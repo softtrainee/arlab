@@ -1,0 +1,211 @@
+'''
+@author: Jake Ross
+@copyright: 2009
+@license: Educational Community License 1.0
+'''
+#=============enthought library imports=======================
+
+#=============standard library imports ========================
+import time
+#=============local library imports  ==========================
+from src.hardware.core.core_device import CoreDevice
+class AnalogDigitalConverter(CoreDevice):
+    '''
+        G{classtree}
+    '''
+    scan_func = 'read_device'
+    read_voltage = 0
+    def read_device(self, **kw):
+        '''
+        '''
+        if self.simulation:
+            return self.get_random_value()
+
+#    def _scan_(self, *args, **kw):
+#        '''
+#        '''
+#        return self.read_device(**kw)
+
+            #self.stream_manager.record(r, self.name)
+'''
+Agilent requires chr(10) as its communicator terminator
+
+'''
+
+class AgilentADC(AnalogDigitalConverter):
+    '''
+        G{classtree}
+    '''
+#    def __init__(self, *args, **kw):
+#        super(AgilentADC, self).__init__(*args, **kw)
+    address = None
+    def load_additional_args(self, config):
+        '''
+            @type setupargs: C{str}
+            @param setupargs:
+        '''
+        #super(AgilentADC, self).load_additional_args(path, setupargs)
+
+        slot = self.config_get(config, 'General', 'slot')
+        channel = self.config_get(config, 'General', 'channel', cast = 'int')
+
+        #self.address = setupargs[1][0]
+        tc = self.config_get(config, 'General', 'trigger_count', cast = 'int')
+        self.trigger_count = tc if tc is not None else 1
+        #self.trigger_count = int(setupargs[2][0])
+
+
+        if slot is not None and channel is not None:
+            self.address = '%s%02i' % (slot, channel)
+            return True
+
+    def initialize(self, *args, **kw):
+        '''
+        '''
+
+        self._communicator._terminator = chr(10)
+        if self.address is not None:
+            cmds = [
+                  '*CLS',
+                  'CONF:VOLT:DC (@%s)' % self.address,
+                  'FORM:READING:ALARM OFF',
+                  'FORM:READING:CHANNEL ON',
+                  'FORM:READING:TIME OFF',
+                  'FORM:READING:UNIT OFF',
+                  'TRIG:SOURCE TIMER',
+                  'TRIG:TIMER 0',
+                  'TRIG:COUNT %i' % self.trigger_count,
+                  'ROUT:SCAN (@%s)' % self.address
+                 ]
+
+            for c in cmds:
+                self.tell(c)
+
+            return True
+
+
+    def _trigger_(self):
+        '''
+        '''
+        self.ask('ABORT')
+        #time.sleep(0.05)
+        self.tell('INIT')
+        time.sleep(0.1)
+    def read_device(self, **kw):
+        '''
+        '''
+        #resp = super(AgilentADC, self).read_device()
+        resp = AnalogDigitalConverter.read_device(self)
+        if resp is None:
+            self._trigger_()
+            resp = self.ask('DATA:POINTS?')
+            if resp is not None:
+                n = float(resp)
+                resp = 0
+                if n > 0:
+                    resp = self.ask('DATA:REMOVE? %i' % float(n))
+                    resp = self._parse_response_(resp)
+
+                #self.current_value = resp
+                self.read_voltage = resp
+        return resp
+
+    def _parse_response_(self, r):
+        '''
+            
+        '''
+        if r is None:
+            return r
+
+        args = r.split(',')
+        data = args[:-1]
+
+
+        return sum([float(d) for d in data]) / self.trigger_count
+
+
+
+
+
+class M1000(AnalogDigitalConverter):
+    '''
+        G{classtree}
+    '''
+    short_form_prompt = '$'
+    long_form_prompt = '#'
+
+    def load_additional_args(self, config):
+        '''
+            @type config: C{str}
+            @param config:
+        '''
+#        super(M1000, self).load_setup_args(p, setupargs)
+#
+        self.set_attribute(config, 'address', 'General', 'address')
+
+        if self.address is not None:
+            return True
+
+#    def setup(self):
+#        '''
+#        '''
+#
+#        #enable write
+#        self.__write__(self.short_form_prompt + addr + 'WE')
+#
+#        addr = '%02X' % ord(self.address)
+#
+#        byte2 = '01' #comunications options 
+#                    #no linefeed, no parity 19200kbs
+#        byte3 = '01' #seldom used options
+#        btye4 = '%02X' % int('1100000', 2)
+#        setupbits = ''.join([addr, byte2, byte3, byte4])
+#
+#        cmd = 'SU'
+#        self.__write__(self.short_form_prompt + addr + cmd + setupbytes)
+    def read_device(self, **kw):
+        '''
+        '''
+        res = super(M1000, self).read_device(**kw)
+        if res is None:
+            cmd = 'RD'
+            addr = self.address
+            cmd = '%s%s%s' % (self.short_form_prompt, addr, cmd)
+
+            res = self.ask(cmd, **kw)
+            res = self._parse_response_(res)
+        return res
+
+    def _parse_response_(self, r, form = '$', type = None):
+        '''
+            typical response form 
+            short *+00072.00
+            long *1RD+00072.00A4
+        '''
+        func = lambda r: float(r[5:-2]) if form == self.long_form_prompt else float(r[2:])
+
+        if r is not None:
+            if type == 'block':
+                r = r.split(',')
+                return [func(ri) for ri in r if ri is not '']
+            else:
+                return func(r)
+
+
+class KeithleyADC(M1000):
+    '''
+        G{classtree}
+    '''
+class OmegaADC(M1000):
+    '''
+        G{classtree}
+    '''
+    def read_block(self):
+        '''
+        '''
+        com = 'RB'
+        r = self.ask('%s%s%s' % (self.short_form_prompt, self.address,
+                   com), remove_eol = False, replace = [chr(13), ','])
+
+        return self._parse_response_(r, type = 'block')
+

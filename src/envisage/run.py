@@ -1,0 +1,164 @@
+#============= enthought library imports =======================
+from envisage.core_plugin import CorePlugin
+from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
+from envisage.api import Plugin
+from pyface.timer.do_later import do_later
+#============= standard library imports ========================
+import os
+import sys
+
+#============= local library imports  ==========================
+from pychron_application import Pychron
+
+from plugins.pychron_workbench_plugin import PychronWorkbenchPlugin
+from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
+from src.hardware.plugins.hardware_plugin import HardwarePlugin
+from src.hardware.plugins.hardware_ui_plugin import HardwareUIPlugin
+
+from src.helpers.paths import plugins_dir, setup_dir
+from src.helpers.initialization_parser import InitializationParser
+
+from src.helpers.logger_setup import add_console
+from src.helpers.gdisplays import gLoggerDisplay
+from globals import open_logger_on_launch
+
+
+logger = add_console(name = '{:<30}'.format('launcher'), display = gLoggerDisplay)
+if open_logger_on_launch:
+    do_later(gLoggerDisplay.edit_traits)
+
+PACKAGE_DICT = dict(
+                   DatabasePlugin = 'src.database.plugins.database_plugin',
+                   DatabaseUIPlugin = 'src.database.plugins.database_ui_plugin',
+                   ExperimentPlugin = 'src.experiments.plugins.experiment_plugin',
+                   ExperimentUIPlugin = 'src.experiments.plugins.experiment_ui_plugin',
+                   ScriptPlugin = 'src.scripts.plugins.script_plugin',
+                   ScriptUIPlugin = 'src.scripts.plugins.script_ui_plugin',
+                   ExtractionLinePlugin = 'src.extraction_line.plugins.extraction_line_plugin',
+                   ExtractionLineUIPlugin = 'src.extraction_line.plugins.extraction_line_ui_plugin',
+                   CanvasDesignerPlugin = 'src.canvas.plugins.canvas_designer_plugin',
+                   CanvasDesignerUIPlugin = 'src.canvas.plugins.canvas_designer_ui_plugin',
+                   MDDModelerPlugin = 'src.data_processing.plugins.mdd_modeler_plugin',
+                   MDDModelerUIPlugin = 'src.data_processing.plugins.mdd_modeler_ui_plugin',
+                   SVNPlugin = 'src.svn.plugins.svn_plugin',
+                   SVNUIPlugin = 'src.svn.plugins.svn_ui_plugin',
+                   FusionsDiodePlugin = 'src.lasers.plugins.fusions_diode_plugin',
+                   FusionsDiodeUIPlugin = 'src.lasers.plugins.fusions_diode_ui_plugin',
+                   FusionsCO2Plugin = 'src.lasers.plugins.fusions_co2_plugin',
+                   FusionsCO2UIPlugin = 'src.lasers.plugins.fusions_co2_ui_plugin',
+                   SynradCO2Plugin = 'src.lasers.plugins.synrad_co2_plugin',
+                   SynradCO2UIPlugin = 'src.lasers.plugins.synrad_co2_ui_plugin',
+
+                   SpectrometerPlugin = 'src.spectrometer.plugins.spectrometer_plugin',
+                   SpectrometerUIPlugin = 'src.spectrometer.plugins.spectrometer_ui_plugin',
+
+                   GraphPlugin = 'src.graph.plugins.graph_plugin',
+                   GraphUIPlugin = 'src.graph.plugins.graph_ui_plugin',
+
+                   BakeoutPlugin = 'src.extraction_line.plugins.bakeout_plugin',
+                   BakeoutUIPlugin = 'src.extraction_line.plugins.bakeout_ui_plugin'
+                 )
+
+def get_module_name(klass):
+    words = []
+    wcnt = 0
+    for c in klass:
+        if c.upper() == c:
+            words.append(c.lower())
+            wcnt += 1
+        else:
+            words[wcnt - 1] += c
+
+    return '_'.join(words)
+
+def get_user_plugins():
+    '''
+    '''
+    def get_klass(package, name):
+        try:
+            m = __import__(package, gdict, locals(), [name], -1)
+            klass = getattr(m, name)
+        except ImportError, e:
+            klass = None
+            logger.warning('****** %s could not be imported %s*****' % (name, e))
+        return klass
+
+    #append plugins dir to the sys path
+    sys.path.append(plugins_dir)
+
+    plugins = []
+    ps = InitializationParser(os.path.join(setup_dir, 'initialization.xml')).get_plugins()
+    for p in ps:
+        pp = []
+        gdict = globals()
+        pp.append(p + 'Plugin')
+        #add UI 
+        uip = p + 'UIPlugin'
+        pp.append(uip)
+
+        for pname in pp:
+
+            klass = None
+            if pname in gdict:
+                klass = gdict[pname]
+            elif pname in PACKAGE_DICT:
+                package = PACKAGE_DICT[pname]
+                klass = get_klass(package, pname)
+            else:
+                logger.warning('***** %s not available ******' % pname)
+
+            if klass is not None:
+                plugin = klass()
+                if isinstance(plugin, Plugin):
+
+                    check = plugin.check()
+                    if check is True:
+                        plugins.append(plugin)
+                    else:
+                        logger.warning('****** %s not available %s******' % (klass, check))
+                else:
+                    logger.warning('***** Invalid %s needs to be a subclass of Plugin ******' % klass)
+
+    return plugins
+#def get_developer_plugins():
+#    from envisage.developer.developer_plugin import DeveloperPlugin
+#    from envisage.developer.ui.developer_ui_plugin import DeveloperUIPlugin
+#    return [DeveloperPlugin(),
+#            DeveloperUIPlugin()]
+#
+#def get_logger_plugins():
+#    from apptools.logger.plugin.logger_plugin import LoggerPlugin
+#    return [LoggerPlugin()]
+def launch(beta = False):
+    '''
+    '''
+    logger.info('Launching Pychron')
+    plugins = [CorePlugin(),
+
+              WorkbenchPlugin(),
+              PychronWorkbenchPlugin(),
+              PychronWorkbenchUIPlugin(),
+
+             HardwarePlugin(),
+             HardwareUIPlugin()
+             ]
+
+    plugins += get_user_plugins()
+
+#    use_developer = False
+#    if use_developer:
+#        plugins += get_developer_plugins()
+#
+#    use_logger = False
+#    if use_logger:
+#        plugins += get_logger_plugins()
+
+    lab = Pychron(plugins = plugins,
+
+                  beta = beta
+                  )
+
+    lab.run()
+    logger.info('Quiting Pychron')
+
+#============= EOF ====================================
