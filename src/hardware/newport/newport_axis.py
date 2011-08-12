@@ -592,7 +592,10 @@ class NewportAxis(Axis):
         cp.set('General', 'deceleration', self.deceleration)
         for sect in cp.sections():
             for attr in cp.options(sect):
-                cp.set(sect, attr, getattr(self, attr))
+                val = getattr(self, attr)
+                if attr == '_trajectory_mode':
+                    val += 1
+                cp.set(sect, attr, val)
 #            for items in cp.items(sect):
 #                print sect, items, hasattr(self, items[0])
 #                cp.set(sect, key, getattr(self, key))

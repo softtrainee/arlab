@@ -18,11 +18,12 @@ class MotionProfiler(ConfigLoadable):
     velocity_tol = Float(0.5, enter_set = True, auto_set = False)
     acceleration_tol = Float(0.5, enter_set = True, auto_set = False)
     deceleration_tol = Float(0.05, enter_set = True, auto_set = False)
-    
+
     max_velocity = Float(4, enter_set = True, auto_set = False)
     min_velocity = Float(0.5, enter_set = True, auto_set = False)
-    min_acceleration=Float(0.05)
-    max_deceleration=Float(0.05)
+
+    min_acceleration = Float(0.05)
+    min_deceleration = Float(0.05)
 
     min_acceleration_time = Float(0.2, enter_set = True, auto_set = False)
     max_transit_time = Float(5, enter_set = True, auto_set = False)
@@ -109,22 +110,18 @@ class MotionProfiler(ConfigLoadable):
         dc = obj.nominal_deceleration
         v = obj.nominal_velocity
 
-
         mv = obj.velocity
         mac = obj.acceleration
         mdc = obj.deceleration
 
-        nv, nac, ndc, force = self.calculate_corrected_parameters(displacement, v, ac, dc)
-
+        nv, nac, ndc = self.calculate_corrected_parameters(displacement, v, ac, dc)
         dv = abs(nv - mv)
         dac = abs(nac - mac)
         ddc = abs(ndc - mdc)
         change = (
                   dv / mv > self.velocity_tol or
                   dac / mac > self.acceleration_tol or
-                  ddc / mdc > self.deceleration_tol or
-                  force
-                  )
+                  ddc / mdc > self.deceleration_tol)
         return change, nv, nac, ndc
 
     def calculate_transit_parameters(self, displacement, v, ac, dc):
@@ -164,7 +161,7 @@ class MotionProfiler(ConfigLoadable):
         self.trapezoidal_err = False
         ac = float(ac)
         dc = float(dc)
-        force = False
+#        force = False
         acdc_param = 1 / ac + 1 / dc
         '''
             trapezodail movement 
@@ -206,12 +203,14 @@ class MotionProfiler(ConfigLoadable):
             times, _distances = self.calculate_transit_parameters(displacement, cv, ac, dc)
             if _distances[2] < 0:
                 self.trapezoidal_err = True
-                ncv, ac, dc = self.find_min(displacement, cv, ac, dc)
-                self.info('trapezoidal err. negative velocity= {} new velocity= {}'.format(cv, ncv))
-                cv = ncv
-            force = True
+                self.info('trapezoidal err. negative velocity displacement velocity= {} new velocity= {}'.format(cv, self.min_velocity))
+                cv = self.min_velocity
+                ac = self.min_acceleration
+                dc = self.min_acceleration
+                #ncv, ac, dc = self.find_min(displacement, cv, ac, dc)
+#            force = True
 
-        return cv, ac, dc, force
+        return cv, ac, dc#, force
 
     def find_min(self, disp, v, a, d, tol = 0.001):
 
@@ -219,18 +218,19 @@ class MotionProfiler(ConfigLoadable):
         atime = times[0]
         cvtime = times[2]
 
-        if abs(atime - cvtime) < tol:
-            return v, a, d
-        else:
-            v = v * 0.99
-            a = v / self.min_acceleration_time
-            d = a
-            try:
-                np = self.find_min(self,disp, v, a, d)
-            except RuntimeError,e:
-                print e, v,a,d
-                np=self.min_velocity, self.min_acceleration. self.min_deceleration
-            return np
+
+#        if abs(atime - cvtime) < tol:
+#            return v, a, d
+#        else:
+#            v = v * 0.99
+#            a = v / self.min_acceleration_time
+#            d = a
+#            try:
+#                np = self.find_min(self, disp, v, a, d)
+#            except RuntimeError, e:
+#                print e, v, a, d
+#                np = self.min_velocity, self.min_acceleration. self.min_deceleration
+#            return np
 
 if __name__ == '__main__':
     m = MotionProfiler()
@@ -239,7 +239,7 @@ if __name__ == '__main__':
     v = 3.
 
     disp = 0.01
-    print m.calculate_corrected_parameters(disp, v, a, d)
+    print 'calc parameters', m.calculate_corrected_parameters(disp, v, a, d)
 
 
 #============= EOF ====================================

@@ -136,8 +136,8 @@ class VideoStageManager(StageManager, Videoable):
 #        if hasattr(self, 'video'):
         self.video.open(user = 'underlay')
 
-        xa = self.stage_controller.axes['x'].calibration
-        ya = self.stage_controller.axes['y'].calibration
+        xa = self.stage_controller.axes['x'].drive_ratio
+        ya = self.stage_controller.axes['y'].drive_ratio
 
         self._drive_xratio = xa
         self._drive_yratio = ya

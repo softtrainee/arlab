@@ -79,6 +79,13 @@ class LaserTrayCanvas(MapCanvas):
 #                    controller.jog_move(c)
 #                    self._jog_moving = True
 
+
+        c = event.character
+        if c in ['Left', 'Right', 'Up', 'Down']:
+            event.handled = True
+            self.parent.stage_controller.relative_move(c)
+#            self.parent.canvas.set_stage_position(x, y)
+
         super(LaserTrayCanvas, self).normal_key_pressed(event)
 
     def _get_current_position(self):
@@ -210,7 +217,7 @@ class LaserTrayCanvas(MapCanvas):
             return
 
         if delta is None:
-            
+
             vrange = getattr(self, '{}_mapper'.format(mapper)).range
 
             vmi = vrange.low
@@ -227,7 +234,7 @@ class LaserTrayCanvas(MapCanvas):
             nmi = val - delta
             nma = val + delta
 
-        
+
         self.set_mapper_limits(mapper, (nmi, nma))
 
     def _draw_hook(self, gc, *args, **kw):

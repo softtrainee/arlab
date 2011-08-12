@@ -217,32 +217,45 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         return f
 
-    def jog_move(self, c):
+    def relative_move(self, key_direction):
+        #move one pixel in the specified direction
 
-        if c == 'Left':
-            ax_key = 'x'
-            direction = -1
-        elif c == 'Right':
+        if key_direction == 'Left':
             ax_key = 'x'
             direction = 1
-        elif c == 'Down':
+        elif key_direction == 'Right':
+            ax_key = 'x'
+            direction = -1
+        elif key_direction == 'Down':
             ax_key = 'y'
             direction = -1
-        elif c == 'Up':
+        elif key_direction == 'Up':
             ax_key = 'y'
             direction = 1
-
-        self.destroy_group(mode = 1)
 
         ax = self.axes[ax_key]
-        direction = '+' if direction * ax.sign == 1 else '-'
 
-        cmd = self._build_command('MV', xx = ax.id, nn = direction)
-        self.tell(cmd)
+        v1 = self.parent.canvas.map_data((0, 0))
+        v2 = self.parent.canvas.map_data((1, 1))
 
-        pos = self.get_current_position(ax_key)
-        if pos is not None:
-            setattr(self, '_{}_position'.format(ax_key), pos)
+        v = (v2[0] - v1[0]) * direction * ax.sign
+
+        if ax_key == 'y':
+            v = self._y_position + v
+            x = self._x_position
+            y = v
+
+        else:
+            v = self._x_position + v
+            x = v
+            y = self._y_position
+
+        self.parent.canvas.set_desired_position(x, y)
+        self.parent.canvas.set_stage_position(x, y)
+
+        self.single_axis_move(ax_key, v, block = False, mode = 'relative', update = False)
+
+        setattr(self, '_{}_position'.format(ax_key), v)
 
     def multiple_point_move(self, points, nominal_displacement = 0.5):
 
@@ -320,7 +333,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         else:
             self.info('displacement of move too small {} < {}'.format(d, tol))
 
-    def single_axis_move(self, key, value, block = False):
+    def single_axis_move(self, key, value, block = False, mode = 'absolute', update = True):
         '''
         '''
 
@@ -330,7 +343,13 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if id in map(int, self.groupobj.axes):
                 self.destroy_group()
 
-        com = '{}PA{:0.5f}'.format(id, self._sign_correct(value, key) * ax.drive_ratio)
+        if mode == 'absolute':
+            cmd = 'PA'
+        else:
+            cmd = 'PR'
+
+        cmd = self._build_command(cmd, xx = id,
+                                  nn = '{:0.5f}'.format(self._sign_correct(value, key) * ax.drive_ratio))
         func = None
 
         if key != 'z':
@@ -358,9 +377,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
         else:
             func = self._z_inprogress_update
 
-        self.timer = self.timer_factory(func = func)
+        if update:
+            self.timer = self.timer_factory(func = func)
 
-        self._axis_move(com, block = block)
+        self._axis_move(cmd, block = block)
 
     def multiple_axis_move(self, axes_list, block = False):
         '''
@@ -493,6 +513,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             self.info('destroying group')
             com = '1HX'
             self.tell(com)
+
 
         self.set_trajectory_mode(mode)
         self.mode = 'normal'
@@ -871,3 +892,29 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         self.parent.canvas.set_stage_position(self._x_position, self._y_position)
 #======================EOF========================================
+#def jog_move(self, c):
+#
+#        if c == 'Left':
+#            ax_key = 'x'
+#            direction = -1
+#        elif c == 'Right':
+#            ax_key = 'x'
+#            direction = 1
+#        elif c == 'Down':
+#            ax_key = 'y'
+#            direction = -1
+#        elif c == 'Up':
+#            ax_key = 'y'
+#            direction = 1
+#
+#        self.destroy_group(mode = 1)
+#
+#        ax = self.axes[ax_key]
+#        direction = '+' if direction * ax.sign == 1 else '-'
+#
+#        cmd = self._build_command('MV', xx = ax.id, nn = direction)
+#        self.tell(cmd)
+#
+#        pos = self.get_current_position(ax_key)
+#        if pos is not None:
+#            setattr(self, '_{}_position'.format(ax_key), pos)
