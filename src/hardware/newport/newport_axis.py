@@ -595,6 +595,16 @@ class NewportAxis(Axis):
                 val = getattr(self, attr)
                 if attr == '_trajectory_mode':
                     val += 1
+
+                if attr in ['_amplifier_io_configuration',
+                            '_feedback_configuration',
+                            '_estop_configuration',
+                            '_following_error_configuration',
+                            '_hardware_limit_configuration',
+                            '_software_limit_configuration',
+                            ]:
+                    val = '{:X}'.format(val)
+
                 cp.set(sect, attr, val)
 #            for items in cp.items(sect):
 #                print sect, items, hasattr(self, items[0])
