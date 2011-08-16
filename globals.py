@@ -1,7 +1,9 @@
 
 
 import os
-beta = True if 'beta' in os.path.basename(os.path.dirname(__file__)) else False
+
+
+beta = False if os.path.basename(os.path.dirname(__file__))=='pychron' else True
 use_shared_memory = False
 
 use_debug_logger = False

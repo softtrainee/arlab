@@ -8,11 +8,14 @@ import sys
 #add src to the path
 
 root = os.path.basename(os.path.dirname(__file__))
-if 'pychron_beta' not in root:
-    root = 'pychron_beta'
+#print root
+#if 'pychron_beta' not in root:
+#    root = 'pychron_beta'
+
 
 SRC_DIR = os.path.join(os.path.expanduser('~'),
                    'Programming',
+                   'mercurial',
                    root
                    )
 sys.path.insert(0, SRC_DIR)
