@@ -5,12 +5,10 @@ import os
 import sys
 #============= local library imports  ==========================
 #add src to the path
-root = os.path.basename(os.path.dirname(__file__))
-if 'pychron' not in root:
-    root = 'pychron'
 src = os.path.join(os.path.expanduser('~'),
                    'Programming',
-                   root
+                   'mercurial',
+                   'pychron_beta'
                    )
 sys.path.append(src)
 
