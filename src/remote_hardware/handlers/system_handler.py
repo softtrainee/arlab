@@ -7,7 +7,7 @@ from base_remote_hardware_handler import BaseRemoteHardwareHandler
 
 #============= views ===================================
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-
+TM_PROTOCOL='src.social.twitter_manager.TwitterManager'
 class DummyDevice(object):
     def get(self):
         return 0.1
@@ -117,6 +117,19 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
         return result
 
+    def StartMultRuns(self, data):
+        if self.application is not None:
+            tm=self.application.get_service(TM_PROTOCOL)
+            
+            tm.post('Mult runs start {}'.format(data))
+            
+    def CompleteMultRuns(self,data):
+        if self.application is not None:
+            tm=self.application.get_service(TM_PROTOCOL)
+            
+            tm.post('Mult runs completed {}'.format(data))
+            
+        
     def handle(self, data):
         elm = self.get_extraction_line_manager()
         result = 'ERROR'

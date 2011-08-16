@@ -1,4 +1,3 @@
-from __future__ import with_statement
 #============= enthought library imports =======================
 #============= standard library imports ========================
 import os

@@ -56,7 +56,12 @@ PACKAGE_DICT = dict(
                    GraphUIPlugin = 'src.graph.plugins.graph_ui_plugin',
 
                    BakeoutPlugin = 'src.extraction_line.plugins.bakeout_plugin',
-                   BakeoutUIPlugin = 'src.extraction_line.plugins.bakeout_ui_plugin'
+                   BakeoutUIPlugin = 'src.extraction_line.plugins.bakeout_ui_plugin',
+                   
+                   TwitterPlugin='src.social.plugins.twitter_plugin',
+                   TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',
+                   EmailPlugin='src.social.plugins.email_plugin',
+                   EmailUIPlugin='src.social.plugins.email_ui_plugin',
                  )
 
 def get_module_name(klass):
@@ -97,15 +102,15 @@ def get_user_plugins():
         pp.append(uip)
 
         for pname in pp:
-
             klass = None
             if pname in gdict:
                 klass = gdict[pname]
             elif pname in PACKAGE_DICT:
                 package = PACKAGE_DICT[pname]
                 klass = get_klass(package, pname)
-            else:
-                logger.warning('***** %s not available ******' % pname)
+            elif not pname.endswith('UIPlugin'):
+                #dont warn if uiplugin not available
+                logger.warning('***** {} not available ******'.format(pname))
 
             if klass is not None:
                 plugin = klass()
@@ -152,7 +157,6 @@ def launch(beta = False):
 #    use_logger = False
 #    if use_logger:
 #        plugins += get_logger_plugins()
-
     lab = Pychron(plugins = plugins,
 
                   beta = beta
