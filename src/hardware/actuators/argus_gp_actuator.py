@@ -1,8 +1,3 @@
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
 #========== standard library imports ==========
 
 #========== local library imports =============
@@ -11,7 +6,6 @@ from gp_actuator import GPActuator
 class ArgusGPActuator(GPActuator):
     '''
     
-    G{classtree}
     '''
 
 #    def initialize(self, *args, **kw):
@@ -41,7 +35,7 @@ class ArgusGPActuator(GPActuator):
             s = self.ask(cmd)
 
             if s is not None:
-                if s.strip() == 'True':
+                if s.strip() in 'True':
                     return True
                 else:
                     return False
@@ -57,9 +51,9 @@ class ArgusGPActuator(GPActuator):
 
         cmd = 'Close {}'.format(obj.name[-1])
 
-        self.tell(cmd)
-
-        return self.get_channel_state(obj) == False
+        r=self.ask(cmd)
+        if r is not None and r.strip()=='OK':
+            return self.get_channel_state(obj) == False
 
 
     def open_channel(self, obj):
@@ -67,7 +61,8 @@ class ArgusGPActuator(GPActuator):
         '''
         cmd = 'Open {}'.format(obj.name[-1])
 
-        self.tell(cmd)
-        return self.get_channel_state(obj) == True
+        r=self.ask(cmd)
+        if r is not None and r.strip()=='OK':
+            return self.get_channel_state(obj) == True
 
 
