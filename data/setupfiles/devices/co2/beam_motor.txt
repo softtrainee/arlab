@@ -1,0 +1,21 @@
+#CO2  BEAM MOTOR SETUP FILE
+#beam address
+01
+#beam motor steps
+137500
+#beam min, beam max 
+0,6
+#beam motor home delay(sec)s
+4
+#beam drive sign
+-1
+#beam velocity,acceleration
+#801A0600,2C010000
+400000,300
+#beam homing velocity,acceleration
+#801A0600,2C010000
+400000,300
+#Beam position for focal position in percent from home
+0.01
+
+

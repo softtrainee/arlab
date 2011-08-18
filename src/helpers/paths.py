@@ -7,6 +7,7 @@ make sure directory exists and build if not
 import os
 from src.helpers.initialization_parser import InitializationParser
 
+HOME=os.path.expanduser('~')
 home = 'Pychrondata'
 
 from globals import beta
@@ -19,7 +20,8 @@ if beta:
     project_root = 'branches/pychron'
 
 project_home = os.path.join(host_url, project_root)
-root = os.path.join(os.path.expanduser('~') , home)
+root = os.path.join(HOME, home)
+pychron_src_dir=os.path.join(HOME, 'Programming','mercurial',home)
 
 #_dir suffix ensures the path is checked for existence
 root_dir = root
@@ -79,8 +81,14 @@ def build_initialization_file(root):
                                     'Spectrometer',
                                     ]
         DEFAULT_DATA_PLUGINS = ['Graph', 'MDDModeler']
+        DEFAULT_SOCIAL_PLUGINS=['Twitter','Email']
 
-        DEFAULT_PLUGINS = DEFAULT_GENERAL_PLUGINS + DEFAULT_HARDWARE_PLUGINS + DEFAULT_DATA_PLUGINS
+        DEFAULT_PLUGINS = (DEFAULT_GENERAL_PLUGINS + 
+                            DEFAULT_HARDWARE_PLUGINS +  
+                            DEFAULT_DATA_PLUGINS +
+                            DEFAULT_SOCIAL_PLUGINS
+                            )
+                            
         DEFAULT_PLUGINS.sort()
         plugins = parser.get_plugins(all = True)
         plugins.sort()
@@ -91,6 +99,7 @@ def build_initialization_file(root):
             for grp, plist in [('general', DEFAULT_GENERAL_PLUGINS),
                           ('hardware', DEFAULT_HARDWARE_PLUGINS),
                           ('data', DEFAULT_DATA_PLUGINS),
+                          ('social', DEFAULT_SOCIAL_PLUGINS)
                           ]:
                 for di in diff:
                     if di in plist:
@@ -139,6 +148,11 @@ def build_initialization_file(root):
     <plugin enabled="false">Graph</plugin>
     <plugin enabled="false">MDDModeler</plugin>
   </data>
+  <social>
+      <plugin enabled="false">Twitter</plugin>
+      <plugin enabled="false">Email</plugin>
+  </social>
+  
 </root>
 ''')
 

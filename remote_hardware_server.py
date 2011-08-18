@@ -11,9 +11,9 @@ src = os.path.join(os.path.expanduser('~'),
                    'pychron_beta'
                    )
 sys.path.append(src)
-
 from src.helpers.logger_setup import setup
-from src.managers.server_manager import ServerManager
+from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
+
 
 if __name__ == '__main__':
     '''
@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
 
     setup('server')
-    s = ServerManager()
+    s = RemoteHardwareServerManager()
     s.load()
     s.configure_traits()
 

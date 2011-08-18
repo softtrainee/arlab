@@ -5,7 +5,7 @@ from pyface.image_resource import ImageResource
 #from traits.api import List, on_trait_change
 #============= standard library imports ========================
 import os
-from src.envisage.core.action_helper import open_manager
+from src.helpers.paths import pychron_src_dir
 #from envisage.ui.tasks.tasks_application import TasksApplication
 #============= local library imports  ==========================
 class Pychron(WorkbenchApplication):
@@ -22,10 +22,11 @@ class Pychron(WorkbenchApplication):
         return about_dialog
 
     def _splash_screen_default(self):
-
-        p = os.path.join(os.path.expanduser('~'), 'Programming',
-                        'pychron_beta' if self.beta else 'pychron',
-                       'resources')
+        
+        p = os.path.join(
+                         pychron_src_dir,
+                       'resources'
+                       )
 
         sp = SplashScreen(
                           image = ImageResource(name = 'splash.png',

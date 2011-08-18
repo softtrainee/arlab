@@ -1,7 +1,14 @@
+#!/Library/Frameworks/Python.framework/Versions/Current/bin/python
+#make this file exectutable
+
+#============= standard library imports ========================
 import os
 import shutil
 import sys
 import plistlib
+import argparse
+#============= local library imports  ==========================
+
 
 root = os.getcwd()
 
@@ -17,7 +24,8 @@ class Installer(object):
     def install(self):
         if sys.platform == 'darwin':
             from BuildApplet import buildapplet
-
+            print 'Building {}.py'.format(self.name)
+            
             sys.argv[1:] = [os.path.join(root, '{}.py'.format(self.name))]
             buildapplet()
 
@@ -57,7 +65,7 @@ class Installer(object):
             tree['CFBundleName'] = self.name
 
             plistlib.writePlist(tree, info_plist)
-
+            print 'Created {}'.format(os.path.join(root, '{}.py'.format(self.name)))
             #===================================================================
             # change app prefix
             #===================================================================
@@ -68,9 +76,54 @@ class Installer(object):
 #                shutil.rmtree(p2)
 #            os.rename(p1, p2)
 
-if __name__ == '__main__':
-    import argparse
 
+def install_pychron_suite():
+    
+
+    parser = argparse.ArgumentParser(description = 'Install Pychron')
+    
+    parser.add_argument('-d', '--data', action='store_true',
+                        help = 'overwrite the current pychron_data directory')
+    parser.add_argument('-f', '--force-data', action='store_true',
+                        help = 'dont ask to overwrite the data dir, just do it')
+    parser.add_argument('-a', '--apps-only', action='store_true',
+                        help = 'only create the app bundles')
+    args = parser.parse_args()
+    
+    
+    i=Installer('pychron_beta', 'pychron_beta')
+    i.install()
+    
+    i.prefix='remote_hardware_server'
+    i.name='remote_hardware_server'
+    i.install()
+    
+
+    #move data into place
+    if args.apps_only:
+        return 
+    
+    data=os.path.join(os.getcwd(),'data')
+    home=os.path.expanduser('~')
+    dst=os.path.join(home, 'pychron_data_beta')
+
+    try:
+        shutil.copytree(data, dst)
+        print 'copying {} -> {}'.format(data,dst)
+    except OSError:
+        if args.data:
+            rin='y'
+            if not args.force_data:
+                rin=raw_input('overwrite exisiting data y/n [y] >> ').strip().lower()
+                
+            if len(rin)==0 or rin in ['y','yes']:
+                print 'copying {} -> {}'.format(data,dst)   
+                shutil.rmtree(dst, ignore_errors=True)
+                shutil.copytree(data, dst)
+        
+
+def cli_install():
+    
     parser = argparse.ArgumentParser(description = 'Create a new Launchable Application')
     parser.add_argument('prefix',
                         #metavar = 'prefix', 
@@ -88,3 +141,10 @@ if __name__ == '__main__':
 
     i = Installer(args.prefix, args.name, args.icon)
     i.install()
+    
+if __name__ == '__main__':
+    
+#    cli_install()
+    
+    install_pychron_suite()
+#============= EOF =====================================

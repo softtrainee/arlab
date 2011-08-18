@@ -19,9 +19,9 @@ from src.messaging.command_repeater import CommandRepeater
 from src.messaging.remote_command_server import RemoteCommandServer
 
 from src.managers.manager import Manager
-from src.helpers.paths import initialization_dir
+from src.helpers.paths import setup_dir
 
-class ServerManager(Manager):
+class RemoteHardwareServerManager(Manager):
     '''
     '''
     # quit the program if this window is closed
@@ -49,7 +49,9 @@ class ServerManager(Manager):
         '''
 
         config = ConfigParser.ConfigParser()
-        path = os.path.join(initialization_dir, 'server_initialization.cfg')
+        
+        
+        path = os.path.join(setup_dir, 'rhs.cfg')
         config.read(path)
 
         servernames = [s.strip() for s in self.config_get(config, 'General', 'servers').split(',')]
