@@ -1,0 +1,101 @@
+#============= enthought library imports =======================
+from traits.api import  on_trait_change
+#============= standard library imports ========================
+
+#============= local library imports  ==========================
+from src.envisage.core.core_ui_plugin import CoreUIPlugin
+
+class MDDModelerUIPlugin(CoreUIPlugin):
+    '''
+        G{classtree}
+    '''
+    id = 'pychron.canvas_designer.ui'
+
+
+    def _action_sets_default(self):
+        '''
+        '''
+        from mdd_modeler_action_set import MDDModelerActionSet
+        return [MDDModelerActionSet]
+
+    def _perspectives_default(self):
+        '''
+        '''
+        p = []
+        return p
+
+    def _get_manager(self):
+        modeler_manager = self.application.get_service('src.data_processing.modeling.modeler_manager.ModelerManager')
+        return modeler_manager
+
+#============= views ===================================
+    def _views_default(self):
+        '''
+        '''
+        rv = [self._create_data_directory_view,
+              self._create_notes_view,
+              self._create_summary_view,
+              ]
+        return rv
+
+    def _create_summary_view(self, **kw):
+        from summary_view import SummaryView
+        obj = SummaryView()
+        manager = self._get_manager()
+        if manager is not None:
+            manager.on_trait_change(obj.selected_update, 'selected_datum')
+            manager.on_trait_change(obj.selected_update, 'selected')
+
+        args = dict(id = 'pychron.modeler.summary_view',
+                  name = 'Summary',
+                  obj = obj
+                  )
+        return self.traitsuiview_factory(args, kw)
+
+    def _create_notes_view(self, **kw):
+        from notes_view import NotesView
+        obj = NotesView()
+        manager = self._get_manager()
+        if manager is not None:
+            manager.on_trait_change(obj.selected_update, 'selected_datum')
+
+        args = dict(id = 'pychron.modeler.notes_view',
+                  name = 'Notes',
+                  obj = obj
+                  )
+        return self.traitsuiview_factory(args, kw)
+
+    def _create_data_directory_view(self, **kw):
+        modeler_manager = self._get_manager()
+
+        args = dict(
+                    id = 'pychron.modeler.data_directory',
+                  name = 'Data',
+                  view = 'data_select_view',
+                  obj = modeler_manager#.modeler,
+                  )
+        return self.traitsuiview_factory(args, kw)
+
+    @on_trait_change('application.gui:started')
+    def _started(self, obj, name, old, new):
+        '''
+            @type obj: C{str}
+            @param obj:
+
+            @type name: C{str}
+            @param name:
+
+            @type old: C{str}
+            @param old:
+
+            @type new: C{str}
+            @param new:
+        '''
+        if new  is True:
+            app = self.application
+            window = app.workbench.active_window
+            manager = app.get_service('src.data_processing.modeling.modeler_manager.ModelerManager')
+            manager.window = window
+            manager.open_default()
+
+#============= EOF ====================================

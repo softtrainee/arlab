@@ -1,0 +1,81 @@
+#============= enthought library imports =======================
+from traits.api import  on_trait_change
+#============= standard library imports ========================
+
+#============= local library imports  ==========================
+from src.envisage.core.core_ui_plugin import CoreUIPlugin
+
+class CanvasDesignerUIPlugin(CoreUIPlugin):
+    '''
+        G{classtree}
+    '''
+    id = 'pychron.canvas_designer.ui'
+
+
+    def _action_sets_default(self):
+        '''
+        '''
+        from canvas_designer_action_set import CanvasDesignerActionSet
+        return [CanvasDesignerActionSet]
+
+    def _perspectives_default(self):
+        '''
+        '''
+        p = []
+        return p
+
+    @on_trait_change('application.gui:started')
+    def _started(self, obj, name, old, new):
+        '''
+            @type obj: C{str}
+            @param obj:
+
+            @type name: C{str}
+            @param name:
+
+            @type old: C{str}
+            @param old:
+
+            @type new: C{str}
+            @param new:
+        '''
+        if new  is True:
+            app = self.application
+            window = app.workbench.active_window
+            manager = app.get_service('src.canvas.designer.canvas_manager.CanvasManager')
+            manager.window = window
+            debug = False
+            if debug:
+                manager.open_default()
+#============= views ===================================
+    def _views_default(self):
+        '''
+        '''
+        rv = [self._create_property_view]
+        return rv
+    def _create_property_view(self, **kw):
+        '''
+            @type **kw: C{str}
+            @param **kw:
+        '''
+        app = self.application
+        obj = app.get_service('src.canvas.designer.canvas_manager.CanvasManager')
+        args = dict(id = 'pychron.canvas_designer.property_view',
+                         name = 'Property View',
+                         obj = obj,
+                         view = 'active_canvas_view',
+                         )
+
+        return self.traitsuiview_factory(args, kw)
+#    def _create_designer_view(self, window, **kw):
+#        obj = CanvasDesigner()
+#        v = TraitsUIView(id = 'pychron.canvas_designer.ui',
+#                         category = 'Canvas',
+#                         name = 'Canvas Designer',
+#                         obj = obj,
+#                         window = window,
+#                         **kw
+#                         )
+#        return v
+
+#============= EOF ====================================

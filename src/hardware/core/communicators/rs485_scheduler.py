@@ -1,0 +1,37 @@
+#============= enthought library imports =======================
+from traits.api import HasTraits, Float
+
+from threading import Lock
+import time
+#============= standard library imports ========================
+
+#============= local library imports  ==========================
+class RS485Scheduler(HasTraits):
+    '''
+        this class should be used when working with multiple rs485 devices on the same port. 
+        
+        it uses a simple lock and sleep cycle to avoid collision on the data lines
+        
+        when setting up the devices use device.set_scheduler to set the shared scheduler
+        
+    '''
+
+    collision_delay = Float(125)
+
+    def __init__(self, *args, **kw):
+        super(RS485Scheduler, self).__init__(*args, **kw)
+        self._lock = Lock()
+
+    def schedule(self, func, args = None, kwargs = None):
+        self._lock.acquire()
+        if args is None:
+            args = tuple()
+        if kwargs is None:
+            kwargs = dict()
+
+        r = func(*args, **kwargs)
+        time.sleep(self.collision_delay / 1000.0)
+        self._lock.release()
+
+        return r
+#============= EOF ====================================

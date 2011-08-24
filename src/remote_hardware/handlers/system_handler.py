@@ -1,0 +1,204 @@
+#============= enthought library imports =======================
+
+#============= standard library imports ========================
+import subprocess
+#============= local library imports  ==========================
+from base_remote_hardware_handler import BaseRemoteHardwareHandler
+
+#============= views ===================================
+EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+TM_PROTOCOL='src.social.twitter_manager.TwitterManager'
+class DummyDevice(object):
+    def get(self):
+        return 0.1
+    def set(self, v):
+        return 'OK'
+
+class DummyELM(object):
+    def open_valve(self, v):
+        return True
+    def close_valve(self, v):
+        return True
+    def get_valve_state(self, v):
+        return True
+    def get_manual_state(self, v):
+        return True
+    def get_device(self, n):
+        d = DummyDevice()
+        return d
+
+class SystemHandler(BaseRemoteHardwareHandler):
+    extraction_line_manager = None
+    def get_extraction_line_manager(self):
+
+        if self.extraction_line_manager is None:
+            if self.application is not None:
+                elm = self.application.get_service(EL_PROTOCOL)
+            else:
+                elm = DummyELM()
+            self.extraction_line_manager = elm
+        else:
+            elm = self.extraction_line_manager
+
+        return elm
+
+    def get_device(self, name, protocol = None):
+        if self.application is not None:
+            if protocol is None:
+                protocol = 'src.hardware.core.i_core_device.ICoreDevice'
+            dev = self.application.get_service(protocol, 'name=="{}"'.format(name))
+        else:
+            dev = DummyDevice()
+        return dev
+
+    def Set(self, dname, value):
+        d = self.get_device(dname)
+        if d is not None:
+            result = d.set(value)
+        else:
+            result = 'Device not connected: {}'.format(dname)
+        return result
+
+    def Read(self, dname):
+        d = self.get_device(dname)
+        if d is not None:
+            result = d.get()
+        else:
+            result = 'Device not connected: {}'.format(dname)
+        return result
+
+    def Open(self, vname):
+        elm = self.get_extraction_line_manager()
+        result = elm.open_valve(vname)
+        if result == True:
+            result = 'OK'
+        return result
+
+    def Close(self, vname):
+        elm = self.get_extraction_line_manager()
+        result = elm.close_valve(vname)
+        if result == True:
+            result = 'OK'
+        return result
+
+    def GetValveState(self, vname):
+        elm = self.get_extraction_line_manager()
+        return elm.get_valve_state(vname)
+
+    def GetValveStates(self, *args):
+        elm = self.get_extraction_line_manager()
+        result = elm.get_valve_states()
+        if result is None:
+            result = 'ERROR'
+        return result
+
+    def GetManualState(self, vname):
+        elm = self.get_extraction_line_manager()
+        #mstate = elm.get_manual_state(vname)
+
+        lstate = elm.get_software_lock(vname)
+        if lstate is None:
+            result = 'ERROR: {} name available'.format(vname)
+            result = False
+        else:
+            result = lstate
+#        if result is None:
+#            result = 'ERROR'
+        return result
+
+    def RemoteLaunch(self, *args):
+        #launch pychron
+        p = '/Users/Ross/Programming/pychron/Pychron.app'
+        result = 'OK'
+        try:
+            subprocess.Popen(['open', p])
+        except OSError:
+            result = 'ERROR: failed to launch Pychron'
+
+        return result
+
+    def StartMultRuns(self, data):
+        if self.application is not None:
+            tm=self.application.get_service(TM_PROTOCOL)
+            
+            tm.post('Mult runs start {}'.format(data))
+            
+    def CompleteMultRuns(self,data):
+        if self.application is not None:
+            tm=self.application.get_service(TM_PROTOCOL)
+            
+            tm.post('Mult runs completed {}'.format(data))
+            
+        
+    def handle(self, data):
+        elm = self.get_extraction_line_manager()
+        result = 'ERROR'
+        if elm is None:
+            self.warning('Extraction Line Manager not available')
+        else:
+            args = self.split_data(data)
+            if args:
+                action = args[0]
+
+                func = self._get_func(action)
+                if func is not None:
+                    try:
+                        result = func(*args[1:])
+                    except TypeError:
+                        result = 'Invalid arguments passed {}'.format(args[1:])
+            else:
+                result = 'No command passed'
+        return str(result)
+if __name__ == '__main__':
+    v = SystemHandler()
+    v.RemoteLaunch()
+#============= EOF ====================================
+            #if action in self._make_keys('set'):
+#                dname = args[1]
+#                d = self.get_device(dname)
+#                if d is not None:
+#                    result = d.set(args[2])
+
+#            elif action in self._make_keys('read'):
+#                dname = args[1]
+#                d = self.get_device(dname)
+#                if d is not None:
+#                    result = d.get()
+
+#            elif action in self._make_keys('open'):
+#                result = elm.open_valve(args[1])
+#                if result == True:
+#                    result = 'OK'
+#
+#            elif action in self._make_keys('close'):
+#                result = elm.close_valve(args[1])
+#                if result == True:
+#                    result = 'OK'
+
+#            elif action == 'GetValveState':
+#                result = elm.get_valve_state(args[1])
+
+#            elif action == 'GetValveStates':
+#                result = elm.get_valve_states()
+#                if result is None:
+#                    result = 'ERROR'
+
+#            elif action == 'GetManualState':
+#                result = elm.get_manual_state(args[1])
+#                if result is None:
+#                    result = 'ERROR'
+#            else:
+#                self.warning('Invalid command %s, %i' % (data, len(data)))
+
+#        return str(result)
+#            if '.' in data:
+#                obj, func = data.split('.')
+#
+#                t = elm.get_device(obj)
+#                if t is not None:
+#                    if hasattr(t, func):
+#                        result = getattr(t, func)()
+#                    else:
+#                        self.warning('Invalid func %s' % func)
+#            else:
+#                self.warning('Invalid command %s' % data)

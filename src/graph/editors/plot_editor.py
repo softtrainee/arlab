@@ -1,0 +1,309 @@
+
+#=============enthought library imports=======================
+from traits.api import HasTraits, DelegatesTo, Property, Any, Str, Int, Float, List
+from traitsui.api import View, Item, VGroup, Group, \
+    TextEditor, TableEditor, Handler, InstanceEditor
+from chaco.polygon_plot import PolygonPlot
+#=============standard library imports ========================
+#=============local library imports  ==========================
+from series_editor import SeriesEditor, PolygonPlotEditor
+from traitsui.table_column import ObjectColumn
+from traitsui.extras.checkbox_column import CheckboxColumn
+from kiva.trait_defs.kiva_font_trait import KivaFontFunc
+class PlotEditorHandler(Handler):
+    def closed(self, info, is_ok):
+        '''
+        '''
+        obj = info.object
+        obj.graph.plot_editor = None
+
+class PlotEditor(HasTraits):
+    '''
+    '''
+
+
+    _xtitle = Str
+    _ytitle = Str
+
+    _xmin = Float(0)
+    _xmax = Float(0)
+    _ymin = Float(0)
+    _ymax = Float(0)
+
+    xtitle = Property(Str, depends_on = '_xtitle')
+    ytitle = Property(Str, depends_on = '_ytitle')
+    xmax = Property(Float, depends_on = '_xmax')
+    xmin = Property(depends_on = '_xmin')
+    ymax = Property(depends_on = '_xmax')
+    ymin = Property(depends_on = '_ymin')
+
+
+#    xcolor_ = Property
+#    ycolor_ = Property
+
+    graph = Any
+    plot = Any
+    id = Int(0)
+    name = Str('Plot Editor')
+    series_editors = List
+
+    autoupdate = DelegatesTo('graph')
+
+    #the _prev_selected hack prevents selected from ever being set to None
+    #this prevents view resizing when hiding/showing series.
+    selected = Property(depends_on = '_selected')
+    _selected = Any
+    _prev_selected = Any
+
+    def __init__(self, *args, **kw):
+        '''
+        '''
+        super(PlotEditor, self).__init__(*args, **kw)
+        if self.graph:
+            self._build_series_editors()
+
+    def _get_selected(self):
+        if self._selected is None:
+            s = self._prev_selected
+        else:
+            s = self._selected
+        return s
+
+    def __selected_changed(self, old, new):
+        if new is None:
+            self._prev_selected = old
+
+    def _build_series_editors(self):
+        '''
+        '''
+        if self.plot:
+            pplot = self.plot
+            self.id = self.graph.plots.index(pplot)
+
+        elif self.graph:
+            pplot = self.graph.plots[self.id]
+        plots = pplot.plots
+
+        self.series_editors = []
+        for key in plots:
+            plot = plots[key][0]
+
+            if isinstance(plot, PolygonPlot):
+                editor = PolygonPlotEditor
+            else:
+                editor = SeriesEditor
+
+            id = int(key[4:])
+
+            kwargs = dict(series = plot,
+                                 graph = self.graph,
+                                 plotid = self.id,
+                                 id = id,
+                                 name = self.graph.get_series_label(plotid = self.id, series = id)
+                                 )
+            self.series_editors.append(editor(**kwargs))
+            self.series_editors.sort(key = lambda x:x.id)
+
+            plot.index_mapper.on_trait_change(self.update_x, 'updated')
+            plot.value_mapper.on_trait_change(self.update_y, 'updated')
+
+        if plots:
+            px = plot
+            self._xmin, self._xmax = px.index_range.low, px.index_range.high
+            self._ymin, self._ymax = px.value_range.low, px.value_range.high
+
+    def _autoupdate_changed(self):
+        '''
+        '''
+        if not self.autoupdate:
+            self.graph.set_x_limits(min = self._xmin, max = self._xmax, plotid = self.id)
+            self.graph.set_y_limits(min = self._ymin, max = self._ymax, plotid = self.id)
+            self.graph.auto_update(False, plotid = self.id)
+        else:
+            self.graph.auto_update(True, plotid = self.id)
+
+    def update_x(self, o, oo, nn):
+        '''
+        '''
+        if not isinstance(nn, bool) and self.autoupdate:
+            self._xmax = nn.high
+            self._xmin = nn.low
+
+    def update_y(self, o, n, nn):
+        '''
+        '''
+        if not isinstance(nn, bool) and self.autoupdate:
+            self._ymax = nn.high
+            self._ymin = nn.low
+
+    def get_axes_group(self):
+        editor = TextEditor(enter_set = True,
+                            auto_set = False,
+
+
+                            )
+        xgrp = VGroup('xtitle', Item('xmin', editor = editor, enabled_when = 'not autoupdate'),
+                                Item('xmax', editor = editor, enabled_when = 'not autoupdate'),
+                                #Item('xcolor_', editor = ColorEditor(current_color = 'red'))
+                                )
+        ygrp = VGroup('ytitle', Item('ymin', editor = editor, enabled_when = 'not autoupdate'),
+                                Item('ymax', editor = editor, enabled_when = 'not autoupdate'),
+                                #Item('ycolor_', editor = ColorEditor(current_color = 'blue'))
+                                )
+
+        return VGroup(xgrp, ygrp, show_border = True)
+
+    def traits_view(self):
+        '''
+        '''
+        cols = [ObjectColumn(name = 'name', editable = False),
+                CheckboxColumn(name = 'show')]
+        table_editor = TableEditor(columns = cols,
+                                   selected = '_selected',
+                                   selection_mode = 'row')
+        v = View(VGroup(
+                        self.get_axes_group(),
+                        Group(
+                            Item('selected',
+                                 style = 'custom',
+                                  show_label = False,
+                                  editor = InstanceEditor(),
+                                  enabled_when = 'selected.show',
+                                  height = 0.25
+                                 ),
+                                 show_border = True,
+                                 springy = False
+                             ),
+                        Item('series_editors',
+                             style = 'custom',
+                             editor = table_editor,
+                             show_label = False,
+                             springy = False,
+                             height = 0.75
+                             ),
+                        ),
+
+                    resizable = True,
+                    height = 0.8,
+                    width = 275,
+                    title = self.name,
+                    handler = PlotEditorHandler,
+                    x = 10,
+                    y = 20
+                    )
+        return v
+
+#=============================Property Methods============================
+#    def _set_color(self, name, v):
+#        if sys.platform == 'win32':
+#            v = [vi / 255. for vi in v ]
+#
+#        self.graph.set_axis_tick_color(name, v, plotid = self.id)
+#        self.graph.set_axis_label_color(name, v, plotid = self.id)
+#        self.graph.plotcontainer.invalidate_and_redraw()
+#
+#    def _get_color(self, name):
+#        c = Colour()
+#        axis = getattr(self.plot, '{}_axis'.format(name))
+#        c.SetFromName(axis.tick_color)
+#
+#        c = 'red'
+#        return c
+#
+#    def _set_xcolor_(self, v):
+#        self._set_color('x', v)
+#
+#    def _set_ycolor_(self, v):
+#        self._set_color('y', v)
+#
+#    def _get_xcolor_(self):
+#        self._get_color('x')
+#
+#    def _get_ycolor_(self):
+#        self._get_color('y')
+
+    def _validate_float(self, v, test = None):
+
+        try:
+            r = float(v)
+
+            if test is not None:
+                r = test(r)
+
+            return r
+        except ValueError:
+            pass
+
+
+    def _set_xtitle(self, v):
+        self._xtitle = v
+        self.graph.set_x_title(v, plotid = self.id)
+
+
+    def _set_ytitle(self, v):
+        self._ytitle = v
+
+
+        self.graph.set_y_title(v, plotid = self.id)
+
+    def _get_xtitle(self):
+        plot = self.graph.plots[self.id]
+        return  plot.index_axis.title
+
+    def _get_ytitle(self):
+        plot = self.graph.plots[self.id]
+        return  plot.value_axis.title
+
+    def _set_xtitle_font(self, v):
+        raise NotImplementedError
+
+        plot = self.graph.plots[self.id]
+
+        kv = KivaFontFunc('Arial 24')
+        plot.value_axis.title_font = kv.default
+
+
+    def _set_xmin(self, v):
+        self._xmin = v
+        self.graph.set_x_limits(min = v, plotid = self.id)
+
+    def _set_xmax(self, v):
+        self._xmax = v
+        self.graph.set_x_limits(max = v, plotid = self.id)
+
+    def _set_ymin(self, v):
+        self._ymin = v
+        self.graph.set_y_limits(min = v, plotid = self.id)
+
+    def _set_ymax(self, v):
+        self._ymax = v
+        self.graph.set_y_limits(max = v, plotid = self.id)
+
+    def _get_xmin(self):
+        return self._xmin
+
+    def _get_xmax(self):
+        return self._xmax
+
+    def _get_ymin(self):
+        return self._ymin
+
+    def _get_ymax(self):
+        return self._ymax
+
+    def _validate_xmin(self, v):
+        return self._validate_float(v, test = lambda x:None if x >= self.xmax else x)
+
+    def _validate_xmax(self, v):
+        v = self._validate_float(v, test = lambda x:None if x <= self.xmin else x)
+        return v
+
+    def _validate_ymin(self, v):
+        v = self._validate_float(v, test = lambda x:None if x >= self.ymax else x)
+        return v
+
+    def _validate_ymax(self, v):
+        v = self._validate_float(v, test = lambda x:None if x <= self.ymin else x)
+        return v
+
+#============= EOF ====================================
