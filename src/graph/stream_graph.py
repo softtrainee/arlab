@@ -33,7 +33,7 @@ class StreamGraph(Graph):
     def new_plot(self, **kw):
         '''
         '''
-        sd = kw['scan_delay'] if 'scan_deley' in kw else 0.5
+        sd = kw['scan_delay'] if 'scan_delay' in kw else 0.5
         dl = kw['data_limit'] if 'data_limit' in kw else 500
         tl = kw['track_amount'] if 'track_amount' in kw else 0
         self.scan_delays.append(sd)
@@ -95,6 +95,7 @@ class StreamGraph(Graph):
         return x
 
     def record(self, y, x = None, series = 0, plotid = 0, update_x = True, do_after = None):
+        
         xn, yn = self.series[plotid][series]
 
         plot = self.plots[plotid]
@@ -138,6 +139,7 @@ class StreamGraph(Graph):
             if update_x:
                 ma = new_xd[-1]
                 mi = new_xd[0]
+                
                 if ma >= ((dl - 1) * self.scan_delays[plotid]) - 1:
                     #print self.plot_windows[plotid], self.plot_windows[plotid] - dl * self.scan_delays[plotid]
                     self.set_x_limits(max = ma,

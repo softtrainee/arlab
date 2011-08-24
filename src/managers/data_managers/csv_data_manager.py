@@ -3,7 +3,6 @@ from data_manager import DataManager
 
 #============= standard library imports ========================
 import csv
-from src.helpers.datetime_tools import generate_timestamp
 #============= local library imports  ==========================
 class CSVDataManager(DataManager):
     '''
@@ -39,17 +38,6 @@ class CSVDataManager(DataManager):
             else:
                 writer.writerow(datum)
 
-    def add_time_stamped_value(self, value, frame_key):
-        '''
-
-        '''
-        frame = self._get_frame(frame_key)
-        if frame is not None:
-            datum = (generate_timestamp(), value)
-            self.new_writer(frame, datum)
-
-    def _get_frame(self, key):
-        if key in self.frames:
-            return self.frames[key]
+    
 
 #============= EOF ====================================

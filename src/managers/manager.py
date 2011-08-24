@@ -1,5 +1,5 @@
 #=============enthought library imports=======================
-from traits.api import Str, Float, Any, Button, Int
+from traits.api import Str, Float, Any, Button, Int, List
 from traitsui.api import  Item, HGroup, VGroup, Handler, \
     RangeEditor, ButtonEditor, ScrubberEditor, Label, spring
 from traitsui.menu import Action, Menu, MenuBar
@@ -63,6 +63,8 @@ class Manager(ConfigLoadable):
 
     handler_klass = ManagerHandler
     application = Any
+    
+    devices=List
 
     def __init__(self, *args, **kw):
         '''

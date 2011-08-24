@@ -9,7 +9,6 @@ from src.managers.manager import Manager
 
 from src.messaging.command_processor import CommandProcessor
 from src.remote_hardware.context import ContextFilter
-import threading
 
 #============= standard library imports ========================
 
@@ -62,8 +61,10 @@ class RemoteHardwareManager(Manager):
         else:
 
             klass = '{}Handler'.format(request_type.capitalize())
-            pkg = 'handlers.{}_handler'.format(request_type.lower())
+            pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
             try:
+                
+                    
                 module = __import__(pkg, globals(), locals(), [klass])
 
                 factory = getattr(module, klass)
@@ -83,8 +84,8 @@ class RemoteHardwareManager(Manager):
 
                 result = self.context_filter.get_response(handler, data)
 
-            except ImportError:
-                result = 'import error {} {}'.format(klass, pkg)
+            except ImportError,e:
+                result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg,e )
 
         self.debug('Result: {}'.format(result))
         self.result = result

@@ -7,9 +7,6 @@ import shlex
 import os
 #============= local library imports  ==========================
 
-
-
-
 class BaseRemoteHardwareHandler(Loggable):
     application = Any
 

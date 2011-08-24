@@ -27,7 +27,6 @@ class Pychron(WorkbenchApplication):
                          pychron_src_dir,
                        'resources'
                        )
-
         sp = SplashScreen(
                           image = ImageResource(name = 'splash.png',
                                                 search_path = [p]

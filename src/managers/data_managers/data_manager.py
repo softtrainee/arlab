@@ -8,6 +8,7 @@ import os
 from src.helpers import paths
 from src.helpers.filetools import unique_path
 from src.managers.manager import Manager
+from src.helpers.datetime_tools import generate_timestamp
 
 class DataManager(Manager):
     '''
@@ -27,12 +28,12 @@ class DataManager(Manager):
         self._current_frame = name
         return name
 
-    def _new_frame_path(self, path = None, directory = 'streams', base_frame_name = None):
+    def _new_frame_path(self, path = None, directory = 'scans', base_frame_name = None):
         '''
 
         '''
         if base_frame_name is None:
-            base_frame_name = 'run'
+            base_frame_name = 'scan'
 
         base = os.path.join(paths.data_dir, directory)
         if not os.path.isdir(base):
@@ -45,5 +46,16 @@ class DataManager(Manager):
         return path
 
 
+    def add_time_stamped_value(self, value, frame_key):
+        '''
 
+        '''
+        frame = self._get_frame(frame_key)
+        if frame is not None:
+            datum = (generate_timestamp(), value)
+            self.new_writer(frame, datum)
+
+    def _get_frame(self, key):
+        if key in self.frames:
+            return self.frames[key]
 #============= EOF ====================================

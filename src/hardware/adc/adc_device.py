@@ -6,9 +6,9 @@
 #=============local library imports  ==========================
 from analog_digital_converter import AnalogDigitalConverter, AgilentADC, OmegaADC, KeithleyADC
 from src.hardware.core.abstract_device import AbstractDevice
-from src.hardware.core.streamable import Streamable
+#from src.hardware.core.streamable import Streamable
 
-class ADCDevice(AbstractDevice, Streamable):
+class ADCDevice(AbstractDevice):
     scan_func = 'read_voltage'
     def load_additional_args(self, config):
         '''

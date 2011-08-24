@@ -35,12 +35,21 @@ class ExtractionLineUIPlugin(CoreUIPlugin):
         return [ExtractionLineActionSet]
 
     @on_trait_change('application:workbench:active_window')
-    def upda(self, obj, name, old, new):
+    def start_manager(self, obj, name, old, new):
 
         elm = self.application.get_service(EL_PROTOCOL)
         elm.window_x = 10
         elm.window_y = 25
         open_manager(elm)
+        
+        
+        #start device streams
+        for dev in elm.devices:
+            if dev.scan_device:
+                dev.start_scan()
+                
+        
+        
 #============= views ===================================
 #    def _views_default(self):
 #        '''

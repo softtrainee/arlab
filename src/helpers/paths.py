@@ -21,7 +21,8 @@ if beta:
 
 project_home = os.path.join(host_url, project_root)
 root = os.path.join(HOME, home)
-pychron_src_dir=os.path.join(HOME, 'Programming','mercurial',home)
+src_repo_name='pychron_device_stream'
+pychron_src_dir=os.path.join(HOME, 'Programming','mercurial',src_repo_name)
 
 #_dir suffix ensures the path is checked for existence
 root_dir = root

@@ -6,13 +6,14 @@ from base_remote_hardware_handler import BaseRemoteHardwareHandler
 #============= local library imports  ==========================
 #DIODE_PROTOCOL = 'src.managers.laser_managers.fusions_diode_manager.FusionDiodeManager'
 #CO2_PROTOCOL = 'src.managers.laser_managers.fusions_co2_manager.FusionCO2Manager'
-from src.managers.laser_managers.fusions_diode_manager import FusionsDiodeManager
-from src.managers.laser_managers.fusions_co2_manager import FusionsCO2Manager
-from src.managers.laser_managers.synrad_co2_manager import SynradCO2Manager
+#from src.managers.laser_managers.fusions_diode_manager import FusionsDiodeManager
+#from src.managers.laser_managers.fusions_co2_manager import FusionsCO2Manager
+#from src.managers.laser_managers.synrad_co2_manager import SynradCO2Manager
 
-DIODE_PROTOCOL = FusionsDiodeManager
-CO2_PROTOCOL = FusionsCO2Manager
-SYNRAD_PROTOCOL = SynradCO2Manager
+DIODE_PROTOCOL = 'src.managers.laser_managers.fusions_diode_manager.FusionDiodeManager'
+CO2_PROTOCOL = 'src.managers.laser_managers.fusions_co2_manager.FusionCO2Manager'
+SYNRAD_PROTOCOL = 'src.managers.laser_managers.synrad_co2_manager.SynradCO2Manager'
+
 class DummyJM(object):
     def get_jogs(self):
         return 'JogA,JogB,JogC'

@@ -15,7 +15,7 @@ from communicators.gpib_communicator import GPIBCommunicator as gpib
 #from streamable import Streamable
 from viewable_device import ViewableDevice
 from i_core_device import ICoreDevice
-
+from src.managers.data_managers.csv_data_manager import CSVDataManager
 class CoreDevice(ViewableDevice):
     '''
     '''
@@ -25,16 +25,22 @@ class CoreDevice(ViewableDevice):
     id_query = ''
     id_response = ''
 
-    stream_manager = None
+    
+    scan_device=False
     scan_func = None
-    stream_lock = None
+    scan_lock = None
     timer = None
     scan_period = 1000
+    scan_units='ms'
+    
+    current_value=0
+    
+    time_dict=dict(ms=1, s=1000, m=60.0*1000, h=60.0*60.0*1000)
 
     def get(self):
-
-        if self.simulation:
-            return 'simulation'
+        return self.current_value
+#        if self.simulation:
+#            return 'simulation'
 
     def set(self, v):
         pass
@@ -134,14 +140,7 @@ class CoreDevice(ViewableDevice):
 #===============================================================================
 # streamin interface
 #===============================================================================
-    def target(self, *args, **kw):
-        '''
-        '''
-        self.stream_lock.acquire()
-
-        self._scan_(*args, **kw)
-        self.stream_lock.release()
-
+        
     def _scan_(self, *args):
         '''
 
@@ -155,9 +154,10 @@ class CoreDevice(ViewableDevice):
             if v is not None:
 #                if isinstance(v, tuple):
 #                    self.current_value = v[0]
-
-                if self.stream_manager is not None:
-                    self.stream_manager.record(v, self.name)
+                self.current_value=v
+                x=self.graph.record(v)        
+                self.data_manager.write_to_frame((x,v))
+            
             else:
                 '''
                     scan func must return a value or we will stop the scan
@@ -171,26 +171,30 @@ class CoreDevice(ViewableDevice):
         '''
 
         '''
-        if self.stream_lock is None:
-            self.stream_lock = Lock()
+        if self.scan_lock is None:
+            self.scan_lock = Lock()
 
-        #if self.block:
-            #self.current_value = 0
-            #return 0
-        #else:
-        self.target()
-        #Thread(target = self.target, args = args, kwargs = kw).start()
-
+        self.scan_lock.acquire()
+        self._scan_(*args, **kw)
+        self.scan_lock.release()
+        
     def start_scan(self):
         if self.timer is not None:
             self.timer.Stop()
 
-        if not self.simulation:
-            self.info('Starting scan')
-            self.timer = Timer(self.scan_period, self.scan)
-            self.timer.Start()
+#        if not self.simulation:
+        self.info('Starting scan')
+        
+        self.data_manager=CSVDataManager()
+        self.frame_name=self.data_manager.new_frame()
+        
+        sp=self.scan_period*self.time_dict[self.scan_units]
+        
+        self.timer = Timer(sp, self.scan)
+        self.timer.Start()
 
     def stop_scan(self):
         if self.timer is not None:
             self.timer.Stop()
 
+#========================= EOF ============================================

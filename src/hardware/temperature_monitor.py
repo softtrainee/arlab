@@ -1,6 +1,6 @@
 #=============enthought library imports=======================
 from traits.api import Float, Property, Str
-from traitsui.api import View, Item, EnumEditor
+from traitsui.api import View, Item,VGroup, EnumEditor
 #=============standard library imports ========================
 #import time
 #=============local library imports  ==========================
@@ -19,6 +19,7 @@ from traitsui.api import View, Item, EnumEditor
 #            self.stream_manager.record(v, self.name)
 from core.core_device import CoreDevice
 from src.hardware.core.data_helper import make_bitarray
+from src.graph.time_series_graph import TimeSeriesStreamGraph
 class ISeriesDevice(CoreDevice):
     '''
         G{classtree}
@@ -60,7 +61,8 @@ class DPi32TemperatureMonitor(ISeriesDevice):
     input_type = Property(depends_on = '_input_type')
     _input_type = Str
     id_query = '*R07'
-
+    graph_klass=TimeSeriesStreamGraph
+    
     def id_response(self, response):
         r = False
         if response is not None:
@@ -72,7 +74,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         return r
 
 
-    def initialize(self):
+    def initialize(self, *args,**kw):
         self.info('getting input type')
         self.read_input_type()
 
@@ -101,7 +103,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         commandindex = '01'
         com = self._build_command('V', commandindex)
         x = self._parse_response(self.ask(com, # delay = 400,
-                                              verbose = False
+                                              verbose = True
                                               ))
         if x is not None:
             self.process_value = x
@@ -110,8 +112,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 
     def set_input_type(self, v):
         '''
-            @type v: C{str}
-            @param v:
+
         '''
         commandindex = '07'
 
@@ -161,9 +162,30 @@ class DPi32TemperatureMonitor(ISeriesDevice):
                  #delay = 400
                  )
 
+    def graph_builder(self,g):
+        g.new_plot(
+                   padding=[20,5,5,20],
+                   scan_delay=self.scan_period*self.time_dict[self.scan_units]/1000.0,
+
+                   )
+        g.new_series()
+        
+        
     def traits_view(self):
         '''
         '''
         return View(Item('process_value', style = 'readonly'),
                     Item('input_type', editor = EnumEditor(values = TC_KEYS), show_label = False))
+    
+    def current_state_view(self):
+        v=super(DPi32TemperatureMonitor,self).current_state_view()
+    
+        v.content.content.append(VGroup(Item('graph', show_label=False, style='custom'),
+                                        Item('scan_func',label='Function',style='readonly'),
+                                        Item('scan_period',label='Period ({})'.format(self.scan_units), style='readonly'),
+                                        label='Scan'
+                                        )
+                                 )
+        return v
+        
 #============= EOF ============================================

@@ -134,12 +134,14 @@ class ExtractionLineManager(Manager):
             self.canvas.canvas3D.setup(canvas3D_dir, 'extractionline3D.txt')
 
             #load state
-            for k, v in self.valve_manager.valves.iteritems():
-                vc = self.canvas.canvas3D.scene_graph.get_object_by_name(k)
-                vc.soft_lock = v.software_lock
+            try:
+                for k, v in self.valve_manager.valves.iteritems():
+                    vc = self.canvas.canvas3D.scene_graph.get_object_by_name(k)
+                    vc.soft_lock = v.software_lock  
 
-
-            self.view_controller = self._view_controller_factory()
+                self.view_controller = self._view_controller_factory()
+            except AttributeError:
+                self.warning('valve manger not enabled')
 
     def load_canvas(self):
         '''

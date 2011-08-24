@@ -25,8 +25,9 @@ class ViewableDevice(ConfigLoadable):
     last_command = Str
     last_response = Str
 
-    last_value = CStr
+    current_value = CStr
 
+    graph_klass=Graph
     def _get_config_short_path(self):
         '''
             config_path is an attribute of 
@@ -54,30 +55,38 @@ class ViewableDevice(ConfigLoadable):
         else:
             return True
 
-    def current_state_view(self):
-        v = View(Item('name'),
-                 Item('last_command', style = 'readonly'),
-                 Item('last_response', style = 'readonly'),
-                 Item('last_value', style = 'readonly')
-                 )
-
-        return v
+    
+    
     def _graph_default(self):
-        g = Graph(
+        
+        g = self.graph_klass(
                   container_dict = dict(padding = [10, 10, 10, 10])
                   )
 
         self.graph_builder(g)
 
         return g
+    
     def graph_builder(self, g):
         g.new_plot(padding = [40, 5, 5, 20],
                    zoom = True,
                   pan = True,
                    )
+        
     def get_control_group(self):
         pass
+    
+    def current_state_view(self):
+        v = View(Group(
+                 Item('name'),
+                 Item('last_command', style = 'readonly'),
+                 Item('last_response', style = 'readonly'),
+                 Item('current_value', style = 'readonly'),
+                 label='General'
+                 )
+                 )
 
+        return v
     def info_view(self):
         v = View(
                  Group(

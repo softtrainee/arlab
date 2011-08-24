@@ -20,7 +20,7 @@ from threading import Thread
 
 
 class Client(HasTraits):
-    command = String('DoJog tefstpattern', enter_set = True, auto_set = False)
+    command = String('Read argus_temp_monitor', enter_set = True, auto_set = False)
     resend = Button
     response = String
     port = Int(1068)
@@ -77,17 +77,22 @@ class Client(HasTraits):
         sock.connect(addr)
         return sock
     def traits_view(self):
-        v = View(Item('command'),
-                 Item('response', show_label = False, style = 'readonly'),
-                 Item('resend', show_label = False),
-                 HGroup(Item('periodic',
-                             editor = ButtonEditor(label_value = 'periodic_label'),
-                             show_label = False), Item('period', show_label = False),
-                             Item('n_periods')
-                        ),
-                 Item('kind', show_label = False),
-                 Item('port'),
-                 Item('host'),
+        v = View(
+                 VGroup(
+                     Item('command'),
+                     Item('response', show_label = False, style = 'custom',
+                          width=-300
+                          ),
+                     Item('resend',show_label = False),
+                     
+                     HGroup(Item('periodic',
+                                 editor = ButtonEditor(label_value = 'periodic_label'),
+                                 show_label = False), Item('period', show_label = False),
+                                 Item('n_periods')
+                            ),
+                     Item('kind', show_label = False),
+                     Item('port'),
+                     Item('host')),
 
                  resizable = True
                  )
