@@ -2,8 +2,7 @@
 
 #============= standard library imports ========================
 from tables import openFile, NodeError
-from pylab import array
-
+from numpy import array
 #============= local library imports  ==========================
 from data_manager import DataManager
 from table_descriptions import table_description_factory
