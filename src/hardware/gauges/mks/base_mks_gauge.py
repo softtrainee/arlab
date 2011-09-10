@@ -38,7 +38,7 @@ class BaseMKSGauge(BaseGauge):
 
         self.ask(q)
 
-    def _build_query(self, addr, typetag, setpointindex = 1):
+    def _build_query(self, addr, typetag, setpointindex=1):
         '''
         build a query
         
@@ -63,7 +63,7 @@ class BaseMKSGauge(BaseGauge):
         return rs
 
 
-    def _build_command(self, addr, typetag, value, setpointindex = 1):
+    def _build_command(self, addr, typetag, value, setpointindex=1):
         '''
         build a command
         

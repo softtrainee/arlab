@@ -28,10 +28,10 @@ class ViewableDevice(ConfigLoadable):
     graph = Instance(Graph)
     simulation = Property
 
-    connected = Property(depends_on = 'simulation')
+    connected = Property(depends_on='simulation')
     com_class = Property
 
-    loaded = Property(depends_on = '_loaded')
+    loaded = Property(depends_on='_loaded')
     _loaded = Bool
 
     klass = Property
@@ -42,7 +42,7 @@ class ViewableDevice(ConfigLoadable):
 
     current_value = CStr
 
-    graph_klass=Graph
+    graph_klass = Graph
     def _get_config_short_path(self):
         '''
             config_path is an attribute of 
@@ -75,7 +75,7 @@ class ViewableDevice(ConfigLoadable):
     def _graph_default(self):
         
         g = self.graph_klass(
-                  container_dict = dict(padding = [10, 10, 10, 10])
+                  container_dict=dict(padding=[10, 10, 10, 10])
                   )
 
         self.graph_builder(g)
@@ -83,9 +83,9 @@ class ViewableDevice(ConfigLoadable):
         return g
     
     def graph_builder(self, g):
-        g.new_plot(padding = [40, 5, 5, 20],
-                   zoom = True,
-                  pan = True,
+        g.new_plot(padding=[40, 5, 5, 20],
+                   zoom=True,
+                  pan=True,
                    )
         
     def get_control_group(self):
@@ -94,9 +94,9 @@ class ViewableDevice(ConfigLoadable):
     def current_state_view(self):
         v = View(Group(
                  Item('name'),
-                 Item('last_command', style = 'readonly'),
-                 Item('last_response', style = 'readonly'),
-                 Item('current_value', style = 'readonly'),
+                 Item('last_command', style='readonly'),
+                 Item('last_response', style='readonly'),
+                 Item('current_value', style='readonly'),
                  label='General'
                  )
                  )
@@ -106,15 +106,15 @@ class ViewableDevice(ConfigLoadable):
         v = View(
                  Group(
                        VGroup(
-                         Item('name', style = 'readonly'),
-                         Item('klass', style = 'readonly', label = 'Class'),
-                         Item('connected', style = 'readonly'),
-                         Item('com_class', style = 'readonly', label = 'Com. Class'),
-                         Item('config_short_path', style = 'readonly'),
-                         Item('loaded', style = 'readonly'),
-                         label = 'Info',
+                         Item('name', style='readonly'),
+                         Item('klass', style='readonly', label='Class'),
+                         Item('connected', style='readonly'),
+                         Item('com_class', style='readonly', label='Com. Class'),
+                         Item('config_short_path', style='readonly'),
+                         Item('loaded', style='readonly'),
+                         label='Info',
                          ),
-                       layout = 'tabbed'
+                       layout='tabbed'
                        )
                  )
         cg = self.get_control_group()

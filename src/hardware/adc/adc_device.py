@@ -33,8 +33,8 @@ class ADCDevice(AbstractDevice):
         if adc is not None:
             gdict = globals()
             if adc in gdict:
-                self._cdevice = gdict[adc](name = adc,
-                                              configuration_dir_name = self.configuration_dir_name
+                self._cdevice = gdict[adc](name=adc,
+                                              configuration_dir_name=self.configuration_dir_name
                             )
                 self._cdevice.load()
                 return True

@@ -84,13 +84,13 @@ class RunConfiguration(HasTraits):
         '''
         files_mod_group = VGroup(Item('sample'),
                                Item('geometry'),
-                               label = 'files_mod')
+                               label='files_mod')
         autoarr_group = VGroup(Item('max_domains'),
                              Item('min_domains'),
-                             label = 'autoarr')
+                             label='autoarr')
         autoage_mon_group = VGroup(Item('nruns'),
                                  Item('max_plateau_age'),
-                                 label = 'autoage-mon'
+                                 label='autoage-mon'
                                  )
         return View(
                        Item('data_dir'),
@@ -98,13 +98,13 @@ class RunConfiguration(HasTraits):
                              files_mod_group,
                              autoarr_group,
                              autoage_mon_group,
-                             layout = 'tabbed'
+                             layout='tabbed'
                             ),
-                    buttons = ['OK', 'Cancel'],
-                    resizable = True,
-                    kind = 'modal',
-                    width = 500,
-                    height = 150
+                    buttons=['OK', 'Cancel'],
+                    resizable=True,
+                    kind='modal',
+                    width=500,
+                    height=150
                     )
 
 class Modeler(Loggable):
@@ -113,9 +113,9 @@ class Modeler(Loggable):
     '''
 
     graph = Instance(DiffusionGraph)
-    name = Str(enter_set = True, auto_set = False)
+    name = Str(enter_set=True, auto_set=False)
 
-    datum = Directory(value = data_dir)
+    datum = Directory(value=data_dir)
     data = List(ModelDataDirectory)
 
     data_loader = Instance(DataLoader)
@@ -149,7 +149,7 @@ class Modeler(Loggable):
     def update_graph_title(self):
         '''
         '''
-        self.graph.set_title(self.graph_title, size = 18)
+        self.graph.set_title(self.graph_title, size=18)
 
     def open_run_configuration(self):
         def edit_config(*args):
@@ -158,7 +158,7 @@ class Modeler(Loggable):
             else:
                 m = RunConfiguration()
 
-            info = m.edit_traits(kind = 'modal')
+            info = m.edit_traits(kind='modal')
             if info.result:
                 with open(p, 'w') as f:
                     pickle.dump(m, f)
@@ -187,10 +187,10 @@ class Modeler(Loggable):
         '''
         '''
 
-        model_thread = Thread(target = self._run_model_)
+        model_thread = Thread(target=self._run_model_)
         model_thread.start()
 
-    def _run_model_(self, run_config = None):
+    def _run_model_(self, run_config=None):
         '''
             @type *args: C{str}
             @param *args:
@@ -262,13 +262,13 @@ class Modeler(Loggable):
         '''
         '''
 
-        f = FileDialog(action = 'open', default_directory = data_dir)
+        f = FileDialog(action='open', default_directory=data_dir)
         if f.open() == OK:
             self.info('loading autoupdate file %s' % f.path)
 
             #open a autoupdate config dialog
             adlg = AutoupdateConfigDialog()
-            info = adlg.edit_traits(kind = 'modal')
+            info = adlg.edit_traits(kind='modal')
             if info.result:
                 self.info('tempoffset = %s (C), timeoffset = %s (min)' % (adlg.tempoffset, adlg.timeoffset))
                 self.data_loader.load_autoupdate(f.path, adlg.tempoffset, adlg.timeoffset)
@@ -377,8 +377,8 @@ class Modeler(Loggable):
             bindings = g.bindings
 
             for i, _p in enumerate(g.plots):
-                xlims.append(g.get_x_limits(plotid = i))
-                ylims.append(g.get_y_limits(plotid = i))
+                xlims.append(g.get_x_limits(plotid=i))
+                ylims.append(g.get_y_limits(plotid=i))
 
 
         #self.graph = g = DiffusionGraph()
@@ -387,15 +387,15 @@ class Modeler(Loggable):
 
         if sync:
             g.bindings = bindings
-            g.set_title(title, font = title_font, size = title_size)
+            g.set_title(title, font=title_font, size=title_size)
             g.plotcontainer.bgcolor = bgcolor
             for i, lim in enumerate(zip(xlims, ylims)):
                 xlim = lim[0]
                 ylim = lim[1]
                 #check to see limits are not inf or -inf
                 if xlim[0] != float('-inf') and xlim[1] != float('inf'):
-                    g.set_x_limits(min = xlim[0], max = xlim[1], plotid = i)
-                    g.set_y_limits(min = ylim[0], max = ylim[1], plotid = i)
+                    g.set_x_limits(min=xlim[0], max=xlim[1], plotid=i)
+                    g.set_y_limits(min=ylim[0], max=ylim[1], plotid=i)
             #sync open editors    
             if graph_editor is not None:
                 graph_editor.graph = g
@@ -418,33 +418,33 @@ class Modeler(Loggable):
         return self.data_select_view()
 
     def data_select_view(self):
-        tree = Item('datum', style = 'custom', show_label = False, height = 0.75,
-                  width = 0.25)
+        tree = Item('datum', style='custom', show_label=False, height=0.75,
+                  width=0.25)
 
 
-        cols = [CheckboxColumn(name = 'show'),
-                CheckboxColumn(name = 'bind'),
-              ObjectColumn(name = 'path', editable = False),
+        cols = [CheckboxColumn(name='show'),
+                CheckboxColumn(name='bind'),
+              ObjectColumn(name='path', editable=False),
               ]
 
-        editor = TableEditor(columns = cols,
-                             editable = True,
-                             reorderable = True,
-                             deletable = True,
-                             show_toolbar = True,
-                             selection_mode = 'rows',
-                             selected = 'selected'
+        editor = TableEditor(columns=cols,
+                             editable=True,
+                             reorderable=True,
+                             deletable=True,
+                             show_toolbar=True,
+                             selection_mode='rows',
+                             selected='selected'
                              )
-        selected = Item('data', show_label = False, height = 0.25,
-                      editor = editor,
-                      width = 0.25
+        selected = Item('data', show_label=False, height=0.25,
+                      editor=editor,
+                      width=0.25
                       )
         v = View(VSplit(selected,
                         tree))
         return v
     def graph_view(self):
-        graph = Item('graph', show_label = False,
-                    style = 'custom',
+        graph = Item('graph', show_label=False,
+                    style='custom',
                     #width = 0.75
                     )
         v = View(graph)
@@ -470,11 +470,11 @@ class Modeler(Loggable):
                     return
 
             id = len(self.data)
-            d = ModelDataDirectory(path = d,
-                                modeler = self,
-                                show = True, # if len(self.data) >= 1 else False,
-                                bind = True,
-                                id = id,
+            d = ModelDataDirectory(path=d,
+                                modeler=self,
+                                show=True, # if len(self.data) >= 1 else False,
+                                bind=True,
+                                id=id,
                                 )
 
             self.graph.set_group_binding(id, True)

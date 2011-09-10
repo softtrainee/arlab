@@ -39,7 +39,7 @@ class StepHeatManager(Manager, Videoable):
     graph = Instance(Graph)
 
     heat_event = Event
-    heat_label = Property(depends_on = 'heating')
+    heat_label = Property(depends_on='heating')
     heating = Bool
     laser_manager = Any
     data_manager = Instance(CSVDataManager, ())
@@ -68,10 +68,10 @@ class StepHeatManager(Manager, Videoable):
         root = unique_dir(root, 'stepheat')
 
 
-        tvt = dm.new_frame(path = os.path.join(root, 'time_vs_temp.csv'))
-        rvt = dm.new_frame(path = os.path.join(root, 'request_vs_actual.csv'))
-        dm.write_to_frame(('Time', 'TC Temp', 'Py Temp'), frame_key = tvt)
-        dm.write_to_frame(('Request', 'TC Temp', 'Py Temp'), frame_key = rvt)
+        tvt = dm.new_frame(path=os.path.join(root, 'time_vs_temp.csv'))
+        rvt = dm.new_frame(path=os.path.join(root, 'request_vs_actual.csv'))
+        dm.write_to_frame(('Time', 'TC Temp', 'Py Temp'), frame_key=tvt)
+        dm.write_to_frame(('Request', 'TC Temp', 'Py Temp'), frame_key=rvt)
 
         record_video = False
         if record_video:
@@ -80,7 +80,7 @@ class StepHeatManager(Manager, Videoable):
 
 
         manager.enable_laser()
-        manager.set_zoom(25, block = True)
+        manager.set_zoom(25, block=True)
         manager.set_light(False)
         self.graph.set_time_zero()
         cnt = 1
@@ -90,9 +90,9 @@ class StepHeatManager(Manager, Videoable):
 
         temps = [hi.temp_or_power for hi in hs.steps]
 
-        self.graph.set_x_limits(min = min(temps),
-                                max = max(temps),
-                                pad = 5, plotid = 1)
+        self.graph.set_x_limits(min=min(temps),
+                                max=max(temps),
+                                pad=5, plotid=1)
 
         for i, hi in enumerate(hs.steps):
             if not self.isAlive():
@@ -101,7 +101,7 @@ class StepHeatManager(Manager, Videoable):
             dev = 0
             self.heat_schedule.current_step = hi
 
-            tvti = dm.new_frame(path = os.path.join(root, 'time_vs_temp_{:02n}.csv'.format(i)))
+            tvti = dm.new_frame(path=os.path.join(root, 'time_vs_temp_{:02n}.csv'.format(i)))
             duration = hi.duration
             tp = hi.temp_or_power
             self.info('executing heat step {} {}={} duration={}'.format(i, 'temp', tp, duration))
@@ -121,15 +121,15 @@ class StepHeatManager(Manager, Videoable):
                 mjtc = 300
                 mjpy = manager.get_pyrometer_temperature()
 
-                ti = self.graph.record_multiple((mjtc, mjpy), do_after = 1)
+                ti = self.graph.record_multiple((mjtc, mjpy), do_after=1)
 
                 dev = ti - self.sample_period * cnt
                 cnt += 1
 
-                dm.write_to_frame((ti, mjtc, mjpy), frame_key = tvt)
+                dm.write_to_frame((ti, mjtc, mjpy), frame_key=tvt)
 
                 #write individual steps
-                dm.write_to_frame((ti, mjtc, mjpy), frame_key = tvti)
+                dm.write_to_frame((ti, mjtc, mjpy), frame_key=tvti)
 
             prevtime = ti
             if not self.isAlive():
@@ -137,12 +137,12 @@ class StepHeatManager(Manager, Videoable):
 
             self.graph.add_vertical_rule(ti)
 
-            self.graph.add_datum((tp, mjtc), plotid = 1, do_after = 1)
-            self.graph.add_datum((tp, mjpy), plotid = 1, series = 1, do_after = 1)
-            dm.write_to_frame((tp, mjtc, mjpy), frame_key = rvt)
+            self.graph.add_datum((tp, mjtc), plotid=1, do_after=1)
+            self.graph.add_datum((tp, mjpy), plotid=1, series=1, do_after=1)
+            dm.write_to_frame((tp, mjtc, mjpy), frame_key=rvt)
 
             if self.video_manager is not None:
-                self.video_manager.snapshot(root = root)
+                self.video_manager.snapshot(root=root)
 
             if self.isAlive():
                 hi.state = 'success'
@@ -162,7 +162,7 @@ class StepHeatManager(Manager, Videoable):
     def _heat_event_fired(self):
         if not self.heating:
             self.info('start heating')
-            t = Thread(target = self._heat_)
+            t = Thread(target=self._heat_)
             self.heating = True
             t.start()
         else:
@@ -178,29 +178,29 @@ class StepHeatManager(Manager, Videoable):
 
     def _graph_factory(self):
         g = TimeSeriesStreamGraph()
-        g.new_plot(xtitle = 'Time',
-                   ytitle = 'Temp C',
-                   link = False,
-                   data_limit = 300,
-                   scan_delay = self.sample_period,
-                   padding_top = 10,
-                   padding_left = 20,
-                   padding_right = 10
+        g.new_plot(xtitle='Time',
+                   ytitle='Temp C',
+                   link=False,
+                   data_limit=300,
+                   scan_delay=self.sample_period,
+                   padding_top=10,
+                   padding_left=20,
+                   padding_right=10
                    )
 
         g.new_series()
         g.new_series()
-        g.new_plot(xtitle = 'Request Temp C',
-                   ytitle = 'Temp C',
-                   link = False,
-                   data_limit = 50,
-                   padding_top = 10,
-                   padding_left = 20,
-                   padding_right = 10
+        g.new_plot(xtitle='Request Temp C',
+                   ytitle='Temp C',
+                   link=False,
+                   data_limit=50,
+                   padding_top=10,
+                   padding_left=20,
+                   padding_right=10
                    )
 
-        g.new_series(plotid = 1, time_series = False)
-        g.new_series(plotid = 1, time_series = False)
+        g.new_series(plotid=1, time_series=False)
+        g.new_series(plotid=1, time_series=False)
         return g
 
     def _graph_default(self):
@@ -211,31 +211,31 @@ class StepHeatManager(Manager, Videoable):
 
     def traits_view(self):
         #if not self.simulation:
-        self.video_manager.start(user = 'shm_underlay')
+        self.video_manager.start(user='shm_underlay')
         self.video_manager.canvas.show_grids = False
         self.video_manager.width = 640
         self.video_manager.height = 480
-        video = Item('video_manager', width = 0.65, show_label = False, style = 'custom')
+        video = Item('video_manager', width=0.65, show_label=False, style='custom')
 
-        graph = Item('graph', height = 0.65, show_label = False, style = 'custom')
+        graph = Item('graph', height=0.65, show_label=False, style='custom')
         v = View(
                  VGroup(
-                        self._button_factory('heat_event', 'heat_label', None, align = 'right'),
+                        self._button_factory('heat_event', 'heat_label', None, align='right'),
 
                         HGroup(
                                video,
                                VGroup(
                                       graph,
-                                      Item('heat_schedule', height = 0.35, show_label = False, style = 'custom'),
+                                      Item('heat_schedule', height=0.35, show_label=False, style='custom'),
                                      )
                                ),
                         ),
 
-               resizable = True,
-               width = 1250,
-               height = 650,
-               title = 'Step Heat Manager',
-               handler = self.handler_klass
+               resizable=True,
+               width=1250,
+               height=650,
+               title='Step Heat Manager',
+               handler=self.handler_klass
                )
         return v
 
@@ -255,8 +255,8 @@ if __name__ == '__main__':
         def set_zoom(self, *args, **kw):
             pass
 
-    s = StepHeatManager(laser_manager = DummyManager(),
-                        simulation = True)
+    s = StepHeatManager(laser_manager=DummyManager(),
+                        simulation=True)
 
     s.configure_traits()
 #============= EOF =============================================

@@ -14,30 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Str
-from traitsui.api import View, Item, VGroup
-from apptools.preferences.ui.api import PreferencesPage
-
+from envisage.ui.action.api import Action#, Group, Menu, ToolBar
+from envisage.ui.workbench.api import WorkbenchActionSet
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-
-class SVNPreferencesPage(PreferencesPage):
+class SVNActionSet(WorkbenchActionSet):
     '''
         G{classtree}
     '''
-    id = 'pychron.workbench.svn.preferences_page'
-    name = 'SVN'
-    preferences_path = 'pychron.svn'
-    site_name = Str
-    site_location = Str('http://')
-    def traits_view(self):
-        '''
-        '''
-        v = View(VGroup(
-                    Item('site_name', label = 'Name'),
-                    Item('site_location', label = 'Location')
-                    ))
-        return v
-#============= views ===================================
+    id = 'pychron.svn.action_set'
+    actions = [
+               Action(name='Update Software',
+                      path='MenuBar/Help',
+                      class_name='src.svn.plugins.svn_actions:UpdateToHeadAction'),
+
+
+              ]
 #============= EOF ====================================

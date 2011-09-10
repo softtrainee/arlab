@@ -45,14 +45,14 @@ class DisplayHandler(logging.StreamHandler):
 
         '''
         if self.output is not None:
-            msg = '{record.name}{record.message}'.format(record = record)
+            msg = '{record.name}{record.message}'.format(record=record)
             self.output.add_text(
-                                 color = 'red' if record.levelno > 20 else 'black',
-                                 msg = msg,
-                                 kind = 'warning' if record.levelno > 20 else 'info',
+                                 color='red' if record.levelno > 20 else 'black',
+                                 msg=msg,
+                                 kind='warning' if record.levelno > 20 else 'info',
                                  )
 
-def setup(name, level = None):
+def setup(name, level=None):
     '''
     '''
 
@@ -61,7 +61,7 @@ def setup(name, level = None):
     if not os.path.isdir(bdir):
         os.mkdir(bdir)
 
-    logpath = unique_path(bdir, name, filetype = 'log')
+    logpath = unique_path(bdir, name, filetype='log')
 
     if sys.version.split(' ')[0] < '2.4.0':
         logging.basicConfig()
@@ -72,18 +72,18 @@ def setup(name, level = None):
         else:
             level = LEVEL
 
-        logging.basicConfig(level = level,
-                        format = FORMAT,
-                        filename = logpath,
-                        filemode = 'w'
+        logging.basicConfig(level=level,
+                        format=FORMAT,
+                        filename=logpath,
+                        filemode='w'
                       )
     if use_debug_logger:
 
         #main_logger = logging.getLogger()
         #main_logger.setLevel(logging.NOTSET)
-        add_console(name = 'main', level = logging.NOTSET)
+        add_console(name='main', level=logging.NOTSET)
 
-def add_console(logger = None, name = None, display = None, level = None):
+def add_console(logger=None, name=None, display=None, level=None):
     '''
             @type name: C{str}
             @param name:

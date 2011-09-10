@@ -34,7 +34,7 @@ class EnvisageManager(HasTraits):
     klass = Any
     def sync_editor(self, oldname):
         editor = self.window.application.workbench.active_window.get_editor(self.selected,
-                                                                            kind = self.editor_klass)
+                                                                            kind=self.editor_klass)
         editor.name = self.selected.name
 
     def get_service(self, protocol):
@@ -51,12 +51,12 @@ class EnvisageManager(HasTraits):
     def save_as(self):
         path = self._file_dialog('save as')
         if path is not None:
-            self.save(path = path)
+            self.save(path=path)
 
     def _file_dialog(self, action):
-        df = FileDialog(action = action,
-              default_directory = self.default_directory,
-              wildcard = self.wildcard)
+        df = FileDialog(action=action,
+              default_directory=self.default_directory,
+              wildcard=self.wildcard)
         if df.open() == OK:
             return df.path
 
@@ -77,7 +77,7 @@ class EnvisageManager(HasTraits):
                     #sync the editors name
                     self.sync_editor(oldname)
 
-    def open(self, path = None):
+    def open(self, path=None):
         cancel = False
         if path is None:
             path = self._file_dialog('open')

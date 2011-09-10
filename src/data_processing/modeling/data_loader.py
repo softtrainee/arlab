@@ -30,7 +30,7 @@ class DataLoader(Loggable):
     '''
     '''
     root = Str
-    def _open_reader(self, name, root = None, delimiter = TAB):
+    def _open_reader(self, name, root=None, delimiter=TAB):
         '''
             
         '''
@@ -42,12 +42,12 @@ class DataLoader(Loggable):
         if os.path.isfile(path):
 
             f = open(path, 'U')
-            return f, csv.reader(f, delimiter = delimiter, skipinitialspace = True)
+            return f, csv.reader(f, delimiter=delimiter, skipinitialspace=True)
         else:
             self.warning('Path does not exist %s' % path)
             return None, None
 
-    def _open_writer(self, name, delimiter = TAB):
+    def _open_writer(self, name, delimiter=TAB):
         '''
             @type name: C{str}
             @param name:
@@ -56,7 +56,7 @@ class DataLoader(Loggable):
             @param delimiter:
         '''
         f = open(name, 'wb')
-        return f, csv.writer(f, delimiter = delimiter)
+        return f, csv.writer(f, delimiter=delimiter)
 
     def load_autoupdate(self, path, tempoffset, timeoffset):
         '''
@@ -70,7 +70,7 @@ class DataLoader(Loggable):
                                     tempoffset=%s (C)
                                     timeoffset=%s (min)
                             ''' % (len(samples), ', '.join(names), tempoffset, timeoffset),
-                            decorate = False)
+                            decorate=False)
         for i in range(len(samples) - 1):
             self.info('loading sample %s' % names[i])
             self.load_sample(path, samples[i], samples[i + 1], names[i], tempoffset, timeoffset)
@@ -118,7 +118,7 @@ class DataLoader(Loggable):
         '''
         self.info('loading sample %s' % path)
         root, p = os.path.split(path)
-        f, reader = self._open_reader(p, root = root)
+        f, reader = self._open_reader(p, root=root)
         if reader is None:
             return
 
@@ -154,7 +154,7 @@ class DataLoader(Loggable):
 
         f.close()
 
-        f, reader = self._open_reader(p, root = root)
+        f, reader = self._open_reader(p, root=root)
         op = os.path.join(cur_dir, '%s.in' % name)
         wf, writer = self._open_writer(op)
         CumAr39 = 0
@@ -201,7 +201,7 @@ class DataLoader(Loggable):
         '''
         '''
         self.info('load spectrum')
-        f, reader = self._open_reader('age.in', delimiter = ' ')
+        f, reader = self._open_reader('age.in', delimiter=' ')
         if reader is None:
             return [], [], 0, 0
 
@@ -215,7 +215,7 @@ class DataLoader(Loggable):
             age.append(float(row[1]))
         f.close()
 
-        f, reader = self._open_reader('age-sd.smp', delimiter = ' ')
+        f, reader = self._open_reader('age-sd.smp', delimiter=' ')
         if reader is None:
             return
         age_err = []
@@ -235,7 +235,7 @@ class DataLoader(Loggable):
         self.info('load arrhenius')
         inv_temp = []
         log_d = []
-        f, reader = self._open_reader(name, delimiter = ' ')
+        f, reader = self._open_reader(name, delimiter=' ')
         if reader is not None:
             for row in reader:
                 if '&' not in row:
@@ -249,7 +249,7 @@ class DataLoader(Loggable):
         '''
         '''
         self.info('load cooling history')
-        f, reader = self._open_reader('confmed.dat', delimiter = ' ')
+        f, reader = self._open_reader('confmed.dat', delimiter=' ')
 
         if reader is None:
             return None
@@ -272,7 +272,7 @@ class DataLoader(Loggable):
         '''
         self.info('load log r/ro')
 
-        f, reader = self._open_reader(name, delimiter = ' ')
+        f, reader = self._open_reader(name, delimiter=' ')
         if reader is None:
             return None
 

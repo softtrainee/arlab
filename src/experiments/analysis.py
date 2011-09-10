@@ -43,7 +43,7 @@ class Analysis(Loggable):
     sample_id = Long
     experiment_id = Long
 
-    runid = String(enter_set = True, auto_set = False)
+    runid = String(enter_set=True, auto_set=False)
     power = Float
     hole = Int
 
@@ -51,16 +51,16 @@ class Analysis(Loggable):
     time_at_temp = Float
 
     prep_script = Str
-    _active_prep_script = Any(transient = True)
+    _active_prep_script = Any(transient=True)
 
-    database = Instance(DatabaseAdapter, transient = True)
-    extraction_line_manager = Instance(ExtractionLineManager, transient = True)
+    database = Instance(DatabaseAdapter, transient=True)
+    extraction_line_manager = Instance(ExtractionLineManager, transient=True)
 
 #===============================================================================
 # setup parameters
 #===============================================================================
-    heating_schedule = Property(depends_on = '_heating_schedule')
-    heating_schedules = Property(depends_on = '_heating_schedules')
+    heating_schedule = Property(depends_on='_heating_schedule')
+    heating_schedules = Property(depends_on='_heating_schedules')
 
     _heating_schedule = Instance(HeatingSchedule)
     _heating_schedules = List
@@ -70,15 +70,15 @@ class Analysis(Loggable):
     assign = Button
 
     _valid_sample = Bool(False)
-    use_schedule = Property(depends_on = 'power')
+    use_schedule = Property(depends_on='power')
 
     _prep_scripts = List
 
-    _alive = Bool(False, transient = True)
+    _alive = Bool(False, transient=True)
 #===============================================================================
 # graph
 #===============================================================================
-    graph = Instance(Graph, transient = True)
+    graph = Instance(Graph, transient=True)
 
 #===============================================================================
 # experiment
@@ -88,10 +88,10 @@ class Analysis(Loggable):
 #===============================================================================
 # database parameters
 #===============================================================================
-    db_session = Any(transient = True)
-    db_analysis = Any(transient = True)
-    db_detectors = Any(transient = True)
-    db_signals = Any(transient = True)
+    db_session = Any(transient=True)
+    db_analysis = Any(transient=True)
+    db_detectors = Any(transient=True)
+    db_signals = Any(transient=True)
 
     def _graph_default(self):
         '''
@@ -99,10 +99,10 @@ class Analysis(Loggable):
         return self._graph_factory()
 
     def _graph_factory(self):
-        g = Graph(container_dict = dict(type = 'g', shape = [2, 3],
-                                       padding = 0,
-                                       fill_padding = True,
-                                       spacing = (5, 5)
+        g = Graph(container_dict=dict(type='g', shape=[2, 3],
+                                       padding=0,
+                                       fill_padding=True,
+                                       spacing=(5, 5)
                                        ))
 
         return g
@@ -121,16 +121,16 @@ class Analysis(Loggable):
         self.save_analysis()
         self.save_detectors()
         #do an analysis
-        spectrometer.move_to_mass(40, detector = 'ax')
+        spectrometer.move_to_mass(40, detector='ax')
 
 #        colors = ['red', 'green', 'blue', 'yellow', 'purple']
         for i, di in enumerate(['l2', 'l1', 'ax', 'h1', 'h2']):
-            self.graph.new_plot(**dict(padding = [25, 0, 0, 25],
+            self.graph.new_plot(**dict(padding=[25, 0, 0, 25],
                                        ))
-            self.graph.new_series(type = 'scatter', plotid = i, marker_size = 1.25)
+            self.graph.new_series(type='scatter', plotid=i, marker_size=1.25)
 
-        x = dict(l1 = [], l2 = [], ax = [], h1 = [], h2 = [])
-        y = dict(l1 = [], l2 = [], ax = [], h1 = [], h2 = [])
+        x = dict(l1=[], l2=[], ax=[], h1=[], h2=[])
+        y = dict(l1=[], l2=[], ax=[], h1=[], h2=[])
         realtime_view = False
         db_save = True
         for _j in range(60):
@@ -141,7 +141,7 @@ class Analysis(Loggable):
                     self.save_signal(di, datum)
 
                 if realtime_view:
-                    self.graph.add_datum(datum, plotid = i)
+                    self.graph.add_datum(datum, plotid=i)
                     time.sleep(0.1)
                 else:
                     x[di].append(datum[0])
@@ -149,8 +149,8 @@ class Analysis(Loggable):
 
         if not realtime_view:
             for i, di in enumerate(['l2', 'l1', 'ax', 'h1', 'h2']):
-                self.graph.set_data(x[di], plotid = i, axis = 0)
-                self.graph.set_data(y[di], plotid = i, axis = 1)
+                self.graph.set_data(x[di], plotid=i, axis=0)
+                self.graph.set_data(y[di], plotid=i, axis=1)
 
     def isAlive(self):
         return self._alive
@@ -197,10 +197,10 @@ class Analysis(Loggable):
             dbdet.time_series = build_time_series_blob(t, v)
         else:
             ts = build_time_series_blob(*datum)
-            args = dict(time_series = ts)
-            dbs, _sess = self.database.add_signal(args, dbanalysis = db_analysis,
-                                        dbdetector = db_detector,
-                                        sess = self.db_session
+            args = dict(time_series=ts)
+            dbs, _sess = self.database.add_signal(args, dbanalysis=db_analysis,
+                                        dbdetector=db_detector,
+                                        sess=self.db_session
                                         )
             self.db_signals[detector_key] = dbs
 
@@ -215,8 +215,8 @@ class Analysis(Loggable):
             axial_mass = 38
             self.db_detectors = dict()
             for i, d in enumerate(detectors):
-                db_detector, sess = db.add_detector(dict(mass = axial_mass - 2 + i , label = d),
-                                                    sess = self.db_session)
+                db_detector, sess = db.add_detector(dict(mass=axial_mass - 2 + i , label=d),
+                                                    sess=self.db_session)
                 self.db_session = sess
                 self.db_detectors[d] = db_detector
 
@@ -227,9 +227,9 @@ class Analysis(Loggable):
         '''
         db = self.database
         if db is not None:
-            args = dict(args = dict(kind = self.kind),
-                      dbexperiment = self.experiment_id,
-                      sess = self.db_session
+            args = dict(args=dict(kind=self.kind),
+                      dbexperiment=self.experiment_id,
+                      sess=self.db_session
                       )
 
             if self.sample_id:
@@ -272,17 +272,17 @@ class Analysis(Loggable):
             c.acquire()
 
             if os.path.isfile(fullpath):
-                e = ExtractionLineScript(source_dir = prep_script_dir ,
-                                     file_name = self.prep_script,
-                                     manager = manager,
-                                     getter_time = self.getter_time,
-                                     power = self.power,
-                                     kind = self.kind,
-                                     time_at_temp = self.time_at_temp,
-                                     hole = self.hole
+                e = ExtractionLineScript(source_dir=prep_script_dir ,
+                                     file_name=self.prep_script,
+                                     manager=manager,
+                                     getter_time=self.getter_time,
+                                     power=self.power,
+                                     kind=self.kind,
+                                     time_at_temp=self.time_at_temp,
+                                     hole=self.hole
                                      )
 
-                e.bootstrap(condition = c)
+                e.bootstrap(condition=c)
                 self._active_prep_script = e
 
                 #condition released by script.kill_script
@@ -315,7 +315,7 @@ class Analysis(Loggable):
 
         if not self.experiment.analyses and self.experiment.start_with_blank:
             #if the is the first analysis prepend a blank
-            b = self.clone_traits(traits = ['prep_script'])
+            b = self.clone_traits(traits=['prep_script'])
             print b.runid
             b.name = 'Blank %i' % len(self.experiment.blanks)
             b.kind = 'blank'
@@ -341,10 +341,10 @@ class Analysis(Loggable):
         if self.heating_schedule:
             s = self._heating_schedule
             s.load_from_pickle()
-            ss = HeatingScheduleEditor(schedule = s,
-                                       _allow_save_as = True)
+            ss = HeatingScheduleEditor(schedule=s,
+                                       _allow_save_as=True)
 
-            info = ss.edit_traits(kind = 'livemodal')
+            info = ss.edit_traits(kind='livemodal')
             if info.result:
                 if ss.schedule.save_as:
                     self._heating_schedules.append(ss.schedule)
@@ -354,7 +354,7 @@ class Analysis(Loggable):
         '''
         '''
         s = HeatingScheduleEditor()
-        info = s.edit_traits(kind = 'livemodal')
+        info = s.edit_traits(kind='livemodal')
         if info.result:
             self._heating_schedules.append(s.schedule)
             self._heating_schedule = s.schedule
@@ -363,7 +363,7 @@ class Analysis(Loggable):
         '''
         '''
         if self.database is not None:
-            sample, sess = self.database.get_samples(dict(name = self.runid))
+            sample, sess = self.database.get_samples(dict(name=self.runid))
             if sample is not None:
                 self._valid_sample = True
                 self.sample_id = sample.id
@@ -376,20 +376,20 @@ class Analysis(Loggable):
         '''
         hg = Group(
                    HGroup(
-                          Item('prep_script', editor = EnumEditor(name = '_prep_scripts'))
+                          Item('prep_script', editor=EnumEditor(name='_prep_scripts'))
                           ),
                    HGroup(
                           Item('heating_schedule',
-                               editor = EnumEditor(name = 'object.heating_schedules'),
+                               editor=EnumEditor(name='object.heating_schedules'),
                                ),
-                          Item('edit_hs', enabled_when = 'object.heating_schedules'),
+                          Item('edit_hs', enabled_when='object.heating_schedules'),
                           Item('new_hs'),
                           Item('assign'),
-                          show_labels = False,
+                          show_labels=False,
                         ),
-                 visible_when = '_valid_sample',
-                 show_border = True,
-                 label = 'Heating Schedule')
+                 visible_when='_valid_sample',
+                 show_border=True,
+                 label='Heating Schedule')
 
         analysis_group = Group(
                  Item('runid'),
@@ -401,14 +401,14 @@ class Analysis(Loggable):
                  #enabled_when = 'kind=="analysis"'
                  )
 
-        kind_group = HGroup(Item('kind', show_label = False), spring),
+        kind_group = HGroup(Item('kind', show_label=False), spring),
         v = View(VGroup(
                     kind_group,
                     analysis_group,
                     ),
-                 buttons = ['OK', 'Cancel'],
-                 width = 500,
-                 height = 500,
+                 buttons=['OK', 'Cancel'],
+                 width=500,
+                 height=500,
                  )
         return v
 

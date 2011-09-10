@@ -28,10 +28,10 @@ from stream_graph import StreamGraph, StreamStackedGraph
 from graph import Graph
 
 
-HMSScales = [TimeScale(microseconds = 100), TimeScale(milliseconds = 10)] + \
-           [TimeScale(seconds = dt) for dt in (1, 5, 15, 30)] + \
-           [TimeScale(minutes = dt) for dt in (5, 15, 30)] + \
-           [TimeScale(hours = dt) for dt in (6, 12, 24)]#+\
+HMSScales = [TimeScale(microseconds=100), TimeScale(milliseconds=10)] + \
+           [TimeScale(seconds=dt) for dt in (1, 5, 15, 30)] + \
+           [TimeScale(minutes=dt) for dt in (5, 15, 30)] + \
+           [TimeScale(hours=dt) for dt in (6, 12, 24)]#+\
 #           [TimeScale(days=dt) for dt in (1,2,7)]
 class TimeSeriesGraph(Graph):
     def smooth(self, x, **kw):
@@ -41,13 +41,13 @@ class TimeSeriesGraph(Graph):
     def autocorrelation(self, y, **kw):
         return autocorrelation(y, **kw)
 
-    def set_x_title(self, t, plotid = 0):
+    def set_x_title(self, t, plotid=0):
         '''
         '''
         axis = self._get_x_axis(plotid)
         axis.title = t
 
-        super(TimeSeriesGraph, self).set_x_title(t, plotid = plotid)
+        super(TimeSeriesGraph, self).set_x_title(t, plotid=plotid)
 
     def set_axis_label_color(self, *args, **kw):
         '''
@@ -79,11 +79,11 @@ class TimeSeriesGraph(Graph):
         kw['pan'] = 'x' if not 'pan' in kw else kw['pan']
         super(TimeSeriesGraph, self).new_plot(*args, **kw)
 
-    def new_series(self, x = None, y = None, plotid = 0, normalize = False, time_series = True, timescale = False, downsample = None, ** kw):
+    def new_series(self, x=None, y=None, plotid=0, normalize=False, time_series=True, timescale=False, downsample=None, ** kw):
         '''
         '''
         if not time_series:
-            return super(TimeSeriesGraph, self).new_series(x = x, y = y, plotid = plotid, **kw)
+            return super(TimeSeriesGraph, self).new_series(x=x, y=y, plotid=plotid, **kw)
 
 
         xd = x
@@ -111,11 +111,11 @@ class TimeSeriesGraph(Graph):
             xd = downsample_1d(x, downsample)
             y = downsample_1d(y, downsample)
 
-        plot, names, rd = self._series_factory(xd, y, None, plotid = plotid, **kw)
+        plot, names, rd = self._series_factory(xd, y, None, plotid=plotid, **kw)
         if 'type' in rd:
             if rd['type'] == 'line_scatter':
-                plot.plot(names, type = 'scatter', marker_size = 2,
-                                   marker = 'circle')
+                plot.plot(names, type='scatter', marker_size=2,
+                                   marker='circle')
                 rd['type'] = 'line'
         plota = plot.plot(names, **rd)[0]
 
@@ -136,9 +136,9 @@ class TimeSeriesGraph(Graph):
 #                underlay.tick_label_formatter=lambda x:''
 
         if plotid == 0 or timescale:
-            axis = ScalesPlotAxis(plota, orientation = "bottom", # mapper=xmapper,
-                                  title = title,
-                                  tick_generator = ScalesTickGenerator(scale = CalendarScaleSystem(*HMSScales)
+            axis = ScalesPlotAxis(plota, orientation="bottom", # mapper=xmapper,
+                                  title=title,
+                                  tick_generator=ScalesTickGenerator(scale=CalendarScaleSystem(*HMSScales)
                                                                        #scale = TimeScale()
                                                                        )
                                     )

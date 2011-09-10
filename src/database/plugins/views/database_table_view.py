@@ -41,10 +41,10 @@ class DatabaseTableView(HasTraits):
     def traits_view(self):
         '''
         '''
-        table = Item('items', show_label = False,
-                     editor = self.get_table_editor())
+        table = Item('items', show_label=False,
+                     editor=self.get_table_editor())
         v = View(table,
-                 handler = DatabaseTableHandler)
+                 handler=DatabaseTableHandler)
         return v
 
     def _table_editor_factory(self, kw):
@@ -58,8 +58,8 @@ class DatabaseTableView(HasTraits):
         '''
         '''
         cols = [
-              ObjectColumn(name = 'id', editable = False),
-              ObjectColumn(name = 'name', editable = False),
+              ObjectColumn(name='id', editable=False),
+              ObjectColumn(name='name', editable=False),
               ]
         return cols
 
@@ -69,7 +69,7 @@ class DatabaseTableView(HasTraits):
         if self.klass is not None:
             item = self.klass()
             self._pre_add(item)
-            info = item.edit_traits(kind = 'modal')
+            info = item.edit_traits(kind='modal')
             if info.result:
                 if self.database.connected:
                     if self._add_row(item):
@@ -91,7 +91,7 @@ class DatabaseTableView(HasTraits):
         pass
 
 
-    def load(self, sess = None, refresh = True):
+    def load(self, sess=None, refresh=True):
         '''
             @type sess: C{str}
             @param sess:
@@ -102,7 +102,7 @@ class DatabaseTableView(HasTraits):
         self.items = []
         if self.database.connected:
             getter = getattr(self.database, 'get_%ss' % self.id)
-            items, sess = getter(sess = sess)
+            items, sess = getter(sess=sess)
 
             if self.klass is not None:
                 for i in items:

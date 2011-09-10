@@ -40,7 +40,7 @@ class CRHandler(Handler):
 class CommandRepeater(ConfigLoadable):
     '''
     '''
-    path = String(enter_set = True, auto_set = False)
+    path = String(enter_set=True, auto_set=False)
 
     test = Button
     led = Instance(LED, ())
@@ -74,11 +74,11 @@ class CommandRepeater(ConfigLoadable):
         v = View(
                  'path',
                     HGroup(
-                           Item('led', editor = LEDEditor(), show_label = False),
-                           Item('test', show_label = False),
+                           Item('led', editor=LEDEditor(), show_label=False),
+                           Item('test', show_label=False),
 
                            ),
-                    handler = CRHandler,
+                    handler=CRHandler,
                     )
         return v
 
@@ -120,7 +120,7 @@ class CommandRepeater(ConfigLoadable):
 class SHMCommandRepeater(SHMClient):
     '''
     '''
-    path = String(enter_set = True, auto_set = False)
+    path = String(enter_set=True, auto_set=False)
 
     test = Button
     led = Instance(LED, ())
@@ -152,11 +152,11 @@ class SHMCommandRepeater(SHMClient):
         v = View(
                  'path',
                     HGroup(
-                           Item('led', editor = LEDEditor(), show_label = False),
-                           Item('test', show_label = False),
+                           Item('led', editor=LEDEditor(), show_label=False),
+                           Item('test', show_label=False),
 
                            ),
-                    handler = CRHandler,
+                    handler=CRHandler,
                     )
         return v
 

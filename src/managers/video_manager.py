@@ -45,12 +45,12 @@ class VideoManager(Manager):
     image = Instance(Image, ())
 
     process = Button
-    threshold = Float(99, auto_set = False, enter_set = True)
-    angle = Float(0, auto_set = False, enter_set = True)
-    erosion = Int(0, auto_set = False, enter_set = True)
-    dilation = Int(0, auto_set = False, enter_set = True)
-    x = Int(0, auto_set = False, enter_set = True)
-    y = Int(0, auto_set = False, enter_set = True)
+    threshold = Float(99, auto_set=False, enter_set=True)
+    angle = Float(0, auto_set=False, enter_set=True)
+    erosion = Int(0, auto_set=False, enter_set=True)
+    dilation = Int(0, auto_set=False, enter_set=True)
+    x = Int(0, auto_set=False, enter_set=True)
+    y = Int(0, auto_set=False, enter_set=True)
 
     canvas = Instance(VideoCanvas)
     width = Int
@@ -79,21 +79,21 @@ class VideoManager(Manager):
         self.stop()
         self.video.stop_recording()
 
-    def start(self, user = None):
+    def start(self, user=None):
         '''
      
         '''
         self.info('opening video connection')
-        self.video.open(user = user)
+        self.video.open(user=user)
 
-    def stop(self, user = None):
+    def stop(self, user=None):
         '''
    
         '''
         self.info('closing video connection')
-        self.video.close(user = user)
+        self.video.close(user=user)
 
-    def snapshot(self, identifier = None, path = None, root = None, crop = None):
+    def snapshot(self, identifier=None, path=None, root=None, crop=None):
         if path is None:
             if root is None:
                 root = snapshot_dir
@@ -103,10 +103,10 @@ class VideoManager(Manager):
                 base = 'frame_{}_'.format(identifier)
 
 
-            path = unique_path(root = root, base = base, filetype = 'jpg')
+            path = unique_path(root=root, base=base, filetype='jpg')
 
         self.info('saving snapshot {}'.format(path))
-        src = self.video.record_frame(path, crop = crop)
+        src = self.video.record_frame(path, crop=crop)
         return src, os.path.basename(path)
 #        if kind is not None:
 #            self.image = globals()['{}Image'.format(kind.capitalize())]()
@@ -168,7 +168,7 @@ class VideoManager(Manager):
 #        return target
 
     def _canvas_default(self):
-        return VideoCanvas(video = self.video)
+        return VideoCanvas(video=self.video)
 
 #    def _video_default(self):
 #        '''
@@ -196,27 +196,27 @@ class VideoManager(Manager):
 
 
     def traits_view(self):
-        v = View(Item('canvas', show_label = False,
-                      resizable = False,
-                      editor = VideoComponentEditor(width = self.width,
-                                                    height = self.height)))
+        v = View(Item('canvas', show_label=False,
+                      resizable=False,
+                      editor=VideoComponentEditor(width=self.width,
+                                                    height=self.height)))
         return v
 
     def image_view(self):
         '''
         '''
-        control_grp = VGroup(Item('threshold', editor = RangeEditor(mode = 'slider',
-                                                        low = 0,
-                                                        high = 255)),
+        control_grp = VGroup(Item('threshold', editor=RangeEditor(mode='slider',
+                                                        low=0,
+                                                        high=255)),
 #                                Item('angle', editor = RangeEditor(mode = 'slider',
 #                                                                    low = 0,
 #                                                                    high = 360)),
-                                Item('erosion', editor = RangeEditor(mode = 'spinner',
-                                                                    low = 0,
-                                                                    high = 4)),
-                                Item('dilation', editor = RangeEditor(mode = 'spinner',
-                                                                    low = 0,
-                                                                    high = 4)))
+                                Item('erosion', editor=RangeEditor(mode='spinner',
+                                                                    low=0,
+                                                                    high=4)),
+                                Item('dilation', editor=RangeEditor(mode='spinner',
+                                                                    low=0,
+                                                                    high=4)))
 #                                Item('x', editor = RangeEditor(mode = 'spinner',
 #                                                                    low = 0,
 #                                                                    high = 500)),
@@ -225,16 +225,16 @@ class VideoManager(Manager):
 #                                                                    high = 500)),)
         return View(
                     VGroup(control_grp,
-                           Item('image', show_label = False,
-                             editor = ImageEditor())
+                           Item('image', show_label=False,
+                             editor=ImageEditor())
                            ),
-                         x = 0.05,
-                         y = 0.1,
+                         x=0.05,
+                         y=0.1,
                          #386365
-                         width = 1000,
-                         height = 700,
-                         resizable = True,
-                         title = self.title
+                         width=1000,
+                         height=700,
+                         resizable=True,
+                         title=self.title
                          )
 
 if __name__ == '__main__':
@@ -242,8 +242,8 @@ if __name__ == '__main__':
 
     p = '/Users/fargo2/Desktop/laser_tray_50.tiff'
 
-    vm.process_image(p, crop = (0, 0, 250, 250))
-    vm.configure_traits(view = 'image_view')
+    vm.process_image(p, crop=(0, 0, 250, 250))
+    vm.configure_traits(view='image_view')
 
 
 

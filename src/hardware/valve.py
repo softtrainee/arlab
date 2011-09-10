@@ -92,7 +92,7 @@ class HardwareValve(Loggable):
         #print self.auto
         return r
 
-    def open(self, mode = 'normal'):
+    def open(self, mode='normal'):
         '''
 
         '''
@@ -110,7 +110,7 @@ class HardwareValve(Loggable):
 
         return result
 
-    def close(self, mode = 'normal'):
+    def close(self, mode='normal'):
         '''
 
         '''

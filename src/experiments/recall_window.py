@@ -70,8 +70,8 @@ class RecallWindow(HasTraits):
     def get_columns(self):
         '''
         '''
-        return [(ObjectColumn, dict(name = 'name')),
-                 (ObjectColumn, dict(name = 'project_id'))
+        return [(ObjectColumn, dict(name='name')),
+                 (ObjectColumn, dict(name='project_id'))
                  ]
     def refresh(self):
         '''
@@ -86,7 +86,7 @@ class RecallWindow(HasTraits):
         if self.search_key:
             print self.table, self.comparator, self.search_key
             if self.table == 'Projects':
-                rargs = 'get_projects', dict(name = self.search_key)
+                rargs = 'get_projects', dict(name=self.search_key)
 
         return rargs
 
@@ -96,7 +96,7 @@ class RecallWindow(HasTraits):
         gfunc, filter = self.get_filter_clause()
         if gfunc is not None:
             func = getattr(self.database, gfunc)
-            items, sess = func(filter = filter)
+            items, sess = func(filter=filter)
             if items is not None:
                 items = items.samples
             return items, sess
@@ -113,7 +113,7 @@ class RecallWindow(HasTraits):
             if analyses is not None:
                 for s in analyses:
                     attrs = [a for a in dir(s) if a[0] != '_' and a != 'metadata']
-                    kw = dict(dbitem = s)
+                    kw = dict(dbitem=s)
                     for a in attrs:
                         kw[a] = getattr(s, a)
                     self.items.append(RecallItem(**kw))
@@ -128,11 +128,11 @@ class RecallWindow(HasTraits):
     def show_summary_window(self):
         '''
         '''
-        analysis, self.db_session = self.database.get_analyses(filter = dict(id = 5),
-                                                                sess = self.db_session)
+        analysis, self.db_session = self.database.get_analyses(filter=dict(id=5),
+                                                                sess=self.db_session)
 
         s = SummaryWindow(
-                          item = analysis)
+                          item=analysis)
         s.edit_traits()
     def on_table_click(self, *args, **kw):
         '''
@@ -152,24 +152,24 @@ class RecallWindow(HasTraits):
                           Item('search_key'),
                           spring,
                           Item('search'),
-                          show_labels = False
+                          show_labels=False
                         ),
-                 show_border = True)
-        editor = TableEditor(columns = self.build_columns(),
+                 show_border=True)
+        editor = TableEditor(columns=self.build_columns(),
                            #show_toolbar = False
-                           selection_mode = 'row',
-                           editable = False,
-                           selected = 'selected',
-                           on_dclick = self.on_table_click
+                           selection_mode='row',
+                           editable=False,
+                           selected='selected',
+                           on_dclick=self.on_table_click
                            )
-        v = View(Item('items', show_label = False,
-                      editor = editor
+        v = View(Item('items', show_label=False,
+                      editor=editor
                       ),
-                Item('summary', show_label = False),
+                Item('summary', show_label=False),
                 sg,
-                      width = 300,
-                      height = 500,
-                 resizable = True)
+                      width=300,
+                      height=500,
+                 resizable=True)
         return v
 #============= views ===================================
 #============= EOF ====================================

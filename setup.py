@@ -44,26 +44,26 @@ def get_name():
     return lines[0]
 
 def get_top_level_modules():
-    return ['pychron_beta','remote_hardware_server']
+    return ['pychron_beta', 'remote_hardware_server']
 
 def get_data_files():
-    home=os.path.expanduser('~')
-    dsthome=os.path.join(home, 'pychron_data_beta')
+    home = os.path.expanduser('~')
+    dsthome = os.path.join(home, 'pychron_data_beta')
     
     import sys
-    data=os.path.join(os.getcwd(),'data')
-    fss=[]
+    data = os.path.join(os.getcwd(), 'data')
+    fss = []
     for root, dirs, files in os.walk(data):
         
         try:
-            ri=root.split('data/')[1]
+            ri = root.split('data/')[1]
         except IndexError:
             continue
         
-        dst=os.path.join(dsthome,ri)
+        dst = os.path.join(dsthome, ri)
         
         #filter out hidden files
-        fs=[os.path.join('data',os.path.basename(root),f)
+        fs = [os.path.join('data', os.path.basename(root), f)
              for f in files
                 if not f.startswith('.')]
         if fs:
@@ -73,19 +73,19 @@ def get_data_files():
 #python setup.py sdist adds everything under version control
 setup(
 
-    packages = find_packages(),
+    packages=find_packages(),
     py_modules=get_top_level_modules(),
     
     data_files=get_data_files(),
     #info
-    author = AUTHOR,
-    author_email = AUTHOR_EMAIL,
-    description = DESCRIPTION,
-    long_description = readtxt('README'),
-    license = LICENSE,
-    url = URL,
-    name = get_name(),
-    version = get_version()
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
+    description=DESCRIPTION,
+    long_description=readtxt('README'),
+    license=LICENSE,
+    url=URL,
+    name=get_name(),
+    version=get_version()
     )
 
 

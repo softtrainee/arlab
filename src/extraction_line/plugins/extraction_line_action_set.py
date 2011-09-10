@@ -26,23 +26,23 @@ class ExtractionLineActionSet(WorkbenchActionSet):
     id = 'pychron.extraction_line.action_set'
     actions = [
 
-               Action(name = 'Extraction Line Manager',
-                      path = 'MenuBar/Extraction Line',
-                      class_name = 'src.extraction_line.plugins.extraction_line_actions:OpenExtractionLineManager'
+               Action(name='Extraction Line Manager',
+                      path='MenuBar/Extraction Line',
+                      class_name='src.extraction_line.plugins.extraction_line_actions:OpenExtractionLineManager'
                       ),
 
-               Action(name = 'Load Canvas',
-                      path = 'MenuBar/Extraction Line',
-                      class_name = 'src.extraction_line.plugins.extraction_line_actions:LoadCanvasAction'),
-               Action(name = 'Refresh Canvas',
-                      path = 'MenuBar/Extraction Line',
-                      class_name = 'src.extraction_line.plugins.extraction_line_actions:RefreshCanvasAction'),
-               Action(name = 'Canvas Views',
-                      path = 'MenuBar/Extraction Line',
-                      class_name = 'src.extraction_line.plugins.extraction_line_actions:OpenViewControllerAction'),
-               Action(name = 'Device Streamer',
-                      path = 'MenuBar/Extraction Line',
-                      class_name = 'src.extraction_line.plugins.extraction_line_actions:OpenDeviceStreamerAction'),
+               Action(name='Load Canvas',
+                      path='MenuBar/Extraction Line',
+                      class_name='src.extraction_line.plugins.extraction_line_actions:LoadCanvasAction'),
+               Action(name='Refresh Canvas',
+                      path='MenuBar/Extraction Line',
+                      class_name='src.extraction_line.plugins.extraction_line_actions:RefreshCanvasAction'),
+               Action(name='Canvas Views',
+                      path='MenuBar/Extraction Line',
+                      class_name='src.extraction_line.plugins.extraction_line_actions:OpenViewControllerAction'),
+               Action(name='Device Streamer',
+                      path='MenuBar/Extraction Line',
+                      class_name='src.extraction_line.plugins.extraction_line_actions:OpenDeviceStreamerAction'),
 
 
               ]

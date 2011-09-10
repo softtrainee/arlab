@@ -44,12 +44,12 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                Item('show_grids'),
                Item('show_laser_position'),
                Item('show_desired_position'),
-               Item('desired_position_color', show_label = False, enabled_when = 'show_desired_position'),
-               Item('crosshairs_kind', label = 'Crosshairs', enabled_when = 'show_laser_position'),
-               Item('crosshairs_color', enabled_when = 'show_laser_position'),
+               Item('desired_position_color', show_label=False, enabled_when='show_desired_position'),
+               Item('crosshairs_kind', label='Crosshairs', enabled_when='show_laser_position'),
+               Item('crosshairs_color', enabled_when='show_laser_position'),
                Item('calibration_style'),
                Item('scaling'),
-               label = 'Stage',
+               label='Stage',
                )
         grp2 = Group(Item('close_after'))
         return [grp, grp2]

@@ -51,9 +51,9 @@ class RemoteHardwareServerManager(Manager):
         names = self.read_configuration()
         if names:
             for s in names:
-                e = RemoteCommandServer(name = s,
-                               repeater = self.repeater,
-                               configuration_dir_name = 'servers',
+                e = RemoteCommandServer(name=s,
+                               repeater=self.repeater,
+                               configuration_dir_name='servers',
                                )
 
                 e.bootstrap()
@@ -75,47 +75,47 @@ class RemoteHardwareServerManager(Manager):
     def _repeater_default(self):
         '''
         '''
-        c = CommandRepeater(name = 'repeater',
-                               configuration_dir_name = 'servers')
+        c = CommandRepeater(name='repeater',
+                               configuration_dir_name='servers')
         c.bootstrap()
         return c
 
     def traits_view(self):
         '''
         '''
-        cols = [ObjectColumn(name = 'name'),
-                ObjectColumn(name = 'klass', label = 'Class'),
-                ObjectColumn(name = 'processor_type', label = 'Type'),
-              ObjectColumn(name = 'host'),
-              ObjectColumn(name = 'port')]
-        tservers = Group(Item('servers', style = 'custom',
-                      editor = TableEditor(columns = cols,
-                                           selected = 'selected',
-                                           editable = False),
-                      show_label = False,
+        cols = [ObjectColumn(name='name'),
+                ObjectColumn(name='klass', label='Class'),
+                ObjectColumn(name='processor_type', label='Type'),
+              ObjectColumn(name='host'),
+              ObjectColumn(name='port')]
+        tservers = Group(Item('servers', style='custom',
+                      editor=TableEditor(columns=cols,
+                                           selected='selected',
+                                           editable=False),
+                      show_label=False,
                       ),
-                      show_border = True,
-                      label = 'Servers'
+                      show_border=True,
+                      label='Servers'
                       )
         servers = Item('servers',
-                       style = 'custom',
-                       editor = ListEditor(use_notebook = True,
-                                           page_name = '.name',
-                                           selected = 'selected'), show_label = False)
-        repeater = Group(Item('repeater', style = 'custom',
-                              show_label = False),
-                            show_border = True,
+                       style='custom',
+                       editor=ListEditor(use_notebook=True,
+                                           page_name='.name',
+                                           selected='selected'), show_label=False)
+        repeater = Group(Item('repeater', style='custom',
+                              show_label=False),
+                            show_border=True,
 
-                         label = 'Repeater')
+                         label='Repeater')
         v = View(HGroup(
                  VGroup(tservers, repeater),
                  servers
                  ),
-                 title = 'Remote Hardware Server',
-                 width = 700,
-                 height = 360,
-                 resizable = True,
-                 handler = self.handler_klass
+                 title='Remote Hardware Server',
+                 width=700,
+                 height=360,
+                 resizable=True,
+                 handler=self.handler_klass
                  )
 
         return v

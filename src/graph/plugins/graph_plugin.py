@@ -24,8 +24,8 @@ from src.envisage.core.core_plugin import CorePlugin
 from src.managers.graph_manager import GraphManager
 class GraphPlugin(CorePlugin):
     def _service_offers_default(self):
-        so = self.service_offer_factory(protocol = GraphManager,
-                                        factory = GraphManager)
+        so = self.service_offer_factory(protocol=GraphManager,
+                                        factory=GraphManager)
         return [so]
 
 #============= EOF =============================================

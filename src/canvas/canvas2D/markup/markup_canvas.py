@@ -490,7 +490,7 @@ class MarkupCanvas(BaseDataCanvas):
 
 
 
-    def _over_item(self, event, items = None):
+    def _over_item(self, event, items=None):
         '''
         '''
         if items is None:
@@ -517,7 +517,7 @@ class MarkupCanvas(BaseDataCanvas):
 #                    return k, item
 
 
-    def _over_mark_up_line(self, event, tolerance = 7):
+    def _over_mark_up_line(self, event, tolerance=7):
         '''
 
         '''
@@ -602,7 +602,7 @@ class MarkupCanvas(BaseDataCanvas):
                 break
         return key
 
-    def _over_mark_up_point(self, event, line, tolerance = 4):
+    def _over_mark_up_point(self, event, line, tolerance=4):
         '''
 
         '''

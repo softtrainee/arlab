@@ -26,8 +26,8 @@ import apptools.sweet_pickle as pickle
 from src.graph.regression_graph import RegressionGraph
 from src.config_loadable import ConfigLoadable
 class CalibrationPoint(HasTraits):
-    zoom = Float(enter_set = True, auto_set = False)
-    pxpercm = Float(enter_set = True, auto_set = False)
+    zoom = Float(enter_set=True, auto_set=False)
+    pxpercm = Float(enter_set=True, auto_set=False)
     pxpercmx = Float
     pxpercmy = Float
     z = Float
@@ -36,8 +36,8 @@ class CalibrationPoint(HasTraits):
 class CalibrationData(HasTraits):
     calibration_points = List(CalibrationPoint)
 
-    xcoeff_str = String(enter_set = True, auto_set = False)
-    ycoeff_str = String(enter_set = True, auto_set = False)
+    xcoeff_str = String(enter_set=True, auto_set=False)
+    ycoeff_str = String(enter_set=True, auto_set=False)
     graph = Instance(RegressionGraph)
 
     def get_xcoeffs(self):
@@ -56,17 +56,17 @@ class CalibrationData(HasTraits):
     def _coeff_str_changed(self):
         g = self.graph
         xs, ys = self._get_poly_data()
-        g.set_data(xs, series = 4)
-        g.set_data(ys, series = 4, axis = 1)
+        g.set_data(xs, series=4)
+        g.set_data(ys, series=4, axis=1)
 
     def _graph_default(self):
         g = RegressionGraph()
         g.new_plot()
         xs, ys = self._get_data()
-        g.new_series(x = xs, y = ys)
+        g.new_series(x=xs, y=ys)
 
         xs, ys = self._get_poly_data()
-        g.new_series(x = xs, y = ys, regress = False)
+        g.new_series(x=xs, y=ys, regress=False)
         return g
 
     def _get_poly_data(self):
@@ -77,7 +77,7 @@ class CalibrationData(HasTraits):
 
     def _calibration_points_default(self):
         coeffs = [1, 0]
-        return [CalibrationPoint(zoom = i, pxpercm = np.polyval(coeffs, i)) for i in range(0, 110, 10)]
+        return [CalibrationPoint(zoom=i, pxpercm=np.polyval(coeffs, i)) for i in range(0, 110, 10)]
 
     def load(self):
         with open(self.path, 'rb') as f:
@@ -102,17 +102,17 @@ class CalibrationData(HasTraits):
 #              ]
 #        editor = TableEditor(columns = cols)
         v = View(
-                 Item('xcoeff_str', show_label = False),
+                 Item('xcoeff_str', show_label=False),
 #                 HGroup(Item('calibration_points', editor = editor,
 #                             width = 0.15,
 #                             show_label = False
 #                        ),
-                        Item('graph', show_label = False, style = 'custom',
-                             width = .85),
+                        Item('graph', show_label=False, style='custom',
+                             width=.85),
 
-                 width = 700,
-                 height = 600,
-                 resizable = True
+                 width=700,
+                 height=600,
+                 resizable=True
                  )
         return v
 
@@ -154,12 +154,12 @@ class Camera(ConfigLoadable):
         '''
         self.config_path = p
         config = self.get_configuration(self.config_path)
-        self.set_attribute(config, 'swap_rb', 'General', 'swap_rb', cast = 'boolean')
-        self.set_attribute(config, 'mirror', 'General', 'mirror', cast = 'boolean')
+        self.set_attribute(config, 'swap_rb', 'General', 'swap_rb', cast='boolean')
+        self.set_attribute(config, 'mirror', 'General', 'mirror', cast='boolean')
 
-        self.set_attribute(config, 'width', 'General', 'width', cast = 'int')
-        self.set_attribute(config, 'height', 'General', 'height', cast = 'int')
-        self.set_attribute(config, 'focus_z', 'General', 'focus', cast = 'float')
+        self.set_attribute(config, 'width', 'General', 'width', cast='int')
+        self.set_attribute(config, 'height', 'General', 'height', cast='int')
+        self.set_attribute(config, 'focus_z', 'General', 'focus', cast='float')
 #        data = parse_setupfile(p)
 #        self.swap_rb = True if data[0][0] in ['True', 'true', 'T'] else False
         #self.width = float(data[1][0])
@@ -190,14 +190,14 @@ class Camera(ConfigLoadable):
 #            except ValueError:
 #                self.reset_calibration_data()
     def add_calibration_point(self, zoom, z, px, py):
-        self.calibration_data.calibration_points.append(CalibrationPoint(zoom = zoom,
-                                                                         z = z,
-                                                                         pxpercm = px,
-                                                                         pxpercmx = px,
-                                                                         pxpercmy = py,
+        self.calibration_data.calibration_points.append(CalibrationPoint(zoom=zoom,
+                                                                         z=z,
+                                                                         pxpercm=px,
+                                                                         pxpercmx=px,
+                                                                         pxpercmy=py,
 
                                                                          ))
-    def set_limits_by_zoom(self, zoom, canvas = None):
+    def set_limits_by_zoom(self, zoom, canvas=None):
         '''
         '''
 
@@ -243,7 +243,7 @@ if __name__ == '__main__':
 #    c = Camera()
 #    p = '/Users/fargo2/Pychrondata_beta/setupfiles/canvas2D/camera.txt'
 #    c.save_calibration_data(p)    
-    c = CalibrationData(xcoeff_str = '1.1, 5')
+    c = CalibrationData(xcoeff_str='1.1, 5')
     c.configure_traits()
 
 #============= EOF ====================================

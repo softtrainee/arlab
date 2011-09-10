@@ -70,37 +70,37 @@ class StreamLoader(HasTraits):
             @_type parent: C{str}
             @param parent:
         '''
-        s = Streams(parent = parent, name = parent.name)
+        s = Streams(parent=parent, name=parent.name)
         self.streams.append(s)
 
     def traits_view(self):
         '''
         '''
         cols = [
-              ObjectColumn(name = 'name'),
-              CheckboxColumn(name = 'include'),
-              ObjectColumn(name = 'delay'),
-              ObjectColumn(name = '_type')
+              ObjectColumn(name='name'),
+              CheckboxColumn(name='include'),
+              ObjectColumn(name='delay'),
+              ObjectColumn(name='_type')
               ]
-        table_editor = TableEditor(columns = cols)
+        table_editor = TableEditor(columns=cols)
         v = View(VGroup(
                HGroup(
                       Item('save_data'),
-                      Item('default_path', visible_when = 'save_data'),
-                      Item('save_type', visible_when = 'save_data', show_label = False)
+                      Item('default_path', visible_when='save_data'),
+                      Item('save_type', visible_when='save_data', show_label=False)
                       ),
-               HGroup(Item('time_units', editor = EnumEditor(values = {1:'seconds', 60:'minutes', 3600:'hours'})), springy = False),
-               Item('streams', show_label = False, editor = table_editor, height = 75),
+               HGroup(Item('time_units', editor=EnumEditor(values={1:'seconds', 60:'minutes', 3600:'hours'})), springy=False),
+               Item('streams', show_label=False, editor=table_editor, height=75),
                HGroup(
-                     Item('show_hide', editor = ButtonEditor(label_value = 'label'),
-                           show_label = False,
-                           springy = False
+                     Item('show_hide', editor=ButtonEditor(label_value='label'),
+                           show_label=False,
+                           springy=False
                            )
                      )
                ),
-               height = 500,
-               width = 100,
-               resizable = True,
+               height=500,
+               width=100,
+               resizable=True,
                #title = 'Select Streams',
-               buttons = ['OK', 'Cancel'])
+               buttons=['OK', 'Cancel'])
         return v

@@ -48,8 +48,8 @@ class Eurotherm(CoreDevice):
     UID = 1
     protocol = 'ei_bisynch'
     process_value = Float
-    process_setpoint = Property(Float(enter_set = True, auto_set = False),
-                              depends_on = '_setpoint')
+    process_setpoint = Property(Float(enter_set=True, auto_set=False),
+                              depends_on='_setpoint')
     _setpoint = Float
     setpoint_min = 0
     setpoint_max = 1800
@@ -85,14 +85,14 @@ class Eurotherm(CoreDevice):
             @param config:
         '''
 
-        self.set_attribute(config, 'protocol', 'Communications', 'protocol', optional = True)
+        self.set_attribute(config, 'protocol', 'Communications', 'protocol', optional=True)
 
         if self.protocol == 'ei_bisynch':
             self._communicator._terminator = None
 
-            self.set_attribute(config, 'GID', 'Communications', 'GID', cast = 'int', optional = True)
+            self.set_attribute(config, 'GID', 'Communications', 'GID', cast='int', optional=True)
 
-            self.set_attribute(config, 'UID', 'Communications', 'UID', cast = 'int', optional = True)
+            self.set_attribute(config, 'UID', 'Communications', 'UID', cast='int', optional=True)
 
         return True
 
@@ -243,7 +243,7 @@ class Eurotherm(CoreDevice):
         builder = getattr(self, '%s_build_query' % self.protocol)
 
         resp = self.ask(builder(cmd),
-                        verbose = False
+                        verbose=False
                         )
 
         parser = getattr(self, '%s_parse_response' % self.protocol)
@@ -264,7 +264,7 @@ class Eurotherm(CoreDevice):
         '''
         '''
         return View(Item('process_setpoint'),
-                    Item('process_value', style = 'readonly')
+                    Item('process_value', style='readonly')
                     )
 #============= EOF ====================================
 # def __init__(self, *args, **kw):

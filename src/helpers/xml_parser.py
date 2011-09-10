@@ -37,7 +37,7 @@ class XMLParser(object):
         self.indent(self._tree.getroot())
         self._tree.write(self._path)
 
-    def indent(self, elem, level = 0):
+    def indent(self, elem, level=0):
         i = '\n' + level * '  '
         if len(elem):
             if not elem.text or not elem.text.strip():
@@ -53,7 +53,7 @@ class XMLParser(object):
                 elem.tail = i
 
     def new_element(self, tag, value, ** kw):
-        e = Element(tag, attrib = kw)
+        e = Element(tag, attrib=kw)
         e.text = value
         return e
 #============= EOF ====================================

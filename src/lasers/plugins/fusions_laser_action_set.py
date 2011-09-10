@@ -34,9 +34,9 @@ class FusionsLaserActionSet(LaserActionSet):
     def __init__(self, *args, **kw):
         super(FusionsLaserActionSet, self).__init__(*args, **kw)
         self.actions += [
-                Action(name = 'Calibrate Camera',
-                       path = 'MenuBar/Lasers',
-                       class_name = 'src.lasers.plugins.fusions_laser_actions:OpenCalibrationManagerAction'
+                Action(name='Calibrate Camera',
+                       path='MenuBar/Lasers',
+                       class_name='src.lasers.plugins.fusions_laser_actions:OpenCalibrationManagerAction'
                        ),
 
                     ]

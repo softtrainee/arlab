@@ -53,16 +53,16 @@ class MeasurementScript(CoreScript):
     prev_mass = 0
     signals = None
 
-    def set_time_zero(self, t = None):
+    def set_time_zero(self, t=None):
         self.time_zero = t
         if t is None:
             self.time_zero = t = time.time()
-            self.time_generator = time_generator(start = t)
+            self.time_generator = time_generator(start=t)
 
     def pre_cycle(self):
         if self.pre_peak:
             self.manager.peak_center(
-                                 center_pos = 40
+                                 center_pos=40
                                  )
         if self.pre_baseline:
             pass
@@ -77,7 +77,7 @@ class MeasurementScript(CoreScript):
                     time.sleep(settle / 1000.0)
 
                 if peak_center:
-                    self.manager.peak_center(center_pos = mass, update_pos = True)
+                    self.manager.peak_center(center_pos=mass, update_pos=True)
                 if baseline:
                     pass
 
@@ -89,7 +89,7 @@ class MeasurementScript(CoreScript):
     def post_cycle(self):
         if self.post_peak:
             self.manager.peak_center(
-                                 center_pos = 40
+                                 center_pos=40
                                  )
         if self.post_baseline:
             pass
@@ -182,24 +182,24 @@ class MeasurementScript(CoreScript):
 
     def set_graph(self):
         g = StackedRegressionGraph(
-                         window_title = 'Peak Regression {}'.format('foo'),
-                         window_height = 800,
-                         window_y = 25,
-                         show_regression_editor = False
+                         window_title='Peak Regression {}'.format('foo'),
+                         window_height=800,
+                         window_y=25,
+                         show_regression_editor=False
                          )
 
 
         cups = ['H2', 'H1', 'AX', 'L1', 'L2']
         cups.reverse()
         for i, cup in enumerate(cups):
-            g.new_plot(bounds = (50, 125),
-                       show_legend = True)
-            g.new_series(plotid = i,
-                         fit_type = 'parabolic',
+            g.new_plot(bounds=(50, 125),
+                       show_legend=True)
+            g.new_series(plotid=i,
+                         fit_type='parabolic',
 
-                         type = 'scatter', marker = 'circle', marker_size = 1.0)
-            g.set_series_label(cup, plotid = i)
-        g.set_x_limits(min = 0, max = 60)
+                         type='scatter', marker='circle', marker_size=1.0)
+            g.set_series_label(cup, plotid=i)
+        g.set_x_limits(min=0, max=60)
         g.set_x_title('Time (sec)')
 
         do_after(5, g.edit_traits)

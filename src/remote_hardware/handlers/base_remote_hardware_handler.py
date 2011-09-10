@@ -20,13 +20,17 @@ from src.loggable import Loggable
 #============= standard library imports ========================
 import shlex
 import os
+from src.remote_hardware.error_handler import ErrorHandler
 #============= local library imports  ==========================
 
 class BaseRemoteHardwareHandler(Loggable):
     application = Any
 
-    @staticmethod
-    def _make_keys(name):
+    def __init__(self):
+        self.error_handler=ErrorHandler()
+        
+    #@staticmethod
+    def _make_keys(self,name):
         return [name, name.upper(), name.capitalize(), name.lower()]
 
     def parse(self, data):
@@ -34,10 +38,23 @@ class BaseRemoteHardwareHandler(Loggable):
         return args[0], ' '.join(args[1:])
 
     def handle(self, data):
-        pass
+        eh=self.error_handler
+        manager=self.get_manager()
+        err=eh.check_manager(manager)
+        if err is None:
+            args=self.split_data(data)
+            err, func=eh.check_command(self,args)
+            if err is None:
+                err, response=eh.check_response(func,manager,args)
+                if err is None:
+                    return response
+        return err
 
-    @staticmethod
-    def split_data(data):
+    def get_manager(self):
+        return
+    
+    #@staticmethod
+    def split_data(self,data):
         return [a.strip() for a in shlex.split(data)]
 
     def _get_func(self, fstr):

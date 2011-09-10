@@ -75,7 +75,7 @@ class ExtractionLineManager(Manager):
         '''
         '''
         klass = self.convert_config_name(manager)
-        kw = dict(name = manager)
+        kw = dict(name=manager)
 
         kw['parent'] = self
 
@@ -141,7 +141,7 @@ class ExtractionLineManager(Manager):
 #                                      parent = self.ui.control)
 
     def show_device_streamer(self):
-        self.device_stream_manager.edit_traits(parent = self.window.control)
+        self.device_stream_manager.edit_traits(parent=self.window.control)
 
     def reload_scene_graph(self):
 
@@ -161,7 +161,7 @@ class ExtractionLineManager(Manager):
     def load_canvas(self):
         '''
         '''
-        p = self._file_dialog_('open', **dict(default_dir = canvas2D_dir))
+        p = self._file_dialog_('open', **dict(default_dir=canvas2D_dir))
 
         if p is not None:
             self.canvas.load_canvas(p)
@@ -201,7 +201,7 @@ class ExtractionLineManager(Manager):
         '''
         self.canvas.set_interactor_state(state)
 
-    def get_valve_state(self, name, address = None):
+    def get_valve_state(self, name, address=None):
         '''
         '''
         if self.valve_manager is not None:
@@ -224,7 +224,7 @@ class ExtractionLineManager(Manager):
     def _change_valve_state(self, name, mode, action):
 
         func = getattr(self.valve_manager, '{}_by_name'.format(action))
-        result = func(name, mode = mode)
+        result = func(name, mode=mode)
 #        result = self.valve_manager.open_by_name(name, mode = mode)
 
         if isinstance(result, bool):
@@ -233,7 +233,7 @@ class ExtractionLineManager(Manager):
 
         return result
 
-    def open_valve(self, name, address = None, mode = 'remote'):
+    def open_valve(self, name, address=None, mode='remote'):
         '''
         '''
         print 'elm', threading.currentThread()
@@ -242,7 +242,7 @@ class ExtractionLineManager(Manager):
                 name = self.valve_manager.get_name_by_address(address)
             return self._change_valve_state(name, mode, 'open')
 
-    def close_valve(self, name, address = None, mode = 'remote'):
+    def close_valve(self, name, address=None, mode='remote'):
         '''
 
         '''
@@ -257,9 +257,9 @@ class ExtractionLineManager(Manager):
     def execute_run_script(self, runscript_name):
         runscript_dir = os.path.join(scripts_dir, 'runscripts')
         if self.runscript is None:
-            e = ExtractionLineScript(source_dir = runscript_dir ,
-                                     file_name = runscript_name,
-                                     manager = self,
+            e = ExtractionLineScript(source_dir=runscript_dir ,
+                                     file_name=runscript_name,
+                                     manager=self,
 
                                      )
 
@@ -275,20 +275,20 @@ class ExtractionLineManager(Manager):
 
         v = View(
                  HGroup(
-                        Item('explanation', style = 'custom', show_label = False,
-                             width = 340
+                        Item('explanation', style='custom', show_label=False,
+                             width=340
                              ),
                         Item('canvas',
-                             width = self.canvas.width,
-                             height = self.canvas.height,
-                             style = 'custom', show_label = False),
+                             width=self.canvas.width,
+                             height=self.canvas.height,
+                             style='custom', show_label=False),
                         ),
 
-               handler = self.handler_klass,
-               title = 'Extraction Line Manager',
-               resizable = True,
-               x = self.window_x,
-               y = self.window_y
+               handler=self.handler_klass,
+               title='Extraction Line Manager',
+               resizable=True,
+               x=self.window_x,
+               y=self.window_y
                )
         return v
 
@@ -297,7 +297,7 @@ class ExtractionLineManager(Manager):
 
     def _view_controller_factory(self):
         if self.canvas.canvas3D:
-            v = ViewController(scene_graph = self.canvas.canvas3D.scene_graph)
+            v = ViewController(scene_graph=self.canvas.canvas3D.scene_graph)
             self.canvas.canvas3D.user_views = v.views
             return v
 
@@ -324,13 +324,13 @@ class ExtractionLineManager(Manager):
     def _canvas_default(self):
         '''
         '''
-        return ExtractionLineCanvas(manager = self)
+        return ExtractionLineCanvas(manager=self)
 
     def _pumping_monitor_default(self):
         '''
         '''
-        return PumpingMonitor(gauge_manager = self.gauge_manager,
-                              parent = self)
+        return PumpingMonitor(gauge_manager=self.gauge_manager,
+                              parent=self)
 
 
 #=================== EOF ================================

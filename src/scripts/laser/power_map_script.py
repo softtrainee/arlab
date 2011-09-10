@@ -69,7 +69,7 @@ class PowerMapStep(HasTraits):
     step_length = Float
     power = Float
     integration = Int
-    est_duration = Property(depends_on = 'padding,step_length')
+    est_duration = Property(depends_on='padding,step_length')
     duration = Float
     def _get_est_duration(self):
         nsecs = 0
@@ -109,11 +109,11 @@ class PowerMapScript(CoreScript):
         p = os.path.join(self.source_dir, self.file_name)
         for l in parse_file(p):
             args = l.split(',')
-            self.steps.append(PowerMapStep(beam_diameter = float(args[0]),
-                                           padding = float(args[1]),
-                                           step_length = float(args[2]),
-                                           power = float(args[3]),
-                                           integration = self.integration
+            self.steps.append(PowerMapStep(beam_diameter=float(args[0]),
+                                           padding=float(args[1]),
+                                           step_length=float(args[2]),
+                                           power=float(args[3]),
+                                           integration=self.integration
                                            )
 
                               )
@@ -121,21 +121,21 @@ class PowerMapScript(CoreScript):
     def get_documentation(self):
         from src.scripts.core.html_builder import HTMLDoc, HTMLText
 
-        doc = HTMLDoc(attribs = 'bgcolor = "#ffffcc" text = "#000000"')
-        doc.add_heading('Power Map Documentation', heading = 2, color = 'red')
+        doc = HTMLDoc(attribs='bgcolor = "#ffffcc" text = "#000000"')
+        doc.add_heading('Power Map Documentation', heading=2, color='red')
 
-        doc.add_heading('Parameters', heading = 3)
+        doc.add_heading('Parameters', heading=3)
         doc.add_text('Beam Diam, Padding, Step len, Power<br>')
         doc.add_list(['Beam diameter (0-6) -- approx. laser beam diameter',
                       'Padding -- Number of steps +/- from center',
                       'Step length (mm) -- 2 * padding * step length = length of map side',
                       'Power setting (0-100) -- percent of total power'])
 
-        table = doc.add_table(attribs = 'bgcolor="#D3D3D3" width="90%"')
-        r1 = HTMLText('Ex.', face = 'courier', size = '2')
+        table = doc.add_table(attribs='bgcolor="#D3D3D3" width="90%"')
+        r1 = HTMLText('Ex.', face='courier', size='2')
         table.add_row([r1])
 
-        r2 = HTMLText('1,5,0.1,10.', face = 'courier', size = '2')
+        r2 = HTMLText('1,5,0.1,10.', face='courier', size='2')
         table.add_row([r2])
         return doc
 
@@ -148,7 +148,7 @@ class PowerMapScript(CoreScript):
             self.center_x = stm.stage_controller.x
             self.center_y = stm.stage_controller.y
 
-            info = self.edit_traits(view = 'set_center_view')
+            info = self.edit_traits(view='set_center_view')
             if not info.result:
                 ok = False
 
@@ -191,7 +191,7 @@ class PowerMapScript(CoreScript):
 
             nsteps = int(padding / step_len)
             steps = xrange(-nsteps, nsteps + 1)
-            self.set_data_frame(base_frame_name = 'beam%.1f_' % bd)
+            self.set_data_frame(base_frame_name='beam%.1f_' % bd)
 
             self.selected = self.steps[self.cnt]
             self.cnt += 1
@@ -236,13 +236,13 @@ class PowerMapScript(CoreScript):
         for a in stage_controller.axes.itervalues():
             a.calculate_parameters = False
 
-        stage_controller._set_single_axis_motion_parameters(pdict = dict(key = 'x', acceleration = 2,
-                                                                          deceleration = 2,
-                                                                          velocity = 1.25
+        stage_controller._set_single_axis_motion_parameters(pdict=dict(key='x', acceleration=2,
+                                                                          deceleration=2,
+                                                                          velocity=1.25
                                                                           ))
-        stage_controller._set_single_axis_motion_parameters(pdict = dict(key = 'y', acceleration = 2,
-                                                                          deceleration = 2,
-                                                                          velocity = 1.25
+        stage_controller._set_single_axis_motion_parameters(pdict=dict(key='y', acceleration=2,
+                                                                          deceleration=2,
+                                                                          velocity=1.25
                                                                           ))
 
         for i in range(nrows):
@@ -255,20 +255,20 @@ class PowerMapScript(CoreScript):
                 p1 = cx + padding, y
 
 
-            stage_controller.linear_move(p1[0], p1[1], block = True, grouped_move = False)
+            stage_controller.linear_move(p1[0], p1[1], block=True, grouped_move=False)
 
             #wait at the start for a bit to let the detector settle
             #time.sleep(0.5)
 
             stage_controller.linear_move(p2[0], p2[1],
-                                                        block = False, grouped_move = False)
+                                                        block=False, grouped_move=False)
 
             #sleep time required to reach cvt zone
 
             max_len = 50
             event = Event()
             axkey = 'x'
-            t = Thread(target = stage_controller.at_velocity, args = (axkey, event))
+            t = Thread(target=stage_controller.at_velocity, args=(axkey, event))
             t.start()
 
 #            nvalues = random.randint(0, 0) + max_len
@@ -295,7 +295,7 @@ class PowerMapScript(CoreScript):
                 zs.append(mag)
 
             #sort the lists
-            data = sorted(zip(xs, ys, zs), key = lambda d:d[0])
+            data = sorted(zip(xs, ys, zs), key=lambda d:d[0])
             xs = [d[0] for d in data]
             ys = [d[1] for d in data]
             zs = [d[2] for d in data]
@@ -339,13 +339,13 @@ class PowerMapScript(CoreScript):
 
         gaussian_power_generator = power_generator(len(xsteps))
 
-        stage_manager.stage_controller._set_single_axis_motion_parameters(pdict = dict(key = 'x', acceleration = 2,
-                                                                          deceleration = 2,
-                                                                          velocity = 1
+        stage_manager.stage_controller._set_single_axis_motion_parameters(pdict=dict(key='x', acceleration=2,
+                                                                          deceleration=2,
+                                                                          velocity=1
                                                                           ))
-        stage_manager.stage_controller._set_single_axis_motion_parameters(pdict = dict(key = 'y', acceleration = 2,
-                                                                          deceleration = 2,
-                                                                          velocity = 1
+        stage_manager.stage_controller._set_single_axis_motion_parameters(pdict=dict(key='y', acceleration=2,
+                                                                          deceleration=2,
+                                                                          velocity=1
                                                                           ))
 
         manager.set_laser_monitor_duration(self.selected.duration)
@@ -360,7 +360,7 @@ class PowerMapScript(CoreScript):
                     break
                 nx = (xi * step_len) + cx
 
-                stage_manager.stage_controller.linear_move(nx, ny, verbose = False, block = True, grouped_move = False)
+                stage_manager.stage_controller.linear_move(nx, ny, verbose=False, block=True, grouped_move=False)
                 if not self.isAlive():
                     break
 
@@ -374,7 +374,7 @@ class PowerMapScript(CoreScript):
                         time.sleep(1.5)
                     mag = 0
                     for c in range(self.integration):
-                        mag += analog_power_meter.read_power_meter(verbose = False)
+                        mag += analog_power_meter.read_power_meter(verbose=False)
                         time.sleep(0.01)
 
                     mag /= self.integration
@@ -394,23 +394,23 @@ class PowerMapScript(CoreScript):
 #============= views ===================================
     def set_center_view(self):
         v = View(HGroup(spring, Label('Set Center Position'), spring),
-                 Item('center_x', format_str = '%0.3f'),
-                 Item('center_y', format_str = '%0.3f'),
-                 kind = 'modal',
-                 buttons = ['OK', 'Cancel'],
-                 title = 'Define Center'
+                 Item('center_x', format_str='%0.3f'),
+                 Item('center_y', format_str='%0.3f'),
+                 kind='modal',
+                 buttons=['OK', 'Cancel'],
+                 title='Define Center'
                  )
         return v
 
     def canvas_view(self):
-        v = View(Item('canvas', show_label = False,
-                    editor = ComponentEditor(),
+        v = View(Item('canvas', show_label=False,
+                    editor=ComponentEditor(),
                     ),
-                    resizable = True,
-                    height = 625,
-                    width = 625,
+                    resizable=True,
+                    height=625,
+                    width=625,
                     #title = 'Raster Manager',
-                    handler = PowerMapHandler
+                    handler=PowerMapHandler
                     )
         return v
 

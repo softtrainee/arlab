@@ -65,11 +65,11 @@ class SVNClient(Loggable):
         '''
         '''
         self.info('updating to head')
-        t = Thread(target = self._update_)
+        t = Thread(target=self._update_)
         t.start()
 
     def isCurrent(self):
-        status = self._client.status(src_root, get_all = False)
+        status = self._client.status(src_root, get_all=False)
 
         current = True
         for pi in status:
@@ -96,12 +96,12 @@ class SVNClient(Loggable):
 
             return p, entry
 
-    def get_remote_version_file(self, progress = None):
+    def get_remote_version_file(self, progress=None):
         if self._client:
             p = os.path.join(project_home, VERSION_PATH)
             self._inprogress = True
             if progress is not None:
-                tt = Thread(target = self._timer_update, args = (progress,))
+                tt = Thread(target=self._timer_update, args=(progress,))
                 tt.start()
             return self._get_remote_file_info(p)
 #        t=Thread(target=self._get_remote_file_info, args=(p,))

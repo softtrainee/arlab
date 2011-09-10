@@ -31,21 +31,21 @@ class MDDModelerActionSet(WorkbenchActionSet):
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
     actions = [
-               Action(name = 'Run Model',
-                      path = 'MenuBar/MDD',
-                    class_name = 'src.data_processing.plugins.mdd_modeler_actions:RunModelAction'
+               Action(name='Run Model',
+                      path='MenuBar/MDD',
+                    class_name='src.data_processing.plugins.mdd_modeler_actions:RunModelAction'
                     ),
-               Action(name = 'Run Configuration',
-                      path = 'MenuBar/MDD',
-                    class_name = 'src.data_processing.plugins.mdd_modeler_actions:RunConfigurationAction'
+               Action(name='Run Configuration',
+                      path='MenuBar/MDD',
+                    class_name='src.data_processing.plugins.mdd_modeler_actions:RunConfigurationAction'
                     ),
-               Action(name = 'Parse Autoupdate',
-                      path = 'MenuBar/MDD',
-                    class_name = 'src.data_processing.plugins.mdd_modeler_actions:ParseAutoupdateAction'
+               Action(name='Parse Autoupdate',
+                      path='MenuBar/MDD',
+                    class_name='src.data_processing.plugins.mdd_modeler_actions:ParseAutoupdateAction'
                     ),
-               Action(name = 'New Model',
-                      path = 'MenuBar/MDD',
-                    class_name = 'src.data_processing.plugins.mdd_modeler_actions:NewModelAction'
+               Action(name='New Model',
+                      path='MenuBar/MDD',
+                    class_name='src.data_processing.plugins.mdd_modeler_actions:NewModelAction'
                     ),
              ]
 #============= EOF ====================================

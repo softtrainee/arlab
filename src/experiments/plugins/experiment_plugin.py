@@ -32,15 +32,15 @@ class ExperimentPlugin(CorePlugin):
         '''
         '''
         so = self.service_offer_factory(
-                          protocol = ExperimentsManager,
+                          protocol=ExperimentsManager,
                           #protocol = 'src.experiments.experiments_manager.ExperimentsManager',
-                          factory = self._factory
+                          factory=self._factory
                           )
-        so1 = self.service_offer_factory(protocol = 'src.experiments.process_view.ProcessView',
-                           factory = 'src.experiments.process_view.ProcessView'
+        so1 = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
+                           factory='src.experiments.process_view.ProcessView'
                            )
-        so2 = self.service_offer_factory(protocol = 'src.experiments.analysis_graph_view.AnalysisGraphView',
-                           factory = 'src.experiments.analysis_graph_view.AnalysisGraphView'
+        so2 = self.service_offer_factory(protocol='src.experiments.analysis_graph_view.AnalysisGraphView',
+                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
                            )
         return [so, so1, so2]
 

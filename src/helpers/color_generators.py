@@ -32,21 +32,21 @@ utility functions for creating a series of colors
 #                )
 
 colors8i = dict(
-                black = (0, 0, 0),
-                red = (255, 0, 0),
-                maroon = (127, 0, 0),
-                yellow = (255, 255, 0),
-                olive = (127, 127, 0),
-                lime = (0, 255, 0),
-                green = (0, 127, 0),
-                gray = (127, 127, 127),
-                aqua = (0, 255, 255),
-                teal = (0, 127, 127),
-                blue = (0, 0, 255),
-                silver = (191, 191, 191),
-                navy = (0, 0, 127),
-                fuchsia = (255, 0, 255),
-                purple = (127, 0, 127)
+                black=(0, 0, 0),
+                red=(255, 0, 0),
+                maroon=(127, 0, 0),
+                yellow=(255, 255, 0),
+                olive=(127, 127, 0),
+                lime=(0, 255, 0),
+                green=(0, 127, 0),
+                gray=(127, 127, 127),
+                aqua=(0, 255, 255),
+                teal=(0, 127, 127),
+                blue=(0, 0, 255),
+                silver=(191, 191, 191),
+                navy=(0, 0, 127),
+                fuchsia=(255, 0, 255),
+                purple=(127, 0, 127)
 
               )
 colors1f = dict()

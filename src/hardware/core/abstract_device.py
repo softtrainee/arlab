@@ -31,11 +31,11 @@ class AbstractDevice(ViewableDevice):
 
     _cdevice = Any
 
-    simulation = Property(depends_on = '_cdevice')
-    com_class = Property(depends_on = '_cdevice')
+    simulation = Property(depends_on='_cdevice')
+    com_class = Property(depends_on='_cdevice')
 
-    last_command = Property(depends_on = '_cdevice.last_command')
-    last_response = Property(depends_on = '_cdevice.last_response')
+    last_command = Property(depends_on='_cdevice.last_command')
+    last_response = Property(depends_on='_cdevice.last_response')
     def _get_last_command(self):
         return self._cdevice.last_command
     def _get_last_response(self):
@@ -98,13 +98,13 @@ class AbstractDevice(ViewableDevice):
 
 
     def traits_view(self):
-        v = View(Item('name', style = 'readonly'),
-                 Item('klass', style = 'readonly', label = 'Class'),
-                 Item('_type', style = 'readonly', label = 'Type'),
-                 Item('connected', style = 'readonly'),
-                 Item('com_class', style = 'readonly', label = 'Com. Class'),
-                 Item('config_short_path', style = 'readonly'),
-                 Item('loaded', style = 'readonly'),
+        v = View(Item('name', style='readonly'),
+                 Item('klass', style='readonly', label='Class'),
+                 Item('_type', style='readonly', label='Type'),
+                 Item('connected', style='readonly'),
+                 Item('com_class', style='readonly', label='Com. Class'),
+                 Item('config_short_path', style='readonly'),
+                 Item('loaded', style='readonly'),
 
                )
         return v

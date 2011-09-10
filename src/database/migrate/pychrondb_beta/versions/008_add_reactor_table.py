@@ -19,7 +19,7 @@ from sqlalchemy import *
 from migrate import *
 meta = MetaData()
 table = Table('Reactors', meta,
-    Column('id', Integer, primary_key = True),
+    Column('id', Integer, primary_key=True),
     Column('name', String(40))
 )
 

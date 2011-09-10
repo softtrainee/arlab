@@ -161,12 +161,12 @@ class GaugeManager(Manager):
         path = os.path.join(paths.device_dir, 'gauges.cfg')
         config = self.get_configuration(path)
 
-        port = self.config_get(config, 'Communications', 'port', optional = False)
-        baudrate = self.config_get(config, 'Communications', 'baudrate', optional = False)
-        self.scan_rate = self.config_get(config, 'General', 'scan_rate', 'float', optional = False)
+        port = self.config_get(config, 'Communications', 'port', optional=False)
+        baudrate = self.config_get(config, 'Communications', 'baudrate', optional=False)
+        self.scan_rate = self.config_get(config, 'General', 'scan_rate', 'float', optional=False)
         for section in config.sections():
             _continue = False
-            args = dict(name = section,
+            args = dict(name=section,
                         )
             for opt in ['address', 'kind']:
                 if not config.has_option(section, opt):
@@ -184,7 +184,7 @@ class GaugeManager(Manager):
 
             g.set_scheduler(scheduler)
 
-            if g.open(port = port, baudrate = baudrate):
+            if g.open(port=port, baudrate=baudrate):
                 self.info('%s opened' % g.name)
 
             if g.initialize():
@@ -192,7 +192,7 @@ class GaugeManager(Manager):
 
                 #setup a datamanager for saving the gauge data
                 self.data_manager = CSVDataManager()
-                self.data_manager.new_frame(directory = 'gauges', base_frame_name = g.name)
+                self.data_manager.new_frame(directory='gauges', base_frame_name=g.name)
 
             self.gauges.append(g)
 
@@ -259,11 +259,11 @@ class GaugeManager(Manager):
         '''
         prev_gauge = self.prev_gauge
         if prev_gauge is not None:
-            prev_gauge.trait_set(indicator = False)
+            prev_gauge.trait_set(indicator=False)
 
         if cmd == 'pressure':
-            gauge.trait_set(indicator = True)
-            gauge.get_transducer_pressure(verbose = False)
+            gauge.trait_set(indicator=True)
+            gauge.get_transducer_pressure(verbose=False)
             self.prev_gauge = gauge
 
     def _gauge_factory(self, kind, **kw):
@@ -285,12 +285,12 @@ class GaugeManager(Manager):
     def _configure_setpoints_fired(self):
         '''
         '''
-        self.edit_traits(view = 'gauge_configure_view')
+        self.edit_traits(view='gauge_configure_view')
 
     def _degas_fired(self):
         '''
         '''
-        self.edit_traits(view = 'degas_configure_view')
+        self.edit_traits(view='degas_configure_view')
 
     @on_trait_change('gauges.pressure')
     def pressure_handler(self, object, name, old, new):
@@ -303,15 +303,15 @@ class GaugeManager(Manager):
     def degas_configure_view(self):
         '''
         '''
-        v = View(Item('ion_gauges', show_label = False,
-                    style = 'custom',
-                    editor = TableEditor(columns = [ObjectColumn(name = 'name'),
-                                                CheckboxColumn(name = 'degas')])
+        v = View(Item('ion_gauges', show_label=False,
+                    style='custom',
+                    editor=TableEditor(columns=[ObjectColumn(name='name'),
+                                                CheckboxColumn(name='degas')])
                     ),
-                    title = 'Degas',
-                    resizable = True,
-                    width = 150,
-                    height = 150
+                    title='Degas',
+                    resizable=True,
+                    width=150,
+                    height=150
                     )
         return v
 
@@ -319,16 +319,16 @@ class GaugeManager(Manager):
         '''
         '''
         v = View(Item('gauges',
-                    show_label = False,
-                    style = 'custom',
-                    editor = ListEditor(use_notebook = True,
-                                               dock_style = 'tab',
-                                               page_name = '.name',
-                                               view = 'config_view')),
-                resizable = True,
-                width = 415,
-                height = 200,
-                title = 'Configure Setpoints'
+                    show_label=False,
+                    style='custom',
+                    editor=ListEditor(use_notebook=True,
+                                               dock_style='tab',
+                                               page_name='.name',
+                                               view='config_view')),
+                resizable=True,
+                width=415,
+                height=200,
+                title='Configure Setpoints'
                 )
         return v
 
@@ -341,23 +341,23 @@ class GaugeManager(Manager):
         @return: Traits View
         '''
         cols = [
-                ObjectColumn(name = 'name', editable = False, width = 75),
+                ObjectColumn(name='name', editable=False, width=75),
 #                ObjectColumn(name = 'description', editable = False, width = 75),
-                CheckboxColumn(name = 'indicator', label = '-', width = 25, editable = False),
-                ObjectColumn(name = 'pressure', format = '%0.2e', editable = False, width = 75),
-                CheckboxColumn(name = 'state', label = 'ON/OFF', width = 50),
+                CheckboxColumn(name='indicator', label='-', width=25, editable=False),
+                ObjectColumn(name='pressure', format='%0.2e', editable=False, width=75),
+                CheckboxColumn(name='state', label='ON/OFF', width=50),
                 ]
-        table_editor = TableEditor(columns = cols)
+        table_editor = TableEditor(columns=cols)
 
         table = Item('gauges',
-                            editor = table_editor,
-                            show_label = False,
-                            width = 175,
-                            height = 175,
+                            editor=table_editor,
+                            show_label=False,
+                            width=175,
+                            height=175,
 
                             )
-        config_button = HGroup(Item('configure_setpoints', show_label = False),
-                             Item('degas', show_label = False),
+        config_button = HGroup(Item('configure_setpoints', show_label=False),
+                             Item('degas', show_label=False),
                              spring)
         v = View(
                  VGroup(
@@ -365,7 +365,7 @@ class GaugeManager(Manager):
                         table,
                         #text_out
                         ),
-                resizable = True,
+                resizable=True,
                # handler = ManagerHandler
                 )
         return v

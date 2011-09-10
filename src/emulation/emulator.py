@@ -31,9 +31,9 @@ class Emulator(object):
         ch = Co2Handler
 
         for h, ao in [(sh, 1), (dh, 2), (ch, 2)]:
-            self._build_handler_namespace(h, args_offset = ao)
+            self._build_handler_namespace(h, args_offset=ao)
 
-    def _build_handler_namespace(self, h, args_offset = 1):
+    def _build_handler_namespace(self, h, args_offset=1):
         for d in dir(h):
             if d == 'add_class_trait':
                 break

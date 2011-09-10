@@ -27,7 +27,7 @@ class GraphPerspective(Perspective):
     show_editor_area = True
 
     contents = [
-                PerspectiveItem(id = 'pychron.graph_manager',
+                PerspectiveItem(id='pychron.graph_manager',
                               #width = 0.65
                               )
               ]

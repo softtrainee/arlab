@@ -84,7 +84,7 @@ class RemoteHardwareManager(Manager):
 
                 factory = getattr(module, klass)
 
-                handler = factory(application = self.application)
+                handler = factory(application=self.application)
                 '''
                     the context filter uses the handler object to 
                     get the kind and request
@@ -99,8 +99,8 @@ class RemoteHardwareManager(Manager):
 
                 result = self.context_filter.get_response(handler, data)
 
-            except ImportError,e:
-                result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg,e )
+            except ImportError, e:
+                result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
 
         self.debug('Result: {}'.format(result))
         self.result = result

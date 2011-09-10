@@ -23,15 +23,15 @@ import wx
 
 sw, sh = wx.DisplaySize()
 gWarningDisplay = RichTextDisplay(
-                                  title = 'Warnings',
-                                  width = 450,
-                                  default_color = 'red'
+                                  title='Warnings',
+                                  width=450,
+                                  default_color='red'
                                   )
 
-gLoggerDisplay = RichTextDisplay(title = 'Logger',
-                                 width = 450,
-                                 x = sw - 450,
-                                 y = 20
+gLoggerDisplay = RichTextDisplay(title='Logger',
+                                 width=450,
+                                 x=sw - 450,
+                                 y=20
                                  )
 
 #============= EOF =============================================

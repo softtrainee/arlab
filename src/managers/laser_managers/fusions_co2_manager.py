@@ -73,8 +73,8 @@ class FusionsCO2Manager(FusionsLaserManager):
     def _logic_board_default(self):
         '''
         '''
-        b = FusionsCO2LogicBoard(name = 'co2logicboard',
-                                 configuration_dir_name = 'co2')
+        b = FusionsCO2LogicBoard(name='co2logicboard',
+                                 configuration_dir_name='co2')
         return b
 
 
@@ -82,9 +82,9 @@ class FusionsCO2Manager(FusionsLaserManager):
         '''
         '''
 #        print 'afasdf'
-        args = dict(name = 'co2stage',
-                            configuration_dir_name = 'co2',
-                             parent = self)
+        args = dict(name='co2stage',
+                            configuration_dir_name='co2',
+                             parent=self)
 
         return self._stage_manager_factory(args)
 

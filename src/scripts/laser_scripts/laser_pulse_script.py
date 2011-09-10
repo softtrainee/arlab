@@ -61,9 +61,9 @@ class LaserPulseScript(FileScript):
     def traits_view(self):
         '''
         '''
-        v = View(Item('fire', show_label = False, enabled_when = 'not firing'),
+        v = View(Item('fire', show_label=False, enabled_when='not firing'),
                Item('request_power'),
                Item('pulse_length'),
-               title = 'Laser Pulse'
+               title='Laser Pulse'
                )
         return v

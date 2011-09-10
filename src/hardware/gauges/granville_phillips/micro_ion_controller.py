@@ -23,7 +23,7 @@ from src.hardware.core.core_device import CoreDevice
 class MicroIonController(CoreDevice):
     scan_func = 'get_pressures'
     def load_additional_args(self, config, *args, **kw):
-        self.address = self.config_get(config, 'General', 'address', optional = False)
+        self.address = self.config_get(config, 'General', 'address', optional=False)
         return True
 
     def get_pressures(self):
@@ -64,7 +64,7 @@ class MicroIonController(CoreDevice):
         r = self._parse_response(r)
         return r
 
-    def get_process_control_status(self, channel = None):
+    def get_process_control_status(self, channel=None):
         key = 'PCS'
 
         cmd = self._build_command(key, channel)
@@ -90,7 +90,7 @@ class MicroIonController(CoreDevice):
         r = self._parse_response(r)
         return r
 
-    def _build_command(self, key, value = None):
+    def _build_command(self, key, value=None):
 
         #prepend key with our address
         #example of new string formating 
@@ -149,16 +149,16 @@ class tester(unittest.TestCase):
         self.assertEqual(cmd, 'IG1 OFF ' + CRLF)
 
     def testProcessControl(self):
-        cmd = self._controller.get_process_control_status(channel = 1)
+        cmd = self._controller.get_process_control_status(channel=1)
         self.assertEqual(cmd, 'PCS 1 ' + CRLF)
 
-        cmd = self._controller.get_process_control_status(channel = None)
+        cmd = self._controller.get_process_control_status(channel=None)
         self.assertEqual(cmd, 'PCS ' + CRLF)
 
 
 
 if __name__ == '__main__':
-    m = MicroIonController(name = 'micro_ion_controller')
+    m = MicroIonController(name='micro_ion_controller')
     m.bootstrap()
     m.scan()
 #============= EOF ====================================

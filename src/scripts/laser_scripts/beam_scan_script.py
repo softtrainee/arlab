@@ -46,7 +46,7 @@ class BeamScanScript(LaserScript):
         if self.video_record:
             p = unique_path(os.path.join(data_dir, 'beamscans'),
                           'video',
-                          filetype = 'avi'
+                          filetype='avi'
                           )
             vm.start()
             vm.start_recording(p)
@@ -65,13 +65,13 @@ class BeamScanScript(LaserScript):
             manager.set_beam_diameter(bd)
 
             msg = 'waiting at %0.1f for %i sec' % (bd, delay)
-            self.add_display_text(msg, log = True)
+            self.add_display_text(msg, log=True)
 
             time.sleep(delay)
 
         self.clean_up()
         if self.video_record:
             vm.stop_recording()
-        self.add_display_text('beam scan complete', log = True)
+        self.add_display_text('beam scan complete', log=True)
 
 #============= EOF ====================================

@@ -15,4 +15,4 @@ limitations under the License.
 '''
 #!/usr/bin/env python
 from migrate.versioning.shell import main
-main(debug = 'False')
+main(debug='False')

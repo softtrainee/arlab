@@ -30,18 +30,18 @@ class MotionProfiler(ConfigLoadable):
 #===========================================================================    
 # configable parameters 
 #===========================================================================
-    velocity_tol = Float(0.5, enter_set = True, auto_set = False)
-    acceleration_tol = Float(0.5, enter_set = True, auto_set = False)
-    deceleration_tol = Float(0.05, enter_set = True, auto_set = False)
+    velocity_tol = Float(0.5, enter_set=True, auto_set=False)
+    acceleration_tol = Float(0.5, enter_set=True, auto_set=False)
+    deceleration_tol = Float(0.05, enter_set=True, auto_set=False)
 
-    max_velocity = Float(4, enter_set = True, auto_set = False)
-    min_velocity = Float(0.5, enter_set = True, auto_set = False)
+    max_velocity = Float(4, enter_set=True, auto_set=False)
+    min_velocity = Float(0.5, enter_set=True, auto_set=False)
 
     min_acceleration = Float(0.05)
     min_deceleration = Float(0.05)
 
-    min_acceleration_time = Float(0.2, enter_set = True, auto_set = False)
-    max_transit_time = Float(5, enter_set = True, auto_set = False)
+    min_acceleration_time = Float(0.2, enter_set=True, auto_set=False)
+    max_transit_time = Float(5, enter_set=True, auto_set=False)
 #===============================================================================
 # computed parameters
 #===============================================================================
@@ -74,7 +74,7 @@ class MotionProfiler(ConfigLoadable):
         if os.path.isfile(p):
             config = self.get_configuration(self.config_path)
             for attr in ATTRS:
-                self.set_attribute(config, attr, 'General', attr, cast = 'float')
+                self.set_attribute(config, attr, 'General', attr, cast='float')
         else:
             #create a new config file with default values
             config = self.configparser_factory()
@@ -93,29 +93,29 @@ class MotionProfiler(ConfigLoadable):
                     Item('max_velocity'),
                     Item('max_transit_time'),
                     Item('min_acceleration_time'),
-                    label = 'Tolerances'
+                    label='Tolerances'
                      ),
                  Group(
                        HGroup(
                                Group(
-                                     Item('atime', format_str = '%0.4f', style = 'readonly'),
-                                     Item('dtime', format_str = '%0.4f', style = 'readonly'),
-                                     Item('cvtime', format_str = '%0.4f', style = 'readonly'),
+                                     Item('atime', format_str='%0.4f', style='readonly'),
+                                     Item('dtime', format_str='%0.4f', style='readonly'),
+                                     Item('cvtime', format_str='%0.4f', style='readonly'),
                                      ),
                                spring,
                                Group(
-                                     Item('adisp', format_str = '%0.4f', style = 'readonly'),
-                                     Item('ddisp', format_str = '%0.4f', style = 'readonly'),
-                                     Item('cvdisp', format_str = '%0.4f', style = 'readonly'),
+                                     Item('adisp', format_str='%0.4f', style='readonly'),
+                                     Item('ddisp', format_str='%0.4f', style='readonly'),
+                                     Item('cvdisp', format_str='%0.4f', style='readonly'),
                                      )
                               ),
                        Group(
-                             Item('max_transit_err', style = 'custom'),
-                             Item('velocity_err', style = 'custom'),
-                             Item('min_acceleration_err', style = 'custom'),
-                             Item('trapezoidal_err', style = 'custom'),
+                             Item('max_transit_err', style='custom'),
+                             Item('velocity_err', style='custom'),
+                             Item('min_acceleration_err', style='custom'),
+                             Item('trapezoidal_err', style='custom'),
                              ),
-                       label = 'Results'
+                       label='Results'
                        )
                )
         return v
@@ -227,7 +227,7 @@ class MotionProfiler(ConfigLoadable):
 
         return cv, ac, dc#, force
 
-    def find_min(self, disp, v, a, d, tol = 0.001):
+    def find_min(self, disp, v, a, d, tol=0.001):
 
         times, _distances = self.calculate_transit_parameters(disp, v, a, d)
         atime = times[0]

@@ -49,9 +49,9 @@ class ExperimentUIPlugin(CoreUIPlugin):
         manager = app.get_service('src.experiments.experiments_manager.ExperimentsManager')
         manager.on_trait_change(obj.update, 'selected')
 
-        args = dict(id = 'experiment.analysis.graph.view',
-                         name = 'GraphView',
-                         obj = obj
+        args = dict(id='experiment.analysis.graph.view',
+                         name='GraphView',
+                         obj=obj
                          )
 
         return self.traitsuiview_factory(args, kw)

@@ -23,7 +23,7 @@ import scikits.statsmodels as sm
 
 #============= views ===================================
 class WLS(object):
-    def __init__(self, x, y, w, fitdegree = 1):
+    def __init__(self, x, y, w, fitdegree=1):
         order = fitdegree + 1
         self.X = np.asarray(x)
         self.Y = np.asarray(y)
@@ -42,7 +42,7 @@ class WLS(object):
 
 
 class OLS(object):
-    def __init__(self, x, y, fitdegree = 1):
+    def __init__(self, x, y, fitdegree=1):
         order = fitdegree + 1
         self.X = np.asarray(x)
         self.Y = np.asarray(y)

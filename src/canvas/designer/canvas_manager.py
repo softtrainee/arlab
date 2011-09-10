@@ -36,7 +36,7 @@ class CanvasManager(EnvisageManager):
     _selected_item = DelegatesTo('canvas_designer')
 
     show_hide = Event
-    show_hide_label = Property(depends_on = '_show_hide')
+    show_hide_label = Property(depends_on='_show_hide')
     _show_hide = Bool
 
     editor_klass = CEditor
@@ -68,9 +68,9 @@ class CanvasManager(EnvisageManager):
         '''
         '''
         self.window.workbench.edit(self.canvas_designer,
-                         kind = self.editor_klass)
+                         kind=self.editor_klass)
 
-    def open(self, path = None):
+    def open(self, path=None):
         path = self._file_dialog('open')
         if path is not None:
             self.canvas_designer.bootstrap(path)
@@ -103,9 +103,9 @@ class CanvasManager(EnvisageManager):
     def active_canvas_view(self):
         '''
         '''
-        v = View(Item('_selected_item', editor = InstanceEditor(), style = 'custom', show_label = False),
-                 Item('show_hide', editor = ButtonEditor(label_value = 'show_hide_label'),
-                      show_label = False)
+        v = View(Item('_selected_item', editor=InstanceEditor(), style='custom', show_label=False),
+                 Item('show_hide', editor=ButtonEditor(label_value='show_hide_label'),
+                      show_label=False)
                  )
         return v
 

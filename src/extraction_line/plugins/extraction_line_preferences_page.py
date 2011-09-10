@@ -37,10 +37,10 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
 
     def get_additional_groups(self):
         canvas_group = VGroup(
-                              Item('style', show_label = False),
+                              Item('style', show_label=False),
                               'width',
                               'height',
-                              label = 'Canvas', show_border = True)
+                              label='Canvas', show_border=True)
         return [
 
                 canvas_group,

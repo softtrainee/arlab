@@ -16,7 +16,7 @@ limitations under the License.
 import numpy as np
 from src.helpers.datetime_tools import get_datetime#, convert_timestamp
 
-def smooth(x, window_len = 11, window = 'hanning'):
+def smooth(x, window_len=11, window='hanning'):
     x = np.asarray(x)
     s = np.r_[2 * x[0] - x[window_len - 1::-1], x, 2 * x[-1] - x[-1:-window_len:-1]]
     if window == 'flat': #moving average
@@ -24,7 +24,7 @@ def smooth(x, window_len = 11, window = 'hanning'):
     else:
         w = eval('np.' + window + '(window_len)')
 
-    y = np.convolve(w / w.sum(), s, mode = 'same')
+    y = np.convolve(w / w.sum(), s, mode='same')
     return y[window_len:-window_len + 1]
 
 def seasonal_subseries(x, y, **kw):
@@ -41,11 +41,11 @@ def seasonal_subseries(x, y, **kw):
 
     return xbins, ybins, ms
 
-def downsample_1d(data, factor, estimator = np.mean):
+def downsample_1d(data, factor, estimator=np.mean):
     n = data.shape[0]
     crarr = data[:n - (n % int(factor))]
     a = [crarr[i::factor] for i in range(factor)]
-    return estimator(np.concatenate([a]), axis = 0)
+    return estimator(np.concatenate([a]), axis=0)
 #def aautocorrelation(x, **kw):
 #    result = np.correlate(x, x, mode = 'full')
 #    r = result[result.size / 2:]
@@ -56,9 +56,9 @@ def downsample_1d(data, factor, estimator = np.mean):
 #    r = np.real(np.fft.ifft(s * np.conjugate(s))) / np.var(x)
 #    return np.linspace(0, len(r) - 1, len(r)), r
 
-def autocorrelation(x, nlags = 100):
+def autocorrelation(x, nlags=100):
     from autocorr import autocorr
-    return autocorr(x, nlags = nlags)
+    return autocorr(x, nlags=nlags)
 
 #if __name__ == '__main__':
 #    import csv

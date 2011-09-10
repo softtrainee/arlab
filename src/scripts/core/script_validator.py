@@ -42,7 +42,7 @@ class ScriptValidator(HasTraits):
 
                 self.errors.append(error)
 
-    def validate(self, script, file = None):
+    def validate(self, script, file=None):
         '''
         '''
 
@@ -59,22 +59,22 @@ class ScriptValidator(HasTraits):
                 for name, linei, ei in e:
                     if file is not None:
                         name = file
-                    self._add_error(file = name, linenum = linei,
-                            error = ei)
+                    self._add_error(file=name, linenum=linei,
+                            error=ei)
             else:
                 if file is not None:
                     name = file
-                self._add_error(file = name, linenum = linenum, error = e)
+                self._add_error(file=name, linenum=linenum, error=e)
 
     def traits_view(self):
         '''
         '''
-        cols = [ObjectColumn(name = 'file'),
-              ObjectColumn(name = 'linenum'),
-              ObjectColumn(name = 'error')]
-        return View(Item('errors', editor = TableEditor(columns = cols,
-                                                        editable = False),
-                         show_label = False))
+        cols = [ObjectColumn(name='file'),
+              ObjectColumn(name='linenum'),
+              ObjectColumn(name='error')]
+        return View(Item('errors', editor=TableEditor(columns=cols,
+                                                        editable=False),
+                         show_label=False))
 
     def _parser_default(self):
         '''

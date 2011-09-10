@@ -117,7 +117,7 @@ class Object3D(Node):
         glEnd()
         glEnable(GL_LIGHTING)
 
-    def _text_(self, text, offs, stroke = False, color = None):
+    def _text_(self, text, offs, stroke=False, color=None):
         '''
         '''
 
@@ -138,25 +138,25 @@ class Object3D(Node):
                 glutBitmapCharacter(font, ord(c))
             glEnable(GL_LIGHTING)
 
-    def _cylinder_(self, r, h, rotate = True):
+    def _cylinder_(self, r, h, rotate=True):
         '''
         '''
         if rotate:
             glRotatef(90, 1, 0, 0)
         gluCylinder(gluNewQuadric(), r, r, h, xseg, yseg)
 
-    def _sphere_(self, radius = 1):
+    def _sphere_(self, radius=1):
         '''
         '''
 
         glutSolidSphere(radius, xseg, yseg)
 
-    def _cube_(self, radius = 1):
+    def _cube_(self, radius=1):
         '''
         '''
         glutSolidCube(radius)
 
-    def _tube_(self, points, colors, radius = 1):
+    def _tube_(self, points, colors, radius=1):
         '''
         '''
         if len(colors) == 4:
@@ -175,7 +175,7 @@ class Object3D(Node):
                 (2 * bend_radius, 2 * bend_radius, 0), (2 * bend_radius, 2 * bend_radius, 0)]
 
 
-        self._tube_(points, self.color, radius = tube_radius)
+        self._tube_(points, self.color, radius=tube_radius)
 
         glPushMatrix()
         glTranslatef(0, 0.5, 0)
@@ -187,7 +187,7 @@ class Object3D(Node):
         self._can_(0.66, 0.5)
         glPopMatrix()
 
-    def _nipple_(self, trans, rot, rh, flange = 'mini'):
+    def _nipple_(self, trans, rot, rh, flange='mini'):
         '''
         '''
         if flange == 'mini':
@@ -207,20 +207,20 @@ class Object3D(Node):
 
         glPopMatrix()
 
-    def _can_(self, radius = 1, height = 1):
+    def _can_(self, radius=1, height=1):
         '''
         '''
         glPushMatrix()
 
         glPushMatrix()
         glRotatef(90, 1, 0, 0)
-        self._disk_(radius = radius)
+        self._disk_(radius=radius)
         glPopMatrix()
 
         glPushMatrix()
         glTranslatef(0, -height, 0)
         glRotatef(90, 1, 0, 0)
-        self._disk_(radius = radius)
+        self._disk_(radius=radius)
         glPopMatrix()
 
         self._cylinder_(radius, height)
@@ -251,12 +251,12 @@ class Object3D(Node):
             glPopMatrix()
         glPopMatrix()
 
-    def _disk_(self, radius = 1, inner_radius = 0):
+    def _disk_(self, radius=1, inner_radius=0):
         '''
         '''
         gluDisk(gluNewQuadric(), inner_radius, radius, xseg, yseg)
 
-    def _torus_(self, radius = 1, inner_radius = 0, xs = None, ys = None):
+    def _torus_(self, radius=1, inner_radius=0, xs=None, ys=None):
         '''
         '''
         if xs is None:
@@ -267,7 +267,7 @@ class Object3D(Node):
 
         glutSolidTorus(inner_radius, radius, xs, ys)
 
-    def _set_material(self, color = None, alpha = None):
+    def _set_material(self, color=None, alpha=None):
         '''
         '''
         c = color

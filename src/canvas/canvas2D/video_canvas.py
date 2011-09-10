@@ -33,7 +33,7 @@ class VideoCanvas(BaseDataCanvas):
 
     use_backbuffer = True
     def _camera_default(self):
-        return Camera(parent = self)
+        return Camera(parent=self)
 
     def __init__(self, *args, **kw):
         '''
@@ -43,21 +43,21 @@ class VideoCanvas(BaseDataCanvas):
         super(VideoCanvas, self).__init__(*args, **kw)
 
 
-        self.video_underlay = VideoUnderlay(component = self, video = self.video)
+        self.video_underlay = VideoUnderlay(component=self, video=self.video)
 
         self.underlays.insert(0, self.video_underlay)
 
         #self.overlays.pop()
 
-        for key, d in [('x_grid', dict(line_color = (1, 1, 0),
-                                     line_width = 1,
-                                     line_style = 'dash',
-                                     visible = self.show_grids)
+        for key, d in [('x_grid', dict(line_color=(1, 1, 0),
+                                     line_width=1,
+                                     line_style='dash',
+                                     visible=self.show_grids)
                                      ),
-                       ('y_grid', dict(line_color = (1, 1, 0),
-                                      line_width = 1,
-                                      line_style = 'dash',
-                                      visible = self.show_grids))]:
+                       ('y_grid', dict(line_color=(1, 1, 0),
+                                      line_width=1,
+                                      line_style='dash',
+                                      visible=self.show_grids))]:
             o = getattr(self, key)
             o.trait_set(**d)
 

@@ -43,7 +43,7 @@ class DataManager(Manager):
         self._current_frame = name
         return name
 
-    def _new_frame_path(self, path = None, directory = 'scans', base_frame_name = None):
+    def _new_frame_path(self, path=None, directory='scans', base_frame_name=None):
         '''
 
         '''
@@ -55,7 +55,7 @@ class DataManager(Manager):
             os.mkdir(base)
 
         if path is None:
-            path = unique_path(base, base_frame_name, filetype = self._extension)
+            path = unique_path(base, base_frame_name, filetype=self._extension)
 
         self.info('New frame {}'.format(path))
         return path

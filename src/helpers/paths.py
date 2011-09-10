@@ -22,7 +22,7 @@ make sure directory exists and build if not
 import os
 from src.helpers.initialization_parser import InitializationParser
 
-HOME=os.path.expanduser('~')
+HOME = os.path.expanduser('~')
 home = 'Pychrondata'
 
 from globals import beta
@@ -31,19 +31,18 @@ host_url = 'https://arlab.googlecode.com/svn'
 project_root = 'trunk'
 
 if beta:
-    home = '%s_beta' % home
+    home = '{}_beta'.format(home)
     project_root = 'branches/pychron'
 
 project_home = os.path.join(host_url, project_root)
 root = os.path.join(HOME, home)
-src_repo_name='pychron_device_stream'
-pychron_src_dir=os.path.join(HOME, 'Programming','mercurial',src_repo_name)
+src_repo_name = 'pychron_device_stream'
+pychron_src_dir = os.path.join(HOME, 'Programming', 'mercurial', src_repo_name)
 
 #_dir suffix ensures the path is checked for existence
 root_dir = root
 
 src_root = os.getcwd()
-#src_root=os.path.join('C:\\Users','clark','workspace','PychronTRUNK')
 
 #directories directly under root
 setup_dir = os.path.join(root, 'setupfiles')
@@ -75,8 +74,6 @@ snapshot_dir = os.path.join(data_dir, 'snapshots')
 
 hidden_dir = os.path.join(root, '.hidden')
 
-
-
 def rec_make(pi):
     if not os.path.exists(pi):
         try:
@@ -97,20 +94,21 @@ def build_initialization_file(root):
                                     'Spectrometer',
                                     ]
         DEFAULT_DATA_PLUGINS = ['Graph', 'MDDModeler']
-        DEFAULT_SOCIAL_PLUGINS=['Twitter','Email']
+        DEFAULT_SOCIAL_PLUGINS = ['Twitter', 'Email']
 
         DEFAULT_PLUGINS = (DEFAULT_GENERAL_PLUGINS + 
-                            DEFAULT_HARDWARE_PLUGINS +  
-                            DEFAULT_DATA_PLUGINS +
+                            DEFAULT_HARDWARE_PLUGINS + 
+                            DEFAULT_DATA_PLUGINS + 
                             DEFAULT_SOCIAL_PLUGINS
                             )
                             
         DEFAULT_PLUGINS.sort()
-        plugins = parser.get_plugins(all = True)
+        plugins = parser.get_plugins(all=True)
         plugins.sort()
+        
+        #add any default plugin not defined already
         uptodate = DEFAULT_PLUGINS == plugins
         if not uptodate:
-
             diff = list(set(DEFAULT_PLUGINS) - set(plugins))
             for grp, plist in [('general', DEFAULT_GENERAL_PLUGINS),
                           ('hardware', DEFAULT_HARDWARE_PLUGINS),
@@ -123,7 +121,35 @@ def build_initialization_file(root):
                         #@todo add child elements such as managers and devices to this plugin
     else:
         with open(p, 'w') as f:
-            f.write('''<root>
+            f.write('''
+<!--
+This is the initialization file. It defines the plugins and the associated managers and devices
+that should be bootstrapped (load, open, initialize) on startup.
+
+load means read configuration values
+open means create and error check communication handles
+initialize is a hook for object specific tasks directly after communications is established
+
+plugins
+general
+  database
+  svn @depecretated
+  script
+hardware
+  extractionline
+  bakeout
+  fusionsCO2
+  fusionsDiode
+  synradCO2
+  spectrometer
+data
+  graph
+social
+  email
+  twitter
+-->
+
+<root>
   <general>
     <plugin enabled="false">Database</plugin>
     <plugin enabled="false">SVN</plugin>
@@ -168,7 +194,6 @@ def build_initialization_file(root):
       <plugin enabled="false">Twitter</plugin>
       <plugin enabled="false">Email</plugin>
   </social>
-  
 </root>
 ''')
 
@@ -193,65 +218,4 @@ def build_directories():
                 #build initialization file
                 build_initialization_file(pi)
 
-
-#============= EOF ====================================
-
-##write the default plugins
-#        with open(p, 'w') as f:
-#            text = '''<root>
-#<general>
-#    <plugin enabled="false">Database</plugin>
-#    <plugin enabled="false">SVN</plugin>
-#</general>
-#<hardware>
-#    <plugin enabled="false">ExtractionLine</plugin>
-#    <plugin enabled="false">FusionsCO2</plugin>
-#    <plugin enabled="false">FusionsDiode</plugin>
-#    <plugin enabled="false">SynradCO2</plugin>
-#    <plugin enabled="false">Spectrometer</plugin>
-#</hardware>
-#<data>
-#    <plugin enabled="true">Graph</plugin>
-#    <plugin enabled="false">MDDModeler</plugin>
-#</data>
-#</root>'''
-#            f.write(text)
-
-#build_directories()
-#def build_plugin_directory(base):
-#
-#    p = os.path.join(base, '__init__.py')
-#    if not os.path.isfile(p):
-#        with open(p, 'w') as f:
-#            pass
-#
-#    p = os.path.join(base, 'plugins.xml')
-#    if os.path.isfile(p):
-        #check to see if file is up to date
-#        parser = InitializationParser(p)
-#
-#        DEFAULT_GENERAL_PLUGINS = ['Database', 'SVN']
-#        DEFAULT_HARDWARE_PLUGINS = ['ExtractionLine',
-#                                    'FusionsCO2', 'FusionsDiode',
-#                                    'SynradCO2',
-#                                    'Spectrometer',
-#                                    ]
-#        DEFAULT_DATA_PLUGINS = ['Graph', 'MDDModeler']
-#
-#        DEFAULT_PLUGINS = DEFAULT_GENERAL_PLUGINS + DEFAULT_HARDWARE_PLUGINS + DEFAULT_DATA_PLUGINS
-#        DEFAULT_PLUGINS.sort()
-#        plugins = parser.get_plugins(all = True)
-#        plugins.sort()
-#        uptodate = DEFAULT_PLUGINS == plugins
-#        if not uptodate:
-#
-#            diff = list(set(DEFAULT_PLUGINS) - set(plugins))
-#            for grp, plist in [('general', DEFAULT_GENERAL_PLUGINS),
-#                          ('hardware', DEFAULT_HARDWARE_PLUGINS),
-#                          ('data', DEFAULT_DATA_PLUGINS),
-#                          ]:
-#                for di in diff:
-#                    if di in plist:
-#                        parser.add_plugin(grp, di)
-
-
+#============= EOF ==============================================

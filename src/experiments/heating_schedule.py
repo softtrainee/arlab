@@ -35,7 +35,7 @@ class HeatingSchedule(HasTraits):
         G{classtree}
     '''
     steps = List(HeatingStep)
-    name = String(enter_set = True, auto_set = False)
+    name = String(enter_set=True, auto_set=False)
     save_as = Bool(False)
     def row_factory(self):
         '''
@@ -54,14 +54,14 @@ class HeatingSchedule(HasTraits):
         '''
         '''
         cols = [
-                ObjectColumn(name = 'power'),
+                ObjectColumn(name='power'),
                ]
-        editor = TableEditor(columns = cols,
-                              show_toolbar = True,
-                           row_factory = self.row_factory
+        editor = TableEditor(columns=cols,
+                              show_toolbar=True,
+                           row_factory=self.row_factory
                            )
-        return View(Item('name', enabled_when = 'save_as'),
-                    Item('steps', show_label = False, editor = editor))
+        return View(Item('name', enabled_when='save_as'),
+                    Item('steps', show_label=False, editor=editor))
 
 class HeatingScheduleEditor(HasTraits):
     '''
@@ -88,16 +88,16 @@ class HeatingScheduleEditor(HasTraits):
     def _schedule_default(self):
         '''
         '''
-        return HeatingSchedule(save_as = True)
+        return HeatingSchedule(save_as=True)
 
     def traits_view(self):
         '''
         '''
-        v = View(Item('schedule', show_label = False, style = 'custom'),
-                 HGroup(Item('save'), Item('save_as', visible_when = '_allow_save_as'), show_labels = False),
-                 width = 300,
-                 height = 300,
-                 buttons = ['OK', 'Cancel'])
+        v = View(Item('schedule', show_label=False, style='custom'),
+                 HGroup(Item('save'), Item('save_as', visible_when='_allow_save_as'), show_labels=False),
+                 width=300,
+                 height=300,
+                 buttons=['OK', 'Cancel'])
         return v
 #============= views ===================================
 #============= EOF ====================================

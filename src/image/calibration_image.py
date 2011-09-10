@@ -32,7 +32,7 @@ from src.data_processing.image.image_helper import grayspace, erode, dilate, \
 class CalibrationImage(Image):
     '''
     '''
-    def find_polygons(self, thresh = 0, erode_value = 0, dilate_value = 0, angle = 0):
+    def find_polygons(self, thresh=0, erode_value=0, dilate_value=0, angle=0):
         self.frames = []
         frame = self.source_frame
         #crop(frame, 150, 150, 300, 300)
@@ -63,7 +63,7 @@ class CalibrationImage(Image):
         #lsrc, ls = lines(gsrc, thresh = thresh)
         #self.frames.append(lsrc)
 
-    def process(self, thresh = 0, erode_value = 0, dilate_value = 0, angle = 0):
+    def process(self, thresh=0, erode_value=0, dilate_value=0, angle=0):
         '''
    
         '''
@@ -81,7 +81,7 @@ class CalibrationImage(Image):
         gsrc = threshold(gsrc, thresh)
 
         self.frames.append(colorspace(gsrc))
-        lsrc, ls = lines(gsrc, thresh = thresh)
+        lsrc, ls = lines(gsrc, thresh=thresh)
         self.frames.append(lsrc)
 
         vert = []

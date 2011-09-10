@@ -75,7 +75,7 @@ class CoreScript(Loggable):
     def join(self):
         self._thread.join()
 
-    def bootstrap(self, new_thread = True):
+    def bootstrap(self, new_thread=True):
 
         #load the file 
         p = os.path.join(self.source_dir, self.file_name)
@@ -102,7 +102,7 @@ class CoreScript(Loggable):
 #            return True
         return True
 
-    def kill_script(self, failure_reason = None, force = False):
+    def kill_script(self, failure_reason=None, force=False):
         if self.isAlive() or force:
             self._kill_script()
 
@@ -148,7 +148,7 @@ class CoreScript(Loggable):
     def set_graph(self):
         pass
 
-    def set_data_frame(self, base_frame_name = None):
+    def set_data_frame(self, base_frame_name=None):
         '''
         '''
         dm = self.data_manager
@@ -165,8 +165,8 @@ class CoreScript(Loggable):
 #        else:
 
         #if self.record_data:
-        dm.new_frame(directory = self.name[:-6].lower(),
-                     base_frame_name = base_frame_name)
+        dm.new_frame(directory=self.name[:-6].lower(),
+                     base_frame_name=base_frame_name)
 
         h = self.get_frame_header()
         for line in h:
@@ -180,7 +180,7 @@ class CoreScript(Loggable):
     def start(self, new_thread):
         new_thread = True
         if new_thread:
-            self._thread = Thread(target = self.run)
+            self._thread = Thread(target=self.run)
             self._thread.start()
         else:
             self.run()
@@ -189,7 +189,7 @@ class CoreScript(Loggable):
         self.info('%s started' % self.file_name)
 #        print self._file_contents_, 'file cont'
 
-        errors = self.parser.parse(self._file_contents_, check_header = False)
+        errors = self.parser.parse(self._file_contents_, check_header=False)
 #        print errors
         error = False
         for e in errors:
@@ -219,7 +219,7 @@ class CoreScript(Loggable):
         return True
 
 
-    def _run_command(self, linenum, cmd, infor = False):
+    def _run_command(self, linenum, cmd, infor=False):
         '''
        
         
@@ -244,7 +244,7 @@ class CoreScript(Loggable):
         #print token
         parser = getattr(self.parser, '_%s_parse' % token.lower())
 
-        func(*parser(0, line = cmd)[1:])
+        func(*parser(0, line=cmd)[1:])
 
 
     def raw_statement(self, a):

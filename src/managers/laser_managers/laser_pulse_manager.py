@@ -29,17 +29,17 @@ from threading import Thread, Condition
 class Pulse(HasTraits):
     power = Float(1.1)
     duration = Float(1)
-    wait_control = Instance(WaitDialog, transient = True)
-    manager = Any(transient = True)
+    wait_control = Instance(WaitDialog, transient=True)
+    manager = Any(transient=True)
     def _duration_changed(self):
         self.wait_control.wtime = self.duration
         self.wait_control._current_time = self.duration
 
     def _wait_control_default(self):
-        return WaitDialog(low_name = 0,
-                          auto_start = False,
-                          wtime = self.duration,
-                          title = None
+        return WaitDialog(low_name=0,
+                          auto_start=False,
+                          wtime=self.duration,
+                          title=None
 
                           )
     def start(self):
@@ -62,7 +62,7 @@ class Pulse(HasTraits):
     def traits_view(self):
         v = View(Item('power'),
                  Item('duration'),
-               Item('wait_control', show_label = False, style = 'custom')
+               Item('wait_control', show_label=False, style='custom')
                )
         return v
 
@@ -90,7 +90,7 @@ class LaserPulseManager(Manager):
                 pul = pickle.load(f)
                 pul.manager = self.parent
         else:
-            pul = Pulse(manager = self.parent)
+            pul = Pulse(manager=self.parent)
 
         return pul
 
@@ -99,15 +99,15 @@ class LaserPulseManager(Manager):
 
     def _pulse_button_fired(self):
 
-        t = Thread(target = self.pulse.start)
+        t = Thread(target=self.pulse.start)
         t.start()
 
     def traits_view(self):
-        v = View(self._button_factory('pulse_button', 'pulse_label', align = 'right'),
-                 Item('pulse', show_label = False, style = 'custom'),
-                 title = 'Pulse',
-                 resizable = True,
-                 handler = PulseHandler
+        v = View(self._button_factory('pulse_button', 'pulse_label', align='right'),
+                 Item('pulse', show_label=False, style='custom'),
+                 title='Pulse',
+                 resizable=True,
+                 handler=PulseHandler
                  )
         return v
 

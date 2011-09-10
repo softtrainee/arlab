@@ -102,7 +102,7 @@ class ThermoRack(CoreDevice):
         resp = self.ask(cmd)
         sp = None
         if not self.simulation and resp is not None:
-            sp = self.parse_response(resp, scale = 0.1)
+            sp = self.parse_response(resp, scale=0.1)
         return sp
 
     def get_faults(self, **kw):
@@ -133,13 +133,13 @@ class ThermoRack(CoreDevice):
 
         resp = self.ask(cmd)
         if not self.simulation and resp is not None:
-            temp = self.parse_response(resp, scale = 0.1)
+            temp = self.parse_response(resp, scale=0.1)
         else:
             temp = self.get_random_value(0, 40)
 
         return temp
 
-    def parse_response(self, resp, scale = 1):
+    def parse_response(self, resp, scale=1):
         '''
             @type resp: C{str}
             @param resp:
@@ -170,12 +170,12 @@ class ThermoRack(CoreDevice):
 
         CoreDevice.graph_builder(self, g)
         x = np.linspace(0, 10, 100)
-        g.new_series(x = x,
-                     y = np.cos(x)
+        g.new_series(x=x,
+                     y=np.cos(x)
                      )
 
     def current_state_view(self):
-        v = View(Item('graph', show_label = False, style = 'custom'))
+        v = View(Item('graph', show_label=False, style='custom'))
         return v
 
 

@@ -28,7 +28,7 @@ class ProcessView(HasTraits):
     '''
     name = String
     execute = Event
-    execute_label = Property(depends_on = 'alive')
+    execute_label = Property(depends_on='alive')
 
     #experiment = Any
     #script = Any
@@ -102,10 +102,10 @@ class ProcessView(HasTraits):
         return View(Item('name'),
                     HGroup(
                            Item('execute',
-                                editor = ButtonEditor(label_value = 'execute_label'),
+                                editor=ButtonEditor(label_value='execute_label'),
                                        #enabled_when = 'experiment or script',
-                                       enabled_when = 'not dirty',
-                                       show_label = False)
+                                       enabled_when='not dirty',
+                                       show_label=False)
                             ),
                             spring
                     )

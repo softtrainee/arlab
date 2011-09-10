@@ -40,13 +40,13 @@ class MotionControllerManager(Manager):
     '''
 
     motion_controller = Instance(MotionController)
-    _axes = DelegatesTo('motion_controller', prefix = 'axes')
+    _axes = DelegatesTo('motion_controller', prefix='axes')
     axes = Property
 
     apply_all = Button('Apply All')
     restore = Button
     load_button = Button('Load')
-    motion_group = DelegatesTo('motion_controller', prefix = 'groupobj')
+    motion_group = DelegatesTo('motion_controller', prefix='groupobj')
 
     view_style = Enum('simple_view', 'full_view')
     def kill(self, **kw):
@@ -95,19 +95,19 @@ class MotionControllerManager(Manager):
         '''
         '''
         view = View(Item('axes',
-                       style = 'custom',
-                       show_label = False,
-                       editor = ListEditor(use_notebook = True,
-                                                dock_style = 'tab',
-                                                page_name = '.name',
-                                                view = self.view_style
+                       style='custom',
+                       show_label=False,
+                       editor=ListEditor(use_notebook=True,
+                                                dock_style='tab',
+                                                page_name='.name',
+                                                view=self.view_style
                         )
                         ),
-                    HGroup(spring, Item('load_button'), Item('restore'), Item('apply_all'), show_labels = False,
-                           visible_when = 'view_style=="full_view"'
+                    HGroup(spring, Item('load_button'), Item('restore'), Item('apply_all'), show_labels=False,
+                           visible_when='view_style=="full_view"'
                            ),
-                resizable = True,
-                handler = self.handler_klass, #MotionControllerManagerHandler,
-                title = 'Configure Motion Controller'
+                resizable=True,
+                handler=self.handler_klass, #MotionControllerManagerHandler,
+                title='Configure Motion Controller'
                 )
         return view

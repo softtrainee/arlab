@@ -30,19 +30,19 @@ class ExperimentActionSet(WorkbenchActionSet):
 #    menus = [
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
-    actions = [Action(name = 'New Experiment',
-                      path = 'MenuBar/File',
-                    class_name = 'src.experiments.plugins.experiment_actions:NewExperimentAction'
+    actions = [Action(name='New Experiment',
+                      path='MenuBar/File',
+                    class_name='src.experiments.plugins.experiment_actions:NewExperimentAction'
 
                     ),
-                Action(name = 'Open Experiment',
-                       path = 'MenuBar/File',
-                       class_name = 'src.experiments.plugins.experiment_actions:OpenExperimentAction'
+                Action(name='Open Experiment',
+                       path='MenuBar/File',
+                       class_name='src.experiments.plugins.experiment_actions:OpenExperimentAction'
 
                        ),
-                Action(name = 'Recall',
-                       path = 'MenuBar/File',
-                       class_name = 'src.experiments.plugins.experiment_actions:RecallAnalysisAction'
+                Action(name='Recall',
+                       path='MenuBar/File',
+                       class_name='src.experiments.plugins.experiment_actions:RecallAnalysisAction'
 
                        )
              ]

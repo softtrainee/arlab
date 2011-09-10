@@ -34,18 +34,18 @@ class SummaryWindow(HasTraits):
         '''
         '''
 
-        self.graph = RegressionGraph(container_dict = dict(type = 'g', shape = [2, 3],
-                                       padding = 0,
-                                       fill_padding = True,
-                                       spacing = (5, 5)
+        self.graph = RegressionGraph(container_dict=dict(type='g', shape=[2, 3],
+                                       padding=0,
+                                       fill_padding=True,
+                                       spacing=(5, 5)
                                        ))
         if self.item is not None:
             for i, s in enumerate(self.item.signals):
                 x, y = parse_time_series_blob(s.time_series)
-                self.graph.new_plot(**dict(padding = [25, 0, 0, 25]))
-                self.graph.new_series(x = x, y = y, plotid = i, color = colornames[i], type = 'scatter',
-                                      marker_size = 5, #1.75,
-                                      marker = 'circle'
+                self.graph.new_plot(**dict(padding=[25, 0, 0, 25]))
+                self.graph.new_series(x=x, y=y, plotid=i, color=colornames[i], type='scatter',
+                                      marker_size=5, #1.75,
+                                      marker='circle'
                                       )
 
 #    def edit_traits(self, *args, **kw):
@@ -61,10 +61,10 @@ class SummaryWindow(HasTraits):
         '''
         '''
         self.load()
-        v = View(Item('graph', style = 'custom', show_label = False),
-               resizable = True,
-               width = 500,
-               height = 500
+        v = View(Item('graph', style='custom', show_label=False),
+               resizable=True,
+               width=500,
+               height=500
                )
         return v
 #============= views ===================================

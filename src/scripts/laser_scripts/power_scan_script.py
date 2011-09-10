@@ -51,8 +51,8 @@ class PowerScanScript(LaserPowerScript):
                     plotid = int(args[3])
                     series = int(args[4])
 
-                    self.scan_setup.append((obj, func, dict(plotid = plotid, series = series,
-                                                        label = label
+                    self.scan_setup.append((obj, func, dict(plotid=plotid, series=series,
+                                                        label=label
                                                         )))
 
 
@@ -85,9 +85,9 @@ class PowerScanScript(LaserPowerScript):
     def set_graph(self):
         '''
         '''
-        g = StackedGraph(title = 'Power Scan')
+        g = StackedGraph(title='Power Scan')
 
-        g.new_plot(show_legend = 'ur')
+        g.new_plot(show_legend='ur')
         cur_plotid = 0
         for obj, func, plotinfo in self.scan_setup:
 
@@ -95,13 +95,13 @@ class PowerScanScript(LaserPowerScript):
             series = plotinfo['series']
             label = plotinfo['label']
             if not cur_plotid == plotid:
-                g.new_plot(show_legend = 'ur')
+                g.new_plot(show_legend='ur')
                 cur_plotid = plotid
 
-            g.new_series(type = 'line', render_style = 'connectedpoints', plotid = cur_plotid)
+            g.new_series(type='line', render_style='connectedpoints', plotid=cur_plotid)
             if label is None:
                 label = func
-            g.set_series_label(label, series = series, plotid = cur_plotid)
+            g.set_series_label(label, series=series, plotid=cur_plotid)
 
 
         g.edit_traits()

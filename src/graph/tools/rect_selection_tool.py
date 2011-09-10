@@ -41,7 +41,7 @@ class RectSelectionTool(AbstractOverlay):
         self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
 
         plot = self.component
-        index = plot.map_index((event.x, event.y), threshold = self.threshold)
+        index = plot.map_index((event.x, event.y), threshold=self.threshold)
         if index is not None:
             if event.control_down:
                 plot.index.metadata[self.hover_metadata_name] = [index]
@@ -85,7 +85,7 @@ class RectSelectionTool(AbstractOverlay):
             @type event: C{str}
             @param event:
         '''
-        return self.component.map_index((event.x, event.y), threshold = self.threshold)
+        return self.component.map_index((event.x, event.y), threshold=self.threshold)
 
 
     def _already_selected(self, token):
@@ -142,7 +142,7 @@ class RectSelectionTool(AbstractOverlay):
                 md[self.selection_metadata_name] = new
                 getattr(plot, name).metadata_changed = True
 
-    def _select_token(self, token, append = True):
+    def _select_token(self, token, append=True):
         '''
             @type token: C{str}
             @param token:

@@ -48,7 +48,7 @@ class KerrMotor(KerrDevice):
     enabled = Bool(False)
     timer = None
 
-    data_position = Property(depends_on = '_data_position')
+    data_position = Property(depends_on='_data_position')
     _data_position = Float
 
     update_position = Float
@@ -76,10 +76,10 @@ class KerrMotor(KerrDevice):
 
               ]
         for section, key in args:
-            self.set_attribute(config, key, section, key, cast = 'float')
+            self.set_attribute(config, key, section, key, cast='float')
 
         if config.has_option('Motion', 'hysteresis'):
-            self.hysteresis_value = self.config_get(config, 'Motion', 'hysteresis', cast = 'int')
+            self.hysteresis_value = self.config_get(config, 'Motion', 'hysteresis', cast='int')
             self.use_hysteresis = True
         else:
             self.use_hysteresis = False
@@ -155,7 +155,7 @@ class KerrMotor(KerrDevice):
             instead we will poll the motor position until n successive positions are equal ie at a limt
         '''
 
-        self.block(4, progress = progress)
+        self.block(4, progress=progress)
 
         #we are homed and should reset position
 
@@ -166,7 +166,7 @@ class KerrMotor(KerrDevice):
         #move to the home position
         self._set_data_position(0)
 
-    def block(self, n = 3, tolerance = 1, progress = None):
+    def block(self, n=3, tolerance=1, progress=None):
         '''
         '''
         fail_cnt = 0
@@ -177,7 +177,7 @@ class KerrMotor(KerrDevice):
 
         while not self.parent.simulation:
 
-            pos = self._get_motor_position(verbose = False)
+            pos = self._get_motor_position(verbose=False)
 
             if progress is not None:
                 progress.change_message('{} position = {}'.format(self.name, pos))
@@ -208,7 +208,7 @@ class KerrMotor(KerrDevice):
         addr = self.address
         cmd = '0E'
         cmd = self._build_command(addr, cmd)
-        status_byte = self.ask(cmd, hex = True, delay = 100, info = 'get status byte')
+        status_byte = self.ask(cmd, hex=True, delay=100, info='get status byte')
 
         if status_byte == 'simulation':
             status_byte = 'DFDF'
@@ -247,7 +247,7 @@ class KerrMotor(KerrDevice):
 #            self._motor_position = pos
             return pos
 
-    def _set_motor_position_(self, pos, hysteresis = 0):
+    def _set_motor_position_(self, pos, hysteresis=0):
         '''
         '''
         self._motor_position = pos + hysteresis
@@ -363,13 +363,13 @@ class KerrMotor(KerrDevice):
             else:
                 self.update_position = self._data_position
 
-    def _float_to_hexstr(self, f, endianness = 'little'):
+    def _float_to_hexstr(self, f, endianness='little'):
         '''
         '''
         fmt = '%sI' % ('<' if endianness == 'little' else '>')
         return binascii.hexlify(struct.pack(fmt, int(f)))
 
-    def _hexstr_to_float(self, h, endianness = 'little'):
+    def _hexstr_to_float(self, h, endianness='little'):
         '''
         '''
         fmt = '%sI' % ('<' if endianness == 'little' else '>')
@@ -382,9 +382,9 @@ class KerrMotor(KerrDevice):
         '''
         '''
         return View(VGroup(
-                           HGroup('min', 'max', label = 'Limits', show_border = True),
-                           VGroup('velocity', 'acceleration', Item('sign', editor = EnumEditor(values = {'negative':-1, 'positive':1})), label = 'Move', show_border = True),
-                           VGroup('home_velocity', 'home_acceleration', 'focal_position', label = 'Home', show_border = True)
+                           HGroup('min', 'max', label='Limits', show_border=True),
+                           VGroup('velocity', 'acceleration', Item('sign', editor=EnumEditor(values={'negative':-1, 'positive':1})), label='Move', show_border=True),
+                           VGroup('home_velocity', 'home_acceleration', 'focal_position', label='Home', show_border=True)
                            )
                     )
 #============= EOF ====================================

@@ -27,8 +27,8 @@ class ScriptPerspective(Perspective):
     show_editor_area = True
 
     contents = [
-              PerspectiveItem(id = 'pychron.process_view'),
-              PerspectiveItem(id = 'script.errors', position = 'bottom', relative_to = 'pychron.process_view'),
+              PerspectiveItem(id='pychron.process_view'),
+              PerspectiveItem(id='script.errors', position='bottom', relative_to='pychron.process_view'),
               ]
 #============= views ===================================
 #============= EOF ====================================

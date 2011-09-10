@@ -38,7 +38,7 @@ class JogPattern(HasTraits):
     direction = Enum('in', 'out')
     show_path = Bool(True)
 
-    parent = Any(transient = True)
+    parent = Any(transient=True)
     transit_time = Float
     mp = MotionProfiler()
 
@@ -49,9 +49,9 @@ class JogPattern(HasTraits):
 #============= views ===================================
     def traits_view(self):
         v = View(
-                 Item('ns', label = 'N revolutions'),
-                 Item('R', label = 'Radius'),
-                 Item('p', label = '% radius increase'),
+                 Item('ns', label='N revolutions'),
+                 Item('R', label='Radius'),
+                 Item('p', label='% radius increase'),
                  Item('step_scalar'),
 
                  HGroup(Item('show_path'), Item('show_overlap'),
@@ -66,7 +66,7 @@ class JogPattern(HasTraits):
         if self.parent is not None:
             self.parent.replot()
 
-    def do_spiral(self, kind, sx = None, sy = None):
+    def do_spiral(self, kind, sx=None, sy=None):
 
         if self.direction == 'in':
             return getattr(self, 'inner_%s' % kind)(sx, sy)
@@ -83,9 +83,9 @@ class JogPattern(HasTraits):
         jogger = square_jogger(
                                sx, sy,
                                self.R, self.ns, self.p,
-                               direction = 'in'
+                               direction='in'
                                )
-        self._spiral_(self.cx, self.cy, jogger, 'green', direction = 'in')
+        self._spiral_(self.cx, self.cy, jogger, 'green', direction='in')
 
     def outer_line_spiral(self, *args):
         cx = self.cx
@@ -99,10 +99,10 @@ class JogPattern(HasTraits):
     def inner_line_spiral(self, *args):
         cx = self.cx
         cy = self.cy
-        line_jog = line_jogger(cx, cy, self.R, self.ns, self.p, self.step_scalar, direction = 'in')
-        self._spiral_(cx, cy, line_jog, 'yellow', direction = 'in')
+        line_jog = line_jogger(cx, cy, self.R, self.ns, self.p, self.step_scalar, direction='in')
+        self._spiral_(cx, cy, line_jog, 'yellow', direction='in')
 
-    def _spiral_(self, cx, cy, jogger, color, direction = 'out'):
+    def _spiral_(self, cx, cy, jogger, color, direction='out'):
         xs = []
         ys = []
         if direction == 'out':
@@ -127,9 +127,9 @@ class JogPattern(HasTraits):
                 if self.show_overlap:
                     if self.parent is not None:
                         self.parent.circle(x, y, self.beam_diam / 2.0,
-                                    face_color = color, #(1, 0, 0, 0),
-                                    alpha = self.alpha,
-                                    edge_width = 0,
+                                    face_color=color, #(1, 0, 0, 0),
+                                    alpha=self.alpha,
+                                    edge_width=0,
                                     #   edge_color = 'transparent'
                                  )
             except StopIteration:
@@ -141,7 +141,7 @@ class JogPattern(HasTraits):
 
         if self.show_path:
             if self.parent is not None:
-                self.parent.canvas.new_series(xs, ys, color = color, render_style = 'connectedpoints')
+                self.parent.canvas.new_series(xs, ys, color=color, render_style='connectedpoints')
                 self.parent.canvas.set_x_limits(-1.5 + cx, cx + 1.5)
                 self.parent.canvas.set_y_limits(-1.5 + cy, cy + 1.5)
 

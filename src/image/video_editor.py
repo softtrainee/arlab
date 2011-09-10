@@ -36,7 +36,7 @@ class _VideoEditor(_ImageEditor):
 
 
 
-    def get_frames(self, tweak = True):
+    def get_frames(self, tweak=True):
         '''
             @type tweak: C{str}
             @param tweak:

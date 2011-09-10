@@ -36,15 +36,15 @@ class LaserPlugin(CorePlugin):
             raise NotImplementedError
 
         so = self.service_offer_factory(
-                          protocol = '.'.join(self.klass),
-                          factory = self._factory)
+                          protocol='.'.join(self.klass),
+                          factory=self._factory)
 
         return [so]
 
     def _factory(self):
         '''
         '''
-        factory = __import__(self.klass[0], fromlist = [self.klass[1]])
+        factory = __import__(self.klass[0], fromlist=[self.klass[1]])
         m = getattr(factory, self.klass[1])()
         bind_preference(m, 'use_video', '{}.use_video'.format(self.id))
         bind_preference(m, 'close_after', '{}.close_after'.format(self.id))
@@ -52,11 +52,11 @@ class LaserPlugin(CorePlugin):
 
         return m
 
-    managers = List(contributes_to = MANAGERS)
+    managers = List(contributes_to=MANAGERS)
     def _managers_default(self):
         '''
         '''
         app = self.application
-        return [dict(name = self.name,
-                     manager = app.get_service('.'.join(self.klass)))]
+        return [dict(name=self.name,
+                     manager=app.get_service('.'.join(self.klass)))]
 #============= EOF ====================================

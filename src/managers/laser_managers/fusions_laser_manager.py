@@ -43,9 +43,9 @@ class FusionsLaserManager(LaserManager):
     subsystem = Instance(ArduinoSubsystem)
     fiber_light = Instance(FiberLight)
 
-    light = DelegatesTo('fiber_light', prefix = 'power')
-    light_label = DelegatesTo('fiber_light', prefix = 'power_label')
-    light_intensity = DelegatesTo('fiber_light', prefix = 'intensity')
+    light = DelegatesTo('fiber_light', prefix='power')
+    light_label = DelegatesTo('fiber_light', prefix='power_label')
+    light_intensity = DelegatesTo('fiber_light', prefix='intensity')
 
     beam = DelegatesTo('logic_board')
     beammin = DelegatesTo('logic_board')
@@ -59,7 +59,7 @@ class FusionsLaserManager(LaserManager):
 
     pointer = Event
     pointer_state = Bool(False)
-    pointer_label = Property(depends_on = 'pointer_state')
+    pointer_label = Property(depends_on='pointer_state')
 
     step_heat_manager = None
     def set_light(self, state):
@@ -140,7 +140,7 @@ class FusionsLaserManager(LaserManager):
 
             self.stage_manager.move_to_hole(holenumber)
 
-    def enable_laser(self, mode = 'normal'):
+    def enable_laser(self, mode='normal'):
         '''
         '''
         if mode == 'remote':
@@ -164,7 +164,7 @@ class FusionsLaserManager(LaserManager):
             self.stage_manager.video_manager.locate_centroid()
 
         is_ok = self.logic_board._enable_laser_()
-        super(FusionsLaserManager, self).enable_laser(is_ok = is_ok)
+        super(FusionsLaserManager, self).enable_laser(is_ok=is_ok)
         return is_ok
 
     def disable_laser(self):
@@ -195,7 +195,7 @@ class FusionsLaserManager(LaserManager):
 
         module = __import__(package, globals(), locals(), [_class_], -1)
         factory = getattr(module, _class_)
-        m = factory(motion_controller = stage_controller)
+        m = factory(motion_controller=stage_controller)
         m.edit_traits()
 
 #========================= views =========================
@@ -227,10 +227,10 @@ class FusionsLaserManager(LaserManager):
         '''
 
         vg = VGroup(HGroup(
-                                 Item('enabled_led', show_label = False, style = 'custom', editor = LEDEditor()),
-                                 self._button_group_factory(self.get_control_buttons(), orientation = 'h'),
+                                 Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+                                 self._button_group_factory(self.get_control_buttons(), orientation='h'),
                                     ),
-                                    springy = True
+                                    springy=True
                           )
 
         ps = self.get_power_slider()
@@ -238,7 +238,7 @@ class FusionsLaserManager(LaserManager):
             vg.content.append(ps)
 
         vg.content.append(Item('light_intensity',
-                                 enabled_when = 'fiber_light.state'))
+                                 enabled_when='fiber_light.state'))
 
         csliders = self.get_control_sliders()
         vg.content.append(self._update_slider_group_factory(csliders))
@@ -257,12 +257,12 @@ class FusionsLaserManager(LaserManager):
     def _subsystem_default(self):
         '''
         '''
-        return ArduinoSubsystem(name = 'arduino_subsystem_2')
+        return ArduinoSubsystem(name='arduino_subsystem_2')
 
     def _fiber_light_default(self):
         '''
         '''
-        return FiberLight(name = 'FiberLight')
+        return FiberLight(name='FiberLight')
 
 #========================== EOF ====================================
 #    def show_video_controls(self):

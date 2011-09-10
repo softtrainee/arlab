@@ -40,7 +40,7 @@ class HWCParser(XMLParser):
             body = '''cmd='{command}'
         resp=self.ask(self._build_command(cmd))
         return self._parse_response(resp)
-'''.format(command = f.find('command').text)
+'''.format(command=f.find('command').text)
 
 
             kwargs = ', '
@@ -50,10 +50,10 @@ class HWCParser(XMLParser):
             if kwargs == ', ':
                 kwargs = ''
 
-            d = dict(name = name,
-                   args = args,
-                   kwargs = kwargs,
-                   body = body
+            d = dict(name=name,
+                   args=args,
+                   kwargs=kwargs,
+                   body=body
                    )
             r.append(d)
 

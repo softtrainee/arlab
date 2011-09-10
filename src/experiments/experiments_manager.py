@@ -61,31 +61,31 @@ class ExperimentsManager(EnvisageManager):
         e.extraction_line_manager = self.get_extraction_line_manager()
 
         self.window.workbench.edit(e,
-                                   kind = self.editor_klass,
-                                   use_existing = False)
+                                   kind=self.editor_klass,
+                                   use_existing=False)
 
     def recall_analysis(self):
         '''
         '''
-        r = RecallWindow(database = self.get_database())
+        r = RecallWindow(database=self.get_database())
 
         r.edit_traits()
 
     def new(self):
         '''
         '''
-        e = Experiment(database = self.get_database())
+        e = Experiment(database=self.get_database())
         self.add_and_edit(e)
 
     def _bootstrap_hook(self, obj, path):
-        return obj.bootstrap(path, database = self.get_database())
+        return obj.bootstrap(path, database=self.get_database())
 
     def open_default(self):
         '''
         '''
         p = '/Users/Ross/Pychrondata_beta/experiments/default.pxp'
         if os.path.exists(p):
-            self.open(path = p)
+            self.open(path=p)
         else:
             self.new()
 

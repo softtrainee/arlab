@@ -40,8 +40,8 @@ class ArduinoSubsystem(Subsystem):
                 _class_ = 'Arduino{}'.format(m)
                 gdict = globals()
                 if _class_ in gdict:
-                    module = gdict[_class_](name = _class_,
-                                            configuration_dir_name = self.configuration_dir_name
+                    module = gdict[_class_](name=_class_,
+                                            configuration_dir_name=self.configuration_dir_name
                                     )
                     module.load()
                     module._communicator = self._communicator

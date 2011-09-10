@@ -25,17 +25,17 @@ class ScriptActionSet(WorkbenchActionSet):
     '''
     id = 'pychron.script.action_set'
     actions = [
-               Action(name = 'New',
-                      path = 'MenuBar/File/Script',
-                      class_name = 'src.scripts.plugins.script_actions:NewScriptAction'),
+               Action(name='New',
+                      path='MenuBar/File/Script',
+                      class_name='src.scripts.plugins.script_actions:NewScriptAction'),
 
-               Action(name = 'Run',
-                      path = 'MenuBar/File/Script',
-                      class_name = 'src.scripts.plugins.script_actions:RunScriptAction'),
+               Action(name='Run',
+                      path='MenuBar/File/Script',
+                      class_name='src.scripts.plugins.script_actions:RunScriptAction'),
 
-               Action(name = 'Power Map',
-                      path = 'MenuBar/File/Script/Open',
-                      class_name = 'src.scripts.plugins.script_actions:PowerMapAction'),
+               Action(name='Power Map',
+                      path='MenuBar/File/Script/Open',
+                      class_name='src.scripts.plugins.script_actions:PowerMapAction'),
 
               ]
 #============= EOF ====================================

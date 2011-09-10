@@ -35,7 +35,7 @@ from threading import Thread
 
 
 class Client(HasTraits):
-    command = String('Read argus_temp_monitor', enter_set = True, auto_set = False)
+    command = String('Read argus_temp_monitor', enter_set=True, auto_set=False)
     resend = Button
     response = String
     port = Int(1068)
@@ -44,7 +44,7 @@ class Client(HasTraits):
 
     period = Float(100)
     periodic = Event
-    periodic_label = Property(depends_on = '_alive')
+    periodic_label = Property(depends_on='_alive')
 
     n_periods = Int(100)
     _alive = Bool(False)
@@ -52,7 +52,7 @@ class Client(HasTraits):
     def _periodic_fired(self):
         self._alive = not self._alive
         if self._alive:
-            t = Thread(target = self._loop)
+            t = Thread(target=self._loop)
             t.start()
 
     def _loop(self):
@@ -95,27 +95,27 @@ class Client(HasTraits):
         v = View(
                  VGroup(
                      Item('command'),
-                     Item('response', show_label = False, style = 'custom',
-                          width=-300
+                     Item('response', show_label=False, style='custom',
+                          width= -300
                           ),
-                     Item('resend',show_label = False),
+                     Item('resend', show_label=False),
                      
                      HGroup(Item('periodic',
-                                 editor = ButtonEditor(label_value = 'periodic_label'),
-                                 show_label = False), Item('period', show_label = False),
+                                 editor=ButtonEditor(label_value='periodic_label'),
+                                 show_label=False), Item('period', show_label=False),
                                  Item('n_periods')
                             ),
-                     Item('kind', show_label = False),
+                     Item('kind', show_label=False),
                      Item('port'),
                      Item('host')),
 
-                 resizable = True
+                 resizable=True
                  )
         return v
 
 
 
-def send_command(addr, cmd, kind = 'UDP'):
+def send_command(addr, cmd, kind='UDP'):
     p = socket.SOCK_STREAM
     if kind == 'UDP':
         p = socket.SOCK_DGRAM
@@ -172,10 +172,10 @@ def benchmark(me, im, fp):
     t = Timer(me, im)
     st = time.time()
     n = 1000
-    times = array(t.repeat(n, number = 1))
+    times = array(t.repeat(n, number=1))
     dur = time.time() - st
 
-    etime = timedelta(seconds = dur)
+    etime = timedelta(seconds=dur)
     avg = mean(times)
     stdev = std(times)
     mi = min(times) * 1000
@@ -187,7 +187,7 @@ def benchmark(me, im, fp):
 
     stats = array([n, etime, avg, stdev, mi, ma])
     p = os.path.join(os.getcwd(), fp)
-    savez(p, times = times, stats = stats)
+    savez(p, times=times, stats=stats)
 
     foo = load(p)
     hist(foo['times'], n / 4.)

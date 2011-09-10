@@ -100,8 +100,8 @@ class ExtractionLineScript(CoreScript):
     def extraction_analysis_statement(self, *args):
         #bootstrap an analysis script
         an = MeasurementScript(
-                            source_dir = os.path.join(scripts_dir, 'analysis'),
-                            file_name = 'test.rs'
+                            source_dir=os.path.join(scripts_dir, 'analysis'),
+                            file_name='test.rs'
 
                             )
         an.bootstrap()
@@ -125,7 +125,7 @@ class ExtractionLineScript(CoreScript):
 
         self.log_statement(msg)
 
-    def wait_statement(self, wtime, N = 5):
+    def wait_statement(self, wtime, N=5):
         '''
         
         '''
@@ -141,10 +141,10 @@ class ExtractionLineScript(CoreScript):
             if wtime > N:
                 c = Condition()
                 c.acquire()
-                wd = WaitDialog(wtime = wtime,
-                                    condition = c,
-                                    parent = self)
-                do_later(wd.edit_traits, kind = 'livemodal')
+                wd = WaitDialog(wtime=wtime,
+                                    condition=c,
+                                    parent=self)
+                do_later(wd.edit_traits, kind='livemodal')
                 c.wait()
                 c.release()
                 do_later(wd.close)
@@ -217,7 +217,7 @@ class ExtractionLineScript(CoreScript):
 
                 if '---' in c and '%i' in c:
                     c = c % i
-                self.run_command(c, infor = True)
+                self.run_command(c, infor=True)
 
     def valve_statement(self, valve_name, open_close):
         '''

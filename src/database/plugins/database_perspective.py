@@ -27,9 +27,9 @@ class DatabasePerspective(Perspective):
     show_editor_area = True
 
     contents = [
-              PerspectiveItem(id = 'db.user'),
-              PerspectiveItem(id = 'db.project', position = 'bottom', relative_to = 'db.user'),
-              PerspectiveItem(id = 'db.sample', position = 'bottom', relative_to = 'db.project'),
+              PerspectiveItem(id='db.user'),
+              PerspectiveItem(id='db.project', position='bottom', relative_to='db.user'),
+              PerspectiveItem(id='db.sample', position='bottom', relative_to='db.project'),
               ]
 #============= views ===================================
 #============= EOF ====================================

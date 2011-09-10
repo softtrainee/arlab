@@ -50,7 +50,7 @@ def __generate_crc16_table():
     return result
 __crc16_table = __generate_crc16_table()
 
-def computeCRC(data, start_crc = 0xffff):
+def computeCRC(data, start_crc=0xffff):
     '''
         @type start_crc: C{str}
         @param start_crc:

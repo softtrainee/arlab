@@ -50,7 +50,7 @@ class FusionsLaserMonitor(LaserMonitor):
 #                           'General', 'max_coolant_temp', cast = 'float', optional = True)
         if LaserMonitor.load_additional_args(self, config):
             self.set_attribute(config, 'max_coolant_temp',
-                           'General', 'max_coolant_temp', cast = 'float', optional = True)
+                           'General', 'max_coolant_temp', cast='float', optional=True)
 
 
 
@@ -69,7 +69,7 @@ class FusionsLaserMonitor(LaserMonitor):
             if interlocks:
                 inter = ' '.join(interlocks)
                 self.warning('%s' % inter)
-                manager.emergency_shutoff(reason = inter)
+                manager.emergency_shutoff(reason=inter)
                 break
             else:
                 self.info('interlocks OK')
@@ -79,7 +79,7 @@ class FusionsLaserMonitor(LaserMonitor):
             #failed checking interlocks 
             self.gntries += 1
             if self.gntries > NFAILURES:
-                manager.emergency_shutoff(reason = 'failed checking interlocks')
+                manager.emergency_shutoff(reason='failed checking interlocks')
 
 
     def __check_coolant_temp(self):
@@ -88,13 +88,13 @@ class FusionsLaserMonitor(LaserMonitor):
         manager = self.manager
 
         self.info('Check laser coolant temperature')
-        ct = manager.get_coolant_temperature(verbose = False)
+        ct = manager.get_coolant_temperature(verbose=False)
         if ct is None:
             pass
             #manager.emergency_shutoff(reason = 'Laser chiller not available')
         elif ct > self.max_coolant_temp:
             self.warning('Laser coolant over temperature %0.2f' % ct)
-            manager.emergency_shutoff(reason = 'Coolant over temp %f' % ct)
+            manager.emergency_shutoff(reason='Coolant over temp %f' % ct)
 
     def __check_coolant_status(self):
         manager = self.manager
@@ -110,6 +110,6 @@ class FusionsLaserMonitor(LaserMonitor):
 
             if error:
                 self.warning('Laser coolant error %s' % error)
-                manager.emergency_shutoff(reason = error)
+                manager.emergency_shutoff(reason=error)
 
 #============= EOF ====================================

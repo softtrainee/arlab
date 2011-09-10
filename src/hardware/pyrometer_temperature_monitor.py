@@ -37,7 +37,7 @@ class PyrometerTemperatureMonitor(ADCDevice):
                     ('General', 'amps_min'),
                     ('General', 'pyrometer_min'),
                     ('General', 'pyrometer_max')]:
-            self.set_attribute(config, k, s, k, cast = 'float')
+            self.set_attribute(config, k, s, k, cast='float')
 #            
 
         return True

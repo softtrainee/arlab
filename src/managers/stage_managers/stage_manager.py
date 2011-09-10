@@ -66,8 +66,8 @@ class StageManager(Manager):
 
     simulation = DelegatesTo('stage_controller')
 
-    stage_map = Property(depends_on = '_stage_map')
-    stage_maps = Property(depends_on = '_stage_maps')
+    stage_map = Property(depends_on='_stage_map')
+    stage_maps = Property(depends_on='_stage_maps')
 
     _stage_map = Instance(StageMap)
     _stage_maps = None
@@ -105,7 +105,7 @@ class StageManager(Manager):
     stop_label = String('Stop')
 
     hole_thread = None
-    hole = Property(Int(enter_set = True, auto_set = False), depends_on = '_hole')
+    hole = Property(Int(enter_set=True, auto_set=False), depends_on='_hole')
     _hole = Int
 
 
@@ -152,7 +152,7 @@ class StageManager(Manager):
         mapfiles = self.config_get(config, 'General', 'mapfiles')
         for mapfile in mapfiles.split(','):
             path = os.path.join(map_dir, mapfile.strip())
-            sm = StageMap(file_path = path,
+            sm = StageMap(file_path=path,
 
                         )
             self._stage_maps.append(sm)
@@ -174,14 +174,14 @@ class StageManager(Manager):
     def finish_loading(self):
         self.update_axes()
 
-    def add_output(self, msg, color = None):
+    def add_output(self, msg, color=None):
         '''
           
         '''
         if not color:
             color = colors['black']
 
-        self.output.add_text(msg = msg, color = color)
+        self.output.add_text(msg=msg, color=color)
 
 #    def arc_move(self, *args, **kw):
 #        self.timer = self.timer_factory()
@@ -203,7 +203,7 @@ class StageManager(Manager):
 
         self.stage_controller.linear_move(*pos, **kw)
 
-    def _get_hole_by_position(self, x, y, tol = 0.1):
+    def _get_hole_by_position(self, x, y, tol=0.1):
         hole = next((hole for hole in self._stage_map.sample_holes
                       if abs(hole.x - x) < tol and abs(hole.y - y) < tol), None)
         return hole
@@ -231,7 +231,7 @@ class StageManager(Manager):
         x, y, z = self.stage_controller.get_load_position()
         self.info('moving to load position, x={}, y={}, z={}'.format(x, y, z))
 
-        self.stage_controller.linear_move(x, y, grouped_move = False, block = False)
+        self.stage_controller.linear_move(x, y, grouped_move=False, block=False)
 
         self.stage_controller._set_z(z)
         self.stage_controller._block_()
@@ -268,9 +268,9 @@ class StageManager(Manager):
 #            self.info('displacement of move too small {} < {}'.format(d, tol))
 
     @on_trait_change('stop_button')
-    def stop(self, ax_key = None):
+    def stop(self, ax_key=None):
 
-        self.stage_controller.stop(ax_key = ax_key)
+        self.stage_controller.stop(ax_key=ax_key)
 
 
     def moving(self, **kw):
@@ -287,12 +287,12 @@ class StageManager(Manager):
 
             msg = 'homing all motors'
             homed = ['x', 'y', 'z']
-            home_kwargs = dict(x = -25, y = -25, z = 50)
+            home_kwargs = dict(x= -25, y= -25, z=50)
 
         elif self.home_option == 'XY':
             msg = 'homing x,y'
             homed = ['x', 'y']
-            home_kwargs = dict(x = -25, y = -25)
+            home_kwargs = dict(x= -25, y= -25)
         else:
             define_home = False
             msg = 'homing {}'.format(self.home_option)
@@ -322,7 +322,7 @@ class StageManager(Manager):
         self.stage_controller._y_position = -25
 
         self.info('moving to center')
-        self.stage_controller.linear_move(0, 0, block = True, sign_correct = False)
+        self.stage_controller.linear_move(0, 0, block=True, sign_correct=False)
 
 #======================= Button handlers =======================
     def _ejoystick_fired(self):
@@ -333,7 +333,7 @@ class StageManager(Manager):
             self.stage_controller.enable_joystick()
             self.joystick_label = 'Disable Joystick'
 
-            self.joystick_timer = self.timer_factory(func = self._joystick_inprogress_update)
+            self.joystick_timer = self.timer_factory(func=self._joystick_inprogress_update)
         else:
             if self.joystick_timer is not None:
                 self.joystick_timer.Stop()
@@ -344,7 +344,7 @@ class StageManager(Manager):
     def _home_fired(self):
         '''
         '''
-        t = Thread(target = self._home_)
+        t = Thread(target=self._home_)
         t.start()
 
 #===============================views=====================
@@ -367,14 +367,14 @@ class StageManager(Manager):
 
         canvas_group = VGroup(
                             # Item('test'),
-                             HGroup(Item('stage_map', show_label = False,
-                                         editor = EnumEditor(name = 'object.stage_maps')),
+                             HGroup(Item('stage_map', show_label=False,
+                                         editor=EnumEditor(name='object.stage_maps')),
                                     Item('_stage_map',
-                                          show_label = False),
+                                          show_label=False),
                                      spring),
-                             Item('canvas', style = 'custom', editor = editor ,
-                                   show_label = False,
-                                   resizable = False
+                             Item('canvas', style='custom', editor=editor ,
+                                   show_label=False,
+                                   resizable=False
                                    ),
                              )
 
@@ -384,10 +384,10 @@ class StageManager(Manager):
             vg.content.append(getattr(self, h)())
 
         return View(HSplit(vg, canvas_group),
-                    resizable = True,
+                    resizable=True,
                     #title = self.title,
-                    x = 10,
-                    y = 20,
+                    x=10,
+                    y=20,
 #                    handler = self.handler_klass
                     )
 #===============================groups=====================
@@ -405,18 +405,18 @@ class StageManager(Manager):
 
         vg.content.append(HGroup(calibrate_stage, home,
                                  Item('home_option',
-                                      editor = EnumEditor(values = self.home_options),
-                                      show_label = False)))
+                                      editor=EnumEditor(values=self.home_options),
+                                      show_label=False)))
 
         if len(self.buttons) > 2:
         #vg.content.append(self._button_group_factory(self.buttons[:2], orientation = 'h'))
-            vg.content.append(self._button_group_factory(self.buttons[2:], orientation = 'h'))
+            vg.content.append(self._button_group_factory(self.buttons[2:], orientation='h'))
         return vg
 
     def _axis__group__(self):
         '''
         '''
-        return Item('stage_controller', show_label = False, style = 'custom')
+        return Item('stage_controller', show_label=False, style='custom')
 
 
     def _sconfig__group__(self):
@@ -426,25 +426,25 @@ class StageManager(Manager):
 
                      Group(
 
-                           Item('canvas', show_label = False,
-                                editor = InstanceEditor(view = 'config_view'),
-                                 style = 'custom'),
-                           label = 'Canvas'),
+                           Item('canvas', show_label=False,
+                                editor=InstanceEditor(view='config_view'),
+                                 style='custom'),
+                           label='Canvas'),
 
-                     Group(Item('motion_controller_manager', style = 'custom', show_label = False),
-                           Item('motion_profiler', style = 'custom', show_label = False),
-                           label = 'Motion'
+                     Group(Item('motion_controller_manager', style='custom', show_label=False),
+                           Item('motion_profiler', style='custom', show_label=False),
+                           label='Motion'
                            ),
                      Item('tray_calibration_manager',
-                          label = 'Calibration',
-                           show_label = False, style = 'custom'),
+                          label='Calibration',
+                           show_label=False, style='custom'),
 
 #                     Item('output', show_label = False, style = 'custom'),
 
 #                     Item('jog_manager', show_label = False, style = 'custom',
 #                          resizable=False
 #                          ),
-                     layout = 'tabbed'
+                     layout='tabbed'
                      )
 
 #===============================defaults=====================
@@ -452,7 +452,7 @@ class StageManager(Manager):
         return self.motion_configure_factory()
 
     def motion_configure_factory(self, **kw):
-        return MotionControllerManager(motion_controller = self.stage_controller, **kw)
+        return MotionControllerManager(motion_controller=self.stage_controller, **kw)
 
     def _stage_controller_factory(self):
         '''
@@ -464,9 +464,9 @@ class StageManager(Manager):
             from src.hardware.aerotech.aerotech_motion_controller import AerotechMotionController
             factory = AerotechMotionController
 
-        m = factory(name = '{}controller'.format(self.name),
-                    configuration_dir_name = self.configuration_dir_name,
-                    parent = self
+        m = factory(name='{}controller'.format(self.name),
+                    configuration_dir_name=self.configuration_dir_name,
+                    parent=self
                     )
         return m
 
@@ -481,11 +481,11 @@ class StageManager(Manager):
 
         w = 640 / 2.0 / 23.2
         h = 0.75 * w
-        l = LaserTrayCanvas(parent = self,
-                               padding = [30, 5, 5, 30],
-                               map = self._stage_map,
-                               view_x_range = [-w, w],
-                               view_y_range = [-h, h],
+        l = LaserTrayCanvas(parent=self,
+                               padding=[30, 5, 5, 30],
+                               map=self._stage_map,
+                               view_x_range=[-w, w],
+                               view_y_range=[-h, h],
                                )
 
         return l
@@ -497,15 +497,15 @@ class StageManager(Manager):
         w = 640 * canvas.scaling
         h = w * 0.75
 
-        return self.canvas_editor_klass(width = w + canvas.padding_left + canvas.padding_right,
-                                          height = h + canvas.padding_top + canvas.padding_bottom
+        return self.canvas_editor_klass(width=w + canvas.padding_left + canvas.padding_right,
+                                          height=h + canvas.padding_top + canvas.padding_bottom
 
                                           )
     def _output_default(self):
         '''
         '''
-        return RichTextDisplay(height = 175,
-                               width = 100
+        return RichTextDisplay(height=175,
+                               width=100
                                )
 
     def _title_default(self):
@@ -513,14 +513,14 @@ class StageManager(Manager):
         '''
         return '%s Stage Manager' % self.name[:-5].capitalize()
     def _pattern_manager_default(self):
-        return PatternManager(parent = self)
+        return PatternManager(parent=self)
 #    def _jog_manager_default(self):
 #        return JogManager(parent = self)
 
 
     def _tray_calibration_manager_default(self):
-        t = TrayCalibrationManager(parent = self,
-                                   canvas = self.canvas)
+        t = TrayCalibrationManager(parent=self,
+                                   canvas=self.canvas)
         return t
 
 #======================= Property methods ======================
@@ -581,7 +581,7 @@ class StageManager(Manager):
         return pos
 
 
-    def _map_calibrated_space(self, pos, key = None):
+    def _map_calibrated_space(self, pos, key=None):
         map = self._stage_map
 
         #use a affine transform object to map
@@ -612,7 +612,7 @@ class StageManager(Manager):
             pos = self._stage_map.get_hole_pos(str(v))
             if pos is not None:
                 self._hole = v
-                self.hole_thread = Thread(target = self._move_to_hole, args = (str(v),))
+                self.hole_thread = Thread(target=self._move_to_hole, args=(str(v),))
                 self.hole_thread.start()
             else:
                 err = 'Invalid hole {}'.format(v)
@@ -628,8 +628,8 @@ class StageManager(Manager):
         pos = self._stage_map.get_hole_pos(key)
 
         #map the position to calibrated space
-        pos = self._map_calibrated_space(pos, key = key)
-        self.stage_controller.linear_move(block = True, *pos)
+        pos = self._map_calibrated_space(pos, key=key)
+        self.stage_controller.linear_move(block=True, *pos)
 
         self.info('Move complete')
         self.hole_thread = None
@@ -657,11 +657,11 @@ if __name__ == '__main__':
     setup('stage_manager')
 
     s = StageManager(
-                     name = 'co2stage',
-                     configuration_dir_name = 'co2',
+                     name='co2stage',
+                     configuration_dir_name='co2',
                      #parent = DummyParent(),
-                     window_width = 945,
-                     window_height = 545
+                     window_width=945,
+                     window_height=545
 
                      )
 #    from src.initializer import Initializer

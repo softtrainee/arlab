@@ -49,16 +49,16 @@ class VideoPlayer(Videoable):
     crosshairs_color = DelegatesTo('canvas')
 
     def _canvas_default(self):
-        self.video.open(user = 'underlay')
-        return VideoDisplayCanvas(padding = 30,
-                                  video = self.video_manager.video)
+        self.video.open(user='underlay')
+        return VideoDisplayCanvas(padding=30,
+                                  video=self.video_manager.video)
 
     def traits_view(self):
         vc = Item('canvas',
-                  style = 'custom',
-                  editor = VideoComponentEditor(width = 640, height = 480),
-                  show_label = False,
-                  resizable = False,
+                  style='custom',
+                  editor=VideoComponentEditor(width=640, height=480),
+                  show_label=False,
+                  resizable=False,
 
                   )
         v = View(
@@ -66,8 +66,8 @@ class VideoPlayer(Videoable):
                  HGroup(spring, Item('crosshairs_kind'), Item('crosshairs_color')),
                  vc,
 #                 width = 800,
-                 height = 530,
-                 title = 'Video Display'
+                 height=530,
+                 title='Video Display'
                  )
         return v
 if __name__ == '__main__':

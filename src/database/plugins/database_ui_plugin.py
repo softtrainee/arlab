@@ -110,16 +110,16 @@ class DatabaseUIPlugin(CoreUIPlugin):
 
         name = nc[0].upper() + nc[1:]
         __class__ = CLASS % name
-        module = __import__(view, fromlist = [__class__])
+        module = __import__(view, fromlist=[__class__])
         klass = getattr(module, __class__)
 
         database = self._get_database()
         if database is not None:
             args = dict(
-                      id = 'db.%s' % id,
-                      name = name,
-                      category = 'Database',
-                      obj = klass(database = database),
+                      id='db.%s' % id,
+                      name=name,
+                      category='Database',
+                      obj=klass(database=database),
                      )
             return self.traitsuiview_factory(args, kw)
 

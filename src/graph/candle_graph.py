@@ -23,9 +23,9 @@ class CandleGraph(Graph):
     '''
         G{classtree}
     '''
-    def new_series(self, plotid = 0, *args, **kw):
+    def new_series(self, plotid=0, *args, **kw):
 
-        plot, names, rd = self._series_factory(plotid = 0, *args, **kw)
+        plot, names, rd = self._series_factory(plotid=0, *args, **kw)
         plot.x_axis.tick_interval = 1
         series = plot.candle_plot(names, **rd)
         return series[0], plot
@@ -38,7 +38,7 @@ class CandleGraph(Graph):
         self.barminname_generators = [self._name_generator_factory('barmin')]
         self.barmaxname_generators = [self._name_generator_factory('barmax')]
 
-    def _series_factory(self, plotid = 0, *args, **kw):
+    def _series_factory(self, plotid=0, *args, **kw):
 
         minname = self.minname_generators[plotid].next()
         maxname = self.maxname_generators[plotid].next()
@@ -67,6 +67,6 @@ if __name__ == '__main__':
     ybarmax = [20, 20, 20, 20, 20]
     ymax = [25, 25, 25, 25, 25]
 
-    c.new_series(x = x, y = y, ymin = ymin, ymax = ymax, ybarmin = ybarmin, ybarmax = ybarmax)
+    c.new_series(x=x, y=y, ymin=ymin, ymax=ymax, ybarmin=ybarmin, ybarmax=ybarmax)
     c.configure_traits()
 #============= EOF ====================================

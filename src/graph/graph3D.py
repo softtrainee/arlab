@@ -124,11 +124,11 @@ class Graph3D(HasTraits):
         if klass is not None:
             kw['scene_class'] = klass
 
-        v = View(Item('scene', show_label = False,
-                      height = 400,
-                      width = 400,
-                      resizable = True,
-                      editor = SceneEditor(**kw
+        v = View(Item('scene', show_label=False,
+                      height=400,
+                      width=400,
+                      resizable=True,
+                      editor=SceneEditor(**kw
 
 
                                            )))

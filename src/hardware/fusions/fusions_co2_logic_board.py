@@ -24,8 +24,8 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
     '''
     '''
 
-    request_power = Property(Float(enter_set = True, auto_set = False),
-                            depends_on = '_request_power')
+    request_power = Property(Float(enter_set=True, auto_set=False),
+                            depends_on='_request_power')
     _request_power = Float
     request_powermin = Float(0)
     request_powermax = Float(100)
@@ -49,8 +49,8 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         '''
         '''
 
-        self.set_attribute(config, 'request_powermin', 'General', 'power min', cast = 'float')
-        self.set_attribute(config, 'request_powermax', 'General', 'power max', cast = 'float')
+        self.set_attribute(config, 'request_powermin', 'General', 'power min', cast='float')
+        self.set_attribute(config, 'request_powermax', 'General', 'power max', cast='float')
 
         return FusionsLogicBoard.load_additional_args(self, config)
 #        return super(FusionsCO2LogicBoard, self).load_additional_args(config)

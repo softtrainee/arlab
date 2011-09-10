@@ -48,8 +48,8 @@ class Actuator(AbstractDevice):
             else:
                 gdict = globals()
                 if class_type in gdict:
-                    self._cdevice = gdict[class_type](name = class_type,
-                                            configuration_dir_name = self.configuration_dir_name
+                    self._cdevice = gdict[class_type](name=class_type,
+                                            configuration_dir_name=self.configuration_dir_name
                                     )
                     self._cdevice.load()
                     return True

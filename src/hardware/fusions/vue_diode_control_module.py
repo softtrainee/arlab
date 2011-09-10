@@ -104,7 +104,7 @@ class VueDiodeControlModule(CoreDevice):
         '''
         '''
         cmd = 'pa?'
-        return self._parse_response(self.ask(cmd, **kw), type = 'float')
+        return self._parse_response(self.ask(cmd, **kw), type='float')
 
 
 
@@ -113,13 +113,13 @@ class VueDiodeControlModule(CoreDevice):
             
         '''
         cmd = 'adi%i?' % id
-        return self._parse_response(self.ask(cmd, **kw), type = 'float')
+        return self._parse_response(self.ask(cmd, **kw), type='float')
 
     def read_laser_current_adc(self, **kw):
         '''
         '''
         cmd = 'adi?'
-        return self._parse_response(self.ask(cmd, **kw), type = 'float')
+        return self._parse_response(self.ask(cmd, **kw), type='float')
 
     def read_laser_temperature_adc(self, **kw):
         '''
@@ -127,29 +127,29 @@ class VueDiodeControlModule(CoreDevice):
         cmd = 'adlt?'
         #cmd = 't0?'
 
-        return self._parse_response(self.ask(cmd, **kw), type = 'float')
+        return self._parse_response(self.ask(cmd, **kw), type='float')
 
 
     def read_laser_power_adc(self, **kw):
         '''
         '''
         cmd = 'adp?'
-        return self._parse_response(self.ask(cmd, **kw), type = 'float')
+        return self._parse_response(self.ask(cmd, **kw), type='float')
 
     def read_laser_voltage_adc(self, **kw):
         '''
         '''
         cmd = 'adv?'
-        return self._parse_response(self.ask(cmd, **kw), type = 'float')
+        return self._parse_response(self.ask(cmd, **kw), type='float')
     def read_laser_amps(self, **kw):
         '''
         '''
         cmd = 'i?'
-        return self._parse_response(self.ask(cmd, **kw), type = 'float')
+        return self._parse_response(self.ask(cmd, **kw), type='float')
 
     def read_external_control_adc(self, **kw):
         cmd = 'adixc?'
-        return self._parse_response(self.ask(cmd, **kw), type = 'float')
+        return self._parse_response(self.ask(cmd, **kw), type='float')
 
     def set_request_amps(self, a, **kw):
         '''
@@ -158,7 +158,7 @@ class VueDiodeControlModule(CoreDevice):
         cmd = 'i {:0.3d}'.format(a)
         self.ask(cmd, **kw)
 
-    def _parse_response(self, res, type = 'bool'):
+    def _parse_response(self, res, type='bool'):
         '''
         '''
         r = None
@@ -179,28 +179,28 @@ class VueDiodeControlModule(CoreDevice):
 
     def update(self):
 
-        a = self.read_laser_amps(verbose = False)
+        a = self.read_laser_amps(verbose=False)
         if a is not None:
             self.laser_amps = a
 
-        t = self.get_internal_temperature(verbose = False)
+        t = self.get_internal_temperature(verbose=False)
         if t is not None:
             self.laser_temperature = t
 
-        p = self.read_measured_power(verbose = False)
+        p = self.read_measured_power(verbose=False)
         if p is not None:
             self.laser_power = p
 
-        v = self.read_laser_voltage_adc(verbose = False)
+        v = self.read_laser_voltage_adc(verbose=False)
         if v is not None:
             self.laser_voltage = v
 
     def get_control_group(self):
         g = VGroup(
-                Item('laser_amps', format_str = '%0.2f', style = 'readonly'),
-                Item('laser_temperature', format_str = '%0.2f', style = 'readonly'),
-                Item('laser_power', format_str = '%0.2f', style = 'readonly'),
-                Item('laser_voltage', format_str = '%0.2f', style = 'readonly')
+                Item('laser_amps', format_str='%0.2f', style='readonly'),
+                Item('laser_temperature', format_str='%0.2f', style='readonly'),
+                Item('laser_power', format_str='%0.2f', style='readonly'),
+                Item('laser_voltage', format_str='%0.2f', style='readonly')
                 )
         return g
 

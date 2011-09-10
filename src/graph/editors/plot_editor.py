@@ -45,12 +45,12 @@ class PlotEditor(HasTraits):
     _ymin = Float(0)
     _ymax = Float(0)
 
-    xtitle = Property(Str, depends_on = '_xtitle')
-    ytitle = Property(Str, depends_on = '_ytitle')
-    xmax = Property(Float, depends_on = '_xmax')
-    xmin = Property(depends_on = '_xmin')
-    ymax = Property(depends_on = '_xmax')
-    ymin = Property(depends_on = '_ymin')
+    xtitle = Property(Str, depends_on='_xtitle')
+    ytitle = Property(Str, depends_on='_ytitle')
+    xmax = Property(Float, depends_on='_xmax')
+    xmin = Property(depends_on='_xmin')
+    ymax = Property(depends_on='_xmax')
+    ymin = Property(depends_on='_ymin')
 
 
 #    xcolor_ = Property
@@ -66,7 +66,7 @@ class PlotEditor(HasTraits):
 
     #the _prev_selected hack prevents selected from ever being set to None
     #this prevents view resizing when hiding/showing series.
-    selected = Property(depends_on = '_selected')
+    selected = Property(depends_on='_selected')
     _selected = Any
     _prev_selected = Any
 
@@ -110,14 +110,14 @@ class PlotEditor(HasTraits):
 
             id = int(key[4:])
 
-            kwargs = dict(series = plot,
-                                 graph = self.graph,
-                                 plotid = self.id,
-                                 id = id,
-                                 name = self.graph.get_series_label(plotid = self.id, series = id)
+            kwargs = dict(series=plot,
+                                 graph=self.graph,
+                                 plotid=self.id,
+                                 id=id,
+                                 name=self.graph.get_series_label(plotid=self.id, series=id)
                                  )
             self.series_editors.append(editor(**kwargs))
-            self.series_editors.sort(key = lambda x:x.id)
+            self.series_editors.sort(key=lambda x:x.id)
 
             plot.index_mapper.on_trait_change(self.update_x, 'updated')
             plot.value_mapper.on_trait_change(self.update_y, 'updated')
@@ -131,11 +131,11 @@ class PlotEditor(HasTraits):
         '''
         '''
         if not self.autoupdate:
-            self.graph.set_x_limits(min = self._xmin, max = self._xmax, plotid = self.id)
-            self.graph.set_y_limits(min = self._ymin, max = self._ymax, plotid = self.id)
-            self.graph.auto_update(False, plotid = self.id)
+            self.graph.set_x_limits(min=self._xmin, max=self._xmax, plotid=self.id)
+            self.graph.set_y_limits(min=self._ymin, max=self._ymax, plotid=self.id)
+            self.graph.auto_update(False, plotid=self.id)
         else:
-            self.graph.auto_update(True, plotid = self.id)
+            self.graph.auto_update(True, plotid=self.id)
 
     def update_x(self, o, oo, nn):
         '''
@@ -152,59 +152,59 @@ class PlotEditor(HasTraits):
             self._ymin = nn.low
 
     def get_axes_group(self):
-        editor = TextEditor(enter_set = True,
-                            auto_set = False,
+        editor = TextEditor(enter_set=True,
+                            auto_set=False,
 
 
                             )
-        xgrp = VGroup('xtitle', Item('xmin', editor = editor, enabled_when = 'not autoupdate'),
-                                Item('xmax', editor = editor, enabled_when = 'not autoupdate'),
+        xgrp = VGroup('xtitle', Item('xmin', editor=editor, enabled_when='not autoupdate'),
+                                Item('xmax', editor=editor, enabled_when='not autoupdate'),
                                 #Item('xcolor_', editor = ColorEditor(current_color = 'red'))
                                 )
-        ygrp = VGroup('ytitle', Item('ymin', editor = editor, enabled_when = 'not autoupdate'),
-                                Item('ymax', editor = editor, enabled_when = 'not autoupdate'),
+        ygrp = VGroup('ytitle', Item('ymin', editor=editor, enabled_when='not autoupdate'),
+                                Item('ymax', editor=editor, enabled_when='not autoupdate'),
                                 #Item('ycolor_', editor = ColorEditor(current_color = 'blue'))
                                 )
 
-        return VGroup(xgrp, ygrp, show_border = True)
+        return VGroup(xgrp, ygrp, show_border=True)
 
     def traits_view(self):
         '''
         '''
-        cols = [ObjectColumn(name = 'name', editable = False),
-                CheckboxColumn(name = 'show')]
-        table_editor = TableEditor(columns = cols,
-                                   selected = '_selected',
-                                   selection_mode = 'row')
+        cols = [ObjectColumn(name='name', editable=False),
+                CheckboxColumn(name='show')]
+        table_editor = TableEditor(columns=cols,
+                                   selected='_selected',
+                                   selection_mode='row')
         v = View(VGroup(
                         self.get_axes_group(),
                         Group(
                             Item('selected',
-                                 style = 'custom',
-                                  show_label = False,
-                                  editor = InstanceEditor(),
-                                  enabled_when = 'selected.show',
-                                  height = 0.25
+                                 style='custom',
+                                  show_label=False,
+                                  editor=InstanceEditor(),
+                                  enabled_when='selected.show',
+                                  height=0.25
                                  ),
-                                 show_border = True,
-                                 springy = False
+                                 show_border=True,
+                                 springy=False
                              ),
                         Item('series_editors',
-                             style = 'custom',
-                             editor = table_editor,
-                             show_label = False,
-                             springy = False,
-                             height = 0.75
+                             style='custom',
+                             editor=table_editor,
+                             show_label=False,
+                             springy=False,
+                             height=0.75
                              ),
                         ),
 
-                    resizable = True,
-                    height = 0.8,
-                    width = 275,
-                    title = self.name,
-                    handler = PlotEditorHandler,
-                    x = 10,
-                    y = 20
+                    resizable=True,
+                    height=0.8,
+                    width=275,
+                    title=self.name,
+                    handler=PlotEditorHandler,
+                    x=10,
+                    y=20
                     )
         return v
 
@@ -237,7 +237,7 @@ class PlotEditor(HasTraits):
 #    def _get_ycolor_(self):
 #        self._get_color('y')
 
-    def _validate_float(self, v, test = None):
+    def _validate_float(self, v, test=None):
 
         try:
             r = float(v)
@@ -252,14 +252,14 @@ class PlotEditor(HasTraits):
 
     def _set_xtitle(self, v):
         self._xtitle = v
-        self.graph.set_x_title(v, plotid = self.id)
+        self.graph.set_x_title(v, plotid=self.id)
 
 
     def _set_ytitle(self, v):
         self._ytitle = v
 
 
-        self.graph.set_y_title(v, plotid = self.id)
+        self.graph.set_y_title(v, plotid=self.id)
 
     def _get_xtitle(self):
         plot = self.graph.plots[self.id]
@@ -280,19 +280,19 @@ class PlotEditor(HasTraits):
 
     def _set_xmin(self, v):
         self._xmin = v
-        self.graph.set_x_limits(min = v, plotid = self.id)
+        self.graph.set_x_limits(min=v, plotid=self.id)
 
     def _set_xmax(self, v):
         self._xmax = v
-        self.graph.set_x_limits(max = v, plotid = self.id)
+        self.graph.set_x_limits(max=v, plotid=self.id)
 
     def _set_ymin(self, v):
         self._ymin = v
-        self.graph.set_y_limits(min = v, plotid = self.id)
+        self.graph.set_y_limits(min=v, plotid=self.id)
 
     def _set_ymax(self, v):
         self._ymax = v
-        self.graph.set_y_limits(max = v, plotid = self.id)
+        self.graph.set_y_limits(max=v, plotid=self.id)
 
     def _get_xmin(self):
         return self._xmin
@@ -307,18 +307,18 @@ class PlotEditor(HasTraits):
         return self._ymax
 
     def _validate_xmin(self, v):
-        return self._validate_float(v, test = lambda x:None if x >= self.xmax else x)
+        return self._validate_float(v, test=lambda x:None if x >= self.xmax else x)
 
     def _validate_xmax(self, v):
-        v = self._validate_float(v, test = lambda x:None if x <= self.xmin else x)
+        v = self._validate_float(v, test=lambda x:None if x <= self.xmin else x)
         return v
 
     def _validate_ymin(self, v):
-        v = self._validate_float(v, test = lambda x:None if x >= self.ymax else x)
+        v = self._validate_float(v, test=lambda x:None if x >= self.ymax else x)
         return v
 
     def _validate_ymax(self, v):
-        v = self._validate_float(v, test = lambda x:None if x <= self.ymin else x)
+        v = self._validate_float(v, test=lambda x:None if x <= self.ymin else x)
         return v
 
 #============= EOF ====================================

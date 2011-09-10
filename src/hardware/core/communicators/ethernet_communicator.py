@@ -25,7 +25,7 @@ class Handler(Loggable):
         pass
     def send_packet(self, p):
         pass
-    def open_socket(self, addr, timeout = 0.1):
+    def open_socket(self, addr, timeout=0.1):
         self.address = addr
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.connect(addr)
@@ -43,7 +43,7 @@ class TCPHandler(Handler):
 
 class UDPHandler(Handler):
     datasize = 2 ** 10
-    def open_socket(self, addr, timeout = 2):
+    def open_socket(self, addr, timeout=2):
         self.address = addr
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         #self.sock.connect(addr)
@@ -82,9 +82,9 @@ class EthernetCommunicator(Communicator):
         '''
         self.host = self.config_get(config, 'Communications', 'host')
         #self.host = 'localhost'
-        self.port = self.config_get(config, 'Communications', 'port', cast = 'int')
+        self.port = self.config_get(config, 'Communications', 'port', cast='int')
 
-        self.kind = self.config_get(config, 'Communications', 'kind', optional = True)
+        self.kind = self.config_get(config, 'Communications', 'kind', optional=True)
 
         if self.kind is None:
             self.kind = 'UDP'
@@ -119,7 +119,7 @@ class EthernetCommunicator(Communicator):
         self.handler = h
         return h
 
-    def ask(self, cmd, verbose = True, info = None):
+    def ask(self, cmd, verbose=True, info=None):
         '''
 
         '''
@@ -145,7 +145,7 @@ class EthernetCommunicator(Communicator):
 
         return re
 
-    def tell(self, cmd, verbose = True, info = None):
+    def tell(self, cmd, verbose=True, info=None):
         self._lock.acquire()
         handler = self.get_handler()
 

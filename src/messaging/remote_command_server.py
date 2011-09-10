@@ -58,8 +58,8 @@ class RemoteCommandServer(ConfigLoadable):
     _server = None
     repeater = None
 
-    host = Str(enter_set = True, auto_set = False)
-    port = Int(enter_set = True, auto_set = False)
+    host = Str(enter_set=True, auto_set=False)
+    port = Int(enter_set=True, auto_set=False)
     klass = Str
 
     loaded_port = None
@@ -73,7 +73,7 @@ class RemoteCommandServer(ConfigLoadable):
     cur_spacket = String
 
     server_button = Event
-    server_label = Property(depends_on = '_running')
+    server_label = Property(depends_on='_running')
     _running = Bool(False)
     _connected = Bool(False)
 
@@ -96,7 +96,7 @@ class RemoteCommandServer(ConfigLoadable):
 
             host = self.config_get(config, 'General', 'host')
 
-            port = self.config_get(config, 'General', 'port', cast = 'int')
+            port = self.config_get(config, 'General', 'port', cast='int')
             if host is None or port is None:
                 self.warning('Host and Port not set')
                 return
@@ -120,7 +120,7 @@ class RemoteCommandServer(ConfigLoadable):
                 ds = config.getint('Requests', 'datasize')
 
 
-            ptype = self.config_get(config, 'Requests', 'type', optional = False)
+            ptype = self.config_get(config, 'Requests', 'type', optional=False)
             if ptype is None:
                 return
 
@@ -171,7 +171,7 @@ class RemoteCommandServer(ConfigLoadable):
         '''
         self._running = True
         #t = threading.Thread(target = self._server.serve_forever)
-        t = threading.Thread(target = self.start_server)
+        t = threading.Thread(target=self.start_server)
         t.start()
 
         return True
@@ -207,41 +207,41 @@ class RemoteCommandServer(ConfigLoadable):
         '''
         cparams = VGroup(
                         HGroup(
-                                Item('led', show_label = False,
-                                     editor = LEDEditor()),
-                                Item('server_button', show_label = False,
-                                     editor = ButtonEditor(label_value = 'server_label'),
-                                     enabled_when = '_connected'),
+                                Item('led', show_label=False,
+                                     editor=LEDEditor()),
+                                Item('server_button', show_label=False,
+                                     editor=ButtonEditor(label_value='server_label'),
+                                     enabled_when='_connected'),
                                 ),
 
-                        Item('host', visible_when = 'not _running'),
-                        Item('port', visible_when = 'not _running'),
+                        Item('host', visible_when='not _running'),
+                        Item('port', visible_when='not _running'),
 
-                        show_border = True,
-                        label = 'Connection',
+                        show_border=True,
+                        label='Connection',
                         )
         stats = Group(
-                      Item('packets_received', style = 'readonly'),
-                      Item('cur_rpacket', label = 'Recieved', style = 'readonly'),
-                      Item('packets_sent', style = 'readonly'),
-                      Item('cur_spacket', label = 'Sent', style = 'readonly'),
+                      Item('packets_received', style='readonly'),
+                      Item('cur_rpacket', label='Recieved', style='readonly'),
+                      Item('packets_sent', style='readonly'),
+                      Item('cur_spacket', label='Sent', style='readonly'),
 
-                      Item('repeater_fails', style = 'readonly'),
-                      Item('run_time', style = 'readonly'),
-                      show_border = True,
-                      label = 'Statistics',
-                      visible_when = '_connected'
+                      Item('repeater_fails', style='readonly'),
+                      Item('run_time', style='readonly'),
+                      show_border=True,
+                      label='Statistics',
+                      visible_when='_connected'
                       )
 
         buttons = HGroup(
-                         Item('save', show_label = False, enabled_when = '_dirty')
+                         Item('save', show_label=False, enabled_when='_dirty')
                          )
         v = View(VGroup(
                         cparams,
                         stats,
                         buttons
                         ),
-                handler = RCSHandler,
+                handler=RCSHandler,
                )
         return v
 

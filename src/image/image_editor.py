@@ -55,10 +55,10 @@ class _ImageEditor(Editor):
             return obj.frames
 
 
-    def _create_control(self, parent, track_mouse = False):
+    def _create_control(self, parent, track_mouse=False):
         '''
         '''
-        panel = Panel(parent, -1, style = CLIP_CHILDREN)
+        panel = Panel(parent, -1, style=CLIP_CHILDREN)
 
         panel.SetClientSize((640, 480))
 #        panel.SetClientSize((893, 610))
@@ -129,10 +129,10 @@ class _ImageEditor(Editor):
         '''
         '''
 
-        bitmap = cvIplImageAsBitmap(src, swap = True, flip = False)
+        bitmap = cvIplImageAsBitmap(src, swap=True, flip=False)
         dc.DrawBitmap(bitmap, 0, 0, False)
 
-    def _display_crosshair(self, dc, x, y, pen = None):
+    def _display_crosshair(self, dc, x, y, pen=None):
         '''
         '''
         if not pen:
@@ -189,7 +189,7 @@ class _ImageEditor(Editor):
             display = src
         self._display_image(dc, display)
 
-    def _display_points(self, dc, ptlist, radius = 5):
+    def _display_points(self, dc, ptlist, radius=5):
         '''
         '''
         for pt in ptlist:

@@ -30,7 +30,7 @@ class EnvisageScript(EnvisageEditable):
     '''
         G{classtree}
     '''
-    text = Property(depends_on = '_text_')
+    text = Property(depends_on='_text_')
     _text_ = String('')
     manager = Any
     parent = Any
@@ -91,7 +91,7 @@ class EnvisageScript(EnvisageEditable):
 
         if self.parent:
             path = self.parent.validator.parser.__check_valid_subroutine__(sub)
-            self.parent.open(path = path)
+            self.parent.open(path=path)
 #            if path:
 #                self.parent.add_script(path)
 
@@ -104,12 +104,12 @@ class EnvisageScript(EnvisageEditable):
         actions = []
 
         if on_sub:
-            actions.append(Action(name = 'GO TO SUB',
-                        on_perform = self.goto_sub))
+            actions.append(Action(name='GO TO SUB',
+                        on_perform=self.goto_sub))
 
         return Menu(*actions)
 
-    def bootstrap(self, path = ''):
+    def bootstrap(self, path=''):
         '''
             @type p: C{str}
             @param p:
@@ -119,11 +119,11 @@ class EnvisageScript(EnvisageEditable):
         self._script = self._script_factory()
         return self.read()
 
-    def save(self, path = None):
+    def save(self, path=None):
         '''
         '''
         oldname, path = self._pre_save(path)
-        self._dump_items(path, self.text, use_pickle = False)
+        self._dump_items(path, self.text, use_pickle=False)
         self.file_path = path
 
         root, name = os.path.split(path)
@@ -134,10 +134,10 @@ class EnvisageScript(EnvisageEditable):
     def _script_factory(self):
         sdir = os.path.split(self.file_path)[0]
 
-        kw = dict(source_dir = sdir,
-                 file_name = self.name,
-                 manager = self.manager,
-                 file_path = self.file_path
+        kw = dict(source_dir=sdir,
+                 file_name=self.name,
+                 manager=self.manager,
+                 file_path=self.file_path
                  )
 
         sp = self.script_package
@@ -179,8 +179,8 @@ class EnvisageScript(EnvisageEditable):
     def traits_view(self):
         '''
         '''
-        v = View(Item('text', show_label = False, style = 'custom',
-                           editor = ScriptEditor()
+        v = View(Item('text', show_label=False, style='custom',
+                           editor=ScriptEditor()
 
                     )
               )

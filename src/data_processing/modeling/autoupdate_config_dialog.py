@@ -27,7 +27,7 @@ class AutoupdateConfigDialog(HasTraits):
     def traits_view(self):
         v = View('tempoffset',
                'timeoffset',
-               buttons = ['OK', 'Cancel']
+               buttons=['OK', 'Cancel']
                )
         return v
 #============= views ===================================

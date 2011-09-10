@@ -125,7 +125,7 @@ class XYSeries(object):
         p = os.path.join(root, '%s.txt' % self.name)
 
         with open(p, 'w') as f:
-            writer = csv.writer(f, delimiter = '\t')
+            writer = csv.writer(f, delimiter='\t')
 
             #write a header row
             header = ['Time (s)', 'Intensity (fA)']

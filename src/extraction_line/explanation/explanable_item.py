@@ -29,12 +29,12 @@ class ExplanableItem(HasTraits):
         G{classtree}
     '''
     name = Str
-    state_property = Property(depends_on = 'state')
+    state_property = Property(depends_on='state')
     state = Bool(False)
     description = Str
     identify = Bool(False)
 
-    lock_property = Property(depends_on = 'soft_lock')
+    lock_property = Property(depends_on='soft_lock')
     soft_lock = Bool(False)
 
     canvas = Any

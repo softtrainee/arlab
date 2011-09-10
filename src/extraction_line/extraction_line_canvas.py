@@ -30,9 +30,9 @@ class ExtractionLineCanvas3DDummy(HasTraits):
     '''
     '''
     canvas = Any
-    scene_graph = Property(depends_on = 'canvas')
-    user_views = Property(depends_on = 'canvas')
-    interactor_state = Property(depends_on = 'canvas')
+    scene_graph = Property(depends_on='canvas')
+    user_views = Property(depends_on='canvas')
+    interactor_state = Property(depends_on='canvas')
 
     manager = None
 
@@ -227,7 +227,7 @@ class ExtractionLineCanvas(HasTraits):
         '''
         '''
         e = ExtractionLineCanvas2D(
-                                   manager = self.manager
+                                   manager=self.manager
                                    )
         p = os.path.join(paths.canvas2D_dir, 'canvas.elc')
         e.bootstrap(p)
@@ -236,7 +236,7 @@ class ExtractionLineCanvas(HasTraits):
     def _canvas3D_default(self):
         '''
         '''
-        e = ExtractionLineCanvas3DDummy(manager = self.manager)
+        e = ExtractionLineCanvas3DDummy(manager=self.manager)
         return e
 
     def _get_canvas_size(self):
@@ -254,13 +254,13 @@ class ExtractionLineCanvas(HasTraits):
         w, h = self._get_canvas_size()
 
         g = Item('canvas2D',
-                    style = 'custom',
+                    style='custom',
                     #visible_when='twod_canvas',
-                    show_label = False,
-                    editor = ComponentEditor(width = w,
-                                           height = h
+                    show_label=False,
+                    editor=ComponentEditor(width=w,
+                                           height=h
                                             ),
-                label = '2D'
+                label='2D'
                 )
         return g
 
@@ -269,13 +269,13 @@ class ExtractionLineCanvas(HasTraits):
         '''
         w, h = self._get_canvas_size()
         g = Item('canvas3D',
-                    style = 'custom',
-                    show_label = False,
+                    style='custom',
+                    show_label=False,
                     #visible_when = 'not twod_canvas',
-                    editor = Canvas3DEditor(),
-                    width = w,
-                    height = h,
-                    label = '3D'
+                    editor=Canvas3DEditor(),
+                    width=w,
+                    height=h,
+                    label='3D'
                     )
 
         return g

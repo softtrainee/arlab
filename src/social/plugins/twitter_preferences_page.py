@@ -24,8 +24,8 @@ from apptools.preferences.ui.api import PreferencesPage
 #============= local library imports  ==========================
 
 class TwitterPreferencesPage(PreferencesPage):
-    name='Twitter'
-    preferences_path='pychron.twitter'
+    name = 'Twitter'
+    preferences_path = 'pychron.twitter'
     
 #    def traits_view(self):
 #        '''

@@ -55,7 +55,7 @@ class Canvas3D(wx.glcanvas.GLCanvas):
         #
         #self.Update()
         #self.Refresh()
-    def draw(self, offscreen = False):
+    def draw(self, offscreen=False):
         '''
         '''
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)

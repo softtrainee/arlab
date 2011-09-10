@@ -18,7 +18,7 @@ limitations under the License.
 import os
 
 
-beta = False if os.path.basename(os.path.dirname(__file__))=='pychron' else True
+beta = False if os.path.basename(os.path.dirname(__file__)) == 'pychron' else True
 use_shared_memory = False
 
 use_debug_logger = False

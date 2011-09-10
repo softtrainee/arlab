@@ -42,7 +42,7 @@ class PowerMapManager(Manager):
 
     start_button = Event
 
-    start_label = Property(depends_on = 'script._alive')
+    start_label = Property(depends_on='script._alive')
 
     def _get_start_label(self):
         return 'Stop' if self.script.isAlive() else 'Start'
@@ -66,9 +66,9 @@ class PowerMapManager(Manager):
 
         root, name = os.path.split(self.file_name)
         self.script = PowerMapScript(
-                              source_dir = root,
-                              file_name = name,
-                              manager = self.parent)
+                              source_dir=root,
+                              file_name=name,
+                              manager=self.parent)
         self.script.load_steps()
 
     def _script_default(self):
@@ -76,29 +76,29 @@ class PowerMapManager(Manager):
 
     def traits_view(self):
         cols = [
-              ObjectColumn(name = 'beam_diameter'),
-              ObjectColumn(name = 'padding'),
-              ObjectColumn(name = 'step_length'),
-              ObjectColumn(name = 'power'),
-              ObjectColumn(name = 'est_duration', editable = False)
+              ObjectColumn(name='beam_diameter'),
+              ObjectColumn(name='padding'),
+              ObjectColumn(name='step_length'),
+              ObjectColumn(name='power'),
+              ObjectColumn(name='est_duration', editable=False)
 
               ]
         v = View(
                  VGroup(
-                         self._button_factory('start_button', 'start_label', None, align = 'right'),
+                         self._button_factory('start_button', 'start_label', None, align='right'),
                          HGroup(
 
-                                Item('steps', width = 0.32, show_label = False, editor = TableEditor(columns = cols,
-                                                                                       selected = 'object.script.selected'
+                                Item('steps', width=0.32, show_label=False, editor=TableEditor(columns=cols,
+                                                                                       selected='object.script.selected'
                                                                                        )),
-                                Item('script', width = 0.68, show_label = False, style = 'custom', editor = InstanceEditor(view = 'canvas_view'))
+                                Item('script', width=0.68, show_label=False, style='custom', editor=InstanceEditor(view='canvas_view'))
                                 )
                         ),
-                title = self.title,
-                handler = PowerMapHandler,
-                resizable = True,
-                width = 890,
-                height = 650
+                title=self.title,
+                handler=PowerMapHandler,
+                resizable=True,
+                width=890,
+                height=650
                 )
         return v
 

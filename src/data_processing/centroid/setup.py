@@ -27,13 +27,13 @@ from Cython.Distutils import build_ext
 
 ext_modules = [Extension("centroid", ["centroid.pyx"],
 
-				        include_dirs = [numpy.get_include(),
+				        include_dirs=[numpy.get_include(),
                          #pychron_dir
                          ]
 				)]
 
 setup(
-  name = 'centroid',
-  cmdclass = {'build_ext': build_ext},
-  ext_modules = ext_modules
+  name='centroid',
+  cmdclass={'build_ext': build_ext},
+  ext_modules=ext_modules
 )

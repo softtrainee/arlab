@@ -42,21 +42,21 @@ class HardwareUIPlugin(CoreUIPlugin):
     def _create_current_device_view(self, *args, **kw):
 
         manager = self.application.get_service(HardwareManager)
-        args = dict(id = 'hardware.current_device',
-                  category = 'Hardware',
-                  name = 'Current Device',
-                  obj = manager,
-                  view = 'current_device_view'
+        args = dict(id='hardware.current_device',
+                  category='Hardware',
+                  name='Current Device',
+                  obj=manager,
+                  view='current_device_view'
                   )
         return self.traitsuiview_factory(args, kw)
     def _create_device_list_view(self, *args, **kw):
 
         manager = self.application.get_service(HardwareManager)
 
-        args = dict(id = 'hardware.devices',
-                         category = 'Hardware',
-                       name = 'Devices',
-                       obj = manager
+        args = dict(id='hardware.devices',
+                         category='Hardware',
+                       name='Devices',
+                       obj=manager
                        )
         return self.traitsuiview_factory(args, kw)
 

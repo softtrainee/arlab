@@ -44,10 +44,10 @@ class BaseDataCanvas(DataView):
     def line_plot(self, x, y):
         if self.plot is None:
             self.plot = LinePlot(
-                 index = ArrayDataSource([x]),
-                 value = ArrayDataSource([y]),
-                 index_mapper = LinearMapper(range = self.index_range),
-                 value_mapper = LinearMapper(range = self.value_range)
+                 index=ArrayDataSource([x]),
+                 value=ArrayDataSource([y]),
+                 index_mapper=LinearMapper(range=self.index_range),
+                 value_mapper=LinearMapper(range=self.value_range)
 
                  )
 
@@ -88,9 +88,9 @@ class BaseDataCanvas(DataView):
         #plot=BaseXYPlot
         plot = LinePlot
 
-        sp = plot(index = ArrayDataSource(self.y_range), value = ArrayDataSource(self.x_range),
-                       index_mapper = LinearMapper(range = self.index_range),
-                       value_mapper = LinearMapper(range = self.value_range))
+        sp = plot(index=ArrayDataSource(self.y_range), value=ArrayDataSource(self.x_range),
+                       index_mapper=LinearMapper(range=self.index_range),
+                       value_mapper=LinearMapper(range=self.value_range))
 
         self.index_range.sources.append(sp.index)
         self.value_range.sources.append(sp.value)
@@ -150,9 +150,9 @@ class BaseDataCanvas(DataView):
     def add_zoom(self):
         '''
         '''
-        z = ZoomTool(component = self, always_on = False, tool_mode = 'box',
-                   max_zoom_out_factor = 1,
-                   max_zoom_in_factor = 10000)
+        z = ZoomTool(component=self, always_on=False, tool_mode='box',
+                   max_zoom_out_factor=1,
+                   max_zoom_in_factor=10000)
 
         #b=BroadcasterTool()
         # b.tools.append(z)
@@ -171,7 +171,7 @@ class BaseDataCanvas(DataView):
         return w, h
 
 
-    def _vertical_line(self, gc, x, y1, y2, color = (0, 0, 0)):
+    def _vertical_line(self, gc, x, y1, y2, color=(0, 0, 0)):
         '''
         '''
         gc.save_state()
@@ -183,7 +183,7 @@ class BaseDataCanvas(DataView):
         gc.draw_path()
         gc.restore_state()
 
-    def _horizontal_line(self, gc, y, x1, x2, color = (0, 0, 0)):
+    def _horizontal_line(self, gc, y, x1, x2, color=(0, 0, 0)):
         '''
 
         '''

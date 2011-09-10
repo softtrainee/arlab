@@ -31,7 +31,7 @@ class TargetImage(Image):
     '''
     '''
 
-    def process(self, thresh, angle, erode = False, dilate = False):
+    def process(self, thresh, angle, erode=False, dilate=False):
         '''
    
         '''

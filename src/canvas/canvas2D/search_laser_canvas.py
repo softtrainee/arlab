@@ -94,4 +94,4 @@ class SearchLaserCanvas(LaserTrayCanvas):
 
             for color, g in self.triangles_group:
                 for t in g:
-                    t.render(gc, color = color)
+                    t.render(gc, color=color)

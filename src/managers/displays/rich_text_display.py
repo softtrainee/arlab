@@ -55,7 +55,7 @@ class RichTextDisplay(HasTraits):
 
     x = Float(10)
     y = Float(20)
-    def _do_later(self, func, args = None, obj = None):
+    def _do_later(self, func, args=None, obj=None):
         if obj is None:
             obj = self._display
 
@@ -81,16 +81,16 @@ class RichTextDisplay(HasTraits):
         '''
         '''
         return View(
-                Item('_display', show_label = False,
-                     editor = CustomEditor(factory = self.factory),
+                Item('_display', show_label=False,
+                     editor=CustomEditor(factory=self.factory),
                      ),
-                     handler = DisplayHandler,
-                     title = self.title,
+                     handler=DisplayHandler,
+                     title=self.title,
                      #resizable = False,
-                     width = self.width,
-                     height = self.height,
-                     x = self.x,
-                     y = self.y,
+                     width=self.width,
+                     height=self.height,
+                     x=self.x,
+                     y=self.y,
                      )
 
     def factory(self, window, editor):
@@ -99,14 +99,14 @@ class RichTextDisplay(HasTraits):
         '''
         panel = wx.Panel(window,
                        - 1,
-                       style = wx.DEFAULT_FRAME_STYLE
+                       style=wx.DEFAULT_FRAME_STYLE
                        )
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         rtc = rt.RichTextCtrl(panel,
-                            size = (self.width, self.height - 25),
-                            style = wx.VSCROLL | wx.HSCROLL | wx.TE_READONLY
+                            size=(self.width, self.height - 25),
+                            style=wx.VSCROLL | wx.HSCROLL | wx.TE_READONLY
                             )
 
         rtc.SetEditable(self.editable)
@@ -126,7 +126,7 @@ class RichTextDisplay(HasTraits):
 
         return panel
 
-    def _add_(self, msg, new_line = True, color = None, **kw):
+    def _add_(self, msg, new_line=True, color=None, **kw):
         '''
             
         '''
@@ -142,9 +142,9 @@ class RichTextDisplay(HasTraits):
         else:
             color = wx.Colour(*color)
 
-        self._do_later('BeginFontSize', args = 10)
-        self._do_later('BeginTextColour', args = color)
-        self._do_later('WriteText', args = msg)
+        self._do_later('BeginFontSize', args=10)
+        self._do_later('BeginTextColour', args=color)
+        self._do_later('WriteText', args=msg)
         self._do_later('EndTextColour')
         self._do_later('EndFontSize')
 
@@ -152,7 +152,7 @@ class RichTextDisplay(HasTraits):
             self._do_later('Newline')
 
         lp = d.GetLastPosition()
-        self._do_later('ShowPosition', args = lp + 600)
+        self._do_later('ShowPosition', args=lp + 600)
 
     def add_text(self, msg, **kw):
         '''
@@ -173,7 +173,7 @@ class RichTextDisplay(HasTraits):
             if len(self.text) > 500:
                 a = self.text.pop(0)[0]
 
-                self._do_later('Remove', args = (0, len(a) + 1))
+                self._do_later('Remove', args=(0, len(a) + 1))
                 self._do_later('SetInsertionPointEnd')
         else:
             if isinstance(msg, (list, tuple)):

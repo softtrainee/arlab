@@ -45,22 +45,22 @@ class StageMapDesigner(Manager):
 
     def _path_changed(self):
         if self.path is not None:
-            self.canvas.set_map(StageMap(file_path = self.path))
+            self.canvas.set_map(StageMap(file_path=self.path))
 #            self.canvas.invalidate_and_redraw()
             self.canvas.smart_move()
 
     def _canvas_default(self):
         #path = '/Users/Ross/Pychrondata_beta/setupfiles/tray_maps/221-hole.txt'
-        sm = StageMap(file_path = self.path)
+        sm = StageMap(file_path=self.path)
 
         w, h = self._get_wh()
 
-        c = MapCanvas(map = sm,
-                      padding = PADDING,
-                      view_x_range = [-w, w],
-                      view_y_range = [-h, h],
-                      use_valid_holes = False,
-                      show_indicators = False
+        c = MapCanvas(map=sm,
+                      padding=PADDING,
+                      view_x_range=[-w, w],
+                      view_y_range=[-h, h],
+                      use_valid_holes=False,
+                      show_indicators=False
                       )
 
         c.new_calibration_item(0, 0)
@@ -86,12 +86,12 @@ class StageMapDesigner(Manager):
                  HGroup(
                         VGroup(
 
-                               Item('path', show_label = False),
-                               Item('export', show_label = False),
+                               Item('path', show_label=False),
+                               Item('export', show_label=False),
                                Item('px_per_mm')
                                ),
-                        Item('canvas', show_label = False,
-                             editor = ComponentEditor(width = w + 2 * PADDING, height = h + 2 * PADDING)
+                        Item('canvas', show_label=False,
+                             editor=ComponentEditor(width=w + 2 * PADDING, height=h + 2 * PADDING)
                              )
                         ),
 #                 resizable = True

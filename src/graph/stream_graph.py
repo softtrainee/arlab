@@ -58,20 +58,20 @@ class StreamGraph(Graph):
         self.update_x_limits.append(True)
 
         args = super(StreamGraph, self).new_plot(**kw)
-        self.set_x_limits(min = 0, max = dl, plotid = len(self.plots) - 1)
+        self.set_x_limits(min=0, max=dl, plotid=len(self.plots) - 1)
 
         return args
 
-    def auto_update(self, au, plotid = 0):
+    def auto_update(self, au, plotid=0):
         '''
         '''
 #        self.trim_data[plotid] = au
         self.update_x_limits[plotid] = au
 
-    def set_scan_delay(self, v, plotid = 0):
+    def set_scan_delay(self, v, plotid=0):
         self.scan_delays[plotid] = v
 
-    def set_time_zero(self, plotid = 0):
+    def set_time_zero(self, plotid=0):
 
         tg = time_generator(self.scan_delays[plotid])
         try:
@@ -81,7 +81,7 @@ class StreamGraph(Graph):
 
 
 
-    def record_multiple(self, ys, plotid = 0, **kw):
+    def record_multiple(self, ys, plotid=0, **kw):
 
         tg = self.global_time_generator
         if tg is None:
@@ -91,7 +91,7 @@ class StreamGraph(Graph):
 
         x = tg.next()
         for i, yi in enumerate(ys):
-            self.record(yi, x = x, series = i, update_x = False, **kw)
+            self.record(yi, x=x, series=i, update_x=False, **kw)
 
         ma = max(ys)
         mi = min(ys)
@@ -103,13 +103,13 @@ class StreamGraph(Graph):
         dl = self.data_limits[plotid]
 #
         if x >= ((dl - 1) * self.scan_delays[plotid]):
-            self.set_x_limits(max = x + 1,
-                          min = x - (dl - 1) * self.scan_delays[plotid],
-                          plotid = plotid,
+            self.set_x_limits(max=x + 1,
+                          min=x - (dl - 1) * self.scan_delays[plotid],
+                          plotid=plotid,
                           )
         return x
 
-    def record(self, y, x = None, series = 0, plotid = 0, update_x = True, do_after = None):
+    def record(self, y, x=None, series=0, plotid=0, update_x=True, do_after=None):
         
         xn, yn = self.series[plotid][series]
 
@@ -157,10 +157,10 @@ class StreamGraph(Graph):
                 
                 if ma >= ((dl - 1) * self.scan_delays[plotid]) - 1:
                     #print self.plot_windows[plotid], self.plot_windows[plotid] - dl * self.scan_delays[plotid]
-                    self.set_x_limits(max = ma,
-                                  min = mi,
-                                  plotid = plotid,
-                                  pad = 1
+                    self.set_x_limits(max=ma,
+                                  min=mi,
+                                  plotid=plotid,
+                                  pad=1
                                   )
 #                    self.plot_windows[plotid] += self.scan_delays[plotid]
 
@@ -173,9 +173,9 @@ class StreamGraph(Graph):
                 if mi < self.cur_min:
                     self.cur_min = mi
 
-                self.set_y_limits(max = self.cur_max ,
-                              min = self.cur_min,
-                              plotid = plotid)
+                self.set_y_limits(max=self.cur_max ,
+                              min=self.cur_min,
+                              plotid=plotid)
 
         if do_after:
             do_after_timer(do_after, _record_)

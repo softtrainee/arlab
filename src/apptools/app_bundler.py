@@ -20,19 +20,19 @@ from installer import Installer
 
 def cli_install():
     
-    parser = argparse.ArgumentParser(description = 'Create a new Launchable Application')
+    parser = argparse.ArgumentParser(description='Create a new Launchable Application')
     parser.add_argument('prefix',
                         #metavar = 'prefix', 
-                        type = str, nargs = '?',
-                        help = 'Prefix name. used to identify the icon file and the launch script eg. pychron'
+                        type=str, nargs='?',
+                        help='Prefix name. used to identify the icon file and the launch script eg. pychron'
                         )
     parser.add_argument('name',
                         #metavar = 'name', 
-                        type = str, nargs = '?',
-                        help = 'Name of the application bundle eg. Pychron')
+                        type=str, nargs='?',
+                        help='Name of the application bundle eg. Pychron')
 
-    parser.add_argument('--icon', type = str, nargs = '?',
-                        help = 'icon file name')
+    parser.add_argument('--icon', type=str, nargs='?',
+                        help='icon file name')
     args = parser.parse_args()
 
     i = Installer(args.prefix, args.name, args.icon)

@@ -41,15 +41,15 @@ class MotionController(CoreDevice):
     timer = None
     parent = Any
 
-    x = Property(trait = Float(enter_set = True, auto_set = False),
-               depends_on = '_x_position')
+    x = Property(trait=Float(enter_set=True, auto_set=False),
+               depends_on='_x_position')
     _x_position = Float
-    y = Property(trait = Float(enter_set = True, auto_set = False),
-               depends_on = '_y_position')
+    y = Property(trait=Float(enter_set=True, auto_set=False),
+               depends_on='_y_position')
     _y_position = Float
 
-    z = Property(trait = Float(enter_set = True, auto_set = False),
-           depends_on = '_z_position')
+    z = Property(trait=Float(enter_set=True, auto_set=False),
+           depends_on='_z_position')
 
     _z_position = Float
     z_progress = Float
@@ -73,7 +73,7 @@ class MotionController(CoreDevice):
 
         self.z_progress = self._z_position
 
-    def timer_factory(self, func = None):
+    def timer_factory(self, func=None):
         '''
         '''
         if self.timer is not None:
@@ -209,15 +209,15 @@ class MotionController(CoreDevice):
         keys.sort()
         for k in keys:
 
-            editor = RangeEditor(low_name = '{}axes_min'.format(k),
-                                  high_name = '{}axes_max'.format(k),
-                                  mode = 'slider',
-                                  format = '%0.3f')
+            editor = RangeEditor(low_name='{}axes_min'.format(k),
+                                  high_name='{}axes_max'.format(k),
+                                  mode='slider',
+                                  format='%0.3f')
 
-            g.content.append(Item(k, editor = editor))
+            g.content.append(Item(k, editor=editor))
             if k == 'z':
-                g.content.append(Item('z_progress', show_label = False,
-                                      editor = editor, enabled_when = '0'))
+                g.content.append(Item('z_progress', show_label=False,
+                                      editor=editor, enabled_when='0'))
         return g
 
     def linear_move(self, *args, **kw):

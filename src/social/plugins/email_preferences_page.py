@@ -24,11 +24,11 @@ from apptools.preferences.ui.api import PreferencesPage
 #============= local library imports  ==========================
 
 class EmailPreferencesPage(PreferencesPage):
-    name='Email'
-    preferences_path='pychron.email'
-    smtp_host=Str
-    username=Str
-    password=Password
+    name = 'Email'
+    preferences_path = 'pychron.email'
+    smtp_host = Str
+    username = Str
+    password = Password
     def traits_view(self):
         return View('smtp_host',
                     'username',

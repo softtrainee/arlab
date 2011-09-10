@@ -64,26 +64,26 @@ class IrradiationProductionRatios(DatabaseItem):
     def traits_view(self):
 
         view = View(#Item('name'),
-                       Item('irradiation', editor = EnumEditor(values = self.irradiations)),
+                       Item('irradiation', editor=EnumEditor(values=self.irradiations)),
                        VGroup(
 
                               HGroup(spring, Label('Value'), spring, Label('Error'), spring),
-                              HGroup(spring, Item('ca3637'), Item('ca3637er', show_label = False)),
-                              HGroup(spring, Item('ca3837'), Item('ca3837er', show_label = False)),
-                              HGroup(spring, Item('ca3937'), Item('ca3937er', show_label = False)),
+                              HGroup(spring, Item('ca3637'), Item('ca3637er', show_label=False)),
+                              HGroup(spring, Item('ca3837'), Item('ca3837er', show_label=False)),
+                              HGroup(spring, Item('ca3937'), Item('ca3937er', show_label=False)),
 
-                              HGroup(spring, Item('k3739'), Item('k3739er', show_label = False)),
-                              HGroup(spring, Item('k3839'), Item('k3839er', show_label = False)),
-                              HGroup(spring, Item('k4039'), Item('k4039er', show_label = False)),
+                              HGroup(spring, Item('k3739'), Item('k3739er', show_label=False)),
+                              HGroup(spring, Item('k3839'), Item('k3839er', show_label=False)),
+                              HGroup(spring, Item('k4039'), Item('k4039er', show_label=False)),
 
-                              HGroup(spring, Item('cl3638'), Item('cl3638er', show_label = False)),
-                              HGroup(spring, Item('cak'), Item('caker', show_label = False)),
-                              HGroup(spring, Item('clk'), Item('clker', show_label = False)),
-                              show_border = True,
-                              label = 'Production Ratios'
+                              HGroup(spring, Item('cl3638'), Item('cl3638er', show_label=False)),
+                              HGroup(spring, Item('cak'), Item('caker', show_label=False)),
+                              HGroup(spring, Item('clk'), Item('clker', show_label=False)),
+                              show_border=True,
+                              label='Production Ratios'
                               ),
-                       title = 'New IrradiationProductionRatios',
-                       buttons = ['OK', 'Cancel'])
+                       title='New IrradiationProductionRatios',
+                       buttons=['OK', 'Cancel'])
         return view
 
 class IrradiationProductionRatiosView(DatabaseTableView):
@@ -97,18 +97,18 @@ class IrradiationProductionRatiosView(DatabaseTableView):
     def get_table_editor(self):
         '''
         '''
-        kw = dict(columns = self.get_table_columns(),
-                  show_toolbar = True,
-                  selection_mode = 'row',
-                  selected = 'selected',
-                  row_factory = self.row_factory
+        kw = dict(columns=self.get_table_columns(),
+                  show_toolbar=True,
+                  selection_mode='row',
+                  selected='selected',
+                  row_factory=self.row_factory
                   )
         return self._table_editor_factory(kw)
     def get_table_columns(self):
         return [
-                ObjectColumn(name = 'id', editable = False),
-                ObjectColumn(name = 'ca3637', editable = False),
-                ObjectColumn(name = 'ca3837', editable = False),
+                ObjectColumn(name='id', editable=False),
+                ObjectColumn(name='ca3637', editable=False),
+                ObjectColumn(name='ca3837', editable=False),
 
                 ]
     def _pre_add(self, item):
@@ -134,7 +134,7 @@ class IrradiationProductionRatiosView(DatabaseTableView):
         if iid is None:
             iid = item._irradiations[0][0]
         dbirradiation, sess = self.database.add_irradiation_production_ratios(args,
-                                                                             dbirradiation = iid
+                                                                             dbirradiation=iid
                                                                              )
         if dbirradiation:
             sess.commit()

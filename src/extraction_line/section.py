@@ -153,7 +153,7 @@ class Section(object):
                 self.set_state(avalve, state, sg)
                 self.set_valve_high_side_state(valve, 'static', sg)
             else:
-                self.set_state(valve, 'static', sg, low_side = False)
+                self.set_state(valve, 'static', sg, low_side=False)
 
 
     def _update_state_(self, action, valve, sg):
@@ -203,7 +203,7 @@ class Section(object):
         if c is not None:
             c.high_side.set_state(state, valve.name)
 
-    def set_state(self, valve, state, sg, low_side = True, high_side = True):
+    def set_state(self, valve, state, sg, low_side=True, high_side=True):
         '''
             @type valve: C{str}
             @param valve:

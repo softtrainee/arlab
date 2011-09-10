@@ -38,40 +38,40 @@ from src.helpers.gdisplays import gLoggerDisplay
 from globals import open_logger_on_launch
 
 
-logger = add_console(name = '{:<30}'.format('launcher'), display = gLoggerDisplay)
+logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
 if open_logger_on_launch:
     do_later(gLoggerDisplay.edit_traits)
 
 PACKAGE_DICT = dict(
-                   DatabasePlugin = 'src.database.plugins.database_plugin',
-                   DatabaseUIPlugin = 'src.database.plugins.database_ui_plugin',
-                   ExperimentPlugin = 'src.experiments.plugins.experiment_plugin',
-                   ExperimentUIPlugin = 'src.experiments.plugins.experiment_ui_plugin',
-                   ScriptPlugin = 'src.scripts.plugins.script_plugin',
-                   ScriptUIPlugin = 'src.scripts.plugins.script_ui_plugin',
-                   ExtractionLinePlugin = 'src.extraction_line.plugins.extraction_line_plugin',
-                   ExtractionLineUIPlugin = 'src.extraction_line.plugins.extraction_line_ui_plugin',
-                   CanvasDesignerPlugin = 'src.canvas.plugins.canvas_designer_plugin',
-                   CanvasDesignerUIPlugin = 'src.canvas.plugins.canvas_designer_ui_plugin',
-                   MDDModelerPlugin = 'src.data_processing.plugins.mdd_modeler_plugin',
-                   MDDModelerUIPlugin = 'src.data_processing.plugins.mdd_modeler_ui_plugin',
-                   SVNPlugin = 'src.svn.plugins.svn_plugin',
-                   SVNUIPlugin = 'src.svn.plugins.svn_ui_plugin',
-                   FusionsDiodePlugin = 'src.lasers.plugins.fusions_diode_plugin',
-                   FusionsDiodeUIPlugin = 'src.lasers.plugins.fusions_diode_ui_plugin',
-                   FusionsCO2Plugin = 'src.lasers.plugins.fusions_co2_plugin',
-                   FusionsCO2UIPlugin = 'src.lasers.plugins.fusions_co2_ui_plugin',
-                   SynradCO2Plugin = 'src.lasers.plugins.synrad_co2_plugin',
-                   SynradCO2UIPlugin = 'src.lasers.plugins.synrad_co2_ui_plugin',
+                   DatabasePlugin='src.database.plugins.database_plugin',
+                   DatabaseUIPlugin='src.database.plugins.database_ui_plugin',
+                   ExperimentPlugin='src.experiments.plugins.experiment_plugin',
+                   ExperimentUIPlugin='src.experiments.plugins.experiment_ui_plugin',
+                   ScriptPlugin='src.scripts.plugins.script_plugin',
+                   ScriptUIPlugin='src.scripts.plugins.script_ui_plugin',
+                   ExtractionLinePlugin='src.extraction_line.plugins.extraction_line_plugin',
+                   ExtractionLineUIPlugin='src.extraction_line.plugins.extraction_line_ui_plugin',
+                   CanvasDesignerPlugin='src.canvas.plugins.canvas_designer_plugin',
+                   CanvasDesignerUIPlugin='src.canvas.plugins.canvas_designer_ui_plugin',
+                   MDDModelerPlugin='src.data_processing.plugins.mdd_modeler_plugin',
+                   MDDModelerUIPlugin='src.data_processing.plugins.mdd_modeler_ui_plugin',
+                   SVNPlugin='src.svn.plugins.svn_plugin',
+                   SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
+                   FusionsDiodePlugin='src.lasers.plugins.fusions_diode_plugin',
+                   FusionsDiodeUIPlugin='src.lasers.plugins.fusions_diode_ui_plugin',
+                   FusionsCO2Plugin='src.lasers.plugins.fusions_co2_plugin',
+                   FusionsCO2UIPlugin='src.lasers.plugins.fusions_co2_ui_plugin',
+                   SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
+                   SynradCO2UIPlugin='src.lasers.plugins.synrad_co2_ui_plugin',
 
-                   SpectrometerPlugin = 'src.spectrometer.plugins.spectrometer_plugin',
-                   SpectrometerUIPlugin = 'src.spectrometer.plugins.spectrometer_ui_plugin',
+                   SpectrometerPlugin='src.spectrometer.plugins.spectrometer_plugin',
+                   SpectrometerUIPlugin='src.spectrometer.plugins.spectrometer_ui_plugin',
 
-                   GraphPlugin = 'src.graph.plugins.graph_plugin',
-                   GraphUIPlugin = 'src.graph.plugins.graph_ui_plugin',
+                   GraphPlugin='src.graph.plugins.graph_plugin',
+                   GraphUIPlugin='src.graph.plugins.graph_ui_plugin',
 
-                   BakeoutPlugin = 'src.extraction_line.plugins.bakeout_plugin',
-                   BakeoutUIPlugin = 'src.extraction_line.plugins.bakeout_ui_plugin',
+                   BakeoutPlugin='src.extraction_line.plugins.bakeout_plugin',
+                   BakeoutUIPlugin='src.extraction_line.plugins.bakeout_ui_plugin',
                    
                    TwitterPlugin='src.social.plugins.twitter_plugin',
                    TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',
@@ -149,7 +149,7 @@ def get_user_plugins():
 #def get_logger_plugins():
 #    from apptools.logger.plugin.logger_plugin import LoggerPlugin
 #    return [LoggerPlugin()]
-def launch(beta = False):
+def launch(beta=False):
     '''
     '''
     logger.info('Launching Pychron')
@@ -172,9 +172,9 @@ def launch(beta = False):
 #    use_logger = False
 #    if use_logger:
 #        plugins += get_logger_plugins()
-    lab = Pychron(plugins = plugins,
+    lab = Pychron(plugins=plugins,
 
-                  beta = beta
+                  beta=beta
                   )
 
     lab.run()

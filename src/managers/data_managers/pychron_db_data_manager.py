@@ -56,8 +56,8 @@ class PychronDBDataManager(DBDataManager):
 #                      )
 
 
-        s = db.get_signal(dict(analysis_id = 1,
-                               detector_id = 25
+        s = db.get_signal(dict(analysis_id=1,
+                               detector_id=25
                                ))
         import struct
         width = 8

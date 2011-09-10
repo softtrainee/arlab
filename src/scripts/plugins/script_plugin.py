@@ -30,8 +30,8 @@ class ScriptPlugin(CorePlugin):
     def _service_offers_default(self):
         '''
         '''
-        so = self.service_offer_factory(protocol = 'src.scripts.core.scripts_manager.ScriptsManager',
-                          factory = self._factory
+        so = self.service_offer_factory(protocol='src.scripts.core.scripts_manager.ScriptsManager',
+                          factory=self._factory
                           )
 
         return [so]

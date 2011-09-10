@@ -52,22 +52,22 @@ class Image(HasTraits):
     def _get_frame(self):
         return self.source_frame
 
-    def get_frame(self, flip = False, mirror = False, gray = False, swap_rb = None, clone = False):
+    def get_frame(self, flip=False, mirror=False, gray=False, swap_rb=None, clone=False):
 
         rframe = self._get_frame()
         if rframe is not None:
 
             if flip and mirror:
-                cvFlip(rframe, flip_mode = 2)
+                cvFlip(rframe, flip_mode=2)
             elif mirror:
-                cvFlip(rframe, flip_mode = 1)
+                cvFlip(rframe, flip_mode=1)
             elif flip:
                 cvFlip(rframe)
             if swap_rb:
                 cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
 
-            frame = new_dst(rframe, width = self.width,
-                              height = self.height)
+            frame = new_dst(rframe, width=self.width,
+                              height=self.height)
 
             cvResize(rframe, frame)
             if clone:
@@ -105,7 +105,7 @@ class Image(HasTraits):
 #
             return self._bitmap
 
-    def threshold(self, t, frame_id = 0, inplace = True):
+    def threshold(self, t, frame_id=0, inplace=True):
 #        f = self.frames[frame_id]
         f = self.source_frame
         gsrc = grayspace(f)
@@ -116,13 +116,13 @@ class Image(HasTraits):
 
         return dst
 
-    def polygonate(self, t, frame_id = 0, skip = None, line_width = 1, min_area = 100000):
+    def polygonate(self, t, frame_id=0, skip=None, line_width=1, min_area=100000):
         gsrc = self.threshold(t)
 
         _nc, contours = contour(gsrc)
 #        print skip
         if contours:
-            polygons = get_polygons(contours, min_area = min_area)
+            polygons = get_polygons(contours, min_area=min_area)
 #            print polygons
 #            polygons = polygons[:3]
             f = self.frames[frame_id]

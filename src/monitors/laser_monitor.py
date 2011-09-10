@@ -38,7 +38,7 @@ class LaserMonitor(Monitor):
         '''
 
         self.set_attribute(config, 'max_duration',
-                           'General', 'max_duration', cast = 'float', optional = True)
+                           'General', 'max_duration', cast='float', optional=True)
 
 
 
@@ -55,7 +55,7 @@ class LaserMonitor(Monitor):
         #max duration in mins convert to secs for comparison
         if time.time() - self.start_time > self.max_duration * 60.0:
             self.warning('Max duration %s (min) exceeded' % self.max_duration)
-            manager.emergency_shutoff(reason = 'Max duration exceeded')
+            manager.emergency_shutoff(reason='Max duration exceeded')
 
 
 #============= EOF ====================================

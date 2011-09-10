@@ -23,10 +23,10 @@ class InitializationParser(XMLParser):
         tree = self._tree
 
         cat = tree.find(category)
-        cat.append(self.new_element('plugin', name, enabled = 'false'))
+        cat.append(self.new_element('plugin', name, enabled='false'))
         self.save()
 
-    def get_plugins(self, category = None, all = False):
+    def get_plugins(self, category=None, all=False):
         tree = self._tree
 
         if category:
@@ -34,9 +34,9 @@ class InitializationParser(XMLParser):
             plugins = cat.findall('plugin')
         else:
             try:
-                plugins = tree.iter(tag = 'plugin')
+                plugins = tree.iter(tag='plugin')
             except AttributeError:
-                plugins = tree.getiterator(tag = 'plugin')
+                plugins = tree.getiterator(tag='plugin')
 
         return [p.text.strip() for p in plugins if all or p.get('enabled').lower() == 'true']
 
@@ -65,33 +65,33 @@ class InitializationParser(XMLParser):
 
     def enable_device(self, name, manager):
 
-        dev = self.get_device(manager, name, True, element = True)
+        dev = self.get_device(manager, name, True, element=True)
         if dev is None:
-            dev = self.get_device(manager, name, False, element = True)
+            dev = self.get_device(manager, name, False, element=True)
 
         dev.set('enabled', 'true')
         self.save()
 
     def disable_device(self, name, manager):
-        dev = self.get_device(manager, name, True, element = True)
+        dev = self.get_device(manager, name, True, element=True)
         if dev is None:
-            dev = self.get_device(manager, name, False, element = True)
+            dev = self.get_device(manager, name, False, element=True)
 
         dev.set('enabled', 'false')
         self.save()
 
 
-    def enable_plugin(self, name, category = None):
+    def enable_plugin(self, name, category=None):
         plugin = self.get_plugin(name, category)
         plugin.set('enabled', 'true')
         self.save()
 
-    def disable_plugin(self, name, category = None):
+    def disable_plugin(self, name, category=None):
         plugin = self.get_plugin(name, category)
         plugin.set('enabled', 'false')
         self.save()
 
-    def get_device(self, manager, name, plugin, element = False):
+    def get_device(self, manager, name, plugin, element=False):
         if plugin is None:
             man = self.get_plugin(manager)
         else:
@@ -102,16 +102,16 @@ class InitializationParser(XMLParser):
             dev = dev.text.strip()
         return dev
 
-    def get_devices(self, manager, all = False, element = False):
+    def get_devices(self, manager, all=False, element=False):
         return [d if element else d.text.strip()  for d in manager.findall('device')
                                 if all or d.get('enabled').lower() == 'true']
 
-    def get_managers(self, elem, all = False, element = False):
+    def get_managers(self, elem, all=False, element=False):
         return [m if element else m.text.strip()
                 for m in elem.findall('manager')
                                if all or m.get('enabled').lower() == 'true']
 
-    def get_plugin(self, name, category = None):
+    def get_plugin(self, name, category=None):
         if '_' in name:
 
             if 'co2' in name:
@@ -131,10 +131,10 @@ class InitializationParser(XMLParser):
 
         return man
 
-    def _get_element(self, category, name, tag = 'plugin'):
+    def _get_element(self, category, name, tag='plugin'):
         tree = self._tree
         if category is None:
-            for p in tree.iter(tag = tag):
+            for p in tree.iter(tag=tag):
                 if p.text.strip() == name:
                     return p
         else:

@@ -133,7 +133,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         self.temperature_controller.set_open_loop_setpoint(0.0)
 
 
-    def set_laser_power(self, power, mode = 'open'):
+    def set_laser_power(self, power, mode='open'):
         ''' 
         '''
         tc = self.temperature_controller
@@ -186,8 +186,8 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         vm = self.video_manager
         p = os.path.join(paths.data_dir, 'video', 'testframe.png')
-        vm.process_frame(path = p)
-        vm.edit_traits(view = 'image_view')
+        vm.process_frame(path=p)
+        vm.edit_traits(view='image_view')
 
 #    def show_step_heater(self):
 #
@@ -214,7 +214,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     def _show_temperature_controller_configuration(self):
         '''
         '''
-        self.temperature_controller.edit_traits(view = 'configure_view')
+        self.temperature_controller.edit_traits(view='configure_view')
 
 
 #    def __watlow__group__(self):
@@ -232,30 +232,30 @@ class FusionsDiodeManager(FusionsLaserManager):
 #                      label = 'Pyrometer')
     def get_additional_controls(self):
         v = Group(
-                   VGroup(Item('temperature_controller', style = 'custom', show_label = False,
+                   VGroup(Item('temperature_controller', style='custom', show_label=False,
 #                               springy = True
                                ),
-                      label = 'Watlow',
+                      label='Watlow',
 #                      show_border = True,
 #                      springy = True
                       ),
-                 VGroup(Item('pyrometer', show_label = False, style = 'custom',
+                 VGroup(Item('pyrometer', show_label=False, style='custom',
 #                              springy = True
                               ),
 #                      show_border = True,
-                      label = 'Pyrometer',
+                      label='Pyrometer',
 #                      springy = True
 
                       ),
-                 VGroup(Item('control_module_manager', show_label = False, style = 'custom',
+                 VGroup(Item('control_module_manager', show_label=False, style='custom',
 #                             springy = True
                              ),
 #                      show_border = True,
-                      label = 'ControlModule',
+                      label='ControlModule',
 #                      springy = True
 
                       ),
-                  layout = 'tabbed',
+                  layout='tabbed',
 #                  springy = False
                    )
         return v
@@ -278,22 +278,22 @@ class FusionsDiodeManager(FusionsLaserManager):
     def _temperature_monitor_default(self):
         '''
         '''
-        tm = DPi32TemperatureMonitor(name = 'temperature_monitor',
-                                     configuration_dir_name = 'diode')
+        tm = DPi32TemperatureMonitor(name='temperature_monitor',
+                                     configuration_dir_name='diode')
         return tm
 
     def _pyrometer_default(self):
         '''
         '''
-        p = MikronGA140Pyrometer(name = 'pyrometer',
-                                 configuration_dir_name = 'diode')
+        p = MikronGA140Pyrometer(name='pyrometer',
+                                 configuration_dir_name='diode')
         return p
 
     def _logic_board_default(self):
         '''
         '''
-        b = FusionsDiodeLogicBoard(name = 'diodelogicboard',
-                                   configuration_dir_name = 'diode')
+        b = FusionsDiodeLogicBoard(name='diodelogicboard',
+                                   configuration_dir_name='diode')
         return b
 
 #    def _control_module_default(self):
@@ -307,23 +307,23 @@ class FusionsDiodeManager(FusionsLaserManager):
     def _stage_manager_default(self):
         '''
         '''
-        args = dict(name = 'diodestage',
-                            configuration_dir_name = 'diode',
-                             parent = self,
+        args = dict(name='diodestage',
+                            configuration_dir_name='diode',
+                             parent=self,
                              )
         return self._stage_manager_factory(args)
 
     def _temperature_controller_default(self):
         '''
         '''
-        w = WatlowEZZone(name = 'temperature_controller',
-                        configuration_dir_name = 'diode')
+        w = WatlowEZZone(name='temperature_controller',
+                        configuration_dir_name='diode')
         return w
     def _pyrometer_temperature_monitor_default(self):
         '''
         '''
-        py = PyrometerTemperatureMonitor(name = 'pyrometer_tm',
-                                       configuration_dir_name = 'diode')
+        py = PyrometerTemperatureMonitor(name='pyrometer_tm',
+                                       configuration_dir_name='diode')
         return py
     def _title_default(self):
         '''

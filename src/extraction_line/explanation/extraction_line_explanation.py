@@ -34,7 +34,7 @@ class ExtractionLineExplanation(HasTraits):
     #show_all = Button
     #hide_all = Button
     show_hide = Event
-    label = Property(depends_on = 'identify')
+    label = Property(depends_on='identify')
 
 
     identify = Bool(False)
@@ -69,30 +69,30 @@ class ExtractionLineExplanation(HasTraits):
             #temp = v
 
         for name, desc, id in [('An', 'Analytical', 'analytical_turbo'), ('Ro', 'Roughing', 'roughing_turbo')]:
-            t = ExplanableTurbo(name = name, description = desc, _id = id)
+            t = ExplanableTurbo(name=name, description=desc, _id=id)
             self.explanable_items.append(t)
 
     def traits_view(self):
         '''
         '''
-        self.legend_editor = TableEditor(columns = [ObjectColumn(name = 'name', editable = False),
-                                           ObjectColumn(name = 'description', editable = False),
-                                           ObjectColumn(name = 'state_property', editable = False, label = 'State'),
-                                           CheckboxColumn(name = 'identify'),
-                                           ObjectColumn(name = 'lock_property', editable = False, label = 'Lock')
+        self.legend_editor = TableEditor(columns=[ObjectColumn(name='name', editable=False),
+                                           ObjectColumn(name='description', editable=False),
+                                           ObjectColumn(name='state_property', editable=False, label='State'),
+                                           CheckboxColumn(name='identify'),
+                                           ObjectColumn(name='lock_property', editable=False, label='Lock')
                                            ],
-                                           selected = 'selected'
+                                           selected='selected'
                                 #editable = False,
                                 )
         v = View(
                VGroup(HGroup(
-                       Item('show_hide', editor = ButtonEditor(label_value = 'label'),
-                           show_label = False,
-                           springy = False)),
+                       Item('show_hide', editor=ButtonEditor(label_value='label'),
+                           show_label=False,
+                           springy=False)),
 
                       Item('explanable_items',
-                           editor = self.legend_editor,
-                           show_label = False,
+                           editor=self.legend_editor,
+                           show_label=False,
                            #width=0.45
                            ),
 

@@ -44,11 +44,11 @@ class GraphEditor(HasTraits):
         G{classtree}
     '''
     graph = Any
-    container = Property(depends_on = 'graph')
-    bgcolor = Property(depends_on = 'bgcolor_')
+    container = Property(depends_on='graph')
+    bgcolor = Property(depends_on='bgcolor_')
     bgcolor_ = Color
 
-    title = DelegatesTo('graph', prefix = '_title')
+    title = DelegatesTo('graph', prefix='_title')
     font = Font
 
     def sync(self):
@@ -112,21 +112,21 @@ class GraphEditor(HasTraits):
         size = args[0]
 
         font = ' '.join(args[2:])
-        self.graph.set_title(self.title, font = font, size = size)
+        self.graph.set_title(self.title, font=font, size=size)
 
     def traits_view(self):
         '''
         '''
-        v = View(Item('bgcolor', editor = ColorEditor()),
-               Item('title', editor = TextEditor(enter_set = True,
-                                               auto_set = False)),
+        v = View(Item('bgcolor', editor=ColorEditor()),
+               Item('title', editor=TextEditor(enter_set=True,
+                                               auto_set=False)),
                Item('font',
-                    style = 'custom',
+                    style='custom',
                     ),
-               title = 'Graph Editor',
-               resizable = True,
-               handler = GraphEditorHandler,
-               x = 0.05,
-               y = 0.1,
+               title='Graph Editor',
+               resizable=True,
+               handler=GraphEditorHandler,
+               x=0.05,
+               y=0.1,
                )
         return v

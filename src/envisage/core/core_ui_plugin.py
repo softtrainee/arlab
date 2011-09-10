@@ -29,10 +29,10 @@ class CoreUIPlugin(Plugin):
     ACTION_SETS = 'envisage.ui.workbench.action_sets'
     PREFERENCES_PAGES = 'envisage.ui.workbench.preferences_pages'
 
-    preferences_pages = List(contributes_to = PREFERENCES_PAGES)
-    perspectives = List(contributes_to = PERSPECTIVES)
-    views = List(contributes_to = VIEWS)
-    action_sets = List(contributes_to = ACTION_SETS)
+    preferences_pages = List(contributes_to=PREFERENCES_PAGES)
+    perspectives = List(contributes_to=PERSPECTIVES)
+    views = List(contributes_to=VIEWS)
+    action_sets = List(contributes_to=ACTION_SETS)
 
 
     def check(self):

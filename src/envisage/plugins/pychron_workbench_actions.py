@@ -25,7 +25,7 @@ from src.canvas.designer.canvas_manager import CEditor
 from src.data_processing.modeling.modeler_manager import MEditor
 from src.helpers.gdisplays import gLoggerDisplay
 
-def get_manager(window, editor = None):
+def get_manager(window, editor=None):
     if editor is None:
         editor = window.active_editor
 
@@ -60,7 +60,7 @@ class SaveAction(Action):
         self.window.on_trait_change(self.update, 'active_editor')
 
     def update(self, obj, name, old, new):
-        manager = get_manager(self.window, editor = new)
+        manager = get_manager(self.window, editor=new)
         if manager is not None:
             manager.on_trait_change(self.update_dirty, 'selected.dirty')
             #manager.on_trait_change(self.update_file_path, 'selected.file_path')
@@ -126,7 +126,7 @@ class SaveAsAction(Action):
 class LoggerAction(Action):
     def perform(self, event):
 
-        gLoggerDisplay.edit_traits(parent = self.window.control)
+        gLoggerDisplay.edit_traits(parent=self.window.control)
 
 class GotoHelpPageAction(Action):
     def perform(self, event):
@@ -142,7 +142,7 @@ class OpenUpdateManagerAction(Action):
     def perform(self, event):
         from src.managers.update_manager import UpdateManager
         manager = UpdateManager()
-        manager.edit_traits(parent = self.window.control)
+        manager.edit_traits(parent=self.window.control)
 class RefreshSourceAction(Action):
     accelerator = 'Ctrl+R'
     def perform(self, event):

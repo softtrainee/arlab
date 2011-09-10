@@ -145,14 +145,14 @@ class Graph(HasTraits):
 #            #disposes 50 ms from now
 #            do_later(self.ui.dispose)
 
-    def update_group_attribute(self, plot, attr, value, dataid = 0):
+    def update_group_attribute(self, plot, attr, value, dataid=0):
         pass
 
 
     def action_factory(self, name, func, **kw):
         '''
         '''
-        return Action(name = name, on_perform = getattr(self, func),
+        return Action(name=name, on_perform=getattr(self, func),
                        **kw)
 
     def get_contextual_menu_save_actions(self):
@@ -171,7 +171,7 @@ class Graph(HasTraits):
             save_actions.append(self.action_factory(n, f, **kw))
 
         save_menu = Menu(
-                       name = 'Save Figure',
+                       name='Save Figure',
                        *save_actions)
 
         if not self.crosshairs_enabled:
@@ -189,7 +189,7 @@ class Graph(HasTraits):
                           ]
 
 
-        export_menu = Menu(name = 'Export',
+        export_menu = Menu(name='Export',
                          *export_actions)
         contents = [save_menu, crosshairs_action, export_menu]
         if self.editor_enabled:
@@ -215,7 +215,7 @@ class Graph(HasTraits):
         '''
         return len(self.series[plotid])
 
-    def get_data(self, plotid = 0, series = 0, axis = 0):
+    def get_data(self, plotid=0, series=0, axis=0):
         '''
 
         '''
@@ -223,40 +223,40 @@ class Graph(HasTraits):
         p = self.plots[plotid]
         return p.data.get_data(s[axis])
 
-    def save_png(self, path = None):
+    def save_png(self, path=None):
         '''
         '''
-        self._save_(type = 'pic', path = path)
-    def save_pdf(self, path = None):
+        self._save_(type='pic', path=path)
+    def save_pdf(self, path=None):
         '''
         '''
-        self._save_(type = 'pdf', path = path)
+        self._save_(type='pdf', path=path)
 
-    def save(self, path = None):
+    def save(self, path=None):
         '''
         '''
-        self._save_(path = path)
+        self._save_(path=path)
 
-    def export_raw_data(self, path = None, header = None, plotid = 0):
+    def export_raw_data(self, path=None, header=None, plotid=0):
         if path is None:
             path = self._path_factory()
         self._export_raw_data(path, header, plotid)
 
-    def export_data(self, path = None):
+    def export_data(self, path=None):
         if path is None:
             path = self._path_factory()
         self._export_data(path)
 
     def _path_factory(self):
 
-        dlg = FileDialog(action = 'save as')
+        dlg = FileDialog(action='save as')
         if dlg.open() == OK:
             return dlg.path
 
     def _name_generator_factory(self, name):
         return name_generator(name)
 
-    def read_xy(self, p, header = False, series = 0, plotid = 0):
+    def read_xy(self, p, header=False, series=0, plotid=0):
         x = []
         y = []
         with open(p, 'r') as f:
@@ -271,7 +271,7 @@ class Graph(HasTraits):
                     y.append(float(line[1]))
 
         self.set_data(x, plotid, series)
-        self.set_data(y, plotid, series, axis = 1)
+        self.set_data(y, plotid, series, axis=1)
 
 
     def clear(self):
@@ -327,13 +327,13 @@ class Graph(HasTraits):
         for a in attr:
             setattr(ax, '{}_color'.format(a), color)
 
-    def set_data(self, d, plotid = 0, series = 0, axis = 0):
+    def set_data(self, d, plotid=0, series=0, axis=0):
         '''
         '''
         n = self.series[plotid][series]
         self.plots[plotid].data.set_data(n[axis], d)
 
-    def set_axis_traits(self, d, plotid = 0, axis = 'x'):
+    def set_axis_traits(self, d, plotid=0, axis='x'):
         '''
         '''
         plot = self.plots[plotid]
@@ -341,7 +341,7 @@ class Graph(HasTraits):
         attr = getattr(plot, '{}_axis'.format(axis))
         attr.trait_set(**d)
 
-    def set_series_traits(self, d, plotid = 0, series = 0):
+    def set_series_traits(self, d, plotid=0, series=0):
         '''
         '''
 
@@ -366,7 +366,7 @@ class Graph(HasTraits):
 #        self.plotcontainer.invalidate_and_redraw()
 #        return series
 #        #self.refresh_editor()
-    def get_series_label(self, plotid = 0, series = 0):
+    def get_series_label(self, plotid=0, series=0):
         r = ''
         legend = self.plots[plotid].legend
         try:
@@ -374,7 +374,7 @@ class Graph(HasTraits):
         except IndexError:
             pass
         return r
-    def set_series_label(self, label, plotid = 0, series = 0):
+    def set_series_label(self, label, plotid=0, series=0):
         '''
         '''
 
@@ -385,12 +385,12 @@ class Graph(HasTraits):
         except:
             legend.labels.append(label)
 
-    def clear_legend(self, keys, plotid = 0):
+    def clear_legend(self, keys, plotid=0):
         legend = self.plots[plotid].legend
         for key in keys:
             legend.plots.pop(key)
 
-    def set_series_visiblity(self, v, plotid = 0, series = 0):
+    def set_series_visiblity(self, v, plotid=0, series=0):
         '''
         '''
         p = self.plots[plotid]
@@ -401,27 +401,27 @@ class Graph(HasTraits):
 #        self.plotcontainer.invalidate_and_redraw()
         self.plotcontainer.request_redraw()
 
-    def get_x_limits(self, plotid = 0):
+    def get_x_limits(self, plotid=0):
         '''
         '''
-        return self._get_limits('index', plotid = plotid)
+        return self._get_limits('index', plotid=plotid)
 
-    def get_y_limits(self, plotid = 0):
+    def get_y_limits(self, plotid=0):
         '''
         '''
-        return self._get_limits('value', plotid = plotid)
+        return self._get_limits('value', plotid=plotid)
 
-    def set_y_limits(self, min = None, max = None, auto = False, track = 0, pad = 0, plotid = 0):
+    def set_y_limits(self, min=None, max=None, auto=False, track=0, pad=0, plotid=0):
         '''
         '''
         self._set_limits(min, max, 'value', plotid, auto, track, pad)
 
-    def set_x_limits(self, min = None, max = None, auto = False, track = 0, pad = 0, plotid = 0):
+    def set_x_limits(self, min=None, max=None, auto=False, track=0, pad=0, plotid=0):
         '''
         '''
         self._set_limits(min, max, 'index', plotid, auto, track, pad)
 
-    def set_tracking(self, track, plotid = 0):
+    def set_tracking(self, track, plotid=0):
         plot = self.plots[plotid]
         if track:
             plot.index_range.tracking_amount = track
@@ -431,7 +431,7 @@ class Graph(HasTraits):
             plot.index_range.high_setting = 'auto'
             plot.index_range.low_setting = 'auto'
 
-    def set_title(self, t, font = 'Helvetica', size = None):
+    def set_title(self, t, font='Helvetica', size=None):
         '''
         '''
         self._title = t
@@ -448,51 +448,51 @@ class Graph(HasTraits):
         self._title_size = size
         font = '%s %s' % (font, size)
         pc.overlays.append(PlotLabel(t,
-                                     component = pc,
-                                 font = font,
-                                 vjustify = 'bottom',
-                                 overlay_position = 'top'
+                                     component=pc,
+                                 font=font,
+                                 vjustify='bottom',
+                                 overlay_position='top'
                                  ))
 #        pc.invalidate_and_redraw()
         pc.request_redraw()
 
-    def get_x_title(self, plotid = 0):
+    def get_x_title(self, plotid=0):
         '''
         '''
         return self._get_title('y_axis', plotid)
 
-    def get_y_title(self, plotid = 0):
+    def get_y_title(self, plotid=0):
         '''
         '''
         return self._get_title('x_axis', plotid)
 
-    def set_x_title(self, title, plotid = 0):
+    def set_x_title(self, title, plotid=0):
         '''
         '''
         self._set_title('x_axis', title, plotid)
 
-    def set_y_title(self, title, plotid = 0):
+    def set_y_title(self, title, plotid=0):
         '''
         '''
         self._set_title('y_axis', title, plotid)
 
-    def add_plot_label(self, txt, plotid = 0):
+    def add_plot_label(self, txt, plotid=0):
         '''
         '''
-        self.plots[plotid].overlays.append(PlotLabel(txt, x = 50, y = 100))
+        self.plots[plotid].overlays.append(PlotLabel(txt, x=50, y=100))
 
-    def add_guide(self, value, orientation = 'h', plotid = 0, color = (0, 0, 0)):
+    def add_guide(self, value, orientation='h', plotid=0, color=(0, 0, 0)):
         '''
         '''
 
         plot = self.plots[plotid]
 
-        guide_overlay = GuideOverlay(component = plot,
-                                   value = value,
-                                   color = color)
+        guide_overlay = GuideOverlay(component=plot,
+                                   value=value,
+                                   color=color)
         plot.overlays.append(guide_overlay)
 
-    def new_plot(self, add = True, **kw):
+    def new_plot(self, add=True, **kw):
         '''
         '''
         p = self._plot_factory(**kw)
@@ -519,18 +519,18 @@ class Graph(HasTraits):
 
 
         if zoom:
-            nkw = dict(tool_mode = 'box',
-                    always_on = False
+            nkw = dict(tool_mode='box',
+                    always_on=False
                     )
             if 'zoom_dict' in kw:
                 zoomargs = kw['zoom_dict']
                 for k in zoomargs:
                     nkw[k] = zoomargs[k]
-            zt = ZoomTool(component = p, **nkw)
+            zt = ZoomTool(component=p, **nkw)
             p.overlays.append(zt)
 
         if pan:
-            kwargs = dict(always_on = False)
+            kwargs = dict(always_on=False)
             if isinstance(pan, str):
                 kwargs['constrain'] = True
                 kwargs['constrain_direction'] = pan
@@ -544,9 +544,9 @@ class Graph(HasTraits):
 
         plotid = len(self.plots) - 1
         if contextmenu:
-            menu = ContextualMenuTool(parent = self,
-                                      component = pc,
-                                    plotid = plotid)
+            menu = ContextualMenuTool(parent=self,
+                                      component=pc,
+                                    plotid=plotid)
 
             pc.tools.append(menu)
 
@@ -562,14 +562,14 @@ class Graph(HasTraits):
         '''
         raise NotImplementedError
 
-    def new_series(self, x = None, y = None, yer = None, plotid = None, aux_plot = False, **kw):
+    def new_series(self, x=None, y=None, yer=None, plotid=None, aux_plot=False, **kw):
         '''
         '''
         if plotid is None:
             plotid = len(self.plots) - 1
 
         kw['plotid'] = plotid
-        plot, names, rd = self._series_factory(x, y, yer = None, **kw)
+        plot, names, rd = self._series_factory(x, y, yer=None, **kw)
 
         if aux_plot:
             p = create_line_plot((x, y))
@@ -587,8 +587,8 @@ class Graph(HasTraits):
         else:
             if 'type' in rd and rd['type'] == 'line_scatter':
 
-                series = plot.plot(names, type = 'scatter', marker_size = 2,
-                                   marker = 'circle')
+                series = plot.plot(names, type='scatter', marker_size=2,
+                                   marker='circle')
                 rd['type'] = 'line'
             series = plot.plot(names, **rd)
 
@@ -602,10 +602,10 @@ class Graph(HasTraits):
         '''
         g = self.graph_editor
         if g is None:
-            g = GraphEditor(graph = self)
+            g = GraphEditor(graph=self)
             self.graph_editor = g
 
-        g.edit_traits(parent = self._control)
+        g.edit_traits(parent=self._control)
 
     def show_plot_editor(self):
         '''
@@ -618,13 +618,13 @@ class Graph(HasTraits):
         p = self.plot_editor
 
         if p is None or not p.plot == self.selected_plot:
-            p = self.plot_editor_klass(plot = self.selected_plot,
-                           graph = self,
+            p = self.plot_editor_klass(plot=self.selected_plot,
+                           graph=self,
                            **kw
                      )
             self.plot_editor = p
 
-            p.edit_traits(parent = self._control)
+            p.edit_traits(parent=self._control)
 
 
     def auto_update(self, *args, **kw):
@@ -632,7 +632,7 @@ class Graph(HasTraits):
         '''
         pass
 
-    def add_datum_to_aux_plot(self, datum, plotid = 0, series = 1):
+    def add_datum_to_aux_plot(self, datum, plotid=0, series=1):
         '''
         '''
         plot = self.plots[plotid]
@@ -644,15 +644,15 @@ class Graph(HasTraits):
 
         series.index.set_data(np.hstack((oi, [datum[0]])))
         series.value.set_data(np.hstack((ov, [datum[1]])))
-    def add_data(self, data, plotlist = None, **kw):
+    def add_data(self, data, plotlist=None, **kw):
         if plotlist is None:
             plotlist = xrange(len(data))
         for pi, d in zip(plotlist, data):
             self.add_datum(d,
-                           plotid = pi,
+                           plotid=pi,
                            ** kw)
 
-    def add_datum(self, datum, plotid = 0, series = 0, update_y_limits = False, ypadding = 10, do_after = None):
+    def add_datum(self, datum, plotid=0, series=0, update_y_limits=False, ypadding=10, do_after=None):
         '''
         '''
         def add():
@@ -669,9 +669,9 @@ class Graph(HasTraits):
                     ma = max(nd)
 
             if update_y_limits:
-                self.set_y_limits(min = mi - ypadding,
-                                  max = ma + ypadding,
-                                  plotid = plotid)
+                self.set_y_limits(min=mi - ypadding,
+                                  max=ma + ypadding,
+                                  plotid=plotid)
 
 
         if do_after:
@@ -693,16 +693,16 @@ class Graph(HasTraits):
         plot.overlays = [o for o in plot.overlays if not isinstance(o, LineInspector)]
         self.plotcontainer.request_redraw()
 
-    def add_vertical_rule(self, v, plotid = 0):
+    def add_vertical_rule(self, v, plotid=0):
         plot = self.plots[plotid]
-        l = GuideOverlay(plot, value = v, orientation = 'v')
+        l = GuideOverlay(plot, value=v, orientation='v')
 
         plot.overlays.append(l)
 
-    def add_horizontal_rule(self, v, plotid = 0):
+    def add_horizontal_rule(self, v, plotid=0):
         plot = self.plots[0]
 
-        l = GuideOverlay(plot, value = v)
+        l = GuideOverlay(plot, value=v)
 
         plot.overlays.append(l)
 
@@ -712,15 +712,15 @@ class Graph(HasTraits):
         '''
         return self._container_factory(**self.container_dict)
 
-    def _add_line_inspector(self, plot, axis = 'x', color = 'red'):
+    def _add_line_inspector(self, plot, axis='x', color='red'):
         '''
         '''
-        plot.overlays.append(LineInspector(component = plot,
-                                           axis = 'index_%s' % axis,
-                                           write_metadata = self.line_inspectors_write_metadata,
-                                           inspect_mode = 'indexed',
-                                           is_listener = False,
-                                           color = color
+        plot.overlays.append(LineInspector(component=plot,
+                                           axis='index_%s' % axis,
+                                           write_metadata=self.line_inspectors_write_metadata,
+                                           inspect_mode='indexed',
+                                           is_listener=False,
+                                           color=color
                                            ))
 
     def _container_factory(self, **kw):
@@ -737,12 +737,12 @@ class Graph(HasTraits):
         c = containers[types.index(type)]
 
         options = dict(
-                       bgcolor = 'white',
+                       bgcolor='white',
                      #spacing = spacing,
                      #padding=25,
-                     padding = [40, 10, 60, 10],
-                     fill_padding = True,
-                     use_backbuffer = True
+                     padding=[40, 10, 60, 10],
+                     fill_padding=True,
+                     use_backbuffer=True
                      )
 
         for k in options:
@@ -761,19 +761,19 @@ class Graph(HasTraits):
         #container.tools.append(gt)
         return container
 
-    def _crosshairs_factory(self, plot = None):
+    def _crosshairs_factory(self, plot=None):
         '''
         '''
         if plot is None:
             plot = self.plots[0].plots['plot0'][0]
-        self._add_line_inspector(plot, axis = 'x', color = 'black')
-        self._add_line_inspector(plot, axis = 'y', color = 'black')
+        self._add_line_inspector(plot, axis='x', color='black')
+        self._add_line_inspector(plot, axis='y', color='black')
 
     def _plot_factory(self, **kw):
         '''
         '''
-        p = Plot(data = ArrayPlotData(),
-               use_backbuffer = True,
+        p = Plot(data=ArrayPlotData(),
+               use_backbuffer=True,
                **kw
                )
 
@@ -844,7 +844,7 @@ class Graph(HasTraits):
         rows = zip(*cols)
         writer.writerows(rows)
 
-    def _series_factory(self, x, y, yer = None, plotid = 0, add = True, **kw):
+    def _series_factory(self, x, y, yer=None, plotid=0, add=True, **kw):
         '''
         '''
         if x is None:
@@ -905,18 +905,18 @@ class Graph(HasTraits):
 
         return plot, (xname, yname), kw
 
-    def _save_(self, type = 'pic', path = None):
+    def _save_(self, type='pic', path=None):
         '''
         '''
         if path is None:
-            dlg = FileDialog(action = 'save as')
+            dlg = FileDialog(action='save as')
             if dlg.open() == OK:
                 path = dlg.path
                 self.status_text = 'Image Saved: %s' % path
 
         if path is not None:
             if type == 'pdf':
-                self._render_to_pdf(filename = path)
+                self._render_to_pdf(filename=path)
             else:
                 #auto add an extension to the filename if not present
                 #extension is necessary for PIL compression
@@ -938,16 +938,16 @@ class Graph(HasTraits):
 #                if not ext in IMAGE_EXTENSIONS:
 #                    path = ''.join((base, DEFAULT_IMAGE_EXT))
 
-    def _render_to_pdf(self, filename = None, dest_box = None, canvas = None):
+    def _render_to_pdf(self, filename=None, dest_box=None, canvas=None):
         '''
         '''
         from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 
-        gc = PdfPlotGraphicsContext(filename = filename,
-                                  pdf_canvas = canvas,
-                                  pagesize = 'letter',
-                                  dest_box = dest_box,
-                                  dest_box_units = 'inch')
+        gc = PdfPlotGraphicsContext(filename=filename,
+                                  pdf_canvas=canvas,
+                                  pagesize='letter',
+                                  dest_box=dest_box,
+                                  dest_box_units='inch')
         gc.render_component(self.plotcontainer)
         gc.save()
 
@@ -981,7 +981,7 @@ class Graph(HasTraits):
         p = self.plotcontainer
         #gc = PlotGraphicsContext((int(p.outer_width), int(p.outer_height)))
         width, height = p.outer_bounds
-        gc = PlotGraphicsContext((width, height), dpi = 72)
+        gc = PlotGraphicsContext((width, height), dpi=72)
         p.use_backbuffer = False
         gc.render_component(p)
         p.use_backbuffer = True
@@ -1008,7 +1008,7 @@ class Graph(HasTraits):
         '''
         '''
         axis = getattr(self.plots[plotid], axis)
-        axis.trait_set(title = title)
+        axis.trait_set(title=title)
         self.plotcontainer.request_redraw()
 
     def _get_limits(self, axis, plotid):
@@ -1075,22 +1075,22 @@ class Graph(HasTraits):
         '''
 
         plot = Item('plotcontainer',
-                    style = 'custom',
-                    show_label = False,
-                    editor = ComponentEditor(
-                                             size = (self.width,
+                    style='custom',
+                    show_label=False,
+                    editor=ComponentEditor(
+                                             size=(self.width,
                                                      self.height)
                                              ),
                     )
 
 
         v = View(plot,
-                 resizable = self.resizable,
-                 title = self.window_title,
-                 width = self.window_width,
-                 height = self.window_height,
-                 x = self.window_x,
-                 y = self.window_y,
+                 resizable=self.resizable,
+                 title=self.window_title,
+                 width=self.window_width,
+                 height=self.window_height,
+                 x=self.window_x,
+                 y=self.window_y,
 #                 statusbar = 'status_text',
                  )
         return v

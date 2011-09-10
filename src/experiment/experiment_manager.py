@@ -50,31 +50,31 @@ class Experiment(HasTraits):
 
     def _apply_fired(self):
         for s in self.heat_schedule.steps:
-            a = Analysis(heat_step = s)
+            a = Analysis(heat_step=s)
             self.analyses.append(a)
 
     def traits_view(self):
-        new_analysis = Item('analysis', style = 'custom', show_label = False)
+        new_analysis = Item('analysis', style='custom', show_label=False)
 
-        editor = TabularEditor(adapter = AnalysisAdapter(),
-                                operations = ['move'],
-                                update = 'object.current_analysis.update'
+        editor = TabularEditor(adapter=AnalysisAdapter(),
+                                operations=['move'],
+                                update='object.current_analysis.update'
                                 )
-        analysis_table = Item('analyses', show_label = False,
-                              editor = editor,
-                              height = 0.5
+        analysis_table = Item('analyses', show_label=False,
+                              editor=editor,
+                              height=0.5
                              )
 
 
-        heat_schedule_table = Item('heat_schedule', style = 'custom', show_label = False,
-                                   height = 0.35
+        heat_schedule_table = Item('heat_schedule', style='custom', show_label=False,
+                                   height=0.35
                                    )
         v = View(
                  'name',
                  new_analysis,
-                 HGroup(spring, Item('apply', enabled_when = 'ok_to_add'),
-                                Item('add', enabled_when = 'ok_to_add'),
-                                show_labels = False),
+                 HGroup(spring, Item('apply', enabled_when='ok_to_add'),
+                                Item('add', enabled_when='ok_to_add'),
+                                show_labels=False),
                  VGroup(
                         heat_schedule_table,
                         analysis_table
@@ -89,7 +89,7 @@ class ExperimentManager(Manager):
     experiment_config = None
 
 
-    experiment = Instance(Experiment, (), kw = dict(name = 'dore'))
+    experiment = Instance(Experiment, (), kw=dict(name='dore'))
     delay_before_analysis = Int
 
     data_manager = Instance(Manager)
@@ -133,15 +133,15 @@ class ExperimentManager(Manager):
     def load_experiment_config(self):
         self.info('loading experiment configuration')
         self.analysis_config = dict(
-                                           extraction_line_script = os.path.join(scripts_dir, 'runscripts', 'test.rs'),
-                                           analysis_script = os.path.join(scripts_dir, 'analysisscripts', 'test.rs'),
-                                           identifier = 4
+                                           extraction_line_script=os.path.join(scripts_dir, 'runscripts', 'test.rs'),
+                                           analysis_script=os.path.join(scripts_dir, 'analysisscripts', 'test.rs'),
+                                           identifier=4
                                   )
 
     def _test_fired(self):
         target = self.do_experiment
         #target = self.spectrometer_manager.deflection_calibration
-        t = Thread(target = target)
+        t = Thread(target=target)
         t.start()
 
 #    def _add_fired(self):
@@ -160,19 +160,19 @@ class ExperimentManager(Manager):
 
             #check db for this sample identifier
             db = self.data_manager
-            sample = db.get_sample(dict(identifier = new))
+            sample = db.get_sample(dict(identifier=new))
             if sample is not None:
                 self.experiment.analysis.sample_data_record = sample
                 self.experiment.ok_to_add = True
         else:
             self.ok_to_add = False
     def traits_view(self):
-        v = View(Item('test', show_label = False),
-                 Item('experiment', show_label = False, style = 'custom'),
+        v = View(Item('test', show_label=False),
+                 Item('experiment', show_label=False, style='custom'),
 
-                 resizable = True,
-                 width = 500,
-                 height = 500
+                 resizable=True,
+                 width=500,
+                 height=500
                  )
         return v
 if __name__ == '__main__':
@@ -187,7 +187,7 @@ if __name__ == '__main__':
 #    ini.run()
 
     e = ExperimentManager(
-                          spectrometer_manager = s
+                          spectrometer_manager=s
                           )
     e.configure_traits()
 

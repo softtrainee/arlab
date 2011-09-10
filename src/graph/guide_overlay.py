@@ -27,7 +27,7 @@ class GuideOverlay(AbstractOverlay):
     orientation = Enum('h', 'v')
     value = Float
     color = Tuple(1, 0, 0)
-    def overlay(self, component, gc, view_bounds = None, mode = 'normal'):
+    def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
 
         '''

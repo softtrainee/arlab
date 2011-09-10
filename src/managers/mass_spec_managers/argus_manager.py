@@ -54,9 +54,9 @@ class Detector(HasTraits):
         '''
         '''
         vg = VGroup()
-        vg.content.append(HGroup(Item('enabled', show_label = False),
-                                 Item('signal', format_str = '%0.5f', style = 'readonly'),
-                                 Item('color', style = 'readonly', show_label = False, width = 60),
+        vg.content.append(HGroup(Item('enabled', show_label=False),
+                                 Item('signal', format_str='%0.5f', style='readonly'),
+                                 Item('color', style='readonly', show_label=False, width=60),
                                  spring))
 
         cg = self._child_groups()
@@ -79,7 +79,7 @@ class Detector(HasTraits):
             si = self.get_signal_from_device()
             s.append(si)
             if self.graph is not None:
-                self.graph.record(si, series = self.series_id)
+                self.graph.record(si, series=self.series_id)
             time.sleep(1)
 
         self.enabled = False
@@ -122,7 +122,7 @@ class IonCounterDetector(Detector):
 class ArgusManager(Manager):
     '''
     '''
-    magnet_position = Property(Float(enter_set = True, auto_set = False))
+    magnet_position = Property(Float(enter_set=True, auto_set=False))
     _magnet_position = Float
 
     _detector_map = None
@@ -146,7 +146,7 @@ class ArgusManager(Manager):
                 det_name = det_args[0]
 
                 _class_ = globals()['%sDetector' % det_name]
-                det = _class_(name = d, *det_args[1:])
+                det = _class_(name=d, *det_args[1:])
                 self.add_trait(d, det)
                 self.detectors.append(det)
 
@@ -159,8 +159,8 @@ class ArgusManager(Manager):
 
             #if det.enabled:
                 #setup graph
-            xs, _ys = self.graph.new_series(type = 'scatter', marker = 'circle',
-                                        marker_size = 2.5, line_width = 0)
+            xs, _ys = self.graph.new_series(type='scatter', marker='circle',
+                                        marker_size=2.5, line_width=0)
             series_id = int(xs[1:])
             #setup timers
             det.series_id = series_id
@@ -171,7 +171,7 @@ class ArgusManager(Manager):
             #self.det_timers.append(Timer(SCAN_INTERVAL,det.get_signal_from_device))
 
 
-        self.measure_thread = Thread(target = self.measure_gas)
+        self.measure_thread = Thread(target=self.measure_gas)
         self.measure_thread.start()
     def measure_gas(self):
         '''
@@ -184,7 +184,7 @@ class ArgusManager(Manager):
         cond = Condition()
         cond.acquire()
         for i, _d in enumerate(self._detector_map):
-            t = Thread(target = self.detectors[i].collect_data, args = (cond,))
+            t = Thread(target=self.detectors[i].collect_data, args=(cond,))
             t.start()
             #self.detectors[i].collect_data(cond)
             cond.wait()
@@ -207,31 +207,31 @@ class ArgusManager(Manager):
         '''
         '''
         t = TimeSeriesStreamGraph()
-        t.new_plot(data_limit = 300,
-                   scan_delay = SCAN_INTERVAL / 1000.0)
-        t.set_y_limits(min = 0, max = 10)
+        t.new_plot(data_limit=300,
+                   scan_delay=SCAN_INTERVAL / 1000.0)
+        t.set_y_limits(min=0, max=10)
         return t
 
 
     def traits_view(self):
         '''
         '''
-        detector_group = VGroup(show_border = True)
+        detector_group = VGroup(show_border=True)
 
         for d in self._detector_map:
-            detector_group.content.append(Item(d, style = 'custom'))
+            detector_group.content.append(Item(d, style='custom'))
 
 
 
-        v = View(VGroup(HGroup(Item('measure', show_label = False), spring),
+        v = View(VGroup(HGroup(Item('measure', show_label=False), spring),
                       HGroup(Item('magnet_position'), spring),
                       HGroup(detector_group, spring),
-                      Item('graph', style = 'custom', show_label = False),
+                      Item('graph', style='custom', show_label=False),
 #                      spring,
                       ),
-               width = self.window_width,
-               height = self.window_height,
-               resizable = True)
+               width=self.window_width,
+               height=self.window_height,
+               resizable=True)
         return v
 
 

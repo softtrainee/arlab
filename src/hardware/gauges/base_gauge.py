@@ -65,8 +65,8 @@ class BaseGauge(CoreDevice):
         '''
         '''
         for i in range(self.nsetpoints):
-            s = Setpoint(parent = self,
-                       index = i + 1)
+            s = Setpoint(parent=self,
+                       index=i + 1)
             s.load()
             self.setpoints.append(s)
 
@@ -74,7 +74,7 @@ class BaseGauge(CoreDevice):
         #self.write(q)
 
 
-    def get_transducer_pressure(self, retry = 5, verbose = False):
+    def get_transducer_pressure(self, retry=5, verbose=False):
         '''
         gets the pressure from the transducer
             
@@ -95,7 +95,7 @@ class BaseGauge(CoreDevice):
 
         def read(q):
             p = self._parse_response('pressure', self.ask(q,
-                                                      verbose = verbose,
+                                                      verbose=verbose,
                                                       #delay = 125
                                                       )
                                 )
@@ -135,7 +135,7 @@ class BaseGauge(CoreDevice):
 
             self.pressure = 0
 
-            self.trait_set(state = False, trait_change_notify = False)
+            self.trait_set(state=False, trait_change_notify=False)
 #            
 #        else:#if self.state:
 #            self.pressure = p
@@ -159,11 +159,11 @@ class BaseGauge(CoreDevice):
         '''
         return View(
                     #Item('name', style = 'readonly', show_label = False),
-                    Item('setpoints', style = 'custom',
-                         show_label = False,
-                         editor = ListEditor(use_notebook = True,
-                                           dock_style = 'tab',
-                                           page_name = '.name'))
+                    Item('setpoints', style='custom',
+                         show_label=False,
+                         editor=ListEditor(use_notebook=True,
+                                           dock_style='tab',
+                                           page_name='.name'))
                     )
 
 

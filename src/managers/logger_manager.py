@@ -37,19 +37,19 @@ class LogFilter(TableFilter):
     name = Str
     names = List(['---'])
     level = Enum('---', 'INFO', 'WARNING', 'DEBUG')
-    date = Str(enter_set = True, auto_set = False)
-    time = Str(enter_set = True, auto_set = False)
+    date = Str(enter_set=True, auto_set=False)
+    time = Str(enter_set=True, auto_set=False)
 
     highlight = Bool
 
     dcomparator = Enum('=', '<', '>', '<=', '>=')
     tcomparator = Enum('=', '<', '>', '<=', '>=')
-    message = Str(enter_set = True, auto_set = False)
-    traits_view = View(Item('name', editor = EnumEditor(name = 'names')),
+    message = Str(enter_set=True, auto_set=False)
+    traits_view = View(Item('name', editor=EnumEditor(name='names')),
                        Item('level'),
-                       HGroup(Label('Date'), Item('dcomparator', show_label = False), Item('date', show_label = False)),
-                       HGroup(Label('Time'), Item('tcomparator', show_label = False), Item('time', show_label = False)),
-                       HGroup(Label('Message = '), Item('message', show_label = False), Item('highlight'))
+                       HGroup(Label('Date'), Item('dcomparator', show_label=False), Item('date', show_label=False)),
+                       HGroup(Label('Time'), Item('tcomparator', show_label=False), Item('time', show_label=False)),
+                       HGroup(Label('Message = '), Item('message', show_label=False), Item('highlight'))
 
                        )
 
@@ -180,36 +180,36 @@ class LoggerManager(Manager):
                         prev_msg = ''
 
     def add_message(self, name, date, time, level, msg):
-        self.messages.append(LogRecord(name = name,
-                                       date = date,
-                                       time = time,
-                                       level = level,
-                                       message = msg
+        self.messages.append(LogRecord(name=name,
+                                       date=date,
+                                       time=time,
+                                       level=level,
+                                       message=msg
                                        ))
         if name not in self.filter.names:
             self.filter.names.append(name)
 
     def traits_view(self):
-        editor = TableEditor(columns = [ObjectColumn(name = 'name'),
-                                        ObjectColumn(name = 'date'),
-                                        ObjectColumn(name = 'time'),
-                                        ObjectColumn(name = 'level'),
-                                        ObjectColumn(name = 'message'),
+        editor = TableEditor(columns=[ObjectColumn(name='name'),
+                                        ObjectColumn(name='date'),
+                                        ObjectColumn(name='time'),
+                                        ObjectColumn(name='level'),
+                                        ObjectColumn(name='message'),
                                         ],
-                             editable = False,
-                             selection_mode = 'rows',
-                             selected = 'selected',
-                             filter_name = 'filter',
-                             filtered_indices = 'filtered_indices',
-                             show_toolbar = True
+                             editable=False,
+                             selection_mode='rows',
+                             selected='selected',
+                             filter_name='filter',
+                             filtered_indices='filtered_indices',
+                             show_toolbar=True
                              )
         v = View(
-                 Item('filter', show_label = False, style = 'custom'),
-                 Item('path', style = 'readonly', show_label = False),
-                 Item('messages', editor = editor, show_label = False),
-                 width = 700,
-                 height = 550,
-                 resizable = True
+                 Item('filter', show_label=False, style='custom'),
+                 Item('path', style='readonly', show_label=False),
+                 Item('messages', editor=editor, show_label=False),
+                 width=700,
+                 height=550,
+                 resizable=True
                  )
         return v
 if __name__ == '__main__':

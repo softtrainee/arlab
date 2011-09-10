@@ -31,9 +31,9 @@ class CanvasDesignerPlugin(CorePlugin):
         '''
         '''
         so = self.service_offer_factory(
-                          protocol = CanvasManager,
+                          protocol=CanvasManager,
                           #protocol = 'src.canvas.designer.canvas_manager.CanvasManager',
-                          factory = self._factory
+                          factory=self._factory
                           )
         return [so]
     def _factory(self):

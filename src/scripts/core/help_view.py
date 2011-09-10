@@ -36,6 +36,6 @@ class HelpView(HasTraits):
 
     def traits_view(self):
         v = View(Item('help_message',
-                    editor = HTMLEditor(),
-                     show_label = False))
+                    editor=HTMLEditor(),
+                     show_label=False))
         return v

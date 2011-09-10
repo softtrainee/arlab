@@ -60,7 +60,7 @@ class RegressionItem(HasTraits):
         self.intercept_error = rdict['coeff_errors'][-1]
 
     def get_data(self):
-        data = np.loadtxt(self.data_path, delimiter = '\t', skiprows = 1)
+        data = np.loadtxt(self.data_path, delimiter='\t', skiprows=1)
         xs, ys, ers = np.hsplit(data, 3)
         return xs.flatten(), ys.flatten(), ers.flatten()
 
@@ -72,7 +72,7 @@ class PeakRegressionManager(Manager):
     exportbutton = Button('Export')
 
     exportall = Event
-    exportall_str = Property(depends_on = '_export_all')
+    exportall_str = Property(depends_on='_export_all')
     _export_all = Bool(True)
     import_button = Button('Import')
 
@@ -132,7 +132,7 @@ class PeakRegressionManager(Manager):
         return ngroups
 
     def _exportbutton_fired(self):
-        t = Thread(target = self._export_results)
+        t = Thread(target=self._export_results)
         t.start()
 
     def _export_results(self):
@@ -140,7 +140,7 @@ class PeakRegressionManager(Manager):
         #file numbers auto  incremented
         #located the current directory
 
-        p = unique_path(os.path.splitext(self.path)[0], 'fit_results', filetype = 'csv')
+        p = unique_path(os.path.splitext(self.path)[0], 'fit_results', filetype='csv')
 
         if p is not None:
 
@@ -224,19 +224,19 @@ class PeakRegressionManager(Manager):
 
         #xs, ys, ers = item.get_data()
         data = item.get_data()
-        g = RegressionGraph(window_title = item.name,
-                            window_width = 800,
-                            window_height = 700,
-                            container_dict = dict(padding = 10)
+        g = RegressionGraph(window_title=item.name,
+                            window_width=800,
+                            window_height=700,
+                            container_dict=dict(padding=10)
                             )
 
-        g.new_plot(padding = [50, 5, 5, 30])
+        g.new_plot(padding=[50, 5, 5, 30])
         g.set_x_title('Time (sec)')
         g.set_y_title('Intensity (fA)')
 
-        g.new_series(x = data[0].flatten(), y = data[1].flatten(), type = 'scatter', marker = 'circle', marker_size = 3)
-        g.set_x_limits(min = 0)
-        g.edit_traits(parent = self.ui.control)
+        g.new_series(x=data[0].flatten(), y=data[1].flatten(), type='scatter', marker='circle', marker_size=3)
+        g.set_x_limits(min=0)
+        g.edit_traits(parent=self.ui.control)
 
     def _get_name(self):
         if self.path:
@@ -260,8 +260,8 @@ class PeakRegressionManager(Manager):
     def load_directory(self):
         files = os.listdir(self.directory)
         self.trait_set(
-                       path = self.directory,
-                       trait_change_notify = False)
+                       path=self.directory,
+                       trait_change_notify=False)
         self.name = self.name_factory(self.directory)
 
         self.results = self._results_factory([os.path.splitext(f)[0] for f in files])
@@ -280,9 +280,9 @@ class PeakRegressionManager(Manager):
 
             path = os.path.join(argsp[0], argsn[0], '%s.txt' % ri)
 
-            ra = RegressionItem(name = ri,
-                           data_path = path,
-                           fit_type = self.fitall
+            ra = RegressionItem(name=ri,
+                           data_path=path,
+                           fit_type=self.fitall
                            )
             rs.append(ra)
         return rs
@@ -292,7 +292,7 @@ class PeakRegressionManager(Manager):
         if p:
 
             kw = dict(#'with_results'=self.with_results,
-                    nisotopes = self.ndetectors
+                    nisotopes=self.ndetectors
                     )
             f = self._filter_factory(**kw)
             results = f.filter(p)
@@ -308,39 +308,39 @@ class PeakRegressionManager(Manager):
         return imf
 
     def traits_view(self):
-        cols = [ObjectColumn(name = 'name', width = 0.25, editable = False),
-              CheckboxColumn(name = 'export'),
-              ObjectColumn(name = 'fit_type', width = 0.6)
+        cols = [ObjectColumn(name='name', width=0.25, editable=False),
+              CheckboxColumn(name='export'),
+              ObjectColumn(name='fit_type', width=0.6)
               ]
 
         v = View(
 
                Item('name',
-                    style = 'readonly',
-                    show_label = False
+                    style='readonly',
+                    show_label=False
                     ),
-               Item('results', show_label = False,
-                   editor = TableEditor(columns = cols,
-                                        auto_size = False,
-                                        dclick = 'selected'
+               Item('results', show_label=False,
+                   editor=TableEditor(columns=cols,
+                                        auto_size=False,
+                                        dclick='selected'
                                         )
                    ),
-               HGroup(Item('exportall', editor = ButtonEditor(label_value = 'exportall_str'),
-                            show_label = False),
-                      Item('exportbutton', show_label = False),
-                      Item('fitall', label = 'Fit All'),
-                      enabled_when = 'results'
+               HGroup(Item('exportall', editor=ButtonEditor(label_value='exportall_str'),
+                            show_label=False),
+                      Item('exportbutton', show_label=False),
+                      Item('fitall', label='Fit All'),
+                      enabled_when='results'
                       ),
 
-               Item('directory', label = 'Load'),
-               HGroup(Item('ndetectors', label = 'Num Detectors'), spring),
-               Item('path', label = 'Import'),
+               Item('directory', label='Load'),
+               HGroup(Item('ndetectors', label='Num Detectors'), spring),
+               Item('path', label='Import'),
 
-               title = 'Peak Regression Manager',
-               resizable = True,
-               width = 600,
-               height = 400,
-               handler = self.handler_klass
+               title='Peak Regression Manager',
+               resizable=True,
+               width=600,
+               height=400,
+               handler=self.handler_klass
                )
         return v
 
@@ -354,14 +354,14 @@ def main2():
     xs = []
     ys = []
     with open(path, 'r') as f:
-        reader = csv.reader(f, delimiter = '\t')
+        reader = csv.reader(f, delimiter='\t')
         reader.next()
 
         for r in reader:
 
             xs.append(float(r[0]))
             ys.append(float(r[1]))
-    o = OLS(xs, ys, fitdegree = 2)
+    o = OLS(xs, ys, fitdegree=2)
     print o.get_coefficients()
     print o.get_coefficient_standard_errors()
 

@@ -30,9 +30,9 @@ class SynradCO2Manager(LaserManager):
 
     control_dac = Instance(AgilentDAC)
     control_switch = Instance(AgilentGPActuator)
-    request_power = Property(depends_on = 'control_dac.value')
-    request_powermin = DelegatesTo('control_dac', prefix = 'min_value')
-    request_powermax = DelegatesTo('control_dac', prefix = 'max_value')
+    request_power = Property(depends_on='control_dac.value')
+    request_powermin = DelegatesTo('control_dac', prefix='min_value')
+    request_powermax = DelegatesTo('control_dac', prefix='max_value')
 
     enable_address = 120
 
@@ -60,18 +60,18 @@ class SynradCO2Manager(LaserManager):
 
         self.control_switch.open_channel(self.enable_address)
 
-        super(SynradCO2Manager, self).enable_laser(is_ok = is_ok)
+        super(SynradCO2Manager, self).enable_laser(is_ok=is_ok)
 
 
         return is_ok
 
     def _control_dac_default(self):
-        return AgilentDAC(name = 'control_dac',
-                          configuration_dir_name = 'synrad',
+        return AgilentDAC(name='control_dac',
+                          configuration_dir_name='synrad',
                           )
     def _control_switch_default(self):
-        a = AgilentGPActuator(name = 'control_switch',
-                          configuration_dir_name = 'synrad',
+        a = AgilentGPActuator(name='control_switch',
+                          configuration_dir_name='synrad',
                           )
 
 
@@ -82,11 +82,11 @@ class SynradCO2Manager(LaserManager):
         '''
         '''
         l = 'CO2'
-        vg = VGroup(show_border = True, label = '%s Laser' % l)
+        vg = VGroup(show_border=True, label='%s Laser' % l)
 
         vg.content.append(HGroup(
-                                 Item('enabled_led', show_label = False, style = 'custom', editor = LEDEditor()),
-                                 self._button_group_factory(self.get_control_buttons(), orientation = 'h'))
+                                 Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+                                 self._button_group_factory(self.get_control_buttons(), orientation='h'))
                                  )
 
         ps = self.get_power_slider()
@@ -109,9 +109,9 @@ class SynradCO2Manager(LaserManager):
         '''
         '''
 
-        args = dict(name = 'synradstage',
-                            configuration_dir_name = 'synrad',
-                             parent = self)
+        args = dict(name='synradstage',
+                            configuration_dir_name='synrad',
+                             parent=self)
         stm = self._stage_manager_factory(args)
 
         return stm

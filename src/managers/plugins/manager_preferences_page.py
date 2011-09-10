@@ -35,8 +35,8 @@ class ManagerPreferencesPage(PreferencesPage):
         ensure subclass sets plugin_name
         
     '''
-    devices = List(transient = True)
-    managers = List(transient = True)
+    devices = List(transient=True)
+    managers = List(transient=True)
     plugin_name = None
     def __init__(self, *args, **kw):
         super(ManagerPreferencesPage, self).__init__(*args, **kw)
@@ -62,10 +62,10 @@ class ManagerPreferencesPage(PreferencesPage):
         r = []
         #get the plugin this manager belongs to
         plugin = self.parser.get_plugin(self.plugin_name)
-        mans = self.parser.get_managers(plugin, element = True, all = True)
+        mans = self.parser.get_managers(plugin, element=True, all=True)
         if mans is not None:
-            r = [CItem(enabled = True if m.get('enabled').lower() == 'true' else False,
-                       name = m.text.strip()
+            r = [CItem(enabled=True if m.get('enabled').lower() == 'true' else False,
+                       name=m.text.strip()
                         )
                         for m in mans]
         return r
@@ -76,10 +76,10 @@ class ManagerPreferencesPage(PreferencesPage):
         #get the plugin this manager belongs to
         plugin = self.parser.get_plugin(self.plugin_name)
 
-        devs = self.parser.get_devices(plugin, element = True, all = True)
+        devs = self.parser.get_devices(plugin, element=True, all=True)
         if devs is not None:
-            r = [CItem(enabled = True if d.get('enabled').lower() == 'true' else False,
-                       name = d.text.strip()
+            r = [CItem(enabled=True if d.get('enabled').lower() == 'true' else False,
+                       name=d.text.strip()
                         )
                         for d in devs]
         return r
@@ -94,30 +94,30 @@ class ManagerPreferencesPage(PreferencesPage):
         '''
         '''
 
-        cols = [CheckboxColumn(name = 'enabled',
+        cols = [CheckboxColumn(name='enabled',
                              ),
-                ObjectColumn(name = 'name', editable = False)
+                ObjectColumn(name='name', editable=False)
                              ]
-        table_editor = TableEditor(columns = cols)
+        table_editor = TableEditor(columns=cols)
 
-        devices_group = VGroup(Item('devices', show_label = False,
-                                    editor = table_editor,
-                                    height = 400
+        devices_group = VGroup(Item('devices', show_label=False,
+                                    editor=table_editor,
+                                    height=400
                                     ),
-                                label = 'Devices'
+                                label='Devices'
                               )
-        manager_group = VGroup(Item('managers', show_label = False,
-                                    editor = table_editor,
-                                    height = 400
+        manager_group = VGroup(Item('managers', show_label=False,
+                                    editor=table_editor,
+                                    height=400
                                     ),
-                                label = 'Managers'
+                                label='Managers'
                               )
 
 
         grp = Group(
                   manager_group,
                   devices_group,
-                  layout = 'tabbed')
+                  layout='tabbed')
         ggrp = self.get_general_group()
         if ggrp is not None:
             ggrp.label = 'General'

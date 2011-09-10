@@ -17,7 +17,7 @@ import time
 import math
 from datetime import datetime
 ISO_FORMAT_STR = "%Y-%m-%d %H:%M:%S"
-def time_generator(start = None):
+def time_generator(start=None):
     if start is None:
         start = time.time()
     while 1:
@@ -41,7 +41,7 @@ def current_time_generator(start):
         i += 1
 
 
-def generate_timestamp(resolution = 'seconds'):
+def generate_timestamp(resolution='seconds'):
     '''
     '''
     ti = time.time()

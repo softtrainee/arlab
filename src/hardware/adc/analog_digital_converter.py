@@ -62,10 +62,10 @@ class AgilentADC(AnalogDigitalConverter):
         #super(AgilentADC, self).load_additional_args(path, setupargs)
 
         slot = self.config_get(config, 'General', 'slot')
-        channel = self.config_get(config, 'General', 'channel', cast = 'int')
+        channel = self.config_get(config, 'General', 'channel', cast='int')
 
         #self.address = setupargs[1][0]
-        tc = self.config_get(config, 'General', 'trigger_count', cast = 'int')
+        tc = self.config_get(config, 'General', 'trigger_count', cast='int')
         self.trigger_count = tc if tc is not None else 1
         #self.trigger_count = int(setupargs[2][0])
 
@@ -191,7 +191,7 @@ class M1000(AnalogDigitalConverter):
             res = self._parse_response_(res)
         return res
 
-    def _parse_response_(self, r, form = '$', type = None):
+    def _parse_response_(self, r, form='$', type=None):
         '''
             typical response form 
             short *+00072.00
@@ -220,7 +220,7 @@ class OmegaADC(M1000):
         '''
         com = 'RB'
         r = self.ask('%s%s%s' % (self.short_form_prompt, self.address,
-                   com), remove_eol = False, replace = [chr(13), ','])
+                   com), remove_eol=False, replace=[chr(13), ','])
 
-        return self._parse_response_(r, type = 'block')
+        return self._parse_response_(r, type='block')
 

@@ -104,7 +104,7 @@ class PowerMapScript(LaserPowerScript):
                 #delay before next run
                 time.sleep(5)
 
-            self.add_display_text('executing %s' % line, log = True)
+            self.add_display_text('executing %s' % line, log=True)
             args = line.split(',')
             #beam diameter (mm), padding(mm), step len (mm), power (PowerUnits)
             if len(args) == 4:
@@ -134,7 +134,7 @@ class PowerMapScript(LaserPowerScript):
 
         self.info('power mapping finished ')
 
-    def setup_table(self, table, parent = 'root.molectron'):
+    def setup_table(self, table, parent='root.molectron'):
         '''
             @type table: C{str}
             @param table:
@@ -144,7 +144,7 @@ class PowerMapScript(LaserPowerScript):
         '''
         dm = self.data_manager
 
-        run_id = dm.add_table(table, parent = parent, table_style = 'PowerMap')
+        run_id = dm.add_table(table, parent=parent, table_style='PowerMap')
 
         table = '%s%s' % (self.parent_group, run_id)
         dm.set_table_attribute('beam_diameter', self.beam_diameter, table)
@@ -182,7 +182,7 @@ class PowerMapScript(LaserPowerScript):
 #
 #        self.move_to_baseline(x, y)
 
-        self.warm_up(duration = self.power_meter_warmup_time)
+        self.warm_up(duration=self.power_meter_warmup_time)
 #        b1 = self._measure_baseline()
 #        data_manager.set_table_attribute('baseline1', b1, table)
 
@@ -211,11 +211,11 @@ class PowerMapScript(LaserPowerScript):
             s = 1.0 if manager.simulation else 3600.0
 
             duration = (time.time() - start_time) / s
-            self.add_display_text('run complete duration =%0.2f' % duration, log = True)
+            self.add_display_text('run complete duration =%0.2f' % duration, log=True)
 
             data_manager.set_table_attribute('duration', duration, table)
 
-    def warm_up(self, duration = None):
+    def warm_up(self, duration=None):
         '''
             @type duration: C{str}
             @param duration:
@@ -240,7 +240,7 @@ class PowerMapScript(LaserPowerScript):
                 time.sleep(0.1)
 
         else:
-            self.add_display_text('Warming up power meter for %s (secs)' % self.power_meter_warmup_time, log = True)
+            self.add_display_text('Warming up power meter for %s (secs)' % self.power_meter_warmup_time, log=True)
             if not self.manager.logic_board.simulation:
                 time.sleep(duration)
 
@@ -253,9 +253,9 @@ class PowerMapScript(LaserPowerScript):
             @param y:
         '''
         msg = 'moving to baseline position %0.3f, %0.3f' % (x, y)
-        self.add_display_text(msg, log = True)
+        self.add_display_text(msg, log=True)
 
-        self.manager.stage_manager.linear_move_to(x, y, block = True)
+        self.manager.stage_manager.linear_move_to(x, y, block=True)
 
     def _measure_baseline(self,):
         '''
@@ -310,7 +310,7 @@ class PowerMapScript(LaserPowerScript):
                 nx = (xi * step_len) + self.center_x
                 self.info('moving to step %i, %i (%0.3f,%0.3f)' % (j, i, nx, ny))
                 if not manager.simulation:
-                    stage_manager.linear_move_to(nx, ny, block = True, grouped_move = False)
+                    stage_manager.linear_move_to(nx, ny, block=True, grouped_move=False)
 
                 if not self.isAlive():
                     break
@@ -331,7 +331,7 @@ class PowerMapScript(LaserPowerScript):
                 raster_manager.set_cell_value(i, j, mag,
                                               #refresh = not manager.simulation
                                               )
-                data_manager.record(dict(x = xi, y = yi, row = j, col = i, power = mag), table = '%s%s' % (self.parent_group, run_id))
+                data_manager.record(dict(x=xi, y=yi, row=j, col=i, power=mag), table='%s%s' % (self.parent_group, run_id))
 
                 if manager.simulation:
                     time.sleep(0.25)

@@ -378,7 +378,7 @@ def memoize(function):
 cached_tinv = memoize(tinv)
 
 
-def stats(r, confidence_interval = 0.05):
+def stats(r, confidence_interval=0.05):
     '''
         @type confidence_interval: C{str}
         @param confidence_interval:

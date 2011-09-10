@@ -44,7 +44,7 @@ import apptools.sweet_pickle as pickle
 class VersionInfo(HasTraits):
     major = Str
     minor = Str
-    version = Property(transient = True)
+    version = Property(transient=True)
     def _get_version(self):
         return '.'.join((self.major, self.minor))
 class VersionInfoHandler(Handler):
@@ -61,22 +61,22 @@ class VersionInfoDisplay(HasTraits):
     def _get_message(self):
         args = ()
         vi = self.version_info
-        kw = dict(major = vi.major, minor = vi.minor, text = vi.text)
+        kw = dict(major=vi.major, minor=vi.minor, text=vi.text)
         msg = '''<h2>Version {major}.{minor}</h2>
 <p><font color="red">file or directory change required</font></p>
 <p>{text}</p>'''
         return msg.format(*args, **kw)
 
     def traits_view(self):
-        v = View(Item('message', style = 'custom', editor = HTMLEditor(),
-                      show_label = False),
+        v = View(Item('message', style='custom', editor=HTMLEditor(),
+                      show_label=False),
                  HGroup(spring, Item('dismiss_notification')),
-                 kind = 'modal',
-                 handler = VersionInfoHandler,
-                 buttons = ['OK'],
-                 width = 300,
-                 height = 300,
-                 title = 'Version Info'
+                 kind='modal',
+                 handler=VersionInfoHandler,
+                 buttons=['OK'],
+                 width=300,
+                 height=300,
+                 title='Version Info'
                  )
 
         return v
@@ -106,8 +106,8 @@ class VersionInfoDisplay(HasTraits):
                 line = f.readline()
                 minor = line.split('=')[1].strip()
 
-                self.version_info = VersionInfo(major = major,
-                                                minor = minor)
+                self.version_info = VersionInfo(major=major,
+                                                minor=minor)
                 f.readline()
                 p = []
                 ps = []
@@ -134,7 +134,7 @@ class VersionInfoDisplay(HasTraits):
                 mismatch = local_info.version != '.'.join((major, minor))
 
             if mismatch:
-                do_later(self.edit_traits, kind = 'modal')
+                do_later(self.edit_traits, kind='modal')
 
 def main():
     #build directories
@@ -142,15 +142,15 @@ def main():
 
     from src.helpers.paths import hidden_dir
     path = os.path.join(hidden_dir, 'version_info')
-    a = VersionInfoDisplay(local_path = path,
-                           src_path = os.path.join(SRC_DIR, 'version_info.txt'),
+    a = VersionInfoDisplay(local_path=path,
+                           src_path=os.path.join(SRC_DIR, 'version_info.txt'),
                            )
     a.check()
 
 
-    setup('pychron', level = 'DEBUG')
+    setup('pychron', level='DEBUG')
 
-    launch(beta = False)
+    launch(beta=False)
 
     os._exit(0)
     profile = False

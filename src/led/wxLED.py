@@ -39,7 +39,7 @@ class wxLED(wx.Control):
             @param parent:
         '''
 
-        wx.Control.__init__(self, parent, -1, (0, 0), (20, 20), style = wx.NO_BORDER)
+        wx.Control.__init__(self, parent, -1, (0, 0), (20, 20), style=wx.NO_BORDER)
 
 
         self.set_state(0)
@@ -64,7 +64,7 @@ class wxLED(wx.Control):
         '''
         if self.blink:
             if self._blink % 3 == 0:
-                self._set_led_color(0, color = change_intensity(COLORS[self._state], 0.5))
+                self._set_led_color(0, color=change_intensity(COLORS[self._state], 0.5))
             else:
                 self._set_led_color(self._state)
 
@@ -85,7 +85,7 @@ class wxLED(wx.Control):
         self._state = s
         self._set_led_color(s)
 
-    def _set_led_color(self, state, color = None):
+    def _set_led_color(self, state, color=None):
         '''
             @type state: C{str}
             @param state:

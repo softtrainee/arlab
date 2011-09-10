@@ -103,7 +103,7 @@ class DataEditor(HasTraits):
         x = plot.index.get_data()
         y = plot.value.get_data()
         data = vstack((x, y)).transpose()
-        data = [DataItem(x = d[0], y = d[1]) for d in data]
+        data = [DataItem(x=d[0], y=d[1]) for d in data]
 
         data = List(data)
         return name, data
@@ -114,14 +114,14 @@ class DataEditor(HasTraits):
         content = []
         n = self.graph.get_num_plots()
         if n == 1:
-            t = Item('table0', show_label = False, editor = TabularEditor(adapter = self.adapter))
+            t = Item('table0', show_label=False, editor=TabularEditor(adapter=self.adapter))
             content.append(t)
         else:
             for i in range(n):
-                t = Item('table%i' % i, show_label = False, editor = TabularEditor(adapter = self.adapter),
-                   label = 'Table %i' % i)
+                t = Item('table%i' % i, show_label=False, editor=TabularEditor(adapter=self.adapter),
+                   label='Table %i' % i)
                 content.append(t)
-        return View(Group(content = content, layout = 'tabbed'))
+        return View(Group(content=content, layout='tabbed'))
 class RegressionDataItem(DataItem):
     '''
         G{classtree}
@@ -162,9 +162,9 @@ class RegressionDataEditor(DataEditor):
             @type id: C{str}
             @param id:
         '''
-        x, y, res = self.graph.calc_residuals(plotid = id)
+        x, y, res = self.graph.calc_residuals(plotid=id)
         data = vstack((x, y, res)).transpose()
-        data = [RegressionDataItem(x = d[0], y = d[1], res = d[2]) for d in data]
+        data = [RegressionDataItem(x=d[0], y=d[1], res=d[2]) for d in data]
 
         s = self.graph.plots[id].plots['plot0'][0].index.metadata.get('selections')
 

@@ -21,7 +21,7 @@ limitations under the License.
 from src.loggable import Loggable
 import random
 
-def signal_generator(mid, ncycles, npts, rlow = 0, rhigh = 5):
+def signal_generator(mid, ncycles, npts, rlow=0, rhigh=5):
     '''
         @type ncycles: C{str}
         @param ncycles:
@@ -56,7 +56,7 @@ for k, m in [('l2', 0.000154), ('l1', 0.0043159), ('ax', 0.0009083), ('h1', 0.06
     signal_generators[k] = signal_generator(m, 6, 10)
 
 class Spectrometer(Loggable):
-    def move_to_mass(self, mass, detector = 'ax'):
+    def move_to_mass(self, mass, detector='ax'):
         '''
             @type mass: C{str}
             @param mass:

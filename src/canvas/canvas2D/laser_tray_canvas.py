@@ -26,15 +26,15 @@ class LaserTrayCanvas(MapCanvas):
     '''
     configuration_dir = None
 
-    stage_position = Property(depends_on = '_stage_position')
+    stage_position = Property(depends_on='_stage_position')
     _stage_position = Tuple(Float, Float)
 
-    desired_position = Property(depends_on = '_desired_position')
+    desired_position = Property(depends_on='_desired_position')
     _desired_position = Any
 
 #    map = StageMap
     show_axes = True
-    current_position = Property(depends_on = 'cur_pos')
+    current_position = Property(depends_on='cur_pos')
     cur_pos = Tuple(Float(0), Float(0))
 
     tool_state = None
@@ -63,11 +63,11 @@ class LaserTrayCanvas(MapCanvas):
                Item('show_bitmap'),
                Item('show_grids'),
                Item('show_desired_position'),
-               Item('desired_position_color', show_label = False, enabled_when = 'show_desired_position'),
+               Item('desired_position_color', show_label=False, enabled_when='show_desired_position'),
                Item('show_laser_position'),
-               Item('crosshairs_kind', enabled_when = 'show_laser_position'),
-               Item('crosshairs_color', show_label = False, enabled_when = 'show_laser_position'),
-               Item('crosshairs_radius', enabled_when = 'show_laser_position and object.crosshairs_kind==4'))
+               Item('crosshairs_kind', enabled_when='show_laser_position'),
+               Item('crosshairs_color', show_label=False, enabled_when='show_laser_position'),
+               Item('crosshairs_radius', enabled_when='show_laser_position and object.crosshairs_kind==4'))
         return v
 
     def end_key(self, event):
@@ -150,7 +150,7 @@ class LaserTrayCanvas(MapCanvas):
         if enable_mouse_wheel_zoom:
             inc = event.mouse_wheel
 
-            self.parent.parent.logic_board.set_zoom(inc, relative = True)
+            self.parent.parent.logic_board.set_zoom(inc, relative=True)
             event.handled = True
 
 #    def normal_key_pressed(self, event):
@@ -225,7 +225,7 @@ class LaserTrayCanvas(MapCanvas):
         self._desired_position = (x, y)
         self.request_redraw()
 
-    def adjust_limits(self, mapper, val, delta = None):
+    def adjust_limits(self, mapper, val, delta=None):
         '''
         '''
         if val is None:
@@ -261,7 +261,7 @@ class LaserTrayCanvas(MapCanvas):
 
         if self.show_desired_position and self.desired_position is not None:
             #draw the place you want the laser to be
-            self._draw_crosshairs(gc, self.desired_position, color = self.desired_position_color, kind = 2)
+            self._draw_crosshairs(gc, self.desired_position, color=self.desired_position_color, kind=2)
 
         if self.show_laser_position:
             #draw where the laser is
@@ -270,11 +270,11 @@ class LaserTrayCanvas(MapCanvas):
 
 
 #            self._draw_crosshairs(gc, pos, color = colors1f[self.crosshairs_color])
-            self._draw_crosshairs(gc, pos, color = self.crosshairs_color)
+            self._draw_crosshairs(gc, pos, color=self.crosshairs_color)
 
         MarkupCanvas._draw_hook(self, gc, *args, **kw)
 
-    def _draw_crosshairs(self, gc, xy, color = (1, 0, 0), kind = None):
+    def _draw_crosshairs(self, gc, xy, color=(1, 0, 0), kind=None):
         '''
         '''
         mx = xy[0] + 1

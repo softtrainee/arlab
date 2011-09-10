@@ -41,10 +41,10 @@ class GraphUIPlugin(CoreUIPlugin):
 
         manager.application = self.application
 
-        args = dict(id = 'pychron.graph_manager',
-                  category = 'Data',
-                  name = 'GraphManager',
-                  obj = manager,
+        args = dict(id='pychron.graph_manager',
+                  category='Data',
+                  name='GraphManager',
+                  obj=manager,
 #                  view = 'manager_view'
                   )
         return self.traitsuiview_factory(args, kw)

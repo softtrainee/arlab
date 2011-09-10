@@ -99,7 +99,7 @@ class InteractionCanvas3D(AnimationCanvas3D):
 
             handled = True
         elif char_code == 308:#Control
-            self._show_popup(event, position = self._current_pos)
+            self._show_popup(event, position=self._current_pos)
             handled = True
             self.Refresh()
         else:
@@ -175,12 +175,12 @@ class InteractionCanvas3D(AnimationCanvas3D):
 
         else:
             hit = self._gl_select_(x, y)
-            self._show_popup(event, hit = hit)
+            self._show_popup(event, hit=hit)
 
         self.Refresh()
         return hit
 
-    def _show_popup(self, event, position = None, hit = None):
+    def _show_popup(self, event, position=None, hit=None):
 
         if position is not None:
             x, y = position
@@ -261,7 +261,7 @@ class InteractionCanvas3D(AnimationCanvas3D):
         '''
         _gw, gh = self.GetSize()
 
-        self.draw(offscreen = True)
+        self.draw(offscreen=True)
         b = glReadPixels(x, gh - y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE)
 
         _buff = glSelectBuffer(128)
@@ -277,7 +277,7 @@ class InteractionCanvas3D(AnimationCanvas3D):
         self._set_view_volume()
 
         glMatrixMode(GL_MODELVIEW)
-        self.draw(offscreen = True)
+        self.draw(offscreen=True)
 
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()

@@ -42,7 +42,7 @@ class ManagerScript(Loggable):
     data_manager = None
     manager = Any
     start_button = Event
-    start_label = Property(depends_on = '_alive')
+    start_label = Property(depends_on='_alive')
     _alive = Bool(False)
 
     notes_button = Button('Notes')
@@ -108,7 +108,7 @@ class ManagerScript(Loggable):
 
         else:
 
-            dm.new_frame(None, directory = self.name[:-6].lower(), base_frame_name = 'run')
+            dm.new_frame(None, directory=self.name[:-6].lower(), base_frame_name='run')
 #            self.notes_enabled = True
             return True
 
@@ -179,9 +179,9 @@ class ManagerScript(Loggable):
         '''
         return HGroup(Item('start_button',
                            #style='custom',
-                           editor = ButtonEditor(label_value = 'start_label')),
-                      Item('notes_button', enabled_when = 'notes_enabled'),
-                           show_labels = False)
+                           editor=ButtonEditor(label_value='start_label')),
+                      Item('notes_button', enabled_when='notes_enabled'),
+                           show_labels=False)
 
     def _data_manager_factory(self):
         '''

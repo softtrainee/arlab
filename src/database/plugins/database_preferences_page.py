@@ -42,12 +42,12 @@ class DatabasePreferencesPage(PreferencesPage):
         v = View(VGroup(
                     Item('use_db'),
                     VGroup(
-                    Item('dbname', label = 'Database Name'),
+                    Item('dbname', label='Database Name'),
                     Item('host'),
                     Item('user'),
                     Item('password'),
-                    show_border = True,
-                    visible_when = 'use_db'
+                    show_border=True,
+                    visible_when='use_db'
                     )
                     ))
         return v

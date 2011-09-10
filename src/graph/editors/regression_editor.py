@@ -43,12 +43,12 @@ class CustomEquation(HasTraits):
     example = 'p[0]+p[1]*cos(p[2]*x)'
     equation = String('p[0]+x**2+p[1]*cos(2*x)+p[2]*sin(2*x)')
     initial_guess = String('1,1,1')
-    v = View(Item('example', style = 'readonly'),
-           Item('equation', label = 'Y ='),
+    v = View(Item('example', style='readonly'),
+           Item('equation', label='Y ='),
            Item('initial_guess'),
-           resizable = True,
-           kind = 'modal',
-           buttons = ['OK', 'Cancel']
+           resizable=True,
+           kind='modal',
+           buttons=['OK', 'Cancel']
            )
 
 class RegressionEditor(HasTraits):
@@ -61,7 +61,7 @@ class RegressionEditor(HasTraits):
     stats = List
     fitfunc = ''
 
-    intercept = Float(editable = False)
+    intercept = Float(editable=False)
     intercept_error = Float
     def __init__(self, *args, **kw):
         '''
@@ -99,7 +99,7 @@ class RegressionEditor(HasTraits):
         self.graph.fit_types[self.id] = self.fit_type
         self.graph.selected_plotid = self.id
 
-    def set_regression_statistics(self, rdict, plotid = 0):
+    def set_regression_statistics(self, rdict, plotid=0):
         '''
 
         '''
@@ -119,10 +119,10 @@ class RegressionEditor(HasTraits):
             strcoeff_errs = '%s (%0.3f%%)' % (exp_fmt % coeff_errs[0], float(coeff_errs[0]) / float(coeffs[0]) * 100)
             #intercept = 'Intercept %0.5e +/- %0.5e (%0.3f%%)' % (coeffs[0], coeff_errs[0], float(coeff_errs[0]) / float(coeffs[0]) * 100)
 
-            strcoeffs_item = StatsTableItem(name = 'Average',
-                                        value = strcoeffs)
-            strcoeff_errs_item = StatsTableItem(name = 'Average Error',
-                                                value = strcoeff_errs)
+            strcoeffs_item = StatsTableItem(name='Average',
+                                        value=strcoeffs)
+            strcoeff_errs_item = StatsTableItem(name='Average Error',
+                                                value=strcoeff_errs)
 
             intercept = exp_fmt % coeffs[0]
             intercept_err = exp_fmt % coeff_errs[0]
@@ -163,10 +163,10 @@ class RegressionEditor(HasTraits):
             intercept_err = exp_fmt % icoef_err
             intercept_err_percent = '%0.3f' % (abs(icoef_err / icoef) if icoef != 0 else 0 * 100)
 
-            strcoeffs_item = StatsTableItem(name = 'Coefficients',
-                                        value = strcoeffs)
-            strcoeff_errs_item = StatsTableItem(name = 'Coefficient Errors',
-                                                value = strcoeff_errs)
+            strcoeffs_item = StatsTableItem(name='Coefficients',
+                                        value=strcoeffs)
+            strcoeff_errs_item = StatsTableItem(name='Coefficient Errors',
+                                                value=strcoeff_errs)
 
 #        stddev = 'standard deviation = %0.5G' % stats['stddev']
 #        sample_stddev = 'sample standard deviation = %0.5G' % stats['sample_stddev']
@@ -175,19 +175,19 @@ class RegressionEditor(HasTraits):
 
         stats = self.stats
 
-        strfunc_item = StatsTableItem(name = 'Fit Function',
-                                    value = strfunc)
+        strfunc_item = StatsTableItem(name='Fit Function',
+                                    value=strfunc)
 
 
-        intercept_item = StatsTableItem(name = 'Y Intercept',
-                                      value = intercept
+        intercept_item = StatsTableItem(name='Y Intercept',
+                                      value=intercept
                                       )
 
-        intercept_err_item = StatsTableItem(name = 'Y Intercept Error',
-                                            value = intercept_err)
+        intercept_err_item = StatsTableItem(name='Y Intercept Error',
+                                            value=intercept_err)
 
-        intercept_err_percent_item = StatsTableItem(name = 'Y Intercept Error (%)',
-                                            value = intercept_err_percent)
+        intercept_err_percent_item = StatsTableItem(name='Y Intercept Error (%)',
+                                            value=intercept_err_percent)
 
         if stats:
 #            stats[0] = strfunc
@@ -228,20 +228,20 @@ class RegressionEditor(HasTraits):
         '''
         '''
         cols = [
-                ObjectColumn(name = 'name', editable = False, width = 125),
-                ObjectColumn(name = 'value', width = 0.80)
+                ObjectColumn(name='name', editable=False, width=125),
+                ObjectColumn(name='value', width=0.80)
                 ]
-        editor = TableEditor(columns = cols,
-                             show_column_labels = False,
-                             auto_size = False,
-                             selection_mode = 'cell'
+        editor = TableEditor(columns=cols,
+                             show_column_labels=False,
+                             auto_size=False,
+                             selection_mode='cell'
                              )
 
         return View(VGroup(
-                           Item('fit_type', show_label = False),
+                           Item('fit_type', show_label=False),
 #                           HGroup(Item('intercept', format_str = '%0.8G', width = 0.5),
 #                                  Item('intercept_error', format_str = '%0.8G', width = 0.5)),
-                           Item('stats', editor = editor, show_label = False)
+                           Item('stats', editor=editor, show_label=False)
                            )
                     )
 #========================= EOF =========================

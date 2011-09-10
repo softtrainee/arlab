@@ -46,7 +46,7 @@ class CommandProcessor(ConfigLoadable):
         '''
         '''
         #grab the port from the repeater config file
-        config = self.get_configuration(path = os.path.join(paths.device_dir,
+        config = self.get_configuration(path=os.path.join(paths.device_dir,
                                                             'servers', 'repeater.cfg'))
         if config:
 #            self.port = self.config_get(config, 'General', 'port', cast = 'int')
@@ -76,7 +76,7 @@ class CommandProcessor(ConfigLoadable):
         self._sock.listen(2)
         self.info('listening to {}'.format(self.path))
 
-        t = Thread(target = self._listener)
+        t = Thread(target=self._listener)
         t.start()
         return True
 
@@ -97,7 +97,7 @@ class CommandProcessor(ConfigLoadable):
         if self.manager is not None:
             ptype, payload = data.split('|')
 
-            t = Thread(target = self.manager.process_server_request, args = (ptype, payload))
+            t = Thread(target=self.manager.process_server_request, args=(ptype, payload))
             t.start()
             t.join()
 
@@ -136,7 +136,7 @@ class SHMCommandProcessor(SHMServer):
         '''
         '''
         #grab the port from the repeater config file
-        config = self.get_configuration(path = os.path.join(paths.device_dir,
+        config = self.get_configuration(path=os.path.join(paths.device_dir,
                                                             'servers', 'repeater.cfg'))
         if config:
 #            self.port = self.config_get(config, 'General', 'port', cast = 'int')

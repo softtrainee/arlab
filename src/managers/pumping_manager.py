@@ -39,9 +39,9 @@ class PumpingSystem(HasTraits):
     controller = Instance(MicroIonController)
 
     def _led_item_factory(self, name):
-        return Item(name, editor = LEDEditor(),
+        return Item(name, editor=LEDEditor(),
                     #show_label=False, 
-                    style = 'custom')
+                    style='custom')
 
     def update(self):
         statefunc = lambda st: 2 if int(st) == 1 else 0
@@ -58,12 +58,12 @@ class PumpingSystem(HasTraits):
         cg1 = VGroup(
                    self._led_item_factory('relay1'),
                    self._led_item_factory('relay2'),
-                   show_border = True
+                   show_border=True
                   )
         cg2 = VGroup(
                   self._led_item_factory('relay3'),
                   self._led_item_factory('relay4'),
-                  show_border = True
+                  show_border=True
                   )
 
         v = View(
@@ -90,19 +90,19 @@ class PumpingManager(Manager):
             self.systems.append((s[0], ss))
 
     def _pumping_system_factory(self, name, controller):
-        return PumpingSystem(name = name,
-                             controller = controller
+        return PumpingSystem(name=name,
+                             controller=controller
                              )
 
     def traits_view(self):
 
         vg = VGroup()
         for ps in self.systems:
-            vg.content.append(Group(Item(ps[0], style = 'custom', show_label = False), show_border = True,
-                                   label = ps[0]
+            vg.content.append(Group(Item(ps[0], style='custom', show_label=False), show_border=True,
+                                   label=ps[0]
                                    ))
 
-        v = View(vg, resizable = True)
+        v = View(vg, resizable=True)
         return v
 
     def start_scan(self):

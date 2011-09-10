@@ -26,13 +26,13 @@ from Cython.Distutils import build_ext
 
 pychron_dir = '/Users/Ross/Programming/pychron_beta/src'
 ext_modules = [Extension("Fflux_gradient_monte_carlo", ["Fflux_gradient_monte_carlo.pyx"],
-                         include_dirs = [numpy.get_include(),
+                         include_dirs=[numpy.get_include(),
                                          pychron_dir
                                          ]
                          )]
 
 setup(
-  name = 'Fast Flux Gradient Calculation',
-  cmdclass = {'build_ext': build_ext},
-  ext_modules = ext_modules
+  name='Fast Flux Gradient Calculation',
+  cmdclass={'build_ext': build_ext},
+  ext_modules=ext_modules
 )

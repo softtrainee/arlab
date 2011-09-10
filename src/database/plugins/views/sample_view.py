@@ -66,11 +66,11 @@ class Sample(DatabaseItem):
         '''
 
         v = View(Item('name'),
-                       Item('project', editor = EnumEditor(values = self.projects)),
-                       Item('irradiation', editor = EnumEditor(values = self.irradiations)),
-                       title = 'New Sample',
+                       Item('project', editor=EnumEditor(values=self.projects)),
+                       Item('irradiation', editor=EnumEditor(values=self.irradiations)),
+                       title='New Sample',
 
-                       buttons = ['OK', 'Cancel']
+                       buttons=['OK', 'Cancel']
                 )
         return v
 
@@ -85,11 +85,11 @@ class SampleView(DatabaseTableView):
     def get_table_editor(self):
         '''
         '''
-        kw = dict(columns = self.get_table_columns(),
-                  show_toolbar = True,
-                  selection_mode = 'row',
-                  selected = 'selected',
-                  row_factory = self.row_factory,
+        kw = dict(columns=self.get_table_columns(),
+                  show_toolbar=True,
+                  selection_mode='row',
+                  selected='selected',
+                  row_factory=self.row_factory,
                   )
         return self._table_editor_factory(kw)
 
@@ -118,9 +118,9 @@ class SampleView(DatabaseTableView):
             pid = item._projects[0][0]
 
         dbsample, sess = self.database.add_sample(
-                                                  dict(name = item.name),
-                                                  dbproject = pid,
-                                                  dbirradiation = iid
+                                                  dict(name=item.name),
+                                                  dbproject=pid,
+                                                  dbirradiation=iid
                                                   )
         if dbsample:
             sess.commit()

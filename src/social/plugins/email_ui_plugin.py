@@ -28,7 +28,7 @@ class EmailUIPlugin(CoreUIPlugin):
         return [EmailPreferencesPage]
     
     def start(self):
-        em=self.application.get_service(EmailManager)
+        em = self.application.get_service(EmailManager)
         bind_preference(em, 'outgoing_server', 'pychron.email.smtp_host')
         bind_preference(em, 'server_username', 'pychron.email.username')
         bind_preference(em, 'server_password', 'pychron.email.password')

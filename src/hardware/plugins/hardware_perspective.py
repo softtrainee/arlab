@@ -27,11 +27,11 @@ class HardwarePerspective(Perspective):
     show_editor_area = False
 
     contents = [
-              PerspectiveItem(id = 'hardware.devices',
-                              width = 0.65
+              PerspectiveItem(id='hardware.devices',
+                              width=0.65
                               ),
-              PerspectiveItem(id = 'hardware.current_device',
-                              width = 0.45
+              PerspectiveItem(id='hardware.current_device',
+                              width=0.45
                               ),
 
 #              PerspectiveItem(id = 'extraction_line.canvas',

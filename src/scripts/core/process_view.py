@@ -31,7 +31,7 @@ class ProcessView(HasTraits):
     '''
     name = String
     execute = Event
-    execute_label = Property(depends_on = 'alive')
+    execute_label = Property(depends_on='alive')
 
     #experiment = Any
     #script = Any
@@ -55,7 +55,7 @@ class ProcessView(HasTraits):
         return ScriptSelector()
 
     def _display_default(self):
-        return RichTextDisplay(height = 300)
+        return RichTextDisplay(height=300)
 
     def _get_execute_label(self):
 
@@ -126,14 +126,14 @@ class ProcessView(HasTraits):
                     HGroup(Item('name'), spring),
                     HGroup(
                            Item('execute',
-                                editor = ButtonEditor(label_value = 'execute_label'),
+                                editor=ButtonEditor(label_value='execute_label'),
                                        #enabled_when = 'experiment or script',
-                                       enabled_when = 'not dirty',
-                                       show_label = False)
+                                       enabled_when='not dirty',
+                                       show_label=False)
                             ),
                             #spring
                     #Item('selector', show_label = False, style = 'custom'),
-                    Item('display', show_label = False, style = 'custom')
+                    Item('display', show_label=False, style='custom')
                     )
 
 #============= EOF ====================================

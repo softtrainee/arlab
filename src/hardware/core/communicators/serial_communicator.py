@@ -60,17 +60,17 @@ class SerialCommunicator(Communicator):
 
         self.set_attribute(config, 'port', 'Communications', 'port')
         self.set_attribute(config, 'baudrate', 'Communications', 'baudrate',
-                           cast = 'int', optional = True)
+                           cast='int', optional=True)
         self.set_attribute(config, 'bytesize', 'Communications', 'bytesize',
-                           cast = 'int', optional = True)
+                           cast='int', optional=True)
         self.set_attribute(config, 'timeout', 'Communications', 'timeout',
-                           cast = 'float', optional = True)
+                           cast='float', optional=True)
 
-        parity = self.config_get(config, 'Communications', 'parity', optional = True)
+        parity = self.config_get(config, 'Communications', 'parity', optional=True)
         if parity is not None:
             self.parity = getattr(serial, 'PARITY_%s' % parity.upper())
 
-        stopbits = self.config_get(config, 'Communications', 'stopbits', optional = True)
+        stopbits = self.config_get(config, 'Communications', 'stopbits', optional=True)
         if stopbits is not None:
             if stopbits == '1':
                 stopbits = 'ONE'
@@ -80,7 +80,7 @@ class SerialCommunicator(Communicator):
 
 
 
-    def tell(self, cmd, hex = False, info = None, verbose = True, **kw):
+    def tell(self, cmd, hex=False, info=None, verbose=True, **kw):
         '''
            
         '''
@@ -92,7 +92,7 @@ class SerialCommunicator(Communicator):
 
 
         self._lock.acquire()
-        self._write(cmd, hex = hex)
+        self._write(cmd, hex=hex)
         if verbose:
             self.log_tell(cmd, info)
 
@@ -115,7 +115,7 @@ class SerialCommunicator(Communicator):
         self._lock.release()
         return r
 
-    def ask(self, cmd, hex = False, verbose = True, delay = None, replace = None, remove_eol = True, info = None):
+    def ask(self, cmd, hex=False, verbose=True, delay=None, replace=None, remove_eol=True, info=None):
         '''
             
         '''
@@ -126,7 +126,7 @@ class SerialCommunicator(Communicator):
             return
 
         self._lock.acquire()
-        self._write(cmd, hex = hex)
+        self._write(cmd, hex=hex)
 
 
         '''
@@ -137,7 +137,7 @@ class SerialCommunicator(Communicator):
          
         '''
 
-        re = self._read(hex = hex, delay = delay)
+        re = self._read(hex=hex, delay=delay)
         self._lock.release()
 
         re = self.process_response(re, replace, remove_eol)
@@ -281,7 +281,7 @@ class SerialCommunicator(Communicator):
 #            self.warning('''%s is not a valid port address
 #==== valid port addresses ==== \n%s''' % (port, valid))
 
-    def _write(self, cmd, hex = False):
+    def _write(self, cmd, hex=False):
         '''
             use the serial handle to write the cmd to the serial buffer 
             
@@ -308,7 +308,7 @@ class SerialCommunicator(Communicator):
                 else:
                     write(cmd)
 
-    def _read(self, hex = False, time_out = 1, delay = None):
+    def _read(self, hex=False, time_out=1, delay=None):
         '''
             use the serial handle to read available bytes from the serial buffer
             

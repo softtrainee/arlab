@@ -42,8 +42,8 @@ class SHMServer(SharedMemoryUser):
 
     def open(self):
         name = '/tmp/shm5/hardware'
-        memory = self._memory_factory(name, o_crex = True, size = 1024)
-        self.semaphore = self._semaphore_factory(name, o_crex = True)
+        memory = self._memory_factory(name, o_crex=True, size=1024)
+        self.semaphore = self._semaphore_factory(name, o_crex=True)
 
         self.mapfile = self._mapfile_factory(memory)
 
@@ -52,7 +52,7 @@ class SHMServer(SharedMemoryUser):
 
         #start server forever thread
 
-        t = Thread(target = self.serve)
+        t = Thread(target=self.serve)
         t.start()
 
         return True
