@@ -66,7 +66,7 @@ class TerraNovaIonPumpController(CoreDevice):
         qry = ''.join([STX, self.address, qry, '?,', cksum, CR])
         return qry
 
-    def _parse_response(self, r, kind = 'float'):
+    def _parse_response(self, r, kind='float'):
         print r
 
         args = r.split(':')
@@ -87,7 +87,7 @@ class TerraNovaIonPumpController(CoreDevice):
     def _read_bool(self, qry):
         qry = self._build_query(qry)
         r = self.ask(qry)
-        r = self._parse_response(r, kind = 'bool')
+        r = self._parse_response(r, kind='bool')
         return r
 
 if __name__ == '__main__':

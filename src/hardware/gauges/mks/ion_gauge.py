@@ -27,7 +27,7 @@ class IonGauge(BaseMKSGauge):
         G{classtree}
     '''
     _degas = Bool(False)
-    degas = Property(depends_on = '_degas')
+    degas = Property(depends_on='_degas')
     def _get_degas(self):
         '''
         '''
@@ -97,7 +97,7 @@ class IonGauge(BaseMKSGauge):
             self._degas = False
 
         if self._degas:
-            t = threading.Thread(target = degas_shutdown)
+            t = threading.Thread(target=degas_shutdown)
             t.start()
 
     def get_transducer_filament_state(self, **kw):

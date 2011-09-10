@@ -28,8 +28,8 @@ class User(HasTraits):
     name = Str
     id = Str
     traits_view = View(Item('name'),
-                       title = 'New User',
-                       buttons = ['OK', 'Cancel'])
+                       title='New User',
+                       buttons=['OK', 'Cancel'])
 
 class UserView(DatabaseTableView):
     '''
@@ -42,11 +42,11 @@ class UserView(DatabaseTableView):
     def get_table_editor(self):
         '''
         '''
-        kw = dict(columns = self.get_table_columns(),
-                  show_toolbar = True,
-                  selection_mode = 'row',
-                  selected = 'selected',
-                  row_factory = self.row_factory,
+        kw = dict(columns=self.get_table_columns(),
+                  show_toolbar=True,
+                  selection_mode='row',
+                  selected='selected',
+                  row_factory=self.row_factory,
                   )
         return self._table_editor_factory(kw)
 
@@ -55,7 +55,7 @@ class UserView(DatabaseTableView):
             @type item: C{str}
             @param item:
         '''
-        dbuser, sess = self.database.add_user(dict(name = item.name))
+        dbuser, sess = self.database.add_user(dict(name=item.name))
         if dbuser:
             sess.commit()
             item.id = str(dbuser.id)

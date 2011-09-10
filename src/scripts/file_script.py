@@ -64,7 +64,7 @@ class FileScript(ManagerScript):
 
                 self.available_scripts = files
                 self.file_name = files[0]
-                self.edit_traits(view = 'progress_view')
+                self.edit_traits(view='progress_view')
             else:
                 self.warning('Invalid directory %s' % self.source_dir)
         else:
@@ -82,7 +82,7 @@ class FileScript(ManagerScript):
         '''
         return self.bootstrap()
 
-    def bootstrap(self, condition = None):
+    def bootstrap(self, condition=None):
         '''
             @type condition: C{str}
             @param condition:
@@ -98,7 +98,7 @@ class FileScript(ManagerScript):
                 return True
 
 
-    def add_display_text(self, msg, color = None, log = False):
+    def add_display_text(self, msg, color=None, log=False):
         '''
             @type msg: C{str}
             @param msg:
@@ -115,7 +115,7 @@ class FileScript(ManagerScript):
         elif isinstance(color, str):
             color = colors[color]
 
-        self.progress_display.add_text(msg = msg, color = color)
+        self.progress_display.add_text(msg=msg, color=color)
         if log:
             self.info('%s' % msg)
     def load(self):
@@ -140,7 +140,7 @@ class FileScript(ManagerScript):
     def _info_group_factory(self):
         '''
         '''
-        g = Group(Item('progress_display', show_label = False, style = 'custom'),)
+        g = Group(Item('progress_display', show_label=False, style='custom'),)
         return g
 
     def progress_view(self):
@@ -149,17 +149,17 @@ class FileScript(ManagerScript):
 
         return View(Item('default_save'),
                     self._button_group_factory(),
-                    HGroup(Item('file_name', editor = EnumEditor(values = self.available_scripts), show_label = False), spring),
+                    HGroup(Item('file_name', editor=EnumEditor(values=self.available_scripts), show_label=False), spring),
                     self._info_group_factory(),
-                    x = 10,
-                    y = 20,
-                    title = 'Script Progress',
-                    resizable = True,
+                    x=10,
+                    y=20,
+                    title='Script Progress',
+                    resizable=True,
                     )
 
 #=========== defaults ===========
     def _progress_display_default(self):
         '''
         '''
-        return RichTextDisplay(width = 100)
+        return RichTextDisplay(width=100)
 #=========== EOF ================

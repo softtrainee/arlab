@@ -31,85 +31,85 @@ class PowerMapProcessor:
     levels = 10
 
 #    def load_graph(self, table, window_title = ''):
-    def load_graph(self, reader, window_title = ''):
+    def load_graph(self, reader, window_title=''):
         '''
         '''
 
-        cg = ContourGraph(window_width = 725,
-                          window_height = 635)
+        cg = ContourGraph(window_width=725,
+                          window_height=635)
     #    cg.plotcontainer = cg._container_factory(type = 'h')
 
         z, metadata = self._extract_power_map_data(reader)
         x, y, z = self._prep_2D_data(z)
 
         bounds = (-float(metadata[1][1]), float(metadata[1][1]))
-        cplot = cg.new_plot(add = False,
-                            padding_top = 15,
-                            padding_left = 20,
-                            padding_right = 5,
-                            resizable = '',
-                            bounds = [400, 400],
+        cplot = cg.new_plot(add=False,
+                            padding_top=15,
+                            padding_left=20,
+                            padding_right=5,
+                            resizable='',
+                            bounds=[400, 400],
                           )
         cplot.index_axis.title = 'mm'
         cplot.value_axis.title = 'mm'
 
-        cg.new_series(x = x, y = y, z = z, style = 'contour',
-                      xbounds = bounds,
-                      ybounds = bounds,
-                      cmap = self.color_map,
-                      colorbar = True,
-                      levels = self.levels)
+        cg.new_series(x=x, y=y, z=z, style='contour',
+                      xbounds=bounds,
+                      ybounds=bounds,
+                      cmap=self.color_map,
+                      colorbar=True,
+                      levels=self.levels)
 
         cpolyplot = cplot.plots['plot0'][0]
-        options = dict(style = 'cmap_scatter',
-                     type = 'cmap_scatter',
-                     marker = 'circle',
-                     color_mapper = cpolyplot.color_mapper
+        options = dict(style='cmap_scatter',
+                     type='cmap_scatter',
+                     marker='circle',
+                     color_mapper=cpolyplot.color_mapper
                      )
 
-        p_xaxis = cg.new_plot(add = False,
-                            padding_bottom = 0,
-                            padding_left = 20,
-                            padding_right = 5,
-                            padding_top = 30,
-                            resizable = '',
-                            bounds = [400, 100],
-                            title = 'Power Map'
+        p_xaxis = cg.new_plot(add=False,
+                            padding_bottom=0,
+                            padding_left=20,
+                            padding_right=5,
+                            padding_top=30,
+                            resizable='',
+                            bounds=[400, 100],
+                            title='Power Map'
                             )
 
         p_xaxis.index_axis.visible = False
         p_xaxis.value_axis.title = 'Power (%)'
-        cg.new_series(plotid = 1, render_style = 'connectedpoints')
-        cg.new_series(plotid = 1, **options)
+        cg.new_series(plotid=1, render_style='connectedpoints')
+        cg.new_series(plotid=1, **options)
 
-        p_yaxis = cg.new_plot(add = False,
-                              orientation = 'v',
-                              padding_left = 0,
-                              padding_bottom = 60,
-                              resizable = '',
-                              bounds = [120, 400]
+        p_yaxis = cg.new_plot(add=False,
+                              orientation='v',
+                              padding_left=0,
+                              padding_bottom=60,
+                              resizable='',
+                              bounds=[120, 400]
                              )
 
         p_yaxis.index_axis.visible = False
         p_yaxis.value_axis.title = 'Power (%)'
 
-        cg.new_series(plotid = 2, render_style = 'connectedpoints')
-        cg.new_series(plotid = 2, **options)
+        cg.new_series(plotid=2, render_style='connectedpoints')
+        cg.new_series(plotid=2, **options)
 
         ma = max([max(z[i, :]) for i in range(len(x))])
         mi = min([min(z[i, :]) for i in range(len(x))])
 
-        cg.set_y_limits(min = mi, max = ma, plotid = 1)
-        cg.set_y_limits(min = mi, max = ma, plotid = 2)
+        cg.set_y_limits(min=mi, max=ma, plotid=1)
+        cg.set_y_limits(min=mi, max=ma, plotid=2)
 
         cg.show_crosshairs()
 
         cpolyplot.index.on_trait_change(cg.metadata_changed,
                                            'metadata_changed')
 
-        container = cg._container_factory(type = 'v',
-                                          bounds = [400, 600],
-                                          resizable = ''
+        container = cg._container_factory(type='v',
+                                          bounds=[400, 600],
+                                          resizable=''
                                           )
         container.add(cplot)
         container.add(p_xaxis)
@@ -159,7 +159,7 @@ class PowerMapProcessor:
 
 
         #rotate the array
-        return rot90(array(cells), k = 2), metadata
+        return rot90(array(cells), k=2), metadata
 
 
 

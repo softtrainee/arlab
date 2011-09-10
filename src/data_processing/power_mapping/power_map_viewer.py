@@ -70,7 +70,7 @@ class PowerMapViewer(Loggable):
 
             p = self._selected_file.get_path()
 
-            names, tables = self._processor._get_tables(path = p)
+            names, tables = self._processor._get_tables(path=p)
 
 
             tables = [DataTable(tab, tables[tab]) for tab in names]
@@ -98,24 +98,24 @@ class PowerMapViewer(Loggable):
     def traits_view(self):
         '''
         '''
-        graph = Item('graph', show_label = False, style = 'custom',
-                   width = 0.85)
-        cols = [ObjectColumn(name = 'name'), ]
-        ftable_editor = TableEditor(columns = cols,
-                                 editable = False,
-                                 selected = '_selected_file')
-        ttable_editor = TableEditor(columns = cols,
-                                 editable = False,
-                                 selected = '_selected_table')
-        data = VSplit(Item('data_files', editor = ftable_editor, show_label = False),
-                    Item('data_tables', editor = ttable_editor, show_label = False))
+        graph = Item('graph', show_label=False, style='custom',
+                   width=0.85)
+        cols = [ObjectColumn(name='name'), ]
+        ftable_editor = TableEditor(columns=cols,
+                                 editable=False,
+                                 selected='_selected_file')
+        ttable_editor = TableEditor(columns=cols,
+                                 editable=False,
+                                 selected='_selected_table')
+        data = VSplit(Item('data_files', editor=ftable_editor, show_label=False),
+                    Item('data_tables', editor=ttable_editor, show_label=False))
 
         v = View(
                  HSplit(data, graph),
-               resizable = True,
-               width = 900,
-               height = 700,
-               title = 'Power Map Viewer')
+               resizable=True,
+               width=900,
+               height=700,
+               title='Power Map Viewer')
         return v
     def __processor_default(self):
         '''

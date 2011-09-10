@@ -53,7 +53,7 @@ class RegressionGraph(Graph):
     fit_types = []
 
     use_error = False
-    def get_intercept(self, plotid = 0):
+    def get_intercept(self, plotid=0):
         results = self.regression_results[plotid]
         if  results is not None:
             coeffs = results['coefficients']
@@ -114,7 +114,7 @@ class RegressionGraph(Graph):
             x1 = line.index_range.low
             x2 = line.index_range.high
 
-            args = self._regress_(sel_indices = sel_ind, plotid = plotid, data_range = (x1, x2))
+            args = self._regress_(sel_indices=sel_ind, plotid=plotid, data_range=(x1, x2))
             line.index.set_data(args['x'])
             line.value.set_data(args['y'])
 
@@ -148,7 +148,7 @@ class RegressionGraph(Graph):
 
         return type, kw
 
-    def _regress_(self, sel_indices = None, plotid = None, data_range = None):
+    def _regress_(self, sel_indices=None, plotid=None, data_range=None):
         '''
         '''
         if sel_indices is None:
@@ -187,7 +187,7 @@ class RegressionGraph(Graph):
         if self.show_regression_editor and return_dict:
 
             editor = self.regression_editors[plotid]
-            editor.set_regression_statistics(return_dict, plotid = plotid)
+            editor.set_regression_statistics(return_dict, plotid=plotid)
 
         self.regression_results[plotid] = return_dict
         return return_dict
@@ -203,7 +203,7 @@ class RegressionGraph(Graph):
 #            self.set_data(args['x'], series = 1, **kw)
 #            self.set_data(args['y'], series = 1, axis = 1, **kw)
 
-    def calc_residuals(self, plotid = 0, split = False):
+    def calc_residuals(self, plotid=0, split=False):
         '''
 
         '''
@@ -238,17 +238,17 @@ class RegressionGraph(Graph):
         super(RegressionGraph, self).new_plot(**kw)
         if self.show_regression_editor:
 
-            self.regression_editors.append(RegressionEditor(graph = self,
-                                                            id = len(self.regression_editors)))
+            self.regression_editors.append(RegressionEditor(graph=self,
+                                                            id=len(self.regression_editors)))
 
-    def new_series(self, x = None, y = None, plotid = 0, fit_type = 'linear', regress = True, *args, **kw):
+    def new_series(self, x=None, y=None, plotid=0, fit_type='linear', regress=True, *args, **kw):
         '''
         '''
         if not regress:
-            return super(RegressionGraph, self).new_series(x = x, y = y, plotid = plotid, *args, **kw)
+            return super(RegressionGraph, self).new_series(x=x, y=y, plotid=plotid, *args, **kw)
 
         kw['type'] = 'scatter'
-        plot, names, rd = self._series_factory(x, y, plotid = plotid, **kw)
+        plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
         scatter = plot.plot(names, **rd)[0]
         self.set_series_label('data')
 #        si = ScatterTool(component = scatter,
@@ -256,17 +256,17 @@ class RegressionGraph(Graph):
 #                         )#, parent = self, plotid = plotid)
 #     #   scatter.tools.append(si)
 
-        overlay = ScatterInspectorOverlay(component = scatter,
-                                        hover_color = 'green',
+        overlay = ScatterInspectorOverlay(component=scatter,
+                                        hover_color='green',
                                 #        hover_metadata_name = 'no',
-                                        selection_color = 'red',
+                                        selection_color='red',
                                         )
         scatter.overlays.append(overlay)
 
         scatter.index.on_trait_change(self._metadata_changed,
                                             'metadata_changed')
 
-        rect_tool = RectSelectionTool(scatter, parent = self, plotid = plotid)
+        rect_tool = RectSelectionTool(scatter, parent=self, plotid=plotid)
         scatter.overlays.append(rect_tool)
 
         #rect_tool.on_trait_change(self._metadata_changed, 'update_flag')
@@ -278,7 +278,7 @@ class RegressionGraph(Graph):
         self.fit_types.append(fit_type)
 
         if x is not None and y is not None:
-            args = self._regress_(plotid = plotid)
+            args = self._regress_(plotid=plotid)
             x = args['x']
             y = args['y']
             ux = args['upper_x']
@@ -295,19 +295,19 @@ class RegressionGraph(Graph):
             ly = None
 
 
-        plot, names, rd = self._series_factory(x, y, plotid = plotid, **kw)
+        plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
         line = plot.plot(names, **rd)[0]
-        self.set_series_label('fit', series = 1)
+        self.set_series_label('fit', series=1)
         if 'color' in kw:
             kw.pop('color')
 
-        plot, names, rd = self._series_factory(ux, uy, line_style = 'dash', color = 'red', plotid = plotid, **kw)
+        plot, names, rd = self._series_factory(ux, uy, line_style='dash', color='red', plotid=plotid, **kw)
         plot.plot(names, **rd)[0]
-        self.set_series_label('upper CI', series = 2)
+        self.set_series_label('upper CI', series=2)
 
-        plot, names, rd = self._series_factory(lx, ly, line_style = 'dash', color = 'red', plotid = plotid, **kw)
+        plot, names, rd = self._series_factory(lx, ly, line_style='dash', color='red', plotid=plotid, **kw)
         plot.plot(names, **rd)[0]
-        self.set_series_label('lower CI', series = 3)
+        self.set_series_label('lower CI', series=3)
 
         return plot, scatter, line
 
@@ -321,17 +321,17 @@ class RegressionGraph(Graph):
                        #Group(
                        v.content,
                        Item('regression_editors',
-                            style = 'custom',
-                            editor = ListEditor(use_notebook = True,
-                                                selected = 'selected'),
-                            show_label = False,
-                            height = 0.25
+                            style='custom',
+                            editor=ListEditor(use_notebook=True,
+                                                selected='selected'),
+                            show_label=False,
+                            height=0.25
                             ),
                         )
-            v = View(grp, resizable = True,
-                     title = self.window_title,
-                   width = self.window_width,
-                   height = self.window_height)
+            v = View(grp, resizable=True,
+                     title=self.window_title,
+                   width=self.window_width,
+                   height=self.window_height)
         return v
 
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
@@ -367,7 +367,7 @@ if __name__ == '__main__':
 #    reg=Regressor()
 #    reg.exponential(xs, ys)
 #    
-    r.new_series(xs, ys, yer = yer, marker = 'circle', marker_size = 1.5)
+    r.new_series(xs, ys, yer=yer, marker='circle', marker_size=1.5)
     r.configure_traits()
 #============= EOF ====================================
 

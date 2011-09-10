@@ -123,7 +123,7 @@ class Regressor(object):
             degree = 0
         return degree
 
-    def _regress_(self, x, y, kind, data_range = None, npts = None, **kw):
+    def _regress_(self, x, y, kind, data_range=None, npts=None, **kw):
         '''
 
         '''
@@ -144,14 +144,14 @@ class Regressor(object):
             stddev = std(y)
             stderr = stddev / math.sqrt(n)
 
-            sample_stddev = std(y, ddof = 1)
+            sample_stddev = std(y, ddof=1)
 
             stderr_mean = stddev / math.sqrt(n - 1)
 
-            stats = dict(stddev = stddev,
-                       sample_stddev = sample_stddev,
-                       stderr = stderr,
-                       stderr_mean = stderr_mean
+            stats = dict(stddev=stddev,
+                       sample_stddev=sample_stddev,
+                       stderr=stderr,
+                       stderr_mean=stderr_mean
                        )
 
         if npts is None:
@@ -205,14 +205,14 @@ class Regressor(object):
                 raise RegressorError('no initial guess specified')
 
             if kind == 'least_squares':
-                coeffs, cov_params, infodict, msg, ier = optimize.leastsq(errfunc, p0[:], args = (x, y),
-                                    full_output = 1,
+                coeffs, cov_params, infodict, msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
+                                    full_output=1,
                                     #maxfev = 1000
                                      )
                 while ier != 1:
                     p0 = [pi / 2.0 for pi in p0]
-                    coeffs, cov_params, infodict, msg, ier = optimize.leastsq(errfunc, p0[:], args = (x, y),
-                                        full_output = 1,
+                    coeffs, cov_params, infodict, msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
+                                        full_output=1,
                                     #    maxfev = 1000
                                     )
                 coeff_errors = sqrt(diagonal(cov_params))
@@ -230,11 +230,11 @@ class Regressor(object):
 #        return sum
                 #self.fitparams = p0
                 a = optimize.fmin(func, p0,
-                                    maxiter = 100,
-                                    ftol = 1e-15,
-                                    args = (fitfunc, x, y, fiterrdata),
-                                    full_output = 1,
-                                    disp = 0
+                                    maxiter=100,
+                                    ftol=1e-15,
+                                    args=(fitfunc, x, y, fiterrdata),
+                                    full_output=1,
+                                    disp=0
                                     )
                 coeffs = a[0]
 
@@ -255,21 +255,21 @@ class Regressor(object):
             yn = polyval(coeffs, x)
             lcly, ucly = self.calc_confidence_interval(95, x, y, yn, xreturn, yreturn)
             if len(x) > degree + 1:
-                o = OLS(x, y, fitdegree = degree)
+                o = OLS(x, y, fitdegree=degree)
                 coeff_errors = o.get_coefficient_standard_errors()
 
             if stats is not None:
                 stats['r_squared'] = self.calc_r_squared(y, yn)
 
-        return dict(x = xreturn,
-                    y = yreturn,
-                    upper_x = xreturn,
-                    upper_y = ucly,
-                    lower_x = xreturn,
-                    lower_y = lcly,
-                    coefficients = coeffs,
-                    coeff_errors = coeff_errors, #(slope_error, intercept_error),
-                    statistics = stats)
+        return dict(x=xreturn,
+                    y=yreturn,
+                    upper_x=xreturn,
+                    upper_y=ucly,
+                    lower_x=xreturn,
+                    lower_y=lcly,
+                    coefficients=coeffs,
+                    coeff_errors=coeff_errors, #(slope_error, intercept_error),
+                    statistics=stats)
 
     def calc_r_squared(self, y, ymodel):
         def sum_of_squares(data, model):

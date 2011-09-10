@@ -41,13 +41,13 @@ class MikronGA140Pyrometer(CoreDevice):
     global_address_wo_response = 98
     _terminator = chr(13)
 
-    emissivity = Property(Float(enter_set = True, auto_set = False), depends_on = '_emissivity')
+    emissivity = Property(Float(enter_set=True, auto_set=False), depends_on='_emissivity')
     _emissivity = Float(50)
     emmin = Float(10)
     emmax = Float(100)
     pointer = Button
     pointing = Bool
-    pointer_label = Property(depends_on = 'pointing')
+    pointer_label = Property(depends_on='pointing')
 
     units = Str('C')
     temperature = Float
@@ -89,7 +89,7 @@ class MikronGA140Pyrometer(CoreDevice):
         self._communicator.char_write = True
         return True
 
-    def _build_command(self, cmd, value = None, per_mil = False, single_digit = False):
+    def _build_command(self, cmd, value=None, per_mil=False, single_digit=False):
         '''
 
         '''
@@ -102,7 +102,7 @@ class MikronGA140Pyrometer(CoreDevice):
 
         return fmt % args
 
-    def _parse_response(self, resp, scalar = 10, response_type = 'float'):
+    def _parse_response(self, resp, scalar=10, response_type='float'):
         '''
 
         '''
@@ -133,7 +133,7 @@ class MikronGA140Pyrometer(CoreDevice):
         '''
 
         cmd = self._build_command('ms')
-        temp = self._parse_response(self.ask(cmd, verbose = False))
+        temp = self._parse_response(self.ask(cmd, verbose=False))
 
 
         self.temperature = temp if temp is not None else 0.0
@@ -147,13 +147,13 @@ class MikronGA140Pyrometer(CoreDevice):
         '''
         '''
         cmd = self._build_command('mb')
-        return self._parse_response(self.ask(cmd), response_type = 'hex_range')
+        return self._parse_response(self.ask(cmd), response_type='hex_range')
 
     def read_emissivity(self):
         '''
         '''
         cmd = self._build_command('em')
-        emv = self._parse_response(self.ask(cmd), scalar = 10)
+        emv = self._parse_response(self.ask(cmd), scalar=10)
         if emv:
             self._emissivity = emv
             #self.trait_property_changed('emissivity', emv)
@@ -171,7 +171,7 @@ class MikronGA140Pyrometer(CoreDevice):
             1 = 0.01 s    4 = 1.00 s    2 = 0.05 s
             5 = 3.00 s    3 = 0.25 s    6 = 10.00 s
         '''
-        cmd = self._build_command('ez', value = value, single_digit = True)
+        cmd = self._build_command('ez', value=value, single_digit=True)
         self.ask(cmd)
 
 
@@ -201,26 +201,26 @@ class MikronGA140Pyrometer(CoreDevice):
         except:
             pass
 
-    def set_emissivity(self, emv, per_mil = True):
+    def set_emissivity(self, emv, per_mil=True):
         '''
             set emissivity in %
         '''
     #    self._emissivity=float(emv)
 
         emv = emv * 10.0 if per_mil else emv
-        cmd = self._build_command('em', value = emv, per_mil = per_mil)
+        cmd = self._build_command('em', value=emv, per_mil=per_mil)
 
 
         #self.tell(cmd)
-        return self._parse_response(self.ask(cmd), response_type = 'text')
+        return self._parse_response(self.ask(cmd), response_type='text')
 
     def set_analog_output(self, output_range_id):
         '''
             0 = 0...20mA  1 = 4...20mA
         '''
         cmd = self._build_command('as',
-                                value = output_range_id,
-                                single_digit = True
+                                value=output_range_id,
+                                single_digit=True
                                 )
         self.ask(cmd)
     def _get_pointer_label(self):
@@ -242,17 +242,17 @@ class MikronGA140Pyrometer(CoreDevice):
         '''
         value = 1 if onoff else 0
 
-        cmd = self._build_command('la', value = value, single_digit = True)
+        cmd = self._build_command('la', value=value, single_digit=True)
         return self.ask(cmd)
 
     def get_control_group(self):
-        cg = Group(HGroup(Item('pointer', editor = ButtonEditor(label_value = 'pointer_label')),
+        cg = Group(HGroup(Item('pointer', editor=ButtonEditor(label_value='pointer_label')),
                           spring,
-                          show_labels = False),
-                  Item('temperature', style = 'readonly'),
-                  Item('emissivity', editor = RangeEditor(mode = 'slider',
-                                                         low_name = 'emmin',
-                                                         high_name = 'emmax'
+                          show_labels=False),
+                  Item('temperature', style='readonly'),
+                  Item('emissivity', editor=RangeEditor(mode='slider',
+                                                         low_name='emmin',
+                                                         high_name='emmax'
                                                          )))
         return cg
 

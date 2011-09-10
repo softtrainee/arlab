@@ -81,10 +81,10 @@ class SynradCO2UIPlugin(CoreUIPlugin):
 #
     def create_control_view(self, **kw):
         obj = self.application.get_service(self._protocol)
-        args = dict(id = 'synrad.control',
-                  category = 'extraction devices',
-                  name = 'Synrad Control',
-                  obj = obj.stage_manager
+        args = dict(id='synrad.control',
+                  category='extraction devices',
+                  name='Synrad Control',
+                  obj=obj.stage_manager
                   )
         return self.traitsuiview_factory(args, kw)
 

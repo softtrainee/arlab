@@ -38,7 +38,7 @@ class DataTransferServer(DataTransferObject):
     def serve_forever(self):
         '''
         '''
-        t = Thread(target = self.serve)
+        t = Thread(target=self.serve)
         t.start()
     def serve(self):
         '''

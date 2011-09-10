@@ -35,8 +35,8 @@ class ImageUnderlay(AbstractOverlay):
         try:
             gc.save_state()
             dc = component._window.dc
-            bitmap = self.image.get_bitmap(flip = True,
-                                         swap_rb = self.swap_rb
+            bitmap = self.image.get_bitmap(flip=True,
+                                         swap_rb=self.swap_rb
                                          )
             if bitmap:
                 x = component.x

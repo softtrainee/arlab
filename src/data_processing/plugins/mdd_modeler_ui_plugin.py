@@ -61,9 +61,9 @@ class MDDModelerUIPlugin(CoreUIPlugin):
             manager.on_trait_change(obj.selected_update, 'selected_datum')
             manager.on_trait_change(obj.selected_update, 'selected')
 
-        args = dict(id = 'pychron.modeler.summary_view',
-                  name = 'Summary',
-                  obj = obj
+        args = dict(id='pychron.modeler.summary_view',
+                  name='Summary',
+                  obj=obj
                   )
         return self.traitsuiview_factory(args, kw)
 
@@ -74,9 +74,9 @@ class MDDModelerUIPlugin(CoreUIPlugin):
         if manager is not None:
             manager.on_trait_change(obj.selected_update, 'selected_datum')
 
-        args = dict(id = 'pychron.modeler.notes_view',
-                  name = 'Notes',
-                  obj = obj
+        args = dict(id='pychron.modeler.notes_view',
+                  name='Notes',
+                  obj=obj
                   )
         return self.traitsuiview_factory(args, kw)
 
@@ -84,10 +84,10 @@ class MDDModelerUIPlugin(CoreUIPlugin):
         modeler_manager = self._get_manager()
 
         args = dict(
-                    id = 'pychron.modeler.data_directory',
-                  name = 'Data',
-                  view = 'data_select_view',
-                  obj = modeler_manager#.modeler,
+                    id='pychron.modeler.data_directory',
+                  name='Data',
+                  view='data_select_view',
+                  obj=modeler_manager#.modeler,
                   )
         return self.traitsuiview_factory(args, kw)
 

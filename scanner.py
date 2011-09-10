@@ -39,7 +39,7 @@ def scan(root):
     with open(os.path.join(root, 'sloccount_stats.txt'), 'w') as f:
         os.environ['PATH'] = ':'.join((os.environ['PATH'], '/usr/local/bin'))
         subprocess.call(['/usr/local/bin/sloccount', root, 'cached'],
-                                      stdout = f
+                                      stdout=f
                                       )
     #parse results
     with open(os.path.join(root, 'sloccount_stats.txt'), 'r') as f:

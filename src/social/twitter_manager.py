@@ -32,7 +32,7 @@ def sudo(command, password=None, prompt="Enter password "):
     command = "sudo " + command
     child = pexpect.spawn(command)
     child.logfile = sys.stdout
-    child.expect(['Password:', pexpect.EOF,pexpect.TIMEOUT])
+    child.expect(['Password:', pexpect.EOF, pexpect.TIMEOUT])
     try:
         child.sendline(password)
     except OSError:
@@ -49,18 +49,18 @@ pwd=Argon4039
 
 '''
 class Crediential(HasTraits):
-    user_name=Str('root')
-    password=Password('jir812')
+    user_name = Str('root')
+    password = Password('jir812')
     def traits_view(self):
-        v=View('user_name',
+        v = View('user_name',
                'password',
                )
         return v
 class TwitterManager(Manager):
-    tapi=None
-    credientials=Instance(Crediential, ())
+    tapi = None
+    credientials = Instance(Crediential, ())
     def install_view(self):
-        v=View(Item('credientials',show_label=False,
+        v = View(Item('credientials', show_label=False,
                     style='custom'),
                kind='livemodal',
                buttons=['OK', 'Cancel']
@@ -77,25 +77,25 @@ class TwitterManager(Manager):
         except ImportError:
             self.warning('Could not import python-twitter. Is it installed?')
             
-            info=self.edit_traits(view='install_view')
+            info = self.edit_traits(view='install_view')
             if info.result:
-                cmd='/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install python-twitter'
+                cmd = '/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install python-twitter'
                 #cmd='/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install crcmod'
 #                cmd='pwd'
-                err=sudo(cmd, 
+                err = sudo(cmd,
                      password=self.credientials.password)
 #                
                 #activation not working so gonna have to require a restart
                 #python-twitter requires setuptools and I think thats causing the problem
                 
                 if err is None:
-                    msg='python-twitter successfully installed. restart required '          
+                    msg = 'python-twitter successfully installed. restart required '          
                     self.info(msg)
-                    information(None,msg)
+                    information(None, msg)
                 else:
-                    msg='python-twitter failed to install. '          
+                    msg = 'python-twitter failed to install. '          
                     self.info(msg)
-                    information(None,msg)
+                    information(None, msg)
                     
                 sys.exit()
                 
@@ -113,7 +113,7 @@ class TwitterManager(Manager):
 #                import crcmod
 #                print crcmod
 
-        self.tapi=twitter.Api(consumer_key='8mdnnhVEhOlT7Xu8Mg',
+        self.tapi = twitter.Api(consumer_key='8mdnnhVEhOlT7Xu8Mg',
                                consumer_secret='IzMqOxjSemTXyjZ8VCelFpUXdrhD77E74SV6mdrl7E',
                                access_token_key='27101038-lzzwYplffclywtSAWnfbuB3ovrnPgmqkWMFqO2jvf',
                                access_token_secret='BOea1U7aUoQXJEQ1CldvrK5RkjLImfXGls6PbuQw'
@@ -128,13 +128,13 @@ class TwitterManager(Manager):
             self.tapi.PostUpdate(msg)
 class App(HasTraits):
 #    man=Instance(TwitterManager,())
-    test=Button
+    test = Button
     def _test_fired(self):
-        tm=TwitterManager()
+        tm = TwitterManager()
     def traits_view(self):
         return View(Item('test'))
 if __name__ == '__main__':
-    m=TwitterManager()
+    m = TwitterManager()
     m.get_twitter()
 #    m.verify()
 #    m.post('test mesg')

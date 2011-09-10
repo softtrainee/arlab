@@ -40,7 +40,7 @@ class PatternManager(Manager):
                 'SquareSpiral',
 
                 'Random'
-                ), depends_on = '_kind')
+                ), depends_on='_kind')
     _kind = Enum(
                  'Arc',
                  'Polygon',
@@ -56,17 +56,17 @@ class PatternManager(Manager):
     _alive = False
 
     def get_pattern_names(self):
-        return self.get_file_list(pattern_dir, extension = '.lp')
+        return self.get_file_list(pattern_dir, extension='.lp')
 
     def stop_pattern(self):
         self.info('User requested stop')
         self._alive = False
         self.parent.stage_controller.stop()
 
-    def execute_pattern(self, pattern_name = None, use_current = False):
+    def execute_pattern(self, pattern_name=None, use_current=False):
         if pattern_name is not None:
             #open pattern from file
-            self.load_pattern(path = os.path.join(pattern_dir,
+            self.load_pattern(path=os.path.join(pattern_dir,
                                                             '{}.lp'.format(pattern_name)
                                                             ))
         elif not use_current:
@@ -82,7 +82,7 @@ class PatternManager(Manager):
             self._alive = True
 #            self.edit_traits()
             do_later(self.edit_traits)
-            t = Thread(target = self._execute_)
+            t = Thread(target=self._execute_)
             t.start()
         else:
             err = 'invalid pattern name {}'.format(pattern_name)
@@ -111,10 +111,10 @@ class PatternManager(Manager):
             self.info('finished pattern {}'.format(self.pattern_name))
             self.close_ui()
 
-    def load_pattern(self, path = None):
+    def load_pattern(self, path=None):
         self.pattern = None
         if path is None:
-            path = self.open_file_dialog(default_directory = pattern_dir)
+            path = self.open_file_dialog(default_directory=pattern_dir)
 
         if path is not None and os.path.isfile(path):
             with open(path, 'rb') as f:
@@ -127,7 +127,7 @@ class PatternManager(Manager):
 
     def save_pattern(self):
         if not self.pattern_name:
-            path = unique_path(pattern_dir, 'pattern', filetype = 'lp')
+            path = unique_path(pattern_dir, 'pattern', filetype='lp')
             self.pattern_name = os.path.basename(path).split('.')[0]
         else:
             path = os.path.join(pattern_dir, '{}.lp'.format(self.pattern_name))
@@ -143,33 +143,33 @@ class PatternManager(Manager):
         return pattern
 
     def traits_view(self):
-        v = View(Item('pattern', show_label = False,
-                       style = 'custom',
-                       editor = InstanceEditor(view = 'graph_view')),
-                 handler = self.handler_klass,
-                 title = self.pattern_name
+        v = View(Item('pattern', show_label=False,
+                       style='custom',
+                       editor=InstanceEditor(view='graph_view')),
+                 handler=self.handler_klass,
+                 title=self.pattern_name
                  )
         return v
 
     def pattern_maker_view(self):
-        v = View(HGroup(Item('pattern_name', label = 'Name'), Item('kind')),
-                 HGroup(Item('save_button', show_label = False),
-                        Item('load_button', show_label = False)),
-                 Item('pattern', style = 'custom', show_label = False),
-                 resizable = True,
-                 width = 520,
-                 height = 750,
-                 title = 'Pattern Maker'
+        v = View(HGroup(Item('pattern_name', label='Name'), Item('kind')),
+                 HGroup(Item('save_button', show_label=False),
+                        Item('load_button', show_label=False)),
+                 Item('pattern', style='custom', show_label=False),
+                 resizable=True,
+                 width=520,
+                 height=750,
+                 title='Pattern Maker'
                  )
         return v
 
     def _graph_default(self):
 
         g = Graph(
-                  width = 400,
-                  height = 400,
-                  container_dict = dict(
-                                        padding = 30
+                  width=400,
+                  height=400,
+                  container_dict=dict(
+                                        padding=30
                                         )
                   )
         return g
@@ -202,5 +202,5 @@ class PatternManager(Manager):
 if __name__ == '__main__':
     setup('pattern')
     pm = PatternManager()
-    pm.configure_traits(view = 'pattern_maker_view')
+    pm.configure_traits(view='pattern_maker_view')
 #============= EOF ====================================

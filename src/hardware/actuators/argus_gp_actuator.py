@@ -66,8 +66,8 @@ class ArgusGPActuator(GPActuator):
 
         cmd = 'Close {}'.format(obj.name[-1])
 
-        r=self.ask(cmd)
-        if r is not None and r.strip()=='OK':
+        r = self.ask(cmd)
+        if r is not None and r.strip() == 'OK':
             return self.get_channel_state(obj) == False
 
 
@@ -76,8 +76,8 @@ class ArgusGPActuator(GPActuator):
         '''
         cmd = 'Open {}'.format(obj.name[-1])
 
-        r=self.ask(cmd)
-        if r is not None and r.strip()=='OK':
+        r = self.ask(cmd)
+        if r is not None and r.strip() == 'OK':
             return self.get_channel_state(obj) == True
 
 

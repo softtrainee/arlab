@@ -25,8 +25,8 @@ import wx
 #=============local library imports  ==========================
 class PopupWindow(wx.MiniFrame):
     text = None
-    def __init__(self, parent, style = None):
-        super(PopupWindow, self).__init__(parent, style = wx.NO_BORDER | wx.FRAME_FLOAT_ON_PARENT
+    def __init__(self, parent, style=None):
+        super(PopupWindow, self).__init__(parent, style=wx.NO_BORDER | wx.FRAME_FLOAT_ON_PARENT
                               | wx.FRAME_NO_TASKBAR)
         #self.Bind(wx.EVT_KEY_DOWN , self.OnKeyDown)
 #        self.Bind(wx.EVT_CHAR, self.OnChar)
@@ -39,8 +39,8 @@ class PopupWindow(wx.MiniFrame):
         self.SetSizer(s)
 
 
-        t = wx.StaticText(self, style = wx.TE_MULTILINE | wx.TE_READONLY,
-                          size = (w, h)
+        t = wx.StaticText(self, style=wx.TE_MULTILINE | wx.TE_READONLY,
+                          size=(w, h)
                           )
         #t = wx.TextCtrl(self, style = wx.TE_READONLY | wx.TE_)
         s.Add(t)

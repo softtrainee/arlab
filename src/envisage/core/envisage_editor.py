@@ -44,7 +44,7 @@ class EnvisageEditor(Editor):
     def create_control(self, parent):
         '''
         '''
-        args = dict(parent = parent, kind = 'subpanel')
+        args = dict(parent=parent, kind='subpanel')
         if self.view_name:
             args['view'] = self.view_name
         ui = self.obj.edit_traits(**args)

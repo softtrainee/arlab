@@ -29,18 +29,18 @@ class SpectrometerPlugin(CorePlugin):
         '''
         '''
         so = self.service_offer_factory(
-                          protocol = SpectrometerManager,
-                          factory = self._factory)
+                          protocol=SpectrometerManager,
+                          factory=self._factory)
 
         return [so]
     def _factory(self, *args, **kw):
         return SpectrometerManager()
 
-    managers = List(contributes_to = MANAGERS)
+    managers = List(contributes_to=MANAGERS)
     def _managers_default(self):
         '''
         '''
         app = self.application
-        return [dict(name = 'spectrometer_manager',
-                     manager = app.get_service(SpectrometerManager))]
+        return [dict(name='spectrometer_manager',
+                     manager=app.get_service(SpectrometerManager))]
 #============= EOF =============================================

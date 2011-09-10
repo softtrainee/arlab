@@ -49,7 +49,7 @@ def smart_equilibrate(*args, **kw):
 
     equilibrate(*args, **kw)
 
-def equilibrate(parent, temp_func, setpoint, frequency = None, freq_hook = None, timeout = 1, **kw):
+def equilibrate(parent, temp_func, setpoint, frequency=None, freq_hook=None, timeout=1, **kw):
     '''
         @type temp_func: C{str}
         @param temp_func:
@@ -87,10 +87,10 @@ def equilibrate(parent, temp_func, setpoint, frequency = None, freq_hook = None,
     eq_time = time.time() - start
     return eq_time
 
-def check_point(points, point, setpoint, n = 10, mean_tolerance = 1.5,
-                    std_tolerance = 1,
-                    mean_check = False,
-                    std_check = False,
+def check_point(points, point, setpoint, n=10, mean_tolerance=1.5,
+                    std_tolerance=1,
+                    mean_check=False,
+                    std_check=False,
                     **kw):
     '''
         @type point: C{str}
@@ -127,7 +127,7 @@ def check_point(points, point, setpoint, n = 10, mean_tolerance = 1.5,
             std_bit = stderr < std_tolerance
             bits = (mean_bit and std_bit)
 
-        stats = dict(mean = avg, std = stderr)
+        stats = dict(mean=avg, std=stderr)
         return (bits, points, stats)
     else:
         return (False, points)

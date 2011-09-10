@@ -46,10 +46,10 @@ class MapCanvas(MarkupCanvas):
 
     def __init__(self, *args, **kw):
         super(MapCanvas, self).__init__(*args, **kw)
-        bmu = BitmapUnderlay(component = self,
+        bmu = BitmapUnderlay(component=self,
 #                             path = self.map.bitmap_path,
-                             visible = self.show_bitmap,
-                             canvas_scaling = self.scaling
+                             visible=self.show_bitmap,
+                             canvas_scaling=self.scaling
                              )
         self.underlays.append(bmu)
         self.bitmap_underlay = bmu
@@ -137,11 +137,11 @@ class MapCanvas(MarkupCanvas):
 
         self.request_redraw()
 
-    def new_calibration_item(self, x, y, rotation, kind = 'pychron'):
+    def new_calibration_item(self, x, y, rotation, kind='pychron'):
         if kind == 'MassSpec':
             ci = CalibrationObject()
         else:
-            ci = CalibrationItem(x, y, rotation, canvas = self)
+            ci = CalibrationItem(x, y, rotation, canvas=self)
         self.calibration_item = ci
         return ci
 
@@ -201,11 +201,11 @@ class MapCanvas(MarkupCanvas):
 
 #                    x,y=self.parent._map_calibrated_space((hole.x, hole.y))
                     x, y = self.map_screen([(hole.x, hole.y)])[0]
-                    self._draw_sample_hole(gc, x, y, hole.dimension, hole.shape, tweak = tweak)
+                    self._draw_sample_hole(gc, x, y, hole.dimension, hole.shape, tweak=tweak)
 
         gc.restore_state()
 
-    def _draw_sample_hole(self, gc, x, y, size, shape, tweak = None):
+    def _draw_sample_hole(self, gc, x, y, size, shape, tweak=None):
         '''
 
         '''
@@ -216,13 +216,13 @@ class MapCanvas(MarkupCanvas):
         else:
             if self.show_indicators:
                 func = self._draw_cross_indicator
-                func(gc, x, y, float(size), tweak = tweak)
+                func(gc, x, y, float(size), tweak=tweak)
 
             func = getattr(self, '_draw_%s' % shape)
 
         func(gc, x, y, float(size))
 
-    def _draw_cross_indicator(self, gc, x, y, size, tweak = None):
+    def _draw_cross_indicator(self, gc, x, y, size, tweak=None):
         w, h = self._get_wh(size, size)
         w /= 2.0
         h /= 2.0

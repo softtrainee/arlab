@@ -34,18 +34,18 @@ class FusionsMotorConfigurer(HasTraits):
         '''
         '''
 
-        motorgroup = Group(layout = 'tabbed')
+        motorgroup = Group(layout='tabbed')
         for m in self.motors:
             n = m.name
             self.add_trait(n, m)
 
 
-            i = Item(n, style = 'custom', show_label = False)
+            i = Item(n, style='custom', show_label=False)
             motorgroup.content.append(i)
 
 
 
-        return View(motorgroup, resizable = True, title = 'Configure Motors',
-                    buttons = ['OK', 'Cancel', 'Revert'],
+        return View(motorgroup, resizable=True, title='Configure Motors',
+                    buttons=['OK', 'Cancel', 'Revert'],
 
                     )

@@ -42,7 +42,7 @@ from src.helpers.filetools import unique_dir#, unique_path
 DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False
 
-def psuedo_peak(center, start, stop, step, magnitude = 500, peak_width = 0.002):
+def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.002):
     x = np.linspace(start, stop, step)
     gaussian = lambda x: magnitude * np.exp(-((center - x) / peak_width) ** 2)
 
@@ -56,7 +56,7 @@ class Spectrometer(SpectrometerDevice):
     regressor = Instance(Regressor, ())
     magnet = Instance(Magnet, ())
     source = Instance(Source, ())
-    detectors = Property(List, depends_on = '_detectors')
+    detectors = Property(List, depends_on='_detectors')
     _detectors = Dict()
     detector_names = Dict
 
@@ -79,7 +79,7 @@ class Spectrometer(SpectrometerDevice):
     molecular_weight = Str
     sub_cup_configurations = List
 
-    sub_cup_configuration = Property(depends_on = '_sub_cup_configuration')
+    sub_cup_configuration = Property(depends_on='_sub_cup_configuration')
     _sub_cup_configuration = Str
 
     peak_center_results = None
@@ -135,10 +135,10 @@ class Spectrometer(SpectrometerDevice):
 
         self.info('{} deflection calibration'.format(self.reference_detector))
 
-        rgraph = RegressionGraph(window_x = 100,
-                                window_y = 50)
+        rgraph = RegressionGraph(window_x=100,
+                                window_y=50)
         rgraph.new_plot()
-        rgraph.new_series(yer = [])
+        rgraph.new_series(yer=[])
 
         root_dir = unique_dir(os.path.join(data_dir, 'magfield'), '{}_def_calibration'.format(self.reference_detector))
 #        if not os.path.exists(root_dir):
@@ -147,10 +147,10 @@ class Spectrometer(SpectrometerDevice):
         dm = self.data_manager
 
         p = os.path.join(root_dir, 'defl_vs_dac.csv')
-        deflection_frame_key = dm.new_frame(path = p)
+        deflection_frame_key = dm.new_frame(path=p)
 
         dm.write_to_frame(['Deflection (V)', '40{} DAC'.format(self.reference_detector)],
-                          frame_key = deflection_frame_key)
+                          frame_key=deflection_frame_key)
 
         start = self.dc_start
         stop = self.dc_stop
@@ -174,23 +174,23 @@ class Spectrometer(SpectrometerDevice):
                 self.info('Peak center ni = {}'.format(n + 1))
 
                 p = os.path.join(root_dir, 'peak_scan_{:02n}_{:02n}.csv'.format(int(ni), n))
-                dm.new_frame(path = p)
+                dm.new_frame(path=p)
                 dm.write_to_frame(['DAC (V)', 'Intensity (fA)'])
 
-                graph = Graph(window_title = 'Peak Centering',
-                              window_x = 175 + i * 25 + n * 5,
-                              window_y = 25 + i * 25 + n * 5
+                graph = Graph(window_title='Peak Centering',
+                              window_x=175 + i * 25 + n * 5,
+                              window_y=25 + i * 25 + n * 5
                               )
 
-                self.peak_center(graph = graph,
-                                  update_mftable = True,
-                                  update_pos = False,
-                                  center_pos = mass
+                self.peak_center(graph=graph,
+                                  update_mftable=True,
+                                  update_pos=False,
+                                  center_pos=mass
                                   )
 
                 if self.isAlive():
                     #write scan to file
-                    dm.write_to_frame(zip(graph.get_data(), graph.get_data(axis = 1)))
+                    dm.write_to_frame(zip(graph.get_data(), graph.get_data(axis=1)))
 
                     if npeak_centers > 1:
                         if not self.simulation:
@@ -199,10 +199,10 @@ class Spectrometer(SpectrometerDevice):
                     if self.peak_center_results:
                         d = (ni, self.peak_center_results[0][1])
                         ds.append(self.peak_center_results[0][1])
-                        dm.write_to_frame(list(d), frame_key = deflection_frame_key)
+                        dm.write_to_frame(list(d), frame_key=deflection_frame_key)
 
                         #write the centering results to the centering file
-                        dm.write_to_frame([('#{}'.format(x), y) for x, y in  zip(graph.get_data(series = 1), graph.get_data(series = 1, axis = 1))])
+                        dm.write_to_frame([('#{}'.format(x), y) for x, y in  zip(graph.get_data(series=1), graph.get_data(series=1, axis=1))])
 
             if self.peak_center_results:
                 rgraph.add_datum((ni, np.mean(ds), np.std(ds)))
@@ -223,7 +223,7 @@ class Spectrometer(SpectrometerDevice):
         for d in self._detectors.itervalues():
             d.microcontroller = m
 
-    def get_hv_correction(self, current = False):
+    def get_hv_correction(self, current=False):
         cur = self.source.current_hv
         if current:
             cur = self.source.read_hv()
@@ -283,7 +283,7 @@ class Spectrometer(SpectrometerDevice):
         return self._alive
 
 
-    def peak_center(self, update_mftable = False, graph = None, update_pos = True, center_pos = None, mass = True):
+    def peak_center(self, update_mftable=False, graph=None, update_pos=True, center_pos=None, mass=True):
         '''
             default is to set position by mass
             if mass is a str it needs to be a mol wt key ie Ar40
@@ -292,9 +292,9 @@ class Spectrometer(SpectrometerDevice):
         self.peak_center_results = None
         self.info('Peak center')
         if graph is None:
-            graph = Graph(window_title = 'Peak Centering',
-                          window_x = 300 + self.pc_window_cnt * 25,
-                          window_y = 25 + self.pc_window_cnt * 25
+            graph = Graph(window_title='Peak Centering',
+                          window_x=300 + self.pc_window_cnt * 25,
+                          window_y=25 + self.pc_window_cnt * 25
                           )
             self.pc_window_cnt += 1
 
@@ -332,7 +332,7 @@ class Spectrometer(SpectrometerDevice):
             end = m + wnd * (i + 1)
             self.info('Scan parameters center={} start={} end={} step width={}'.format(m, start, end, self.pc_step_width))
 
-            self._peak_center_graph_factory(graph, start, end, title = m)
+            self._peak_center_graph_factory(graph, start, end, title=m)
 
             width = self.pc_step_width
             if self.simulation:
@@ -347,7 +347,7 @@ class Spectrometer(SpectrometerDevice):
             if self.scan_timer.IsRunning():
                 self.scan_timer.Stop()
 
-            t = Thread(target = self.scan_dac, args = (dac_values, graph))
+            t = Thread(target=self.scan_dac, args=(dac_values, graph))
             t.start()
             t.join()
 
@@ -359,7 +359,7 @@ class Spectrometer(SpectrometerDevice):
             if result is not None:
 #                adjust the center position for nominal high voltage
                 xs = result[0]
-                refpos = xs[1] / self.get_hv_correction(current = True)
+                refpos = xs[1] / self.get_hv_correction(current=True)
 
                 if update_mftable:
 #                    update the field table
@@ -373,28 +373,28 @@ class Spectrometer(SpectrometerDevice):
 #            force magnet update
             self.set_magnet_position(MOLECULAR_WEIGHTS[self.molecular_weight])
 
-    def finish_peak_center(self, graph, dac_values, intensities, plotid = 0):
+    def finish_peak_center(self, graph, dac_values, intensities, plotid=0):
         result = self.calculate_peak_center(dac_values, intensities)
         if result is not None:
             xs, ys, mx, my = result
-            graph.set_data(xs, plotid = plotid, series = 1)
-            graph.set_data(ys, plotid = plotid, series = 1, axis = 1)
+            graph.set_data(xs, plotid=plotid, series=1)
+            graph.set_data(ys, plotid=plotid, series=1, axis=1)
 
-            graph.set_data(mx, plotid = plotid, series = 2)
-            graph.set_data(my, plotid = plotid, series = 2, axis = 1)
+            graph.set_data(mx, plotid=plotid, series=2)
+            graph.set_data(my, plotid=plotid, series=2, axis=1)
 
             graph.add_vertical_rule(xs[1])
             self.peak_center_results = result
             xs = result[0]
             #adjust the center position for nominal high voltage
-            refpos = xs[1] / self.get_hv_correction(current = True)
+            refpos = xs[1] / self.get_hv_correction(current=True)
             self.info('''{} Peak center results
                                         current hv = {}  {}
                                         nominal hv = {}  {}'''.format(self.reference_detector,
                                                                       xs[1], self.source.current_hv,
                                                                       refpos, self.source.nominal_hv,
                                                                       ),
-                       decorate = False
+                       decorate=False
                        )
 
 
@@ -421,7 +421,7 @@ class Spectrometer(SpectrometerDevice):
                         intensity = data[DETECTOR_ORDER.index(self.reference_detector)]
 
                     self.intensities.append(intensity)
-                    do_after(1, graph.add_datum, (dac, intensity), update_y_limits = True)
+                    do_after(1, graph.add_datum, (dac, intensity), update_y_limits=True)
 
             except StopIteration:
                 break
@@ -503,27 +503,27 @@ class Spectrometer(SpectrometerDevice):
         self.scan_timer = Timer((self.integration_time + 0.025) * mult, self.get_intensities)
         self.scan_timer.Start()
 
-    def _peak_center_graph_factory(self, graph, start, end, title = ''):
-        graph.container_dict = dict(padding = [10, 0, 30, 10])
+    def _peak_center_graph_factory(self, graph, start, end, title=''):
+        graph.container_dict = dict(padding=[10, 0, 30, 10])
         graph.clear()
-        graph.new_plot(title = '{}'.format(title),
-                       xtitle = 'DAC (V)',
-                       ytitle = 'Intensity (fA)',
+        graph.new_plot(title='{}'.format(title),
+                       xtitle='DAC (V)',
+                       ytitle='Intensity (fA)',
                        )
 
-        graph.new_series(type = 'scatter', marker = 'circle',
-                         marker_size = 1.25
+        graph.new_series(type='scatter', marker='circle',
+                         marker_size=1.25
                          )
-        graph.new_series(type = 'scatter', marker = 'circle',
-                         marker_size = 4
+        graph.new_series(type='scatter', marker='circle',
+                         marker_size=4
                          )
-        graph.new_series(type = 'scatter', marker = 'circle',
-                         marker_size = 4,
-                         color = 'green'
+        graph.new_series(type='scatter', marker='circle',
+                         marker_size=4,
+                         color='green'
                          )
 
         graph.plots[0].value_range.tight_bounds = False
-        graph.set_x_limits(min = min(start, end), max = max(start, end))
+        graph.set_x_limits(min=min(start, end), max=max(start, end))
 
 #===============================================================================
 # property get/set
@@ -546,38 +546,38 @@ class Spectrometer(SpectrometerDevice):
 # views
 #===============================================================================
     def traits_view(self):
-        pc_group = VGroup(Item('pc_window', label = 'Window'),
-                        Item('pc_step_width', label = 'Step'),
-                        show_border = True,
-                        label = 'Peak Center'
+        pc_group = VGroup(Item('pc_window', label='Window'),
+                        Item('pc_step_width', label='Step'),
+                        show_border=True,
+                        label='Peak Center'
                         )
-        dc_group = VGroup(Item('dc_threshold', label = 'Threshold (fA)'),
-                          Item('dc_start', label = 'Start'),
-                        Item('dc_stop', label = 'Stop'),
-                        Item('dc_step', label = 'Step', editor = RangeEditor(
-                                                                             low_name = 'dc_stepmin',
-                                                                             high_name = 'dc_stepmax',
-                                                                             mode = 'spinner')),
-                        Item('dc_npeak_centers', label = 'NPeak Centers', editor = RangeEditor(
-                                                                             low_name = 'dc_stepmin',
-                                                                             high_name = 'dc_stepmax',
-                                                                             mode = 'spinner')),
-                        show_border = True,
-                        label = 'Steering Calibration'
+        dc_group = VGroup(Item('dc_threshold', label='Threshold (fA)'),
+                          Item('dc_start', label='Start'),
+                        Item('dc_stop', label='Stop'),
+                        Item('dc_step', label='Step', editor=RangeEditor(
+                                                                             low_name='dc_stepmin',
+                                                                             high_name='dc_stepmax',
+                                                                             mode='spinner')),
+                        Item('dc_npeak_centers', label='NPeak Centers', editor=RangeEditor(
+                                                                             low_name='dc_stepmin',
+                                                                             high_name='dc_stepmax',
+                                                                             mode='spinner')),
+                        show_border=True,
+                        label='Steering Calibration'
                         )
         v = View(
                 Item('integration_time'),
-                Item('molecular_weight', editor = EnumEditor(values = MOLECULAR_WEIGHT_KEYS)),
-                Item('sub_cup_configuration', show_label = False,
-                     editor = EnumEditor(values = self.sub_cup_configurations)),
-                Item('reference_detector', show_label = False, style = 'custom',
-                                            editor = EnumEditor(
-                                                               values = self.detector_names,
-                                                               cols = len(self.detector_names)
+                Item('molecular_weight', editor=EnumEditor(values=MOLECULAR_WEIGHT_KEYS)),
+                Item('sub_cup_configuration', show_label=False,
+                     editor=EnumEditor(values=self.sub_cup_configurations)),
+                Item('reference_detector', show_label=False, style='custom',
+                                            editor=EnumEditor(
+                                                               values=self.detector_names,
+                                                               cols=len(self.detector_names)
                                                                )),
-                Item('magnet_dac', editor = RangeEditor(low_name = 'magnet_dacmin',
-                                                      high_name = 'magnet_dacmax',
-                                                      mode = 'slider'
+                Item('magnet_dac', editor=RangeEditor(low_name='magnet_dacmin',
+                                                      high_name='magnet_dacmax',
+                                                      mode='slider'
                                                       )),
                 pc_group,
                 dc_group
@@ -588,7 +588,7 @@ class Spectrometer(SpectrometerDevice):
 # load
 #===============================================================================
     def load_configurations(self):
-        scc = self.microcontroller.ask('GetSubCupConfigurationList Argon', verbose = False)
+        scc = self.microcontroller.ask('GetSubCupConfigurationList Argon', verbose=False)
         if 'ERROR' not in scc:
             self.sub_cup_configurations = scc.split('\r')
         else:
@@ -609,20 +609,20 @@ class Spectrometer(SpectrometerDevice):
                                  'CDD':'6:CDD'}
         self.reference_detector = 'AX'
 
-        self._detectors = dict(H2 = Detector(name = 'H2', relative_position = 1.2, active = True),
-                              H1 = Detector(name = 'H1', relative_position = 1.1, active = True),
-                              AX = Detector(name = 'AX', relative_position = 1, active = True),
-                              L1 = Detector(name = 'L1', relative_position = 0.9, active = True),
-                              L2 = Detector(name = 'L2', relative_position = 0.8, active = True),
-                              CDD = Detector(name = 'CDD', relative_position = 0.7, active = False),
+        self._detectors = dict(H2=Detector(name='H2', relative_position=1.2, active=True),
+                              H1=Detector(name='H1', relative_position=1.1, active=True),
+                              AX=Detector(name='AX', relative_position=1, active=True),
+                              L1=Detector(name='L1', relative_position=0.9, active=True),
+                              L2=Detector(name='L2', relative_position=0.8, active=True),
+                              CDD=Detector(name='CDD', relative_position=0.7, active=False),
                               )
 
         self.magnet.load()
 #===============================================================================
 # signals
 #===============================================================================
-    def get_intensities(self, record = True):
-        datastr = self.microcontroller.ask('GetData', verbose = False)
+    def get_intensities(self, record=True):
+        datastr = self.microcontroller.ask('GetData', verbose=False)
         if not 'ERROR' in datastr:
             try:
                 data = [float(d) for d in datastr.split(',')]

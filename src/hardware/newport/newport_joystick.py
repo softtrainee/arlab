@@ -35,14 +35,14 @@ class Joystick(HasTraits):
         G{classtree}
     '''
     parent = Any
-    xnegative = Property(fvalidate = validate)
-    xpositive = Property(fvalidate = validate)
+    xnegative = Property(fvalidate=validate)
+    xpositive = Property(fvalidate=validate)
 
-    ynegative = Property(fvalidate = validate)
-    ypositive = Property(fvalidate = validate)
+    ynegative = Property(fvalidate=validate)
+    ypositive = Property(fvalidate=validate)
 
-    znegative = Property(fvalidate = validate)
-    zpositive = Property(fvalidate = validate)
+    znegative = Property(fvalidate=validate)
+    zpositive = Property(fvalidate=validate)
     high_low_bit = Property
     dio_bits = List
 
@@ -133,9 +133,9 @@ class Joystick(HasTraits):
     def disable(self):
         '''
         '''
-        com = ';'.join([self.parent._build_command_('BQ', xx = a.id, nn = 0) for a in self.parent.axes])[:-1]
+        com = ';'.join([self.parent._build_command_('BQ', xx=a.id, nn=0) for a in self.parent.axes])[:-1]
         self.parent.ask(com)
-        com = ';'.join([self.parent._build_command_('TJ', xx = a.id, nn = 1) for a in self.parent.axes])[:-1]
+        com = ';'.join([self.parent._build_command_('TJ', xx=a.id, nn=1) for a in self.parent.axes])[:-1]
         self.parent.ask(com)
 
     def enable(self):
@@ -159,7 +159,7 @@ class Joystick(HasTraits):
                 nn = ai[1]
                 if ai[0] == 'BP':
                     nn = self.dio_bits[a.id - 1]
-                coms.append(self.parent._build_command_(ai[0], xx = a.id, nn = nn))
+                coms.append(self.parent._build_command_(ai[0], xx=a.id, nn=nn))
 
         com = ';'.join(coms)
 
@@ -177,4 +177,4 @@ class Joystick(HasTraits):
 
         dio_group.content.append(Item('high_low_bit'))
         return View(dio_group,
-                   resizable = True)
+                   resizable=True)

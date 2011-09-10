@@ -55,7 +55,7 @@ class UserView(HasTraits):
     rx = Float
     ry = Float
     rz = Float
-    scene_graph = Any(transient = True)
+    scene_graph = Any(transient=True)
 
     rmin = Float(0)
     rmax = Float(360)
@@ -64,7 +64,7 @@ class UserView(HasTraits):
     ymin = Float(-50)
     ymax = Float(10)
 
-    zoom = Property(depends_on = '_zoom')
+    zoom = Property(depends_on='_zoom')
     _zoom = Float(1)
     zmin = Float(1)
     zmax = Float(100)
@@ -150,51 +150,51 @@ class ViewController(HasTraits):
 
             v = copy.copy(self.views[-1])
         else:
-            v = UserView(scene_graph = self.scene_graph, name = 'userview')
+            v = UserView(scene_graph=self.scene_graph, name='userview')
 
         self.scene_graph.canvas.user_views.append(v)
 
     def _table_editor_factory(self):
         '''
         '''
-        col = [ObjectColumn(name = 'name'),
-             ObjectColumn(name = 'key')]
-        return TableEditor(columns = col,
-                           auto_size = False,
-                           orientation = 'vertical',
-                           show_toolbar = True,
-                           row_factory = self.row_factory,
-                           deletable = True,
-                           edit_view = View(
+        col = [ObjectColumn(name='name'),
+             ObjectColumn(name='key')]
+        return TableEditor(columns=col,
+                           auto_size=False,
+                           orientation='vertical',
+                           show_toolbar=True,
+                           row_factory=self.row_factory,
+                           deletable=True,
+                           edit_view=View(
                                             Group(
                                                 HGroup('name', 'key'),
-                                                Item('x', editor = RangeEditor(low_name = 'xmin',
-                                                                            high_name = 'xmax',
-                                                                            mode = 'slider')),
-                                                Item('y', editor = RangeEditor(low_name = 'xmin',
-                                                                            high_name = 'xmax',
-                                                                            mode = 'slider')),
-                                                Item('z', editor = RangeEditor(low_name = 'xmin',
-                                                                            high_name = 'xmax',
-                                                                            mode = 'slider')),
-                                                Item('rx', editor = RangeEditor(low_name = 'rmin',
-                                                                             high_name = 'rmax',
-                                                                             mode = 'slider')),
-                                                Item('ry', editor = RangeEditor(low_name = 'rmin',
-                                                                             high_name = 'rmax',
-                                                                             mode = 'slider')),
-                                                Item('rz', editor = RangeEditor(low_name = 'rmin',
-                                                                             high_name = 'rmax',
-                                                                             mode = 'slider')),
-                                                Item('zoom', editor = RangeEditor(low_name = 'zmin',
-                                                                             high_name = 'zmax',
-                                                                             mode = 'slider')),
+                                                Item('x', editor=RangeEditor(low_name='xmin',
+                                                                            high_name='xmax',
+                                                                            mode='slider')),
+                                                Item('y', editor=RangeEditor(low_name='xmin',
+                                                                            high_name='xmax',
+                                                                            mode='slider')),
+                                                Item('z', editor=RangeEditor(low_name='xmin',
+                                                                            high_name='xmax',
+                                                                            mode='slider')),
+                                                Item('rx', editor=RangeEditor(low_name='rmin',
+                                                                             high_name='rmax',
+                                                                             mode='slider')),
+                                                Item('ry', editor=RangeEditor(low_name='rmin',
+                                                                             high_name='rmax',
+                                                                             mode='slider')),
+                                                Item('rz', editor=RangeEditor(low_name='rmin',
+                                                                             high_name='rmax',
+                                                                             mode='slider')),
+                                                Item('zoom', editor=RangeEditor(low_name='zmin',
+                                                                             high_name='zmax',
+                                                                             mode='slider')),
                                                 Group('background_color'
                                                       #, style = 'custom'
                                                       ),
-                                                show_border = True,
+                                                show_border=True,
                                                 ),
-                                          resizable = True,
+                                          resizable=True,
                                           )
                            )
     def traits_view(self):
@@ -202,13 +202,13 @@ class ViewController(HasTraits):
         '''
         return View(
                     Item('views',
-                         height = 75,
-                         editor = self._table_editor_factory(), show_label = False),
-                    resizable = True,
-                    width = 375,
-                    height = 675,
-                    handler = ViewControllerHandler,
-                    title = 'User Canvas Views'
+                         height=75,
+                         editor=self._table_editor_factory(), show_label=False),
+                    resizable=True,
+                    width=375,
+                    height=675,
+                    handler=ViewControllerHandler,
+                    title='User Canvas Views'
                     )
 
 

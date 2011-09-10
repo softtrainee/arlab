@@ -85,9 +85,9 @@ class ThermocoupleScript(FileScript):
 
         if self.equilibrate_setpoint:
             eqt = equilibrate(self, eu.get_process_value, setpoint,
-                            n = self.outside_eq_n,
-                            mean_tolerance = self.outside_eq_mean_tol,
-                            std_tolerance = self.outside_eq_std_tol)
+                            n=self.outside_eq_n,
+                            mean_tolerance=self.outside_eq_mean_tol,
+                            std_tolerance=self.outside_eq_std_tol)
             self.log('outside eqtime = %0.2f' % eqt)
 
         self.log('time at temperature %s' % time_at_T)
@@ -95,9 +95,9 @@ class ThermocoupleScript(FileScript):
 
 
         if self.equilibrate_setpoint:
-            eqt = equilibrate(self, di.get_process_value, setpoint, std_check = True,
-                            n = self.inside_eq_n,
-                            std_tolerance = self.inside_eq_std_tol
+            eqt = equilibrate(self, di.get_process_value, setpoint, std_check=True,
+                            n=self.inside_eq_n,
+                            std_tolerance=self.inside_eq_std_tol
                             )
             self.log('inside eqtime = %0.2f' % eqt)
         else:

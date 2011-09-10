@@ -30,8 +30,8 @@ class MDDModelerPlugin(CorePlugin):
     def _service_offers_default(self):
         '''
         '''
-        so = self.service_offer_factory(protocol = ModelerManager,
-                          factory = self._factory
+        so = self.service_offer_factory(protocol=ModelerManager,
+                          factory=self._factory
                           )
         return [so]
     def _factory(self):

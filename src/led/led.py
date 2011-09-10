@@ -26,7 +26,7 @@ class LED(HasTraits):
     '''
         G{classtree}
     '''
-    state = Property(depends_on = '_state')
+    state = Property(depends_on='_state')
     _state = Int
     def _set_state(self, v):
         if isinstance(v, str):

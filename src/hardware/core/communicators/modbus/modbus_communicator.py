@@ -42,7 +42,7 @@ class ModbusCommunicator(SerialCommunicator):
         SerialCommunicator.load(self, config, path)
         self.set_attribute(config, 'slave_address', 'Communications', 'slave_address')
 
-    def write(self, register, value, nregisters = 1, response_type = 'register_write', **kw):
+    def write(self, register, value, nregisters=1, response_type='register_write', **kw):
         '''
         '''
         if nregisters == 1:
@@ -53,7 +53,7 @@ class ModbusCommunicator(SerialCommunicator):
     def tell(self, *args, **kw):
         return self.write(*args, **kw)
 
-    def read(self, register, response_type = 'float', nregisters = 1, **kw):
+    def read(self, register, response_type='float', nregisters=1, **kw):
         '''            
         '''
         return self.read_holding_register(register, nregisters, response_type, **kw)
@@ -64,7 +64,7 @@ class ModbusCommunicator(SerialCommunicator):
         cmd = ''.join([self.slave_address] + args)
 
         #convert hex string into list of ints
-        cmdargs = self._parse_hexstr(cmd, return_type = 'int')
+        cmdargs = self._parse_hexstr(cmd, return_type='int')
 
         #calculate the CRC and append to message
         crc = computeCRC(cmdargs)
@@ -73,15 +73,15 @@ class ModbusCommunicator(SerialCommunicator):
         kw['hex'] = True
 
         if self.scheduler is not None:
-            resp = self.scheduler.schedule(self.ask, args = (cmd,),
-                                           kwargs = kw
+            resp = self.scheduler.schedule(self.ask, args=(cmd,),
+                                           kwargs=kw
                                            )
         else:
             resp = self.ask(cmd, **kw)
 
         return self._parse_response(resp, response_type)
 
-    def _parse_hexstr(self, hexstr, return_type = 'hex'):
+    def _parse_hexstr(self, hexstr, return_type='hex'):
         '''
         '''
         gen = range(0, len(hexstr), 2)
@@ -98,7 +98,7 @@ class ModbusCommunicator(SerialCommunicator):
             args = self._parse_hexstr(resp)
 
             #check the crc
-            cargs = self._parse_hexstr(resp, return_type = 'int')
+            cargs = self._parse_hexstr(resp, return_type='int')
 
             crc = ''.join(args[-2:])
             calc_crc = computeCRC(cargs[:-2])

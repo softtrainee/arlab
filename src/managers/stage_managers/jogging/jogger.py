@@ -21,7 +21,7 @@ import math
 #============= local library imports  ==========================
 #============= views ===================================
 
-def line_jogger(cx, cy, R, ns, p, ss, direction = 'out'):
+def line_jogger(cx, cy, R, ns, p, ss, direction='out'):
 
     stepfunc = lambda i: 2 * i + ss
     rfunc = lambda i, j :R * (1 + (i + j / 360.) * p)
@@ -42,7 +42,7 @@ def line_jogger(cx, cy, R, ns, p, ss, direction = 'out'):
 
             yield x, y
 
-def square_jogger(cx, cy, R, ns, p, direction = 'out', ox = 0, oy = 0):
+def square_jogger(cx, cy, R, ns, p, direction='out', ox=0, oy=0):
 
     rfunc = lambda i: R * (1 + (i) * p)
     ns = 4 * ns + 1

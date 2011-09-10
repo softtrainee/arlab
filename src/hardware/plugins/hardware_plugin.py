@@ -41,19 +41,19 @@ class HardwarePlugin(CorePlugin):
     '''
     id = 'pychron.hardware'
     managers = ExtensionPoint(List(Dict),
-                              id = 'pychron.hardware.managers')
+                              id='pychron.hardware.managers')
 
     def _service_offers_default(self):
         '''
         '''
         so = self.service_offer_factory(
-                          protocol = HardwareManager,
-                          factory = self._hardware_manager_factory)
+                          protocol=HardwareManager,
+                          factory=self._hardware_manager_factory)
 
         return [so]
 
     def _hardware_manager_factory(self):
-        return HardwareManager(application = self.application)
+        return HardwareManager(application=self.application)
 
     def start(self):
         '''
@@ -68,16 +68,16 @@ class HardwarePlugin(CorePlugin):
                 dp.serial_preference.auto_find_handle = toBool(afh)
                 dp.serial_preference.auto_write_handle = toBool(awh)
 
-            ini = Initializer(device_prefs = dp)
+            ini = Initializer(device_prefs=dp)
 
             for m in self.managers:
                 ini.add_initialization(m)
 
             #any loaded managers will be registered as services
-            ini.run(application = self.application)
+            ini.run(application=self.application)
 
             #create the hardware server
-            rhs = RemoteHardwareManager(application = self.application)
+            rhs = RemoteHardwareManager(application=self.application)
             bind_preference(rhs, 'enable_hardware_server', 'pychron.hardware.enable_hardware_server')
             rhs.bootstrap()
 

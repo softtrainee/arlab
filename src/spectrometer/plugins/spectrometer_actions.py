@@ -26,7 +26,7 @@ class MagFieldCalibrationAction(Action):
         app = event.window.application
 
         manager = app.get_service(SPECTROMETER_PROTOCOL)
-        manager.peak_center(update_mftable = True)
+        manager.peak_center(update_mftable=True)
 
 class PeakCenterAction(Action):
     description = 'Calculate peak center'

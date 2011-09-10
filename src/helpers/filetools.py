@@ -27,7 +27,7 @@ def unique_dir(root, base):
 
     return p
 
-def unique_path(root, base, filetype = 'txt'):
+def unique_path(root, base, filetype='txt'):
     '''
 
     '''
@@ -56,7 +56,7 @@ def str_to_bool(a):
     elif a in fks:
         return False
 
-def parse_xy(p, delimiter = ','):
+def parse_xy(p, delimiter=','):
     '''
     '''
     data = parse_file(p)
@@ -73,7 +73,7 @@ def commented_line(l):
     else:
         return False
 
-def parse_file(p, split = None):
+def parse_file(p, split=None):
     '''
     '''
     if os.path.exists(p) and os.path.isfile(p):
@@ -120,7 +120,7 @@ def parse_canvasfile(p, kw):
                             break
 
             return indices
-def filetoarray(f, commentchar = '#'):
+def filetoarray(f, commentchar='#'):
     '''
 
     '''

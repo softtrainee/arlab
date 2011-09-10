@@ -16,7 +16,7 @@ limitations under the License.
 from traits.api import HasTraits, String
 from traitsui.api import View, Item, HTMLEditor
 class Table(object):
-    def __init__(self, attribs = None):
+    def __init__(self, attribs=None):
         super(Table, self).__init__()
         self.rows = []
 
@@ -64,7 +64,7 @@ class TableCell(object):
         return '\t\t<td>%s</td>\n' % v
 
 class HTMLDoc(object):
-    def __init__(self, attribs = None):
+    def __init__(self, attribs=None):
         super(HTMLDoc, self).__init__()
         self.attribs = attribs
         self.elements = []
@@ -74,7 +74,7 @@ class HTMLDoc(object):
         t = Table(**kw)
         self.elements.append(t)
         return t
-    def add_list(self, items = None, kind = 'unordered'):
+    def add_list(self, items=None, kind='unordered'):
         lklass = HTMLList
         if kind == 'ordered':
             lklass = HTMLOList
@@ -101,7 +101,7 @@ class HTMLDoc(object):
         self.elements.append(h)
 
 class HTMLText(object):
-    def __init__(self, value, heading = None, size = None, color = None, face = None):
+    def __init__(self, value, heading=None, size=None, color=None, face=None):
         super(HTMLText, self).__init__()
         self.value = value
         self.color = color
@@ -151,28 +151,28 @@ class HTMLListItem(object):
 
 class DemoWindow(HasTraits):
     msg = String
-    v = View(Item('msg', editor = HTMLEditor(),
-                show_label = False),
-           resizable = True,
+    v = View(Item('msg', editor=HTMLEditor(),
+                show_label=False),
+           resizable=True,
 
-           width = 500,
-           height = 500
+           width=500,
+           height=500
            )
 
 if __name__ == '__main__':
-    doc = HTMLDoc(attribs = 'bgcolor = "#ffffcc" text = "#000000"')
-    doc.add_heading('Bakeout Documentation', heading = 2, color = 'red')
-    doc.add_heading('Parameters', heading = 3)
+    doc = HTMLDoc(attribs='bgcolor = "#ffffcc" text = "#000000"')
+    doc.add_heading('Bakeout Documentation', heading=2, color='red')
+    doc.add_heading('Parameters', heading=3)
     doc.add_text('Setpoint (C), Duration (min)')
     doc.add_list(['Setpoint (C) -- Bakeout Controller Setpoint',
                   'Duration (min) -- Heating duration'
                   ])
-    table = doc.add_table(attribs = 'bgcolor="#D3D3D3" width="90%"')
-    r1 = HTMLText('Ex.', face = 'courier', size = '2')
+    table = doc.add_table(attribs='bgcolor="#D3D3D3" width="90%"')
+    r1 = HTMLText('Ex.', face='courier', size='2')
     table.add_row([r1])
 
-    r2 = HTMLText('150,360', face = 'courier', size = '2')
+    r2 = HTMLText('150,360', face='courier', size='2')
     table.add_row([r2])
     print doc
-    dem = DemoWindow(msg = str(doc))
+    dem = DemoWindow(msg=str(doc))
     dem.configure_traits()

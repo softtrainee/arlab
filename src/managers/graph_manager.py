@@ -30,24 +30,24 @@ from src.helpers.paths import data_dir
 from manager import Manager
 from src.envisage.core.envisage_editor import EnvisageEditor
 
-KIND_VALUES = dict(peak_center = 'Peak Center',
-                   powermap = 'Power Map',
-                   xy = 'XY',
-                   deflection = 'Deflection',
-                   step_heat = 'Step Heat'
+KIND_VALUES = dict(peak_center='Peak Center',
+                   powermap='Power Map',
+                   xy='XY',
+                   deflection='Deflection',
+                   step_heat='Step Heat'
                    )
 class GraphManager(Manager):
     path = File
     root = Directory
     kind = Str('deflection')
-    def open_graph(self, kind, path = None):
+    def open_graph(self, kind, path=None):
 
         pfunc = getattr(self, '{}_parser'.format(kind))
 
         gfunc = getattr(self, '{}_factory'.format(kind))
 
         if path is None:
-            path = self.open_file_dialog(default_directory = data_dir)
+            path = self.open_file_dialog(default_directory=data_dir)
 
 
         if path is not None and os.path.exists(path):
@@ -57,7 +57,7 @@ class GraphManager(Manager):
                 graph.name = os.path.basename(path)
                 if self.application is not None:
                     self.application.workbench.edit(graph,
-                                                    kind = EnvisageEditor)
+                                                    kind=EnvisageEditor)
                 else:
                     graph.edit_traits()
 #===============================================================================
@@ -120,41 +120,41 @@ class GraphManager(Manager):
 
     def step_heat_factory(self, ttdata, radata, title):
         g = TimeSeriesStreamGraph()
-        g.new_plot(xtitle = 'Time',
-                   ytitle = 'Temp C',
-                   link = False,
-                   data_limit = 300,
-                   scan_delay = 1,
-                   padding_top = 10,
-                   padding_left = 20,
-                   padding_right = 10
+        g.new_plot(xtitle='Time',
+                   ytitle='Temp C',
+                   link=False,
+                   data_limit=300,
+                   scan_delay=1,
+                   padding_top=10,
+                   padding_left=20,
+                   padding_right=10
                    )
 
 
-        g.new_series(x = ttdata[0], y = ttdata[1])
-        g.new_series(x = ttdata[0], y = ttdata[2])
-        g.new_plot(xtitle = 'Request Temp C',
-                   ytitle = 'Temp C',
-                   link = False,
-                   data_limit = 50,
-                   padding_top = 10,
-                   padding_left = 20,
-                   padding_right = 10
+        g.new_series(x=ttdata[0], y=ttdata[1])
+        g.new_series(x=ttdata[0], y=ttdata[2])
+        g.new_plot(xtitle='Request Temp C',
+                   ytitle='Temp C',
+                   link=False,
+                   data_limit=50,
+                   padding_top=10,
+                   padding_left=20,
+                   padding_right=10
                    )
 
-        g.new_series(x = radata[0], y = radata[1], plotid = 1, time_series = False)
-        g.new_series(x = radata[0], y = radata[2], plotid = 1, time_series = False)
+        g.new_series(x=radata[0], y=radata[1], plotid=1, time_series=False)
+        g.new_series(x=radata[0], y=radata[2], plotid=1, time_series=False)
 
-        g.set_x_limits(min = min(radata[0]) - 5, max = max(radata[0]) + 5, plotid = 1)
+        g.set_x_limits(min=min(radata[0]) - 5, max=max(radata[0]) + 5, plotid=1)
         g.name = title
         return g
 
     def xy_factory(self, data, title):
         g = self.graph_factory(
-                               data = data,
-                               graph_kwargs = dict(window_title = title),
-                               plot_kwargs = dict(xtitle = 'X', ytitle = 'Y'),
-                               series_kwargs = {}
+                               data=data,
+                               graph_kwargs=dict(window_title=title),
+                               plot_kwargs=dict(xtitle='X', ytitle='Y'),
+                               series_kwargs={}
                                )
         return g
 
@@ -162,34 +162,34 @@ class GraphManager(Manager):
         '''
             the centering info should written as metadata instead of recalculating it
         '''
-        plot_kwargs = dict(xtitle = 'Magnet DAC (V)',
-                           ytitle = 'Intensity (fA)'
+        plot_kwargs = dict(xtitle='Magnet DAC (V)',
+                           ytitle='Intensity (fA)'
                            )
-        g = self.graph_factory(data = data, graph_kwargs = dict(window_title = title),
-                                    plot_kwargs = plot_kwargs,
-                                    series_kwargs = dict()
+        g = self.graph_factory(data=data, graph_kwargs=dict(window_title=title),
+                                    plot_kwargs=plot_kwargs,
+                                    series_kwargs=dict()
 
                                )
         if minmaxdata is not None:
-            g.new_series(x = minmaxdata[0], y = minmaxdata[1], type = 'scatter')
+            g.new_series(x=minmaxdata[0], y=minmaxdata[1], type='scatter')
 
         return g
 
     def deflection_factory(self, data, title):
         graph_kwargs = dict(
-                           container_dict = dict(padding = [20, 5, 15, 15]),
-                           window_height = 700,
-                           window_title = title
+                           container_dict=dict(padding=[20, 5, 15, 15]),
+                           window_height=700,
+                           window_title=title
                            )
 
-        plot_kwargs = dict(padding_top = 15,
-                           padding_right = 15,
-                           xtitle = 'Deflection (V)',
-                           ytitle = '40Ar Peak Center (Magnet DAC V)'
+        plot_kwargs = dict(padding_top=15,
+                           padding_right=15,
+                           xtitle='Deflection (V)',
+                           ytitle='40Ar Peak Center (Magnet DAC V)'
                            )
-        g = self.residuals_factory(data, graph_kwargs = graph_kwargs,
-                                         plot_kwargs = plot_kwargs,
-                                         series_kwargs = {})
+        g = self.residuals_factory(data, graph_kwargs=graph_kwargs,
+                                         plot_kwargs=plot_kwargs,
+                                         series_kwargs={})
         return g
 
     def powermap_factory(self, data, title):
@@ -217,7 +217,7 @@ class GraphManager(Manager):
         g = self._graph_factory(klass, *args, **kw)
         return g
 
-    def _graph_factory(self, klass, data = None, graph_kwargs = None, plot_kwargs = None, series_kwargs = None):
+    def _graph_factory(self, klass, data=None, graph_kwargs=None, plot_kwargs=None, series_kwargs=None):
         if graph_kwargs is None:
             graph_kwargs = {}
 
@@ -226,7 +226,7 @@ class GraphManager(Manager):
             g.new_plot(**plot_kwargs)
             if series_kwargs is not None:
                 if data is not None:
-                    g.new_series(x = data[0], y = data[1], **series_kwargs)
+                    g.new_series(x=data[0], y=data[1], **series_kwargs)
                 else:
                     g.new_series(**series_kwargs)
         return g
@@ -243,18 +243,18 @@ class GraphManager(Manager):
         _rheader, data = self._get_csv_data(path, **kw)
         return data, self._dir_and_name_title(path)
 
-    def _get_csv_data(self, path, header = True, unpack = True, delimiter = ',', **kw):
+    def _get_csv_data(self, path, header=True, unpack=True, delimiter=',', **kw):
         rheader = None
         data = None
         if path is None:
-            path = self.open_file_dialog(default_directory = data_dir)
+            path = self.open_file_dialog(default_directory=data_dir)
 
         if path is not None:
             with open(path, 'r') as f:
                 if header:
                     rheader = f.readline()
 
-                data = np.loadtxt(f, delimiter = delimiter, unpack = unpack, **kw)
+                data = np.loadtxt(f, delimiter=delimiter, unpack=unpack, **kw)
 
         return rheader, data
 
@@ -324,9 +324,9 @@ class GraphManager(Manager):
     def traits_view(self):
         v = View(
                  #Item('test'),
-                 Item('kind', editor = EnumEditor(values = KIND_VALUES)),
-                 Item('path', visible_when = 'kind not in ["step_heat"]'),
-                 Item('root', label = 'Path', visible_when = 'kind in ["step_heat"]')
+                 Item('kind', editor=EnumEditor(values=KIND_VALUES)),
+                 Item('path', visible_when='kind not in ["step_heat"]'),
+                 Item('root', label='Path', visible_when='kind in ["step_heat"]')
                  )
         return v
 if __name__ == '__main__':

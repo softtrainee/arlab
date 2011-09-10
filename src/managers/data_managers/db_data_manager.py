@@ -42,8 +42,8 @@ class DBDataManager(Manager):
 
     def traits_view(self):
 
-        v = View(Item('importbutton', show_label = False),
-                 Item('database', style = 'custom', show_label = False)
+        v = View(Item('importbutton', show_label=False),
+                 Item('database', style='custom', show_label=False)
                  )
         return v
 

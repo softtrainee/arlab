@@ -50,13 +50,13 @@ class BakeoutController(WatlowEZZone):
         goto_setpoint('cool')
         
     '''
-    duration = Property(Float(enter_set = True, auto_set = False),
-                        depends_on = '_duration')
+    duration = Property(Float(enter_set=True, auto_set=False),
+                        depends_on='_duration')
     _duration = Float
 
     #setpoint = Property(depends_on = '_setpoint')
     #_setpoint = Float
-    setpoint = Float(enter_set = True, auto_set = False)
+    setpoint = Float(enter_set=True, auto_set=False)
     #temp = Float
     scripts = List()
     script = Str('---')
@@ -136,9 +136,9 @@ class BakeoutController(WatlowEZZone):
         else:
             self.active = True
             self.alive = True
-            t = BakeoutScript(source_dir = os.path.join(paths.scripts_dir, 'bakeoutscripts'),
-                                 file_name = self.script,
-                                 controller = self)
+            t = BakeoutScript(source_dir=os.path.join(paths.scripts_dir, 'bakeoutscripts'),
+                                 file_name=self.script,
+                                 controller=self)
             t.bootstrap()
             self._active_script = t
             self._timer = Timer(UPDATE_INTERVAL * 1000., self._update2_)
@@ -172,7 +172,7 @@ class BakeoutController(WatlowEZZone):
             self.info('setting ramp scale = {}'.format(value))
             value = scalemap[value]
             register = 2188
-            self.write(register, value, nregisters = 2, **kw)
+            self.write(register, value, nregisters=2, **kw)
 
     def set_ramp_action(self, value, **kw):
         '''
@@ -187,7 +187,7 @@ class BakeoutController(WatlowEZZone):
             self.info('setting ramp action = {}'.format(value))
             value = rampmap[value]
             register = 2186
-            self.write(register, value, nregisters = 2, **kw)
+            self.write(register, value, nregisters=2, **kw)
 
     def set_ramp_rate(self, value, **kw):
         '''
@@ -195,10 +195,10 @@ class BakeoutController(WatlowEZZone):
         '''
         self.info('setting ramp rate = %0.3f' % value)
         register = 2192
-        self.write(register, value, nregisters = 2, **kw)
+        self.write(register, value, nregisters=2, **kw)
 
 
-    def end(self, user_kill = False, script_kill = False):
+    def end(self, user_kill=False, script_kill=False):
         if self.isActive() and self.isAlive():
             if hasattr(self, '_timer'):
                 self._timer.Stop()
@@ -228,7 +228,7 @@ class BakeoutController(WatlowEZZone):
             self._duration -= nsecs / 3600.
             self.cnt = 0
 
-        self.get_temperature(verbose = False)
+        self.get_temperature(verbose=False)
 
         if DUTY_CYCLE:
         #make a duty cycle measurement
@@ -258,29 +258,29 @@ class BakeoutController(WatlowEZZone):
                             HGroup(
                                    Label(self.name[-1]),
                                   # spring,
-                                   Item('led', editor = LEDEditor(),
-                                        show_label = False, style = 'custom'),
-                                    springy = True
+                                   Item('led', editor=LEDEditor(),
+                                        show_label=False, style='custom'),
+                                    springy=True
                             ),
-                            springy = True
+                            springy=True
                             )
         else:
             header_grp = HGroup(
                             HGroup(
                                 Label(self.name[-1]),
-                                Item('led', editor = LEDEditor(),
-                                        show_label = False, style = 'custom'),
-                                springy = True
+                                Item('led', editor=LEDEditor(),
+                                        show_label=False, style='custom'),
+                                springy=True
                                 ))
 
         v = View(
                  VGroup(
                     header_grp,
                     VGroup(
-                            Item('script', show_label = False, editor = EnumEditor(values = self.scripts)),
-                            Item('duration', label = 'Duration (hrs)', show_label = show_label, enabled_when = 'script=="---"', format_str = '%0.2f'),
-                            Item('setpoint', label = 'Setpoint (C)', show_label = show_label, enabled_when = 'script=="---"', format_str = '%0.2f'),
-                            Item('process_value', label = 'Temp (C)', show_label = show_label, style = 'readonly', format_str = '%0.1f')
+                            Item('script', show_label=False, editor=EnumEditor(values=self.scripts)),
+                            Item('duration', label='Duration (hrs)', show_label=show_label, enabled_when='script=="---"', format_str='%0.2f'),
+                            Item('setpoint', label='Setpoint (C)', show_label=show_label, enabled_when='script=="---"', format_str='%0.2f'),
+                            Item('process_value', label='Temp (C)', show_label=show_label, style='readonly', format_str='%0.1f')
                             )
                         )
                )

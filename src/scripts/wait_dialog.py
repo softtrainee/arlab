@@ -32,7 +32,7 @@ class WaitDialog(HasTraits):
     condition = None
     wtime = Float
     low_name = Float(2)
-    current_time = Property(depends_on = '_current_time')
+    current_time = Property(depends_on='_current_time')
     _current_time = Float
     auto_start = Bool(True)
     timer = None
@@ -43,7 +43,7 @@ class WaitDialog(HasTraits):
         if self.auto_start:
             self.timer = Timer(1000, self._update_time)
 
-    def start(self, condition = None):
+    def start(self, condition=None):
         self.condition = condition
         self.timer = Timer(1000, self._update_time)
 
@@ -79,14 +79,14 @@ class WaitDialog(HasTraits):
 
     def traits_view(self):
 
-        kw = dict(buttons = ['Cancel'],
-                  handler = WDHandler,
+        kw = dict(buttons=['Cancel'],
+                  handler=WDHandler,
                   )
         if self.title is not None:
             kw['title'] = self.title
-        return View(Item('current_time', show_label = False, editor = RangeEditor(mode = 'slider',
-                                                           low_name = 'low_name',
-                                                           high_name = 'wtime'
+        return View(Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
+                                                           low_name='low_name',
+                                                           high_name='wtime'
                                                            )),
                     **kw
 #                    title = self.title,

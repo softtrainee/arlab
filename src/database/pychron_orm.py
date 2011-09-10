@@ -26,7 +26,7 @@ Base = declarative_base()
 
 class Detectors(Base):
     __tablename__ = 'Detectors'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(40))
     gain = Column(Float)
     kind = Column(String(40))
@@ -34,60 +34,60 @@ class Detectors(Base):
 
 class Spectrometers(Base):
     __tablename__ = 'Spectrometers'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(40))
     kind = Column(String(40))
-    detectors = relationship('Detectors', order_by = 'Detectors.id')
+    detectors = relationship('Detectors', order_by='Detectors.id')
 
 class Analyses(Base):
     __tablename__ = 'Analyses'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     sample_id = Column(Integer, ForeignKey('Samples.id'))
-    status = Column(Integer, default = 0)
-    signals = relationship('Signals', backref = 'analysis')
+    status = Column(Integer, default=0)
+    signals = relationship('Signals', backref='analysis')
 
 class Samples(Base):
     __tablename__ = 'Samples'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(40))
     irradiation_id = Column(Integer, ForeignKey('Irradiations.id'))
     tray_id = Column(String(10), ForeignKey('IrradiationTrays.id'))
     holenum = Column(Integer)
     identifier = Column(Integer)
-    analyses = relationship('Analyses', backref = 'sample')
+    analyses = relationship('Analyses', backref='sample')
 
 class Signals(Base):
     __tablename__ = 'Signals'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     times = Column(BLOB)
     intensities = Column(BLOB)
     analysis_id = Column(Integer, ForeignKey('Analyses.id'))
     detector_id = Column(Integer, ForeignKey('Detectors.id'))
-    detector = relationship('Detectors', backref = 'signals')
+    detector = relationship('Detectors', backref='signals')
 
 class Irradiations(Base):
     __tablename__ = 'Irradiations'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(40))
     reactor_id = Column(Integer, ForeignKey('Reactors.id'))
 
-    samples = relationship('Samples', backref = 'irradiation')
-    trays = relationship('IrradiationTrays', backref = 'irradiation')
+    samples = relationship('Samples', backref='irradiation')
+    trays = relationship('IrradiationTrays', backref='irradiation')
 
 class IrradiationTrays(Base):
     __tablename__ = 'IrradiationTrays'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(40))
     nholes = Column(Integer)
     irradiation_id = Column(Integer, ForeignKey('Irradiations.id'))
-    samples = relationship('Samples', backref = 'irradiation_tray')
+    samples = relationship('Samples', backref='irradiation_tray')
 
 
 class Reactors(Base):
     __tablename__ = 'Reactors'
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(40))
-    irradiations = relationship('Irradiations', backref = 'reactor')
+    irradiations = relationship('Irradiations', backref='reactor')
 #class ArArAnalyses(Base):
 #    __tablename__ = 'ArArAnalyses'
 #    id = Column(Integer, primary_key = True)

@@ -44,7 +44,8 @@ class DummyELM(object):
 
 class SystemHandler(BaseRemoteHardwareHandler):
     extraction_line_manager = None
-    def get_extraction_line_manager(self):
+#    def get_extraction_line_manager(self):
+    def get_manager(self):
 
         if self.extraction_line_manager is None:
             if self.application is not None:
@@ -82,46 +83,38 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = 'Device not connected: {}'.format(dname)
         return result
 
-    def Open(self, vname):
-        elm = self.get_extraction_line_manager()
-        result = elm.open_valve(vname)
+    def Open(self, manager, vname):
+        result = manager.open_valve(vname)
         if result == True:
             result = 'OK'
         return result
 
-    def Close(self, vname):
-        elm = self.get_extraction_line_manager()
-        result = elm.close_valve(vname)
+    def Close(self, manager,vname):
+        result = manager.close_valve(vname)
         if result == True:
             result = 'OK'
         return result
 
-    def GetValveState(self, vname):
-        elm = self.get_extraction_line_manager()
-        return elm.get_valve_state(vname)
+    def GetValveState(self, manager,vname):
+        return manager.get_valve_state(vname)
 
-    def GetValveStates(self, *args):
-        elm = self.get_extraction_line_manager()
-        result = elm.get_valve_states()
+    def GetValveStates(self, manager, *args):
+        result = manager.get_valve_states()
         if result is None:
             result = 'ERROR'
         return result
 
-    def GetManualState(self, vname):
-        elm = self.get_extraction_line_manager()
-        #mstate = elm.get_manual_state(vname)
-
-        lstate = elm.get_software_lock(vname)
+    def GetManualState(self, manager, vname):
+        lstate = manager.get_software_lock(vname)
         if lstate is None:
             result = 'ERROR: {} name available'.format(vname)
             result = False
         else:
             result = lstate
-#        if result is None:
-#            result = 'ERROR'
+            
         return result
 
-    def RemoteLaunch(self, *args):
+    def RemoteLaunch(self,manager, *args):
         #launch pychron
         p = '/Users/Ross/Programming/pychron/Pychron.app'
         result = 'OK'
@@ -132,38 +125,39 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
         return result
 
-    def StartMultRuns(self, data):
+    def StartMultRuns(self, manager,data):
         if self.application is not None:
             tm=self.application.get_service(TM_PROTOCOL)
             
             tm.post('Mult runs start {}'.format(data))
             
-    def CompleteMultRuns(self,data):
+    def CompleteMultRuns(self,manager,data):
         if self.application is not None:
             tm=self.application.get_service(TM_PROTOCOL)
             
             tm.post('Mult runs completed {}'.format(data))
             
         
-    def handle(self, data):
-        elm = self.get_extraction_line_manager()
-        result = 'ERROR'
-        if elm is None:
-            self.warning('Extraction Line Manager not available')
-        else:
-            args = self.split_data(data)
-            if args:
-                action = args[0]
-
-                func = self._get_func(action)
-                if func is not None:
-                    try:
-                        result = func(*args[1:])
-                    except TypeError:
-                        result = 'Invalid arguments passed {}'.format(args[1:])
-            else:
-                result = 'No command passed'
-        return str(result)
+#    def handle(self, data):
+#        elm = self.get_extraction_line_manager()
+#        result = 'ERROR'
+#        if elm is None:
+#            self.warning('Extraction Line Manager not available')
+#        else:
+#            args = self.split_data(data)
+#            if args:
+#                action = args[0]
+#
+#                func = self._get_func(action)
+#                if func is not None:
+#                    try:
+#                        result = func(*args[1:])
+#                    except TypeError:
+#                        result = 'Invalid arguments passed {}'.format(args[1:])
+#            else:
+#                result = 'No command passed'
+#        return str(result)
+    
 if __name__ == '__main__':
     v = SystemHandler()
     v.RemoteLaunch()

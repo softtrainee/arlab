@@ -59,7 +59,7 @@ def find_circles(src):
         print cvGetSeqElem(circles, i)
 
 
-def lines(src, thresh = 0):
+def lines(src, thresh=0):
     '''
     '''
 
@@ -75,8 +75,8 @@ def lines(src, thresh = 0):
     dst = new_dst(src,
                # width = src.width + 1,
                 #height = src.height + 1,
-                nchannels = 3,
-                zero = True
+                nchannels=3,
+                zero=True
                 )
 
     lines = cvHoughLines2(src, storage, CV_HOUGH_PROBABILISTIC, 1, CV_PI / 180, int(thresh), 100, 100)
@@ -156,11 +156,11 @@ def histogram(src):
     planes = (h_plane, s_plane)
 #    
     cvCalcHist(planes, hist, 0, 0)
-    dst = new_dst(src, nchannels = 1)
+    dst = new_dst(src, nchannels=1)
     cvCalcBackProject(planes, dst, hist)
     return dst
 
-def colorspace1D(src, channel = 'r'):
+def colorspace1D(src, channel='r'):
     '''
         @type channel: C{str}
         @param channel:
@@ -221,7 +221,7 @@ def convert_color(color):
         color = CvScalar(color)
     return color
 
-def draw_point(src, pt, color = (255, 0, 0), thickness = -1):
+def draw_point(src, pt, color=(255, 0, 0), thickness= -1):
     '''
     '''
     if isinstance(pt, (tuple, list)):
@@ -229,9 +229,9 @@ def draw_point(src, pt, color = (255, 0, 0), thickness = -1):
         pt = CvPoint(*pt)
 
     color = convert_color(color)
-    cvCircle(src, pt, 5, color, thickness = thickness)
+    cvCircle(src, pt, 5, color, thickness=thickness)
 
-def draw_polygons(img, polygons, line_width = 1):
+def draw_polygons(img, polygons, line_width=1):
     '''
     '''
 
@@ -247,14 +247,14 @@ def draw_contour_list(src, clist):
                    CV_RGB(255, 0, 0),
                    CV_RGB(255, 0, 255),
                    255,
-                   thickness = 4
+                   thickness=4
                    )
 
 #    for p in polygons:
 #        pa = p.asarray(CvPoint)
 #        print pa
 #        cvPolyLine(src, [pa], 0, CV_RGB(0, 255, 0), 3, CV_AA, 0)
-def draw_rectangle(src, p1, p2, color = (255, 0, 0), fill = False, thickness = 3):
+def draw_rectangle(src, p1, p2, color=(255, 0, 0), fill=False, thickness=3):
     '''
         
     '''
@@ -262,7 +262,7 @@ def draw_rectangle(src, p1, p2, color = (255, 0, 0), fill = False, thickness = 3
         thickness = -1
 
     color = convert_color(color)
-    cvRectangle(src, p1, p2, color, thickness = thickness)
+    cvRectangle(src, p1, p2, color, thickness=thickness)
 
 def draw_squares(img, squares):
     '''
@@ -288,7 +288,7 @@ def draw_squares(img, squares):
         pts.append(pt)
 
     return dst, pts
-def new_video_writer(path, fps = None, frame_size = None):
+def new_video_writer(path, fps=None, frame_size=None):
     '''
     '''
     if fps is None or fps == 0:
@@ -319,10 +319,10 @@ def new_mask(src, x, y, w, h):
         @type h: C{str}
         @param h:
     '''
-    dst = new_dst(src, nchannels = 1)
+    dst = new_dst(src, nchannels=1)
     cvZero(dst)
 
-    draw_rectangle(dst, CvPoint(x, y), CvPoint(x + w, y + h), color = 1, fill = True)
+    draw_rectangle(dst, CvPoint(x, y), CvPoint(x + w, y + h), color=1, fill=True)
     return dst
 
 def new_rect(x, y, w, h):
@@ -352,7 +352,7 @@ def new_size(src):
     return CvSize(src.width & -2,
                   src.height & -2)
 
-def new_seq(data = None):
+def new_seq(data=None):
     '''
     '''
 
@@ -362,7 +362,7 @@ def new_seq(data = None):
             seq.append(d)
     return seq
 
-def new_dst(src, zero = False, width = None, height = None, nchannels = None, size = None):
+def new_dst(src, zero=False, width=None, height=None, nchannels=None, size=None):
     '''
     '''
 
@@ -419,9 +419,9 @@ def get_min_max_location(src, region):
     maxpt = CvPoint()
     minval, maxval = cvMinMaxLoc(grayspace(src),
                 #minval,maxval,
-                               min_loc = minpt,
-                               max_loc = maxpt,
-                               mask = region
+                               min_loc=minpt,
+                               max_loc=maxpt,
+                               mask=region
                        )
     return minval, maxval, minpt, maxpt
 
@@ -462,7 +462,7 @@ def canny(src, lt, ht):
         gsrc = src
 
     #use canny for edge detection
-    dst = new_dst(gsrc, nchannels = 1)
+    dst = new_dst(gsrc, nchannels=1)
 
     cvCanny(gsrc, dst, lt, ht, 3)
 
@@ -476,14 +476,14 @@ def threshold(src, threshold):
 
     return dst
 
-def colorspace(src, cs = CV_GRAY2BGR):
+def colorspace(src, cs=CV_GRAY2BGR):
     '''
         @type cs: C{str}
         @param cs:
     '''
     if src.nChannels == 1:
         #csrc=cvCreateImage(cvGetSize(src),8,3)
-        dst = new_dst(src, nchannels = 3)
+        dst = new_dst(src, nchannels=3)
         cvCvtColor(src, dst, cs)
     else:
         dst = src
@@ -494,7 +494,7 @@ def grayspace(src):
     '''
     if src.nChannels > 1:
         #gsrc=cvCreateImage(cvGetSize(src),8,1)
-        dst = new_dst(src, nchannels = 1)
+        dst = new_dst(src, nchannels=1)
         cvCvtColor(src, dst, CV_BGR2GRAY)
     else:
         dst = src
@@ -502,7 +502,7 @@ def grayspace(src):
     cvNot(dst, dst2)
     return dst2
 
-def load_image(path, swap = False):
+def load_image(path, swap=False):
     '''
     '''
     frame = cvLoadImage(path)

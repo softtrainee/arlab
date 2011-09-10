@@ -53,7 +53,7 @@ class Communicator(ConfigLoadable):
     def read(self, *args, **kw):
         pass
 
-    def process_response(self, re, replace = None, remove_eol = True):
+    def process_response(self, re, replace=None, remove_eol=True):
         '''
         '''
         if remove_eol:
@@ -81,7 +81,7 @@ class Communicator(ConfigLoadable):
             ns += c
         return ns
 
-    def log_tell(self, cmd, info = None):
+    def log_tell(self, cmd, info=None):
         '''
         '''
         cmd = self._remove_eol(cmd)
@@ -98,7 +98,7 @@ class Communicator(ConfigLoadable):
 
         self.info(msg)
 
-    def log_response(self, cmd, re, info = None):
+    def log_response(self, cmd, re, info=None):
         '''
         '''
         cmd = self._remove_eol(cmd)
@@ -112,7 +112,7 @@ class Communicator(ConfigLoadable):
         else:
             msg = '%s ===>> %s' % (cmd, re)
 
-        self.info(msg, decorate = False)
+        self.info(msg, decorate=False)
 
 
     def _remove_eol(self, re):

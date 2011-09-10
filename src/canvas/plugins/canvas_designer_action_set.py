@@ -30,14 +30,14 @@ class CanvasDesignerActionSet(WorkbenchActionSet):
 #    menus = [
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
-    actions = [Action(name = 'New Canvas',
-                      path = 'MenuBar/File',
-                    class_name = 'src.canvas.plugins.canvas_designer_actions:NewCanvasAction'
+    actions = [Action(name='New Canvas',
+                      path='MenuBar/File',
+                    class_name='src.canvas.plugins.canvas_designer_actions:NewCanvasAction'
 
                     ),
-                Action(name = 'Open Canvas',
-                       path = 'MenuBar/File',
-                       class_name = 'src.canvas.plugins.canvas_designer_actions:OpenCanvasAction'
+                Action(name='Open Canvas',
+                       path='MenuBar/File',
+                       class_name='src.canvas.plugins.canvas_designer_actions:OpenCanvasAction'
 
                        ),
 

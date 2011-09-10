@@ -35,13 +35,13 @@ class Experiment(EnvisageEditable):
     '''
     analyses = List(Analysis)
     blanks = List(Analysis)
-    database = Instance(DatabaseAdapter, transient = True)
-    extraction_line_manager = Instance(ExtractionLineManager, transient = True)
-    graph = Instance(Graph, transient = True)
+    database = Instance(DatabaseAdapter, transient=True)
+    extraction_line_manager = Instance(ExtractionLineManager, transient=True)
+    graph = Instance(Graph, transient=True)
 
     active_analysis = Instance(Analysis)
 
-    spectrometer = Instance(Spectrometer, transient = True)
+    spectrometer = Instance(Spectrometer, transient=True)
     file_extension = '.pxp'
     _alive = Bool(False)
 
@@ -49,17 +49,17 @@ class Experiment(EnvisageEditable):
     start_with_blank = True
 
     db_id = 0
-    _selected = Any(transient = True)
+    _selected = Any(transient=True)
     def _spectrometer_default(self):
         '''
         '''
-        return Spectrometer(name = 'ArgusVI')
+        return Spectrometer(name='ArgusVI')
 
     def execute(self):
         '''
         '''
 
-        t = Thread(target = self._execute_)
+        t = Thread(target=self._execute_)
         t.start()
 
         #process view wants a return valve
@@ -91,9 +91,9 @@ class Experiment(EnvisageEditable):
         for a in self.analyses:
             self.active_analysis = a
             a.database = self.database
-            a.execute(dict(spectrometer = self.spectrometer,
-                           extraction_line_manager = self.extraction_line_manager,
-                           experiment_id = self.db_id
+            a.execute(dict(spectrometer=self.spectrometer,
+                           extraction_line_manager=self.extraction_line_manager,
+                           experiment_id=self.db_id
                            ))
 
         self._post_execute_()
@@ -104,12 +104,12 @@ class Experiment(EnvisageEditable):
             self.active_analysis.kill()
         self._alive = False
 
-    def save(self, path = None):
+    def save(self, path=None):
         oldname, path = self._pre_save(path)
         self._dump_items(path, self)
         return oldname
 
-    def bootstrap(self, p, database = None):
+    def bootstrap(self, p, database=None):
         '''
             @type p: C{str}
             @param p:
@@ -140,8 +140,8 @@ class Experiment(EnvisageEditable):
 
     def _add_blank_fired(self):
 
-        a = self._analysis_factory(kind = 'blank',
-                                   prep_script = self.active_analysis.prep_script
+        a = self._analysis_factory(kind='blank',
+                                   prep_script=self.active_analysis.prep_script
                                    )
         if self._selected:
             index = self.analyses.index(self._selected[-1])
@@ -154,12 +154,12 @@ class Experiment(EnvisageEditable):
             but are assigned by the analysis
         '''
         a = self._analysis_factory()
-        a.edit_traits(kind = 'livemodal')
+        a.edit_traits(kind='livemodal')
 
     def _analysis_factory(self, *args, **kw):
         self.dirty = True
-        a = Analysis(database = self.database,
-                     experiment = self,
+        a = Analysis(database=self.database,
+                     experiment=self,
                      **kw)
         return a
 
@@ -172,28 +172,28 @@ class Experiment(EnvisageEditable):
     def traits_view(self):
         '''
         '''
-        cols = [ObjectColumn(name = 'kind'),
-                ObjectColumn(name = 'runid', width = 50, editable = False),
-              ObjectColumn(name = 'power', width = 50),
-              ObjectColumn(name = 'prep_script')
+        cols = [ObjectColumn(name='kind'),
+                ObjectColumn(name='runid', width=50, editable=False),
+              ObjectColumn(name='power', width=50),
+              ObjectColumn(name='prep_script')
               #ObjectColumn(name = '')
               ]
-        editor = TableEditor(columns = cols,
-                             row_factory = self.row_factory,
-                             show_toolbar = True,
-                             deletable = True,
-                             selection_mode = 'rows',
-                             selected = '_selected')
-        v = View(Item('analyses', editor = editor, show_label = False),
-                 HGroup(Item('add_blank', enabled_when = 'analyses', show_label = False)),
-                 height = 500,
-                 width = 500)
+        editor = TableEditor(columns=cols,
+                             row_factory=self.row_factory,
+                             show_toolbar=True,
+                             deletable=True,
+                             selection_mode='rows',
+                             selected='_selected')
+        v = View(Item('analyses', editor=editor, show_label=False),
+                 HGroup(Item('add_blank', enabled_when='analyses', show_label=False)),
+                 height=500,
+                 width=500)
         return v
 
     def graph_view(self):
         '''
         '''
-        v = View(Item('graph', show_label = False))
+        v = View(Item('graph', show_label=False))
         return v
 #============= views ===================================
 

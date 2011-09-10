@@ -48,7 +48,7 @@ def name_generator(base):
         yield('%s %i' % (base, i))
         i += 1
 
-def new_id(canvas = None, valid = True):
+def new_id(canvas=None, valid=True):
     '''
     '''
     id = id_gen.next()
@@ -100,7 +100,7 @@ class SceneLoader(object):
         sg.root.add(t)
 
         if sg.use_view_cube:
-            vc = ViewCube(translate = (10, 10, 0))
+            vc = ViewCube(translate=(10, 10, 0))
             vc.id = 1
             sg.root.add(vc)
 
@@ -419,7 +419,7 @@ class SceneLoader(object):
         valve.add(bb)
         valve.high_side = bb
 
-    def part_factory(self, factory, name, translate, parentid, sg, dependencies = None, **kw):
+    def part_factory(self, factory, name, translate, parentid, sg, dependencies=None, **kw):
         '''
         '''
         p = factory(**kw)
@@ -475,7 +475,7 @@ class SceneLoader(object):
 
             if config.has_option(section, 'radius'):
                 kw['radius'] = config.getfloat(section, 'radius')
-            self.part_factory(factory, name, translate, parent, sg, dependencies = dep, **kw)
+            self.part_factory(factory, name, translate, parent, sg, dependencies=dep, **kw)
 
 
 

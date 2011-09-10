@@ -28,7 +28,7 @@ pageinfo = 'report'
 
 from reportlab.platypus.flowables import Flowable
 class FlowableGraph(Flowable):
-    def __init__(self, g, xoffset = 0, size = None, fillcolor = 'red', strokcolor = 'black'):
+    def __init__(self, g, xoffset=0, size=None, fillcolor='red', strokcolor='black'):
         self.graph = g
         self.xoffset = xoffset
         if size is None:
@@ -41,7 +41,7 @@ class FlowableGraph(Flowable):
         canvas = self.canv
         canvas.translate(self.xoffset, 0)
         canvas.scale(self.scale, self.scale)
-        self.graph.render_to_pdf(canvas = canvas, dest_box = (0, 0, self.size / inch, self.size / inch))
+        self.graph.render_to_pdf(canvas=canvas, dest_box=(0, 0, self.size / inch, self.size / inch))
 
 
 class Report:
@@ -141,7 +141,7 @@ class Report:
 #        report_text.append(ta)    
 #         
         report_text = self.report_text
-        doc.build(report_text, onFirstPage = self.create_cover_page, onLaterPages = self.create_report_page)
+        doc.build(report_text, onFirstPage=self.create_cover_page, onLaterPages=self.create_report_page)
 #        
 #        for i in range(20): 
 #            bogustext = ("This is Paragraph number %s.  " % i) *20 

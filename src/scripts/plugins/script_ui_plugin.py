@@ -55,9 +55,9 @@ class ScriptUIPlugin(CoreUIPlugin):
         if smanager is not None:
             smanager.on_trait_change(obj.selected_update, 'selected')
 
-        args = dict(id = 'script.help',
-                  name = 'Script Help',
-                  obj = obj
+        args = dict(id='script.help',
+                  name='Script Help',
+                  obj=obj
                   )
         return self.traitsuiview_factory(args, kw)
 
@@ -66,15 +66,15 @@ class ScriptUIPlugin(CoreUIPlugin):
 
         smanager = self._get_script_manager()
 
-        obj = ProcessView(script_manager = smanager)
+        obj = ProcessView(script_manager=smanager)
         smanager.process_view = obj
         if smanager is not None:
             smanager.on_trait_change(obj.selected_update, 'selected')
 
 
-        args = dict (id = 'script.process',
-                         name = 'Script Process',
-                         obj = obj,
+        args = dict (id='script.process',
+                         name='Script Process',
+                         obj=obj,
 
                          )
         return self.traitsuiview_factory(args, kw)
@@ -85,10 +85,10 @@ class ScriptUIPlugin(CoreUIPlugin):
             @param **kw:
         '''
         manager = self._get_script_manager()
-        args = dict (id = 'script.errors',
-                         name = 'Script Errors',
-                         obj = manager,
-                         view = 'error_view',
+        args = dict (id='script.errors',
+                         name='Script Errors',
+                         obj=manager,
+                         view='error_view',
                          )
         return self.traitsuiview_factory(args, kw)
 

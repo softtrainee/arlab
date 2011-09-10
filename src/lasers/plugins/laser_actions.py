@@ -22,7 +22,7 @@ from src.envisage.core.action_helper import open_manager
 
 #============= local library imports  ==========================
 
-def get_manager(event, app = None):
+def get_manager(event, app=None):
     if app is None:
         app = event.window.application
     base = 'src.managers.laser_managers.{}'
@@ -44,7 +44,7 @@ class OpenPatternManagerAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
-            open_manager(manager.stage_manager.pattern_manager, view = 'pattern_maker_view')
+            open_manager(manager.stage_manager.pattern_manager, view='pattern_maker_view')
 
 #class OpenCalibrationManagerAction(Action):
 #    def perform(self, event):
@@ -56,7 +56,7 @@ class OpenMotionControllerManagerAction(Action):
     def perform(self, event):
         man = get_manager(event)
         if man is not None:
-            m = man.stage_manager.motion_configure_factory(view_style = 'full_view')
+            m = man.stage_manager.motion_configure_factory(view_style='full_view')
 
             open_manager(m)
 

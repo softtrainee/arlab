@@ -81,15 +81,15 @@ class EnvironmentalManager(Manager):
     def traits_view(self):
         '''
         '''
-        g = VGroup(Item('coolant_temp', label = 'Coolant Temp', style = 'readonly'),
-                 Item('coolant_average', label = 'Avg.', format_str = '%0.2f', style = 'readonly'),
-                 Item('coolant_std', label = 'Std.', format_str = '%0.2f', style = 'readonly'),
-                 Item('coolant_trend', label = 'Trend', style = 'readonly'),
+        g = VGroup(Item('coolant_temp', label='Coolant Temp', style='readonly'),
+                 Item('coolant_average', label='Avg.', format_str='%0.2f', style='readonly'),
+                 Item('coolant_std', label='Std.', format_str='%0.2f', style='readonly'),
+                 Item('coolant_trend', label='Trend', style='readonly'),
 
                  )
 
         v = View(g,
-               resizable = True)
+               resizable=True)
 
         return v
 #============= views ===================================

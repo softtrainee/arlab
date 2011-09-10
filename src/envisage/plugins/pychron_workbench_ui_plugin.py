@@ -65,9 +65,9 @@ class PychronWorkbenchUIPlugin(CoreUIPlugin):
         if smanager is not None:
             smanager.on_trait_change(obj.selected_update, 'selected')
 
-        args = dict(id = 'pychron.process_view',
-                         name = 'Process',
-                         obj = obj
+        args = dict(id='pychron.process_view',
+                         name='Process',
+                         obj=obj
                        )
         return self.traitsuiview_factory(args, kw)
 

@@ -48,7 +48,7 @@ class LaserShotHistory(HasTraits):
     history = List(LaserShot)
     dump = Button
     clear = Button
-    count = Property(depends_on = 'history')
+    count = Property(depends_on='history')
     view_mode = Enum('detail', 'simple')
 
     def __init__(self, *args, **kw):
@@ -107,8 +107,8 @@ class LaserShotHistory(HasTraits):
         '''
         n = len(self.history)
 
-        shot = LaserShot(id = n,
-                       timestamp = generate_timestamp(),
+        shot = LaserShot(id=n,
+                       timestamp=generate_timestamp(),
                        **kw)
         self.history.append(shot)
         self.__dump()
@@ -117,19 +117,19 @@ class LaserShotHistory(HasTraits):
         '''
         '''
 
-        cols = [ObjectColumn(name = 'id'),
-              ObjectColumn(name = 'mode'),
-              ObjectColumn(name = 'timestamp')]
-        table_editor = TableEditor(columns = cols,
-                                 editable = False)
-        detail_view = Group(Item('dump', show_label = False),
-                          Item('clear', show_label = False),
-                          Item('history', editor = table_editor,
-                               show_label = False),
-                         visible_when = 'view_mode=="detail"',
+        cols = [ObjectColumn(name='id'),
+              ObjectColumn(name='mode'),
+              ObjectColumn(name='timestamp')]
+        table_editor = TableEditor(columns=cols,
+                                 editable=False)
+        detail_view = Group(Item('dump', show_label=False),
+                          Item('clear', show_label=False),
+                          Item('history', editor=table_editor,
+                               show_label=False),
+                         visible_when='view_mode=="detail"',
                          )
         simple_view = Group(Item('count'),
-                          visible_when = 'view_mode=="simple"')
+                          visible_when='view_mode=="simple"')
         v = View(detail_view,
                simple_view)
 

@@ -41,12 +41,12 @@ class VideoStageManager(StageManager, Videoable):
 
     canvas_editor_klass = VideoComponentEditor
 #    calibration_manager = Instance(CalibrationManager)
-    camera_xcoefficients = Property(String(enter_set = True, auto_set = False),
-                                   depends_on = '_camera_xcoefficients')
+    camera_xcoefficients = Property(String(enter_set=True, auto_set=False),
+                                   depends_on='_camera_xcoefficients')
     _camera_xcoefficients = String
 
-    camera_ycoefficients = Property(String(enter_set = True, auto_set = False),
-                                   depends_on = '_camera_ycoefficients')
+    camera_ycoefficients = Property(String(enter_set=True, auto_set=False),
+                                   depends_on='_camera_ycoefficients')
     _camera_ycoefficients = String
 
     camera_calibration_manager = Instance(CameraCalibrationManager)
@@ -57,14 +57,14 @@ class VideoStageManager(StageManager, Videoable):
     focus_z = Float
 
 
-    drive_xratio = Property(Float(enter_set = True,
-                                   auto_set = False
-                                   ), depends_on = '_drive_xratio')
+    drive_xratio = Property(Float(enter_set=True,
+                                   auto_set=False
+                                   ), depends_on='_drive_xratio')
     _drive_xratio = Float
 
-    drive_yratio = Property(Float(enter_set = True,
-                                   auto_set = False
-                                   ), depends_on = '_drive_yratio')
+    drive_yratio = Property(Float(enter_set=True,
+                                   auto_set=False
+                                   ), depends_on='_drive_yratio')
     _drive_yratio = Float
 
     calculate_offsets = Bool
@@ -149,7 +149,7 @@ class VideoStageManager(StageManager, Videoable):
         super(VideoStageManager, self).initialize_stage()
 
 #        if hasattr(self, 'video'):
-        self.video.open(user = 'underlay')
+        self.video.open(user='underlay')
 
         xa = self.stage_controller.axes['x'].drive_ratio
         ya = self.stage_controller.axes['y'].drive_ratio
@@ -164,7 +164,7 @@ class VideoStageManager(StageManager, Videoable):
         super(VideoStageManager, self).kill()
         self.canvas.camera.save_calibration()
 #        if hasattr(self, 'video'):
-        self.video.close(user = 'underlay')
+        self.video.close(user='underlay')
 
 
     def auto_locate(self):
@@ -180,10 +180,10 @@ class VideoStageManager(StageManager, Videoable):
             self.warning('Video not Available')
             video = None
 
-        v = VideoLaserTrayCanvas(parent = self,
-                               padding = 30,
-                               video = video,
-                               map = self._stage_map,
+        v = VideoLaserTrayCanvas(parent=self,
+                               padding=30,
+                               video=video,
+                               map=self._stage_map,
 
                                )
         return v
@@ -195,34 +195,34 @@ class VideoStageManager(StageManager, Videoable):
         r = self.canvas.padding_right
         t = self.canvas.padding_top
         b = self.canvas.padding_bottom
-        return self.canvas_editor_klass(width = w + l + r,
-                                          height = h + t + b)
+        return self.canvas_editor_klass(width=w + l + r,
+                                          height=h + t + b)
     def _sconfig__group__(self):
         g = super(VideoStageManager, self)._sconfig__group__()
         g.content.append(Group(Item('camera_xcoefficients'),
                                Item('camera_ycoefficients'),
                                Item('drive_xratio'),
                                Item('drive_yratio'),
-                               HGroup(Item('calculate', show_label = False), Item('calculate_offsets'), spring),
+                               HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
                                Item('pxpercmx'),
                                Item('pxpercmy'),
 
-                               HGroup(Item('calibrate_focus', show_label = False), Spring(width = 20,
-                                                                                          springy = False),
+                               HGroup(Item('calibrate_focus', show_label=False), Spring(width=20,
+                                                                                          springy=False),
                                       Item('focus_z',
-                                            label = 'Focus',
-                                            style = 'readonly'
+                                            label='Focus',
+                                            style='readonly'
                                             )),
-                               label = 'Camera'))
+                               label='Camera'))
         return g
 
 
-    def _calculate_indicator_positions(self, shift = None):
+    def _calculate_indicator_positions(self, shift=None):
         ccm = self.camera_calibration_manager
 
         zoom = self.parent.zoom
-        src, name = self.video_manager.snapshot(identifier = zoom)
-        ccm.image_factory(src = src)
+        src, name = self.video_manager.snapshot(identifier=zoom)
+        ccm.image_factory(src=src)
 
         ccm.process_image()
         ccm.title = name
@@ -230,9 +230,9 @@ class VideoStageManager(StageManager, Videoable):
         cond = Condition()
         ccm.cond = cond
         cond.acquire()
-        do_later(ccm.edit_traits, view = 'snapshot_view')
+        do_later(ccm.edit_traits, view='snapshot_view')
         if shift:
-            self.stage_controller.linear_move(*shift, block = False)
+            self.stage_controller.linear_move(*shift, block=False)
 
         cond.wait()
         cond.release()
@@ -248,14 +248,14 @@ class VideoStageManager(StageManager, Videoable):
 
                 x = self.stage_controller.x + rdxmm
                 y = self.stage_controller.y + rdymm
-                self.stage_controller.linear_move(x, y, block = True)
+                self.stage_controller.linear_move(x, y, block=True)
 
                 time.sleep(2)
 
                 polygons1 = ccm.polygons
                 x = self.stage_controller.x - rdxmm
                 y = self.stage_controller.y - rdymm
-                self._calculate_indicator_positions(shift = (x, y))
+                self._calculate_indicator_positions(shift=(x, y))
 
                 polygons2 = ccm.polygons
 
@@ -284,7 +284,7 @@ class VideoStageManager(StageManager, Videoable):
     def _calculate_fired(self):
 
 
-        t = Thread(target = self._calculate_camera_parameters)
+        t = Thread(target=self._calculate_camera_parameters)
         t.start()
 
 
@@ -296,8 +296,8 @@ if __name__ == '__main__':
 
 
     setup('stage_manager')
-    s = VideoStageManager(name = 'co2stage',
-                     configuration_dir_name = 'co2',
+    s = VideoStageManager(name='co2stage',
+                     configuration_dir_name='co2',
                      )
 
 #    i = Initializer()

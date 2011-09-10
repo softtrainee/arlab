@@ -52,11 +52,11 @@ class AerotechMotionController(MotionController):
         path = self.configuration_dir_path
         for i, a in enumerate(['x', 'y', 'z']):
             self.axes[a] = self._axis_factory(path,
-                                            name = a.upper(),
-                                            parent = self,
-                                            id = i + 1,
-                                            negative_limit = -5,
-                                            positive_limit = 5)
+                                            name=a.upper(),
+                                            parent=self,
+                                            id=i + 1,
+                                            negative_limit= -5,
+                                            positive_limit=5)
 
         return True
 
@@ -92,7 +92,7 @@ class AerotechMotionController(MotionController):
 
         cmd = 'INDEX'
 
-        cmd = self._build_command(cmd, axes, values = values)
+        cmd = self._build_command(cmd, axes, values=values)
         resp = self.ask(cmd)
         return self._parse_response(resp)
 
@@ -147,7 +147,7 @@ class AerotechMotionController(MotionController):
         axis = self.axes[key]
         rtype = 4 #absolute command posisiton
         axis = '%s%i' % (axis.name, rtype)
-        cmd = self._build_command(cmd, axis, remote = False)
+        cmd = self._build_command(cmd, axis, remote=False)
         r = self.ask(cmd)
 
         return r
@@ -183,7 +183,7 @@ class AerotechMotionController(MotionController):
 
             self.warning('%s' % w)
 
-    def _build_command(self, cmd, axes, values = None, remote = True):
+    def _build_command(self, cmd, axes, values=None, remote=True):
         '''
             @type cmd: C{str}
             @param cmd:
@@ -235,7 +235,7 @@ class AerotechMotionController(MotionController):
         cmd = 'PS'
 
 
-        cmd = self._build_command(cmd, n, remote = False)
+        cmd = self._build_command(cmd, n, remote=False)
         r = self.ask(cmd)
         if self.simulation:
             r = '4'
@@ -248,7 +248,7 @@ class AerotechMotionController(MotionController):
         '''
 
         r = self._parse_response(r)
-        return make_bitarray(int(r), width = 32)
+        return make_bitarray(int(r), width=32)
 
     def _parse_response(self, resp):
         '''

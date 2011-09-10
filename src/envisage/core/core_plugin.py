@@ -24,7 +24,7 @@ class CorePlugin(Plugin):
         
     '''
     SERVICE_OFFERS = 'envisage.service_offers'
-    service_offers = List(contributes_to = SERVICE_OFFERS)
+    service_offers = List(contributes_to=SERVICE_OFFERS)
     def service_offer_factory(self, **kw):
         '''
         

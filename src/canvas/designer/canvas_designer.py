@@ -41,12 +41,12 @@ class CanvasDesigner(EnvisageEditable):
 #        d.items = self._load_fired(d)
         return d
 #    
-    def save(self, path = None):
+    def save(self, path=None):
         oldname, path = self._pre_save(path)
         self._dump_items(path, self.canvas.items)
         return oldname
 
-    def bootstrap(self, path = None):
+    def bootstrap(self, path=None):
         '''
         '''
 
@@ -64,7 +64,7 @@ class CanvasDesigner(EnvisageEditable):
         lines = [l.split(',') for l in lines if l]
         lines = [(l[0], l[1], tuple(l[2:])) for l in lines if len(l) == 4]
         for klass, name, pos in lines:
-            self.canvas.add_item(klass, args = dict(name = name, pos = pos), use_editor = False)
+            self.canvas.add_item(klass, args=dict(name=name, pos=pos), use_editor=False)
 
         f.close()
 
@@ -75,13 +75,13 @@ class CanvasDesigner(EnvisageEditable):
         '''
         v = View(
                  Item(
-                      'canvas', show_label = False,
-                       style = 'custom',
-                       editor = ComponentEditor()
+                      'canvas', show_label=False,
+                       style='custom',
+                       editor=ComponentEditor()
                       ),
-             resizable = True,
-             width = 800,
-             height = 800
+             resizable=True,
+             width=800,
+             height=800
              )
         return v
 if __name__ == '__main__':

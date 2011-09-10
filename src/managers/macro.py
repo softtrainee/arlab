@@ -29,7 +29,7 @@ class Macro(HasTraits):
         G{classtree}
     '''
     _recording = False
-    delay = Float(enter_set = True, auto_set = False)
+    delay = Float(enter_set=True, auto_set=False)
     def __init__(self, *args, **kw):
         '''
             @type *args: C{str}
@@ -65,7 +65,7 @@ class Macro(HasTraits):
         '''
         v = View(Item('delay',
                     ),
-                kind = 'livemodal'
+                kind='livemodal'
                 )
         return v
 _Macro_ = Macro()

@@ -48,7 +48,7 @@ class FileMonitor(Loggable):
         '''
         '''
         self.info('Monitoring %s' % self.watch_dir)
-        t = Thread(target = self._run_)
+        t = Thread(target=self._run_)
         t.start()
 
     def _run_(self, *args):

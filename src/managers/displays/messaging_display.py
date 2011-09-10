@@ -91,7 +91,7 @@ class MultiPanelMessagingDisplay(HasTraits):
             @type name: C{str}
             @param name:
         '''
-        md = MessagingDisplay(name = name)
+        md = MessagingDisplay(name=name)
         md.register(name)
         self.panels.append(md)
 
@@ -108,20 +108,20 @@ class MultiPanelMessagingDisplay(HasTraits):
                 color = kw['color'] if 'color' in kw else None
 
                 if mk == name:
-                    p.add_text(name = name, msg = msg, color = color)
+                    p.add_text(name=name, msg=msg, color=color)
 
     def traits_view(self):
         '''
         '''
-        v = View(Item('panels', style = 'custom',
-                    show_label = False,
-                    editor = ListEditor(use_notebook = True,
-                                      page_name = '.name',
-                                               dock_style = 'horizontal')),
-                title = self.title,
-                width = self.width,
-                height = self.height,
-                resizable = True
+        v = View(Item('panels', style='custom',
+                    show_label=False,
+                    editor=ListEditor(use_notebook=True,
+                                      page_name='.name',
+                                               dock_style='horizontal')),
+                title=self.title,
+                width=self.width,
+                height=self.height,
+                resizable=True
                 )
         return v
 #============= views ===================================

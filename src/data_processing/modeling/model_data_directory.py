@@ -28,7 +28,7 @@ class ModelDataDirectory(HasTraits):
     '''
     show = Bool
     bind = Bool
-    name = Property(depends_on = 'path')
+    name = Property(depends_on='path')
     path = Str
     id = 0
     modeler = Any
@@ -41,7 +41,7 @@ class ModelDataDirectory(HasTraits):
         '''
         '''
         if self.modeler:
-            self.modeler.graph.set_group_visiblity(self.show, gid = self.id)
+            self.modeler.graph.set_group_visiblity(self.show, gid=self.id)
             self.modeler.update_graph_title()
 
 

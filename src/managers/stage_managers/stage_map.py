@@ -38,14 +38,14 @@ class SampleHoleAdapter(TabularAdapter):
 class StageMap(HasTraits):
     file_path = Str
     #holes = Dict
-    name = Property(depends_on = 'file_path')
-    bitmap_path = Property(depends_on = 'file_path')
+    name = Property(depends_on='file_path')
+    bitmap_path = Property(depends_on='file_path')
 #    valid_holes = None
 #    use_valid_holes = True
     #holes = Property
     sample_holes = List(SampleHole)
 
-    g_dimension = Float(enter_set = True, auto_set = False)
+    g_dimension = Float(enter_set=True, auto_set=False)
     g_shape = Enum('circle', 'square')
 
     def get_hole_pos(self, key):
@@ -104,12 +104,12 @@ class StageMap(HasTraits):
                 x, y = line.split(',')
                 hole = str(hi + 1)
 
-            self.sample_holes.append(SampleHole(id = hole,
-                                                 x = float(x),
-                                                 y = float(y),
-                                                 render = 'x' if hole in valid_holes else '',
-                                                 shape = shape,
-                                                 dimension = float(dimension)
+            self.sample_holes.append(SampleHole(id=hole,
+                                                 x=float(x),
+                                                 y=float(y),
+                                                 render='x' if hole in valid_holes else '',
+                                                 shape=shape,
+                                                 dimension=float(dimension)
 
                                                  ))
 
@@ -123,16 +123,16 @@ class StageMap(HasTraits):
 #        editor = TableEditor(columns = cols)
 
 
-        editor = TabularEditor(adapter = SampleHoleAdapter())
+        editor = TabularEditor(adapter=SampleHoleAdapter())
         v = View(
-                 HGroup(Item('g_shape', show_label = False),
-                        Item('g_dimension', show_label = False)
+                 HGroup(Item('g_shape', show_label=False),
+                        Item('g_dimension', show_label=False)
                         ),
 
                  Item('sample_holes',
-                      show_label = False, editor = editor),
-                 height = 500, width = 250,
-                 resizable = True
+                      show_label=False, editor=editor),
+                 height=500, width=250,
+                 resizable=True
                  )
         return v
 #============= EOF =============================================

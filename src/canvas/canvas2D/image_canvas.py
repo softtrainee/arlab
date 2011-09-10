@@ -32,21 +32,21 @@ class ImageCanvas(BaseDataCanvas):
         super(ImageCanvas, self).__init__(*args, **kw)
 
 
-        image_underlay = ImageUnderlay(component = self, image = self.image)
+        image_underlay = ImageUnderlay(component=self, image=self.image)
 
         self.underlays.insert(0, image_underlay)
 
         #self.overlays.pop()
 
-        for key, d in [('x_grid', dict(line_color = (1, 1, 0),
-                                     line_width = 1,
-                                     line_style = 'dash',
-                                     visible = self.show_grids)
+        for key, d in [('x_grid', dict(line_color=(1, 1, 0),
+                                     line_width=1,
+                                     line_style='dash',
+                                     visible=self.show_grids)
                                      ),
-                       ('y_grid', dict(line_color = (1, 1, 0),
-                                      line_width = 1,
-                                      line_style = 'dash',
-                                      visible = self.show_grids))]:
+                       ('y_grid', dict(line_color=(1, 1, 0),
+                                      line_width=1,
+                                      line_style='dash',
+                                      visible=self.show_grids))]:
             o = getattr(self, key)
             o.trait_set(**d)
 

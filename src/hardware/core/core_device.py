@@ -41,16 +41,16 @@ class CoreDevice(ViewableDevice):
     id_response = ''
 
     
-    scan_device=False
+    scan_device = False
     scan_func = None
     scan_lock = None
     timer = None
     scan_period = 1000
-    scan_units='ms'
+    scan_units = 'ms'
     
-    current_value=0
+    current_value = 0
     
-    time_dict=dict(ms=1, s=1000, m=60.0*1000, h=60.0*60.0*1000)
+    time_dict = dict(ms=1, s=1000, m=60.0 * 1000, h=60.0 * 60.0 * 1000)
 
     def get(self):
         return self.current_value
@@ -64,9 +64,9 @@ class CoreDevice(ViewableDevice):
         if communicator_type is not None:
             gdict = globals()
             if communicator_type in gdict:
-                return gdict[communicator_type](name = '_'.join((self.name, communicator_type)),
-                                   id_query = self.id_query,
-                                   id_response = self.id_response
+                return gdict[communicator_type](name='_'.join((self.name, communicator_type)),
+                                   id_query=self.id_query,
+                                   id_response=self.id_response
                                 )
 
     def load(self, *args, **kw):
@@ -137,7 +137,7 @@ class CoreDevice(ViewableDevice):
         if self._communicator is not None:
             return self._communicator.read(*args, **kw)
 
-    def get_random_value(self, min = 0, max = 10):
+    def get_random_value(self, min=0, max=10):
         '''
             convienent method for getting a random integer between min and max
             
@@ -169,9 +169,9 @@ class CoreDevice(ViewableDevice):
             if v is not None:
 #                if isinstance(v, tuple):
 #                    self.current_value = v[0]
-                self.current_value=v
-                x=self.graph.record(v)        
-                self.data_manager.write_to_frame((x,v))
+                self.current_value = v
+                x = self.graph.record(v)        
+                self.data_manager.write_to_frame((x, v))
             
             else:
                 '''
@@ -200,10 +200,10 @@ class CoreDevice(ViewableDevice):
 #        if not self.simulation:
         self.info('Starting scan')
         
-        self.data_manager=CSVDataManager()
-        self.frame_name=self.data_manager.new_frame()
+        self.data_manager = CSVDataManager()
+        self.frame_name = self.data_manager.new_frame()
         
-        sp=self.scan_period*self.time_dict[self.scan_units]
+        sp = self.scan_period * self.time_dict[self.scan_units]
         
         self.timer = Timer(sp, self.scan)
         self.timer.Start()

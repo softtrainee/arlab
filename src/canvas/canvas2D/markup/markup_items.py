@@ -40,7 +40,7 @@ class MarkupItem(HasTraits):
     state = False
     default_color = (1, 0, 0)
     active_color = (0, 1, 0)
-    canvas = Any(transient = True)
+    canvas = Any(transient=True)
 
     def __init__(self, x, y, *args, **kw):
         self.x = x
@@ -178,17 +178,17 @@ class CalibrationItem(MarkupItem, CalibrationObject):
     def __init__(self, x, y, rotation, *args, **kw):
         super(CalibrationItem, self).__init__(x, y, *args, **kw)
 
-        self.center = Circle(x, y, 30, canvas = self.canvas)
+        self.center = Circle(x, y, 30, canvas=self.canvas)
 
         r = 10
         rx = x + r * math.cos(rotation)
         ry = y + r * math.cos(rotation)
 
-        self.right = Circle(rx, ry, 19, default_color = (1, 1, 1), canvas = self.canvas)
-        self.line = Line(Point(x, y, canvas = self.canvas),
-                          Point(rx, ry, canvas = self.canvas),
-                          default_color = (1, 1, 1),
-                          canvas = self.canvas)
+        self.right = Circle(rx, ry, 19, default_color=(1, 1, 1), canvas=self.canvas)
+        self.line = Line(Point(x, y, canvas=self.canvas),
+                          Point(rx, ry, canvas=self.canvas),
+                          default_color=(1, 1, 1),
+                          canvas=self.canvas)
 
     def get_rotation(self):
         return self.line.data_rotation

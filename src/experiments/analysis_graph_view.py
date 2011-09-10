@@ -76,12 +76,12 @@ class AnalysisGraphView(HasTraits):
         '''
         '''
         return View(
-                    Item('graphs', editor = ListEditor(use_notebook = True,
+                    Item('graphs', editor=ListEditor(use_notebook=True,
                                                        #page_name = '.name',
-                                                       selected = 'selected'
+                                                       selected='selected'
                                                        ),
-                         style = 'custom',
-                         show_label = False,
+                         style='custom',
+                         show_label=False,
                          )
                          )
 #============= EOF =====================================

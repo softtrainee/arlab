@@ -33,7 +33,7 @@ class MProgressDialog(ProgressDialog):
         '''
         style = wx.DEFAULT_FRAME_STYLE | wx.FRAME_NO_WINDOW_MENU | wx.CLIP_CHILDREN
 
-        dialog = wx.Frame(parent, -1, self.title, style = style,
+        dialog = wx.Frame(parent, -1, self.title, style=style,
                           #size = self.size,
                           #pos = self.position
                           )
@@ -93,7 +93,7 @@ class Initializer(Loggable):
         if add:
             ilist.append(a)
 
-    def run(self, application = None):
+    def run(self, application=None):
         '''
         '''
         self.application = application
@@ -130,7 +130,7 @@ class Initializer(Loggable):
 
         super(Initializer, self).info(msg, **kw)
 
-    def _run_(self, name = None , device_dir = None, initialization_dir = None, manager = None, plugin_name = None):
+    def _run_(self, name=None , device_dir=None, initialization_dir=None, manager=None, plugin_name=None):
         '''
         '''
         if device_dir is None:
@@ -213,7 +213,7 @@ class Initializer(Loggable):
 #                     co2 = 'FusionsCO2'
 #                     )
 
-            d = dict(name = mi, device_dir = device_dir, manager = man, plugin_name = manager.name)
+            d = dict(name=mi, device_dir=device_dir, manager=man, plugin_name=manager.name)
             self.add_initialization(d)
 
     def load_devices(self, manager, name, devices, plugin_name):
@@ -229,16 +229,16 @@ class Initializer(Loggable):
                 continue
 
             dev = None
-            pdev = self.parser.get_device(name, device, plugin_name, element = True)
+            pdev = self.parser.get_device(name, device, plugin_name, element=True)
             dev_class = pdev.get('klass')
             try:
 
                 dev = getattr(manager, device)
                 if dev is None:
-                    dev = manager.create_device(device, dev_class = dev_class)
+                    dev = manager.create_device(device, dev_class=dev_class)
 
             except AttributeError:
-                dev = manager.create_device(device, dev_class = dev_class)
+                dev = manager.create_device(device, dev_class=dev_class)
 
             if dev is None:
                 self.warning('No device for %s' % device)
@@ -252,7 +252,7 @@ class Initializer(Loggable):
                     self.application.register_service(ICoreDevice, dev)
 
                 self.info('opening {}'.format(dev.name))
-                if not dev.open(prefs = self.device_prefs):
+                if not dev.open(prefs=self.device_prefs):
                     self.info('failed connecting to {}'.format(dev.name))
                 else:
                     opened.append(dev)
@@ -261,7 +261,7 @@ class Initializer(Loggable):
 
         for  od in opened:
             self.info('Initializing {}'.format(od.name))
-            result = od.initialize(progress = self.pd)
+            result = od.initialize(progress=self.pd)
             if result is not True:
                 self.warning('Failed setting up communications to {}'.format(od.name))
                 od._communicator.simulation = True
@@ -269,19 +269,19 @@ class Initializer(Loggable):
                 raise NotImplementedError
         
             #setup the scan parameters
-            sc=pdev.get('scan')
+            sc = pdev.get('scan')
             if sc is not None:
-                od.scan_device=sc.lower()=='true'
+                od.scan_device = sc.lower() == 'true'
                 if od.scan_device:
-                    sp=pdev.get('scan_period')
+                    sp = pdev.get('scan_period')
                     try:
-                        od.scan_period=float(sp)
+                        od.scan_period = float(sp)
                     except ValueError:
                         if sp is not None:
                             self.info('invalid scan period {}'.format(sp))
-                    su=pdev.get('scan_units')
-                    if su in ['ms','s','m','h']:
-                        od.scan_units=su
+                    su = pdev.get('scan_units')
+                    if su in ['ms', 's', 'm', 'h']:
+                        od.scan_units = su
                 
             manager.devices.append(od)
                 
@@ -291,8 +291,8 @@ class Initializer(Loggable):
     def load_progress(self, n):
         '''
         '''
-        pd = MProgressDialog(max = n,
-                             size = (550, 15))
+        pd = MProgressDialog(max=n,
+                             size=(550, 15))
 
         pd.open()
         w, h = wx.DisplaySize()

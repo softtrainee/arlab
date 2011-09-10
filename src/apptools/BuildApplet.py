@@ -63,8 +63,8 @@ def buildapplet():
     # Ask for source text if not specified in sys.argv[1:]
 
     if not sys.argv[1:]:
-        filename = EasyDialogs.AskFileForOpen(message = 'Select Python source or applet:',
-                typeList = ('TEXT', 'APPL'))
+        filename = EasyDialogs.AskFileForOpen(message='Select Python source or applet:',
+                typeList=('TEXT', 'APPL'))
         if not filename:
             return
         tp, tf = os.path.split(filename)
@@ -72,8 +72,8 @@ def buildapplet():
             tf = tf[:-3]
         else:
             tf = tf + '.applet'
-        dstfilename = EasyDialogs.AskFileForSave(message = 'Save application as:',
-                savedFileName = tf)
+        dstfilename = EasyDialogs.AskFileForSave(message='Save application as:',
+                savedFileName=tf)
         if not dstfilename: return
         cr, tp = MacOS.GetCreatorAndType(filename)
         if tp == 'APPL':
@@ -130,8 +130,8 @@ def buildapplet():
                 buildtools.update(template, filename, dstfilename)
             else:
                 buildtools.process(template, filename, dstfilename, 1,
-                        rsrcname = rsrcfilename, others = extras, raw = raw,
-                        progress = verbose, destroot = destroot)
+                        rsrcname=rsrcfilename, others=extras, raw=raw,
+                        progress=verbose, destroot=destroot)
 
 def usage():
     print "BuildApplet creates an application from a Python source file"

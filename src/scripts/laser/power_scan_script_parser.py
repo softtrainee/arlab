@@ -22,7 +22,7 @@ limitations under the License.
 #============= local library imports  ==========================
 from src.scripts.core.core_script_parser import CoreScriptParser
 class PowerScanScriptParser(CoreScriptParser):
-    def parse(self, text, check_header = True):
+    def parse(self, text, check_header=True):
 
 
         errors = []
@@ -36,7 +36,7 @@ class PowerScanScriptParser(CoreScriptParser):
             if self.headerindex is not None:
                 text = text[self.headerindex:]
 #        errors += super(PowerScanScriptParser, self).parse(text, check_header = check_header)
-        errors += CoreScriptParser.parse(self, text, check_header = check_header)
+        errors += CoreScriptParser.parse(self, text, check_header=check_header)
         return errors
 
     def raw_parse(self, args):

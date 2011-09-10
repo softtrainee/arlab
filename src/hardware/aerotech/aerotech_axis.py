@@ -24,14 +24,14 @@ from src.hardware.axis import Axis
 class AerotechAxis(Axis):
     '''
     '''
-    feedrate = Float(enter_set = True, auto_set = False)
+    feedrate = Float(enter_set=True, auto_set=False)
     metric_digits = Int
     mlow = Int(1)
     mhigh = Int(8)
 
-    conversion_factor = Float(enter_set = True, auto_set = False)
+    conversion_factor = Float(enter_set=True, auto_set=False)
 
-    rms_current_sample_time = Property(Float(enter_set = True, auto_set = False))
+    rms_current_sample_time = Property(Float(enter_set=True, auto_set=False))
     _rms_current_sample_time = Float
 
     def _validate_rms_current_sample_time(self, s):
@@ -123,9 +123,9 @@ class AerotechAxis(Axis):
         '''
         axis_config = Group(Item('conversion_factor'))
         planes = Group(Item('feedrate'),
-                     Item('metric_digits', editor = RangeEditor(mode = 'spinner',
-                                                             low_name = 'mlow',
-                                                             high_name = 'mhigh')))
+                     Item('metric_digits', editor=RangeEditor(mode='spinner',
+                                                             low_name='mlow',
+                                                             high_name='mhigh')))
         traps = Group(Item('rms_current_sample_time'))
         return View(axis_config,
                     planes,

@@ -112,7 +112,7 @@ class DiodeLaserMonitor(LaserMonitor):
             @param config:
         '''
         self.set_attribute(config, 'max_temp',
-                       'General', 'max_temp', cast = 'float', optional = True)
+                       'General', 'max_temp', cast='float', optional=True)
 
 #    def _get_update_max_temp(self):
 #        '''
@@ -132,11 +132,11 @@ class DiodeLaserMonitor(LaserMonitor):
         manager = self.manager
         #check laser temp
         #self.info('Check laser temperature')
-        lt = manager.get_laser_internal_temperature(verbose = False)
+        lt = manager.get_laser_internal_temperature(verbose=False)
         #self._update_max_temp = lt
         if lt > self.max_temp:
             self.warning('Laser over temperature %0.2f' % lt)
-            manager.emergency_shutoff(reason = 'Over temp %f' % lt)
+            manager.emergency_shutoff(reason='Over temp %f' % lt)
 
 
 #============= views ===================================

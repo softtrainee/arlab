@@ -48,7 +48,7 @@ class RasterCanvas(BaseCanvas):
         self.cells = self.cell_factory()
         self.request_redraw()
 
-    def cell_factory(self, x = None, y = None):
+    def cell_factory(self, x=None, y=None):
         '''
 
         '''
@@ -76,7 +76,7 @@ class RasterCanvas(BaseCanvas):
         finally:
             gc.restore_state()
 
-    def set_cell_value(self, x, y, value, refresh = True):
+    def set_cell_value(self, x, y, value, refresh=True):
         '''
             
         '''
@@ -92,7 +92,7 @@ class RasterCanvas(BaseCanvas):
         if refresh:
             self.request_redraw()
 
-    def _colormap(self, mag, cmin = 0, cmax = 1):
+    def _colormap(self, mag, cmin=0, cmax=1):
         '''
 
         '''
@@ -105,7 +105,7 @@ class RasterCanvas(BaseCanvas):
         return maf(x)
 
 
-    def _color_cell(self, gc, x, y, color, height = 20, width = 20, border = False):
+    def _color_cell(self, gc, x, y, color, height=20, width=20, border=False):
         '''
 
         '''
@@ -141,9 +141,9 @@ class RasterCanvas(BaseCanvas):
         height = 5
         width = 10
         for ci in range(ncolorsteps):
-            color = self._colormap(ci, cmax = ncolorsteps - 1)
+            color = self._colormap(ci, cmax=ncolorsteps - 1)
 
-            self._color_cell(gc, x, y + ci * height, color, width = width, height = height, border = False)
+            self._color_cell(gc, x, y + ci * height, color, width=width, height=height, border=False)
 
         fmt = '%0.2f'
         xx = x + width + 5
@@ -171,7 +171,7 @@ class RasterCanvas(BaseCanvas):
                 yi = yi * ystep + self.centery
                 if j < len(self.ystepper) and i < len(self.xstepper):
                     #get the cells value and colormap it
-                    color = self._colormap(self.cells[i][j], cmax = self.max_value)
-                    self._color_cell(gc, xi, yi, color, width = xstep, height = ystep)
+                    color = self._colormap(self.cells[i][j], cmax=self.max_value)
+                    self._color_cell(gc, xi, yi, color, width=xstep, height=ystep)
 
         gc.restore_state()

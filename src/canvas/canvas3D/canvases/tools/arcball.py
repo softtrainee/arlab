@@ -188,7 +188,7 @@ def Vector3fT ():
     '''
     return zeros (3, 'f')
 
-def Point2fT (x = 0.0, y = 0.0):
+def Point2fT (x=0.0, y=0.0):
     '''
         @type y: C{str}
         @param y:
@@ -252,8 +252,8 @@ def Matrix4fSVD (NewObj):
     Y = 1
     Z = 2
     s = sqrt (
-        ((NewObj [X][X] * NewObj [X][X]) + (NewObj [X][Y] * NewObj [X][Y]) + (NewObj [X][Z] * NewObj [X][Z]) +
-        (NewObj [Y][X] * NewObj [Y][X]) + (NewObj [Y][Y] * NewObj [Y][Y]) + (NewObj [Y][Z] * NewObj [Y][Z]) +
+        ((NewObj [X][X] * NewObj [X][X]) + (NewObj [X][Y] * NewObj [X][Y]) + (NewObj [X][Z] * NewObj [X][Z]) + 
+        (NewObj [Y][X] * NewObj [Y][X]) + (NewObj [Y][Y] * NewObj [Y][Y]) + (NewObj [Y][Z] * NewObj [Y][Z]) + 
         (NewObj [Z][X] * NewObj [Z][X]) + (NewObj [Z][Y] * NewObj [Z][Y]) + (NewObj [Z][Z] * NewObj [Z][Z])) / 3.0)
     return s
 

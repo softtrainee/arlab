@@ -23,7 +23,7 @@ class Installer(object):
     prefix = None
     name = None
     icon_name = None
-    def __init__(self, prefix, name, icon_name = None):
+    def __init__(self, prefix, name, icon_name=None):
         self.prefix = prefix
         self.name = name
         self.icon_name = icon_name

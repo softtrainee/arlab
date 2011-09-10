@@ -36,14 +36,14 @@ class PowerScanScript(CoreScript):
     def get_documentation(self):
         from src.scripts.core.html_builder import HTMLDoc, HTMLText
 
-        doc = HTMLDoc(attribs = 'bgcolor = "#ffffcc" text = "#000000"')
+        doc = HTMLDoc(attribs='bgcolor = "#ffffcc" text = "#000000"')
 
-        doc.add_heading('Power Scan Documentation', heading = 2, color = 'red')
+        doc.add_heading('Power Scan Documentation', heading=2, color='red')
 
-        doc.add_heading('Header', heading = 3)
+        doc.add_heading('Header', heading=3)
         doc.add_text('Configure what measurements to make during scan and how to plot them<br>')
 
-        doc.add_heading('Parameters', heading = 3)
+        doc.add_heading('Parameters', heading=3)
         doc.add_text('Device, Func, Label, Plotid, Series<br>')
         doc.add_list(['Device -- object name of device to measure',
                       'Func -- function to call to get a measurement',
@@ -51,25 +51,25 @@ class PowerScanScript(CoreScript):
                       'Plotid -- plot identifier',
                       'Series -- series identifier'])
 
-        table = doc.add_table(attribs = 'bgcolor="#D3D3D3" width="90%"')
-        r1 = HTMLText('Ex.', face = 'courier', size = '2')
+        table = doc.add_table(attribs='bgcolor="#D3D3D3" width="90%"')
+        r1 = HTMLText('Ex.', face='courier', size='2')
         table.add_row([r1])
 
-        r2 = HTMLText('1,5,0.1,10.', face = 'courier', size = '2')
+        r2 = HTMLText('1,5,0.1,10.', face='courier', size='2')
         table.add_row([r2])
 
-        doc.add_heading('Type A Parameters', heading = 3)
+        doc.add_heading('Type A Parameters', heading=3)
         doc.add_text('Power, Hold <br>')
         doc.add_list(['Power setting (0-100) -- percent of total power',
                       'Hold (secs) -- time to hold power'])
 
-        table = doc.add_table(attribs = 'bgcolor="#D3D3D3" width="90%"')
-        r1 = HTMLText('Ex.', face = 'courier', size = '2')
+        table = doc.add_table(attribs='bgcolor="#D3D3D3" width="90%"')
+        r1 = HTMLText('Ex.', face='courier', size='2')
         table.add_row([r1])
-        r2 = HTMLText('20,10.', face = 'courier', size = '2')
+        r2 = HTMLText('20,10.', face='courier', size='2')
         table.add_row([r2])
 
-        doc.add_heading('Type B Parameters', heading = 3)
+        doc.add_heading('Type B Parameters', heading=3)
         doc.add_text('''PowerStart, PowerEnd, k, Hold<br>
     Step by k from power start to power end and wait for hold secs<br><br>
     ''')
@@ -80,10 +80,10 @@ class PowerScanScript(CoreScript):
                       'Power increment (integer) --',
                       'Hold (secs) -- time to hold power'])
 
-        table = doc.add_table(attribs = 'bgcolor="#D3D3D3" width="90%"')
-        r1 = HTMLText('Ex.', face = 'courier', size = '2')
+        table = doc.add_table(attribs='bgcolor="#D3D3D3" width="90%"')
+        r1 = HTMLText('Ex.', face='courier', size='2')
         table.add_row([r1])
-        r2 = HTMLText('0,50,1,5.', face = 'courier', size = '2')
+        r2 = HTMLText('0,50,1,5.', face='courier', size='2')
         table.add_row([r2])
 
         return doc
@@ -108,8 +108,8 @@ class PowerScanScript(CoreScript):
                     plotid = int(args[3])
                     series = int(args[4])
 
-                    self.scan_setup.append((obj, func, dict(plotid = plotid, series = series,
-                                                        label = label
+                    self.scan_setup.append((obj, func, dict(plotid=plotid, series=series,
+                                                        label=label
                                                         )))
 
 
@@ -137,9 +137,9 @@ class PowerScanScript(CoreScript):
     def set_graph(self):
         '''
         '''
-        g = StackedGraph(window_title = 'Power Scan %s' % self.file_name)
+        g = StackedGraph(window_title='Power Scan %s' % self.file_name)
 
-        g.new_plot(show_legend = 'ur')
+        g.new_plot(show_legend='ur')
         cur_plotid = 0
 
         for _obj, func, plotinfo in self.scan_setup:
@@ -148,14 +148,14 @@ class PowerScanScript(CoreScript):
             series = plotinfo['series']
             label = plotinfo['label']
             if not cur_plotid == plotid:
-                g.new_plot(show_legend = 'ur')
+                g.new_plot(show_legend='ur')
                 cur_plotid = plotid
 
-            g.new_series(type = 'line', render_style = 'connectedpoints', plotid = cur_plotid)
+            g.new_series(type='line', render_style='connectedpoints', plotid=cur_plotid)
             if label is None:
                 label = func
 
-            g.set_series_label(label, series = series, plotid = cur_plotid)
+            g.set_series_label(label, series=series, plotid=cur_plotid)
 
         g.edit_traits()
         self.graph = g

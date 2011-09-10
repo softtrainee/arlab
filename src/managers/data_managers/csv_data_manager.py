@@ -23,14 +23,14 @@ class CSVDataManager(DataManager):
     '''
     '''
 
-    def write_metadata(self, md, frame_key = None):
+    def write_metadata(self, md, frame_key=None):
 
         sline = ['#<metadata>===================================================']
         eline = ['#</metadata>===================================================']
         data = [sline] + md + [eline]
         self.write_to_frame(data, frame_key)
 
-    def write_to_frame(self, datum, frame_key = None):
+    def write_to_frame(self, datum, frame_key=None):
 
         if frame_key is None:
             frame_key = self._current_frame
@@ -39,7 +39,7 @@ class CSVDataManager(DataManager):
         if frame is not None:
             self.new_writer(frame, datum)
 
-    def new_writer(self, p, datum, append = True):
+    def new_writer(self, p, datum, append=True):
         '''
 
         '''

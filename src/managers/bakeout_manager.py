@@ -44,12 +44,12 @@ class BakeoutManager(Manager):
 
     execute = Event
     save = Button
-    execute_label = Property(depends_on = 'alive')
+    execute_label = Property(depends_on='alive')
     alive = Bool(False)
 
-    configurations = Property(depends_on = '_configurations')
+    configurations = Property(depends_on='_configurations')
     _configurations = List
-    configuration = Property(depends_on = '_configuration')
+    configuration = Property(depends_on='_configuration')
     _configuration = String
     buffer = List
     buffer2 = List
@@ -73,7 +73,7 @@ class BakeoutManager(Manager):
     def update_graph_temperature(self, obj, name, old, new):
         if obj.isAlive():
             id = self.graph_info[obj.name]['id']
-            self.graph.record(new, series = id)
+            self.graph.record(new, series=id)
             if obj.name not in self.buffer:
                 self.buffer.append(obj.name)
 
@@ -86,22 +86,22 @@ class BakeoutManager(Manager):
         if DUTY_CYCLE:
             if obj.isAlive():
                 id = self.graph_info[obj.name]['id']
-                self.graph.record(new, series = id, plotid = 1)
+                self.graph.record(new, series=id, plotid=1)
                 if obj.name not in self.buffer2:
                     self.buffer2.append(obj.name)
 
                 if len(self.buffer2) == len(self.active_controllers):
-                    self.write_data(self.data_name2, plotid = 1)
+                    self.write_data(self.data_name2, plotid=1)
                     self.buffer2 = []
 
-    def write_data(self, name, plotid = 0):
+    def write_data(self, name, plotid=0):
         p = self.data_manager.frames[name]
         h = []
         for c in self.active_controllers:
             h.append('%s_time' % c)
             h.append('%s_temp' % c)
 
-        self.graph.export_raw_data(header = h, path = p, plotid = plotid)
+        self.graph.export_raw_data(header=h, path=p, plotid=plotid)
 
     def update_alive(self, obj, name, old, new):
         if new:
@@ -120,7 +120,7 @@ class BakeoutManager(Manager):
     def load_controllers(self):
         '''
         '''
-        scheduler = RS485Scheduler(collision_delay = 150)
+        scheduler = RS485Scheduler(collision_delay=150)
         for bcn in self._get_controllers():
             bc = getattr(self, bcn)
             #set the communicators scheduler
@@ -136,9 +136,9 @@ class BakeoutManager(Manager):
         return True
 
     def _controller_factory(self, name):
-        bc = BakeoutController(name = name,
-                                   configuration_dir_name = 'bakeout',
-                                   logger_display = self.logger_display
+        bc = BakeoutController(name=name,
+                                   configuration_dir_name='bakeout',
+                                   logger_display=self.logger_display
                                    )
         return bc
     def kill(self, **kw):
@@ -154,7 +154,7 @@ class BakeoutManager(Manager):
             getattr(self, tr).end(**kw)
 
     def _open_graph(self, path):
-        g = self._graph_factory(stream = False, **dict(pan = True, zoom = True))#graph = self.graph)
+        g = self._graph_factory(stream=False, **dict(pan=True, zoom=True))#graph = self.graph)
         #p = '/Users/Ross/Pychrondata_beta/data/bakeouts/bakeout-2011-02-17008.txt'
 
         self._parse_graph_file(g, path)
@@ -166,12 +166,12 @@ class BakeoutManager(Manager):
             date = '-'.join(args[1:])
             name = '.%s_duty_cycle-%s' % (name, date)
             path = os.path.join(head, name)
-            self._parse_graph_file(g, path, plotid = 1)
+            self._parse_graph_file(g, path, plotid=1)
 
         g.window_title = os.path.basename(path)
         g.edit_traits()
 
-    def _parse_graph_file(self, graph, path, plotid = 0):
+    def _parse_graph_file(self, graph, path, plotid=0):
         import csv
 
         reader = csv.reader(open(path, 'r'))
@@ -181,27 +181,27 @@ class BakeoutManager(Manager):
 
             #set up graph
             name = header[2 * i][:-5]
-            graph.new_series(type = 'line', render_style = 'connectedpoints', plotid = plotid)
+            graph.new_series(type='line', render_style='connectedpoints', plotid=plotid)
             #self.graph_info[name] = dict(id = i)
 
-            graph.set_series_label(name, series = i, plotid = plotid)
+            graph.set_series_label(name, series=i, plotid=plotid)
 
-        data = np.array_split(np.array([row for row in reader], dtype = float), nseries, axis = 1)
+        data = np.array_split(np.array([row for row in reader], dtype=float), nseries, axis=1)
         for i, da in enumerate(data):
             x, y = np.transpose(da)
 
-            graph.set_data(x, series = i, axis = 0, plotid = plotid)
-            graph.set_data(y, series = i, axis = 1, plotid = plotid)
+            graph.set_data(x, series=i, axis=0, plotid=plotid)
+            graph.set_data(y, series=i, axis=1, plotid=plotid)
 
 
     def _open_fired(self):
-        path = self._file_dialog_('open', default_directory = os.path.join(data_dir, 'bakeouts'))
+        path = self._file_dialog_('open', default_directory=os.path.join(data_dir, 'bakeouts'))
         if path is not None:
             self._open_graph(path)
 
     def _save_fired(self):
 
-        path = self._file_dialog_('save as', default_directory = bakeout_config_dir)
+        path = self._file_dialog_('save as', default_directory=bakeout_config_dir)
         if path is not None:
             config = self.get_configuration_writer()
 
@@ -220,24 +220,24 @@ class BakeoutManager(Manager):
         '''
         '''
         if self.isAlive():
-            self.kill(user_kill = True)
+            self.kill(user_kill=True)
         else:
             id = 0
             #self.n_active_controllers = 0
             self.active_controllers = []
             self.graph_info = dict()
-            self._graph_factory(graph = self.graph)
+            self._graph_factory(graph=self.graph)
             #setup data recording
             self.data_manager = dm = CSVDataManager()
 
             name = 'bakeout-%s' % generate_datestamp()
-            self.data_name = dm.new_frame(directory = 'bakeouts',
-                         base_frame_name = name)
+            self.data_name = dm.new_frame(directory='bakeouts',
+                         base_frame_name=name)
 
             if DUTY_CYCLE:
                 self.data_name2 = name = '.bakeout_duty_cycle-%s' % generate_datestamp()
-                dm.new_frame(None, directory = 'bakeouts',
-                             base_frame_name = name)
+                dm.new_frame(None, directory='bakeouts',
+                             base_frame_name=name)
             #clear_ids = []
             #names = []
             for tr in self._get_controllers():
@@ -246,20 +246,20 @@ class BakeoutManager(Manager):
                     bc.on_trait_change(self.update_alive, 'alive')
 
                     #set up graph
-                    self.graph.new_series(type = 'line', render_style = 'connectedpoints')
-                    self.graph_info[bc.name] = dict(id = id)
+                    self.graph.new_series(type='line', render_style='connectedpoints')
+                    self.graph_info[bc.name] = dict(id=id)
 
-                    self.graph.set_series_label(tr, series = id)
+                    self.graph.set_series_label(tr, series=id)
 
                     #setup duty cycle subgraph
                     if DUTY_CYCLE:
-                        self.graph.new_series(type = 'line', render_style = 'connectedpoints',
-                                              plotid = 1)
+                        self.graph.new_series(type='line', render_style='connectedpoints',
+                                              plotid=1)
                     #clear_ids.append('plot%i' % (id))
 
 
 
-                    t = Thread(target = bc.run)
+                    t = Thread(target=bc.run)
                     t.start()
 
                     id += 1
@@ -276,23 +276,23 @@ class BakeoutManager(Manager):
         g = HGroup(
                    )
         for tr in self._get_controllers():
-            g.content.append(Item(tr, show_label = False, style = 'custom'))
+            g.content.append(Item(tr, show_label=False, style='custom'))
 
         control = HGroup(VGroup(
-                         Item('execute', editor = ButtonEditor(label_value = 'execute_label'),
-                              show_label = False),
-                         Item('open', show_label = False)),
+                         Item('execute', editor=ButtonEditor(label_value='execute_label'),
+                              show_label=False),
+                         Item('open', show_label=False)),
                         spring,
-                        HGroup(Item('configuration', editor = EnumEditor(name = 'configurations'),
-                             show_label = False),
-                             Item('save', show_label = False),
+                        HGroup(Item('configuration', editor=EnumEditor(name='configurations'),
+                             show_label=False),
+                             Item('save', show_label=False),
 
                              ),
                               ),
-        v = View(VGroup(control, g, Item('graph', show_label = False, style = 'custom')),
-               handler = ManagerHandler,
-               resizable = True,
-               title = 'Bakeout Manager')
+        v = View(VGroup(control, g, Item('graph', show_label=False, style='custom')),
+               handler=ManagerHandler,
+               resizable=True,
+               title='Bakeout Manager')
         return v
 
     def _get_controllers(self):
@@ -315,12 +315,12 @@ class BakeoutManager(Manager):
 
         for section in config.sections():
             kw = dict()
-            script = self.config_get(config, section, 'script', optional = True)
+            script = self.config_get(config, section, 'script', optional=True)
             if script:
                 kw['script'] = script
             else:
                 for opt in ['duration', 'setpoint']:
-                    value = self.config_get(config, section, opt, cast = 'float')
+                    value = self.config_get(config, section, opt, cast='float')
                     if value is not None:
                         kw[opt] = value
             getattr(self, section).trait_set(**kw)
@@ -348,7 +348,7 @@ class BakeoutManager(Manager):
                     kw[attr] = 0
                 tr_obj.trait_set(**kw)
 
-    def _graph_factory(self, stream = True, graph = None, **kw):
+    def _graph_factory(self, stream=True, graph=None, **kw):
         if graph is None:
             if stream:
                 graph = TimeSeriesStreamGraph()
@@ -357,19 +357,19 @@ class BakeoutManager(Manager):
 
         graph.clear()
 
-        graph.new_plot(data_limit = 3600,
-                       scan_delay = 5,
-                       show_legend = 'll',
-                       track_amount = 1200,
+        graph.new_plot(data_limit=3600,
+                       scan_delay=5,
+                       show_legend='ll',
+                       track_amount=1200,
                        **kw
                        )
         if DUTY_CYCLE:
-            graph.new_plot(data_limit = 3600,
-                           scan_delay = 5,
+            graph.new_plot(data_limit=3600,
+                           scan_delay=5,
                            **kw
                            )
-            graph.set_y_limits(min = 0, max = 100, plotid = 1)
-            graph.set_y_title('Duty Cycle %', plotid = 1)
+            graph.set_y_limits(min=0, max=100, plotid=1)
+            graph.set_y_title('Duty Cycle %', plotid=1)
         graph.set_x_title('Time')
         graph.set_y_title('Temp C')
         return graph

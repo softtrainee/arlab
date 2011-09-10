@@ -34,7 +34,7 @@ class Monitor(ConfigLoadable):
     def load(self):
         config = self.get_configuration()
         self.set_attribute(config, 'sample_delay',
-                           'General', 'sample_delay', cast = 'int', optional = True)
+                           'General', 'sample_delay', cast='int', optional=True)
 
     def stop(self):
         '''
@@ -46,7 +46,7 @@ class Monitor(ConfigLoadable):
         '''
         '''
         self.info('Starting monitor')
-        t = Thread(target = self._monitor_)
+        t = Thread(target=self._monitor_)
         self.kill = False
         t.start()
 

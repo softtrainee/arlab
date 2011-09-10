@@ -60,8 +60,8 @@ class ResultsReport(Loggable):
     save = Button
     axis = Axis
     def _save_fired(self):
-        dlg = FileDialog(default_directory = root_dir,
-                         action = 'save as'
+        dlg = FileDialog(default_directory=root_dir,
+                         action='save as'
                          )
         if dlg.open() == OK:
             self.info('saving results to {}'.format(dlg.path))
@@ -75,19 +75,19 @@ class ResultsReport(Loggable):
 
     def traits_view(self):
 
-        self.results = sorted(self.results, key = lambda r: r.key)
-        v = View(Item('results', show_label = False,
-                      style = 'custom',
-                      editor = TabularEditor(adapter = ResultsAdapter(),
+        self.results = sorted(self.results, key=lambda r: r.key)
+        v = View(Item('results', show_label=False,
+                      style='custom',
+                      editor=TabularEditor(adapter=ResultsAdapter(),
 
-                                           editable = False
+                                           editable=False
                                            )
                     ),
-                 HGroup(spring, Item('save', show_label = False)),
-                 width = 550,
-                 height = 800,
-                 resizable = True,
-                 title = 'Results'
+                 HGroup(spring, Item('save', show_label=False)),
+                 width=550,
+                 height=800,
+                 resizable=True,
+                 title='Results'
                  )
         return v
 #============= EOF ===================================

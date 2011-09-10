@@ -27,7 +27,7 @@ class SeriesEditor(HasTraits):
     '''
         G{classtree}
     '''
-    name = Property(depends_on = '_name')
+    name = Property(depends_on='_name')
     _name = Str
 
     plotid = Int
@@ -49,21 +49,21 @@ class SeriesEditor(HasTraits):
         '''
         '''
         if name[0] != '_' and name[-1:] != '_' and name not in ['visible', 'series']:
-            self.graph.update_group_attribute(obj, name, new, dataid = self.id / 2)
+            self.graph.update_group_attribute(obj, name, new, dataid=self.id / 2)
 
     def _show_changed(self, name, old, new):
         '''
         '''
-        self.graph.set_series_visiblity(new, plotid = self.plotid,
-                                        series = self.id)
+        self.graph.set_series_visiblity(new, plotid=self.plotid,
+                                        series=self.id)
 
     def traits_view(self):
         '''
         '''
 
         return View(VGroup(
-                            Item('name', show_label = False),
-                            Item('series', style = 'custom', show_label = False)
+                            Item('name', show_label=False),
+                            Item('series', style='custom', show_label=False)
                            )
                     )
 
@@ -98,8 +98,8 @@ class PolygonPlotEditor(SeriesEditor):
         '''
         '''
         v = View(VGroup(
-                      Item('show', label = 'hide/show'),
-                      Item('color_', style = 'custom', editor = ColorEditor())
+                      Item('show', label='hide/show'),
+                      Item('color_', style='custom', editor=ColorEditor())
                       )
                 )
         return v

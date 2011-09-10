@@ -23,7 +23,7 @@ from sqlalchemy.orm import sessionmaker
 
 from src.loggable import Loggable
 ATTR_KEYS = ['kind', 'user', 'host', 'dbname', 'password']
-def create_url(kind, user, hostname, db, password = None):
+def create_url(kind, user, hostname, db, password=None):
     '''
 
     '''
@@ -65,7 +65,7 @@ class DatabaseAdapter(Loggable):
         if self.window:
             for v in self.window.views:
                 if v.category == 'Database':
-                    sess = v.obj.load(sess = sess)
+                    sess = v.obj.load(sess=sess)
 
         if sess is not None:
             sess.close()
@@ -80,7 +80,7 @@ class DatabaseAdapter(Loggable):
         self._new_engine(*tuple(args))
         self.info('connecting to database')
 
-        self.session_factory = sessionmaker(bind = self.engine)
+        self.session_factory = sessionmaker(bind=self.engine)
 
         if self._test_db_connection():
             self.connected = True
@@ -93,7 +93,7 @@ class DatabaseAdapter(Loggable):
         try:
             connected = True
             if self.test_func is not None:
-                _users, sess = getattr(self, self.test_func)(sess = sess)
+                _users, sess = getattr(self, self.test_func)(sess=sess)
 
         except:
             self.warning('connection failed %s@%s/%s' % (self.user, self.host,
@@ -111,7 +111,7 @@ class DatabaseAdapter(Loggable):
             
         '''
 
-        url = create_url(kind, user, host, db, password = password)
+        url = create_url(kind, user, host, db, password=password)
         self.info('url = %s' % url)
         self.engine = create_engine(url)
 
@@ -122,10 +122,10 @@ class DatabaseAdapter(Loggable):
         if record is not None:
             result = None
             if isinstance(record, int) or isinstance(record, long):
-                record = dict(id = record)
+                record = dict(id=record)
 
             if isinstance(record, dict):
-                result, sess = getattr(self, func)(filter = record, sess = sess)
+                result, sess = getattr(self, func)(filter=record, sess=sess)
             else:
                 result = record
             return result

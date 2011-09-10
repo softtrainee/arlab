@@ -20,7 +20,7 @@ from migrate import *
 meta = MetaData()
 table = Table('IrradiationTrays', meta,
 
-Column('id', Integer, primary_key = True),
+Column('id', Integer, primary_key=True),
 Column('name', String(10)),
 Column('nholes', Integer),
 Column('irradiation_id', Integer)

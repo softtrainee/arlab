@@ -70,7 +70,7 @@ class Turbo(MultiStateObject3D):
         glPushAttrib(GL_CURRENT_BIT)
 
         glPushMatrix()
-        self._set_material(color = [0, 0, 0])
+        self._set_material(color=[0, 0, 0])
         glTranslatef(0, 0.5, 0)
 
         ac = 1
@@ -98,9 +98,9 @@ class Turbo(MultiStateObject3D):
 
         glPushAttrib(GL_CURRENT_BIT)
         for r, h, alpha in [(1, 3, 0.5), (1.5, 0.5, False)]:
-            self._set_material(alpha = alpha)
+            self._set_material(alpha=alpha)
             glTranslatef(0, h, 0)
-            self._can_(radius = r, height = h)
+            self._can_(radius=r, height=h)
         glPopAttrib()
 
 class SixWayCross(MultiStateObject3D):
@@ -165,7 +165,7 @@ class Bellows(MultiStateObject3D):
             rh = [self.radius, self.height]
             self._nipple_(trans, rot, rh)
         else:
-            self._tube_(self.points, self.color, radius = self.radius)
+            self._tube_(self.points, self.color, radius=self.radius)
 
 class Flex(Bellows):
     '''
@@ -201,7 +201,7 @@ class IonPump(MultiStateObject3D):
         h = 0.5
         glPushMatrix()
         glTranslatef(pumpwidth / 4.0, pumpheight / 2.0 + 1.5 - h, 0)
-        self._can_(radius = 0.75, height = h)
+        self._can_(radius=0.75, height=h)
         glPopMatrix()
 
         h = pumpheight / 2.0 + 0.75
@@ -211,7 +211,7 @@ class IonPump(MultiStateObject3D):
                 (pumpwidth / 4.0, h + 2, 0),
                 (0, h2 - 2, 0), (0, h2, 0), (0, h2, 0)]
 
-        self._tube_(points, self.color, radius = 0.45)
+        self._tube_(points, self.color, radius=0.45)
 
         glScalef(pumplength, pumpheight, pumpwidth)
 
@@ -307,7 +307,7 @@ class Quadrupole(MultiStateObject3D):
 
         glTranslatef(0, 0, -3)
         glRotatef(-90, 1, 0, 0)
-        self._can_(radius = 1, height = 3)
+        self._can_(radius=1, height=3)
 
         glPopMatrix()
 
@@ -535,7 +535,7 @@ class Valve(SetStateObject3D):
         #super(Valve, self).render()
         SetStateObject3D.render(self)
         #self._set_material()
-        self._sphere_(radius = self.radius)
+        self._sphere_(radius=self.radius)
         #glPopAttrib()
 
         if self.identify:
@@ -575,14 +575,14 @@ class Valve(SetStateObject3D):
         '''
         '''
         s = self.set_state(True)
-        self._finish_state_change(True, success = s)
+        self._finish_state_change(True, success=s)
         return s
 
     def close(self):
         '''
         '''
         s = self.set_state(False)
-        self._finish_state_change(False, success = s)
+        self._finish_state_change(False, success=s)
         return s
 
 
@@ -608,7 +608,7 @@ class Valve(SetStateObject3D):
 
             return s
 
-    def _finish_state_change(self, s, success = True):
+    def _finish_state_change(self, s, success=True):
         '''
 
         '''
@@ -636,8 +636,8 @@ class Valve(SetStateObject3D):
             glPushMatrix()
             glRotatef(a, 1, 0, 0)
             glTranslatef(0, 0, -0.25 / 2)
-            self._torus_(radius = r, inner_radius = 0.15,
-                         xs = 25, ys = 25
+            self._torus_(radius=r, inner_radius=0.15,
+                         xs=25, ys=25
                          )
             glPopMatrix()
 
@@ -647,8 +647,8 @@ class Valve(SetStateObject3D):
 
     def _draw_halo(self):
         glPushAttrib(GL_CURRENT_BIT)
-        self._set_material((0, 0, 1), alpha = 0.3)
-        self._sphere_(radius = 1.5)
+        self._set_material((0, 0, 1), alpha=0.3)
+        self._sphere_(radius=1.5)
         glPopAttrib()
 
     def _draw_blue_balls(self):
@@ -661,8 +661,8 @@ class Valve(SetStateObject3D):
         for c in l:
             glPushMatrix()
             glTranslatef(*c)
-            self._set_material(color = [0, 0, 1])
-            self._sphere_(radius = 0.3)
+            self._set_material(color=[0, 0, 1])
+            self._sphere_(radius=0.3)
             glPopMatrix()
 
 

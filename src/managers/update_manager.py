@@ -31,8 +31,8 @@ class ProgressBar(object):
     control = Instance(wx.Gauge)
     direction = Enum('horizontal', 'horizontal', 'vertical')
 
-    def __init__(self, parent, minimum = 0, maximum = 100, direction = 'horizontal',
-                 size = (200, -1)):
+    def __init__(self, parent, minimum=0, maximum=100, direction='horizontal',
+                 size=(200, -1)):
         """
         Constructs a progress bar which can be put into a panel, or optionaly,
         its own window
@@ -50,7 +50,7 @@ class ProgressBar(object):
         self.control = self.factory()
 
     def factory(self):
-        return wx.Gauge(self.parent, -1, self._max, style = self.style, size = self.size)
+        return wx.Gauge(self.parent, -1, self._max, style=self.style, size=self.size)
 
     def update(self, value):
         """
@@ -87,7 +87,7 @@ class UpdateManager(Manager):
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         panel.SetSizer(sizer)
 
-        gauge = ProgressBar(panel, maximum = 0)
+        gauge = ProgressBar(panel, maximum=0)
         self.progress_bar = gauge
         sizer.Add(gauge.control)
 
@@ -103,13 +103,13 @@ class UpdateManager(Manager):
     def traits_view(self):
         v = View(
                'test',
-               Item('site', editor = EnumEditor(name = 'sites')),
+               Item('site', editor=EnumEditor(name='sites')),
                #Item('status', editor=ProgressEditor(min=0,max=5)),
                Item('version'),
-               Item('progress_bar', style = 'custom',
-                    show_label = False,
-                    editor = CustomEditor(factory = self._progress_factory)),
-               resizable = True
+               Item('progress_bar', style='custom',
+                    show_label=False,
+                    editor=CustomEditor(factory=self._progress_factory)),
+               resizable=True
                )
         return v
 
@@ -123,7 +123,7 @@ class UpdateManager(Manager):
     def _check_for_updates(self):
         #use pysvn to get version info
         c = self.svn_client
-        _name, info = c.get_remote_version_file(progress = self.progress_bar)
+        _name, info = c.get_remote_version_file(progress=self.progress_bar)
         remote_rev = info.last_changed_rev.number
 
         _name, info = c.get_local_version_file()

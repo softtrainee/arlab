@@ -28,7 +28,7 @@ def extract_data(p):
     '''
     '''
     import csv
-    reader = csv.reader(open(p, 'U'), delimiter = '\t')
+    reader = csv.reader(open(p, 'U'), delimiter='\t')
     x = []
     y = []
 
@@ -62,13 +62,13 @@ def plot_data(x, y, x1, y1):
     '''
     g = TimeSeriesGraph()
 
-    g.new_plot(show_legend = True, zoom = True, pan = True)
-    g.new_series(x = x, y = y)
-    g.new_series(x = x1, y = y1)
+    g.new_plot(show_legend=True, zoom=True, pan=True)
+    g.new_series(x=x, y=y)
+    g.new_series(x=x1, y=y1)
 
     g.set_series_label('Inside')
 
-    g.set_series_label('Outside', series = 1)
+    g.set_series_label('Outside', series=1)
 
     g.configure_traits()
 if __name__ == '__main__':

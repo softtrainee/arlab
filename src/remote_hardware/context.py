@@ -55,7 +55,7 @@ class Context(object):
         self.messages = self.messages[-self.window:]
         self.times = self.times[-self.window:]
 
-    def get_frequency(self, request = None, response = None):
+    def get_frequency(self, request=None, response=None):
         '''
         '''
         times = [t for m, t in zip(self.messages, self.times)
@@ -80,7 +80,7 @@ class Context(object):
             '''
             return self.messages[-1].response
 
-TRIGGERS = dict(SetValveState = 'GetValveState')
+TRIGGERS = dict(SetValveState='GetValveState')
 
 class ContextFilter(Loggable):
     _contexts_ = None
@@ -115,8 +115,8 @@ class ContextFilter(Loggable):
             if kind in self._contexts_:
                 ctx = self._contexts_[kind]
                 resp = ctx.get_response()
-                freqa = ctx.get_frequency(request = request)
-                freqr = ctx.get_frequency(request = request, response = resp)
+                freqa = ctx.get_frequency(request=request)
+                freqr = ctx.get_frequency(request=request, response=resp)
     
             if resp == True:
                 resp_kind = 'Actual'
@@ -164,9 +164,9 @@ def main():
     sender.start()
     time.sleep(2)
     sender._serve = False
-    print cf._contexts_['GetValveState'].get_frequency(request = 'A', response = 'True')
-    print cf._contexts_['GetValveState'].get_frequency(request = 'B', response = 'True')
-    print cf._contexts_['GetValveState'].get_frequency(response = 'False')
+    print cf._contexts_['GetValveState'].get_frequency(request='A', response='True')
+    print cf._contexts_['GetValveState'].get_frequency(request='B', response='True')
+    print cf._contexts_['GetValveState'].get_frequency(response='False')
 
 
 if __name__ == '__main__':

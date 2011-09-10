@@ -29,7 +29,7 @@ class DesignerCanvas(ExtractionLineCanvas2D):
     '''
     tool_state = Enum('select', 'line', 'mline', 'valve')
     active = False
-    _selected_item = Property(depends_on = 'selected_id')
+    _selected_item = Property(depends_on='selected_id')
     show_axes = True
     show_grids = True
     padding_left = 50
@@ -48,7 +48,7 @@ class DesignerCanvas(ExtractionLineCanvas2D):
         '''
         super(DesignerCanvas, self).__init__(*args, **kw)
 
-        r = RectSelectionTool(component = self)
+        r = RectSelectionTool(component=self)
         self.overlays.append(r)
 
 
@@ -70,10 +70,10 @@ class DesignerCanvas(ExtractionLineCanvas2D):
             @param path:
         '''
         for item in  self._bootstrap(path):
-            self.add_item(item, use_editor = False)
+            self.add_item(item, use_editor=False)
         self.invalidate_and_redraw()
 
-    def add_item(self, item_name, args = None, use_editor = True):
+    def add_item(self, item_name, args=None, use_editor=True):
         '''
             @type item_name: C{str}
             @param item_name:
@@ -89,13 +89,13 @@ class DesignerCanvas(ExtractionLineCanvas2D):
             if args is None:
                 args = dict()
 
-            item = globals()[item_name.capitalize()](state = False, **args)
+            item = globals()[item_name.capitalize()](state=False, **args)
         else:
             item = item_name
 
         item.on_trait_change(self.request_redraw, '_x, _y, identify, name')
         if use_editor:
-            info = item.edit_traits(kind = 'livemodal')
+            info = item.edit_traits(kind='livemodal')
             if info.result:
                 self.active_item = len(self.items)
                 self.items.append(item)

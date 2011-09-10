@@ -46,7 +46,7 @@ class Video(Image):
     _recording = Bool(False)
     width = Int(640)
     height = Int(480)
-    def open(self, user = None):
+    def open(self, user=None):
         '''
 
         '''
@@ -64,7 +64,7 @@ class Video(Image):
         self.users = []
         del(self.cap)
 
-    def close(self, user = None, force = False):
+    def close(self, user=None, force=False):
         '''
   
         '''
@@ -132,7 +132,7 @@ class Video(Image):
                     if d >= 0:
                         time.sleep(d)
 
-        t = Thread(target = __record)
+        t = Thread(target=__record)
         t.start()
 
     def stop_recording(self):
@@ -140,7 +140,7 @@ class Video(Image):
         '''
         self._recording = False
 
-    def record_frame(self, path, crop = None):
+    def record_frame(self, path, crop=None):
         '''
         '''
 

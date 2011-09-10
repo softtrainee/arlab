@@ -28,7 +28,7 @@ MAXLEN = 30
 class Loggable(HasTraits):
     '''
     '''
-    logger = Any(transient = True)
+    logger = Any(transient=True)
     name = String
     logger_display = None
     def __init__(self, *args, **kw):
@@ -51,9 +51,9 @@ class Loggable(HasTraits):
 
 #        name = name + ' ' * (MAXLEN - len(name))
         name = '{:<{}}'.format(name, MAXLEN)
-        self.logger = add_console(name = name, display = gLoggerDisplay)
+        self.logger = add_console(name=name, display=gLoggerDisplay)
 
-    def warning(self, msg, decorate = True):
+    def warning(self, msg, decorate=True):
         '''
  
         '''
@@ -69,7 +69,7 @@ class Loggable(HasTraits):
 
             self.logger.warning(msg)
 
-    def info(self, msg, decorate = True):
+    def info(self, msg, decorate=True):
         '''
 
         '''
@@ -82,7 +82,7 @@ class Loggable(HasTraits):
             self.logger.info(msg)
 
 
-    def debug(self, msg, decorate = True):
+    def debug(self, msg, decorate=True):
         '''
         '''
         if self.logger is not None:

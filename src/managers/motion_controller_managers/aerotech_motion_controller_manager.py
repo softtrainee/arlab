@@ -45,10 +45,10 @@ class AerotechMotionControllerManager(MotionControllerManager):
             a.load_parameters_from_device()
 
         v = super(AerotechMotionControllerManager, self).traits_view()
-        system_grp = VGroup(Item('_auto_enable_x', label = 'X'),
-                                Item('_auto_enable_y', label = 'Y'),
-                                Item('_auto_enable_z', label = 'Z'),
-                                Item('_auto_enable_u', label = 'U'),
-                                label = 'Auto Enable Axes')
+        system_grp = VGroup(Item('_auto_enable_x', label='X'),
+                                Item('_auto_enable_y', label='Y'),
+                                Item('_auto_enable_z', label='Z'),
+                                Item('_auto_enable_u', label='U'),
+                                label='Auto Enable Axes')
         return View(system_grp, v.content)
 #============= EOF ====================================

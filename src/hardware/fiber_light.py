@@ -26,9 +26,9 @@ class FiberLight(AbstractDevice):
     '''
         G{classtree}
     '''
-    intensity = Range(0, 100.0, mode = 'slider')
+    intensity = Range(0, 100.0, mode='slider')
     power = Event
-    power_label = Property(depends_on = 'state')
+    power_label = Property(depends_on='state')
     state = Bool
     def load_additional_args(self, config):
         '''
@@ -44,8 +44,8 @@ class FiberLight(AbstractDevice):
             else:
                 gdict = globals()
                 if n in gdict:
-                    self._cdevice = gdict[n](name = n,
-                                 configuration_dir_name = self.configuration_dir_name
+                    self._cdevice = gdict[n](name=n,
+                                 configuration_dir_name=self.configuration_dir_name
                                  )
                     self._cdevice.load()
             return True

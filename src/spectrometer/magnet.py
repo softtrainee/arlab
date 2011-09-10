@@ -40,21 +40,21 @@ class Magnet(SpectrometerDevice):
     regressor = Instance(Regressor, ())
     microcontroller = Any
 
-    magnet_dac = Property(depends_on = '_magnet_dac')
+    magnet_dac = Property(depends_on='_magnet_dac')
     _magnet_dac = Float
     magnet_dacmin = Float(0.0)
     magnet_dacmax = Float(10.0)
 
     settling_time = 0.01
 
-    calibration_points = Property(depends_on = 'mftable')
+    calibration_points = Property(depends_on='mftable')
     graph = Instance(Graph, ())
     def _get_calibration_points(self):
         pts = []
         xs, ys = self.mftable
         for xi, yi in zip(xs, ys):
             xi = MOLECULAR_WEIGHTS[xi]
-            pts.append(CalibrationPoint(x = xi, y = yi))
+            pts.append(CalibrationPoint(x=xi, y=yi))
         return pts
 
     def update_graph(self):
@@ -78,7 +78,7 @@ class Magnet(SpectrometerDevice):
 
         dac_value = reg.get_value('parabolic', data, mass)
         return dac_value
-    def set_axial_mass(self, x, hv_correction = 1):
+    def set_axial_mass(self, x, hv_correction=1):
         '''
             set the axial detector to mass x
         '''
@@ -94,7 +94,7 @@ class Magnet(SpectrometerDevice):
 
     def set_dac(self, v):
         self._magnet_dac = v
-        _r = self.microcontroller.ask('SetMagnetDAC {}'.format(v), verbose = True)
+        _r = self.microcontroller.ask('SetMagnetDAC {}'.format(v), verbose=True)
         time.sleep(self.settling_time)
 
     def read_dac(self):
@@ -124,13 +124,13 @@ class Magnet(SpectrometerDevice):
 
     def set_graph(self, pts):
 
-        g = Graph(container_dict = dict(padding = 10))
+        g = Graph(container_dict=dict(padding=10))
         g.clear()
-        g.new_plot(xtitle = 'Mass',
-                   ytitle = 'DAC',
-                   padding = [30, 0, 0, 30],
-                   zoom = True,
-                   pan = True
+        g.new_plot(xtitle='Mass',
+                   ytitle='DAC',
+                   padding=[30, 0, 0, 30],
+                   zoom=True,
+                   pan=True
                    )
         g.set_x_limits(0, 150)
         g.set_y_limits(0, 100)
@@ -138,26 +138,26 @@ class Magnet(SpectrometerDevice):
         ys = [cp.y * 10 for cp in pts]
 
         reg = self.regressor
-        rdict = reg.parabolic(xs, ys, data_range = (0, 150), npts = 5000)
+        rdict = reg.parabolic(xs, ys, data_range=(0, 150), npts=5000)
 
-        g.new_series(x = xs, y = ys, type = 'scatter')
+        g.new_series(x=xs, y=ys, type='scatter')
 
 
-        g.new_series(x = rdict['x'], y = rdict['y'])
+        g.new_series(x=rdict['x'], y=rdict['y'])
         self.graph = g
 
     def mftable_view(self):
-        cols = [ObjectColumn(name = 'x', label = 'Mass'),
-              ObjectColumn(name = 'y', label = 'DAC'),
+        cols = [ObjectColumn(name='x', label='Mass'),
+              ObjectColumn(name='y', label='DAC'),
               ]
-        teditor = TableEditor(columns = cols, editable = False)
+        teditor = TableEditor(columns=cols, editable=False)
         v = View(HGroup(
-                        Item('calibration_points', editor = teditor, show_label = False),
-                        Item('graph', show_label = False, style = 'custom')
+                        Item('calibration_points', editor=teditor, show_label=False),
+                        Item('graph', show_label=False, style='custom')
                         ),
-                 width = 700,
-                 height = 500,
-                 resizable = True
+                 width=700,
+                 height=500,
+                 resizable=True
 
                  )
         return v

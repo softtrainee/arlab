@@ -30,8 +30,8 @@ class SVNPlugin(CorePlugin):
     def _service_offers_default(self):
         '''
         '''
-        so = self.service_offer_factory(protocol = PROTOCOL,
-                                      factory = self._factory)
+        so = self.service_offer_factory(protocol=PROTOCOL,
+                                      factory=self._factory)
         return [so]
 
     def _factory(self, *args, **kw):

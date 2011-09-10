@@ -42,7 +42,7 @@ class CameraScanScript(FileScript):
         if super(CameraScanScript, self).set_data_frame():
             dm = self.data_manager
             dm.add_group('camera_scan')
-            dm.add_table('scan', parent = 'root.camera_scan', table_style = 'CameraScan')
+            dm.add_table('scan', parent='root.camera_scan', table_style='CameraScan')
             return True
 
     def kill_script(self):
@@ -71,11 +71,11 @@ class CameraScanScript(FileScript):
         #set the zoom
         self.info('set zoom')
         self.add_output('setting zoom %0.1f' % self.zoom)
-        manager.logic_board.set_zoom(self.zoom, block = True)
+        manager.logic_board.set_zoom(self.zoom, block=True)
 
         self.info('set beam diameter')
         self.add_output('setting beam diameter %0.1f' % self.beam_diameter)
-        manager.logic_board.set_beam_diameter(self.beam_diameter, block = True)
+        manager.logic_board.set_beam_diameter(self.beam_diameter, block=True)
 
         delay = 1
         self.info('delay %i' % delay)
@@ -83,7 +83,7 @@ class CameraScanScript(FileScript):
 
         #turn laser on
         self.info('enabling laser for firing')
-        self.add_output('ENABLING LASER', color = 'red')
+        self.add_output('ENABLING LASER', color='red')
         manager.enable_laser()
 
         for line in self._file_contents_:

@@ -91,16 +91,16 @@ class WatlowEZZone(CoreDevice):
 #    powermax=Float(1500.0)
 #    
     closed_loop_setpoint = Property(Float(0,
-                                          auto_set = False,
-                                          enter_set = True),
-                                    depends_on = '_clsetpoint')
+                                          auto_set=False,
+                                          enter_set=True),
+                                    depends_on='_clsetpoint')
     _clsetpoint = Float(0.0)
     setpointmin = Float(0.0)
     setpointmax = Float(100.0)
 
-    open_loop_setpoint = Property(Float(0, auto_set = False,
-                                        enter_set = True),
-                                 depends_on = '_olsetpoint')
+    open_loop_setpoint = Property(Float(0, auto_set=False,
+                                        enter_set=True),
+                                 depends_on='_olsetpoint')
     _olsetpoint = Float(0.0)
     olsmin = Float(0.0)
     olsmax = Float(100.0)
@@ -110,17 +110,17 @@ class WatlowEZZone(CoreDevice):
 #    comin = Float(-500.0)
 #    comax = Float(500.0)
 
-    scale_low = Float(0, auto_set = False, enter_set = True)
-    scale_high = Float(3.8, auto_set = False, enter_set = True)
+    scale_low = Float(0, auto_set=False, enter_set=True)
+    scale_high = Float(3.8, auto_set=False, enter_set=True)
 
-    control_mode = Property(depends_on = '_control_mode')
+    control_mode = Property(depends_on='_control_mode')
     _control_mode = String('closed')
 
     autotune = Button
     configure = Button
 
-    sensor1_type = Property(String, depends_on = '_sensor1_type')
-    thermocouple1_type = Property(String, depends_on = '_thermocouple1_type')
+    sensor1_type = Property(String, depends_on='_sensor1_type')
+    thermocouple1_type = Property(String, depends_on='_thermocouple1_type')
 
     _sensor1_type = Int(95)
     _thermocouple1_type = Int(11)
@@ -190,8 +190,8 @@ class WatlowEZZone(CoreDevice):
             @type config: C{str}
             @param config:
         '''
-        self.set_attribute(config, 'setpointmin', 'Setpoint', 'min', cast = 'float')
-        self.set_attribute(config, 'setpointmax', 'Setpoint', 'max', cast = 'float')
+        self.set_attribute(config, 'setpointmin', 'Setpoint', 'min', cast='float')
+        self.set_attribute(config, 'setpointmax', 'Setpoint', 'max', cast='float')
         return True
 
     def set_pid_parameter(self, **kw):
@@ -213,7 +213,7 @@ class WatlowEZZone(CoreDevice):
         self._clsetpoint = setpoint
 
         register = 2160
-        self.write(register, setpoint, nregisters = 2, **kw)
+        self.write(register, setpoint, nregisters=2, **kw)
 
     def set_open_loop_setpoint(self, setpoint, **kw):
         '''
@@ -223,7 +223,7 @@ class WatlowEZZone(CoreDevice):
         self._olsetpoint = setpoint
 
         register = 2162
-        self.write(register, setpoint, nregisters = 2, **kw)
+        self.write(register, setpoint, nregisters=2, **kw)
 
     def set_temperature_units(self, comms, units, **kw):
         '''
@@ -248,7 +248,7 @@ class WatlowEZZone(CoreDevice):
     
         '''
         register = 382 if input == 1 else 462
-        self.write(register, value, nregisters = 2, **kw)
+        self.write(register, value, nregisters=2, **kw)
 
     def set_control_mode(self, mode, **kw):
         '''
@@ -284,7 +284,7 @@ class WatlowEZZone(CoreDevice):
         '''
         self.info.logger('setting heat proportional band = %0.3f' % value)
         register = 1890
-        self.write(register, value, nregisters = 2, **kw)
+        self.write(register, value, nregisters=2, **kw)
 
     def set_cool_proportional_band(self, value, **kw):
         '''
@@ -295,7 +295,7 @@ class WatlowEZZone(CoreDevice):
         self.info.logger('setting cool proportional band = %0.3f' % value)
 
         register = 1892
-        self.write(register, value, nregisters = 2, **kw)
+        self.write(register, value, nregisters=2, **kw)
 
     def set_time_integral(self, value, **kw):
         '''
@@ -306,7 +306,7 @@ class WatlowEZZone(CoreDevice):
         self.info.logger('setting time integral = %0.3f' % value)
 
         register = 1894
-        self.write(register, value, nregisters = 2, **kw)
+        self.write(register, value, nregisters=2, **kw)
 
     def set_time_derivative(self, value, **kw):
         '''
@@ -316,7 +316,7 @@ class WatlowEZZone(CoreDevice):
         '''
         self.info.logger('setting time derivative = %0.3f' % value)
         register = 1896
-        self.write(register, value, nregisters = 2, **kw)
+        self.write(register, value, nregisters=2, **kw)
 
     def set_output_function(self, value, **kw):
         '''
@@ -337,7 +337,7 @@ class WatlowEZZone(CoreDevice):
           
         '''
         register = 736
-        self.write(register, value, nregisters = 2, **kw)
+        self.write(register, value, nregisters=2, **kw)
 
     def set_output_scale_high(self, value, **kw):
         '''
@@ -345,7 +345,7 @@ class WatlowEZZone(CoreDevice):
     
         '''
         register = 738
-        self.write(register, value, nregisters = 2, **kw)
+        self.write(register, value, nregisters=2, **kw)
 
     def set_analog_input_sensor_type(self, input, value, **kw):
         '''
@@ -397,7 +397,7 @@ class WatlowEZZone(CoreDevice):
 
     def read_output_state(self, **kw):
         register = 1012
-        rid = str(self.read(register, response_type = 'int', **kw))
+        rid = str(self.read(register, response_type='int', **kw))
         units_map = {'63':'On', '62':'Off'}
         return units_map[rid] if rid in units_map else None
 
@@ -406,28 +406,28 @@ class WatlowEZZone(CoreDevice):
  
         '''
         register = 1890
-        return self.read(register, nregisters = 2, **kw)
+        return self.read(register, nregisters=2, **kw)
 
     def read_cool_proportional_band(self, **kw):
         '''
      
         '''
         register = 1892
-        return self.read(register, nregisters = 2, **kw)
+        return self.read(register, nregisters=2, **kw)
 
     def read_time_integral(self, **kw):
         '''
  
         '''
         register = 1894
-        return self.read(register, nregisters = 2, **kw)
+        return self.read(register, nregisters=2, **kw)
 
     def read_time_derivative(self, **kw):
         '''
 
         '''
         register = 1896
-        return self.read(register, nregisters = 2, **kw)
+        return self.read(register, nregisters=2, **kw)
 
     def read_calibration_offset(self, input, **kw):
         '''
@@ -437,21 +437,21 @@ class WatlowEZZone(CoreDevice):
         '''
         register = 382 if input == 1 else 462
 
-        return self.read(register, nregisters = 2, **kw)
+        return self.read(register, nregisters=2, **kw)
 
     def read_closed_loop_setpoint(self, **kw):
         '''
 
         '''
         register = 2160
-        return self.read(register, nregisters = 2, **kw)
+        return self.read(register, nregisters=2, **kw)
 
     def read_open_loop_setpoint(self, **kw):
         '''
 
         '''
         register = 2162
-        return self.read(register, nregisters = 2, **kw)
+        return self.read(register, nregisters=2, **kw)
 
     def read_analog_input_sensor_type(self, input, **kw):
         '''
@@ -462,7 +462,7 @@ class WatlowEZZone(CoreDevice):
         else:
             register = 448
 
-        return self.read(register, response_type = 'int', **kw)
+        return self.read(register, response_type='int', **kw)
 
     def read_thermocouple_type(self, input, **kw):
         '''
@@ -472,7 +472,7 @@ class WatlowEZZone(CoreDevice):
             register = 370
         else:
             register = 450
-        rid = self.read(register, response_type = 'int', **kw)
+        rid = self.read(register, response_type='int', **kw)
         return rid
 
     def read_filtered_process_value(self, input, **kw):
@@ -482,7 +482,7 @@ class WatlowEZZone(CoreDevice):
         '''
         register = 402
 
-        return self.read(register, nregisters = 2, **kw)
+        return self.read(register, nregisters=2, **kw)
 
     def read_process_value(self, input, **kw):
         '''
@@ -490,7 +490,7 @@ class WatlowEZZone(CoreDevice):
         '''
         register = 360 if input == 1 else 440
 
-        return self.read(register, nregisters = 2, **kw)
+        return self.read(register, nregisters=2, **kw)
 
     def read_error_status(self, input, **kw):
         '''
@@ -498,14 +498,14 @@ class WatlowEZZone(CoreDevice):
   
         '''
         register = 362 if input == 1 else 442
-        return self.read(register, response_type = 'int', **kw)
+        return self.read(register, response_type='int', **kw)
 
     def read_temperature_units(self, comms):
         '''
 
         '''
         register = 2490 if comms == 1 else 2510
-        rid = str(self.read(register, response_type = 'int'))
+        rid = str(self.read(register, response_type='int'))
         units_map = {'15':'C', '30':'F'}
         return units_map[rid] if rid in units_map else None
 
@@ -513,14 +513,14 @@ class WatlowEZZone(CoreDevice):
         '''
         '''
         register = 1880
-        return self.read(register, response_type = 'int')
+        return self.read(register, response_type='int')
 
     def read_heat_algorithm(self, **kw):
         '''
              
         '''
         register = 1884
-        rid = str(self.read(register, response_type = 'int', **kw))
+        rid = str(self.read(register, response_type='int', **kw))
 
         hal_map = {'62':'off', '71':'PID', '64':'on-off'}
         return hal_map[rid] if rid in hal_map else None
@@ -531,7 +531,7 @@ class WatlowEZZone(CoreDevice):
         '''
         register = 1922
         r_map = {'59':'NO', '106':'YES'}
-        rid = str(self.read(register, response_type = 'int'))
+        rid = str(self.read(register, response_type='int'))
         return r_map[id] if rid in r_map else None
 
     def read_output_type(self, **kw):
@@ -540,7 +540,7 @@ class WatlowEZZone(CoreDevice):
         '''
         register = 720
         r_map = {'104':'volts', '112':'milliamps'}
-        rid = str(self.read(register, response_type = 'int', **kw))
+        rid = str(self.read(register, response_type='int', **kw))
         return r_map[rid] if rid in r_map else None
 
     def read_output_function(self, **kw):
@@ -548,7 +548,7 @@ class WatlowEZZone(CoreDevice):
        
         '''
         register = 722
-        rid = str(self.read(register, response_type = 'int', **kw))
+        rid = str(self.read(register, response_type='int', **kw))
         r_map = {'36':'heat', '62':'off'}
 
         return r_map[rid] if rid in r_map else None
@@ -563,17 +563,17 @@ class WatlowEZZone(CoreDevice):
 #========================= views ===========================
     def get_control_group(self):
         closed_grp = VGroup(Item('closed_loop_setpoint',
-                                 label = 'setpoint',
-                                 editor = RangeEditor(mode = 'slider',
-                                               low_name = 'setpointmin', high_name = 'setpointmax'),
-                                 visible_when = 'control_mode=="closed"'))
+                                 label='setpoint',
+                                 editor=RangeEditor(mode='slider',
+                                               low_name='setpointmin', high_name='setpointmax'),
+                                 visible_when='control_mode=="closed"'))
 
         open_grp = VGroup(Item('open_loop_setpoint',
-                               label = 'setpoint',
-                               editor = RangeEditor(mode = 'slider',
-                                                  low_name = 'olsmin', high_name = 'olsmax'),
-                               visible_when = 'control_mode=="open"'))
-        cg = VGroup(Item('control_mode', editor = EnumEditor(values = ['closed', 'open'])),
+                               label='setpoint',
+                               editor=RangeEditor(mode='slider',
+                                                  low_name='olsmin', high_name='olsmax'),
+                               visible_when='control_mode=="open"'))
+        cg = VGroup(Item('control_mode', editor=EnumEditor(values=['closed', 'open'])),
                     closed_grp, open_grp)
         return cg
 #    def traits_view(self):
@@ -595,16 +595,16 @@ class WatlowEZZone(CoreDevice):
 
         output_process = VGroup('scale_low',
                               'scale_high',
-                              label = 'Output Process',
-                              show_border = True)
-        autotune_grp = VGroup(Item('autotune', show_label = False),
+                              label='Output Process',
+                              show_border=True)
+        autotune_grp = VGroup(Item('autotune', show_label=False),
                             #'autotune_setpoint'
                             )
-        sensor_grp = Group(VGroup(Item('sensor1_type', editor = EnumEditor(values = sensor_map)),
+        sensor_grp = Group(VGroup(Item('sensor1_type', editor=EnumEditor(values=sensor_map)),
                                 Item('thermocouple1_type',
-                                     editor = EnumEditor(values = tc_map),
-                                     show_label = False,
-                                     visible_when = '_sensor1_type==95')),
+                                     editor=EnumEditor(values=tc_map),
+                                     show_label=False,
+                                     visible_when='_sensor1_type==95')),
 
                          )
         return View(
@@ -612,8 +612,8 @@ class WatlowEZZone(CoreDevice):
                     output_process,
                     sensor_grp,
                     #tune_grp,
-                    buttons = ['OK', 'Cancel'],
-                    kind = 'livemodal')
+                    buttons=['OK', 'Cancel'],
+                    kind='livemodal')
     def _scan_(self, *args, **kw):
         '''
 
@@ -626,7 +626,7 @@ class WatlowEZZone(CoreDevice):
         '''
         '''
         self.load_configuration_values_from_device()
-        self.edit_traits(view = 'configure_view')
+        self.edit_traits(view='configure_view')
 
     def _autotune_fired(self):
         '''

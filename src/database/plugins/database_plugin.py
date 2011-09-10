@@ -38,9 +38,9 @@ class DatabasePlugin(CorePlugin):
         '''
 
         database_so = self.service_offer_factory(
-                                 protocol = PychronDatabaseAdapter,
+                                 protocol=PychronDatabaseAdapter,
                                  #protocol = 'src.database.pychron_database_adapter.PychronDatabaseAdapter',
-                                 factory = self._database_factory)
+                                 factory=self._database_factory)
         return [database_so]
     def _database_factory(self):
         '''
@@ -50,7 +50,7 @@ class DatabasePlugin(CorePlugin):
             base = 'pychron.database.%s'
             use_db = True if prefs.get(base % 'use_db') == 'True' else False
 
-            adapter = PychronDatabaseAdapter(kind = 'mysql')
+            adapter = PychronDatabaseAdapter(kind='mysql')
 
             #bind the preferences to the Database adapter
             for key in ['dbname', 'user', 'password', 'host', 'use_db']:

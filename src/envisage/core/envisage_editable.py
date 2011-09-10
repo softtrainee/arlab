@@ -26,7 +26,7 @@ class EnvisageEditable(Loggable):
     file_path = Str
     dirty = Bool
     file_extension = Str
-    name = Property(depends_on = 'file_path')
+    name = Property(depends_on='file_path')
     _name = Str
 
     def _get_name(self):
@@ -43,7 +43,7 @@ class EnvisageEditable(Loggable):
 
         return name
 
-    def _dump_items(self, path, items, use_pickle = True):
+    def _dump_items(self, path, items, use_pickle=True):
         with open(path, 'w') as f:
             self.dirty = False
             self.file_path = path

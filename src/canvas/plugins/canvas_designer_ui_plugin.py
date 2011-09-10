@@ -75,10 +75,10 @@ class CanvasDesignerUIPlugin(CoreUIPlugin):
         '''
         app = self.application
         obj = app.get_service('src.canvas.designer.canvas_manager.CanvasManager')
-        args = dict(id = 'pychron.canvas_designer.property_view',
-                         name = 'Property View',
-                         obj = obj,
-                         view = 'active_canvas_view',
+        args = dict(id='pychron.canvas_designer.property_view',
+                         name='Property View',
+                         obj=obj,
+                         view='active_canvas_view',
                          )
 
         return self.traitsuiview_factory(args, kw)

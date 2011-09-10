@@ -51,9 +51,9 @@ class H5DataManager(DataManager):
         '''
         p = self._new_frame_path(*args, **kw)
 
-        self._frame = openFile(p, mode = 'w')
+        self._frame = openFile(p, mode='w')
 
-    def add_table(self, table, table_style = 'Timestamp', parent = 'root'):
+    def add_table(self, table, table_style='Timestamp', parent='root'):
         '''
 
 
@@ -78,7 +78,7 @@ class H5DataManager(DataManager):
                 add = False
         return table
 
-    def add_group(self, group, parent = 'root'):
+    def add_group(self, group, parent='root'):
         '''
 
 
@@ -89,7 +89,7 @@ class H5DataManager(DataManager):
 
         self._frame = df
 
-    def _get_parent(self, parent, df = None):
+    def _get_parent(self, parent, df=None):
         '''
 
 
@@ -111,7 +111,7 @@ class H5DataManager(DataManager):
 
         return df, pgrp
 
-    def _get_tables(self, df = None, path = None):
+    def _get_tables(self, df=None, path=None):
         '''
           
         '''
@@ -119,12 +119,12 @@ class H5DataManager(DataManager):
         tabs = {}
         #tabs=[]
         if path is not None:
-            df = openFile(path, mode = 'r')
+            df = openFile(path, mode='r')
 
         for group in df.walkGroups('/'):
 
 #            grpname = self._get_group_name(group)
-            for table in df.listNodes(group, classname = 'Table'):
+            for table in df.listNodes(group, classname='Table'):
                 #name = '%s.%s' % (grpname, table.name)
                 #tabs.append((grpname, table.name))
                 tabs[table.name] = table

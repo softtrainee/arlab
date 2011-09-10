@@ -75,7 +75,7 @@ class CoreScriptParser(object):
 
         return errors
 
-    def _raw_parse(self, linenum, line = None):
+    def _raw_parse(self, linenum, line=None):
         if line is None:
             line = self.text[linenum - 1]
 

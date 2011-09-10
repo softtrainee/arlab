@@ -28,10 +28,10 @@ class FusionsUVLogicBoard(FusionsLogicBoard):
         G{classtree}
     '''
     attenuator_motor = Instance(KerrMotor)
-    attenuation = DelegatesTo('attenuator_motor', prefix = 'data_position')
-    attenuationmin = DelegatesTo('attenuator_motor', prefix = 'min')
-    attenuationmax = DelegatesTo('attenuator_motor', prefix = 'max')
-    update_attenuation = DelegatesTo('attenuator_motor', prefix = 'update_position')
+    attenuation = DelegatesTo('attenuator_motor', prefix='data_position')
+    attenuationmin = DelegatesTo('attenuator_motor', prefix='min')
+    attenuationmax = DelegatesTo('attenuator_motor', prefix='max')
+    update_attenuation = DelegatesTo('attenuator_motor', prefix='update_position')
 
 
 
@@ -51,7 +51,7 @@ class FusionsUVLogicBoard(FusionsLogicBoard):
     def _attenuator_motor_default(self):
         '''
         '''
-        return KerrMotor(name = 'attenuator', parent = self)
+        return KerrMotor(name='attenuator', parent=self)
 #============= views ===================================
 
 #============= EOF ====================================

@@ -26,7 +26,7 @@ class AffineTransform:
     #     [ b d f]
     #     [ 0 0 1]
     # self.A = [a b c d e f] = " [ A[0] A[1] A[2] A[3] A[4] A[5] ]"
-    def __init__(self, init = None):
+    def __init__(self, init=None):
         if init:
             if len(init) == 6 :
                 self.A = init

@@ -83,18 +83,18 @@ class ResidualsGraph(RegressionGraph):
         self.xtitle = kw['xtitle'] if 'xtitle' in kw else None
         return super(ResidualsGraph, self).new_plot(*args, **kw)
 
-    def new_series(self, x = None, y = None, plotid = 0, **kw):
+    def new_series(self, x=None, y=None, plotid=0, **kw):
         '''
         '''
 
-        plot, scatter, _line = super(ResidualsGraph, self).new_series(x = x, y = y, plotid = plotid, **kw)
+        plot, scatter, _line = super(ResidualsGraph, self).new_series(x=x, y=y, plotid=plotid, **kw)
         for underlay in plot.underlays:
             if underlay.orientation == 'bottom':
                 underlay.visible = False
                 underlay.padding_bottom = 0
         plot.padding_bottom = 0
 
-        x, y, res = self.calc_residuals(plotid = plotid)
+        x, y, res = self.calc_residuals(plotid=plotid)
 
         ressplit = self._split_residual(x, res)
         resneg = ArrayDataSource(ressplit[1])
@@ -104,55 +104,55 @@ class ResidualsGraph(RegressionGraph):
 
         yrange = DataRange1D(ArrayDataSource(res))#, low_setting = -2, high_setting = 2)
 
-        ymapper = LinearMapper(range = yrange)
+        ymapper = LinearMapper(range=yrange)
 
-        container = self._container_factory(type = 'o',
-                                            padding = [50, 15, 0, 30],
-                                            height = 75,
-                                            resizable = 'h'
+        container = self._container_factory(type='o',
+                                            padding=[50, 15, 0, 30],
+                                            height=75,
+                                            resizable='h'
                                             )
-        bar = BarPlot(index = xneg,
-                    value = resneg,
-                    index_mapper = scatter.index_mapper,
-                    value_mapper = ymapper,
-                    bar_width = 0.2,
-                    line_color = 'blue',
-                    fill_color = 'blue',
+        bar = BarPlot(index=xneg,
+                    value=resneg,
+                    index_mapper=scatter.index_mapper,
+                    value_mapper=ymapper,
+                    bar_width=0.2,
+                    line_color='blue',
+                    fill_color='blue',
 
-                    border_visible = True,
+                    border_visible=True,
                     )
 
 #        left_axis = PlotAxis(bar, orientation = 'left')
         #bottom_axis=PlotAxis(bar,orientaiton='bottom')
 
-        kw = dict(vtitle = 'residuals')
+        kw = dict(vtitle='residuals')
         if self.xtitle:
             kw['htitle'] = self.xtitle
         add_default_axes(bar, **kw)
-        hgrid = PlotGrid(mapper = ymapper,
-                       component = bar,
-                       orientation = 'horizontal',
-                       line_color = 'lightgray',
-                       line_style = 'dot')
+        hgrid = PlotGrid(mapper=ymapper,
+                       component=bar,
+                       orientation='horizontal',
+                       line_color='lightgray',
+                       line_style='dot')
 
         bar.underlays.append(hgrid)
 #        bar.underlays.append(left_axis)
 #        bar.underlays.append(bottom_axis)
 
-        bar2 = BarPlot(index = xpos,
-                    value = respos,
-                    index_mapper = scatter.index_mapper,
-                    value_mapper = ymapper,
-                    bar_width = 0.2,
-                    line_color = 'green',
-                    fill_color = 'green',
+        bar2 = BarPlot(index=xpos,
+                    value=respos,
+                    index_mapper=scatter.index_mapper,
+                    value_mapper=ymapper,
+                    bar_width=0.2,
+                    line_color='green',
+                    fill_color='green',
                     #bgcolor = 'green',
 
-                    resizable = 'hv',
-                    border_visible = True,
+                    resizable='hv',
+                    border_visible=True,
                     #padding = [30, 5, 0, 30]
                     )
-        bar2.overlays.append(GuideOverlay(bar2, value = 0, color = (0, 0, 0)))
+        bar2.overlays.append(GuideOverlay(bar2, value=0, color=(0, 0, 0)))
         bar2.underlays.append(hgrid)
         container.add(bar)
         container.add(bar2)

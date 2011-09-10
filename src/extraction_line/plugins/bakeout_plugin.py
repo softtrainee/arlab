@@ -32,8 +32,8 @@ class BakeoutPlugin(CorePlugin):
         '''
         '''
         so = self.service_offer_factory(
-                          protocol = BakeoutManager,
-                          factory = self._factory)
+                          protocol=BakeoutManager,
+                          factory=self._factory)
 
 #        so1 = self.service_offer_factory(
 #                          protocol = GaugeManager,
@@ -51,13 +51,13 @@ class BakeoutPlugin(CorePlugin):
 
         return bm
 
-    managers = List(contributes_to = MANAGERS)
+    managers = List(contributes_to=MANAGERS)
     def _managers_default(self):
         '''
         '''
         app = self.application
-        return [dict(name = 'bakeout',
-                     manager = app.get_service(BakeoutManager))]
+        return [dict(name='bakeout',
+                     manager=app.get_service(BakeoutManager))]
 
 #============= views ===================================
 #============= EOF ====================================

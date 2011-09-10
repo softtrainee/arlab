@@ -44,7 +44,7 @@ class ContourGraph(Graph):
         '''
         return [('PNG', 'save_png', {})]
 
-    def new_plot(self, add = True, **kw):
+    def new_plot(self, add=True, **kw):
         '''
             @type add: C{str}
             @param add:
@@ -58,7 +58,7 @@ class ContourGraph(Graph):
 
         return p
 
-    def new_series(self, x = None, y = None, z = None, colorbar = False, plotid = 0, style = 'xy', **kw):
+    def new_series(self, x=None, y=None, z=None, colorbar=False, plotid=0, style='xy', **kw):
         '''
             @type x: C{str}
             @param x:
@@ -76,7 +76,7 @@ class ContourGraph(Graph):
             @param style:
 
         '''
-        plot, names, rd = self._series_factory(x, y, plotid = plotid, **kw)
+        plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
 
         if style in ['xy', 'cmap_scatter']:
 
@@ -140,23 +140,23 @@ class ContourGraph(Graph):
                 xdata, ydata = index.get_data()
                 xdata, ydata = xdata.get_data(), ydata.get_data()
 
-                self.set_data(xdata, plotid = 1)
-                self.set_data(d1, plotid = 1, axis = 1)
+                self.set_data(xdata, plotid=1)
+                self.set_data(d1, plotid=1, axis=1)
 
-                self.set_data(ydata, plotid = 2)
-                self.set_data(d2, plotid = 2, axis = 1)
+                self.set_data(ydata, plotid=2)
+                self.set_data(d2, plotid=2, axis=1)
 
                 yy = [ydata[y_ndx]]
                 xx = [xdata[x_ndx]]
                 v = [data.data[y_ndx, x_ndx]]
 
-                self.set_data(xx, plotid = 1, series = 1)
-                self.set_data(v, plotid = 1, series = 1, axis = 1)
-                self.set_data(v, plotid = 1, series = 1, axis = 2)
+                self.set_data(xx, plotid=1, series=1)
+                self.set_data(v, plotid=1, series=1, axis=1)
+                self.set_data(v, plotid=1, series=1, axis=2)
 
-                self.set_data(yy, plotid = 2, series = 1)
-                self.set_data(v, plotid = 2, series = 1, axis = 1)
-                self.set_data(v, plotid = 2, series = 1, axis = 2)
+                self.set_data(yy, plotid=2, series=1)
+                self.set_data(v, plotid=2, series=1, axis=1)
+                self.set_data(v, plotid=2, series=1, axis=2)
                 self.plotcontainer.request_redraw()
 
     def _plotcontainer_default(self):
@@ -167,7 +167,7 @@ class ContourGraph(Graph):
     def container_factory(self):
         '''
         '''
-        return self._container_factory(type = 'h')
+        return self._container_factory(type='h')
 
     def _colorbar_factory(self, cplot):
         '''
@@ -175,12 +175,12 @@ class ContourGraph(Graph):
             @param cplot:
         '''
         colormap = cplot.color_mapper
-        colorbar = ColorBar(index_mapper = LinearMapper(range = colormap.range),
-                          color_mapper = colormap,
-                          plot = cplot,
-                          orientation = 'v',
-                          resizable = 'v',
-                          width = 30,
+        colorbar = ColorBar(index_mapper=LinearMapper(range=colormap.range),
+                          color_mapper=colormap,
+                          plot=cplot,
+                          orientation='v',
+                          resizable='v',
+                          width=30,
                           #padding=20
                           )
 

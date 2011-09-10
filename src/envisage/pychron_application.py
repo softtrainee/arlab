@@ -33,7 +33,7 @@ class Pychron(WorkbenchApplication):
     def _about_dialog_default(self):
         '''
         '''
-        about_dialog = AboutDialog(parent = self.workbench.active_window.control)
+        about_dialog = AboutDialog(parent=self.workbench.active_window.control)
         return about_dialog
 
     def _splash_screen_default(self):
@@ -43,8 +43,8 @@ class Pychron(WorkbenchApplication):
                        'resources'
                        )
         sp = SplashScreen(
-                          image = ImageResource(name = 'splash.png',
-                                                search_path = [p]
+                          image=ImageResource(name='splash.png',
+                                                search_path=[p]
                                                 )
                           )
         return sp

@@ -57,14 +57,14 @@ class NewportMotionController(MotionController):
             progress.change_message(msg)
 
         #force group destruction
-        self.destroy_group(force = True)
+        self.destroy_group(force=True)
 
         #get and clear any error
         self.read_error()
 
 
         return r
-    def axes_factory(self, config = None):
+    def axes_factory(self, config=None):
         if config is None:
 
             config = self.get_configuration(self.config_path)
@@ -85,11 +85,11 @@ class NewportMotionController(MotionController):
         for i, a in enumerate(mapping):
             limits = [float(v) for v in config.get('Axes Limits', a).split(',')]
             na = self._axis_factory(config_path,
-                                  name = a,
-                                  id = i + 1,
-                                  negative_limit = limits[0],
-                                  positive_limit = limits[1],
-                                  loadposition = loadposition[i]
+                                  name=a,
+                                  id=i + 1,
+                                  negative_limit=limits[0],
+                                  positive_limit=limits[1],
+                                  loadposition=loadposition[i]
                                   )
 
             self.axes[a] = na
@@ -135,7 +135,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         #the esp 300 doesnt like grouped commands 
         #ie 1PA1.0;2PA1.0
-        self.set_attribute(config, 'group_commands', 'General', 'group_commands', cast = 'boolean', optional = True)
+        self.set_attribute(config, 'group_commands', 'General', 'group_commands', cast='boolean', optional=True)
 
         #set the drive calibration values
 
@@ -156,7 +156,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         '''
         '''
 
-        self.joystick = Joystick(parent = self)
+        self.joystick = Joystick(parent=self)
         self.joystick.load_parameters(f)
 
 #        self.joystick_bits=[]
@@ -200,7 +200,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         self.joystick.disable_laser()
     def get_xy(self):
 
-        v = self.ask('1TP?;2TP?', verbose = False)
+        v = self.ask('1TP?;2TP?', verbose=False)
         return map(float, v.split('\n'))
 
     def get_current_position(self, aid):
@@ -217,8 +217,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
             ax = self._get_axis_by_id(aid)
             axis = ax.name
 
-        cmd = self._build_query('TP', xx = aid)
-        f = self.ask(cmd, verbose = False)
+        cmd = self._build_query('TP', xx=aid)
+        f = self.ask(cmd, verbose=False)
 
         if f != 'simulation' and f is not None:
             try:
@@ -268,17 +268,17 @@ ABLE TO USE THE HARDWARE JOYSTICK
         self.parent.canvas.set_desired_position(x, y)
         self.parent.canvas.set_stage_position(x, y)
 
-        self.single_axis_move(ax_key, v, block = False, mode = 'relative', update = False)
+        self.single_axis_move(ax_key, v, block=False, mode='relative', update=False)
 
         setattr(self, '_{}_position'.format(ax_key), v)
 
-    def multiple_point_move(self, points, nominal_displacement = 0.5):
+    def multiple_point_move(self, points, nominal_displacement=0.5):
 
         self.timer = self.timer_factory()
         #use a nominal displacement to set the motion params
-        self.configure_group(True, displacement = nominal_displacement)
-        cmd = self._build_command('HQ', xx = self.groupobj.id, nn = 10)
-        self.tell(cmd, verbose = True)
+        self.configure_group(True, displacement=nominal_displacement)
+        cmd = self._build_command('HQ', xx=self.groupobj.id, nn=10)
+        self.tell(cmd, verbose=True)
 
         while 1:
             #isue the first 10 points and wait
@@ -286,13 +286,13 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 #sign correct each point
                 x = self._sign_correct(x, 'x')
                 y = self._sign_correct(y, 'y')
-                cmd = self._build_command('HL', xx = self.groupobj.id, nn = '{:0.5f},{:0.5f}'.format(x, y))
-                self.tell(cmd, verbose = True)
+                cmd = self._build_command('HL', xx=self.groupobj.id, nn='{:0.5f},{:0.5f}'.format(x, y))
+                self.tell(cmd, verbose=True)
 
             waiting = True
             while waiting and not self.simulation:
-                cmd = self._build_query('HQ', xx = self.groupobj.id)
-                resp = self.ask(cmd, verbose = False)
+                cmd = self._build_query('HQ', xx=self.groupobj.id)
+                resp = self.ask(cmd, verbose=False)
                 if resp is not None:
                     resp = resp.strip()
                     waiting = True if int(resp) != 10 else False
@@ -330,8 +330,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
             self._x_position = x
             return
 
-        errx = self._validate(x, 'x', cur = self._x_position)
-        erry = self._validate(y, 'y', cur = self._y_position)
+        errx = self._validate(x, 'x', cur=self._x_position)
+        erry = self._validate(y, 'y', cur=self._y_position)
         if errx is None and erry is None:
             return 'invalidate position {},{}'.format(x, y)
 
@@ -344,11 +344,11 @@ ABLE TO USE THE HARDWARE JOYSTICK
             self._y_position = y
 
             self.timer = self.timer_factory()
-            self._linear_move_(dict(x = x, y = y), **kw)
+            self._linear_move_(dict(x=x, y=y), **kw)
         else:
             self.info('displacement of move too small {} < {}'.format(d, tol))
 
-    def single_axis_move(self, key, value, block = False, mode = 'absolute', update = True):
+    def single_axis_move(self, key, value, block=False, mode='absolute', update=True):
         '''
         '''
 
@@ -363,8 +363,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
         else:
             cmd = 'PR'
 
-        cmd = self._build_command(cmd, xx = id,
-                                  nn = '{:0.5f}'.format(self._sign_correct(value, key) * ax.drive_ratio))
+        cmd = self._build_command(cmd, xx=id,
+                                  nn='{:0.5f}'.format(self._sign_correct(value, key) * ax.drive_ratio))
         func = None
 
         if key != 'z':
@@ -377,7 +377,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 y = value
                 o = self._y_position
 
-            if self._validate(value, key, cur = o) is  None:
+            if self._validate(value, key, cur=o) is  None:
                 return 'invalidate position {}'.format(value)
 
             self.parent.canvas.set_desired_position(x, y)
@@ -393,11 +393,11 @@ ABLE TO USE THE HARDWARE JOYSTICK
             func = self._z_inprogress_update
 
         if update:
-            self.timer = self.timer_factory(func = func)
+            self.timer = self.timer_factory(func=func)
 
-        self._axis_move(cmd, block = block)
+        self._axis_move(cmd, block=block)
 
-    def multiple_axis_move(self, axes_list, block = False):
+    def multiple_axis_move(self, axes_list, block=False):
         '''
             block - wait for move to complete before returning control
         '''
@@ -411,9 +411,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
 
 
-        self._axis_move(cmd, block = block)
+        self._axis_move(cmd, block=block)
 
-    def arc_move(self, cx, cy, angle, block = True, sign_correct = True):
+    def arc_move(self, cx, cy, angle, block=True, sign_correct=True):
         ''' 
             the radius of the resultant arc is
             the distance from the center to the current point
@@ -439,7 +439,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         z = self.axes['z'].loadposition
         return x, y, z
 
-    def home(self, axes, search_mode = 4, block = True):
+    def home(self, axes, search_mode=4, block=True):
         '''
         '''
         #manual 3-104
@@ -457,13 +457,13 @@ ABLE TO USE THE HARDWARE JOYSTICK
         # index signal transition.
 
         #destroy the grouping
-        self.destroy_group(force = True)
+        self.destroy_group(force=True)
 
 
 #        cmd = ';'.join(['{}OR{{}}'.format(k.id) for k in self.axes.itervalues()])
         #if all:
 #            cmd = ';'.join(['{}OR{{}}'.format(k.id) for k in self.axes.itervalues()])
-        cmd = ';'.join([self._build_command('OR', a.id, nn = search_mode if a.name.lower() != 'z' else 3)
+        cmd = ';'.join([self._build_command('OR', a.id, nn=search_mode if a.name.lower() != 'z' else 3)
                          for a in self.axes.itervalues() if a.name in axes])
 
 
@@ -488,7 +488,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 if block:
                     self._block_()
 
-    def block_group(self, n = 10):
+    def block_group(self, n=10):
         cmd = '1HQ%i' % n
         self.tell(cmd)
 
@@ -498,11 +498,11 @@ ABLE TO USE THE HARDWARE JOYSTICK
     def group_moving(self):
 #        cmd = '1HS?'
 
-        cmd = self._build_query('HS', xx = self.groupobj.id)
+        cmd = self._build_query('HS', xx=self.groupobj.id)
         m = True if self.ask(cmd) == '0' else False
         return m
 
-    def stop(self, ax_key = None):
+    def stop(self, ax_key=None):
 
         if self.timer is not None:
             self.timer.Stop()
@@ -516,12 +516,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 time.sleep(0.1)
         else:
             if isinstance(ax_key, str):
-                cmd = self._build_command('ST', xx = self.axes[ax_key].id)
+                cmd = self._build_command('ST', xx=self.axes[ax_key].id)
             else:
                 cmd = 'ST'
             self.tell(cmd)
 
-    def destroy_group(self, force = False, mode = 1):
+    def destroy_group(self, force=False, mode=1):
         '''
         '''
         if self.mode == 'grouped' or force:
@@ -541,21 +541,21 @@ ABLE TO USE THE HARDWARE JOYSTICK
         for k in kw:
             if k in self.axes:
                 id = self.axes[k].id
-                cmd.append(self._build_command('SH', xx = id, nn = kw[k]))
+                cmd.append(self._build_command('SH', xx=id, nn=kw[k]))
 
         self.tell(';'.join(cmd))
 
-    def define_home(self, axis = None):
+    def define_home(self, axis=None):
         '''
         '''
         if axis is not None:
             id = self.axes[axis].id
-            cmd = self._build_command('DH', xx = id, nn = 0)
+            cmd = self._build_command('DH', xx=id, nn=0)
         else:
             cmd = []
             for k in ['x', 'y']:
                 id = self.axes[k].id
-                cmd.append(self._build_command('DH', xx = id, nn = 0))
+                cmd.append(self._build_command('DH', xx=id, nn=0))
             cmd = ';'.join(cmd)
 
         self.tell(cmd)
@@ -583,7 +583,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         self._trajectory_mode = mode
         coms = []
         for k in self.axes:
-            coms.append(self._build_command('TJ', xx = self.axes[k].id, nn = mode))
+            coms.append(self._build_command('TJ', xx=self.axes[k].id, nn=mode))
 
         if self.group_commands:
             com = ';'.join(coms)
@@ -620,7 +620,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             except:
                 pass
         return error
-    def set_group_motion_parameters(self, acceleration = None, deceleration = None, velocity = None):
+    def set_group_motion_parameters(self, acceleration=None, deceleration=None, velocity=None):
         if self.groupobj is not None:
             if acceleration is not None:
                 self.groupobj.acceleration = acceleration
@@ -635,16 +635,16 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if obj.calculate_parameters:
             change, nv, ac, dc = self.motion_profiler.check_motion(displacement, obj)
             if change:
-                obj.trait_set(_acceleration = ac,
-                                        _deceleration = dc,
-                                        _velocity = nv)
+                obj.trait_set(_acceleration=ac,
+                                        _deceleration=dc,
+                                        _velocity=nv)
         else:
             change = (obj.machine_acceleration != obj.acceleration or
                       obj.machine_deceleration != obj.deceleration or
                       obj.machine_velocity != obj.velocity)
         return change
 
-    def configure_group(self, group, displacement = None):
+    def configure_group(self, group, displacement=None):
         gobj = self.groupobj
         if not gobj and group:
             self.logger.warn('GROUPED MOVE NOT ENABLED')
@@ -659,7 +659,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if not group:
                 self.destroy_group()
             elif change: #the group needs a motion parameter change
-                self._set_axis_grouping(new_group = False)
+                self._set_axis_grouping(new_group=False)
         else: # mode==normal
             if group:
                 self._set_axis_grouping()
@@ -668,8 +668,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         return True
 
-    def at_velocity(self, axkey, event, tol = 0.25):
-        desired_velocity = float(self.ask(self._build_query('VA', xx = self.axes[axkey].id)))
+    def at_velocity(self, axkey, event, tol=0.25):
+        desired_velocity = float(self.ask(self._build_query('VA', xx=self.axes[axkey].id)))
         av = self.read_actual_velocity(axkey)
         while av is not None and abs(abs(av) - desired_velocity) > tol:
             av = self.read_actual_velocity(axkey)
@@ -686,13 +686,13 @@ ABLE TO USE THE HARDWARE JOYSTICK
     def read_actual_velocity(self, axkey):
         ax = self.axes[axkey]
 #        self._build_command('TV', xx = ax.id, nn = '?')
-        cmd = self._build_query('TV', xx = ax.id)
-        v = self.ask(cmd, verbose = False)
+        cmd = self._build_query('TV', xx=ax.id)
+        v = self.ask(cmd, verbose=False)
         if v is not None:
             return float(v)
 
 
-    def _set_axis_grouping(self, new_group = True):
+    def _set_axis_grouping(self, new_group=True):
         #check group_parameters are acceptable
         if new_group:
             msg = 'setting new group'
@@ -713,7 +713,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 #self.read_error()
                 #time.sleep(0.1)
 
-    def _set_single_axis_motion_parameters(self, axis = None, pdict = None):
+    def _set_single_axis_motion_parameters(self, axis=None, pdict=None):
         '''
            
         '''
@@ -721,9 +721,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
             axis = self.axes[pdict['key']]
 
         else:
-            pdict = dict(velocity = axis.velocity,
-                       acceleration = axis.acceleration,
-                       deceleration = axis.deceleration)
+            pdict = dict(velocity=axis.velocity,
+                       acceleration=axis.acceleration,
+                       deceleration=axis.deceleration)
 
         param_coms = [('VA', 'velocity'),
                     ('AC', 'acceleration'),
@@ -749,7 +749,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if a.id == id:
                 return a
 
-    def _linear_move_(self, kwargs, block = False, grouped_move = True, sign_correct = True, **kw):
+    def _linear_move_(self, kwargs, block=False, grouped_move=True, sign_correct=True, **kw):
         '''
         '''
         self.configure_group(grouped_move, **kw)
@@ -772,7 +772,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 #            if self.axes['x'].id == 2:
 #                st = '{:n}HL{y:0.3f},{x:0.3f}'.format(id, **kwargs)
 
-            self.tell(st, verbose = True)
+            self.tell(st, verbose=True)
         else:
 
             self.multiple_axis_move([
@@ -783,7 +783,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if block:
             self._block_()
 
-    def _axis_move(self, com, block = False):
+    def _axis_move(self, com, block=False):
         '''
         '''
 
@@ -804,7 +804,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         return val * axis.sign
 
-    def _block_(self, event = None):
+    def _block_(self, event=None):
         '''
         '''
 
@@ -818,7 +818,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if event is not None:
             event.set()
 
-    def _moving_(self, axis = None):
+    def _moving_(self, axis=None):
         '''
             use TX to read the controllers state.
             see manual 3-141
@@ -832,7 +832,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if self.mode == 'grouped':
                 return self.group_moving()
             else:
-                return True if self.ask(self._build_command('MD?', xx = axis)) == '0' else False
+                return True if self.ask(self._build_command('MD?', xx=axis)) == '0' else False
 
         moving = False
         if not self.simulation:
@@ -842,7 +842,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             r = ''
             while not r or i > retries:
                 r = self.ask(self._build_command('TX'),
-                         verbose = False
+                         verbose=False
                          )
                 i += 1
 
@@ -851,7 +851,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                     r = r[0]
                     controller_state = ord(r)
 
-                    cs = make_bitarray(controller_state, width = 8)
+                    cs = make_bitarray(controller_state, width=8)
                     moving = cs[3] == '1'
             else:
                 moving = False
@@ -860,7 +860,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         return moving
 
-    def _build_command(self, command, xx = None, nn = None):
+    def _build_command(self, command, xx=None, nn=None):
         '''
         '''
         if isinstance(nn, list):
@@ -878,13 +878,13 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         return cmd.format(*args)
 
-    def _build_query(self, command, xx = ' '):
-        return self._build_command(command, xx = xx, nn = '?')
+    def _build_query(self, command, xx=' '):
+        return self._build_command(command, xx=xx, nn='?')
 
     def _axis_factory(self, path, **kw):
         '''
         '''
-        na = NewportAxis(parent = self,
+        na = NewportAxis(parent=self,
                        **kw
                          )
 

@@ -35,12 +35,12 @@ class NewportGroup(Axis):
 #    calculate_parameters = Bool(True)
     id = None
 
-    MAPPING = dict(acceleration = 'HA',
-                 deceleration = 'HD',
+    MAPPING = dict(acceleration='HA',
+                 deceleration='HD',
                  #emergency_deceleration = 'HE',
-                 jerk = 'HJ',
-                 velocity = 'HV',
-                 axes = 'HN'
+                 jerk='HJ',
+                 velocity='HV',
+                 axes='HN'
                  )
 
 
@@ -71,9 +71,9 @@ class NewportGroup(Axis):
                      'jerk',
                      'velocity',
                      ]:
-            self.set_attribute(config, attr, 'General', attr, cast = 'float')
+            self.set_attribute(config, attr, 'General', attr, cast='float')
 
-        self.set_attribute(config, 'id', 'General', 'id', cast = 'int')
+        self.set_attribute(config, 'id', 'General', 'id', cast='int')
         self.axes = tuple(map(int, self.config_get(config, 'General', 'axes').split(',')))
 
         self.nominal_velocity = self.velocity

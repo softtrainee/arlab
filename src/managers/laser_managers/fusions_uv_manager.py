@@ -41,9 +41,9 @@ class FusionsUVManager(FusionsLaserManager):
     single_shot = Button('Single Shot')
     laser_status = Str
     laseronoff = Event
-    laseronoff_label = Property(depends_on = '_enabled')
+    laseronoff_label = Property(depends_on='_enabled')
     _enabled = DelegatesTo('controller')
-    fire_label = Property(depends_on = 'triggered')
+    fire_label = Property(depends_on='triggered')
     triggered = DelegatesTo('controller')
 
     energy = DelegatesTo('controller')
@@ -84,11 +84,11 @@ class FusionsUVManager(FusionsLaserManager):
     shot_history = Instance(LaserShotHistory)
 
     auto = Event
-    auto_label = Property(depends_on = 'gas_handling_state')
+    auto_label = Property(depends_on='gas_handling_state')
     auto_led = Bool
 
     mirror = Event
-    mirror_label = Property(depends_on = 'gas_handling_state')
+    mirror_label = Property(depends_on='gas_handling_state')
     mirror_led = Bool
 
     gas_handling_state = Enum('none', 'auto', 'mirror')
@@ -159,7 +159,7 @@ class FusionsUVManager(FusionsLaserManager):
     def show_control_view(self):
         '''
         '''
-        self.edit_traits(view = 'control_view')
+        self.edit_traits(view='control_view')
 
     def get_control_buttons(self):
         '''
@@ -170,8 +170,8 @@ class FusionsUVManager(FusionsLaserManager):
         '''
         m = super(FusionsUVManager, self).get_menus()
 
-        m.append(('Laser', [dict(name = 'Control',
-                               action = 'show_control_view')]))
+        m.append(('Laser', [dict(name='Control',
+                               action='show_control_view')]))
         return m
     def get_control_sliders(self):
         '''
@@ -197,30 +197,30 @@ class FusionsUVManager(FusionsLaserManager):
         '''
 
         stg = VGroup(#Label('Stab. Mode'),
-                    Item('stablization_mode', style = 'custom',
-                         show_label = False,
-                         editor = EnumEditor(values = self.stablization_modes,
-                                           cols = 1),
+                    Item('stablization_mode', style='custom',
+                         show_label=False,
+                         editor=EnumEditor(values=self.stablization_modes,
+                                           cols=1),
                          ),
-                    HGroup(Item('stop_at_low_e', show_label = False), Label('Stop at Low Energy')),
-                    label = 'STAB. MODE',
-                    show_border = True
+                    HGroup(Item('stop_at_low_e', show_label=False), Label('Stop at Low Energy')),
+                    label='STAB. MODE',
+                    show_border=True
                     )
         tbg = self._button_group_factory([('fire', 'fire_label', 'on'),
                                                ('single_shot', '', 'on')
-                                               ], orientation = 'v')
+                                               ], orientation='v')
         bg = HGroup(VGroup(
-                         HGroup(Item('burst', show_label = False),
+                         HGroup(Item('burst', show_label=False),
                                 Label('BURST'))
                          ),
-                  Item('nburst', show_label = False),
-                  Item('cburst', show_label = False, enabled_when = '0')
+                  Item('nburst', show_label=False),
+                  Item('cburst', show_label=False, enabled_when='0')
                   )
         tg = HGroup(VGroup(Label('TRIGGER MODE'),
-                         Item('trigger_mode', style = 'custom',
-                            show_label = False,
-                               editor = EnumEditor(values = self.trigger_modes,
-                                                        cols = 1)),
+                         Item('trigger_mode', style='custom',
+                            show_label=False,
+                               editor=EnumEditor(values=self.trigger_modes,
+                                                        cols=1)),
                          bg
                          ),
                     tbg
@@ -246,28 +246,28 @@ class FusionsUVManager(FusionsLaserManager):
         sg.content.append(self._readonly_slider_factory('laser_head', 'laser_head'))
         sg.show_border = True
 
-        vg = VGroup(Item('cathode', enabled_when = '0'),
-                  Item('reservoir', enabled_when = '0'),
-                  Item('missing_pulses', enabled_when = '0'),
-                  Item('halogen_filter', enabled_when = '0'))
+        vg = VGroup(Item('cathode', enabled_when='0'),
+                  Item('reservoir', enabled_when='0'),
+                  Item('missing_pulses', enabled_when='0'),
+                  Item('halogen_filter', enabled_when='0'))
 
         pg = HGroup(sg, vg)
 
-        hg = HGroup(Item('shot_history', show_label = False, style = 'custom')
+        hg = HGroup(Item('shot_history', show_label=False, style='custom')
                   )
         return [
                 cg,
                 pg,
                 hg,
-                HGroup(Item('laser_status', style = 'readonly'))
+                HGroup(Item('laser_status', style='readonly'))
                 ]
     def control_view(self):
         '''
         '''
         control_contents = self._get_control_contents()
         v = View(
-               resizable = True,
-               title = 'UV Laser Control'
+               resizable=True,
+               title='UV Laser Control'
                )
         for c in control_contents:
 
@@ -295,10 +295,10 @@ class FusionsUVManager(FusionsLaserManager):
     def _stage_manager_default(self):
         '''
         '''
-        args = dict(name = 'uvstage',
-                            configuration_dir_name = 'uv',
-                             parent = self,
-                             stage_controller_class = 'Aerotech'
+        args = dict(name='uvstage',
+                            configuration_dir_name='uv',
+                             parent=self,
+                             stage_controller_class='Aerotech'
                              )
 
         if self.video_manager.__class__.__name__ == 'VideoManager' and self._video_stage:
@@ -314,17 +314,17 @@ class FusionsUVManager(FusionsLaserManager):
     def _logic_board_default(self):
         '''
         '''
-        return FusionsUVLogicBoard(name = 'uvlogicboard',
-                                   configuration_dir_name = 'uv')
+        return FusionsUVLogicBoard(name='uvlogicboard',
+                                   configuration_dir_name='uv')
 
     def _controller_default(self):
         '''
         '''
-        return ATLLaserControlUnit(name = 'atl_laser_control',
-                                   configuration_dir_name = 'uv',
+        return ATLLaserControlUnit(name='atl_laser_control',
+                                   configuration_dir_name='uv',
                                    )
     def _shot_history_default(self):
         '''
         '''
-        return LaserShotHistory(view_mode = 'simple')
+        return LaserShotHistory(view_mode='simple')
 #============= EOF ====================================

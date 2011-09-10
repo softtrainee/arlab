@@ -68,7 +68,7 @@ class ATLLaserControlUnit(CoreDevice):
     laser_headmax = Constant(7900.0)
 
     burst = Bool
-    nburst = Int(enter_set = True, auto_set = False)
+    nburst = Int(enter_set=True, auto_set=False)
     cburst = Int
     def start_update_timer(self):
         '''
@@ -315,8 +315,8 @@ class ATLLaserControlUnit(CoreDevice):
 if __name__ == '__main__':
     from src.helpers.logger_setup import setup
     setup('atl')
-    a = ATLLaserControlUnit(name = 'ATLLaserControlUnit',
-                          configuration_dir_name = 'uv')
+    a = ATLLaserControlUnit(name='ATLLaserControlUnit',
+                          configuration_dir_name='uv')
     a.bootstrap()
     a.laser_off()
 #============= EOF ====================================

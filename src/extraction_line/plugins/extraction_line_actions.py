@@ -79,8 +79,8 @@ class OpenViewControllerAction(Action):
         '''
         manager = get_manager(event.window)
 
-        open_manager(manager.view_controller, kind = 'livemodal',
-                     parent = manager.ui.control
+        open_manager(manager.view_controller, kind='livemodal',
+                     parent=manager.ui.control
                      )
 
 class OpenDeviceStreamerAction(Action):

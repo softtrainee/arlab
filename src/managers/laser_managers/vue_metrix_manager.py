@@ -68,14 +68,14 @@ class VueMetrixManager(Manager):
     def _control_default(self):
         '''
         '''
-        b = VueDiodeControlModule(name = 'diodecontrolmodule',
-                                      configuration_dir_name = 'diode'
+        b = VueDiodeControlModule(name='diodecontrolmodule',
+                                      configuration_dir_name='diode'
                                       )
         return b
 #============= views ===================================
     def traits_view(self):
         v = View(
-                 Item('control', show_label = False, style = 'custom'),
+                 Item('control', show_label=False, style='custom'),
 #                 VGroup(
 #                        Item('laser_amps', format_str = '%0.2f', style = 'readonly'),
 #                        Item('laser_temperature', format_str = '%0.2f', style = 'readonly'),
@@ -83,9 +83,9 @@ class VueMetrixManager(Manager):
 #                        Item('laser_voltage', format_str = '%0.2f', style = 'readonly'),
 #                        ),
 #                    handler = self.handler_klass,
-                    width = 500,
-                    height = 500,
-                    resizable = True
+                    width=500,
+                    height=500,
+                    resizable=True
                  )
         return v
 

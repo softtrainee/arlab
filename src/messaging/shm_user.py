@@ -57,7 +57,7 @@ class SharedMemoryUser(ConfigLoadable):
             mf.write('\0')
             l += 1
 
-    def _memory_factory(self, name, o_crex = False, size = None):
+    def _memory_factory(self, name, o_crex=False, size=None):
 
         args = (name,)
         kw = dict()
@@ -74,7 +74,7 @@ class SharedMemoryUser(ConfigLoadable):
 
         return shm
 
-    def _semaphore_factory(self, name, o_crex = False):
+    def _semaphore_factory(self, name, o_crex=False):
         args = (name,)
         if o_crex:
             args += (posix_ipc.O_CREX,)

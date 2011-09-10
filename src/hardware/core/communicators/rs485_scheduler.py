@@ -37,7 +37,7 @@ class RS485Scheduler(HasTraits):
         super(RS485Scheduler, self).__init__(*args, **kw)
         self._lock = Lock()
 
-    def schedule(self, func, args = None, kwargs = None):
+    def schedule(self, func, args=None, kwargs=None):
         self._lock.acquire()
         if args is None:
             args = tuple()

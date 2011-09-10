@@ -31,12 +31,12 @@ from pychron_orm import Detectors, Spectrometers, Analyses, Samples, Signals, \
     Irradiations, Reactors, IrradiationTrays
 
 class PychronDatabaseAdapter(DatabaseAdapter):
-    def add_sample(self, irradiation = None, **kw):
+    def add_sample(self, irradiation=None, **kw):
         row = Samples(**kw)
         self.add_item(row, [(Irradiations, irradiation, 'samples')])
         return row
 
-    def add_detector(self, spectrometer = None, ** kw):
+    def add_detector(self, spectrometer=None, ** kw):
         if 'gain' in kw:
             kw['gain'] = float(kw['gain'])
 
@@ -44,12 +44,12 @@ class PychronDatabaseAdapter(DatabaseAdapter):
         self.add_item(row, [(Spectrometers, spectrometer, 'detectors')])
         return row
 
-    def add_analysis(self, sample = None, **kw):
+    def add_analysis(self, sample=None, **kw):
         row = Analyses(**kw)
         self.add_item(row, [(Samples, sample, 'analyses')])
         return row
 
-    def add_signal(self, analysis = None, detector = None, **kw):
+    def add_signal(self, analysis=None, detector=None, **kw):
 
         #convert to blobs
         if 'times' in kw:
@@ -80,7 +80,7 @@ class PychronDatabaseAdapter(DatabaseAdapter):
         self.add_item(row, None)
         return row
 
-    def add_irradiation_tray(self, irradiation = None, **kw):
+    def add_irradiation_tray(self, irradiation=None, **kw):
         row = IrradiationTrays(**kw)
         self.add_item(row, [(Irradiations, irradiation, 'trays')])
         return row
@@ -98,7 +98,7 @@ class PychronDatabaseAdapter(DatabaseAdapter):
             for parent_klass, parent, relation in parent_args:
                 if parent is not None:
                     if isinstance(parent, (dict, str)):
-                        parent = self.get_item(parent_klass, filter_clause = parent)
+                        parent = self.get_item(parent_klass, filter_clause=parent)
 
                     if parent:
                         getattr(parent, relation).append(obj)
@@ -109,7 +109,7 @@ class PychronDatabaseAdapter(DatabaseAdapter):
         return self.get_items(Reactors)
 
     def get_irradiation(self, filter):
-        return self.get_item(Irradiations, filter_clause = filter)
+        return self.get_item(Irradiations, filter_clause=filter)
 
     def get_irradiations(self):
         return self.get_items(Irradiations)
@@ -118,28 +118,28 @@ class PychronDatabaseAdapter(DatabaseAdapter):
         return self.get_items(Samples)
 
     def get_sample(self, filter):
-        return self.get_item(Samples, filter_clause = filter)
+        return self.get_item(Samples, filter_clause=filter)
 
     def get_spectrometer(self, filter):
-        return self.get_item(Spectrometers, filter_clause = filter)
+        return self.get_item(Spectrometers, filter_clause=filter)
 
     def get_analysis(self, filter):
-        return self.get_item(Analyses, filter_clause = filter)
+        return self.get_item(Analyses, filter_clause=filter)
 
     def get_signal(self, filter):
-        return self.get_item(Signals, filter_clause = filter)
+        return self.get_item(Signals, filter_clause=filter)
 
     def get_item(self, *args, **kw):
-        return self.get_items(func = 'one', *args, **kw)
+        return self.get_items(func='one', *args, **kw)
 
-    def get_items(self, klass, filter_clause = None, func = 'all'):
+    def get_items(self, klass, filter_clause=None, func='all'):
         sess = self.get_session()
         query = sess.query(klass)
         items = None
         if filter_clause is not None:
 
             if isinstance(filter_clause, str):
-                filter_clause = dict(name = filter_clause)
+                filter_clause = dict(name=filter_clause)
 
             try:
                 q = query.filter_by(**filter_clause)

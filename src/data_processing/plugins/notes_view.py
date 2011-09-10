@@ -42,8 +42,8 @@ class NotesView(HasTraits):
                 f.write(self.notes)
 
     def traits_view(self):
-        v = View(HGroup(spring, Item('save', show_label = False)),
+        v = View(HGroup(spring, Item('save', show_label=False)),
                Item('notes',
-                     style = 'custom',
-                     show_label = False))
+                     style='custom',
+                     show_label=False))
         return v

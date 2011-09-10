@@ -28,12 +28,12 @@ class ExtractionLinePerspective(Perspective):
 
     contents = [
 
-              PerspectiveItem(id = 'extraction_line.canvas',
-                              width = 0.65
+              PerspectiveItem(id='extraction_line.canvas',
+                              width=0.65
                               ),
-              PerspectiveItem(id = 'extraction_line.explanation', position = 'left',
-                              relative_to = 'extraction_line.canvas',
-                              width = 0.35
+              PerspectiveItem(id='extraction_line.explanation', position='left',
+                              relative_to='extraction_line.canvas',
+                              width=0.35
                               ),
               ]
 #============= views ===================================

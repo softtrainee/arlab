@@ -29,9 +29,9 @@ class BakeoutActionSet(WorkbenchActionSet):
     id = 'pychron.bakeout.action_set'
 
     actions = [
-               Action(name = 'Bakeout',
-                      path = 'MenuBar/Extraction Line',
-                      class_name = 'src.extraction_line.plugins.bakeout_actions:OpenBakeoutManagerAction'
+               Action(name='Bakeout',
+                      path='MenuBar/Extraction Line',
+                      class_name='src.extraction_line.plugins.bakeout_actions:OpenBakeoutManagerAction'
                       )
              ]
 #============= EOF ====================================

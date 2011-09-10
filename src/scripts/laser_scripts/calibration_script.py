@@ -49,7 +49,7 @@ class CalibrationScript(FileScript):
         for name in sm.streamids:
             self.data_manager.add_group(name)
             table = 'stream'
-            self.data_manager.add_table(table, parent = 'root.%s' % name)
+            self.data_manager.add_table(table, parent='root.%s' % name)
             sm.set_stream_tableid(name, 'root.%s.%s' % (name, table))
 
 

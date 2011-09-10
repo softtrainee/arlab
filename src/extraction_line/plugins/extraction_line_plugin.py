@@ -32,8 +32,8 @@ class ExtractionLinePlugin(CorePlugin):
         '''
         '''
         so = self.service_offer_factory(
-                          protocol = ExtractionLineManager,
-                          factory = self._factory)
+                          protocol=ExtractionLineManager,
+                          factory=self._factory)
 
 #        so1 = self.service_offer_factory(
 #                          protocol = GaugeManager,
@@ -59,13 +59,13 @@ class ExtractionLinePlugin(CorePlugin):
         
         return elm
 
-    managers = List(contributes_to = MANAGERS)
+    managers = List(contributes_to=MANAGERS)
     def _managers_default(self):
         '''
         '''
         app = self.application
-        return [dict(name = 'extraction_line',
-                     manager = app.get_service(ExtractionLineManager))]
+        return [dict(name='extraction_line',
+                     manager=app.get_service(ExtractionLineManager))]
 
 #============= views ===================================
 #============= EOF ====================================

@@ -32,18 +32,18 @@ class MEditor(EnvisageEditor):
 
 class ModelerManager(EnvisageManager):
     _modeler = Instance(Modeler)
-    modeler = Property(depends_on = '_modeler')
+    modeler = Property(depends_on='_modeler')
     modelers = List(Modeler)
     editor_klass = MEditor
 
-    selected_datum = DelegatesTo('modeler', prefix = 'selected')
+    selected_datum = DelegatesTo('modeler', prefix='selected')
     def _selected_changed(self, old, new):
         self._modeler = new
 
 
 
     def new_modeler(self):
-        self.open_modeler(m = self._modeler_factory())
+        self.open_modeler(m=self._modeler_factory())
 
     def _get_modeler(self):
         return self._modeler
@@ -60,13 +60,13 @@ class ModelerManager(EnvisageManager):
     def open_default(self):
         self.open_modeler()
 
-    def open_modeler(self, m = None):
+    def open_modeler(self, m=None):
         if m is None:
             m = self.modeler
         self.selected = m
         self.window.workbench.edit(m,
-                                   kind = self.editor_klass,
-                                   use_existing = False
+                                   kind=self.editor_klass,
+                                   use_existing=False
                                    )
 
         self._modeler = m
@@ -74,7 +74,7 @@ class ModelerManager(EnvisageManager):
     def save(self):
         path = self._file_dialog('save as')
         if path is not None:
-            self.modeler.graph.save_png(path = path)
+            self.modeler.graph.save_png(path=path)
 
     def __modeler_default(self):
         return self._modeler_factory()
@@ -86,6 +86,6 @@ class ModelerManager(EnvisageManager):
         return m
 
     def data_select_view(self):
-        return View(Item('_modeler', style = 'custom', show_label = False))
+        return View(Item('_modeler', style='custom', show_label=False))
 #============= views ===================================
 #============= EOF ====================================

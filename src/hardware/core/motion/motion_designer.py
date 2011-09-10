@@ -44,8 +44,8 @@ class MotionDesigner(HasTraits):
 
 
         g.clear()
-        g.new_plot(title = 'Velocity')
-        g.new_plot(title = 'Position')
+        g.new_plot(title='Velocity')
+        g.new_plot(title='Position')
 
         atime, dtime, vtime = self.velocity_profile(0)
 
@@ -72,7 +72,7 @@ class MotionDesigner(HasTraits):
             x.append(atime + vtime + i)
             p = yo + self.velocity * i - 0.5 * self.deceleration * i ** 2
             y.append(p)
-        g.new_series(x, y, render_style = 'connectedpoints')
+        g.new_series(x, y, render_style='connectedpoints')
 
 
         #plot beam center
@@ -84,8 +84,8 @@ class MotionDesigner(HasTraits):
         #include padding in the beam radius
         yl = [pi - self.beam_radius for pi in y]
         yu = [pi + self.beam_radius for pi in y]
-        g.new_series(x, yl, color = 'blue')
-        g.new_series(x, yu, color = 'blue')
+        g.new_series(x, yl, color='blue')
+        g.new_series(x, yu, color='blue')
 
 
     def velocity_profile(self, plotid):
@@ -128,8 +128,8 @@ class MotionDesigner(HasTraits):
         totaltime = atime + dtime + vtime
         x.append(totaltime)
         y.append(0)
-        g.new_series(x, y, plotid = plotid, render_style = 'connectedpoints')
-        g.set_y_limits(plotid = plotid, max = self.velocity + 5)
+        g.new_series(x, y, plotid=plotid, render_style='connectedpoints')
+        g.set_y_limits(plotid=plotid, max=self.velocity + 5)
 
 
         return atime, dtime, vtime
@@ -144,11 +144,11 @@ class MotionDesigner(HasTraits):
                    )
         v = View(
                  cgrp,
-                 Item('canvas', show_label = False,
-                    style = 'custom'),
-                 resizable = True,
-                 width = 800,
-                 height = 700
+                 Item('canvas', show_label=False,
+                    style='custom'),
+                 resizable=True,
+                 width=800,
+                 height=700
                  )
         return v
     def _canvas_default(self):

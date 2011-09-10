@@ -50,24 +50,24 @@ class SEditor(EnvisageEditor):
 class ScriptSelector(HasTraits):
     names = ['BakeoutScript', 'ExtractionLineScript', 'PowerScanScript', 'PowerMapScript']
     scripts = dict(
-                   BakeoutScript = ['bakeout_script', None],
-                   ExtractionLineScript = ['extraction_line_script',
+                   BakeoutScript=['bakeout_script', None],
+                   ExtractionLineScript=['extraction_line_script',
                                             'src.managers.extraction_line_manager.ExtractionLineManager'],
-                   PowerScanScript = ['laser.power_scan_script',
+                   PowerScanScript=['laser.power_scan_script',
                                       ('src.managers.laser_managers.fusions_diode_manager.FusionsDiodeManager',
                                        'src.managers.laser_managers.fusions_co2_manager.FusionsCO2Manager',
                                        )],
-                   PowerMapScript = ['laser.power_map_script',
+                   PowerMapScript=['laser.power_map_script',
                                       ('src.managers.laser_managers.fusions_diode_manager.FusionsDiodeManager',
                                        'src.managers.laser_managers.fusions_co2_manager.FusionsCO2Manager',
                                        )],
                    )
-    selected = Property(depends_on = '_selected')
+    selected = Property(depends_on='_selected')
     _selected = Str('BakeoutScript')
 
-    v = View(Item('selected', show_label = False, editor = EnumEditor(values = names)),
-             kind = 'modal',
-             buttons = ['OK', 'Cancel']
+    v = View(Item('selected', show_label=False, editor=EnumEditor(values=names)),
+             kind='modal',
+             buttons=['OK', 'Cancel']
              )
 
     def _get_selected(self):
@@ -148,16 +148,16 @@ class ScriptsManager(EnvisageManager):
             self.validator.errors = []
             for script in self.scripts:
 
-                self.validator.validate(script, file = script.name)
+                self.validator.validate(script, file=script.name)
         else:
             self.validator.errors = []
 
     def _validator_default(self):
         '''
         '''
-        return ScriptValidator(parent = self)
+        return ScriptValidator(parent=self)
 
-    def add_and_edit(self, s, new = False):
+    def add_and_edit(self, s, new=False):
 
         if new:
             self.process_view.dirty = True
@@ -168,8 +168,8 @@ class ScriptsManager(EnvisageManager):
         self.selected = s
         s.parent = self
         self.window.workbench.edit(s,
-                                   kind = self.editor_klass,
-                                   use_existing = False)
+                                   kind=self.editor_klass,
+                                   use_existing=False)
 
     def new(self):
         '''
@@ -182,9 +182,9 @@ class ScriptsManager(EnvisageManager):
 
             sk, sp, ma = ss.selected
 
-            kw = dict(script_package = sp,
-                      script_klass = sk,
-                      _name = sk
+            kw = dict(script_package=sp,
+                      script_klass=sk,
+                      _name=sk
                       )
 
             if ma is not None:
@@ -192,16 +192,16 @@ class ScriptsManager(EnvisageManager):
 
             s = self.klass_factory(**kw)
             s.bootstrap()
-            self.add_and_edit(s, new = True)
+            self.add_and_edit(s, new=True)
 
 
     def klass_factory(self, **kw):
 
         if not kw:
 
-            kw = dict(script_package = self.script_package,
-                    script_klass = self.script_klass,
-                    manager = self.get_service(self.manager_protocol)
+            kw = dict(script_package=self.script_package,
+                    script_klass=self.script_klass,
+                    manager=self.get_service(self.manager_protocol)
                     )
 
         s = self.klass(
@@ -222,5 +222,5 @@ class ScriptsManager(EnvisageManager):
     def error_view(self):
         '''
         '''
-        return View(Item('validator', show_label = False, style = 'custom'))
+        return View(Item('validator', show_label=False, style='custom'))
 #============= EOF ====================================

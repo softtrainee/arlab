@@ -42,8 +42,8 @@ class HardwareCreator():
             f.write(self.render())
 
     def render(self):
-        render_dict = dict(imports = 'from src.hardware.core.core_device import CoreDevice',
-                           hw_name = self.hardware_name)
+        render_dict = dict(imports='from src.hardware.core.core_device import CoreDevice',
+                           hw_name=self.hardware_name)
         self.text = '''
 {imports}
 class {hw_name}(CoreDevice):
@@ -70,8 +70,8 @@ class {hw_name}(CoreDevice):
         return v
         
 '''.format(
-           set_func = 'pass',
-           get_func = 'foo',
+           set_func='pass',
+           get_func='foo',
            )
 
     def _add_class_attributes(self):
@@ -128,17 +128,17 @@ if __name__ == '__main__':
 
     import argparse
 
-    parser = argparse.ArgumentParser(description = 'Create a new hardware device')
+    parser = argparse.ArgumentParser(description='Create a new hardware device')
 
-    parser.add_argument('class_name', metavar = 'class_name', type = str, nargs = '?',
-                       help = 'camel case class name')
+    parser.add_argument('class_name', metavar='class_name', type=str, nargs='?',
+                       help='camel case class name')
 
-    parser.add_argument('-o', metavar = 'file_name', type = str, nargs = '?',
-                       help = 'Python file name for the hardware',
-                       default = None)
-    parser.add_argument('-i', metavar = 'input file_name', type = str, nargs = '?',
-                       help = 'XML input file ',
-                       default = None)
+    parser.add_argument('-o', metavar='file_name', type=str, nargs='?',
+                       help='Python file name for the hardware',
+                       default=None)
+    parser.add_argument('-i', metavar='input file_name', type=str, nargs='?',
+                       help='XML input file ',
+                       default=None)
 
 #    parser.add_argument('--sum', dest = 'accumulate', action = 'store_const',
 #                       const = sum, default = max,

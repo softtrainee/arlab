@@ -27,7 +27,7 @@ class Detector(SpectrometerDevice):
     name = Str
     relative_position = Float(1)
 
-    deflection = Property(Float(enter_set = True, auto_set = False), depends_on = '_deflection')
+    deflection = Property(Float(enter_set=True, auto_set=False), depends_on='_deflection')
     _deflection = Float
 
     intensity = Float

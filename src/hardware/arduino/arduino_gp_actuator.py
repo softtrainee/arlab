@@ -78,7 +78,7 @@ class ArduinoGPActuator(GPActuator):
             '''
             i = 0
             while s is None and i < 10:
-                s = self.ask(cmd, verbose = False)
+                s = self.ask(cmd, verbose=False)
                 i += 1
             if i == 10:
                 s = False

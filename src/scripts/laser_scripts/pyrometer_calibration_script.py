@@ -34,9 +34,9 @@ class PIDLoop(HasTraits):
         G{classtree}
     '''
     dt = 0.02
-    kp = Float(enter_set = True, auto_set = False)
-    ki = Float(enter_set = True, auto_set = False)
-    kd = Float(enter_set = True, auto_set = False)
+    kp = Float(enter_set=True, auto_set=False)
+    ki = Float(enter_set=True, auto_set=False)
+    kd = Float(enter_set=True, auto_set=False)
     previous_error = 0
     integral = 0
     def __init__(self, p, i, d):
@@ -105,7 +105,7 @@ class PyrometerCalibrationScript(FileScript):
         '''
         '''
 
-        rg = ResidualsGraph(title = 'Pyrometer Calibration Curve')
+        rg = ResidualsGraph(title='Pyrometer Calibration Curve')
         rg.new_plot()
         rg.new_series()
         return rg
@@ -129,7 +129,7 @@ class PyrometerCalibrationScript(FileScript):
         manager.stream_manager.start_streams()
 
         #fire laser
-        self.progress.add_text('firing laser' , color = (255, 0, 0))
+        self.progress.add_text('firing laser' , color=(255, 0, 0))
         manager.enable_laser()
 
 
@@ -144,13 +144,13 @@ class PyrometerCalibrationScript(FileScript):
 
                 self.calibration_points = []
                 for si in range(int(args[0]), int(args[1]) + 1, int(args[2])):
-                    t = Thread(target = self._execute_step, args = (si,))
+                    t = Thread(target=self._execute_step, args=(si,))
                     t.start()
                     t.join()
 
             else:
                 si = float(args[0])
-                t = Thread(target = self._execute_step, args = (si,))
+                t = Thread(target=self._execute_step, args=(si,))
                 t.start()
                 t.join()
 
@@ -175,7 +175,7 @@ class PyrometerCalibrationScript(FileScript):
 
         emiss = manager.pyrometer.emissivity
         if self.at_setpoint(temp):
-            self.progress.add_text('Emissivity calibration point e=%0.3f, temp=%0.3f' % (emiss, setpoint), color = (255, 100, 0))
+            self.progress.add_text('Emissivity calibration point e=%0.3f, temp=%0.3f' % (emiss, setpoint), color=(255, 100, 0))
             #if self.calibration_points is not None:
             #    self.calibration_points.append((setpoint,emiss))
             self.graph.add_datum((mean(self.temperatures), emiss))
@@ -203,13 +203,13 @@ class PyrometerCalibrationScript(FileScript):
     def _start_pid_loop(self):
         '''
         '''
-        self.progress.add_text('starting PID loop', color = (255, 0, 0))
+        self.progress.add_text('starting PID loop', color=(255, 0, 0))
 
         event = Event()
         self.temperatures = array([])
         while not event.isSet():
             #self.pid.reset()
-            Thread(target = self.loop, args = (event,)).start()
+            Thread(target=self.loop, args=(event,)).start()
             time.sleep(self.update_interval / 1000.0)
 
 
@@ -240,16 +240,16 @@ class PyrometerCalibrationScript(FileScript):
 
 
         s = [
-           dict(parent = pytm, plotid = 0, delay = 1000, show_legend = True, label = 'pyrometer',
-                tableid = 'root.pyrometer_tm.stream'
+           dict(parent=pytm, plotid=0, delay=1000, show_legend=True, label='pyrometer',
+                tableid='root.pyrometer_tm.stream'
                 ),
-           dict(parent = tc, plotid = 0, series = 1, delay = 1000, new_plot = False, show_legend = True, label = 'thermocouple',
-                tableid = 'root.temperature_controller.stream'
+           dict(parent=tc, plotid=0, series=1, delay=1000, new_plot=False, show_legend=True, label='thermocouple',
+                tableid='root.temperature_controller.stream'
                 ),
-           dict(parent = py, plotid = 1, delay = 1000, type = 'line',
-                tableid = 'root.emissivity.stream')]
+           dict(parent=py, plotid=1, delay=1000, type='line',
+                tableid='root.emissivity.stream')]
 
-        sm.load_streams(s, start = False)
+        sm.load_streams(s, start=False)
 
         self.graph.clear()
         self.graph.new_plot()

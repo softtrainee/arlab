@@ -39,7 +39,7 @@ class HardwarePreferencesPage(PreferencesPage):
         v = View(
                  'enable_hardware_server',
                  'auto_find_handle',
-                 Item('auto_write_handle', enabled_when = 'auto_find_handle')
+                 Item('auto_write_handle', enabled_when='auto_find_handle')
                  )
         return v
 #============= views ===================================

@@ -45,7 +45,7 @@ class CameraCalibrationManager(Manager):
     polygons = List
     pxpercmx = Int
     pxpercmy = Int
-    target_size = Float(0.5, enter_set = True, auto_set = False) #cm
+    target_size = Float(0.5, enter_set=True, auto_set=False) #cm
     n = Int
     threshold = Range(0, 255, 100)
     cond = None
@@ -60,17 +60,17 @@ class CameraCalibrationManager(Manager):
     def update(self, object, name, old, new):
         skip = [i for i, p in enumerate(self.polygons) if not p.enabled]
 
-        self.process_image(skip = skip)
+        self.process_image(skip=skip)
 
-    def process_image(self, skip = None):
+    def process_image(self, skip=None):
         im = self.image
 
         if skip is None:
             self.polygons = []
 
         polygons = im.polygonate(self.threshold,
-                                 min_area = 20,
-                                 skip = skip, line_width = 2)
+                                 min_area=20,
+                                 skip=skip, line_width=2)
 
         widths = []
         heights = []
@@ -112,10 +112,10 @@ class CameraCalibrationManager(Manager):
             widths.append(width)
             heights.append(height)
             if skip is None:
-                self.polygons.append(Polygon(name = '{}'.format(i),
-                                             width = width,
-                                             height = height,
-                                             points = p
+                self.polygons.append(Polygon(name='{}'.format(i),
+                                             width=width,
+                                             height=height,
+                                             points=p
                                              ))
         try:
             n = len(polygons)
@@ -128,14 +128,14 @@ class CameraCalibrationManager(Manager):
             pass
 
     def _target_size_changed(self):
-        self.process_image(skip = [])
+        self.process_image(skip=[])
 
     def _threshold_changed(self):
         self.process_image()
 
     def _snapshot_fired(self):
         self.process_image()
-        self.edit_traits(view = 'snapshot_view')
+        self.edit_traits(view='snapshot_view')
 #    def calculate(self):
 #        self.process_image()
 #
@@ -156,41 +156,41 @@ class CameraCalibrationManager(Manager):
         return super(CameraCalibrationManager, self).edit_traits(*args, **kw)
 
     def traits_view(self):
-        v = View(Item('snapshot', show_label = False),
+        v = View(Item('snapshot', show_label=False),
 
                  )
         return v
 
     def snapshot_view(self):
         results_grp = VGroup(
-                             Group(Item('polygons', show_label = False, editor = TableEditor(columns = [ObjectColumn(name = 'name', editable = False),
-                                                                                                  ObjectColumn(name = 'width', editable = False),
-                                                                                                  ObjectColumn(name = 'height', editable = False),
-                                                                                                  CheckboxColumn(name = 'enabled')
+                             Group(Item('polygons', show_label=False, editor=TableEditor(columns=[ObjectColumn(name='name', editable=False),
+                                                                                                  ObjectColumn(name='width', editable=False),
+                                                                                                  ObjectColumn(name='height', editable=False),
+                                                                                                  CheckboxColumn(name='enabled')
                                                                      ]))),
                              Item('target_size'),
-                             Item('pxpercmx', style = 'readonly'),
-                             Item('pxpercmy', style = 'readonly'),
-                             Item('n', style = 'readonly')
+                             Item('pxpercmx', style='readonly'),
+                             Item('pxpercmy', style='readonly'),
+                             Item('n', style='readonly')
                              )
         v = View(
                  HGroup(
                         VGroup(
-                               Item('threshold', show_label = False),
-                               Item('image', show_label = False,
-                                    editor = ImageEditor()),
+                               Item('threshold', show_label=False),
+                               Item('image', show_label=False,
+                                    editor=ImageEditor()),
                                ),
                         results_grp
                         ),
-                 handler = MHandler,
-               title = self.title,
-               resizable = True,
-               buttons = [OKButton, CancelButton],
+                 handler=MHandler,
+               title=self.title,
+               resizable=True,
+               buttons=[OKButton, CancelButton],
 #               kind = 'livemodal'
                )
         return v
 
-    def image_factory(self, path = None, src = None):
+    def image_factory(self, path=None, src=None):
         im = Image()
 
 #        if src is not None:

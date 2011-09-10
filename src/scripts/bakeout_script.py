@@ -37,18 +37,18 @@ class BakeoutScript(CoreScript):
     controller = None
     def get_documentation(self):
         from src.scripts.core.html_builder import HTMLDoc, HTMLText
-        doc = HTMLDoc(attribs = 'bgcolor = "#ffffcc" text = "#000000"')
-        doc.add_heading('Bakeout Documentation', heading = 2, color = 'red')
-        doc.add_heading('Parameters', heading = 3)
+        doc = HTMLDoc(attribs='bgcolor = "#ffffcc" text = "#000000"')
+        doc.add_heading('Bakeout Documentation', heading=2, color='red')
+        doc.add_heading('Parameters', heading=3)
         doc.add_text('Setpoint (C), Duration (min)')
         doc.add_list(['Setpoint (C) -- Bakeout Controller Setpoint',
                       'Duration (min) -- Heating duration'
                       ])
-        table = doc.add_table(attribs = 'bgcolor="#D3D3D3" width="90%"')
-        r1 = HTMLText('Ex.', face = 'courier', size = '2')
+        table = doc.add_table(attribs='bgcolor="#D3D3D3" width="90%"')
+        r1 = HTMLText('Ex.', face='courier', size='2')
         table.add_row([r1])
 
-        r2 = HTMLText('150,360', face = 'courier', size = '2')
+        r2 = HTMLText('150,360', face='courier', size='2')
         table.add_row([r2])
 
         return str(doc)
@@ -63,11 +63,11 @@ class BakeoutScript(CoreScript):
 
     def kill_script(self):
         if self.controller is not None:
-            self.controller.end(script_kill = True)
+            self.controller.end(script_kill=True)
 #        super(BakeoutScript, self).kill_script()
         CoreScript.kill_script(self)
 
-    def wait_for_setpoint(self, sp, mean_check = True, std_check = False, mean_tolerance = 5, std_tolerance = 1, timeout = 15):
+    def wait_for_setpoint(self, sp, mean_check=True, std_check=False, mean_tolerance=5, std_tolerance=1, timeout=15):
         '''
             @type sp: C{str}
             @param sp:
@@ -87,11 +87,11 @@ class BakeoutScript(CoreScript):
                 smart_equilibrate(self,
                                   self.controller.get_temperature,
                                   sp,
-                                  mean_check = mean_check,
-                                  std_check = std_check,
-                                  mean_tolerance = mean_tolerance,
-                                  std_tolerance = std_tolerance,
-                                  timeout = timeout
+                                  mean_check=mean_check,
+                                  std_check=std_check,
+                                  mean_tolerance=mean_tolerance,
+                                  std_tolerance=std_tolerance,
+                                  timeout=timeout
                                   )
 
     def maintain(self, *args):

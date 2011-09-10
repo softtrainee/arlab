@@ -30,8 +30,8 @@ class StreamPlotEditor(PlotEditor):
         G{classtree}
     '''
     autoupdate = DelegatesTo('graph')
-    data_limit = Property(Float(enter_set = True, auto_set = False),
-                          depends_on = '_data_limit')
+    data_limit = Property(Float(enter_set=True, auto_set=False),
+                          depends_on='_data_limit')
     _data_limit = Float
 
     def __init__(self, *args, **kw):
@@ -52,13 +52,13 @@ class StreamPlotEditor(PlotEditor):
         '''
         '''
         if not self.autoupdate:
-            self.graph.set_x_limits(min = self._xmin, max = self._xmax, plotid = self.id)
-            self.graph.set_y_limits(min = self._ymin, max = self._ymax, plotid = self.id)
-            self.graph.auto_update(False, plotid = self.id)
+            self.graph.set_x_limits(min=self._xmin, max=self._xmax, plotid=self.id)
+            self.graph.set_y_limits(min=self._ymin, max=self._ymax, plotid=self.id)
+            self.graph.auto_update(False, plotid=self.id)
             #self.graph.trim_data[self.id]=False
         else:
 
-            self.graph.auto_update(True, plotid = self.id)
+            self.graph.auto_update(True, plotid=self.id)
 
     def get_axes_group(self):
         #grp = super(StreamPlotEditor, self).get_axes_group()

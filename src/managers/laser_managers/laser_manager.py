@@ -35,7 +35,7 @@ class LaserManager(Manager):
         Base class for a GUI representation of a laser device
     '''
     enable = Event
-    enable_label = Property(depends_on = '_enabled')
+    enable_label = Property(depends_on='_enabled')
     enabled_led = Instance(LED, ())
     _enabled = Bool(False)
 
@@ -60,7 +60,7 @@ class LaserManager(Manager):
 
     def get_pulse_manager(self):
         from laser_pulse_manager import LaserPulseManager
-        return LaserPulseManager(parent = self)
+        return LaserPulseManager(parent=self)
 
     def get_power_map_manager(self):
         from power_map_manager import PowerMapManager
@@ -92,7 +92,7 @@ class LaserManager(Manager):
     def get_power_slider(self):
         '''
         '''
-        return self._slider_group_factory([('request_power', 'request_power', dict(enabled_when = '_enabled'))])
+        return self._slider_group_factory([('request_power', 'request_power', dict(enabled_when='_enabled'))])
 
     def finish_loading(self):
         self.enabled_led.state = 'red' if not self._enabled else 'green'
@@ -106,7 +106,7 @@ class LaserManager(Manager):
 
             self.disable_laser()
 
-    def enable_laser(self, is_ok = True):
+    def enable_laser(self, is_ok=True):
         self.info('enable laser')
         if is_ok:
             self._enabled = True
@@ -132,8 +132,8 @@ class LaserManager(Manager):
 
     def show_step_heater(self):
 
-        shm = StepHeatManager(laser_manager = self,
-                              video_manager = self.stage_manager.video_manager
+        shm = StepHeatManager(laser_manager=self,
+                              video_manager=self.stage_manager.video_manager
                               )
         self.step_heat_manager = shm
         shm.edit_traits()
@@ -165,7 +165,7 @@ class LaserManager(Manager):
         '''
         self.monitor.reset_start_time()
 
-    def emergency_shutoff(self, reason = None):
+    def emergency_shutoff(self, reason=None):
         '''
             
         '''
@@ -181,9 +181,9 @@ class LaserManager(Manager):
     def monitor_factory(self):
         lm = self.monitor
         if lm is None:
-            lm = self.monitor_klass(manager = self,
-                            configuration_dir_name = paths.monitors_dir,
-                            name = self.monitor_name)
+            lm = self.monitor_klass(manager=self,
+                            configuration_dir_name=paths.monitors_dir,
+                            name=self.monitor_name)
             #lm.bootstrap()
         return lm
 
@@ -228,7 +228,7 @@ class LaserManager(Manager):
 
     #========================= views =========================
     def __stage__group__(self):
-        return Item('stage_manager', height = 0.70, style = 'custom', show_label = False)
+        return Item('stage_manager', height=0.70, style='custom', show_label=False)
 
     def traits_view(self):
         '''
@@ -240,10 +240,10 @@ class LaserManager(Manager):
             vg.content.append(getattr(self, h)())
 
         return View(vg,
-                    resizable = True,
-                    title = self.__class__.__name__ if self.title == '' else self.title,
-                    handler = self.handler_klass,
+                    resizable=True,
+                    title=self.__class__.__name__ if self.title == '' else self.title,
+                    handler=self.handler_klass,
 
-                    statusbar = 'status_text'
+                    statusbar='status_text'
                     )
 #============= EOF ====================================

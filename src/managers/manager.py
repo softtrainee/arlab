@@ -79,7 +79,7 @@ class Manager(ConfigLoadable):
     handler_klass = ManagerHandler
     application = Any
     
-    devices=List
+    devices = List
 
     def __init__(self, *args, **kw):
         '''
@@ -109,7 +109,7 @@ class Manager(ConfigLoadable):
             do_later(self.close_ui)
 
         if self.close_after:
-            t = Thread(target = _loop)
+            t = Thread(target=_loop)
             t.start()
 
         self._killed = False
@@ -199,7 +199,7 @@ class Manager(ConfigLoadable):
             self.warning('Problem with manager class {} source'.format(klass))
         return class_factory
 
-    def create_device(self, device_name, gdict = None, dev_class = None, prefix = None):
+    def create_device(self, device_name, gdict=None, dev_class=None, prefix=None):
         '''
         '''
         device = None
@@ -222,7 +222,7 @@ class Manager(ConfigLoadable):
                 self.warning('Invalid device class {}'.format(klass))
                 return
 
-        device = class_factory(name = device_name)
+        device = class_factory(name=device_name)
 
         if device is not None:
             if prefix:
@@ -235,7 +235,7 @@ class Manager(ConfigLoadable):
 
         return device
 
-    def get_file_list(self, p, extension = None):
+    def get_file_list(self, p, extension=None):
 
         if os.path.isdir(p):
 
@@ -248,7 +248,7 @@ class Manager(ConfigLoadable):
     def _file_dialog_(self, action, **kw):
         '''
         '''
-        dlg = FileDialog(action = action, **kw)
+        dlg = FileDialog(action=action, **kw)
         if dlg.open() == OK:
             return dlg.path
 
@@ -261,14 +261,14 @@ class Manager(ConfigLoadable):
         p.Add()
         return p
 
-    def _led_factory(self, name, color = 'green'):
+    def _led_factory(self, name, color='green'):
         '''
 
         '''
-        i = Item(name, show_label = False)
+        i = Item(name, show_label=False)
         return i
 
-    def _switch_factory(self, name, label = False, enabled = None):
+    def _switch_factory(self, name, label=False, enabled=None):
         '''
         '''
         if label == True:
@@ -280,7 +280,7 @@ class Manager(ConfigLoadable):
                  )
         return v
 
-    def _switch_group_factory(self, switches, orientation = 'h', **kw):
+    def _switch_group_factory(self, switches, orientation='h', **kw):
         '''
 
         '''
@@ -290,7 +290,7 @@ class Manager(ConfigLoadable):
             g = VGroup(**kw)
 
         for s, label, enabled in switches:
-            sw = self._switch_factory(s, label = label, enabled = enabled)
+            sw = self._switch_factory(s, label=label, enabled=enabled)
             g.content.append(sw)
         return g
 
@@ -298,7 +298,7 @@ class Manager(ConfigLoadable):
         '''
         
         '''
-        return Item(name, editor = ScrubberEditor(**range_dict))
+        return Item(name, editor=ScrubberEditor(**range_dict))
 
     def _scrubber_group_factory(self, scrubbers, **kw):
         '''
@@ -307,7 +307,7 @@ class Manager(ConfigLoadable):
         '''
         vg = VGroup(**kw)
         for name, prefix in scrubbers:
-            range_dict = dict(low = getattr(self, '%smin' % prefix), high = getattr(self, '%smax' % prefix))
+            range_dict = dict(low=getattr(self, '%smin' % prefix), high=getattr(self, '%smax' % prefix))
             vg.content.append(self._scrubber_factory(name, range_dict))
         return vg
 
@@ -316,18 +316,18 @@ class Manager(ConfigLoadable):
         
         '''
         return self._slider_factory(
-                                    enabled_when = '0',
+                                    enabled_when='0',
                                     *args, **kw)
-    def _slider_factory(self, name, prefix, mode = 'slider', ** kw):
+    def _slider_factory(self, name, prefix, mode='slider', ** kw):
         '''
         
 
         '''
-        return Item(name, editor = RangeEditor(mode = mode,
-                                            low_name = '%smin' % prefix,
-                                            high_name = '%smax' % prefix,
+        return Item(name, editor=RangeEditor(mode=mode,
+                                            low_name='%smin' % prefix,
+                                            high_name='%smax' % prefix,
 
-                                            format = '%0.2f'
+                                            format='%0.2f'
                                             ),
 
                                             **kw)
@@ -341,7 +341,7 @@ class Manager(ConfigLoadable):
         r = self._slider_factory(name, prefix, **kw)
         vg.content.append(r)
 
-        ur = self._slider_factory('update_%s' % name, name, **dict(show_label = False, enabled_when = '0'))
+        ur = self._slider_factory('update_%s' % name, name, **dict(show_label=False, enabled_when='0'))
 
         vg.content.append(ur)
 
@@ -370,13 +370,13 @@ class Manager(ConfigLoadable):
             vg.content.append(self._slider_factory(si, prefix, **options))
         return vg
 
-    def _button_factory(self, name, label, enabled = None, align = None, **kw):
+    def _button_factory(self, name, label, enabled=None, align=None, **kw):
         '''
             
         '''
-        b = Item(name, show_label = False, **kw)
+        b = Item(name, show_label=False, **kw)
         if label is not None:
-            b.editor = ButtonEditor(label_value = label)
+            b.editor = ButtonEditor(label_value=label)
 
         if enabled is not None:
             b.enabled_when = enabled
@@ -396,13 +396,13 @@ class Manager(ConfigLoadable):
 
         return b
 
-    def _button_group_factory(self, buttons, orientation = 'v'):
+    def _button_group_factory(self, buttons, orientation='v'):
         '''
         '''
         vg = VGroup() if orientation == 'v' else HGroup()
 
         for name, label, enabled in buttons:
-            vg.content.append(HGroup(self._button_factory(name, label, enabled), springy = False))
+            vg.content.append(HGroup(self._button_factory(name, label, enabled), springy=False))
         return vg
 
     def get_menus(self):
@@ -414,7 +414,7 @@ class Manager(ConfigLoadable):
         '''
         '''
         a = [Action(**a) for a in actions]
-        return Menu(name = name, *a)
+        return Menu(name=name, *a)
 
     def menus_factory(self):
         '''

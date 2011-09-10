@@ -33,18 +33,18 @@ class Axis(ConfigLoadable):
     negative_limit = Float
     positive_limit = Float
     pdir = Str
-    parent = Any(transient = True)
+    parent = Any(transient=True)
     calculate_parameters = Bool(True)
     drive_ratio = Float(1)
 
-    velocity = Property(depends_on = '_velocity')
-    _velocity = Float(enter_set = True, auto_set = False)
+    velocity = Property(depends_on='_velocity')
+    _velocity = Float(enter_set=True, auto_set=False)
 
-    acceleration = Property(depends_on = '_acceleration')
-    _acceleration = Float(enter_set = True, auto_set = False)
+    acceleration = Property(depends_on='_acceleration')
+    _acceleration = Float(enter_set=True, auto_set=False)
 
-    deceleration = Property(depends_on = '_deceleration')
-    _deceleration = Float(enter_set = True, auto_set = False)
+    deceleration = Property(depends_on='_deceleration')
+    _deceleration = Float(enter_set=True, auto_set=False)
 
     machine_velocity = Float
     machine_acceleration = Float
@@ -72,10 +72,10 @@ class Axis(ConfigLoadable):
 
     def simple_view(self):
         v = View(Item('calculate_parameters'),
-                 Item('velocity', format_str = '%0.3f', enabled_when = 'not calculate_parameters'),
-                    Item('acceleration', format_str = '%0.3f', enabled_when = 'not calculate_parameters'),
-                    Item('deceleration', format_str = '%0.3f', enabled_when = 'not calculate_parameters'),
-                    Item('calibration')
+                 Item('velocity', format_str='%0.3f', enabled_when='not calculate_parameters'),
+                    Item('acceleration', format_str='%0.3f', enabled_when='not calculate_parameters'),
+                    Item('deceleration', format_str='%0.3f', enabled_when='not calculate_parameters'),
+                    Item('drive_ratio')
                     )
         return v
 

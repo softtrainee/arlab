@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import on_trait_change, Float, Button, Enum, String
-from traitsui.api import View, Item, HGroup, VGroup
+from traitsui.api import View, Item, HGroup, VGroup, spring
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
@@ -112,7 +112,7 @@ class TrayCalibrationManager(Manager):
 
         if self.calibration_style == 'MassSpec':
             if self.calibration_step == 'Calibrate':
-                calibration = canvas.new_calibration_item(self.x, self.y, 0, kind = self.calibration_style)
+                calibration = canvas.new_calibration_item(self.x, self.y, 0, kind=self.calibration_style)
                 self.calibration_step = 'Locate Center'
             elif self.calibration_step == 'Locate Center':
                 canvas.calibration_item.set_center(x, y)
@@ -189,24 +189,31 @@ class TrayCalibrationManager(Manager):
 
 #============= views ===================================
     def traits_view(self):
-        v = View(VGroup(self._button_factory('calibrate', 'calibration_step',),
+        v = View(VGroup(
+                        Item('calibration_style'),
+                        self._button_factory('calibrate', 'calibration_step',),
+                        
                         HGroup(
                         #Item('calibrate', show_label = False),
-                        Item('edit', show_label = False,
-                              visible_when = 'calibration_style=="pychron"'),
-                        Item('accept', show_label = False,
-                              enabled_when = 'object.canvas.calibrate',
-                              visible_when = 'calibration_style=="pychron"'),
-                        Item('cancel', show_label = False,
-                              enabled_when = 'object.canvas.calibrate',
-                              visible_when = 'calibration_style=="pychron"'),
+                        spring,
+                        Item('edit', show_label=False,
+                              visible_when='calibration_style=="pychron"'),
+                        Item('accept', show_label=False,
+                              enabled_when='object.canvas.calibrate',
+                              visible_when='calibration_style=="pychron"'),
+                        Item('cancel', show_label=False,
+                              enabled_when='object.canvas.calibrate',
+                              visible_when='calibration_style=="pychron"'),
                               )
                         ),
 
-                 Item('x', format_str = '%0.3f', style = 'readonly'),
-                 Item('y', format_str = '%0.3f', style = 'readonly'),
-                 Item('rotation', format_str = '%0.3f', style = 'readonly'),
-                 Item('help', style = 'readonly', show_label = False, springy = True)
+                 Item('x', format_str='%0.3f', style='readonly'),
+                 Item('y', format_str='%0.3f', style='readonly'),
+                 Item('rotation', format_str='%0.3f', style='readonly'),
+                 VGroup(
+                        Item('help', style='readonly', show_label=False, springy=True)
+                        )
+                 
                 )
         return v
 #============= EOF ====================================

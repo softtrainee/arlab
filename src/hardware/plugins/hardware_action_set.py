@@ -25,9 +25,9 @@ class HardwareActionSet(WorkbenchActionSet):
     '''
     id = 'pychron.hardware.action_set'
     actions = [
-               Action(name = 'Hardware Manager',
-                      path = 'MenuBar/Extraction Line',
-                      class_name = 'src.hardware.plugins.hardware_actions:OpenHardwareManagerAction'),
+               Action(name='Hardware Manager',
+                      path='MenuBar/Extraction Line',
+                      class_name='src.hardware.plugins.hardware_actions:OpenHardwareManagerAction'),
 
               ]
 #============= EOF ====================================

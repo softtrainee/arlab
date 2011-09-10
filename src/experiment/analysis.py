@@ -74,12 +74,12 @@ class Analysis(Loggable):
 
     sample = Str
 
-    identifier = String(enter_set = True, auto_set = False)
+    identifier = String(enter_set=True, auto_set=False)
     state = Enum('not run', 'extraction', 'measurement', 'success', 'fail')
 
     heat_step = Instance(HeatStep)
-    duration = Property(depends_on = 'heat_step,_duration')
-    temp_or_power = Property(depends_on = 'heat_step,_temp_or_power')
+    duration = Property(depends_on='heat_step,_duration')
+    temp_or_power = Property(depends_on='heat_step,_temp_or_power')
     _duration = Float
     _temp_or_power = Float
     position = Int
@@ -107,12 +107,12 @@ class Analysis(Loggable):
 
         ec = self.configuration
         els = ExtractionLineScript(
-                            source_dir = os.path.dirname(ec['extraction_line_script']),
-                            file_name = os.path.basename(ec['extraction_line_script']),
+                            source_dir=os.path.dirname(ec['extraction_line_script']),
+                            file_name=os.path.basename(ec['extraction_line_script']),
 
-                            hole = self.position,
-                            heat_duration = self.duration,
-                            temp_or_power = self.temp_or_power
+                            hole=self.position,
+                            heat_duration=self.duration,
+                            temp_or_power=self.temp_or_power
                             )
         els.bootstrap()
         '''
@@ -139,10 +139,10 @@ class Analysis(Loggable):
 
         #@todo: MeasurementScript needs accurate identifier
         ms = MeasurementScript(
-                            manager = self.spectrometer_manager,
-                            source_dir = os.path.dirname(ec['analysis_script']),
-                            file_name = os.path.basename(ec['analysis_script']),
-                            identifier = ec['identifier']
+                            manager=self.spectrometer_manager,
+                            source_dir=os.path.dirname(ec['analysis_script']),
+                            file_name=os.path.basename(ec['analysis_script']),
+                            identifier=ec['identifier']
                             )
         self.measurement_script = ms
         ms.bootstrap()
@@ -174,8 +174,8 @@ class Analysis(Loggable):
         #add an analysis
         #relate to sample
         analysis = db.add_analysis(
-                        status = 0 if self.state else 1,
-                        sample = self.sample_data_record
+                        status=0 if self.state else 1,
+                        sample=self.sample_data_record
                         )
 
         spec = db.get_spectrometer('obama')
@@ -186,10 +186,10 @@ class Analysis(Loggable):
 
         #relate to signal with analysis and detector
         for d, s in zip(spec.detectors, signals[1:]):
-            db.add_signal(times = times,
-                          intensities = s,
-                          analysis = analysis,
-                          detector = d
+            db.add_signal(times=times,
+                          intensities=s,
+                          analysis=analysis,
+                          detector=d
                           )
 
 
@@ -199,10 +199,10 @@ class Analysis(Loggable):
     def traits_view(self):
 
         scripts = VGroup(
-                       Item('analysis_script', editor = EnumEditor(name = 'extraction_line_scripts')),
-                       Item('measurement_script_name', editor = EnumEditor(name = 'measurement_scripts')),
-                       label = 'Scripts',
-                       show_border = True
+                       Item('analysis_script', editor=EnumEditor(name='extraction_line_scripts')),
+                       Item('measurement_script_name', editor=EnumEditor(name='measurement_scripts')),
+                       label='Scripts',
+                       show_border=True
                        )
         v = View(
                  Item('identifier'),

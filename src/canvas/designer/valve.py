@@ -24,9 +24,9 @@ class Valve(HasTraits):
     '''
         G{classtree}
     '''
-    pos = Property(depends_on = '_x,_y')
-    _x = Float(enter_set = True, auto_set = False)
-    _y = Float(enter_set = True, auto_set = False)
+    pos = Property(depends_on='_x,_y')
+    _x = Float(enter_set=True, auto_set=False)
+    _y = Float(enter_set=True, auto_set=False)
     name = String
     state = Bool
     identify = Bool
@@ -48,8 +48,8 @@ class Valve(HasTraits):
         '''
         '''
         return View('name', 'identify',
-                     HGroup(Item('_x', format_str = '%0.2f'), Item('_y', format_str = '%0.2f')),
-                    buttons = ['OK', 'Cancel']
+                     HGroup(Item('_x', format_str='%0.2f'), Item('_y', format_str='%0.2f')),
+                    buttons=['OK', 'Cancel']
                                  )
 #============= views ===================================
 #============= EOF ====================================

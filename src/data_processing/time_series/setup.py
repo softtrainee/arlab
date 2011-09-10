@@ -27,13 +27,13 @@ from Cython.Distutils import build_ext
 
 ext_modules = [Extension("autocorr", ["autocorr.pyx"],
 
-				        include_dirs = [numpy.get_include(),
+				        include_dirs=[numpy.get_include(),
                          #pychron_dir
                          ]
 				)]
 
 setup(
-  name = 'autocorr',
-  cmdclass = {'build_ext': build_ext},
-  ext_modules = ext_modules
+  name='autocorr',
+  cmdclass={'build_ext': build_ext},
+  ext_modules=ext_modules
 )

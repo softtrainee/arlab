@@ -34,8 +34,8 @@ class CanvasPreviewer(HasTraits):
     def traits_view(self):
         '''
         '''
-        v = View(Item('canvas', editor = ComponentEditor(),
-                      show_label = False))
+        v = View(Item('canvas', editor=ComponentEditor(),
+                      show_label=False))
         return v
 
 if __name__ == '__main__':

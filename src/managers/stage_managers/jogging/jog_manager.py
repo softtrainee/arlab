@@ -34,7 +34,7 @@ class JogHandler(ManagerHandler):
     def dump(self, info):
         obj = info.object
 
-        dlg = FileDialog(action = 'save as', default_directory = jog_dir)
+        dlg = FileDialog(action='save as', default_directory=jog_dir)
         if dlg.open() == OK:
             with open(dlg.path, 'w') as f:
 #                pickle.dump(obj.opattern, f)
@@ -65,9 +65,9 @@ class JogManager(Manager):
     cy = Float
 
     handler_klass = JogHandler
-    def load_file(self, name = None):
+    def load_file(self, name=None):
         if name is None:
-            dlg = FileDialog(action = 'open', default_directory = jog_dir)
+            dlg = FileDialog(action='open', default_directory=jog_dir)
             if dlg.open() == OK:
                 path = dlg.path
             else:
@@ -137,17 +137,17 @@ class JogManager(Manager):
 
     def replot(self):
         self.canvas.clear()
-        self.canvas.new_plot(padding = 10)
+        self.canvas.new_plot(padding=10)
         cx = self.cx
         cy = self.cy
 
         #draw sample hole
-        self.circle(cx, cy, 1, edge_width = 3)
+        self.circle(cx, cy, 1, edge_width=3)
 
         sx, sy = self.opattern.do_spiral(self.kind)
-        self.ipattern.do_spiral(self.kind, sx = sx, sy = sy)
+        self.ipattern.do_spiral(self.kind, sx=sx, sy=sy)
 
-    def circle(self, cx, cy, r, face_color = (1, 1, 1, 0), line_color = 'black', alpha = 1, edge_width = 2):
+    def circle(self, cx, cy, r, face_color=(1, 1, 1, 0), line_color='black', alpha=1, edge_width=2):
         if cx is None or cy is None:
             return
 
@@ -160,78 +160,78 @@ class JogManager(Manager):
             x.append(cx + r * math.cos(t))
             y.append(cy + r * math.sin(t))
         g.new_series(x, y,
-                     type = 'polygon',
-                     face_color = face_color,
-                     alpha = alpha,
-                     edge_width = edge_width
+                     type='polygon',
+                     face_color=face_color,
+                     alpha=alpha,
+                     edge_width=edge_width
                      )
 
     def update_position(self, x, y):
         self.replot()
-        self.circle(x, y, 0.1, face_color = (1, 1, 0))
+        self.circle(x, y, 0.1, face_color=(1, 1, 0))
 #============= views ===================================
     def traits_view(self):
 
         control_grp = Group(
                             Group(
-                              Item('jog', editor = ButtonEditor(label_value = 'jog_label'), show_label = False),
+                              Item('jog', editor=ButtonEditor(label_value='jog_label'), show_label=False),
                               Item('bind'),
-                              Item('beam_diam', label = 'Beam Diam.'),
-                              Item('kind', show_label = False),
-                              label = 'Main'
+                              Item('beam_diam', label='Beam Diam.'),
+                              Item('kind', show_label=False),
+                              label='Main'
                               ),
                             Group(
-                                  Item('ipattern', show_label = False, style = 'custom'),
-                                  label = 'In'
+                                  Item('ipattern', show_label=False, style='custom'),
+                                  label='In'
 
                                   ),
                             Group(
-                                  Item('opattern', show_label = False, style = 'custom'),
-                                  label = 'Out'
+                                  Item('opattern', show_label=False, style='custom'),
+                                  label='Out'
                                   ),
 
-                            layout = 'tabbed'
+                            layout='tabbed'
                             )
 
-        save = Action(name = 'save',
-                    action = 'dump')
-        load = Action(name = 'load',
-                    action = 'load_file')
+        save = Action(name='save',
+                    action='dump')
+        load = Action(name='load',
+                    action='load_file')
 
         v = View(
                  control_grp,
-                 Item('canvas', style = 'custom', show_label = False),
-                 resizable = True,
-                 title = 'Jog Manager',
-                 handler = self.handler_klass,
-                 buttons = [save, load]
+                 Item('canvas', style='custom', show_label=False),
+                 resizable=True,
+                 title='Jog Manager',
+                 handler=self.handler_klass,
+                 buttons=[save, load]
                )
         return v
     def _canvas_default(self):
 
         g = Graph(
-                  width = 300,
-                  height = 300,
-                  container_dict = dict(
-                                        padding = 20
+                  width=300,
+                  height=300,
+                  container_dict=dict(
+                                        padding=20
                                         )
                   )
 
         return g
     def _opattern_default(self):
-        s = JogPattern(direction = 'out',
-                 parent = self,
-                 cx = 0,
-                 cy = 0,
-                 beam_diam = self.beam_diam
+        s = JogPattern(direction='out',
+                 parent=self,
+                 cx=0,
+                 cy=0,
+                 beam_diam=self.beam_diam
                  )
         return s
     def _ipattern_default(self):
-        s = JogPattern(direction = 'in',
-                 parent = self,
-                 cx = 0,
-                 cy = 0,
-                 beam_diam = self.beam_diam
+        s = JogPattern(direction='in',
+                 parent=self,
+                 cx=0,
+                 cy=0,
+                 beam_diam=self.beam_diam
                  )
         return s
 class DummyParent(HasTraits):
@@ -240,7 +240,7 @@ class DummyParent(HasTraits):
 
 if __name__ == '__main__':
 #    main()
-    j = JogManager(parent = DummyParent())
+    j = JogManager(parent=DummyParent())
     j.replot()
     j.configure_traits()
 #============= EOF ====================================

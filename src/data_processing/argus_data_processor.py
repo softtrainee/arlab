@@ -50,7 +50,7 @@ class ArgusDataProcessor(Loggable):
         '''
             
         '''
-        _header, lines = self.read_csv_file(path, delimiter = '\t')
+        _header, lines = self.read_csv_file(path, delimiter='\t')
         for line in lines[0:4]:
             '''
             each line represents an analysis
@@ -70,11 +70,11 @@ class ArgusDataProcessor(Loggable):
         '''
         self.info('generating peak blobs')
         numcycles = (len(line) - 2) / 25
-        signals_dict = dict(m40 = [],
-                            m39 = [],
-                            m38 = [],
-                            m37 = [],
-                            m36 = [],
+        signals_dict = dict(m40=[],
+                            m39=[],
+                            m38=[],
+                            m37=[],
+                            m36=[],
                             )
 
         mkey = ['m36', 'm37', 'm38', 'm39', 'm40']
@@ -103,12 +103,12 @@ class ArgusDataProcessor(Loggable):
             analysis_args = dict(zip(header, l))
             #save project info
             if 'Project' in analysis_args:
-                sess = self._db.add_project(dict(Project = analysis_args['Project']), sess = sess)
+                sess = self._db.add_project(dict(Project=analysis_args['Project']), sess=sess)
                 sess.flush()
             #save sample info
             if 'Sample' in analysis_args:
-                sess = self._db.add_sample(dict(Project = analysis_args['Project'],
-                                                Sample = analysis_args['Sample']), sess = sess)
+                sess = self._db.add_sample(dict(Project=analysis_args['Project'],
+                                                Sample=analysis_args['Sample']), sess=sess)
                 sess.flush()
 
             #save irradiation info
@@ -123,22 +123,22 @@ class ArgusDataProcessor(Loggable):
             if fail:
                 break
 
-            dbirradiationpos, sess = self._db.add_irradiation_position(iargs, sess = sess)
+            dbirradiationpos, sess = self._db.add_irradiation_position(iargs, sess=sess)
             sess.flush()
 
             #add analysis and aranalysis
             if 'RID' in analysis_args:
-                dbanalysis, new, sess = self._db.add_analysis(dict(RID = analysis_args['RID']),
-                                             None, sess = sess, dbirradiationpos = dbirradiationpos)
+                dbanalysis, new, sess = self._db.add_analysis(dict(RID=analysis_args['RID']),
+                                             None, sess=sess, dbirradiationpos=dbirradiationpos)
 
                 sess.flush()
             if not new:
                 #get the isotopes and update
-                isos, sess = self._db.get_isotopes(dbanalysis.AnalysisID, sess = sess)
+                isos, sess = self._db.get_isotopes(dbanalysis.AnalysisID, sess=sess)
                 for i, iso in enumerate(isos):
                     iso.NumCnts += 1
                     #update peak time table
-                    pk, sess = self._db.get_peaktimeblob(iso.IsotopeID, sess = sess)
+                    pk, sess = self._db.get_peaktimeblob(iso.IsotopeID, sess=sess)
                     ts, vs = self.parse_timeblob(pk.PeakTimeBlob)
                     vs.append(analysis_args[mkeys[i]])
                     ts.append(analysis_args['Time'])
@@ -154,7 +154,7 @@ class ArgusDataProcessor(Loggable):
                     if dk_1 in analysis_args and dk_2 in analysis_args:
                         args['Gain'] = analysis_args[dk_1]
                         args['DetectorTypeID'] = analysis_args[dk_2]
-                        detector, sess = self._db.add_detector(None, args, sess = sess)
+                        detector, sess = self._db.add_detector(None, args, sess=sess)
                         #keep a list of the added detectorIDs
                         #list will be in order from L2 to H2
                         sess.flush()
@@ -165,11 +165,11 @@ class ArgusDataProcessor(Loggable):
                 if fail:
                     break
                 #update the isotope dict
-                isotopes = [dict(Label = 'Ar36', NumCnts = 1),
-                            dict(Label = 'Ar38', NumCnts = 1),
-                            dict(Label = 'Ar37', NumCnts = 1),
-                            dict(Label = 'Ar39', NumCnts = 1),
-                            dict(Label = 'Ar40', NumCnts = 1) ]
+                isotopes = [dict(Label='Ar36', NumCnts=1),
+                            dict(Label='Ar38', NumCnts=1),
+                            dict(Label='Ar37', NumCnts=1),
+                            dict(Label='Ar39', NumCnts=1),
+                            dict(Label='Ar40', NumCnts=1) ]
 
                 #add the baselines
 
@@ -177,16 +177,16 @@ class ArgusDataProcessor(Loggable):
                 for i, iso in enumerate(isotopes):
                 #TODO add baseline ref.
                 #requires reference to analyses, detector
-                    dbisotope, sess = self._db.add_isotope(iso, sess = sess, dbanalysis = dbanalysis,
-                                                           dbdetector = detector_ids[i])
+                    dbisotope, sess = self._db.add_isotope(iso, sess=sess, dbanalysis=dbanalysis,
+                                                           dbdetector=detector_ids[i])
                     if dbisotope is not None:
                 #add the peak time series
                         v = [analysis_args[mkeys[i]]]
                         t = [analysis_args['Time']]
                         sess = self._db.add_peaktimeblob(None, self.build_timeblob(t, v),
-                                              sess = sess, dbisotope = dbisotope)
+                                              sess=sess, dbisotope=dbisotope)
                 #add a araranalysis
-                sess = self._db.add_arar_analysis(dict(), sess = sess, dbanalysis = dbanalysis)
+                sess = self._db.add_arar_analysis(dict(), sess=sess, dbanalysis=dbanalysis)
 
         return sess, fail
     def test(self):

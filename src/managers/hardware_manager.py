@@ -39,41 +39,41 @@ class HardwareManager(Manager):
             self.current_device = self.selected
     def current_device_view(self):
         return View(Item('current_device',
-                         editor = InstanceEditor(view = 'current_state_view'),
-                         style = 'custom',
-                         show_label = False
+                         editor=InstanceEditor(view='current_state_view'),
+                         style='custom',
+                         show_label=False
                          ))
     def traits_view(self):
-        cols = [ObjectColumn(name = 'name'),
-                ObjectColumn(name = 'connected'),
-                ObjectColumn(name = 'com_class', label = 'Com. Class'),
-                ObjectColumn(name = 'klass', label = 'Class'),
+        cols = [ObjectColumn(name='name'),
+                ObjectColumn(name='connected'),
+                ObjectColumn(name='com_class', label='Com. Class'),
+                ObjectColumn(name='klass', label='Class'),
 
                 ]
-        table_editor = TableEditor(columns = cols,
-                                   editable = False,
-                                   selected = 'selected',
-                                   selection_mode = 'row'
+        table_editor = TableEditor(columns=cols,
+                                   editable=False,
+                                   selected='selected',
+                                   selection_mode='row'
 
                                    )
         v = View(
                  VSplit(
-                     Item('devices', editor = table_editor,
-                          show_label = False,
+                     Item('devices', editor=table_editor,
+                          show_label=False,
 
-                          height = 0.65,
+                          height=0.65,
                           ),
 
-                     Item('current_device', show_label = False,
-                          style = 'custom',
-                          editor = InstanceEditor(view = 'info_view'),
-                          height = 0.34,
-                          width = 0.5
+                     Item('current_device', show_label=False,
+                          style='custom',
+                          editor=InstanceEditor(view='info_view'),
+                          height=0.34,
+                          width=0.5
                           ),
                       ),
-                width = 650,
-                height = 500,
-                 resizable = True)
+                width=650,
+                height=500,
+                 resizable=True)
 
 
         return v

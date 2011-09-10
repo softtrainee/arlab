@@ -64,13 +64,13 @@ class OverlapOverlay(AbstractOverlay):
 
 class Pattern(HasTraits):
 
-    graph = Instance(Graph, (), transient = True)
-    cx = Float(transient = True)
-    cy = Float(transient = True)
+    graph = Instance(Graph, (), transient=True)
+    cx = Float(transient=True)
+    cy = Float(transient=True)
     target_radius = Float(1)
 
     overlap_overlay = OverlapOverlay
-    beam_radius = Float(1, enter_set = True, auto_set = False)
+    beam_radius = Float(1, enter_set=True, auto_set=False)
     show_overlap = Bool(False)
 
     def _anytrait_changed(self, name, new):
@@ -94,7 +94,7 @@ class Pattern(HasTraits):
         data_out = array([pt for pt in pgen_out])
         xs, ys = transpose(data_out)
         self.graph.set_data(xs)
-        self.graph.set_data(ys, axis = 1)
+        self.graph.set_data(ys, axis=1)
         return data_out[-1][0], data_out[-1][1]
 
     def points_factory(self):
@@ -102,7 +102,7 @@ class Pattern(HasTraits):
         return [pt for pt in gen_out]
 
     def graph_view(self):
-        v = View(Item('graph', style = 'custom', show_label = False),
+        v = View(Item('graph', style='custom', show_label=False),
 
 
                  )
@@ -110,25 +110,25 @@ class Pattern(HasTraits):
 
     def _graph_default(self):
         g = Graph(
-                  width = 500,
-                  height = 500,
+                  width=500,
+                  height=500,
 #                  
-                  container_dict = dict(
-                                        padding = 20
+                  container_dict=dict(
+                                        padding=20
                                         ))
-        g.new_plot(bounds = [500, 500],
-                   padding = 0)
+        g.new_plot(bounds=[500, 500],
+                   padding=0)
         g.set_x_limits(-2, 2)
         g.set_y_limits(-2, 2)
 
         lp, _plot = g.new_series()
-        lp.overlays.append(TargetOverlay(component = lp,
-                                                      cx = self.cx,
-                                                      cy = self.cy,
-                                                      target_radius = self.target_radius
+        lp.overlays.append(TargetOverlay(component=lp,
+                                                      cx=self.cx,
+                                                      cy=self.cy,
+                                                      target_radius=self.target_radius
                                                       ))
-        self.overlap_overlay = OverlapOverlay(component = lp,
-                                              visible = self.show_overlap
+        self.overlap_overlay = OverlapOverlay(component=lp,
+                                              visible=self.show_overlap
                                               )
         lp.overlays.append(self.overlap_overlay)
         g.new_series()
@@ -140,8 +140,8 @@ class Pattern(HasTraits):
                  Item('beam_radius'),
                  Item('show_overlap'),
                  Item('graph',
-                      resizable = False,
-                      show_label = False, style = 'custom')
+                      resizable=False,
+                      show_label=False, style='custom')
                  )
         return v
     def get_parameter_group(self):
@@ -171,7 +171,7 @@ class RandomPattern(Pattern):
         return Group('walk_x',
                      'walk_y',
                      'npoints',
-                     HGroup(spring, Item('regenerate', show_label = False))
+                     HGroup(spring, Item('regenerate', show_label=False))
                      )
     def pattern_generator_factory(self, **kw):
         return random_pattern(self.cx, self.cy, self.walk_x, self.walk_y, self.npoints, **kw)
@@ -189,13 +189,13 @@ class PolygonPattern(Pattern):
     def get_parameter_group(self):
         return Group('radius',
                      'nsides',
-                     Item('rotation', editor = RangeEditor(mode = 'slider',
-                                                         low = 0,
-                                                         high = 360
+                     Item('rotation', editor=RangeEditor(mode='slider',
+                                                         low=0,
+                                                         high=360
                                                          ))
                      )
     def pattern_generator_factory(self, **kw):
-        return polygon_pattern(self.cx, self.cy, self.radius, self.nsides, rotation = self.rotation)
+        return polygon_pattern(self.cx, self.cy, self.radius, self.nsides, rotation=self.rotation)
 
 class ArcPattern(Pattern):
     radius = Range(0.0, 1.0, 0.5)
@@ -203,9 +203,9 @@ class ArcPattern(Pattern):
     show_overlap = Bool(False)
     def get_parameter_group(self):
         return Group('radius',
-                     Item('degrees', editor = RangeEditor(mode = 'slider',
-                                                        low = 0,
-                                                        high = 360
+                     Item('degrees', editor=RangeEditor(mode='slider',
+                                                        low=0,
+                                                        high=360
                                                         ))
                      )
     def pattern_generator_factory(self, **kw):
@@ -222,20 +222,20 @@ class SpiralPattern(Pattern):
 
     def points_factory(self):
         gen_out = self.pattern_generator_factory()
-        gen_in = self.pattern_generator_factory(direction = 'in')
+        gen_in = self.pattern_generator_factory(direction='in')
         return [pt for pt in gen_out] + [pt for pt in gen_in]
 
 
 
     def plot_in(self, ox, oy):
-        pgen_in = self.pattern_generator_factory(ox = ox, #data_out[-1][0],
-                                                 oy = oy, #data_out[-1][1],
-                                                 direction = 'in')
+        pgen_in = self.pattern_generator_factory(ox=ox, #data_out[-1][0],
+                                                 oy=oy, #data_out[-1][1],
+                                                 direction='in')
         data_in = array([pt for pt in pgen_in])
 
         xs, ys = transpose(data_in)
-        self.graph.set_data(xs, series = 1)
-        self.graph.set_data(ys, axis = 1, series = 1)
+        self.graph.set_data(xs, series=1)
+        self.graph.set_data(ys, axis=1, series=1)
 
     def get_parameter_group(self):
         return Group('radius',

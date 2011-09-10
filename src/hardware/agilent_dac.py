@@ -40,16 +40,16 @@ class AgilentDAC(CoreDevice):
     #===========================================================================
     def load_additional_args(self, config):
 
-        self.min_value = self.config_get(config, 'General', 'min', cast = 'float', default = 0.0, optional = True)
-        self.max_value = self.config_get(config, 'General', 'max', cast = 'float', default = 100.0, optional = True)
-        self.slot_number = self.config_get(config, 'General', 'slot', default = '1', optional = True)
-        self.channel_number = '{:02n}'.format(self.config_get(config, 'General', 'channel', cast = 'int', default = '4', optional = True))
+        self.min_value = self.config_get(config, 'General', 'min', cast='float', default=0.0, optional=True)
+        self.max_value = self.config_get(config, 'General', 'max', cast='float', default=100.0, optional=True)
+        self.slot_number = self.config_get(config, 'General', 'slot', default='1', optional=True)
+        self.channel_number = '{:02n}'.format(self.config_get(config, 'General', 'channel', cast='int', default='4', optional=True))
 
         if self.channel_number not in ['04', '05']:
             self.warning('Invalid channel number {} setting to default: 04'.format(self.channel_number))
             return False
 
-        self.dac_bits = 2 ** self.config_get(config, 'General', 'bits', cast = 'int', optional = True, default = 10)
+        self.dac_bits = 2 ** self.config_get(config, 'General', 'bits', cast='int', optional=True, default=10)
 
         return True
     #===============================================================================

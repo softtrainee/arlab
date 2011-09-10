@@ -59,54 +59,54 @@ HOME_SEARCH_MODES = ['Find +0 Position Count',
                    'Find Positive Limit and Index',
                    'Find Negative Limit and Index Signals']
 
-COMMAND_MAP = dict(kind = 'QM',
-                 units = 'SN',
-                 encoder_resolution = 'SU',
-                 encoder_full_step_resolution = 'FR',
-                 microstep_factor = 'QS',
-                 average_motor_voltage = 'QV',
-                 maximum_motor_current = 'QI',
-                 gear_constant = 'QG',
-                 tachometer_gain = 'QT',
-                 software_negative_limit = 'SL',
-                 software_positive_limit = 'SR',
-                 trajectory_mode = 'TJ',
-                 home_search_mode = 'OM',
-                 maximum_velocity = 'VU',
-                 velocity = 'VA',
-                 jog_high_speed = 'JH',
-                 jog_low_speed = 'JW',
-                 home_search_high_speed = 'OH',
-                 home_search_low_speed = 'OL',
-                 base_velocity = 'VB',
-                 maximum_acceleration_deceleration = 'AU',
-                 acceleration = 'AC',
-                 deceleration = 'AG',
-                 estop_deceleration = 'AE',
-                 jerk_rate = 'JK',
-                 proportional_gain = 'KP',
-                 integral_gain = 'KI',
-                 derivative_gain = 'KD',
-                 velocity_feed_forward_gain = 'VF',
-                 acceleration_feed_forward_gain = 'AF',
-                 integral_saturation_level = 'KS',
-                 maximum_following_error_threshold = 'FE',
-                 position_deadband = 'DB',
-                 update_interval = 'CL',
-                 reduce_motor_torque_time = 'QR',
-                 reduce_motor_torque_percent = 'QR',
-                 slave_axis = 'SS',
-                 master_slave_reduction_ratio = 'GR',
-                 master_slave_jog_velocity_update = 'SI',
-                 master_slave_jog_velocity_scaling_coefficients = 'SK',
-                 backlash_compensation = 'BA',
-                 linear_compensation = 'CO',
-                 amplifier_io_configuration = 'ZA',
-                 feedback_configuration = 'ZB',
-                 estop_configuration = 'ZE',
-                 following_error_configuration = 'ZF',
-                 hardware_limit_configuration = 'ZH',
-                 software_limit_configuration = 'ZS'
+COMMAND_MAP = dict(kind='QM',
+                 units='SN',
+                 encoder_resolution='SU',
+                 encoder_full_step_resolution='FR',
+                 microstep_factor='QS',
+                 average_motor_voltage='QV',
+                 maximum_motor_current='QI',
+                 gear_constant='QG',
+                 tachometer_gain='QT',
+                 software_negative_limit='SL',
+                 software_positive_limit='SR',
+                 trajectory_mode='TJ',
+                 home_search_mode='OM',
+                 maximum_velocity='VU',
+                 velocity='VA',
+                 jog_high_speed='JH',
+                 jog_low_speed='JW',
+                 home_search_high_speed='OH',
+                 home_search_low_speed='OL',
+                 base_velocity='VB',
+                 maximum_acceleration_deceleration='AU',
+                 acceleration='AC',
+                 deceleration='AG',
+                 estop_deceleration='AE',
+                 jerk_rate='JK',
+                 proportional_gain='KP',
+                 integral_gain='KI',
+                 derivative_gain='KD',
+                 velocity_feed_forward_gain='VF',
+                 acceleration_feed_forward_gain='AF',
+                 integral_saturation_level='KS',
+                 maximum_following_error_threshold='FE',
+                 position_deadband='DB',
+                 update_interval='CL',
+                 reduce_motor_torque_time='QR',
+                 reduce_motor_torque_percent='QR',
+                 slave_axis='SS',
+                 master_slave_reduction_ratio='GR',
+                 master_slave_jog_velocity_update='SI',
+                 master_slave_jog_velocity_scaling_coefficients='SK',
+                 backlash_compensation='BA',
+                 linear_compensation='CO',
+                 amplifier_io_configuration='ZA',
+                 feedback_configuration='ZB',
+                 estop_configuration='ZE',
+                 following_error_configuration='ZF',
+                 hardware_limit_configuration='ZH',
+                 software_limit_configuration='ZS'
                  )
 SIGNS = ['Positive',
        'Negative']
@@ -157,78 +157,78 @@ class NewportAxis(Axis):
 
     sign = CInt(1)
 
-    kind = Property(depends_on = '_kind')
+    kind = Property(depends_on='_kind')
     _kind = Int
 
-    units = Property(depends_on = '_units')
+    units = Property(depends_on='_units')
     _units = Int
 
-    encoder_resolution = Float(enter_set = True, auto_set = False)
-    encoder_full_step_resolution = Float(enter_set = True, auto_set = False)
-    microstep_factor = Float(enter_set = True, auto_set = False)
+    encoder_resolution = Float(enter_set=True, auto_set=False)
+    encoder_full_step_resolution = Float(enter_set=True, auto_set=False)
+    microstep_factor = Float(enter_set=True, auto_set=False)
 
-    average_motor_voltage = Float(enter_set = True, auto_set = False)
-    maximum_motor_current = Float(enter_set = True, auto_set = False)
-    gear_constant = Float(enter_set = True, auto_set = False)
-    tachometer_gain = Float(enter_set = True, auto_set = False)
+    average_motor_voltage = Float(enter_set=True, auto_set=False)
+    maximum_motor_current = Float(enter_set=True, auto_set=False)
+    gear_constant = Float(enter_set=True, auto_set=False)
+    tachometer_gain = Float(enter_set=True, auto_set=False)
 
-    software_negative_limt = Float(enter_set = True, auto_set = False)
-    software_positive_limit = Float(enter_set = True, auto_set = False)
+    software_negative_limt = Float(enter_set=True, auto_set=False)
+    software_positive_limit = Float(enter_set=True, auto_set=False)
 
-    trajectory_mode = Property(depends_on = '_trajectory_mode')
+    trajectory_mode = Property(depends_on='_trajectory_mode')
     _trajectory_mode = Int
 
-    home_search_mode = Property(depends_on = '_home_search_mode')
+    home_search_mode = Property(depends_on='_home_search_mode')
     _home_search_mode = Int
 
-    maximum_velocity = Float(enter_set = True, auto_set = False)
-    base_velocity = Float(enter_set = True, auto_set = False)
+    maximum_velocity = Float(enter_set=True, auto_set=False)
+    base_velocity = Float(enter_set=True, auto_set=False)
 
-    jog_high_speed = Float(enter_set = True, auto_set = False)
-    jog_low_speed = Float(enter_set = True, auto_set = False)
-    home_search_high_speed = Float(enter_set = True, auto_set = False)
-    home_search_low_speed = Float(enter_set = True, auto_set = False)
+    jog_high_speed = Float(enter_set=True, auto_set=False)
+    jog_low_speed = Float(enter_set=True, auto_set=False)
+    home_search_high_speed = Float(enter_set=True, auto_set=False)
+    home_search_low_speed = Float(enter_set=True, auto_set=False)
 
-    maximum_acceleration_deceleration = Float(enter_set = True, auto_set = False)
+    maximum_acceleration_deceleration = Float(enter_set=True, auto_set=False)
 
-    estop_deceleration = Float(enter_set = True, auto_set = False)
-    jerk_rate = Float(enter_set = True, auto_set = False)
+    estop_deceleration = Float(enter_set=True, auto_set=False)
+    jerk_rate = Float(enter_set=True, auto_set=False)
 
-    proportional_gain = Float(enter_set = True, auto_set = False)
-    integral_gain = Float(enter_set = True, auto_set = False)
-    derivative_gain = Float(enter_set = True, auto_set = False)
-    integral_saturation_level = Float(enter_set = True, auto_set = False)
+    proportional_gain = Float(enter_set=True, auto_set=False)
+    integral_gain = Float(enter_set=True, auto_set=False)
+    derivative_gain = Float(enter_set=True, auto_set=False)
+    integral_saturation_level = Float(enter_set=True, auto_set=False)
 
-    velocity_feed_forward_gain = Float(enter_set = True, auto_set = False)
-    acceleration_feed_forward_gain = Float(enter_set = True, auto_set = False)
+    velocity_feed_forward_gain = Float(enter_set=True, auto_set=False)
+    acceleration_feed_forward_gain = Float(enter_set=True, auto_set=False)
 
-    maximum_following_error_threshold = Float(enter_set = True, auto_set = False)
-    position_deadband = Float(enter_set = True, auto_set = False)
+    maximum_following_error_threshold = Float(enter_set=True, auto_set=False)
+    position_deadband = Float(enter_set=True, auto_set=False)
 
-    update_interval = Float(enter_set = True, auto_set = False)
+    update_interval = Float(enter_set=True, auto_set=False)
 
-    reduce_motor_torque_time = Float(enter_set = True, auto_set = False)
-    reduce_motor_torque_percent = Float(enter_set = True, auto_set = False)
+    reduce_motor_torque_time = Float(enter_set=True, auto_set=False)
+    reduce_motor_torque_percent = Float(enter_set=True, auto_set=False)
 
-    slave_axis = Int(enter_set = True, auto_set = False)
-    master_slave_reduction_ratio = Float(enter_set = True, auto_set = False)
-    master_slave_jog_velocity_update = Float(enter_set = True, auto_set = False)
-    master_slave_jog_velocity_scaling_coefficients = Str(enter_set = True, auto_set = False)
+    slave_axis = Int(enter_set=True, auto_set=False)
+    master_slave_reduction_ratio = Float(enter_set=True, auto_set=False)
+    master_slave_jog_velocity_update = Float(enter_set=True, auto_set=False)
+    master_slave_jog_velocity_scaling_coefficients = Str(enter_set=True, auto_set=False)
 
-    backlash_compensation = Float(enter_set = True, auto_set = False)
-    linear_compensation = Float(enter_set = True, auto_set = False)
+    backlash_compensation = Float(enter_set=True, auto_set=False)
+    linear_compensation = Float(enter_set=True, auto_set=False)
 
-    amplifier_io_configuration = Property(depends_on = '_amplifier_io_configuration')
+    amplifier_io_configuration = Property(depends_on='_amplifier_io_configuration')
     _amplifier_io_configuration = Int
-    feedback_configuration = Property(depends_on = '_feedback_configuration')
+    feedback_configuration = Property(depends_on='_feedback_configuration')
     _feedback_configuration = Int
-    estop_configuration = Property(depends_on = '_estop_configuration')
+    estop_configuration = Property(depends_on='_estop_configuration')
     _estop_configuration = Int
-    following_error_configuration = Property(depends_on = '_following_error_configuration')
+    following_error_configuration = Property(depends_on='_following_error_configuration')
     _following_error_configuration = Int
-    hardware_limit_configuration = Property(depends_on = '_hardware_limit_configuration')
+    hardware_limit_configuration = Property(depends_on='_hardware_limit_configuration')
     _hardware_limit_configuration = Int
-    software_limit_configuration = Property(depends_on = '_software_limit_configuration')
+    software_limit_configuration = Property(depends_on='_software_limit_configuration')
     _software_limit_configuration = Int
 
 
@@ -237,21 +237,21 @@ class NewportAxis(Axis):
         self._velocity = v
         self.nominal_velocity = v
         if self.loaded:
-            com = self.parent._build_command(COMMAND_MAP['velocity'], xx = self.id, nn = v)
+            com = self.parent._build_command(COMMAND_MAP['velocity'], xx=self.id, nn=v)
             self.parent.tell(com)
 
     def _set_acceleration(self, v):
         self._acceleration = v
         self.nominal_acceleration = v
         if self.loaded:
-            com = self.parent._build_command(COMMAND_MAP['acceleration'], xx = self.id, nn = v)
+            com = self.parent._build_command(COMMAND_MAP['acceleration'], xx=self.id, nn=v)
             self.parent.tell(com)
 
     def _set_deceleration(self, v):
         self._deceleration = v
         self.nominal_deceleration = v
         if self.loaded:
-            com = self.parent._build_command(COMMAND_MAP['deceleration'], xx = self.id, nn = v)
+            com = self.parent._build_command(COMMAND_MAP['deceleration'], xx=self.id, nn=v)
             self.parent.tell(com)
 
     def upload_parameters_to_device(self):
@@ -273,14 +273,14 @@ class NewportAxis(Axis):
                         value += 1
 
 
-            cmd = self.parent._build_command(cmd, xx = self.id, nn = value)
+            cmd = self.parent._build_command(cmd, xx=self.id, nn=value)
             self.parent.tell(cmd)
 
         value = '{:n},{:n}'.format(
                                self.reduce_motor_torque_time,
                                self.reduce_motor_torque_percent
                                )
-        cmd = self.parent._build_command('QR', xx = self.id, nn = value)
+        cmd = self.parent._build_command('QR', xx=self.id, nn=value)
         self.parent.tell(cmd)
 
     def load(self, path):
@@ -542,9 +542,9 @@ class NewportAxis(Axis):
 
     def _read_parameters_fired(self):
 #        results = []
-        results = ResultsReport(axis = self)
+        results = ResultsReport(axis=self)
         for name, c in COMMAND_MAP.iteritems():
-            cmd = self.parent._build_query(c, xx = self.id)
+            cmd = self.parent._build_query(c, xx=self.id)
             result = self.parent.ask(cmd)
             results.add(name, c, result)
 #            results.append((name, c, cmd, result))
@@ -564,7 +564,7 @@ class NewportAxis(Axis):
                 elif name == 'trajectory_mode':
                     new += 1
 
-                cmd = self.parent._build_command(attr, xx = self.id, nn = new)
+                cmd = self.parent._build_command(attr, xx=self.id, nn=new)
                 self.parent.tell(cmd)
 
 
@@ -636,27 +636,27 @@ class NewportAxis(Axis):
         encoder_group = Group(Item('encoder_resolution'),
                             Item('encoder_full_step_resolution'),
                             Item('microstep_factor'),
-                            label = 'Encoder'
+                            label='Encoder'
                             )
-        general_group = Group(Item('name', style = 'readonly'),
-                            Item('id', style = 'readonly'),
-                            Item('kind', editor = EnumEditor(values = KINDS)),
-                            Item('units', editor = EnumEditor(values = UNITS)),
-                            Item('sign', editor = EnumEditor(values = SIGNS)),
-                            Item('trajectory_mode', editor = EnumEditor(values = TRAJECTORY_MODES)),
+        general_group = Group(Item('name', style='readonly'),
+                            Item('id', style='readonly'),
+                            Item('kind', editor=EnumEditor(values=KINDS)),
+                            Item('units', editor=EnumEditor(values=UNITS)),
+                            Item('sign', editor=EnumEditor(values=SIGNS)),
+                            Item('trajectory_mode', editor=EnumEditor(values=TRAJECTORY_MODES)),
                             encoder_group,
-                            label = 'General')
+                            label='General')
         motor_group = Group(Item('average_motor_voltage'),
                           Item('maximum_motor_current'),
                           Item('gear_constant'),
                           Item('tachometer_gain'),
-                          label = 'Motor')
+                          label='Motor')
 
 
-        home_group = Group(Item('home_search_mode', editor = EnumEditor(values = HOME_SEARCH_MODES)),
+        home_group = Group(Item('home_search_mode', editor=EnumEditor(values=HOME_SEARCH_MODES)),
                          Item('home_search_low_speed'),
                          Item('home_search_high_speed'),
-                         label = 'Home',
+                         label='Home',
                          )
 
 
@@ -665,17 +665,17 @@ class NewportAxis(Axis):
                         Item('derivative_gain'),
                         Item('integral_saturation_level'),
                         Item('update_interval'),
-                        label = 'PID')
+                        label='PID')
 
         feed_forward_group = Group(Item('velocity_feed_forward_gain'),
                                  Item('acceleration_feed_forward_gain'),
-                                 label = 'Feed-Forward'
+                                 label='Feed-Forward'
                                  )
         loop_group = Group(pid_group, feed_forward_group,
-                         label = 'Loop')
+                         label='Loop')
         limit_group = Group(Item('software_negative_limit'),
                           Item('software_positive_limit'),
-                          label = 'Limits')
+                          label='Limits')
 
         motion_group = Group(Item('maximum_velocity'),
                            Item('velocity'),
@@ -688,9 +688,9 @@ class NewportAxis(Axis):
 
                            Group('jog_high_speed',
                                  'jog_low_speed',
-                                 label = 'Jog'),
+                                 label='Jog'),
                            limit_group,
-                           label = 'Motion'
+                           label='Motion'
                            )
         misc_group = Group(Item('maximum_following_error_threshold'),
                          Item('position_deadband'),
@@ -698,22 +698,22 @@ class NewportAxis(Axis):
                          Item('reduce_motor_torque_percent'),
                          Item('linear_compensation'),
                          Item('backlash_compensation'),
-                         label = 'Misc.')
+                         label='Misc.')
         master_slave_group = Group(Item('slave_axis'),
                                  Item('master_slave_reduction_ratio'),
                                  Item('master_slave_jog_velocity_update'),
                                  Item('master_slave_jog_velocity_scaling_coefficients'),
-                                 label = 'Master-Slave')
+                                 label='Master-Slave')
         configuration_group = Group(Item('amplifier_io_configuration'),
                                   Item('feedback_configuration'),
                                   Item('estop_configuration'),
                                   Item('following_error_configuration'),
                                   Item('hardware_limit_configuration'),
                                   Item('software_limit_configuration'),
-                                  label = 'Configuration')
+                                  label='Configuration')
         view = View(
                     VGroup(
-                           HGroup(spring, Item('read_parameters', show_label = False)),
+                           HGroup(spring, Item('read_parameters', show_label=False)),
                            Group(
                                general_group,
                                motion_group,
@@ -723,7 +723,7 @@ class NewportAxis(Axis):
                                master_slave_group,
                                loop_group,
                                misc_group,
-                               layout = 'tabbed'
+                               layout='tabbed'
                            )
                           ),
 #                  handler = NewportAxisHandler

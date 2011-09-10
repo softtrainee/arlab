@@ -50,12 +50,12 @@ class _StyledTextEditor(Editor):
             @type parent: C{str}
             @param parent:
         '''
-        panel = Panel(parent, -1, style = CLIP_CHILDREN)
+        panel = Panel(parent, -1, style=CLIP_CHILDREN)
         sizer = wx.BoxSizer(wx.VERTICAL)
 
 
         stc = wx.stc.StyledTextCtrl(panel,
-                            size = (self.object.width, self.object.height),
+                            size=(self.object.width, self.object.height),
                           #  style = wx.VSCROLL #| wx.HSCROLL
                             #|wx.NO_BORDER
 
@@ -112,7 +112,7 @@ class StyledTextDisplay(HasTraits):
         '''
         self.delegated_text = []
         self.stc.ClearAll()
-    def get_style(self, color = 'black'):
+    def get_style(self, color='black'):
         '''
             @type color: C{str}
             @param color:
@@ -168,7 +168,7 @@ class StyledTextDisplay(HasTraits):
 
             lentext = len(msg.encode('utf8'))
             stc.StartStyling(end, 31)
-            stc.SetStyling(lentext, self.get_style(color = color))
+            stc.SetStyling(lentext, self.get_style(color=color))
 
             stc.EnsureCaretVisible()
 
@@ -181,15 +181,15 @@ class StyledTextDisplay(HasTraits):
     def traits_view(self):
         '''
         '''
-        v = View(HGroup(Item('clear', show_label = False,
-                                visible_when = 'clearable')),
-               Item('stc', show_label = False, editor = StyledTextEditor(
+        v = View(HGroup(Item('clear', show_label=False,
+                                visible_when='clearable')),
+               Item('stc', show_label=False, editor=StyledTextEditor(
                                                   ),
                     ),
-            width = self.width + 50,
-            height = self.height + 50,
-            resizable = True,
-            handler = StyledTextHandler
+            width=self.width + 50,
+            height=self.height + 50,
+            resizable=True,
+            handler=StyledTextHandler
               )
         return v
 

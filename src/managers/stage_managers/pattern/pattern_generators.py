@@ -20,7 +20,7 @@ from numpy import linspace, cos, sin, array, hstack
 import math
 import random
 #============= local library imports  ==========================
-def polygon_pattern(cx, cy, radius, nsides, rotation = 0):
+def polygon_pattern(cx, cy, radius, nsides, rotation=0):
 
 
     for i in range(nsides + 1 + 2):
@@ -50,7 +50,7 @@ def arc_pattern(cx, cy, degrees, radius):
     for pt in zip(xs, ys):
         yield pt
 
-def random_pattern(cx, cy, walk_x, walk_y, ns, shape = 'circle', ** kw):
+def random_pattern(cx, cy, walk_x, walk_y, ns, shape='circle', ** kw):
     '''
         this method generates a more even distribution around the center than 
         method 1.
@@ -106,7 +106,7 @@ def diamond_pattern(cx, cy, width, height, **kw):
     for pt in pts:
         yield pt
 
-def square_spiral_pattern(cx, cy, R, ns, p, direction = 'out', ox = None, oy = None, **kw):
+def square_spiral_pattern(cx, cy, R, ns, p, direction='out', ox=None, oy=None, **kw):
     '''
         cx,cy= center point to spiral around
         R = nominal spiral diameter
@@ -144,7 +144,7 @@ def square_spiral_pattern(cx, cy, R, ns, p, direction = 'out', ox = None, oy = N
 
         yield x, y
 
-def line_spiral_pattern(cx, cy, R, ns, p, ss, direction = 'out', **kw):
+def line_spiral_pattern(cx, cy, R, ns, p, ss, direction='out', **kw):
     '''
         cx,cy= center point to spiral around
         R = nominal spiral

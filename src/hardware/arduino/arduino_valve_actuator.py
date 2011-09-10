@@ -40,5 +40,5 @@ class ArduinoValveActuator(ArduinoGPActuator):
             @param obj:
         '''
         cmd = 'A%s' % obj.name
-        return self.ask(cmd, verbose = False) == '1'
+        return self.ask(cmd, verbose=False) == '1'
 #============= EOF ====================================

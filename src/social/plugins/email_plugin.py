@@ -25,7 +25,7 @@ from src.social.email_manager import EmailManager
 class EmailPlugin(CorePlugin):
     
     def _service_offers_default(self):
-        so=self.service_offer_factory(protocol=EmailManager,
+        so = self.service_offer_factory(protocol=EmailManager,
                                       factory=self.factory
                                       )
         return [so]

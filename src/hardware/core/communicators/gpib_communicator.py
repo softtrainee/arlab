@@ -48,7 +48,7 @@ class GPIBCommunicator(Communicator):
 #        print self.simulation, 'fff'
 #        return not self.simulation
 
-    def ask(self, cmd, verbose = True, *args, **kw):
+    def ask(self, cmd, verbose=True, *args, **kw):
 #        self.handle.ibask(self.dev_handle)
         if self.handle is None:
             if verbose:
@@ -78,7 +78,7 @@ class GPIBCommunicator(Communicator):
     def tell(self, *args, **kw):
         self.write(*args, **kw)
 
-    def write(self, cmd, verbose = True, *args, **kw):
+    def write(self, cmd, verbose=True, *args, **kw):
 
         self._write(cmd, *args, **kw)
         if verbose:

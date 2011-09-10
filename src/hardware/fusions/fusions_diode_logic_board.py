@@ -49,5 +49,5 @@ class FusionsDiodeLogicBoard(FusionsLogicBoard):
     def _beam_motor_default(self):
         '''
         '''
-        return KerrThorMotor(name = 'beam', parent = self)
+        return KerrThorMotor(name='beam', parent=self)
 #====================== EOF ===========================================

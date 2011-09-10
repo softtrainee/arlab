@@ -47,7 +47,7 @@ class SpectrometerManager(Manager):
     #defscan = Button
 
     defscan = Event
-    defscan_label = Property(depends_on = 'defscanning')
+    defscan_label = Property(depends_on='defscanning')
     defscanning = Bool
 
     results = Button
@@ -65,18 +65,18 @@ class SpectrometerManager(Manager):
     def finish_loading(self):
         integration_time = 1.048576
         #load the scan graph
-        sg = TimeSeriesStreamGraph(container_dict = dict(padding = [5, 5, 5, 30]))
+        sg = TimeSeriesStreamGraph(container_dict=dict(padding=[5, 5, 5, 30]))
         sg.new_plot(
-                    scan_delay = integration_time + 0.025,
+                    scan_delay=integration_time + 0.025,
                     #data_limit = 15,
-                    data_limit = int(300 / integration_time),
-                    padding = [30, 0, 0, 0],
+                    data_limit=int(300 / integration_time),
+                    padding=[30, 0, 0, 0],
 
                      )
         for _i, _d in enumerate(DETECTOR_ORDER):
             sg.new_series()
 
-        sg.set_series_visiblity(False, series = 5)
+        sg.set_series_visiblity(False, series=5)
         sg.plots[0].value_scale = 'log'
 
         sg.plots[0].underlays.pop(3)
@@ -112,20 +112,20 @@ class SpectrometerManager(Manager):
 
     def _update_hover(self, obj, name, old, new):
         if new is not None:
-            g = Graph(container_dict = dict(padding = [30, 0, 0, 30]))
-            g.new_plot(padding = 5)
+            g = Graph(container_dict=dict(padding=[30, 0, 0, 30]))
+            g.new_plot(padding=5)
             g.new_series()
 #            root = os.path.join(data_dir, 'magfield', 'def_calibration001')
             try:
                 p = os.path.join(self.results_root, self.center_paths[new])
             except IndexError:
                 return
-            g.read_xy(p, header = True)
+            g.read_xy(p, header=True)
 
 
-            xs, ys, mx, my = self.spectrometer.calculate_peak_center(g.get_data(), g.get_data(axis = 1))
-            g.new_series(x = xs, y = ys, type = 'scatter')
-            g.new_series(x = mx, y = my, type = 'scatter')
+            xs, ys, mx, my = self.spectrometer.calculate_peak_center(g.get_data(), g.get_data(axis=1))
+            g.new_series(x=xs, y=ys, type='scatter')
+            g.new_series(x=mx, y=my, type='scatter')
 
             g.window_width = 250
             g.window_height = 250
@@ -137,7 +137,7 @@ class SpectrometerManager(Manager):
 
             g.window_y = 400 - y
 
-            g.edit_traits(kind = 'popover')
+            g.edit_traits(kind='popover')
 
 #    def open_calibration_result(self):
 #
@@ -196,7 +196,7 @@ class SpectrometerManager(Manager):
     def _defscan_fired(self):
         if self.spectrometer.stop():
             self.defscanning = True
-            t = Thread(target = self.deflection_calibration)
+            t = Thread(target=self.deflection_calibration)
             t.start()
         else:
             self.defscanning = False
@@ -219,7 +219,7 @@ class SpectrometerManager(Manager):
 
     @on_trait_change('detectors:active')
     def _active_detectors_changed(self, obj, name, old, new):
-        self.scan_graph.set_series_visiblity(new, series = DETECTOR_ORDER.index(obj.name))
+        self.scan_graph.set_series_visiblity(new, series=DETECTOR_ORDER.index(obj.name))
 
     def _get_defscan_label(self):
         return 'Start' if not self.defscanning else 'Stop'
@@ -229,8 +229,8 @@ class SpectrometerManager(Manager):
                                 HGroup(self._button_factory('defscan', 'defscan_label', None),
                                        #Item('defscan'),
 
-                                        Item('results'), show_labels = False),
-                                Item('spectrometer', style = 'custom', show_label = False)
+                                        Item('results'), show_labels=False),
+                                Item('spectrometer', style='custom', show_label=False)
                                 #Item('current_hv', style = 'readonly'),
 #                                Item('integration_time'),
 #                                Item('molecular_weight', editor = EnumEditor(values = MOLECULAR_WEIGHT_KEYS)),
@@ -248,13 +248,13 @@ class SpectrometerManager(Manager):
                                 #self._slider_factory('magnet_dac', 'magnet_dac'),
                                 #self._slider_factory('magnet_position', 'magnet_position')
                               )
-        graph_group = Item('scan_graph', show_label = False, style = 'custom')
+        graph_group = Item('scan_graph', show_label=False, style='custom')
         detector_group = Item('detectors',
-                              show_label = False,
-                              editor = TableEditor(columns = [ObjectColumn(name = 'name', editable = False),
-                                                             ObjectColumn(name = 'intensity', editable = False),
-                                                             CheckboxColumn(name = 'active', editable = True),
-                                                             ObjectColumn(name = 'deflection', editable = True)
+                              show_label=False,
+                              editor=TableEditor(columns=[ObjectColumn(name='name', editable=False),
+                                                             ObjectColumn(name='intensity', editable=False),
+                                                             CheckboxColumn(name='active', editable=True),
+                                                             ObjectColumn(name='deflection', editable=True)
                                                              ],
 
 
@@ -268,16 +268,16 @@ class SpectrometerManager(Manager):
                            graph_group,
 
                            ),
-                    title = 'Spectrometer Manager',
-                    resizable = True,
-                    handler = self.handler_klass
+                    title='Spectrometer Manager',
+                    resizable=True,
+                    handler=self.handler_klass
                     )
 if __name__ == '__main__':
     setup('spectrometer')
     s = SpectrometerManager()
     ini = Initializer()
-    ini.add_initialization(dict(name = 'spectrometer_manager',
-                                manager = s
+    ini.add_initialization(dict(name='spectrometer_manager',
+                                manager=s
                                 ))
     ini.run()
 #    s.magnet_field_calibration()

@@ -105,7 +105,7 @@ class TCPServer(ThreadingTCPServer, MessagingServer):
             sock.close()
 
         #start a listener thread
-        t = Thread(target = listen)
+        t = Thread(target=listen)
         t.start()
 
 #============= EOF ====================================

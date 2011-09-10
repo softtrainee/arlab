@@ -41,7 +41,7 @@ class FTPTranfer(object):
         '''
         self._connect(host)
 
-    def transfer(self, path, name = None):
+    def transfer(self, path, name=None):
         '''
             @type path: C{str}
             @param path:
@@ -55,7 +55,7 @@ class FTPTranfer(object):
             self._ftp.cwd('argusVI_one_data')
             with open(path, 'r') as f:
                 self._ftp.storlines('STOR %s' % name, f,
-                                callback = self._transfer_line,
+                                callback=self._transfer_line,
                                 )
 
     def _transfer_line(self, args):
@@ -71,7 +71,7 @@ class FTPTranfer(object):
             @param host:
         '''
         self._ftp = f = ftplib.FTP(host)
-        f.login(user = 'ross', passwd = 'jir812')
+        f.login(user='ross', passwd='jir812')
 
 if __name__ == '__main__':
     f = FTPTranfer('localhost')

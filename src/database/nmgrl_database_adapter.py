@@ -31,36 +31,36 @@ from nmgrl_orm import  DetectorTable, \
     PeakTimeTable
 
 class NMGRLDatabaseAdapter(DatabaseAdapter):
-    def add_project(self, args, sess = None):
+    def add_project(self, args, sess=None):
         '''
       
         '''
         if sess is None:
             sess = self.session_factory()
 
-        p, sess = self.get_project(args['Project'], sess = sess)
+        p, sess = self.get_project(args['Project'], sess=sess)
         if p is None:
             p = ProjectTable(**args)
         sess.add(p)
         return sess
 
-    def add_sample(self, args, sess = None):
+    def add_sample(self, args, sess=None):
         '''
 
         '''
         if sess is None:
             sess = self.session_factory()
         #check to see if sample already exists
-        s, sess = self.get_sample(args['Sample'], sess = sess)
+        s, sess = self.get_sample(args['Sample'], sess=sess)
         if s is None:
-            p, sess = self.get_project(args['Project'], sess = sess)
+            p, sess = self.get_project(args['Project'], sess=sess)
 
             s = SampleTable(**args)
             p.samples.append(s)
             sess.add(s)
         return s, sess
 
-    def add_material(self, args, sess = None):
+    def add_material(self, args, sess=None):
         '''
 
         '''
@@ -70,7 +70,7 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
         sess.add(m)
         return m, sess
 
-    def add_irradiation_position(self, args, sess = None):
+    def add_irradiation_position(self, args, sess=None):
         '''
         '''
         if sess is None:
@@ -78,14 +78,14 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
 
         ip, sess = self.get_irradiation_position((args['IrradiationLevel'],
                                                  args['HoleNumber']),
-                                                 sess = sess)
+                                                 sess=sess)
         print ip
         if ip is None:
-            material, sess = self.get_material(args['Material'], sess = sess)
+            material, sess = self.get_material(args['Material'], sess=sess)
             #if the material doesnt exist add it
             if material is None:
-                material, sess = self.add_material(dict(Material = args['Material']), sess = sess)
-            sample, sess = self.get_sample(args['Sample'], sess = sess)
+                material, sess = self.add_material(dict(Material=args['Material']), sess=sess)
+            sample, sess = self.get_sample(args['Sample'], sess=sess)
             args.pop('Sample')
 
             ip = IrradiationPositionTable(**args)
@@ -94,7 +94,7 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
 
         return ip, sess
 
-    def add_arar_analysis(self, args, sess = None, dbanalysis = None):
+    def add_arar_analysis(self, args, sess=None, dbanalysis=None):
         '''
 
         '''
@@ -102,29 +102,29 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
             sess = self.session_factory()
         if dbanalysis is None:
             if 'RID' in args:
-                analysis, sess = self.get_analysis(args['RID'], sess = sess)
+                analysis, sess = self.get_analysis(args['RID'], sess=sess)
             else:
                 analysis = None
         else:
             analysis = dbanalysis
 
         if analysis is not None:
-            araranalysis, sess = self.get_araranalysis(analysis.AnalysisID, sess = sess)
+            araranalysis, sess = self.get_araranalysis(analysis.AnalysisID, sess=sess)
             if araranalysis is None:
 #                args.pop('RID')
                 a = ArArAnalysisTable(**args)
                 analysis.araranalyses.append(a)
         return sess
 
-    def add_analysis(self, kw, sess = None, dbirradiationpos = None,
-                     dbsample = None):
+    def add_analysis(self, kw, sess=None, dbirradiationpos=None,
+                     dbsample=None):
         '''
             
         '''
         if sess is None:
             sess = self.session_factory()
 
-        analysis, sess = self.get_analysis(kw['RID'], sess = sess)
+        analysis, sess = self.get_analysis(kw['RID'], sess=sess)
         new = False
         if analysis is None:
             irradpos = self._get_record(dbirradiationpos, 'get_irradiation_position', sess)
@@ -138,7 +138,7 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
 
         return analysis, new, sess
 
-    def add_detector(self, detector_id, kw, sess = None):
+    def add_detector(self, detector_id, kw, sess=None):
         '''
             
         '''
@@ -148,7 +148,7 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
 #        print det_args, sess, detector_id
         if detector_id is not None:
 #            #get the detector row
-            det, sess = self.get_detector(detector_id, sess = sess)
+            det, sess = self.get_detector(detector_id, sess=sess)
             #print det
             for a in kw:
                 setattr(det, a, kw[a])
@@ -157,8 +157,8 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
             sess.add(det)
 
         return det, sess
-    def add_isotope(self, args, sess = None, dbanalysis = None,
-                    dbdetector = None, dbbaseline = None):
+    def add_isotope(self, args, sess=None, dbanalysis=None,
+                    dbdetector=None, dbbaseline=None):
         '''
             
         '''
@@ -178,7 +178,7 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
 
         return iso, sess
 
-    def add_peaktimeblob(self, IsotopeID, blob, dbisotope = None, sess = None):
+    def add_peaktimeblob(self, IsotopeID, blob, dbisotope=None, sess=None):
         '''
             
         '''
@@ -187,15 +187,15 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
 
         isotope = dbisotope
         if dbisotope is None:
-            isotope, sess = self.get_isotope(IsotopeID, sess = sess)
+            isotope, sess = self.get_isotope(IsotopeID, sess=sess)
 
         if isotope is not None:
-            pk = PeakTimeTable(PeakTimeBlob = blob)
+            pk = PeakTimeTable(PeakTimeBlob=blob)
             isotope.peak_time_series.append(pk)
 
         return sess
 
-    def get_rids(self, sess = None):
+    def get_rids(self, sess=None):
         '''
           
         '''
@@ -204,42 +204,42 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
 
         p = sess.query(AnalysesTable.AnalysisID, AnalysesTable.RID).limit(1000)
         return p, sess
-    def get_project(self, project, sess = None):
+    def get_project(self, project, sess=None):
         '''
            
         '''
         if sess is None:
             sess = self.session_factory()
         try:
-            p = sess.query(ProjectTable).filter_by(Project = project).one()
+            p = sess.query(ProjectTable).filter_by(Project=project).one()
         except:
             p = None
         return p, sess
 
-    def get_araranalysis(self, aid, sess = None):
+    def get_araranalysis(self, aid, sess=None):
         '''
         
         '''
         if sess is None:
             sess = self.session_factory()
         try:
-            a = sess.query(ArArAnalysisTable).filter_by(AnalysisID = aid).one()
+            a = sess.query(ArArAnalysisTable).filter_by(AnalysisID=aid).one()
         except:
             a = None
         return a, sess
 
-    def get_analysis(self, rid, sess = None):
+    def get_analysis(self, rid, sess=None):
         '''
         
         '''
         if sess is None:
             sess = self.session_factory()
         try:
-            a = sess.query(AnalysesTable).filter_by(RID = rid).one()
+            a = sess.query(AnalysesTable).filter_by(RID=rid).one()
         except:
             a = None
         return a, sess
-    def get_analyses(self, sess = None):
+    def get_analyses(self, sess=None):
         '''
             
         '''
@@ -249,7 +249,7 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
 
         return p, sess
 
-    def get_detector(self, id, sess = None):
+    def get_detector(self, id, sess=None):
         '''
             @type id: C{str}
             @param id:
@@ -260,41 +260,41 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
         if sess is None:
             sess = self.session_factory()
 
-        d = sess.query(DetectorTable).filter_by(DetectorID = id).one()
+        d = sess.query(DetectorTable).filter_by(DetectorID=id).one()
         return d, sess
 
-    def get_material(self, material, sess = None):
+    def get_material(self, material, sess=None):
         '''
     
         '''
         if sess is None:
             sess = self.session_factory()
         try:
-            m = sess.query(MaterialTable).filter_by(Material = material).one()
+            m = sess.query(MaterialTable).filter_by(Material=material).one()
         except:
             m = None
         return m, sess
-    def get_sample(self, sample, sess = None):
+    def get_sample(self, sample, sess=None):
         '''
 
         '''
         if sess is None:
             sess = self.session_factory()
         try:
-            s = sess.query(SampleTable).filter_by(Sample = sample).one()
+            s = sess.query(SampleTable).filter_by(Sample=sample).one()
         except:
             s = None
         return s, sess
-    def get_isotopes(self, AnalysisID, sess = None):
+    def get_isotopes(self, AnalysisID, sess=None):
         '''
   
         '''
         if sess is None:
             sess = self.session_factory()
 
-        isos = sess.query(IsotopeTable).filter_by(AnalysisID = AnalysisID).all()
+        isos = sess.query(IsotopeTable).filter_by(AnalysisID=AnalysisID).all()
         return isos, sess
-    def get_irradiation_position(self, args, sess = None):
+    def get_irradiation_position(self, args, sess=None):
         '''
      
         '''
@@ -303,25 +303,25 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
             sess = self.session_factory()
         try:
             if isinstance(args, tuple):
-                s = sess.query(IrradiationPositionTable).filter_by(IrradiationLevel = args[0],
-                                                                   HoleNumber = int(args[1]),
+                s = sess.query(IrradiationPositionTable).filter_by(IrradiationLevel=args[0],
+                                                                   HoleNumber=int(args[1]),
                                                                    ).one()
             else:
                 IrradiationPosID = args
-                s = sess.query(IrradiationPositionTable).filter_by(IrradPos = IrradiationPosID).one()
+                s = sess.query(IrradiationPositionTable).filter_by(IrradPos=IrradiationPosID).one()
         except:
             s = None
 
         return s, sess
 
-    def get_peaktimeblob(self, IsotopeID, sess = None):
+    def get_peaktimeblob(self, IsotopeID, sess=None):
         '''
      
         '''
         if sess is None:
             sess = self.session_factory()
         try:
-            ptb = sess.query(PeakTimeTable).filter_by(IsotopeID = IsotopeID).one()
+            ptb = sess.query(PeakTimeTable).filter_by(IsotopeID=IsotopeID).one()
         except:
             ptb = None
         return ptb, sess
@@ -332,10 +332,10 @@ class NMGRLDatabaseAdapter(DatabaseAdapter):
         '''
         if record is not None:
             if isinstance(record, int):
-                record, sess = getattr(self, func)(record, sess = sess)
+                record, sess = getattr(self, func)(record, sess=sess)
 
         return record
-    def debug_delete_table(self, table, sess = None):
+    def debug_delete_table(self, table, sess=None):
         def _delete_table(t):
             rows = sess.query(t).all()
             for r in rows:

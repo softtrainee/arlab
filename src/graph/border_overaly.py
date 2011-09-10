@@ -20,7 +20,7 @@ from chaco.api import AbstractOverlay
 
 #============= local library imports  ==========================
 class BorderOverlay(AbstractOverlay):
-    def overlay(self, component, gc, view_bounds = None, mode = 'normal'):
+    def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
             @type component: C{str}
             @param component:

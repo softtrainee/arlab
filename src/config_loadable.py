@@ -56,7 +56,7 @@ class ConfigLoadable(Loggable):
             r = config.options(section)
         return r
 
-    def config_get(self, config, section, option, cast = None, optional = False, default = None):
+    def config_get(self, config, section, option, cast=None, optional=False, default=None):
         '''
         '''
         if cast is not None:
@@ -73,10 +73,10 @@ class ConfigLoadable(Loggable):
         else:
             return func(section, option)
 
-    def set_attribute(self, config, attribute, section, option, cast = None, optional = False):
+    def set_attribute(self, config, attribute, section, option, cast=None, optional=False):
         '''
         '''
-        r = self.config_get(config, section, option, cast = cast, optional = optional)
+        r = self.config_get(config, section, option, cast=cast, optional=optional)
 
         if r is not None:
             setattr(self, attribute, r)
@@ -97,7 +97,7 @@ class ConfigLoadable(Loggable):
         '''
         return True
 
-    def write_configuration(self, config, path = None):
+    def write_configuration(self, config, path=None):
         '''
 
         '''
@@ -107,7 +107,7 @@ class ConfigLoadable(Loggable):
         with open(path, 'w') as f:
             config.write(f)
 
-    def get_configuration(self, path = None):
+    def get_configuration(self, path=None):
         '''
 
         '''

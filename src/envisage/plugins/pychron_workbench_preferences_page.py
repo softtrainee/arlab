@@ -43,22 +43,22 @@ class PluginCategory(HasTraits):
         '''
         parser = self.parser
         if obj.enabled:
-            parser.enable_plugin(obj.name, category = obj.category)
+            parser.enable_plugin(obj.name, category=obj.category)
         else:
-            parser.disable_plugin(obj.name, category = obj.category)
+            parser.disable_plugin(obj.name, category=obj.category)
 
     def traits_view(self):
         cols = [
-                CheckboxColumn(name = 'enabled'),
-                ObjectColumn(name = 'name', editable = False)]
-        editor = TableEditor(columns = cols)
+                CheckboxColumn(name='enabled'),
+                ObjectColumn(name='name', editable=False)]
+        editor = TableEditor(columns=cols)
 
-        return View(Item('plugins', editor = editor, show_label = False))
+        return View(Item('plugins', editor=editor, show_label=False))
 
 class PychronWorkbenchPreferencesPage(PreferencesPage):
     '''
     '''
-    categories = List(transient = True)
+    categories = List(transient=True)
     preferences_path = 'pychron.workbench'
     name = 'Plugins'
 
@@ -76,15 +76,15 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
             ps = parser.get_plugins_as_elements(g)
             plugins = []
             for pi in ps:
-                plugin = Plugin(name = pi.text.strip(),
-                              enabled = True if pi.get('enabled').lower() == 'true' else False,
-                              category = g
+                plugin = Plugin(name=pi.text.strip(),
+                              enabled=True if pi.get('enabled').lower() == 'true' else False,
+                              category=g
                               )
                 plugins.append(plugin)
 
-            cat = PluginCategory(name = g.capitalize(),
-                                 plugins = plugins,
-                                 parser = self.parser
+            cat = PluginCategory(name=g.capitalize(),
+                                 plugins=plugins,
+                                 parser=self.parser
                                  )
             cats.append(cat)
 
@@ -94,13 +94,13 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
     def traits_view(self):
         '''
         '''
-        editor = ListEditor(use_notebook = True,
-                            dock_style = 'tab',
-                            page_name = '.name'
+        editor = ListEditor(use_notebook=True,
+                            dock_style='tab',
+                            page_name='.name'
                             )
-        v = View(Item('categories', editor = editor,
-                       show_label = False,
-                       style = 'custom'
+        v = View(Item('categories', editor=editor,
+                       show_label=False,
+                       style='custom'
                        ))
         return v
 #============= views ===================================
