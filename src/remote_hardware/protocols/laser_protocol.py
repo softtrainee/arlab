@@ -20,7 +20,7 @@ limitations under the License.
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class LaserProtocol:
-    commands=['ReadLaserPower',
+    commands = ['ReadLaserPower',
         'GetLaserStatus',
         'Enable',
         'Disable',

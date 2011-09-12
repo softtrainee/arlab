@@ -22,8 +22,6 @@ from src.remote_hardware.tests.base_test import baseTest
 from src.remote_hardware.error_handler import InvalidCommandErrorCode, \
     InvalidArgumentsErrorCode
  
-    
-#class LaserTest(unittest.TestCase):
 class LaserTest(baseTest):
     protocol = LaserProtocol
         
