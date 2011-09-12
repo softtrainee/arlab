@@ -19,59 +19,73 @@ from traitsui.api import View, Item
 #============= standard library imports =======================
 #============= local library imports  =========================
 class ErrorCode:
-    msg=None
-    code=None
+    msg = None
+    code = None
     def __repr__(self):
-        return '{} : {}'.format(self.code,self.msg)
+        return '{} : {}'.format(self.code, self.msg)
 
 class InvalidCommandErrorCode(ErrorCode):
-    msg='invalid command: {}'
-    code=1
-    def __init__(self,command):
-        self.msg=self.msg.format(command)
+    msg = 'invalid command: {}'
+    code = 1
+    def __init__(self, command):
+        self.msg = self.msg.format(command)
     
 class ManagerUnavaliableErrorCode(ErrorCode):
-    msg='manager unavaliable {}'
-    code=2
-
+    msg = 'manager unavaliable: {}'
+    code = 2
+    def __init__(self, manager):
+        self.msg = self.msg.format(manager)
+    
 class InvalidArgumentsErrorCode(ErrorCode):
-    msg='invalid arguments: {}'
-    code=3
-    def __init__(self,command):
-        self.msg=self.msg.format(command)
+    msg = 'invalid arguments: {} {}'
+    code = 3
+    def __init__(self, command, err):
+        self.msg = self.msg.format(command, err)
         
 class DeviceCommErrorCode(ErrorCode):
-    msg='no response from device'
-    code=6
+    msg = 'no response from device'
+    code = 6
+class DeviceConnectionErrorCode(ErrorCode):
+    msg = 'device {} not connected'
+    code = 7
+    def __init__(self, name):
+        self.msg = self.msg.format(name)
     
 class ErrorHandler:
-    def check_manager(self,manager):
+    def check_manager(self, manager, name):
         if manager is None:
-            return ManagerUnavaliableErrorCode() 
+            return ManagerUnavaliableErrorCode(name) 
             
-    def check_command(self,handler,args):
+    def check_command(self, handler, args):
         if args:
-            command_func=self._get_func(args[0])
+            command_func = handler.get_func(args[0])
             if command_func is None:
-                return InvalidCommandErrorCode(), None
+                return InvalidCommandErrorCode(args[0]), None
             else:
                 return None, command_func
         else:
             return InvalidCommandErrorCode(), None
         
-    def check_response(self,func, manager, args):
+    def check_response(self, func, manager, args):
+        '''
+            performs the requested command and checks for errors
+             
+        '''
+        result = None
+        err = None
         try:
-            result = func(manager,*args)
-            
+            result = func(manager, *args)
             if result is None:
-                err=DeviceCommErrorCode()
+                err = DeviceCommErrorCode()
+            elif result in ['DeviceConnectionErrorCode', 'InvalidArgumentsErrorCode']:
+                err = globals()[result](args[0])
+                
+        except TypeError, e:
+            err = InvalidArgumentsErrorCode(args, e)
             
-        except TypeError:
-            err=InvalidArgumentsErrorCode(args)
-            
-        return err, result
+        return err, str(result)
         
 if __name__ == '__main__':
-    ec=ErrorHandler()
+    ec = ErrorHandler()
     
 #============= EOF ============================================

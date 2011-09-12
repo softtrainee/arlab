@@ -22,28 +22,42 @@ from base_remote_hardware_handler import BaseRemoteHardwareHandler
 
 #============= views ===================================
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-TM_PROTOCOL='src.social.twitter_manager.TwitterManager'
+TM_PROTOCOL = 'src.social.twitter_manager.TwitterManager'
 class DummyDevice(object):
     def get(self):
         return 0.1
     def set(self, v):
         return 'OK'
 
+alphas = [chr(i) for i in range(65, 65 + 26, 1)]
+
 class DummyELM(object):
     def open_valve(self, v):
-        return True
+        if len(v) == 1 and v in alphas:
+            return True
+        
     def close_valve(self, v):
-        return True
+        if len(v) == 1:
+            return True
+    
     def get_valve_state(self, v):
         return True
+    def get_valve_states(self):
+        return ','.join(map(str, [True, True, False]))
     def get_manual_state(self, v):
         return True
     def get_device(self, n):
+        
         d = DummyDevice()
+        d = None
         return d
+        
+    def get_software_lock(self, n):
+        return False
 
 class SystemHandler(BaseRemoteHardwareHandler):
     extraction_line_manager = None
+    manager_name = 'extraction_line_manager'
 #    def get_extraction_line_manager(self):
     def get_manager(self):
 
@@ -67,35 +81,41 @@ class SystemHandler(BaseRemoteHardwareHandler):
             dev = DummyDevice()
         return dev
 
-    def Set(self, dname, value):
+    def Set(self, manager, dname, value):
         d = self.get_device(dname)
         if d is not None:
             result = d.set(value)
         else:
-            result = 'Device not connected: {}'.format(dname)
+            result = 'DeviceConnectionErrorCode'
+        
         return result
 
-    def Read(self, dname):
+    def Read(self, manager, dname):
         d = self.get_device(dname)
         if d is not None:
             result = d.get()
         else:
-            result = 'Device not connected: {}'.format(dname)
+            result = 'DeviceConnectionErrorCode'
         return result
 
     def Open(self, manager, vname):
         result = manager.open_valve(vname)
         if result == True:
             result = 'OK'
+        elif result is None:
+            result = 'InvalidArgumentsErrorCode'
+        
         return result
 
-    def Close(self, manager,vname):
+    def Close(self, manager, vname):
         result = manager.close_valve(vname)
         if result == True:
             result = 'OK'
+        elif result is None:
+            result = 'InvalidArgumentsErrorCode'
         return result
 
-    def GetValveState(self, manager,vname):
+    def GetValveState(self, manager, vname):
         return manager.get_valve_state(vname)
 
     def GetValveStates(self, manager, *args):
@@ -114,7 +134,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             
         return result
 
-    def RemoteLaunch(self,manager, *args):
+    def RemoteLaunch(self, manager, *args):
         #launch pychron
         p = '/Users/Ross/Programming/pychron/Pychron.app'
         result = 'OK'
@@ -125,15 +145,15 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
         return result
 
-    def StartMultRuns(self, manager,data):
+    def StartMultRuns(self, manager, data):
         if self.application is not None:
-            tm=self.application.get_service(TM_PROTOCOL)
+            tm = self.application.get_service(TM_PROTOCOL)
             
             tm.post('Mult runs start {}'.format(data))
             
-    def CompleteMultRuns(self,manager,data):
+    def CompleteMultRuns(self, manager, data):
         if self.application is not None:
-            tm=self.application.get_service(TM_PROTOCOL)
+            tm = self.application.get_service(TM_PROTOCOL)
             
             tm.post('Mult runs completed {}'.format(data))
             

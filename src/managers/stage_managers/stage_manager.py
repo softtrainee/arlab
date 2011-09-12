@@ -189,7 +189,9 @@ class StageManager(Manager):
 
 #    def _hole_changed(self, name, old, new):
 #        self._move_to_hole(new)
-
+    def single_axis_move(self,*args,**kw):
+        return self.stage_controller.single_axis_move(*args,**kw)
+        
     def linear_move(self, x, y, **kw):
 
         #x = self.stage_controller._sign_correct(x, 'x')
@@ -530,7 +532,7 @@ class StageManager(Manager):
     def _get_stage_map(self):
         if self._stage_map:
             return self._stage_map.name
-
+    
     def _set_stage_map(self, v):
         s = next((sm for sm in self._stage_maps if sm.name == v), None)
         if s is not None:
@@ -558,7 +560,9 @@ class StageManager(Manager):
 #
 #        axes = self.stage_controller.axes
 #        return ['Home All'] + [axes[a].name.upper() for a in axes]
-
+    def get_z(self):
+        return self.stage_controller._z_position
+    
     def get_uncalibrated_xy(self):
 
         pos = (self.stage_controller._x_position, self.stage_controller._y_position)

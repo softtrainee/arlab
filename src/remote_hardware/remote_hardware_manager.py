@@ -24,6 +24,7 @@ from src.managers.manager import Manager
 
 from src.messaging.command_processor import CommandProcessor
 from src.remote_hardware.context import ContextFilter
+from src.remote_hardware.error_handler import ErrorCode
 
 #============= standard library imports ========================
 
@@ -84,7 +85,7 @@ class RemoteHardwareManager(Manager):
 
                 factory = getattr(module, klass)
 
-                handler = factory(application=self.application)
+                handler = factory(application = self.application)
                 '''
                     the context filter uses the handler object to 
                     get the kind and request
@@ -103,7 +104,11 @@ class RemoteHardwareManager(Manager):
                 result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
 
         self.debug('Result: {}'.format(result))
-        self.result = result
+        if isinstance(result, ErrorCode):
+            self.result = repr(result)
+        else:
+            self.result = result
+            
         return result
 
     def get_server_response(self):
