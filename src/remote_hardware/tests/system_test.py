@@ -21,7 +21,7 @@ limitations under the License.
 #from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
 from src.remote_hardware.protocols.system_protocol import SystemProtocol
 from src.remote_hardware.tests.base_test import baseTest
-from src.remote_hardware.error_handler import InvalidCommandErrorCode, \
+from src.remote_hardware.errors import InvalidCommandErrorCode, \
     DeviceCommErrorCode, InvalidArgumentsErrorCode
 
 class SystemTest(baseTest):
@@ -77,13 +77,13 @@ class SystemTest(baseTest):
         self._test('System', data, v)
         
     def testStartMultRuns(self):
-        data = ['StartMultRuns 1254', 'StartMultRuns 1254']
-        vs = ['6 : no response from device', DeviceCommErrorCode]
+        data = ['StartMultRuns 1254']
+        vs = ['2 : manager unavaliable: TwitterManager']
         self._test_suite('System', data, vs)
         
     def testCompleteMultRuns(self):
-        data = ['CompleteMultRuns 1254', 'CompleteMultRuns 1254'] 
-        vs = ['6 : no response from device', DeviceCommErrorCode]
+        data = ['CompleteMultRuns 1254'] 
+        vs = ['2 : manager unavaliable: TwitterManager']
         self._test_suite('System', data, vs)
         
         

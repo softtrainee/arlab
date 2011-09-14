@@ -18,7 +18,8 @@ import unittest
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
-from src.remote_hardware.error_handler import ErrorCode
+from src.remote_hardware.errors.error import ErrorCode
+
 
 class baseTest(unittest.TestCase):
     protocol = None
@@ -65,11 +66,12 @@ class baseTest(unittest.TestCase):
                 error(rt, data[1], v[1])
         else:
             success(request_types, data[0], v[0])
-            error(request_types, data[1], v[1])
+            try:
+                error(request_types, data[1], v[1])
+            except IndexError:
+                pass
             #failure(request_types, data[1], v[1])
            
-            
-            
     def setUp(self):
         self.manager = RemoteHardwareManager()
 

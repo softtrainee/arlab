@@ -91,6 +91,12 @@ class Client(HasTraits):
 
         sock.connect(addr)
         return sock
+    
+    def ask(self, command):
+        conn = self.get_connection()
+        conn.send(command)
+        return conn.recv(4096)
+        
     def traits_view(self):
         v = View(
                  VGroup(
@@ -112,8 +118,6 @@ class Client(HasTraits):
                  resizable=True
                  )
         return v
-
-
 
 def send_command(addr, cmd, kind='UDP'):
     p = socket.SOCK_STREAM

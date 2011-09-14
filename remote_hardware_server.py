@@ -40,6 +40,7 @@ if __name__ == '__main__':
     s = RemoteHardwareServerManager()
     s.load()
     s.configure_traits()
+    os._exit(0)
 
 #    launch()
 #============= EOF ====================================

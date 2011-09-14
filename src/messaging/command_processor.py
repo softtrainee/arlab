@@ -24,8 +24,8 @@ from src.config_loadable import ConfigLoadable
 from src.helpers import paths
 
 from globals import use_shared_memory
-import threading
-from src.remote_hardware.error_handler import ErrorCode
+from src.remote_hardware.errors.error import ErrorCode
+
 if use_shared_memory:
     from src.messaging.shm_server import SHMServer
 else:

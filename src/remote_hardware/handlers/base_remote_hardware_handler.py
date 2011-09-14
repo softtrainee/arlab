@@ -15,20 +15,22 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import Any, Instance
-from src.loggable import Loggable
+import shlex
 
 #============= standard library imports ========================
-import shlex
-from src.remote_hardware.error_handler import ErrorHandler, \
-    InvalidCommandErrorCode
 #============= local library imports  ==========================
+from src.loggable import Loggable
+from error_handler import ErrorHandler
 
 class BaseRemoteHardwareHandler(Loggable):
     application = Any
     error_handler = Instance(ErrorHandler, ())
     manager_name = 'Manager'
 
-        
+    def _error_handler_default(self):
+        eh = ErrorHandler()
+        eh.logger = self
+        return eh 
     #@staticmethod
     def _make_keys(self, name):
         return [name, name.upper(), name.capitalize(), name.lower()]
@@ -69,8 +71,10 @@ class BaseRemoteHardwareHandler(Loggable):
     def get_func(self, fstr):
         try:
             return getattr(self, fstr)
+        
         except AttributeError:
-            self.warning('Invalid command {}, {:n}'.format(fstr, len(fstr)))
+            pass
+            #self.warning('Invalid command {}, {:n}'.format(fstr, len(fstr)))
 
 
 

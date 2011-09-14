@@ -65,7 +65,7 @@ class ValveManager(Manager):
 #            self.actuator = dev
             return dev
 
-    def finish_loading(self, update = False):
+    def finish_loading(self, update=False):
         '''
    
         '''
@@ -107,9 +107,9 @@ class ValveManager(Manager):
 
                 for v in self.valves:
                     if sls[v]:
-                        self.lock(v, save = False)
+                        self.lock(v, save=False)
                     else:
-                        self.unlock(v, save = False)
+                        self.unlock(v, save=False)
 
     def get_states(self):
         states = []
@@ -210,21 +210,21 @@ class ValveManager(Manager):
 #        return self.close_by_name(*args, **kw)
 
 #    def open_by_name(self, name, mode = 'auto'):
-    def open_by_name(self, name, mode = 'normal'):
+    def open_by_name(self, name, mode='normal'):
         '''
         '''
 #        return self._open_(name = name, mode = mode)
         return self._open_(name, mode)
 
 #    def close_by_name(self, name, mode = 'auto'):
-    def close_by_name(self, name, mode = 'normal'):
+    def close_by_name(self, name, mode='normal'):
         '''
 
         '''
         return self._close_(name, mode)
 
     #@recordable
-    def _actuate_(self, name, open_close, mode, address = None):
+    def _actuate_(self, name, open_close, mode, address=None):
         '''
         '''
         if address is None:
@@ -239,7 +239,7 @@ class ValveManager(Manager):
 
             act = getattr(v, open_close)
 
-            result = act(mode = mode)
+            result = act(mode=mode)
             if isinstance(result, bool):#else its an error message
 
                 ve = self.get_evalve_by_name(name)
@@ -279,7 +279,7 @@ class ValveManager(Manager):
 
             self.info('end sampling')
 
-    def lock(self, name, save = True):
+    def lock(self, name, save=True):
         '''
         '''
         v = self.get_valve_by_name(name)
@@ -291,7 +291,7 @@ class ValveManager(Manager):
             if save:
                 self.save_soft_lock_state()
 
-    def unlock(self, name, save = True):
+    def unlock(self, name, save=True):
         '''
         '''
         v = self.get_valve_by_name(name)
@@ -347,7 +347,7 @@ class ValveManager(Manager):
             @param path:
         '''
         self.sections = []
-        config = self.get_configuration(path = path)
+        config = self.get_configuration(path=path)
         if config is not None:
             for s in config.sections():
                 section = Section()
@@ -380,10 +380,10 @@ class ValveManager(Manager):
 
             actuator = self.get_actuator_by_name(act)
 
-            v = HardwareValve(name = a[0],
-                     address = a[1],
-                     actuator = actuator,
-                     interlocks = a[2].split(',')
+            v = HardwareValve(name=a[0],
+                     address=a[1],
+                     actuator=actuator,
+                     interlocks=a[2].split(',')
                      )
 
             s = v.get_hardware_state()
@@ -391,10 +391,10 @@ class ValveManager(Manager):
             #update the extraction line managers canvas
             self.parent.canvas.update_valve_state(v.name[-1], s)
 
-            args = dict(name = a[0],
-                        address = a[1],
-                        description = a[3],
-                        canvas = self.parent.canvas,
+            args = dict(name=a[0],
+                        address=a[1],
+                        description=a[3],
+                        canvas=self.parent.canvas,
 
                         )
             ev = ExplanableValve(**args)

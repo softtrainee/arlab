@@ -13,16 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-#============= enthought library imports =======================
-
+#=============enthought library imports=======================
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
-from laser_handler import LaserHandler
-
-class SynradHandler(LaserHandler):
-    manager_name = 'Synrad'
-
-
-#============= views ===================================
-#============= EOF ====================================
+class ErrorCode(object):
+    msg = ''
+    code = None
+    def __init__(self, logger=None):
+        if logger is not None:
+            logger.warning(self.msg)
+            
+    def __repr__(self):
+        return '{} : {}'.format(self.code, self.msg)
+#============= EOF =====================================

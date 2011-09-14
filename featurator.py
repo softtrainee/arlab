@@ -13,14 +13,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from src.remote_hardware.protocols.laser_protocol import LaserProtocol
+
 '''
 test features of pychron using unittest
 
 
 
 '''
+#=============enthought library imports=======================
+#============= standard library imports ========================
+#============= local library imports  ==========================
+import subprocess
+import os
+import time
 
-#import unittest
 #===============================================================================
 # ImportTest
 #===============================================================================
@@ -56,8 +63,55 @@ test features of pychron using unittest
 #===============================================================================
 # RemoteHardwareTest
 #===============================================================================
-from src.remote_hardware.tests.laser_test import LaserTest
-from src.remote_hardware.tests.system_test import SystemTest
+
+#from src.remote_hardware.tests.laser_test import LaserTest
+#from src.remote_hardware.tests.system_test import SystemTest
 
 
+def test(protocol, client):
+    
+    print '=' * 80
+    print 'Testing commands'
+    print '=' * 80
+    print 
+    for k, v in protocol.commands.iteritems():
+        
+        cmd = '{} {}'.format(k, v) if v is not None else k
+        resp = client.ask(cmd)
+        time.sleep(0.25)
+        
+    print
+    print '=' * 80
+    print 'Finished testing commands'
+    print '=' * 80
+    
+def main(launch=False):
+    if launch:
+        #launch pychron
+        subprocess.Popen(['python', 'pychron_beta.py'])
+        #launch remote hardware server
+        subprocess.Popen(['python', 'remote_hardware_server.py'])
+        #use testclient to send commands
+        time.sleep(25)
+        
+    from src.remote_hardware.protocols.system_protocol import SystemProtocol
+
+    from src.messaging.testclient import Client
+    client = Client(port=1063)
+    
+    test(SystemProtocol(), client)
+    
+    client.port = 1068
+    test(LaserProtocol(), client)
+    
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-l', '--launch', action='store_true')
+    
+    args = parser.parse_args()
+    main(launch=args.launch)
+
+#============= EOF =====================================
 
