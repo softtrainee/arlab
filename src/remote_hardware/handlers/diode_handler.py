@@ -24,10 +24,16 @@ from laser_handler import LaserHandler
 
 class DiodeHandler(LaserHandler):
     manager_name = 'Diode'
-    def SetLaserPower(self, manager, data):
-        result = 'OK'
-        #manager.set_laser_power(data)
-        return result
+#    def SetLaserPower(self, manager, data):
+#        
+#        result = 'OK'
+#        try:
+#            p = float(data)
+#        except ValueError:
+#            return InvalidArgumentsErrorCode('SetLaserPower', data)
+#        
+#        #manager.set_laser_power(data)
+#        return result
 
 #============= views ===================================
 #============= EOF ====================================

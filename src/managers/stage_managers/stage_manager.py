@@ -189,8 +189,8 @@ class StageManager(Manager):
 
 #    def _hole_changed(self, name, old, new):
 #        self._move_to_hole(new)
-    def single_axis_move(self,*args,**kw):
-        return self.stage_controller.single_axis_move(*args,**kw)
+    def single_axis_move(self, *args, **kw):
+        return self.stage_controller.single_axis_move(*args, **kw)
         
     def linear_move(self, x, y, **kw):
 

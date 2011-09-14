@@ -14,57 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports========================
-from traits.api import HasTraits
-from traitsui.api import View, Item
+
 #============= standard library imports =======================
 #============= local library imports  =========================
-class ErrorCode:
-    msg = None
-    code = None
-    def __repr__(self):
-        return '{} : {}'.format(self.code, self.msg)
+from src.remote_hardware.errors.system_errors import ManagerUnavaliableErrorCode, \
+    InvalidCommandErrorCode, DeviceCommErrorCode, InvalidArgumentsErrorCode
+from src.remote_hardware.errors.error import ErrorCode
+#from src.loggable import Loggable
 
-class InvalidCommandErrorCode(ErrorCode):
-    msg = 'invalid command: {}'
-    code = 1
-    def __init__(self, command):
-        self.msg = self.msg.format(command)
-    
-class ManagerUnavaliableErrorCode(ErrorCode):
-    msg = 'manager unavaliable: {}'
-    code = 2
-    def __init__(self, manager):
-        self.msg = self.msg.format(manager)
-    
-class InvalidArgumentsErrorCode(ErrorCode):
-    msg = 'invalid arguments: {} {}'
-    code = 3
-    def __init__(self, command, err):
-        self.msg = self.msg.format(command, err)
-        
-class DeviceCommErrorCode(ErrorCode):
-    msg = 'no response from device'
-    code = 6
-class DeviceConnectionErrorCode(ErrorCode):
-    msg = 'device {} not connected'
-    code = 7
-    def __init__(self, name):
-        self.msg = self.msg.format(name)
     
 class ErrorHandler:
+    logger = None
     def check_manager(self, manager, name):
         if manager is None:
-            return ManagerUnavaliableErrorCode(name) 
+            return ManagerUnavaliableErrorCode(name, logger=self.logger) 
             
     def check_command(self, handler, args):
         if args:
+            
             command_func = handler.get_func(args[0])
             if command_func is None:
-                return InvalidCommandErrorCode(args[0]), None
+                return InvalidCommandErrorCode(args[0], logger=self.logger), None
             else:
                 return None, command_func
         else:
-            return InvalidCommandErrorCode(), None
+            return InvalidCommandErrorCode(logger=self.logger), None
         
     def check_response(self, func, manager, args):
         '''
@@ -75,13 +49,15 @@ class ErrorHandler:
         err = None
         try:
             result = func(manager, *args)
+            
             if result is None:
-                err = DeviceCommErrorCode()
-            elif result in ['DeviceConnectionErrorCode', 'InvalidArgumentsErrorCode']:
-                err = globals()[result](args[0])
+                err = DeviceCommErrorCode(logger=self.logger)
+            elif isinstance(result, ErrorCode):
+                err = result
+
                 
         except TypeError, e:
-            err = InvalidArgumentsErrorCode(args, e)
+            err = InvalidArgumentsErrorCode(args, e, logger=self.logger)
             
         return err, str(result)
         

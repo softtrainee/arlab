@@ -19,6 +19,8 @@ limitations under the License.
 import subprocess
 #============= local library imports  ==========================
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
+from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode, \
+    InvalidArgumentsErrorCode, ManagerUnavaliableErrorCode
 
 #============= views ===================================
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -72,7 +74,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
         return elm
 
-    def get_device(self, name, protocol = None):
+    def get_device(self, name, protocol=None):
         if self.application is not None:
             if protocol is None:
                 protocol = 'src.hardware.core.i_core_device.ICoreDevice'
@@ -86,7 +88,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         if d is not None:
             result = d.set(value)
         else:
-            result = 'DeviceConnectionErrorCode'
+            result = DeviceConnectionErrorCode(dname, logger=self)
         
         return result
 
@@ -95,7 +97,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         if d is not None:
             result = d.get()
         else:
-            result = 'DeviceConnectionErrorCode'
+            result = DeviceConnectionErrorCode(dname, logger=self)
         return result
 
     def Open(self, manager, vname):
@@ -103,7 +105,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         if result == True:
             result = 'OK'
         elif result is None:
-            result = 'InvalidArgumentsErrorCode'
+            result = InvalidArgumentsErrorCode('Open', vname, logger=self)
         
         return result
 
@@ -112,7 +114,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         if result == True:
             result = 'OK'
         elif result is None:
-            result = 'InvalidArgumentsErrorCode'
+            result = InvalidArgumentsErrorCode('Close', vname, logger=self)
         return result
 
     def GetValveState(self, manager, vname):
@@ -148,14 +150,23 @@ class SystemHandler(BaseRemoteHardwareHandler):
     def StartMultRuns(self, manager, data):
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
-            
-            tm.post('Mult runs start {}'.format(data))
+            if tm is not None:
+                tm.post('Mult runs start {}'.format(data))
+            else:
+                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+        else:
+            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
             
     def CompleteMultRuns(self, manager, data):
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
+            if tm is not None:
+                tm.post('Mult runs completed {}'.format(data))
+            else:
+                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+        else:
+            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
             
-            tm.post('Mult runs completed {}'.format(data))
             
         
 #    def handle(self, data):

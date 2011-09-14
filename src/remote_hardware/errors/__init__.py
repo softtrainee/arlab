@@ -13,16 +13,4 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-#============= enthought library imports =======================
-
-#============= standard library imports ========================
-
-#============= local library imports  ==========================
-from laser_handler import LaserHandler
-
-class SynradHandler(LaserHandler):
-    manager_name = 'Synrad'
-
-
-#============= views ===================================
-#============= EOF ====================================
+from system_errors import *

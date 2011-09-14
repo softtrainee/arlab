@@ -236,7 +236,6 @@ class ExtractionLineManager(Manager):
     def open_valve(self, name, address=None, mode='remote'):
         '''
         '''
-        print 'elm', threading.currentThread()
         if self.valve_manager is not None:
             if address:
                 name = self.valve_manager.get_name_by_address(address)

@@ -829,6 +829,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
             
         '''
         if axis is not None:
+            if isinstance(axis, str):
+                axis = self.axes[axis].id
+            
             if self.mode == 'grouped':
                 return self.group_moving()
             else:

@@ -22,13 +22,14 @@ from src.managers.manager import Manager
 #    from src.messaging.command_processor import SHMCommandProcessor as CommandProcessor
 #else:
 
-from src.messaging.command_processor import CommandProcessor
-from src.remote_hardware.context import ContextFilter
-from src.remote_hardware.error_handler import ErrorCode
+
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+from src.messaging.command_processor import CommandProcessor
+from src.remote_hardware.context import ContextFilter
+from src.remote_hardware.errors.error import ErrorCode
 
 '''
 #===================================
@@ -85,7 +86,7 @@ class RemoteHardwareManager(Manager):
 
                 factory = getattr(module, klass)
 
-                handler = factory(application = self.application)
+                handler = factory(application=self.application)
                 '''
                     the context filter uses the handler object to 
                     get the kind and request
