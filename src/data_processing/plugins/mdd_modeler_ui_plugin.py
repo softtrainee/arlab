@@ -22,9 +22,8 @@ from src.envisage.core.core_ui_plugin import CoreUIPlugin
 
 class MDDModelerUIPlugin(CoreUIPlugin):
     '''
-        G{classtree}
     '''
-    id = 'pychron.canvas_designer.ui'
+    id = 'pychron.mdd_modeler'
 
 
     def _action_sets_default(self):
@@ -36,7 +35,8 @@ class MDDModelerUIPlugin(CoreUIPlugin):
     def _perspectives_default(self):
         '''
         '''
-        p = []
+        from mdd_modeler_perspective import MDDModelerPerspective 
+        p = [MDDModelerPerspective]
         return p
 
     def _get_manager(self):
