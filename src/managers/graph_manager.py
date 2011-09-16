@@ -16,21 +16,19 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import File, Str, Directory
 from traitsui.api import View, Item, EnumEditor
+from chaco.api import ArrayDataSource
 #============= standard library imports ========================
 import csv
-import numpy as np
+from numpy import array, loadtxt, sqrt
 import os
 #============= local library imports  ==========================
 from src.graph.graph import Graph
 #from src.graph.stacked_graph import StackedGraph
-from src.graph.time_series_graph import TimeSeriesStreamGraph
-from src.graph.residuals_graph import ResidualsGraph
-from src.data_processing.power_mapping.power_map_processor import PowerMapProcessor
 from src.helpers.paths import data_dir
 from manager import Manager
-from src.envisage.core.envisage_editor import EnvisageEditor
 
-KIND_VALUES = dict(peak_center='Peak Center',
+KIND_VALUES = dict(
+                   peak_center='Peak Center',
                    powermap='Power Map',
                    xy='XY',
                    deflection='Deflection',
@@ -40,6 +38,10 @@ class GraphManager(Manager):
     path = File
     root = Directory
     kind = Str('deflection')
+    def _test_fired(self):
+        self.open_graph('inverse_isochron', path='/Users/Ross/Desktop/data.csv')
+        #self.open_graph('age_spectrum', path='/Users/Ross/Desktop/test.csv')
+    
     def open_graph(self, kind, path=None):
 
         pfunc = getattr(self, '{}_parser'.format(kind))
@@ -56,6 +58,7 @@ class GraphManager(Manager):
                 graph = gfunc(*args)
                 graph.name = os.path.basename(path)
                 if self.application is not None:
+                    from src.envisage.core.envisage_editor import EnvisageEditor
                     self.application.workbench.edit(graph,
                                                     kind=EnvisageEditor)
                 else:
@@ -69,6 +72,7 @@ class GraphManager(Manager):
 
         title = 'adfasf'
         return xs, ys, title
+    
     def peak_center_parser(self, path):
         data, title = self._default_xy_parser(path)
         xs = []
@@ -82,7 +86,7 @@ class GraphManager(Manager):
 
         minmaxdata = None
         if xs:
-            minmaxdata = np.array((xs, ys))
+            minmaxdata = array((xs, ys))
         return data, minmaxdata, title
 
     def deflection_parser(self, path):
@@ -109,16 +113,131 @@ class GraphManager(Manager):
                                               )
 
         return tt_data, ra_data, title
-
+    
+    def age_spectrum_parser(self, path):
+        '''
+            return 2 lists of tuples 
+            x= [(start39, end39), ...]
+            y=[(age,error),...]
+        '''
+        ar39signals = [0.1, 3, 0.25, 0.1]
+        
+        ages = [5, 4, 3, 2, 1]
+        errors = [0.25, 0.25, 0.25, 0.25]
+        
+        total39 = sum(ar39signals)
+        x = []
+        
+        start = 0
+        end = 0
+        nages = []
+        nerrors = []
+        for ai, ei, si in zip(ages, errors, ar39signals):
+            end += si / total39
+            x.append((start, end))
+            start = end
+            nages.append(ai)
+            nerrors.append(ei)
+            nages.append(ai)
+            nerrors.append(ei)
+        return x, zip(nages, nerrors), 'foo'
+    
+    def inverse_isochron_parser(self, path):
+        '''
+            inverse isochron
+            39/40 vs 36/40
+        '''
+        rheader, data = self._get_csv_data(path)
+        
+        
+        rheader = rheader.strip().split(',')
+        ar40signals = array(data[rheader.index('Ar40_')])
+        ar40signals_er = array(data[rheader.index('Ar40_Er')])        
+        ar39signals = array(data[rheader.index('Ar39_')])
+        ar39signals_er = array(data[rheader.index('Ar39_Er')])        
+        ar36signals = array(data[rheader.index('Ar36_')])
+        ar36signals_er = array(data[rheader.index('Ar36_Er')])
+        
+        
+#        ar39signals = array([3.3, 3.35, 3.2, 3.0])
+#        
+#        ar40signals = array([4.3, 4.35, 4.2, 4.0])
+#        ar36signals = ar40signals * array([1 / 300.1, 1 / 303.1, 1 / 299.1, 1 / 305.1])
+#        
+        
+        v1 = ar40signals
+        e1 = ar40signals_er
+        v2 = ar39signals
+        e2 = ar39signals_er
+        
+        err = lambda v1, e1, v2, e2:(((e1 / v1) ** 2 + (e2 / v2) ** 2) ** 0.5) * (v2 / v1)
+        xers = err(v1, e1, v2, e2)
+        
+        v2 = ar36signals
+        e2 = ar36signals_er
+        yers = err(v1, e1, v2, e2)
+        return ar39signals / ar40signals, ar36signals / ar40signals, xers, yers, 'foo'
 #===============================================================================
 # factories
 #===============================================================================
+    def inverse_isochron_factory(self, xs, ys, xers, yers, title):
+        from src.graph.regression_graph import RegressionGraph
+        g = RegressionGraph(show_regression_editor=False)
+        
+        g.new_plot()
+        _plot, scatter, _line = g.new_series(x=xs, y=ys, marker='pixel')
+
+        from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
+        scatter.overlays.append(ErrorEllipseOverlay())
+        scatter.xerror = ArrayDataSource(xers)
+        scatter.yerror = ArrayDataSource(yers)
+        
+        g.set_x_limits(0.125, 0.15)
+        g.set_y_limits(0, 0.0035)
+        return g
+        
+    def age_spectrum_factory(self, xs, ys, title):
+        g = Graph()
+        g.new_plot(xtitle='Cum. 39Ark',
+                   ytitle='Age (Ma)',
+                   title=title)
+        
+        x = []
+        for xi in xs:
+            x.append(xi[0])
+            x.append(xi[1])
+        y = [y[0] for y in ys]
+
+        g.new_series(x=x, y=y)
+#                     , render_style='connectedhold')
+        
+        ox = x[:]
+        x.reverse()
+        xp = ox + x
+        
+        yu = [yi[0] + yi[1] for yi in ys]
+        
+        yl = [yi[0] - yi[1] for yi in ys]
+        yl.reverse()
+        
+        yp = yu + yl
+        g.new_series(x=xp, y=yp, type='polygon',
+                     color='orange',
+                     )
+        
+        lpad = 2
+        upad = 2
+#        g.set_y_limits(0, 10)
+        g.set_y_limits(min(y) - lpad, max(y) + upad)
+        return g
+    
     def powerscan_factory(self, xs, ys, title):
         g = Graph()
         return g
 
-
     def step_heat_factory(self, ttdata, radata, title):
+        from src.graph.time_series_graph import TimeSeriesStreamGraph
+
         g = TimeSeriesStreamGraph()
         g.new_plot(xtitle='Time',
                    ytitle='Temp C',
@@ -197,6 +316,7 @@ class GraphManager(Manager):
             data is a path in this case 
             let a PowerMapProcessor do all the work
         '''
+        from src.data_processing.power_mapping.power_map_processor import PowerMapProcessor
 
         with open(data, 'r') as f:
             pmp = PowerMapProcessor()
@@ -206,7 +326,8 @@ class GraphManager(Manager):
             return pmp.load_graph(reader)
 
     def residuals_factory(self, *args, **kw):
-
+        from src.graph.residuals_graph import ResidualsGraph
+    
         klass = ResidualsGraph
         g = self._graph_factory(klass, *args, **kw)
         return g
@@ -250,12 +371,10 @@ class GraphManager(Manager):
             path = self.open_file_dialog(default_directory=data_dir)
 
         if path is not None:
-            with open(path, 'r') as f:
+            with open(path, 'U') as f:
                 if header:
                     rheader = f.readline()
-
-                data = np.loadtxt(f, delimiter=delimiter, unpack=unpack, **kw)
-
+                data = loadtxt(f, delimiter=delimiter, unpack=unpack, **kw)
         return rheader, data
 
 #    def open_power_scan_graph(self):
@@ -323,7 +442,7 @@ class GraphManager(Manager):
 
     def traits_view(self):
         v = View(
-                 #Item('test'),
+                 Item('test'),
                  Item('kind', editor=EnumEditor(values=KIND_VALUES)),
                  Item('path', visible_when='kind not in ["step_heat"]'),
                  Item('root', label='Path', visible_when='kind in ["step_heat"]')

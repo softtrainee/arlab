@@ -22,17 +22,7 @@ from chaco.api import AbstractOverlay
 class BorderOverlay(AbstractOverlay):
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
-            @type component: C{str}
-            @param component:
-
-            @type gc: C{str}
-            @param gc:
-
-            @type view_bounds: C{str}
-            @param view_bounds:
-
-            @type mode: C{str}
-            @param mode:
+            
         '''
         print component.outer_bounds, component.outer_position
         gc.set_stroke_color((0, 1, 0))
