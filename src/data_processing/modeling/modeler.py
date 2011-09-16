@@ -279,14 +279,7 @@ class Modeler(Loggable):
 
     def load_graph(self, data_directory, gid, color):
         '''
-            @type data_directory: C{str}
-            @param data_directory:
-
-            @type gid: C{str}
-            @param gid:
-
-            @type color: C{str}
-            @param color:
+            
         '''
         self.info('loading graph for %s' % data_directory.path)
         g = self.graph
@@ -296,59 +289,56 @@ class Modeler(Loggable):
 
         data = dl.load_spectrum()
         if data is not None:
-            try:
-                g.build_spectrum(*data, **{'color':color})
-            except:
-                pass
+            g.build_spectrum(*data, **{'color':color})
+            
+        data = dl.load_logr_ro('logr.samp')
+        if data is not None:
+            g.build_logr_ro(*data)
+            g.set_legend_label('logr.samp', plotid=1, series=0)
 
-#        data = dl.load_logr_ro('logr.samp')
-#        if data is not None:
-#            g.build_logr_ro(*data)
-#            g.set_legend_label('logr.samp', plotid = 1, series = 0)
-#
-#        data = dl.load_logr_ro('logr.dat')
-#        if data is not None:
-#            g.build_logr_ro(ngroup = False, *data)
-#            g.set_legend_label('logr.dat', plotid = 1, series = 1)
-#
-#        data = dl.load_cooling_history()
-#        if data is not None:
-#            g.build_cooling_history(*data)
-#
-#        data = dl.load_arrhenius('arr.samp')
-#        if data is not None:
-#            g.build_arrhenius(*data)
-#            g.set_legend_label('arr.samp', plotid = 2, series = 0,)
-#
-#        data = dl.load_arrhenius('arr.dat')
-#        if data is not None:
-#            g.build_arrhenius(ngroup = False, *data)
-#            g.set_legend_label('arr.dat', plotid = 2, series = 1)
-#
-#
-#        #sync the colors
-#        if self.sync_groups:
-#            for si in self.sync_groups:
-#
-#                tg = g.groups[si]
-#                sg = self.sync_groups[si]
-#
-#                for i, subgroup in enumerate(sg):
-#                    for j, series in enumerate(subgroup):
-#                        try:
-#
-#                            tseries = tg[i][j]
-#                            if series.__class__.__name__ == 'PolygonPlot':
-#                                for a in ['face_color', 'edge_color']:
-#                                    color = series.trait_get(a)
-#                                    tseries.trait_set(**color)
-#                            else:
-#                                tseries.trait_set(**{'color':series.color})
-#
-#                        except IndexError:
-#                            pass
-#
-#        g.set_group_visiblity(data_directory.show, gid = data_directory.id)
+        data = dl.load_logr_ro('logr.dat')
+        if data is not None:
+            g.build_logr_ro(ngroup=False, *data)
+            g.set_legend_label('logr.dat', plotid=1, series=1)
+
+        data = dl.load_cooling_history()
+        if data is not None:
+            g.build_cooling_history(*data)
+
+        data = dl.load_arrhenius('arr.samp')
+        if data is not None:
+            g.build_arrhenius(*data)
+            g.set_legend_label('arr.samp', plotid=2, series=0,)
+
+        data = dl.load_arrhenius('arr.dat')
+        if data is not None:
+            g.build_arrhenius(ngroup=False, *data)
+            g.set_legend_label('arr.dat', plotid=2, series=1)
+
+
+        #sync the colors
+        if self.sync_groups:
+            for si in self.sync_groups:
+
+                tg = g.groups[si]
+                sg = self.sync_groups[si]
+
+                for i, subgroup in enumerate(sg):
+                    for j, series in enumerate(subgroup):
+                        try:
+
+                            tseries = tg[i][j]
+                            if series.__class__.__name__ == 'PolygonPlot':
+                                for a in ['face_color', 'edge_color']:
+                                    color = series.trait_get(a)
+                                    tseries.trait_set(**color)
+                            else:
+                                tseries.trait_set(**{'color':series.color})
+
+                        except IndexError:
+                            pass
+
+        g.set_group_visiblity(data_directory.show, gid=data_directory.id)
 
     def refresh_graph(self):
         '''
