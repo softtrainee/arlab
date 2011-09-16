@@ -175,28 +175,28 @@ class DiffusionGraph(Graph):
         self.plotcontainer.invalidate_and_redraw()
 
 
-    def build_spectrum(self, ar39, age, ar39_err, age_err, id=0, **kw):
+    def build_spectrum(self, ar39, age, ar39_err, age_err, pid=0, **kw):
         '''
 
         '''
 
-        a, _p = self.new_series(ar39_err, age_err, plotid=id,
+        a, _p = self.new_series(ar39_err, age_err, plotid=pid,
                         type='polygon',
                         color='orange')
 
-        b, _p = self.new_series(ar39, age, plotid=id, **kw)
+        b, _p = self.new_series(ar39, age, plotid=pid, **kw)
 
         self.groups['spectrum'].append([b, a])
 
-        self.set_x_title('Cum. 39Ar %', plotid=id)
-        self.set_y_title('Age (Ma)', plotid=id)
+        self.set_x_title('Cum. 39Ar %', plotid=pid)
+        self.set_y_title('Age (Ma)', plotid=pid)
 
 
-    def build_logr_ro(self, ar39, logr, id=1, ngroup=True, **kw):
+    def build_logr_ro(self, ar39, logr, pid=1, ngroup=True, **kw):
         '''
         '''
 
-        a, _p = self.new_series(ar39, logr, plotid=id, **kw)
+        a, _p = self.new_series(ar39, logr, plotid=pid, **kw)
         g = self.groups['logr_ro']
         if ngroup:
             g.append([a])
@@ -204,15 +204,15 @@ class DiffusionGraph(Graph):
             #g[len(g) - 1].append(a)
             g[-1].append(a)
 
-        self.set_x_title('Cum. 39Ar %', plotid=id)
-        self.set_y_title('Log R/Ro', plotid=id)
+        self.set_x_title('Cum. 39Ar %', plotid=pid)
+        self.set_y_title('Log R/Ro', plotid=pid)
 
-    def build_arrhenius(self, T, Dta, id=2, ngroup=True, **kw):
+    def build_arrhenius(self, T, Dta, pid=2, ngroup=True, **kw):
         '''
             
         '''
 
-        a, _p = self.new_series(T, Dta, plotid=id, type='scatter', marker_size=2.5, **kw)
+        a, _p = self.new_series(T, Dta, plotid=pid, type='scatter', marker_size=2.5, **kw)
         g = self.groups['arrhenius']
         if ngroup:
             g.append([a])
@@ -220,15 +220,15 @@ class DiffusionGraph(Graph):
             #g[len(g) - 1].append(a)
             g[-1].append(a)
 
-        self.set_x_title('10000/T (K)', plotid=id)
-        self.set_y_title('Log Dt/a^2', plotid=id)
+        self.set_x_title('10000/T (K)', plotid=pid)
+        self.set_y_title('Log Dt/a^2', plotid=pid)
 
-    def build_cooling_history(self, ts, Tsl, Tsh, id=3):
+    def build_cooling_history(self, ts, Tsl, Tsh, pid=3):
         '''
                     '''
-        self.set_x_title('t (Ma)', plotid=id)
-        self.set_y_title('Temp (C)', plotid=id)
-        self.set_y_limits(min=100, plotid=id)
+        self.set_x_title('t (Ma)', plotid=pid)
+        self.set_y_title('Temp (C)', plotid=pid)
+        self.set_y_limits(min=100, plotid=pid)
         a, _p = self.new_series(ts, Tsl, type='polygon', color=self.color_generators[id].next())
         b, _p = self.new_series(ts, Tsh, type='polygon', color=self.color_generators[id].next())
 
