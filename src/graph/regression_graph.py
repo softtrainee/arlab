@@ -19,11 +19,10 @@ from traitsui.api import View, Item, VSplit, ListEditor
 from chaco.api import ScatterInspectorOverlay
 #from chaco.abstract_overlay import AbstractOverlay
 #=============standard library imports =======================
-import numpy as np
+from numpy import delete
 import time
-from src.data_processing.regression.ols import WLS
-cos = np.cos
-sin = np.sin
+#cos = np.cos
+#sin = np.sin
 
 #=============local library imports  ==========================
 from graph import Graph
@@ -63,8 +62,11 @@ class RegressionGraph(Graph):
     def _selected_plotid_changed(self):
         '''
         '''
-        self.selected = self.regression_editors[self.selected_plotid]
-
+        try:
+            self.selected = self.regression_editors[self.selected_plotid]
+        except IndexError:
+            pass
+        
     def __init__(self, *args, **kw):
         '''
         '''
@@ -161,8 +163,10 @@ class RegressionGraph(Graph):
 
         data_range = (dplot.index_range.low, dplot.index_range.high)
 
-        fitdata = np.delete(dplot.value.get_data(), sel_indices, 0)
-        indexdata = np.delete(dplot.index.get_data(), sel_indices, 0)
+#        fitdata = np.delete(dplot.value.get_data(), sel_indices, 0)
+#        indexdata = np.delete(dplot.index.get_data(), sel_indices, 0)
+        fitdata = delete(dplot.value.get_data(), sel_indices, 0)
+        indexdata = delete(dplot.index.get_data(), sel_indices, 0)
 
 #        if self.use_error:
 #            fiterrdata = self.get_data(axis = 2)
@@ -218,8 +222,10 @@ class RegressionGraph(Graph):
             if len(x) > 0 and len(y) > 0:
                 s = dplot.index.metadata.get('selections')
                 dr = (dplot.index_range.low, dplot.index_range.high)
-                xd = np.delete(x, s, 0)
-                yd = np.delete(y, s, 0)
+#                xd = np.delete(x, s, 0)
+#                yd = np.delete(y, s, 0)
+                xd = delete(x, s, 0)
+                yd = delete(y, s, 0)
 
                 type = self.fit_types[plotid]
                 type, kw = self._get_type_dict(type)
@@ -351,6 +357,7 @@ if __name__ == '__main__':
     ys = [xi * 2 + 3 for xi in xs]
     ys[0] = 5
     yer = [1, 1, 1, 1, 1, 1]#[0.2, 0.2, 0.4, 0.3, 0.6]
+    from src.data_processing.regression.ols import WLS
 
     w = WLS(xs, ys, yer)
 

@@ -22,7 +22,7 @@ from chaco.api import AbstractOverlay
 #=============local library imports  ==========================
 class GuideOverlay(AbstractOverlay):
     '''
-        G{classtree}
+    draws a horizontal or vertical line at the specified value
     '''
     orientation = Enum('h', 'v')
     value = Float
