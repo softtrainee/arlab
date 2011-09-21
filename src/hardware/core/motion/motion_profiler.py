@@ -227,11 +227,11 @@ class MotionProfiler(ConfigLoadable):
 
         return cv, ac, dc#, force
 
-    def find_min(self, disp, v, a, d, tol=0.001):
-
-        times, _distances = self.calculate_transit_parameters(disp, v, a, d)
-        atime = times[0]
-        cvtime = times[2]
+#    def find_min(self, disp, v, a, d, tol=0.001):
+#
+#        times, _distances = self.calculate_transit_parameters(disp, v, a, d)
+#        _atime = times[0]
+#        _cvtime = times[2]
 
 
 #        if abs(atime - cvtime) < tol:

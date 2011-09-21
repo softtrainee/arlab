@@ -205,13 +205,13 @@ class Regressor(object):
                 raise RegressorError('no initial guess specified')
 
             if kind == 'least_squares':
-                coeffs, cov_params, infodict, msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
+                coeffs, cov_params, _infodict, _msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
                                     full_output=1,
                                     #maxfev = 1000
                                      )
                 while ier != 1:
                     p0 = [pi / 2.0 for pi in p0]
-                    coeffs, cov_params, infodict, msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
+                    coeffs, cov_params, _infodict, _msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
                                         full_output=1,
                                     #    maxfev = 1000
                                     )

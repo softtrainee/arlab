@@ -16,10 +16,10 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import List
 #============= standard library imports ========================
+#from apptools.preferences.preference_binding import bind_preference
 
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
-from apptools.preferences.preference_binding import bind_preference
 from src.managers.bakeout_manager import BakeoutManager
 
 class BakeoutPlugin(CorePlugin):

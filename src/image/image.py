@@ -20,15 +20,13 @@ from traits.api import HasTraits, Any, List, Int
 import wx
 #=============local library imports  ==========================
 
-from ctypes_opencv import cvIplImageAsBitmap, \
-    cvConvertImage, cvCloneImage, \
+from ctypes_opencv import cvConvertImage, cvCloneImage, \
     cvResize, cvFlip, \
     CV_CVTIMG_SWAP_RB
 from image_helper import load_image, new_dst, grayspace
 from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
     draw_polygons
-import binascii
-import ctypes
+
 
 
 class Image(HasTraits):

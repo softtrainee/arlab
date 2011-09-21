@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Bool
+#from traits.api import Bool
 #from enable.component_editor import ComponentEditor , _ComponentEditor
 #============= standard library imports ========================
-from wx import EVT_IDLE, EVT_PAINT, BufferedPaintDC
+from wx import EVT_IDLE
 from src.managers.stage_managers.stage_component_editor import LaserComponentEditor, \
     _LaserComponentEditor
 #============= local library imports  ==========================

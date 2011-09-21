@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import Instance, Bool, Enum, Float, on_trait_change
+from traits.api import Instance, Bool, Enum, Float
 #=============standard library imports ========================
 import math
 #=============local library imports  ==========================

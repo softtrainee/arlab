@@ -15,11 +15,10 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import  Instance, Float
-from traitsui.api import View, Item, HGroup, HSplit
+from traitsui.api import View, Item, HGroup
 #=============standard library imports ========================
 import os
 #=============local library imports  ==========================
-import threading
 
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas

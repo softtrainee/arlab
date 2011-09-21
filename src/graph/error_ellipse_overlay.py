@@ -17,7 +17,7 @@ limitations under the License.
 from chaco.api import AbstractOverlay
 
 #============= standard library imports ========================
-from numpy import linspace, hstack, sqrt, power, matrix, corrcoef
+from numpy import linspace, hstack, sqrt, power, corrcoef
 from numpy.linalg import eig
 import math
 

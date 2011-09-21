@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Float, Button, Str, Int, Instance, Range
-from traitsui.api import View, Item, Group, HGroup, VGroup, RangeEditor, spring
+from traits.api import HasTraits, Bool, Float, Button, Instance, Range
+from traitsui.api import View, Item, Group, HGroup, RangeEditor, spring
 from chaco.api import AbstractOverlay
 
 #============= standard library imports ========================

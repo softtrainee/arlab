@@ -13,6 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from src.hardware.gauges.base_gauge import BaseGauge
+from src.hardware.gauges.mks.ion_gauge import IonGauge
+from src.hardware.gauges.mks.pirani_gauge import MicroPirani1S, MicroPirani3S
 '''
 @author: Jake Ross
 @copyright: 2009
@@ -32,7 +35,7 @@ import os
 
 #=============local library imports  ==========================
 #from src.hardware.gauges.base_gauge import BaseGauge, MicroPirani1S, MicroPirani3S, IonGauge
-from src.hardware.gauges.api import BaseGauge, IonGauge, MicroPirani1S, MicroPirani3S
+#from src.hardware.gauges.api import BaseGauge, IonGauge, MicroPirani1S, MicroPirani3S
 
 from manager import Manager
 #from stream_manager import StreamManager

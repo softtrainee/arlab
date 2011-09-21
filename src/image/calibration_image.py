@@ -26,8 +26,8 @@ limitations under the License.
 
 
 from image import Image
-from src.data_processing.image.image_helper import grayspace, erode, dilate, \
-    threshold, colorspace, contour, clone, get_polygons, draw_polygons
+from src.image.image_helper import grayspace, erode, dilate, \
+    threshold, colorspace, contour, clone, get_polygons, draw_polygons, lines
 
 class CalibrationImage(Image):
     '''

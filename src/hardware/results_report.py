@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports ======================
 from traits.api import HasTraits, List, CStr, Button
-from traitsui.api import View, Item, Group, HGroup, VGroup, spring, TableEditor, TabularEditor
+from traitsui.api import View, Item, HGroup, spring, TabularEditor
 from traitsui.tabular_adapter import TabularAdapter
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK

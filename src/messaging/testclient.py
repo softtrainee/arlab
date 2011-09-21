@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Button, Int, Str, Enum, Float, Bool, Event, Property
-from traitsui.api import View, Item, Group, HGroup, VGroup, ButtonEditor
+from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor
 
 #============= standard library imports ========================
 

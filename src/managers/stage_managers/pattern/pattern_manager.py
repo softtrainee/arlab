@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import Enum, Instance, Button, Str, Property
-from traitsui.api import View, Item, Group, HGroup, VGroup, InstanceEditor
+from traitsui.api import View, Item, HGroup, InstanceEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os

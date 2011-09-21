@@ -20,7 +20,7 @@ from threading import Thread
 
 #=============local library imports ===========================
 #from src.helpers.filetools import unique_path
-from ctypes_opencv import cvCreateCameraCapture, cvQueryFrame
+from ctypes_opencv import cvCreateCameraCapture, cvQueryFrame, cvWriteFrame
 #    cvIplImageAsBitmap, \
 #    cvConvertImage, cvCloneImage, \
 #    cvResize, cvWriteFrame, \

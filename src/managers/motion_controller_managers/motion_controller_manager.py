@@ -16,7 +16,7 @@ limitations under the License.
 #=============enthought library imports=======================
 from traits.api import Instance, Enum, DelegatesTo, Property, Button
 from traitsui.api import View, Item, HGroup, spring, \
-    ListEditor, Handler
+    ListEditor
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
