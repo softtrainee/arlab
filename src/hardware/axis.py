@@ -14,14 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Str, Int, Float, Bool, Property, on_trait_change
+from traits.api import  Any, Str, Int, Float, Bool, Property, on_trait_change
 from traitsui.api import View, Item
 
 #import apptools.sweet_pickle as pickle
 
 #============= standard library imports ========================
 import os
-import ConfigParser
 from src.config_loadable import ConfigLoadable
 #============= local library imports  ==========================
 class Axis(ConfigLoadable):
