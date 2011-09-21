@@ -112,12 +112,6 @@ class ExtractionLineScript(CoreScript):
             value = define_dict[key]
             setattr(self.script, key, value)
 
-    def config_statement(self, config_dict):
-        for key in config_dict:
-            if hasattr(self.script, key):
-                value = config_dict[key]
-                setattr(self.script, key, value)
-
     def set_time_zero_statement(self):
 
         msg = 'time zero %s' % generate_timestamp()

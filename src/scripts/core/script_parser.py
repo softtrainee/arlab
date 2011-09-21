@@ -49,16 +49,13 @@ class ScriptParser(object):
 
     def set_lexer(self, text):
         '''
-            @type text: C{str}
-            @param text:
+
         '''
         self.lexer = shlex.shlex(text)
         self.lexer.wordchars += '.=!<>,%\''
 
     def get_command_token(self, cmd):
         '''
-            @type cmd: C{str}
-            @param cmd:
         '''
         lexer = self.lexer
         tok = lexer.get_token()
@@ -67,8 +64,6 @@ class ScriptParser(object):
 
     def parse(self, text):
         '''
-            @type text: C{str}
-            @param text:
         '''
         errors = []
         if text is not None:
@@ -82,8 +77,7 @@ class ScriptParser(object):
 
     def __get_subroutine_path__(self, subroutine):
         '''
-            @type subroutine: C{str}
-            @param subroutine:
+            
         '''
         if '.' in subroutine:
             sub = RUNSCRIPT_DIR
@@ -104,11 +98,6 @@ class ScriptParser(object):
 
     def __check_line__(self, linenum, line):
         '''
-            @type linenum: C{str}
-            @param linenum:
-
-            @type line: C{str}
-            @param line:
         '''
         self.set_lexer(line)
 

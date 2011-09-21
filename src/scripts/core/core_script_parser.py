@@ -17,6 +17,7 @@ limitations under the License.
 
 #============= standard library imports ========================
 import shlex
+from src.helpers.filetools import str_to_bool
 
 #============= local library imports  ==========================
 class CoreScriptParser(object):
@@ -33,8 +34,7 @@ class CoreScriptParser(object):
 
     def set_lexer(self, text):
         '''
-            @type text: C{str}
-            @param text:
+
         '''
         self._lexer = shlex.shlex(text)
         self._lexer.wordchars += '.=!<>,%\'-'
@@ -48,8 +48,7 @@ class CoreScriptParser(object):
 
     def get_command_token(self):
         '''
-            @type cmd: C{str}
-            @param cmd:
+
         '''
         tok = self.get_token()
         if '----' in tok or tok in self._get_command_keys():
@@ -60,19 +59,20 @@ class CoreScriptParser(object):
 
     def parse(self, text, **kw):
         '''
-            @type text: C{str}
-            @param text:
+
         '''
+        
         errors = []
 
         if text is not None:
+           
             if isinstance(text, str):
                 text = text.split('\n')
-
+            
             self.text = text
             for linenum, line in enumerate(text):
                 errors.append(self._check_line(linenum + 1, line.strip()))
-
+            
         return errors
 
     def _raw_parse(self, linenum, line=None):
@@ -81,7 +81,80 @@ class CoreScriptParser(object):
 
         args = line.split(',')
         return self.raw_parse(args)
+    
+    def _config_parse(self, linenum, **kw):
+        kw = dict()
+        error = None
+        if linenum != 1 and linenum != 0:
+            error = 'config not at line 1'
+        else:
+            lexer = self._lexer
+            token = lexer.get_token()
+            while token:
+                error = None
+                if '=' not in token:
+                    error = 'Expected ='
+                else:
+                    key, value = token.split('=')
+                    bval = str_to_bool(value)
+                    if key == 'debug' and value:
+                        if bval is not None:
+                            kw[key] = bval
+                        else:
+                            error = 'Expected boolean'
+                    else:
+                        if bval is None:
+                            kw[key] = value
+                        else:
+                            kw[key] = bval
 
+                token = self._lexer.get_token()
+                
+        return error, kw
+    def _get_float(self):
+        lexer = self._lexer
+        error = None
+        ti = lexer.get_token()
+        t = None
+        if ti:
+            try:
+                t = float(ti)
+            except ValueError:
+                #see if this is a interpolation key
+                if ti[0] == '%':
+                    t = ti
+                else:
+                    error = 'Invalid float argument {}'.ti
+
+            error = self._check_extra_args(lexer)
+
+        else:
+            error = 'Specify a float or interpolation argument'
+
+        return error, t
+    
+    def _get_int(self):
+        lexer = self._lexer
+        error = None
+        ti = lexer.get_token()
+        t = None
+        if ti:
+            try:
+                t = int(ti)
+            except ValueError:
+                #see if this is a interpolation key
+                if ti[0] == '%':
+                    t = ti
+                else:
+                    error = 'Invalid int argument {}'.ti
+
+            error = self._check_extra_args(lexer)
+
+        else:
+            error = 'Specify a int or interpolation argument'
+
+        return error, t
+    
     def _check_number(self, args):
         errora = []
         error = None
@@ -99,11 +172,7 @@ class CoreScriptParser(object):
 
     def _check_line(self, linenum, line):
         '''
-            @type linenum: C{str}
-            @param linenum:
 
-            @type line: C{str}
-            @param line:
         '''
         self.set_lexer(line)
 
@@ -116,7 +185,7 @@ class CoreScriptParser(object):
                     token = 'raw'
                 except ValueError:
                     if not ',' in token:
-                        error = 'Invalid KEY %s' % token
+                        error = 'Invalid KEY {}'.format(token)
                     else:
                         token = 'raw'
 
@@ -125,7 +194,7 @@ class CoreScriptParser(object):
 
             if not error:
                 try:
-                    func = getattr(self, '_%s_parse' % token.lower())
+                    func = getattr(self, '_{}_parse'.format(token.lower()))
                     error = func(linenum)[0]
                 except AttributeError:
                     pass

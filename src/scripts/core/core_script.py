@@ -27,10 +27,10 @@ from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.helpers.filetools import parse_file
 from core_script_parser import CoreScriptParser
 
+
 class CoreScript(Loggable):
     '''
     '''
-    #_alive = False
     _thread = None
     _file_contents_ = None
     source_dir = Directory
@@ -48,7 +48,7 @@ class CoreScript(Loggable):
 
     _alive = Bool(False)
     _display_msg = String
-
+    _ok_to_run = False
 #    record_data = Bool(False)
 
     base_frame_name = None
@@ -186,26 +186,33 @@ class CoreScript(Loggable):
             self.run()
 
     def run(self):
-        self.info('%s started' % self.file_name)
+        
 #        print self._file_contents_, 'file cont'
 
+        self.info('parsing {}'.format(self.file_name))
+        
+        
         errors = self.parser.parse(self._file_contents_, check_header=False)
 #        print errors
         error = False
+        
         for e in errors:
             if e[2] is not None:
                 error = True
-                break
+                self.warning('Line: {} - {}'.format(e[1], e[2]))
+                
         if not error:
             self._alive = True
             self._ok_to_run = True
+            self.info('{} started'.format(self.file_name))
             if self._pre_run_():
-
+                
+                
                 for i, line in enumerate(self._file_contents_):
                     if self.isAlive():
                         self._run_command(i, line)
-
-
+        else:
+            self.warning('parsing unsuccessful')
         #join any daughter threads before finishing
         for d in self.daughter_threads:
             d.join()
@@ -213,6 +220,9 @@ class CoreScript(Loggable):
         if self._post_run():
             self.kill_script()
 
+    def _execute_script(self):
+        raise NotImplementedError
+    
     def _post_run(self):
         return True
     def _pre_run_(self):
@@ -222,8 +232,6 @@ class CoreScript(Loggable):
     def _run_command(self, linenum, cmd, infor=False):
         '''
        
-        
-        G{callgraph }
         '''
         cmd = cmd.strip()
 
@@ -237,19 +245,25 @@ class CoreScript(Loggable):
             self.info(cmd)#
 
         # get a statement method 
-        func = getattr(self, '%s_statement' % token.lower())
+        func = getattr(self, '{}_statement'.format(token.lower()))
 
         # get a parser method
         # all parsers should return a tuple
         #print token
-        parser = getattr(self.parser, '_%s_parse' % token.lower())
+        parser = getattr(self.parser, '_{}_parse'.format(token.lower()))
 
         func(*parser(0, line=cmd)[1:])
 
 
     def raw_statement(self, a):
         pass
-
+    
+    def config_statement(self, config_dict):
+        for key in config_dict:
+            if hasattr(self, key):
+                value = config_dict[key]
+                setattr(self, key, value)
+                
     def wait(self, dur):
         st = time.time()
         while time.time() - st < dur:

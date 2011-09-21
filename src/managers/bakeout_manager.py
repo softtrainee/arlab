@@ -208,8 +208,13 @@ class BakeoutManager(Manager):
             for tr in self._get_controllers():
                 tr_obj = getattr(self, tr)
                 config.add_section(tr)
-                for attr in ['duration', 'setpoint']:
-                    config.set(tr, attr, getattr(tr_obj, attr))
+                
+                script = getattr(tr_obj, 'script')
+                if script is not '---':
+                    config.set(tr, 'script', script)
+                else:
+                    for attr in ['duration', 'setpoint']:
+                        config.set(tr, attr, getattr(tr_obj, attr))
 
             with open(path, 'w') as f:
                 config.write(f)
@@ -319,6 +324,7 @@ class BakeoutManager(Manager):
             if script:
                 kw['script'] = script
             else:
+                kw['script'] = '---'     
                 for opt in ['duration', 'setpoint']:
                     value = self.config_get(config, section, opt, cast='float')
                     if value is not None:
@@ -338,15 +344,17 @@ class BakeoutManager(Manager):
         return 'Stop' if self.alive else 'Execute'
 
     def __configuration_changed(self):
+        for tr in self._get_controllers():
+            kw = dict()
+            tr_obj = getattr(self, tr)
+            for attr in ['duration', 'setpoint']:
+                kw[attr] = 0
+            kw['script'] = '---'
+            tr_obj.trait_set(**kw)
+        
         if self.configuration != '---':
             self._parse_config_file(self._configuration)
-        else:
-            for tr in self._get_controllers():
-                kw = dict()
-                tr_obj = getattr(self, tr)
-                for attr in ['duration', 'setpoint']:
-                    kw[attr] = 0
-                tr_obj.trait_set(**kw)
+        
 
     def _graph_factory(self, stream=True, graph=None, **kw):
         if graph is None:
@@ -379,7 +387,7 @@ class BakeoutManager(Manager):
         return g
 
 
-def main():
+def launch_bakeout():
     b = BakeoutManager()
     b.load()
     b.load_controllers()
