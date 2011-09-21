@@ -26,3 +26,4 @@ use_debug_logger = False
 open_logger_on_launch = True
 
 show_warnings = False
+

@@ -23,7 +23,7 @@ import sys
 src = os.path.join(os.path.expanduser('~'),
                    'Programming',
                    'mercurial',
-                   'pychron_beta'
+                   'pychron_bakeout'
                    )
 sys.path.append(src)
 from src.helpers.logger_setup import setup
