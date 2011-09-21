@@ -47,6 +47,7 @@ class LaserPlugin(CorePlugin):
         factory = __import__(self.klass[0], fromlist=[self.klass[1]])
         m = getattr(factory, self.klass[1])()
         bind_preference(m, 'use_video', '{}.use_video'.format(self.id))
+
         bind_preference(m, 'close_after', '{}.close_after'.format(self.id))
         m.stage_manager.bind_preferences(self.id)
 

@@ -52,7 +52,7 @@ class Image(HasTraits):
     def _get_frame(self):
         return self.source_frame
 
-    def get_frame(self, flip=False, mirror=False, gray=False, swap_rb=None, clone=False):
+    def get_frame(self, flip=False, mirror=False, gray=False, swap_rb=False, clone=False):
 
         rframe = self._get_frame()
         if rframe is not None:
@@ -101,7 +101,7 @@ class Image(HasTraits):
 
             else:
                 self._bitmap.CopyFromBuffer(frame.data_as_string())
-
+                
 #
             return self._bitmap
 

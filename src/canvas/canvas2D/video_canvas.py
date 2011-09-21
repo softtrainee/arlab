@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, Bool
+from traits.api import Instance, Bool, Enum
 #from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
@@ -32,6 +32,7 @@ class VideoCanvas(BaseDataCanvas):
     pause = Bool(False)
 
     use_backbuffer = True
+    
     def _camera_default(self):
         return Camera(parent=self)
 
@@ -63,9 +64,9 @@ class VideoCanvas(BaseDataCanvas):
 
         if self.video:
             self.on_trait_change(self.video.update_bounds, 'bounds')
-
+            
         self.set_camera()
-
+        
     def set_camera(self):
 
         if self.use_camera:
@@ -80,5 +81,6 @@ class VideoCanvas(BaseDataCanvas):
             #swap red blue channels True or False
             self.video_underlay.swap_rb = self.camera.swap_rb
             self.video_underlay.mirror = self.camera.mirror
-
+            self.video_underlay.flip = self.camera.flip
+            
 #============= EOF ====================================

@@ -18,17 +18,21 @@ from traits.api import Instance
 from chaco.api import AbstractOverlay
 
 #============= standard library imports ========================
-#import wx
+import wx
 
 #============= local library imports  ==========================
 from src.image.video import Video
+import math
 class VideoUnderlay(AbstractOverlay):
     '''
     '''
     video = Instance(Video)
     swap_rb = True
     mirror = False
+    flip = False
 #    visible = True
+
+        
     def overlay(self, component, gc, *args, **kw):
         '''
 
@@ -36,17 +40,19 @@ class VideoUnderlay(AbstractOverlay):
         try:
             gc.save_state()
             dc = component._window.dc
-
             bitmap = self.video.get_bitmap(
-                                           flip=True,
+                                         flip=not self.flip,
+                                         #flip=False,
                                          swap_rb=self.swap_rb,
-                                         mirror=self.mirror
+                                         mirror=self.mirror,
+                                         #rotate=self.rotate
                                          )
             if bitmap:
                 x = component.x
                 y = component.y
 
                 dc.DrawBitmap(bitmap, x, y, False)
+                
 
         except (AttributeError, UnboundLocalError), e:
             print e

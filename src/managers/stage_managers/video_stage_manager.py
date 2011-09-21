@@ -71,7 +71,8 @@ class VideoStageManager(StageManager, Videoable):
 
     pxpercmx = DelegatesTo('camera_calibration_manager')
     pxpercmy = DelegatesTo('camera_calibration_manager')
-
+        
+        
     def _get_drive_xratio(self):
         return self._drive_xratio
 
