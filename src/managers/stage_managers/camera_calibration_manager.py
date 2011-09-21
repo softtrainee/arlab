@@ -21,8 +21,7 @@ from src.image.image import Image
 from traitsui.menu import OKButton, CancelButton
 from traitsui.extras.checkbox_column import CheckboxColumn
 from traitsui.table_column import ObjectColumn
-from src.managers.manager import Manager, ManagerHandler
-from pyface.timer.do_later import do_later
+from src.managers.manager import Manager
 
 
 #============= standard library imports =======================

@@ -216,9 +216,9 @@ class PowerMapScript(CoreScript):
 
 
         graph = Graph3D()
-        s = self.graph.scene
+        s = graph.scene
 
-        do_after(1, self.graph.edit_traits)
+        do_after(1, graph.edit_traits)
 
         offset = 1
 

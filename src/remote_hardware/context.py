@@ -18,7 +18,7 @@ limitations under the License.
 #from traitsui.api import View, Item, Group, HGroup, VGroup
 from threading import Thread
 import time
-from collections import Counter
+#from collections import Counter
 import random
 from src.loggable import Loggable
 #============= standard library imports ========================

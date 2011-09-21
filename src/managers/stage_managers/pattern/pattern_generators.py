@@ -16,7 +16,7 @@ limitations under the License.
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-from numpy import linspace, cos, sin, array, hstack
+from numpy import linspace, cos, sin, hstack
 import math
 import random
 #============= local library imports  ==========================

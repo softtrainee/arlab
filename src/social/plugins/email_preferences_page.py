@@ -16,7 +16,7 @@ limitations under the License.
 #from __future__ import with_statement
 #============= enthought library imports =======================
 from traits.api import Str, Password
-from traitsui.api import  View, Item, Group
+from traitsui.api import  View
 from apptools.preferences.ui.api import PreferencesPage
 
 #============= standard library imports ========================

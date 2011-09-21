@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, Bool, Enum
+from traits.api import Instance, Bool
 #from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================

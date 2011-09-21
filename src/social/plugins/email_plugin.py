@@ -14,12 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
-from apptools.preferences.preference_binding import bind_preference
+#from apptools.preferences.preference_binding import bind_preference
 from src.social.email_manager import EmailManager
 
 class EmailPlugin(CorePlugin):

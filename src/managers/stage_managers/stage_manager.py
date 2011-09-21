@@ -30,7 +30,7 @@ import time
 
 #=============local library imports  ==========================
 
-from src.managers.manager import Manager, ManagerHandler
+from src.managers.manager import Manager
 from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
 from src.managers.displays.rich_text_display import RichTextDisplay
 from src.helpers.color_generators import colors8i as colors

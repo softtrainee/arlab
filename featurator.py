@@ -25,7 +25,6 @@ test features of pychron using unittest
 #============= standard library imports ========================
 #============= local library imports  ==========================
 import subprocess
-import os
 import time
 
 #===============================================================================

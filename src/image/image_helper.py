@@ -19,21 +19,25 @@ limitations under the License.
 from thread import start_new_thread
 #=============local library imports  ==========================
 
-from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, cvBoundingRect, \
+from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
     cvWarpAffine, cv2DRotationMatrix, cvAvg, cvAvgSdv, cvMinMaxLoc, cvZero, cvPolyLine, cvLoadImage, \
     cvConvertImage, cvSaveImage, cvDrawContours, cvFindContours, cvThreshold, cvSubS, cvCheckContourConvexity, \
     cvCalcBackProject, cvCalcHist, cvCreateHist, \
     cvEqualizeHist, cvCopy, cvSetImageCOI, cvSetImageROI, cvNot, \
     cvCanny, cvHoughLines2, cvGetSize, cvCvtColor, cvCloneImage, cvCreateImage, cvLine, \
-    cvCreateMemStorage, cvClearMemStorage, \
+    cvCreateMemStorage, \
     cvRectangle, cvCircle, \
-    cvSet, cvSet2D, cvFilter2D, cvScalarAll, CV_32FC1, cvGet1D, cvSet1D, \
     cvGetSeqElem, cvCreateSeq, cvApproxPoly, cvContourPerimeter, cvContourArea, \
     CvPoint, CvPoint2D32f, CvRect, CvSize, CvScalar, CvSeq, CvContour, \
-    CV_GRAY2BGR, CV_BGR2GRAY, CV_HOUGH_STANDARD, CV_HOUGH_PROBABILISTIC, CV_PI, CV_RGB, \
+    CV_GRAY2BGR, CV_BGR2GRAY, CV_HOUGH_PROBABILISTIC, CV_PI, CV_RGB, \
     CV_8UC3, CV_8UC1, CV_HIST_ARRAY, CV_THRESH_BINARY, CV_CVTIMG_SWAP_RB, CV_AA, CV_POLY_APPROX_DP, \
     sizeof, \
     cvCreateVideoWriter, CV_FOURCC
+    #unused
+#    cvClearMemStorage,\
+#    cvSet, cvSet2D, cvFilter2D, cvScalarAll, CV_32FC1, cvGet1D, cvSet1D, \
+#    CV_HOUGH_STANDARD,cvBoundingRect
+    
 
 from ctypes import POINTER
 from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT

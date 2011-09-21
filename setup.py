@@ -50,10 +50,9 @@ def get_data_files():
     home = os.path.expanduser('~')
     dsthome = os.path.join(home, 'pychron_data_beta')
     
-    import sys
     data = os.path.join(os.getcwd(), 'data')
     fss = []
-    for root, dirs, files in os.walk(data):
+    for root, _dirs, files in os.walk(data):
         
         try:
             ri = root.split('data/')[1]

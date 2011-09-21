@@ -19,11 +19,8 @@ from traits.api import Property, Str, Float, CInt, Int, Button
 from traitsui.api import View, Item, Group, EnumEditor, HGroup, VGroup, spring
 
 #=============standard library imports ========================
-
-import os
 #=============local library imports  ==========================
 from src.hardware.axis import Axis
-import ConfigParser
 from src.helpers.filetools import parse_file
 
 from src.hardware.results_report import ResultsReport

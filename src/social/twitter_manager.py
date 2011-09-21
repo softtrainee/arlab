@@ -17,29 +17,28 @@ limitations under the License.
 from traits.api import HasTraits, Instance, Str, Password, Button
 from traitsui.api import View, Item
 from src.managers.manager import Manager
-import sys
-from pyface.message_dialog import information
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
-def sudo(command, password=None, prompt="Enter password "):
-
-    import pexpect
-    
-    if not password:
-        import getpass
-        password = getpass.getpass(prompt)
-
-    command = "sudo " + command
-    child = pexpect.spawn(command)
-    child.logfile = sys.stdout
-    child.expect(['Password:', pexpect.EOF, pexpect.TIMEOUT])
-    try:
-        child.sendline(password)
-    except OSError:
-        pass
-    child.expect(pexpect.EOF)
-    # is this necessary?
-    child.close()
+#def sudo(command, password=None, prompt="Enter password "):
+#
+#    import pexpect
+#    
+#    if not password:
+#        import getpass
+#        password = getpass.getpass(prompt)
+#
+#    command = "sudo " + command
+#    child = pexpect.spawn(command)
+#    child.logfile = sys.stdout
+#    child.expect(['Password:', pexpect.EOF, pexpect.TIMEOUT])
+#    try:
+#        child.sendline(password)
+#    except OSError:
+#        pass
+#    child.expect(pexpect.EOF)
+#    # is this necessary?
+#    child.close()
 
 '''
 credentials
@@ -77,27 +76,27 @@ class TwitterManager(Manager):
         except ImportError:
             self.warning('Could not import python-twitter. Is it installed?')
             
-            info = self.edit_traits(view='install_view')
-            if info.result:
-                cmd = '/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install python-twitter'
-                #cmd='/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install crcmod'
-#                cmd='pwd'
-                err = sudo(cmd,
-                     password=self.credientials.password)
+#            info = self.edit_traits(view='install_view')
+#            if info.result:
+#                cmd = '/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install python-twitter'
+#                #cmd='/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install crcmod'
+##                cmd='pwd'
+#                err = sudo(cmd,
+#                     password=self.credientials.password)
+##                
+#                #activation not working so gonna have to require a restart
+#                #python-twitter requires setuptools and I think thats causing the problem
 #                
-                #activation not working so gonna have to require a restart
-                #python-twitter requires setuptools and I think thats causing the problem
-                
-                if err is None:
-                    msg = 'python-twitter successfully installed. restart required '          
-                    self.info(msg)
-                    information(None, msg)
-                else:
-                    msg = 'python-twitter failed to install. '          
-                    self.info(msg)
-                    information(None, msg)
-                    
-                sys.exit()
+#                if err is None:
+#                    msg = 'python-twitter successfully installed. restart required '          
+#                    self.info(msg)
+#                    information(None, msg)
+#                else:
+#                    msg = 'python-twitter failed to install. '          
+#                    self.info(msg)
+#                    information(None, msg)
+#                    
+#                sys.exit()
                 
                 
 #                import pkg_resources

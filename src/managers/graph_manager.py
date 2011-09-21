@@ -19,7 +19,7 @@ from traitsui.api import View, Item, EnumEditor
 from chaco.api import ArrayDataSource
 #============= standard library imports ========================
 import csv
-from numpy import array, loadtxt, sqrt
+from numpy import array, loadtxt
 import os
 #============= local library imports  ==========================
 from src.graph.graph import Graph

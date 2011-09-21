@@ -239,9 +239,6 @@ class BakeoutController(WatlowEZZone):
         '''
         self.temp = self.get_temperature()
 
-       # self.duration = (time.time() - self.start_time) / 3600.
-#        if self.setpoint == 0:
-#            self.end()
 
 #============= views ===================================
     def traits_view(self):

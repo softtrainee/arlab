@@ -18,11 +18,10 @@ from traits.api import Instance
 from chaco.api import AbstractOverlay
 
 #============= standard library imports ========================
-import wx
 
 #============= local library imports  ==========================
 from src.image.video import Video
-import math
+
 class VideoUnderlay(AbstractOverlay):
     '''
     '''
