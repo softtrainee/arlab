@@ -352,7 +352,7 @@ class BakeoutManager(Manager):
             kw['script'] = '---'
             tr_obj.trait_set(**kw)
         
-        if self.configuration != '---':
+        if self.configuration is not '---':
             self._parse_config_file(self._configuration)
         
 

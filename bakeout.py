@@ -18,16 +18,16 @@ limitations under the License.
 #============= standard library imports ========================
 import os
 import sys
-from src.managers.bakeout_manager import launch_bakeout
 
 #============= local library imports  ==========================
 #add src to the path
 src = os.path.join(os.path.expanduser('~'),
                    'Programming',
                    'mercurial',
-                   'pychron_beta'
+                   'pychron_bakeout'
                    )
 sys.path.append(src)
+from src.managers.bakeout_manager import launch_bakeout
 from src.helpers.logger_setup import setup
 
 
