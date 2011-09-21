@@ -23,18 +23,20 @@ from src.scripts.core.script_helper import smart_equilibrate#, equilibrate
 from src.scripts.core.core_script import CoreScript
 from bakeout_script_parser import BakeoutScriptParser
 
+TIMEDICT = dict(s=1, m=60.0, h=60.0 * 60.0)
 class BakeoutScript(CoreScript):
     '''
-        G{classtree}
     '''
 
     parser_klass = BakeoutScriptParser
     heat_ramp = 0
-    heat_scale = None
     cool_ramp = 0
-    cool_scale = None
+    scale = 'h'
     maintain_time = 1
     controller = None
+    
+    kind = None
+    current_setpoint = 0
     def get_documentation(self):
         from src.scripts.core.html_builder import HTMLDoc, HTMLText
         doc = HTMLDoc(attribs='bgcolor = "#ffffcc" text = "#000000"')
@@ -54,29 +56,23 @@ class BakeoutScript(CoreScript):
         return str(doc)
 
     def raw_statement(self, args):
+        
         #change the setpoint temp
         if self.controller is not None:
             self.controller.setpoint = float(args[0])
 
-        #wait for dur mins
-        self.wait(float(args[1]) * 60)
-
+        #wait for dur 
+        self.wait(float(args[1]) * TIMEDICT[self.scale])
+        
+    
     def kill_script(self):
         if self.controller is not None:
             self.controller.end(script_kill=True)
-#        super(BakeoutScript, self).kill_script()
-        CoreScript.kill_script(self)
+        super(BakeoutScript, self).kill_script()
 
     def wait_for_setpoint(self, sp, mean_check=True, std_check=False, mean_tolerance=5, std_tolerance=1, timeout=15):
         '''
-            @type sp: C{str}
-            @param sp:
 
-            @type tolerance: C{str}
-            @param tolerance:
-
-            @type frequency: C{str}
-            @param frequency:
         '''
         self.info('waiting for setpoint equilibration')
         if self.controller is not None:
@@ -94,35 +90,45 @@ class BakeoutScript(CoreScript):
                                   timeout=timeout
                                   )
 
-    def maintain(self, *args):
+    def maintain_statement(self, mt):
         '''
-        '''
+        ''' 
         if self.controller is not None:
             self.controller.led.state = 2
             if self.controller.simulation:
-                mt = 3 / 60.
-        else:
-            mt = self.maintain_time
-
-        self.info('Maintaining setpoint for %s minutes' % mt)
-        mt *= 60
+                mt = 3.
+       
+        self.info('Maintaining setpoint for {} {}'.format(mt, self.scale))
+        mt *= TIMEDICT[self.scale]
+        
         st = time.time()
+        self.controller.duration = mt / 3600.
+        cnt = 1
+        sleep_time = 5
         while time.time() - st < mt and self.isAlive():
-            time.sleep(1)
-
-    def goto_setpoint(self, name):
+            time.sleep(sleep_time)
+            self.controller._duration = self.controller._oduration - cnt * sleep_time / 3600.
+            #print 'f', cnt, self.controller._duration, self.controller._oduration
+            cnt += 1
+            
+    def goto_statement(self, setpoint):
         '''
-            @type name: C{str}
-            @param name:
+
         '''
         controller = self.controller
-        r = getattr(self, '%s_ramp' % name)
-        sp = getattr(self, '%s_setpoint' % name)
-        s = getattr(self, '%s_scale' % name)
+        
+        
+        if setpoint > self.current_setpoint:
+            name = 'heat'
+        else:
+            name = 'cool'
+    
+        ramp = float(getattr(self, '{}_ramp'.format(name)))
+        #sp = getattr(self, '{}_setpoint'.format(name))
 
         if controller is not None:
             controller.led.state = -1
-            controller.ramp_to_setpoint(r, sp, s)
+            controller.ramp_to_setpoint(ramp, setpoint, self.scale)
 
         #wait until setpoint reached or ramping timed out
         kw = dict()
@@ -131,7 +137,7 @@ class BakeoutScript(CoreScript):
             kw['std_check'] = True
             kw['std_tolerance'] = 5
             kw['timeout'] = 60
-        self.wait_for_setpoint(sp, **kw)
+        self.wait_for_setpoint(setpoint, **kw)
 #============= EOF ====================================
 #    def load_file(self):
 #        '''

@@ -125,7 +125,7 @@ class Manager(ConfigLoadable):
             #time.sleep(0.05)
 
     def close(self, is_ok):
-        print self.name, 'close', is_ok
+#        print self.name, 'close', is_ok
         return True
 
     def kill(self, **kw):

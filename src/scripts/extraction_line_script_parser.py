@@ -103,43 +103,18 @@ class ExtractionLineScriptParser(CoreScriptParser):
 
         return error, kw
 
-    def _config_parse(self, linenum, **kw):
-        kw = dict()
-        error = None
-        if linenum != 1 and linenum != 0:
-            error = 'config not at line 1'
-        else:
-            lexer = self._lexer
-            token = lexer.get_token()
-            while token:
-                error = None
-                if '=' not in token:
-                    error = 'Expected ='
-                else:
-                    key, value = token.split('=')
-                    if key == 'debug' and value:
-                        bval = str_to_bool(value)
-                        if bval is not None:
-                            kw[key] = bval
-                        else:
-                            error = 'Expected boolean'
-
-                token = self._lexer.get_token()
-        return error, kw
-
     def _measure_parse(self, linenum, **kw):
         '''
-            @type linenum: C{str}
-            @param linenum:
+
         '''
         lexer = self._lexer
         error = self._check_extra_args(lexer)
 
         return error, None
+
     def _warning_parse(self, linenum, **kw):
         '''
-            @type linenum: C{str}
-            @param linenum:
+
         '''
         return self._log_parse(linenum)
 
@@ -321,39 +296,16 @@ class ExtractionLineScriptParser(CoreScriptParser):
 #                    error = 'Extra args %s' % extra_args
         return error, valve_token, action
 
+        
     def _wait_parse(self, linenum, **kw):
         '''
-            @type linenum: C{str}
-            @param linenum:
+            
         '''
-        lexer = self._lexer
-        error = None
-        time = lexer.get_token()
-        t = None
-        if time:
-            try:
-                t = float(time)
-            except ValueError:
-                #see if this is a interpolation key
-                if time[0] == '%':
-                    t = time
-                else:
-                    error = 'Invalid float argument %s' % time
-
-            error = self._check_extra_args(lexer)
-#            extra_args = _lexer.get_token()
-#            if extra_args:
-#                error = 'Extra args %s' % extra_args
-
-        else:
-            error = 'Specify a float or interpolation argument'
-
-        return error, t
+        return self._get_float()
 
     def _if_parse(self, linenum, **kw):
         '''
-            @type linenum: C{str}
-            @param linenum:
+    
         '''
         lexer = self._lexer
         def _operator_(key, condition):

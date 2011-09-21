@@ -64,7 +64,7 @@ class BakeoutController(WatlowEZZone):
     alive = Bool(False)
     active = Bool(False)
     cnt = 0
-
+    ramp_scale = None
     def _setpoint_changed(self):
         if self.isAlive():
             self.set_closed_loop_setpoint(self.setpoint)
@@ -108,7 +108,7 @@ class BakeoutController(WatlowEZZone):
 
         self.scripts = ['---'] + [f for f in files
                     if not os.path.basename(f).startswith('.') and
-                        os.path.isfile(os.path.join(sd, f)) and os.path.splitext(f)[1] in ['.bo', '.bos']]
+                        os.path.isfile(os.path.join(sd, f)) and os.path.splitext(f)[1] in ['.bo' ]]
         return True
     def ok_to_run(self):
         ok = True
@@ -145,17 +145,12 @@ class BakeoutController(WatlowEZZone):
 
     def ramp_to_setpoint(self, ramp, setpoint, scale):
         '''
-            @type ramp: C{str}
-            @param ramp:
 
-            @type setpoint: C{str}
-            @param setpoint:
-
-            @type scale: C{str}
-            @param scale:
         '''
-        if scale is not None:
+        if scale is not None and scale != self.ramp_scale:
+            self.ramp_scale = scale
             self.set_ramp_scale(scale)
+            
         self.set_ramp_action('setpoint')
         self.set_ramp_rate(ramp)
         self.set_closed_loop_setpoint(setpoint)
@@ -166,8 +161,9 @@ class BakeoutController(WatlowEZZone):
 
         '''
 
-        scalemap = {'hour':39,
-                  'min':57}
+        scalemap = {'h':39,
+                  'm':57}
+        
         if 'value' in scalemap:
             self.info('setting ramp scale = {}'.format(value))
             value = scalemap[value]
@@ -193,7 +189,7 @@ class BakeoutController(WatlowEZZone):
         '''
           
         '''
-        self.info('setting ramp rate = %0.3f' % value)
+        self.info('setting ramp rate = {:0.3f}'.format(value))
         register = 2192
         self.write(register, value, nregisters=2, **kw)
 
@@ -243,7 +239,7 @@ class BakeoutController(WatlowEZZone):
         '''
         self.temp = self.get_temperature()
 
-        self.duration = (time.time() - self.start_time) / 3600.
+       # self.duration = (time.time() - self.start_time) / 3600.
 #        if self.setpoint == 0:
 #            self.end()
 
@@ -278,7 +274,7 @@ class BakeoutController(WatlowEZZone):
                     header_grp,
                     VGroup(
                             Item('script', show_label=False, editor=EnumEditor(values=self.scripts)),
-                            Item('duration', label='Duration (hrs)', show_label=show_label, enabled_when='script=="---"', format_str='%0.2f'),
+                            Item('duration', label='Duration (hrs)', show_label=show_label, enabled_when='script=="---"', format_str='%0.3f'),
                             Item('setpoint', label='Setpoint (C)', show_label=show_label, enabled_when='script=="---"', format_str='%0.2f'),
                             Item('process_value', label='Temp (C)', show_label=show_label, style='readonly', format_str='%0.1f')
                             )
