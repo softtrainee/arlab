@@ -22,10 +22,12 @@ import sys
 
 #add src to the path
 
+#always change back to pychron_beta before committing
 SRC_DIR = os.path.join(os.path.expanduser('~'),
                    'Programming',
                    'mercurial',
-                   'pychron_beta'
+#                   'pychron_beta'
+                    'pychron_beam_config'
                    )
 sys.path.insert(0, SRC_DIR)
 
@@ -52,6 +54,7 @@ class VersionInfoHandler(Handler):
 
 class VersionInfoDisplay(HasTraits):
     message = Property
+    local_version = Str
     local_path = Str
     src_path = Str
     dismiss_notification = Bool(False)
@@ -59,11 +62,14 @@ class VersionInfoDisplay(HasTraits):
     def _get_message(self):
         args = ()
         vi = self.version_info
-        kw = dict(major=vi.major, minor=vi.minor, text=vi.text)
         msg = '''<h2>Version {major}.{minor}</h2>
+                <h3>Previous Version {previous_version}
 <p><font color="red">file or directory change required</font></p>
 <p>{text}</p>'''
-        return msg.format(*args, **kw)
+        return msg.format(*args,
+                          major=vi.major, minor=vi.minor, text=vi.text,
+                          previous_version=self.local_version
+                          )
 
     def traits_view(self):
         v = View(Item('message', style='custom', editor=HTMLEditor(),
@@ -132,6 +138,7 @@ class VersionInfoDisplay(HasTraits):
                 mismatch = local_info.version != '.'.join((major, minor))
 
             if mismatch:
+                self.local_version = local_info.version
                 do_later(self.edit_traits, kind='modal')
 
 def main():
