@@ -244,8 +244,8 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         return [('enable', 'enable_label', None),
-                ('pointer', 'pointer_label', None),
-                ('light', 'light_label', None)
+                #('pointer', 'pointer_label', None),
+                #('light', 'light_label', None)
                 ]
 
     def get_control_sliders(self):
