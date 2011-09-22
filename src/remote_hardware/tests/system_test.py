@@ -70,12 +70,17 @@ class SystemTest(baseTest):
         data = ['GetValveStates', 'getValveStates']
         vs = ['True,True,False', InvalidCommandErrorCode]
         self._test_suite('System', data, vs)
-        
-    def testRemoteLaunch(self):
-        data = 'RemoteLaunch'
-        v = 'OK'
-        self._test('System', data, v)
-        
+#        
+#    def testRemoteLaunch(self):
+#        data = 'RemoteLaunch'
+#        v = 'OK'
+#        self._test('System', data, v)
+#    
+#    def testPychronReady(self):
+#        data = 'PychronReady'
+#        v = 'OK'
+#        self._test('System', data, v)
+            
     def testStartMultRuns(self):
         data = ['StartMultRuns 1254']
         vs = ['2 : manager unavaliable: TwitterManager']
@@ -85,6 +90,6 @@ class SystemTest(baseTest):
         data = ['CompleteMultRuns 1254'] 
         vs = ['2 : manager unavaliable: TwitterManager']
         self._test_suite('System', data, vs)
-        
+    
         
 #============= EOF ====================================

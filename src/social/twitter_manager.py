@@ -125,16 +125,17 @@ class TwitterManager(Manager):
     def post(self, msg):
         if self.tapi is not None:
             self.tapi.PostUpdate(msg)
-class App(HasTraits):
-#    man=Instance(TwitterManager,())
-    test = Button
-    def _test_fired(self):
-        tm = TwitterManager()
-    def traits_view(self):
-        return View(Item('test'))
+            
 if __name__ == '__main__':
     m = TwitterManager()
     m.get_twitter()
+#    class App(HasTraits):
+#    #    man=Instance(TwitterManager,())
+#        test = Button
+#        def _test_fired(self):
+#            tm = TwitterManager()
+#        def traits_view(self):
+#            return View(Item('test'))
 #    m.verify()
 #    m.post('test mesg')
 #    m=App()
