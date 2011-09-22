@@ -483,7 +483,6 @@ class StageManager(Manager):
 
         w = 640 / 2.0 / 23.2
         h = 0.75 * w
-        print self._stage_map
         l = LaserTrayCanvas(parent=self,
                                padding=[30, 5, 5, 30],
                                map=self._stage_map,

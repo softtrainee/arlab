@@ -38,11 +38,10 @@ class _VideoEditor(_ImageEditor):
 
     def get_frames(self, tweak=True):
         '''
-            @type tweak: C{str}
-            @param tweak:
+
         '''
         frame = self.value.get_frame()
-        print frame
+#        print frame
         if frame is not None:
 #            if tweak:
 

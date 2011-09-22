@@ -145,18 +145,18 @@ class DiffusionGraph(Graph):
 #        '''
 #        return self._container_factory(
 #                                       )
-    def set_group_color(self, gid=0, series=None):
-        '''
-            
-        '''
-        for k in ['spectrum', 'arrhenius', 'logr_ro', 'cooling_history']:
-            g = self.groups[k]
-            try:
-                plots = g[gid]
-                for p in plots:
-                    print p
-            except IndexError:
-                pass
+#    def set_group_color(self, gid=0, series=None):
+#        '''
+#            
+#        '''
+#        for k in ['spectrum', 'arrhenius', 'logr_ro', 'cooling_history']:
+#            g = self.groups[k]
+#            try:
+#                plots = g[gid]
+#                for p in plots:
+#                    print p
+#            except IndexError:
+#                pass
 
     def set_group_visiblity(self, vis, gid=0):
         '''
