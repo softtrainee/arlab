@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import  Instance, Event, Property, \
-    DelegatesTo, Str
+    DelegatesTo, Str, Enum
 from traitsui.api import View, Item, HGroup, VGroup, \
     TableEditor, InstanceEditor, Handler
 from traitsui.table_column import ObjectColumn
@@ -43,7 +43,7 @@ class PowerMapManager(Manager):
     start_button = Event
 
     start_label = Property(depends_on='script._alive')
-
+    kind = Enum('normal', 'fast')
     def _get_start_label(self):
         return 'Stop' if self.script.isAlive() else 'Start'
 
@@ -58,6 +58,7 @@ class PowerMapManager(Manager):
 
     def _start_button_fired(self):
         if not self.script.isAlive():
+            self.script.kind = self.kind
             self.script.bootstrap()
         else:
             self.script.kill_script()
@@ -85,7 +86,8 @@ class PowerMapManager(Manager):
               ]
         v = View(
                  VGroup(
-                         self._button_factory('start_button', 'start_label', None, align='right'),
+                         HGroup(Item('kind', show_label=False),
+                                self._button_factory('start_button', 'start_label', None, align='right')),
                          HGroup(
 
                                 Item('steps', width=0.32, show_label=False, editor=TableEditor(columns=cols,

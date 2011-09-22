@@ -202,9 +202,7 @@ class PowerMapScript(CoreScript):
 
 
     def _execute_map(self, *args):
-        kind = 'normal'
-        kind = 'fast'
-        func = getattr(self, '_{}_scan'.format(kind))
+        func = getattr(self, '_{}_scan'.format(self.kind))
         func(*args)
 
     def _fast_scan(self, beam_diam, rpwr, steps, step_len, padding):

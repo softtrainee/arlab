@@ -187,11 +187,8 @@ class CoreScript(Loggable):
 
     def run(self):
         
-#        print self._file_contents_, 'file cont'
-
         self.info('parsing {}'.format(self.file_name))
-        
-        
+                
         errors = self.parser.parse(self._file_contents_, check_header=False)
 #        print errors
         error = False

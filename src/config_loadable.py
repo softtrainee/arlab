@@ -107,7 +107,7 @@ class ConfigLoadable(Loggable):
         with open(path, 'w') as f:
             config.write(f)
 
-    def get_configuration(self, path=None):
+    def get_configuration(self, path=None, name=None):
         '''
 
         '''
@@ -122,7 +122,10 @@ class ConfigLoadable(Loggable):
                     base = device_dir
 
                 self.configuration_dir_path = base
-                path = os.path.join(base, '%s.cfg' % self.name)
+                if name is None:
+                    name = self.name
+                
+                path = os.path.join(base, '{}.cfg'.format(name))
 
         if  path is not None and os.path.isfile(path):
             config = self.configparser_factory()
