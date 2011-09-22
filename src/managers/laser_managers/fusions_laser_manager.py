@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from threading import Thread
 '''
 '''
 #=============enthought library imports=======================
@@ -63,11 +64,15 @@ class FusionsLaserManager(LaserManager):
 
     step_heat_manager = None
     
-    lens_configuration = Str
+    lens_configuration = Str('standard')
     lens_configuration_dict = Dict
     lens_configuration_names = List
     def _lens_configuration_changed(self):
-        self.set_lens_configuration(self.lens_configuration)
+        
+        t = Thread(target=self.set_lens_configuration)
+        t.start()
+        
+        #self.set_lens_configuration(self.lens_configuration)
         
     def set_light(self, state):
         if state:
@@ -99,7 +104,10 @@ class FusionsLaserManager(LaserManager):
                 
         self.set_lens_configuration('standard')
         
-    def set_lens_configuration(self, name):
+    def set_lens_configuration(self, name=None):
+        if name is None:
+            name = self.lens_configuration
+        
         try:
             bd, offset = self.lens_configuration_dict[name]
         except KeyError:
