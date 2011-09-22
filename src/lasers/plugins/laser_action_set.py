@@ -57,10 +57,10 @@ class LaserActionSet(WorkbenchActionSet):
                        path='MenuBar/Lasers/Scans',
                        class_name='src.lasers.plugins.laser_actions:PowerMapAction'
                        ),
-                Action(name='Pulse',
-                       path='MenuBar/Lasers/Scans',
-                       class_name='src.lasers.plugins.laser_actions:PulseAction'
-                       ),
+#                Action(name='Pulse',
+#                       path='MenuBar/Lasers/Scans',
+#                       class_name='src.lasers.plugins.laser_actions:PulseAction'
+#                       ),
                 Action(name='Step Heat',
                        path='MenuBar/Lasers/Scans',
                        class_name='src.lasers.plugins.laser_actions:StepHeatAction'

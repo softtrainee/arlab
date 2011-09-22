@@ -18,7 +18,7 @@ from threading import Thread
 '''
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, on_trait_change, Event, Bool
-from traitsui.api import VGroup, Item, HGroup, Spring, spring, EnumEditor
+from traitsui.api import VGroup, Item, HGroup, Group, Spring, spring, EnumEditor
 from pyface.timer.do_later import do_later
 #from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
@@ -52,6 +52,7 @@ class FusionsLaserManager(LaserManager):
     beammin = DelegatesTo('logic_board')
     beammax = DelegatesTo('logic_board')
     update_beam = DelegatesTo('logic_board')
+    beam_enabled = Bool(True)
 
     zoom = DelegatesTo('logic_board')
     zoommin = DelegatesTo('logic_board')
@@ -100,21 +101,23 @@ class FusionsLaserManager(LaserManager):
                 offset = tuple(map(int, self.config_get(config, 'General', 'offset', default='0,0').split(',')))
                 
                 bd = self.config_get(config, 'General', 'beam', cast='float')
-                self.lens_configuration_dict[config_name] = (bd, offset)
+                user_enabled = self.config_get(config, 'General', 'user_enabled', cast='boolean', default=True)
+                self.lens_configuration_dict[config_name] = (bd, offset, user_enabled)
                 
         self.set_lens_configuration('standard')
         
     def set_lens_configuration(self, name=None):
         if name is None:
             name = self.lens_configuration
-        
+            
         try:
-            bd, offset = self.lens_configuration_dict[name]
+            bd, offset, enabled = self.lens_configuration_dict[name]
         except KeyError:
             return
-            
+        
         self.stage_manager.canvas.crosshairs_offset = offset
         self.set_beam_diameter(bd)
+        self.beam_enabled = enabled
         
     def finish_loading(self):
         '''
@@ -162,8 +165,10 @@ class FusionsLaserManager(LaserManager):
     def set_beam_diameter(self, bd, **kw):
         '''
         '''
-        self.logic_board.set_beam_diameter(bd, **kw)
-
+        if self.beam_enabled:
+            self.logic_board.set_beam_diameter(bd, **kw)
+        else:
+            self.info('beam disabled by lens configuration {}'.format(self.lens_configuration))
 
     def set_zoom(self, z, **kw):
         '''
@@ -252,7 +257,7 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         s = [('zoom', 'zoom', {}),
-            ('beam', 'beam', {'enabled_when':'object.lens_configuration=="standard"'})
+            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
             ]
         return s
 #
@@ -266,35 +271,49 @@ class FusionsLaserManager(LaserManager):
     def __control__group__(self):
         '''
         '''
-        
-        vg = VGroup(
-                    HGroup(
-                           spring,
-                           HGroup(
+        power_grp = VGroup(
+                           HGroup(spring,
                                   Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
                                   self._button_group_factory(self.get_control_buttons(), orientation='h'),
+                                  springy=True
                                   ),
-                           springy=True
+                           show_border=True,
+                           springy=True,
+                           label='Power'
                            )
-                           
-                    )
+        
         ps = self.get_power_slider()
         if ps:
-            vg.content.append(ps)
-
-        vg.content.append(Item('light_intensity',
-                                 enabled_when='fiber_light.state'))
+            ps.springy = True
+            power_grp.content.append(ps)
+        
+        pulse_grp = HGroup(
+                           #spring,
+                           Item('pulse', show_label=False, style='custom'),
+                           show_border=True,
+                           springy=False,
+                           label='Pulse'
+                           )
+        
+        vg = VGroup()
 
         csliders = self.get_control_sliders()
         
         hg = HGroup(#spring,
                    VGroup(
-                         spring,
-                         Item('lens_configuration', editor=EnumEditor(values=self.lens_configuration_names),
-                               show_label=False),
-                         Spring(height=22, springy=False),
-                         ),
-                  self._update_slider_group_factory(csliders, springy=True)
+                          Item('lens_configuration',
+                               editor=EnumEditor(values=self.lens_configuration_names)),
+                          self._update_slider_group_factory(csliders),
+                          show_border=True,
+                          label='Lens'
+                      ),
+                  #VGroup(
+                      pulse_grp,
+                      power_grp,
+                   #   springy=True,
+                      #show_border=True
+                    #  ),
+                  springy=True
                   )
 #        vg.content.append(self._update_slider_group_factory(csliders))
         vg.content.append(hg)

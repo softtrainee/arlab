@@ -28,6 +28,8 @@ from src.monitors.laser_monitor import LaserMonitor
 from src.helpers import paths
 from src.managers.step_heat_manager import StepHeatManager
 from src.managers.graph_manager import GraphManager
+from src.managers.laser_managers.laser_pulse_manager import LaserPulseManager, \
+    Pulse
 
 
 class LaserManager(Manager):
@@ -35,9 +37,9 @@ class LaserManager(Manager):
         Base class for a GUI representation of a laser device
     '''
     enable = Event
-    enable_label = Property(depends_on='_enabled')
+    enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
-    _enabled = Bool(False)
+    enabled = Bool(False)
 
     graph_manager = Instance(GraphManager, ())
     stage_manager = Instance(StageManager)
@@ -52,16 +54,20 @@ class LaserManager(Manager):
 
 #    use_power_slider = Bool(True)
     status_text = Str
-
+#    pulse_manager = Instance(LaserPulseManager)
+    pulse = Instance(Pulse)
     @on_trait_change('stage_manager:canvas:current_position')
     def update_status_bar(self, obj, name, old, new):
         if isinstance(new, tuple):
             self.status_text = 'x = {:n} ({:0.4f} mm), y = {:n} ({:0.4f} mm)'.format(*new)
 
     def get_pulse_manager(self):
-        from laser_pulse_manager import LaserPulseManager
-        return LaserPulseManager(parent=self)
-
+        return self.pulse
+    
+    def _pulse_default(self):
+#        return LaserPulseManager(parent=self)
+        return Pulse(manager=self)
+    
     def get_power_map_manager(self):
         from power_map_manager import PowerMapManager
 
@@ -92,15 +98,15 @@ class LaserManager(Manager):
     def get_power_slider(self):
         '''
         '''
-        return self._slider_group_factory([('request_power', 'request_power', dict(enabled_when='_enabled'))])
+        return self._slider_group_factory([('request_power', 'request_power', dict(enabled_when='enabled'))])
 
     def finish_loading(self):
-        self.enabled_led.state = 'red' if not self._enabled else 'green'
+        self.enabled_led.state = 'red' if not self.enabled else 'green'
 
     def _enable_fired(self):
         '''
         '''
-        if not self._enabled:
+        if not self.enabled:
             self.enable_laser()
         else:
 
@@ -109,7 +115,7 @@ class LaserManager(Manager):
     def enable_laser(self, is_ok=True):
         self.info('enable laser')
         if is_ok:
-            self._enabled = True
+            self.enabled = True
             self.monitor = self.monitor_factory()
             self.monitor.monitor()
             self.enabled_led.state = 'green'
@@ -121,7 +127,7 @@ class LaserManager(Manager):
     def disable_laser(self):
         self.info('disable laser')
 
-        self._enabled = False
+        self.enabled = False
         #stop the laser monitor 
         #if the laser is not firing is there any reason to be running the monitor?
         if self.monitor is not None:
@@ -200,7 +206,7 @@ class LaserManager(Manager):
     def _get_enable_label(self):
         '''
         '''
-        return 'STOP' if self._enabled else 'ENABLE'
+        return 'STOP' if self.enabled else 'ENABLE'
 
     def _use_video_changed(self):
         if not self.use_video:
