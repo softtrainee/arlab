@@ -117,19 +117,8 @@ class EnvisageManager(HasTraits):
     @on_trait_change('window:active_editor')
     def _on_active_editor_changed(self, obj, trait_name, old, new):
         '''
-            @type obj: C{str}
-            @param obj:
 
-            @type trait_name: C{str}
-            @param trait_name:
-
-            @type old: C{str}
-            @param old:
-
-            @type new: C{str}
-            @param new:
         '''
-        print 'act', new
         if isinstance(new, self.editor_klass):
             self.selected = new.obj
         else:
