@@ -28,7 +28,7 @@ SYNRAD_PROTOCOL = 'src.managers.laser_managers.synrad_co2_manager.SynradCO2Manag
 
 class DummyPM(object):
     def get_pattern_names(self):
-        return 'PatternA,PatternB'
+        return ['PatternA', 'PatternB']
     def execute_pattern(self, name):
         pass
     def stop_pattern(self):

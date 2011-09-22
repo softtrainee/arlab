@@ -136,17 +136,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
             
         return result
 
-    def RemoteLaunch(self, manager, *args):
-        #launch pychron
-        p = '/Users/Ross/Programming/pychron/Pychron.app'
-        result = 'OK'
-        try:
-            subprocess.Popen(['open', p])
-        except OSError:
-            result = 'ERROR: failed to launch Pychron'
-
-        return result
-
+    
+                
     def StartMultRuns(self, manager, data):
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
@@ -167,7 +158,16 @@ class SystemHandler(BaseRemoteHardwareHandler):
         else:
             return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
             
-            
+#    def RemoteLaunch(self, manager, *args):
+#        #launch pychron
+#        p = '/Users/Ross/Programming/pychron/Pychron.app'
+#        result = 'OK'
+#        try:
+#            subprocess.Popen(['open', p])
+#        except OSError:
+#            result = 'ERROR: failed to launch Pychron'
+#
+#        return result   
         
 #    def handle(self, data):
 #        elm = self.get_extraction_line_manager()

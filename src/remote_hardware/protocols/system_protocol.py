@@ -24,8 +24,8 @@ class SystemProtocol(Protocol):
     commands = {'Open':'D', 'Close':'D',
               'GetValveState':'D', 'GetValveStates':None, 'GetManualState':'A',
               'Read':'foo', 'Set':'foo 1',
-              'RemoteLaunch':None,
-              'PychronReady':None,
+              #'RemoteLaunch':None,
+              #'PychronReady':None,
               'StartMultRuns':'1254', 'CompleteMultRuns':'1254',
               
               }

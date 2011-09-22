@@ -24,6 +24,8 @@ from src.led.led import LED
 from src.led.led_editor import LEDEditor
 import random
 from globals import use_shared_memory
+from pychron_beta import SRC_DIR
+from src.helpers.paths import pychron_src_dir
 if use_shared_memory:
     from src.messaging.shm_client import SHMClient
 else:
@@ -57,11 +59,15 @@ class CommandRepeater(ConfigLoadable):
         ra = '{:0.3f}'.format(random.random())
 
         r = self.get_response('test', ra)
+        connected = False
         if r is None:
             self.led.state = 0
         elif r == ra:
             self.led.state = 2
-
+            connected = True
+        
+        return connected
+    
     def _path_changed(self, old, new):
         '''
         '''
@@ -93,11 +99,33 @@ class CommandRepeater(ConfigLoadable):
             self.path = self.config_get(config, 'General', 'path')
             self.info('configured for {}'.format(self.path))
             return True
+    def remote_launch(self, name):
+        import subprocess, os
+        #launch pychron
+        p = os.path.join(pychron_src_dir, '{}.app'.format(name))
+        result = 'OK'
+        try:
+            subprocess.Popen(['open', p])
+        except OSError:
+            result = 'ERROR: failed to launch Pychron'
 
+        return result
+    
     def get_response(self, rid, data):
         '''
 
         '''
+        #intercept the pychron ready command
+        #sent a test query 
+        result = 'Error: Communication with Pychron failed'
+        ready_flag = False
+        if data == 'PychronReady':
+            ready_flag = True
+            data = '{:0.3f}'.format(random.random())
+            rid = 'test'
+        elif data == 'RemoteLaunch':
+            return self.remote_launch('pychron')
+            
 
         try:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -107,8 +135,11 @@ class CommandRepeater(ConfigLoadable):
             result = sock.recv(4096)
         except socket.error:
             self.warning('Connection Failed {}'.format(self.path))
-            result = 'Error: Communication with Pychron failed'
 
+
+        if ready_flag and data == result:
+            result = 'OK'
+        
         return result
 
 #============= EOF ====================================
