@@ -33,7 +33,7 @@ class FusionsCO2Manager(FusionsLaserManager):
     '''
     name = 'FusionsCO2'
     id = 'pychron.fusions.co2'
-
+    configuration_dir_name = 'co2'
     launch_profile = Button
     launch_step = Button
 

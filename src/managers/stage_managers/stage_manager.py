@@ -40,7 +40,6 @@ from src.helpers.paths import map_dir, hidden_dir
 from src.managers.stage_managers.affine import AffineTransform
 from src.helpers.logger_setup import setup
 
-from stage_map import StageMap
 
 #from jogging.jogger import line_jogger, square_jogger
 #from jogging.jog_manager import JogManager
@@ -49,6 +48,7 @@ from src.managers.stage_managers.tray_calibration_manager import TrayCalibration
 from src.managers.stage_managers.stage_component_editor import LaserComponentEditor
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem
 from pattern.pattern_manager import PatternManager
+from src.managers.stage_managers.stage_map import StageMap
 
 #UPDATE_MS = 300
 
@@ -483,6 +483,7 @@ class StageManager(Manager):
 
         w = 640 / 2.0 / 23.2
         h = 0.75 * w
+        print self._stage_map
         l = LaserTrayCanvas(parent=self,
                                padding=[30, 5, 5, 30],
                                map=self._stage_map,

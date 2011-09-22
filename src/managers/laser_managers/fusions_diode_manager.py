@@ -51,6 +51,8 @@ class FusionsDiodeManager(FusionsLaserManager):
     '''
     id = 'pychron.fusions.diode'
     name = 'FusionsDiode'
+    configuration_dir_name = 'co2'
+
     pyrometer = Instance(MikronGA140Pyrometer)
     temperature_controller = Instance(WatlowEZZone)
     #temperature_monitor = Instance(DPi32TemperatureMonitor)

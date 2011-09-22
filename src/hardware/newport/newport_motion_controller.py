@@ -201,6 +201,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
     def get_xy(self):
 
         v = self.ask('1TP?;2TP?', verbose=False)
+        if v is None:
+            return 0, 0
+        
         return map(float, v.split('\n'))
 
     def get_current_position(self, aid):
@@ -348,7 +351,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         else:
             self.info('displacement of move too small {} < {}'.format(d, tol))
 
-    def single_axis_move(self, key, value, block=False, mode='absolute', update=True):
+    def single_axis_move(self, key, value, block=False, mode='absolute', update=True, **kw):
         '''
         '''
 
@@ -644,7 +647,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                       obj.machine_velocity != obj.velocity)
         return change
 
-    def configure_group(self, group, displacement=None):
+    def configure_group(self, group, displacement=None, **kw):
         gobj = self.groupobj
         if not gobj and group:
             self.logger.warn('GROUPED MOVE NOT ENABLED')
@@ -669,20 +672,21 @@ ABLE TO USE THE HARDWARE JOYSTICK
         return True
 
     def at_velocity(self, axkey, event, tol=0.25):
-        desired_velocity = float(self.ask(self._build_query('VA', xx=self.axes[axkey].id)))
-        av = self.read_actual_velocity(axkey)
-        while av is not None and abs(abs(av) - desired_velocity) > tol:
+        if not self.simulation:
+            desired_velocity = float(self.ask(self._build_query('VA', xx=self.axes[axkey].id)))
             av = self.read_actual_velocity(axkey)
-            time.sleep(0.01)
-
-        event.clear()
-        desired_velocity = 0
-        while av is not None and abs(abs(av) - desired_velocity) > tol:
-            av = self.read_actual_velocity(axkey)
-            time.sleep(0.01)
-
+            while av is not None and abs(abs(av) - desired_velocity) > tol:
+                av = self.read_actual_velocity(axkey)
+                time.sleep(0.01)
+    
+            event.clear()
+            desired_velocity = 0
+            while av is not None and abs(abs(av) - desired_velocity) > tol:
+                av = self.read_actual_velocity(axkey)
+                time.sleep(0.01)
+    
         event.set()
-
+            
     def read_actual_velocity(self, axkey):
         ax = self.axes[axkey]
 #        self._build_command('TV', xx = ax.id, nn = '?')

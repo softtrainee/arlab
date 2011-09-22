@@ -205,10 +205,14 @@ class LaserManager(Manager):
     def _use_video_changed(self):
         if not self.use_video:
             self.stage_manager.video_manager.shutdown()
+        
         sm = self._stage_manager_factory(self.stage_args)
+        
         sm.stage_controller = self.stage_manager.stage_controller
         sm.stage_controller.parent = sm
         sm.bind_preferences(self.id)
+        
+        sm.canvas.crosshairs_offset = self.stage_manager.canvas.crosshairs_offset
 #        bind_preference(sm.canvas, 'show_grids', '{}.show_grids'.format(self.id))
 #
 #        sm .canvas.change_grid_visibility()
@@ -243,7 +247,7 @@ class LaserManager(Manager):
                     resizable=True,
                     title=self.__class__.__name__ if self.title == '' else self.title,
                     handler=self.handler_klass,
-
+                    height=0.9,
                     statusbar='status_text'
                     )
 #============= EOF ====================================
