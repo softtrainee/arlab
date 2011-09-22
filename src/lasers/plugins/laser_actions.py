@@ -106,7 +106,8 @@ class PulseAction(Action):
         manager = get_manager(event)
         if manager is not None:
             man = manager.get_pulse_manager()
-            open_manager(man)#, view = 'canvas_view')
+            open_manager(man, view='standalone_view')
+            
 class PowerMapAction(Action):
     name = 'Power Map'
     def perform(self, event):

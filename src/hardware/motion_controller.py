@@ -203,7 +203,8 @@ class MotionController(CoreDevice):
         pass
 
     def get_control_group(self):
-        g = VGroup()
+        g = VGroup(show_border=True,
+                   label='Axes')
 
         keys = self.axes.keys()
         keys.sort()

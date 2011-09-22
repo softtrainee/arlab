@@ -91,8 +91,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 
     def initialize(self, *args, **kw):
         self.info('getting input type')
-        self.read_input_type()
-
+        return self.read_input_type()
 
     def _get_input_type(self):
         '''
@@ -101,8 +100,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 
     def _set_input_type(self, v):
         '''
-            @type v: C{str}
-            @param v:
+            
         '''
         self._input_type = v
         self.set_input_type(v)
@@ -159,7 +157,9 @@ class DPi32TemperatureMonitor(ISeriesDevice):
                 input_class = INPUT_CLASS_MAP[int(re[:2])]
                 if input_class == 'TC':
                     self._input_type = TC_MAP[int(re[2:6])]
-
+                    
+                return True
+             
     def reset(self):
         '''
         '''
