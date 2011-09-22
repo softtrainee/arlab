@@ -1,6 +1,14 @@
 Pychron 
 major=0
-minor=6.0
+minor=7.0
+#0.7.0
+<ul>
+	<li>Major change to mercurial scm</li>
+	<li>added Apache 2.0 license</li>
+	<li>added commandline toolset apptools</li>
+	<li>standalone bakeout application</li>
+	<li>added social plugins</li>
+</ul>
 
 #0.6.0
 <ul>

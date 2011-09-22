@@ -31,7 +31,8 @@ class InitializationParser(XMLParser):
 
         if category:
             cat = tree.find(category)
-            plugins = cat.findall('plugin')
+            if cat is not None:
+                plugins = cat.findall('plugin')
         else:
             try:
                 plugins = tree.iter(tag='plugin')
