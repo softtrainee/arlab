@@ -143,10 +143,14 @@ class SystemHandler(BaseRemoteHardwareHandler):
             if tm is not None:
                 tm.post('Run {} started'.format(data))
             else:
-                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+
         else:
-            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-            
+#            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+        return 'OK'
+
     def CompleteRun(self, manager, *args):
         data = ' '.join(args)
         if self.application is not None:
@@ -156,11 +160,14 @@ class SystemHandler(BaseRemoteHardwareHandler):
                     tm.post('Run {}'.format(data))
                 else:     
                     tm.post('Run {} completed'.format(data))
+
             else:
-                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
         else:
-            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-            
+            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+        return 'OK'
                     
     def StartMultRuns(self, manager, *args):
         data = ' '.join(args)
@@ -169,9 +176,12 @@ class SystemHandler(BaseRemoteHardwareHandler):
             if tm is not None:
                 tm.post('Mult runs start {}'.format(data))
             else:
-                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
         else:
-            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+        return 'OK'
             
     def CompleteMultRuns(self, manager, *args):
         data = ' '.join(args)
@@ -180,9 +190,12 @@ class SystemHandler(BaseRemoteHardwareHandler):
             if tm is not None:
                 tm.post('Mult runs completed {}'.format(data))
             else:
-                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
         else:
-            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+        return 'OK'
             
 #    def RemoteLaunch(self, manager, *args):
 #        #launch pychron
