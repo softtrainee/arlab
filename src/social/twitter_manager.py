@@ -66,8 +66,10 @@ class TwitterManager(Manager):
                )
         return v
     
-#    def __init__(self,*args,**kw):
-#        super(TwitterManager,self).__init__(*args,**kw)
+    def __init__(self, *args, **kw):
+        super(TwitterManager, self).__init__(*args, **kw)
+        self.get_twitter()
+        
     def get_twitter(self):
         #check for dependencies:
         try:
@@ -136,8 +138,8 @@ if __name__ == '__main__':
 #            tm = TwitterManager()
 #        def traits_view(self):
 #            return View(Item('test'))
-#    m.verify()
-#    m.post('test mesg')
+    m.verify()
+    m.post('test mesgffff')
 #    m=App()
 #    m.configure_traits()
     
