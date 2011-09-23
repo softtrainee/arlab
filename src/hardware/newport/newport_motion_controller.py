@@ -271,8 +271,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
         self.parent.canvas.set_desired_position(x, y)
         self.parent.canvas.set_stage_position(x, y)
 
-        setattr(self, '_{}_position'.format(ax_key), v)
         self.single_axis_move(ax_key, v, block=False, mode='relative', update=False)
+        setattr(self, '_{}_position'.format(ax_key), v)
 
 
     def multiple_point_move(self, points, nominal_displacement=0.5):
@@ -381,7 +381,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 o = self._y_position
 
             if self._validate(value, key, cur=o) is  None:
-                return 'invalidate position {}'.format(value)
+                return 'invalid position {}'.format(value)
 
             self.parent.canvas.set_desired_position(x, y)
 

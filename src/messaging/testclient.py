@@ -204,9 +204,42 @@ if __name__ == '__main__':
 #              'benchmark_unix_tcp_no_log.npz'
 #              )
 #   
-
     c = Client()
     c.configure_traits()
+    
+    #===========================================================================
+    #Check Remote launch snippet 
+    #===========================================================================
+    #===========================================================================
+    # def ready(client):
+    #    r = client.ask('PychronReady')
+    #    if r is not None:
+    #        r = r.strip()
+    #    return r == 'OK'
+    # 
+    # c.port = 1063
+    # 
+    # if not ready(c):
+    #    print 'not ready'
+    #    c.ask('RemoteLaunch')
+    #    st = time.time()
+    #    timeout = 5
+    #    print 'launching'
+    #    success = False
+    #    while time.time() - st < timeout:
+    #        if ready(c):
+    #            success = True
+    #            print 'Remotely launched !!!'   
+    #            break
+    #        
+    #        time.sleep(2)
+    #    if not success:
+    #        print 'Launch timed out after {}'.format(timeout)
+    #===========================================================================
+        
+        
+    
+    
 #    host = '129.138.12.145'
 #
 ##    host = 'localhost'
