@@ -136,7 +136,8 @@ class MotionController(CoreDevice):
             if v is not None:
                 if abs(v - cur) <= 0.001:
                     v = None
-        except:
+        except ValueError, e:
+            print e
             v = None
 
         return v
