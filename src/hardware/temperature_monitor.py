@@ -115,8 +115,8 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         '''
         commandindex = '01'
         com = self._build_command('V', commandindex)
-        x = self._parse_response(self.ask(com, # delay = 400,
-                                              verbose=True
+        x = self._parse_response(self.ask(com, delay=400,
+                                              verbose=False
                                               ))
         if x is not None:
             self.process_value = x

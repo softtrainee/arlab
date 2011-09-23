@@ -24,7 +24,6 @@ from src.led.led import LED
 from src.led.led_editor import LEDEditor
 import random
 from globals import use_shared_memory
-from pychron_beta import SRC_DIR
 from src.helpers.paths import pychron_src_dir
 if use_shared_memory:
     from src.messaging.shm_client import SHMClient
