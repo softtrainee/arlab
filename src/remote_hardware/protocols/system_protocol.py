@@ -27,6 +27,6 @@ class SystemProtocol(Protocol):
               #'RemoteLaunch':None,
               #'PychronReady':None,
               'StartMultRuns':'1254', 'CompleteMultRuns':'1254',
-              
+              'StartRun':'1', 'CompleteRun':'1'
               }
 #============= EOF =====================================

@@ -16,7 +16,6 @@ limitations under the License.
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-import subprocess
 #============= local library imports  ==========================
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode, \
@@ -137,7 +136,30 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     
-                
+    def StartRun(self, manager, data):
+        if self.application is not None:
+            tm = self.application.get_service(TM_PROTOCOL)
+            if tm is not None:
+                tm.post('Run {} started'.format(data))
+            else:
+                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+        else:
+            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+            
+    def CompleteRun(self, manager, data):
+        if self.application is not None:
+            tm = self.application.get_service(TM_PROTOCOL)
+            if tm is not None:
+                if 'cancel' in data.lower():
+                    tm.post('Run {}'.format(data))
+                else:     
+                    tm.post('Run {} completed'.format(data))
+            else:
+                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+        else:
+            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+            
+                    
     def StartMultRuns(self, manager, data):
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
