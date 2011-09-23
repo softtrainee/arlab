@@ -24,5 +24,5 @@ class ErrorCode(object):
             logger.warning(self.msg)
             
     def __repr__(self):
-        return '{} : {}'.format(self.code, self.msg)
+        return 'ERROR {} : {}'.format(self.code, self.msg)
 #============= EOF =====================================

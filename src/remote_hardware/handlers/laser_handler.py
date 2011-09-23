@@ -227,8 +227,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
         except ValueError:
             return InvalidArgumentsErrorCode('SetBeamDiameter', data, logger=self)
         
-        manager.set_beam_diameter(bd, block=False)
-        return 'OK'
+        
+        if manager.set_beam_diameter(bd, block=False):
+            return 'OK'
+        else:
+            return 'OK - beam disabled'
+        
 
     def GetBeamDiameter(self, manager):
         return manager.beam

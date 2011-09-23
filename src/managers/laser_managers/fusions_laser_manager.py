@@ -116,7 +116,8 @@ class FusionsLaserManager(LaserManager):
             return
         
         self.stage_manager.canvas.crosshairs_offset = offset
-        self.set_beam_diameter(bd)
+        
+        self.set_beam_diameter(bd, force=True)
         self.beam_enabled = enabled
         
     def finish_loading(self):
@@ -157,19 +158,17 @@ class FusionsLaserManager(LaserManager):
         if chiller is not None:
             return chiller.get_faults(**kw)
 
-#    @on_trait_change('beam')
-#    def beam_change(self):
-#        self.stage_manager.canvas.set_beam_radius(self.beam / 2.0)
-
-
-    def set_beam_diameter(self, bd, **kw):
+    def set_beam_diameter(self, bd, force=False, **kw):
         '''
         '''
-        if self.beam_enabled:
+        result = False
+        if self.beam_enabled or force:
             self.logic_board.set_beam_diameter(bd, **kw)
+            result = True
         else:
             self.info('beam disabled by lens configuration {}'.format(self.lens_configuration))
-
+        return result 
+    
     def set_zoom(self, z, **kw):
         '''
         '''
@@ -305,7 +304,7 @@ class FusionsLaserManager(LaserManager):
                                editor=EnumEditor(values=self.lens_configuration_names)),
                           self._update_slider_group_factory(csliders),
                           show_border=True,
-                          label='Lens'
+                          label='Optics'
                       ),
                   #VGroup(
                       pulse_grp,
