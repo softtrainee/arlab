@@ -136,7 +136,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     
-    def StartRun(self, manager, data):
+    def StartRun(self, manager, *args):
+        data = ' '.join(args)
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
@@ -146,7 +147,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
         else:
             return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
             
-    def CompleteRun(self, manager, data):
+    def CompleteRun(self, manager, *args):
+        data = ' '.join(args)
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
@@ -160,7 +162,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
             return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
             
                     
-    def StartMultRuns(self, manager, data):
+    def StartMultRuns(self, manager, *args):
+        data = ' '.join(args)
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
@@ -170,7 +173,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
         else:
             return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
             
-    def CompleteMultRuns(self, manager, data):
+    def CompleteMultRuns(self, manager, *args):
+        data = ' '.join(args)
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
