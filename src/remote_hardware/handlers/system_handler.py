@@ -137,22 +137,26 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
     
     def StartRun(self, manager, *args):
+        
         data = ' '.join(args)
+        manager.multruns_report_manager.start_run(data)
+        
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
                 tm.post('Run {} started'.format(data))
-            else:
-#                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-
-        else:
-#            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#            else:
+##                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#
+#        else:
+##            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
         return 'OK'
 
     def CompleteRun(self, manager, *args):
         data = ' '.join(args)
+        manager.multruns_report_manager.complete_run()
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
@@ -160,40 +164,44 @@ class SystemHandler(BaseRemoteHardwareHandler):
                     tm.post('Run {}'.format(data))
                 else:     
                     tm.post('Run {} completed'.format(data))
-
-            else:
-                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-        else:
-            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#
+#            else:
+#                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+##                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#        else:
+#            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
 #            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
         return 'OK'
                     
     def StartMultRuns(self, manager, *args):
         data = ' '.join(args)
+        
+        manager.multruns_report_manager.start_new_report(data)
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
                 tm.post('Mult runs start {}'.format(data))
-            else:
-                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-        else:
-            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#            else:
+#                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+##                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#        else:
+#            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
 #            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
         return 'OK'
             
     def CompleteMultRuns(self, manager, *args):
         data = ' '.join(args)
+        
+        manager.multruns_report_manager.complete_report()
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
                 tm.post('Mult runs completed {}'.format(data))
-            else:
-                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-        else:
-            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#            else:
+#                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+##                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+#        else:
+#            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
 #            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
         return 'OK'
             

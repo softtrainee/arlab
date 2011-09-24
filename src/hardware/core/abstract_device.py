@@ -40,12 +40,12 @@ class AbstractDevice(ViewableDevice):
         return self._cdevice.last_command
     def _get_last_response(self):
         return self._cdevice.last_response
-    def start(self):
-        '''
-        '''
-        self.load()
-        self.open()
-        self.initialize()
+#    def start(self):
+#        '''
+#        '''
+#        self.load()
+#        self.open()
+#        self.initialize()
 
     def ask(self, cmd, **kw):
         '''
@@ -55,11 +55,6 @@ class AbstractDevice(ViewableDevice):
 
     def initialize(self, *args, **kw):
         '''
-            @type *args: C{str}
-            @param *args:
-
-            @type **kw: C{str}
-            @param **kw:
         '''
         if self._cdevice is not None:
             return self._cdevice.initialize(*args, **kw)
@@ -69,7 +64,11 @@ class AbstractDevice(ViewableDevice):
         '''
         if self._cdevice is not None:
             return self._cdevice.open(**kw)
-
+    
+    def setup_scan(self, *args, **kw):
+        if self._cdevice is not None:
+            return self._cdevice.setup_scan(*args, **kw)
+        
     def load(self, *args, **kw):
         '''
         '''

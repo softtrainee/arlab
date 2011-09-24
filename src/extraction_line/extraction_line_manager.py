@@ -51,7 +51,8 @@ class ExtractionLineManager(Manager):
     environmental_manager = Instance(Manager)
 #    bakeout_manager = Instance(Manager)
     device_stream_manager = Instance(Manager)
-
+    multruns_report_manager = Instance(Manager)
+    
     view_controller = Instance(ViewController)
     pumping_monitor = Instance(PumpingMonitor)
     explanation = Instance(ExtractionLineExplanation)
@@ -94,9 +95,13 @@ class ExtractionLineManager(Manager):
             class_factory = self.get_manager_factory(package, klass)
 
         if class_factory:
+            kw['application'] = self.application
             m = class_factory(**kw)
+            
             if manager in ['gauge_manager', 'valve_manager',
-                           'environmental_manager', 'device_stream_manager']:
+                           'environmental_manager', 'device_stream_manager',
+                           'multruns_report_manager'
+                           ]:
                 self.trait_set(**{manager:m})
             else:
                 self.add_trait(manager, m)

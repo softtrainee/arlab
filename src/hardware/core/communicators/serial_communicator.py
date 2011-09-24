@@ -329,13 +329,27 @@ class SerialCommunicator(Communicator):
             else:
                 start_time = time.time()
                 inw = 0
-                while inw == 0 and (time.time() - start_time) < time_out:
+                
+                prev_inw = None
+                cnt = 0
+                while (time.time() - start_time) < time_out:
                     inw = get_chars()
-
+                    #print prev_inw, inw, cnt
+                    if prev_inw != inw:
+                        cnt = 0
+                        
+                    if inw != 0 and inw == prev_inw:
+                        if cnt > 3000:
+                            break
+                        cnt += 1
+                    
+                    prev_inw = inw
+                    
 #                # do one more get_chars to make sure we got it all
                 time.sleep(0.025)
                 inw = get_chars()
-
+            
+            
             if inw > 0:
                 try:
                     r = self.handle.read(inw)

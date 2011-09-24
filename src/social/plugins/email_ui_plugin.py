@@ -25,12 +25,22 @@ class EmailUIPlugin(CoreUIPlugin):
         from email_preferences_page import EmailPreferencesPage
         return [EmailPreferencesPage]
     
+    def _views_default(self):
+        return [self._create_user_view]
+    
+    def _create_user_view(self, *args, **kw):
+        args = dict(id='social.email.users',
+                    name='Users',
+                    category='Social',
+                    obj=self.application.get_service(EmailManager)
+                  )
+        return self.traitsuiview_factory(args, kw)
     def start(self):
         em = self.application.get_service(EmailManager)
         bind_preference(em, 'outgoing_server', 'pychron.email.smtp_host')
         bind_preference(em, 'server_username', 'pychron.email.username')
         bind_preference(em, 'server_password', 'pychron.email.password')
+
         
-        
-        em.broadcast('fadsfasdfasdf')
+        #em.broadcast('fadsfasdfasdf')
 #============= EOF =====================================

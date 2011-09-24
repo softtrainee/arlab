@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import  Str, implements
+from traits.api import  Str, implements, Any
 from pyface.timer.api import Timer
 
 #=============standard library imports ========================
@@ -47,11 +47,13 @@ class CoreDevice(ViewableDevice):
     timer = None
     scan_period = 1000
     scan_units = 'ms'
+    record_scan_data = True
     
     current_value = 0
     
     time_dict = dict(ms=1, s=1000, m=60.0 * 1000, h=60.0 * 60.0 * 1000)
-
+    application = Any
+    
     def get(self):
         return self.current_value
 #        if self.simulation:
@@ -155,7 +157,25 @@ class CoreDevice(ViewableDevice):
 #===============================================================================
 # streamin interface
 #===============================================================================
-        
+    def setup_scan(self, pdev):
+        sc = pdev.get('scan')
+        if sc is not None:
+            self.scan_device = sc.lower() == 'true'
+            if self.scan_device:
+                sp = pdev.get('scan_period')
+                try:
+                    self.scan_period = float(sp)
+                except ValueError:
+                    if sp is not None:
+                        self.info('invalid scan period {}'.format(sp))
+                su = pdev.get('scan_units')
+                if su in ['ms', 's', 'm', 'h']:
+                    self.scan_units = su
+                
+                rsd = pdev.get('record')
+                if rsd is not None:
+                    self.record_scan_data = rsd.lower() == 'true'
+                
     def _scan_(self, *args):
         '''
 
@@ -170,8 +190,9 @@ class CoreDevice(ViewableDevice):
 #                if isinstance(v, tuple):
 #                    self.current_value = v[0]
                 self.current_value = v
-                x = self.graph.record(v)        
-                self.data_manager.write_to_frame((x, v))
+                if self.record_scan_data:
+                    x = self.graph.record(v)        
+                    self.data_manager.write_to_frame((x, v))
             
             else:
                 '''
@@ -199,9 +220,9 @@ class CoreDevice(ViewableDevice):
 
 #        if not self.simulation:
         self.info('Starting scan')
-        
-        self.data_manager = CSVDataManager()
-        self.frame_name = self.data_manager.new_frame()
+        if self.record_scan_data:
+            self.data_manager = CSVDataManager()
+            self.frame_name = self.data_manager.new_frame()
         
         sp = self.scan_period * self.time_dict[self.scan_units]
         
