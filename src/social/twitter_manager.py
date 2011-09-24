@@ -47,6 +47,12 @@ usr= nmgrl
 pwd=Argon4039
 
 '''
+try:
+    import twitter
+except ImportError:
+    print 'install twitter'
+    
+    
 class Crediential(HasTraits):
     user_name = Str('root')
     password = Password('jir812')
@@ -68,16 +74,20 @@ class TwitterManager(Manager):
     
     def __init__(self, *args, **kw):
         super(TwitterManager, self).__init__(*args, **kw)
-        self.get_twitter()
-        
-    def get_twitter(self):
+#        self.get_twitter()
+        self.tapi = twitter.Api(consumer_key='8mdnnhVEhOlT7Xu8Mg',
+                               consumer_secret='IzMqOxjSemTXyjZ8VCelFpUXdrhD77E74SV6mdrl7E',
+                               access_token_key='27101038-lzzwYplffclywtSAWnfbuB3ovrnPgmqkWMFqO2jvf',
+                               access_token_secret='BOea1U7aUoQXJEQ1CldvrK5RkjLImfXGls6PbuQw'
+                               )
+#    def get_twitter(self):
         #check for dependencies:
-        try:
-
-            import twitter
-        except ImportError:
-            self.warning('Could not import python-twitter. Is it installed?')
-            
+#        try:
+#
+#            import twitter
+#        except ImportError:
+#            self.warning('Could not import python-twitter. Is it installed?')
+#            
 #            info = self.edit_traits(view='install_view')
 #            if info.result:
 #                cmd = '/Library/Frameworks/Python.framework/Versions/Current/bin/easy_install python-twitter'
@@ -114,11 +124,11 @@ class TwitterManager(Manager):
 #                import crcmod
 #                print crcmod
 
-        self.tapi = twitter.Api(consumer_key='8mdnnhVEhOlT7Xu8Mg',
-                               consumer_secret='IzMqOxjSemTXyjZ8VCelFpUXdrhD77E74SV6mdrl7E',
-                               access_token_key='27101038-lzzwYplffclywtSAWnfbuB3ovrnPgmqkWMFqO2jvf',
-                               access_token_secret='BOea1U7aUoQXJEQ1CldvrK5RkjLImfXGls6PbuQw'
-                               )
+#        self.tapi = twitter.Api(consumer_key='8mdnnhVEhOlT7Xu8Mg',
+#                               consumer_secret='IzMqOxjSemTXyjZ8VCelFpUXdrhD77E74SV6mdrl7E',
+#                               access_token_key='27101038-lzzwYplffclywtSAWnfbuB3ovrnPgmqkWMFqO2jvf',
+#                               access_token_secret='BOea1U7aUoQXJEQ1CldvrK5RkjLImfXGls6PbuQw'
+#                               )
         
     def verify(self):
         if self.tapi is not None:
@@ -126,8 +136,11 @@ class TwitterManager(Manager):
         
     def post(self, msg):
         if self.tapi is not None:
-            self.tapi.PostUpdate(msg)
-            
+            try:
+                self.tapi.PostUpdate(msg)
+            except twitter.TwitterError, e:
+                print e
+                
 if __name__ == '__main__':
     m = TwitterManager()
     m.get_twitter()

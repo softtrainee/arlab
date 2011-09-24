@@ -119,7 +119,7 @@ class EthernetCommunicator(Communicator):
         self.handler = h
         return h
 
-    def ask(self, cmd, verbose=True, info=None):
+    def ask(self, cmd, verbose=True, info=None, *args, **kw):
         '''
 
         '''

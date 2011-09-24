@@ -55,7 +55,12 @@ class ExtractionLineUIPlugin(CoreUIPlugin):
         elm = self.application.get_service(EL_PROTOCOL)
         elm.window_x = 10
         elm.window_y = 25
-        open_manager(elm)
+        
+        
+        #@todo: make this a configuration option
+        open_elm_on_launch = False
+        if open_elm_on_launch:
+            open_manager(elm)
         
         
         #start device streams

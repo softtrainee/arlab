@@ -25,18 +25,21 @@ from traitsui.extras.checkbox_column import CheckboxColumn
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from src.helpers.paths import setup_dir
+import os
+from ConfigParser import ConfigParser
 class User(HasTraits):
     name = Str
     email = Str
     email_enabled = Bool
-    email_level = Enum(0, 1, 2)
+    level = Enum(0, 1, 2)
     telephone = Str
     
     
     def edit_view(self):
         return View('name',
                     'email',
-                    'email_level',
+                    'level',
                     'telephone'
                     
                     )
@@ -50,6 +53,11 @@ class EmailManager(Manager):
     server_password = Password
     
     _server = None
+    def __init__(self, *args, **kw):
+        super(EmailManager, self).__init__(*args, **kw)
+        self.load_users_file()
+        
+        
     def traits_view(self):
         v = View(Item('users', show_label=False,
                     editor=TableEditor(columns=[ObjectColumn(name='name'),
@@ -72,14 +80,14 @@ class EmailManager(Manager):
         u = User(name='moo')
         self.users.append(u)
     
-    def get_emails(self):
-        return [u.email for u in self.users]
+    def get_emails(self, level):
+        return [u.email for u in self.users if u.level <= level]
     
-    def _message_factory(self, text):
+    def _message_factory(self, text, level, subject='!Pychron Alert!'):
         msg = MIMEMultipart()
         msg['From'] = self.sender#'nmgrl@gmail.com'
-        msg['To'] = ', '.join(self.get_emails())
-        msg['Subject'] = '!Pychron Alert!'
+        msg['To'] = ', '.join(self.get_emails(level))
+        msg['Subject'] = subject
         
         msg.attach(MIMEText(text))
         return msg
@@ -93,18 +101,41 @@ class EmailManager(Manager):
             
             server.login(self.server_username, self.server_password)
             self._server = server
+            
         return self._server
     
-    def broadcast(self, text):
-
-        recipients = self.get_emails()
+    def broadcast(self, text, level=0, subject=None):
+        
+        recipients = self.get_emails(level)
         if recipients:
-            msg = self._message_factory(text)
+            self.info('Broadcasting message to {}'.format(','.join(recipients)))
+            msg = self._message_factory(text, level, subject)
             
             server = self.connect()
             server.sendmail(self.sender, recipients, msg.as_string())        
             server.close()
+            
+    def add_user(self, **kw):
+        u = User(**kw)
+        self.users.append(u) 
+    
+    def load_users_file(self, *args, **kw):
         
+        p = os.path.join(setup_dir, 'users.cfg')
+        config = ConfigParser()
+        config.read(p)
+        
+        for user in config.sections():
+            kw = dict(name=user)
+            for opt, func in [('email', None), ('level', 'int')]:
+                if func is None:
+                    func = config.get
+                else:
+                    func = getattr(config, 'get{}'.format(func))
+                    
+                kw[opt] = func(user, opt)
+            self.users.append(User(**kw))
+            
 if __name__ == '__main__':
     em = EmailManager()
     em.users = [
@@ -115,6 +146,6 @@ if __name__ == '__main__':
                    email='nmgrlab@gmail.com'
                    )
               ]
-    em.broadcast()
+    em.broadcast('ffoooo')
     #em.configure_traits()
 #============= EOF =====================================

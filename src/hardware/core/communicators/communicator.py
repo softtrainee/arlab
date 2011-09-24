@@ -42,9 +42,9 @@ class Communicator(ConfigLoadable):
         '''
         time.sleep(ms / 1000.0)
 
-    def ask(self, cmd, *args, **kw):
+    def ask(self, *args, **kw):
         pass
-    def tell(self, cmd, *args, **kw):
+    def tell(self, *args, **kw):
         pass
 
     def write(self, *args, **kw):

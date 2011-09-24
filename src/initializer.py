@@ -269,21 +269,12 @@ class Initializer(Loggable):
                 raise NotImplementedError
         
             #setup the scan parameters
-            sc = pdev.get('scan')
-            if sc is not None:
-                od.scan_device = sc.lower() == 'true'
-                if od.scan_device:
-                    sp = pdev.get('scan_period')
-                    try:
-                        od.scan_period = float(sp)
-                    except ValueError:
-                        if sp is not None:
-                            self.info('invalid scan period {}'.format(sp))
-                    su = pdev.get('scan_units')
-                    if su in ['ms', 's', 'm', 'h']:
-                        od.scan_units = su
+            od.setup_scan(pdev)
+            
+                    
                 
             manager.devices.append(od)
+            od.application = self.application
                 
             if od.simulation:
                 time.sleep(0.25)

@@ -15,14 +15,24 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 #============= standard library imports ========================
+from datetime import datetime
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
+
 class FerrupsUPS(CoreDevice):
+    scan_func = 'power_outage_scan'
+    _power_out = False
+    min_voltage_in = 5
     def _parse_response(self, resp):
         if self.simulation:
             resp = self.get_random_value(0, 10)
         elif resp is not None:
             resp = resp.strip()
+            if '\n' in resp:
+                EOF = '\n'
+            else:
+                EOF = '\r'
+            resp = resp.split(EOF)
         return resp
 
     def _build_command(self, cmd):
@@ -30,7 +40,25 @@ class FerrupsUPS(CoreDevice):
 
     def _build_query(self, qry):
         return qry
-
+    
+    def set_password(self, pwd):
+        qry = 'password {}'.format(pwd)
+        qry = self._build_query(qry)
+        resp = self.ask(qry)
+        return self._parse_response(resp)
+        
+    def get_parameter(self, pname):
+        qry = 'pa {}'.format(pname)
+        qry = self._build_query(qry)
+        resp = self.ask(qry)
+        return self._parse_response(resp)
+        
+    def get_parameters(self, start=1, end=2):
+        qry = 'pa {} {}'.format(start, end)
+        qry = self._build_query(qry)
+        resp = self.ask(qry)
+        return self._parse_response(resp)
+        
     def get_status(self):
         qry = 'status'
         qry = self._build_query(qry)
@@ -42,4 +70,41 @@ class FerrupsUPS(CoreDevice):
         qry = self._build_query(qry)
         resp = self.ask(qry)
         return self._parse_response(resp)
+    
+    def power_outage_scan(self):
+        
+        if self.check_power_outage():
+            if self.application:
+                tm = self.application.get_service('src.social.twitter_manager.TwitterManager')
+                tm.post('Power Outage {}'.format(datetime.now()))
+            self._power_out = True
+        elif self._power_out:
+            if self.application:
+                tm = self.application.get_service('src.social.twitter_manager.TwitterManager')
+                tm.post('Power Returned {}'.format(datetime.now()))
+            self._power_out = False
+            
+    def check_power_outage(self):
+        '''
+            check to see if the V In to the ups is 0 
+            
+            True if power is out
+        '''
+        _query, resp = self.get_parameter(1)
+        
+        vin = resp.split(' ')[-1]
+        try:
+            vin = float(vin)
+        except ValueError, e:
+            print e
+            return
+        
+        return vin < self.min_voltage_in
+            
+        
+if __name__ == '__main__':
+    f = FerrupsUPS(name='ups')
+    f.bootstrap()
+    
+    print f.check_power_outage() 
 #============ EOF ==============================================

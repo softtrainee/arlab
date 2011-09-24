@@ -30,6 +30,7 @@ HW_PACKAGE_MAP = {'CommandProcessor':'src.messaging.command_processor',
              'Eurotherm':'src.hardware.eurotherm',
              'ThermoRack':'src.hardware.thermorack',
              'MicroIonController':'src.hardware.gauges.granville_phillips.micro_ion_controller',
-             'ArgusController':'src.hardware.argus_controller'
+             'ArgusController':'src.hardware.argus_controller',
+             'FerrupsUPS':'src.hardware.FerrupsUPS'
              #'ControlModule':'src.hardware.fusions.vue_diode_control_module'
              }

@@ -203,9 +203,16 @@ if __name__ == '__main__':
 #    benchmark('main()', 'from __main__ import main',
 #              'benchmark_unix_tcp_no_log.npz'
 #              )
-#   
+   
     c = Client()
-    c.configure_traits()
+#    c.configure_traits()
+#    
+    c.port = 1063
+    c.ask('StartMultRuns 12345')
+    c.ask('StartRun 12345-A')
+    c.ask('CompleteRun 12345-A')
+    c.ask('CompleteMultRuns 12345')
+    
     
     #===========================================================================
     #Check Remote launch snippet 
