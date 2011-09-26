@@ -29,6 +29,7 @@ from src.scripts.extraction_line_script import ExtractionLineScript
 
 from view_controller import ViewController
 from src.managers.manager import Manager
+#from src.managers.multruns_report_manager import MultrunsReportManager
 
 #Macro = None
 #start_recording = None
@@ -46,22 +47,21 @@ class ExtractionLineManager(Manager):
     canvas = Instance(ExtractionLineCanvas)
     canvas_width = Float(500)
     canvas_height = Float(500)
+    explanation = Instance(ExtractionLineExplanation)
+    
     valve_manager = Instance(Manager)
     gauge_manager = Instance(Manager)
     environmental_manager = Instance(Manager)
-#    bakeout_manager = Instance(Manager)
     device_stream_manager = Instance(Manager)
+    
     multruns_report_manager = Instance(Manager)
+#    multruns_report_manager = Instance(MultrunsReportManager)
     
     view_controller = Instance(ViewController)
     pumping_monitor = Instance(PumpingMonitor)
-    explanation = Instance(ExtractionLineExplanation)
 
-    laser_manager = None
-
-    #exit_on_close = True
     runscript = None
-
+    
     def get_subsystem_module(self, subsystem, module):
         '''
         '''
@@ -106,27 +106,9 @@ class ExtractionLineManager(Manager):
             else:
                 self.add_trait(manager, m)
 
-            m.exit_on_close = False
+            #m.exit_on_close = False
 
             return m
-
-#    def close(self):
-#        self.info('saving soft lock state')
-#        #save soft lock state
-#        valves = self.valve_manager.valves
-#        for v in valves:
-#            v_canvas_obj = self.canvas.canvas3D.scene_graph.get_object_by_name(v)
-#            self.soft_lock_state[v] = v_canvas_obj.soft_lock
-#
-#        return True
-
-#    def kill(self):
-#        '''
-#            
-#        '''
-#        super(ExtractionLineManager, self).kill()
-
-
 
     def finish_loading(self):
         '''
@@ -216,6 +198,7 @@ class ExtractionLineManager(Manager):
 
     def get_manual_state(self, name):
         return False
+    
     def get_software_lock(self, name):
         if self.valve_manager is not None:
             return self.valve_manager.get_software_lock(name)
@@ -334,6 +317,9 @@ class ExtractionLineManager(Manager):
         '''
         return PumpingMonitor(gauge_manager=self.gauge_manager,
                               parent=self)
+
+#    def _multruns_report_manager_default(self):
+#        return MultrunsReportManager(application=self.application)
 
 
 #=================== EOF ================================

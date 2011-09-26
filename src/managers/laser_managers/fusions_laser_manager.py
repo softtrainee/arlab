@@ -18,7 +18,7 @@ from threading import Thread
 '''
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, on_trait_change, Event, Bool
-from traitsui.api import VGroup, Item, HGroup, Group, Spring, spring, EnumEditor
+from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor
 from pyface.timer.do_later import do_later
 #from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
@@ -65,16 +65,15 @@ class FusionsLaserManager(LaserManager):
 
     step_heat_manager = None
     
-    lens_configuration = Str('standard')
+    lens_configuration = Str('gaussian')
     lens_configuration_dict = Dict
     lens_configuration_names = List
+    
     def _lens_configuration_changed(self):
         
         t = Thread(target=self.set_lens_configuration)
         t.start()
-        
-        #self.set_lens_configuration(self.lens_configuration)
-        
+    
     def set_light(self, state):
         if state:
             self.fiber_light.power_off()
@@ -91,7 +90,7 @@ class FusionsLaserManager(LaserManager):
         super(FusionsLaserManager, self).kill(**kw)
     
     def load_lens_configurations(self):
-        for config_name in ['standard', 'homogenizer']:
+        for config_name in ['gaussian', 'homogenizer']:
             self.config_path = None
             config = self.get_configuration(name=config_name)
             if config:
@@ -104,7 +103,7 @@ class FusionsLaserManager(LaserManager):
                 user_enabled = self.config_get(config, 'General', 'user_enabled', cast='boolean', default=True)
                 self.lens_configuration_dict[config_name] = (bd, offset, user_enabled)
                 
-        self.set_lens_configuration('standard')
+        self.set_lens_configuration('gaussian')
         
     def set_lens_configuration(self, name=None):
         if name is None:
@@ -259,13 +258,6 @@ class FusionsLaserManager(LaserManager):
             ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
             ]
         return s
-#
-#    def get_power_slider(self):
-#        '''
-#        '''
-#        return None
-
-
 
     def __control__group__(self):
         '''
@@ -301,7 +293,8 @@ class FusionsLaserManager(LaserManager):
         hg = HGroup(#spring,
                    VGroup(
                           Item('lens_configuration',
-                               editor=EnumEditor(values=self.lens_configuration_names)),
+                               editor=EnumEditor(values=self.lens_configuration_names)
+                               ),
                           self._update_slider_group_factory(csliders),
                           show_border=True,
                           label='Optics'

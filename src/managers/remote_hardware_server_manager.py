@@ -40,7 +40,6 @@ class RemoteHardwareServerManager(Manager):
     '''
     '''
     # quit the program if this window is closed
-    exit_on_close = True
     servers = List(RemoteCommandServer)
     repeater = Instance(CommandRepeater)
     selected = Any

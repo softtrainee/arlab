@@ -135,8 +135,8 @@ class CoreScript(Loggable):
         if self._thread is not None:
             r = self._thread.isAlive()
 
-        if hasattr(self.manager, '_enabled'):
-            r = self.manager._enabled and r
+        if hasattr(self.manager, 'enabled'):
+            r = self.manager.enabled and r
 
         if not r and self.manager.failure_reason is None:
             self.user_cancel = True

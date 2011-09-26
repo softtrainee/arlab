@@ -137,7 +137,11 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
     
     def StartRun(self, manager, *args):
-        
+        '''
+            data is a str in form:
+            
+            RID,Sample,Power/Temp 
+        '''
         data = ' '.join(args)
         manager.multruns_report_manager.start_run(data)
         
@@ -153,8 +157,12 @@ class SystemHandler(BaseRemoteHardwareHandler):
 ##            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
 #            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
         return 'OK'
-
+    
     def CompleteRun(self, manager, *args):
+        '''
+            complete run should report age
+        '''
+        
         data = ' '.join(args)
         manager.multruns_report_manager.complete_run()
         if self.application is not None:
@@ -174,8 +182,12 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return 'OK'
                     
     def StartMultRuns(self, manager, *args):
+        '''
+            data should be str of form:
+            
+            NSamples,
+        '''
         data = ' '.join(args)
-        
         manager.multruns_report_manager.start_new_report(data)
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)

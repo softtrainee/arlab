@@ -20,9 +20,9 @@ import serial
 import time
 import glob
 import os
+import sys
 #=============local library imports  ==========================
 from communicator import Communicator
-import sys
 class SerialCommunicator(Communicator):
     '''
         Base Class for devices that communicate using a rs232 serial port.
@@ -327,6 +327,12 @@ class SerialCommunicator(Communicator):
                 time.sleep(delay / 1000.)
                 inw = get_chars()
             else:
+                '''
+                use select
+                
+                ready_to_read,ready_to_write,in_err=select.select([self.handle])
+                '''
+                
                 start_time = time.time()
                 inw = 0
                 
@@ -339,7 +345,7 @@ class SerialCommunicator(Communicator):
                         cnt = 0
                         
                     if inw != 0 and inw == prev_inw:
-                        if cnt > 3000:
+                        if cnt > 2000:
                             break
                         cnt += 1
                     

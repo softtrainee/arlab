@@ -25,7 +25,7 @@ class FerrupsUPS(CoreDevice):
     min_voltage_in = 5
     def _parse_response(self, resp):
         if self.simulation:
-            resp = self.get_random_value(0, 10)
+            resp = 'query', self.get_random_value(0, 10)
         elif resp is not None:
             resp = resp.strip()
             if '\n' in resp:
@@ -47,10 +47,10 @@ class FerrupsUPS(CoreDevice):
         resp = self.ask(qry)
         return self._parse_response(resp)
         
-    def get_parameter(self, pname):
+    def get_parameter(self, pname, **kw):
         qry = 'pa {}'.format(pname)
         qry = self._build_query(qry)
-        resp = self.ask(qry)
+        resp = self.ask(qry, **kw)
         return self._parse_response(resp)
         
     def get_parameters(self, start=1, end=2):
@@ -72,25 +72,35 @@ class FerrupsUPS(CoreDevice):
         return self._parse_response(resp)
     
     def power_outage_scan(self):
-        
-        if self.check_power_outage():
+        outage = self.check_power_outage()
+        if outage is None:
+            return 
+            
+        if outage:
             if self.application:
                 tm = self.application.get_service('src.social.twitter_manager.TwitterManager')
-                tm.post('Power Outage {}'.format(datetime.now()))
+                tm.post('Power Outage {}'.format(datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')))
             self._power_out = True
         elif self._power_out:
             if self.application:
                 tm = self.application.get_service('src.social.twitter_manager.TwitterManager')
-                tm.post('Power Returned {}'.format(datetime.now()))
+                tm.post('Power Returned {}'.format(datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')))
             self._power_out = False
-            
+        
+        return True
+        
+
     def check_power_outage(self):
         '''
             check to see if the V In to the ups is 0 
             
             True if power is out
         '''
-        _query, resp = self.get_parameter(1)
+        _query, resp = self.get_parameter(1, verbose=False)
+        
+        if self.simulation:
+            return not self._power_out
+            
         
         vin = resp.split(' ')[-1]
         try:
@@ -100,8 +110,8 @@ class FerrupsUPS(CoreDevice):
             return
         
         return vin < self.min_voltage_in
-            
-        
+    
+                                 
 if __name__ == '__main__':
     f = FerrupsUPS(name='ups')
     f.bootstrap()

@@ -26,21 +26,22 @@ from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor
 
 import socket
 from numpy import array, mean, std, savez, load
-from pylab import hist, show, xlim
+from pylab import hist, show, xlim, linspace, plot
 from timeit import Timer
 import time
 import os
 from datetime import timedelta
 from threading import Thread
 
-
+import struct
 class Client(HasTraits):
     command = String('Read argus_temp_monitor', enter_set=True, auto_set=False)
     resend = Button
+    receive_data_stream=Button
     response = String
     port = Int(1068)
     host = Str('localhost')
-    kind = Enum('UDP', 'TCP')
+    kind = Enum('TCP')#,'UDP', 'TCP')
 
     period = Float(100)
     periodic = Event
@@ -48,7 +49,24 @@ class Client(HasTraits):
 
     n_periods = Int(100)
     _alive = Bool(False)
-
+    def _receive_data_stream_fired(self):
+        sock=self.get_connection()
+        nbytes=sock.recv(4)
+        print nbytes, len(nbytes)
+        n=struct.unpack('!I',nbytes)[0]
+        print n
+        data=sock.recv(n)
+        
+        #print struct.unpack('!d',data[:8])
+        
+        ys=[]
+        for i in range(0,n,8):
+            ys.append(struct.unpack('>d', data[i:i+8]))
+        plot(linspace(0,6.28, n/8),ys)
+        show()
+         #   print struct.unpack('!dd',data[i:i+16])
+            #print struct.unpack('>d',data[i:i+8])
+        #array(data, dtype='>'+'d'*400)
     def _periodic_fired(self):
         self._alive = not self._alive
         if self._alive:
@@ -100,6 +118,7 @@ class Client(HasTraits):
     def traits_view(self):
         v = View(
                  VGroup(
+                     Item('receive_data_stream',show_label=False),
                      Item('command'),
                      Item('response', show_label=False, style='custom',
                           width= -300
@@ -205,14 +224,7 @@ if __name__ == '__main__':
 #              )
    
     c = Client()
-#    c.configure_traits()
-#    
-    c.port = 1063
-    c.ask('StartMultRuns 12345')
-    c.ask('StartRun 12345-A')
-    c.ask('CompleteRun 12345-A')
-    c.ask('CompleteMultRuns 12345')
-    
+    c.configure_traits()
     
     #===========================================================================
     #Check Remote launch snippet 
