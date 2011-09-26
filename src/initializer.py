@@ -220,6 +220,7 @@ class Initializer(Loggable):
         '''
         '''
         opened = []
+        devs = []
         if manager is None:
             return
 
@@ -250,7 +251,7 @@ class Initializer(Loggable):
                 #register the device
                 if self.application is not None:
                     self.application.register_service(ICoreDevice, dev)
-
+                devs.append(dev)
                 self.info('opening {}'.format(dev.name))
                 if not dev.open(prefs=self.device_prefs):
                     self.info('failed connecting to {}'.format(dev.name))
@@ -259,7 +260,8 @@ class Initializer(Loggable):
             else:
                 self.info('failed loading {}'.format(dev.name))
 
-        for  od in opened:
+#        for od in opened:
+        for od in devs:
             self.info('Initializing {}'.format(od.name))
             result = od.initialize(progress=self.pd)
             if result is not True:

@@ -54,6 +54,7 @@ class CoreDevice(ViewableDevice):
     time_dict = dict(ms=1, s=1000, m=60.0 * 1000, h=60.0 * 60.0 * 1000)
     application = Any
     
+    no_response_counter = 0
     def get(self):
         return self.current_value
 #        if self.simulation:
@@ -158,23 +159,19 @@ class CoreDevice(ViewableDevice):
 # streamin interface
 #===============================================================================
     def setup_scan(self, pdev):
-        sc = pdev.get('scan')
-        if sc is not None:
-            self.scan_device = sc.lower() == 'true'
-            if self.scan_device:
-                sp = pdev.get('scan_period')
-                try:
-                    self.scan_period = float(sp)
-                except ValueError:
-                    if sp is not None:
-                        self.info('invalid scan period {}'.format(sp))
-                su = pdev.get('scan_units')
-                if su in ['ms', 's', 'm', 'h']:
-                    self.scan_units = su
-                
-                rsd = pdev.get('record')
-                if rsd is not None:
-                    self.record_scan_data = rsd.lower() == 'true'
+        
+        
+        #should get scan settings from the config file not the initialization.xml
+        
+        config = self.get_configuration()
+        if config.has_section('Scan'):
+            if config.getboolean('Scan', 'enabled'):
+                self.set_attribute(config, 'scan_period', 'Scan', 'period', cast='float')
+                self.set_attribute(config, 'scan_units', 'Scan', 'units')
+                self.set_attribute(config, 'record_scan_data', 'Scan', 'record', cast='boolean')
+                self.start_scan()
+        
+
                 
     def _scan_(self, *args):
         '''
@@ -183,12 +180,11 @@ class CoreDevice(ViewableDevice):
         if self.scan_func:
             try:
                 v = getattr(self, self.scan_func)()
-            except AttributeError:
+            except AttributeError, e:
+                print e
                 return
 
             if v is not None:
-#                if isinstance(v, tuple):
-#                    self.current_value = v[0]
                 self.current_value = v
                 if self.record_scan_data:
                     x = self.graph.record(v)        
@@ -200,8 +196,13 @@ class CoreDevice(ViewableDevice):
                     since the timer runs on the main thread any long comms timeouts
                     slow user interaction
                 '''
-                self.info('no response. stopping scan')
-                self.timer.Stop()
+                if self.no_response_counter > 3:
+                    self.info('no response. stopping scan')
+                    self.timer.Stop()
+                    self.no_response_counter = 0
+                else:
+                    self.info('no response {}'.format(self.no_response_counter))
+                    self.no_response_counter += 1
 
     def scan(self, *args, **kw):
         '''

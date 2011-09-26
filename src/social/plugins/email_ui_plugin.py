@@ -41,6 +41,10 @@ class EmailUIPlugin(CoreUIPlugin):
         bind_preference(em, 'server_username', 'pychron.email.username')
         bind_preference(em, 'server_password', 'pychron.email.password')
 
+    def stop(self):
+        em = self.application.get_service(EmailManager)
+        em.save_users()
+        
         
         #em.broadcast('fadsfasdfasdf')
 #============= EOF =====================================

@@ -16,7 +16,7 @@ limitations under the License.
 '''
 '''
 #=============enthought library imports=======================
-from traits.api import Any, Dict, List
+from traits.api import Any, Dict, List, on_trait_change
 #=============standard library imports ========================
 import time
 import os
@@ -40,7 +40,7 @@ class ValveManager(Manager):
     '''
     valves = Dict
     explanable_items = List
-    parent = Any
+    #parent = Any
     sampletime = 0.1
     #actuator = Any
     actuators = List
@@ -403,6 +403,6 @@ class ValveManager(Manager):
 
             self.valves[a[0]] = v
             self.explanable_items.append(ev)
-
+        
 #==================== EOF ==================================
 

@@ -51,5 +51,6 @@
   </data>
   <social>
     <plugin enabled="true">Email</plugin>
+    <plugin enabled="false">Twitter</plugin>
   </social>
 </root>

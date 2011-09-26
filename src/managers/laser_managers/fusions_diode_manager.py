@@ -154,7 +154,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         #simple calls logicboard.enable_laser
         #super(FusionsDiodeManager, self).enable_laser()
         FusionsLaserManager.enable_laser(self)
-        if self._enabled:
+        if self.enabled:
             return self.control_module_manager.enable()
 
     def disable_laser(self):

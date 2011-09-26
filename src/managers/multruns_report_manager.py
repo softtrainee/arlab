@@ -26,13 +26,14 @@ class Run(object):
     end = None
     def __init__(self, rid):
         self.rid = rid
-        self.start = str(datetime.now())
+        self.start = datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')
         
     def set_complete_time(self):
-        self.end = str(datetime.now())
+        self.end = datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')
         
     def to_report(self):
         return '{:<15}{:<30}{}'.format(self.rid, self.start, self.end)
+    
 class Report(HasTraits):
     name = None
     runs = List(Run)
@@ -41,10 +42,10 @@ class Report(HasTraits):
     def __init__(self, name, *args, **kw):
         super(Report, self).__init__(*args, **kw)
         self.name = name
-        self.start = datetime.now()
+        self.start = datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')
         
     def complete(self):
-        self.end = datetime.now()
+        self.end = datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')
         
     def complete_run(self):
         self.runs[-1].set_complete_time()
@@ -53,8 +54,6 @@ class Report(HasTraits):
         self.runs.append(Run(r))
         
     def generate_report(self):
-        
-        
         multruns_info = '{}\nStart: {}\nEnd  :{}'.format(self.name,
                                                          self.start,
                                                          self.end)

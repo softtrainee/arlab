@@ -28,8 +28,7 @@ from src.monitors.laser_monitor import LaserMonitor
 from src.helpers import paths
 from src.managers.step_heat_manager import StepHeatManager
 from src.managers.graph_manager import GraphManager
-from src.managers.laser_managers.laser_pulse_manager import LaserPulseManager, \
-    Pulse
+from src.managers.laser_managers.laser_pulse_manager import Pulse
 
 
 class LaserManager(Manager):
@@ -52,10 +51,9 @@ class LaserManager(Manager):
 
     #simulation_led = Instance(LED, ())
 
-#    use_power_slider = Bool(True)
     status_text = Str
-#    pulse_manager = Instance(LaserPulseManager)
     pulse = Instance(Pulse)
+
     @on_trait_change('stage_manager:canvas:current_position')
     def update_status_bar(self, obj, name, old, new):
         if isinstance(new, tuple):
@@ -65,7 +63,6 @@ class LaserManager(Manager):
         return self.pulse
     
     def _pulse_default(self):
-#        return LaserPulseManager(parent=self)
         return Pulse(manager=self)
     
     def get_power_map_manager(self):

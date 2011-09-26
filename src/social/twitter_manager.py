@@ -14,9 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import HasTraits, Instance, Str, Password, Button
+from traits.api import HasTraits, Instance, Str, Password
 from traitsui.api import View, Item
 from src.managers.manager import Manager
+from dummy_thread import start_new_thread
+from threading import Thread
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -134,10 +136,18 @@ class TwitterManager(Manager):
         if self.tapi is not None:
             print self.tapi.VerifyCredentials()
         
+    
     def post(self, msg):
+        
         if self.tapi is not None:
-            try:
+            def _post():
                 self.tapi.PostUpdate(msg)
+                
+            try:
+                self.info('Posted - {}'.format(msg))
+                t = Thread(target=_post)
+                t.start()
+                #self.tapi.PostUpdate(msg)
             except twitter.TwitterError, e:
                 print e
                 

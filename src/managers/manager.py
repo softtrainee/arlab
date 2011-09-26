@@ -65,10 +65,8 @@ class Manager(ConfigLoadable):
     window_y = Float(0.1)
     window_width = Float(0.75)
     window_height = Float(0.75)
-    exit_on_close = False
     simulation = False
 
-    _enabled = True
     _killed = False
     failure_reason = None
     close_after = Int #in minutes

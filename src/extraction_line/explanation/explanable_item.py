@@ -26,7 +26,6 @@ from traits.api import HasTraits, Str, Bool, Any, Property
 #=============local library imports  ==========================
 class ExplanableItem(HasTraits):
     '''
-        G{classtree}
     '''
     name = Str
     state_property = Property(depends_on='state')
@@ -54,14 +53,12 @@ class ExplanableItem(HasTraits):
 
 class ExplanableTurbo(ExplanableItem):
     '''
-        G{classtree}
     '''
     def _get_state_property(self):
         return 'On' if self.state else 'Off'
 
 class ExplanableValve(ExplanableItem):
     '''
-        G{classtree}
     '''
     pass
     #address = Str
