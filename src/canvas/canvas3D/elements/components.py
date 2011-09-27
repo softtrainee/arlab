@@ -13,11 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
@@ -34,7 +29,6 @@ animate = False
 
 class Origin(Object3D):
     '''
-        G{classtree}
     '''
 
     def render(self):
@@ -332,36 +326,36 @@ class Sector(MultiStateObject3D):
 
 class Shaft(MultiStateObject3D):
     '''
-        G{classtree}
     '''
     #state=F
     prev_ac = 0
     orientation = None
-    colorlist = ['red', 'red', 'red', 'green', 'red', 'red', 'red', 'green', 'red', 'red', 'red', 'green']
+    #colorlist = ['red', 'red', 'red', 'green', 'red', 'red', 'red', 'green', 'red', 'red', 'red', 'green']
     length = 6
     def render(self):
         '''
-            @type ac: C{str}
-            @param ac:
+
         '''
-        #super(Shaft, self).render()
-        MultiStateObject3D.render(self)
+        super(Shaft, self).render()
+        #MultiStateObject3D.render(self)
         glPushAttrib(GL_CURRENT_BIT)
         n = self.length
         lim = n - 1
+        if self.orientation in ['down', 'forward', 'backward']:
+            lim = 0
+        self._set_material()
+#        print lim
         for i in range(n):
             glPushMatrix()
 
-
             glTranslatef(0, i / 2.0, 0)
-            self._set_material()
 
-            if self.orientation in ['down', 'forward']:
-                lim = 0
 
             if i == lim:
                 self._can_(0.66, 0.5)
+                
             self._cylinder_(0.5, 0.5)
+            
             glPopMatrix()
 #        if self.state and animate:
 #            if ac % 20 == 0 and self.prev_ac != ac:
@@ -402,35 +396,24 @@ class Bone(MultiStateObject3D):
 
     def render(self):
         '''
-            @type ac: C{str}
-            @param ac:
-        '''
-        MultiStateObject3D.render(self)
-        #super(Bone, self).render()
-        #figure out the state of the bone
-        #traverse(self.child, self)
+         '''
+        super(Bone, self).render()
+
         glPushAttrib(GL_CURRENT_BIT)
+        
+        self._set_material()
         for i in range(self.length):
             glPushMatrix()
             glTranslatef(i, 0, 0)
 
-            if self.state:
-                if animate:
-                    self.color = colors[self.colorlist[i]]
 
-            self._set_material()
-            self._cube_()
+#            self._cube_()
             glPopMatrix()
-#        if self.state and animate:
-#            if ac % 20 == 0 and self.prev_ac != ac:
-#                    self.colorlist = shift(self.colorlist)
-##        
-#        self.prev_ac = ac
+
         glPopAttrib()
 
 class Object2D(Object3D):
     '''
-        G{classtree}
     '''
     #position = None
     def start_render(self):
@@ -508,7 +491,6 @@ class TextPanel(Object2D):
         self.end_render()
 class Valve(SetStateObject3D):
     '''
-        G{classtree}
     '''
     valve_manager = None
 
@@ -532,10 +514,10 @@ class Valve(SetStateObject3D):
 
         '''
         #glPushAttrib(GL_CURRENT_BIT)
-        #super(Valve, self).render()
-        SetStateObject3D.render(self)
+        super(Valve, self).render()
+        #SetStateObject3D.render(self)
         #self._set_material()
-        self._sphere_(radius=self.radius)
+        #self._sphere_(radius=self.radius)
         #glPopAttrib()
 
         if self.identify:
