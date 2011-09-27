@@ -99,11 +99,10 @@ class Manager(ConfigLoadable):
     def opened(self):
         def _loop():
             s = time.time()
-            while time.time() - s < self.close_after * 60:
+            self.info('Window set to close after {} min'.format(self.close_after))
+            while time.time() - s < (self.close_after * 60):
                 time.sleep(3)
 
-            #prevent the manager from killing itself
-#            self._killed = True
             do_later(self.close_ui)
 
         if self.close_after:
