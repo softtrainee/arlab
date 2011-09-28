@@ -26,6 +26,7 @@ class FerrupsUPS(CoreDevice):
     def _parse_response(self, resp):
         if self.simulation:
             resp = 'query', self.get_random_value(0, 10)
+            
         elif resp is not None:
             resp = resp.strip()
             if '\n' in resp:
@@ -72,34 +73,33 @@ class FerrupsUPS(CoreDevice):
         return self._parse_response(resp)
     
     def power_outage_scan(self):
-        outage = self.check_power_outage()
-        if outage is None:
+        vin = self.get_voltage_in()
+        if vin is None:
             return 
             
-        if outage:
+        if vin < self.min_voltage_in:
             if self.application:
                 tm = self.application.get_service('src.social.twitter_manager.TwitterManager')
-                tm.post('Power Outage {}'.format(datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')))
+                tm.post('Power Outage {} Vin= {}'.format(datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')), vin)
             self._power_out = True
         elif self._power_out:
             if self.application:
                 tm = self.application.get_service('src.social.twitter_manager.TwitterManager')
-                tm.post('Power Returned {}'.format(datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')))
+                tm.post('Power Returned {} Vin= {}'.format(datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')), vin)
             self._power_out = False
         
-        return True
-        
+        return vin
 
-    def check_power_outage(self):
+    def get_voltage_in(self):
         '''
-            check to see if the V In to the ups is 0 
             
-            True if power is out
         '''
         _query, resp = self.get_parameter(1, verbose=False)
         
         if self.simulation:
-            return not self._power_out
+            #ensures True...  random 0-10
+            return self.get_random_value() < 100
+            #return not self._power_out
             
         
         vin = resp.split(' ')[-1]
@@ -109,7 +109,7 @@ class FerrupsUPS(CoreDevice):
             print e
             return
         
-        return vin < self.min_voltage_in
+        return vin 
     
                                  
 if __name__ == '__main__':

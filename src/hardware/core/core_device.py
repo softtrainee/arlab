@@ -14,23 +14,57 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import  Str, implements, Any
+from traits.api import HasTraits, Str, implements, Any, List
 from pyface.timer.api import Timer
 
 #=============standard library imports ========================
 import random
-from threading import Lock#, Thread
+from threading import Lock
+from datetime import datetime
 
 #=============local library imports  ==========================
-from communicators.serial_communicator import SerialCommunicator as serial
-from communicators.modbus.modbus_communicator import ModbusCommunicator as modbus
-from communicators.ethernet_communicator import EthernetCommunicator as ethernet
-from communicators.gpib_communicator import GPIBCommunicator as gpib
+
 
 #from streamable import Streamable
 from viewable_device import ViewableDevice
 from i_core_device import ICoreDevice
 from src.managers.data_managers.csv_data_manager import CSVDataManager
+
+class Alarm(HasTraits):
+    alarm_str = Str
+    triggered = False   
+    def get_alarm_params(self):
+        als = self.alarm_str
+        cond = als[0]
+        if cond not in ['<', '>']:
+            cond = '='
+            trigger = float(als)
+        else:
+            trigger = float(als[1:])
+        return cond, trigger
+    
+    def test_condition(self, value):
+        cond, trigger = self.get_alarm_params()
+            
+        expr = 'value {} {}'.format(cond, trigger)
+        
+        triggered = eval(expr, {}, dict(value=value))
+        
+        if triggered:
+            if not self.triggered:
+                self.triggered = True
+        else:
+            self.triggered = False
+            
+        return self.triggered 
+    
+    def get_message(self, value):
+        cond, trigger = self.get_alarm_params()
+        tstamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
+
+        return '<<<<<<ALARM {}>>>>>> {} {} {}'.format(tstamp, value, cond, trigger)
+        
+        
 class CoreDevice(ViewableDevice):
     '''
     '''
@@ -49,14 +83,16 @@ class CoreDevice(ViewableDevice):
     scan_units = 'ms'
     record_scan_data = True
     
-    current_value = 0
+    current_scan_value = 0
     
     time_dict = dict(ms=1, s=1000, m=60.0 * 1000, h=60.0 * 60.0 * 1000)
     application = Any
     
     no_response_counter = 0
+    alarms = List(Alarm)
+    
     def get(self):
-        return self.current_value
+        return self.current_scan_value
 #        if self.simulation:
 #            return 'simulation'
 
@@ -65,13 +101,27 @@ class CoreDevice(ViewableDevice):
 
     def _communicator_factory(self, communicator_type):
         if communicator_type is not None:
-            gdict = globals()
-            if communicator_type in gdict:
-                return gdict[communicator_type](name='_'.join((self.name, communicator_type)),
-                                   id_query=self.id_query,
-                                   id_response=self.id_response
-                                )
 
+            class_key = '{}Communicator'.format(communicator_type.capitalize())
+            module_path = 'src.hardware.core.communicators.{}_communicator'.format(communicator_type)
+            classlist = [class_key]
+
+            class_factory = __import__(module_path, fromlist=classlist)
+            return getattr(class_factory, class_key)(name='_'.join((self.name, communicator_type)),
+                          id_query=self.id_query,
+                          id_response=self.id_response
+                         )
+            
+#            gdict = globals()
+#            if communicator_type in gdict:
+#                return gdict[communicator_type](name='_'.join((self.name, communicator_type)),
+#                                   id_query=self.id_query,
+#                                   id_response=self.id_response
+#                                )
+    def post_initialize(self, *args, **kw):
+        self.setup_scan()
+        self.setup_alarms()
+            
     def load(self, *args, **kw):
         '''
             Load a configuration file.  
@@ -158,7 +208,7 @@ class CoreDevice(ViewableDevice):
 #===============================================================================
 # streamin interface
 #===============================================================================
-    def setup_scan(self, pdev):
+    def setup_scan(self):
         
         
         #should get scan settings from the config file not the initialization.xml
@@ -170,8 +220,15 @@ class CoreDevice(ViewableDevice):
                 self.set_attribute(config, 'scan_units', 'Scan', 'units')
                 self.set_attribute(config, 'record_scan_data', 'Scan', 'record', cast='boolean')
                 self.start_scan()
-        
-
+                
+    def setup_alarms(self):
+        config = self.get_configuration()
+        if config.has_section('Alarms'):
+            for opt in config.options('Alarms'):
+                self.alarms.append(Alarm(
+                                         name=opt,
+                                         alarm_str=config.get('Alarms', opt)
+                                         ))
                 
     def _scan_(self, *args):
         '''
@@ -185,11 +242,23 @@ class CoreDevice(ViewableDevice):
                 return
 
             if v is not None:
-                self.current_value = v
+                self.current_scan_value = v
+            
                 if self.record_scan_data:
                     x = self.graph.record(v)        
                     self.data_manager.write_to_frame((x, v))
-            
+                
+                for a in self.alarms:
+                    if a.test_condition(v):
+
+                        alarm_msg = a.get_message(v)
+                        self.warning(alarm_msg)
+                        manager = self.application.get_service('src.social.twitter_manager.TwitterManager')
+                        if manager is not None:
+                            manager.post(alarm_msg)
+                            
+                        break
+                    
             else:
                 '''
                     scan func must return a value or we will stop the scan

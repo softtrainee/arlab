@@ -270,10 +270,7 @@ class Initializer(Loggable):
             elif result is None:
                 raise NotImplementedError
         
-            #setup the scan parameters
-            od.setup_scan(pdev)
-            
-                    
+            od.post_initialize()
                 
             manager.devices.append(od)
             od.application = self.application

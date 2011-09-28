@@ -68,9 +68,9 @@ class ExtractionLineExplanation(HasTraits):
             self.explanable_items.append(v)
             #temp = v
 
-        for name, desc, id in [('An', 'Analytical', 'analytical_turbo'), ('Ro', 'Roughing', 'roughing_turbo')]:
-            t = ExplanableTurbo(name=name, description=desc, _id=id)
-            self.explanable_items.append(t)
+#        for name, desc, id in [('An', 'Analytical', 'analytical_turbo'), ('Ro', 'Roughing', 'roughing_turbo')]:
+#            t = ExplanableTurbo(name=name, description=desc, _id=id)
+#            self.explanable_items.append(t)
 
     def traits_view(self):
         '''

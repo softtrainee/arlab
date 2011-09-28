@@ -17,7 +17,6 @@ limitations under the License.
 from traits.api import HasTraits, Instance, Str, Password
 from traitsui.api import View, Item
 from src.managers.manager import Manager
-from dummy_thread import start_new_thread
 from threading import Thread
 
 #============= standard library imports ========================
@@ -141,15 +140,15 @@ class TwitterManager(Manager):
         
         if self.tapi is not None:
             def _post():
-                self.tapi.PostUpdate(msg)
-                
-            try:
-                self.info('Posted - {}'.format(msg))
-                t = Thread(target=_post)
-                t.start()
-                #self.tapi.PostUpdate(msg)
-            except twitter.TwitterError, e:
-                print e
+                try:
+                    self.tapi.PostUpdate(msg)
+                    self.info('Posted - {}'.format(msg))
+                except twitter.TwitterError:
+                    pass
+            
+            t = Thread(target=_post)
+            t.start()
+            
                 
 if __name__ == '__main__':
     m = TwitterManager()
