@@ -47,9 +47,9 @@ class ExplanableItem(HasTraits):
     def _identify_changed(self):
         '''
         '''
-        self.canvas.toggle_item_identify(self.name)
-        #self.canvas3D.toggle_item_identify(self.id)
-
+        if self.canvas is not None:
+            self.canvas.toggle_item_identify(self.name)
+        
 
 class ExplanableTurbo(ExplanableItem):
     '''

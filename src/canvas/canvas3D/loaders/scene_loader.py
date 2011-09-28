@@ -437,17 +437,6 @@ class SceneLoader(object):
 
     def load_generic(self, path, sg, *args, **kw):
         '''
-            @type path: C{str}
-            @param path:
-
-            @type sg: C{str}
-            @param sg:
-
-            @type *args: C{str}
-            @param *args:
-
-            @type **kw: C{str}
-            @param **kw:
         '''
         config = get_config(path)
 

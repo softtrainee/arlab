@@ -22,7 +22,6 @@ from src.config_loadable import ConfigLoadable
 from src.graph.graph import Graph
 class ViewableDevice(ConfigLoadable):
     '''
-        G{classtree}
     '''
 
     graph = Instance(Graph)
@@ -40,7 +39,7 @@ class ViewableDevice(ConfigLoadable):
     last_command = Str
     last_response = Str
 
-    current_value = CStr
+    current_scan_value = CStr
 
     graph_klass = Graph
     def _get_config_short_path(self):
@@ -96,7 +95,7 @@ class ViewableDevice(ConfigLoadable):
                  Item('name'),
                  Item('last_command', style='readonly'),
                  Item('last_response', style='readonly'),
-                 Item('current_value', style='readonly'),
+                 Item('current_scan_value', style='readonly'),
                  label='General'
                  )
                  )

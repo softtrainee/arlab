@@ -49,8 +49,8 @@ class ISeriesDevice(CoreDevice):
         '''
         '''
         if re is not None:
-            if re == 'simulation':
-                return self.get_random_value()
+#            if re == 'simulation':
+#                return self.get_random_value()
 
             args = re.split(' ')
 
@@ -59,6 +59,8 @@ class ISeriesDevice(CoreDevice):
                     return float(args[1])
                 except:
                     return -1
+        else:
+            return self.get_random_value(min= -10, max=10)
 
     def _build_command(self, cmd_type, cmd_indx):
         '''
@@ -70,7 +72,6 @@ TC_MAP = {0:'J', 1:'K', 2:'T', 3:'E', 4:'N', 5:'Din-J', 6:'R', 7:'S', 8:'B', 9:'
 TC_KEYS = ['J', 'K', 'T', 'E', 'N', 'Din-J', 'R', 'S', 'B', 'C']
 class DPi32TemperatureMonitor(ISeriesDevice):
     '''
-        G{classtree}
     '''
     scan_func = 'read_temperature'
     input_type = Property(depends_on='_input_type')
@@ -125,7 +126,6 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 
     def set_input_type(self, v):
         '''
-
         '''
         commandindex = '07'
 

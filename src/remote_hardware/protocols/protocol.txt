@@ -136,4 +136,8 @@ GetIonCounterVoltage            		1730
 SetIonCounterVoltage     value        		OK,Error
 ==================================================================
 
+==========Hiden Protocol==
+Scan	Mass or MassList	Scan 40,39,36	OK,Error
+GetData 			
+
 =======================EOF========================================

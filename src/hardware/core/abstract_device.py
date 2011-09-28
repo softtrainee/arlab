@@ -58,7 +58,10 @@ class AbstractDevice(ViewableDevice):
         '''
         if self._cdevice is not None:
             return self._cdevice.initialize(*args, **kw)
-
+    
+    def post_initialize(self, *args, **kw):
+        pass
+    
     def open(self, **kw):
         '''
         '''

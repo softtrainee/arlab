@@ -46,15 +46,12 @@ class Origin(Object3D):
 
 class Turbo(MultiStateObject3D):
     '''
-        G{classtree}
     '''
     def render(self):
         '''
-            @type ac: C{str}
-            @param ac:
+
         '''
-        #super(Turbo, self).render()
-        MultiStateObject3D.render(self)
+        super(Turbo, self).render()
         if self.identify:
             tag = self.name.split('_')
             tag = ' '.join([i.capitalize() for i in tag])
@@ -99,16 +96,12 @@ class Turbo(MultiStateObject3D):
 
 class SixWayCross(MultiStateObject3D):
     '''
-        G{classtree}
     '''
 
     def render(self):
         '''
-            @type ac: C{str}
-            @param ac:
         '''
-#        super(SixWayCross, self).render()
-        MultiStateObject3D.render(self)
+        super(SixWayCross, self).render()
 
         glPushMatrix()
         h = 3
@@ -123,24 +116,17 @@ class SixWayCross(MultiStateObject3D):
 
 class Elbow(MultiStateObject3D):
     '''
-        G{classtree}
+        
     '''
 
     def render(self):
         '''
-            @type ac: C{str}
-            @param ac:
         '''
-#        super(Elbow, self).render()
-        MultiStateObject3D.render(self)
-
-        #glPushMatrix()
+        super(Elbow, self).render()
         self._elbow_(1, 0.5)
-        #glPopMatrix()
 
 class Bellows(MultiStateObject3D):
     '''
-        G{classtree}
     '''
     straight = True
     radius = 0.5
@@ -148,11 +134,8 @@ class Bellows(MultiStateObject3D):
     points = None
     def render(self):
         '''
-            @type ac: C{str}
-            @param ac:
         '''
-        #super(Bellows, self).render()
-        MultiStateObject3D.render(self)
+        super(Bellows, self).render()
         if self.straight:
             trans = [0, 0, 0]
             rot = [0, 0, 0, 0]
@@ -168,16 +151,12 @@ class Flex(Bellows):
 
 class IonPump(MultiStateObject3D):
     '''
-        G{classtree}
     '''
 
     def render(self):
         '''
-            @type ac: C{str}
-            @param ac:
         '''
-        #super(IonPump, self).render()
-        MultiStateObject3D.render(self)
+        super(IonPump, self).render()
         pumpheight = 3
         pumpwidth = 2
         pumplength = 4
@@ -215,13 +194,10 @@ class IonPump(MultiStateObject3D):
 
 class Laser(MultiStateObject3D):
     '''
-        G{classtree}
     '''
 
     def render(self):
         '''
-            @type ac: C{str}
-            @param ac:
         '''
         #super(Laser, self).render()
         MultiStateObject3D.render(self)
@@ -259,17 +235,13 @@ class Laser(MultiStateObject3D):
 
 class Quadrupole(MultiStateObject3D):
     '''
-        G{classtree}
     '''
     colorlist = ['black'] * 9 + ['yellow']
     prev_ac = 0
     def render(self):
         '''
-            @type ac: C{str}
-            @param ac:
         '''
-        #super(Quadrupole, self).render()
-        MultiStateObject3D.render(self)
+        super(Quadrupole, self).render()
         glPushMatrix()
 #        if self.state:
 #            glPushMatrix()
@@ -307,21 +279,20 @@ class Quadrupole(MultiStateObject3D):
 
 class Sector(MultiStateObject3D):
     '''
-        G{classtree}
+        
     '''
     start_ac = None
     def render(self):
         '''
         '''
-        MultiStateObject3D.render(self)
-        #super(Sector, self).render()
-#        glPushAttrib(GL_CURRENT_BIT)
+        super(Sector, self).render()
 
         glPushMatrix()
+        
         glScalef(3, 5, 5)
         self._set_material()
         self._cube_()
-#        glPopAttrib()
+
         glPopMatrix()
 
 class Shaft(MultiStateObject3D):
@@ -330,14 +301,13 @@ class Shaft(MultiStateObject3D):
     #state=F
     prev_ac = 0
     orientation = None
-    #colorlist = ['red', 'red', 'red', 'green', 'red', 'red', 'red', 'green', 'red', 'red', 'red', 'green']
     length = 6
     def render(self):
         '''
 
         '''
         super(Shaft, self).render()
-        #MultiStateObject3D.render(self)
+
         glPushAttrib(GL_CURRENT_BIT)
         n = self.length
         lim = n - 1
@@ -349,7 +319,6 @@ class Shaft(MultiStateObject3D):
             glPushMatrix()
 
             glTranslatef(0, i / 2.0, 0)
-
 
             if i == lim:
                 self._can_(0.66, 0.5)
@@ -388,10 +357,7 @@ def deshift(l):
 
 class Bone(MultiStateObject3D):
     '''
-        G{classtree}
     '''
-    colorlist = ['red', 'red', 'red', 'green', 'red', 'red', 'red', 'green', 'red', 'red', 'red', 'green']
-    #prev_ac = 0
     length = 1
 
     def render(self):
@@ -401,21 +367,20 @@ class Bone(MultiStateObject3D):
 
         glPushAttrib(GL_CURRENT_BIT)
         
+        glPushMatrix()
         self._set_material()
-        for i in range(self.length):
-            glPushMatrix()
-            glTranslatef(i, 0, 0)
-
-
-#            self._cube_()
-            glPopMatrix()
+        #glTranslatef(0, 0, 0)
+        self._cube_()
+        for _i in range(self.length - 1):
+            glTranslatef(1, 0, 0)
+            self._cube_()
+        glPopMatrix()
 
         glPopAttrib()
 
 class Object2D(Object3D):
     '''
     '''
-    #position = None
     def start_render(self):
         '''
         '''
@@ -424,9 +389,8 @@ class Object2D(Object3D):
         glPushMatrix()
         glLoadIdentity()
 
-        #pos = self.position if self.position else [0, 0, 0]
-
         glTranslatef(*self.translate)
+
     def end_render(self):
         '''
         '''
@@ -435,7 +399,6 @@ class Object2D(Object3D):
 
 class TextPanel(Object2D):
     '''
-        G{classtree}
     '''
     fields = None
     title = ''
@@ -517,7 +480,7 @@ class Valve(SetStateObject3D):
         super(Valve, self).render()
         #SetStateObject3D.render(self)
         #self._set_material()
-        #self._sphere_(radius=self.radius)
+        self._sphere_(radius=self.radius)
         #glPopAttrib()
 
         if self.identify:
@@ -604,6 +567,7 @@ class Valve(SetStateObject3D):
 
             #required so canvas shows valve state changes
             self.refresh()
+            
     def _draw_soft_locked_identifier(self):
         '''
         '''
@@ -624,8 +588,6 @@ class Valve(SetStateObject3D):
             glPopMatrix()
 
         glPopAttrib()
-
-
 
     def _draw_halo(self):
         glPushAttrib(GL_CURRENT_BIT)
