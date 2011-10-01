@@ -65,8 +65,6 @@ class ExtractionLineUIPlugin(CoreUIPlugin):
             if dev.is_scannable:
                 dev.start_scan()
                 
-        
-        
 #============= views ===================================
 #    def _views_default(self):
 #        '''

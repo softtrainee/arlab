@@ -37,7 +37,7 @@ import struct
 class Client(HasTraits):
     command = String('Read argus_temp_monitor', enter_set=True, auto_set=False)
     resend = Button
-    receive_data_stream=Button
+    receive_data_stream = Button
     response = String
     port = Int(1068)
     host = Str('localhost')
@@ -50,19 +50,19 @@ class Client(HasTraits):
     n_periods = Int(100)
     _alive = Bool(False)
     def _receive_data_stream_fired(self):
-        sock=self.get_connection()
-        nbytes=sock.recv(4)
+        sock = self.get_connection()
+        nbytes = sock.recv(4)
         print nbytes, len(nbytes)
-        n=struct.unpack('!I',nbytes)[0]
+        n = struct.unpack('!I', nbytes)[0]
         print n
-        data=sock.recv(n)
+        data = sock.recv(n)
         
         #print struct.unpack('!d',data[:8])
         
-        ys=[]
-        for i in range(0,n,8):
-            ys.append(struct.unpack('>d', data[i:i+8]))
-        plot(linspace(0,6.28, n/8),ys)
+        ys = []
+        for i in range(0, n, 8):
+            ys.append(struct.unpack('>d', data[i:i + 8]))
+        plot(linspace(0, 6.28, n / 8), ys)
         show()
          #   print struct.unpack('!dd',data[i:i+16])
             #print struct.unpack('>d',data[i:i+8])
@@ -118,7 +118,7 @@ class Client(HasTraits):
     def traits_view(self):
         v = View(
                  VGroup(
-                     Item('receive_data_stream',show_label=False),
+                     Item('receive_data_stream', show_label=False),
                      Item('command'),
                      Item('response', show_label=False, style='custom',
                           width= -300
