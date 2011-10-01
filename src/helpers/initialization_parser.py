@@ -64,23 +64,15 @@ class InitializationParser(XMLParser):
         man.set('enabled', 'false')
         self.save()
 
-    def enable_device(self, name, manager):
-
-        dev = self.get_device(manager, name, True, element=True)
-        if dev is None:
-            dev = self.get_device(manager, name, False, element=True)
-
+    def enable_device(self, name, plugin):
+        dev = self.get_device(plugin, name, None, element=True)
         dev.set('enabled', 'true')
         self.save()
 
-    def disable_device(self, name, manager):
-        dev = self.get_device(manager, name, True, element=True)
-        if dev is None:
-            dev = self.get_device(manager, name, False, element=True)
-
+    def disable_device(self, name, plugin):
+        dev = self.get_device(plugin, name, None, element=True)
         dev.set('enabled', 'false')
         self.save()
-
 
     def enable_plugin(self, name, category=None):
         plugin = self.get_plugin(name, category)
@@ -92,13 +84,14 @@ class InitializationParser(XMLParser):
         plugin.set('enabled', 'false')
         self.save()
 
-    def get_device(self, manager, name, plugin, element=False):
+    def get_device(self, manager, devname, plugin, element=False):
+        
         if plugin is None:
             man = self.get_plugin(manager)
         else:
             man = self.get_manager(manager, plugin)
-
-        dev = next((d for d in man.findall('device') if d.text.strip() == name), None)
+        
+        dev = next((d for d in man.findall('device') if d.text.strip() == devname), None)
         if not element and dev:
             dev = dev.text.strip()
         return dev

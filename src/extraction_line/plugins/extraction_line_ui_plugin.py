@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import on_trait_change
+from traits.api import on_trait_change, Bool
 from apptools.preferences.preference_binding import bind_preference
 
 #============= standard library imports ========================
@@ -25,10 +25,10 @@ from src.envisage.core.action_helper import open_manager
 
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 BAKEOUT_PROTOCOL = 'src.managers.bakeout_manager.BakeoutManager'
-
 class ExtractionLineUIPlugin(CoreUIPlugin):
     '''
     '''
+    open_on_startup = Bool
     def _perspectives_default(self):
         from extraction_line_perspective import ExtractionLinePerspective
         return [ExtractionLinePerspective]
@@ -56,16 +56,13 @@ class ExtractionLineUIPlugin(CoreUIPlugin):
         elm.window_x = 10
         elm.window_y = 25
         
-        
-        #@todo: make this a configuration option
-        open_elm_on_launch = False
-        if open_elm_on_launch:
+        bind_preference(self, 'open_on_startup', 'pychron.extraction_line.open_on_startup')
+        if self.open_on_startup:
             open_manager(elm)
-        
         
         #start device streams
         for dev in elm.devices:
-            if dev.scan_device:
+            if dev.is_scannable:
                 dev.start_scan()
                 
         

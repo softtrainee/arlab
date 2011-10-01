@@ -75,7 +75,7 @@ class CoreDevice(ViewableDevice):
     id_response = ''
 
     
-    scan_device = False
+    is_scannaable = False
     scan_func = None
     scan_lock = None
     timer = None
@@ -216,10 +216,10 @@ class CoreDevice(ViewableDevice):
         config = self.get_configuration()
         if config.has_section('Scan'):
             if config.getboolean('Scan', 'enabled'):
+                self.is_scannable = True
                 self.set_attribute(config, 'scan_period', 'Scan', 'period', cast='float')
                 self.set_attribute(config, 'scan_units', 'Scan', 'units')
                 self.set_attribute(config, 'record_scan_data', 'Scan', 'record', cast='boolean')
-                self.start_scan()
                 
     def setup_alarms(self):
         config = self.get_configuration()
