@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Enum, Float, Range
+from traits.api import Enum, Float, Range, Bool
 from traitsui.api import Item, VGroup, Group
 #============= standard library imports ========================
 
@@ -31,9 +31,13 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
     width = Float(400)
     height = Float(400)
     plugin_name = 'ExtractionLine'
+    open_on_startup = Bool
     close_after = Range(0, 60, 60)
+    
     def get_general_group(self):
-        return Group(Item('close_after'))
+        return Group(Item('open_on_startup'),
+                     Item('close_after'),
+                     )
 
     def get_additional_groups(self):
         canvas_group = VGroup(
