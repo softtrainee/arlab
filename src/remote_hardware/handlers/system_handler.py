@@ -143,7 +143,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
             RID,Sample,Power/Temp 
         '''
         data = ' '.join(args)
-        manager.multruns_report_manager.start_run(data)
+        if manager.multruns_report_manager is not None:
+            manager.multruns_report_manager.start_run(data)
         
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
@@ -164,7 +165,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
         '''
         
         data = ' '.join(args)
-        manager.multruns_report_manager.complete_run()
+        if manager.multruns_report_manager is not None:
+            manager.multruns_report_manager.complete_run()
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
@@ -188,7 +190,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
             NSamples,
         '''
         data = ' '.join(args)
-        manager.multruns_report_manager.start_new_report(data)
+        if manager.multruns_report_manager is not None:
+            manager.multruns_report_manager.start_new_report(data)
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
@@ -203,8 +206,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
             
     def CompleteMultRuns(self, manager, *args):
         data = ' '.join(args)
-        
-        manager.multruns_report_manager.complete_report()
+        if manager.multruns_report_manager is not None:
+            manager.multruns_report_manager.complete_report()
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
