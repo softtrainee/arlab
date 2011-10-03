@@ -29,6 +29,7 @@ from datetime import datetime
 from viewable_device import ViewableDevice
 from i_core_device import ICoreDevice
 from src.managers.data_managers.csv_data_manager import CSVDataManager
+from src.helpers.datetime_tools import generate_timestamp
 
 class Alarm(HasTraits):
     alarm_str = Str
@@ -246,7 +247,9 @@ class CoreDevice(ViewableDevice):
             
                 if self.record_scan_data:
                     x = self.graph.record(v)        
-                    self.data_manager.write_to_frame((x, v))
+                    
+                    ts = generate_timestamp()
+                    self.data_manager.write_to_frame((ts, x, v))
                 
                 for a in self.alarms:
                     if a.test_condition(v):

@@ -47,7 +47,7 @@ def generate_timestamp(resolution='seconds'):
     ti = time.time()
     millisecs = math.modf(ti)[0] * 1000
     if resolution == 'seconds':
-        r = '{}'.format(time.strftime(ISO_FORMAT_STR))
+        r = time.strftime(ISO_FORMAT_STR)
     else:
         r = '{}{:0.5f}'.format(time.strftime(ISO_FORMAT_STR), millisecs)
     return r
