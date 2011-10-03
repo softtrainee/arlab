@@ -18,7 +18,7 @@ limitations under the License.
 import struct
 import binascii
 #=============local library imports  =========================
-from ..serial_communicator import SerialCommunicator
+from serial_communicator import SerialCommunicator
 from src.hardware.core.checksum_helper import computeCRC
 class ModbusCommunicator(SerialCommunicator):
     '''

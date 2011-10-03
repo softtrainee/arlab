@@ -40,9 +40,6 @@ class BakeoutScriptParser(CoreScriptParser):
         
         return self._get_float()
     
-    
-        
-    
     def _maintain_parse(self, linenum, **kw):
         return self._get_float()
 #============= EOF ====================================
