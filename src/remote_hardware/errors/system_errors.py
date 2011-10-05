@@ -17,7 +17,6 @@ limitations under the License.
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.remote_hardware.errors.error import ErrorCode
-
 class InvalidCommandErrorCode(ErrorCode):
     msg = 'invalid command: {}'
     code = 1
@@ -49,4 +48,25 @@ class DeviceConnectionErrorCode(ErrorCode):
     def __init__(self, name, *args, **kw):
         self.msg = self.msg.format(name)
         super(DeviceConnectionErrorCode, self).__init__(*args, **kw)
+
+class SystemLockErrorCode(ErrorCode):
+    msg = 'Access Denied by {}. you are {}'
+    code = 6
+    def __init__(self, locker, sender, *args, **kw):
+        self.msg = self.msg.format(locker, sender)
+        super(SystemLockErrorCode, self).__init__(*args, **kw)
+
+class PychronCommunicationErrorCode(ErrorCode):
+    msg = 'could not communication with pychron through {}. socket.error = {}'
+    code = 6
+    def __init__(self, path, err, *args, **kw):
+        self.msg = self.msg.format(path, err)
+        super(PychronCommunicationErrorCode, self).__init__(*args, **kw)
+        
+class InvalidValveErrorCode(ErrorCode):
+    msg = '{} is not a register valve name'
+    code = 7
+    def __init__(self, name, *args, **kw):
+        self.msg = self.msg.format(name)
+        super(InvalidValveErrorCode, self).__init__(*args, **kw)
 #============= EOF =====================================

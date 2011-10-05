@@ -37,7 +37,7 @@ from src.graph.regression_graph import RegressionGraph
 from src.helpers.paths import data_dir
 import os
 from src.managers.data_managers.csv_data_manager import CSVDataManager
-from src.helpers.filetools import unique_dir#, unique_path
+from src.helpers.filetools import unique_dir
 
 DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False

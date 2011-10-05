@@ -35,17 +35,22 @@ class Loggable(HasTraits):
         '''
         '''
         super(Loggable, self).__init__(*args, **kw)
-        self._add_logger()
+        self._add_logger(*args, **kw)
 
     @on_trait_change('name')
     def _add_logger(self, *args, **kw):
         '''
 
         '''
-        if self.name:
-            name = self.name
-        else:
-            name = self.__class__.__name__
+        try:
+            name = kw['logger_name']
+        except KeyError:
+            if self.name:
+                name = self.name
+            else:
+                name = self.__class__.__name__
+            
+        
         #self.logger = new_logger(name)
 
 

@@ -16,6 +16,7 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import Instance, Bool, on_trait_change
 from src.managers.manager import Manager
+from src.remote_hardware.command_processor import CommandProcessor
 
 #from globals import use_shared_memory
 #if use_shared_memory:
@@ -27,9 +28,6 @@ from src.managers.manager import Manager
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.messaging.command_processor import CommandProcessor
-from src.remote_hardware.context import ContextFilter
-from src.remote_hardware.errors.error import ErrorCode
 
 '''
 #===================================
@@ -41,12 +39,12 @@ from src.remote_hardware.errors.error import ErrorCode
 '''
 
 class RemoteHardwareManager(Manager):
-    command_processor = Instance(CommandProcessor, ())
+    
+    command_processor = Instance(CommandProcessor)
     enable_hardware_server = Bool
     result = None
-    def __init__(self, *args, **kw):
-        super(RemoteHardwareManager, self).__init__(*args, **kw)
-        self.context_filter = ContextFilter()
+#    def __init__(self, *args, **kw):
+#        super(RemoteHardwareManager, self).__init__(*args, **kw)
 
     def bootstrap(self):
         if self.enable_hardware_server:
@@ -62,55 +60,57 @@ class RemoteHardwareManager(Manager):
 
     def stop(self):
         self.command_processor.close()
+#
+    def _command_processor_default(self):
+        return CommandProcessor(application=self.application)
+#    def process_server_request(self, request_type, data):
+#        '''
+#
+#        '''
 
-    def process_server_request(self, request_type, data):
-        '''
-
-        '''
-
-        self.debug('Request: {}, {}'.format(request_type, data.strip()))
-        result = 'error handling'
-
-        if not request_type in ['System', 'Diode', 'Synrad', 'CO2', 'test']:
-            self.warning('Invalid request type ' + request_type)
-        elif request_type == 'test':
-            result = data
-        else:
-
-            klass = '{}Handler'.format(request_type.capitalize())
-            pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
-            try:
-                
-                    
-                module = __import__(pkg, globals(), locals(), [klass])
-
-                factory = getattr(module, klass)
-
-                handler = factory(application=self.application)
-                '''
-                    the context filter uses the handler object to 
-                    get the kind and request
-                    if the min period has elapse since last request or the message is triggered
-                    get and return the state from pychron
-                    
-        
-                    pure frequency filtering could be accomplished earlier in the stream in the 
-                    Remote Hardware Server (CommandRepeater.get_response) 
-                '''
-
-
-                result = self.context_filter.get_response(handler, data)
-
-            except ImportError, e:
-                result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
-
-        self.debug('Result: {}'.format(result))
-        if isinstance(result, ErrorCode):
-            self.result = repr(result)
-        else:
-            self.result = result
-            
-        return result
+#        self.debug('Request: {}, {}'.format(request_type, data.strip()))
+#        result = 'error handling'
+#
+#        if not request_type in ['System', 'Diode', 'Synrad', 'CO2', 'test']:
+#            self.warning('Invalid request type ' + request_type)
+#        elif request_type == 'test':
+#            result = data
+#        else:
+#
+#            klass = '{}Handler'.format(request_type.capitalize())
+#            pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
+#            try:
+#                
+#                    
+#                module = __import__(pkg, globals(), locals(), [klass])
+#
+#                factory = getattr(module, klass)
+#
+#                handler = factory(application=self.application)
+#                '''
+#                    the context filter uses the handler object to 
+#                    get the kind and request
+#                    if the min period has elapse since last request or the message is triggered
+#                    get and return the state from pychron
+#                    
+#        
+#                    pure frequency filtering could be accomplished earlier in the stream in the 
+#                    Remote Hardware Server (CommandRepeater.get_response) 
+#                '''
+#
+#
+#                result = self.context_filter.get_response(handler, data)
+#
+#            except ImportError, e:
+#                result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
+#
+#        self.debug('Result: {}'.format(result))
+#        if isinstance(result, ErrorCode):
+#            self.result = repr(result)
+#        else:
+#            self.result = result
+#            
+#        return result
 
     def get_server_response(self):
         return self.result

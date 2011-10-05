@@ -36,7 +36,7 @@ class TCPHandler(MessagingHandler):
 
 
         return data
-
+    
     def send_packet(self, response):
         '''
         '''

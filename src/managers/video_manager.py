@@ -103,7 +103,7 @@ class VideoManager(Manager):
                 base = 'frame_{}_'.format(identifier)
 
 
-            path = unique_path(root=root, base=base, filetype='jpg')
+            path, _cnt = unique_path(root=root, base=base, filetype='jpg')
 
         self.info('saving snapshot {}'.format(path))
         src = self.video.record_frame(path, crop=crop)

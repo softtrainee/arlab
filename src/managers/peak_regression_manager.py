@@ -140,7 +140,7 @@ class PeakRegressionManager(Manager):
         #file numbers auto  incremented
         #located the current directory
 
-        p = unique_path(os.path.splitext(self.path)[0], 'fit_results', filetype='csv')
+        p, _cnt = unique_path(os.path.splitext(self.path)[0], 'fit_results', filetype='csv')
 
         if p is not None:
 

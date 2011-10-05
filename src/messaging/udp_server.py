@@ -17,14 +17,16 @@ limitations under the License.
 
 #============= standard library imports ========================
 from SocketServer import ThreadingUDPServer
+import socket
 
 #============= local library imports  ==========================
 from messaging_server import MessagingServer
+from src.messaging.handlers.udp_handler import UDPHandler
+
 class UDPServer(ThreadingUDPServer, MessagingServer):
+#class UDPServer(_UDPServer, MessagingServer):
     '''
-        G{classtree}
     '''
-    allow_reuse_address = True
 
     def __init__(self, parent, processor_type, datasize, * args, **kw):
         '''
@@ -37,10 +39,10 @@ class UDPServer(ThreadingUDPServer, MessagingServer):
 
         self.connected = True
         try:
-            ThreadingUDPServer.__init__(self, *args, **kw)
-        except:
-            #self.logger.warning(e)
-            self.warning('%s: %s already bound' % args[0])
+            args += (UDPHandler,)
+            super(UDPServer, self).__init__(*args, **kw)
+        except socket.error, e:
+            self.warning(e)
             self.connected = False
 
 

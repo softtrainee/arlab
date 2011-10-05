@@ -32,12 +32,14 @@ def unique_path(root, base, filetype='txt'):
 
     '''
     p = os.path.join(root, '%s001.%s' % (base, filetype))
+    cnt = 1
     i = 2
     while os.path.exists(p):
         p = os.path.join(root, '%s%03i.%s' % (base, i, filetype))
         i += 1
-
-    return p
+        cnt += 1
+        
+    return p, cnt
 
 def str_to_bool(a):
     '''

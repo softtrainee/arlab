@@ -29,7 +29,6 @@ from src.helpers.filetools import unique_path
 
 class BeamScanScript(LaserScript):
     '''
-        G{classtree}
     '''
     video_record = False
     def load_file(self):
@@ -44,7 +43,7 @@ class BeamScanScript(LaserScript):
         manager = self.manager
         vm = manager.video_manager
         if self.video_record:
-            p = unique_path(os.path.join(data_dir, 'beamscans'),
+            p, _cnt = unique_path(os.path.join(data_dir, 'beamscans'),
                           'video',
                           filetype='avi'
                           )

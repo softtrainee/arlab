@@ -127,7 +127,7 @@ class PatternManager(Manager):
 
     def save_pattern(self):
         if not self.pattern_name:
-            path = unique_path(pattern_dir, 'pattern', filetype='lp')
+            path, _cnt = unique_path(pattern_dir, 'pattern', filetype='lp')
             self.pattern_name = os.path.basename(path).split('.')[0]
         else:
             path = os.path.join(pattern_dir, '{}.lp'.format(self.pattern_name))

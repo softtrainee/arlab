@@ -22,11 +22,12 @@ from threading import Thread
 import select
 #============= local library imports  ==========================
 from messaging_server import MessagingServer
+from src.messaging.handlers.tcp_handler import TCPHandler
 
+#class TCPServer(_TCPServer, MessagingServer):
 class TCPServer(ThreadingTCPServer, MessagingServer):
     '''
     '''
-    allow_reuse_address = True
 
     def __init__(self, parent, processor_type, datasize, *args, **kw):
         '''
@@ -42,8 +43,8 @@ class TCPServer(ThreadingTCPServer, MessagingServer):
         self.connected = True
 
         try:
-            ThreadingTCPServer.__init__(self, *args, **kw)
-
+            args += (TCPHandler,)
+            super(TCPServer, self).__init__(*args, **kw)
         except socket.error, e:
             self.warning(e)
             self.connected = False

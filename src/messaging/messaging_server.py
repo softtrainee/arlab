@@ -20,9 +20,9 @@ limitations under the License.
 #============= local library imports  ==========================
 class MessagingServer(object):
     '''
-        G{classtree}
     '''
     parent = None
+    allow_reuse_address = True
 
     def increment_packets_received(self):
         '''

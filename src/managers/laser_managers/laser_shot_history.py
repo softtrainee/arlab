@@ -32,7 +32,6 @@ from src.helpers.datetime_tools import generate_timestamp
 #============= views ===================================
 class LaserShot(HasTraits):
     '''
-        G{classtree}
     '''
     id = Int
     mode = Enum('single', 'continuous')
@@ -94,7 +93,7 @@ class LaserShotHistory(HasTraits):
         '''
         '''
         #make a backup copy
-        p = unique_path(root, 'laser_shot_history', 'bak')
+        p, _cnt = unique_path(root, 'laser_shot_history', 'bak')
         shutil.copy(self.pickle_path, p)
 
         os.remove(self.pickle_path)
