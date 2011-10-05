@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import List, Instance, Any
+from traits.api import List, DelegatesTo, Any
 from traitsui.api import View, Item, Group, HGroup, VGroup, \
     ListEditor, TableEditor
 from traitsui.table_column import ObjectColumn
@@ -29,7 +29,7 @@ import ConfigParser
 #    from src.messaging.command_repeater import SHMCommandRepeater as CommandRepeater
 #else:
 
-from src.messaging.command_repeater import CommandRepeater
+#from src.messaging.command_repeater import CommandRepeater
 
 from src.messaging.remote_command_server import RemoteCommandServer
 
@@ -41,8 +41,10 @@ class RemoteHardwareServerManager(Manager):
     '''
     # quit the program if this window is closed
     servers = List(RemoteCommandServer)
-    repeater = Instance(CommandRepeater)
+#    repeater = Instance(CommandRepeater)
+
     selected = Any
+    repeater = DelegatesTo('selected')
     def load(self):
         '''
         '''
@@ -51,7 +53,7 @@ class RemoteHardwareServerManager(Manager):
         if names:
             for s in names:
                 e = RemoteCommandServer(name=s,
-                               repeater=self.repeater,
+                               #repeater=self.repeater,
                                configuration_dir_name='servers',
                                )
 
@@ -71,13 +73,13 @@ class RemoteHardwareServerManager(Manager):
         servernames = [s.strip() for s in self.config_get(config, 'General', 'servers').split(',')]
         return servernames
 
-    def _repeater_default(self):
-        '''
-        '''
-        c = CommandRepeater(name='repeater',
-                               configuration_dir_name='servers')
-        c.bootstrap()
-        return c
+#    def _repeater_default(self):
+#        '''
+#        '''
+#        c = CommandRepeater(name='repeater',
+#                               configuration_dir_name='servers')
+#        c.bootstrap()
+#        return c
 
     def traits_view(self):
         '''

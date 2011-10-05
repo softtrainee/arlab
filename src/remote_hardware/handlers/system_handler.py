@@ -19,7 +19,8 @@ limitations under the License.
 #============= local library imports  ==========================
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode, \
-    InvalidArgumentsErrorCode, ManagerUnavaliableErrorCode
+    InvalidArgumentsErrorCode, ManagerUnavaliableErrorCode, \
+    InvalidValveErrorCode
 
 #============= views ===================================
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -117,7 +118,10 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     def GetValveState(self, manager, vname):
-        return manager.get_valve_state(vname)
+        result = manager.get_valve_state(vname)
+        if result is None:
+            result = InvalidValveErrorCode(vname)
+        return result
 
     def GetValveStates(self, manager, *args):
         result = manager.get_valve_states()

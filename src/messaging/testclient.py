@@ -25,15 +25,15 @@ from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor
 #============= EOF ====================================
 
 import socket
-from numpy import array, mean, std, savez, load
-from pylab import hist, show, xlim, linspace, plot
-from timeit import Timer
-import time
-import os
-from datetime import timedelta
-from threading import Thread
 
-import struct
+#from timeit import Timer
+import time
+#import os
+#from datetime import timedelta
+from threading import Thread
+import random
+#import struct
+
 class Client(HasTraits):
     command = String('Read argus_temp_monitor', enter_set=True, auto_set=False)
     resend = Button
@@ -41,7 +41,7 @@ class Client(HasTraits):
     response = String
     port = Int(1068)
     host = Str('localhost')
-    kind = Enum('TCP')#,'UDP', 'TCP')
+    kind = Enum('UDP', 'TCP')
 
     period = Float(100)
     periodic = Event
@@ -49,24 +49,7 @@ class Client(HasTraits):
 
     n_periods = Int(100)
     _alive = Bool(False)
-    def _receive_data_stream_fired(self):
-        sock = self.get_connection()
-        nbytes = sock.recv(4)
-        print nbytes, len(nbytes)
-        n = struct.unpack('!I', nbytes)[0]
-        print n
-        data = sock.recv(n)
-        
-        #print struct.unpack('!d',data[:8])
-        
-        ys = []
-        for i in range(0, n, 8):
-            ys.append(struct.unpack('>d', data[i:i + 8]))
-        plot(linspace(0, 6.28, n / 8), ys)
-        show()
-         #   print struct.unpack('!dd',data[i:i+16])
-            #print struct.unpack('>d',data[i:i+8])
-        #array(data, dtype='>'+'d'*400)
+
     def _periodic_fired(self):
         self._alive = not self._alive
         if self._alive:
@@ -103,18 +86,31 @@ class Client(HasTraits):
         addr = (self.host, self.port)
         if self.kind == 'UDP':
             packet_kind = socket.SOCK_DGRAM
-
+                    
         sock = socket.socket(family, packet_kind)
-
-
         sock.connect(addr)
         return sock
     
     def ask(self, command):
         conn = self.get_connection()
         conn.send(command)
-        return conn.recv(4096)
+        r = conn.recv(4096)
+        print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)
+    
+    def test(self):
         
+        for i in range(10000):
+            for v in 'ABCEDFG':
+                
+                self.ask('GetValveState {}'.format(v))
+            
+            if i % 5 == 0:
+                self.ask('Open {}'.format(self.ask_id[0]))
+            elif i % 8 == 0:
+                self.ask('Close {}'.format(self.ask_id[0]))
+                
+            time.sleep(random.randint(0, 175) / 100.)
+                
     def traits_view(self):
         v = View(
                  VGroup(
@@ -184,47 +180,35 @@ def main2():
     s.recv(1024)
     s.close()
 
-def plothist(name):
-    p = os.path.join(os.getcwd(), name)
-    files = load(p)
-    hist(files['times'], 1000 / 4.)
-    xlim(0, 0.040)
-    show()
-
-def benchmark(me, im, fp):
-    t = Timer(me, im)
-    st = time.time()
-    n = 1000
-    times = array(t.repeat(n, number=1))
-    dur = time.time() - st
-
-    etime = timedelta(seconds=dur)
-    avg = mean(times)
-    stdev = std(times)
-    mi = min(times) * 1000
-    ma = max(times) * 1000
-
-    print 'n trials', n, 'execution time %s' % etime
-    print 'mean %0.2f' % (avg * 1000), ' std %0.2f' % (stdev * 1000)
-    print 'min %0.2f ms' % mi, 'max %0.2f ms' % ma
-
-    stats = array([n, etime, avg, stdev, mi, ma])
-    p = os.path.join(os.getcwd(), fp)
-    savez(p, times=times, stats=stats)
-
-    foo = load(p)
-    hist(foo['times'], n / 4.)
-    show()
 
 
+def multiplex_test():
+    #cmd = 'GetValveState C'
+    c = Client(port=1063,
+               ask_id='D'
+               )
+    t = Thread(target=c.test)
+
+    
+    #cmd = 'GetValveState C'
+    c = Client(port=1063,
+               ask_id='E')
+    t2 = Thread(target=c.test)
+
+    t.start()
+    t2.start()
+        
+    
+    
 if __name__ == '__main__':
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
 #              'benchmark_unix_tcp_no_log.npz'
 #              )
    
-    c = Client()
-    c.configure_traits()
+    multiplex_test()
+    #c = Client()
+    #c.configure_traits()
     
     #===========================================================================
     #Check Remote launch snippet 
@@ -257,7 +241,56 @@ if __name__ == '__main__':
     #===========================================================================
         
         
-    
+#======================== EOF ===================================
+#    def _receive_data_stream_fired(self):
+#        sock = self.get_connection()
+#        nbytes = sock.recv(4)
+#        print nbytes, len(nbytes)
+#        n = struct.unpack('!I', nbytes)[0]
+#        print n
+#        data = sock.recv(n)
+#        
+#        #print struct.unpack('!d',data[:8])
+#        
+#        ys = []
+#        for i in range(0, n, 8):
+#            ys.append(struct.unpack('>d', data[i:i + 8]))
+#        plot(linspace(0, 6.28, n / 8), ys)
+#        show()
+#            print struct.unpack('!dd',data[i:i+16])
+            #print struct.unpack('>d',data[i:i+8])
+        #array(data, dtype='>'+'d'*400)
+#def plothist(name):
+#    p = os.path.join(os.getcwd(), name)
+#    files = load(p)
+#    hist(files['times'], 1000 / 4.)
+#    xlim(0, 0.040)
+#    show()
+#
+#def benchmark(me, im, fp):
+#    t = Timer(me, im)
+#    st = time.time()
+#    n = 1000
+#    times = array(t.repeat(n, number=1))
+#    dur = time.time() - st
+#
+#    etime = timedelta(seconds=dur)
+#    avg = mean(times)
+#    stdev = std(times)
+#    mi = min(times) * 1000
+#    ma = max(times) * 1000
+#
+#    print 'n trials', n, 'execution time %s' % etime
+#    print 'mean %0.2f' % (avg * 1000), ' std %0.2f' % (stdev * 1000)
+#    print 'min %0.2f ms' % mi, 'max %0.2f ms' % ma
+#
+#    stats = array([n, etime, avg, stdev, mi, ma])
+#    p = os.path.join(os.getcwd(), fp)
+#    savez(p, times=times, stats=stats)
+#
+#    foo = load(p)
+#    hist(foo['times'], n / 4.)
+#    show()
     
 #    host = '129.138.12.145'
 #

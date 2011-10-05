@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from __future__ import with_statement
 #============= enthought library imports =======================
 from traits.api import  Str, Int, Instance, Bool, Property, Event, Button, String
 from traitsui.api import View, Item, Group, HGroup, VGroup, \
@@ -26,13 +25,14 @@ import select
 import time
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
-from handlers.api import TCPHandler, UDPHandler
+#from handlers.api import TCPHandler, UDPHandler
 from tcp_server import TCPServer
 from udp_server import UDPServer
 
 #from src.managers.displays.messaging_display import MessagingDisplay
 from src.led.led_editor import LEDEditor
 from src.led.led import LED
+from src.messaging.command_repeater import CommandRepeater
 class RCSHandler(Handler):
     def init(self, info):
         '''
@@ -56,7 +56,7 @@ class RemoteCommandServer(ConfigLoadable):
     '''
     simulation = False
     _server = None
-    repeater = None
+    repeater = Instance(CommandRepeater)
 
     host = Str(enter_set=True, auto_set=False)
     port = Int(enter_set=True, auto_set=False)
@@ -82,7 +82,16 @@ class RemoteCommandServer(ConfigLoadable):
 
     run_time = Str
     led = Instance(LED, ())
-
+    
+    def _repeater_default(self):
+        '''
+        '''
+        c = CommandRepeater(name='repeater',
+                            logger_name='{}_repeater'.format(self.name),
+                               configuration_dir_name='servers')
+        c.bootstrap()
+        return c
+    
     def _repeater_fails_changed(self, old, new):
         if new != 0:
             self.repeater.led.state = 0
@@ -113,7 +122,7 @@ class RemoteCommandServer(ConfigLoadable):
 #            if config.has_option('Requests', 'handler'):
 #                handler = config.get('Requests', 'handler')
 #            else:
-            handler = '{}Handler'.format(self.klass)
+            #handler = '{}Handler'.format(self.klass)
 
             ds = None
             if config.has_option('Requests', 'datasize'):
@@ -134,9 +143,10 @@ class RemoteCommandServer(ConfigLoadable):
             self.loaded_host = host
             self.loaded_port = port
 
-            self.handler = handler
+            #self.handler = handler
 
-            self._server = self.server_factory(server_class, addr, handler, ptype, ds)
+#            self._server = self.server_factory(server_class, addr, handler, ptype, ds)
+            self._server = self.server_factory(server_class, addr, ptype, ds)
 
             #add links
             for link in self.config_get_options(config, 'Links'):
@@ -155,16 +165,18 @@ class RemoteCommandServer(ConfigLoadable):
                 self.warning('Cannot connect to %s: %s' % addr)
 
 
-    def server_factory(self, server_class, addr, handler, ptype, ds):
+    def server_factory(self, server_class, addr, ptype, ds):
         '''
         '''
         gdict = globals()
-        if handler in gdict:
-            handler_klass = gdict[handler]
-            server = gdict[server_class]
-            if ds is None:
-                ds = 2 ** 10
-            return server(self, ptype, ds, addr, handler_klass)
+#        if handler in gdict:
+#            handler_klass = gdict[handler]
+
+        server = gdict[server_class]
+        if ds is None:
+            ds = 2 ** 10
+#        return server(self, ptype, ds, addr, handler_klass)
+        return server(self, ptype, ds, addr)
 
     def open(self):
         '''

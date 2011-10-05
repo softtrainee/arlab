@@ -55,7 +55,7 @@ class DataManager(Manager):
             os.mkdir(base)
 
         if path is None:
-            path = unique_path(base, base_frame_name, filetype=self._extension)
+            path, _cnt = unique_path(base, base_frame_name, filetype=self._extension)
 
         self.info('New frame {}'.format(path))
         return path

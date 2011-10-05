@@ -63,8 +63,8 @@ import time
 # RemoteHardwareTest
 #===============================================================================
 
-from src.remote_hardware.tests.laser_test import LaserTest
-from src.remote_hardware.tests.system_test import SystemTest
+#from src.remote_hardware.tests.laser_test import LaserTest
+#from src.remote_hardware.tests.system_test import SystemTest
 
 
 def test(protocol, client):

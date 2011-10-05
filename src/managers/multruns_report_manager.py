@@ -48,8 +48,11 @@ class Report(HasTraits):
         self.end = datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')
         
     def complete_run(self):
-        self.runs[-1].set_complete_time()
-        
+        try:
+            self.runs[-1].set_complete_time()
+        except IndexError, e:
+            print e, 'Report.complete_run'
+            
     def start_run(self, r):
         self.runs.append(Run(r))
         

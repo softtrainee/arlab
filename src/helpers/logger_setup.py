@@ -13,11 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
+
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
@@ -32,7 +28,7 @@ from globals import use_debug_logger
 FORMAT = '%(name)-12s: %(asctime)s %(levelname)s %(message)s'
 FORMATTER = logging.Formatter(FORMAT)
 
-LEVEL = logging.INFO
+LEVEL = logging.DEBUG
 
 LOGGER_LIST = []
 
@@ -51,7 +47,40 @@ class DisplayHandler(logging.StreamHandler):
                                  msg=msg,
                                  kind='warning' if record.levelno > 20 else 'info',
                                  )
-
+#def clean_logdir(p, cnt):
+#    def get_basename(p):
+#        p = os.path.basename(p)
+#        basename, _tail = os.path.splitext(p)
+#        
+#        while basename[-1] in '0123456789':
+#            basename = basename[:-1]
+#        
+#        
+#        return basename
+#    
+#    d = os.path.dirname(p)
+#    p = os.path.basename(p)
+#    b = get_basename(p)
+#    print 'cleaning {} for {}'.format(d, b)
+#    
+#    
+#    
+#    import tarfile, time
+#    name = 'logarchive-{}'.format(time.strftime('%m-%d-%y', time.localtime()))
+#    cp, _cnt = unique_path(d, name, filetype='tar')
+#    
+#    with tarfile.open(cp, 'w') as tar:
+#        for i, pi in enumerate(os.listdir(d)):
+#            if get_basename(pi) == b and i < (cnt - 5):
+#                #print 'compress', i, cnt, pi
+#                os.chdir(d)
+#                tar.add(pi)
+#                os.remove(pi)
+#                
+#    print 'clean up finished'
+                
+            
+    
 def setup(name, level=None):
     '''
     '''
@@ -61,7 +90,7 @@ def setup(name, level=None):
     if not os.path.isdir(bdir):
         os.mkdir(bdir)
 
-    logpath = unique_path(bdir, name, filetype='log')
+    logpath, _cnt = unique_path(bdir, name, filetype='log')
 
     if sys.version.split(' ')[0] < '2.4.0':
         logging.basicConfig()
@@ -71,26 +100,23 @@ def setup(name, level=None):
             level = getattr(logging, level)
         else:
             level = LEVEL
-
+            
         logging.basicConfig(level=level,
                         format=FORMAT,
                         filename=logpath,
                         filemode='w'
                       )
+        
     if use_debug_logger:
 
         #main_logger = logging.getLogger()
         #main_logger.setLevel(logging.NOTSET)
         add_console(name='main', level=logging.NOTSET)
 
-def add_console(logger=None, name=None, display=None, level=None):
-    '''
-            @type name: C{str}
-            @param name:
+def add_console(logger=None, name=None, display=None, level=LEVEL):
     '''
 
-    if level is  None:
-        level = LEVEL
+    '''
 
     if name:
         logger = new_logger(name)

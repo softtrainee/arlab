@@ -24,7 +24,6 @@ from loggable import Loggable
 
 class ConfigLoadable(Loggable):
     '''
-        G{classtree}
     '''
     configuration_dir_name = None
     configuration_dir_path = None

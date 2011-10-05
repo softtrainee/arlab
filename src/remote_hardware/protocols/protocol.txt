@@ -19,7 +19,8 @@ ID	Class    	Command    	Note
 3     	InvalidArguments    	SetX 1a    
 4     	DeviceComm    	Set bakeout1 100   	bakeout1 communications timed out
 5	DeviceConnection    	Set Foo 100    	no device named Foo is connected
-
+6	PychronCommunication		Pychron is not running or there is a problem with the repeater-processor link
+7	InvalidValveError	Open Foo	Foo is not a registered valve name in the valves.txt
 Error ==> <ID> : <error message>
      eg. command==SetX 1,1  error== 3 : invalid arguments: SetX invalid literal for float(): 1,1
 
