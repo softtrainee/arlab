@@ -44,8 +44,8 @@ class CommandRepeater(ConfigLoadable):
     test = Button
     led = Instance(LED, ())
     
-    system_lock = False
-    system_lock_address = None
+#    system_lock = False
+#    system_lock_address = None
 
     def _test_fired(self):
         '''
@@ -111,16 +111,7 @@ class CommandRepeater(ConfigLoadable):
 
         return result
     
-    def _check_system_lock(self, addr):    
-        '''
-            return true if addr is not equal to the system lock address
-            ie this isnt who locked us so we deny access
-        '''
-        
-        if self.system_lock:
-            if addr is not None:
-                return self.system_lock_address != addr
-        
+    
     def get_response(self, rid, data, sender_address):
         '''
 
@@ -137,21 +128,21 @@ class CommandRepeater(ConfigLoadable):
         elif data == 'RemoteLaunch':
             return self.remote_launch('pychron')
         
-        elif data in ['SystemLock On', 'SystemLock Off']:
-            _cmd, onoff = data.split(' ')
-            self.system_lock = onoff == 'On'
-            self.system_lock_address = sender_address
-            return 'OK'
+#        elif data in ['SystemLock On', 'SystemLock Off']:
+#            _cmd, onoff = data.split(' ')
+#            self.system_lock = onoff == 'On'
+#            self.system_lock_address = sender_address
+#            return 'OK'
         
         
-        if self._check_system_lock(sender_address):
-            return repr(SystemLockErrorCode(self.system_lock_address, sender_address, logger=self.logger))
-        
+#        if self._check_system_lock(sender_address):
+#            return repr(SystemLockErrorCode(self.system_lock_address, sender_address, logger=self.logger))
+#        
         try:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             sock.settimeout(5)
             sock.connect(self.path)
-            sock.send('{}|{}'.format(rid, data))
+            sock.send('{}|{}|{}'.format(sender_address, rid, data))
             result = sock.recv(4096)
             sock.close()
         except socket.error, e:

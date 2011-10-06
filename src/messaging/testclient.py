@@ -99,7 +99,7 @@ class Client(HasTraits):
     
     def test(self):
         
-        for i in range(10000):
+        for i in range(5):
             for v in 'ABCEDFG':
                 
                 self.ask('GetValveState {}'.format(v))
@@ -184,14 +184,16 @@ def main2():
 
 def multiplex_test():
     #cmd = 'GetValveState C'
-    c = Client(port=1063,
+    c = Client(host='192.168.0.79',
+               port=1063,
                ask_id='D'
                )
     t = Thread(target=c.test)
 
     
     #cmd = 'GetValveState C'
-    c = Client(port=1063,
+    c = Client(host='192.168.0.79',
+               port=1063,
                ask_id='E')
     t2 = Thread(target=c.test)
 

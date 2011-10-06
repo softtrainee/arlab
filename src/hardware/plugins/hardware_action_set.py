@@ -28,6 +28,9 @@ class HardwareActionSet(WorkbenchActionSet):
                Action(name='Hardware Manager',
                       path='MenuBar/Extraction Line',
                       class_name='src.hardware.plugins.hardware_actions:OpenHardwareManagerAction'),
+               Action(name='System Lock',
+                      path='MenuBar/File',
+                      class_name='src.hardware.plugins.hardware_actions:SystemLockManagerAction'),
 
               ]
 #============= EOF ====================================

@@ -50,10 +50,10 @@ class DeviceConnectionErrorCode(ErrorCode):
         super(DeviceConnectionErrorCode, self).__init__(*args, **kw)
 
 class SystemLockErrorCode(ErrorCode):
-    msg = 'Access Denied by {}. you are {}'
+    msg = 'Access restricted to {} ({}). You are {}'
     code = 6
-    def __init__(self, locker, sender, *args, **kw):
-        self.msg = self.msg.format(locker, sender)
+    def __init__(self, name, locker, sender, *args, **kw):
+        self.msg = self.msg.format(name, locker, sender)
         super(SystemLockErrorCode, self).__init__(*args, **kw)
 
 class PychronCommunicationErrorCode(ErrorCode):

@@ -17,6 +17,7 @@ limitations under the License.
 from traits.api import Instance, Bool, on_trait_change
 from src.managers.manager import Manager
 from src.remote_hardware.command_processor import CommandProcessor
+from apptools.preferences.preference_binding import bind_preference
 
 #from globals import use_shared_memory
 #if use_shared_memory:
@@ -62,7 +63,11 @@ class RemoteHardwareManager(Manager):
         self.command_processor.close()
 #
     def _command_processor_default(self):
-        return CommandProcessor(application=self.application)
+        cp = CommandProcessor(application=self.application)
+        bind_preference(cp, 'system_lock', 'pychron.hardware.enabled')
+        bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
+        bind_preference(cp, 'system_lock_name', 'pychron.hardware.system')
+        return cp
 #    def process_server_request(self, request_type, data):
 #        '''
 #

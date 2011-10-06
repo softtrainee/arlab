@@ -39,7 +39,7 @@ class BaseRemoteHardwareHandler(Loggable):
         args = data.split(' ')
         return args[0], ' '.join(args[1:])
 
-    def handle(self, data):
+    def handle(self, data, sender_addr):
         eh = self.error_handler
         manager = self.get_manager()
         err = eh.check_manager(manager, self.manager_name)
@@ -54,7 +54,8 @@ class BaseRemoteHardwareHandler(Loggable):
                 
             if err is None:
                 #hardware query happens here
-                err, response = eh.check_response(func, manager, args[1:])
+                
+                err, response = eh.check_response(func, manager, args[1:] + [sender_addr])
                 
                 if err is None:
                     return response
