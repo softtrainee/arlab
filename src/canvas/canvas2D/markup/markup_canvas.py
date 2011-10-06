@@ -82,6 +82,7 @@ class MarkupCanvas(BaseDataCanvas):
         '''
 
         '''
+        
         self.selected_point = None
         self.selected_element = None
 
