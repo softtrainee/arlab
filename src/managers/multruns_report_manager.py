@@ -67,7 +67,7 @@ class Report(HasTraits):
         
         
 class MultrunsReportManager(Manager):
-    email_manager = Any
+    #email_manager = Any
     current_report = None
     def start_new_report(self, name):
         self.current_report = Report(name)

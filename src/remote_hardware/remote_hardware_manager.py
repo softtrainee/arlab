@@ -15,20 +15,16 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import Instance, Bool, on_trait_change
-from src.managers.manager import Manager
-from src.remote_hardware.command_processor import CommandProcessor
 from apptools.preferences.preference_binding import bind_preference
 
-#from globals import use_shared_memory
-#if use_shared_memory:
-#    from src.messaging.command_processor import SHMCommandProcessor as CommandProcessor
-#else:
-
-
-
 #============= standard library imports ========================
-
+import ConfigParser
+import os
 #============= local library imports  ==========================
+from src.helpers.paths import setup_dir
+from src.managers.manager import Manager
+from src.remote_hardware.command_processor import CommandProcessor
+from ConfigParser import NoSectionError
 
 '''
 #===================================
@@ -68,7 +64,57 @@ class RemoteHardwareManager(Manager):
         bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
         bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
         
+        config = ConfigParser.ConfigParser()
+        p = os.path.join(setup_dir, 'system_locks.cfg')
+        config.read(p)
+        
+        names = []
+        hosts = dict()
+        for sect in config.sections():
+            name = config.get(sect, 'name')
+            host = config.get(sect, 'host')
+            names.append(name)
+            hosts[name] = host
+
+        pref = self.application.preferences
+        pref.set('pychron.hardware.system_lock_names', names)
+        pref.set('pychron.hardware.system_lock_addresses', hosts)
+        
+        name = pref.get('pychron.hardware.system_lock_name')
+        if name:
+            pref.set('pychron.hardware.system_lock_address', hosts[name])
+        else:
+            pref.set('pychron.hardware.system_lock_address', hosts[names[0]])
+                    
+        pref.save()
+
         return cp
+    
+    def lock_by_address(self, addr, lock=True):
+        if lock:
+            
+            addrs = self.application.preferences.get('pychron.hardware.system_lock_addresses')
+            pairs = addrs[1:-1].split(',')
+            
+            for p in pairs:
+                k, v = p.split(':')
+                k = k.strip()
+                v = v.strip()
+                if v[1:-1] == addr:
+                    self.application.preferences.set('pychron.hardware.system_lock_address', addr)
+                    self.application.preferences.set('pychron.hardware.system_lock_name', k)
+                    return True
+            self.warning('You are not using an approved ip address {}'.format(addr))
+            
+        else:
+            self.application.preferences.set('pychron.hardware.enable_system_lock', lock)
+            return True
+
+    def get_server_response(self):
+        return self.result
+
+
+#============= EOF ====================================
 #    def process_server_request(self, request_type, data):
 #        '''
 #
@@ -117,11 +163,3 @@ class RemoteHardwareManager(Manager):
 #            self.result = result
 #            
 #        return result
-
-    def get_server_response(self):
-        return self.result
-
-
-
-#============= views ===================================
-#============= EOF ====================================

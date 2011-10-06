@@ -64,9 +64,15 @@ class PychronCommunicationErrorCode(ErrorCode):
         super(PychronCommunicationErrorCode, self).__init__(*args, **kw)
         
 class InvalidValveErrorCode(ErrorCode):
-    msg = '{} is not a register valve name'
+    msg = '{} is not a registered valve name'
     code = 7
     def __init__(self, name, *args, **kw):
         self.msg = self.msg.format(name)
         super(InvalidValveErrorCode, self).__init__(*args, **kw)
+class InvalidIPAddressErrorCode(ErrorCode):
+    msg = '{} is not a registered ip address'
+    code = 8
+    def __init__(self, ip, *args, **kw):
+        self.msg = self.msg.format(ip)
+        super(InvalidIPAddressErrorCode, self).__init__(*args, **kw)
 #============= EOF =====================================
