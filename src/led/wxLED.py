@@ -23,8 +23,7 @@ import wx
 COLORS = [wx.Colour(220, 10, 10), wx.Colour(250, 200, 0), wx.Colour(10, 220, 10), wx.Colour(0, 0, 0)]
 def change_intensity(color, fac):
     '''
-        @type fac: C{str}
-        @param fac:
+
     '''
     rgb = [color.Red(), color.Green(), color.Blue()]
     for i, intensity in enumerate(rgb):
@@ -33,17 +32,14 @@ def change_intensity(color, fac):
     return wx.Color(*rgb)
 
 class wxLED(wx.Control):
-    def __init__(self, parent):
+    def __init__(self, parent, state):
         '''
-            @type parent: C{str}
-            @param parent:
+
         '''
 
         wx.Control.__init__(self, parent, -1, (0, 0), (20, 20), style=wx.NO_BORDER)
 
-
-        self.set_state(0)
-
+        self.set_state(state)
         self._blink = 0
         self.blink = False
 
@@ -56,11 +52,14 @@ class wxLED(wx.Control):
 #    def set_blinking(self, blink):
 #        self.blink = blink
 #        self._blink = 0
-
+    def GetValue(self):
+        return self._state
+    def SetValue(self, v):
+        self._state = v
+        
     def OnTimer(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
         if self.blink:
             if self._blink % 3 == 0:
@@ -74,24 +73,20 @@ class wxLED(wx.Control):
 
     def set_state(self, s):
         '''
-            @type s: C{str}
-            @param s:
+
         '''
         self.blink = False
         #use negative values for blinking
         if s < 0:
             self.blink = True
+        
         s = abs(s)
         self._state = s
         self._set_led_color(s)
 
     def _set_led_color(self, state, color=None):
         '''
-            @type state: C{str}
-            @param state:
 
-            @type color: C{str}
-            @param color:
         '''
         if color is not None:
             color1 = color
@@ -137,8 +132,7 @@ class wxLED(wx.Control):
 
     def OnPaint(self, e):
         '''
-            @type e: C{str}
-            @param e:
+  
         '''
         dc = wx.PaintDC(self)
         dc.DrawBitmap(self.bmp, 0, 0, True)

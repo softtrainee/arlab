@@ -31,11 +31,10 @@ class MessagingHandler(BaseRequestHandler):
             self.server.info('Received: %s' % data.strip())
             response = self.server.repeater.get_response(self.server.processor_type, data, self.client_address[0])
             self.send_packet(response)
-
-            if 'Error' in response:
+            
+            if 'ERROR 6' in response:
                 self.server.increment_repeater_fails()
-            else:
-                self.server.repeater.led.state = 2
+
 
             self.server.info('Sent: %s' % response.strip())
             self.server.parent.cur_rpacket = data
