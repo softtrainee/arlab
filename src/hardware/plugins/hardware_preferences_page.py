@@ -14,12 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Bool, String, on_trait_change, Button
+from traits.api import Bool, String, on_trait_change, Dict, List
 from traitsui.api import View, Item, EnumEditor, Group, VGroup, HGroup
 from apptools.preferences.ui.api import PreferencesPage
-from src.helpers.paths import setup_dir
-import ConfigParser
-import os
+
 
 #============= standard library imports ========================
 
@@ -40,9 +38,8 @@ class HardwarePreferencesPage(PreferencesPage):
     system_lock_address = String
     enable_system_lock = Bool
 
-    system_lock_names = None
-    system_lock_addresses = None
-    add = Button
+    system_lock_names = List
+    system_lock_addresses = Dict
     
     @on_trait_change('system_lock_name,enable_system_lock')
     def _update(self, obj, name, new):
@@ -52,28 +49,37 @@ class HardwarePreferencesPage(PreferencesPage):
             return 
         
         self.system_lock_address = addr
-        
-    def __init__(self, *args, **kw):
-        super(HardwarePreferencesPage, self).__init__(*args, **kw)
-
-        config = ConfigParser.ConfigParser()
-        p = os.path.join(setup_dir, 'system_locks.cfg')
-        config.read(p)
-        self.system_lock_names = []
-        self.system_lock_addresses = dict()
-
-        for sect in config.sections():
-            name = config.get(sect, 'name')
-            host = config.get(sect, 'host')
-            
-            self.system_lock_names.append(name)
-            self.system_lock_addresses[name] = host
-        
-        #you must open the preference window and hit ok for changes in the configuration file to be passed into the master preference file    
-        if not self.system_lock_addresses.has_key(self.system_lock_name):
-            self.system_lock_name = self.system_lock_names[0]
-            
-        self.system_lock_address = self.system_lock_addresses[self.system_lock_name]
+#        
+#    def __init__(self, *args, **kw):
+#
+#        config = ConfigParser.ConfigParser()
+#        p = os.path.join(setup_dir, 'system_locks.cfg')
+#        config.read(p)
+#        self.system_lock_names = []
+#        self.system_lock_addresses = dict()
+#
+#        for sect in config.sections():
+#            name = config.get(sect, 'name')
+#            host = config.get(sect, 'host')
+#            
+#            self.system_lock_names.append(name)
+#            self.system_lock_addresses[name] = host
+#        
+#        pref = ConfigParser.ConfigParser()
+#        p = os.path.join(os.path.expanduser('~'), '.enthought', 'pychron', 'preferences.ini')
+#        pref.read(p)
+#
+#        pref.set('pychron.hardware', 'system_lock_names', value)
+#        with open(p, 'w') as fp:
+#            pref.write(fp)
+#        
+#        #you must open the preference window and hit ok for changes in the configuration file to be passed into the master preference file    
+#        if not self.system_lock_addresses.has_key(self.system_lock_name):
+#            self.system_lock_name = self.system_lock_names[0]
+#            
+#        self.system_lock_address = self.system_lock_addresses[self.system_lock_name]
+#        
+#        super(HardwarePreferencesPage, self).__init__(*args, **kw)
         
         
     def traits_view(self):

@@ -30,7 +30,7 @@ class Valve(HasTraits):
     state = Bool
     identify = Bool
     selected = Bool
-    soft_lock=Bool
+    soft_lock = Bool
     def _get_pos(self):
         '''
         '''

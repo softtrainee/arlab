@@ -129,9 +129,9 @@ class ExtractionLineCanvas2D(MarkupCanvas):
          :
         '''
         self.normal_mouse_move(event)
-    def select_right_down(self,event):
+    def select_right_down(self, event):
         item = self.items[self.active_item]
-        item.soft_lock=lock= not item.soft_lock
+        item.soft_lock = lock = not item.soft_lock
         self.manager.set_software_lock(item.name, lock)
         
         self.invalidate_and_redraw()
@@ -196,10 +196,10 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                     #print item.name, item.soft_lock
                     if item.soft_lock:
                         gc.save_state()
-                        gc.set_fill_color((0,0,0,0))
-                        gc.set_stroke_color((0,0.75,1))
+                        gc.set_fill_color((0, 0, 0, 0))
+                        gc.set_stroke_color((0, 0.75, 1))
                         gc.set_line_width(3)
-                        gc.rect(pos[0]-2,pos[1]-2, w+4,h+4)
+                        gc.rect(pos[0] - 2, pos[1] - 2, w + 4, h + 4)
                         gc.draw_path()
                         gc.restore_state()
                         
@@ -212,7 +212,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                         try:    
                             gc.set_text_position(pos[0] + w / 2.5, pos[1] + h / 2.5)
                             gc.show_text(str(item.name))
-                        except RuntimeError,e:
+                        except RuntimeError, e:
                             print e
                         finally:
                             gc.draw_path()

@@ -19,12 +19,13 @@ limitations under the License.
 #============= local library imports  ==========================
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode, \
-    InvalidArgumentsErrorCode, ManagerUnavaliableErrorCode, \
-    InvalidValveErrorCode
+    InvalidArgumentsErrorCode, InvalidValveErrorCode, InvalidIPAddressErrorCode
+from threading import Thread
 
 #============= views ===================================
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 TM_PROTOCOL = 'src.social.twitter_manager.TwitterManager'
+RHM_PROTOCOL = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
 class DummyDevice(object):
     def get(self):
         return 0.1
@@ -193,35 +194,42 @@ class SystemHandler(BaseRemoteHardwareHandler):
             
             NSamples,
         '''
-        data = ' '.join(args)
-        if manager.multruns_report_manager is not None:
-            manager.multruns_report_manager.start_new_report(data)
+        sender_addr = args[-1]
+        data = ' '.join(args[:-1])
         if self.application is not None:
-            tm = self.application.get_service(TM_PROTOCOL)
-            if tm is not None:
-                tm.post('Mult runs start {}'.format(data))
-#            else:
-#                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-##                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#        else:
-#            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+            
+            rhm = self.application.get_service(RHM_PROTOCOL)
+            if rhm.lock_by_address(sender_addr, lock=True):
+            
+                if manager.multruns_report_manager is not None:
+                    manager.multruns_report_manager.start_new_report(data)
+                
+                tm = self.application.get_service(TM_PROTOCOL)
+                if tm is not None:
+                    tm.post('Mult runs start {}'.format(data))
+            else:
+                return repr(InvalidIPAddressErrorCode(sender_addr))
         return 'OK'
             
     def CompleteMultRuns(self, manager, *args):
-        data = ' '.join(args)
-        if manager.multruns_report_manager is not None:
-            manager.multruns_report_manager.complete_report()
+
+        sender_addr = args[-1]
+        data = ' '.join(args[:-1])
+            
         if self.application is not None:
-            tm = self.application.get_service(TM_PROTOCOL)
-            if tm is not None:
-                tm.post('Mult runs completed {}'.format(data))
-#            else:
-#                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-##                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#        else:
-#            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+            
+            rhm = self.application.get_service(RHM_PROTOCOL)
+            if rhm.lock_by_address(sender_addr, lock=False):
+                if manager.multruns_report_manager is not None:
+                    t = Thread(target=manager.multruns_report_manager.complete_report)
+                    t.start()
+                
+                tm = self.application.get_service(TM_PROTOCOL)
+                if tm is not None:
+                    tm.post('Mult runs completed {}'.format(data))
+            else:
+                return repr(InvalidIPAddressErrorCode(sender_addr))
+
         return 'OK'
      
     def SystemLock(self, manager, name, onoff, sender_addr, *args):

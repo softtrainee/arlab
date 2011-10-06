@@ -27,6 +27,7 @@ from email.mime.text import MIMEText
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.helpers.paths import setup_dir
+from smtplib import SMTPServerDisconnected
 class User(HasTraits):
     name = Str
     email = Str
@@ -100,13 +101,16 @@ class EmailManager(Manager):
     
     def connect(self):
         if self._server is None:
-            server = smtplib.SMTP(self.outgoing_server, self.port)
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            
-            server.login(self.server_username, self.server_password)
-            self._server = server
+            try:
+                server = smtplib.SMTP(self.outgoing_server, self.port)
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                
+                server.login(self.server_username, self.server_password)
+                self._server = server
+            except SMTPServerDisconnected:
+                self.warning('SMTPServer not properly configured')
             
         return self._server
     
@@ -114,12 +118,12 @@ class EmailManager(Manager):
         
         recipients = self.get_emails(level)
         if recipients:
-            self.info('Broadcasting message to {}'.format(','.join(recipients)))
             msg = self._message_factory(text, level, subject)
-            
             server = self.connect()
-            server.sendmail(self.sender, recipients, msg.as_string())        
-            server.close()
+            if server:
+                self.info('Broadcasting message to {}'.format(','.join(recipients)))
+                server.sendmail(self.sender, recipients, msg.as_string())        
+                server.close()
             
     def add_user(self, **kw):
         u = User(**kw)

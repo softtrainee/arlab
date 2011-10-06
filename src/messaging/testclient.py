@@ -98,18 +98,22 @@ class Client(HasTraits):
         print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)
     
     def test(self):
+        self.ask('StartMultRuns Foo')
+        time.sleep(2)
         
-        for i in range(500):
-            for v in 'ABCEDFG':
-                
-                self.ask('GetValveState {}'.format(v))
-            
-            if i % 5 == 0:
-                self.ask('Open {}'.format(self.ask_id[0]))
-            elif i % 8 == 0:
-                self.ask('Close {}'.format(self.ask_id[0]))
-                
-            time.sleep(random.randint(0, 175) / 100.)
+        self.ask('CompleteMultRuns Foo')
+        
+#        for i in range(500):
+#            for v in 'ABCEDFG':
+#                
+#                self.ask('GetValveState {}'.format(v))
+#            
+#            if i % 5 == 0:
+#                self.ask('Open {}'.format(self.ask_id[0]))
+#            elif i % 8 == 0:
+#                self.ask('Close {}'.format(self.ask_id[0]))
+#                
+#            time.sleep(random.randint(0, 175) / 100.)
                 
     def traits_view(self):
         v = View(

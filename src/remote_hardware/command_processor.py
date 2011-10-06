@@ -61,7 +61,7 @@ class CommandProcessor(ConfigLoadable):
             self.path = self.config_get(config, 'General', 'path')
                         
             return True
-
+        
     def close(self):
         '''
         '''
