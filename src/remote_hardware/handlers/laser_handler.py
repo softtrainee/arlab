@@ -81,6 +81,8 @@ class DummyLM(object):
         return 14.0
 
 class LaserHandler(BaseRemoteHardwareHandler):
+
+	
     def error_response(self, err):
         return 'OK' if (err is None or err is True) else err
 
@@ -100,26 +102,26 @@ class LaserHandler(BaseRemoteHardwareHandler):
         
         return lm
 
-    def ReadLaserPower(self, manager):
+    def ReadLaserPower(self, manager, *args):
         '''
             return watts
         '''
         result = manager.get_laser_watts()
         return result
 
-    def GetLaserStatus(self, manager):
+    def GetLaserStatus(self, manager, *args):
         result = 'OK'
         return result
 
-    def Enable(self, manager):
+    def Enable(self, manager, *args):
         err = manager.enable_laser()
         return self.error_response(err)
 
-    def Disable(self, manager):
+    def Disable(self, manager, *args):
         err = manager.disable_laser()
         return self.error_response(err)
 
-    def SetXY(self, manager, data):
+    def SetXY(self, manager, data, *args):
         try:
             x, y = data.split(',')
         except ValueError:
@@ -147,16 +149,16 @@ class LaserHandler(BaseRemoteHardwareHandler):
         err = manager.stage_manager.single_axis_move(axis, d)
         return self.error_response(err)
 
-    def SetX(self, manager, data):
+    def SetX(self, manager, data, *args):
         return self._set_axis(manager, 'x', data)
 
-    def SetY(self, manager, data):
+    def SetY(self, manager, data, *args):
         return self._set_axis(manager, 'y', data)
 
-    def SetZ(self, manager, data):
+    def SetZ(self, manager, data, *args):
         return self._set_axis(manager, 'z', data)
 
-    def GetPosition(self, manager):
+    def GetPosition(self, manager, *args):
         smanager = manager.stage_manager
         x, y = smanager.get_uncalibrated_xy()
         z = smanager.get_z()
@@ -165,33 +167,33 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         return result
 
-    def GetDriveMoving(self, manager):
+    def GetDriveMoving(self, manager, *args):
         return manager.stage_manager.moving()
 
-    def GetXMoving(self, manager):
+    def GetXMoving(self, manager, *args):
         return manager.stage_manager.moving(axis='x')
 
-    def GetYMoving(self, manager):
+    def GetYMoving(self, manager, *args):
         return manager.stage_manager.moving(axis='y')
 
-    def GetZMoving(self, manager):
+    def GetZMoving(self, manager, *args):
         return manager.stage_manager.moving(axis='z')
 
-    def StopDrive(self, manager):
+    def StopDrive(self, manager, *args):
         manager.stage_manager.stop()
         return 'OK'
 
-    def SetDriveHome(self, manager):
+    def SetDriveHome(self, manager, *args):
         manager.stage_manager.define_home()
         return 'OK'
 
-    def SetHomeX(self, manager):
+    def SetHomeX(self, manager, *args):
         return self._set_home_(manager, axis='x')
 
-    def SetHomeY(self, manager):
+    def SetHomeY(self, manager, *args):
         return self._set_home_(manager, axis='y')
 
-    def SetHomeZ(self, manager):
+    def SetHomeZ(self, manager, *args):
         return self._set_home_(manager, axis='z')
 
     def _set_home_(self, manager, **kw):
@@ -200,7 +202,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
         err = manager.stage_manager.define_home(**kw)
         return self.error_response(err)
 
-    def GoToHole(self, manager, data):
+    def GoToHole(self, manager, data, *args):
         try:
             data = int(data)
             err = manager.stage_manager._set_hole(data)
@@ -209,19 +211,19 @@ class LaserHandler(BaseRemoteHardwareHandler):
         
         return self.error_response(err)
 
-    def GetJogProcedures(self, manager):
+    def GetJogProcedures(self, manager, *args):
         jogs = manager.stage_manager.pattern_manager.get_pattern_names()
         return ','.join(jogs)
 
-    def JogName(self, manager, name):
+    def JogName(self, manager, name, *args):
         err = manager.stage_manager.pattern_manager.execute_pattern(name)
         return self.error_response(err)
 
-    def AbortJog(self, manager):
+    def AbortJog(self, manager, *args):
         err = manager.stage_manager.pattern_manager.stop_pattern()
         return self.error_response(err)
 
-    def SetBeamDiameter(self, manager, data):
+    def SetBeamDiameter(self, manager, data, *args):
         try:
             bd = float(data)
         except ValueError:
@@ -234,10 +236,10 @@ class LaserHandler(BaseRemoteHardwareHandler):
             return 'OK - beam disabled'
         
 
-    def GetBeamDiameter(self, manager):
+    def GetBeamDiameter(self, manager, *args):
         return manager.beam
 
-    def SetZoom(self, manager, data):
+    def SetZoom(self, manager, data, *args):
         try:
             zoom = float(data)
         except ValueError:
@@ -245,17 +247,17 @@ class LaserHandler(BaseRemoteHardwareHandler):
         manager.zoom = zoom
         return 'OK'
 
-    def GetZoom(self, manager):
+    def GetZoom(self, manager, *args):
         return manager.zoom
 
-    def SetSampleHolder(self, manager, name):
+    def SetSampleHolder(self, manager, name, *args):
         err = manager.stage_manager._set_stage_map(name)
         return self.error_response(err)
 
-    def GetSampleHolder(self, manager):
+    def GetSampleHolder(self, manager, *args):
         return manager.stage_manager.stage_map
     
-    def SetLaserPower(self, manager, data):
+    def SetLaserPower(self, manager, data, *args):
         result = 'OK'
         try:
             p = float(data)
