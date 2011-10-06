@@ -83,7 +83,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             dev = DummyDevice()
         return dev
 
-    def Set(self, manager, dname, value):
+    def Set(self, manager, dname, value, *args):
         d = self.get_device(dname)
         if d is not None:
             result = d.set(value)
@@ -92,7 +92,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         
         return result
 
-    def Read(self, manager, dname):
+    def Read(self, manager, dname, *args):
         d = self.get_device(dname)
         if d is not None:
             result = d.get()
@@ -100,7 +100,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = DeviceConnectionErrorCode(dname, logger=self)
         return result
 
-    def Open(self, manager, vname):
+    def Open(self, manager, vname, *args):
         result = manager.open_valve(vname)
         if result == True:
             result = 'OK'
@@ -109,7 +109,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         
         return result
 
-    def Close(self, manager, vname):
+    def Close(self, manager, vname, *args):
         result = manager.close_valve(vname)
         if result == True:
             result = 'OK'
@@ -117,7 +117,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = InvalidArgumentsErrorCode('Close', vname, logger=self)
         return result
 
-    def GetValveState(self, manager, vname):
+    def GetValveState(self, manager, vname, *args):
         result = manager.get_valve_state(vname)
         if result is None:
             result = InvalidValveErrorCode(vname)
@@ -129,7 +129,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = 'ERROR'
         return result
 
-    def GetManualState(self, manager, vname):
+    def GetManualState(self, manager, vname, *args):
         lstate = manager.get_software_lock(vname)
         if lstate is None:
             result = 'ERROR: {} name available'.format(vname)
@@ -223,7 +223,13 @@ class SystemHandler(BaseRemoteHardwareHandler):
 #            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
 #            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
         return 'OK'
-            
+     
+    def SystemLock(self, manager, name, onoff, sender_addr, *args):
+        cp = manager.remote_hardware_manager.command_processor
+        
+        cp.system_lock = onoff in ['On', 'on', 'ON']
+        if onoff:
+            cp.system_lock_address = sender_addr
 #    def RemoteLaunch(self, manager, *args):
 #        #launch pychron
 #        p = '/Users/Ross/Programming/pychron/Pychron.app'

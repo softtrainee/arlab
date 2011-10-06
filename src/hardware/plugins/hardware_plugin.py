@@ -22,6 +22,7 @@ from src.envisage.core.core_plugin import CorePlugin
 from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
 from apptools.preferences.preference_binding import bind_preference
 from src.managers.hardware_manager import HardwareManager
+#from src.managers.system_lock_manager import SystemLockManager
 
 class Preference(HasTraits):
     pass
@@ -46,40 +47,56 @@ class HardwarePlugin(CorePlugin):
     def _service_offers_default(self):
         '''
         '''
+        
         so = self.service_offer_factory(
                           protocol=HardwareManager,
                           factory=self._hardware_manager_factory)
 
-        return [so]
+        so1 = self.service_offer_factory(
+                          protocol=RemoteHardwareManager,
+                          factory=self._remote_hardware_manager_factory)
+
+#        so2 = self.service_offer_factory(
+#                          protocol=SystemLockManager,
+#                          factory=self._system_lock_manager_factory
+#                          )
+        return [so, so1]
 
     def _hardware_manager_factory(self):
         return HardwareManager(application=self.application)
+    
+    def _remote_hardware_manager_factory(self):
+        return RemoteHardwareManager(application=self.application)
 
+#    def _system_lock_manager_factory(self):
+#        return SystemLockManager(application=self.application)
+    
     def start(self):
         '''
         '''
-        if self.managers:
-            from src.initializer import Initializer
-            dp = DevicePreferences()
-            afh = self.application.preferences.get('pychron.hardware.auto_find_handle')
-            awh = self.application.preferences.get('pychron.hardware.auto_write_handle')
-            if afh is not None:
-                toBool = lambda x: True if x == 'True' else False
-                dp.serial_preference.auto_find_handle = toBool(afh)
-                dp.serial_preference.auto_write_handle = toBool(awh)
+        #print self.managers
+        #if self.managers:
+        from src.initializer import Initializer
+        dp = DevicePreferences()
+        afh = self.application.preferences.get('pychron.hardware.auto_find_handle')
+        awh = self.application.preferences.get('pychron.hardware.auto_write_handle')
+        if afh is not None:
+            toBool = lambda x: True if x == 'True' else False
+            dp.serial_preference.auto_find_handle = toBool(afh)
+            dp.serial_preference.auto_write_handle = toBool(awh)
 
-            ini = Initializer(device_prefs=dp)
+        ini = Initializer(device_prefs=dp)
 
-            for m in self.managers:
-                ini.add_initialization(m)
+        for m in self.managers:
+            ini.add_initialization(m)
 
-            #any loaded managers will be registered as services
-            ini.run(application=self.application)
+        #any loaded managers will be registered as services
+        ini.run(application=self.application)
 
-            #create the hardware server
-            rhs = RemoteHardwareManager(application=self.application)
-            bind_preference(rhs, 'enable_hardware_server', 'pychron.hardware.enable_hardware_server')
-            rhs.bootstrap()
+        #create the hardware server
+        rhm = self.application.get_service(RemoteHardwareManager)
+        bind_preference(rhm, 'enable_hardware_server', 'pychron.hardware.enable_hardware_server')
+        rhm.bootstrap()
 
     def stop(self):
         if self.managers:

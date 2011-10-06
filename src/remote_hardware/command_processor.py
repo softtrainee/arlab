@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-
+from traits.api import Bool, Str
 #============= standard library imports ========================
 import socket
 from threading import Thread
@@ -26,6 +26,7 @@ from src.helpers import paths
 #from globals import use_shared_memory
 from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
+from src.remote_hardware.errors.system_errors import SystemLockErrorCode
 
 #class Processor(ThreadingUDPServer):
 class CommandProcessor(ConfigLoadable):
@@ -40,6 +41,11 @@ class CommandProcessor(ConfigLoadable):
     simulation = False
     manager = None
     _sock = None
+    
+    system_lock_name = Str
+    system_lock = Bool(False)
+    system_lock_address = Str
+    
     def __init__(self, *args, **kw):
         super(CommandProcessor, self).__init__(*args, **kw)
         self.context_filter = ContextFilter()
@@ -53,6 +59,7 @@ class CommandProcessor(ConfigLoadable):
         if config:
 #            self.port = self.config_get(config, 'General', 'port', cast = 'int')
             self.path = self.config_get(config, 'General', 'path')
+                        
             return True
 
     def close(self):
@@ -82,7 +89,16 @@ class CommandProcessor(ConfigLoadable):
         t = Thread(target=self._listener)
         t.start()
         return True
-
+    def _check_system_lock(self, addr):    
+        '''
+            return true if addr is not equal to the system lock address
+            ie this isnt who locked us so we deny access
+        '''
+        
+        if self.system_lock:
+            if not addr in [None, 'None']:
+                return self.system_lock_address != addr
+        
     def _listener(self, *args, **kw):
         '''
         '''
@@ -92,60 +108,66 @@ class CommandProcessor(ConfigLoadable):
             sock, _addr = self._sock.accept()
             
             data = sock.recv(4096)
-            ptype, payload = data.split('|')
+            sender_addr, ptype, payload = data.split('|')
             
-            t = Thread(target=self._process_request, args=(sock, ptype, payload))
+            t = Thread(target=self._process_request, args=(sock, sender_addr, ptype, payload))
             t.start()
 #            resp = self._process_request(sock, ptype, payload)
-            
-            
+    def _end_request(self, sock, data):
+        self.debug('Result: {}'.format(data))
 
-    def _process_request(self, sock, request_type, data):
+        sock.send(data)
+        sock.close()
+             
+    def _process_request(self, sock, sender_addr, request_type, data):
         
         self.debug('Request: {}, {}'.format(request_type, data.strip()))
-        result = 'error handling'
 
-        if not request_type in ['System', 'Diode', 'Synrad', 'CO2', 'test']:
-            self.warning('Invalid request type ' + request_type)
-        elif request_type == 'test':
-            result = data
+        if self._check_system_lock(sender_addr):
+            result = repr(SystemLockErrorCode(self.system_lock_name,
+                                         self.system_lock_address,
+                                         sender_addr, logger=self.logger))
         else:
-
-            klass = '{}Handler'.format(request_type.capitalize())
-            pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
-            try:
-                
+            
+            result = 'error handling'
+            if not request_type in ['System', 'Diode', 'Synrad', 'CO2', 'test']:
+                self.warning('Invalid request type ' + request_type)
+            elif request_type == 'test':
+                result = data
+            else:
+    
+                klass = '{}Handler'.format(request_type.capitalize())
+                pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
+                try:
                     
-                module = __import__(pkg, globals(), locals(), [klass])
-
-                factory = getattr(module, klass)
-
-                handler = factory(application=self.application)
-                '''
-                    the context filter uses the handler object to 
-                    get the kind and request
-                    if the min period has elapse since last request or the message is triggered
-                    get and return the state from pychron
-                    
+                        
+                    module = __import__(pkg, globals(), locals(), [klass])
+    
+                    factory = getattr(module, klass)
+    
+                    handler = factory(application=self.application)
+                    '''
+                        the context filter uses the handler object to 
+                        get the kind and request
+                        if the min period has elapse since last request or the message is triggered
+                        get and return the state from pychron
+                        
+            
+                        pure frequency filtering could be accomplished earlier in the stream in the 
+                        Remote Hardware Server (CommandRepeater.get_response) 
+                    '''
+    
+                    result = handler.handle(data, sender_addr)
+    #                result = self.context_filter.get_response(handler, data)
+    
+                except ImportError, e:
+                    result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
+    
+            
+            if isinstance(result, ErrorCode):
+                result = repr(result)
         
-                    pure frequency filtering could be accomplished earlier in the stream in the 
-                    Remote Hardware Server (CommandRepeater.get_response) 
-                '''
-
-                result = handler.handle(data)
-#                result = self.context_filter.get_response(handler, data)
-
-            except ImportError, e:
-                result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
-
-        self.debug('Result: {}'.format(result))
-        
-        if isinstance(result, ErrorCode):
-            result = repr(result)
-        
-        sock.send(result)
-        sock.close()
-        #return result
+        self._end_request(sock, result)
         
 
 #if __name__ == '__main__':
