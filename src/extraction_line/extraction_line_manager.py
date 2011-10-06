@@ -69,7 +69,7 @@ class ExtractionLineManager(Manager):
             ss = getattr(self, subsystem)
             return ss.get_module(module)
         except AttributeError:
-            self.warning('%s not initialized' % subsystem)
+            self.warning('{} not initialized'.format(subsystem))
 
     def create_manager(self, manager):
         '''
