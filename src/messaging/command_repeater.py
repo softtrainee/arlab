@@ -24,8 +24,7 @@ from src.led.led import LED
 from src.led.led_editor import LEDEditor
 import random
 from src.helpers.paths import pychron_src_dir
-from src.remote_hardware.errors.system_errors import SystemLockErrorCode, \
-    PychronCommunicationErrorCode
+from src.remote_hardware.errors.system_errors import PychronCommunicationErrorCode
 
 
 class CRHandler(Handler):

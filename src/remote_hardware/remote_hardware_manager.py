@@ -64,9 +64,10 @@ class RemoteHardwareManager(Manager):
 #
     def _command_processor_default(self):
         cp = CommandProcessor(application=self.application)
-        bind_preference(cp, 'system_lock', 'pychron.hardware.enabled')
+        bind_preference(cp, 'system_lock', 'pychron.hardware.system_lock_enabled')
         bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
-        bind_preference(cp, 'system_lock_name', 'pychron.hardware.system')
+        bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
+        
         return cp
 #    def process_server_request(self, request_type, data):
 #        '''

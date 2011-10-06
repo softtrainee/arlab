@@ -94,7 +94,7 @@ class CommandProcessor(ConfigLoadable):
             return true if addr is not equal to the system lock address
             ie this isnt who locked us so we deny access
         '''
-        
+#        print self.system_lock, self.system_lock_name, self.system_lock_address
         if self.system_lock:
             if not addr in [None, 'None']:
                 return self.system_lock_address != addr

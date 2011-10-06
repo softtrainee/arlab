@@ -20,10 +20,6 @@ from src.envisage.core.action_helper import open_manager
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-class SystemLockManagerAction(Action):
-    def perform(self, event):
-        m = self.window.application.get_service('src.managers.system_lock_manager.SystemLockManager')
-        open_manager(m)
     
 class OpenHardwareManagerAction(Action):
     '''
