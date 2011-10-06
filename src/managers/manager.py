@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import Str, Float, Any, Button, Int, List
+from traits.api import Str, Float, Any, Button, Int, List, Bool
 from traitsui.api import  Item, HGroup, VGroup, Handler, \
     RangeEditor, ButtonEditor, ScrubberEditor, Label, spring
 from traitsui.menu import Action, Menu, MenuBar
@@ -69,7 +69,8 @@ class Manager(ConfigLoadable):
 
     _killed = False
     failure_reason = None
-    close_after = Int #in minutes
+    enable_close_after = Bool
+    close_after_minutes = Int #in minutes
 
     #_opened = False
     ui = Any
@@ -99,16 +100,20 @@ class Manager(ConfigLoadable):
     def opened(self):
         def _loop():
             start = time.time()
-            self.info('Window set to close after {} min'.format(self.close_after))
+            self.info('Window set to close after {} min'.format(self.close_after_minutes))
             
             now = time.time()
-            while  now - start < (self.close_after * 60) and not self._killed:
-                time.sleep(3)
+            while  now - start < (self.close_after_minutes * 60) and not self._killed:
+                #wait min of half the residual and 0.1
+                residual = abs((now - start) - (self.close_after_minutes * 60))
+                time.sleep(max(residual / 2.0, 0.5))
+                
+                #increase frequency when close to end
                 now = time.time()
                 
-            do_later(self.close_ui)
+            self.close_ui()
 
-        if self.close_after:
+        if self.enable_close_after and self.close_after_minutes:
             t = Thread(target=_loop)
             t.start()
 

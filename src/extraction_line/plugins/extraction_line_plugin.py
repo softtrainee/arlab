@@ -55,7 +55,8 @@ class ExtractionLinePlugin(CorePlugin):
         bind_preference(elm.canvas, 'style', 'pychron.extraction_line.style')
         bind_preference(elm.canvas, 'width', 'pychron.extraction_line.width')
         bind_preference(elm.canvas, 'height', 'pychron.extraction_line.height')
-        bind_preference(elm, 'close_after', 'pychron.extraction_line.close_after')
+        bind_preference(elm, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
+        bind_preference(elm, 'close_after_minutes', 'pychron.extraction_line.close_after')
         
         return elm
 
