@@ -20,7 +20,8 @@ import apptools.sweet_pickle as pickle
 
 #============= local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
-
+W = 2
+H = 2
 class ExtractionLineCanvas2D(MarkupCanvas):
     '''
     '''
@@ -46,14 +47,9 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             v.identify = not v.identify
 
         self.request_redraw()
-
-    def update_valve_state(self, name, nstate):
+        
+    def update_valve_state(self, name, nstate, mode=None):
         '''
-            @type name: C{str}
-            @param name:
-
-            @type nstate: C{str}
-            @param nstate:
         '''
         valve = self._get_valve_by_name(name)
         if valve is not None:
@@ -62,18 +58,20 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
     def _get_valve_by_name(self, name):
         '''
-            @type name: C{str}
-            @param name:
+        
         '''
-        for i in self.items:
-            if i.__class__.__name__ == 'Valve':
-                if i.name == name:
-                    return i
-#
+        
+        return next((i for i in self.items if i.__class__.__name__ == 'Valve' and i.name == name), None)
+#        for i in self.items:
+#            if i.__class__.__name__ == 'Valve':
+#                if i.name == name:
+#                    return i
+    def _get_object_by_name(self, name):
+        return next((i for i in self.items if i.name == name), None)
+        
+    
     def _bootstrap(self, path):
-        '''
-            @type path: C{str}
-            @param path:
+        ''' 
         '''
         self.items = []
         items = None
@@ -87,24 +85,35 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
     def bootstrap(self, path):
         '''
-            @type path: C{str}
-            @param path:
+
         '''
         items = self._bootstrap(path)
         if items:
             self.items = items
         self.invalidate_and_redraw()
-
+        
+    def _over_item(self, x, y):
+        for k, item in enumerate(self.items):
+            if item.__class__.__name__ == 'Valve':
+    
+                mx, my = self.map_screen([item.pos])[0]
+                
+                w, h = self._get_wh(W, H)
+                mx += w / 2.0
+                my += h / 2.0
+                if abs(mx - x) < w and abs(my - y) < h:
+                    return k, item
+        
+        return None, None
+            
     def normal_mouse_move(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
 
-        item = self._over_item(event)
-
+        k, item = self._over_item(event.x, event.y)
         if item is not None:
-            self.active_item = item
+            self.active_item = k
             self.event_state = 'select'
             event.window.set_pointer(self.select_pointer)
         else:
@@ -113,18 +122,16 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             event.window.set_pointer(self.normal_pointer)
         event.handled = True
         self.invalidate_and_redraw()
-
+    
     def select_mouse_move(self, event):
         '''
-            @type event: C{str}
-            @param event:
+         :
         '''
         self.normal_mouse_move(event)
 
     def select_left_down(self, event):
         '''
-            @type event: C{str}
-            @param event:
+    
         '''
         item = self.items[self.active_item]
         state = item.state
@@ -134,11 +141,11 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         if self.manager is not None:
             if state:
 #                if self.manager.open_valve(item.name, mode = 'manual'):
-                if self.manager.open_valve(item.name):
+                if self.manager.open_valve(item.name, mode='manual'):
                     ok = True
             else:
 #                if self.manager.close_valve(item.name, mode = 'manual'):
-                if self.manager.close_valve(item.name):
+                if self.manager.close_valve(item.name, mode='manual'):
                     ok = True
         else:
             ok = True
@@ -149,23 +156,14 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
     def _draw_hook(self, gc, *args, **kw):
         '''
-            @type gc: C{str}
-            @param gc:
 
-            @type *args: C{str}
-            @param *args:
-
-            @type **kw: C{str}
-            @param **kw:
         '''
-        MarkupCanvas._draw_hook(self, gc, *args, **kw)
-        #super(ExtractionLineCanvas2D, self)._draw_hook(gc, *args, **kw)
+#        MarkupCanvas._draw_hook(self, gc, *args, **kw)
+        super(ExtractionLineCanvas2D, self)._draw_hook(gc, *args, **kw)
         self._draw_items(gc)
 
     def _draw_items(self, gc):
         '''
-            @type gc: C{str}
-            @param gc:
         '''
         gc.save_state()
         for item in self.items:
@@ -173,7 +171,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             if item.__class__.__name__ == 'Valve':
                 if item.pos:
                     pos = tuple(self.map_screen([item.pos])[0])
-                    w, h = self._get_wh(2, 2)
+                    w, h = self._get_wh(W, H)
                     args = pos + (w, h)
                     if item.state:
                         gc.set_fill_color((0, 1, 0))
@@ -186,7 +184,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                     gc.rect(*args)
                     gc.draw_path()
 
-                    if item.identify:
+                    if not item.identify:
 
                         if item.state:
                             gc.set_fill_color((0, 0, 0))

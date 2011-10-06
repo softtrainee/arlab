@@ -112,33 +112,33 @@ class ExtractionLineCanvas3DDummy(HasTraits):
         if hasattr(self.canvas, 'user_views'):
             self.canvas._set_view(v)
 
-    def _get_interactor_state(self):
-        '''
-        '''
-        return self.canvas.interactor_state
-
-    def _set_interactor_state(self, s):
-        '''
-        '''
-        self.canvas.interactor_state = s
-
-    def update_pressure(self, *args, **kw):
-        '''
-        '''
-        if self.canvas is not None:
-            self.canvas.update_pressure(*args, **kw)
-
-    def update_pumping_duration(self, *args, **kw):
-        '''
-        '''
-        if self.canvas is not None:
-            self.canvas.update_pumping_duration(*args, **kw)
-
-    def update_idle_duration(self, *args, **kw):
-        '''
-        '''
-        if self.canvas is not None:
-            self.canvas.update_idle_duration(*args, **kw)
+#    def _get_interactor_state(self):
+#        '''
+#        '''
+#        return self.canvas.interactor_state
+#
+#    def _set_interactor_state(self, s):
+#        '''
+#        '''
+#        self.canvas.interactor_state = s
+#
+#    def update_pressure(self, *args, **kw):
+#        '''
+#        '''
+#        if self.canvas is not None:
+#            self.canvas.update_pressure(*args, **kw)
+#
+#    def update_pumping_duration(self, *args, **kw):
+#        '''
+#        '''
+#        if self.canvas is not None:
+#            self.canvas.update_pumping_duration(*args, **kw)
+#
+#    def update_idle_duration(self, *args, **kw):
+#        '''
+#        '''
+#        if self.canvas is not None:
+#            self.canvas.update_idle_duration(*args, **kw)
 
     def Refresh(self):
         '''
@@ -189,29 +189,28 @@ class ExtractionLineCanvas(HasTraits):
         if self.canvas3D:
             self.canvas3D.Update()
 
-    def set_interactor_state(self, state):
-        '''
-        
-        '''
-
-        for c in [self.canvas2D, self.canvas3D]:
-            if c is not None:
-                c.interactor_state = state
+#    def set_interactor_state(self, state):
+#        '''
+#        
+#        '''
+#
+#        for c in [self.canvas2D, self.canvas3D]:
+#            if c is not None:
+#                c.interactor_state = state
+    def get_object(self, name):
+        if self.style == '2D':
+            obj = self.canvas2D._get_object_by_name(name)
+        else:
+            obj = self.canvas3D._get_object_by_name(name)
+        return obj
+    
     def load_canvas(self, path):
         '''
-          
         '''
+        print 'loading canvas ', path
         if self.canvas2D:
             self.canvas2D.bootstrap(path)
-
-    def update_canvas2D(self, name, state, istate):
-#        self.canvas2D.update_valve_state(name, state, mode = istate)
-        self.canvas2D.update_valve_state(name, state)
-
-    def update_pressure(self, *args, **kw):
-        '''
-        '''
-        pass
+    
 
     def update_valve_state(self, name, state, *args, **kw):
         '''
