@@ -64,8 +64,10 @@ class StageMap(HasTraits):
         return os.path.join(root, name)
 
     def _get_name(self):
-        return  os.path.basename(self.file_path)
-
+	    name= os.path.basename(self.file_path)
+	    name, _ext = os.path.splitext(name)
+	    return name
+        
     def __init__(self, *args, **kw):
         super(StageMap, self).__init__(*args, **kw)
         self.load()
