@@ -255,7 +255,12 @@ class ExtractionLineManager(Manager):
             self.warning('{} already running'.format(runscript_name))
         else:
             self.runscript = None
-
+            
+    def set_selected_explanation_item(self, obj):
+        selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
+        if selected:
+            self.explanation.selected = selected
+    
     def traits_view(self):
         '''
         '''
