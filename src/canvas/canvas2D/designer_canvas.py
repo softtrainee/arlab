@@ -25,7 +25,6 @@ from src.canvas.canvas2D.rect_selection_tool import RectSelectionTool
 #from src.canvas.designer.valve import Valve
 class DesignerCanvas(ExtractionLineCanvas2D):
     '''
-        G{classtree}
     '''
     tool_state = Enum('select', 'line', 'mline', 'valve')
     active = False
@@ -40,11 +39,7 @@ class DesignerCanvas(ExtractionLineCanvas2D):
 
     def __init__(self, *args, **kw):
         '''
-            @type *args: C{str}
-            @param *args:
 
-            @type **kw: C{str}
-            @param **kw:
         '''
         super(DesignerCanvas, self).__init__(*args, **kw)
 

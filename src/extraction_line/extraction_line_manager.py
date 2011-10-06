@@ -135,14 +135,16 @@ class ExtractionLineManager(Manager):
             self.canvas.canvas3D.setup(canvas3D_dir, 'extractionline3D.txt')
 
             #load state
-            try:
-                for k, v in self.valve_manager.valves.iteritems():
-                    vc = self.canvas.canvas3D.scene_graph.get_object_by_name(k)
+
+            for k, v in self.valve_manager.valves.iteritems():
+                vc = self.canvas.get_object(k)
+#                print vc, k
+                if vc:
+#                vc = self.canvas.canvas3D.scene_graph.get_object_by_name(k)
                     vc.soft_lock = v.software_lock  
 
-                self.view_controller = self._view_controller_factory()
-            except AttributeError:
-                self.warning('valve manger not enabled')
+
+            self.view_controller = self._view_controller_factory()
 
     def load_canvas(self):
         '''
@@ -152,40 +154,36 @@ class ExtractionLineManager(Manager):
         if p is not None:
             self.canvas.load_canvas(p)
 
-    def pressure_update(self, o, oo, n):
-        '''
-        on_trait_change handler for gauge_manager.gauges.pressure
-        
-        '''
-        if self.canvas:
-            self.canvas.update_pressure(o.name, n, o.state)
+#    def pressure_update(self, o, oo, n):
+#        '''
+#        on_trait_change handler for gauge_manager.gauges.pressure
+#        
+#        '''
+#        if self.canvas:
+#            self.canvas.update_pressure(o.name, n, o.state)
 
     def update_canvas2D(self, *args):
         if self.canvas:
-            self.canvas.update_canvas2D(*args)
+            self.canvas.canvas2D.update_valve_state(*args)
 
-    def update_pumping_duration(self, name, val):
-        '''
+#    def update_pumping_duration(self, name, val):
+#        '''
+#
+#        '''
+#        if self.canvas:
+#            self.canvas.canvas3D.update_pumping_duration(name, val)
 
-        '''
-        if self.canvas:
-            self.canvas.canvas3D.update_pumping_duration(name, val)
+#    def update_idle_duration(self, name, val):
+#        '''
+# 
+#        '''
+#        if self.canvas:
+#            self.canvas.update_idle_duration(name, val)
 
-    def update_idle_duration(self, name, val):
-        '''
-            @type name: C{str}
-            @param name:
-
-            @type val: C{str}
-            @param val:
-        '''
-        if self.canvas:
-            self.canvas.update_idle_duration(name, val)
-
-    def set_interactor_state(self, state):
-        '''
-        '''
-        self.canvas.set_interactor_state(state)
+#    def set_interactor_state(self, state):
+#        '''
+#        '''
+#        self.canvas.set_interactor_state(state)
 
     def get_valve_state(self, name, address=None):
         '''
@@ -196,8 +194,8 @@ class ExtractionLineManager(Manager):
             state = self.valve_manager.get_state_by_name(name)
             return state
 
-    def get_manual_state(self, name):
-        return False
+#    def get_manual_state(self, name):
+#        return False
     
     def get_software_lock(self, name):
         if self.valve_manager is not None:

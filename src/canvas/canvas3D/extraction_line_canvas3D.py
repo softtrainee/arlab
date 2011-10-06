@@ -40,7 +40,6 @@ url_gen = url_generator()
 
 class ExtractionLineCanvas3D(InteractionCanvas3D):
     '''
-        G{classtree}
     '''
     control_canvas = None
     manager = None
@@ -65,39 +64,7 @@ class ExtractionLineCanvas3D(InteractionCanvas3D):
                             self.manager.valve_manager,
                             self)
 
-    def update_pumping_duration(self, name, val):
-        '''
-        '''
-        if 'analytical' in name.lower():
-            textp = self._get_object_by_name('Analytical_info_panel')
-        if textp is not None:
-            textp.fields[3] = (val, True, 'pumping_dur')
-        self.Refresh()
 
-    def update_idle_duration(self, name, val):
-        '''
-        '''
-        if 'analytical' in name.lower():
-            textp = self._get_object_by_name('Analytical_info_panel')
-        if textp is not None:
-            textp.fields[4] = (val, True, 'idle_dur')
-        self.Refresh()
-    def update_pressure(self, name, val, state):
-        '''
-            
-        '''
-
-        id = int(name[-1:])
-        if id in [0, 1, 2]:
-            textp = self._get_object_by_name('Analytical_info_panel')
-        else:
-            id -= 3
-            textp = self._get_object_by_name('Roughing_info_panel')
-
-        if textp is not None:
-            textp.fields[id] = (val, state, 'pressure')
-
-        self.Refresh()
 
     def update_popup(self, obj):
         self.popup.text.SetLabel('''Name: %s
@@ -172,6 +139,40 @@ Locked:%s''' % (obj.name,
 
 
 #============= EOF ============================================
+
+#    def update_pumping_duration(self, name, val):
+#        '''
+#        '''
+#        if 'analytical' in name.lower():
+#            textp = self._get_object_by_name('Analytical_info_panel')
+#        if textp is not None:
+#            textp.fields[3] = (val, True, 'pumping_dur')
+#        self.Refresh()
+#
+#    def update_idle_duration(self, name, val):
+#        '''
+#        '''
+#        if 'analytical' in name.lower():
+#            textp = self._get_object_by_name('Analytical_info_panel')
+#        if textp is not None:
+#            textp.fields[4] = (val, True, 'idle_dur')
+#        self.Refresh()
+#    def update_pressure(self, name, val, state):
+#        '''
+#            
+#        '''
+#
+#        id = int(name[-1:])
+#        if id in [0, 1, 2]:
+#            textp = self._get_object_by_name('Analytical_info_panel')
+#        else:
+#            id -= 3
+#            textp = self._get_object_by_name('Roughing_info_panel')
+#
+#        if textp is not None:
+#            textp.fields[id] = (val, state, 'pressure')
+#
+#        self.Refresh()
 
         #self.Refresh()
 

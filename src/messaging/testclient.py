@@ -99,7 +99,7 @@ class Client(HasTraits):
     
     def test(self):
         
-        for i in range(5):
+        for i in range(500):
             for v in 'ABCEDFG':
                 
                 self.ask('GetValveState {}'.format(v))
