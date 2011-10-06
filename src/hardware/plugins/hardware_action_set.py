@@ -21,16 +21,12 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 #============= local library imports  ==========================
 class HardwareActionSet(WorkbenchActionSet):
     '''
-        G{classtree}
     '''
     id = 'pychron.hardware.action_set'
     actions = [
                Action(name='Hardware Manager',
-                      path='MenuBar/Extraction Line',
-                      class_name='src.hardware.plugins.hardware_actions:OpenHardwareManagerAction'),
-               Action(name='System Lock',
                       path='MenuBar/File',
-                      class_name='src.hardware.plugins.hardware_actions:SystemLockManagerAction'),
-
+                      class_name='src.hardware.plugins.hardware_actions:OpenHardwareManagerAction'),
+               
               ]
 #============= EOF ====================================

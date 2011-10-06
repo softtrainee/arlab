@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Property, Bool, List, Str, on_trait_change, Dict
+from traits.api import Bool, List, String, on_trait_change, Dict, Button
 from traitsui.api import View, Item, EnumEditor, Group
 from apptools.preferences.ui.api import PreferencesPage
 from src.helpers.paths import setup_dir
@@ -36,20 +36,22 @@ class HardwarePreferencesPage(PreferencesPage):
     auto_find_handle = Bool
     auto_write_handle = Bool
     
-    system_name = Str
-    system_names = List
-    system_lock_addresses=Dict
-    enabled = Bool
+    system_lock_name = String
+    system_lock_address = String
+    system_lock_enabled = Bool
+
+    system_lock_names = None
+    system_lock_addresses = None
+    add = Button
     
-    system_lock_address = Str
-    
-    @on_trait_change('system_name,enabled')
-    def _system_changed(self):
+    @on_trait_change('system_lock_name,system_lock_enabled')
+    def _update(self, obj, name, new):
         try:
-            addr = self.system_lock_addresses[self.system_name]
-            self.system_lock_address = addr
-        except KeyError,e:
-            print e
+            addr = self.system_lock_addresses[self.system_lock_name]
+        except (TypeError, KeyError):
+            return 
+        
+        self.system_lock_address = addr
         
     def __init__(self, *args, **kw):
         super(HardwarePreferencesPage, self).__init__(*args, **kw)
@@ -57,19 +59,22 @@ class HardwarePreferencesPage(PreferencesPage):
         config = ConfigParser.ConfigParser()
         p = os.path.join(setup_dir, 'system_locks.cfg')
         config.read(p)
-        self.system_names = []
+        self.system_lock_names = []
         self.system_lock_addresses = dict()
+
         for sect in config.sections():
             name = config.get(sect, 'name')
             host = config.get(sect, 'host')
             
-            self.system_names.append(name)
+            self.system_lock_names.append(name)
             self.system_lock_addresses[name] = host
         
-        if not self.system_name:
-            self.system_name=self.system_names[0]
-        self.system_lock_address=self.system_lock_addresses[self.system_name]
+        #you must open the preference window and hit ok for changes in the configuration file to be passed into the master preference file    
+        if not self.system_lock_addresses.has_key(self.system_lock_name):
+            self.system_lock_name = self.system_lock_names[0]
             
+        self.system_lock_address = self.system_lock_addresses[self.system_lock_name]
+        
         
     def traits_view(self):
         '''
@@ -79,12 +84,12 @@ class HardwarePreferencesPage(PreferencesPage):
                  'auto_find_handle',
                  Item('auto_write_handle', enabled_when='auto_find_handle'),
                  Group(
-                       Item('system_name', editor=EnumEditor(values=self.system_names)),
-                       Item('system_lock_address',style='readonly', label='Host'),
-                       Item('enabled'),
+                       Item('system_lock_name', editor=EnumEditor(values=self.system_lock_names)),
+                       Item('system_lock_address', style='readonly', label='Host'),
+                       Item('system_lock_enabled'),
                        
-                       label='Sytem Lock'
-                       )
+                       label='System Lock'
+                       ),
                  )
         return v
 #============= views ===================================

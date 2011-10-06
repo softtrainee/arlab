@@ -192,13 +192,13 @@ def multiplex_test():
 
     
     #cmd = 'GetValveState C'
-    c = Client(host='192.168.0.79',
-               port=1063,
-               ask_id='E')
-    t2 = Thread(target=c.test)
+#    c = Client(host='192.168.0.65',
+#               port=1063,
+#               ask_id='E')
+#    t2 = Thread(target=c.test)
 
     t.start()
-    t2.start()
+#    t2.start()
         
     
     
