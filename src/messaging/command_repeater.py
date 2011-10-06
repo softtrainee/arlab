@@ -58,12 +58,12 @@ class CommandRepeater(ConfigLoadable):
 
         r = self.get_response('test', ra, None)
         connected = False
-        if r is None:
-            self.led.state = 0
+        if 'ERROR 6' in r:
+            self.led.state = 'red'
         elif r == ra:
-            self.led.state = 2
+            self.led.state = 'green'
             connected = True
-        
+            
         return connected
     
     def _path_changed(self, old, new):
@@ -127,15 +127,6 @@ class CommandRepeater(ConfigLoadable):
         elif data == 'RemoteLaunch':
             return self.remote_launch('pychron')
         
-#        elif data in ['SystemLock On', 'SystemLock Off']:
-#            _cmd, onoff = data.split(' ')
-#            self.system_lock = onoff == 'On'
-#            self.system_lock_address = sender_address
-#            return 'OK'
-        
-        
-#        if self._check_system_lock(sender_address):
-#            return repr(SystemLockErrorCode(self.system_lock_address, sender_address, logger=self.logger))
 #        
         try:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -144,7 +135,10 @@ class CommandRepeater(ConfigLoadable):
             sock.send('{}|{}|{}'.format(sender_address, rid, data))
             result = sock.recv(4096)
             sock.close()
+            self.led.state = 'green'
+            
         except socket.error, e:
+            self.led.state = 'red'
             return repr(PychronCommunicationErrorCode(self.path, e))
             
         if ready_flag and data == result:

@@ -27,9 +27,9 @@ class _LEDEditor(Editor):
         '''
 
         '''
-
-        self.control = self._create_control(parent)
-        self.value.on_trait_change(self.update_object, 'state')
+        if self.control is None:
+            self.control = self._create_control(parent)
+            self.value.on_trait_change(self.update_object, 'state')
 
     def update_object(self, object, name, new):
         '''
@@ -39,21 +39,21 @@ class _LEDEditor(Editor):
             if self.control is not None:
                 self.control.set_state(new)
 
-    def update_editor(self):
-        '''
-        '''
-        pass
+#    def update_editor(self, *args, **kw):
+#        '''
+#        '''
+#        self.control = self._create_control(None)
+#        self.value.on_trait_change(self.update_object, 'state')
 
     def _create_control(self, parent):
         '''
 
         '''
-        panel = wxLED(parent)
+        panel = wxLED(parent, self.value.state)
         return panel
 
 class LEDEditor(BasicEditorFactory):
     '''
-        G{classtree}
     '''
     klass = _LEDEditor
 #============= EOF ====================================

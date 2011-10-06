@@ -24,7 +24,6 @@ from traits.api import HasTraits, Int, Property
 COLORS = ['red', 'yellow', 'green', 'black']
 class LED(HasTraits):
     '''
-        G{classtree}
     '''
     state = Property(depends_on='_state')
     _state = Int
