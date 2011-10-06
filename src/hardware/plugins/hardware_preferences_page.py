@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Bool, List, String, on_trait_change, Dict, Button
-from traitsui.api import View, Item, EnumEditor, Group
+from traits.api import Bool, String, on_trait_change, Button
+from traitsui.api import View, Item, EnumEditor, Group, VGroup, HGroup
 from apptools.preferences.ui.api import PreferencesPage
 from src.helpers.paths import setup_dir
 import ConfigParser
@@ -38,13 +38,13 @@ class HardwarePreferencesPage(PreferencesPage):
     
     system_lock_name = String
     system_lock_address = String
-    system_lock_enabled = Bool
+    enable_system_lock = Bool
 
     system_lock_names = None
     system_lock_addresses = None
     add = Button
     
-    @on_trait_change('system_lock_name,system_lock_enabled')
+    @on_trait_change('system_lock_name,enable_system_lock')
     def _update(self, obj, name, new):
         try:
             addr = self.system_lock_addresses[self.system_lock_name]
@@ -80,16 +80,25 @@ class HardwarePreferencesPage(PreferencesPage):
         '''
         '''
         v = View(
-                 'enable_hardware_server',
-                 'auto_find_handle',
-                 Item('auto_write_handle', enabled_when='auto_find_handle'),
-                 Group(
-                       Item('system_lock_name', editor=EnumEditor(values=self.system_lock_names)),
-                       Item('system_lock_address', style='readonly', label='Host'),
-                       Item('system_lock_enabled'),
-                       
-                       label='System Lock'
-                       ),
+                 VGroup(
+                     Group(
+                           HGroup('enable_hardware_server', Item('enable_system_lock', enabled_when='enable_hardware_server')),
+                           Group(
+                                 Item('system_lock_name', editor=EnumEditor(values=self.system_lock_names),
+                                      enabled_when='enable_system_lock'),
+                                 Item('system_lock_address', style='readonly', label='Host'),
+                                      enabled_when='enable_hardware_server'),
+                           label='Remote Hardware Server',
+                           show_border=True
+                           ),
+                     Group(
+                           'auto_find_handle',
+                           Item('auto_write_handle', enabled_when='auto_find_handle'),
+                           label='Serial',
+                           show_border=True
+                           ),
+                        ),
+                 scrollable=True
                  )
         return v
 #============= views ===================================
