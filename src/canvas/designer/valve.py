@@ -22,7 +22,6 @@ from traitsui.api import View, Item, HGroup
 #============= local library imports  ==========================
 class Valve(HasTraits):
     '''
-        G{classtree}
     '''
     pos = Property(depends_on='_x,_y')
     _x = Float(enter_set=True, auto_set=False)
@@ -31,6 +30,7 @@ class Valve(HasTraits):
     state = Bool
     identify = Bool
     selected = Bool
+    soft_lock=Bool
     def _get_pos(self):
         '''
         '''
@@ -38,8 +38,6 @@ class Valve(HasTraits):
 
     def _set_pos(self, pos):
         '''
-            @type pos: C{str}
-            @param pos:
         '''
         self._x = float(pos[0])
         self._y = float(pos[1])

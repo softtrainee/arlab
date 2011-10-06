@@ -138,9 +138,7 @@ class ExtractionLineManager(Manager):
 
             for k, v in self.valve_manager.valves.iteritems():
                 vc = self.canvas.get_object(k)
-#                print vc, k
                 if vc:
-#                vc = self.canvas.canvas3D.scene_graph.get_object_by_name(k)
                     vc.soft_lock = v.software_lock  
 
 
@@ -200,7 +198,12 @@ class ExtractionLineManager(Manager):
     def get_software_lock(self, name):
         if self.valve_manager is not None:
             return self.valve_manager.get_software_lock(name)
-
+    def set_software_lock(self,name, lock):
+        if self.valve_manager is not None:
+            if lock:
+                self.valve_manager.lock(name)
+            else:
+                self.valve_manager.unlock(name)
     def get_valve_states(self):
         if self.valve_manager is not None:
             return self.valve_manager.get_states()
