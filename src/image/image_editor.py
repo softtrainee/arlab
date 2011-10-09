@@ -129,7 +129,7 @@ class _ImageEditor(Editor):
         '''
         '''
 
-        bitmap = cvIplImageAsBitmap(src, swap=True, flip=False)
+        bitmap = cvIplImageAsBitmap(src, swap=False, flip=False)
         dc.DrawBitmap(bitmap, 0, 0, False)
 
     def _display_crosshair(self, dc, x, y, pen=None):

@@ -75,14 +75,14 @@ def commented_line(l):
     else:
         return False
 
-def parse_file(p, split=None):
+def parse_file(p, delimiter=None):
     '''
     '''
     if os.path.exists(p) and os.path.isfile(p):
         with open(p, 'U') as file:
             r = filetoarray(file)
-            if split:
-                r = [ri.split(split) for ri in r]
+            if delimiter:
+                r = [ri.split(delimiter) for ri in r]
 
             return r
 

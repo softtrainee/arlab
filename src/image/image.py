@@ -25,7 +25,7 @@ from ctypes_opencv import cvConvertImage, cvCloneImage, \
     CV_CVTIMG_SWAP_RB
 from image_helper import load_image, new_dst, grayspace
 from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
-    draw_polygons
+    draw_polygons, find_circles, find_ellipses, clone
 
 
 
@@ -40,7 +40,7 @@ class Image(HasTraits):
     _bitmap = None
     def load(self, path):
         self.source_frame = load_image(path)
-        self.frames = [self.source_frame]
+        self.frames = [clone(self.source_frame)]
 
     def update_bounds(self, obj, name, old, new):
         if new:
@@ -50,7 +50,7 @@ class Image(HasTraits):
     def _get_frame(self):
         return self.source_frame
 
-    def get_frame(self, flip=False, mirror=False, gray=False, swap_rb=False, clone=False):
+    def get_frame(self, flip=False, mirror=False, gray=False, swap_rb=True, clone=False):
 
         rframe = self._get_frame()
         if rframe is not None:
@@ -61,6 +61,7 @@ class Image(HasTraits):
                 cvFlip(rframe, flip_mode=1)
             elif flip:
                 cvFlip(rframe)
+                
             if swap_rb:
                 cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
 
@@ -107,13 +108,19 @@ class Image(HasTraits):
 #        f = self.frames[frame_id]
         f = self.source_frame
         gsrc = grayspace(f)
-
         dst = threshold(gsrc, t)
+            
         if inplace:
             self.frames[frame_id] = colorspace(dst)
 
         return dst
-
+    
+    def circleate(self):
+        
+        gsrc = self.threshold(200)
+        _n, contours = contour(gsrc)
+        find_ellipses(self.frames[0], contours)
+        
     def polygonate(self, t, frame_id=0, skip=None, line_width=1, min_area=100000):
         gsrc = self.threshold(t)
 
@@ -128,7 +135,7 @@ class Image(HasTraits):
                 polygons = [p for i, p in enumerate(polygons) if i not in skip ]
 
 #            polygons = polygons[:9]
-            draw_polygons(f, polygons, line_width)
+            #draw_polygons(f, polygons, line_width)
             return polygons
 
 

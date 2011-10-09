@@ -30,7 +30,7 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
     cvGetSeqElem, cvCreateSeq, cvApproxPoly, cvContourPerimeter, cvContourArea, \
     CvPoint, CvPoint2D32f, CvRect, CvSize, CvScalar, CvSeq, CvContour, \
     CV_GRAY2BGR, CV_BGR2GRAY, CV_HOUGH_PROBABILISTIC, CV_PI, CV_RGB, \
-    CV_8UC3, CV_8UC1, CV_HIST_ARRAY, CV_THRESH_BINARY, CV_CVTIMG_SWAP_RB, CV_AA, CV_POLY_APPROX_DP, \
+    CV_8UC3, CV_8UC1, CV_HIST_ARRAY, CV_THRESH_BINARY_INV, CV_THRESH_BINARY, CV_CVTIMG_SWAP_RB, CV_AA, CV_POLY_APPROX_DP, \
     sizeof, \
     cvCreateVideoWriter, CV_FOURCC
     #unused
@@ -40,7 +40,10 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
     
 
 from ctypes import POINTER
-from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT
+from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT, CvVect32f, \
+    cvFitEllipse2
+from ctypes_opencv.cxcore import cvCvtSeqToArray, CV_32SC2, CV_32FC2, cvConvert, \
+    CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice
 
 
 def convert_seq(seq):
@@ -49,18 +52,51 @@ def convert_seq(seq):
 
 
 storage = cvCreateMemStorage(0)
+
+def find_ellipses(src, contours):
+    centers = []
+    for c in contours.hrange():
+        n = c.total
+        if n < 6:
+            continue
+        
+        pointarray = cvCreateMat(1, n, CV_32SC2)
+        pointarray2d32f = cvCreateMat(1, n, CV_32FC2)
+        cvCvtSeqToArray(c, pointarray.data.ptr, cvSlice(0, CV_WHOLE_SEQ_END_INDEX))
+        cvConvert(pointarray, pointarray2d32f)
+        
+        box = CvBox2D()
+        box = cvFitEllipse2(pointarray2d32f)
+        
+        w = cvRound(box.size.width / 2.0)
+        h = cvRound(box.size.height / 2.0)
+        
+        cx = cvRound(box.center.x)
+        cy = cvRound(box.center.y)
+        #centers.append((cx, cy))
+        draw_rectangle(src, CvPoint(cx - w, cy - h),
+                       CvPoint(cx + w, cy + h),
+                       #color=(0, 100, 200)
+                       )
+    return centers
+         
 def find_circles(src):
     gsrc = grayspace(src)
+    
     circles = cvHoughCircles(gsrc, storage,
                              CV_HOUGH_GRADIENT,
                              2,
                              1, 100, 50
                              )
-    print circles
+
+    circles = circles.asarrayptr(POINTER(CvVect32f))
+    for c in circles:
+        pass
+        
 #    c = circles.asarrayptr(POINTER(CvScalar))
-    print circles.total
-    for i in range(circles.total):
-        print cvGetSeqElem(circles, i)
+#    print circles.total
+#    for i in range(circles.total):
+#        print cvGetSeqElem(circles, i)
 
 
 def lines(src, thresh=0):
@@ -166,8 +202,7 @@ def histogram(src):
 
 def colorspace1D(src, channel='r'):
     '''
-        @type channel: C{str}
-        @param channel:
+
     '''
 
     dst = cvCloneImage(src)
@@ -183,7 +218,7 @@ def colorspace1D(src, channel='r'):
     return dst
 
 
-def get_polygons(contours, min_area):
+def get_polygons(contours, min_area=3e6):
     '''
     '''
 
@@ -270,8 +305,7 @@ def draw_rectangle(src, p1, p2, color=(255, 0, 0), fill=False, thickness=3):
 
 def draw_squares(img, squares):
     '''
-        @type squares: C{str}
-        @param squares:
+
     '''
     dst = cvCloneImage(img)
     # read 4 sequence elements at a time (all vertices of a square)
@@ -472,11 +506,15 @@ def canny(src, lt, ht):
 
     return dst
 
-def threshold(src, threshold):
+def threshold(src, threshold, invert=False):
     '''
     '''
     dst = cvCloneImage(src)
-    cvThreshold(src, dst, threshold, 255, CV_THRESH_BINARY)
+    kind = CV_THRESH_BINARY
+    if invert:
+        kind = CV_THRESH_BINARY_INV
+    
+    cvThreshold(src, dst, threshold, 255, kind)
 
     return dst
 
@@ -502,9 +540,10 @@ def grayspace(src):
         cvCvtColor(src, dst, CV_BGR2GRAY)
     else:
         dst = src
-    dst2 = new_dst(dst)
-    cvNot(dst, dst2)
-    return dst2
+    #dst2 = new_dst(dst)
+    #cvNot(dst, dst2)
+    #return dst2
+    return dst
 
 def load_image(path, swap=False):
     '''

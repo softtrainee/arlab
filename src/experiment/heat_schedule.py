@@ -144,7 +144,7 @@ class HeatSchedule(HasTraits):
             self.path = p
 
         self.steps = []
-        for args in parse_file(p, split=','):
+        for args in parse_file(p, delimiter=','):
             if len(args) == 2:
                 self.steps.append(HeatStep(temp_or_power=float(args[0]),
                                            duration=float(args[1])
