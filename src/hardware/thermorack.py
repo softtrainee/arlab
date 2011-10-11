@@ -168,7 +168,7 @@ class ThermoRack(CoreDevice):
         import numpy as np
 
 
-        CoreDevice.graph_builder(self, g)
+        super(ThermoRack, self).graph_builder(g)
         x = np.linspace(0, 10, 100)
         g.new_series(x=x,
                      y=np.cos(x)
