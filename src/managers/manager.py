@@ -19,10 +19,9 @@ from traitsui.api import  Item, HGroup, VGroup, Handler, \
     RangeEditor, ButtonEditor, ScrubberEditor, Label, spring
 from traitsui.menu import Action, Menu, MenuBar
 from pyface.api import FileDialog, OK, warning
-from pyface.timer.do_later import do_later, do_after
+from pyface.timer.do_later import do_after
 #=============standard library imports ========================
 import os
-
 #=============local library imports  ==========================
 from src.config_loadable import ConfigLoadable
 from src.hardware import HW_PACKAGE_MAP
@@ -34,7 +33,6 @@ class ManagerHandler(Handler):
         
     '''
     def init(self, info):
-        #info.object._opened = True
         info.object.ui = info.ui
         info.object.opened()
 
@@ -44,9 +42,6 @@ class ManagerHandler(Handler):
     def closed(self, info, is_ok):
         '''
         '''
-        #info.object._opened = False
-
-        #info.object.ui = None
 
         info.object.kill()
         return True
@@ -59,7 +54,7 @@ class Manager(ConfigLoadable):
 
     macro = None
     parent = Any
-    #name = Str
+
     title = Str
     window_x = Float(0.1)
     window_y = Float(0.1)
@@ -72,7 +67,6 @@ class Manager(ConfigLoadable):
     enable_close_after = Bool
     close_after_minutes = Int #in minutes
 
-    #_opened = False
     ui = Any
 
     handler_klass = ManagerHandler
@@ -94,8 +88,6 @@ class Manager(ConfigLoadable):
         '''
         pass
 
-#    def isOpen(self):
-#        return self._opened
 
     def opened(self):
         def _loop():
@@ -104,13 +96,9 @@ class Manager(ConfigLoadable):
             
             now = time.time()
             while  now - start < (self.close_after_minutes * 60) and not self._killed:
-                #wait min of half the residual and 0.1
-                residual = abs((now - start) - (self.close_after_minutes * 60))
-                time.sleep(max(residual / 2.0, 0.5))
-                
-                #increase frequency when close to end
+                time.sleep(1)
                 now = time.time()
-                
+
             self.close_ui()
 
         if self.enable_close_after and self.close_after_minutes:
@@ -233,6 +221,7 @@ class Manager(ConfigLoadable):
             if prefix:
                 device_name = ''.join((prefix, device_name))
 
+            
             if device_name in self.traits():
                 self.trait_set(**{device_name:device})
             else:

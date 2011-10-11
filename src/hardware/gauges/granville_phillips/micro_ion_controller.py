@@ -25,9 +25,25 @@ class MicroIonController(CoreDevice):
     def load_additional_args(self, config, *args, **kw):
         self.address = self.config_get(config, 'General', 'address', optional=False)
         return True
+    
+    def graph_builder(self, g):
+        CoreDevice.graph_builder(self, g, **{'show_legend':True})
+        g.new_series()
+        g.set_series_label('IG')
+        
+        g.new_series()
+        g.set_series_label('CG1', series=1)
 
+        g.new_series()
+        g.set_series_label('CG2', series=2)
+        
     def get_pressures(self):
-        return self.get_convectron_a_pressure()
+        b = self.get_convectron_b_pressure()
+        a = self.get_convectron_a_pressure()
+        ig = self.get_ion_pressure()
+        
+        return ig, a, b
+        #return self.get_convectron_a_pressure()
 
     def set_degas(self, state):
         key = 'DG'
@@ -85,7 +101,6 @@ class MicroIonController(CoreDevice):
         key = 'DS'
         cmd = self._build_command(key, name)
 
-        print cmd
         r = self.ask(cmd)
         r = self._parse_response(r)
         return r
@@ -105,7 +120,6 @@ class MicroIonController(CoreDevice):
         return  c
 
     def _parse_response(self, r):
-        print 'response', r
         if self.simulation or r is None:
             r = self.get_random_value(0, 10)
 
