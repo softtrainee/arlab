@@ -113,17 +113,26 @@ class ValveManager(Manager):
                         self.unlock(v, save=False)
 
     def get_states(self):
+        '''
+           
+        '''
+        hardware_query = False
+        
         states = []
         for k, v in self.valves.items():
             states.append(k)
-            states.append('1' if v.state else '0')
-
+            if hardware_query:
+                s = self.get_state_by_name(k)
+            else:
+                s = v.state
+            states.append('1' if s else '0')
+            
+                
         return ''.join(states)
 
     def get_valve_by_address(self, a):
         '''
-            @_type a: C{str}
-            @param a:
+
         '''
         return next((valve for valve in self.valves if valve.address == a), None)
 #        for v in self.valves:
