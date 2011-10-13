@@ -135,10 +135,6 @@ class ValveManager(Manager):
 
         '''
         return next((valve for valve in self.valves if valve.address == a), None)
-#        for v in self.valves:
-#            valve = self.valves[v]
-#            if valve.address == a:
-#                return valve
 
     def get_name_by_address(self, k):
         '''

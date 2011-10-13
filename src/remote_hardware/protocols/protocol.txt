@@ -13,14 +13,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 ==ErrorCodes== (expect future expansion)
+codes from 01-09 are debugging errors
+codes from 10-19 are communication errors
+
 ID	Class    	Command    	Note
-1     	InvalidCommand    	Opent
-2     	ManagerUnavaliable    	Enable	the laser system is not initialized
-3     	InvalidArguments    	SetX 1a    
-4     	DeviceComm    	Set bakeout1 100   	bakeout1 communications timed out
-5	DeviceConnection    	Set Foo 100    	no device named Foo is connected
-6	PychronCommunication		Pychron is not running or there is a problem with the repeater-processor link
-7	InvalidValveError	Open Foo	Foo is not a registered valve name in the valves.txt
+
+see system_errors.py for now
+
 Error ==> <ID> : <error message>
      eg. command==SetX 1,1  error== 3 : invalid arguments: SetX invalid literal for float(): 1,1
 
@@ -30,7 +29,7 @@ OK == command successfully executed
 ==System Protocol==
 Command Name    	Parameters    	Ex.    	Returns    	Note
 GetValveState    	ValveName    	GetValveState A    	True,False,Error    	True=open, False=closed
-GetManualState    	ValveName    	GetManualState A    	True,False,Error    	True=manual, False=auto
+GetManualState    	ValveName    	GetManualState A    True,False,Error    	True=manual, False=auto
 Close    	ValveName    	Close A   	OK,Error
 Open    	ValveName    	Open A    	OK,Error
 GetValveStates    	--    	GetValveStates    	A0B0C1D0E1    

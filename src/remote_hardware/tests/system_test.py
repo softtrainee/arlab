@@ -22,7 +22,7 @@ limitations under the License.
 from src.remote_hardware.protocols.system_protocol import SystemProtocol
 from src.remote_hardware.tests.base_test import baseTest
 from src.remote_hardware.errors import InvalidCommandErrorCode, \
-    DeviceCommErrorCode, InvalidArgumentsErrorCode
+    NoResponseErrorCode, InvalidArgumentsErrorCode
 
 class SystemTest(baseTest):
     protocol = SystemProtocol

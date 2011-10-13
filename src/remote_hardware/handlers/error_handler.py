@@ -18,7 +18,7 @@ limitations under the License.
 #============= standard library imports =======================
 #============= local library imports  =========================
 from src.remote_hardware.errors.system_errors import ManagerUnavaliableErrorCode, \
-    InvalidCommandErrorCode, DeviceCommErrorCode, InvalidArgumentsErrorCode
+    InvalidCommandErrorCode, NoResponseErrorCode, InvalidArgumentsErrorCode
 from src.remote_hardware.errors.error import ErrorCode
 #from src.loggable import Loggable
 
@@ -51,7 +51,7 @@ class ErrorHandler:
             result = func(manager, *args)
             
             if result is None:
-                err = DeviceCommErrorCode(logger=self.logger)
+                err = NoResponseErrorCode(logger=self.logger)
             elif isinstance(result, ErrorCode):
                 err = result
 

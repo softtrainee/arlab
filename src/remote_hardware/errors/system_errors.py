@@ -17,62 +17,69 @@ limitations under the License.
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.remote_hardware.errors.error import ErrorCode
+
+#===== debug errors =====
+
 class InvalidCommandErrorCode(ErrorCode):
     msg = 'invalid command: {}'
     code = 1
     def __init__(self, command, *args, **kw):
         self.msg = self.msg.format(command)
         super(InvalidCommandErrorCode, self).__init__(*args, **kw)
-    
-class ManagerUnavaliableErrorCode(ErrorCode):
-    msg = 'manager unavaliable: {}'
-    code = 2
-    def __init__(self, manager, *args, **kw):
-        self.msg = self.msg.format(manager)
-        super(ManagerUnavaliableErrorCode, self).__init__(*args, **kw)
-    
+        
 class InvalidArgumentsErrorCode(ErrorCode):
     msg = 'invalid arguments: {} {}'
-    code = 3
+    code = 2
     def __init__(self, command, err, *args, **kw):
         self.msg = self.msg.format(command, err)
         super(InvalidArgumentsErrorCode, self).__init__(*args, **kw)
-        
-class DeviceCommErrorCode(ErrorCode):
-    msg = 'no response from device'
+
+class InvalidValveErrorCode(ErrorCode):
+    msg = '{} is not a registered valve name'
+    code = 3
+    def __init__(self, name, *args, **kw):
+        self.msg = self.msg.format(name)
+        super(InvalidValveErrorCode, self).__init__(*args, **kw)
+
+#====== initialization problems with pychron    
+class ManagerUnavaliableErrorCode(ErrorCode):
+    msg = 'manager unavaliable: {}'
     code = 4
-    
+    def __init__(self, manager, *args, **kw):
+        self.msg = self.msg.format(manager)
+        super(ManagerUnavaliableErrorCode, self).__init__(*args, **kw)
+
 class DeviceConnectionErrorCode(ErrorCode):
     msg = 'device {} not connected'
     code = 5
     def __init__(self, name, *args, **kw):
         self.msg = self.msg.format(name)
         super(DeviceConnectionErrorCode, self).__init__(*args, **kw)
-
-class SystemLockErrorCode(ErrorCode):
-    msg = 'Access restricted to {} ({}). You are {}'
+        
+class InvalidIPAddressErrorCode(ErrorCode):
+    msg = '{} is not a registered ip address'
     code = 6
-    def __init__(self, name, locker, sender, *args, **kw):
-        self.msg = self.msg.format(name, locker, sender)
-        super(SystemLockErrorCode, self).__init__(*args, **kw)
+    def __init__(self, ip, *args, **kw):
+        self.msg = self.msg.format(ip)
+        super(InvalidIPAddressErrorCode, self).__init__(*args, **kw)                    
+
+#===== comm errors =====        
+class NoResponseErrorCode(ErrorCode):
+    msg = 'no response from device'
+    code = 11
 
 class PychronCommunicationErrorCode(ErrorCode):
-    msg = 'could not communication with pychron through {}. socket.error = {}'
-    code = 6
+    msg = 'could not communicate with pychron through {}. socket.error = {}'
+    code = 12
     def __init__(self, path, err, *args, **kw):
         self.msg = self.msg.format(path, err)
         super(PychronCommunicationErrorCode, self).__init__(*args, **kw)
+
+class SystemLockErrorCode(ErrorCode):
+    msg = 'Access restricted to {} ({}). You are {}'
+    code = 13
+    def __init__(self, name, locker, sender, *args, **kw):
+        self.msg = self.msg.format(name, locker, sender)
+        super(SystemLockErrorCode, self).__init__(*args, **kw)
         
-class InvalidValveErrorCode(ErrorCode):
-    msg = '{} is not a registered valve name'
-    code = 7
-    def __init__(self, name, *args, **kw):
-        self.msg = self.msg.format(name)
-        super(InvalidValveErrorCode, self).__init__(*args, **kw)
-class InvalidIPAddressErrorCode(ErrorCode):
-    msg = '{} is not a registered ip address'
-    code = 8
-    def __init__(self, ip, *args, **kw):
-        self.msg = self.msg.format(ip)
-        super(InvalidIPAddressErrorCode, self).__init__(*args, **kw)
 #============= EOF =====================================
