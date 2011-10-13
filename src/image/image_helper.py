@@ -17,6 +17,7 @@ limitations under the License.
 #=============standard library imports ========================
 
 from thread import start_new_thread
+from numpy import array
 #=============local library imports  ==========================
 
 from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
@@ -44,6 +45,8 @@ from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT, CvVect32f, \
     cvFitEllipse2
 from ctypes_opencv.cxcore import cvCvtSeqToArray, CV_32SC2, CV_32FC2, cvConvert, \
     CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice
+from src.data_processing.centroid.centroid import centroid as _centroid
+from threading import Thread
 
 
 def convert_seq(seq):
@@ -52,14 +55,17 @@ def convert_seq(seq):
 
 
 storage = cvCreateMemStorage(0)
-
+def centroid(polypts):
+    
+    pts = array([(pt.x, pt.y) for pt in polypts], dtype=float)
+    return _centroid(pts)
+    
 def find_ellipses(src, contours):
     centers = []
     for c in contours.hrange():
         n = c.total
         if n < 6:
             continue
-        
         pointarray = cvCreateMat(1, n, CV_32SC2)
         pointarray2d32f = cvCreateMat(1, n, CV_32FC2)
         cvCvtSeqToArray(c, pointarray.data.ptr, cvSlice(0, CV_WHOLE_SEQ_END_INDEX))
@@ -73,11 +79,13 @@ def find_ellipses(src, contours):
         
         cx = cvRound(box.center.x)
         cy = cvRound(box.center.y)
-        #centers.append((cx, cy))
+        centers.append((cx, cy))
         draw_rectangle(src, CvPoint(cx - w, cy - h),
                        CvPoint(cx + w, cy + h),
                        #color=(0, 100, 200)
                        )
+        
+        
     return centers
          
 def find_circles(src):
@@ -218,7 +226,7 @@ def colorspace1D(src, channel='r'):
     return dst
 
 
-def get_polygons(contours, min_area=3e6):
+def get_polygons(contours, min_area=0, max_area=1e10, convextest=0):
     '''
     '''
 
@@ -228,13 +236,16 @@ def get_polygons(contours, min_area=3e6):
     for i, cont in enumerate(contours.hrange()):
         result = cvApproxPoly(cont, sizeof(CvContour),
                      storage, CV_POLY_APPROX_DP,
-                     cvContourPerimeter(cont) * 0.003,
+                     cvContourPerimeter(cont) * 0.001,
                       0)
+        
         area = abs(cvContourArea(result))
+        print result.total, area, cvCheckContourConvexity(result)
         if (result.total >= 4
             and area > min_area
+            and area < max_area
             #and area < 3e6
-            and cvCheckContourConvexity(result)
+            and cvCheckContourConvexity(result) == convextest
                 ):
 
             ra = result.asarray(CvPoint)
@@ -520,8 +531,7 @@ def threshold(src, threshold, invert=False):
 
 def colorspace(src, cs=CV_GRAY2BGR):
     '''
-        @type cs: C{str}
-        @param cs:
+
     '''
     if src.nChannels == 1:
         #csrc=cvCreateImage(cvGetSize(src),8,3)
@@ -563,8 +573,10 @@ def save_image(src, path):
     def _record_frame():
         cvSaveImage(path, src)
 
-    start_new_thread(_record_frame, ())
-    return path
+    t = Thread(target=_record_frame)
+    t.start()
+    #start_new_thread(_record_frame, ())
+    #return path
 #===========#def angle( pt1, pt2, pt0 ):
 #    dx1 = pt1.x - pt0.x;
 #    dy1 = pt1.y - pt0.y;

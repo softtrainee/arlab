@@ -125,6 +125,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     def GetValveStates(self, manager, *args):
+        
         result = manager.get_valve_states()
         if result is None:
             result = 'ERROR'
@@ -147,7 +148,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             
             RID,Sample,Power/Temp 
         '''
-        data = ' '.join(args)
+        data = ' '.join(args[:-1])
         if manager.multruns_report_manager is not None:
             manager.multruns_report_manager.start_run(data)
         
@@ -155,13 +156,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
                 tm.post('Run {} started'.format(data))
-#            else:
-##                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#
-#        else:
-##            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+
         return 'OK'
     
     def CompleteRun(self, manager, *args):
@@ -169,7 +164,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             complete run should report age
         '''
         
-        data = ' '.join(args)
+        data = ' '.join(args[:-1])
         if manager.multruns_report_manager is not None:
             manager.multruns_report_manager.complete_run()
         if self.application is not None:
@@ -179,13 +174,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
                     tm.post('Run {}'.format(data))
                 else:     
                     tm.post('Run {} completed'.format(data))
-#
-#            else:
-#                ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-##                return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#        else:
-#            ManagerUnavaliableErrorCode('TwitterManager', logger=self)
-#            return ManagerUnavaliableErrorCode('TwitterManager', logger=self)
+
         return 'OK'
                     
     def StartMultRuns(self, manager, *args):
@@ -208,7 +197,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
                 if tm is not None:
                     tm.post('Mult runs start {}'.format(data))
             else:
-                return repr(InvalidIPAddressErrorCode(sender_addr))
+                return InvalidIPAddressErrorCode(sender_addr)
         return 'OK'
             
     def CompleteMultRuns(self, manager, *args):
@@ -228,16 +217,22 @@ class SystemHandler(BaseRemoteHardwareHandler):
                 if tm is not None:
                     tm.post('Mult runs completed {}'.format(data))
             else:
-                return repr(InvalidIPAddressErrorCode(sender_addr))
+                return InvalidIPAddressErrorCode(sender_addr)
 
         return 'OK'
      
     def SystemLock(self, manager, name, onoff, sender_addr, *args):
-        cp = manager.remote_hardware_manager.command_processor
         
-        cp.system_lock = onoff in ['On', 'on', 'ON']
-        if onoff:
-            cp.system_lock_address = sender_addr
+        cp = manager.remote_hardware_manager.command_processor
+        rhm = self.application.get_service(RHM_PROTOCOL)
+        if rhm.validate_address(sender_addr):
+            cp.system_lock = onoff in ['On', 'on', 'ON']
+            if onoff:
+                cp.system_lock_address = sender_addr
+        else:    
+            return InvalidIPAddressErrorCode(sender_addr)
+        
+        return 'OK'
 #    def RemoteLaunch(self, manager, *args):
 #        #launch pychron
 #        p = '/Users/Ross/Programming/pychron/Pychron.app'

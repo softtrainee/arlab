@@ -212,9 +212,9 @@ if __name__ == '__main__':
 #              'benchmark_unix_tcp_no_log.npz'
 #              )
    
-    multiplex_test()
-    #c = Client()
-    #c.configure_traits()
+    #multiplex_test()
+    c = Client()
+    c.configure_traits()
     
     #===========================================================================
     #Check Remote launch snippet 

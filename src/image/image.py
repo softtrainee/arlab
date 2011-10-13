@@ -25,7 +25,9 @@ from ctypes_opencv import cvConvertImage, cvCloneImage, \
     CV_CVTIMG_SWAP_RB
 from image_helper import load_image, new_dst, grayspace
 from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
-    draw_polygons, find_circles, find_ellipses, clone
+    draw_polygons, find_circles, find_ellipses, clone, crop, draw_contour_list, \
+    centroid
+from ctypes_opencv.cxcore import CvPoint, cvRound, cvCircle
 
 
 
@@ -115,27 +117,52 @@ class Image(HasTraits):
 
         return dst
     
-    def circleate(self):
+    def center_crop(self, w, h, frame_id=0):
+        src = self.source_frame
         
-        gsrc = self.threshold(200)
-        _n, contours = contour(gsrc)
-        find_ellipses(self.frames[0], contours)
+        x = (src.width - w) / 2
+        y = (src.height - h) / 2
+        self.frames[frame_id] = crop(src, x, y, w, h)
         
-    def polygonate(self, t, frame_id=0, skip=None, line_width=1, min_area=100000):
+#    def circleate(self, frame_id=0):
+#        
+#        gsrc = self.threshold(200)
+#        _n, contours = contour(gsrc)
+#        
+#        
+#        print find_ellipses(self.frames[frame_id], contours)
+#        draw_contour_list(self.frames[frame_id], contours)
+    def centroid(self, polypts, frame_id=0):
+        center = centroid(polypts)
+        
+        r = 5
+        x = cvRound(center[0])
+        y = cvRound(center[1])
+        cpt = CvPoint(x, y)
+        cvCircle(self.frames[frame_id], cpt, r, (0, 255, 0), thickness= -1)
+        
+        print center, x, y
+        return x, y
+        
+    def polygonate(self, t, frame_id=0, skip=None, line_width=2, min_area=100000,
+                    max_area=1e10, convextest=0):
         gsrc = self.threshold(t)
 
         _nc, contours = contour(gsrc)
 #        print skip
         if contours:
-            polygons = get_polygons(contours, min_area=min_area)
+            polygons = get_polygons(contours, min_area, max_area, convextest)
 #            print polygons
 #            polygons = polygons[:3]
             f = self.frames[frame_id]
             if skip is not None:
                 polygons = [p for i, p in enumerate(polygons) if i not in skip ]
-
 #            polygons = polygons[:9]
-            #draw_polygons(f, polygons, line_width)
+            
+            newsrc = new_dst(f)
+#            draw_polygons(f, polygons, line_width)
+            draw_polygons(newsrc, polygons, line_width)
+            self.frames.append(newsrc)
             return polygons
 
 

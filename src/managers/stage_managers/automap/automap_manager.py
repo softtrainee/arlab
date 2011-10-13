@@ -4,7 +4,7 @@ from traitsui.api import View, Item
 from src.managers.manager import Manager
 #from src.managers.laser_managers.laser_manager import LaserManager
 from src.image.image_helper import crop, load_image, get_polygons, contour, \
-    grayspace
+    grayspace, centroid
 import os
 import time
 from src.image.image import Image
@@ -15,7 +15,10 @@ from src.image.image_editor import ImageEditor
 
 
 class AutomapManager(Manager):
-
+    pxpermm = 64
+    cropwidth = 2
+    cropheight = 2
+        
 #    laser_manager = Instance(LaserManager)
     image = Instance(Image)
 
@@ -46,7 +49,7 @@ class AutomapManager(Manager):
             ch_px = cropheight * pxpermm
             ox = 0.5 * (img.width - cw_px)
             oy = 0.5 * (img.height - cw_px)
-            img = crop(img, ox, oy, cw_px, ch_px)
+#            img = crop(img, ox, oy, cw_px, ch_px)
             
             cx, cy = self._get_corrected_xy(img, hole)
             
@@ -72,18 +75,42 @@ class AutomapManager(Manager):
                 f.writeline(result)
             
             
-    def _get_corrected_xy(self, img, hole):
-        correct_x = 0
-        correct_y = 0
-        return correct_x, correct_y
+#    def _get_corrected_xy(self, img, hole):
+#        correct_x = 0
+#        correct_y = 0
+#        return correct_x, correct_y
     
     
-    def process_image(self):
+    def process_image(self, hx, hy):
         img = self.image
-        img.circleate()
         
-        #print img.polygonate(200, min_area=20)
         
+        #crop the image
+        cw_px = self.cropwidth * self.pxpermm
+        ch_px = self.cropheight * self.pxpermm
+        #ox = 0.5 * (img.width - cw_px)
+        #oy = 0.5 * (img.height - cw_px)
+        #img.center_crop(cw_px, ch_px)
+        
+        radius = 1
+        for pi in img.polygonate(200, min_area=1000, max_area=4000, convextest=0):
+            #exclude the border rect
+            if len(pi) > 4:
+                cx, cy = img.centroid(pi, frame_id=1)
+                cropx = hx - 0.5 * self.cropwidth
+                cropy = hy - 0.5 * self.cropheight
+            
+                cx = cx / float(self.pxpermm) + cropx
+                cy = cy / float(self.pxpermm) + cropy
+                
+                #check to see if new center within one radius of old center
+                dist = ((cx - hx) ** 2 + (cy - hy) ** 2) ** 0.5
+                if dist < radius:
+                    #this is a good new center point
+                    pass
+                    
+                
+                
     def load_image(self, img):
         self.image = Image()
         if isinstance(img, str):
@@ -96,7 +123,7 @@ if __name__ == '__main__':
     am = AutomapManager()
     img = '/Users/Ross/Desktop/target_automapping.png'
     am.load_image(img)
-    am.process_image()
+    am.process_image(5, 5)
     
     am.configure_traits()
     
