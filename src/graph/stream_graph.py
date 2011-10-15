@@ -58,7 +58,7 @@ class StreamGraph(Graph):
         self.update_x_limits.append(True)
 
         args = super(StreamGraph, self).new_plot(**kw)
-        self.set_x_limits(min=0, max=dl, plotid=len(self.plots) - 1)
+        self.set_x_limits(min=0, max=dl * sd, plotid=len(self.plots) - 1)
 
         return args
 
@@ -122,7 +122,6 @@ class StreamGraph(Graph):
             try:
                 tg = self.time_generators[plotid]
 
-
             except:
 #                tg = time_generator(self.scan_delays[plotid])
                 tg = time_generator(self.scan_delays[plotid])
@@ -135,46 +134,46 @@ class StreamGraph(Graph):
 
         ny = float(y)
 
+        #update raw data
         rx = self.raw_x[plotid][series]
         ry = self.raw_y[plotid][series]
 
         self.raw_x[plotid][series] = hstack((rx[MAX_LIMIT:], [nx]))
         self.raw_y[plotid][series] = hstack((ry[MAX_LIMIT:], [ny]))
 
+        
         dl = self.data_limits[plotid]
-        lim = int(-(dl + 2) / (self.scan_delays[plotid]))
+        lim = int(-(dl + 50) / (self.scan_delays[plotid]))
 
         new_xd = hstack((xd[lim:], [nx]))
         new_yd = hstack((yd[lim:], [ny]))
-
+        #print nx, series
         def _record_():
             plot.data.set_data(xn, new_xd)
             plot.data.set_data(yn, new_yd)
 
             if update_x:
                 ma = new_xd[-1]
-                mi = new_xd[0]
-                
+                mi = ma - dl * self.scan_delays[plotid]
+#                print ma, mi, dl, self.scan_delays[plotid]
                 if ma >= ((dl - 1) * self.scan_delays[plotid]) - 1:
-                    #print self.plot_windows[plotid], self.plot_windows[plotid] - dl * self.scan_delays[plotid]
                     self.set_x_limits(max=ma,
-                                  min=mi,
+                                  min=max(1, mi),
                                   plotid=plotid,
                                   pad=1
                                   )
-#                    self.plot_windows[plotid] += self.scan_delays[plotid]
 
-            pad = True
-            if pad:
+            update_y = True
+            if update_y:
                 ma = max(new_yd)
                 mi = min(new_yd)
                 if ma > self.cur_max:
                     self.cur_max = ma
                 if mi < self.cur_min:
                     self.cur_min = mi
-
-                self.set_y_limits(max=self.cur_max ,
-                              min=self.cur_min,
+                pad = 5
+                self.set_y_limits(max=self.cur_max + pad,
+                              min=self.cur_min - pad,
                               plotid=plotid)
 
         if do_after:

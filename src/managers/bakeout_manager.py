@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, Bool, Button, Event, Str, String, Property, List, on_trait_change
+from traits.api import Instance, Bool, Int, Button, Event, Float, Str, String, Property, List, on_trait_change
 from traitsui.api import View, Item, HGroup, VGroup, spring, ButtonEditor, EnumEditor
 #============= standard library imports ========================
 import numpy as np
@@ -30,6 +30,7 @@ from src.helpers.datetime_tools import generate_datestamp
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.core.i_core_device import ICoreDevice
 
+
 class BakeoutManager(Manager):
     '''
     '''
@@ -41,7 +42,9 @@ class BakeoutManager(Manager):
     bakeout4 = Instance(BakeoutController)
     bakeout5 = Instance(BakeoutController)
     bakeout6 = Instance(BakeoutController)
-
+    
+    update_interval = Float(2)
+    scan_window = Int(10)
     execute = Event
     save = Button
     execute_label = Property(depends_on='alive')
@@ -51,6 +54,7 @@ class BakeoutManager(Manager):
     _configurations = List
     configuration = Property(depends_on='_configuration')
     _configuration = String
+    
     buffer = List
     buffer2 = List
     data_name = Str
@@ -69,11 +73,13 @@ class BakeoutManager(Manager):
             app.register_service(ICoreDevice, bc)
 
 
-    @on_trait_change('bakeout+:process_value')
+    @on_trait_change('bakeout+:process_value_flag')
     def update_graph_temperature(self, obj, name, old, new):
         if obj.isAlive():
             id = self.graph_info[obj.name]['id']
-            self.graph.record(new, series=id)
+            
+            datum = getattr(obj, 'process_value')
+            self.graph.record(datum, series=id)
             if obj.name not in self.buffer:
                 self.buffer.append(obj.name)
 
@@ -138,7 +144,8 @@ class BakeoutManager(Manager):
     def _controller_factory(self, name):
         bc = BakeoutController(name=name,
                                    configuration_dir_name='bakeout',
-                                   logger_display=self.logger_display
+                                   logger_display=self.logger_display,
+                                   update_interval=self.update_interval
                                    )
         return bc
     def kill(self, **kw):
@@ -239,10 +246,10 @@ class BakeoutManager(Manager):
             self.data_name = dm.new_frame(directory='bakeouts',
                          base_frame_name=name)
 
-            if DUTY_CYCLE:
-                self.data_name2 = name = '.bakeout_duty_cycle-%s' % generate_datestamp()
-                dm.new_frame(None, directory='bakeouts',
-                             base_frame_name=name)
+#            if DUTY_CYCLE:
+#                self.data_name2 = name = '.bakeout_duty_cycle-%s' % generate_datestamp()
+#                dm.new_frame(None, directory='bakeouts',
+#                             base_frame_name=name)
             #clear_ids = []
             #names = []
             for tr in self._get_controllers():
@@ -257,9 +264,9 @@ class BakeoutManager(Manager):
                     self.graph.set_series_label(tr, series=id)
 
                     #setup duty cycle subgraph
-                    if DUTY_CYCLE:
-                        self.graph.new_series(type='line', render_style='connectedpoints',
-                                              plotid=1)
+#                    if DUTY_CYCLE:
+#                        self.graph.new_series(type='line', render_style='connectedpoints',
+#                                              plotid=1)
                     #clear_ids.append('plot%i' % (id))
 
 
@@ -273,15 +280,21 @@ class BakeoutManager(Manager):
 
             #self.graph.clear_legend(clear_ids)
 
-
+    def _update_interval_changed(self):
+        for tr in self._get_controllers():
+            bc = self.trait_get(tr)[tr]
+            bc.update_interval = self.update_interval
+            
+        self.graph.set_scan_delay(self.update_interval)
+        
 #============= views ===================================
     def traits_view(self):
         '''
         '''
-        g = HGroup(
+        controller_grp = HGroup(
                    )
         for tr in self._get_controllers():
-            g.content.append(Item(tr, show_label=False, style='custom'))
+            controller_grp.content.append(Item(tr, show_label=False, style='custom'))
 
         control = HGroup(VGroup(
                          Item('execute', editor=ButtonEditor(label_value='execute_label'),
@@ -293,8 +306,14 @@ class BakeoutManager(Manager):
                              Item('save', show_label=False),
 
                              ),
-                              ),
-        v = View(VGroup(control, g, Item('graph', show_label=False, style='custom')),
+                         
+                         
+                        )
+        
+        v = View(VGroup(control,
+                        Item('update_interval'),
+                        Item('scan_window'),
+                        controller_grp, Item('graph', show_label=False, style='custom')),
                handler=ManagerHandler,
                resizable=True,
                title='Bakeout Manager')
@@ -317,7 +336,8 @@ class BakeoutManager(Manager):
 
     def _parse_config_file(self, p):
         config = self.get_configuration(p)
-
+        if config is None:
+            return 
         for section in config.sections():
             kw = dict()
             script = self.config_get(config, section, 'script', optional=True)
@@ -365,19 +385,19 @@ class BakeoutManager(Manager):
 
         graph.clear()
 
-        graph.new_plot(data_limit=3600,
-                       scan_delay=5,
+        graph.new_plot(data_limit=self.scan_window / self.update_interval,
+                       scan_delay=self.update_interval,
                        show_legend='ll',
-                       track_amount=1200,
+                       #track_amount=1200,
                        **kw
                        )
-        if DUTY_CYCLE:
-            graph.new_plot(data_limit=3600,
-                           scan_delay=5,
-                           **kw
-                           )
-            graph.set_y_limits(min=0, max=100, plotid=1)
-            graph.set_y_title('Duty Cycle %', plotid=1)
+#        if DUTY_CYCLE:
+#            graph.new_plot(data_limit=3600,
+#                           scan_delay=5,
+#                           **kw
+#                           )
+#            graph.set_y_limits(min=0, max=100, plotid=1)
+#            graph.set_y_title('Duty Cycle %', plotid=1)
         graph.set_x_title('Time')
         graph.set_y_title('Temp C')
         return graph
