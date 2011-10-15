@@ -131,7 +131,7 @@ class KerrMotor(KerrDevice):
         if 'progress' in kw:
             progress = kw['progress']
             progress.change_message('Homing {}'.format(self.name))
-            time.sleep(1.5)
+            time.sleep(0.5)
 
         addr = self.address
 

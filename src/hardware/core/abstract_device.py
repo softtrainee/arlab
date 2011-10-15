@@ -25,7 +25,6 @@ from viewable_device import ViewableDevice
 
 class AbstractDevice(ViewableDevice):
     '''
-        G{classtree}
     '''
     implements(ICoreDevice)
 

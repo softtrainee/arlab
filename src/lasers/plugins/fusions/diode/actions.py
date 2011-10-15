@@ -28,11 +28,7 @@ def get_manager(event, app=None):
     base = 'src.managers.laser_managers.{}'
     
     manager = app.get_service(base.format('fusions_diode_manager.FusionsDiodeManager'))
-    if manager is None:
-        manager = app.get_service(base.format('fusions_co2_manager.FusionsCO2Manager'))
-    if manager is None:
-        manager = app.get_service(base.format('synrad_co2_manager.SynradCO2Manager'))
-
+   
     return manager
 
 class ExecutePatternAction(Action):
@@ -131,3 +127,10 @@ class OpenPowerMapAction(Action):
         if manager is not None:
 #            manager.graph_manager.open_power_map()
             manager.graph_manager.open_graph('powermap')
+            
+class OpenCalibrationManagerAction(Action):
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            man = manager.stage_manager.calibration_manager
+            open_manager(man)

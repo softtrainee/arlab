@@ -14,39 +14,58 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-
+from traits.api import on_trait_change
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 from src.envisage.core.core_ui_plugin import CoreUIPlugin
+from src.envisage.core.action_helper import open_manager
 
 class FusionsLaserUIPlugin(CoreUIPlugin):
 
     def _perspectives_default(self):
         from fusions_laser_perspective import FusionsLaserPerspective
         return [FusionsLaserPerspective]
-
-#    def _preferences_pages_default(self):
-#        from fusions_laser_preferences_page import FusionsLaserPreferencesPage
-#        return [FusionsLaserPreferencesPage]
-
+    
+    def _preferences_pages_default(self):
+        
+        klass = 'Fusions{}PreferencesPage'.format(self.name.capitalize())
+        module = __import__('src.lasers.plugins.fusions.{}.preferences_page'.format(self.name), fromlist=[klass])
+        
+        return [getattr(module, klass)]
     def _action_sets_default(self):
-        from fusions_laser_action_set import FusionsLaserActionSet
-        return [FusionsLaserActionSet]
+#        from fusions_laser_action_set import FusionsLaserActionSet
+        
+        klass = 'Fusions{}ActionSet'.format(self.name.capitalize())
+        module = __import__('src.lasers.plugins.fusions.{}.action_set'.format(self.name), fromlist=[klass])
+        
+        return [getattr(module, klass)]
+#        return [FusionsLaserActionSet]
 
 #============= views ==================================
-    def _views_default(self):
-        service = self.application.get_service(self._protocol)
-        views = []
-        if service:
-            pass
-            #views.append(self.create_control_view)
-            #views.append(self.create_stage_view)
-            #views.append(self.create_power_map_view)
+#    def _views_default(self):
+#        service = self.application.get_service(self._protocol)
+#        views = []
+#        if service:
+#            pass
+#            #views.append(self.create_control_view)
+#            #views.append(self.create_stage_view)
+#            #views.append(self.create_power_map_view)
+#
+#
+#        return views
+    
+    @on_trait_change('application:workbench:active_window')
+    def start_manager(self, obj, name, old, new):
+        lm = self.application.get_service(self._protocol)
+        
+        pref = 'pychron.fusions.{}.open_on_startup'.format(self.name)
+        if self.application.preferences.get(pref) == 'True':
+            open_manager(lm)
 
-
-        return views
-
+        for dev in lm.devices:
+            if dev.is_scanable:
+                dev.start_scan()
 #    def create_power_map_view(self, **kw):
 #        obj = PowerMapViewer(application = self.application)
 #        root = os.path.join(paths.data_dir, 'powermap')

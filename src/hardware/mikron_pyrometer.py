@@ -42,9 +42,9 @@ class MikronGA140Pyrometer(CoreDevice):
     _terminator = chr(13)
 
     emissivity = Property(Float(enter_set=True, auto_set=False), depends_on='_emissivity')
-    _emissivity = Float(50)
-    emmin = Float(10)
-    emmax = Float(100)
+    _emissivity = Float(50.0)
+    emmin = Float(10.0)
+    emmax = Float(100.0)
     pointer = Button
     pointing = Bool
     pointer_label = Property(depends_on='pointing')
@@ -55,13 +55,13 @@ class MikronGA140Pyrometer(CoreDevice):
     char_write = True
     scan_func = 'read_temperature'
 
-    def __init__(self, *args, **kw):
-        '''
-
-        '''
-        super(MikronGA140Pyrometer, self).__init__(*args, **kw)
-        self.emmin = 10
-        self.emmax = 100
+#    def __init__(self, *args, **kw):
+#        '''
+#
+#        '''
+#        super(MikronGA140Pyrometer, self).__init__(*args, **kw)
+#        self.emmin = 10
+#        self.emmax = 100
 
 #    def _scan_(self):
 #        '''
@@ -93,40 +93,57 @@ class MikronGA140Pyrometer(CoreDevice):
         '''
 
         '''
-        fmt = '%s%s' if value is None else '%s%s%04i' if per_mil else \
-            '%s%s%i' if single_digit else '%s%s%02i'
+        fmt = '{}{}' if value is None else '{}{}{:04n}' if per_mil else \
+            '{}{}{:n}' if single_digit else '{}{}{:02n}'
         args = (self.device_address, cmd)
 
         if value is not None:
-            args += (value,)
+            args += (int(value),)
 
-        return fmt % args
+        return fmt.format(*args)
 
     def _parse_response(self, resp, scalar=10, response_type='float'):
         '''
 
         '''
-        if resp is not None:
-            if resp is not 'simulation':
-                #clean null bytes and carriage returns
-                resp = resp.strip()
-                if response_type == 'float':
-                    try:
+        if resp is None:
+            if response_type == 'float':
+                resp = self.get_random_value()
+        else:
+            
+            resp = resp.strip()
+            if response_type == 'float':
+                try:
                         resp = int(resp)
-                    except:
-                        resp = 0
-                    resp /= float(scalar)
-
-                elif response_type == 'hex_range':
+                except:
+                    resp = 0
+                resp /= float(scalar)
+            elif response_type == 'hex_range':
                     low = int(resp[:4], 16)
                     high = int(resp[4:], 16)
                     resp = (low, high)
-            elif response_type == 'float':
-                resp = self.get_random_value()
-        elif response_type == 'float':
-            resp = self.get_random_value()
-
         return resp
+#        if resp is not None:
+#            if resp is not 'simulation':
+#                #clean null bytes and carriage returns
+#                resp = resp.strip()
+#                if response_type == 'float':
+#                    try:
+#                        resp = int(resp)
+#                    except:
+#                        resp = 0
+#                    resp /= float(scalar)
+#
+#                elif response_type == 'hex_range':
+#                    low = int(resp[:4], 16)
+#                    high = int(resp[4:], 16)
+#                    resp = (low, high)
+#            elif response_type == 'float':
+#                resp = self.get_random_value()
+#        elif response_type == 'float':
+#            resp = self.get_random_value()
+#
+#        return resp
 
     def read_temperature(self):
         '''
@@ -137,9 +154,6 @@ class MikronGA140Pyrometer(CoreDevice):
 
 
         self.temperature = temp if temp is not None else 0.0
-
-
-
 
         return self.temperature
 
@@ -154,7 +168,7 @@ class MikronGA140Pyrometer(CoreDevice):
         '''
         cmd = self._build_command('em')
         emv = self._parse_response(self.ask(cmd), scalar=10)
-        if emv:
+        if emv and not self.simulation:
             self._emissivity = emv
             #self.trait_property_changed('emissivity', emv)
         return emv
@@ -187,10 +201,10 @@ class MikronGA140Pyrometer(CoreDevice):
         v = min(max(v, self.emmin), self.emmax)
 
         if v != self._emissivity:
-
-            resp = self.set_emissivity(v)
-            if resp is not None or resp is not 'no':
-                self._emissivity = v
+            
+            self.set_emissivity(v)
+#            if resp is not None or resp is not 'no':
+#                self._emissivity = v
 
     def _validate_emissivity(self, v):
         '''
@@ -205,14 +219,13 @@ class MikronGA140Pyrometer(CoreDevice):
         '''
             set emissivity in %
         '''
-    #    self._emissivity=float(emv)
+        
+        v = emv * 10.0 if per_mil else emv
+        cmd = self._build_command('em', value=v, per_mil=per_mil)
 
-        emv = emv * 10.0 if per_mil else emv
-        cmd = self._build_command('em', value=emv, per_mil=per_mil)
-
-
-        #self.tell(cmd)
-        return self._parse_response(self.ask(cmd), response_type='text')
+        resp = self._parse_response(self.ask(cmd), response_type='text')
+        if resp is not None or self.simulation:
+            self._emissivity = emv
 
     def set_analog_output(self, output_range_id):
         '''
@@ -250,7 +263,8 @@ class MikronGA140Pyrometer(CoreDevice):
                           spring,
                           show_labels=False),
                   Item('temperature', style='readonly'),
-                  Item('emissivity', editor=RangeEditor(mode='slider',
+                  Item('emissivity', editor=RangeEditor(format='%0.1f',
+                                                        mode='slider',
                                                          low_name='emmin',
                                                          high_name='emmax'
                                                          )))

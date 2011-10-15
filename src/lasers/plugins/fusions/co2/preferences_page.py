@@ -18,8 +18,9 @@ limitations under the License.
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from fusions_laser_preferences_page import FusionsLaserPreferencesPage
-class FusionsCO2PreferencesPage(FusionsLaserPreferencesPage):
+from src.lasers.plugins.fusions.fusions_laser_preferences_page import FusionsLaserPreferencesPage
+
+class FusionsCo2PreferencesPage(FusionsLaserPreferencesPage):
     id = 'pychron.fusions.co2.preferences_page'
     preferences_path = 'pychron.fusions.co2'
     plugin_name = 'FusionsCO2'

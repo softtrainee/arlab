@@ -15,11 +15,12 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 #from apptools.preferences.preference_binding import bind_preference
-from src.lasers.plugins.fusions_laser_ui_plugin import FusionsLaserUIPlugin
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+from src.lasers.plugins.fusions.fusions_laser_ui_plugin import FusionsLaserUIPlugin
+
 
 DIODE_PROTOCOL = 'src.managers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
 
@@ -28,9 +29,9 @@ class FusionsDiodeUIPlugin(FusionsLaserUIPlugin):
     id = 'fusions.diode'
     _protocol = DIODE_PROTOCOL
 
-    def _preferences_pages_default(self):
-        from fusions_diode_preferences_page import FusionsDiodePreferencesPage
-        return [FusionsDiodePreferencesPage]
+#    def _preferences_pages_default(self):
+#        from fusions_diode_preferences_page import FusionsDiodePreferencesPage
+#        return [FusionsDiodePreferencesPage]
 #    def _action_sets_default(self):
 #        '''
 #        '''
