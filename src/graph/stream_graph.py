@@ -127,7 +127,7 @@ class StreamGraph(Graph):
                 tg = time_generator(self.scan_delays[plotid])
                 self.time_generators.append(tg)
 
-            nx = tg.next()*10
+            nx = tg.next()
         else:
             nx = x
 
