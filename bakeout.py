@@ -37,7 +37,7 @@ if __name__ == '__main__':
     '''
 
 
-    setup('bakeout')
+    setup('bakeout', level='DEBUG')
     launch_bakeout()
     os._exit(0)
 

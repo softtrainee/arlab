@@ -30,7 +30,6 @@ from src.helpers import paths
 from watlow_ezzone import WatlowEZZone
 from src.scripts.bakeout_script import BakeoutScript
 DUTY_CYCLE = False
-UPDATE_INTERVAL = 5
 class BakeoutController(WatlowEZZone):
     '''
         G{classtree}
@@ -65,6 +64,8 @@ class BakeoutController(WatlowEZZone):
     active = Bool(False)
     cnt = 0
     ramp_scale = None
+    
+    update_interval = Float(1)
     def _setpoint_changed(self):
         if self.isAlive():
             self.set_closed_loop_setpoint(self.setpoint)
@@ -100,8 +101,7 @@ class BakeoutController(WatlowEZZone):
 
     def load_additional_args(self, config):
         '''
-            @type config: C{str}
-            @param config:
+
         '''
         sd = os.path.join(paths.scripts_dir, 'bakeoutscripts')
         files = os.listdir(sd)
@@ -122,26 +122,28 @@ class BakeoutController(WatlowEZZone):
         '''
         self.cnt = 0
         self.start_time = time.time()
+        self.active = True
+        self.alive = True
         if self.script == '---':
             #if self.setpoint != 0:
             self.set_control_mode('closed')
             self.set_closed_loop_setpoint(self.setpoint)
-            self.alive = True
-            self.active = True
+#            self.alive = True
+#            self.active = True
             self._oduration = self._duration
-            self._timer = Timer(UPDATE_INTERVAL * 1000., self._update_)
+            self._timer = Timer(self.update_interval * 1000., self._update_)
+            
             #set led to green
-            self.led.state = 2
+            self.led.state = 'green'
 
         else:
-            self.active = True
-            self.alive = True
+            
             t = BakeoutScript(source_dir=os.path.join(paths.scripts_dir, 'bakeoutscripts'),
                                  file_name=self.script,
                                  controller=self)
             t.bootstrap()
             self._active_script = t
-            self._timer = Timer(UPDATE_INTERVAL * 1000., self._update2_)
+            self._timer = Timer(self.update_interval * 1000., self._update2_)
 
     def ramp_to_setpoint(self, ramp, setpoint, scale):
         '''
@@ -218,7 +220,8 @@ class BakeoutController(WatlowEZZone):
     def _update_(self):
         '''
         '''
-        self.cnt += UPDATE_INTERVAL
+
+        self.cnt += self.update_interval
         nsecs = 15
         if self.cnt == nsecs:
             self._duration -= nsecs / 3600.

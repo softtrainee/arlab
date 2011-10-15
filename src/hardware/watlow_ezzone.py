@@ -19,7 +19,7 @@ limitations under the License.
 @license: Educational Community License 1.0
 '''
 #=============enthought library imports========================
-from traits.api import Float, Property, Int, String, Button
+from traits.api import Float, Event, Property, Int, String, Button
 from traitsui.api import View, Item, Group, VGroup, EnumEditor, RangeEditor
 #=============standard library imports ========================
 
@@ -130,6 +130,7 @@ class WatlowEZZone(CoreDevice):
     n_ons = Int
     n_queries = Int
     duty_cycle = Float
+    process_value_flag = Event
     def load_configuration_values_from_device(self):
         '''
         '''
@@ -154,14 +155,17 @@ class WatlowEZZone(CoreDevice):
             self.info('Read temperature')
 
         if self.simulation:
+#            t = 4 + self.closed_loop_setpoint
             t = self.get_random_value() + self.closed_loop_setpoint
         else:
             t = self.read_process_value(1, **kw)
+        
         if t is not None:
             try:
 
                 t = float(t)
                 self.process_value = t
+                self.process_value_flag = True
                 return t
             except ValueError, TypeError:
                 pass
