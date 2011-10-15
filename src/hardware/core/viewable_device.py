@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Instance, Str, Property, Bool, CStr
-from traitsui.api import View, Item, Group, VGroup
+from traitsui.api import View, Item, Group, VGroup, HGroup, spring
 #=============standard library imports ========================
 #=============local library imports  ==========================
 from src.config_loadable import ConfigLoadable
@@ -81,10 +81,13 @@ class ViewableDevice(ConfigLoadable):
 
         return g
     
-    def graph_builder(self, g):
+    def graph_builder(self, g, **kw):
+        
+        
         g.new_plot(padding=[40, 5, 5, 20],
                    zoom=True,
                   pan=True,
+                  **kw
                    )
         
     def get_control_group(self):
@@ -92,12 +95,20 @@ class ViewableDevice(ConfigLoadable):
     
     def current_state_view(self):
         v = View(Group(
-                 Item('name'),
-                 Item('last_command', style='readonly'),
-                 Item('last_response', style='readonly'),
-                 Item('current_scan_value', style='readonly'),
-                 label='General'
-                 )
+                     Item('name'),
+                     Item('last_command', style='readonly'),
+                     Item('last_response', style='readonly'),
+                     Item('current_scan_value', style='readonly'),
+                     label='General'
+                     ),
+                 VGroup(Item('graph', show_label=False, style='custom'),
+                        
+                        VGroup(Item('scan_func', label='Function', style='readonly'),
+                               Item('scan_period', label='Period ({})'.format(self.scan_units),
+                                            style='readonly')
+                               ),
+                        label='Scan'
+                        )
                  )
 
         return v

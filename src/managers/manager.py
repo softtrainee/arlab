@@ -14,15 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import Str, Float, Any, Button, Int, List
+from traits.api import Str, Float, Any, Button, Int, List, Bool
 from traitsui.api import  Item, HGroup, VGroup, Handler, \
     RangeEditor, ButtonEditor, ScrubberEditor, Label, spring
 from traitsui.menu import Action, Menu, MenuBar
 from pyface.api import FileDialog, OK, warning
-from pyface.timer.do_later import do_later, do_after
+from pyface.timer.do_later import do_after
 #=============standard library imports ========================
 import os
-
 #=============local library imports  ==========================
 from src.config_loadable import ConfigLoadable
 from src.hardware import HW_PACKAGE_MAP
@@ -34,7 +33,6 @@ class ManagerHandler(Handler):
         
     '''
     def init(self, info):
-        #info.object._opened = True
         info.object.ui = info.ui
         info.object.opened()
 
@@ -44,9 +42,6 @@ class ManagerHandler(Handler):
     def closed(self, info, is_ok):
         '''
         '''
-        #info.object._opened = False
-
-        #info.object.ui = None
 
         info.object.kill()
         return True
@@ -59,7 +54,7 @@ class Manager(ConfigLoadable):
 
     macro = None
     parent = Any
-    #name = Str
+
     title = Str
     window_x = Float(0.1)
     window_y = Float(0.1)
@@ -69,9 +64,9 @@ class Manager(ConfigLoadable):
 
     _killed = False
     failure_reason = None
-    close_after = Int #in minutes
+    enable_close_after = Bool
+    close_after_minutes = Int #in minutes
 
-    #_opened = False
     ui = Any
 
     handler_klass = ManagerHandler
@@ -93,22 +88,20 @@ class Manager(ConfigLoadable):
         '''
         pass
 
-#    def isOpen(self):
-#        return self._opened
 
     def opened(self):
         def _loop():
             start = time.time()
-            self.info('Window set to close after {} min'.format(self.close_after))
+            self.info('Window set to close after {} min'.format(self.close_after_minutes))
             
             now = time.time()
-            while  now - start < (self.close_after * 60) and not self._killed:
-                time.sleep(3)
+            while  now - start < (self.close_after_minutes * 60) and not self._killed:
+                time.sleep(1)
                 now = time.time()
-                
-            do_later(self.close_ui)
 
-        if self.close_after:
+            self.close_ui()
+
+        if self.enable_close_after and self.close_after_minutes:
             t = Thread(target=_loop)
             t.start()
 
@@ -228,6 +221,7 @@ class Manager(ConfigLoadable):
             if prefix:
                 device_name = ''.join((prefix, device_name))
 
+            
             if device_name in self.traits():
                 self.trait_set(**{device_name:device})
             else:

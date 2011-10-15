@@ -34,10 +34,9 @@ from traitsui.api import View, Item, VGroup, EnumEditor
 #            self.stream_manager.record(v, self.name)
 from core.core_device import CoreDevice
 from src.hardware.core.data_helper import make_bitarray
-from src.graph.time_series_graph import TimeSeriesStreamGraph
+#from src.graph.time_series_graph import TimeSeriesStreamGraph
 class ISeriesDevice(CoreDevice):
     '''
-        G{classtree}
         http://www.omega.com/iseries/Pdf/M3397CO.pdf
     '''
     prefix = '*'
@@ -77,7 +76,6 @@ class DPi32TemperatureMonitor(ISeriesDevice):
     input_type = Property(depends_on='_input_type')
     _input_type = Str
     id_query = '*R07'
-    graph_klass = TimeSeriesStreamGraph
     
     def id_response(self, response):
         r = False

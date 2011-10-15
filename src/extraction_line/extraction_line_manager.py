@@ -69,7 +69,7 @@ class ExtractionLineManager(Manager):
             ss = getattr(self, subsystem)
             return ss.get_module(module)
         except AttributeError:
-            self.warning('%s not initialized' % subsystem)
+            self.warning('{} not initialized'.format(subsystem))
 
     def create_manager(self, manager):
         '''
@@ -113,9 +113,9 @@ class ExtractionLineManager(Manager):
     def finish_loading(self):
         '''
         '''
-
-        if self.gauge_manager is not None:
-            self.gauge_manager.on_trait_change(self.pressure_update, 'gauges.pressure')
+        pass
+#        if self.gauge_manager is not None:
+#            self.gauge_manager.on_trait_change(self.pressure_update, 'gauges.pressure')
 
     def opened(self):
         super(ExtractionLineManager, self).opened()
@@ -126,8 +126,8 @@ class ExtractionLineManager(Manager):
 #        self.view_controller.edit_traits(kind = 'livemodal',
 #                                      parent = self.ui.control)
 
-    def show_device_streamer(self):
-        self.device_stream_manager.edit_traits(parent=self.window.control)
+#    def show_device_streamer(self):
+#        self.device_stream_manager.edit_traits(parent=self.window.control)
 
     def reload_scene_graph(self):
 
@@ -135,11 +135,11 @@ class ExtractionLineManager(Manager):
             self.canvas.canvas3D.setup(canvas3D_dir, 'extractionline3D.txt')
 
             #load state
-
-            for k, v in self.valve_manager.valves.iteritems():
-                vc = self.canvas.get_object(k)
-                if vc:
-                    vc.soft_lock = v.software_lock  
+            if self.valve_manager:
+                for k, v in self.valve_manager.valves.iteritems():
+                    vc = self.canvas.get_object(k)
+                    if vc:
+                        vc.soft_lock = v.software_lock  
 
 
             self.view_controller = self._view_controller_factory()
@@ -255,7 +255,12 @@ class ExtractionLineManager(Manager):
             self.warning('{} already running'.format(runscript_name))
         else:
             self.runscript = None
-
+            
+    def set_selected_explanation_item(self, obj):
+        selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
+        if selected:
+            self.explanation.selected = selected
+    
     def traits_view(self):
         '''
         '''

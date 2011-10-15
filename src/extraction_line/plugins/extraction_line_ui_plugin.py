@@ -65,6 +65,9 @@ class ExtractionLineUIPlugin(CoreUIPlugin):
             if dev.is_scannable:
                 dev.start_scan()
                 
+        if elm.gauge_manager:
+            elm.gauge_manager.start_scans()
+                
 #============= views ===================================
 #    def _views_default(self):
 #        '''

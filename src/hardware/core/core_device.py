@@ -30,6 +30,7 @@ from viewable_device import ViewableDevice
 from i_core_device import ICoreDevice
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.helpers.datetime_tools import generate_timestamp
+from src.graph.time_series_graph import TimeSeriesStreamGraph
 
 class Alarm(HasTraits):
     alarm_str = Str
@@ -69,6 +70,8 @@ class Alarm(HasTraits):
 class CoreDevice(ViewableDevice):
     '''
     '''
+    graph_klass = TimeSeriesStreamGraph
+
     implements(ICoreDevice)
     _communicator = None
     name = Str
@@ -166,7 +169,7 @@ class CoreDevice(ViewableDevice):
         '''
         if self._communicator is not None:
             r = self._communicator.ask(cmd, **kw)
-            self.last_command = cmd
+            self.last_command = cmd.strip()
             self.last_response = str(r)
             return r
         else:
@@ -246,10 +249,13 @@ class CoreDevice(ViewableDevice):
                 self.current_scan_value = v
             
                 if self.record_scan_data:
-                    x = self.graph.record(v)        
+                    if isinstance(v, tuple):
+                        x = self.graph.record_multiple(v)
+                    else:
+                        x = self.graph.record(v)
                     
                     ts = generate_timestamp()
-                    self.data_manager.write_to_frame((ts, x, v))
+                    self.data_manager.write_to_frame((ts, x) + v)
                 
                 for a in self.alarms:
                     if a.test_condition(v):
@@ -304,6 +310,6 @@ class CoreDevice(ViewableDevice):
 
     def stop_scan(self):
         if self.timer is not None:
-            self.timer.Stop()
+            self.timer.Stop()  
 
 #========================= EOF ============================================

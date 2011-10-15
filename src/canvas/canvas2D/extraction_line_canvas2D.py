@@ -93,7 +93,9 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             self.items = items
         self.invalidate_and_redraw()
         
-    def _over_item(self, x, y):
+    def _over_item(self, event):
+        x = event.x
+        y = event.y
         for k, item in enumerate(self.items):
             if item.__class__.__name__ == 'Valve':
     
@@ -106,17 +108,21 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                     return k, item
         
         return None, None
-            
+    
+    def normal_left_down(self, event):
+        pass
+    
     def normal_mouse_move(self, event):
         '''
 
         '''
 
-        k, item = self._over_item(event.x, event.y)
+        k, item = self._over_item(event)
         if item is not None:
             self.active_item = k
             self.event_state = 'select'
             event.window.set_pointer(self.select_pointer)
+            self.manager.set_selected_explanation_item(item)
         else:
             self.active_item = -1
             self.event_state = 'normal'
@@ -129,11 +135,12 @@ class ExtractionLineCanvas2D(MarkupCanvas):
          :
         '''
         self.normal_mouse_move(event)
+        
     def select_right_down(self, event):
         item = self.items[self.active_item]
         item.soft_lock = lock = not item.soft_lock
         self.manager.set_software_lock(item.name, lock)
-        
+        event.handled = True
         self.invalidate_and_redraw()
 
     def select_left_down(self, event):
@@ -141,6 +148,8 @@ class ExtractionLineCanvas2D(MarkupCanvas):
     
         '''
         item = self.items[self.active_item]
+        
+        
         state = item.state
         state = not state
 
@@ -157,7 +166,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         else:
             ok = True
 
-        if ok:
+        if ok and not item.soft_lock:
             item.state = state
         self.invalidate_and_redraw()
 
@@ -181,14 +190,13 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                     w, h = self._get_wh(W, H)
                     args = pos + (w, h)
                     
-                    
                     if item.state:
                         gc.set_fill_color((0, 1, 0))
                     else:
                         if item.selected:
-                            gc.set_fill_color((1, 0, 0))
+                            gc.set_fill_color((1, 1, 0))
                         else:
-                            gc.set_fill_color((0, 0, 0))
+                            gc.set_fill_color((1, 0, 0))
                             
                     gc.rect(*args)
                     gc.draw_path()
@@ -204,13 +212,13 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                         gc.restore_state()
                         
                     if not item.identify:
-
-                        if item.state:
-                            gc.set_fill_color((0, 0, 0))
-                        else:
-                            gc.set_fill_color((0, 1, 0))
+                        gc.set_fill_color((0, 0, 0))
+#                        if item.state:
+#                        else:
+#                            gc.set_fill_color((0, 1, 0))
+                            
                         try:    
-                            gc.set_text_position(pos[0] + w / 2.5, pos[1] + h / 2.5)
+                            gc.set_text_position(pos[0] + w / 4.0, pos[1] + h / 4.0)
                             gc.show_text(str(item.name))
                         except RuntimeError, e:
                             print e

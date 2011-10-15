@@ -26,7 +26,7 @@ from ctypes_opencv import cvConvertImage, cvCloneImage, \
 from image_helper import load_image, new_dst, grayspace
 from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
     draw_polygons, find_circles, find_ellipses, clone, crop, draw_contour_list, \
-    centroid
+    centroid, erode
 from ctypes_opencv.cxcore import CvPoint, cvRound, cvCircle
 
 
@@ -40,6 +40,7 @@ class Image(HasTraits):
     height = Int
 
     _bitmap = None
+    
     def load(self, path):
         self.source_frame = load_image(path)
         self.frames = [clone(self.source_frame)]
@@ -135,7 +136,7 @@ class Image(HasTraits):
     def centroid(self, polypts, frame_id=0):
         center = centroid(polypts)
         
-        r = 5
+        r = 3
         x = cvRound(center[0])
         y = cvRound(center[1])
         cpt = CvPoint(x, y)
@@ -144,22 +145,26 @@ class Image(HasTraits):
         print center, x, y
         return x, y
         
-    def polygonate(self, t, frame_id=0, skip=None, line_width=2, min_area=100000,
+    def polygonate(self, t, frame_id=0, skip=None, line_width=1, min_area=1000,
                     max_area=1e10, convextest=0):
         gsrc = self.threshold(t)
-
+        
+        #esrc = erode(gsrc, 2)
+        #self.frames.append(colorspace(esrc))
+        
         _nc, contours = contour(gsrc)
 #        print skip
         if contours:
             polygons = get_polygons(contours, min_area, max_area, convextest)
-#            print polygons
+            print 'polygos', len(polygons)
 #            polygons = polygons[:3]
             f = self.frames[frame_id]
             if skip is not None:
                 polygons = [p for i, p in enumerate(polygons) if i not in skip ]
 #            polygons = polygons[:9]
             
-            newsrc = new_dst(f)
+            newsrc = new_dst(colorspace(gsrc), zero=True)
+            draw_contour_list(f, contours)
 #            draw_polygons(f, polygons, line_width)
             draw_polygons(newsrc, polygons, line_width)
             self.frames.append(newsrc)
