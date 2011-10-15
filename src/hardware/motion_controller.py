@@ -125,7 +125,7 @@ class MotionController(CoreDevice):
     def _validate(self, v, key, cur):
         '''
         '''
-        print 'vin', v, key,cur
+        print 'vin', v, key, cur
         min = self.axes[key].negative_limit
         max = self.axes[key].positive_limit
 
@@ -136,7 +136,7 @@ class MotionController(CoreDevice):
                 
             if v is not None:
                 if abs(v - cur) <= 0.001:
-                	v=None
+                	v = None
         except ValueError, e:
             print e
             v = None
