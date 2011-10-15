@@ -24,7 +24,6 @@ import os
 from src.helpers.paths import setup_dir
 from src.managers.manager import Manager
 from src.remote_hardware.command_processor import CommandProcessor
-from ConfigParser import NoSectionError
 
 '''
 #===================================
