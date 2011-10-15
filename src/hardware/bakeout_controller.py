@@ -32,7 +32,6 @@ from src.scripts.bakeout_script import BakeoutScript
 DUTY_CYCLE = False
 class BakeoutController(WatlowEZZone):
     '''
-        G{classtree}
         
         bakeout controller can be operated in one of two modes.
         
@@ -223,8 +222,8 @@ class BakeoutController(WatlowEZZone):
 
         self.cnt += self.update_interval
         nsecs = 15
-        if self.cnt == nsecs:
-            self._duration -= nsecs / 3600.
+        if self.cnt >= nsecs:
+            self._duration -= (nsecs + self.cnt % nsecs) / 3600.
             self.cnt = 0
 
         self.get_temperature(verbose=False)
