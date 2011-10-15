@@ -37,8 +37,8 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     calibration_style = Enum('pychron', 'MassSpec')
     scaling = Range(1.0, 3.0, 1.0)
     
-    enable_close_after = Bool
-    close_after = Range(0, 60, 1)
+    #enable_close_after = Bool
+    #close_after = Range(0, 60, 1)
     def get_additional_groups(self):
         grp = Group(
                Item('use_video'),
@@ -53,11 +53,11 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                Item('scaling'),
                label='Stage',
                )
-        grp2 = HGroup(
-                    Item('close_after', enabled_when='enable_close_after'),
-                    Item('enable_close_after', show_label=False)
-                    )
-        return [grp, grp2]
+#        grp2 = HGroup(
+#                    Item('close_after', enabled_when='enable_close_after'),
+#                    Item('enable_close_after', show_label=False)
+#                    )
+        return [grp]#, grp2]
 
 #    def traits_view(self):
 #        '''

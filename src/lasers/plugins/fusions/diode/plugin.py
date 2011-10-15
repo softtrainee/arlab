@@ -18,7 +18,7 @@ limitations under the License.
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.lasers.plugins.fusions_laser_plugin import FusionsLaserPlugin
+from src.lasers.plugins.fusions.fusions_laser_plugin import FusionsLaserPlugin
 
 class FusionsDiodePlugin(FusionsLaserPlugin):
     '''

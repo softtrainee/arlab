@@ -23,13 +23,12 @@ import sys
 #add src to the path
 
 #always change back to pychron_beta before committing
-SRC_DIR = os.path.join(os.path.expanduser('~'),
-                   'Programming',
-                   'mercurial',
+#SRC_DIR = os.path.join(os.path.expanduser('~'),
+#                   'Programming',
+#                   'mercurial',
 #                   'pychron_beta'
-                    'pychron_beam_config'
-                   )
-sys.path.insert(0, SRC_DIR)
+#                   )
+#sys.path.insert(0, SRC_DIR)
 
 from src.envisage.run import launch
 from src.helpers.logger_setup import setup
@@ -147,10 +146,10 @@ def main():
 
     from src.helpers.paths import hidden_dir
     path = os.path.join(hidden_dir, 'version_info')
-    a = VersionInfoDisplay(local_path=path,
-                           src_path=os.path.join(SRC_DIR, 'version_info.txt'),
-                           )
-    a.check()
+#    a = VersionInfoDisplay(local_path=path,
+#                           src_path=os.path.join(SRC_DIR, 'version_info.txt'),
+#                           )
+#    a.check()
 
 
     setup('pychron', level='DEBUG')

@@ -57,10 +57,11 @@ PACKAGE_DICT = dict(
                    MDDModelerUIPlugin='src.data_processing.plugins.mdd_modeler_ui_plugin',
                    SVNPlugin='src.svn.plugins.svn_plugin',
                    SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
-                   FusionsDiodePlugin='src.lasers.plugins.fusions_diode_plugin',
-                   FusionsDiodeUIPlugin='src.lasers.plugins.fusions_diode_ui_plugin',
-                   FusionsCO2Plugin='src.lasers.plugins.fusions_co2_plugin',
-                   FusionsCO2UIPlugin='src.lasers.plugins.fusions_co2_ui_plugin',
+                   
+                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
+                   FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
+                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
+                   FusionsCO2UIPlugin='src.lasers.plugins.fusions.co2.ui_plugin',
                    SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
                    SynradCO2UIPlugin='src.lasers.plugins.synrad_co2_ui_plugin',
 

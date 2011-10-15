@@ -27,12 +27,8 @@ def get_manager(event, app=None):
         app = event.window.application
     base = 'src.managers.laser_managers.{}'
     
-    manager = app.get_service(base.format('fusions_diode_manager.FusionsDiodeManager'))
-    if manager is None:
-        manager = app.get_service(base.format('fusions_co2_manager.FusionsCO2Manager'))
-    if manager is None:
-        manager = app.get_service(base.format('synrad_co2_manager.SynradCO2Manager'))
-
+    manager = app.get_service(base.format('fusions_co2_manager.FusionsCO2Manager'))
+   
     return manager
 
 class ExecutePatternAction(Action):
@@ -66,6 +62,7 @@ class OpenLaserManagerAction(Action):
 
     def perform(self, event):
         manager = get_manager(event)
+        print manager
         if manager is not None:
             man = manager
             open_manager(man)

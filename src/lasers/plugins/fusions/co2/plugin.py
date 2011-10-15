@@ -14,17 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from pyface.action.api import Action
-from src.lasers.plugins.laser_actions import get_manager, open_manager
-#from traits.api import on_trait_change
-
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-class OpenCalibrationManagerAction(Action):
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            man = manager.stage_manager.calibration_manager
-            open_manager(man)
+from src.lasers.plugins.fusions.fusions_laser_plugin import FusionsLaserPlugin
+
+class FusionsCO2Plugin(FusionsLaserPlugin):
+    '''
+    '''
+    id = 'pychron.fusions.co2'
+
+    name = 'fusions_co2_manager'
+    klass = ('src.managers.laser_managers.fusions_co2_manager', 'FusionsCO2Manager')
 #============= EOF ====================================

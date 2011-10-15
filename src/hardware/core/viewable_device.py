@@ -89,6 +89,7 @@ class ViewableDevice(ConfigLoadable):
                   pan=True,
                   **kw
                    )
+        g.new_series()
         
     def get_control_group(self):
         pass

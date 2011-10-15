@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Bool, List, on_trait_change
-from traitsui.api import View, Item, VGroup, TableEditor, Group
+from traits.api import HasTraits, Str, Bool, List, on_trait_change, Range
+from traitsui.api import View, Item, VGroup, TableEditor, Group, HGroup
 from apptools.preferences.ui.api import PreferencesPage
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
@@ -38,6 +38,11 @@ class ManagerPreferencesPage(PreferencesPage):
     devices = List(transient=True)
     managers = List(transient=True)
     plugin_name = None
+    
+    open_on_startup = Bool
+    enable_close_after = Bool
+    close_after = Range(0, 60, 60)
+    
     def __init__(self, *args, **kw):
         super(ManagerPreferencesPage, self).__init__(*args, **kw)
         p = os.path.join(setup_dir, 'initialization.xml')
@@ -86,8 +91,14 @@ class ManagerPreferencesPage(PreferencesPage):
 
     def get_additional_groups(self):
         return []
+    
     def get_general_group(self):
-        pass
+        return Group(Item('open_on_startup'),
+                     HGroup(
+                            Item('close_after', enabled_when='enable_close_after'),
+                            Item('enable_close_after', show_label=False)
+                            )
+                    )
 
 #============= views ===================================
     def traits_view(self):

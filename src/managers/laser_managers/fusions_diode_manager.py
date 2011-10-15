@@ -79,11 +79,11 @@ class FusionsDiodeManager(FusionsLaserManager):
     request_powermin = Float(0)
     request_powermax = Float(1500)
 
-    def finish_loading(self):
-        super(FusionsDiodeManager, self).finish_loading()
-
-        self.pyrometer.start_scan()
-#        self.control_module_manager.start_scan()
+#    def finish_loading(self):
+#        super(FusionsDiodeManager, self).finish_loading()
+#
+#        self.pyrometer.start_scan()
+##        self.control_module_manager.start_scan()
 
     def get_process_temperature(self):
         '''

@@ -26,7 +26,6 @@ import time
 from src.hardware.core.core_device import CoreDevice
 class AnalogDigitalConverter(CoreDevice):
     '''
-        G{classtree}
     '''
     scan_func = 'read_device'
     read_voltage = 0
@@ -49,15 +48,13 @@ Agilent requires chr(10) as its communicator terminator
 
 class AgilentADC(AnalogDigitalConverter):
     '''
-        G{classtree}
     '''
 #    def __init__(self, *args, **kw):
 #        super(AgilentADC, self).__init__(*args, **kw)
     address = None
     def load_additional_args(self, config):
         '''
-            @type setupargs: C{str}
-            @param setupargs:
+
         '''
         #super(AgilentADC, self).load_additional_args(path, setupargs)
 
@@ -144,7 +141,6 @@ class AgilentADC(AnalogDigitalConverter):
 
 class M1000(AnalogDigitalConverter):
     '''
-        G{classtree}
     '''
     short_form_prompt = '$'
     long_form_prompt = '#'
