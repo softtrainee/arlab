@@ -16,7 +16,7 @@ limitations under the License.
 '''
 '''
 #=============enthought library imports=======================
-from traits.api import Any, Dict, List, on_trait_change
+from traits.api import Any, Dict, List
 #=============standard library imports ========================
 import time
 import os

@@ -31,7 +31,6 @@ import time
 #import os
 #from datetime import timedelta
 from threading import Thread
-import random
 #import struct
 
 class Client(HasTraits):

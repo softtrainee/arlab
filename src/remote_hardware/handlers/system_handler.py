@@ -51,7 +51,7 @@ class DummyELM(object):
         return True
     def get_device(self, n):
         
-        d = DummyDevice()
+        _d = DummyDevice()
         d = None
         return d
         
