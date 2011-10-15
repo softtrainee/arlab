@@ -381,9 +381,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 o = self._y_position
 
             if self._validate(value, key, cur=o) is  None:
-            	value=float(value)
+            	value = float(value)
             	if abs(value - o) <= 0.001:
-            		return 'OK At desired position. cur={} desired={}'.format(o,value)
+            		return 'OK At desired position. cur={} desired={}'.format(o, value)
                 return 'invalid position {}'.format(value)
 
             self.parent.canvas.set_desired_position(x, y)
