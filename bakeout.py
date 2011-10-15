@@ -24,7 +24,7 @@ import sys
 src = os.path.join(os.path.expanduser('~'),
                    'Programming',
                    'mercurial',
-                   'pychron_bakeout'
+                   'pychron_beta'
                    )
 sys.path.append(src)
 from src.managers.bakeout_manager import launch_bakeout
