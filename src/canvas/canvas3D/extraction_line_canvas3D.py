@@ -125,11 +125,7 @@ Locked:%s''' % (obj.name,
 
     def _popup_hook(self, hit):
         obj = self.scene_graph.get_object_by_id(hit)
-
-        for i in self.manager.explanation.explanable_items:
-            if i.name == obj.name:
-                self.manager.explanation.selected = i
-                break
+        self.manager.set_selected_explanation_item(obj)
 
     def _on_key_hook(self, event):
         if event.MetaDown() and event.GetKeyCode() == 66:

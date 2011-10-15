@@ -143,12 +143,14 @@ class ExtractionLineCanvas3DDummy(HasTraits):
     def Refresh(self):
         '''
         '''
-        self.canvas.Refresh()
+        if self.canvas:
+            self.canvas.Refresh()
 
     def Update(self):
         '''
         '''
-        self.canvas.Update()
+        if self.canvas:
+            self.canvas.Update()
 #    
 class ExtractionLineCanvas(HasTraits):
     '''

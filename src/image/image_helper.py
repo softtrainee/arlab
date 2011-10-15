@@ -42,9 +42,10 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
 
 from ctypes import POINTER
 from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT, CvVect32f, \
-    cvFitEllipse2
+    cvFitEllipse2, cvCreateStructuringElementEx, CV_SHAPE_RECT, CV_RETR_CCOMP, \
+    CV_RETR_TREE
 from ctypes_opencv.cxcore import cvCvtSeqToArray, CV_32SC2, CV_32FC2, cvConvert, \
-    CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice
+    CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice, CV_SEQ_FLAG_HOLE
 from src.data_processing.centroid.centroid import centroid as _centroid
 from threading import Thread
 
@@ -226,7 +227,7 @@ def colorspace1D(src, channel='r'):
     return dst
 
 
-def get_polygons(contours, min_area=0, max_area=1e10, convextest=0):
+def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
     '''
     '''
 
@@ -234,29 +235,31 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0):
 #    br = None
 #    bra = 0
     for i, cont in enumerate(contours.hrange()):
+        
         result = cvApproxPoly(cont, sizeof(CvContour),
                      storage, CV_POLY_APPROX_DP,
                      cvContourPerimeter(cont) * 0.001,
                       0)
         
         area = abs(cvContourArea(result))
-        print result.total, area, cvCheckContourConvexity(result)
+        #print result.total, area, cvCheckContourConvexity(result), cont.flags
+        
+        if hole:
+            hole_flag = cont.flags & CV_SEQ_FLAG_HOLE != 0
+        else:
+            hole_flag = cont.flags & CV_SEQ_FLAG_HOLE == 0
+            
         if (result.total >= 4
             and area > min_area
             and area < max_area
             #and area < 3e6
             and cvCheckContourConvexity(result) == convextest
+            and hole_flag
                 ):
 
             ra = result.asarray(CvPoint)
             polygons.append(new_seq([ra[i] for i in range(result.total)]))
 
-#            tbr = cvBoundingRect(cont)
-#            ta = tbr.width * tbr.height
-#            #get the largest bounding rect
-#            if ta > bra:
-#                br = tbr
-#                bra = ta
 
 
     return [p.asarray(CvPoint) for p in polygons] #, br
@@ -286,7 +289,7 @@ def draw_polygons(img, polygons, line_width=1):
     '''
 
     for pa in polygons:
-        cvPolyLine(img, [pa], 1, CV_RGB(0, 255, 0), line_width, CV_AA, 0)
+        cvPolyLine(img, [pa], 1, CV_RGB(0, 255, 0), thickness=line_width)
 
 def draw_contour_list(src, clist):
     '''
@@ -297,7 +300,7 @@ def draw_contour_list(src, clist):
                    CV_RGB(255, 0, 0),
                    CV_RGB(255, 0, 255),
                    255,
-                   thickness=4
+                   thickness=1
                    )
 
 #    for p in polygons:
@@ -356,17 +359,7 @@ def new_video_writer(path, fps=None, frame_size=None):
     return w
 def new_mask(src, x, y, w, h):
     '''
-        @type x: C{str}
-        @param x:
 
-        @type y: C{str}
-        @param y:
-
-        @type w: C{str}
-        @param w:
-
-        @type h: C{str}
-        @param h:
     '''
     dst = new_dst(src, nchannels=1)
     cvZero(dst)
@@ -376,21 +369,12 @@ def new_mask(src, x, y, w, h):
 
 def new_rect(x, y, w, h):
     '''
-        @type y: C{str}
-        @param y:
 
-        @type w: C{str}
-        @param w:
-
-        @type h: C{str}
-        @param h:
     '''
     return CvRect(x, y, w, h)
 
 def new_point(x, y):
     '''
-        @type y: C{str}
-        @param y:
     '''
     return CvPoint(x, y)
 
@@ -479,8 +463,10 @@ def erode(src, ev):
         @type ev: C{str}
         @param ev:
     '''
-    e = clone(src)
-    cvErode(e, e, 0, int(ev))
+    e = new_dst(src)
+#    mat = cvCreateMat(3, 3, 1)
+    kernel = cvCreateStructuringElementEx(3, 3, 0, 0, CV_SHAPE_RECT)
+    cvErode(src, e, kernel, int(ev))
     return e
 
 def dilate(src, dv):
