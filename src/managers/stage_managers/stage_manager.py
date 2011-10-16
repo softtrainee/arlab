@@ -192,7 +192,7 @@ class StageManager(Manager):
     def single_axis_move(self, *args, **kw):
         return self.stage_controller.single_axis_move(*args, **kw)
         
-    def linear_move(self, x, y, **kw):
+    def linear_move(self, x, y, calibrated_space=True, **kw):
 
         #x = self.stage_controller._sign_correct(x, 'x')
         #y = self.stage_controller._sign_correct(y, 'y')
@@ -200,9 +200,11 @@ class StageManager(Manager):
         hole = self._get_hole_by_position(x, y)
         if hole is not None:
             self._hole = int(hole.id)
-
-        pos = self._map_calibrated_space((x, y))
-
+        
+        pos = (x, y)    
+        if calibrated_space:
+            pos = self._map_calibrated_space(pos)
+        
         self.stage_controller.linear_move(*pos, **kw)
 
     def _get_hole_by_position(self, x, y, tol=0.1):
@@ -635,8 +637,13 @@ class StageManager(Manager):
         pos = self._map_calibrated_space(pos, key=key)
         self.stage_controller.linear_move(block=True, *pos)
 
+        
+        self._move_to_hole_hook()
+        
         self.info('Move complete')
         self.hole_thread = None
+    def _move_to_hole_hook(self):
+        pass
 #class DummyParent(HasTraits):
 #    zoom = Float
 #    zoommin = Float

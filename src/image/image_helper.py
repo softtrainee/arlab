@@ -43,9 +43,11 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
 from ctypes import POINTER
 from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT, CvVect32f, \
     cvFitEllipse2, cvCreateStructuringElementEx, CV_SHAPE_RECT, CV_RETR_CCOMP, \
-    CV_RETR_TREE
+    CV_RETR_TREE, cvFilter2D
 from ctypes_opencv.cxcore import cvCvtSeqToArray, CV_32SC2, CV_32FC2, cvConvert, \
-    CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice, CV_SEQ_FLAG_HOLE
+    CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice, CV_SEQ_FLAG_HOLE, \
+    CV_32FC1, cvScalarAll, cvSet, cvSet2D, cvConvertScale, cvReleaseData, \
+    cvGet1D, cvSet1D, cvFillPoly
 from src.data_processing.centroid.centroid import centroid as _centroid
 from threading import Thread
 
@@ -60,48 +62,7 @@ def centroid(polypts):
     
     pts = array([(pt.x, pt.y) for pt in polypts], dtype=float)
     return _centroid(pts)
-    
-def find_ellipses(src, contours):
-    centers = []
-    for c in contours.hrange():
-        n = c.total
-        if n < 6:
-            continue
-        pointarray = cvCreateMat(1, n, CV_32SC2)
-        pointarray2d32f = cvCreateMat(1, n, CV_32FC2)
-        cvCvtSeqToArray(c, pointarray.data.ptr, cvSlice(0, CV_WHOLE_SEQ_END_INDEX))
-        cvConvert(pointarray, pointarray2d32f)
-        
-        box = CvBox2D()
-        box = cvFitEllipse2(pointarray2d32f)
-        
-        w = cvRound(box.size.width / 2.0)
-        h = cvRound(box.size.height / 2.0)
-        
-        cx = cvRound(box.center.x)
-        cy = cvRound(box.center.y)
-        centers.append((cx, cy))
-        draw_rectangle(src, CvPoint(cx - w, cy - h),
-                       CvPoint(cx + w, cy + h),
-                       #color=(0, 100, 200)
-                       )
-        
-        
-    return centers
-         
-def find_circles(src):
-    gsrc = grayspace(src)
-    
-    circles = cvHoughCircles(gsrc, storage,
-                             CV_HOUGH_GRADIENT,
-                             2,
-                             1, 100, 50
-                             )
 
-    circles = circles.asarrayptr(POINTER(CvVect32f))
-    for c in circles:
-        pass
-        
 #    c = circles.asarrayptr(POINTER(CvScalar))
 #    print circles.total
 #    for i in range(circles.total):
@@ -284,21 +245,29 @@ def draw_point(src, pt, color=(255, 0, 0), thickness= -1):
     color = convert_color(color)
     cvCircle(src, pt, 5, color, thickness=thickness)
 
-def draw_polygons(img, polygons, line_width=1):
+def draw_polygons(img, polygons, thickness=1, color=(0, 255, 0)):
     '''
     '''
-
+    color = convert_color(color)
     for pa in polygons:
-        cvPolyLine(img, [pa], 1, CV_RGB(0, 255, 0), thickness=line_width)
+        if thickness == -1:
+            cvFillPoly(img, [pa], color)
+        else:    
+            cvPolyLine(img, [pa], 1, color, thickness=thickness)    
 
-def draw_contour_list(src, clist):
+def draw_contour_list(src, clist, external_color=(255, 0, 0),
+                      hole_color=(255, 0, 255)
+                      ):
     '''
     '''
 
     cvDrawContours(src,
                    clist,
-                   CV_RGB(255, 0, 0),
-                   CV_RGB(255, 0, 255),
+                   convert_color(external_color),
+                   convert_color(hole_color),
+                   
+#                   CV_RGB(255, 0, 0),
+#                   CV_RGB(255, 0, 255),
                    255,
                    thickness=1
                    )
@@ -307,7 +276,7 @@ def draw_contour_list(src, clist):
 #        pa = p.asarray(CvPoint)
 #        print pa
 #        cvPolyLine(src, [pa], 0, CV_RGB(0, 255, 0), 3, CV_AA, 0)
-def draw_rectangle(src, p1, p2, color=(255, 0, 0), fill=False, thickness=3):
+def draw_rectangle(src, x, y, w, h, color=(255, 0, 0), fill=False, thickness=3):
     '''
         
     '''
@@ -315,6 +284,9 @@ def draw_rectangle(src, p1, p2, color=(255, 0, 0), fill=False, thickness=3):
         thickness = -1
 
     color = convert_color(color)
+    
+    p1 = new_point(x, y)
+    p2 = new_point(x + w, y + h)
     cvRectangle(src, p1, p2, color, thickness=thickness)
 
 def draw_squares(img, squares):
@@ -444,8 +416,7 @@ def avg_std(src):
 
 def get_min_max_location(src, region):
     '''
-        @type region: C{str}
-        @param region:
+
     '''
 
     minpt = CvPoint()
@@ -460,8 +431,7 @@ def get_min_max_location(src, region):
 
 def erode(src, ev):
     '''
-        @type ev: C{str}
-        @param ev:
+
     '''
     e = new_dst(src)
 #    mat = cvCreateMat(3, 3, 1)
@@ -471,14 +441,38 @@ def erode(src, ev):
 
 def dilate(src, dv):
     '''
-        @type dv: C{str}
-        @param dv:
     '''
     d = clone(src)
     cvDilate(d, d, 0, dv)
     return d
+
 def sharpen(src):
     pass
+#    gray = grayspace(src)
+#    lapl = grayspace(src)
+#    
+##    print lapl.width, lapl.height
+##    print gray.width, gray.height
+#    
+#    kernel = cvCreateMat(3, 3, CV_8UC1)
+#    cvSet(kernel, cvScalarAll(-1.0))
+#    cvSet2D(kernel, 1, 1, cvScalarAll(1.0))
+##    
+#    cvFilter2D(gray, lapl, kernel)
+#    
+#    minv, maxv = cvMinMaxLoc(lapl)
+#    print maxv
+#    for i in xrange(0, lapl.width * lapl.height - 1):
+#        lapv = cvGet1D(lapl, i).val
+#        v = 255 * lapv[0] / maxv
+        #cvSet1D(src, i, cvScalarAll(v))
+##        
+#    minv, maxv = cvMinMaxLoc(gray)
+#    for i in xrange(0, lapl.width * lapl.height):
+#        lapv = cvGet1D(gray, i).val
+#        v = 255 * lapv[0] / maxv
+#        cvSet1D(src, i, cvScalarAll(v))
+        
 def contour(src):
     '''
     '''
@@ -527,12 +521,16 @@ def colorspace(src, cs=CV_GRAY2BGR):
         dst = src
     return dst
 
-def grayspace(src):
+def grayspace(src):#, width = None, height = None):
     '''
     '''
     if src.nChannels > 1:
         #gsrc=cvCreateImage(cvGetSize(src),8,1)
         dst = new_dst(src, nchannels=1)
+        
+#        print src.width, dst.width, src.height, dst.height
+#        print src
+#        print dst
         cvCvtColor(src, dst, CV_BGR2GRAY)
     else:
         dst = src
@@ -569,3 +567,47 @@ def save_image(src, path):
 #    dx2 = pt2.x - pt0.x;
 #    dy2 = pt2.y - pt0.y;
 #    return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
+#    
+
+#============================ EOF =================
+#def find_ellipses(src, contours):
+#    centers = []
+#    for c in contours.hrange():
+#        n = c.total
+#        if n < 6:
+#            continue
+#        pointarray = cvCreateMat(1, n, CV_32SC2)
+#        pointarray2d32f = cvCreateMat(1, n, CV_32FC2)
+#        cvCvtSeqToArray(c, pointarray.data.ptr, cvSlice(0, CV_WHOLE_SEQ_END_INDEX))
+#        cvConvert(pointarray, pointarray2d32f)
+#        
+#        box = CvBox2D()
+#        box = cvFitEllipse2(pointarray2d32f)
+#        
+#        w = cvRound(box.size.width / 2.0)
+#        h = cvRound(box.size.height / 2.0)
+#        
+#        cx = cvRound(box.center.x)
+#        cy = cvRound(box.center.y)
+#        centers.append((cx, cy))
+##        draw_rectangle(src, CvPoint(cx - w, cy - h),
+##                       CvPoint(cx + w, cy + h),
+##                       #color=(0, 100, 200)
+##                       )
+#        
+#        
+#    return centers
+#         
+#def find_circles(src):
+#    gsrc = grayspace(src)
+#    
+#    circles = cvHoughCircles(gsrc, storage,
+#                             CV_HOUGH_GRADIENT,
+#                             2,
+#                             1, 100, 50
+#                             )
+#
+#    circles = circles.asarrayptr(POINTER(CvVect32f))
+#    for c in circles:
+#        pass
+#        

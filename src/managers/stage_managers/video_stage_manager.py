@@ -27,6 +27,7 @@ from src.managers.stage_managers.camera_calibration_manager import CameraCalibra
 import time
 from threading import Thread, Condition
 from pyface.timer.api import do_later
+from src.managers.stage_managers.machine_vision.machine_vision_manager import MachineVisionManager
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -72,32 +73,10 @@ class VideoStageManager(StageManager, Videoable):
     pxpercmx = DelegatesTo('camera_calibration_manager')
     pxpercmy = DelegatesTo('camera_calibration_manager')
         
+    auto_center = Bool(True)
+    machine_vision_manager = Instance(MachineVisionManager)
         
-    def _get_drive_xratio(self):
-        return self._drive_xratio
-
-    def _set_drive_xratio(self, v):
-        self._drive_xratio = v
-        ax = self.stage_controller.axes['x']
-        ax.drive_ratio = v
-        ax.save()
-
-    def _get_drive_yratio(self):
-        return self._drive_yratio
-
-    def _set_drive_yratio(self, v):
-        self._drive_yratio = v
-        ax = self.stage_controller.axes['y']
-        ax.drive_ratio = v
-        ax.save()
-
-    def _calibrate_focus_fired(self):
-        z = self.stage_controller.z
-        self.info('setting focus posiition {}'.format(z))
-        self.canvas.camera.focus_z = z
-
-        self.canvas.camera.save_focus()
-
+    
     def update_camera_params(self, obj, name, old, new):
         if name == 'focus_z':
             self.focus_z = new
@@ -106,50 +85,9 @@ class VideoStageManager(StageManager, Videoable):
         elif 'x' in name:
             self._camera_xcoefficients = new
 
-    def _get_camera_xcoefficients(self):
-        return self._camera_xcoefficients
-
-    def _set_camera_xcoefficients(self, v):
-        self._camera_coefficients = v
-        self.canvas.camera.calibration_data.xcoeff_str = v
-
-        if self.parent is not None:
-            z = self.parent.zoom
-        else:
-            z = 0
-        self.canvas.camera.set_limits_by_zoom(z)
-
-
-    def _get_camera_ycoefficients(self):
-        return self._camera_ycoefficients
-
-    def _set_camera_ycoefficients(self, v):
-        self._camera_ycoefficients = v
-        self.canvas.camera.calibration_data.ycoeff_str = v
-
-        if self.parent is not None:
-            z = self.parent.zoom
-        else:
-            z = 0
-        print 'sety', z, v
-        self.canvas.camera.set_limits_by_zoom(z)
-
-#    def _camera_coefficients_changed(self):
-#        print self.camera_coefficients
-
-#    def _calibration_manager_default(self):
-#
-##        self.video.open(user = 'calibration')
-#        return CalibrationManager(parent = self,
-#                                  laser_manager = self.parent,
-#                               video_manager = self.video_manager,
-#                               )
-
-
     def initialize_stage(self):
         super(VideoStageManager, self).initialize_stage()
 
-#        if hasattr(self, 'video'):
         self.video.open(user='underlay')
 
         xa = self.stage_controller.axes['x'].drive_ratio
@@ -158,19 +96,14 @@ class VideoStageManager(StageManager, Videoable):
         self._drive_xratio = xa
         self._drive_yratio = ya
 
-
     def kill(self):
         '''
         '''
         super(VideoStageManager, self).kill()
         self.canvas.camera.save_calibration()
-#        if hasattr(self, 'video'):
         self.video.close(user='underlay')
 
-
-    def auto_locate(self):
-        pass
-
+    
 
     def _canvas_factory(self):
         '''
@@ -184,9 +117,7 @@ class VideoStageManager(StageManager, Videoable):
         v = VideoLaserTrayCanvas(parent=self,
                                padding=30,
                                video=video,
-                               map=self._stage_map,
-
-                               )
+                               map=self._stage_map)
         return v
 
     def _canvas_editor_factory(self):
@@ -197,7 +128,7 @@ class VideoStageManager(StageManager, Videoable):
         t = self.canvas.padding_top
         b = self.canvas.padding_bottom
         return self.canvas_editor_klass(width=w + l + r,
-                                          height=h + t + b)
+                                        height=h + t + b)
     def _sconfig__group__(self):
         g = super(VideoStageManager, self)._sconfig__group__()
         g.content.append(Group(Item('camera_xcoefficients'),
@@ -216,7 +147,6 @@ class VideoStageManager(StageManager, Videoable):
                                             )),
                                label='Camera'))
         return g
-
 
     def _calculate_indicator_positions(self, shift=None):
         ccm = self.camera_calibration_manager
@@ -237,7 +167,6 @@ class VideoStageManager(StageManager, Videoable):
 
         cond.wait()
         cond.release()
-
 
     def _calculate_camera_parameters(self):
         ccm = self.camera_calibration_manager
@@ -280,19 +209,88 @@ class VideoStageManager(StageManager, Videoable):
                 except ZeroDivisionError:
                     self.drive_xratio = 100
 
+    def _move_to_hole_hook(self):
+        #use machine vision to calculate positioning error
+        if self.auto_center:
+            deviation = self.machine_vision_manager.calculate_positioning_error()
+            if deviation:
+                
+                nx = self.stage_controller._x_position + deviation[0]
+                ny = self.stage_controller._y_position + deviation[1]
+                
+                self.linear_move(nx, ny, calibrated_space=False)
+            
 
-
+#===============================================================================
+# handlers
+#===============================================================================
     def _calculate_fired(self):
-
-
         t = Thread(target=self._calculate_camera_parameters)
         t.start()
 
-
-
+    def _calibrate_focus_fired(self):
+        z = self.stage_controller.z
+        self.info('setting focus posiition {}'.format(z))
+        self.canvas.camera.focus_z = z
+        self.canvas.camera.save_focus()
+        
+#===============================================================================
+# Defaults 
+#===============================================================================
     def _camera_calibration_manager_default(self):
         return CameraCalibrationManager()
 
+    def _machine_vision_manager_default(self):
+        return MachineVisionManager(video=self.video) 
+    
+#===============================================================================
+# Property Get/Set
+#===============================================================================
+    def _get_drive_xratio(self):
+        return self._drive_xratio
+
+    def _set_drive_xratio(self, v):
+        self._drive_xratio = v
+        ax = self.stage_controller.axes['x']
+        ax.drive_ratio = v
+        ax.save()
+
+    def _get_drive_yratio(self):
+        return self._drive_yratio
+
+    def _set_drive_yratio(self, v):
+        self._drive_yratio = v
+        ax = self.stage_controller.axes['y']
+        ax.drive_ratio = v
+        ax.save()
+    
+    def _get_camera_xcoefficients(self):
+        return self._camera_xcoefficients
+
+    def _set_camera_xcoefficients(self, v):
+        self._camera_coefficients = v
+        self.canvas.camera.calibration_data.xcoeff_str = v
+
+        if self.parent is not None:
+            z = self.parent.zoom
+        else:
+            z = 0
+        self.canvas.camera.set_limits_by_zoom(z)
+
+    def _get_camera_ycoefficients(self):
+        return self._camera_ycoefficients
+
+    def _set_camera_ycoefficients(self, v):
+        self._camera_ycoefficients = v
+        self.canvas.camera.calibration_data.ycoeff_str = v
+
+        if self.parent is not None:
+            z = self.parent.zoom
+        else:
+            z = 0
+        print 'sety', z, v
+        self.canvas.camera.set_limits_by_zoom(z)
+    
 if __name__ == '__main__':
 
 
@@ -314,6 +312,17 @@ if __name__ == '__main__':
 
     s.configure_traits()
 #============= EOF ====================================
+#    def _camera_coefficients_changed(self):
+#        print self.camera_coefficients
+
+#    def _calibration_manager_default(self):
+#
+##        self.video.open(user = 'calibration')
+#        return CalibrationManager(parent = self,
+#                                  laser_manager = self.parent,
+#                               video_manager = self.video_manager,
+#                               )
+
     #                adxs = []
     #                adys = []
     #                for p1, p2 in zip(polygons, polygons2):

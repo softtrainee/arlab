@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import HasTraits, Any, List, Int
+from traits.api import HasTraits, Any, List, Int, Bool
 
 #=============standard library imports ========================
 import wx
@@ -23,11 +23,11 @@ import wx
 from ctypes_opencv import cvConvertImage, cvCloneImage, \
     cvResize, cvFlip, \
     CV_CVTIMG_SWAP_RB
-from image_helper import load_image, new_dst, grayspace
-from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
-    draw_polygons, find_circles, find_ellipses, clone, crop, draw_contour_list, \
-    centroid, erode
-from ctypes_opencv.cxcore import CvPoint, cvRound, cvCircle
+from image_helper import load_image, new_dst, grayspace, clone
+#from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
+#    draw_polygons, find_circles, find_ellipses, clone, crop, draw_contour_list, \
+#    centroid, erode
+#from ctypes_opencv.cxcore import CvPoint, cvRound, cvCircle
 
 
 
@@ -38,12 +38,17 @@ class Image(HasTraits):
     source_frame = Any
     width = Int
     height = Int
-
     _bitmap = None
     
-    def load(self, path):
-        self.source_frame = load_image(path)
-        self.frames = [clone(self.source_frame)]
+    def load(self, img, swap_rb=True):
+        if isinstance(img, str):
+            img = load_image(img)
+
+        if swap_rb:
+            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
+        
+        self.source_frame = img
+        self.frames = [clone(img)]
 
     def update_bounds(self, obj, name, old, new):
         if new:
@@ -55,6 +60,7 @@ class Image(HasTraits):
 
     def get_frame(self, flip=False, mirror=False, gray=False, swap_rb=True, clone=False):
 
+        
         rframe = self._get_frame()
         if rframe is not None:
 
@@ -107,68 +113,8 @@ class Image(HasTraits):
 #
             return self._bitmap
 
-    def threshold(self, t, frame_id=0, inplace=True):
-#        f = self.frames[frame_id]
-        f = self.source_frame
-        gsrc = grayspace(f)
-        dst = threshold(gsrc, t)
-            
-        if inplace:
-            self.frames[frame_id] = colorspace(dst)
-
-        return dst
     
-    def center_crop(self, w, h, frame_id=0):
-        src = self.source_frame
         
-        x = (src.width - w) / 2
-        y = (src.height - h) / 2
-        self.frames[frame_id] = crop(src, x, y, w, h)
-        
-#    def circleate(self, frame_id=0):
-#        
-#        gsrc = self.threshold(200)
-#        _n, contours = contour(gsrc)
-#        
-#        
-#        print find_ellipses(self.frames[frame_id], contours)
-#        draw_contour_list(self.frames[frame_id], contours)
-    def centroid(self, polypts, frame_id=0):
-        center = centroid(polypts)
-        
-        r = 3
-        x = cvRound(center[0])
-        y = cvRound(center[1])
-        cpt = CvPoint(x, y)
-        cvCircle(self.frames[frame_id], cpt, r, (0, 255, 0), thickness= -1)
-        
-        print center, x, y
-        return x, y
-        
-    def polygonate(self, t, frame_id=0, skip=None, line_width=1, min_area=1000,
-                    max_area=1e10, convextest=0):
-        gsrc = self.threshold(t)
-        
-        #esrc = erode(gsrc, 2)
-        #self.frames.append(colorspace(esrc))
-        
-        _nc, contours = contour(gsrc)
-#        print skip
-        if contours:
-            polygons = get_polygons(contours, min_area, max_area, convextest)
-            print 'polygos', len(polygons)
-#            polygons = polygons[:3]
-            f = self.frames[frame_id]
-            if skip is not None:
-                polygons = [p for i, p in enumerate(polygons) if i not in skip ]
-#            polygons = polygons[:9]
-            
-            newsrc = new_dst(colorspace(gsrc), zero=True)
-            draw_contour_list(f, contours)
-#            draw_polygons(f, polygons, line_width)
-            draw_polygons(newsrc, polygons, line_width)
-            self.frames.append(newsrc)
-            return polygons
 
 
 #    def _source_frame_changed(self):
