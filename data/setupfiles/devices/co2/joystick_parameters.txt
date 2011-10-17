@@ -1,0 +1,8 @@
+#newport joystick DIO bits assignments
+#x,y
+#xaxis
+16,17
+#yaxis
+12,13
+#zaxis
+14,15
