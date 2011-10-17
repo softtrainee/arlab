@@ -116,18 +116,17 @@ class CommandProcessor(ConfigLoadable):
                     if s == self._sock:
                         client, _addr = self._sock.accept()
                         input.append(client)
-                    else:                    
-                        data = s.recv(4096)
+                    else:
+                        client = s
+                        data = client.recv(4096)
                         if data:
                             sender_addr, ptype, payload = data.split('|')                    
-                            t = Thread(target=self._process_request, args=(s, sender_addr, ptype, payload))
+                            t = Thread(target=self._process_request, args=(client, sender_addr, ptype, payload))
                             t.start()
                         else:
-                            s.close()
-                            input.remove(s)
-            except (socket.error, select.error):
-                #if the client closed its connection pop from input
-                input.remove(s)
+                            client.close()
+                            input.remove(client)
+                        
             except Exception, err:
                 self.debug('Listener Exception {}'.format(err))
             
@@ -136,7 +135,7 @@ class CommandProcessor(ConfigLoadable):
         self.debug('Result: {}'.format(data))
         try:
             sock.send(data)
-            sock.close()
+            #sock.close()
         except Exception, err:
             self.debug('End Request Exception: {}'.format(err))
              
