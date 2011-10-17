@@ -97,7 +97,15 @@ class CommandRepeater(ConfigLoadable):
             self.path = self.config_get(config, 'General', 'path')
             self.info('configured for {}'.format(self.path))
             return True
+    
+    def open(self, *args, **kw):
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.settimeout(5)
         
+        
+        self._sock = sock 
+        return True
+            
     def remote_launch(self, name):
         import subprocess, os
         #launch pychron
@@ -109,7 +117,6 @@ class CommandRepeater(ConfigLoadable):
             result = 'ERROR: failed to launch Pychron'
 
         return result
-    
     
     def get_response(self, rid, data, sender_address):
         '''
@@ -127,18 +134,20 @@ class CommandRepeater(ConfigLoadable):
         elif data == 'RemoteLaunch':
             return self.remote_launch('pychron')
         
-#        
+        try:        
+            self._sock.connect(self.path)
+        except socket.error:
+            #_sock is already connected
+            pass
+        
         try:
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            sock.settimeout(5)
-            sock.connect(self.path)
-            sock.send('{}|{}|{}'.format(sender_address, rid, data))
-            result = sock.recv(4096)
-            sock.close()
+            self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
+            result = self._sock.recv(4096)
             self.led.state = 'green'
-            
         except socket.error, e:
+            #pychron is not running
             self.led.state = 'red'
+            self.open()
             return repr(PychronCommunicationErrorCode(self.path, e))
             
         if ready_flag and data == result:
