@@ -42,9 +42,7 @@ class CommandRepeater(ConfigLoadable):
 
     test = Button
     led = Instance(LED, ())
-    
-#    system_lock = False
-#    system_lock_address = None
+
 
     def _test_fired(self):
         '''

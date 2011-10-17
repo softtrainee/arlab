@@ -26,8 +26,7 @@ import time
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
 #from handlers.api import TCPHandler, UDPHandler
-from tcp_server import TCPServer
-from udp_server import UDPServer
+
 
 #from src.managers.displays.messaging_display import MessagingDisplay
 from src.led.led_editor import LEDEditor
@@ -119,15 +118,9 @@ class RemoteCommandServer(ConfigLoadable):
                 return
             self.klass = server_class[:3]
 
-#            if config.has_option('Requests', 'handler'):
-#                handler = config.get('Requests', 'handler')
-#            else:
-            #handler = '{}Handler'.format(self.klass)
-
             ds = None
             if config.has_option('Requests', 'datasize'):
                 ds = config.getint('Requests', 'datasize')
-
 
             ptype = self.config_get(config, 'Requests', 'type', optional=False)
             if ptype is None:
@@ -143,9 +136,6 @@ class RemoteCommandServer(ConfigLoadable):
             self.loaded_host = host
             self.loaded_port = port
 
-            #self.handler = handler
-
-#            self._server = self.server_factory(server_class, addr, handler, ptype, ds)
             self._server = self.server_factory(server_class, addr, ptype, ds)
 
             #add links
@@ -165,18 +155,24 @@ class RemoteCommandServer(ConfigLoadable):
                 self.warning('Cannot connect to %s: %s' % addr)
 
 
-    def server_factory(self, server_class, addr, ptype, ds):
+    def server_factory(self, klass, addr, ptype, ds):
         '''
         '''
-        gdict = globals()
+        #from tcp_server import TCPServer
+        #from udp_server import UDPServer
+        
+        module = __import__('src.messaging.{}_server'.format(klass[:3].lower()), fromlist=[klass]) 
+        factory = getattr(module, klass)
+        
+#        gdict = globals()
 #        if handler in gdict:
 #            handler_klass = gdict[handler]
 
-        server = gdict[server_class]
+#        server = gdict[server_class]
         if ds is None:
             ds = 2 ** 10
 #        return server(self, ptype, ds, addr, handler_klass)
-        return server(self, ptype, ds, addr)
+        return factory(self, ptype, ds, addr)
 
     def open(self):
         '''
