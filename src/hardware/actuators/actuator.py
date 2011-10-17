@@ -20,10 +20,15 @@ limitations under the License.
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from agilent_gp_actuator import AgilentGPActuator
-from src.hardware.arduino.arduino_gp_actuator import ArduinoGPActuator
-from argus_gp_actuator import ArgusGPActuator
+#from agilent_gp_actuator import AgilentGPActuator
+#from src.hardware.arduino.arduino_gp_actuator import ArduinoGPActuator
+#from argus_gp_actuator import ArgusGPActuator
+
 from src.hardware.core.abstract_device import AbstractDevice
+PACKAGES = dict(AgilentGPActuator='src.hardware.actuators.agilent_gp_actuator',
+              ArduinoGPActuator='src.hardware.arduino.arduino_gp_actuator',
+              ArgusGPActuator='src.hardware.actuators.argus_gp_actuator'
+              )
 
 class Actuator(AbstractDevice):
     '''
@@ -41,18 +46,28 @@ class Actuator(AbstractDevice):
 #            #if a subsystem is specified dont want to create our on instance of a GPActuator
 #            pass
 
-        self._type = class_type = self.config_get(config, 'General', 'type')
-        if class_type is not None:
-            if 'subsystem' in class_type:
+        self._type = klass = self.config_get(config, 'General', 'type')
+        if klass is not None:
+            if 'subsystem' in klass:
                 pass
             else:
-                gdict = globals()
-                if class_type in gdict:
-                    self._cdevice = gdict[class_type](name=class_type,
-                                            configuration_dir_name=self.configuration_dir_name
-                                    )
-                    self._cdevice.load()
-                    return True
+                try:
+                    module = __import__(PACKAGES[klass], fromlist=[klass])
+                except ImportError, e:
+                    self.warning(e)
+                    return False
+                
+                factory = getattr(module, klass)
+                
+                self._cdevice = factory(name=klass,
+                                      configuration_dir_name=self.configuration_dir_name)
+#                gdict = globals()
+#                if class_type in gdict:
+#                    self._cdevice = gdict[class_type](name=class_type,
+#                                            configuration_dir_name=self.configuration_dir_name
+#                                    )
+                self._cdevice.load()
+                return True
 
     def open_channel(self, *args, **kw):
         '''

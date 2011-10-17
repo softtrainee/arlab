@@ -46,19 +46,15 @@ class ArgusGPActuator(GPActuator):
 
         cmd = 'GetValveState'
 
-        if not self.simulation:
-            s = self.ask(cmd)
+        s = self.ask(cmd)
 
-            if s is not None:
-                if s.strip() in 'True':
-                    return True
-                else:
-                    return False
+        if s is not None:
+            if s.strip() in 'True':
+                return True
             else:
                 return False
         else:
             return False
-#        return obj.state
 
     def close_channel(self, obj):
         ''' 

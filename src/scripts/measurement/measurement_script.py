@@ -17,22 +17,21 @@ limitations under the License.
 from pyface.timer.api import Timer, do_after
 #============= standard library imports ========================
 import time
-import numpy as np
+from numpy import array, vstack 
 #============= local library imports  ==========================
 from src.scripts.core.core_script import CoreScript
 from src.helpers.datetime_tools import time_generator
-from src.graph.regression_graph import StackedRegressionGraph
 from src.scripts.measurement.measurement_script_parser import MeasurementScriptParser
 
-def ppr():
-    x = 1
-    while 1:
-
-        c = [(-1.5, 2000), (-1.2, 1000), (1, 500), (1, 50), (1, 10) ]
-#        yield [coeffs[1] / 10 * random.random() + np.polyval(coeffs, x) for coeffs in c]
-        yield [np.polyval(coeffs, x) for coeffs in c]
-        x += 1
-pseudo_peak_regressions = ppr()
+#def ppr():
+#    x = 1
+#    while 1:
+#
+#        c = [(-1.5, 2000), (-1.2, 1000), (1, 500), (1, 50), (1, 10) ]
+##        yield [coeffs[1] / 10 * random.random() + np.polyval(coeffs, x) for coeffs in c]
+#        yield [np.polyval(coeffs, x) for coeffs in c]
+#        x += 1
+#pseudo_peak_regressions = ppr()
 #pc_window_cnt = 0
 class MeasurementScript(CoreScript):
     parser_klass = MeasurementScriptParser
@@ -96,7 +95,8 @@ class MeasurementScript(CoreScript):
 
     def record(self):
         t = self.time_generator.next()
-        d = pseudo_peak_regressions.next()
+        #d = pseudo_peak_regressions.next()
+        d = 0
         #come
         d.reverse()
 
@@ -106,9 +106,9 @@ class MeasurementScript(CoreScript):
 
         data = [(t, di) for di in d]
         if self.signals is None:
-            self.signals = np.array(datum)
+            self.signals = array(datum)
         else:
-            self.signals = np.vstack((self.signals, datum))
+            self.signals = vstack((self.signals, datum))
 
         do_after(1, self.graph.add_data, data)
 
@@ -181,6 +181,8 @@ class MeasurementScript(CoreScript):
             return True
 
     def set_graph(self):
+        from src.graph.regression_graph import StackedRegressionGraph
+
         g = StackedRegressionGraph(
                          window_title='Peak Regression {}'.format('foo'),
                          window_height=800,

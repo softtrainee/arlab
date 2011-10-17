@@ -22,8 +22,7 @@ import os
 
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
-
-from src.monitors.pumping_monitor import PumpingMonitor
+#from src.monitors.pumping_monitor import PumpingMonitor
 from src.helpers.paths import canvas2D_dir, canvas3D_dir, scripts_dir
 from src.scripts.extraction_line_script import ExtractionLineScript
 
@@ -58,7 +57,7 @@ class ExtractionLineManager(Manager):
 #    multruns_report_manager = Instance(MultrunsReportManager)
     
     view_controller = Instance(ViewController)
-    pumping_monitor = Instance(PumpingMonitor)
+#    pumping_monitor = Instance(PumpingMonitor)
 
     runscript = None
     
@@ -318,11 +317,11 @@ class ExtractionLineManager(Manager):
         '''
         return ExtractionLineCanvas(manager=self)
 
-    def _pumping_monitor_default(self):
-        '''
-        '''
-        return PumpingMonitor(gauge_manager=self.gauge_manager,
-                              parent=self)
+#    def _pumping_monitor_default(self):
+#        '''
+#        '''
+#        return PumpingMonitor(gauge_manager=self.gauge_manager,
+#                              parent=self)
 
 #    def _multruns_report_manager_default(self):
 #        return MultrunsReportManager(application=self.application)

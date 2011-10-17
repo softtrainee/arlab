@@ -349,8 +349,6 @@ class ValveManager(Manager):
 
     def _load_sections_from_file(self, path):
         '''
-            @type path: C{str}
-            @param path:
         '''
         self.sections = []
         config = self.get_configuration(path=path)
@@ -385,7 +383,6 @@ class ValveManager(Manager):
                 act = a[4]
 
             actuator = self.get_actuator_by_name(act)
-
             v = HardwareValve(name=a[0],
                      address=a[1],
                      actuator=actuator,

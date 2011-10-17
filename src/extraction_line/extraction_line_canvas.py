@@ -16,7 +16,7 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Any, Property, Float, Enum
 from traitsui.api import View, Item
-from enable.component_editor import ComponentEditor
+#from enable.component_editor import ComponentEditor
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -24,8 +24,6 @@ import os
 from src.canvas.canvas3D.canvas3D_editor import Canvas3DEditor
 
 from src.helpers import paths
-from src.canvas.canvas2D.extraction_line_canvas2D import ExtractionLineCanvas2D
-
 class ExtractionLineCanvas3DDummy(HasTraits):
     '''
     '''
@@ -155,8 +153,8 @@ class ExtractionLineCanvas3DDummy(HasTraits):
 class ExtractionLineCanvas(HasTraits):
     '''
     '''
-    canvas2D = Instance(ExtractionLineCanvas2D)
-    canvas3D = Instance(ExtractionLineCanvas3DDummy)
+    canvas2D = Any#Instance(ExtractionLineCanvas2D)
+    canvas3D = Any#Instance(ExtractionLineCanvas3DDummy)
     manager = Any
     style = Enum('2D', '3D')
     width = Float(400)
@@ -227,6 +225,8 @@ class ExtractionLineCanvas(HasTraits):
     def _canvas2D_default(self):
         '''
         '''
+        from src.canvas.canvas2D.extraction_line_canvas2D import ExtractionLineCanvas2D
+
         e = ExtractionLineCanvas2D(
                                    manager=self.manager
                                    )
@@ -252,6 +252,7 @@ class ExtractionLineCanvas(HasTraits):
         '''
         '''
 
+        from enable.component_editor import ComponentEditor
         w, h = self._get_canvas_size()
 
         g = Item('canvas2D',

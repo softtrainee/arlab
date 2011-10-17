@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import Any, Property, implements
+from traits.api import Any, Property, implements, DelegatesTo
 from traitsui.api import View, Item
 
 #=============standard library imports ========================
@@ -31,14 +31,18 @@ class AbstractDevice(ViewableDevice):
     _cdevice = Any
 
     simulation = Property(depends_on='_cdevice')
-    com_class = Property(depends_on='_cdevice')
+#    com_class = Property(depends_on='_cdevice')
 
-    last_command = Property(depends_on='_cdevice.last_command')
-    last_response = Property(depends_on='_cdevice.last_response')
-    def _get_last_command(self):
-        return self._cdevice.last_command
-    def _get_last_response(self):
-        return self._cdevice.last_response
+#    last_command = Property(depends_on='_cdevice.last_command')
+#    last_response = Property(depends_on='_cdevice.last_response')
+#    
+    scan_units = DelegatesTo('_cdevice')
+    last_command = DelegatesTo('_cdevice')
+    last_response = DelegatesTo('_cdevice')
+#    simulation = DelegatesTo('_cdevice')
+    com_class = DelegatesTo('_cdevice')
+    
+
 #    def start(self):
 #        '''
 #        '''
@@ -84,11 +88,15 @@ class AbstractDevice(ViewableDevice):
 #===============================================================================
 # viewable device protocol
 #===============================================================================
-
-    def _get_com_class(self):
-        if self._cdevice is not None:
-            return self._cdevice.com_class
-
+#    def _get_last_command(self):
+#        return self._cdevice.last_command
+#    def _get_last_response(self):
+#        return self._cdevice.last_response
+    
+#    def _get_com_class(self):
+#        if self._cdevice is not None:
+#            return self._cdevice.com_class
+#
     def _get_simulation(self):
         '''
         '''

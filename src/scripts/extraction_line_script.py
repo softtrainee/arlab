@@ -20,16 +20,15 @@ from pyface.timer.api import do_later
 #============= standard library imports ========================
 from threading import Condition
 import time
+import os
 #============= local library imports  ==========================
 from src.scripts.core.core_script import CoreScript
 from src.helpers.filetools import parse_file
 from src.helpers.datetime_tools import generate_timestamp
-
 from wait_dialog import WaitDialog
 from extraction_line_script_parser import ExtractionLineScriptParser
 #from src.scripts.analysis.analysis_script import AnalysisScript
 from src.helpers.paths import scripts_dir
-import os
 from src.scripts.measurement.measurement_script import MeasurementScript
 
 class Sniffer:

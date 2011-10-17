@@ -27,6 +27,7 @@ from src.helpers import paths
 from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors.system_errors import SystemLockErrorCode
+import select
 
 #class Processor(ThreadingUDPServer):
 class CommandProcessor(ConfigLoadable):
@@ -78,17 +79,19 @@ class CommandProcessor(ConfigLoadable):
 
         try:
             os.remove(self.path)
-        except:
+        except OSError:
             pass
         
         self._sock.bind(self.path)
 
         self._sock.listen(10)
         self.info('listening to {}'.format(self.path))
-
         t = Thread(target=self._listener)
         t.start()
+        
         return True
+    
+    
     def _check_system_lock(self, addr):    
         '''
             return true if addr is not equal to the system lock address
@@ -103,71 +106,92 @@ class CommandProcessor(ConfigLoadable):
         '''
         '''
 
+        input = [self._sock]
         while self._listen:
-
-            sock, _addr = self._sock.accept()
             
-            data = sock.recv(4096)
-            sender_addr, ptype, payload = data.split('|')
+            try:
+                inputready, _outputready, _exceptready = select.select(input, [], [])
+               
+                for s in inputready:
+                    if s == self._sock:
+                        client, _addr = self._sock.accept()
+                        input.append(client)
+                    else:                    
+                        data = s.recv(4096)
+                        if data:
+                            sender_addr, ptype, payload = data.split('|')                    
+                            t = Thread(target=self._process_request, args=(s, sender_addr, ptype, payload))
+                            t.start()
+                        else:
+                            s.close()
+                            input.remove(s)
+            except (socket.error, select.error):
+                #if the client closed its connection pop from input
+                input.remove(s)
+            except Exception, err:
+                self.debug('Listener Exception {}'.format(err))
             
-            t = Thread(target=self._process_request, args=(sock, sender_addr, ptype, payload))
-            t.start()
-#            resp = self._process_request(sock, ptype, payload)
+                    
     def _end_request(self, sock, data):
         self.debug('Result: {}'.format(data))
-
-        sock.send(data)
-        sock.close()
+        try:
+            sock.send(data)
+            sock.close()
+        except Exception, err:
+            self.debug('End Request Exception: {}'.format(err))
              
     def _process_request(self, sock, sender_addr, request_type, data):
         
         self.debug('Request: {}, {}'.format(request_type, data.strip()))
-
-        if self._check_system_lock(sender_addr):
-            result = repr(SystemLockErrorCode(self.system_lock_name,
-                                         self.system_lock_address,
-                                         sender_addr, logger=self.logger))
-        else:
-            
-            result = 'error handling'
-            if not request_type in ['System', 'Diode', 'Synrad', 'CO2', 'test']:
-                self.warning('Invalid request type ' + request_type)
-            elif request_type == 'test':
-                result = data
+        try:
+            if self._check_system_lock(sender_addr):
+                result = repr(SystemLockErrorCode(self.system_lock_name,
+                                             self.system_lock_address,
+                                             sender_addr, logger=self.logger))
             else:
-    
-                klass = '{}Handler'.format(request_type.capitalize())
-                pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
-                try:
-                    
-                        
-                    module = __import__(pkg, globals(), locals(), [klass])
-    
-                    factory = getattr(module, klass)
-    
-                    handler = factory(application=self.application)
-                    '''
-                        the context filter uses the handler object to 
-                        get the kind and request
-                        if the min period has elapse since last request or the message is triggered
-                        get and return the state from pychron
-                        
-            
-                        pure frequency filtering could be accomplished earlier in the stream in the 
-                        Remote Hardware Server (CommandRepeater.get_response) 
-                    '''
-    
-                    result = handler.handle(data, sender_addr)
-    #                result = self.context_filter.get_response(handler, data)
-    
-                except ImportError, e:
-                    result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
-    
-            
-            if isinstance(result, ErrorCode):
-                result = repr(result)
+                
+                result = 'error handling'
+                if not request_type in ['System', 'Diode', 'Synrad', 'CO2', 'test']:
+                    self.warning('Invalid request type ' + request_type)
+                elif request_type == 'test':
+                    result = data
+                else:
         
-        self._end_request(sock, result)
+                    klass = '{}Handler'.format(request_type.capitalize())
+                    pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
+                    try:
+                        
+                            
+                        module = __import__(pkg, globals(), locals(), [klass])
+        
+                        factory = getattr(module, klass)
+        
+                        handler = factory(application=self.application)
+                        '''
+                            the context filter uses the handler object to 
+                            get the kind and request
+                            if the min period has elapse since last request or the message is triggered
+                            get and return the state from pychron
+                            
+                
+                            pure frequency filtering could be accomplished earlier in the stream in the 
+                            Remote Hardware Server (CommandRepeater.get_response) 
+                        '''
+        
+                        result = handler.handle(data, sender_addr)
+        #                result = self.context_filter.get_response(handler, data)
+        
+                    except ImportError, e:
+                        result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
+        
+                
+                if isinstance(result, ErrorCode):
+                    result = repr(result)
+
+            self._end_request(sock, result)
+        
+        except Exception, err:
+            self.debug('Process request Exception {}'.format(err))
         
 
 #if __name__ == '__main__':

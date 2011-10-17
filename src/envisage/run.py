@@ -21,7 +21,6 @@ from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 import os
 import sys
-
 #============= local library imports  ==========================
 from pychron_application import Pychron
 
@@ -99,6 +98,7 @@ def get_user_plugins():
         try:
             m = __import__(package, gdict, locals(), [name], -1)
             klass = getattr(m, name)
+            
         except ImportError, e:
             klass = None
             logger.warning('****** %s could not be imported %s*****' % (name, e))
@@ -163,9 +163,7 @@ def launch(beta=False):
              HardwarePlugin(),
              HardwareUIPlugin()
              ]
-
     plugins += get_user_plugins()
-
 #    use_developer = False
 #    if use_developer:
 #        plugins += get_developer_plugins()
@@ -177,8 +175,11 @@ def launch(beta=False):
 
                   beta=beta
                   )
-
-    lab.run()
+    try:
+        lab.run()
+    except Exception, err:
+        lab.exit()
+        
     logger.info('Quiting Pychron')
 
 #============= EOF ====================================
