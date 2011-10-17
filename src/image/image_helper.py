@@ -43,11 +43,11 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
 from ctypes import POINTER
 from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT, CvVect32f, \
     cvFitEllipse2, cvCreateStructuringElementEx, CV_SHAPE_RECT, CV_RETR_CCOMP, \
-    CV_RETR_TREE, cvFilter2D
+    CV_RETR_TREE, cvFilter2D, cvBoundingRect, cvPyrDown, cvPyrUp
 from ctypes_opencv.cxcore import cvCvtSeqToArray, CV_32SC2, CV_32FC2, cvConvert, \
     CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice, CV_SEQ_FLAG_HOLE, \
     CV_32FC1, cvScalarAll, cvSet, cvSet2D, cvConvertScale, cvReleaseData, \
-    cvGet1D, cvSet1D, cvFillPoly
+    cvGet1D, cvSet1D, cvFillPoly, cvSize, cvRect
 from src.data_processing.centroid.centroid import centroid as _centroid
 from threading import Thread
 
@@ -193,7 +193,7 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
     '''
 
     polygons = []
-#    br = None
+    brs = []
 #    bra = 0
     for i, cont in enumerate(contours.hrange()):
         
@@ -217,13 +217,11 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
             and cvCheckContourConvexity(result) == convextest
             and hole_flag
                 ):
-
             ra = result.asarray(CvPoint)
             polygons.append(new_seq([ra[i] for i in range(result.total)]))
+            brs.append(cvBoundingRect(result))
 
-
-
-    return [p.asarray(CvPoint) for p in polygons] #, br
+    return [(p.asarray(CvPoint)) for p in polygons], brs
 
 def convert_color(color):
     '''
@@ -276,12 +274,10 @@ def draw_contour_list(src, clist, external_color=(255, 0, 0),
 #        pa = p.asarray(CvPoint)
 #        print pa
 #        cvPolyLine(src, [pa], 0, CV_RGB(0, 255, 0), 3, CV_AA, 0)
-def draw_rectangle(src, x, y, w, h, color=(255, 0, 0), fill=False, thickness=3):
+def draw_rectangle(src, x, y, w, h, color=(255, 0, 0), thickness=1):
     '''
         
     '''
-    if fill:
-        thickness = -1
 
     color = convert_color(color)
     
@@ -348,7 +344,7 @@ def new_rect(x, y, w, h):
 def new_point(x, y):
     '''
     '''
-    return CvPoint(x, y)
+    return CvPoint(cvRound(x), cvRound(y))
 
 def new_size(src):
     '''
@@ -448,6 +444,20 @@ def dilate(src, dv):
 
 def sharpen(src):
     pass
+
+def remove_noise(img, x, y, w, h):
+    sz = cvSize(w, h)
+    #sz = cvSize(img.width & -2, img.height & -2)
+    subimage = cvCloneImage(img) # make a copy of input image
+    crop(subimage, x, y, w, h)
+    #gray = cvCreateImage(sz, 8, 1)
+    pyr = cvCreateImage(cvSize(int(sz.width / 2), int(sz.height / 2)), 8, 3)
+#    subimage = cvGetSubRect(timg, None, cvRect(0, 0, sz.width, sz.height))
+    
+    # down-scale and upscale the image to filter out the noise
+    cvPyrDown(subimage, pyr, 7)
+    cvPyrUp(pyr, subimage, 7)
+    return subimage
 #    gray = grayspace(src)
 #    lapl = grayspace(src)
 #    
