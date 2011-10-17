@@ -98,7 +98,7 @@ class CommandRepeater(ConfigLoadable):
     
     def open(self, *args, **kw):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.settimeout(5)
+        sock.settimeout(1)
         
         
         self._sock = sock 
