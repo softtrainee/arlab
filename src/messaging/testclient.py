@@ -34,35 +34,50 @@ from threading import Thread
 #import struct
 
 class Client(HasTraits):
-    command = String('Read argus_temp_monitor', enter_set=True, auto_set=False)
+    command = String('GetValveState D', enter_set=True, auto_set=False)
     resend = Button
     receive_data_stream = Button
     response = String
-    port = Int(1068)
-    host = Str('localhost')
+    port = Int(1063)
+    host = Str('192.168.0.65')
     kind = Enum('UDP', 'TCP')
 
     period = Float(100)
     periodic = Event
     periodic_label = Property(depends_on='_alive')
-
+    periods_completed = Int
+    time_remain = Float
     n_periods = Int(100)
     _alive = Bool(False)
 
+    calculated_duration = Property(depends_on=['n_periods', 'period'])
+    def _get_calculated_duration(self):
+        return self.period / 1000. * self.n_periods / 3600.
+    
     def _periodic_fired(self):
         self._alive = not self._alive
+        self.periods_completed = 0
         if self._alive:
             t = Thread(target=self._loop)
             t.start()
 
     def _loop(self):
-        i = 0
-        while self._alive and i <= self.n_periods:
-            self._send()
-            time.sleep(self.period / 1000.0)
-            i += 1
+        self.time_remain = self.calculated_duration
+        sock = self.get_connection()
+        while self._alive and self.periods_completed <= self.n_periods:
+            t = time.time()
+            try:
+                self._send(sock=sock)
+            
+                self.time_remain = self.calculated_duration - self.periods_completed * self.period / 1000.0 / 3600.
+                self.periods_completed += 1
+            
+                time.sleep(max(0, self.period / 1000.0 - (time.time() - t)))
+            except Exception, e:
+                print e
+        print 'looping complete'    
         self._alive = False
-
+        
     def _get_periodic_label(self):
         return 'Periodic' if not self._alive else 'Stop'
     def _resend_fired(self):
@@ -71,14 +86,19 @@ class Client(HasTraits):
     def _command_changed(self):
         self._send()
 
-    def _send(self):
-        #open connection
-        conn = self.get_connection()
+    def _send(self, sock=None):
+        if sock is None:
+            #open connection
+            sock = self.get_connection()
 
         #send command
-        conn.send(self.command)
-        self.response = conn.recv(4096)
-
+        sock.send(self.command)
+        self.response = sock.recv(4096)
+        
+        if 'ERROR' in self.response:
+            print time.strftime('%H:%M:%S'), self.response
+        return sock
+    
     def get_connection(self):
         packet_kind = socket.SOCK_STREAM
         family = socket.AF_INET
@@ -87,6 +107,7 @@ class Client(HasTraits):
             packet_kind = socket.SOCK_DGRAM
                     
         sock = socket.socket(family, packet_kind)
+        sock.settimeout(1)
         sock.connect(addr)
         return sock
     
@@ -127,7 +148,11 @@ class Client(HasTraits):
                      HGroup(Item('periodic',
                                  editor=ButtonEditor(label_value='periodic_label'),
                                  show_label=False), Item('period', show_label=False),
-                                 Item('n_periods')
+                                 Item('n_periods'),
+                                 Item('periods_completed', show_label=False)
+                            ),
+                     HGroup(Item('calculated_duration', format_str='%0.3f', style='readonly'),
+                            Item('time_remain', format_str='%0.3f', style='readonly'),
                             ),
                      Item('kind', show_label=False),
                      Item('port'),

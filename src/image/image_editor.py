@@ -27,6 +27,7 @@ import math
 #=============local library imports  ==========================
 from ctypes_opencv import  cvIplImageAsBitmap, cvCreateImage, CvSize, cvAddS, CvScalar, \
  CvRect, cvSetImageROI, cvResize, cvResetImageROI
+from ctypes_opencv.cxcore import cvZero
 
 
 class _ImageEditor(Editor):
@@ -54,14 +55,10 @@ class _ImageEditor(Editor):
         if obj.frames:
             return obj.frames
 
-
     def _create_control(self, parent, track_mouse=False):
         '''
         '''
         panel = Panel(parent, -1, style=CLIP_CHILDREN)
-
-        panel.SetClientSize((640, 480))
-#        panel.SetClientSize((893, 610))
 
 
         panel.Bind(EVT_IDLE, self.onIdle)
@@ -108,8 +105,7 @@ class _ImageEditor(Editor):
 
     def onMotion(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
         #self.value.mouse_x=event.GetX()
         #self.value.mouse_y=event.GetY()
@@ -129,7 +125,10 @@ class _ImageEditor(Editor):
         '''
         '''
 
-        bitmap = cvIplImageAsBitmap(src, swap=False, flip=False)
+        bitmap = cvIplImageAsBitmap(src,
+                                    swap=False,
+                                    flip=False
+                                    )
         dc.DrawBitmap(bitmap, 0, 0, False)
 
     def _display_crosshair(self, dc, x, y, pen=None):
@@ -152,21 +151,18 @@ class _ImageEditor(Editor):
                     cols = rows + 1
                     if cols * rows < nsrc:
                         rows += 1
-                #shape=(rows,2*cols)
 
                 size = 300
-                sn = 10
-                offsetx = 100 * sn
-                offsety = 60 * sn
 
                 #create display image
-                display = cvCreateImage(CvSize(int(offsetx + size * cols),
-                                             int(offsety + size * rows)), 8, 3)
+                w = self.value.width
+                h = self.value.height
 
+                display = cvCreateImage(CvSize(w, h), 8, 3)
 
+                cvZero(display)
                 cvAddS(display, CvScalar(200, 200, 200), display)
-
-                padding = 10
+                padding = 12
                 m = padding
                 n = padding
                 for i, s in enumerate(src):
@@ -176,7 +172,7 @@ class _ImageEditor(Editor):
                     scale = ma / size
                     if i % cols == 0 and m != padding:
                         m = padding
-                        n += size - offsety / sn + padding
+                        n += size + padding
 
                     cvSetImageROI(display, CvRect(int(m), int(n), int(x / scale), int(y / scale)))
                     cvResize(s, display)
@@ -201,3 +197,4 @@ class ImageEditor(BasicEditorFactory):
     '''
     '''
     klass = _ImageEditor
+    

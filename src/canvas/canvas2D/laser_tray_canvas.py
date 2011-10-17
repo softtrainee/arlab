@@ -149,7 +149,7 @@ class LaserTrayCanvas(MapCanvas):
 
             pos = self.valid_position(event.x, event.y)
             if pos:
-                self.parent.stage_controller.linear_move(*pos)
+                self.parent.linear_move(*pos, calibrated_space=False)
                 event.handled = True
 
     def normal_mouse_wheel(self, event):
