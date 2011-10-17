@@ -1,17 +1,17 @@
 #=============enthought library imports=======================
-from traits.api import HasTraits, Any, Instance, Range, Button, Int
+from traits.api import Any, Instance, Range, Button, Int
 from traitsui.api import View, Item
 from src.image.image_helper import draw_polygons, draw_contour_list, colorspace, \
     threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
-    erode, dilate, new_seq, draw_rectangle
-from ctypes_opencv.cxcore import cvRound, cvCircle, CV_AA
+    erode, dilate, draw_rectangle
+from ctypes_opencv.cxcore import cvCircle, CV_AA
 from src.image.image import Image
 from src.image.image_editor import ImageEditor
 from pyface.timer.do_later import do_later
-from ctypes_opencv.cv import cvBoundingRect
+from src.managers.manager import Manager
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class MachineVisionManager(HasTraits):
+class MachineVisionManager(Manager):
 
     video = Any
     image = Instance(Image, ())
@@ -194,12 +194,12 @@ class MachineVisionManager(HasTraits):
                  )
         return v
 
-m = MachineVisionManager()
-def timeit_test():
-    m.image.load('/Users/Ross/Desktop/testtray.tiff', swap_rb=True)
-    
-    m.calculate_positioning_error()
-    #m.configure_traits()
+#m = MachineVisionManager()
+#def timeit_test():
+#    m.image.load('/Users/Ross/Desktop/testtray.tiff', swap_rb=True)
+#    
+#    m.calculate_positioning_error()
+#    #m.configure_traits()
 
 def main():
     m = MachineVisionManager()

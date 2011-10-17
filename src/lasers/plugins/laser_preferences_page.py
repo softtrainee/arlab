@@ -37,11 +37,14 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     calibration_style = Enum('pychron', 'MassSpec')
     scaling = Range(1.0, 3.0, 1.0)
     
+    auto_center = Bool(False)
+    
     #enable_close_after = Bool
     #close_after = Range(0, 60, 1)
     def get_additional_groups(self):
         grp = Group(
                Item('use_video'),
+               Item('auto_center', visible_when='use_video'),
                Item('show_map'),
                Item('show_grids'),
                Item('show_laser_position'),
