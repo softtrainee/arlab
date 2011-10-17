@@ -28,6 +28,7 @@ import time
 from threading import Thread, Condition
 from pyface.timer.api import do_later
 from src.managers.stage_managers.machine_vision.machine_vision_manager import MachineVisionManager
+from apptools.preferences.preference_binding import bind_preference
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -71,8 +72,13 @@ class VideoStageManager(StageManager, Videoable):
     pxpercmx = DelegatesTo('camera_calibration_manager')
     pxpercmy = DelegatesTo('camera_calibration_manager')
         
-    auto_center = Bool(True)
+    auto_center = Bool(False)
     machine_vision_manager = Instance(MachineVisionManager)
+    def bind_preferences(self, pref_id):
+        super(VideoStageManager, self).bind_preferences(pref_id)
+        
+        bind_preference(self, 'auto_center', '{}.auto_center'.format(pref_id))
+        
         
     def update_camera_params(self, obj, name, old, new):
         if name == 'focus_z':
