@@ -53,10 +53,8 @@ class VideoStageManager(StageManager, Videoable):
     camera_calibration_manager = Instance(CameraCalibrationManager)
     calculate = Button
 
-
     calibrate_focus = Button
     focus_z = Float
-
 
     drive_xratio = Property(Float(enter_set=True,
                                    auto_set=False
@@ -76,7 +74,6 @@ class VideoStageManager(StageManager, Videoable):
     auto_center = Bool(True)
     machine_vision_manager = Instance(MachineVisionManager)
         
-    
     def update_camera_params(self, obj, name, old, new):
         if name == 'focus_z':
             self.focus_z = new
@@ -102,8 +99,6 @@ class VideoStageManager(StageManager, Videoable):
         super(VideoStageManager, self).kill()
         self.canvas.camera.save_calibration()
         self.video.close(user='underlay')
-
-    
 
     def _canvas_factory(self):
         '''
