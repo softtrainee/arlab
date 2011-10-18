@@ -138,15 +138,27 @@ class CommandRepeater(ConfigLoadable):
             #_sock is already connected
             pass
         
+        
         try:
             self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
             result = self._sock.recv(4096)
             self.led.state = 'green'
         except socket.error, e:
-            #pychron is not running
-            self.led.state = 'red'
-            self.open()
-            return repr(PychronCommunicationErrorCode(self.path, e))
+            is_ok = False
+            for i in range(3):
+                try:
+                    self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
+                    result = self._sock.recv(4096)
+                    is_ok = True
+                    break
+                except socket.error:
+                    pass
+                
+            if not is_ok:
+                #pychron is not running
+                self.led.state = 'red'
+                self.open()
+                return repr(PychronCommunicationErrorCode(self.path, e))
             
         if ready_flag and data == result:
             result = 'OK'
