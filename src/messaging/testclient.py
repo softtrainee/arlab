@@ -93,7 +93,7 @@ class Client(HasTraits):
 
         #send command
         sock.send(self.command)
-        self.response = sock.recv(4096)
+        self.response = sock.recv(1024)
         
         if 'ERROR' in self.response:
             print time.strftime('%H:%M:%S'), self.response

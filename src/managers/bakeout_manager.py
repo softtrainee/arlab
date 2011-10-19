@@ -44,7 +44,7 @@ class BakeoutManager(Manager):
     bakeout6 = Instance(BakeoutController)
     
     update_interval = Float(2)
-    scan_window = Int(10)
+    scan_window = Int(60)
     execute = Event
     save = Button
     execute_label = Property(depends_on='alive')
@@ -217,7 +217,7 @@ class BakeoutManager(Manager):
                 config.add_section(tr)
                 
                 script = getattr(tr_obj, 'script')
-                if script is not '---':
+                if script != '---':
                     config.set(tr, 'script', script)
                 else:
                     for attr in ['duration', 'setpoint']:
@@ -225,6 +225,7 @@ class BakeoutManager(Manager):
 
             with open(path, 'w') as f:
                 config.write(f)
+                
             self._set_configuration(path)
             self._load_configurations()
 
@@ -335,7 +336,7 @@ class BakeoutManager(Manager):
                 self._configurations.append(os.path.join(bakeout_config_dir, p))
 
     def _parse_config_file(self, p):
-        config = self.get_configuration(p)
+        config = self.get_configuration(p, warn=False)
         if config is None:
             return 
         for section in config.sections():
@@ -385,7 +386,7 @@ class BakeoutManager(Manager):
 
         graph.clear()
 
-        graph.new_plot(data_limit=self.scan_window / self.update_interval,
+        graph.new_plot(data_limit=self.scan_window * 60 / self.update_interval,
                        scan_delay=self.update_interval,
                        show_legend='ll',
                        #track_amount=1200,
