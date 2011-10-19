@@ -82,7 +82,6 @@ class DummyLM(object):
 
 class LaserHandler(BaseRemoteHardwareHandler):
 
-	
     def error_response(self, err):
         return 'OK' if (err is None or err is True) else err
 
@@ -215,7 +214,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
         jogs = manager.stage_manager.pattern_manager.get_pattern_names()
         return ','.join(jogs)
 
-    def JogName(self, manager, name, *args):
+    def DoJog(self, manager, name, *args):
         err = manager.stage_manager.pattern_manager.execute_pattern(name)
         return self.error_response(err)
 
@@ -229,13 +228,11 @@ class LaserHandler(BaseRemoteHardwareHandler):
         except ValueError:
             return InvalidArgumentsErrorCode('SetBeamDiameter', data, logger=self)
         
-        
         if manager.set_beam_diameter(bd, block=False):
             return 'OK'
         else:
             return 'OK - beam disabled'
         
-
     def GetBeamDiameter(self, manager, *args):
         return manager.beam
 
@@ -267,26 +264,4 @@ class LaserHandler(BaseRemoteHardwareHandler):
         manager.set_laser_power(p)
         return result
 #============= EOF ====================================
-#    def handle(self, data):
-#        result = 'error handling'
-#
-#        args = self.split_data(data)
-#        if args:
-#
-#            manager = self.get_laser_manager(self.manager_name)
-#            if manager is None:
-#                result = 'Laser not connected to system'
-#            else:
-#
-#                func = self._get_func(args[0])
-#                if func is not None:
-#
-#                    try:
-#                        if len(args) > 1:
-#                            result = func(manager, args[1])
-#                        else:
-#                            result = func(manager)
-#                    except TypeError, e:
-#                        self.warning('Invalid command {}, {}, {}'.format(args, data, e))
-#
-#        return str(result)
+

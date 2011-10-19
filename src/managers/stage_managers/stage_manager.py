@@ -18,43 +18,28 @@ from traits.api import DelegatesTo, Int, Property, Instance, \
     Button, List, String, Event, Bool, on_trait_change
 from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, spring, \
      EnumEditor, InstanceEditor
-#from pyface.timer.api import do_later, do_after
 from apptools.preferences.preference_binding import bind_preference
-
 #=============standard library imports =======================
 import os
 from threading import Thread
-#from numpy import linspace
-#import math
 import time
-
 #=============local library imports  ==========================
-
 from src.managers.manager import Manager
 from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
 from src.managers.displays.rich_text_display import RichTextDisplay
 from src.helpers.color_generators import colors8i as colors
 
 from src.hardware.motion_controller import MotionController
-from src.helpers.paths import map_dir, hidden_dir
+from src.helpers.paths import map_dir
 from src.managers.stage_managers.affine import AffineTransform
 from src.helpers.logger_setup import setup
 
-
-#from jogging.jogger import line_jogger, square_jogger
-#from jogging.jog_manager import JogManager
 from src.managers.motion_controller_managers.motion_controller_manager import MotionControllerManager
 from src.managers.stage_managers.tray_calibration_manager import TrayCalibrationManager
 from src.managers.stage_managers.stage_component_editor import LaserComponentEditor
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem
 from pattern.pattern_manager import PatternManager
 from src.managers.stage_managers.stage_map import StageMap
-
-#UPDATE_MS = 300
-
-PICKLE_PATH = p = os.path.join(hidden_dir, '.stage_calibration')
-
-
 
 class StageManager(Manager):
     '''
@@ -88,12 +73,6 @@ class StageManager(Manager):
     joystick = Bool(False)
     joystick_timer = None
 
-    #@todo: change jog to LaserPattern
-#    jog = Button()
-#    jog_label = Property(depends_on = '_jogging')
-#    _jogging = Bool(False)
-
-#    jog_manager = Instance(JogManager)
     pattern_manager = Instance(PatternManager)
 
     buttons = List([('home', None, None),
@@ -107,7 +86,6 @@ class StageManager(Manager):
     hole_thread = None
     hole = Property(Int(enter_set=True, auto_set=False), depends_on='_hole')
     _hole = Int
-
 
     canvas_editor_klass = LaserComponentEditor
 
@@ -162,9 +140,6 @@ class StageManager(Manager):
         #load the calibration file
         self.tray_calibration_manager.load_calibration()
 
-#    def kill(self):
-#        super(StageManager, self).kill()
-
     def initialize_stage(self):
         self.canvas.parent = self
         self.update_axes()
@@ -183,12 +158,6 @@ class StageManager(Manager):
 
         self.output.add_text(msg=msg, color=color)
 
-#    def arc_move(self, *args, **kw):
-#        self.timer = self.timer_factory()
-#        self.stage_controller.arc_move(*args, ** kw)
-
-#    def _hole_changed(self, name, old, new):
-#        self._move_to_hole(new)
     def single_axis_move(self, *args, **kw):
         return self.stage_controller.single_axis_move(*args, **kw)
         
