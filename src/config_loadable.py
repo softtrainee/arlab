@@ -106,7 +106,7 @@ class ConfigLoadable(Loggable):
         with open(path, 'w') as f:
             config.write(f)
 
-    def get_configuration(self, path=None, name=None):
+    def get_configuration(self, path=None, name=None, warn=True):
         '''
 
         '''
@@ -131,8 +131,8 @@ class ConfigLoadable(Loggable):
             config.read(path)
             self.config_path = path
             return config
-        else:
-            self.warning('%s not a valid initialization file' % path)
+        elif warn:
+            self.debug('{} not a valid initialization file'.format(path))
 
     def get_configuration_writer(self):
         config = ConfigParser.RawConfigParser()
