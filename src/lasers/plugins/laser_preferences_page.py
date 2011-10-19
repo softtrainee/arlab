@@ -16,7 +16,7 @@ limitations under the License.
 #from __future__ import with_statement
 #============= enthought library imports =======================
 from traits.api import Bool, Range, Enum, Color
-from traitsui.api import  Item, Group, HGroup
+from traitsui.api import  Item, Group
 
 #============= standard library imports ========================
 
@@ -32,15 +32,13 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     show_map = Bool(False)
 
     crosshairs_kind = Enum(1, 2, 3, 4)
-    crosshairs_color = Color('maroon')#Enum('red', 'green', 'blue', 'yellow', 'black')
+    crosshairs_color = Color('maroon')
     desired_position_color = Color('green')
     calibration_style = Enum('pychron', 'MassSpec')
     scaling = Range(1.0, 3.0, 1.0)
     
     auto_center = Bool(False)
     
-    #enable_close_after = Bool
-    #close_after = Range(0, 60, 1)
     def get_additional_groups(self):
         grp = Group(
                Item('use_video'),
@@ -56,18 +54,6 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                Item('scaling'),
                label='Stage',
                )
-#        grp2 = HGroup(
-#                    Item('close_after', enabled_when='enable_close_after'),
-#                    Item('enable_close_after', show_label=False)
-#                    )
-        return [grp]#, grp2]
-
-#    def traits_view(self):
-#        '''
-#        '''
-#        v = View(grp,
-#                 hardware_grp
-#                 )
-#        return v
-#============= views ===================================
+        
+        return [grp]
 #============= EOF ====================================
