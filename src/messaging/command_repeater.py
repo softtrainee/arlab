@@ -143,10 +143,25 @@ class CommandRepeater(ConfigLoadable):
             result = self._sock.recv(4096)
             self.led.state = 'green'
         except socket.error, e:
-            #pychron is not running
-            self.led.state = 'red'
-            self.open()
-            return repr(PychronCommunicationErrorCode(self.path, e))
+            
+            is_ok = False
+            retries = 0
+            if 'Errno 32' in str(e):
+                retries = 2
+            #use a retry loop only if error is a broken pipe
+            for _i in range(retries):
+                try:
+                    self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
+                    result = self._sock.recv(4096)
+                    is_ok = True
+                except socket.error:
+                    pass
+                    
+            if not is_ok:
+                #pychron is not running
+                self.led.state = 'red'
+                self.open()
+                return repr(PychronCommunicationErrorCode(self.path, e))
             
         if ready_flag and data == result:
             result = 'OK'
