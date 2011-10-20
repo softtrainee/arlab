@@ -1,0 +1,106 @@
+'''
+Copyright 2011 Jake Ross
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+'''
+#=============enthought library imports=======================
+from traits.api import HasTraits, on_trait_change, \
+    Instance, Bool, Int, Any, Property, Str
+from traitsui.api import View, Item, VGroup, ColorEditor
+from chaco.api import BaseXYPlot
+#=============standard library imports ========================
+from wx import Colour
+
+#=============local library imports  ==========================
+
+class SeriesEditor(HasTraits):
+    '''
+        G{classtree}
+    '''
+    name = Property(depends_on='_name')
+    _name = Str
+
+    plotid = Int
+    id = Int
+    graph = Any
+    series = Instance(BaseXYPlot)
+
+    show = Bool(True)
+    def _get_name(self):
+        if not self._name:
+            return 'series{:03d}'.format(self.id)
+        return self._name
+
+    def _set_name(self, v):
+        self._name = v
+
+    @on_trait_change('series.+')
+    def _series_changed(self, obj, name, new):
+        '''
+        '''
+        if name[0] != '_' and name[-1:] != '_' and name not in ['visible', 'series']:
+            self.graph.update_group_attribute(obj, name, new, dataid=self.id / 2)
+
+    def _show_changed(self, name, old, new):
+        '''
+        '''
+        self.graph.set_series_visiblity(new, plotid=self.plotid,
+                                        series=self.id)
+
+    def traits_view(self):
+        '''
+        '''
+
+        return View(VGroup(
+                            Item('name', show_label=False),
+                            Item('series', style='custom', show_label=False)
+                           )
+                    )
+
+class PolygonPlotEditor(SeriesEditor):
+    '''
+        G{classtree}
+    '''
+    series = Instance(BaseXYPlot)
+
+    color_ = Property
+    def _get_color_(self):
+        '''
+        '''
+        if isinstance(self.series.face_color, str):
+            c = Colour()
+            c.SetFromName(self.series.face_color)
+        else:
+            c = self.series.face_color
+        return c
+
+    def _set_color_(self, c):
+        '''
+        '''
+
+        self.series.face_color = c
+        self.series.edge_color = c
+#        self.series.invalidate_and_redraw()
+        self.series.request_redraw()
+
+
+    def traits_view(self):
+        '''
+        '''
+        v = View(VGroup(
+                      Item('show', label='hide/show'),
+                      Item('color_', style='custom', editor=ColorEditor())
+                      )
+                )
+        return v
+#================= EOF ==============================================
