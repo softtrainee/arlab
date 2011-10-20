@@ -258,7 +258,26 @@ class FusionsLaserManager(LaserManager):
             ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
             ]
         return s
-
+    
+    def get_lens_configuration_group(self):
+        return Item('lens_configuration',
+                           editor=EnumEditor(values=self.lens_configuration_names)
+                           )
+        
+    def get_optics_group(self):
+        csliders = self.get_control_sliders()
+        vg = VGroup(
+                      self._update_slider_group_factory(csliders),
+                      show_border=True,
+                      label='Optics'
+                      )
+        
+        lens_config = self.get_lens_configuration_group()
+        print lens_config
+        if lens_config:
+            vg.content.insert(0, lens_config)
+            
+        return vg
     def __control__group__(self):
         '''
         '''
@@ -288,17 +307,10 @@ class FusionsLaserManager(LaserManager):
         
         vg = VGroup()
 
-        csliders = self.get_control_sliders()
         
+        optics_grp = self.get_optics_group()
         hg = HGroup(#spring,
-                   VGroup(
-                          Item('lens_configuration',
-                               editor=EnumEditor(values=self.lens_configuration_names)
-                               ),
-                          self._update_slider_group_factory(csliders),
-                          show_border=True,
-                          label='Optics'
-                      ),
+                   optics_grp,
                   #VGroup(
                       pulse_grp,
                       power_grp,

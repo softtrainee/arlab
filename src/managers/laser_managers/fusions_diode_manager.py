@@ -102,7 +102,10 @@ class FusionsDiodeManager(FusionsLaserManager):
 
     def get_power_slider(self):
         return None
-
+    
+    def get_lens_configuration_group(self):
+        return None
+        
 #    def get_laser_amps(self):
 #        '''
 #        '''
@@ -182,14 +185,14 @@ class FusionsDiodeManager(FusionsLaserManager):
 #        ps = DiodePowerScanScript(manager = self, parent_path = p)
 #        ps.open()
 
-    def show_image_process(self):
-        '''
-        '''
-
-        vm = self.video_manager
-        p = os.path.join(paths.data_dir, 'video', 'testframe.png')
-        vm.process_frame(path=p)
-        vm.edit_traits(view='image_view')
+#    def show_image_process(self):
+#        '''
+#        '''
+#
+#        vm = self.video_manager
+#        p = os.path.join(paths.data_dir, 'video', 'testframe.png')
+#        vm.process_frame(path=p)
+#        vm.edit_traits(view='image_view')
 
 #    def show_step_heater(self):
 #
@@ -212,11 +215,11 @@ class FusionsDiodeManager(FusionsLaserManager):
 #        c = CalibrationManager(diode_manager = self)
 #        c.open()
 
-    @on_trait_change('configure')
-    def _show_temperature_controller_configuration(self):
-        '''
-        '''
-        self.temperature_controller.edit_traits(view='configure_view')
+#    @on_trait_change('configure')
+#    def _show_temperature_controller_configuration(self):
+#        '''
+#        '''
+#        self.temperature_controller.edit_traits(view='configure_view')
 
 
 #    def __watlow__group__(self):

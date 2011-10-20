@@ -45,6 +45,7 @@ class BakeoutManager(Manager):
     
     update_interval = Float(2)
     scan_window = Int(60)
+    
     execute = Event
     save = Button
     execute_label = Property(depends_on='alive')
@@ -312,8 +313,10 @@ class BakeoutManager(Manager):
                         )
         
         v = View(VGroup(control,
-                        Item('update_interval'),
-                        Item('scan_window'),
+                        HGroup(
+                            VGroup(
+                            Item('update_interval'),
+                            Item('scan_window'), enabled_when='not alive'), spring),
                         controller_grp, Item('graph', show_label=False, style='custom')),
                handler=ManagerHandler,
                resizable=True,
