@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import on_trait_change, Instance, Button, Bool, Float
+from traits.api import Instance, Button, Bool, Float
 from traitsui.api import VGroup, Group, Item
 #=============standard library imports ========================
-import os
+
 
 #=============local library imports  ==========================
 
@@ -28,7 +28,6 @@ from src.hardware.watlow_ezzone import WatlowEZZone
 from src.hardware.temperature_monitor import DPi32TemperatureMonitor
 from src.hardware.pyrometer_temperature_monitor import PyrometerTemperatureMonitor
 
-from src.helpers import paths
 from src.monitors.diode_laser_monitor import DiodeLaserMonitor
 
 from fusions_laser_manager import FusionsLaserManager
@@ -155,9 +154,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
 
         #simple calls logicboard.enable_laser
-        #super(FusionsDiodeManager, self).enable_laser()
-        FusionsLaserManager.enable_laser(self)
-        if self.enabled:
+        if super(FusionsDiodeManager, self).enable_laser():
             return self.control_module_manager.enable()
 
     def disable_laser(self):
