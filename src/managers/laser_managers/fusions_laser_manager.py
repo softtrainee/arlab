@@ -187,25 +187,6 @@ class FusionsLaserManager(LaserManager):
     def enable_laser(self, mode='normal'):
         '''
         '''
-        if mode == 'remote':
-            '''
-                do a final adjustment of the last position
-                
-                method 1
-                1. find the center of the hole
-                2. move to the center
-                method 2
-                1. find the centroid of the grain
-                    a. zoom or crop image to a single hole
-                    b. use a TargetImage
-                2. move to the centroid x,y  
-            '''
-            #use the video manager to do calculations
-            #method 1
-            self.stage_manager.video_manager.locate_center()
-
-            #method 2
-            self.stage_manager.video_manager.locate_centroid()
 
         is_ok = self.logic_board._enable_laser_()
         super(FusionsLaserManager, self).enable_laser(is_ok=is_ok)
