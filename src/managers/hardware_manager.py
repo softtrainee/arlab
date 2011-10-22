@@ -61,13 +61,13 @@ class HardwareManager(Manager):
                      Item('devices', editor=table_editor,
                           show_label=False,
 
-                          height=0.65,
+                          height=0.45,
                           ),
 
                      Item('current_device', show_label=False,
                           style='custom',
                           editor=InstanceEditor(view='info_view'),
-                          height=0.34,
+                          height=0.75,
                           width=0.5
                           ),
                       ),

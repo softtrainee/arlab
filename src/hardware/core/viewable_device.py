@@ -93,7 +93,8 @@ class ViewableDevice(ConfigLoadable):
         
     def get_control_group(self):
         pass
-    
+    def get_configure_group(self):
+        pass
     def current_state_view(self):
         v = View(Group(
                      Item('name'),
@@ -130,9 +131,14 @@ class ViewableDevice(ConfigLoadable):
                  )
         cg = self.get_control_group()
 
+        config_group = self.get_configure_group()
         if cg:
             cg.label = 'Control'
             v.content.content.insert(0, cg)
+            
+        if config_group:
+            config_group.label = 'Configure'
+            v.content.content.insert(1, config_group)
         return v
 
     def traits_view(self):

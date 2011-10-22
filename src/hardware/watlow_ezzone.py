@@ -13,14 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from src.helpers.logger_setup import setup
 '''
 @author: Jake Ross
 @copyright: 2009
 @license: Educational Community License 1.0
 '''
 #=============enthought library imports========================
-from traits.api import Float, Event, Property, Int, String, Button
-from traitsui.api import View, Item, Group, VGroup, EnumEditor, RangeEditor
+from traits.api import Enum, Float, Event, Property, Int, String, Button, Bool, Str
+from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
@@ -57,27 +58,36 @@ tc_map = {'11':'B', '48':'K',
          '26':'E', '84':'S',
          '30':'F', '93':'T',
          '46':'J'}
-
+autotune_aggressive_map = {'under damp':99,
+                         'critical damp':21,
+                         'over damp':69
+                         }
+yesno_map = {'59':'NO', '106':'YES'}
+heat_alogrithm_map = {'62':'off', '71':'PID', '64':'on-off'}
 class WatlowEZZone(CoreDevice):
     '''
     WatlowEZZone represents a WatlowEZZone PM PID controller.
     this class provides human readable methods for setting the modbus registers 
     '''
-    Ph = Property
+    Ph = Property(Float(enter_set=True,
+                        auto_set=False), depends_on='_Ph_')
     _Ph_ = Float(50)
-    Pc = Property
+    Pc = Property(Float(enter_set=True,
+                        auto_set=False), depends_on='_Pc_')
     _Pc_ = Float(4)
-    I = Property
-    _I_ = Float(032)
-    D = Property
+    I = Property(Float(enter_set=True,
+                        auto_set=False), depends_on='_I_')
+    _I_ = Float(32)
+    D = Property(Float(enter_set=True,
+                        auto_set=False), depends_on='_D_')
     _D_ = Float(33)
 
-    pmin = Float(0.0)
-    pmax = Float(100.0)
-    imin = Float(0.0)
-    imax = Float(6000.0)
-    dmin = Float(0.0)
-    dmax = Float(6000.0)
+#    pmin = Float(0.0)
+#    pmax = Float(100.0)
+#    imin = Float(0.0)
+#    imax = Float(6000.0)
+#    dmin = Float(0.0)
+#    dmax = Float(6000.0)
 
     stablization_time = Float(3.0)
     sample_time = Float(0.25)
@@ -110,42 +120,100 @@ class WatlowEZZone(CoreDevice):
 #    comin = Float(-500.0)
 #    comax = Float(500.0)
 
-    scale_low = Float(0, auto_set=False, enter_set=True)
-    scale_high = Float(3.8, auto_set=False, enter_set=True)
-
+    output_scale_low = Property(Float(auto_set=False, enter_set=True),
+                               depends_on='_output_scale_low') 
+    _output_scale_low = Float(0)
+    
+    output_scale_high = Property(Float(auto_set=False, enter_set=True),
+                               depends_on='_output_scale_high') 
+    _output_scale_high = Float(1)
+    
     control_mode = Property(depends_on='_control_mode')
     _control_mode = String('closed')
 
-    autotune = Button
+    autotune = Event
+    autotune_label = Property(depends_on='autotuning')
+    autotuning = Bool
     configure = Button
-
+    
+    autotune_setpoint = Property(Float(auto_set=False, enter_set=True),
+                                 depends_on='_autotune_setpoint')
+    _autotune_setpoint = Float(0)
+    
+    enable_tru_tune = Property(Bool,
+                                depends_on='_enable_tru_tune')
+    _enable_tru_tune = Bool
+    
+    
+    tru_tune_band = Property(Int(auto_set=False, enter_set=True),
+                                 depends_on='_tru_tune_band')
+    _tru_tune_band = Int(0)
+    
+    tru_tune_gain = Property(Enum(('1', '2', '3', '4', '5', '6')),
+                                 depends_on='_tru_tune_gain')
+    _tru_tune_gain = Str
+    
+    heat_alogrithm = Property(Enum('PID', 'On-Off', 'Off'),
+                            depends_on='_heat_alogrithm')
+    _heat_alogrithm = Str
+    
     sensor1_type = Property(String, depends_on='_sensor1_type')
     thermocouple1_type = Property(String, depends_on='_thermocouple1_type')
 
-    _sensor1_type = Int(95)
+    _sensor1_type = Int(112)
     _thermocouple1_type = Int(11)
 
     process_value = Float
 
-    n_ons = Int
-    n_queries = Int
-    duty_cycle = Float
+#    n_ons = Int
+#    n_queries = Int
+#    duty_cycle = Float
     process_value_flag = Event
-    def load_configuration_values_from_device(self):
-        '''
-        '''
-        if not self.simulation:
-            self._sensor1_type = s1 = self.read_analog_input_sensor_type(1)
-            #self._sensor2_type=self.read_analog_input_sensor_type(2)
-            self._thermocouple1_type = t1 = self.read_thermocouple_type(1)
-            #self._thermocouple2_type=self.read_thermocouple_type(2)
-            print s1, t1
+ 
+        
 
     def initialize(self, *args, **kw):
         '''
         '''
         #set open loop and closed loop to zero
         self.disable()
+        
+        s = self.read_analog_input_sensor_type(1)
+        if s is not None:
+            self._sensor1_type = s
+        
+        if self._sensor1_type == 95:
+            t = self.read_thermocouple_type(1)
+            if t is not None:
+                self._thermocouple1_type = t
+        
+        
+        #read pid parameters
+        ph = self.read_heat_proportional_band()
+        pc = self.read_cool_proportional_band()
+        
+        i = self.read_time_integral()
+        d = self.read_time_derivative()
+        
+        #read autotune parameters
+        asp = self.read_autotune_setpoint()
+        if asp is not None:
+            self._autotune_setpoint = asp
+        ttb = self.read_tru_tune_band()
+        if ttb is not None:
+            self._tru_tune_band = ttb
+            
+        ttg = self.read_tru_tune_gain()
+        if ttg is not None: 
+            self._tru_tune_gain = ttg
+        
+        osl = self.read_output_scale_low()
+        if osl is not None:
+            self._output_scale_low = osl
+            
+        osh = self.read_output_scale_low()
+        if osh is not None:
+            self._output_scale_high = osh
         return True
 
     def get_temperature(self, **kw):
@@ -191,23 +259,10 @@ class WatlowEZZone(CoreDevice):
 
     def load_additional_args(self, config):
         '''
-            @type config: C{str}
-            @param config:
         '''
         self.set_attribute(config, 'setpointmin', 'Setpoint', 'min', cast='float')
         self.set_attribute(config, 'setpointmax', 'Setpoint', 'max', cast='float')
         return True
-
-    def set_pid_parameter(self, **kw):
-        '''
-        '''
-        self.set_control_mode('open')
-        for k in kw:
-            v = kw[k]
-            self.trait_set(**{k:v})
-            self.trait_property_changed(k, v)
-
-        self.set_control_mode('closed')
 
     def set_closed_loop_setpoint(self, setpoint, **kw):
         '''
@@ -216,8 +271,7 @@ class WatlowEZZone(CoreDevice):
         self.info('setting closed loop setpoint = {:0.3f}'.format(setpoint))
         self._clsetpoint = setpoint
 
-        register = 2160
-        self.write(register, setpoint, nregisters=2, **kw)
+        self.write(2160, setpoint, nregisters=2, **kw)
 
     def set_open_loop_setpoint(self, setpoint, **kw):
         '''
@@ -226,16 +280,11 @@ class WatlowEZZone(CoreDevice):
         self.info('setting open loop setpoint = {:0.3f}'.format(setpoint))
         self._olsetpoint = setpoint
 
-        register = 2162
-        self.write(register, setpoint, nregisters=2, **kw)
+        self.write(2162, setpoint, nregisters=2, **kw)
 
     def set_temperature_units(self, comms, units, **kw):
         '''
-            @type comms: C{str}
-            @param comms:
-
-            @type units: C{str}
-            @param units:
+   
             
         '''
         register = 2490 if comms == 1 else 2510
@@ -244,13 +293,8 @@ class WatlowEZZone(CoreDevice):
 
     def set_calibration_offset(self, input, value, **kw):
         '''
-            @type input: C{str}
-            @param input:
-
-            @type value: C{str}
-            @param value:
-    
         '''
+        self.info('set calibration offset {}'.format(value))
         register = 382 if input == 1 else 462
         self.write(register, value, nregisters=2, **kw)
 
@@ -262,107 +306,136 @@ class WatlowEZZone(CoreDevice):
         self.info('setting control mode = %s' % mode)
         self._control_mode = mode
         value = 10 if mode == 'closed' else 54
-        register = 1880
-
-        self.write(register, value, **kw)
-
+        self.write(1880, value, **kw)
+#===============================================================================
+# Autotune
+#===============================================================================
     def start_autotune(self, **kw):
         '''
-            @type **kw: C{str}
-            @param **kw:
         '''
-        self.info('starting autotune')
-        register = 1920
-        value = 106
-        self.write(register, value, **kw)
-
-    def set_autotune_setpoint(self):
+        self.info('start autotune')
+        self.write(1920, 106, **kw)
+    
+    def stop_autotune(self, **kw):
         '''
         '''
-        pass
+        self.info('stop autotune')
+        self.write(1920, 59, **kw)
+        
+    def set_autotune_setpoint(self, value, **kw):
+        '''
+        '''
+        self.info('setting autotune setpoint {:0.3f}'.format(value))
+        self.write(1998, value, **kw)
+        
+    def set_autotune_aggressiveness(self, key, **kw):
+        '''
+            under damp - reach setpoint quickly
+            critical damp - balance a rapid response with minimal overshoot
+            over damp - reach setpoint with minimal overshoot
+        '''
+        if key in autotune_aggressive_map:
+            value = autotune_aggressive_map[key]
+        
+            self.info('setting auto aggressiveness {} ({})'.format(key, value))
+            
+            self.write(1916, value, **kw)
+        
+    def set_tru_tune(self, onoff, **kw):
+        if onoff:
+            msg = 'enable TRU-TUNE+'
+            value = 106
+        else:
+            msg = 'disable TRU-TUNE+'
+            value = 59
+        self.info(msg)  
+        self.write(1910, value, **kw)
+        
+    def set_tru_tune_band(self, value, **kw):
+        '''
+            0 -100 int
+            
+            only adjust this parameter is controller is unable to stabilize.
+            only the case for processes with fast responses
+            
+        '''
+        self.info('setting TRU-TUNE+ band {}'.format(value))
+        self.write(1912, int(value), **kw)
+        
+    def set_tru_tune_gain(self, value, **kw):
+        '''
+            1-6 int
+            1= most aggressive response and potential for overshoot
+            6=least "                                      "
+        '''
+        self.info('setting TRU-TUNE+ gain {}'.format(value))
+        self.write(1914, int(value), **kw)
+        
+#===============================================================================
+#  PID
+#===============================================================================
+    def set_heat_alogrithm(self, value, **kw):
+        '''
+        '''
+        self.info('setting heat alogrithm {}'.format(value))
+        self.write(1890)
+        
     def set_heat_proportional_band(self, value, **kw):
         '''
-            @type value: C{str}
-            @param value:
-
         '''
-        self.info.logger('setting heat proportional band = %0.3f' % value)
-        register = 1890
-        self.write(register, value, nregisters=2, **kw)
+        self.info('setting heat proportional band ={:0.3f}'.format(value))
+        self.write(1890, value, nregisters=2, **kw)
 
     def set_cool_proportional_band(self, value, **kw):
         '''
-            @type value: C{str}
-            @param value:
-
         '''
-        self.info.logger('setting cool proportional band = %0.3f' % value)
-
-        register = 1892
-        self.write(register, value, nregisters=2, **kw)
+        self.info('setting cool proportional band = {:0.3f}'.format(value))
+        self.write(1892, value, nregisters=2, **kw)
 
     def set_time_integral(self, value, **kw):
         '''
-            @type value: C{str}
-            @param value:
- 
         '''
-        self.info.logger('setting time integral = %0.3f' % value)
-
-        register = 1894
-        self.write(register, value, nregisters=2, **kw)
+        self.info('setting time integral = {:0.3f}'.format(value))
+        self.write(1894, value, nregisters=2, **kw)
 
     def set_time_derivative(self, value, **kw):
         '''
-            @type value: C{str}
-            @param value:
 
         '''
-        self.info.logger('setting time derivative = %0.3f' % value)
-        register = 1896
-        self.write(register, value, nregisters=2, **kw)
-
+        self.info('setting time derivative = {:0.3f}'.format(value))
+        self.write(1896, value, nregisters=2, **kw)
+#===============================================================================
+# Output
+#===============================================================================
     def set_output_function(self, value, **kw):
         '''
-            
-
         '''
-        register = 722
+        
         inmap = {'heat':36,
                'off':62
                }
 
         if value in inmap:
+            self.info('set output function {}'.format(value))
             value = inmap[value]
-            self.write(register, value, **kw)
+            self.write(722, value, **kw)
 
     def set_output_scale_low(self, value, **kw):
         '''
-          
         '''
-        register = 736
-        self.write(register, value, nregisters=2, **kw)
+        self.info('set output scale low {}'.format(value))
+        self.write(736, value, nregisters=2, **kw)
 
     def set_output_scale_high(self, value, **kw):
         '''
-           
-    
         '''
-        register = 738
-        self.write(register, value, nregisters=2, **kw)
+        self.info('set output scale high {}'.format(value))
+        self.write(738, value, nregisters=2, **kw)
 
     def set_analog_input_sensor_type(self, input, value, **kw):
         '''
-            @type input: C{str}
-            @param input:
-
-            @type value: C{str}
-            @param value:
-
-            @type **kw: C{str}
-            @param **kw:
         '''
-
+        self.info('set input sensor type {}'.format(value))
         register = 368 if input == 1 else 448
         v = value if isinstance(value, int) else isensor_map[value]
 
@@ -370,74 +443,57 @@ class WatlowEZZone(CoreDevice):
 
     def set_thermocouple_type(self, input, value, **kw):
         '''
-            @type input: C{str}
-            @param input:
-
-            @type value: C{str}
-            @param value:
-
-            @type **kw: C{str}
-            @param **kw:
         '''
-
+        self.info('set input thermocouple type {}'.format(value))
         register = 370 if input == 1 else 450
         v = value if isinstance(value, int) else itc_map[value.upper()]
 
         self.write(register, v, **kw)
-    def duty_cycle_increment(self):
-
-        #simple keep track off the number of times an output state is true and 
-        #the number of times queried
-
-        self.n_queries += 1
-        outputstate = self.read_output_state()
-        if outputstate == 'On':
-            self.n_ons += 1
-        if self.simulation:
-            self.duty_cycle = self.get_random_value(0, 100)
-        else:
-            self.duty_cycle = self.n_ons / float(self.n_queries) * 100.
-        self.info('on = %i n = %i  dc = %0.2f' % (self.n_ons, self.n_queries, self.duty_cycle))
+        
+#    def duty_cycle_increment(self):
+#        '''
+#        simple keep track off the number of times an output state is true and 
+#        the number of times queried
+#        '''
+#        self.n_queries += 1
+#        outputstate = self.read_output_state()
+#        if outputstate == 'On':
+#            self.n_ons += 1
+#        if self.simulation:
+#            self.duty_cycle = self.get_random_value(0, 100)
+#        else:
+#            self.duty_cycle = self.n_ons / float(self.n_queries) * 100.
+#        self.info('on = %i n = %i  dc = %0.2f' % (self.n_ons, self.n_queries, self.duty_cycle))
 
     def read_output_state(self, **kw):
-        register = 1012
-        rid = str(self.read(register, response_type='int', **kw))
+        '''
+        '''
+        rid = str(self.read(1012, response_type='int', **kw))
         units_map = {'63':'On', '62':'Off'}
         return units_map[rid] if rid in units_map else None
 
     def read_heat_proportional_band(self, **kw):
         '''
- 
         '''
-        register = 1890
-        return self.read(register, nregisters=2, **kw)
+        return self.read(1890, nregisters=2, **kw)
 
     def read_cool_proportional_band(self, **kw):
         '''
-     
         '''
-        register = 1892
-        return self.read(register, nregisters=2, **kw)
+        return self.read(1892, nregisters=2, **kw)
 
     def read_time_integral(self, **kw):
         '''
- 
         '''
-        register = 1894
-        return self.read(register, nregisters=2, **kw)
+        return self.read(1894, nregisters=2, **kw)
 
     def read_time_derivative(self, **kw):
         '''
-
         '''
-        register = 1896
-        return self.read(register, nregisters=2, **kw)
+        return self.read(1896, nregisters=2, **kw)
 
     def read_calibration_offset(self, input, **kw):
         '''
-            @type input: C{str}
-            @param input:
-
         '''
         register = 382 if input == 1 else 462
 
@@ -445,21 +501,16 @@ class WatlowEZZone(CoreDevice):
 
     def read_closed_loop_setpoint(self, **kw):
         '''
-
         '''
-        register = 2160
-        return self.read(register, nregisters=2, **kw)
+        return self.read(2160, nregisters=2, **kw)
 
     def read_open_loop_setpoint(self, **kw):
         '''
-
         '''
-        register = 2162
-        return self.read(register, nregisters=2, **kw)
+        return self.read(2162, nregisters=2, **kw)
 
     def read_analog_input_sensor_type(self, input, **kw):
         '''
-
         '''
         if input == 1:
             register = 368
@@ -481,12 +532,8 @@ class WatlowEZZone(CoreDevice):
 
     def read_filtered_process_value(self, input, **kw):
         '''
-    
-
         '''
-        register = 402
-
-        return self.read(register, nregisters=2, **kw)
+        return self.read(402, nregisters=2, **kw)
 
     def read_process_value(self, input, **kw):
         '''
@@ -498,15 +545,12 @@ class WatlowEZZone(CoreDevice):
 
     def read_error_status(self, input, **kw):
         '''
-   
-  
         '''
         register = 362 if input == 1 else 442
         return self.read(register, response_type='int', **kw)
 
     def read_temperature_units(self, comms):
         '''
-
         '''
         register = 2490 if comms == 1 else 2510
         rid = str(self.read(register, response_type='int'))
@@ -516,55 +560,291 @@ class WatlowEZZone(CoreDevice):
     def read_control_mode(self):
         '''
         '''
-        register = 1880
-        return self.read(register, response_type='int')
+        return self.read(1880, response_type='int')
 
     def read_heat_algorithm(self, **kw):
         '''
              
         '''
-        register = 1884
-        rid = str(self.read(register, response_type='int', **kw))
-
-        hal_map = {'62':'off', '71':'PID', '64':'on-off'}
-        return hal_map[rid] if rid in hal_map else None
+        rid = str(self.read(1884, response_type='int', **kw))
+        return heat_alogrithm_map[rid] if rid in heat_alogrithm_map else None
 
     def read_open_loop_detect_enable(self, **kw):
         '''
  
         '''
-        register = 1922
-        r_map = {'59':'NO', '106':'YES'}
-        rid = str(self.read(register, response_type='int'))
-        return r_map[id] if rid in r_map else None
-
+        rid = str(self.read(1922, response_type='int'))
+        return yesno_map[id] if rid in yesno_map else None
+    
+    def read_output_scale_low(self, **kw):
+        return self.read(736, **kw)
+    
+    def read_output_scale_high(self, **kw):
+        return self.read(738, **kw)
+    
     def read_output_type(self, **kw):
         '''
 
         '''
-        register = 720
         r_map = {'104':'volts', '112':'milliamps'}
-        rid = str(self.read(register, response_type='int', **kw))
+        rid = str(self.read(720, response_type='int', **kw))
         return r_map[rid] if rid in r_map else None
 
     def read_output_function(self, **kw):
         '''
        
         '''
-        register = 722
-        rid = str(self.read(register, response_type='int', **kw))
+        rid = str(self.read(722, response_type='int', **kw))
         r_map = {'36':'heat', '62':'off'}
 
         return r_map[rid] if rid in r_map else None
-#    def read_heat_power(self,**kw):
-#        register=1904
-#        return self.read(register,**kw)
-#    
+    
+    def read_heat_power(self, **kw):
+        '''
+        '''
+        return self.read(1904, **kw)
+
+    def read_autotune_setpoint(self, **kw):
+        return self.read(1998, **kw)
+
+    def read_tru_tune_enabled(self, **kw):
+        r = self.read(1919, response_type='int', **kw)
+        return yesno_map[r] if r in yesno_map else None
+
+    def read_tru_tune_band(self, **kw):
+        return self.read(1912, response_type='int', **kw)
+    
+    def read_tru_tune_gain(self, **kw):
+        return self.read(1914, response_type='int', **kw)
+
+        
 #    def read_cool_power(self,**kw):
 #        register=1906
 #        return self.read(register,**kw)
 
+
+        
+#    def _scan_(self, *args, **kw):
+#        '''
+#
+#        '''
+#        p = self.get_temperature()
+#        record_id = self.name
+#        self.stream_manager.record(p, record_id)
+
+
+    def _get_sensor1_type(self):
+        '''
+        '''
+        return sensor_map['%i' % self._sensor1_type]
+
+    def _set_sensor1_type(self, v):
+        '''
+
+        '''
+        self._sensor1_type = int(v)
+        self.set_analog_input_sensor_type(1, int(v))
+
+    def _get_thermocouple1_type(self):
+        '''
+        '''
+        return tc_map['%i' % self._thermocouple1_type]
+
+    def _set_thermocouple1_type(self, v):
+        '''
+
+        '''
+        self._thermocouple1_type = int(v)
+        self.set_thermocouple_type(1, int(v))
+
+    def _get_closed_loop_setpoint(self):
+        '''
+        '''
+        return self._clsetpoint
+
+    def _set_closed_loop_setpoint(self, v):
+        '''
+
+        '''
+        self.set_closed_loop_setpoint(v)
+        
+    def _get_open_loop_setpoint(self):
+        '''
+        '''
+        return self._olsetpoint
+
+    def _set_open_loop_setpoint(self, v):
+        '''
+        '''
+        self.set_open_loop_setpoint(v)
+
+    def _get_control_mode(self):
+        '''
+        '''
+        return self._control_mode
+
+    def _set_control_mode(self, mode):
+        '''
+        '''
+
+        self.set_control_mode(mode)
+
+    def _get_Ph(self):
+        '''
+        '''
+        return self._Ph_
+
+    def _set_Ph(self, v):
+        '''
+        '''
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._Ph_):
+                self._Ph_ = v
+#                self.set_control_mode('open')
+                self.set_heat_proportional_band(v)
+#                self.set_control_mode('closed')
+
+    def _get_Pc(self):
+        '''
+        '''
+        return self._Pc_
+
+    def _set_Pc(self, v):
+        '''
+        '''
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._Pc_):
+                self._Pc_ = v
+#                self.set_control_mode('open')
+                self.set_cool_proportional_band(v)
+#                self.set_control_mode('closed')
+
+    def _get_I(self):
+        '''
+        '''
+        return self._I_
+
+    def _set_I(self, v):
+        '''
+
+        '''
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._I_):
+                self._I_ = v
+#                self.set_control_mode('open')
+                self.set_time_integral(v)
+#                self.set_control_mode('closed')
+    
+    def _get_D(self):
+        '''
+        '''
+        return self._D_
+
+    def _set_D(self, v):
+        '''
+        '''
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._D_):
+                self._D_ = v
+#                self.set_control_mode('open')
+                self.set_time_derivative(v)
+#                self.set_control_mode('closed')
+    
+        
+    def _get_calibration_offset(self):
+        '''
+        '''
+        return self._calibration_offset
+
+    def _set_calibration_offset(self, v):
+        '''
+
+        '''
+        self._calibration_offset = v
+        self.set_calibration_offset(1, v)
+
+    def _get_output_scale_low(self):
+        return self._output_scale_low
+    
+    def _set_output_scale_low(self, v):
+        '''
+        '''
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._output_scale_low):
+                self._output_scale_low = v
+                self.set_output_scale_low(v)
+    
+    def _get_output_scale_high(self):
+        return self._output_scale_high
+    
+    def _set_output_scale_high(self, v):
+        '''
+        '''
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._output_scale_high):
+                self._output_scale_high = v
+                self.set_output_scale_high(v)
+        
+    def _get_enable_tru_tune(self):
+        return self._enable_tru_tune
+    
+    def _set_enable_tru_tune(self, v):
+        
+        self._enable_tru_tune = v
+        self.set_tru_tune(v)
+        
+    def _get_tru_tune_band(self):
+        return self._tru_tune_band
+    
+    def _set_tru_tune_band(self, v):
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._tru_tune_band):
+                self._tru_tune_band = v
+                self.set_tru_tune_band(v)
+            
+    def _get_tru_tune_gain(self):
+        return self._tru_tune_gain
+    
+    def _set_tru_tune_gain(self, v):
+        self._tru_tune_gain = v        
+        self.set_tru_tune_gain(v)
+            
+    def _get_autotune_setpoint(self):
+        return self._autotune_setpoint
+    
+    def _set_autotune_setpoint(self, v):
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._autotune_setpoint):
+                self._autotune_setpoint = v
+                self.set_autotune_setpoint(v) 
+                       
+    def _validate_number(self, v):
+        try:
+            v = float(v)        
+            return v
+            
+        except ValueError:
+            pass
+        
+    def _validate_new(self, new, old, tol=0.001):
+        if abs(new - old) > tol:
+            return True
+    
+    def _get_autotune_label(self):
+        return 'Autotune' if not self.autotuning else 'Stop'
+    
+    def _autotune_fired(self):
+        if self.autotuning:
+            self.stop_autotune()
+        else:
+            self.start_autotune()
+        self.autotuning = not self.autotuning
+        
+    def _configure_fired(self):
+        self.edit_traits(view='autotune_configure_view')
+        
 #========================= views ===========================
+    
     def get_control_group(self):
         closed_grp = VGroup(Item('closed_loop_setpoint',
                                  label='setpoint',
@@ -580,207 +860,67 @@ class WatlowEZZone(CoreDevice):
         cg = VGroup(Item('control_mode', editor=EnumEditor(values=['closed', 'open'])),
                     closed_grp, open_grp)
         return cg
-#    def traits_view(self):
-#        '''
-#        '''
-#
-#
-#        return View(
-#                    self.get_control_group()
-#                    #HGroup(Item('configure', show_label = False), spring),
-#
-##                    Item('control_mode', editor = EnumEditor(values = ['closed', 'open'])),
-##                    closed_grp, open_grp
-#                    )
 
-    def configure_view(self):
+    def get_configure_group(self):
         '''
         '''
 
-        output_process = VGroup('scale_low',
-                              'scale_high',
-                              label='Output Process',
-                              show_border=True)
-        autotune_grp = VGroup(Item('autotune', show_label=False),
-                            #'autotune_setpoint'
+        output_grp = VGroup('output_scale_low',
+                              'output_scale_high',
+                              label='Output',
+                              show_border=True
+                              )
+        autotune_grp = HGroup(Item('autotune', show_label=False, editor=ButtonEditor(label_value='autotune_label')),
+                              Item('configure', show_label=False, enabled_when='not autotuning'),
+                            label='Autotune',
+                            show_border=True
                             )
-        sensor_grp = Group(VGroup(Item('sensor1_type', editor=EnumEditor(values=sensor_map)),
+        
+        input_grp = Group(VGroup(Item('sensor1_type', editor=EnumEditor(values=sensor_map),
+                                      show_label=False),
                                 Item('thermocouple1_type',
                                      editor=EnumEditor(values=tc_map),
                                      show_label=False,
                                      visible_when='_sensor1_type==95')),
-
+                         label='Input',
+                         show_border=True
                          )
-        return View(
+        
+        pid_grp = VGroup(HGroup('Ph',
+                                'Pc'),
+                         'I',
+                         'D',
+                         show_border=True,
+                         label='PID')
+        return Group(
                     autotune_grp,
-                    output_process,
-                    sensor_grp,
-                    #tune_grp,
-                    buttons=['OK', 'Cancel'],
-                    kind='livemodal')
-    def _scan_(self, *args, **kw):
-        '''
-
-        '''
-        p = self.get_temperature()
-        record_id = self.name
-        self.stream_manager.record(p, record_id)
-
-    def _configure_fired(self):
-        '''
-        '''
-        self.load_configuration_values_from_device()
-        self.edit_traits(view='configure_view')
-
-    def _autotune_fired(self):
-        '''
-        '''
-        self.info('starting autotune')
-        self.start_autotune()
-
-    def _get_sensor1_type(self):
-        '''
-        '''
-        return sensor_map['%i' % self._sensor1_type]
-
-    def _set_sensor1_type(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self._sensor1_type = int(v)
-        self.set_analog_input_sensor_type(1, int(v))
-
-    def _get_thermocouple1_type(self):
-        '''
-        '''
-        return tc_map['%i' % self._thermocouple1_type]
-
-    def _set_thermocouple1_type(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self._thermocouple1_type = int(v)
-        self.set_thermocouple_type(1, int(v))
-
-    def _get_closed_loop_setpoint(self):
-        '''
-        '''
-        return self._clsetpoint
-
-    def _set_closed_loop_setpoint(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-
-        #self.set_control_mode('open')
-        self.set_closed_loop_setpoint(v)
-        #self.set_control_mode('closed')
-
-    def _get_open_loop_setpoint(self):
-        '''
-        '''
-        return self._olsetpoint
-
-    def _set_open_loop_setpoint(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self.set_open_loop_setpoint(v)
-
-    def _get_control_mode(self):
-        '''
-        '''
-        return self._control_mode
-
-    def _set_control_mode(self, mode):
-        '''
-            @type mode: C{str}
-            @param mode:
-        '''
-
-        self.set_control_mode(mode)
-
-    def _get_Ph(self):
-        '''
-        '''
-        return self._Ph_
-
-    def _set_Ph(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self._Ph_ = v
-        self.set_heat_proportional_band(v)
-
-    def _get_Pc(self):
-        '''
-        '''
-        return self._Pc_
-
-    def _set_Pc(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self._Pc_ = v
-        self.set_cool_proportional_band(v)
-
-    def _get_I(self):
-        '''
-        '''
-        return self._I_
-
-    def _set_I(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self._I_ = v
-        self.set_time_integral(v)
-    def _get_D(self):
-        '''
-        '''
-        return self._D_
-
-    def _set_D(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self._D_ = v
-        self.set_time_derivative(v)
-
-
-    def _get_calibration_offset(self):
-        '''
-        '''
-        return self._calibration_offset
-
-    def _set_calibration_offset(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self._calibration_offset = v
-        self.set_calibration_offset(1, v)
-
-    def _scale_low_changed(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self.set_output_scale_low(v)
-
-    def _scale_high_changed(self, v):
-        '''
-            @type v: C{str}
-            @param v:
-        '''
-        self.set_output_scale_high(v)
-
+                    HGroup(output_grp,
+                           input_grp),
+                    pid_grp,
+                    #autotune_grp,
+                    
+                    )
+    def autotune_configure_view(self):
+        v = View('autotune_setpoint',
+                 VGroup(
+                        'enable_tru_tune',
+                         Group(
+                               Item('tru_tune_band', label='Band'),
+                               Item('tru_tune_gain', label='Gain', tooltip='1:Most overshot, 6:Least overshoot'),
+                               enabled_when='enable_tru_tune'),
+                        show_border=True,
+                        label='TRU-TUNE+'
+                        ),
+                 title='Autotune Configuration',
+                 kind='livemodal'
+                 )
+        return v
+    
+    def traits_view(self):
+        return View(self.get_configure_group())
+if __name__ == '__main__':
+    setup('foo')
+    w = WatlowEZZone()
+    w.initialize()
+    w.configure_traits()
 #============================== EOF ==========================

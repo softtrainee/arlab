@@ -21,7 +21,6 @@ from pyface.workbench.api import Perspective, PerspectiveItem
 #============= local library imports  ==========================
 class HardwarePerspective(Perspective):
     '''
-        G{classtree}
     '''
     name = 'Hardware'
     show_editor_area = False
