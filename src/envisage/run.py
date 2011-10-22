@@ -172,19 +172,3 @@ def launch(beta=False):
     logger.info('Quiting Pychron')
 
 #============= EOF ====================================
-#    use_developer = False
-#    if use_developer:
-#        plugins += get_developer_plugins()
-#
-#    use_logger = False
-#    if use_logger:
-#        plugins += get_logger_plugins()
-#def get_developer_plugins():
-#    from envisage.developer.developer_plugin import DeveloperPlugin
-#    from envisage.developer.ui.developer_ui_plugin import DeveloperUIPlugin
-#    return [DeveloperPlugin(),
-#            DeveloperUIPlugin()]
-#
-#def get_logger_plugins():
-#    from apptools.logger.plugin.logger_plugin import LoggerPlugin
-#    return [LoggerPlugin()]

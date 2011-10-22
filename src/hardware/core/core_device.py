@@ -302,7 +302,7 @@ class CoreDevice(ViewableDevice):
         self.info('Starting scan')
         if self.record_scan_data:
             self.data_manager = CSVDataManager()
-            self.frame_name = self.data_manager.new_frame()
+            self.frame_name = self.data_manager.new_frame(base_frame_name=self.name)
         
         sp = self.scan_period * self.time_dict[self.scan_units]
         
