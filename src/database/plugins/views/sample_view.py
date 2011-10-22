@@ -76,7 +76,6 @@ class Sample(DatabaseItem):
 
 class SampleView(DatabaseTableView):
     '''
-        G{classtree}
     '''
 
     klass = Sample
@@ -95,8 +94,8 @@ class SampleView(DatabaseTableView):
 
     def _pre_add(self, obj):
         def set_enum_lists(id):
-            items, _sess = getattr(self.database, 'get_%s' % id)()
-            setattr(obj, '_%s' % id, [(i.id, i.name) for i in items])
+            items, _sess = getattr(self.database, 'get_{}'.format(id))()
+            setattr(obj, '_{}'.format(id), [(i.id, i.name) for i in items])
 
         if self.database.connected:
             for i in ['irradiations', 'projects']:

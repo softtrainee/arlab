@@ -267,7 +267,7 @@ class MarkupCanvas(BaseDataCanvas):
 
             #store the line in the markupdict
             nline = [self.temp_start_pos, self.temp_end_pos, False]
-            key = 'line%i' % self.line_counter
+            key = 'line{}'.format(self.line_counter)
             if self.tool_state == 'line':
                 self.markupdict[key] = nline
                 self.line_counter += 1
@@ -275,12 +275,12 @@ class MarkupCanvas(BaseDataCanvas):
                 #set state back to normal and redraw
                 self.event_state = 'normal'
             elif self.tool_state == 'mline':
-                pkey = 'mline%i' % (self.line_counter - 1)
+                pkey = 'mline{}'.format(self.line_counter - 1)
                 if pkey in self.markupdict:
                     lines = self.markupdict[pkey][0]
                     lines.append((nline[0], nline[1]))
                 else:
-                    self.markupdict['mline%i' % self.line_counter] = [[(nline[0], nline[1])], None, False]
+                    self.markupdict['mline{}'.format(self.line_counter)] = [[(nline[0], nline[1])], None, False]
                     self.line_counter += 1
                 self.temp_start_pos = (event.x, event.y)
 

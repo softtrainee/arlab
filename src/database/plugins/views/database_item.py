@@ -22,19 +22,15 @@ from traits.api import HasTraits
 class DatabaseItem(HasTraits):
     def get_items(self, id):
         '''
-            @type id: C{str}
-            @param id:
         '''
-        print getattr(self, '_%s' % id)
-        return [i[1] for i in getattr(self, '_%s' % id)]
+        print getattr(self, '_{}'.format(id))
+        return [i[1] for i in getattr(self, '_{}'.format(id))]
 
     def get_id(self, id):
         '''
-            @type id: C{str}
-            @param id:
         '''
         attr = getattr(self, id)
-        for i in getattr(self, '_%s' % id):
+        for i in getattr(self, '_{}'.format(id)):
             if i[1] == attr:
                 return int(i[0])
 #============= views ===================================

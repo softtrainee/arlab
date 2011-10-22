@@ -88,7 +88,6 @@ class IrradiationProductionRatios(DatabaseItem):
 
 class IrradiationProductionRatiosView(DatabaseTableView):
     '''
-        G{classtree}
     '''
 
     klass = IrradiationProductionRatios
@@ -113,8 +112,8 @@ class IrradiationProductionRatiosView(DatabaseTableView):
                 ]
     def _pre_add(self, item):
         def set_enum_lists(id):
-            items, _sess = getattr(self.database, 'get_%s' % id)()
-            setattr(item, '_%s' % id, [(i.id, i.name) for i in items])
+            items, _sess = getattr(self.database, 'get_{}'.format(id))()
+            setattr(item, '_{}'.format(id), [(i.id, i.name) for i in items])
 
         if self.database.connected:
             for i in ['irradiations']:
@@ -122,8 +121,7 @@ class IrradiationProductionRatiosView(DatabaseTableView):
 
     def _add_row(self, item):
         '''
-            @type item: C{str}
-            @param item:
+
         '''
         args = dict()
         for k in item.traits():

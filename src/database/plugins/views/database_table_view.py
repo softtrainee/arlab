@@ -26,14 +26,11 @@ from src.database.pychron_database_adapter import PychronDatabaseAdapter
 class DatabaseTableHandler(Handler):
     def init(self, info):
         '''
-            @type info: C{str}
-            @param info:
         '''
         info.object.load()
 
 class DatabaseTableView(HasTraits):
     '''
-        G{classtree}
     '''
     items = List
     database = Instance(PychronDatabaseAdapter)
@@ -49,8 +46,6 @@ class DatabaseTableView(HasTraits):
 
     def _table_editor_factory(self, kw):
         '''
-            @type kw: C{str}
-            @param kw:
         '''
         return TableEditor(**kw)
 
@@ -77,8 +72,6 @@ class DatabaseTableView(HasTraits):
 
     def _pre_add(self, item):
         '''
-            @type item: C{str}
-            @param item:
             
             subclasses should override this method to load enumeditor lists
         '''
@@ -93,15 +86,11 @@ class DatabaseTableView(HasTraits):
 
     def load(self, sess=None, refresh=True):
         '''
-            @type sess: C{str}
-            @param sess:
 
-            @type refresh: C{str}
-            @param refresh:
         '''
         self.items = []
         if self.database.connected:
-            getter = getattr(self.database, 'get_%ss' % self.id)
+            getter = getattr(self.database, 'get_{}s'.format(self.id))
             items, sess = getter(sess=sess)
 
             if self.klass is not None:

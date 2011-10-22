@@ -410,48 +410,49 @@ class TextPanel(Object2D):
         self.fields = [(0, False, 'pressure'), (0, False, 'pressure'), (0, False, 'pressure'),
                        (0, False, 'pumping_dur'), (0, False, 'idle_dur')]
 
-    def render(self):
-        '''
-            @type ac: C{str}
-            @param ac:
-        '''
-        self.start_render()
-        h = 14.5 * (1 + 2 / 5.)
-        #super(TextPanel, self).render()
-
-        Object2D.render(self)
-
-        self._text_(self.title, [8, h + 3])
-        for i, f in enumerate(self.fields):
-            _type = f[2]
-            if _type == 'pressure':
-                val = f[0]
-                state = f[1]
-
-                if not state:
-                    val = '----'
-                    fmt = '%s'
-                else:
-                    fmt = '%0.3f'
-                    if i == 0:
-                        fmt = '%0.2e'
-                text = ('p %i = %s (torr)' % (i, fmt)) % val, [3, h - 5 - (i * 3.5)]
-            elif _type == 'pumping_dur':
-                val = f[0]
-#                if f>60:
-#                    tunit='min'
-                tunit = 'sec'
-                text = ('p. dur.= %0.1f (%s)' % (val, tunit), [3, h - 5 - (i * 3.5)])
-            elif _type == 'idle_dur':
-                val = f[0]
-                tunit = 'sec'
-                text = ('i. dur.= %0.1f (%s)' % (val, tunit), [3, h - 5 - (i * 3.5)])
-
-            self._text_(*text)
-
-        self._rect2D_(0, 0, 33, h)
-
-        self.end_render()
+#    def render(self):
+#        '''
+#            @type ac: C{str}
+#            @param ac:
+#        '''
+#        self.start_render()
+#        h = 14.5 * (1 + 2 / 5.)
+#        #super(TextPanel, self).render()
+#
+#        Object2D.render(self)
+#
+#        self._text_(self.title, [8, h + 3])
+#        for i, f in enumerate(self.fields):
+#            _type = f[2]
+#            if _type == 'pressure':
+#                val = f[0]
+#                state = f[1]
+#
+#                if not state:
+#                    val = '----'
+#                    fmt = '{}'
+#                else:
+#                    fmt = '{0.3f}'
+#                    if i == 0:
+#                        fmt = '%0.2e'
+#                text = ('p %i = %s (torr)' % (i, fmt)) % val, [3, h - 5 - (i * 3.5)]
+#            elif _type == 'pumping_dur':
+#                val = f[0]
+##                if f>60:
+##                    tunit='min'
+#                tunit = 'sec'
+#                text = ('p. dur.= %0.1f (%s)' % (val, tunit), [3, h - 5 - (i * 3.5)])
+#            elif _type == 'idle_dur':
+#                val = f[0]
+#                tunit = 'sec'
+#                text = ('i. dur.= %0.1f (%s)' % (val, tunit), [3, h - 5 - (i * 3.5)])
+#
+#            self._text_(*text)
+#
+#        self._rect2D_(0, 0, 33, h)
+#
+#        self.end_render()
+        
 class Valve(SetStateObject3D):
     '''
     '''

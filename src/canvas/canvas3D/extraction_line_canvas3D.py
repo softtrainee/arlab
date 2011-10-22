@@ -32,7 +32,7 @@ def url_generator():
         if i == 1:
             yield base
         else:
-            yield base + '%i' % i
+            yield base + str(i)
         i += 1
         if i == 21:
             i = 1
@@ -64,12 +64,10 @@ class ExtractionLineCanvas3D(InteractionCanvas3D):
                             self.manager.valve_manager,
                             self)
 
-
-
     def update_popup(self, obj):
-        self.popup.text.SetLabel('''Name: %s
-State:%s
-Locked:%s''' % (obj.name,
+        self.popup.text.SetLabel('''Name: {}
+State: {}
+Locked: {}'''.format(obj.name,
                 'Open' if obj.state else 'Closed',
                  'Yes' if obj.soft_lock else 'No'
                  )
