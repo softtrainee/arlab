@@ -20,8 +20,6 @@ see 2000 Series Communications Manual - Issue 2
 http://eurotherm.com/document-library/?ignoreeveryonegroup=0&assetdetesctl1390419=1833&search=2000+series&searchcontent=0
 
 '''
-#========== future imports ====================
-from __future__ import with_statement
 
 #============= enthought library imports =======================
 from traits.api import Float, Property
@@ -41,7 +39,6 @@ NAK = chr(15)
 
 class Eurotherm(CoreDevice):
     '''
-        G{classtree}
     '''
     scan_func = 'get_process_value'
     GID = 0
@@ -61,15 +58,12 @@ class Eurotherm(CoreDevice):
 
     def _set_process_setpoint(self, v):
         '''
-            @type v: C{str}
-            @param v:
+           
         '''
         self.set_process_setpoint(v)
 
     def _validate_process_setpoint(self, v):
         '''
-            @type v: C{str}
-            @param v:
         '''
         try:
             v = float(v)
@@ -81,8 +75,7 @@ class Eurotherm(CoreDevice):
 
     def load_additional_args(self, config):
         '''
-            @type config: C{str}
-            @param config:
+
         '''
 
         self.set_attribute(config, 'protocol', 'Communications', 'protocol', optional=True)
@@ -98,15 +91,11 @@ class Eurotherm(CoreDevice):
 
     def modbus_build_query(self, s):
         '''
-            @type s: C{str}
-            @param s:
         '''
         return s
 
     def modbus_parse_response(self, resp):
         '''
-            @type resp: C{str}
-            @param resp:
         '''
         return resp
 
@@ -125,8 +114,7 @@ class Eurotherm(CoreDevice):
 
     def ei_bisynch_build_query(self, s):
         '''
-            @type s: C{str}
-            @param s:
+
         '''
 
         GID = str(self.GID)
@@ -136,8 +124,7 @@ class Eurotherm(CoreDevice):
 
     def ei_bisynch_parse_response(self, resp):
         '''
-            @type resp: C{str}
-            @param resp:
+
         '''
         if resp is not None:
             #remove frame chrs
@@ -157,21 +144,18 @@ class Eurotherm(CoreDevice):
 
     def ei_bisynch_parse_command_response(self, resp):
         '''
-            @type resp: C{str}
-            @param resp:
+
         '''
         return resp == ACK
 
     def set_pid_parameters(self, v):
         '''
-            @type v: C{str}
-            @param v:
         '''
 
         params = self.get_pid_parameters(v)
 
         if params:
-            builder = getattr(self, '%s_build_command' % self.protocol)
+            builder = getattr(self, '{}_build_command'.format(self.protocol))
             #parser = getattr(self, '%s_parse_command_response' % self.protocol)
 
 
@@ -183,8 +167,7 @@ class Eurotherm(CoreDevice):
 
     def get_pid_parameters(self, v):
         '''
-            @type v: C{str}
-            @param v:
+
         '''
 
         p = os.path.join(paths.device_dir, 'Eurotherm_control_parameters.txt')
@@ -212,22 +195,21 @@ class Eurotherm(CoreDevice):
 
     def set_process_setpoint(self, v):
         '''
-            @type v: C{str}
-            @param v:
+
         '''
         if v:
             self.set_pid_parameters(v)
 
         cmd = 'SL'
-        builder = getattr(self, '%s_build_command' % self.protocol)
+        builder = getattr(self, '{}_build_command'.format(self.protocol))
         cmd = builder(cmd, v)
         resp = self.ask(cmd)
-        parser = getattr(self, '%s_parse_command_response' % self.protocol)
+        parser = getattr(self, '{}_parse_command_response'.format(self.protocol))
 
         if not self.simulation:
             resp = parser(resp)
             if not resp:
-                self.warning('Failed setting setpoint to %0.2f' % v)
+                self.warning('Failed setting setpoint to {:0.2f}'.format(v))
             else:
                 self._setpoint
                 return True
@@ -240,17 +222,15 @@ class Eurotherm(CoreDevice):
         '''
         cmd = 'PV'
 
-        builder = getattr(self, '%s_build_query' % self.protocol)
+        builder = getattr(self, '{}_build_query'.format(self.protocol))
 
         resp = self.ask(builder(cmd),
                         verbose=False
                         )
 
-        parser = getattr(self, '%s_parse_response' % self.protocol)
+        parser = getattr(self, '{}_parse_response'.format(self.protocol))
         if not self.simulation:
             resp = parser(resp)
-
-
 
         if resp is None or resp == 'simulation':
             resp = self.get_random_value(0, 10)

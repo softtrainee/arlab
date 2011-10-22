@@ -103,7 +103,7 @@ class ModbusCommunicator(SerialCommunicator):
             crc = ''.join(args[-2:])
             calc_crc = computeCRC(cargs[:-2])
             if not crc.upper() == calc_crc.upper():
-                self.warning('Returned CRC (%s) does not match calculated (%s)' % (crc, calc_crc))
+                self.warning('Returned CRC ({}) does not match calculated ({})'.format(crc, calc_crc))
                 self.handle.flushInput()
             else:
                 if response_type == 'register_write':
@@ -142,9 +142,9 @@ class ModbusCommunicator(SerialCommunicator):
         '''
 
         func_code = '10'
-        data_address = '%04x' % (startid)
-        n = '%04x' % nregisters
-        nbytes = '%02x' % (nregisters * 2)
+        data_address = '{:04x}'.format(startid)
+        n = '{:04x}'.format(nregisters)
+        nbytes = '{:02x}'.format(nregisters * 2)
 
         #convert decimal value to 32-bit float
         binstr = struct.pack('!f', value)
@@ -162,31 +162,31 @@ class ModbusCommunicator(SerialCommunicator):
 
         return self._execute_request([func_code, data_address, n, nbytes, value], response_type, **kw)
 
-    def set_single_register(self, id, value, response_type, **kw):
+    def set_single_register(self, rid, value, response_type, **kw):
         '''
         '''
 
 
         #func_code = '06'
         func_code = self._write_func_code
-        register_addr = '%04x' % id
-        value = '%04x' % value
+        register_addr = '{:04x}'.format(rid)
+        value = '{:04x}'.format(value)
         return self._execute_request([func_code, register_addr, value], response_type, **kw)
 
     def read_holding_register(self, holdid, nregisters, response_type, **kw):
         '''         
         '''
         func_code = '03'
-        data_address = '%04x' % (holdid)
-        n = '%04x' % nregisters
+        data_address = '{:04x}'.format(holdid)
+        n = '{:04x}'.format(nregisters)
         return self._execute_request([func_code, data_address, n], response_type, **kw)
 
     def read_input_status(self, inputid, ninputs):
         '''
         '''
         func_code = '02'
-        data_address = '%04x' % (inputid - 10001)
-        n = '%04x' % ninputs
+        data_address = '{:04x}'.format(inputid - 10001)
+        n = '{04x}'.format(ninputs)
         return self._execute_request([func_code, data_address, n])
 
 

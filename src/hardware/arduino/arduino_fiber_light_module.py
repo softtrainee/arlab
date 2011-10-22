@@ -34,10 +34,8 @@ class ArduinoFiberLightModule(ArduinoCoreDevice):
         self.ask('f')
     def set_intensity(self, v):
         '''
-            @type v: C{str}
-            @param v:
         '''
-        self.ask('i %03i' % v)
+        self.ask('i {:03n}' % v)
 #    def power_on(self):
 ##        self._communicator.digital_write(self.power_pin,
 ##                           1

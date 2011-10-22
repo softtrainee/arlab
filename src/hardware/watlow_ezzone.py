@@ -205,7 +205,7 @@ class WatlowEZZone(CoreDevice):
             
         ttg = self.read_tru_tune_gain()
         if ttg is not None: 
-            self._tru_tune_gain = ttg
+            self._tru_tune_gain = str(ttg)
         
         osl = self.read_output_scale_low()
         if osl is not None:
@@ -817,7 +817,14 @@ class WatlowEZZone(CoreDevice):
             if self._validate_new(v, self._autotune_setpoint):
                 self._autotune_setpoint = v
                 self.set_autotune_setpoint(v) 
-                       
+    
+    def _get_heat_alogrithm(self):
+        return self._heat_alogrithm
+    
+    def _set_heat_alogrithm(self, v):
+        self._heat_alogrithm = v
+        self.set_heat_alogrithm(v)
+           
     def _validate_number(self, v):
         try:
             v = float(v)        

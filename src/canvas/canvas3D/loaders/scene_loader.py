@@ -45,7 +45,7 @@ def name_generator(base):
     '''
     i = 0
     while(1):
-        yield('%s %i' % (base, i))
+        yield('{} {}'.format(base, i))
         i += 1
 
 def new_id(canvas=None, valid=True):
@@ -76,7 +76,6 @@ def get_floatlist(config, section, option):
 
 class SceneLoader(object):
     '''
-    G{classtree}
     '''
 
 
@@ -113,9 +112,10 @@ class SceneLoader(object):
 
         for r in rows:
             name, _ending = r.split('.')
-            loader = getattr(self, 'load_%s' % name[:-2])
+            loader = getattr(self, 'load_{}'.format(name[:-2]))
             loader(os.path.join(paths.canvas3D_dir, r), sg, vm, canvas)
 
+        print self.delegated_dependencies
         for obj, dependency in self.delegated_dependencies:
             obj = sg.get_object_by_name(obj)
             dep = sg.get_object_by_name(dependency)
@@ -192,17 +192,7 @@ class SceneLoader(object):
 
     def load_connections(self, path, sg, vm, canvas):
         '''
-            @type connections: C{str}
-            @param connections:
 
-            @type sg: C{str}
-            @param sg:
-
-            @type vm: C{str}
-            @param vm:
-
-            @type canvas: C{str}
-            @param canvas:
         '''
         config = get_config(path)
         for section in config.sections():
@@ -254,15 +244,13 @@ class SceneLoader(object):
             tx = TextPanel()
             tx.id = new_id()
             name = config.get(section, 'name')
-            tx.name = '%s_info_panel' % name
+            tx.name = '{}_info_panel'.format(name)
             tx.title = name
             tx.translate = get_translation(config, section)
             sg.root.add(tx)
 
-
     def load_mass_specs(self, path, sg, vm, cv):
         '''
-
         '''
         config = get_config(path)
         for section in config.sections():

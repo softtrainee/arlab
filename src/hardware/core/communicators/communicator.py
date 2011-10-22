@@ -77,7 +77,7 @@ class Communicator(ConfigLoadable):
         for c in s:
             oc = ord(c)
             if not 0x20 <= oc <= 0x7E:
-                c = '[%02i]' % ord(c)
+                c = '[{:02n}]'.format(ord(c))
             ns += c
         return ns
 
@@ -90,9 +90,8 @@ class Communicator(ConfigLoadable):
         if ncmd:
             cmd = ncmd
 
-
         if info is not None:
-            msg = '%s    %s' % (info, cmd)
+            msg = '{}    {}'.format(info, cmd)
         else:
             msg = cmd
 
@@ -108,9 +107,9 @@ class Communicator(ConfigLoadable):
             cmd = ncmd
 
         if info and info != '':
-            msg = '%s    %s ===>> %s' % (info, cmd, re)
+            msg = '{}    {} ===>> {}'.format(info, cmd, re)
         else:
-            msg = '%s ===>> %s' % (cmd, re)
+            msg = '{} ===>> {}'.format(cmd, re)
 
         self.info(msg, decorate=False)
 

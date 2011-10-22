@@ -68,7 +68,7 @@ class AgilentADC(AnalogDigitalConverter):
 
 
         if slot is not None and channel is not None:
-            self.address = '%s%02i' % (slot, channel)
+            self.address = '{}{:02n}'.format(slot, channel)
             return True
 
     def initialize(self, *args, **kw):
@@ -79,15 +79,15 @@ class AgilentADC(AnalogDigitalConverter):
         if self.address is not None:
             cmds = [
                   '*CLS',
-                  'CONF:VOLT:DC (@%s)' % self.address,
+                  'CONF:VOLT:DC (@{})'.format(self.address),
                   'FORM:READING:ALARM OFF',
                   'FORM:READING:CHANNEL ON',
                   'FORM:READING:TIME OFF',
                   'FORM:READING:UNIT OFF',
                   'TRIG:SOURCE TIMER',
                   'TRIG:TIMER 0',
-                  'TRIG:COUNT %i' % self.trigger_count,
-                  'ROUT:SCAN (@%s)' % self.address
+                  'TRIG:COUNT {}'.format(self.trigger_count),
+                  'ROUT:SCAN (@{})'.format(self.address)
                  ]
 
             for c in cmds:
@@ -115,7 +115,7 @@ class AgilentADC(AnalogDigitalConverter):
                 n = float(resp)
                 resp = 0
                 if n > 0:
-                    resp = self.ask('DATA:REMOVE? %i' % float(n))
+                    resp = self.ask('DATA:REMOVE? {}'.format(float(n)))
                     resp = self._parse_response_(resp)
 
                 #self.current_value = resp
@@ -147,8 +147,7 @@ class M1000(AnalogDigitalConverter):
 
     def load_additional_args(self, config):
         '''
-            @type config: C{str}
-            @param config:
+
         '''
 #        super(M1000, self).load_setup_args(p, setupargs)
 #
@@ -181,7 +180,7 @@ class M1000(AnalogDigitalConverter):
         if res is None:
             cmd = 'RD'
             addr = self.address
-            cmd = '%s%s%s' % (self.short_form_prompt, addr, cmd)
+            cmd = ''.join((self.short_form_prompt, addr, cmd))
 
             res = self.ask(cmd, **kw)
             res = self._parse_response_(res)
@@ -205,18 +204,17 @@ class M1000(AnalogDigitalConverter):
 
 class KeithleyADC(M1000):
     '''
-        G{classtree}
     '''
+    
 class OmegaADC(M1000):
     '''
-        G{classtree}
     '''
     def read_block(self):
         '''
         '''
         com = 'RB'
-        r = self.ask('%s%s%s' % (self.short_form_prompt, self.address,
-                   com), remove_eol=False, replace=[chr(13), ','])
+        r = self.ask(''.join((self.short_form_prompt, self.address, com)),
+                          remove_eol=False, replace=[chr(13), ','])
 
         return self._parse_response_(r, type='block')
 

@@ -21,7 +21,6 @@ from base_canvas import BaseCanvas
 
 class RasterCanvas(BaseCanvas):
     '''
-        G{classtree}
     '''
     ok_to_draw = False
     centerx = 280
@@ -31,10 +30,7 @@ class RasterCanvas(BaseCanvas):
 
     def set_parameters(self, x, y):
         '''
-
         '''
-
-
         self.ok_to_draw = True
         self.xstepper = x
         self.ystepper = y
@@ -50,7 +46,6 @@ class RasterCanvas(BaseCanvas):
 
     def cell_factory(self, x=None, y=None):
         '''
-
         '''
         if x is None:
             x = len(self.xstepper)
@@ -58,15 +53,11 @@ class RasterCanvas(BaseCanvas):
             y = len(self.ystepper)
 
         return zeros((x, y))
-        #return [[0 for i in x] for j in y]
 
-#    def draw(self, gc, view_bounds = None, mode = 'default'):
     def draw(self, gc, *args, **kw):
         '''
-    
         '''
         super(RasterCanvas, self).draw(gc, *args, **kw)
-#        RasterCanvas.draw(gc, *args, **kw)
         gc.save_state()
         try:
             if self.ok_to_draw:
@@ -78,7 +69,6 @@ class RasterCanvas(BaseCanvas):
 
     def set_cell_value(self, x, y, value, refresh=True):
         '''
-            
         '''
 
         #apply a rotation around diag 
@@ -94,7 +84,6 @@ class RasterCanvas(BaseCanvas):
 
     def _colormap(self, mag, cmin=0, cmax=1):
         '''
-
         '''
         if cmax <= 0:
             cmax = 1
@@ -107,7 +96,6 @@ class RasterCanvas(BaseCanvas):
 
     def _color_cell(self, gc, x, y, color, height=20, width=20, border=False):
         '''
-
         '''
         gc.save_state()
         if not border:
@@ -119,8 +107,6 @@ class RasterCanvas(BaseCanvas):
 
     def _draw_center(self, gc):
         '''
-            @type gc: C{str}
-            @param gc:
         '''
 
         gc.save_state()
@@ -129,10 +115,9 @@ class RasterCanvas(BaseCanvas):
         gc.arc(self.centerx, self.centery, 10, 0, 360)
         gc.draw_path()
         gc.restore_state()
+    
     def _draw_colorbar(self, gc):
         '''
-            @type gc: C{str}
-            @param gc:
         '''
         gc.save_state()
         ncolorsteps = 50
@@ -145,20 +130,19 @@ class RasterCanvas(BaseCanvas):
 
             self._color_cell(gc, x, y + ci * height, color, width=width, height=height, border=False)
 
-        fmt = '%0.2f'
+        fmt = '{:0.2f}'
         xx = x + width + 5
-        for x, y, t in [(xx, y, fmt % 0.0),
-                      (xx, y + ncolorsteps * height / 2.0, fmt % (self.max_value / 2.0)),
-                      (xx, y + ncolorsteps * height, fmt % self.max_value),
+        for x, y, t in [(xx, y, fmt.format(0.0)),
+                      (xx, y + ncolorsteps * height / 2.0, fmt.format(self.max_value / 2.0)),
+                      (xx, y + ncolorsteps * height, fmt.format(self.max_value)),
                       ]:
             gc.set_text_position(x, y)
             gc.show_text(t)
 
         gc.restore_state()
+        
     def _draw_grid(self, gc):
         '''
-            @type gc: C{str}
-            @param gc:
         '''
         gc.save_state()
 

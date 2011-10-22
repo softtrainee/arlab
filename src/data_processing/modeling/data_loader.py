@@ -44,43 +44,35 @@ class DataLoader(Loggable):
             f = open(path, 'U')
             return f, csv.reader(f, delimiter=delimiter, skipinitialspace=True)
         else:
-            self.warning('Path does not exist %s' % path)
+            self.warning('Path does not exist {}'.format(path))
             return None, None
 
     def _open_writer(self, name, delimiter=TAB):
         '''
-            @type name: C{str}
-            @param name:
-
-            @type delimiter: C{str}
-            @param delimiter:
+          
         '''
         f = open(name, 'wb')
         return f, csv.writer(f, delimiter=delimiter)
 
     def load_autoupdate(self, path, tempoffset, timeoffset):
         '''
-            @type path: C{str}
-            @param path:
         '''
         samples, names = self.split_autoupdate(path)
         self.info('''split autoupdate file
-                                    number samples = %i
-                                    names = %s
-                                    tempoffset=%s (C)
-                                    timeoffset=%s (min)
-                            ''' % (len(samples), ', '.join(names), tempoffset, timeoffset),
+                                    number samples = {}
+                                    names = {}
+                                    tempoffset={} (C)
+                                    timeoffset={} (min)
+                            '''.format(len(samples), ', '.join(names), tempoffset, timeoffset),
                             decorate=False)
         for i in range(len(samples) - 1):
-            self.info('loading sample %s' % names[i])
+            self.info('loading sample {}'.format(names[i]))
             self.load_sample(path, samples[i], samples[i + 1], names[i], tempoffset, timeoffset)
 
     def split_autoupdate(self, path):
         '''
-            @type path: C{str}
-            @param path:
         '''
-        self.info('Splitting autoupdate %s' % path)
+        self.info('Splitting autoupdate {}'.format(path))
         root, name = os.path.split(path)
         f, reader = self._open_reader(name, root)
 
@@ -104,19 +96,8 @@ class DataLoader(Loggable):
 
     def load_sample(self, path, TopRow, BottomRow, name, tempoffset, timeoffset):
         '''
-            @type path: C{str}
-            @param path:
-
-            @type TopRow: C{str}
-            @param TopRow:
-
-            @type BottomRow: C{str}
-            @param BottomRow:
-
-            @type name: C{str}
-            @param name:
         '''
-        self.info('loading sample %s' % path)
+        self.info('loading sample {}'.format(path))
         root, p = os.path.split(path)
         f, reader = self._open_reader(p, root=root)
         if reader is None:
@@ -126,11 +107,11 @@ class DataLoader(Loggable):
         path += '_data'
         if not os.path.exists(path):
             os.mkdir(path)
-            self.info('made data directory %s' % path)
+            self.info('made data directory {}'.format(path))
         cur_dir = os.path.join(path, name)
         if not os.path.exists(cur_dir):
             os.mkdir(cur_dir)
-            self.info('made sample directory %s' % path)
+            self.info('made sample directory {}'.format(path))
 
         total_39 = 0
         IgnoreLines = 0
@@ -140,13 +121,13 @@ class DataLoader(Loggable):
                 a = row[LABTABLE["Age"]]
                 age = float(a)
                 if age < 0:
-                    self.info('Skipping negative age %s' % age)
+                    self.info('Skipping negative age {}'.format(age))
                     continue
             except ValueError:
-                self.info('Invalid age %s' % a)
+                self.info('Invalid age {}'.format(a))
                 continue
             except IndexError:
-                self.info('Skipping row %i %s' % (i, row))
+                self.info('Skipping row {} {}'.format(i, row))
                 continue
 
             if TopRowIgnore <= i < BottomRow:
@@ -155,7 +136,7 @@ class DataLoader(Loggable):
         f.close()
 
         f, reader = self._open_reader(p, root=root)
-        op = os.path.join(cur_dir, '%s.in' % name)
+        op = os.path.join(cur_dir, '{}.in'.format(name))
         wf, writer = self._open_writer(op)
         CumAr39 = 0
         sensitivity = 0
@@ -166,7 +147,7 @@ class DataLoader(Loggable):
                 try:
                     age = float(row[LABTABLE["Age"]])
                 except ValueError:
-                    self.info('Invalid age %s' % a)
+                    self.info('Invalid age {}'.format(a))
                     continue
 
                 if age > 0:
@@ -190,10 +171,10 @@ class DataLoader(Loggable):
 
                     writer.writerow(nrow)
                 else:
-                    self.info("Negative age removed from file %s.in" % name)
+                    self.info("Negative age removed from file {}.in".format(name))
 
 
-        self.info('finished writing to %s' % op)
+        self.info('finished writing to {}'.format(op))
         wf.close()
         f.close()
 
@@ -229,13 +210,11 @@ class DataLoader(Loggable):
 
     def load_arrhenius(self, name):
         '''
-            @type name: C{str}
-            @param name:
         '''
         self.info('load arrhenius')
         inv_temp = []
         log_d = []
-        f, reader = self._open_reader(name, delimiter=' ')
+        f, reader = self._open_reader(name, delimiter='\t')
         if reader is not None:
             for row in reader:
                 if '&' not in row:
@@ -267,8 +246,6 @@ class DataLoader(Loggable):
 
     def load_logr_ro(self, name):
         '''
-            @type name: C{str}
-            @param name:
         '''
         self.info('load log r/ro')
 
@@ -287,8 +264,6 @@ class DataLoader(Loggable):
 
     def validate_data_dir(self, d):
         '''
-            @type d: C{str}
-            @param d:
         '''
 
 #        for a in REQUIRED_FILES:

@@ -35,6 +35,7 @@ from src.helpers.initialization_parser import InitializationParser
 from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay
 from globals import open_logger_on_launch
+from pyface.message_dialog import warning
 
 
 logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
@@ -101,7 +102,7 @@ def get_user_plugins():
             
         except ImportError, e:
             klass = None
-            logger.warning('****** %s could not be imported %s*****' % (name, e))
+            logger.warning('****** {} could not be imported {} ******' % (name, e))
         return klass
 
     #append plugins dir to the sys path
@@ -136,20 +137,12 @@ def get_user_plugins():
                     if check is True:
                         plugins.append(plugin)
                     else:
-                        logger.warning('****** %s not available %s******' % (klass, check))
+                        logger.warning('****** {} not available {}******'.format(klass, check))
                 else:
-                    logger.warning('***** Invalid %s needs to be a subclass of Plugin ******' % klass)
+                    logger.warning('***** Invalid {} needs to be a subclass of Plugin ******'.format(klass))
 
     return plugins
-#def get_developer_plugins():
-#    from envisage.developer.developer_plugin import DeveloperPlugin
-#    from envisage.developer.ui.developer_ui_plugin import DeveloperUIPlugin
-#    return [DeveloperPlugin(),
-#            DeveloperUIPlugin()]
-#
-#def get_logger_plugins():
-#    from apptools.logger.plugin.logger_plugin import LoggerPlugin
-#    return [LoggerPlugin()]
+
 def launch(beta=False):
     '''
     '''
@@ -164,13 +157,7 @@ def launch(beta=False):
              HardwareUIPlugin()
              ]
     plugins += get_user_plugins()
-#    use_developer = False
-#    if use_developer:
-#        plugins += get_developer_plugins()
-#
-#    use_logger = False
-#    if use_logger:
-#        plugins += get_logger_plugins()
+
     lab = Pychron(plugins=plugins,
 
                   beta=beta
@@ -178,8 +165,26 @@ def launch(beta=False):
     try:
         lab.run()
     except Exception, err:
+        logger.warning(err)
+        warning(lab.workbench.active_window, str(err))
         lab.exit()
         
     logger.info('Quiting Pychron')
 
 #============= EOF ====================================
+#    use_developer = False
+#    if use_developer:
+#        plugins += get_developer_plugins()
+#
+#    use_logger = False
+#    if use_logger:
+#        plugins += get_logger_plugins()
+#def get_developer_plugins():
+#    from envisage.developer.developer_plugin import DeveloperPlugin
+#    from envisage.developer.ui.developer_ui_plugin import DeveloperUIPlugin
+#    return [DeveloperPlugin(),
+#            DeveloperUIPlugin()]
+#
+#def get_logger_plugins():
+#    from apptools.logger.plugin.logger_plugin import LoggerPlugin
+#    return [LoggerPlugin()]

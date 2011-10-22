@@ -60,13 +60,13 @@ class SummaryView(HasTraits):
 
         header = '\t'.join(['Domain', 'Domain size', 'Volume fraction '])
         self.summary = '''
-Ea = %0.3f
-Do = %0.3f
+Ea = {:0.3f}
+Do = {0.3f}
 
-%s
+{}
 --------------------------
-%s
-        ''' % (self.activation_e,
+{}
+        '''.format(self.activation_e,
              self.d_not,
              header,
              self.data

@@ -212,13 +212,13 @@ class MapCanvas(MarkupCanvas):
         gc.set_stroke_color(self.hole_color)
 
         if self.hole_crosshairs_kind == 2:
-            func = getattr(self, '_draw_%s' % shape)
+            func = getattr(self, '_draw_{}'.format(shape))
         else:
             if self.show_indicators:
                 func = self._draw_cross_indicator
                 func(gc, x, y, float(size), tweak=tweak)
 
-            func = getattr(self, '_draw_%s' % shape)
+            func = getattr(self, '_draw_{}'.format(shape))
 
         func(gc, x, y, float(size))
 

@@ -45,7 +45,6 @@ from src.data_processing.modeling.autoupdate_config_dialog import AutoupdateConf
 NECESSARY_PROGRAMS = ['filesmod.exe', 'autoarr.exe', 'autoagemon.exe']
 class RunConfiguration(HasTraits):
     '''
-        G{classtree}
     '''
     data_dir = Directory('~/Pychrondata_beta/data/modeling')
     sample = Str('59702-52')
@@ -109,7 +108,6 @@ class RunConfiguration(HasTraits):
 
 class Modeler(Loggable):
     '''
-        G{classtree}
     '''
 
     graph = Instance(DiffusionGraph)
@@ -129,14 +127,6 @@ class Modeler(Loggable):
     @on_trait_change('graph.status_text')
     def update_statusbar(self, object, name, value):
         '''
-            @type object: C{str}
-            @param object:
-
-            @type name: C{str}
-            @param name:
-
-            @type value: C{str}
-            @param value:
         '''
         if name == 'status_text':
             self.status_text = value
@@ -192,8 +182,7 @@ class Modeler(Loggable):
 
     def _run_model_(self, run_config=None):
         '''
-            @type *args: C{str}
-            @param *args:
+
         '''
 #        src_dir = os.path.join(data_dir, 'TESTDATA')
         self.info('Running Model')
@@ -205,19 +194,19 @@ class Modeler(Loggable):
         else:
             self.info('Model Options')
             for a in ['sample', 'geometry', 'max_domains', 'min_domains', 'nruns', 'max_plateau_age']:
-                self.info('%s = %s' % (a, getattr(run_config, a)))
+                self.info('{} = {}'.format(a, getattr(run_config, a)))
 
             #dump the individual config files
             error = self.run_configuration.write()
             if error:
                 self.warning('Failed writing config file')
-                self.warning('error = %s' % error)
+                self.warning('error = {}'.format(error))
                 return
 
             if os.path.exists(LOVERA_PATH):
                 #check to see dir has necessary programs
                 if any([not ni in os.listdir(LOVERA_PATH) for ni in  NECESSARY_PROGRAMS]):
-                    self.warning('Incomplete LOVERA_PATH %s' % LOVERA_PATH)
+                    self.warning('Incomplete LOVERA_PATH {}'.format(LOVERA_PATH))
                     return
 
                 src_dir = os.path.join(self.run_configuration.data_dir)
@@ -226,27 +215,27 @@ class Modeler(Loggable):
                 #copy the lovera codes to src_dir
                 for f in NECESSARY_PROGRAMS:
                     p = os.path.join(LOVERA_PATH, f)
-                    self.info('copying %s > %s' % (p, src_dir))
+                    self.info('copying {} > {}'.format(p, src_dir))
                     shutil.copy(p, src_dir)
 
-                self.info('change to directory %s' % src_dir)
+                self.info('change to directory {}'.format(src_dir))
                 #change the working directory
                 os.chdir(src_dir)
 
             else:
-                self.warning('Invalid LOVERA_PATH %s' % LOVERA_PATH)
+                self.warning('Invalid LOVERA_PATH {}'.format(LOVERA_PATH))
                 return
 
             #run the lovera code
             for cmd in ['filesmod', 'autoarr', 'autoagemon']:
-                msg = 'execute %s' % cmd
+                msg = 'execute {}'.format(cmd)
                 self.status_test = msg
                 self.info(msg)
                 if sys.platform == 'win32':
                     os.system(cmd)
                 else:
-                    status, output = commands.getstatusoutput('./%s' % cmd)
-                    self.info('%s %s' % (status, output))
+                    status, output = commands.getstatusoutput('./{}'.format(cmd))
+                    self.info('{} {}' % (status, output))
                     if status:
                         break
 
@@ -264,13 +253,13 @@ class Modeler(Loggable):
 
         f = FileDialog(action='open', default_directory=data_dir)
         if f.open() == OK:
-            self.info('loading autoupdate file %s' % f.path)
+            self.info('loading autoupdate file {}'.format(f.path))
 
             #open a autoupdate config dialog
             adlg = AutoupdateConfigDialog()
             info = adlg.edit_traits(kind='modal')
             if info.result:
-                self.info('tempoffset = %s (C), timeoffset = %s (min)' % (adlg.tempoffset, adlg.timeoffset))
+                self.info('tempoffset = {} (C), timeoffset = {} (min)'.format(adlg.tempoffset, adlg.timeoffset))
                 self.data_loader.load_autoupdate(f.path, adlg.tempoffset, adlg.timeoffset)
 
         #path='/Users/Ross/Pychrondata_beta/data/modeling/ShapFurnace.txt' 
@@ -281,7 +270,7 @@ class Modeler(Loggable):
         '''
             
         '''
-        self.info('loading graph for %s' % data_directory.path)
+        self.info('loading graph for {}'.format(data_directory.path))
         g = self.graph
 
         dl = self.data_loader
@@ -429,9 +418,10 @@ class Modeler(Loggable):
                   width=0.25)
 
 
-        cols = [CheckboxColumn(name='show'),
+        cols = [
+                ObjectColumn(name='name', editable=False),
+                CheckboxColumn(name='show'),
                 CheckboxColumn(name='bind'),
-              ObjectColumn(name='path', editable=False),
               ]
 
         editor = TableEditor(columns=cols,
