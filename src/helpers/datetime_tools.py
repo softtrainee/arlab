@@ -65,3 +65,11 @@ def get_datetime(timestamp):
 def convert_timestamp(timestamp):
     t = get_datetime(timestamp)
     return time.mktime(t.timetuple()) + 1e-6 * t.microsecond
+
+def diff_timestamp(end, start=0):
+    t = datetime.fromtimestamp(end) - datetime.fromtimestamp(start)
+    h = t.seconds / 3600
+    m = (t.seconds % 3600) / 60
+    s = (t.seconds % 3600) % 60
+    
+    return t, h, m, s
