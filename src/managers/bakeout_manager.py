@@ -57,7 +57,6 @@ class BakeoutManager(Manager):
     _configuration = String
     
     buffer = List
-    buffer2 = List
     data_name = Str
     n_active_controllers = 0
     active_controllers = List
@@ -73,7 +72,6 @@ class BakeoutManager(Manager):
         if app is not None:
             app.register_service(ICoreDevice, bc)
 
-
     @on_trait_change('bakeout+:process_value_flag')
     def update_graph_temperature(self, obj, name, old, new):
         if obj.isAlive():
@@ -88,25 +86,12 @@ class BakeoutManager(Manager):
                 self.write_data(self.data_name)
                 self.buffer = []
 
-    @on_trait_change('bakeout+:duty_cycle')
-    def update_graph_duty_cycle(self, obj, name, old, new):
-        if DUTY_CYCLE:
-            if obj.isAlive():
-                id = self.graph_info[obj.name]['id']
-                self.graph.record(new, series=id, plotid=1)
-                if obj.name not in self.buffer2:
-                    self.buffer2.append(obj.name)
-
-                if len(self.buffer2) == len(self.active_controllers):
-                    self.write_data(self.data_name2, plotid=1)
-                    self.buffer2 = []
-
     def write_data(self, name, plotid=0):
         p = self.data_manager.frames[name]
         h = []
         for c in self.active_controllers:
-            h.append('%s_time' % c)
-            h.append('%s_temp' % c)
+            h.append('{}_time'.format(c))
+            h.append('{}_temp'.format(c))
 
         self.graph.export_raw_data(header=h, path=p, plotid=plotid)
 
@@ -137,8 +122,6 @@ class BakeoutManager(Manager):
                     bc.set_scheduler(scheduler)
                     bc.initialize()
 
-#            self.trait_set(**{'bakeout%i' % (i + 1):bc})
-
         self._load_configurations()
         return True
 
@@ -149,6 +132,7 @@ class BakeoutManager(Manager):
                                    update_interval=self.update_interval
                                    )
         return bc
+    
     def kill(self, **kw):
         '''
         '''
@@ -162,21 +146,12 @@ class BakeoutManager(Manager):
             getattr(self, tr).end(**kw)
 
     def _open_graph(self, path):
-        g = self._graph_factory(stream=False, **dict(pan=True, zoom=True))#graph = self.graph)
+        g = self._graph_factory(stream=False, **dict(pan=True, zoom=True))
         #p = '/Users/Ross/Pychrondata_beta/data/bakeouts/bakeout-2011-02-17008.txt'
 
         self._parse_graph_file(g, path)
-
-        if DUTY_CYCLE:
-            head, tail = os.path.split(path)
-            args = tail.split('-')
-            name = args[0]
-            date = '-'.join(args[1:])
-            name = '.%s_duty_cycle-%s' % (name, date)
-            path = os.path.join(head, name)
-            self._parse_graph_file(g, path, plotid=1)
-
         g.window_title = os.path.basename(path)
+        
         g.edit_traits()
 
     def _parse_graph_file(self, graph, path, plotid=0):
@@ -200,7 +175,6 @@ class BakeoutManager(Manager):
 
             graph.set_data(x, series=i, axis=0, plotid=plotid)
             graph.set_data(y, series=i, axis=1, plotid=plotid)
-
 
     def _open_fired(self):
         path = self._file_dialog_('open', default_directory=os.path.join(data_dir, 'bakeouts'))
@@ -237,23 +211,17 @@ class BakeoutManager(Manager):
             self.kill(user_kill=True)
         else:
             id = 0
-            #self.n_active_controllers = 0
             self.active_controllers = []
             self.graph_info = dict()
             self._graph_factory(graph=self.graph)
+
             #setup data recording
             self.data_manager = dm = CSVDataManager()
 
-            name = 'bakeout-%s' % generate_datestamp()
+            name = 'bakeout-{}'.format(generate_datestamp())
             self.data_name = dm.new_frame(directory='bakeouts',
                          base_frame_name=name)
 
-#            if DUTY_CYCLE:
-#                self.data_name2 = name = '.bakeout_duty_cycle-%s' % generate_datestamp()
-#                dm.new_frame(None, directory='bakeouts',
-#                             base_frame_name=name)
-            #clear_ids = []
-            #names = []
             for tr in self._get_controllers():
                 bc = self.trait_get(tr)[tr]
                 if bc.ok_to_run():
@@ -265,22 +233,11 @@ class BakeoutManager(Manager):
 
                     self.graph.set_series_label(tr, series=id)
 
-                    #setup duty cycle subgraph
-#                    if DUTY_CYCLE:
-#                        self.graph.new_series(type='line', render_style='connectedpoints',
-#                                              plotid=1)
-                    #clear_ids.append('plot%i' % (id))
-
-
-
                     t = Thread(target=bc.run)
                     t.start()
 
                     id += 1
                     self.active_controllers.append(tr)
-                    #names.append(tr)
-
-            #self.graph.clear_legend(clear_ids)
 
     def _update_interval_changed(self):
         for tr in self._get_controllers():
@@ -308,15 +265,10 @@ class BakeoutManager(Manager):
                              Item('save', show_label=False),
 
                              ),
-                         
-                         
                         )
         
         v = View(VGroup(control,
-                        HGroup(
-                            VGroup(
-                            Item('update_interval'),
-                            Item('scan_window'), enabled_when='not alive'), spring),
+                        HGroup(Item('update_interval', label='Sample Period (s)'), Item('scan_window', label='Data Window (mins)'), spring, enabled_when='not alive'),
                         controller_grp, Item('graph', show_label=False, style='custom')),
                handler=ManagerHandler,
                resizable=True,
@@ -377,8 +329,7 @@ class BakeoutManager(Manager):
             tr_obj.trait_set(**kw)
         
         if self.configuration is not '---':
-            self._parse_config_file(self._configuration)
-        
+            self._parse_config_file(self._configuration)   
 
     def _graph_factory(self, stream=True, graph=None, **kw):
         if graph is None:
@@ -392,16 +343,9 @@ class BakeoutManager(Manager):
         graph.new_plot(data_limit=self.scan_window * 60 / self.update_interval,
                        scan_delay=self.update_interval,
                        show_legend='ll',
-                       #track_amount=1200,
                        **kw
                        )
-#        if DUTY_CYCLE:
-#            graph.new_plot(data_limit=3600,
-#                           scan_delay=5,
-#                           **kw
-#                           )
-#            graph.set_y_limits(min=0, max=100, plotid=1)
-#            graph.set_y_title('Duty Cycle %', plotid=1)
+
         graph.set_x_title('Time')
         graph.set_y_title('Temp C')
         return graph

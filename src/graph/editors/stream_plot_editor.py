@@ -20,60 +20,82 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Float
-from traitsui.api import Item, HGroup
+from traitsui.api import Item, VGroup
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
 from src.graph.editors.plot_editor import PlotEditor
 class StreamPlotEditor(PlotEditor):
     '''
-        G{classtree}
     '''
-    autoupdate = DelegatesTo('graph')
+    track_x = DelegatesTo('graph')
+    track_y = DelegatesTo('graph')
+    
+    
     data_limit = Property(Float(enter_set=True, auto_set=False),
                           depends_on='_data_limit')
     _data_limit = Float
 
     def __init__(self, *args, **kw):
         '''
-            @type *args: C{str}
-            @param *args:
 
-            @type **kw: C{str}
-            @param **kw:
         '''
         super(PlotEditor, self).__init__(*args, **kw)
         if self.graph:
             self._data_limit = self.graph.data_limits[self.id]
             self._build_series_editors()
-#
+            
+            self.plot.index_mapper.on_trait_change(self.update_x, 'updated')
+            self.plot.value_mapper.on_trait_change(self.update_y, 'updated')
 
-    def _autoupdate_changed(self):
+    def update_x(self, o, oo, nn):
         '''
         '''
-        if not self.autoupdate:
+        if not isinstance(nn, bool) and self.track_x:
+            self._xmax = nn.high
+            self._xmin = nn.low
+
+    def update_y(self, o, n, nn):
+        '''
+        '''
+        if not isinstance(nn, bool) and self.track_y:
+            self._ymax = nn.high
+            self._ymin = nn.low
+            
+    def _track_x_changed(self):    
+        if not self.track_x:
+            self.graph.track_x = False
             self.graph.set_x_limits(min=self._xmin, max=self._xmax, plotid=self.id)
-            self.graph.set_y_limits(min=self._ymin, max=self._ymax, plotid=self.id)
-            self.graph.auto_update(False, plotid=self.id)
-            #self.graph.trim_data[self.id]=False
         else:
-
-            self.graph.auto_update(True, plotid=self.id)
-
+            self.graph.track_x = True
+    
+    def _track_y_changed(self):    
+        if not self.track_y:
+            self.graph.track_y = False
+            self.graph.set_y_limits(min=self._ymin, max=self._ymax, plotid=self.id)
+        else:
+            self.graph.track_y = True
+    
     def get_axes_group(self):
-        #grp = super(StreamPlotEditor, self).get_axes_group()
-        grp = PlotEditor.get_axes_group(self)
-        agrp = HGroup(Item('autoupdate'), Item('data_limit'))
+        grp = super(StreamPlotEditor, self).get_axes_group()
+        agrp = VGroup(Item('track_x'), Item('data_limit'))
         grp.content.insert(0, agrp)
+        grp.content.insert(2, Item('track_y'))
         return grp
 
     def _get_data_limit(self):
         return self._data_limit
 
     def _set_data_limit(self, v):
-        self.graph.data_limits[self.id] = float(v)
-        self.graph.update_x_limits[self.id] = True
         self._data_limit = v
+        self.graph.data_limits[self.id] = v
+        self.graph.force_track_x_flag = True
+        
+    def _validate_data_limit(self, v):
+        try:
+            return float(v)
+        except ValueError:
+            pass
 #============= EOF ====================================
 
 

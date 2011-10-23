@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
+from traits.api import Bool
 from pyface.timer.api import do_after as do_after_timer
 
 #=============standard library imports ========================
@@ -37,12 +38,19 @@ class StreamGraph(Graph):
 
     cur_min = Inf
     cur_max = -Inf
+    
+    
+    track_y = Bool(True)
+    track_x = Bool(True)
+    force_track_x_flag = False
+    
     def clear(self):
         self.scan_delays = []
         self.time_generators = []
         self.data_limits = []
-        self.track_amounts = []
-        self.update_x_limits = []
+        
+        #self.track_amounts = []
+        
         super(StreamGraph, self).clear()
 
     def new_plot(self, **kw):
@@ -50,24 +58,26 @@ class StreamGraph(Graph):
         '''
         sd = kw['scan_delay'] if 'scan_delay' in kw else 0.5
         dl = kw['data_limit'] if 'data_limit' in kw else 500
-        tl = kw['track_amount'] if 'track_amount' in kw else 0
+        
+        #tl = kw['track_amount'] if 'track_amount' in kw else 0
         self.scan_delays.append(sd)
         self.data_limits.append(dl)
-        self.track_amounts.append(tl)
+        
+        #self.track_amounts.append(tl)
 
-        self.update_x_limits.append(True)
+        #self.track_x.append(True)
 
         args = super(StreamGraph, self).new_plot(**kw)
         self.set_x_limits(min=0, max=dl * sd, plotid=len(self.plots) - 1)
 
         return args
 
-    def auto_update(self, au, plotid=0):
-        '''
-        '''
+#    def auto_update(self, au, plotid=0):
+#        '''
+#        '''
 #        self.trim_data[plotid] = au
-        self.update_x_limits[plotid] = au
-
+        #self.track_x[plotid] = au
+        
     def set_scan_delay(self, v, plotid=0):
         self.scan_delays[plotid] = v
 
@@ -78,8 +88,6 @@ class StreamGraph(Graph):
             self.time_generators[plotid] = tg
         except IndexError:
             self.time_generators.append(tg)
-
-
 
     def record_multiple(self, ys, plotid=0, **kw):
 
@@ -109,7 +117,7 @@ class StreamGraph(Graph):
                           )
         return x
 
-    def record(self, y, x=None, series=0, plotid=0, update_x=True, do_after=None):
+    def record(self, y, x=None, series=0, plotid=0, do_after=None):
         
         xn, yn = self.series[plotid][series]
 
@@ -127,7 +135,7 @@ class StreamGraph(Graph):
                 tg = time_generator(self.scan_delays[plotid])
                 self.time_generators.append(tg)
 
-            nx = tg.next()
+            nx = tg.next()*100
         else:
             nx = x
 
@@ -152,19 +160,25 @@ class StreamGraph(Graph):
             plot.data.set_data(xn, new_xd)
             plot.data.set_data(yn, new_yd)
 
-            if update_x:
+            if self.track_x or self.force_track_x_flag:
+                
                 ma = new_xd[-1]
                 mi = ma - dl * self.scan_delays[plotid]
 #                print ma, mi, dl, self.scan_delays[plotid]
-                if ma >= ((dl - 1) * self.scan_delays[plotid]) - 1:
+                if self.force_track_x_flag or ma > dl * self.scan_delays[plotid]:
+                    
+                    if self.force_track_x_flag:
+                        self.force_track_x_flag = False
+                        ma = dl * self.scan_delays[plotid]
+                        
                     self.set_x_limits(max=ma,
-                                  min=max(1, mi),
-                                  plotid=plotid,
-                                  pad=1
-                                  )
+                              min=max(1, mi),
+                              plotid=plotid,
+                              pad=1
+                              )
 
-            update_y = True
-            if update_y:
+            
+            if self.track_y:
                 ma = max(new_yd)
                 mi = min(new_yd)
                 if ma > self.cur_max:
@@ -182,6 +196,8 @@ class StreamGraph(Graph):
             _record_()
 
         return nx
+    
+
 class StreamStackedGraph(StreamGraph, StackedGraph):
     pass
 #============= EOF ====================================
@@ -263,6 +279,6 @@ class StreamStackedGraph(StreamGraph, StackedGraph):
 #        plot.data.set_data(xn, new_xd)
 #        plot.data.set_data(yn, new_yd)
 #
-#        if x > dl and self.update_x_limits[plotid]:
+#        if x > dl and self.track_x[plotid]:
 #            self.set_x_limits(track = dl, plotid = plotid)
-#            self.update_x_limits[plotid] = False
+#            self.track_x[plotid] = False

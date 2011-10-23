@@ -62,7 +62,7 @@ class PlotEditor(HasTraits):
     name = Str('Plot Editor')
     series_editors = List
 
-    autoupdate = DelegatesTo('graph')
+    #autoupdate = DelegatesTo('graph')
 
     #the _prev_selected hack prevents selected from ever being set to None
     #this prevents view resizing when hiding/showing series.
@@ -119,37 +119,15 @@ class PlotEditor(HasTraits):
             self.series_editors.append(editor(**kwargs))
             self.series_editors.sort(key=lambda x:x.id)
 
-            plot.index_mapper.on_trait_change(self.update_x, 'updated')
-            plot.value_mapper.on_trait_change(self.update_y, 'updated')
+            #plot.index_mapper.on_trait_change(self.update_x, 'updated')
+            #plot.value_mapper.on_trait_change(self.update_y, 'updated')
 
         if plots:
-            px = plot
-            self._xmin, self._xmax = px.index_range.low, px.index_range.high
-            self._ymin, self._ymax = px.value_range.low, px.value_range.high
+            self._xmin, self._xmax = plot.index_range.low, plot.index_range.high
+            self._ymin, self._ymax = plot.value_range.low, plot.value_range.high
+            
 
-    def _autoupdate_changed(self):
-        '''
-        '''
-        if not self.autoupdate:
-            self.graph.set_x_limits(min=self._xmin, max=self._xmax, plotid=self.id)
-            self.graph.set_y_limits(min=self._ymin, max=self._ymax, plotid=self.id)
-            self.graph.auto_update(False, plotid=self.id)
-        else:
-            self.graph.auto_update(True, plotid=self.id)
-
-    def update_x(self, o, oo, nn):
-        '''
-        '''
-        if not isinstance(nn, bool) and self.autoupdate:
-            self._xmax = nn.high
-            self._xmin = nn.low
-
-    def update_y(self, o, n, nn):
-        '''
-        '''
-        if not isinstance(nn, bool) and self.autoupdate:
-            self._ymax = nn.high
-            self._ymin = nn.low
+    
 
     def get_axes_group(self):
         editor = TextEditor(enter_set=True,

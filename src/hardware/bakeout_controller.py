@@ -30,6 +30,8 @@ from src.helpers import paths
 from watlow_ezzone import WatlowEZZone
 from src.scripts.bakeout_script import BakeoutScript
 DUTY_CYCLE = False
+class BakeoutMonitor():
+    pass
 class BakeoutController(WatlowEZZone):
     '''
         
