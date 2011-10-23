@@ -32,6 +32,7 @@ from src.config_loadable import ConfigLoadable
 from src.led.led_editor import LEDEditor
 from src.led.led import LED
 from src.messaging.command_repeater import CommandRepeater
+from src.helpers.datetime_tools import diff_timestamp
 class RCSHandler(Handler):
     def init(self, info):
         '''
@@ -257,14 +258,18 @@ class RemoteCommandServer(ConfigLoadable):
         '''
         '''
 
-        t = datetime.datetime.now() - self.start_time
+#        t = datetime.datetime.now() - self.start_time
 
-        h = t.seconds / 3600
-        m = (t.seconds % 3600) / 60
-        s = (t.seconds % 3600) % 60
-        rt = '%02i:%02i:%02i' % (h, m, s)
+#        h = t.seconds / 3600
+#        m = (t.seconds % 3600) / 60
+#        s = (t.seconds % 3600) % 60
+                
+        t, h, m, s = diff_timestamp(datetime.datetime.now(), self.start_time)
+        
+
+        rt = '{:02n}:{:02n}:{:02n}'.format(h, m, s)
         if t.days:
-            rt = '%id %02i:%02i:%02i' % (t.days, h, m, s)
+            rt = '{} {:02n}:{:02n}:{:02n}' .format(t.days, h, m, s)
         self.run_time = rt
 
     def __running_changed(self):
