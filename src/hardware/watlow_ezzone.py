@@ -13,20 +13,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from src.helpers.logger_setup import setup
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
+
 #=============enthought library imports========================
 from traits.api import Enum, Float, Event, Property, Int, String, Button, Bool, Str
 from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor
 #=============standard library imports ========================
-
+import sys, os
 #=============local library imports  ==========================
-from core.core_device import CoreDevice
+sys.path.insert(0, os.path.join(os.path.expanduser('~'),
+                               'Programming', 'mercurial', 'pychron_beta'))
 
+from core.core_device import CoreDevice
+from src.helpers.logger_setup import setup
 sensor_map = {'62':'off',
                     '95':'thermocouple',
                     '104':'volts dc',
@@ -157,11 +155,20 @@ class WatlowEZZone(CoreDevice):
                             depends_on='_heat_alogrithm')
     _heat_alogrithm = Str
     
-    sensor1_type = Property(String, depends_on='_sensor1_type')
-    thermocouple1_type = Property(String, depends_on='_thermocouple1_type')
+    sensor1_type = Property(Enum('off', 'thermocouple', 'volts dc',
+                 'milliamps', 'rtd 100 ohm', 'rtd 1000 ohm', 'potentiometer', 'thermistor'),
+                            depends_on='_sensor1_type')
+    
+    thermocouple1_type = Property(Enum('B', 'K',
+                                       'C', 'N',
+                                       'D', 'R',
+                                       'E', 'S',
+                                       'F', 'T',
+                                       'J'),
+                                        depends_on='_thermocouple1_type')
 
-    _sensor1_type = Int(112)
-    _thermocouple1_type = Int(11)
+    _sensor1_type = Int#(112)
+    _thermocouple1_type = Int#(11)
 
     process_value = Float
 
@@ -182,18 +189,34 @@ class WatlowEZZone(CoreDevice):
         if s is not None:
             self._sensor1_type = s
         
+        print s
         if self._sensor1_type == 95:
             t = self.read_thermocouple_type(1)
+            print t
             if t is not None:
                 self._thermocouple1_type = t
-        
+                #print self.sensor1_type
+                #print self.thermocouple1_type
+        print self.sensor1_type, self._sensor1_type
+        print self.thermocouple1_type, self._thermocouple1_type
         
         #read pid parameters
         ph = self.read_heat_proportional_band()
+        if ph is not None:
+            self._Ph_ = ph
+        
         pc = self.read_cool_proportional_band()
+        if pc is not None:
+            self._Pc_ = pc
         
         i = self.read_time_integral()
+        if i is not None:
+            self._I_ = i
+            
         d = self.read_time_derivative()
+        if d is not None:
+            self._D_ = d
+            
         
         #read autotune parameters
         asp = self.read_autotune_setpoint()
@@ -438,8 +461,11 @@ class WatlowEZZone(CoreDevice):
         self.info('set input sensor type {}'.format(value))
         register = 368 if input == 1 else 448
         v = value if isinstance(value, int) else isensor_map[value]
-
         self.write(register, v, **kw)
+        if v == 95:
+            tc = self.read_thermocouple_type(1)
+            self._thermocouple1_type = tc
+        
 
     def set_thermocouple_type(self, input, value, **kw):
         '''
@@ -636,26 +662,29 @@ class WatlowEZZone(CoreDevice):
     def _get_sensor1_type(self):
         '''
         '''
-        return sensor_map['%i' % self._sensor1_type]
+        return sensor_map[str(self._sensor1_type)]
 
     def _set_sensor1_type(self, v):
         '''
 
         '''
-        self._sensor1_type = int(v)
-        self.set_analog_input_sensor_type(1, int(v))
+        self._sensor1_type = isensor_map[v]
+        self.set_analog_input_sensor_type(1, self._sensor1_type)
 
     def _get_thermocouple1_type(self):
         '''
         '''
-        return tc_map['%i' % self._thermocouple1_type]
-
+        try:
+            return tc_map[str(self._thermocouple1_type)]
+        except KeyError:
+            pass
+        
     def _set_thermocouple1_type(self, v):
         '''
 
         '''
-        self._thermocouple1_type = int(v)
-        self.set_thermocouple_type(1, int(v))
+        self._thermocouple1_type = itc_map[v]
+        self.set_thermocouple_type(1, self._thermocouple1_type)
 
     def _get_closed_loop_setpoint(self):
         '''
@@ -883,10 +912,11 @@ class WatlowEZZone(CoreDevice):
                             show_border=True
                             )
         
-        input_grp = Group(VGroup(Item('sensor1_type', editor=EnumEditor(values=sensor_map),
+        input_grp = Group(VGroup(Item('sensor1_type',
+                                      #editor=EnumEditor(values=sensor_map),
                                       show_label=False),
                                 Item('thermocouple1_type',
-                                     editor=EnumEditor(values=tc_map),
+                                     #editor=EnumEditor(values=tc_map),
                                      show_label=False,
                                      visible_when='_sensor1_type==95')),
                          label='Input',
@@ -925,9 +955,11 @@ class WatlowEZZone(CoreDevice):
     
     def traits_view(self):
         return View(self.get_configure_group())
+        
 if __name__ == '__main__':
     setup('foo')
-    w = WatlowEZZone()
-    w.initialize()
+    w = WatlowEZZone(name='temperature_controller',
+                     configuration_dir_name='diode')
+    w.bootstrap()
     w.configure_traits()
 #============================== EOF ==========================
