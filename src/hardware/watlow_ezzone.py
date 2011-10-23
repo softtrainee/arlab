@@ -18,10 +18,10 @@ limitations under the License.
 from traits.api import Enum, Float, Event, Property, Int, String, Button, Bool, Str
 from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor
 #=============standard library imports ========================
-import sys, os
+#import sys, os
 #=============local library imports  ==========================
-sys.path.insert(0, os.path.join(os.path.expanduser('~'),
-                               'Programming', 'mercurial', 'pychron_beta'))
+#sys.path.insert(0, os.path.join(os.path.expanduser('~'),
+#                               'Programming', 'mercurial', 'pychron_beta'))
 
 from core.core_device import CoreDevice
 from src.helpers.logger_setup import setup
@@ -662,8 +662,11 @@ class WatlowEZZone(CoreDevice):
     def _get_sensor1_type(self):
         '''
         '''
-        return sensor_map[str(self._sensor1_type)]
-
+        try:
+            return sensor_map[str(self._sensor1_type)]
+        except KeyError:
+            pass
+        
     def _set_sensor1_type(self, v):
         '''
 
