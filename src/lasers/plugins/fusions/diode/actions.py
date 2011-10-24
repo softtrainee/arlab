@@ -141,3 +141,10 @@ class DegasAction(Action):
         if manager is not None:
             man = manager.get_degas_manager()
             open_manager(man)
+
+class ConfigureWatlowAction(Action):
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            t = manager.temperature_controller
+            open_manager(t, view='configure_view')
