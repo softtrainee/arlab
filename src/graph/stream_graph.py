@@ -135,10 +135,9 @@ class StreamGraph(Graph):
                 tg = time_generator(self.scan_delays[plotid])
                 self.time_generators.append(tg)
 
-            nx = tg.next()*100
+            nx = tg.next()
         else:
             nx = x
-
 
         ny = float(y)
 
@@ -148,7 +147,6 @@ class StreamGraph(Graph):
 
         self.raw_x[plotid][series] = hstack((rx[MAX_LIMIT:], [nx]))
         self.raw_y[plotid][series] = hstack((ry[MAX_LIMIT:], [ny]))
-
         
         dl = self.data_limits[plotid]
         lim = int(-(dl + 50) / (self.scan_delays[plotid]))
@@ -161,10 +159,9 @@ class StreamGraph(Graph):
             plot.data.set_data(yn, new_yd)
 
             if self.track_x or self.force_track_x_flag:
-                
                 ma = new_xd[-1]
                 mi = ma - dl * self.scan_delays[plotid]
-#                print ma, mi, dl, self.scan_delays[plotid]
+                
                 if self.force_track_x_flag or ma > dl * self.scan_delays[plotid]:
                     
                     if self.force_track_x_flag:
@@ -177,7 +174,6 @@ class StreamGraph(Graph):
                               pad=1
                               )
 
-            
             if self.track_y:
                 ma = max(new_yd)
                 mi = min(new_yd)

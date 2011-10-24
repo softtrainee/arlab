@@ -17,14 +17,17 @@ limitations under the License.
 #=============enthought library imports========================
 from traits.api import Enum, Float, Event, Property, Int, String, Button, Bool, Str
 from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor
+from pyface.timer.api import Timer
 #=============standard library imports ========================
-#import sys, os
+import sys, os
 #=============local library imports  ==========================
-#sys.path.insert(0, os.path.join(os.path.expanduser('~'),
-#                               'Programming', 'mercurial', 'pychron_beta'))
+sys.path.insert(0, os.path.join(os.path.expanduser('~'),
+                               'Programming', 'mercurial', 'pychron_beta'))
 
 from core.core_device import CoreDevice
 from src.helpers.logger_setup import setup
+from src.graph.time_series_graph import TimeSeriesStreamGraph
+from pyface.timer.do_later import do_later
 sensor_map = {'62':'off',
                     '95':'thermocouple',
                     '104':'volts dc',
@@ -171,12 +174,10 @@ class WatlowEZZone(CoreDevice):
     _thermocouple1_type = Int#(11)
 
     process_value = Float
-
-#    n_ons = Int
-#    n_queries = Int
-#    duty_cycle = Float
     process_value_flag = Event
  
+    heat_power_flag = Event
+    heat_power_value = Float
         
 
     def initialize(self, *args, **kw):
@@ -217,7 +218,6 @@ class WatlowEZZone(CoreDevice):
         if d is not None:
             self._D_ = d
             
-        
         #read autotune parameters
         asp = self.read_autotune_setpoint()
         if asp is not None:
@@ -260,7 +260,35 @@ class WatlowEZZone(CoreDevice):
                 return t
             except ValueError, TypeError:
                 pass
+            
+    def complex_query(self, **kw):
+        if 'verbose' in kw and kw['verbose']:
+            self.info('Do complex query')
 
+        if self.simulation:
+#            t = 4 + self.closed_loop_setpoint
+            t = self.get_random_value() + self.closed_loop_setpoint
+            hp = self.get_random_value()
+            
+        else:
+            t = self.read_process_value(1, **kw)
+            hp = self.read_heat_power(**kw)
+        
+        if t is not None and hp is not None:
+            try:
+                hp = float(hp)
+                self.heat_power = hp
+                #self.heat_power_flag = True
+                
+                t = float(t)
+                self.process_value = t
+                self.process_value_flag = True
+                
+                return t, hp
+            except ValueError, TypeError:
+                pass
+            
+        
 #    def kill(self):
 #        '''
 #        '''
@@ -338,12 +366,35 @@ class WatlowEZZone(CoreDevice):
         '''
         self.info('start autotune')
         self.write(1920, 106, **kw)
+        
+        
+        g = TimeSeriesStreamGraph()
+        sp = 1
+        g.new_plot(data_limit=3600,
+                   scan_delay=sp
+                   )
+        g.new_series()
+        do_later(g.edit_traits)
+        
+        #start a query thread
+        self.autotune_timer = Timer(sp * 1000, self._autotune_update, g)
+        self.autotune_timer.Start()
+        
+        
+    def _autotune_update(self, graph):
+        if self.simulation:
+            d = self.get_random_value(0, 100)
+        else:
+            d = self.get_temperature()
+        graph.record(d)
+        
     
     def stop_autotune(self, **kw):
         '''
         '''
         self.info('stop autotune')
         self.write(1920, 59, **kw)
+        self.autotune_timer.Stop()
         
     def set_autotune_setpoint(self, value, **kw):
         '''
@@ -877,6 +928,7 @@ class WatlowEZZone(CoreDevice):
             self.stop_autotune()
         else:
             self.start_autotune()
+            
         self.autotuning = not self.autotuning
         
     def _configure_fired(self):

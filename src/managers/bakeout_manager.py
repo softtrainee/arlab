@@ -25,17 +25,20 @@ from src.hardware.bakeout_controller import BakeoutController, DUTY_CYCLE
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
 import os
 from src.helpers.paths import bakeout_config_dir, data_dir
-from src.graph.time_series_graph import TimeSeriesStreamGraph, TimeSeriesGraph
+from src.graph.time_series_graph import TimeSeriesStreamGraph, TimeSeriesGraph, \
+    TimeSeriesStreamStackedGraph
 from src.helpers.datetime_tools import generate_datestamp
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.core.i_core_device import ICoreDevice
+from src.graph.graph import Graph
 
 
 class BakeoutManager(Manager):
     '''
     '''
-    graph = Instance(TimeSeriesStreamGraph)
-
+#    graph = Instance(TimeSeriesStreamGraph)
+#    graph = Instance(TimeSeriesStreamStackedGraph)
+    graph = Instance(Graph)
     bakeout1 = Instance(BakeoutController)
     bakeout2 = Instance(BakeoutController)
     bakeout3 = Instance(BakeoutController)
@@ -72,13 +75,18 @@ class BakeoutManager(Manager):
         if app is not None:
             app.register_service(ICoreDevice, bc)
 
+                    
     @on_trait_change('bakeout+:process_value_flag')
     def update_graph_temperature(self, obj, name, old, new):
         if obj.isAlive():
             id = self.graph_info[obj.name]['id']
             
             datum = getattr(obj, 'process_value')
-            self.graph.record(datum, series=id)
+            nx = self.graph.record(datum, series=id)
+            
+            datum = getattr(obj, 'heat_power')
+            self.graph.record(datum, x=nx, series=id, plotid=1)
+            
             if obj.name not in self.buffer:
                 self.buffer.append(obj.name)
 
@@ -221,7 +229,7 @@ class BakeoutManager(Manager):
             name = 'bakeout-{}'.format(generate_datestamp())
             self.data_name = dm.new_frame(directory='bakeouts',
                          base_frame_name=name)
-
+            
             for tr in self._get_controllers():
                 bc = self.trait_get(tr)[tr]
                 if bc.ok_to_run():
@@ -232,6 +240,10 @@ class BakeoutManager(Manager):
                     self.graph_info[bc.name] = dict(id=id)
 
                     self.graph.set_series_label(tr, series=id)
+
+                    self.graph.new_series(type='line', render_style='connectedpoints',
+                                          plotid=1)
+
 
                     t = Thread(target=bc.run)
                     t.start()
@@ -334,7 +346,7 @@ class BakeoutManager(Manager):
     def _graph_factory(self, stream=True, graph=None, **kw):
         if graph is None:
             if stream:
-                graph = TimeSeriesStreamGraph()
+                graph = TimeSeriesStreamStackedGraph()
             else:
                 graph = TimeSeriesGraph()
 
@@ -345,9 +357,16 @@ class BakeoutManager(Manager):
                        show_legend='ll',
                        **kw
                        )
+        graph.new_plot(data_limit=self.scan_window * 60 / self.update_interval,
+                       scan_delay=self.update_interval)
 
         graph.set_x_title('Time')
-        graph.set_y_title('Temp C')
+        graph.set_y_title('Temp (C)')
+        
+        graph.set_y_title('Heat Power (%)', plotid=1)
+        
+        graph.set_x_limits(0, self.scan_window * 60)
+                
         return graph
 
     def _graph_default(self):
