@@ -92,7 +92,7 @@ class StreamGraph(Graph):
 
         x = tg.next()
         for i, yi in enumerate(ys):
-            self.record(yi, x=x, series=i, update_x=False, **kw)
+            self.record(yi, x=x, series=i, track_x=False, **kw)
 
         ma = max(ys)
         mi = min(ys)
@@ -118,7 +118,7 @@ class StreamGraph(Graph):
                           )
         return x
 
-    def record(self, y, x=None, series=0, plotid=0, do_after=None):
+    def record(self, y, x=None, series=0, plotid=0, track_x=True, do_after=None):
         
         xn, yn = self.series[plotid][series]
 
@@ -157,7 +157,7 @@ class StreamGraph(Graph):
             plot.data.set_data(xn, new_xd)
             plot.data.set_data(yn, new_yd)
 
-            if (self.track_x_min or self.track_x_max) or self.force_track_x_flag:
+            if track_x and (self.track_x_min or self.track_x_max) or self.force_track_x_flag:
                 ma = new_xd[-1]
                 mi = ma - dl * self.scan_delays[plotid]
                 
