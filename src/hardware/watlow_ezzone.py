@@ -19,10 +19,10 @@ from traits.api import Enum, Float, Event, Property, Int, String, Button, Bool, 
 from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor
 from pyface.timer.api import Timer
 #=============standard library imports ========================
-import sys, os
+#import sys, os
 #=============local library imports  ==========================
-sys.path.insert(0, os.path.join(os.path.expanduser('~'),
-                               'Programming', 'mercurial', 'pychron_beta'))
+#sys.path.insert(0, os.path.join(os.path.expanduser('~'),
+#                               'Programming', 'mercurial', 'pychron_beta'))
 
 from core.core_device import CoreDevice
 from src.helpers.logger_setup import setup
@@ -680,8 +680,10 @@ class WatlowEZZone(CoreDevice):
         return self.read(1912, response_type='int', **kw)
     
     def read_tru_tune_gain(self, **kw):
-        return self.read(1914, response_type='int', **kw)
-
+        try:
+            return str(self.read(1914, response_type='int', **kw))
+        except ValueError:
+            pass
         
 #    def read_cool_power(self,**kw):
 #        register=1906
@@ -1016,7 +1018,10 @@ class WatlowEZZone(CoreDevice):
                  )
         return v
     
-    def traits_view(self):
+    def control_view(self):
+        return View(self.get_control_group())
+        
+    def configure_view(self):
         return View(self.get_configure_group())
         
 if __name__ == '__main__':

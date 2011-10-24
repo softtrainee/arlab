@@ -179,7 +179,8 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         g.new_plot(
                    padding=[20, 5, 5, 20],
                    scan_delay=self.scan_period * self.time_dict[self.scan_units] / 1000.0,
-
+                   zoom=True,
+                   pan=True,
                    )
         g.new_series()
         
@@ -190,15 +191,15 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         return View(Item('process_value', style='readonly'),
                     Item('input_type', editor=EnumEditor(values=TC_KEYS), show_label=False))
     
-    def current_state_view(self):
-        v = super(DPi32TemperatureMonitor, self).current_state_view()
-    
-        v.content.content.append(VGroup(Item('graph', show_label=False, style='custom'),
-                                        Item('scan_func', label='Function', style='readonly'),
-                                        Item('scan_period', label='Period ({})'.format(self.scan_units), style='readonly'),
-                                        label='Scan'
-                                        )
-                                 )
-        return v
+#    def current_state_view(self):
+#        v = super(DPi32TemperatureMonitor, self).current_state_view()
+#    
+#        v.content.content.append(VGroup(Item('graph', show_label=False, style='custom'),
+#                                        Item('scan_func', label='Function', style='readonly'),
+#                                        Item('scan_period', label='Period ({})'.format(self.scan_units), style='readonly'),
+#                                        label='Scan'
+#                                        )
+#                                 )
+#        return v
         
 #============= EOF ============================================

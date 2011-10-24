@@ -118,7 +118,7 @@ class StreamGraph(Graph):
                           )
         return x
 
-    def record(self, y, x=None, series=0, plotid=0, track_x=True, do_after=None):
+    def record(self, y, x=None, series=0, plotid=0, track_x=True, do_after=None, **kw):
         
         xn, yn = self.series[plotid][series]
 

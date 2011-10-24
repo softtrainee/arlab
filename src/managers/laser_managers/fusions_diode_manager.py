@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Instance, Button, Bool, Float
-from traitsui.api import VGroup, Group, Item
+from traitsui.api import VGroup, Group, Item, InstanceEditor
 #=============standard library imports ========================
 
 
@@ -165,8 +165,26 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         super(FusionsDiodeManager, self).disable_laser()
 
-        return True
+        return True 
+    
+    def get_degas_manager(self):
+        from degas_manager import DegasManager
 
+#        path = self.open_file_dialog(default_directory = os.path.join(scripts_dir,
+#                                                                      'laserscripts',
+#                                                                      'degas'
+#                                                                      )
+#                                     )
+
+        path = '/Users/Ross/Pychrondata_beta/scripts/laserscripts/degas/puck1.rs'
+        if path:
+            dm = DegasManager()
+            dm.parent = self
+            dm.file_name = path
+            dm.new_script()
+            return dm
+        
+        
 #    def launch_camera_scan(self):
 #        '''
 #        '''
@@ -234,7 +252,9 @@ class FusionsDiodeManager(FusionsLaserManager):
 #                      label = 'Pyrometer')
     def get_additional_controls(self):
         v = Group(
-                   VGroup(Item('temperature_controller', style='custom', show_label=False,
+                   VGroup(Item('temperature_controller', style='custom',
+                               editor=InstanceEditor(view='control_view'),
+                               show_label=False,
 #                               springy = True
                                ),
                       label='Watlow',

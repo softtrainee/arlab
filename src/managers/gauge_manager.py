@@ -30,13 +30,12 @@ class GaugeManager(Manager):
 #                
     def start_scans(self):
         for k in self.devices:
-            k.start_scan()
+            if k.is_scanable:
+                k.start_scan()
 #            if 'gauge_controller' in k:
 #                print v
 #                v.start_scan()
-#                
-        
-            
+#                       
     def traits_view(self):
         v = View()
         return v
