@@ -13,14 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Float
-from traitsui.api import Item, VGroup
+from traitsui.api import Item, VGroup, TextEditor, HGroup, spring, Label
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
@@ -28,8 +23,11 @@ from src.graph.editors.plot_editor import PlotEditor
 class StreamPlotEditor(PlotEditor):
     '''
     '''
-    track_x = DelegatesTo('graph')
-    track_y = DelegatesTo('graph')
+    track_x_min = DelegatesTo('graph')
+    track_x_max = DelegatesTo('graph')
+    
+    track_y_min = DelegatesTo('graph')
+    track_y_max = DelegatesTo('graph')
     
     
     data_limit = Property(Float(enter_set=True, auto_set=False),
@@ -51,37 +49,55 @@ class StreamPlotEditor(PlotEditor):
     def update_x(self, o, oo, nn):
         '''
         '''
-        if not isinstance(nn, bool) and self.track_x:
-            self._xmax = nn.high
-            self._xmin = nn.low
+        if not isinstance(nn, bool):
+            if self.track_x_min:
+                self._xmin = nn.low
+            if self.track_x_max:
+                self._xmax = nn.high
 
     def update_y(self, o, n, nn):
         '''
         '''
-        if not isinstance(nn, bool) and self.track_y:
-            self._ymax = nn.high
-            self._ymin = nn.low
+        if not isinstance(nn, bool):
+            if self.track_y_min:
+                self._ymin = nn.low
+            if self.track_y_max:
+                self._ymax = nn.high
+                    
+    def _track_x_min_changed(self):    
+        if not self.track_x_min:
+            self.graph.set_x_limits(min=self._xmin, plotid=self.id)
+        else:
+            self.graph.force_track_x_flag = True
             
-    def _track_x_changed(self):    
-        if not self.track_x:
-            self.graph.track_x = False
-            self.graph.set_x_limits(min=self._xmin, max=self._xmax, plotid=self.id)
+    def _track_x_max_changed(self):    
+        if not self.track_x_max:
+            self.graph.set_x_limits(max=self._xmax, plotid=self.id)
         else:
-            self.graph.track_x = True
+            self.graph.force_track_x_flag = True
+            
+    def _track_y_min_changed(self):    
+        if not self.track_y_min:
+            self.graph.set_y_limits(min=self._ymin, plotid=self.id)
     
-    def _track_y_changed(self):    
-        if not self.track_y:
-            self.graph.track_y = False
-            self.graph.set_y_limits(min=self._ymin, max=self._ymax, plotid=self.id)
-        else:
-            self.graph.track_y = True
+    def _track_y_max_changed(self):    
+        if not self.track_y_max:
+            self.graph.set_y_limits(max=self._ymax, plotid=self.id)
     
     def get_axes_group(self):
-        grp = super(StreamPlotEditor, self).get_axes_group()
-        agrp = VGroup(Item('track_x'), Item('data_limit'))
-        grp.content.insert(0, agrp)
-        grp.content.insert(2, Item('track_y'))
-        return grp
+        editor = TextEditor(enter_set=True,
+                            auto_set=False)
+        xgrp = VGroup('xtitle',
+                      HGroup(spring, Label('Track')),
+                      HGroup(Item('xmin', editor=editor, enabled_when='not track_x_min'), spring, Item('track_x_min', show_label=False)),
+                      HGroup(Item('xmax', editor=editor, enabled_when='not track_x_max'), spring, Item('track_x_max', show_label=False))
+                      )
+        ygrp = VGroup('ytitle',
+                      HGroup(Item('ymin', editor=editor, enabled_when='not track_y_min'), spring, Item('track_y_min', show_label=False)),
+                      HGroup(Item('ymax', editor=editor, enabled_when='not track_y_max'), spring, Item('track_y_max', show_label=False)),
+                      )
+
+        return VGroup(Item('data_limit'), xgrp, ygrp, show_border=True)
 
     def _get_data_limit(self):
         return self._data_limit

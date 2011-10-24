@@ -67,12 +67,12 @@ class TimeSeriesGraph(Graph):
     def _get_x_axis(self, plotid):
         plot = self.plots[plotid]
         #print plot.index_axis.title
-
-        for underlay in plot.underlays:
-            if underlay.orientation == 'bottom':
-                #print t,underlay,underlay.title
-
-                return underlay
+        return plot.index_axis
+#        for underlay in plot.underlays:
+#            if underlay.orientation == 'bottom':
+#                #print t,underlay,underlay.title
+#
+#                return underlay
     def new_plot(self, *args, **kw):
         '''
         '''

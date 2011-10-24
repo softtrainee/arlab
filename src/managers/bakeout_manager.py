@@ -21,7 +21,7 @@ import numpy as np
 #============= local library imports  ==========================
 from src.managers.manager import Manager, ManagerHandler
 from threading import Thread
-from src.hardware.bakeout_controller import BakeoutController, DUTY_CYCLE
+from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
 import os
 from src.helpers.paths import bakeout_config_dir, data_dir

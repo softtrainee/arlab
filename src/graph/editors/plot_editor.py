@@ -49,7 +49,7 @@ class PlotEditor(HasTraits):
     ytitle = Property(Str, depends_on='_ytitle')
     xmax = Property(Float, depends_on='_xmax')
     xmin = Property(depends_on='_xmin')
-    ymax = Property(depends_on='_xmax')
+    ymax = Property(depends_on='_ymax')
     ymin = Property(depends_on='_ymin')
 
 
@@ -135,12 +135,12 @@ class PlotEditor(HasTraits):
 
 
                             )
-        xgrp = VGroup('xtitle', Item('xmin', editor=editor, enabled_when='not autoupdate'),
-                                Item('xmax', editor=editor, enabled_when='not autoupdate'),
+        xgrp = VGroup('xtitle', Item('xmin', editor=editor),
+                                Item('xmax', editor=editor),
                                 #Item('xcolor_', editor = ColorEditor(current_color = 'red'))
                                 )
-        ygrp = VGroup('ytitle', Item('ymin', editor=editor, enabled_when='not autoupdate'),
-                                Item('ymax', editor=editor, enabled_when='not autoupdate'),
+        ygrp = VGroup('ytitle', Item('ymin', editor=editor),
+                                Item('ymax', editor=editor),
                                 #Item('ycolor_', editor = ColorEditor(current_color = 'blue'))
                                 )
 
