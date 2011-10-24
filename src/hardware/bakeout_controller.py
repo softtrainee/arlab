@@ -54,10 +54,8 @@ class BakeoutController(WatlowEZZone):
                         depends_on='_duration')
     _duration = Float
 
-    #setpoint = Property(depends_on = '_setpoint')
-    #_setpoint = Float
     setpoint = Float(enter_set=True, auto_set=False)
-    #temp = Float
+
     scripts = List()
     script = Str('---')
     led = Instance(LED, ())
@@ -102,7 +100,6 @@ class BakeoutController(WatlowEZZone):
 
     def load_additional_args(self, config):
         '''
-
         '''
         sd = os.path.join(paths.scripts_dir, 'bakeoutscripts')
         files = os.listdir(sd)
@@ -111,6 +108,7 @@ class BakeoutController(WatlowEZZone):
                     if not os.path.basename(f).startswith('.') and
                         os.path.isfile(os.path.join(sd, f)) and os.path.splitext(f)[1] in ['.bo' ]]
         return True
+    
     def ok_to_run(self):
         ok = True
         if self.script == '---':
@@ -126,11 +124,9 @@ class BakeoutController(WatlowEZZone):
         self.active = True
         self.alive = True
         if self.script == '---':
-            #if self.setpoint != 0:
             self.set_control_mode('closed')
             self.set_closed_loop_setpoint(self.setpoint)
-#            self.alive = True
-#            self.active = True
+
             self._oduration = self._duration
             self._timer = Timer(self.update_interval * 1000., self._update_)
             
@@ -138,7 +134,6 @@ class BakeoutController(WatlowEZZone):
             self.led.state = 'green'
 
         else:
-            
             t = BakeoutScript(source_dir=os.path.join(paths.scripts_dir, 'bakeoutscripts'),
                                  file_name=self.script,
                                  controller=self)
@@ -148,7 +143,6 @@ class BakeoutController(WatlowEZZone):
 
     def ramp_to_setpoint(self, ramp, setpoint, scale):
         '''
-
         '''
         if scale is not None and scale != self.ramp_scale:
             self.ramp_scale = scale
@@ -161,9 +155,7 @@ class BakeoutController(WatlowEZZone):
 
     def set_ramp_scale(self, value, **kw):
         '''
-
         '''
-
         scalemap = {'h':39,
                   'm':57}
         
@@ -228,21 +220,16 @@ class BakeoutController(WatlowEZZone):
             self._duration -= (nsecs + self.cnt % nsecs) / 3600.
             self.cnt = 0
 
-        self.get_temperature(verbose=False)
-
-        if DUTY_CYCLE:
-        #make a duty cycle measurement
-            self.duty_cycle_increment()
-
+        #self.get_temperature(verbose=False)
+        self.complex_query(verbose=False)
+        
         if time.time() - self.start_time > self._oduration * 3600.:
             self.end()
-
 
     def _update2_(self):
         '''
         '''
         self.temp = self.get_temperature()
-
 
 #============= views ===================================
     def traits_view(self):
