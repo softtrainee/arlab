@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Float
+from traits.api import Float, Enum
 from pyface.timer.timer import Timer
 
 #============= standard library imports ========================
@@ -32,7 +32,7 @@ class DegasScript(CoreScript):
 
     parser_klass = DegasScriptParser
     setpoint = Float
-    
+    control_mode = Enum('open', 'closed')
 #    record_data = True
 
     def get_documentation(self):
@@ -235,6 +235,7 @@ class DegasScript(CoreScript):
         
     def _pre_run_(self):
         if self.manager.enable_laser():
+            self.manager.temperature_controll
             return True
 
     def raw_statement(self, args):
@@ -264,7 +265,7 @@ class DegasScript(CoreScript):
         self.setpoint = pwr
         manager = self.manager
         if manager is not None:
-                manager.set_laser_power(pwr)
+                manager.set_laser_power(pwr, mode=self.control_mode)
         self.wait(dur)
 
     

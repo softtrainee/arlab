@@ -146,7 +146,7 @@ class FusionsDiodeManager(FusionsLaserManager):
             tc.set_control_mode(mode)
 
 
-        func = getattr(tc, 'set_%s_loop_setpoint' % mode)
+        func = getattr(tc, 'set_{}_loop_setpoint'.format(mode))
         func(float(power))
 
     def enable_laser(self):
