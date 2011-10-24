@@ -64,6 +64,7 @@ autotune_aggressive_map = {'under damp':99,
                          'over damp':69
                          }
 yesno_map = {'59':'NO', '106':'YES'}
+truefalse_map = {'59':False, '106':True}
 heat_alogrithm_map = {'62':'off', '71':'PID', '64':'on-off'}
 class WatlowEZZone(CoreDevice):
     '''
@@ -211,6 +212,7 @@ class WatlowEZZone(CoreDevice):
                            ('read_time_derivative', '_D_'),
                            
                            ('read_autotune_setpoint', '_autotune_setpoint'),
+                           ('read_tru_tune_enabled', '_enable_tru_tune'),
                            ('read_tru_tune_band', '_tru_tune_band'),
                            ('read_tru_tune_gain', '_tru_tune_gain'),
                            
@@ -384,7 +386,7 @@ class WatlowEZZone(CoreDevice):
         '''
         '''
         self.info('setting autotune setpoint {:0.3f}'.format(value))
-        self.write(1998, value, **kw)
+        self.write(1998, value, nregisters=2, **kw)
         
     def set_autotune_aggressiveness(self, key, **kw):
         '''
@@ -478,6 +480,18 @@ class WatlowEZZone(CoreDevice):
             value = inmap[value]
             self.write(722, value, **kw)
 
+    def set_input_scale_low(self, value, **kw):
+        '''
+        '''
+        self.info('set input scale low {}'.format(value))
+        self.write(338, value, nregisters=2, **kw)
+
+    def set_input_scale_high(self, value, **kw):
+        '''
+        '''
+        self.info('set input scale high {}'.format(value))
+        self.write(390, value, nregisters=2, **kw)
+    
     def set_output_scale_low(self, value, **kw):
         '''
         '''
@@ -638,12 +652,14 @@ class WatlowEZZone(CoreDevice):
         return yesno_map[id] if rid in yesno_map else None
     
     def read_output_scale_low(self, **kw):
-        return self.read(736, **kw)
+        return self.read(736, nregisters=2, **kw)
+    
     def read_output_scale_high(self, **kw):
-        return self.read(738, **kw)
+        return self.read(738, nregisters=2, **kw)
     
     def read_input_scale_low(self, **kw):
         return self.read(388, nregisters=2, **kw)
+    
     def read_input_scale_high(self, **kw):
         return self.read(390, nregisters=2, **kw)
     
@@ -670,11 +686,20 @@ class WatlowEZZone(CoreDevice):
         return self.read(1904, **kw)
 
     def read_autotune_setpoint(self, **kw):
-        return self.read(1998, **kw)
+        r = self.read(1998, nregisters=2, **kw)
+        print 'autotune sep', r
+        return r
 
     def read_tru_tune_enabled(self, **kw):
-        r = self.read(1919, response_type='int', **kw)
-        return yesno_map[r] if r in yesno_map else None
+        r = self.read(1910, response_type='int', **kw)
+        r = str(r)
+        
+        try:
+            return truefalse_map[r]
+        except KeyError:
+            pass
+        
+        
 
     def read_tru_tune_band(self, **kw):
         return self.read(1912, response_type='int', **kw)
@@ -857,6 +882,7 @@ class WatlowEZZone(CoreDevice):
             if self._validate_new(v, self._input_scale_high):
                 self._input_scale_high = v
                 self.set_input_scale_high(v)
+                
     def _get_output_scale_low(self):
         return self._output_scale_low
     
@@ -966,8 +992,10 @@ class WatlowEZZone(CoreDevice):
         '''
         '''
 
-        output_grp = VGroup('output_scale_low',
-                              'output_scale_high',
+        output_grp = VGroup(Item('output_scale_low', format_str='%0.3f',
+                                  label='Scale Low'),
+                            Item('output_scale_high', format_str='%0.3f',
+                                  label='Scale High'),
                               label='Output',
                               show_border=True
                               )
@@ -983,15 +1011,21 @@ class WatlowEZZone(CoreDevice):
                                 Item('thermocouple1_type',
                                      #editor=EnumEditor(values=tc_map),
                                      show_label=False,
-                                     visible_when='_sensor1_type==95')),
+                                     visible_when='_sensor1_type==95'),
+                                 Item('input_scale_low', format_str='%0.3f',
+                                       label='Scale Low', visible_when='_sensor1_type in [104,112]'),
+                                 Item('input_scale_high', format_str='%0.3f',
+                                       label='Scale High', visible_when='_sensor1_type in [104,112]')
+                                 
+                                 ),
                          label='Input',
                          show_border=True
                          )
         
-        pid_grp = VGroup(HGroup('Ph',
-                                'Pc'),
-                         'I',
-                         'D',
+        pid_grp = VGroup(HGroup(Item('Ph', format_str='%0.3f'),
+                                Item('Pc', format_str='%0.3f')),
+                         Item('I', format_str='%0.3f'),
+                         Item('D', format_str='%0.3f'),
                          show_border=True,
                          label='PID')
         return Group(
@@ -1029,7 +1063,7 @@ if __name__ == '__main__':
     w = WatlowEZZone(name='temperature_controller',
                      configuration_dir_name='diode')
     w.bootstrap()
-    w.configure_traits()
+    w.configure_traits(view='configure_view')
 #============================== EOF ==========================
 #        #read pid parameters
 #        ph = self.read_heat_proportional_band()
