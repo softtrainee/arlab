@@ -46,7 +46,7 @@ class TimeSeriesGraph(Graph):
         '''
         axis = self._get_x_axis(plotid)
         axis.title = t
-
+        #print axis.title, axis, t
         super(TimeSeriesGraph, self).set_x_title(t, plotid=plotid)
 
     def set_axis_label_color(self, *args, **kw):

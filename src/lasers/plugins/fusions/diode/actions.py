@@ -134,3 +134,10 @@ class OpenCalibrationManagerAction(Action):
         if manager is not None:
             man = manager.stage_manager.calibration_manager
             open_manager(man)
+            
+class DegasAction(Action):
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            man = manager.get_degas_manager()
+            open_manager(man)

@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Instance, Directory, Str, Bool, String
-
+from traitsui.api import View, Item
 #=============standard library imports ========================
 from threading import Thread
 import time
@@ -26,17 +26,19 @@ from src.loggable import Loggable
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.helpers.filetools import parse_file
 from core_script_parser import CoreScriptParser
+from src.graph.graph import Graph
 
 
 class CoreScript(Loggable):
     '''
     '''
+    graph = Instance(Graph, ())
     _thread = None
     _file_contents_ = None
     source_dir = Directory
     file_name = Str
 
-    user_cancel = False
+    #user_cancel = False
     condition = None
 
     data_manager = Instance(CSVDataManager)
@@ -48,7 +50,7 @@ class CoreScript(Loggable):
 
     _alive = Bool(False)
     _display_msg = String
-    _ok_to_run = False
+    #_ok_to_run = False
 #    record_data = Bool(False)
 
     base_frame_name = None
@@ -102,7 +104,7 @@ class CoreScript(Loggable):
 #            return True
         return True
 
-    def kill_script(self, failure_reason=None, force=False):
+    def kill_script(self, failure_reason=None, force=False, user_cancel=False):
         if self.isAlive() or force:
             self._kill_script()
 
@@ -110,15 +112,18 @@ class CoreScript(Loggable):
                 s.kill_script()
 
             fr = self.manager.failure_reason if self.manager is not None else failure_reason
-            if self.user_cancel:
+            
+            
+            if user_cancel:
                 self.info('run canceled by user')
+                
             elif fr is not None:
-                self.info('%s' % fr)
+                self.info(fr)
 
 
-            self.info('%s finished' % self.file_name)
-            self._ok_to_run = False
-#        self._alive = False
+            self.info('{} finished'.format(self.file_name))
+            #self._ok_to_run = False
+        self._alive = False
 
     def _kill_script(self):
         '''
@@ -131,20 +136,26 @@ class CoreScript(Loggable):
         
             this is way too confusing should be simplified
         '''
-        r = False
+        r = self._alive
+        if not self._alive:
+            return False
+        
         if self._thread is not None:
             r = self._thread.isAlive()
 
         if hasattr(self.manager, 'enabled'):
             r = self.manager.enabled and r
 
-        if not r and self.manager.failure_reason is None:
-            self.user_cancel = True
+#        if not r and self.manager.failure_reason is None:
+#            self.user_cancel = True
 
-        r = r and self._ok_to_run
-        self._alive = r
+        #r = r and self._ok_to_run
+        #self._alive = r
+        #print 'isAlive', self._thread.isAlive(), self.manager.enabled, r
         return r
-
+    
+    def graph_view(self, **kw):
+        return View(Item('graph', show_label=False, style='custom'), resizable=True)
     def set_graph(self):
         pass
 
@@ -178,7 +189,7 @@ class CoreScript(Loggable):
         return []
 
     def start(self, new_thread):
-        new_thread = True
+        #new_thread = True
         if new_thread:
             self._thread = Thread(target=self.run)
             self._thread.start()
@@ -199,10 +210,10 @@ class CoreScript(Loggable):
                 self.warning('Line: {} - {}'.format(e[1], e[2]))
                 
         if not error:
-            self._alive = True
-            self._ok_to_run = True
+            #self._ok_to_run = True
             self.info('{} started'.format(self.file_name))
             if self._pre_run_():
+                self._alive = True
                 
                 
                 for i, line in enumerate(self._file_contents_):
@@ -267,7 +278,6 @@ class CoreScript(Loggable):
             if not self.isAlive():
                 break
             time.sleep(0.01)
-
 
     def _data_manager_factory(self):
         '''

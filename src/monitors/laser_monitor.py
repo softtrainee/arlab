@@ -25,7 +25,6 @@ NFAILURES = 3
 NTRIES = 3
 class LaserMonitor(Monitor):
     '''
-        G{classtree}
     '''
     #manager = None
     max_duration = Float(60) # in minutes

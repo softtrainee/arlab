@@ -174,10 +174,8 @@ class LaserManager(Manager):
         '''
 
         if reason is not None:
-            self.warning('EMERGENCY SHUTDOWN reason: %s' % reason)
+            self.warning('EMERGENCY SHUTDOWN reason: {}'.format(reason))
             self.failure_reason = reason
-
-#            gWarningDisplay.add_text(reason)
 
         self.disable_laser()
 
@@ -187,7 +185,6 @@ class LaserManager(Manager):
             lm = self.monitor_klass(manager=self,
                             configuration_dir_name=paths.monitors_dir,
                             name=self.monitor_name)
-            #lm.bootstrap()
         return lm
 
     def _stage_manager_factory(self, args):

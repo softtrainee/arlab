@@ -43,6 +43,11 @@ class FusionsDiodeActionSet(WorkbenchActionSet):
                        class_name='{}.actions:OpenLaserManagerAction'.format(self.action_path)
 #                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
                        ),
+                Action(name='Degas',
+                       path='MenuBar/Lasers/{}'.format(self.name),
+                       class_name='{}.actions:DegasAction'.format(self.action_path)
+#                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
+                       ),
 
 ##                Action(name='Configure Motion Controller',
 ##                       path='MenuBar/Lasers/{}'.format(self.name),

@@ -38,6 +38,7 @@ from guide_overlay import GuideOverlay
 
 from tools.contextual_menu_tool import ContextualMenuTool
 from tools.pan_tool import MyPanTool as PanTool
+from numpy.core.numeric import Inf
 
 def name_generator(base):
     '''
@@ -1029,13 +1030,29 @@ class Graph(HasTraits):
 
         scale = getattr(plot, '%s_scale' % axis)
         if scale == 'log':
-            if mi < 0:
-                mi = 0.1
-            else:
+            try:
+                if mi <= 0:
+                    
+                    mi = Inf
+                    for di in plot.data.list_data():
+                        if 'y' in di:
+                            ya = np.copy(plot.data.get_data(di))
+                            ya.sort()
+                            i = 0
+                            try:
+                                while ya[i] <= 0:
+                                    i += 1
+                                if ya[i] < mi:
+                                    mi = ya[i]
+                                    
+                            except IndexError:
+                                mi = 0.01
+                
                 mi = 10 ** math.floor(math.log(mi, 10))
-            if ma < 0:
+                
+                ma = 10 ** math.ceil(math.log(ma, 10))
+            except ValueError:
                 return
-            ma = 10 ** math.ceil(math.log(ma, 10))
         else:
             if ma is not None:
                 ma += pad

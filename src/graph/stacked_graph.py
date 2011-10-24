@@ -23,13 +23,14 @@ class StackedGraph(Graph):
     '''
     '''
     equi_stack = True
+    panel_height = 100
     def new_plot(self, **kw):
         '''
         '''
         if self.equi_stack:
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
-                kw['bounds'] = (50, 100)
+                kw['bounds'] = (50, self.panel_height)
 
         if len(self.plots) == 0:
             if 'title' not in kw:
@@ -38,7 +39,7 @@ class StackedGraph(Graph):
         else:
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
-                kw['bounds'] = (50, 100)
+                kw['bounds'] = (50, self.panel_height)
 
             if 'title' not in kw:
                 kw['padding_top'] = 20

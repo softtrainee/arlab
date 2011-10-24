@@ -25,7 +25,6 @@ from src.config_loadable import ConfigLoadable
 
 class Monitor(ConfigLoadable):
     '''
-        G{classtree}
     '''
     sample_delay = Int(10)
     manager = None

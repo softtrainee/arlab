@@ -97,11 +97,11 @@ class MicroIonController(CoreDevice):
             r = r.split(',')
         return r
 
-    def _get_pressure(self, name):
+    def _get_pressure(self, name, verbose=False):
         key = 'DS'
         cmd = self._build_command(key, name)
 
-        r = self.ask(cmd)
+        r = self.ask(cmd, verbose=verbose)
         r = self._parse_response(r)
         return r
 
@@ -121,7 +121,7 @@ class MicroIonController(CoreDevice):
 
     def _parse_response(self, r):
         if self.simulation or r is None:
-            r = self.get_random_value(0, 10)
+            r = self.get_random_value(-10, 10000) / 20000.
 
         return r
 

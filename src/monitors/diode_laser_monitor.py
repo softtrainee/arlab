@@ -24,7 +24,6 @@ from laser_monitor import LaserMonitor
 
 class MonitorSeries(HasTraits):
     '''
-        G{classtree}
     '''
     name = Str
     show = Bool
@@ -32,7 +31,6 @@ class MonitorSeries(HasTraits):
 
 class DiodeLaserMonitor(LaserMonitor):
     '''
-        G{classtree}
     '''
     max_temp = Float(800)
     max_tempmin = Int(0)
@@ -108,8 +106,7 @@ class DiodeLaserMonitor(LaserMonitor):
 
     def load_additional_args(self, config):
         '''
-            @type config: C{str}
-            @param config:
+
         '''
         self.set_attribute(config, 'max_temp',
                        'General', 'max_temp', cast='float', optional=True)
@@ -135,8 +132,8 @@ class DiodeLaserMonitor(LaserMonitor):
         lt = manager.get_laser_internal_temperature(verbose=False)
         #self._update_max_temp = lt
         if lt > self.max_temp:
-            self.warning('Laser over temperature %0.2f' % lt)
-            manager.emergency_shutoff(reason='Over temp %f' % lt)
+            self.warning('Laser over temperature {:0.2f}'.format(lt))
+            manager.emergency_shutoff(reason='Over temp {}'.format(lt))
 
 
 #============= views ===================================
