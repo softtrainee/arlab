@@ -120,7 +120,14 @@ class WatlowEZZone(CoreDevice):
 #    _calibration_offset = Float
 #    comin = Float(-500.0)
 #    comax = Float(500.0)
-
+    input_scale_low = Property(Float(auto_set=False, enter_set=True),
+                               depends_on='_input_scale_low') 
+    _input_scale_low = Float(0)
+    
+    input_scale_high = Property(Float(auto_set=False, enter_set=True),
+                               depends_on='_input_scale_high') 
+    _input_scale_high = Float(1)
+    
     output_scale_low = Property(Float(auto_set=False, enter_set=True),
                                depends_on='_output_scale_low') 
     _output_scale_low = Float(0)
@@ -185,60 +192,37 @@ class WatlowEZZone(CoreDevice):
         '''
         #set open loop and closed loop to zero
         self.disable()
-        
+        self.initialization_hook()
+        return True
+    
+    def initialization_hook(self):
         s = self.read_analog_input_sensor_type(1)
         if s is not None:
             self._sensor1_type = s
         
-        print s
         if self._sensor1_type == 95:
             t = self.read_thermocouple_type(1)
-            print t
             if t is not None:
                 self._thermocouple1_type = t
-                #print self.sensor1_type
-                #print self.thermocouple1_type
-        print self.sensor1_type, self._sensor1_type
-        print self.thermocouple1_type, self._thermocouple1_type
         
-        #read pid parameters
-        ph = self.read_heat_proportional_band()
-        if ph is not None:
-            self._Ph_ = ph
+        for func, attr in [('read_heat_proportional_band', '_Ph_'),
+                           ('read_cool_proportional_band', '_Pc_'),
+                           ('read_time_integral', '_I_'),
+                           ('read_time_derivative', '_D_'),
+                           
+                           ('read_autotune_setpoint', '_autotune_setpoint'),
+                           ('read_tru_tune_band', '_tru_tune_band'),
+                           ('read_tru_tune_gain', '_tru_tune_gain'),
+                           
+                           ('read_output_scale_low', '_output_scale_low'),
+                           ('read_output_scale_high', '_output_scale_high'),
+                           ('read_input_scale_low', '_input_scale_low'),
+                           ('read_input_scale_high', '_input_scale_high'),
+                           ]:
+            v = getattr(self, func)()
+            if v is not None:
+                setattr(self, attr, v)
         
-        pc = self.read_cool_proportional_band()
-        if pc is not None:
-            self._Pc_ = pc
-        
-        i = self.read_time_integral()
-        if i is not None:
-            self._I_ = i
-            
-        d = self.read_time_derivative()
-        if d is not None:
-            self._D_ = d
-            
-        #read autotune parameters
-        asp = self.read_autotune_setpoint()
-        if asp is not None:
-            self._autotune_setpoint = asp
-        ttb = self.read_tru_tune_band()
-        if ttb is not None:
-            self._tru_tune_band = ttb
-            
-        ttg = self.read_tru_tune_gain()
-        if ttg is not None: 
-            self._tru_tune_gain = str(ttg)
-        
-        osl = self.read_output_scale_low()
-        if osl is not None:
-            self._output_scale_low = osl
-            
-        osh = self.read_output_scale_low()
-        if osh is not None:
-            self._output_scale_high = osh
-        return True
-
     def get_temperature(self, **kw):
         '''
         '''
@@ -302,7 +286,7 @@ class WatlowEZZone(CoreDevice):
     def disable(self):
         self.info('disable')
 
-        func = getattr(self, 'set_%s_loop_setpoint' % self.control_mode)
+        func = getattr(self, 'set_{}_loop_setpoint'.format(self.control_mode))
         func(0)
 
 #        self.set_control_mode('open')
@@ -655,9 +639,13 @@ class WatlowEZZone(CoreDevice):
     
     def read_output_scale_low(self, **kw):
         return self.read(736, **kw)
-    
     def read_output_scale_high(self, **kw):
         return self.read(738, **kw)
+    
+    def read_input_scale_low(self, **kw):
+        return self.read(388, nregisters=2, **kw)
+    def read_input_scale_high(self, **kw):
+        return self.read(390, nregisters=2, **kw)
     
     def read_output_type(self, **kw):
         '''
@@ -845,7 +833,28 @@ class WatlowEZZone(CoreDevice):
         '''
         self._calibration_offset = v
         self.set_calibration_offset(1, v)
-
+    
+    def _get_input_scale_low(self):
+        return self._input_scale_low
+    
+    def _set_input_scale_low(self, v):
+        '''
+        '''
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._input_scale_low):
+                self._input_scale_low = v
+                self.set_input_scale_low(v)
+    
+    def _get_input_scale_high(self):
+        return self._input_scale_high
+    
+    def _set_input_scale_high(self, v):
+        '''
+        '''
+        if self._validate_number(v) is not None:
+            if self._validate_new(v, self._input_scale_high):
+                self._input_scale_high = v
+                self.set_input_scale_high(v)
     def _get_output_scale_low(self):
         return self._output_scale_low
     
@@ -928,7 +937,6 @@ class WatlowEZZone(CoreDevice):
             self.stop_autotune()
         else:
             self.start_autotune()
-            
         self.autotuning = not self.autotuning
         
     def _configure_fired(self):
@@ -1018,3 +1026,39 @@ if __name__ == '__main__':
     w.bootstrap()
     w.configure_traits()
 #============================== EOF ==========================
+#        #read pid parameters
+#        ph = self.read_heat_proportional_band()
+#        if ph is not None:
+#            self._Ph_ = ph
+#        
+#        pc = self.read_cool_proportional_band()
+#        if pc is not None:
+#            self._Pc_ = pc
+#
+#        i = self.read_time_integral()
+#        if i is not None:
+#            self._I_ = i
+#            
+#        d = self.read_time_derivative()
+#        if d is not None:
+#            self._D_ = d
+        
+        #read autotune parameters
+#        asp = self.read_autotune_setpoint()
+#        if asp is not None:
+#            self._autotune_setpoint = asp
+#        ttb = self.read_tru_tune_band()
+#        if ttb is not None:
+#            self._tru_tune_band = ttb
+#            
+#        ttg = self.read_tru_tune_gain()
+#        if ttg is not None: 
+#            self._tru_tune_gain = str(ttg)
+        
+#        osl = self.read_output_scale_low()
+#        if osl is not None:
+#            self._output_scale_low = osl
+#            
+#        osh = self.read_output_scale_low()
+#        if osh is not None:
+#            self._output_scale_high = osh

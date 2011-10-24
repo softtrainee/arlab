@@ -142,9 +142,9 @@ class ModbusCommunicator(SerialCommunicator):
         '''
 
         func_code = '10'
-        data_address = '{:04X}'.format(startid)
-        n = '{:04X}'.format(nregisters)
-        nbytes = '{:02X}'.format(nregisters * 2)
+        data_address = '{:04X}'.format(int(startid))
+        n = '{:04X}'.format(int(nregisters))
+        nbytes = '{:02X}'.format(int(nregisters * 2))
 
         #convert decimal value to 32-bit float
         binstr = struct.pack('!f', value)
@@ -169,8 +169,8 @@ class ModbusCommunicator(SerialCommunicator):
 
         #func_code = '06'
         func_code = self._write_func_code
-        register_addr = '{:04X}'.format(rid)
-        value = '{:04X}'.format(value)
+        register_addr = '{:04X}'.format(int(rid))
+        value = '{:04X}'.format(int(value))
         return self._execute_request([func_code, register_addr, value], response_type, **kw)
 
     def read_holding_register(self, holdid, nregisters, response_type, **kw):

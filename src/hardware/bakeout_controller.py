@@ -29,7 +29,6 @@ from src.led.led_editor import LEDEditor
 from src.helpers import paths
 from watlow_ezzone import WatlowEZZone
 from src.scripts.bakeout_script import BakeoutScript
-DUTY_CYCLE = False
 class BakeoutMonitor():
     pass
 class BakeoutController(WatlowEZZone):
@@ -65,6 +64,14 @@ class BakeoutController(WatlowEZZone):
     ramp_scale = None
     
     update_interval = Float(1)
+    
+    def initialization_hook(self):
+        '''
+            suppress the normal initialization querys
+            they are not necessary for the bakeout manager currently
+        '''
+        pass
+    
     def _setpoint_changed(self):
         if self.isAlive():
             self.set_closed_loop_setpoint(self.setpoint)
