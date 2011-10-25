@@ -353,9 +353,11 @@ class WatlowEZZone(CoreDevice):
         self.info('start autotune')
         self.write(1920, 106, **kw)
         
-        
         g = TimeSeriesStreamGraph()
-        sp = 1
+        sp = 2
+        dm = self.data_manager
+        dm.new_frame(base_frame_name=self.name)
+        
         g.new_plot(data_limit=3600,
                    scan_delay=sp
                    )
@@ -372,9 +374,25 @@ class WatlowEZZone(CoreDevice):
             d = self.get_random_value(0, 100)
         else:
             d = self.get_temperature()
-        graph.record(d)
+            
+        x = graph.record(d)
+        self.data_manager.write_to_frame((x, d))
         
-    
+        if self.autotune_finished():
+            self.autotune_timer.Stop()
+            self.info('autotuning finished')
+            
+            #requery the device
+            self.initialization_hook()
+            
+            
+    def autotune_finished(self, **kw):
+        r = self.read_autotuning(1920, **kw)
+        try:
+            return truefalse_map[r]
+        except KeyError:
+            return True
+        
     def stop_autotune(self, **kw):
         '''
         '''

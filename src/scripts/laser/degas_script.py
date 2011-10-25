@@ -110,19 +110,26 @@ class DegasScript(CoreScript):
                 label = None
 
                 if len(args) >= 5:
-                    label = args[2]
-                    plotid = int(args[3])
-                    series = int(args[4])
-                    vscale = False
+                    d = dict(
+                        label=args[2],
+                        plotid=int(args[3]),
+                        series=int(args[4]))
+                    
+                    vscale = 'linear'
+                    formatter = None
                     try:
-                        vscale = args[5].strip() == 'log'
+                        vscale = args[5].strip()
+                        
+                        formatter = lambda x:args[6].format(x)
                     except IndexError:
                         pass
                     
-                    self.scan_setup.append((obj, func, dict(plotid=plotid, series=series,
-                                                        label=label,
-                                                        value_scale=vscale
-                                                        )))
+                    if formatter:
+                        d['formatter'] = formatter
+                        
+                    d['vscale'] = vscale
+                    
+                    self.scan_setup.append((obj, func, d))
 
 
         self._file_contents_ = self._file_contents_[i + 1:]
@@ -134,16 +141,15 @@ class DegasScript(CoreScript):
     def get_frame_header(self):
         metadata = []
         metadata.append(['#===========plot metadata============'])
-        metadata.append(['#time', 'request_power'])
-
-        header = []
+       
+        header = ['#time', 'request_power']
         for _obj, attr, plotinfo in self.scan_setup:
             header.append(attr)
 
             metadata.append(['#%s' % attr, plotinfo['plotid'], plotinfo['series']])
 
-        metadata.append(['#===================================='])
         metadata.append(header)
+        metadata.append(['#===================================='])
         return metadata
 
     def set_graph(self):
@@ -169,7 +175,7 @@ class DegasScript(CoreScript):
             plotid = plotinfo['plotid']
             series = plotinfo['series']
             label = plotinfo['label']
-            value_scale = 'log' if plotinfo['value_scale'] else 'linear'
+            value_scale = plotinfo['value_scale']
             
             if not cur_plotid == plotid:
                 g.new_plot(show_legend='ur')
@@ -221,7 +227,7 @@ class DegasScript(CoreScript):
             #data.append()
             #data.append(((self.setpoint, attr), info))
 
-            drow.append(attr)
+            drow.append(v)
         self.graph.record(self.setpoint, plotid=0)
 #        if data:
 #            for datum, info in data:
@@ -235,7 +241,6 @@ class DegasScript(CoreScript):
         
     def _pre_run_(self):
         if self.manager.enable_laser():
-            self.manager.temperature_controll
             return True
 
     def raw_statement(self, args):

@@ -147,4 +147,5 @@ class ConfigureWatlowAction(Action):
         manager = get_manager(event)
         if manager is not None:
             t = manager.temperature_controller
+            t.initialization_hook()
             open_manager(t, view='configure_view')
