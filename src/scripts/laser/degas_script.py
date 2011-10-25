@@ -32,7 +32,7 @@ class DegasScript(CoreScript):
 
     parser_klass = DegasScriptParser
     setpoint = Float
-    control_mode = Enum('open', 'closed')
+    control_mode = Enum('closed', 'open')
 #    record_data = True
 
     def get_documentation(self):
@@ -127,7 +127,7 @@ class DegasScript(CoreScript):
                     if formatter:
                         d['formatter'] = formatter
                         
-                    d['vscale'] = vscale
+                    d['value_scale'] = vscale
                     
                     self.scan_setup.append((obj, func, d))
 
@@ -163,8 +163,9 @@ class DegasScript(CoreScript):
         
         g.new_plot()
         g.set_x_title('Time')
-        g.set_y_title('Setpoint (%)')
+        g.set_y_title('Setpoint (C)')
             
+        g.new_series()
         g.new_series()
         
         #g.new_plot(show_legend='ur')
@@ -205,7 +206,8 @@ class DegasScript(CoreScript):
             self.timestamp_gen = time_generator()
 
         #data = []
-        drow = [timestamp, self.setpoint]
+        pv = self.manager.temperature_controller.process_value
+        drow = [timestamp, self.setpoint, pv]
         
         for obj, attr, info in self.scan_setup:
             
@@ -222,21 +224,10 @@ class DegasScript(CoreScript):
             v = 0
             if type(attr).__name__ == 'instancemethod':
                 v = attr()
-                
                 self.graph.record(v, **info)
-            #data.append()
-            #data.append(((self.setpoint, attr), info))
-
+            
             drow.append(v)
-        self.graph.record(self.setpoint, plotid=0)
-#        if data:
-#            for datum, info in data:
-                #internal = random.random()
-                #kw = info.copy()
-                #kw.pop('label')
-                #self.graph.record()
-                #self.graph.add_datum(datum, **kw)
-                #self.graph.add_datum((rpower, internal))
+        self.graph.record_multiple((self.setpoint, pv), plotid=0)
         self.data_manager.write_to_frame(drow)
         
     def _pre_run_(self):
