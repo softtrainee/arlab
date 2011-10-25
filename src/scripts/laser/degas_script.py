@@ -26,6 +26,7 @@ from src.graph.stacked_graph import StackedGraph
 from src.helpers.datetime_tools import time_generator
 from src.scripts.laser.degas_script_parser import DegasScriptParser
 from src.graph.time_series_graph import TimeSeriesStreamStackedGraph
+import math
 
 class DegasScript(CoreScript):
 
@@ -93,8 +94,8 @@ class DegasScript(CoreScript):
 
     def load(self):
         self.scan_setup = []
-        plotid = 0
-        series = 0
+        #plotid = 0
+        #series = 0
         
         #first line should be scan period
         self.scan_period = float(self._file_contents_[0].strip())
@@ -107,7 +108,7 @@ class DegasScript(CoreScript):
                 args = line.split(',')
                 obj = args[0]
                 func = args[1]
-                label = None
+                #label = None
 
                 if len(args) >= 5:
                     d = dict(
@@ -119,13 +120,17 @@ class DegasScript(CoreScript):
                     formatter = None
                     try:
                         vscale = args[5].strip()
-                        
-                        formatter = lambda x:args[6].format(x)
+                        def format(x):
+                            if x < 1:
+                                return '{:02n}'.format(math.floor(math.log(x, 10))) if abs(math.floor(math.log(x, 10)) - math.log(x, 10)) <= 1e-6 else ''
+                            else:
+                                return '{:02n}'.format(math.ceil(math.log(x, 10))) if abs(math.ceil(math.log(x, 10)) - math.log(x, 10)) <= 1e-6 else ''
+                        formatter = format
+#                        formatter = lambda x:'{:0.2e}'.format(x) if int(math.log(x, 10)) == math.log(x, 10) else ''
                     except IndexError:
                         pass
                     
-                    if formatter:
-                        d['formatter'] = formatter
+                    d['formatter'] = formatter
                         
                     d['value_scale'] = vscale
                     
@@ -161,15 +166,16 @@ class DegasScript(CoreScript):
                                          )
         #g.clear()
         
-        g.new_plot()
+        g.new_plot(show_legend='ur')
         g.set_x_title('Time')
         g.set_y_title('Setpoint (C)')
             
         g.new_series()
         g.new_series()
         
-        #g.new_plot(show_legend='ur')
-    
+        g.set_series_label('Request')
+        g.set_series_label('Process Value', series=1)
+            
         cur_plotid = 0
         for _obj, func, plotinfo in self.scan_setup:
 
@@ -177,11 +183,16 @@ class DegasScript(CoreScript):
             series = plotinfo['series']
             label = plotinfo['label']
             value_scale = plotinfo['value_scale']
+            formatter = plotinfo['formatter']
+            
             
             if not cur_plotid == plotid:
                 g.new_plot(show_legend='ur')
                 cur_plotid = plotid
 
+            if formatter:
+                g.plots[cur_plotid].value_axis.tick_label_formatter = formatter
+                
             g.new_series(type='line', value_scale=value_scale, render_style='connectedpoints', plotid=cur_plotid)
             if label is None:
                 label = func
@@ -227,7 +238,10 @@ class DegasScript(CoreScript):
                 self.graph.record(v, **info)
             
             drow.append(v)
-        self.graph.record_multiple((self.setpoint, pv), plotid=0)
+        
+        self.graph.record(self.setpoint, plotid=0)
+        self.graph.record(pv, plotid=0, series=1)
+        
         self.data_manager.write_to_frame(drow)
         
     def _pre_run_(self):
