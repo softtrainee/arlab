@@ -28,11 +28,13 @@ from src.helpers.paths import data_dir
 from manager import Manager
 
 KIND_VALUES = dict(
+                   degas='Degas',
                    peak_center='Peak Center',
                    powermap='Power Map',
                    xy='XY',
                    deflection='Deflection',
-                   step_heat='Step Heat'
+                   step_heat='Step Heat',
+                   
                    )
 class GraphManager(Manager):
     path = File
