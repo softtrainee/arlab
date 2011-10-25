@@ -126,7 +126,6 @@ class DegasScript(CoreScript):
                             else:
                                 return '{:02n}'.format(math.ceil(math.log(x, 10))) if abs(math.ceil(math.log(x, 10)) - math.log(x, 10)) <= 1e-6 else ''
                         formatter = format
-#                        formatter = lambda x:'{:0.2e}'.format(x) if int(math.log(x, 10)) == math.log(x, 10) else ''
                     except IndexError:
                         pass
                     
@@ -163,9 +162,7 @@ class DegasScript(CoreScript):
         g = TimeSeriesStreamStackedGraph(
                                          panel_height=175
                                          #window_title='Degas Scan %s' % self.file_name
-                                         )
-        #g.clear()
-        
+                                         )        
         g.new_plot(show_legend='ur')
         g.set_x_title('Time')
         g.set_y_title('Setpoint (C)')
@@ -201,7 +198,6 @@ class DegasScript(CoreScript):
 
         g.set_y_title('Pressure', plotid=1)
         g.set_y_title('Temp', plotid=2)
-        #g.edit_traits()
         
         self.scan_timer = Timer(self.scan_period * 1000,
                               self._scan_
@@ -216,12 +212,10 @@ class DegasScript(CoreScript):
             timestamp = 0
             self.timestamp_gen = time_generator()
 
-        #data = []
         pv = self.manager.temperature_controller.process_value
         drow = [timestamp, self.setpoint, pv]
         
-        for obj, attr, info in self.scan_setup:
-            
+        for obj, attr, info in self.scan_setup:    
             manager, device = obj.split('.')
             if manager == 'laser':
                 manager = self.manager
@@ -229,13 +223,17 @@ class DegasScript(CoreScript):
                 if manager == 'gauge':
                     protocol = 'src.managers.gauge_manager.GaugeManager'
                 manager = self.manager.application.get_service(protocol)
-            
-            dev = getattr(manager, device)
-            attr = getattr(dev, attr)
             v = 0
-            if type(attr).__name__ == 'instancemethod':
-                v = attr()
-                self.graph.record(v, **info)
+            try:
+                dev = getattr(manager, device)
+                attr = getattr(dev, attr)
+                
+                if type(attr).__name__ == 'instancemethod':
+                    v = attr()
+                    self.graph.record(v, **info)
+            except AttributeError, e:
+                self.warning(e)
+                self.kill_script(failure_reason=e, force=True)
             
             drow.append(v)
         
