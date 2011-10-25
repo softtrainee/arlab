@@ -107,10 +107,11 @@ class StreamGraph(Graph):
             if not self.track_x_min:
                 mi = None
             else:
-                mi = min(1, x - dl * self.scan_delays[plotid])
+                mi = max(1, x - dl * self.scan_delays[plotid])
 
             if not self.track_x_max:
                 x = None
+                
             self.set_x_limits(max=x,
                           min=mi,
                           plotid=plotid,
@@ -180,20 +181,29 @@ class StreamGraph(Graph):
                               )
 
             if (self.track_y_min or self.track_y_max):
-                ma = max(new_yd)
-                mi = min(new_yd)
-                    
-                if ma > self.cur_max[plotid]:
-                    self.cur_max[plotid] = ma
-                if mi < self.cur_min[plotid]:
-                    self.cur_min[plotid] = mi
+#                ma = max(new_yd)
+#                mi = min(new_yd)
+#                    
+                self.cur_max[plotid] = max(self.cur_max[plotid], max(new_yd))
+                self.cur_min[plotid] = min(self.cur_max[plotid], min(new_yd))
+                
+#                if ma > self.cur_max[plotid]:
+#                    self.cur_max[plotid] = ma
+#                else:
+#                    
+#                if mi < self.cur_min[plotid]:
+#                    self.cur_min[plotid] = mi
                 
                 if not self.track_y_max:
                     ma = None
-                
+                else:
+                    ma = self.cur_max[plotid]
+                    
                 if not self.track_y_min:
                     mi = None
-                
+                else:
+                    mi = self.cur_min[plotid]
+                    
                 self.set_y_limits(max=ma,
                               min=mi,
                               plotid=plotid,
