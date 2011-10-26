@@ -104,7 +104,9 @@ class FusionsDiodeManager(FusionsLaserManager):
     
     def get_lens_configuration_group(self):
         return None
-        
+    
+    def load_lens_configurations(self):
+        pass
 #    def get_laser_amps(self):
 #        '''
 #        '''

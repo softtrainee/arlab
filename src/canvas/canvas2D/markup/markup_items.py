@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Any, Dict
+from traits.api import HasTraits, Float, Any, Dict, Bool
 
 #============= standard library imports ========================
 import math
@@ -35,6 +35,7 @@ def calc_rotation(x1, y1, x2, y2):
     da = math.degrees(angle)
     return da if da >= 0 else 360 + da
 class MarkupItem(HasTraits):
+    id = ''
     x = Float
     y = Float
     state = False
@@ -80,6 +81,7 @@ class MarkupItem(HasTraits):
 
 class Point(MarkupItem):
     pass
+        
 class Line(MarkupItem):
     start_point = None
     end_point = None
@@ -130,7 +132,7 @@ class Line(MarkupItem):
 
 class Circle(MarkupItem):
     radius = 10
-    def __init__(self, x, y, radius, *args, **kw):
+    def __init__(self, x, y, radius=10, *args, **kw):
         super(Circle, self).__init__(x, y, *args, **kw)
         self.radius = radius
 
@@ -143,6 +145,9 @@ class Circle(MarkupItem):
         if ((x - event.x) ** 2 + (y - event.y) ** 2) ** 0.5 < self.radius:
             return True
 
+
+        
+        
 class CalibrationObject(HasTraits):
     tweak_dict = Dict
     cx = Float
@@ -224,7 +229,14 @@ class CalibrationItem(MarkupItem, CalibrationObject):
         elif self.right.is_in(event):
             self.tool_state = 'rotate'
             return True
-
+class Label(MarkupItem):
+    text = ''
+    def _render_(self, gc):
+        x, y = self.get_xy()
+        
+        gc.set_text_position(x + 10, y + 10)
+        gc.show_text(self.text)
+        
 class Indicator(MarkupItem):
     def __init__(self, x, y, *args, **kw):
         super(Indicator, self).__init__(x, y, *args, **kw)
@@ -238,4 +250,45 @@ class Indicator(MarkupItem):
     def _render_(self, *args, **kw):
         self.hline.render(*args, **kw)
         self.vline.render(*args, **kw)
+
+class PointIndicator(Indicator):
+    radius = 10
+    active = Bool(False)
+    def __init__(self, x, y, *args, **kw):
+        super(PointIndicator, self).__init__(x, y, *args, **kw)
+        self.circle = Circle(self.x, self.y, self.radius, *args, **kw)
+        self.label = Label(self.x, self.y,
+                           text=str(int(self.id[5:]) + 1),
+                            *args, **kw)
+    def set_state(self, state):
+        self.state = state
+        self.hline.state = state
+        self.vline.state = state
+        self.circle.state = state
+        
+    def is_in(self, event):
+        x, y = self.get_xy()
+        if ((x - event.x) ** 2 + (y - event.y) ** 2) ** 0.5 < self.radius:
+            return True
+    def adjust(self, dx, dy):
+        super(PointIndicator, self).adjust(dx, dy)
+        self.hline.adjust(dx, dy)
+        self.vline.adjust(dx, dy)
+        self.circle.adjust(dx, dy)
+        self.label.adjust(dx, dy)
+        
+    def _render_(self, gc):
+        super(PointIndicator, self)._render_(gc)
+        self.circle.render(gc)
+        self.label.render(gc)
+        
+        x, y = self.get_xy()
+        
+        if self.state:
+            gc.rect(x - self.radius - 1,
+                    y - self.radius - 1,
+                    2 * self.radius + 1,
+                    2 * self.radius + 1
+                    )
+        
 #============= EOF ====================================

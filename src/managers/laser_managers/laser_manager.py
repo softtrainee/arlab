@@ -212,7 +212,7 @@ class LaserManager(Manager):
         sm.stage_controller.parent = sm
         sm.bind_preferences(self.id)
         
-        sm.canvas.crosshairs_offset = self.stage_manager.canvas.crosshairs_offset
+#        sm.canvas.crosshairs_offset = self.stage_manager.canvas.crosshairs_offset
 #        bind_preference(sm.canvas, 'show_grids', '{}.show_grids'.format(self.id))
 #
 #        sm .canvas.change_grid_visibility()

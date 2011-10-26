@@ -60,6 +60,8 @@ class MapCanvas(MarkupCanvas):
         self.request_redraw()
 
     def normal_key_pressed(self, event):
+        super(MapCanvas, self).normal_key_pressed(event)
+        
         if event.handled:
             pass
         elif self.current_hole is not None and event.character == 'Backspace':

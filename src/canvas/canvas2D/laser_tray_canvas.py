@@ -21,10 +21,12 @@ from traitsui.api import View, Item
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 from src.canvas.canvas2D.map_canvas import MapCanvas
 import math
+from src.canvas.canvas2D.markup.markup_items import PointIndicator
 
 class LaserTrayCanvas(MapCanvas):
     '''
     '''
+    markup = Bool(False)
     configuration_dir = None
 
     stage_position = Property(depends_on='_stage_position')
@@ -60,6 +62,56 @@ class LaserTrayCanvas(MapCanvas):
     crosshairs_radius = Range(0.0, 4.0, 1.0)
     crosshairs_offset = Tuple(0, 0)
 #    _jog_moving = False
+    def point_exists(self, x, y, tol=1e-5):
+        for p in self.markupdict.itervalues():
+            if isinstance(p, PointIndicator):
+                if abs(p.x - x) < tol and abs(p.y - y) < tol:
+                    #point already in the markup dict
+                    return p
+        
+        
+    def new_point(self):
+        if self.point_exists(*self._stage_position):
+            return
+        
+        id = 'point{}'.format(self.point_counter)
+        p = PointIndicator(*self._stage_position, id=id, canvas=self)
+        self.markupdict[id] = p 
+        self.point_counter += 1
+        self.request_redraw()
+        return p
+    def clear_points(self):
+        popkeys = []
+        self.point_counter = 0
+        for k, v in self.markupdict.iteritems():
+            if isinstance(v, PointIndicator):
+                popkeys.append(k)
+        for p in popkeys:
+            self.markupdict.pop(p)
+        self.request_redraw()
+        
+    def load_points_file(self, p):
+        
+        with open(p, 'r') as f:
+            for line in f:
+                id, x, y = line.split(',')
+                pt = self.point_exists(float(x), float(y))
+                if pt is not None:
+                    self.markupdict.pop(pt.id)
+                
+                self.markupdict[id] = PointIndicator(float(x), float(y), id=id, canvas=self)
+        self.request_redraw()
+             
+    def save_points(self, p):
+        lines = []
+        for _k, v in self.markupdict.iteritems(): 
+            if isinstance(v, PointIndicator):
+                lines.append(','.join(map(str, (v.id, v.x, v.y))))
+        
+        with open(p, 'w') as f:
+            f.write('\n'.join(lines))
+                
+        
     def config_view(self):
         v = View(
                Item('render_map'),
@@ -142,7 +194,7 @@ class LaserTrayCanvas(MapCanvas):
     def normal_left_down(self, event):
         '''
         '''
-        if self.calibrate:
+        if self.calibrate or self.markup:
             super(LaserTrayCanvas, self).normal_left_down(event)
 
         else:
@@ -177,7 +229,7 @@ class LaserTrayCanvas(MapCanvas):
         '''
         '''
         self.cur_pos = (event.x, event.y)
-        if self.calibrate:
+        if self.calibrate or self.markup:
             super(LaserTrayCanvas, self).normal_mouse_move(event)
 #
 #            #both the markup and map canvas can handle this event

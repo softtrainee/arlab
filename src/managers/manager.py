@@ -146,10 +146,10 @@ class Manager(ConfigLoadable):
         '''
         return self._file_dialog_('open', **kw)
 
-    def save_file_dialog(self):
+    def save_file_dialog(self, **kw):
         '''
         '''
-        return self._file_dialog_('save as')
+        return self._file_dialog_('save as', **kw)
 
     def get_managers(self):
 

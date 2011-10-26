@@ -51,7 +51,7 @@ canvas2D_dir = os.path.join(setup_dir, 'canvas2D')
 canvas3D_dir = os.path.join(setup_dir, 'canvas3D')
 data_dir = os.path.join(root, 'data')
 extraction_line_dir = os.path.join(setup_dir, 'extractionline')
-initialization_dir = os.path.join(setup_dir, 'initializations')
+#initialization_dir = os.path.join(setup_dir, 'initializations')
 scripts_dir = os.path.join(root, 'scripts')
 
 #device_creator_dir = os.path.join(device_dir, 'device_creator')
@@ -69,6 +69,7 @@ heating_schedule_dir = os.path.join(setup_dir, 'heating_schedules')
 experiment_dir = os.path.join(root, 'experiments')
 plugins_dir = os.path.join(root, 'plugins')
 map_dir = os.path.join(setup_dir, 'tray_maps')
+user_points_dir = os.path.join(map_dir, 'user_points')
 
 snapshot_dir = os.path.join(data_dir, 'snapshots')
 
