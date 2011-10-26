@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, Str, \
-    Directory, List, on_trait_change, Property, Enum, Float, Int
+    Directory, List, on_trait_change, Property, Enum, Float, Int, Button
 from traitsui.api import View, Item, VSplit, TableEditor, VGroup, Group
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
@@ -53,7 +53,6 @@ class RunConfiguration(HasTraits):
     min_domains = Int(3)
     nruns = Int(50)
     max_plateau_age = Float(375)
-    selected = Any
     def write(self):
         error = None
         def _write_attrs(p, names):
@@ -115,6 +114,10 @@ class Modeler(Loggable):
 
     datum = Directory(value=data_dir)
     data = List(ModelDataDirectory)
+    
+    selected = Any
+
+    refresh = Button
 
     data_loader = Instance(DataLoader)
     graph_title = Property
@@ -124,6 +127,10 @@ class Modeler(Loggable):
 
     run_configuration = None
 
+#    def _refresh_fired(self):
+#        print 'fas'
+        
+        
     @on_trait_change('graph.status_text')
     def update_statusbar(self, object, name, value):
         '''
@@ -436,7 +443,9 @@ class Modeler(Loggable):
                       editor=editor,
                       width=0.25
                       )
-        v = View(VSplit(selected,
+        
+        v = View(Item('refresh', show_label=False),
+                 VSplit(selected,
                         tree))
         return v
     def graph_view(self):
@@ -464,6 +473,7 @@ class Modeler(Loggable):
             #dont add if already in list
             for di in self.data:
                 if di.path == d:
+                    self.selected = d
                     return
 
             id = len(self.data)
@@ -476,12 +486,18 @@ class Modeler(Loggable):
 
             self.graph.set_group_binding(id, True)
             self.data.append(d)
+            self.selected = d
 
-    @on_trait_change('data[]')
+    @on_trait_change('refresh,data[]')
     def _update_(self):
         '''
         '''
         self._update_graph()
+        
+        #force update of notes and summary 
+        d = self.selected
+        self.selected = None
+        self.selected = d
 
     def _update_graph(self):
         '''

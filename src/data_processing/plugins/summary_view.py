@@ -19,6 +19,7 @@ from traitsui.api import View, Item
 
 #============= standard library imports ========================
 import os
+from src.data_processing.modeling.model_data_directory import ModelDataDirectory
 #============= local library imports  ==========================
 
 #============= views ===================================
@@ -28,31 +29,45 @@ class SummaryView(HasTraits):
     d_not = 10
     data = ''
     def selected_update(self, obj, name, old, new):
-        if new is not None and hasattr(new, 'path'):
-
-            path = new.path
-
-            if os.path.isfile(path):
-                head = os.path.split(path)[0]
-                self._parse_diffusion_parameters(head)
+        if not isinstance(new, ModelDataDirectory):
+            try:
+                new = new[0]
+            except (IndexError, TypeError), e:
+                #print e
+                return 
+        try:
+            if os.path.isdir(new.path):
+                self._parse_diffusion_parameters(new.path)
+        except AttributeError:
+            pass
+#        if new is not None and hasattr(new[0], 'path'):
+#
+#            path = new.path
+#
+#            if os.path.isfile(path):
+#                head = os.path.split(path)[0]
+#                self._parse_diffusion_parameters(head)
                 #get the diffustion params
     def _parse_diffusion_parameters(self, root):
         #parse arr-me.in
+        #print 'parsing', root
         p = os.path.join(root, 'arr-me.in')
-        with open(p, 'r') as f:
-            lines = [l for l in f]
-            self.activation_e = float(lines[1].strip())
-            self.d_not = float(lines[-1].strip())
+        if os.path.isfile(p):
+            with open(p, 'r') as f:
+                lines = [l for l in f]
+                self.activation_e = float(lines[1].strip())
+                self.d_not = float(lines[-1].strip())
 
         #parse param.out
         p = os.path.join(root, 'param.out')
-        with open(p, 'r') as f:
-            lines = [li.split('     ') for li in [l.strip() for l in f][-5:-2]]
-            ds = []
-            for l in lines:
-                d = '\t'.join([li.strip() for li in l])
-                ds.append(d)
-        self.data = '\n'.join(ds)
+        if os.path.isfile(p):
+            with open(p, 'r') as f:
+                lines = [li.split('     ') for li in [l.strip() for l in f][-5:-2]]
+                ds = []
+                for l in lines:
+                    d = '\t'.join([li.strip() for li in l])
+                    ds.append(d)
+            self.data = '\n'.join(ds)
 
         self._build_summary()
 
@@ -61,7 +76,7 @@ class SummaryView(HasTraits):
         header = '\t'.join(['Domain', 'Domain size', 'Volume fraction '])
         self.summary = '''
 Ea = {:0.3f}
-Do = {0.3f}
+Do = {:0.3f}
 
 {}
 --------------------------
@@ -74,7 +89,7 @@ Do = {0.3f}
 
 
     def traits_view(self):
-        self._build_summary()
+        #self._build_summary()
 
         v = View(Item('summary', show_label=False,
                     style='custom',

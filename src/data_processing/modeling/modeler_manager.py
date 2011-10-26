@@ -40,8 +40,6 @@ class ModelerManager(EnvisageManager):
     def _selected_changed(self, old, new):
         self._modeler = new
 
-
-
     def new_modeler(self):
         self.open_modeler(m=self._modeler_factory())
 
