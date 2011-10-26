@@ -51,10 +51,12 @@ class SummaryView(HasTraits):
     def _parse_diffusion_parameters(self, root):
         #parse arr-me.in
         #print 'parsing', root
+        ndomains = 0
         p = os.path.join(root, 'arr-me.in')
         if os.path.isfile(p):
             with open(p, 'r') as f:
                 lines = [l for l in f]
+                ndomains = int(lines[0].strip())
                 self.activation_e = float(lines[1].strip())
                 self.d_not = float(lines[-1].strip())
 
@@ -62,7 +64,8 @@ class SummaryView(HasTraits):
         p = os.path.join(root, 'param.out')
         if os.path.isfile(p):
             with open(p, 'r') as f:
-                lines = [li.split('     ') for li in [l.strip() for l in f][-5:-2]]
+        
+                lines = [li.split('     ') for li in [l.strip() for l in f][-(2 + ndomains):-2]]
                 ds = []
                 for l in lines:
                     d = '\t'.join([li.strip() for li in l])
