@@ -399,11 +399,7 @@ class StageManager(Manager):
                                     Item('_stage_map',
                                           show_label=False),
                                     #Item('program_points', show_label=False),
-                                    self._button_factory('program_points', 'program_points_label'),
-                                    Item('accept_point', show_label=False),
-                                    Item('load_points', show_label=False),
-                                    Item('save_points', show_label=False),
-                                    Item('clear_points', show_label=False),
+                                    
                                      spring),
                              Item('canvas', style='custom', editor=editor ,
                                    show_label=False,
@@ -468,6 +464,14 @@ class StageManager(Manager):
                            Item('motion_profiler', style='custom', show_label=False),
                            label='Motion'
                            ),
+                     
+                     Group(
+                           self._button_factory('program_points', 'program_points_label'),
+                            Item('accept_point', show_label=False),
+                            Item('load_points', show_label=False),
+                            Item('save_points', show_label=False),
+                            Item('clear_points', show_label=False),
+                           label='Points'),
                      Item('tray_calibration_manager',
                           label='Calibration',
                            show_label=False, style='custom'),

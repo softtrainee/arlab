@@ -16,7 +16,7 @@ limitations under the License.
 
 #=============enthought library imports========================
 from traits.api import Enum, Float, Event, Property, Int, String, Button, Bool, Str
-from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor
+from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEditor, ButtonEditor, spring
 from pyface.timer.api import Timer
 #=============standard library imports ========================
 #import sys, os
@@ -59,9 +59,9 @@ tc_map = {'11':'B', '48':'K',
          '26':'E', '84':'S',
          '30':'F', '93':'T',
          '46':'J'}
-autotune_aggressive_map = {'under damp':99,
-                         'critical damp':21,
-                         'over damp':69
+autotune_aggressive_map = {'Under':99,
+                         'Critical':21,
+                         'Over':69
                          }
 yesno_map = {'59':'NO', '106':'YES'}
 truefalse_map = {'59':False, '106':True}
@@ -71,6 +71,7 @@ class WatlowEZZone(CoreDevice):
     WatlowEZZone represents a WatlowEZZone PM PID controller.
     this class provides human readable methods for setting the modbus registers 
     '''
+    refresh = Button
     Ph = Property(Float(enter_set=True,
                         auto_set=False), depends_on='_Ph_')
     _Ph_ = Float(50)
@@ -149,6 +150,10 @@ class WatlowEZZone(CoreDevice):
                                  depends_on='_autotune_setpoint')
     _autotune_setpoint = Float(0)
     
+    autotune_aggressiveness = Property(Enum('Under', 'Critical', 'Over'),
+                                       depends_on='_autotune_aggressiveness')
+    _autotune_aggressiveness = Str
+    
     enable_tru_tune = Property(Bool,
                                 depends_on='_enable_tru_tune')
     _enable_tru_tune = Bool
@@ -212,6 +217,7 @@ class WatlowEZZone(CoreDevice):
                            ('read_time_derivative', '_D_'),
                            
                            ('read_autotune_setpoint', '_autotune_setpoint'),
+                           ('read_autotune_aggressiveness', '_autotune_aggressiveness'),
                            ('read_tru_tune_enabled', '_enable_tru_tune'),
                            ('read_tru_tune_band', '_tru_tune_band'),
                            ('read_tru_tune_gain', '_tru_tune_gain'),
@@ -707,7 +713,12 @@ class WatlowEZZone(CoreDevice):
         r = self.read(1998, nregisters=2, **kw)
         print 'autotune sep', r
         return r
-
+    
+    def read_autotune_aggressiveness(self, **kw):
+        rid = str(self.read(1884, response_type='int', **kw))
+        print 'atutaggre', rid
+        return heat_alogrithm_map[rid] if rid in heat_alogrithm_map else None
+        
     def read_tru_tune_enabled(self, **kw):
         r = self.read(1910, response_type='int', **kw)
         r = str(r)
@@ -717,8 +728,6 @@ class WatlowEZZone(CoreDevice):
         except KeyError:
             pass
         
-        
-
     def read_tru_tune_band(self, **kw):
         return self.read(1912, response_type='int', **kw)
     
@@ -955,7 +964,13 @@ class WatlowEZZone(CoreDevice):
             if self._validate_new(v, self._autotune_setpoint):
                 self._autotune_setpoint = v
                 self.set_autotune_setpoint(v) 
+    def _get_autotune_aggressiveness(self):
+        return self._autotune_aggressiveness
     
+    def _set_autotune_aggressiveness(self, v):
+        self._autotune_aggressiveness = v
+        self.set_autotune_aggressiveness(v)
+        
     def _get_heat_alogrithm(self):
         return self._heat_alogrithm
     
@@ -988,6 +1003,8 @@ class WatlowEZZone(CoreDevice):
     def _configure_fired(self):
         self.edit_traits(view='autotune_configure_view')
         
+    def _refresh_fired(self):
+        self.initialization_hook()
 #========================= views ===========================
     
     def get_control_group(self):
@@ -1047,6 +1064,7 @@ class WatlowEZZone(CoreDevice):
                          show_border=True,
                          label='PID')
         return Group(
+                     HGroup(spring, Item('refresh', show_label=False)),
                     autotune_grp,
                     HGroup(output_grp,
                            input_grp),
@@ -1056,6 +1074,7 @@ class WatlowEZZone(CoreDevice):
                     )
     def autotune_configure_view(self):
         v = View('autotune_setpoint',
+                 Item('autotune_aggressiveness', label='Aggressiveness'),
                  VGroup(
                         'enable_tru_tune',
                          Group(
