@@ -24,7 +24,8 @@ from src.graph.editors.stream_plot_editor import StreamPlotEditor
 from stacked_graph import StackedGraph
 from graph import Graph
 
-MAX_LIMIT = int(-1e7)
+#assuming a average scan rate of 1s collect at most 10 days of data
+MAX_LIMIT = int(-1 * 60 * 60 * 24 * 10)
 
 from src.helpers.datetime_tools import current_time_generator as time_generator
 
@@ -149,8 +150,8 @@ class StreamGraph(Graph):
         self.raw_y[plotid][series] = hstack((ry[MAX_LIMIT:], [ny]))
         
         dl = self.data_limits[plotid]
-        lim = int(-(dl + 50) / (self.scan_delays[plotid]))
-
+        #lim = int(-(dl + 50) / (self.scan_delays[plotid]))
+        lim = MAX_LIMIT
         new_xd = hstack((xd[lim:], [nx]))
         new_yd = hstack((yd[lim:], [ny]))
         #print nx, series
