@@ -20,6 +20,7 @@ from traitsui.api import View, Item, HGroup, spring
 
 #============= standard library imports ========================
 import os
+from src.data_processing.modeling.model_data_directory import ModelDataDirectory
 #============= local library imports  ==========================
 
 #============= views ===================================
@@ -27,13 +28,24 @@ class NotesView(HasTraits):
     notes = String('')
     save = Button()
     def selected_update(self, obj, name, old, new):
-        if new is not None:
-            p = os.path.join(new.path, 'notes.txt')
-            if os.path.isfile(p):
-                f = open(p, 'r')
-                self.notes = f.read()
-                self.path = p
-                f.close()
+        if not isinstance(new, ModelDataDirectory):
+            try:
+                new = new[0]
+            except (IndexError, TypeError):
+                return 
+        try:
+            if os.path.isdir(new.path):
+#            
+                p = os.path.join(new.path, 'notes.txt')
+                if os.path.isfile(p):
+                    with open(p, 'r') as f:
+                        self.notes = f.read()
+                        self.path = p
+                else:
+                    self.path = p
+                    self.notes = ''
+        except AttributeError:
+            pass
 
 
     def _save_fired(self):

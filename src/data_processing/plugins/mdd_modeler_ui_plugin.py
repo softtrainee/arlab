@@ -56,7 +56,9 @@ class MDDModelerUIPlugin(CoreUIPlugin):
     def _create_summary_view(self, **kw):
         from summary_view import SummaryView
         obj = SummaryView()
+        obj._build_summary()
         manager = self._get_manager()
+        
         if manager is not None:
             manager.on_trait_change(obj.selected_update, 'selected_datum')
             manager.on_trait_change(obj.selected_update, 'selected')
@@ -65,6 +67,7 @@ class MDDModelerUIPlugin(CoreUIPlugin):
                   name='Summary',
                   obj=obj
                   )
+        
         return self.traitsuiview_factory(args, kw)
 
     def _create_notes_view(self, **kw):

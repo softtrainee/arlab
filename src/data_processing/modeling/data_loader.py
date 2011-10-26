@@ -24,7 +24,8 @@ from src.loggable import Loggable
 from src.helpers.logger_setup import setup
 TAB = chr(9)
 LABTABLE = {"temp":67, "time":73, "39Armol":80, "er39Ar":81, "Age":19, "erAge":20, "terAge":21, "SenseMol":26} # autoupdate column numbers for each header of interest
-REQUIRED_FILES = ['logr.samp', 'logr.dat', 'arr.samp', 'arr.dat']
+#REQUIRED_FILES = ['logr.samp', 'logr.dat', 'arr.samp', 'arr.dat']
+REQUIRED_FILES = ['age.in']
 
 class DataLoader(Loggable):
     '''
@@ -266,10 +267,10 @@ class DataLoader(Loggable):
         '''
         '''
 
-#        for a in REQUIRED_FILES:
-#            p = os.path.join(d, a)
-#            if not os.path.isfile(p):
-#                return False
+        for a in REQUIRED_FILES:
+            p = os.path.join(d, a)
+            if not os.path.isfile(p):
+                return False
 
         return True
 
