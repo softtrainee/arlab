@@ -83,7 +83,6 @@ Do = {:0.3f}
 
 
     def traits_view(self):
-        #self._build_summary()
 
         v = View(Item('summary', show_label=False,
                     style='custom',
