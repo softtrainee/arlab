@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #from __future__ import with_statement
 #============= enthought library imports =======================
-from traits.api import Bool, Range, Enum, Color
+from traits.api import Bool, Range, Enum, Color, Tuple
 from traitsui.api import  Item, Group
 
 #============= standard library imports ========================
@@ -38,7 +38,8 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     scaling = Range(1.0, 3.0, 1.0)
     
     auto_center = Bool(False)
-    
+    crosshairs_offset = Tuple(0, 0)
+    crosshairs_offset_color = Color('blue')
     def get_additional_groups(self):
         grp = Group(
                Item('use_video'),
@@ -50,6 +51,8 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                Item('desired_position_color', show_label=False, enabled_when='show_desired_position'),
                Item('crosshairs_kind', label='Crosshairs', enabled_when='show_laser_position'),
                Item('crosshairs_color', enabled_when='show_laser_position'),
+               Item('crosshairs_offset'),
+               Item('crosshairs_offset_color', show_label=False, enabled_when='crosshairs_offset!=(0,0)'),
                Item('calibration_style'),
                Item('scaling'),
                label='Stage',

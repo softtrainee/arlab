@@ -21,6 +21,7 @@ from traits.api import Enum, Dict
 from numpy import abs
 #=============local library imports  ==========================
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
+from src.canvas.canvas2D.markup.markup_items import PointIndicator
 
 class MarkupCanvas(BaseDataCanvas):
     '''
@@ -30,11 +31,15 @@ class MarkupCanvas(BaseDataCanvas):
     temp_end_pos = None
     current_pos = None
     line_counter = 0
+    point_counter = 0
 
     selected_point = None
     selected_element = None
 
-    tool_state = Enum('select', 'line', 'mline', 'rect')
+    tool_state = Enum('select', 'line', 'mline', 'rect', 'point')
+    def get_item(self, base, key):
+        key = '{}{}'.format(base, key)
+        return next((v for k, v in self.markupdict.iteritems() if k == key), None)
 
     def get_path_points(self, k):
         '''
@@ -64,6 +69,7 @@ class MarkupCanvas(BaseDataCanvas):
         a = self._over_mark_up_line(event)
 
         o = self._over_item(event)
+        
         self.current_pos = (event.x, event.y)
         if a is not None or o is not None:
             if self.tool_state not in ['line', 'mline', 'rect']:
@@ -72,9 +78,10 @@ class MarkupCanvas(BaseDataCanvas):
                 event.handled = True
         else:
 
-            if self.tool_state not in ['line', 'mline', 'rect']:
+            if self.tool_state == 'point':
+                event.window.set_pointer(self.cross_pointer)
+            elif self.tool_state not in ['line', 'mline', 'rect']:
                 event.window.set_pointer(self.normal_pointer)
-
 #        self.invalidate_and_redraw()
         self.request_redraw()
 
@@ -82,10 +89,15 @@ class MarkupCanvas(BaseDataCanvas):
         '''
 
         '''
+        try:
+            self.selected_element.set_state(False)
+        except AttributeError:
+            pass
         
-        self.selected_point = None
-        self.selected_element = None
 
+#        self.selected_point = None
+#        self.selected_element = None
+#        
         self.temp_start_pos = (event.x, event.y)
 
         if self.tool_state in ['line', 'mline']:
@@ -94,17 +106,21 @@ class MarkupCanvas(BaseDataCanvas):
         elif self.tool_state == 'rect':
             self.event_state = 'rdraw'
             event.window.set_pointer(self.cross_pointer)
-
+        
         else:
-            item = self._over_item(event)#items = [('circle1', self.selected_element)])
+            item = self._over_item(event)
             if item:
                 self.selected_element = item
+                self.selected_element.set_state(True)
                 self.event_state = 'omove'
                 event.handled = True
                 event.item = item
+            elif self.selected_element is not None:
+                self.selected_element = None
+                self.selected_point = None                
             else:
                 l = self._over_mark_up_line(event)
-
+                
                 if not l == None:
                     event.handled = True
                     e = self.markupdict[l]
@@ -141,12 +157,24 @@ class MarkupCanvas(BaseDataCanvas):
                         if pti is not None:
                             self.selected_point = pti
                             self.event_state = 'rpmove'
-
+                else:
+                    if self.tool_state == 'point':
+                        x, y = self.map_data((event.x, event.y))
+                        id = 'point{}'.format(self.point_counter)
+                        self.markupdict[id] = PointIndicator(x, y, canvas=self, id=id)
+                        self.point_counter += 1
+                        event.handled = True
+        self.request_redraw()
 
 
     def normal_key_pressed(self, event):
         '''
         '''
+        
+        if event.character == 'Backspace' and self.selected_element is not None:
+            self.markupdict.pop(self.selected_element.id)
+            self.selected_element = None
+            
         self.key_set_tool_state(event)
 
 
@@ -244,8 +272,6 @@ class MarkupCanvas(BaseDataCanvas):
 
     def ldraw_mouse_move(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         self.temp_end_pos = (event.x, event.y)
 #        self.invalidate_and_redraw()
@@ -253,8 +279,7 @@ class MarkupCanvas(BaseDataCanvas):
 
     def ldraw_left_down(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
         b = self.bounds
         ob = self.outer_bounds
@@ -384,7 +409,6 @@ class MarkupCanvas(BaseDataCanvas):
     def key_set_tool_state(self, event):
         '''
         '''
-        print event
         c = event.character
         window = event.window
         if c == 's':
@@ -398,6 +422,7 @@ class MarkupCanvas(BaseDataCanvas):
         elif c == 'c':
             window.set_pointer(self.cross_pointer)
             self.tool_state = 'rect'
+        
 
 
 

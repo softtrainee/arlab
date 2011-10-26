@@ -30,7 +30,7 @@ from src.managers.displays.rich_text_display import RichTextDisplay
 from src.helpers.color_generators import colors8i as colors
 
 from src.hardware.motion_controller import MotionController
-from src.helpers.paths import map_dir
+from src.helpers.paths import map_dir, canvas2D_dir, setup_dir, user_points_dir
 from src.managers.stage_managers.affine import AffineTransform
 from src.helpers.logger_setup import setup
 
@@ -59,7 +59,7 @@ class StageManager(Manager):
 
     canvas = Instance(LaserTrayCanvas)
     output = Instance(RichTextDisplay)
-
+    
 
     #===========================================================================
     # buttons
@@ -73,19 +73,31 @@ class StageManager(Manager):
     joystick = Bool(False)
     joystick_timer = None
 
-    pattern_manager = Instance(PatternManager)
 
     buttons = List([('home', None, None),
 #                    ('jog', 'jog_label', None),
                     ('stop_button', 'stop_label', None)
                       ])
 
+    program_points = Event
+    program_points_label = Property(depends_on='canvas.markup')
+    load_points = Button
+    save_points = Button
+    clear_points = Button
+    accept_point = Button
+    
+    pattern_manager = Instance(PatternManager)
     stop_button = Button()
     stop_label = String('Stop')
 
     hole_thread = None
     hole = Property(Int(enter_set=True, auto_set=False), depends_on='_hole')
     _hole = Int
+    
+    point_thread = None
+    point = Property(Int(enter_set=True, auto_set=False), depends_on='_point')
+    _point = Int
+    
 
     canvas_editor_klass = LaserComponentEditor
 
@@ -96,8 +108,41 @@ class StageManager(Manager):
     def _test_fired(self):
 #        self.do_pattern('testpattern')
         self.do_pattern('pattern003')
+        
+    def _clear_points_fired(self):
+        self.canvas.clear_points()
+        self._point = 0
+        
+    def _get_program_points_label(self):
+        return 'Program Points' if not self.canvas.markup else 'End Program'
+    
+    def _program_points_fired(self):
+        if not self.canvas.markup:
+            self.canvas.tool_state = 'point'
+        else:
+            self.canvas.tool_state = 'select'
+            
+        self.canvas.markup = not self.canvas.markup
+    
+    def _accept_point_fired(self):
+        npt = self.canvas.new_point()
+        if npt:
+            self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.id, npt.x, npt.y))
+        
+    def _load_points_fired(self):
+        p = self.open_file_dialog(default_directory=os.path.join(setup_dir,
+                                                                 'tray_maps',
+                                                                 'user_points')
+                                  )
+        if p:
+            self.canvas.load_points_file(p)
+            
+    def _save_points_fired(self):
+        p = self.save_file_dialog(default_directory=user_points_dir)
 
-
+        if p:
+            self.canvas.save_points(p)
+        
     def __init__(self, *args, **kw):
         '''
 
@@ -117,6 +162,8 @@ class StageManager(Manager):
 
         bind_preference(self.canvas, 'crosshairs_kind', '{}.crosshairs_kind'.format(pref_id))
         bind_preference(self.canvas, 'crosshairs_color', '{}.crosshairs_color'.format(pref_id))
+        bind_preference(self.canvas, 'crosshairs_offset', '{}.crosshairs_offset'.format(pref_id))
+        
         bind_preference(self.canvas, 'scaling', '{}.scaling'.format(pref_id))
 
         bind_preference(self.tray_calibration_manager, 'calibration_style', '{}.calibration_style'.format(pref_id))
@@ -139,12 +186,18 @@ class StageManager(Manager):
 
         #load the calibration file
         self.tray_calibration_manager.load_calibration()
-
+        
+        #load the points file
+        #self.canvas.load_points_file(self.points_file)
+        
+        
     def initialize_stage(self):
         self.canvas.parent = self
         self.update_axes()
         axes = self.stage_controller.axes
         self.home_options = ['Home All', 'XY'] + sorted([axes[a].name.upper() for a in axes])
+
+
 
     def finish_loading(self):
         self.update_axes()
@@ -177,9 +230,10 @@ class StageManager(Manager):
         self.stage_controller.linear_move(*pos, **kw)
 
     def _get_hole_by_position(self, x, y, tol=0.1):
-        hole = next((hole for hole in self._stage_map.sample_holes
-                      if abs(hole.x - x) < tol and abs(hole.y - y) < tol), None)
-        return hole
+        if self._stage_map:
+            hole = next((hole for hole in self._stage_map.sample_holes
+                          if abs(hole.x - x) < tol and abs(hole.y - y) < tol), None)
+            return hole
 
 #
 #    def do_pattern(self, patternname):
@@ -344,6 +398,12 @@ class StageManager(Manager):
                                          editor=EnumEditor(name='object.stage_maps')),
                                     Item('_stage_map',
                                           show_label=False),
+                                    #Item('program_points', show_label=False),
+                                    self._button_factory('program_points', 'program_points_label'),
+                                    Item('accept_point', show_label=False),
+                                    Item('load_points', show_label=False),
+                                    Item('save_points', show_label=False),
+                                    Item('clear_points', show_label=False),
                                      spring),
                              Item('canvas', style='custom', editor=editor ,
                                    show_label=False,
@@ -365,7 +425,7 @@ class StageManager(Manager):
                     )
 #===============================groups=====================
     def _hole__group__(self):
-        g = Group(HGroup(Item('hole'), spring))
+        g = Group(HGroup(Item('hole'), Item('point'), spring))
         return g
 
     def _button__group__(self):
@@ -581,8 +641,14 @@ class StageManager(Manager):
 
     def _set_hole(self, v):
         if self.canvas.calibrate:
+            self.warning_dialog('Cannot move while calibrating')
             return
-
+        
+        if self.canvas.markup:
+            self.warning_dialog('Cannot move while adding/editing points')
+            return
+        
+        
         if self.hole_thread is None and v is not self._hole:
             pos = self._stage_map.get_hole_pos(str(v))
             if pos is not None:
@@ -596,7 +662,37 @@ class StageManager(Manager):
 
     def _get_hole(self):
         return self._hole
+    
+    def _set_point(self, v):
+        if self.canvas.calibrate:
+            self.warning_dialog('Cannot move while calibrating')
+            return
+        
+        if self.canvas.markup:
+            self.warning_dialog('Cannot move while adding/editing points')
+            return
 
+        if self.point_thread is None and v is not self._point:
+            pos = self.canvas.get_item('point', int(v) - 1)
+            if pos is not None:
+                self._point = v
+                self.point_thread = Thread(target=self._move_to_point, args=(pos,))
+                self.point_thread.start()
+            else:
+                err = 'Invalid point {}'.format(v)
+                self.warning(err)
+                return  err
+
+    def _get_point(self):
+        return self._point
+    
+    def _move_to_point(self, pt):
+        pos = pt.x, pt.y
+        self.info('Move to point {}'.format(pt.id))
+        self.stage_controller.linear_move(block=True, *pos)
+        self.info('Move complete')
+        self.point_thread = None
+        
     def _move_to_hole(self, key):
         self.info('Move to hole {}'.format(key))
 #        holes = self._stage_map.holes
