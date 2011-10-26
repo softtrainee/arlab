@@ -19,8 +19,8 @@ from traitsui.api import View, Item
 
 #============= standard library imports ========================
 import os
-from src.data_processing.modeling.model_data_directory import ModelDataDirectory
 #============= local library imports  ==========================
+from src.data_processing.modeling.model_data_directory import ModelDataDirectory
 
 #============= views ===================================
 class SummaryView(HasTraits):
@@ -32,29 +32,22 @@ class SummaryView(HasTraits):
         if not isinstance(new, ModelDataDirectory):
             try:
                 new = new[0]
-            except (IndexError, TypeError), e:
-                #print e
+            except (IndexError, TypeError):
                 return 
         try:
             if os.path.isdir(new.path):
                 self._parse_diffusion_parameters(new.path)
         except AttributeError:
             pass
-#        if new is not None and hasattr(new[0], 'path'):
-#
-#            path = new.path
-#
-#            if os.path.isfile(path):
-#                head = os.path.split(path)[0]
-#                self._parse_diffusion_parameters(head)
-                #get the diffustion params
+
     def _parse_diffusion_parameters(self, root):
-        #parse arr-me.in
-        #print 'parsing', root
+
+        ndomains = 0
         p = os.path.join(root, 'arr-me.in')
         if os.path.isfile(p):
             with open(p, 'r') as f:
                 lines = [l for l in f]
+                ndomains = int(lines[0].strip())
                 self.activation_e = float(lines[1].strip())
                 self.d_not = float(lines[-1].strip())
 
@@ -62,7 +55,8 @@ class SummaryView(HasTraits):
         p = os.path.join(root, 'param.out')
         if os.path.isfile(p):
             with open(p, 'r') as f:
-                lines = [li.split('     ') for li in [l.strip() for l in f][-5:-2]]
+        
+                lines = [li.split('     ') for li in [l.strip() for l in f][-(2 + ndomains):-2]]
                 ds = []
                 for l in lines:
                     d = '\t'.join([li.strip() for li in l])
