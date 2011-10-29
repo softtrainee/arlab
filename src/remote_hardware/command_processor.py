@@ -76,7 +76,7 @@ class CommandProcessor(ConfigLoadable):
 
         '''
         self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-
+        self._sock.setblocking(False)
         try:
             os.remove(self.path)
         except OSError:
@@ -110,7 +110,7 @@ class CommandProcessor(ConfigLoadable):
         while self._listen:
             
             try:
-                inputready, _outputready, _exceptready = select.select(input, [], [])
+                inputready, _outputready, _exceptready = select.select(input, [], [], timeout=5)
                
                 for s in inputready:
                     if s == self._sock:
