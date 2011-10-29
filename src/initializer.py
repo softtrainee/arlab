@@ -19,7 +19,9 @@ from pyface.api import ProgressDialog
 #=============standard library imports ========================
 import time
 import os
-import wx
+
+from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, CLIP_CHILDREN, VERTICAL, \
+     Frame, BoxSizer, NullColor, Size, DisplaySize
 #=============local library imports  ==========================
 from src.helpers import paths
 from src.hardware.core.i_core_device import ICoreDevice
@@ -31,19 +33,19 @@ class MProgressDialog(ProgressDialog):
     def _create_control(self, parent):
         '''
         '''
-        style = wx.DEFAULT_FRAME_STYLE | wx.FRAME_NO_WINDOW_MENU | wx.CLIP_CHILDREN
+        style = DEFAULT_FRAME_STYLE | FRAME_NO_WINDOW_MENU | CLIP_CHILDREN
 
-        dialog = wx.Frame(parent, -1, self.title, style=style,
+        dialog = Frame(parent, -1, self.title, style=style,
                           #size = self.size,
                           #pos = self.position
                           )
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer = BoxSizer(VERTICAL)
         dialog.SetSizer(sizer)
         dialog.SetAutoLayout(True)
-        dialog.SetBackgroundColour(wx.NullColor)
+        dialog.SetBackgroundColour(NullColor)
 
-        self.dialog_size = wx.Size(*self.size)
+        self.dialog_size = Size(*self.size)
 
         # The 'guts' of the dialog.
         self._create_message(dialog, sizer)
@@ -130,13 +132,14 @@ class Initializer(Loggable):
 
         super(Initializer, self).info(msg, **kw)
 
-    def _run_(self, name=None , device_dir=None, initialization_dir=None, manager=None, plugin_name=None):
+#    def _run_(self, name=None , device_dir=None, initialization_dir=None, manager=None, plugin_name=None):
+    def _run_(self, name=None , device_dir=None, manager=None, plugin_name=None):
         '''
         '''
         if device_dir is None:
             device_dir = paths.device_dir
-        if initialization_dir is None:
-            initialization_dir = paths.initialization_dir
+#        if initialization_dir is None:
+#            initialization_dir = paths.initialization_dir
 
         if manager is not None:
             self.info('loading {}'.format(name))
@@ -168,7 +171,8 @@ class Initializer(Loggable):
 
         if managers:
             self.info('loading managers - {}'.format(','.join(managers)))
-            self.load_managers(manager, managers, device_dir, initialization_dir)
+#            self.load_managers(manager, managers, device_dir, initialization_dir)
+            self.load_managers(manager, managers, device_dir)
 
         if devices:
             self.info('loading devices - {}'.format(','.join(devices)))
@@ -180,7 +184,7 @@ class Initializer(Loggable):
 
         return True
 
-    def load_managers(self, manager, managers, device_dir, initialization_dir):
+    def load_managers(self, manager, managers, device_dir):
         '''
         '''
 
@@ -285,7 +289,7 @@ class Initializer(Loggable):
                              size=(550, 15))
 
         pd.open()
-        w, h = wx.DisplaySize()
+        w, h = DisplaySize()
         ww, _hh = pd.control.GetSize()
 
         pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
