@@ -28,6 +28,7 @@ from core.core_device import CoreDevice
 from src.helpers.logger_setup import setup
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 from pyface.timer.do_later import do_later
+import time
 sensor_map = {'62':'off',
                     '95':'thermocouple',
                     '104':'volts dc',
@@ -261,11 +262,13 @@ class WatlowEZZone(CoreDevice):
 #            t = 4 + self.closed_loop_setpoint
             t = self.get_random_value() + self.closed_loop_setpoint
             hp = self.get_random_value()
+            time.sleep(0.1)
             
         else:
             t = self.read_process_value(1, **kw)
             hp = self.read_heat_power(**kw)
-        
+            time.sleep(0.1)
+            
         if t is not None and hp is not None:
             try:
                 hp = float(hp)
@@ -275,6 +278,7 @@ class WatlowEZZone(CoreDevice):
                 t = float(t)
                 self.process_value = t
                 self.process_value_flag = True
+                
                 
                 return t, hp
             except ValueError, TypeError:
@@ -315,6 +319,11 @@ class WatlowEZZone(CoreDevice):
         self._clsetpoint = setpoint
 
         self.write(2160, setpoint, nregisters=2, **kw)
+
+        sp = self.read_closed_loop_setpoint()
+        if sp and abs(sp - setpoint) > 0.01:
+            self.warning('Set point not set. {} != {} retrying'.format(sp, setpoint))
+            self.write(2160, setpoint, nregisters=2, **kw)
 
     def set_open_loop_setpoint(self, setpoint, **kw):
         '''

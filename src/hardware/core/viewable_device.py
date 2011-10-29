@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Instance, Str, Property, Bool, CStr
-from traitsui.api import View, Item, Group, VGroup, HGroup, spring
+from traitsui.api import View, Item, Group, VGroup, HGroup, spring, ButtonEditor
 #=============standard library imports ========================
 #=============local library imports  ==========================
 from src.config_loadable import ConfigLoadable
@@ -95,6 +95,7 @@ class ViewableDevice(ConfigLoadable):
         pass
     def get_configure_group(self):
         pass
+   
     def current_state_view(self):
         v = View(Group(
                      Item('name'),
@@ -106,9 +107,20 @@ class ViewableDevice(ConfigLoadable):
                  VGroup(Item('graph', show_label=False, style='custom'),
                         
                         VGroup(Item('scan_func', label='Function', style='readonly'),
-                               Item('scan_period', label='Period ({})'.format(self.scan_units),
-                                            style='readonly')
+                               
+                               HGroup(Item('scan_period', label='Period ({})'.format(self.scan_units),
+                                            #style='readonly'
+                                            ), spring),
+                                 Item('current_scan_value', style='readonly'),
                                ),
+                        HGroup(Item('scan_button', editor=ButtonEditor(label_value='scan_label'),
+                                     show_label=False),
+                               spring,
+                               Item('scan_path', show_label=False,
+                                    style='readonly',
+                                    visible_when='object.record_scan_data'),
+                               visible_when='object.is_scanable'),
+                        
                         label='Scan'
                         )
                  )

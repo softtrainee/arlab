@@ -80,6 +80,7 @@ class LaserTrayCanvas(MapCanvas):
         self.point_counter += 1
         self.request_redraw()
         return p
+    
     def clear_points(self):
         popkeys = []
         self.point_counter = 0
@@ -91,7 +92,7 @@ class LaserTrayCanvas(MapCanvas):
         self.request_redraw()
         
     def load_points_file(self, p):
-        
+        self.point_counter = 0
         with open(p, 'r') as f:
             for line in f:
                 id, x, y = line.split(',')
@@ -100,6 +101,8 @@ class LaserTrayCanvas(MapCanvas):
                     self.markupdict.pop(pt.id)
                 
                 self.markupdict[id] = PointIndicator(float(x), float(y), id=id, canvas=self)
+                self.point_counter += 1
+                
         self.request_redraw()
              
     def save_points(self, p):
