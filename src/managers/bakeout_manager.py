@@ -47,7 +47,7 @@ class BakeoutManager(Manager):
     bakeout6 = Instance(BakeoutController)
     
     update_interval = Float(2)
-    scan_window = Int(60)
+    scan_window = Int(1)
     
     execute = Event
     save = Button
@@ -81,16 +81,25 @@ class BakeoutManager(Manager):
         if obj.isAlive():
             id = self.graph_info[obj.name]['id']
             
-            datum = getattr(obj, 'process_value')
-            nx = self.graph.record(datum, series=id)
+            pv = getattr(obj, 'process_value')
+            #nx = self.graph.record(pv, series=id, track_y=False)
             
-            datum = getattr(obj, 'heat_power')
-            self.graph.record(datum, x=nx, series=id, plotid=1)
-            
+            hp = getattr(obj, 'heat_power')
+            #self.graph.record(hp, x=nx, series=id, plotid=1, track_y=False)
+                        
             if obj.name not in self.buffer:
-                self.buffer.append(obj.name)
-
+                self.buffer.append((id, pv, hp))
+                
             if len(self.buffer) == len(self.active_controllers):
+                
+                for i, pi, hi in self.buffer:
+                    nx = self.graph.record(pi, series=i)
+                    self.graph.record(hi, x=nx, series=i, plotid=1)
+                
+                
+                self.graph.update_y_limits(plotid=0)
+                self.graph.update_y_limits(plotid=1)
+                
                 self.write_data(self.data_name)
                 self.buffer = []
 

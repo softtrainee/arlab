@@ -412,15 +412,15 @@ class Graph(HasTraits):
         '''
         return self._get_limits('value', plotid=plotid)
 
-    def set_y_limits(self, min=None, max=None, auto=False, track=0, pad=0, plotid=0):
+    def set_y_limits(self, min=None, max=None, pad=0, plotid=0):
         '''
         '''
-        self._set_limits(min, max, 'value', plotid, auto, track, pad)
+        self._set_limits(min, max, 'value', plotid, pad)
 
-    def set_x_limits(self, min=None, max=None, auto=False, track=0, pad=0, plotid=0):
+    def set_x_limits(self, min=None, max=None, pad=0, plotid=0):
         '''
         '''
-        self._set_limits(min, max, 'index', plotid, auto, track, pad)
+        self._set_limits(min, max, 'index', plotid, pad)
 
     def set_tracking(self, track, plotid=0):
         plot = self.plots[plotid]
@@ -1022,7 +1022,8 @@ class Graph(HasTraits):
         except AttributeError, e:
             print e
 
-    def _set_limits(self, mi, ma, axis, plotid, auto, track, pad):
+#    def _set_limits(self, mi, ma, axis, plotid, auto, track, pad):
+    def _set_limits(self, mi, ma, axis, plotid, pad):
         '''
         '''
         plot = self.plots[plotid]
@@ -1060,19 +1061,12 @@ class Graph(HasTraits):
             if mi is not None:
                 mi -= pad
 
-        if auto:
-            ra.high_setting = 'auto'
-            ra.low_setting = 'auto'
-        elif track:
-            ra.tracking_amount = track
-            ra.high_setting = 'track'
-            ra.low_setting = 'auto'
-        else:
-            if mi is not None:
-                ra.low = mi
-            if ma is not None:
-                ra.high = ma
 
+        if mi is not None:
+            ra.low_setting = mi
+        if ma is not None:
+            ra.high_setting = ma
+        
         self.plotcontainer.request_redraw()
 
 

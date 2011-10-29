@@ -110,7 +110,7 @@ class CommandProcessor(ConfigLoadable):
         while self._listen:
             
             try:
-                inputready, _outputready, _exceptready = select.select(input, [], [], timeout=5)
+                inputready, _outputready, _exceptready = select.select(input, [], [], 5)
                
                 for s in inputready:
                     if s == self._sock:

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import HasTraits, Str, implements, Any, List
+from traits.api import HasTraits, Str, implements, Any, List, Event, Property, Bool, Float
 from pyface.timer.api import Timer
 
 #=============standard library imports ========================
@@ -78,14 +78,18 @@ class CoreDevice(ViewableDevice):
     id_query = ''
     id_response = ''
 
+    scan_button = Event
+    scan_label = Property(depends_on='_scanning')
+    _scanning = Bool(False)
     
     is_scanable = False
     scan_func = None
     scan_lock = None
     timer = None
-    scan_period = 1000
+    scan_period = Float(1000, enter_set=True, auto_set=False)
     scan_units = 'ms'
-    record_scan_data = True
+    record_scan_data = Bool(True)
+    scan_path = Str
     
     current_scan_value = 0
     
@@ -94,6 +98,8 @@ class CoreDevice(ViewableDevice):
     
     no_response_counter = 0
     alarms = List(Alarm)
+    
+    data_manager = None
     
     def get(self):
         return self.current_scan_value
@@ -297,20 +303,36 @@ class CoreDevice(ViewableDevice):
     def start_scan(self):
         if self.timer is not None:
             self.timer.Stop()
-
-#        if not self.simulation:
+        
+        self._scanning = True
         self.info('Starting scan')
         if self.record_scan_data:
-            self.data_manager = CSVDataManager()
+            if self.data_manager is None:
+                self.data_manager = CSVDataManager()
+                
             self.frame_name = self.data_manager.new_frame(base_frame_name=self.name)
-        
+            self.scan_path = self.data_manager.frames[self.frame_name]
         sp = self.scan_period * self.time_dict[self.scan_units]
-        
         self.timer = Timer(sp, self.scan)
         self.timer.Start()
+    
 
     def stop_scan(self):
+        self._scanning = False
         if self.timer is not None:
             self.timer.Stop()  
+    
+    def _get_scan_label(self):
+        return 'Start' if not self._scanning else 'Stop'
+    
+    def _scan_button_fired(self):
+        if self._scanning:
+            self.stop_scan()
+        else:
+            self.start_scan()
 
+    def _scan_period_changed(self):
+        if self._scanning:
+            self.stop_scan()
+            self.start_scan()     
 #========================= EOF ============================================
