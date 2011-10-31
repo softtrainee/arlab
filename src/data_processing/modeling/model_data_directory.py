@@ -24,7 +24,6 @@ import os
 #============= views ===================================
 class ModelDataDirectory(HasTraits):
     '''
-        G{classtree}
     '''
     show = Bool
     bind = Bool

@@ -277,6 +277,7 @@ class Modeler(Loggable):
         '''
             
         '''
+        data_directory.id = gid
         self.info('loading graph for {}'.format(data_directory.path))
         g = self.graph
 
