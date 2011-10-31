@@ -36,8 +36,6 @@ from src.graph.graph import Graph
 class BakeoutManager(Manager):
     '''
     '''
-#    graph = Instance(TimeSeriesStreamGraph)
-#    graph = Instance(TimeSeriesStreamStackedGraph)
     graph = Instance(Graph)
     bakeout1 = Instance(BakeoutController)
     bakeout2 = Instance(BakeoutController)
@@ -47,7 +45,8 @@ class BakeoutManager(Manager):
     bakeout6 = Instance(BakeoutController)
     
     update_interval = Float(2)
-    scan_window = Int(1)
+#    scan_window = Int(1)
+    scan_window = Float(0.25)
     
     execute = Event
     save = Button
@@ -90,16 +89,20 @@ class BakeoutManager(Manager):
             if obj.name not in self.buffer:
                 self.buffer.append((id, pv, hp))
                 
-            if len(self.buffer) == len(self.active_controllers):
-                
+            n = len(self.buffer)
+            if n == len(self.active_controllers):
                 for i, pi, hi in self.buffer:
-                    nx = self.graph.record(pi, series=i)
-                    self.graph.record(hi, x=nx, series=i, plotid=1)
                 
+                    nx = self.graph.record(pi, series=i,
+                                           track_x=i == n - 1
+                                           )
+                    self.graph.record(hi, x=nx, series=i, plotid=1,
+                                      track_x=i == n - 1
+                                      )
                 
                 self.graph.update_y_limits(plotid=0)
                 self.graph.update_y_limits(plotid=1)
-                
+            
                 self.write_data(self.data_name)
                 self.buffer = []
 

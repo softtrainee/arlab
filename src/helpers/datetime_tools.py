@@ -67,7 +67,11 @@ def convert_timestamp(timestamp):
     return time.mktime(t.timetuple()) + 1e-6 * t.microsecond
 
 def diff_timestamp(end, start=0):
-    t = datetime.fromtimestamp(end) - datetime.fromtimestamp(start)
+    if not isinstance(end, datetime):
+        end = datetime.fromtimestamp(end)
+    if not isinstance(start, datetime):
+        start = datetime.fromtimestamp(start)
+    t = end - start
     h = t.seconds / 3600
     m = (t.seconds % 3600) / 60
     s = (t.seconds % 3600) % 60

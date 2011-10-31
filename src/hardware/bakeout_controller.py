@@ -16,8 +16,8 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import List, Float, Str, Instance, Bool, Property
 from traitsui.api import View, Item, EnumEditor, spring, HGroup, Label, VGroup
-from pyface.timer.api import Timer
-
+#from pyface.timer.api import Timer
+from src.helpers.timer import Timer
 #============= standard library imports ========================
 import time
 import os
@@ -136,7 +136,7 @@ class BakeoutController(WatlowEZZone):
 
             self._oduration = self._duration
             self._timer = Timer(self.update_interval * 1000., self._update_)
-            
+        
             #set led to green
             self.led.state = 'green'
 
@@ -216,7 +216,35 @@ class BakeoutController(WatlowEZZone):
             self.alive = False
 
             self.process_value = 0
+    
+    def complex_query(self, **kw):
+        if 'verbose' in kw and kw['verbose']:
+            self.info('Do complex query')
 
+        if self.simulation:
+#            t = 4 + self.closed_loop_setpoint
+            t = self.get_random_value() + self.closed_loop_setpoint
+            hp = self.get_random_value()
+            time.sleep(0.25)
+            
+        else:
+            t = self.read_process_value(1, **kw)
+            hp = self.read_heat_power(**kw)
+            
+        if t is not None and hp is not None:
+            try:
+                hp = float(hp)
+                self.heat_power = hp
+                
+                t = float(t)
+                self.process_value = t
+                self.process_value_flag = True
+                
+                
+                return t, hp
+            except ValueError, TypeError:
+                pass
+            
     def _update_(self):
         '''
         '''

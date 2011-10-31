@@ -95,23 +95,26 @@ class Image(HasTraits):
         frame = self.get_frame(**kw)
 
         if frame is not None:
-
+            return wx.BitmapFromBuffer(frame.width,
+                                       frame.height,
+                                       frame.data_as_string()
+                                        )
 #            return cvIplImageAsBitmap(frame, flip = flip, swap = swap_rb)
 #
 #            data = ctypes.string_at(frame.imageData, frame.width * frame.height * 4)
 #            #print data
 #
-            if self._bitmap is None:
-                self._bitmap = wx.BitmapFromBuffer(frame.width,
-                                                 frame.height,
-                                                 frame.data_as_string()
-                                                 )
-
-            else:
-                self._bitmap.CopyFromBuffer(frame.data_as_string())
-                
+#            if self._bitmap is None:
+#                self._bitmap = wx.BitmapFromBuffer(frame.width,
+#                                                 frame.height,
+#                                                 frame.data_as_string()
+#                                                 )
 #
-            return self._bitmap
+#            else:
+#                self._bitmap.CopyFromBuffer(frame.data_as_string())
+#                
+##
+#            return self._bitmap
 
     
         

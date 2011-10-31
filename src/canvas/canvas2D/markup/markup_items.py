@@ -59,6 +59,7 @@ class MarkupItem(HasTraits):
             gc.set_stroke_color(self.active_color)
         else:
             gc.set_stroke_color(self.default_color)
+            
     def _render_(self, gc):
         pass
 
@@ -279,6 +280,7 @@ class PointIndicator(Indicator):
         
     def _render_(self, gc):
         super(PointIndicator, self)._render_(gc)
+        
         self.circle.render(gc)
         self.label.render(gc)
         

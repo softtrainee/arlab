@@ -65,11 +65,11 @@ class StreamGraph(Graph):
         self.data_limits = []
         self.cur_min = []
         self.cur_max = []
-        self.track_x_max = []
-        self.track_x_min = []
+        self.track_x_max = True
+        self.track_x_min = True
         self.track_y_max = []
         self.track_y_min = []
-        self.force_track_x_flag = []
+        self.force_track_x_flag = False
         
         super(StreamGraph, self).clear()
 
@@ -84,11 +84,11 @@ class StreamGraph(Graph):
         self.cur_min.append(Inf)
         self.cur_max.append(-Inf)
         
-        self.track_x_max.append(True)
-        self.track_x_min.append(True)
+        #self.track_x_max.append(True)
+        #self.track_x_min.append(True)
         self.track_y_max.append(True)
         self.track_y_min.append(True)
-        self.force_track_x_flag.append(False)
+        #self.force_track_x_flag.append(False)
         
         
         
@@ -108,7 +108,7 @@ class StreamGraph(Graph):
             mi = None
             
         self.set_y_limits(min=mi, max=ma, plotid=plotid, pad=5)
-        
+            
     def set_scan_delay(self, v, plotid=0):
         self.scan_delays[plotid] = v
 
@@ -140,7 +140,7 @@ class StreamGraph(Graph):
 
         dl = self.data_limits[plotid]
         
-        if x > dl * self.scan_delays[plotid]:
+        if x >= dl * self.scan_delays[plotid]:
             if not self.track_x_min:
                 mi = None
             else:
@@ -186,31 +186,32 @@ class StreamGraph(Graph):
         self.raw_y[plotid][series] = hstack((ry[MAX_LIMIT:], [ny]))
         
         dl = self.data_limits[plotid]
-        #lim = int(-(dl + 50) / (self.scan_delays[plotid]))
+
         lim = MAX_LIMIT
         new_xd = hstack((xd[lim:], [nx]))
         new_yd = hstack((yd[lim:], [ny]))
-        #print nx, series
+
         def _record_():
             plot.data.set_data(xn, new_xd)
             plot.data.set_data(yn, new_yd)
 
-            if track_x and (self.track_x_min[plotid] or self.track_x_max[plotid]) or self.force_track_x_flag[plotid]:
+            if track_x and (self.track_x_min or self.track_x_max) or self.force_track_x_flag:
                 ma = new_xd[-1]
                 mi = ma - dl * self.scan_delays[plotid]
                 
-                if self.force_track_x_flag[plotid] or ma > dl * self.scan_delays[plotid]:
+                if self.force_track_x_flag or ma >= dl * self.scan_delays[plotid]:
                     
-                    if self.force_track_x_flag[plotid]:
-                        self.force_track_x_flag[plotid] = False
+                    if self.force_track_x_flag:
+                        self.force_track_x_flag = False
                         ma = dl * self.scan_delays[plotid]
-                    if not self.track_y_max[plotid]:
+                    if not self.track_x_max:
                         ma = None
-                        
-                    if not self.track_y_min[plotid]:
+                   
+                    if not self.track_x_min:
                         mi = None
                     else:
                         mi = max(1, mi)
+                        
                     self.set_x_limits(max=ma,
                               min=mi,
                               plotid=plotid,
