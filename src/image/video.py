@@ -43,8 +43,7 @@ class Video(Image):
     users = List
 
     _recording = Bool(False)
-    width = Int(640)
-    height = Int(480)
+    
     def open(self, user=None):
         '''
 
@@ -52,6 +51,8 @@ class Video(Image):
         if self.cap is None:
             try:
                 self.cap = cvCreateCameraCapture(0)
+                self.width = 640
+                self.height = 480
 
             except:
                 self.cap = None

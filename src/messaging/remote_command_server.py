@@ -187,16 +187,16 @@ class RemoteCommandServer(ConfigLoadable):
 
     def start_server(self):
         SELECT_TIMEOUT = 1
-        THREAD_LIMIT = 15
+#        THREAD_LIMIT = 15
         while self._running:
             try:
                 readySocket = select.select([self._server.socket], [],
                                             [], SELECT_TIMEOUT)
                 if readySocket[0]:
-                    if threading.activeCount() < THREAD_LIMIT:
-                        self._server.handle_request()
-                    else:
-                        time.sleep(0.25)
+                    self._server.handle_request()
+#                    if threading.activeCount() < THREAD_LIMIT:
+#                        self._server.handle_request()
+                    
             except:
                 pass
         self._server.socket.close()

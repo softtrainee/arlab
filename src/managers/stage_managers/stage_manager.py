@@ -121,7 +121,10 @@ class StageManager(Manager):
             self.canvas.tool_state = 'point'
         else:
             self.canvas.tool_state = 'select'
-            
+            print self.canvas.selected_element
+            if self.canvas.selected_element:
+                self.canvas.selected_element.set_state(False)
+                self.canvas.request_redraw()
         self.canvas.markup = not self.canvas.markup
     
     def _accept_point_fired(self):

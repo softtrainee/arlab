@@ -47,9 +47,11 @@ class CommandProcessor(ConfigLoadable):
     system_lock = Bool(False)
     system_lock_address = Str
     
+    _handlers = None
     def __init__(self, *args, **kw):
         super(CommandProcessor, self).__init__(*args, **kw)
         self.context_filter = ContextFilter()
+        self._handlers = dict()
 
     def load(self, *args, **kw):
         '''
@@ -121,8 +123,10 @@ class CommandProcessor(ConfigLoadable):
                         data = client.recv(4096)
                         if data:
                             sender_addr, ptype, payload = data.split('|')                    
-                            t = Thread(target=self._process_request, args=(client, sender_addr, ptype, payload))
-                            t.start()
+                            #t = Thread(target=self._process_request, args=(client, sender_addr, ptype, payload))
+                            #t.start()
+                            self._process_request(client, sender_addr, ptype, payload)
+                            
                         else:
                             client.close()
                             input.remove(client)
@@ -132,7 +136,7 @@ class CommandProcessor(ConfigLoadable):
             
                     
     def _end_request(self, sock, data):
-        self.debug('Result: {}'.format(data))
+        #self.debug('Result: {}'.format(data))
         try:
             sock.send(data)
             #sock.close()
@@ -141,7 +145,7 @@ class CommandProcessor(ConfigLoadable):
              
     def _process_request(self, sock, sender_addr, request_type, data):
         
-        self.debug('Request: {}, {}'.format(request_type, data.strip()))
+        #self.debug('Request: {}, {}'.format(request_type, data.strip()))
         try:
             if self._check_system_lock(sender_addr):
                 result = repr(SystemLockErrorCode(self.system_lock_name,
@@ -155,35 +159,32 @@ class CommandProcessor(ConfigLoadable):
                 elif request_type == 'test':
                     result = data
                 else:
-        
                     klass = '{}Handler'.format(request_type.capitalize())
-                    pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
-                    try:
-                        
-                            
-                        module = __import__(pkg, globals(), locals(), [klass])
-        
-                        factory = getattr(module, klass)
-        
-                        handler = factory(application=self.application)
-                        '''
-                            the context filter uses the handler object to 
-                            get the kind and request
-                            if the min period has elapse since last request or the message is triggered
-                            get and return the state from pychron
-                            
+                    if klass not in self._handlers:
+                        pkg = 'src.remote_hardware._handlers.{}_handler'.format(request_type.lower())
+                        try:    
+                            module = __import__(pkg, globals(), locals(), [klass])
+                            factory = getattr(module, klass)
+                            handler = factory(application=self.application)
+                            self._handlers[klass] = handler    
+                            '''
+                                the context filter uses the handler object to 
+                                get the kind and request
+                                if the min period has elapse since last request or the message is triggered
+                                get and return the state from pychron
+                                
+                    
+                                pure frequency filtering could be accomplished earlier in the stream in the 
+                                Remote Hardware Server (CommandRepeater.get_response) 
+                            '''
+                        except ImportError, e:
+                            result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
+                    else:
+                        handler = self._handlers[klass]
                 
-                            pure frequency filtering could be accomplished earlier in the stream in the 
-                            Remote Hardware Server (CommandRepeater.get_response) 
-                        '''
-        
-                        result = handler.handle(data, sender_addr)
-        #                result = self.context_filter.get_response(handler, data)
-        
-                    except ImportError, e:
-                        result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
-        
-                
+#                    result = self.context_filter.get_response(handler, data)
+                    result = handler.handle(data, sender_addr)
+                    
                 if isinstance(result, ErrorCode):
                     result = repr(result)
 

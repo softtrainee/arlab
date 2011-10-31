@@ -15,8 +15,8 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import HasTraits, Str, implements, Any, List, Event, Property, Bool, Float
-from pyface.timer.api import Timer
-
+#from pyface.timer.api import Timer
+from src.helpers.timer import Timer
 #=============standard library imports ========================
 import random
 from threading import Lock
@@ -314,7 +314,7 @@ class CoreDevice(ViewableDevice):
             self.scan_path = self.data_manager.frames[self.frame_name]
         sp = self.scan_period * self.time_dict[self.scan_units]
         self.timer = Timer(sp, self.scan)
-        self.timer.Start()
+#        self.timer.Start()
     
 
     def stop_scan(self):

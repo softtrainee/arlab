@@ -41,10 +41,8 @@ class VideoUnderlay(AbstractOverlay):
             dc = component._window.dc
             bitmap = self.video.get_bitmap(
                                          flip=not self.flip,
-                                         #flip=False,
                                          swap_rb=self.swap_rb,
                                          mirror=self.mirror,
-                                         #rotate=self.rotate
                                          )
             if bitmap:
                 x = component.x
