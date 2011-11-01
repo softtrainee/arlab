@@ -41,6 +41,7 @@ class AbstractDevice(ViewableDevice):
     last_response = DelegatesTo('_cdevice')
 #    simulation = DelegatesTo('_cdevice')
     com_class = DelegatesTo('_cdevice')
+    is_scanable = DelegatesTo('_cdevice')
     
 
 #    def start(self):

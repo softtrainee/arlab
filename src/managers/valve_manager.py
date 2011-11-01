@@ -16,7 +16,7 @@ limitations under the License.
 '''
 '''
 #=============enthought library imports=======================
-from traits.api import Any, Dict, List
+from traits.api import Any, Dict, List, Bool
 #=============standard library imports ========================
 import time
 import os
@@ -50,6 +50,8 @@ class ValveManager(Manager):
     sample_gas_type = None #valid values None,sample,air
     sector_inlet_valve = None
     quad_inlet_valve = None
+    
+    query_valve_state = Bool(True)
     def kill(self):
         super(ValveManager, self).kill()
         self.save_soft_lock_state()
@@ -116,12 +118,11 @@ class ValveManager(Manager):
         '''
            
         '''
-        hardware_query = False
         
         states = []
         for k, v in self.valves.items():
             states.append(k)
-            if hardware_query:
+            if self.query_valve_state:
                 s = self.get_state_by_name(k)
             else:
                 s = v.state
@@ -158,15 +159,16 @@ class ValveManager(Manager):
         return next((item for item in self.explanable_items if item.name == n), None)
 
 
-    def get_state_by_name(self, n):
+    def get_state_by_name(self, n, force=False):
         '''
           
         '''
         v = self.get_valve_by_name(n)
         state = None
         if v is not None:
-            state = v.actuator.get_channel_state(v)
-
+            if force or self.query_valve_state:
+                state = v.actuator.get_channel_state(v)
+                                
             if state is None:
                 state = v.state
             else:

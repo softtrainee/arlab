@@ -62,7 +62,7 @@ class RemoteHardwareManager(Manager):
         bind_preference(cp, 'system_lock', 'pychron.hardware.enable_system_lock')
         bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
         bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
-        
+   
         config = ConfigParser.ConfigParser()
         p = os.path.join(setup_dir, 'system_locks.cfg')
         config.read(p)
@@ -80,11 +80,15 @@ class RemoteHardwareManager(Manager):
         pref.set('pychron.hardware.system_lock_addresses', hosts)
         
         name = pref.get('pychron.hardware.system_lock_name')
-        if name:
-            pref.set('pychron.hardware.system_lock_address', hosts[name])
-        else:
-            pref.set('pychron.hardware.system_lock_address', hosts[names[0]])
-                    
+        
+        try:
+            if name:
+                pref.set('pychron.hardware.system_lock_address', hosts[name.strip("'")])
+            else:
+                pref.set('pychron.hardware.system_lock_address', hosts[names[0]])
+        except Exception, err:
+            print 'system lock exceptipon', err
+            
         pref.save()
 
         return cp

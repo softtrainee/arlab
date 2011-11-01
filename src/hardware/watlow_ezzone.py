@@ -346,11 +346,11 @@ class WatlowEZZone(CoreDevice):
         self.write(1920, 106, **kw)
         
         g = TimeSeriesStreamGraph()
-        sp = 2
+        sp = 1.5
         if self.data_manager:
             self.data_manager.new_frame(base_frame_name=self.name)
             
-        g.new_plot(data_limit=3600,
+        g.new_plot(data_limit=180,
                    scan_delay=sp
                    )
         g.new_series()
@@ -390,9 +390,9 @@ class WatlowEZZone(CoreDevice):
             else:
                 return False
         
-        r = self.read(1920, nregisters=2, **kw)
+        r = self.read(1920, response_type='int', **kw)
         try:
-            return not truefalse_map[r]
+            return not truefalse_map[str(r)]
         except KeyError:
             return True
         

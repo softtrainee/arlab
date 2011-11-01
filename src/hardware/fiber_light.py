@@ -15,40 +15,48 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import Range, Event, Bool, on_trait_change, Property
+from traitsui.api import View, Item, ButtonEditor, HGroup
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.hardware.arduino.arduino_fiber_light_module import ArduinoFiberLightModule
+#from src.hardware.arduino.arduino_fiber_light_module import ArduinoFiberLightModule
 from src.hardware.core.abstract_device import AbstractDevice
 
 class FiberLight(AbstractDevice):
     '''
-        G{classtree}
     '''
     intensity = Range(0, 100.0, mode='slider')
     power = Event
     power_label = Property(depends_on='state')
     state = Bool
+    auto_off = Bool(True)
     def load_additional_args(self, config):
         '''
-            @type config: C{str}
-            @param config:
+
         '''
-        n = self.config_get(config, 'General', 'control_module')
+        klass = self.config_get(config, 'General', 'control_module')
 
         self._cdevice = None
-        if n is not None:
-            if 'subsystem' in n:
-                pass
-            else:
-                gdict = globals()
-                if n in gdict:
-                    self._cdevice = gdict[n](name=n,
-                                 configuration_dir_name=self.configuration_dir_name
-                                 )
-                    self._cdevice.load()
+        if klass is not None:
+            package = 'src.hardware.arduino.arduino_fiber_light_module'
+            module = __import__(package, fromlist=[klass])
+            factory = getattr(module, klass)
+            self._cdevice = factory(name=klass,
+                                  configuration_dir_name=self.configuration_dir_name
+                                  )
+            self._cdevice.load()
             return True
+#            if 'subsystem' in n:
+#                pass
+#            else:
+#                gdict = globals()
+#                if n in gdict:
+#                    self._cdevice = gdict[n](name=n,
+#                                 configuration_dir_name=self.configuration_dir_name
+#                                 )
+#                    self._cdevice.load()
+#            return True
 
     def power_on(self):
         '''
@@ -87,4 +95,14 @@ class FiberLight(AbstractDevice):
         else:
             s = 'ON'
         return s
+    
+    
+    def traits_view(self):
+        return View(HGroup(Item('power', editor=ButtonEditor(label_value='power_label'), show_label=False),
+                            Item('intensity', show_label=False)
+                                 
+                           ),
+                    
+                    Item('auto_off')
+                    )
 #============= EOF ====================================

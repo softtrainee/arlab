@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 from threading import Thread
+from src.led.led import LED
 '''
 '''
 #=============enthought library imports=======================
@@ -29,7 +30,7 @@ import time
 
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
-from src.hardware.subsystems.arduino_subsystem import ArduinoSubsystem
+#from src.hardware.subsystems.arduino_subsystem import ArduinoSubsystem
 #from src.managers.step_heat_manager import StepHeatManager
 from src.led.led_editor import LEDEditor
 
@@ -41,12 +42,12 @@ class FusionsLaserManager(LaserManager):
 
     logic_board = Instance(FusionsLogicBoard)
 
-    subsystem = Instance(ArduinoSubsystem)
+    #subsystem = Instance(ArduinoSubsystem)
     fiber_light = Instance(FiberLight)
 
-    light = DelegatesTo('fiber_light', prefix='power')
-    light_label = DelegatesTo('fiber_light', prefix='power_label')
-    light_intensity = DelegatesTo('fiber_light', prefix='intensity')
+#    light = DelegatesTo('fiber_light', prefix='power')
+#    light_label = DelegatesTo('fiber_light', prefix='power_label')
+#    light_intensity = DelegatesTo('fiber_light', prefix='intensity')
 
     beam = DelegatesTo('logic_board')
     beammin = DelegatesTo('logic_board')
@@ -122,12 +123,13 @@ class FusionsLaserManager(LaserManager):
     def finish_loading(self):
         '''
         '''
-        if self.fiber_light._cdevice is None:
-            self.fiber_light._cdevice = self.subsystem.get_module('FiberLightModule')
-
+#        if self.fiber_light._cdevice is None:
+#            self.fiber_light._cdevice = self.subsystem.get_module('FiberLightModule')
+        
         super(FusionsLaserManager, self).finish_loading()
         
         self.load_lens_configurations()
+        
         
     @on_trait_change('pointer')
     def pointer_ononff(self):
@@ -266,8 +268,10 @@ class FusionsLaserManager(LaserManager):
                            HGroup(spring,
                                   Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
                                   self._button_group_factory(self.get_control_buttons(), orientation='h'),
+                                  
                                   springy=True
                                   ),
+                           
                            show_border=True,
                            springy=True,
                            label='Power'
@@ -308,17 +312,18 @@ class FusionsLaserManager(LaserManager):
             vg = HGroup(vg, ac)
 
         return vg
-
+    
     def _get_pointer_label(self):
         '''
         '''
         return 'Pointer ON' if not self.pointer_state else 'Pointer OFF'
-
+    def _get_lock_stage_label(self):
+        return 'Lock' if not self.lock_stage_state else 'Unlock'
 #========================= defaults =======================
-    def _subsystem_default(self):
-        '''
-        '''
-        return ArduinoSubsystem(name='arduino_subsystem_2')
+#    def _subsystem_default(self):
+#        '''
+#        '''
+#        return ArduinoSubsystem(name='arduino_subsystem_2')
 
     def _fiber_light_default(self):
         '''

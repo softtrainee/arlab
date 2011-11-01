@@ -146,11 +146,12 @@ class CommandRepeater(ConfigLoadable):
             
             is_ok = False
             retries = 0
-            if 'Errno 32' in str(e):
+            if str(e) in ['Errno 32', 'Errno 9']:
                 retries = 2
             #use a retry loop only if error is a broken pipe
             for _i in range(retries):
                 try:
+                    self.open()
                     self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
                     result = self._sock.recv(4096)
                     is_ok = True

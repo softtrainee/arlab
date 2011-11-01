@@ -35,12 +35,15 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
     enable_close_after = Bool
     close_after = Range(0, 60, 60)
     
+    query_valve_state = Bool(True)
+    
     def get_general_group(self):
         return Group(Item('open_on_startup'),
                      HGroup(
                             Item('close_after', enabled_when='enable_close_after'),
                             Item('enable_close_after', show_label=False)
-                            )
+                            ),
+                     Item('query_valve_state')
                     )
 
     def get_additional_groups(self):
