@@ -32,6 +32,7 @@ from src.monitors.diode_laser_monitor import DiodeLaserMonitor
 
 from fusions_laser_manager import FusionsLaserManager
 from src.managers.laser_managers.vue_metrix_manager import VueMetrixManager
+import time
 #from src.managers.step_heat_manager import StepHeatManager
 
 
@@ -142,6 +143,9 @@ class FusionsDiodeManager(FusionsLaserManager):
     def set_laser_power(self, power, mode='open'):
         ''' 
         '''
+        
+       
+            
         tc = self.temperature_controller
         if tc._control_mode != mode:
 
@@ -153,7 +157,9 @@ class FusionsDiodeManager(FusionsLaserManager):
     def enable_laser(self):
         '''
         '''
-
+        if self.fiber_light.auto_off and self.fiber_light.state:
+            self.fiber_light.power_off()
+            
         #simple calls logicboard.enable_laser
         if super(FusionsDiodeManager, self).enable_laser():
             return self.control_module_manager.enable()
@@ -256,30 +262,26 @@ class FusionsDiodeManager(FusionsLaserManager):
                    VGroup(Item('temperature_controller', style='custom',
                                editor=InstanceEditor(view='control_view'),
                                show_label=False,
-#                               springy = True
                                ),
                       label='Watlow',
 #                      show_border = True,
-#                      springy = True
                       ),
                  VGroup(Item('pyrometer', show_label=False, style='custom',
-#                              springy = True
                               ),
 #                      show_border = True,
                       label='Pyrometer',
-#                      springy = True
 
                       ),
                  VGroup(Item('control_module_manager', show_label=False, style='custom',
-#                             springy = True
                              ),
 #                      show_border = True,
                       label='ControlModule',
-#                      springy = True
 
                       ),
+                  VGroup(Item('fiber_light', style='custom', show_label=False),
+                         label='FiberLight'
+                         ),
                   layout='tabbed',
-#                  springy = False
                    )
         return v
 

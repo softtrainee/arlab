@@ -229,8 +229,8 @@ class DiffusionGraph(Graph):
         self.set_x_title('t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
         self.set_y_limits(min=100, plotid=pid)
-        a, _p = self.new_series(ts, Tsl, type='polygon', color=self.color_generators[id].next())
-        b, _p = self.new_series(ts, Tsh, type='polygon', color=self.color_generators[id].next())
+        a, _p = self.new_series(ts, Tsl, type='polygon', color=self.color_generators[pid].next())
+        b, _p = self.new_series(ts, Tsh, type='polygon', color=self.color_generators[pid].next())
 
         self.groups['cooling_history'].append([a, b])
 

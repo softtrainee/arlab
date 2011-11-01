@@ -288,47 +288,52 @@ class Modeler(Loggable):
         if data is not None:
             try:
                 g.build_spectrum(*data, **{'color':color})
-            except:
-                pass
+            except Exception, err:
+                self.info(err)
             
         data = dl.load_logr_ro('logr.samp')
         if data is not None:
             try:
                 g.build_logr_ro(*data)
                 g.set_series_label('logr.samp', plotid=1, series=0)
-            except:
-                pass
+            except Exception, err:
+                self.info(err)
+            
             
         data = dl.load_logr_ro('logr.dat')
         if data is not None:
             try:
                 g.build_logr_ro(ngroup=False, *data)
                 g.set_series_label('logr.dat', plotid=1, series=1)
-            except:
-                pass
+            except Exception, err:
+                self.info(err)
+            
             
         data = dl.load_cooling_history()
         if data is not None:
             try:
                 g.build_cooling_history(*data)
-            except:
-                pass
+            except Exception, err:
+                self.info(err)
+            
 
         data = dl.load_arrhenius('arr.samp')
         if data is not None:
             try:
                 g.build_arrhenius(*data)
                 g.set_series_label('arr.samp', plotid=2, series=0,)
-            except:
-                pass
+            except Exception, err:
+                self.info(err)
+            
             
         data = dl.load_arrhenius('arr.dat')
         if data is not None:
             try:
                 g.build_arrhenius(ngroup=False, *data)
                 g.set_series_label('arr.dat', plotid=2, series=1)
-            except:
-                pass
+            except Exception, err:
+                self.info(err)
+            
 
         #sync the colors
         if self.sync_groups:
