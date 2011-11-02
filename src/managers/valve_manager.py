@@ -159,15 +159,15 @@ class ValveManager(Manager):
         return next((item for item in self.explanable_items if item.name == n), None)
 
 
-    def get_state_by_name(self, n, force=False):
+    def get_state_by_name(self, n):
         '''
           
         '''
         v = self.get_valve_by_name(n)
         state = None
         if v is not None:
-            if force or self.query_valve_state:
-                state = v.actuator.get_channel_state(v)
+            if self.query_valve_state:
+                state = v.get_hardware_state()#actuator.get_channel_state(v)
                                 
             if state is None:
                 state = v.state
@@ -175,6 +175,7 @@ class ValveManager(Manager):
                 v.state = state
 
         return state
+    
     def get_actuator_by_name(self, name):
         if self.actuators:
             for a in self.actuators:
@@ -251,8 +252,7 @@ class ValveManager(Manager):
             if isinstance(result, bool):#else its an error message
 
                 ve = self.get_evalve_by_name(name)
-                action = True if open_close == 'open' else False
-                ve.state = action
+                ve.state = True if open_close == 'open' else False
 
 #                update the section state
 #                for s in self.sections:

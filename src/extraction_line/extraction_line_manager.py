@@ -191,34 +191,21 @@ class ExtractionLineManager(Manager):
             state = self.valve_manager.get_state_by_name(name)
             return state
 
-#    def get_manual_state(self, name):
-#        return False
-    
     def get_software_lock(self, name):
         if self.valve_manager is not None:
             return self.valve_manager.get_software_lock(name)
+        
     def set_software_lock(self, name, lock):
         if self.valve_manager is not None:
             if lock:
                 self.valve_manager.lock(name)
             else:
                 self.valve_manager.unlock(name)
+                
     def get_valve_states(self):
         if self.valve_manager is not None:
             return self.valve_manager.get_states()
-
-
-    def _change_valve_state(self, name, mode, action):
-
-        func = getattr(self.valve_manager, '{}_by_name'.format(action))
-        result = func(name, mode=mode)
-#        result = self.valve_manager.open_by_name(name, mode = mode)
-
-        if isinstance(result, bool):
-            self.canvas.update_valve_state(name, True if action == 'open' else False)
-            result = True
-
-        return result
+        
 
     def open_valve(self, name, address=None, mode='remote'):
         '''
@@ -230,7 +217,6 @@ class ExtractionLineManager(Manager):
 
     def close_valve(self, name, address=None, mode='remote'):
         '''
-
         '''
         if self.valve_manager is not None:
 
@@ -239,6 +225,16 @@ class ExtractionLineManager(Manager):
 
             return self._change_valve_state(name, mode, 'close')
 
+    def _change_valve_state(self, name, mode, action):
+
+        func = getattr(self.valve_manager, '{}_by_name'.format(action))
+        result = func(name, mode=mode)
+
+        if isinstance(result, bool):
+            self.canvas.update_valve_state(name, True if action == 'open' else False)
+            result = True
+
+        return result
 
     def execute_run_script(self, runscript_name):
         runscript_dir = os.path.join(scripts_dir, 'runscripts')

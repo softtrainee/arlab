@@ -157,7 +157,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     def enable_laser(self):
         '''
         '''
-        if self.fiber_light.auto_off and self.fiber_light.state:
+        if self.fiber_light.auto_onoff and self.fiber_light.state:
             self.fiber_light.power_off()
             
         #simple calls logicboard.enable_laser
@@ -167,6 +167,9 @@ class FusionsDiodeManager(FusionsLaserManager):
     def disable_laser(self):
         '''
         '''
+        if self.fiber_light.auto_onoff and not self.fiber_light.state:
+            self.fiber_light.power_on()
+            
         self.temperature_controller.disable()
         self.control_module_manager.disable()
 

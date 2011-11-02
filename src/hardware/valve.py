@@ -23,7 +23,6 @@ from state_machine.valve_FSM_sm import Valve_sm
 from src.loggable import Loggable
 class HardwareValve(Loggable):
     '''
-        G{classtree}
     '''
     name = Str
 
