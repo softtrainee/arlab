@@ -147,15 +147,19 @@ class LaserManager(Manager):
 
         pass
 
-    def kill(self, **kw):
-        '''
-           
-        '''
-        if super(LaserManager, self).kill(**kw):
-
-            self.emergency_shutoff()
-#            self.stage_manager.kill()
-
+#    def kill(self, **kw):
+#        '''
+#           
+#        '''
+#        if super(LaserManager, self).kill(**kw):
+#
+##            self.emergency_shutoff()
+#            self.disable_laser()
+##            self.stage_manager.kill()
+    def _kill_hook(self):
+        self.disable_laser()
+        
+        
     def set_laser_monitor_duration(self, d):
         '''
             duration in minutes
@@ -247,7 +251,9 @@ class LaserManager(Manager):
                     resizable=True,
                     title=self.__class__.__name__ if self.title == '' else self.title,
                     handler=self.handler_klass,
-                    height=0.5,
+                    height=0.67,
+                    x=300,
+                    y=25,
                     statusbar='status_text'
                     )
 #============= EOF ====================================
