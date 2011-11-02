@@ -55,22 +55,22 @@ class ArduinoFiberLightModule(ArduinoCoreDevice):
         
     def read_intensity(self):
         resp = self.ask('7;')
-        v = self._parse_response(resp, 'intensity')
+        v = self._parse_response(resp)
         if self.simulation:
             v = 50
         return v / 255.0 * 100
         
     def read_state(self):
         resp = self.ask('8;')
-        v = self._parse_response(resp, 'state')
+        v = self._parse_response(resp)
         return bool(v)
     
-    def _parse_response(self, resp, kind):
+    def _parse_response(self, resp):
         if resp is not None:
             try:
-                cmd, k, v = resp.split(',')
-                if cmd == '1' and k == kind:
-                    return int(v)
+                cmd, v = resp.split(',')
+                if cmd == '1':
+                    return int(v.strip(';'))
             except Exception, err:
                 print err
                 
