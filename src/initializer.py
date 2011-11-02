@@ -128,7 +128,7 @@ class Initializer(Loggable):
             cont, skip = pd.update(offset + 1)
             if not cont or skip:
                 return
-            time.sleep(0.1)
+            #time.sleep(0.1)
 
         super(Initializer, self).info(msg, **kw)
 

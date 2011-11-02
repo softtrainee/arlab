@@ -56,12 +56,12 @@ class ExtractionLineUIPlugin(CoreUIPlugin):
         elm.window_x = 10
         elm.window_y = 25
         if hasattr(elm, 'valve_manager'):
-            bind_preference(elm.valve_manager, 'query_valve_state', 'pychron.extraction_line.query_valve_state')
+            if elm.valve_manager:
+                bind_preference(elm.valve_manager, 'query_valve_state', 'pychron.extraction_line.query_valve_state')
         
         bind_preference(self, 'open_on_startup', 'pychron.extraction_line.open_on_startup')
         if self.open_on_startup:
             open_manager(elm)
-        
         
         #start device streams
         for dev in elm.devices:

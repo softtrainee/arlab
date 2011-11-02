@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Range, Event, Bool, on_trait_change, Property
-from traitsui.api import View, Item, ButtonEditor, HGroup
+from traits.api import Range, Event, Bool, on_trait_change, Property, Float
+from traitsui.api import View, Item, ButtonEditor, HGroup, Group
 
 #============= standard library imports ========================
 
@@ -26,11 +26,13 @@ from src.hardware.core.abstract_device import AbstractDevice
 class FiberLight(AbstractDevice):
     '''
     '''
-    intensity = Range(0, 100.0, mode='slider')
+    intensity = Property(Range(0, 100.0, mode='slider'), depends_on='_intensity')
+    _intensity = Float
     power = Event
     power_label = Property(depends_on='state')
     state = Bool
-    auto_off = Bool(True)
+    auto_onoff = Bool(True)
+    
     def load_additional_args(self, config):
         '''
 
@@ -57,7 +59,23 @@ class FiberLight(AbstractDevice):
 #                                 )
 #                    self._cdevice.load()
 #            return True
-
+    def initialize(self, *args, **kw):
+        self.read_state()
+        self.read_intensity()
+        return True
+    
+    def read_state(self):
+        if self._cdevice is not None:
+            if self._cdevice.read_state():
+                self.state = True
+            else:
+                self.state = False
+    
+    def read_intensity(self):
+        if self._cdevice is not None:
+            v = self._cdevice.read_intensity()
+            self._intensity = float('{:0.3n}'.format(v))
+        
     def power_on(self):
         '''
         '''
@@ -72,12 +90,16 @@ class FiberLight(AbstractDevice):
             self._cdevice.power_off()
             self.state = False
 
-    @on_trait_change('intensity')
-    def set_intensity(self):
+#    @on_trait_change('intensity')
+    def _get_intensity(self):
+        return self._intensity
+    
+    def _set_intensity(self, v):
         '''
         '''
         if self._cdevice is not None:
-            self._cdevice.set_intensity(self.intensity / 100 * 255)
+            self._intensity = float(v)
+            self._cdevice.set_intensity(self._intensity / 100 * 255)
 
     @on_trait_change('power')
     def power_fired(self):
@@ -96,13 +118,13 @@ class FiberLight(AbstractDevice):
             s = 'ON'
         return s
     
-    
-    def traits_view(self):
-        return View(HGroup(Item('power', editor=ButtonEditor(label_value='power_label'), show_label=False),
-                            Item('intensity', show_label=False)
+    def get_control_group(self):
+        return Group(HGroup(Item('power', editor=ButtonEditor(label_value='power_label'), show_label=False),
+                            Item('intensity', format_str='%0.2f', show_label=False)
                                  
                            ),
-                    
-                    Item('auto_off')
+                        Item('auto_onoff'))
+    def traits_view(self):
+        return View(self.get_control_group()
                     )
 #============= EOF ====================================

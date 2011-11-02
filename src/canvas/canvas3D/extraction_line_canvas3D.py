@@ -18,7 +18,6 @@ limitations under the License.
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
-#============= EOF ============================================
 
 from canvases.interaction_canvas3D import InteractionCanvas3D
 from loaders.scene_loader import SceneLoader

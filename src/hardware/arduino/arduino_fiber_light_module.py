@@ -21,29 +21,63 @@ limitations under the License.
 
 from src.hardware.core.arduino_core_device import ArduinoCoreDevice
 '''
+FiberLight Protocol ver 0.2
+4; on
+5; off
+6,v; set intensity v
+7; get intensity      return 1,intensity,v
+8; get state          return 1,state,v
+9; get version        return 1,0.2
 
 '''
 class ArduinoFiberLightModule(ArduinoCoreDevice):
     def power_on(self):
         '''
         '''
-        self.ask('4;')
+        cmd = 4
+        cmd = self._build_command(cmd)
+        self.ask(cmd)
         
     def power_off(self):
         '''
         '''
-        self.ask('5;')
+        cmd = 5
+        cmd = self._build_command(cmd)
+        self.ask(cmd)
+        
         
     def set_intensity(self, v):
         '''
         '''
-        self.ask('6,{};'.format(int(v)))
-#    def power_on(self):
-##        self._communicator.digital_write(self.power_pin,
-##                           1
-##                           )
-#        
-#        
-#    def digital_read(self):
-#        self._communicator.digital_read()
+        cmd = 6
+        cmd = self._build_command(cmd, int(v))
+        self.ask(cmd)
+        
+    def read_intensity(self):
+        resp = self.ask('7;')
+        v = self._parse_response(resp, 'intensity')
+        if self.simulation:
+            v = 50
+        return v / 255.0 * 100
+        
+    def read_state(self):
+        resp = self.ask('8;')
+        v = self._parse_response(resp, 'state')
+        return bool(v)
+    
+    def _parse_response(self, resp, kind):
+        if resp is not None:
+            try:
+                cmd, k, v = resp.split(',')
+                if cmd == '1' and k == kind:
+                    return int(v)
+            except Exception, err:
+                print err
+                
+    def _build_command(self, cmd, value=None):
+        if value is not None:
+            return'{},{};'.format(cmd, value)
+        else:
+            return '{};'.format(cmd)
+
 #============= EOF ====================================

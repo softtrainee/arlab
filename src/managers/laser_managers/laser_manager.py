@@ -247,7 +247,7 @@ class LaserManager(Manager):
                     resizable=True,
                     title=self.__class__.__name__ if self.title == '' else self.title,
                     handler=self.handler_klass,
-                    height=0.9,
+                    height=0.5,
                     statusbar='status_text'
                     )
 #============= EOF ====================================

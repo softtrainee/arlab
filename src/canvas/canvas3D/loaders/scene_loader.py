@@ -115,7 +115,6 @@ class SceneLoader(object):
             loader = getattr(self, 'load_{}'.format(name[:-2]))
             loader(os.path.join(paths.canvas3D_dir, r), sg, vm, canvas)
 
-        print self.delegated_dependencies
         for obj, dependency in self.delegated_dependencies:
             obj = sg.get_object_by_name(obj)
             dep = sg.get_object_by_name(dependency)
