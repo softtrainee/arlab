@@ -70,7 +70,7 @@ class ArduinoFiberLightModule(ArduinoCoreDevice):
             try:
                 cmd, k, v = resp.split(',')
                 if cmd == '1' and k == kind:
-                    return int(v)
+                    return int(v.strip(';'))
             except Exception, err:
                 print err
                 
