@@ -120,7 +120,10 @@ class Manager(ConfigLoadable):
     def close(self, is_ok):
 #        print self.name, 'close', is_ok
         return True
-
+    
+    def _kill_hook(self):
+        pass
+    
     def kill(self, **kw):
         '''
 
@@ -128,6 +131,8 @@ class Manager(ConfigLoadable):
 
         if not self._killed:
             self.info('killing')
+            self._kill_hook()
+            
             self._killed = True
 
             for _k, man in self.get_managers():
