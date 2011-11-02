@@ -49,16 +49,7 @@ class FiberLight(AbstractDevice):
                                   )
             self._cdevice.load()
             return True
-#            if 'subsystem' in n:
-#                pass
-#            else:
-#                gdict = globals()
-#                if n in gdict:
-#                    self._cdevice = gdict[n](name=n,
-#                                 configuration_dir_name=self.configuration_dir_name
-#                                 )
-#                    self._cdevice.load()
-#            return True
+
     def initialize(self, *args, **kw):
         self.read_state()
         self.read_intensity()
@@ -74,7 +65,8 @@ class FiberLight(AbstractDevice):
     def read_intensity(self):
         if self._cdevice is not None:
             v = self._cdevice.read_intensity()
-            self._intensity = float('{:0.3n}'.format(v))
+            if v is not None:
+                self._intensity = float('{:0.3n}'.format(v))
         
     def power_on(self):
         '''
