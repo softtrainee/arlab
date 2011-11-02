@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, Str, \
-    Directory, List, on_trait_change, Property, Enum, Float, Int, Button
+    Directory, List, on_trait_change, Property, Enum, Float, Int, Button, Color
 from traitsui.api import View, Item, VSplit, TableEditor, VGroup, Group
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
@@ -283,19 +283,20 @@ class Modeler(Loggable):
 
         dl = self.data_loader
         dl.root = data_directory.path
-
         data = dl.load_spectrum()
         if data is not None:
             try:
                 g.build_spectrum(*data, **{'color':color})
+                
             except Exception, err:
                 self.info(err)
             
         data = dl.load_logr_ro('logr.samp')
         if data is not None:
             try:
-                g.build_logr_ro(*data)
+                p = g.build_logr_ro(*data)
                 g.set_series_label('logr.samp', plotid=1, series=0)
+                p.on_trait_change(data_directory.update_pcolor, 'color')
             except Exception, err:
                 self.info(err)
             
@@ -303,8 +304,12 @@ class Modeler(Loggable):
         data = dl.load_logr_ro('logr.dat')
         if data is not None:
             try:
-                g.build_logr_ro(ngroup=False, *data)
+                p = g.build_logr_ro(ngroup=False, *data)
                 g.set_series_label('logr.dat', plotid=1, series=1)
+                print p.color
+                data_directory.secondary_color = p.color
+                p.on_trait_change(data_directory.update_scolor, 'color')
+                
             except Exception, err:
                 self.info(err)
             
@@ -435,6 +440,8 @@ class Modeler(Loggable):
                 ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show'),
                 CheckboxColumn(name='bind'),
+                ObjectColumn(name='primary_color', editable=False, label='Pc', style='simple'),
+                ObjectColumn(name='secondary_color', editable=False, label='Sc', style='simple')
               ]
 
         editor = TableEditor(columns=cols,
@@ -482,15 +489,15 @@ class Modeler(Loggable):
                     self.selected = d
                     return
 
-            id = len(self.data)
+            pid = len(self.data)
             d = ModelDataDirectory(path=d,
                                 modeler=self,
                                 show=True, # if len(self.data) >= 1 else False,
                                 bind=True,
-                                id=id,
+                                id=pid,
                                 )
 
-            self.graph.set_group_binding(id, True)
+            self.graph.set_group_binding(pid, True)
             self.data.append(d)
             self.selected = d
 
@@ -514,8 +521,10 @@ class Modeler(Loggable):
             #need to load all graphs even if we are not going to show them 
             #this is to ensure proper grouping
             #set visiblity after
+            c = color_gen.next()
+            d.primary_color = c
 
-            self.load_graph(d, gid, color_gen.next())
+            self.load_graph(d, gid, c)
 
             #skip a color
             color_gen.next()
