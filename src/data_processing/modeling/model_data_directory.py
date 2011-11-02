@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Property, Str, Any
-
+from traits.api import HasTraits, Bool, Property, Str, Any, on_trait_change
+from wx import Color, ColourDatabase
 
 #============= standard library imports ========================
 import os
@@ -31,6 +31,10 @@ class ModelDataDirectory(HasTraits):
     path = Str
     id = 0
     modeler = Any
+    primary_color = Str#Color
+    secondary_color = Str#Color
+    
+    
     def _get_name(self):
         '''
         '''
@@ -41,6 +45,7 @@ class ModelDataDirectory(HasTraits):
         '''
         if self.modeler:
             self.modeler.graph.set_group_visiblity(self.show, gid=self.id)
+            
             self.modeler.update_graph_title()
 
 
@@ -49,5 +54,33 @@ class ModelDataDirectory(HasTraits):
         '''
         if self.modeler:
             self.modeler.graph.set_group_binding(self.id, self.bind)
+            
+    def update_pcolor(self, new):
+        new = [255 * i for i in new]
+        c = Color(*new)
+        self.primary_color = ColourDatabase().FindName(c).lower()
+        
+    def update_scolor(self, new):
+        new = [255 * i for i in new]
+        c = Color(*new)
+        self.secondary_color = ColourDatabase().FindName(c).lower()
 
+#    @on_trait_change('primary_color, secondary_color')
+#    def _color_changed(self):
+#        
+#        
+#        try:
+#            for k, v in self.modeler.graph.groups.iteritems():
+#                if k in ['spectrum', 'logr_ro', 'arrhenius', ]: 
+#                    v[self.id][0].color = self.primary_color
+#                    v[self.id][1].color = self.secondary_color
+#                elif k == 'cooling_history':
+#                    v[self.id][0].face_color = self.primary_color 
+#                    v[self.id][0].edge_color = self.primary_color 
+#                    
+#                    v[self.id][1].face_color = self.secondary_color 
+#                    v[self.id][1].edge_color = self.secondary_color 
+#                    
+#        except Exception, err:
+#            print err
 #============= EOF ====================================

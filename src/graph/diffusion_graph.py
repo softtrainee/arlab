@@ -52,11 +52,7 @@ class DiffusionGraph(Graph):
 
     def set_group_binding(self, id, value):
         '''
-            @type id: C{str}
-            @param id:
 
-            @type value: C{str}
-            @param value:
         '''
         if self.bindings is None:
             self.bindings = []
@@ -67,23 +63,15 @@ class DiffusionGraph(Graph):
 
     def update_group_attribute(self, plot, attr, value, dataid=0):
         '''
-            @type plot: C{str}
-            @param plot:
 
-            @type attr: C{str}
-            @param attr:
-
-            @type value: C{str}
-            @param value:
-
-            @type dataid: C{str}
-            @param dataid:
         '''
+        
         if self.bindings[dataid]:
             index = None
             for k in self.groups:
                 g = self.groups[k]
                 for i, pp in enumerate(g):
+                    
                     try:
                         index = pp.index(plot)
                         break
@@ -196,7 +184,7 @@ class DiffusionGraph(Graph):
         '''
         '''
 
-        a, _p = self.new_series(ar39, logr, plotid=pid, **kw)
+        a, p = self.new_series(ar39, logr, plotid=pid, **kw)
         g = self.groups['logr_ro']
         if ngroup:
             g.append([a])
@@ -206,7 +194,8 @@ class DiffusionGraph(Graph):
 
         self.set_x_title('Cum. 39Ar %', plotid=pid)
         self.set_y_title('Log R/Ro', plotid=pid)
-
+        return a
+    
     def build_arrhenius(self, T, Dta, pid=2, ngroup=True, **kw):
         '''
             
