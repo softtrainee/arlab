@@ -206,6 +206,8 @@ class SerialCommunicator(Communicator):
 
         connected = True if self.handle is not None else False
 
+
+        print 'serial_communicator open', self.simulation, self.handle
         return connected
 
     def _find_handle(self, args, **kw):

@@ -16,7 +16,7 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float
 
-from threading import Lock
+from threading import Lock, currentThread
 import time
 #============= standard library imports ========================
 
@@ -31,8 +31,9 @@ class RS485Scheduler(HasTraits):
         
     '''
 
-    collision_delay = Float(125)
-
+#    collision_delay = Float(125)
+    collision_delay = Float(25)
+    
     def __init__(self, *args, **kw):
         super(RS485Scheduler, self).__init__(*args, **kw)
         self._lock = Lock()
@@ -45,8 +46,11 @@ class RS485Scheduler(HasTraits):
             kwargs = dict()
 
         r = func(*args, **kwargs)
+        
         time.sleep(self.collision_delay / 1000.0)
         self._lock.release()
 
         return r
+
+                
 #============= EOF ====================================

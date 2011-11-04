@@ -45,8 +45,8 @@ class BakeoutManager(Manager):
     bakeout6 = Instance(BakeoutController)
     
     update_interval = Float(2)
-#    scan_window = Int(1)
-    scan_window = Float(0.25)
+    scan_window = Float(10)
+    #scan_window = Float(0.25)
     
     execute = Event
     save = Button
@@ -58,13 +58,16 @@ class BakeoutManager(Manager):
     configuration = Property(depends_on='_configuration')
     _configuration = String
     
-    buffer = List
+    data_buffer = List
     data_name = Str
-    n_active_controllers = 0
-    active_controllers = List
-
-    open = Button
-
+    data_count_flag = 0
+#    n_active_controllers = 0
+    active_controllers = Property(List)
+    
+    open_button = Button
+    open_label = 'Open'
+        
+        
     def load(self, *args, **kw):
         app = self.application
         for bo in self._get_controllers():
@@ -78,23 +81,23 @@ class BakeoutManager(Manager):
     @on_trait_change('bakeout+:process_value_flag')
     def update_graph_temperature(self, obj, name, old, new):
         if obj.isAlive():
-            id = self.graph_info[obj.name]['id']
+            pid = self.graph_info[obj.name]['id']
             
             pv = getattr(obj, 'process_value')
-            #nx = self.graph.record(pv, series=id, track_y=False)
-            
-            hp = getattr(obj, 'heat_power')
-            #self.graph.record(hp, x=nx, series=id, plotid=1, track_y=False)
+            hp = getattr(obj, 'heat_power_value')
                         
-            if obj.name not in self.buffer:
-                self.buffer.append((id, pv, hp))
+#            if obj.name not in self.data_buffer:
+            self.data_buffer.append((pid, pv, hp))
+            self.data_count_flag += 1
                 
-            n = len(self.buffer)
+#            n = len(self.data_buffer) 
+#            if n == len(self.active_controllers):
+            n = self.data_count_flag
             if n == len(self.active_controllers):
-                for i, pi, hi in self.buffer:
+                for i, pi, hi in self.data_buffer:
                 
                     nx = self.graph.record(pi, series=i,
-                                           track_x=i == n - 1
+                                           track_x=False#i == n - 1
                                            )
                     self.graph.record(hi, x=nx, series=i, plotid=1,
                                       track_x=i == n - 1
@@ -104,7 +107,9 @@ class BakeoutManager(Manager):
                 self.graph.update_y_limits(plotid=1)
             
                 self.write_data(self.data_name)
-                self.buffer = []
+#                self.data_buffer = []
+                self.data_count_flag = 0
+                
 
     def write_data(self, name, plotid=0):
         p = self.data_manager.frames[name]
@@ -138,7 +143,7 @@ class BakeoutManager(Manager):
             #set the communicators scheduler
             #used to synchronize access to port
             if bc.load():
-                if bc.open():
+                if bc.open:
                     bc.set_scheduler(scheduler)
                     bc.initialize()
 
@@ -196,7 +201,7 @@ class BakeoutManager(Manager):
             graph.set_data(x, series=i, axis=0, plotid=plotid)
             graph.set_data(y, series=i, axis=1, plotid=plotid)
 
-    def _open_fired(self):
+    def _open_button_fired(self):
         path = self._file_dialog_('open', default_directory=os.path.join(data_dir, 'bakeouts'))
         if path is not None:
             self._open_graph(path)
@@ -230,8 +235,9 @@ class BakeoutManager(Manager):
         if self.isAlive():
             self.kill(user_kill=True)
         else:
-            id = 0
-            self.active_controllers = []
+            pid = 0
+            self.data_buffer = []
+            self.data_count_flag = 0
             self.graph_info = dict()
             self._graph_factory(graph=self.graph)
 
@@ -249,9 +255,9 @@ class BakeoutManager(Manager):
 
                     #set up graph
                     self.graph.new_series(type='line', render_style='connectedpoints')
-                    self.graph_info[bc.name] = dict(id=id)
+                    self.graph_info[bc.name] = dict(id=pid)
 
-                    self.graph.set_series_label(tr, series=id)
+                    self.graph.set_series_label(tr, series=pid)
 
                     self.graph.new_series(type='line', render_style='connectedpoints',
                                           plotid=1)
@@ -260,8 +266,7 @@ class BakeoutManager(Manager):
                     t = Thread(target=bc.run)
                     t.start()
 
-                    id += 1
-                    self.active_controllers.append(tr)
+                    pid += 1
 
     def _update_interval_changed(self):
         for tr in self._get_controllers():
@@ -282,7 +287,9 @@ class BakeoutManager(Manager):
         control = HGroup(VGroup(
                          Item('execute', editor=ButtonEditor(label_value='execute_label'),
                               show_label=False),
-                         Item('open', show_label=False)),
+                         Item('open_button', editor=ButtonEditor(label_value='open_label'),
+                              show_label=False)
+                                ),
                         spring,
                         HGroup(Item('configuration', editor=EnumEditor(name='configurations'),
                              show_label=False),
@@ -305,6 +312,14 @@ class BakeoutManager(Manager):
         c = [tr for tr in self.traits() if tr.startswith('bakeout')]
         c.sort()
         return c
+    
+    def _get_active_controllers(self):
+        ac = []
+        for tr in self._get_controllers():
+            tr = getattr(self, tr)
+            if tr.isActive() and tr.isAlive():
+                ac.append(tr)
+        return ac
 
     def _load_configurations(self):
         '''

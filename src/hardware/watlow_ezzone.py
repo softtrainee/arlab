@@ -69,6 +69,9 @@ autotune_aggressive_map = {'Under':99,
 yesno_map = {'59':'NO', '106':'YES'}
 truefalse_map = {'59':False, '106':True}
 heat_alogrithm_map = {'62':'off', '71':'PID', '64':'on-off'}
+
+
+
 class WatlowEZZone(CoreDevice):
     '''
     WatlowEZZone represents a WatlowEZZone PM PID controller.
@@ -196,7 +199,7 @@ class WatlowEZZone(CoreDevice):
     heat_power_flag = Event
     heat_power_value = Float
         
-
+        
     def initialize(self, *args, **kw):
         '''
         '''
@@ -256,21 +259,9 @@ class WatlowEZZone(CoreDevice):
                 self.process_value = t
                 self.process_value_flag = True
                 return t
-            except ValueError, TypeError:
-                pass
-            
-    
-            
+            except (ValueError, TypeError), e:
+                print 'watlow gettemperature', e
         
-#    def kill(self):
-#        '''
-#        '''
-#        self.info('kill')
-#        self.set_control_mode('open')
-#        self.set_open_loop_setpoint(0)
-#
-#        self.set_control_mode('closed')
-#        self.set_closed_loop_setpoint(0)
 
     def disable(self):
         self.info('disable')
@@ -288,6 +279,12 @@ class WatlowEZZone(CoreDevice):
         self.set_attribute(config, 'setpointmax', 'Setpoint', 'max', cast='float')
         return True
 
+    def set_assembly_definition_address(self, working_address, target_address, **kw):
+        '''
+        '''        
+        ada = working_address - 160 
+        self.write(ada, target_address, nregisters=1, **kw)
+        
     def set_closed_loop_setpoint(self, setpoint, **kw):
         '''
         '''

@@ -65,13 +65,34 @@ class BakeoutController(WatlowEZZone):
     
     update_interval = Float(1)
     
+    
+    memory_block_address = 200
+    memory_block_len = 0
     def initialization_hook(self):
         '''
             suppress the normal initialization querys
             they are not necessary for the bakeout manager currently
         '''
-        pass
-    
+        self._program_memory_block()
+        
+        
+    def _program_memory_block(self):
+        '''
+            see watlow ez zone pm communications rev b nov 07
+            page 5
+            User programmable memory blocks
+        ''' 
+        #set address block 200-203 to hold the process value and the heat power
+        self.set_assembly_definition_address(self.memory_block_address, 360) #process value
+        self.set_assembly_definition_address(self.memory_block_address + 2, 1904) #heat power
+        
+        self.memory_block_len = 4 
+        self.info('programming memory block. start address:{}, len: {}'.format(self.memory_block_address, self.memory_block_len))
+        
+        #now process value and heat power can be read with a single command
+        #self.read(200, nregisters=4, response_type='float')
+        
+        
     def _setpoint_changed(self):
         if self.isAlive():
             self.set_closed_loop_setpoint(self.setpoint)
@@ -220,7 +241,7 @@ class BakeoutController(WatlowEZZone):
     def complex_query(self, **kw):
         if 'verbose' in kw and kw['verbose']:
             self.info('Do complex query')
-
+        
         if self.simulation:
 #            t = 4 + self.closed_loop_setpoint
             t = self.get_random_value() + self.closed_loop_setpoint
@@ -228,22 +249,33 @@ class BakeoutController(WatlowEZZone):
             time.sleep(0.25)
             
         else:
-            t = self.read_process_value(1, **kw)
-            hp = self.read_heat_power(**kw)
+            #t = self.read_process_value(1, **kw)
+            #hp = self.read_heat_power(**kw)
+            data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float')
+            if data is not None:
+                t = data[0]
+                hp = data[1]
             
-        if t is not None and hp is not None:
-            try:
-                hp = float(hp)
-                self.heat_power = hp
-                
-                t = float(t)
-                self.process_value = t
-                self.process_value_flag = True
-                
-                
-                return t, hp
-            except ValueError, TypeError:
-                pass
+        try:
+            self.heat_power_value = hp
+            self.process_value = t
+            self.process_value_flag = True
+        except (ValueError, TypeError), e:
+            print e
+            
+#        if t is not None and hp is not None:
+#            try:
+#                hp = float(hp)
+#                self.heat_power = hp
+#                
+#                t = float(t)
+#                self.process_value = t
+#                self.process_value_flag = True
+#                
+#                
+#                return t, hp
+#            except ValueError, TypeError:
+#                pass
             
     def _update_(self):
         '''
