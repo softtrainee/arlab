@@ -573,7 +573,8 @@ class Graph(HasTraits):
 
         kw['plotid'] = plotid
         plot, names, rd = self._series_factory(x, y, yer=None, **kw)
-
+        print 'downsample', plot.use_downsample
+        plot.use_downsample = True
         if aux_plot:
             p = create_line_plot((x, y))
             l, b = add_default_axes(p)

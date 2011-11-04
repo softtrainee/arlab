@@ -28,7 +28,7 @@ class Communicator(ConfigLoadable):
     '''
     _lock = Lock
     name = Str
-    simulation = Bool
+    simulation = Bool(True)
     _terminator = chr(13) #'\r'
     def __init__(self, *args, **kw):
         '''

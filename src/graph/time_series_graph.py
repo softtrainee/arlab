@@ -119,6 +119,9 @@ class TimeSeriesGraph(Graph):
                 rd['type'] = 'line'
         plota = plot.plot(names, **rd)[0]
 
+#        print plota.use_downsampling
+        plota.unified_draw = True
+        plota.use_downsampling = True
         #this is a hack to hide the default plotaxis
         #since a basexyplot's axis cannot be a ScalesPlotAxis (must be instance of PlotAxis)
         #we cant remove the default axis and set the x_axis to the scaled axis
