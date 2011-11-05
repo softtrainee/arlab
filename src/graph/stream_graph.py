@@ -219,7 +219,7 @@ class StreamGraph(Graph):
                               )
 
             self.cur_max[plotid] = max(self.cur_max[plotid], max(new_yd))
-            self.cur_min[plotid] = min(self.cur_max[plotid], min(new_yd))
+            self.cur_min[plotid] = min(self.cur_min[plotid], min(new_yd))
                             
             if track_y and (self.track_y_min[plotid] or self.track_y_max[plotid]):
 

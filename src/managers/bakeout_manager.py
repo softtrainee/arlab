@@ -98,10 +98,12 @@ class BakeoutManager(Manager):
                 for i, pi, hi in self.data_buffer:
                 
                     nx = self.graph.record(pi, series=i,
-                                           track_x=False#i == n - 1
+                                           track_x=False, #i == n - 1
+                                           track_y=False
                                            )
                     self.graph.record(hi, x=nx, series=i, plotid=1,
-                                      track_x=i == n - 1
+                                      track_x=i == n - 1,
+                                      track_y=False
                                       )
                 
                 self.graph.update_y_limits(plotid=0)

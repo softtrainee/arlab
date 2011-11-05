@@ -144,6 +144,14 @@ SoftLockClosed
 		nil
 		{
 		}
+	ROpen
+		nil
+		{
+		}
+	RClose
+		nil
+		{
+		}
 	
 }
 SoftLockOpened
@@ -180,6 +188,14 @@ SoftLockOpened
 		{
 		}
 	HardUnLock
+		nil
+		{
+		}
+	ROpen
+		nil
+		{
+		}
+	RClose
 		nil
 		{
 		}
