@@ -57,8 +57,8 @@ class ModbusCommunicator(SerialCommunicator):
         '''            
         '''
         return self.read_holding_register(register, nregisters, response_type, **kw)
-
-    def _execute_request(self, args, response_type, nregisters, ** kw):
+        
+    def _execute_request(self, args, response_type, ** kw):
         '''
         '''
         cmd = ''.join([self.slave_address] + args)
@@ -79,7 +79,7 @@ class ModbusCommunicator(SerialCommunicator):
         else:
             resp = self.ask(cmd, **kw)
 
-        return self._parse_response(resp, response_type, nregisters)
+        return self._parse_response(resp, response_type)
 
     def _parse_hexstr(self, hexstr, return_type='hex'):
         '''
@@ -90,7 +90,7 @@ class ModbusCommunicator(SerialCommunicator):
         else:
             return [hexstr[i:i + 2] for i in gen]
 
-    def _parse_response(self, resp, response_type, nregisters):
+    def _parse_response(self, resp, response_type):
         '''
         '''
         if resp is not None and resp is not 'simulation':
@@ -114,31 +114,35 @@ class ModbusCommunicator(SerialCommunicator):
                 if len(dataargs) < ndata:
                     ndata = 4
                     dataargs = args[3:3 + ndata]
-
+                    
                 if ndata > 2:
-                    low_word = ''.join(dataargs[:2])
-                    high_word = ''.join(dataargs[2:])
-
-                    if self.device_word_order == 'low_high':
-                        '''
-                        dataargs in low word - high word order
-                        1234 5678
-                        want high word -low word order
-                        5678 1234
-                        '''
-
-                        data = ''.join([high_word, low_word])
-                    else:
-                        data = ''.join([low_word, high_word])
-                else:
-                    data = '0000'.join(dataargs)
+                    data = []
+                    for i in range(ndata / 4):
+                        low_word = ''.join(dataargs[4 * i:4 * i + 2])
+                        high_word = ''.join(dataargs[4 * i + 2:4 * i + 4])
+    
+                        if self.device_word_order == 'low_high':
+                            '''
+                                dataargs in low word - high word order
+                                1234 5678
+                                want high word -low word order
+                                5678 1234
+                            '''
+                            di = ''.join([high_word, low_word])
+                        else:
+                            di = ''.join([low_word, high_word])
+                        data.append(di)
+                        
+                    data = ''.join(data)
+#                else:
+#                    data = '0000'.join(dataargs)
 
                 if response_type == 'float':
-                    
-                    fmt_str = '!' + 'f' * (nregisters / 2)
+                    fmt_str = '!' + 'f' * (ndata / 4)
                     resp = struct.unpack(fmt_str, data.decode('hex'))
                     #return a single value
-                    if nregisters == 2:
+                    
+                    if ndata == 4:
                         return resp[0]
                     else:
                         #return a list of values
@@ -173,18 +177,18 @@ class ModbusCommunicator(SerialCommunicator):
         else:
             value = hexstr
 
-        return self._execute_request([func_code, data_address, n, nbytes, value], response_type, nregisters, **kw)
+        return self._execute_request([func_code, data_address, n, nbytes, value], response_type, **kw)
 
-    def set_single_register(self, rid, value, response_type, **kw):
+    def set_single_register(self, rid, value, response_type, func_code='06', ** kw):
         '''
         '''
 
 
         #func_code = '06'
-        func_code = self._write_func_code
+        #func_code = self._write_func_code
         register_addr = '{:04X}'.format(int(rid))
         value = '{:04X}'.format(int(value))
-        return self._execute_request([func_code, register_addr, value], response_type, 1, **kw)
+        return self._execute_request([func_code, register_addr, value], response_type, **kw)
 
     def read_holding_register(self, holdid, nregisters, response_type, **kw):
         '''         
@@ -192,7 +196,7 @@ class ModbusCommunicator(SerialCommunicator):
         func_code = '03'
         data_address = '{:04X}'.format(holdid)
         n = '{:04X}'.format(nregisters)
-        return self._execute_request([func_code, data_address, n], response_type, nregisters, **kw)
+        return self._execute_request([func_code, data_address, n], response_type, **kw)
     
             
 #    def read_input_status(self, inputid, ninputs):

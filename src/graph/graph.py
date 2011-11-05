@@ -241,14 +241,14 @@ class Graph(HasTraits):
     def export_raw_data(self, path=None, header=None, plotid=0):
         if path is None:
             path = self._path_factory()
-            if path is not None:
-                self._export_raw_data(path, header, plotid)
+        if path is not None:
+            self._export_raw_data(path, header, plotid)
 
     def export_data(self, path=None):
         if path is None:
             path = self._path_factory()
-            if path is not None:
-                self._export_data(path)
+        if path is not None:
+            self._export_data(path)
 
     def _path_factory(self):
 

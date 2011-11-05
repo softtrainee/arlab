@@ -73,8 +73,9 @@ class BakeoutController(WatlowEZZone):
             suppress the normal initialization querys
             they are not necessary for the bakeout manager currently
         '''
+        #programming memory block is not working
         self._program_memory_block()
-        
+        pass
         
     def _program_memory_block(self):
         '''
@@ -82,12 +83,19 @@ class BakeoutController(WatlowEZZone):
             page 5
             User programmable memory blocks
         ''' 
-        #set address block 200-203 to hold the process value and the heat power
-        self.set_assembly_definition_address(self.memory_block_address, 360) #process value
-        self.set_assembly_definition_address(self.memory_block_address + 2, 1904) #heat power
+        
         
         self.memory_block_len = 4 
         self.info('programming memory block. start address:{}, len: {}'.format(self.memory_block_address, self.memory_block_len))
+        
+        #set address block 200-203 to hold the process value and the heat power
+        #self.set_assembly_definition_address(self.memory_block_address, 360) #process value
+        #self.set_assembly_definition_address(self.memory_block_address + 1, 360) #process value
+        self.set_assembly_definition_address(160 + 40, 360) #process value
+        #self.set_assembly_definition_address(160 + 61, 361) #process value
+        
+        #self.set_assembly_definition_address(self.memory_block_address + 2, 1904) #heat power
+        #self.set_assembly_definition_address(self.memory_block_address + 3, 1904) #heat power
         
         #now process value and heat power can be read with a single command
         #self.read(200, nregisters=4, response_type='float')
@@ -241,21 +249,21 @@ class BakeoutController(WatlowEZZone):
     def complex_query(self, **kw):
         if 'verbose' in kw and kw['verbose']:
             self.info('Do complex query')
+
+        t = self.read_process_value(1, **kw)
+        hp = self.read_heat_power(**kw)
         
+        #data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float', verbose=True)
+        data = None
+        if data is not None:
+            t = data[0]
+            hp = data[1]
+            
         if self.simulation:
 #            t = 4 + self.closed_loop_setpoint
             t = self.get_random_value() + self.closed_loop_setpoint
             hp = self.get_random_value()
             time.sleep(0.25)
-            
-        else:
-            #t = self.read_process_value(1, **kw)
-            #hp = self.read_heat_power(**kw)
-            data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float')
-            if data is not None:
-                t = data[0]
-                hp = data[1]
-            
         try:
             self.heat_power_value = hp
             self.process_value = t

@@ -18,6 +18,8 @@ from traits.api import HasTraits, Float
 
 from threading import Lock, currentThread
 import time
+import threading
+import multiprocessing
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -39,18 +41,21 @@ class RS485Scheduler(HasTraits):
         self._lock = Lock()
 
     def schedule(self, func, args=None, kwargs=None):
-        self._lock.acquire()
-        if args is None:
-            args = tuple()
-        if kwargs is None:
-            kwargs = dict()
+        with self._lock:
+        #self._lock.acquire()
+            if args is None:
+                args = tuple()
+            if kwargs is None:
+                kwargs = dict()
+    
+            r = func(*args, **kwargs)
+            #print 'active count', threading.activeCount(), 'current thread', threading.currentThread()
+            #time.sleep(self.collision_delay / 1000.0)
+            #self._lock.release()
 
-        r = func(*args, **kwargs)
-        
-        time.sleep(self.collision_delay / 1000.0)
-        self._lock.release()
-
-        return r
-
-                
+            return r
+    
+            
+            
+               
 #============= EOF ====================================

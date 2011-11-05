@@ -30,7 +30,7 @@ class Loggable(HasTraits):
     '''
     logger = Any(transient=True)
     name = String
-    logger_display = None
+    #logger_display = None
     def __init__(self, *args, **kw):
         '''
         '''
