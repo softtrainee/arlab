@@ -69,8 +69,8 @@ autotune_aggressive_map = {'Under':99,
 yesno_map = {'59':'NO', '106':'YES'}
 truefalse_map = {'59':False, '106':True}
 heat_alogrithm_map = {'62':'off', '71':'PID', '64':'on-off'}
-
-
+baudmap = {'9600':188, '19200':189, '38400':190}
+ibaudmap = {'188':'9600', '189':'19200', '190':'38400'}
 
 class WatlowEZZone(CoreDevice):
     '''
@@ -278,13 +278,47 @@ class WatlowEZZone(CoreDevice):
         self.set_attribute(config, 'setpointmin', 'Setpoint', 'min', cast='float')
         self.set_attribute(config, 'setpointmax', 'Setpoint', 'max', cast='float')
         return True
-
+    
+    def set_nonvolatile_save(self, yesno, **kw):
+        
+        v = 106 if yesno else 59
+        self.write(2494, v, **kw)
+    
+    def read_nonvolative_save(self):
+        r = self.read(2494, response_type='int')
+        print 'nonvolative save', r
+        
+        
     def set_assembly_definition_address(self, working_address, target_address, **kw):
         '''
         '''        
         ada = working_address - 160 
-        self.write(ada, target_address, nregisters=1, **kw)
         
+        self.write(ada, target_address, **kw)
+        self.info('setting {} to {}'.format(ada, target_address))
+        
+        r = self.read(ada, nregisters=1, response_type='int')
+        self.info('register {} pointing to {}'.format(ada, r))
+        
+    def read_baudrate(self):
+        '''
+        '''
+        r = self.read(2484, response_type='int')
+        try:
+            return ibaudmap[str(r)] 
+        except KeyError, e:
+            print e
+        
+    def set_baudrate(self, v):
+        '''
+        '''
+        
+        try:
+            value = baudmap[v]
+            self.write(2484, value)
+            
+        except KeyError, e:
+            print e
     def set_closed_loop_setpoint(self, setpoint, **kw):
         '''
         '''
@@ -295,6 +329,7 @@ class WatlowEZZone(CoreDevice):
         self.write(2160, setpoint, nregisters=2, **kw)
 
         sp = self.read_closed_loop_setpoint()
+        
         if sp and abs(sp - setpoint) > 0.01:
             self.warning('Set point not set. {} != {} retrying'.format(sp, setpoint))
             self.write(2160, setpoint, nregisters=2, **kw)

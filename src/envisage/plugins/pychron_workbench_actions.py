@@ -138,11 +138,12 @@ class GotoAPIPageAction(Action):
         import webbrowser
         webbrowser.open_new('http://argon131.nmt.edu/~ross/pychron/index.html')
 
-class OpenUpdateManagerAction(Action):
-    def perform(self, event):
-        from src.managers.update_manager import UpdateManager
-        manager = UpdateManager()
-        manager.edit_traits(parent=self.window.control)
+#class OpenUpdateManagerAction(Action):
+#    def perform(self, event):
+#        from src.managers.update_manager import UpdateManager
+#        manager = UpdateManager()
+#        manager.edit_traits(parent=self.window.control)
+#        
 class RefreshSourceAction(Action):
     accelerator = 'Ctrl+R'
     def perform(self, event):

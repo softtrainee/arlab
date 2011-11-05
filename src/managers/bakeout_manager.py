@@ -32,7 +32,8 @@ from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.core.i_core_device import ICoreDevice
 from src.graph.graph import Graph
 
-
+BATCH_SET_BAUDRATE = True
+BAUDRATE = '38400'
 class BakeoutManager(Manager):
     '''
     '''
@@ -107,7 +108,7 @@ class BakeoutManager(Manager):
                 self.graph.update_y_limits(plotid=1)
             
                 self.write_data(self.data_name)
-#                self.data_buffer = []
+                self.data_buffer = []
                 self.data_count_flag = 0
                 
 
@@ -137,15 +138,19 @@ class BakeoutManager(Manager):
     def load_controllers(self):
         '''
         '''
-        scheduler = RS485Scheduler(collision_delay=150)
+        scheduler = RS485Scheduler(collision_delay=25)
         for bcn in self._get_controllers():
             bc = getattr(self, bcn)
             #set the communicators scheduler
             #used to synchronize access to port
             if bc.load():
-                if bc.open:
+                if bc.open():
                     bc.set_scheduler(scheduler)
                     bc.initialize()
+                    
+#                    if BATCH_SET_BAUDRATE:
+#                        bc.set_baudrate(BAUDRATE)
+                    
 
         self._load_configurations()
         return True
@@ -153,7 +158,7 @@ class BakeoutManager(Manager):
     def _controller_factory(self, name):
         bc = BakeoutController(name=name,
                                    configuration_dir_name='bakeout',
-                                   logger_display=self.logger_display,
+                                   #logger_display=self.logger_display,
                                    update_interval=self.update_interval
                                    )
         return bc
