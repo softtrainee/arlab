@@ -149,77 +149,20 @@ class VideoStageManager(StageManager, Videoable):
                                label='Camera'))
         return g
 
-    def _calculate_indicator_positions(self, shift=None):
-        ccm = self.camera_calibration_manager
-
-        zoom = self.parent.zoom
-        src, name = self.video_manager.snapshot(identifier=zoom)
-        ccm.image_factory(src=src)
-
-        ccm.process_image()
-        ccm.title = name
-
-        cond = Condition()
-        ccm.cond = cond
-        cond.acquire()
-        do_later(ccm.edit_traits, view='snapshot_view')
-        if shift:
-            self.stage_controller.linear_move(*shift, block=False)
-
-        cond.wait()
-        cond.release()
-
-    def _calculate_camera_parameters(self):
-        ccm = self.camera_calibration_manager
-        self._calculate_indicator_positions()
-        if ccm.result:
-            if self.calculate_offsets:
-                rdxmm = 5
-                rdymm = 5
-
-                x = self.stage_controller.x + rdxmm
-                y = self.stage_controller.y + rdymm
-                self.stage_controller.linear_move(x, y, block=True)
-
-                time.sleep(2)
-
-                polygons1 = ccm.polygons
-                x = self.stage_controller.x - rdxmm
-                y = self.stage_controller.y - rdymm
-                self._calculate_indicator_positions(shift=(x, y))
-
-                polygons2 = ccm.polygons
-
-                #compare polygon sets
-                #calculate pixel displacement
-                dxpx = sum([sum([(pts1.x - pts2.x)
-                                for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
-                                    for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
-                dypx = sum([sum([(pts1.y - pts2.y)
-                                for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
-                                    for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
-
-                #convert pixel displacement to mm using defined mapping
-                dxmm = dxpx / self.pxpercmx
-                dymm = dypx / self.pxpercmy
-
-                #calculate drive offset. ratio of request/actual
-                try:
-                    self.drive_xratio = rdxmm / dxmm
-                    self.drive_yratio = rdymm / dymm
-                except ZeroDivisionError:
-                    self.drive_xratio = 100
+    
 
     def _move_to_hole_hook(self):
         #use machine vision to calculate positioning error
         if self.auto_center:
-            deviation = self.machine_vision_manager.calculate_positioning_error()
-            if deviation:
+            newpos = self.machine_vision_manager.calculate_positioning_error(self.stage_controller._x_position,
+                                                                                self.stage_controller._y_position
+                                                                                )
+            if newpos:
                 
-                nx = self.stage_controller._x_position + deviation[0]
-                ny = self.stage_controller._y_position + deviation[1]
+                #nx = self.stage_controller._x_position + newpos[0]
+                #ny = self.stage_controller._y_position + newpos[1]
                 
-                self.linear_move(nx, ny, calibrated_space=False)
+                self.linear_move(*newpos, calibrated_space=False)
             
 
 #===============================================================================
@@ -289,9 +232,68 @@ class VideoStageManager(StageManager, Videoable):
             z = self.parent.zoom
         else:
             z = 0
-        print 'sety', z, v
         self.canvas.camera.set_limits_by_zoom(z)
     
+    def _calculate_indicator_positions(self, shift=None):
+        ccm = self.camera_calibration_manager
+
+        zoom = self.parent.zoom
+        src, name = self.video_manager.snapshot(identifier=zoom)
+        ccm.image_factory(src=src)
+
+        ccm.process_image()
+        ccm.title = name
+
+        cond = Condition()
+        ccm.cond = cond
+        cond.acquire()
+        do_later(ccm.edit_traits, view='snapshot_view')
+        if shift:
+            self.stage_controller.linear_move(*shift, block=False)
+
+        cond.wait()
+        cond.release()
+
+    def _calculate_camera_parameters(self):
+        ccm = self.camera_calibration_manager
+        self._calculate_indicator_positions()
+        if ccm.result:
+            if self.calculate_offsets:
+                rdxmm = 5
+                rdymm = 5
+
+                x = self.stage_controller.x + rdxmm
+                y = self.stage_controller.y + rdymm
+                self.stage_controller.linear_move(x, y, block=True)
+
+                time.sleep(2)
+
+                polygons1 = ccm.polygons
+                x = self.stage_controller.x - rdxmm
+                y = self.stage_controller.y - rdymm
+                self._calculate_indicator_positions(shift=(x, y))
+
+                polygons2 = ccm.polygons
+
+                #compare polygon sets
+                #calculate pixel displacement
+                dxpx = sum([sum([(pts1.x - pts2.x)
+                                for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
+                                    for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
+                dypx = sum([sum([(pts1.y - pts2.y)
+                                for pts1, pts2 in zip(p1.points, p2.points)]) / len(p1.points)
+                                    for p1, p2 in zip(polygons1, polygons2)]) / len(polygons1)
+
+                #convert pixel displacement to mm using defined mapping
+                dxmm = dxpx / self.pxpercmx
+                dymm = dypx / self.pxpercmy
+
+                #calculate drive offset. ratio of request/actual
+                try:
+                    self.drive_xratio = rdxmm / dxmm
+                    self.drive_yratio = rdymm / dymm
+                except ZeroDivisionError:
+                    self.drive_xratio = 100  
 if __name__ == '__main__':
 
 
