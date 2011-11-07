@@ -70,7 +70,7 @@ class ModbusCommunicator(SerialCommunicator):
         crc = computeCRC(cmdargs)
         cmd += crc
 
-        kw['hex'] = True
+        kw['is_hex'] = True
 
         if self.scheduler is not None:
             resp = self.scheduler.schedule(self.ask, args=(cmd,),

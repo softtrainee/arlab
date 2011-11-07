@@ -208,7 +208,7 @@ class KerrMotor(KerrDevice):
         addr = self.address
         cmd = '0E'
         cmd = self._build_command(addr, cmd)
-        status_byte = self.ask(cmd, hex=True, delay=100, info='get status byte')
+        status_byte = self.ask(cmd, is_hex=True, delay=100, info='get status byte')
 
         if status_byte == 'simulation':
             status_byte = 'DFDF'

@@ -61,7 +61,7 @@ class ThermoRack(CoreDevice):
     def write(self, *args, **kw):
         '''
         '''
-        kw['hex'] = True
+        kw['is_hex'] = True
         super(ThermoRack, self).write(*args, **kw)
         CoreDevice.write(self, *args, **kw)
 
@@ -69,7 +69,7 @@ class ThermoRack(CoreDevice):
         '''
 
         '''
-        kw['hex'] = True
+        kw['is_hex'] = True
         return super(ThermoRack, self).ask(*args, **kw)
 
 

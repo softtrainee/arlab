@@ -697,6 +697,9 @@ class StageManager(Manager):
         pos = pt.x, pt.y
         self.info('Move to point {}'.format(pt.id))
         self.stage_controller.linear_move(block=True, *pos)
+        
+        self._move_to_point_hook()
+        
         self.info('Move complete')
         self.point_thread = None
         
@@ -714,7 +717,10 @@ class StageManager(Manager):
         
         self.info('Move complete')
         self.hole_thread = None
+        
     def _move_to_hole_hook(self):
+        pass
+    def _move_to_point_hook(self):
         pass
 #class DummyParent(HasTraits):
 #    zoom = Float

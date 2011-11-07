@@ -68,7 +68,7 @@ class KerrDevice(ConfigLoadable):
             if desc:
                 self.info(desc)
 
-            r = self.ask(cmd, hex=True, delay=delay, **kw)
+            r = self.ask(cmd, is_hex=True, delay=delay, **kw)
 
         return r
 
