@@ -175,7 +175,7 @@ class StreamGraph(Graph):
             nx = tg.next()
         else:
             nx = x
-
+            
         ny = float(y)
 
         #update raw data

@@ -31,6 +31,7 @@ from i_core_device import ICoreDevice
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.helpers.datetime_tools import generate_timestamp
 from src.graph.time_series_graph import TimeSeriesStreamGraph
+from src.graph.plot_record import PlotRecord
 
 class Alarm(HasTraits):
     alarm_str = Str
@@ -252,11 +253,20 @@ class CoreDevice(ViewableDevice):
                 return
 
             if v is not None:
-                self.current_scan_value = v
-            
+                self.current_scan_value = str(v)
+                
                 if self.record_scan_data:
                     if isinstance(v, tuple):
                         x = self.graph.record_multiple(v)
+                    elif isinstance(v, PlotRecord):
+                        for pi, d in zip(v.plotids, v.data):
+                            
+                            if isinstance(d, tuple):
+                                x = self.graph.record_multiple(d, plotid=pi)
+                            else:
+                                x = self.graph.record(d, plotid=pi)
+                        v = v.as_data_tuple()
+                        
                     else:
                         x = self.graph.record(v)
                         v = (v,)

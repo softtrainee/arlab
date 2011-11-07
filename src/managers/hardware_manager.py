@@ -30,7 +30,10 @@ class HardwareManager(Manager):
     @on_trait_change('application')
     def app_changed(self, obj, name, old, new):
         if name == 'application' and new:
-            self.devices = new.service_registry.get_services('src.hardware.core.i_core_device.ICoreDevice')
+            self.devices = new.service_registry.get_services('src.hardware.core.i_core_device.ICoreDevice',
+                                                             
+                                                             "display==True"
+                                                             )
             self.devices.sort()
             self.application = new
 
