@@ -74,9 +74,9 @@ class BakeoutManager(Manager):
         for bo in self._get_controllers():
             bc = self._controller_factory(bo)
             self.trait_set(**{bo:bc})
-
-        if app is not None:
-            app.register_service(ICoreDevice, bc)
+                
+            if app is not None:
+                app.register_service(ICoreDevice, bc, {'display':False})
 
                     
     @on_trait_change('bakeout+:process_value_flag')

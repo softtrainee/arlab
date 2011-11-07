@@ -27,10 +27,12 @@ from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEdi
 
 from core.core_device import CoreDevice
 from src.helpers.logger_setup import setup
-from src.graph.time_series_graph import TimeSeriesStreamGraph
+from src.graph.time_series_graph import TimeSeriesStreamGraph, \
+    TimeSeriesStreamStackedGraph
 from pyface.timer.do_later import do_later
 
 from src.helpers.timer import Timer
+from src.graph.plot_record import PlotRecord
 sensor_map = {'62':'off',
                     '95':'thermocouple',
                     '104':'volts dc',
@@ -77,6 +79,8 @@ class WatlowEZZone(CoreDevice):
     WatlowEZZone represents a WatlowEZZone PM PID controller.
     this class provides human readable methods for setting the modbus registers 
     '''
+    
+    graph_klass = TimeSeriesStreamStackedGraph
     refresh = Button
     Ph = Property(Float(enter_set=True,
                         auto_set=False), depends_on='_Ph_')
@@ -198,7 +202,8 @@ class WatlowEZZone(CoreDevice):
  
     heat_power_flag = Event
     heat_power_value = Float
-        
+    #scan_func = 'get_temperature'
+    scan_func = 'get_temp_and_power'
         
     def initialize(self, *args, **kw):
         '''
@@ -239,7 +244,23 @@ class WatlowEZZone(CoreDevice):
             v = getattr(self, func)()
             if v is not None:
                 setattr(self, attr, v)
+    def get_temp_and_power(self, **kw):
+        if 'verbose' in kw and kw['verbose']:
+            self.info('Read temperature')
+
+        if self.simulation:
+#            t = 4 + self.closed_loop_setpoint
+            t = self.get_random_value() + self.closed_loop_setpoint
+            p = self.get_random_value()
+            
+        else:
+            pass
         
+        
+        self.process_value = t
+#        self.process_value_flag = True
+        return PlotRecord([t, p], (0, 1), ('Temp', 'Power'))
+    
     def get_temperature(self, **kw):
         '''
         '''
@@ -251,7 +272,7 @@ class WatlowEZZone(CoreDevice):
             t = self.get_random_value() + self.closed_loop_setpoint
         else:
             t = self.read_process_value(1, **kw)
-        
+        #print t
         if t is not None:
             try:
 
@@ -294,10 +315,10 @@ class WatlowEZZone(CoreDevice):
         '''        
         ada = working_address - 160 
         
-        self.write(ada, target_address, **kw)
+        self.write(ada, target_address, nregisters=2, **kw)
         self.info('setting {} to {}'.format(ada, target_address))
         
-        r = self.read(ada, nregisters=1, response_type='int')
+        r = self.read(ada, response_type='int')
         self.info('register {} pointing to {}'.format(ada, r))
         
     def read_baudrate(self):
@@ -1037,7 +1058,25 @@ class WatlowEZZone(CoreDevice):
     def _refresh_fired(self):
         self.initialization_hook()
 #========================= views ===========================
-    
+    def graph_builder(self, g, **kw):
+        g.new_plot(padding_left=40, #[40, 5, 5, 20],
+                   padding_right=5,
+                   zoom=True,
+                  pan=True,
+                  **kw
+                   )
+        g.new_plot(padding_left=40, #[40, 5, 5, 20],
+                   padding_right=5,
+                   zoom=True,
+                  pan=True,
+                  **kw
+                   )
+        g.new_series()
+        g.new_series(plotid=1)
+        
+        g.set_y_title('Temp (C)')        
+        g.set_y_title('Heat Power (%)', plotid=1)
+        
     def get_control_group(self):
         closed_grp = VGroup(Item('closed_loop_setpoint',
                                  label='setpoint',

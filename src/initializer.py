@@ -155,7 +155,7 @@ class Initializer(Loggable):
 
             #remove manager from name
             idx = name.find('_manager')
-            if idx is not - 1:
+            if idx is not -1:
                 name = name[:idx]
             mp = parser.get_plugin(name)
         else:
@@ -254,7 +254,9 @@ class Initializer(Loggable):
             if dev.load():
                 #register the device
                 if self.application is not None:
-                    self.application.register_service(ICoreDevice, dev)
+                    #display with the HardwareManager
+                    self.application.register_service(ICoreDevice, dev, {'display':True})
+                    
                 devs.append(dev)
                 self.info('opening {}'.format(dev.name))
                 if not dev.open(prefs=self.device_prefs):
