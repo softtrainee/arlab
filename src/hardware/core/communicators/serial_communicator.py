@@ -35,7 +35,7 @@ class SerialCommunicator(Communicator):
     
     '''
 
-    char_write = False
+    #char_write = False
 
     _auto_find_handle = False
     _auto_write_handle = False
@@ -80,7 +80,7 @@ class SerialCommunicator(Communicator):
 
 
 
-    def tell(self, cmd, hex=False, info=None, verbose=True, **kw):
+    def tell(self, cmd, is_hex=False, info=None, verbose=True, **kw):
         '''
            
         '''
@@ -92,7 +92,7 @@ class SerialCommunicator(Communicator):
 
 
         self._lock.acquire()
-        self._write(cmd, hex=hex)
+        self._write(cmd, is_hex=is_hex)
         if verbose:
             self.log_tell(cmd, info)
 
@@ -115,7 +115,7 @@ class SerialCommunicator(Communicator):
         self._lock.release()
         return r
 
-    def ask(self, cmd, hex=False, verbose=True, delay=None, replace=None, remove_eol=True, info=None):
+    def ask(self, cmd, is_hex=False, verbose=True, delay=None, replace=None, remove_eol=True, info=None):
         '''
             
         '''
@@ -126,7 +126,7 @@ class SerialCommunicator(Communicator):
             return
 
         self._lock.acquire()
-        self._write(cmd, hex=hex)
+        self._write(cmd, is_hex=is_hex)
 
 
         '''
@@ -137,7 +137,7 @@ class SerialCommunicator(Communicator):
          
         '''
 
-        re = self._read(hex=hex, delay=delay)
+        re = self._read(is_hex=is_hex, delay=delay)
         self._lock.release()
 
         re = self.process_response(re, replace, remove_eol)
@@ -281,7 +281,7 @@ class SerialCommunicator(Communicator):
 #            self.warning('''%s is not a valid port address
 #==== valid port addresses ==== \n%s''' % (port, valid))
 
-    def _write(self, cmd, hex=False):
+    def _write(self, cmd, is_hex=False):
         '''
             use the serial handle to write the cmd to the serial buffer 
             
@@ -294,21 +294,22 @@ class SerialCommunicator(Communicator):
 
         if not self.simulation:
 
-            if hex:
+            if is_hex:
                 cmd = cmd.decode('hex')
-                write(cmd)
+                #write(cmd)
             else:
                 if self._terminator is not None:
                     cmd += self._terminator
 
-                if self.char_write:
-                    for c in cmd:
-                        write(c)
-                        time.sleep(0.0005)
-                else:
-                    write(cmd)
+#                if self.char_write:
+#                    for c in cmd:
+#                        write(c)
+#                        time.sleep(0.0005)
+#                else:
+#                    write(cmd)
+            write(cmd)
 
-    def _read(self, hex=False, time_out=1, delay=None):
+    def _read(self, is_hex=False, time_out=1, delay=None):
         '''
             use the serial handle to read available bytes from the serial buffer
             
@@ -359,7 +360,7 @@ class SerialCommunicator(Communicator):
             if inw > 0:
                 try:
                     r = self.handle.read(inw)
-                    if hex:
+                    if is_hex:
                         r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
 #                        rr = ''
 #                        for ri in r:

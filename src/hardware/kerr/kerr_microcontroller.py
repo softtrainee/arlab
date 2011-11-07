@@ -34,7 +34,7 @@ class KerrMicrocontroller(KerrDevice):
 
         #clear the buffers
         self.info('init microcontroller')
-        self.parent.tell('0' * 40, hex=True)
+        self.parent.tell('0' * 40, is_hex=True)
 
         addr = self.address
         commands = [(addr, '2101FF', 50, 'setting module 1 address'),

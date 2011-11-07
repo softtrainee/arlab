@@ -150,8 +150,13 @@ class VideoStageManager(StageManager, Videoable):
         return g
 
     
-
+    def _move_to_point_hook(self):
+        self.autocenter()
+        
     def _move_to_hole_hook(self):
+        self.autocenter()
+
+    def autocenter(self):
         #use machine vision to calculate positioning error
         if self.auto_center:
             newpos = self.machine_vision_manager.calculate_positioning_error(self.stage_controller._x_position,
