@@ -84,7 +84,7 @@ class InteractionCanvas3D(AnimationCanvas3D):
         self.scene_graph.root[0].matrix = m
         self.thisrotation = rot
 
-        self.scene_graph.root[0].scale = (v._zoom,)*3
+        self.scene_graph.root[0].scale = (v._zoom,) * 3
 
     def OnKeyUp(self, event):
         self.panning = False

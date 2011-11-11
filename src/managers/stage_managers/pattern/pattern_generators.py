@@ -71,8 +71,8 @@ def random_pattern(cx, cy, walk_x, walk_y, ns, shape='circle', ** kw):
         #gen random point in a square
 
         while 1:
-            x = cx + (random.random()*2 - 1) * walk_x
-            y = cy + (random.random()*2 - 1) * walk_y
+            x = cx + (random.random() * 2 - 1) * walk_x
+            y = cy + (random.random() * 2 - 1) * walk_y
 
             #check if in circle
             disp = math.sqrt((cx - x) ** 2 + (cy - y) ** 2)

@@ -12,10 +12,10 @@ from numpy.random import normal
 from src.data_processing.regression.multiple_linear_regressor import MultipleLinearRegressor
 regressor = MultipleLinearRegressor()
 
-def calc_flux(np.ndarray[np.float64_t, ndim = 2] std_pos,
-                np.ndarray[np.float64_t, ndim = 2] unk_pos,
-                np.ndarray[np.float64_t, ndim = 2] std_js,
-                np.ndarray[np.float64_t, ndim = 2] unk_js,
+def calc_flux(np.ndarray[np.float64_t, ndim=2] std_pos,
+                np.ndarray[np.float64_t, ndim=2] unk_pos,
+                np.ndarray[np.float64_t, ndim=2] std_js,
+                np.ndarray[np.float64_t, ndim=2] unk_js,
                 int ntrials,
                 int nholes,
                 ):
