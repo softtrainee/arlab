@@ -1,16 +1,16 @@
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Bool
-from traitsui.api import View, Item
+from traitsui.api import View, Item, Handler
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #from pylab import histogram, argmax, array, argmin
-from numpy import histogram, argmax, argmin, array
+from numpy import histogram, argmax, argmin, array, linspace
 from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound
 from threading import Thread
 #============= local library imports  ==========================
 from src.image.image_helper import draw_polygons, draw_contour_list, colorspace, \
     threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
-    erode, dilate, draw_rectangle
+    erode, dilate, draw_rectangle, subsample, rotate
 from src.managers.manager import Manager
 from src.image.image import Image
 from src.image.image_editor import ImageEditor
@@ -24,7 +24,11 @@ class TargetResult(object):
         self.dilate_value = dv
         self.erode_value = ev
         self.bounding_rect = br
-    
+
+class ImageHandler(Handler):
+    def init(self, info):
+        info.object.ui = info.ui
+        
 class MachineVisionManager(Manager):
 
     video = Any
@@ -42,22 +46,21 @@ class MachineVisionManager(Manager):
     image_width = Int(640)
     image_height = Int(324)
     
-    hist_results_flag = Bool
-    hist_dev1x = None
-    hist_dev1y = None
-    hist_dev2x = None
-    hist_dev2y = None
-    
     start_threshold_search_value = 125
-    
+    threshold_search_width = 25
+
+    def close_image(self):
+        if self.ui is not None:
+            do_later(self.ui.dispose)
+        
+        self.ui = None
+        
     def _image_default(self):
         return Image(width=self.image_width,
                      height=self.image_height)
         
-    def calculate_positioning_error(self, threshold_val=None, open_image=True):
-        #src = self.video.get_frame()
-        #self.image.load(src)
-
+#    def calculate_positioning_error(self, threshold_val=None, open_image=True):
+    def _calculate_positioning_error(self, threshold_val=None):
         src = self.image.source_frame
         
         cw_px = int(self.cropwidth * self.pxpermm)
@@ -128,8 +131,8 @@ class MachineVisionManager(Manager):
             for i in indicators:
                 self._draw_indicator(*i) 
                 
-        if open_image:    
-            do_later(self.edit_traits, view='image_view')
+#        if open_image:    
+#            do_later(self.edit_traits, view='image_view')
             
         return results
     
@@ -201,21 +204,44 @@ class MachineVisionManager(Manager):
     
     def _set_threshold(self, v):
         self._threshold = v
-        args = self.calculate_positioning_error(v, open_image=False)
+#        args = self._calculate_positioning_error(v, open_image=False)
+        args = self._calculate_positioning_error(v)
         if args:
             for a in args:
                 print a.dev1, a.dev2
-
-    def search(self, cx, cy, **kw):
+                
+    def load_source(self, debug=False):
+        if debug:
+            src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
+        else:
+            src = self.video.get_frame(flip=True, clone=True)
+            
+        self.image.load(src, swap_rb=True)
+        
+        return self.image.source_frame
+            
+    def search(self, cx, cy, debug=False, **kw):
+        self.load_source(debug=debug)
+        
         start = self.start_threshold_search_value
-        end = start + 25
+        end = start + self.threshold_search_width
         expand_value = 5
         found = False
+        
+        
+        self.close_image()
+        #if open_image:    
+        do_later(self.edit_traits, view='image_view')
+        
+        
+        d = rotate(self.image.source_frame, 45)
+        self.image.source_frame = d
         for i in range(3):
             s = start - i * expand_value
             e = end + i * expand_value
             self.info('searching... thresholding {} - {}'.format(s, e))
-            args = self._search(s, e, open_image=i == 0, **kw)
+#            args = self._search(s, e, open_image=i == 0, **kw)
+            args = self._search(s, e, **kw)
             '''
                 args = dev1x, dev1y, dev2x, dev2y
                 dev1== bound rect dev
@@ -256,7 +282,8 @@ class MachineVisionManager(Manager):
             self.info('current pos: {:0.3f},{:0.3f} calculated pos: {:0.3f}, {:0.3f} dev: {:0.3f},{:0.3f} ({:n},{:n})'.format(*args))
             return nx, ny
     
-    def _search(self, start, end, open_image=True, right_search=True):
+#    def _search(self, start, end, open_image=True, right_search=True):
+    def _search(self, start, end, right_search=True):
         
         dev1x = []
         dev1y = []
@@ -266,7 +293,8 @@ class MachineVisionManager(Manager):
         #make end inclusive
         for i in range(start, end + 1):
             self._threshold = i
-            results = self.calculate_positioning_error(i, open_image=i == start and open_image)
+#            results = self.calculate_positioning_error(i, open_image=i == start and open_image)
+            results = self._calculate_positioning_error(i)
             if results:
                 '''                 
                  instead of trying to figure out if the result is the left of right well
@@ -313,12 +341,9 @@ class MachineVisionManager(Manager):
         return dev1x, dev1y, dev2x, dev2y, thresholds
         
     def _test_fired(self):
-        t = Thread(target=self.search, args=(0, 0), kwargs=dict(right_search=True))
+        t = Thread(target=self.search, args=(0, 0), kwargs=dict(right_search=True, debug=True))
         t.start()
-    
-    def _test2_fired(self):
-        self.calculate_positioning_error()
-     
+      
     def traits_view(self):
         v = View('test')
         return v
@@ -329,9 +354,92 @@ class MachineVisionManager(Manager):
                  Item('image', show_label=False, editor=ImageEditor(),
                       width=self.image_width, height=self.image_height
                       ),
-                 title='Positioning Error'
+                 title='Positioning Error',
+                 handler=ImageHandler
                  )
         return v
+    
+    def passive_focus(self, manager):
+        
+        self.info('passive focus. objective func: SMD')
+        
+        self._passive_focus_thread = Thread(target=self._passive_focus, args=(manager,))
+        self._passive_focus_thread.start()
+        
+    def _passive_focus(self, manager):
+        
+        controller = manager.stage_manager.stage_controller
+        
+#        import time
+        fstart = 25
+        fend = 30
+        smds = []
+        steps = fend - fstart + 1
+        
+        prev_zoom = manager.zoom
+        zoom = 50
+        self.info('setting zoom: {}'.format(zoom))
+        manager.set_zoom(zoom, block=True)
+        
+        focussteps = linspace(fstart, fend, steps)
+        for fi in focussteps:
+            
+            #move to focal distance
+            controller._set_z(fi)
+            controller._block_()
+
+            self.load_source(debug=True)
+            smds.append(self._calculate_smd((0, 0, int(40 + fi), int(40 + fi))))
+        
+        smds = array(smds)
+        mi = min(smds)
+        ma = max(smds)
+        fmi = focussteps[argmin(smds)]
+        fma = focussteps[argmax(smds)]
+        #print mii, focussteps[mii] , max(smds)
+        
+        self.info('passive focus results: SMDmin={} (z={}), SMDmax={}, (z={})'.format(mi, fmi, ma, fma))
+        self.info('passive focus. focus z= {}'.format(focussteps[mi]))    
+        
+        controller._set_z(fi)
+        
+        self.info('returning to previous zoom: {}'.format(prev_zoom))
+        manager.set_zoom(prev_zoom, block=True)
+    
+    def _calculate_smd(self, roi, src=None):
+        def _smd_(v, x=True):
+            ni, nj = v.shape
+            if x:
+                genx = xrange(ni - 1)
+                geny = xrange(nj)
+                func = lambda x, i, j:abs(x[i, j] / 255. - x[i + 1, j] / 255.)
+            else:
+                genx = range(ni)
+                geny = range(nj - 1)
+                func = lambda x, i, j:abs(x[i, j] / 255. - x[i, j + 1] / 255.)
+            
+            return sum([func(v, i, j) for i in genx for j in geny])
+#            
+#            s = 0
+#            for i in genx:
+#                for j in geny:
+#                    s += func(v, i, j)
+#            return s
+        
+        
+        
+        if src is None:
+            src = self.image.source_frame
+        gsrc = grayspace(src)
+        
+        v = subsample(gsrc, *roi).as_numpy_array()
+        
+        
+        smdx = _smd_(v)
+        smdy = _smd_(v, x=False)
+        
+        return smdx + smdy 
+        
 
 m = MachineVisionManager()
 def timeit_func():
@@ -341,7 +449,11 @@ def timeit_func():
 def timeit_func2():
     m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
     m.search(0, 0, right_search=False)
-#    
+
+def timeit_smd():
+    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+    s = m.image.source_frame
+    print m._calculate_smd(s, (0, 0, 80, 80))
 #    m.calculate_positioning_error()
 #    #m.configure_traits()
 def time_me():
@@ -356,17 +468,34 @@ def time_me():
     ti = t.timeit(n)
     print 'left search time', n, ti, ti / n * 1000
     
+def time_smd():
+    
+    from timeit import Timer
+    t = Timer('timeit_smd', 'from __main__ import timeit_smd')
+    n = 50
+    ti = t.timeit(n)
+    print 'search time', n, ti, ti / n * 1000
+    
     
     
 def main():
     m = MachineVisionManager()
 #    m.image.load('/Users/Ross/Desktop/testtray.tiff', swap_rb=True)
     m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+   # m.passive_focus()
+    
 #    m.calculate_positioning_error()
+    
+#    print d.as_numpy_array()
+    
+#    print s.as_numpy_array().shape
+        
     m.configure_traits()
     
 if __name__ == '__main__':
-    setup('machine_vision')
+#    setup('machine_vision')
+#    timeit_smd()
+#    time_smd()
 #    time_me()
     main()
 #============= EOF =====================================

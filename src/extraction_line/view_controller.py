@@ -89,7 +89,7 @@ class UserView(HasTraits):
             m, rot = self.scene_graph.calc_rotation_matrix(self.rx, self.ry, self.rz)
             self.scene_graph.canvas.thisrotation = rot
             self.scene_graph.root[0].matrix = m
-            self.scene_graph.root[0].scale = (self._zoom,)*3#(self.zoom * 0.02,)*3
+            self.scene_graph.root[0].scale = (self._zoom,) * 3#(self.zoom * 0.02,)*3
 
             try:
                 self.scene_graph.root[1].matrix = m

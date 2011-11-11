@@ -63,12 +63,6 @@ def centroid(polypts):
     pts = array([(pt.x, pt.y) for pt in polypts], dtype=float)
     return _centroid(pts)
 
-#    c = circles.asarrayptr(POINTER(CvScalar))
-#    print circles.total
-#    for i in range(circles.total):
-#        print cvGetSeqElem(circles, i)
-
-
 def lines(src, thresh=0):
     '''
     '''
@@ -98,12 +92,8 @@ def lines(src, thresh=0):
     return dst, lines
 
 def crop(src, x, y, w, h):
-#    dst = new_dst(src, width = src.width + 1,
-#                height = src.height + 1,
-#                nchannels = 3)
     cvSetImageROI(src, new_rect(x, y, w, h))
-#    cvCopy(src, dst)
-#    return dst
+
 def subsample(src, x, y, width, height):
     '''
     '''
@@ -117,28 +107,6 @@ def subsample(src, x, y, width, height):
 
     cvGetSubRect(clone(src), subrect, rect)
     return subrect
-#def subsample(src,width=640,height=480,center=None, add_rect=False):
-#    
-#    dst=cvCreateImage(CvSize(int(width),int(height)),src.depth,src.nChannels)
-#    size=cvGetSize(src)
-#    
-#    if center is None:
-#        x=size.width/2
-#        y=size.height/2
-#        center=(x,y)
-#        
-#    center32f=CvPoint2D32f(*center)
-#    
-#    cvGetRectSubPix(src,dst,center32f)
-#    
-#    if add_rect:
-#        x1=int(center[0]-width/2)
-#        y1=int(center[1]-height/2)
-#        x2=int(center[0]+width/2)
-#        y2=int(center[1]+height/2)
-#        cvRectangle(src,CvPoint(x1,y1),CvPoint(x2,y2),
-#                    CV_RGB(255,0,0),thickness=4)    
-#    return dst
 
 def equalize(src):
     '''
@@ -194,7 +162,6 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
 
     polygons = []
     brs = []
-#    bra = 0
     for i, cont in enumerate(contours.hrange()):
         
         result = cvApproxPoly(cont, sizeof(CvContour),
@@ -263,27 +230,17 @@ def draw_contour_list(src, clist, external_color=(255, 0, 0),
                    clist,
                    convert_color(external_color),
                    convert_color(hole_color),
-                   
-#                   CV_RGB(255, 0, 0),
-#                   CV_RGB(255, 0, 255),
                    255,
                    thickness=1
                    )
 
-#    for p in polygons:
-#        pa = p.asarray(CvPoint)
-#        print pa
-#        cvPolyLine(src, [pa], 0, CV_RGB(0, 255, 0), 3, CV_AA, 0)
 def draw_rectangle(src, x, y, w, h, color=(255, 0, 0), thickness=1):
     '''
         
     '''
-
-    color = convert_color(color)
-    
     p1 = new_point(x, y)
     p2 = new_point(x + w, y + h)
-    cvRectangle(src, p1, p2, color, thickness=thickness)
+    cvRectangle(src, p1, p2, convert_color(color), thickness=thickness)
 
 def draw_squares(img, squares):
     '''
@@ -308,6 +265,7 @@ def draw_squares(img, squares):
         pts.append(pt)
 
     return dst, pts
+
 def new_video_writer(path, fps=None, frame_size=None):
     '''
     '''
@@ -325,6 +283,7 @@ def new_video_writer(path, fps=None, frame_size=None):
                           )
 
     return w
+
 def new_mask(src, x, y, w, h):
     '''
 
@@ -381,12 +340,11 @@ def new_dst(src, zero=False, width=None, height=None, nchannels=None, size=None)
         cvZero(img)
     return img
 
-def rotate(src, angle):
+def rotate(src, angle, center=None):
     '''
-        @type angle: C{str}
-        @param angle:
     '''
-    center = CvPoint2D32f(src.width / 2, src.height / 2)
+    if center is None:
+        center = CvPoint2D32f(src.width / 2, src.height / 2)
     rot_mat = cv2DRotationMatrix(center, angle, 1)
     dst = clone(src)
     cvWarpAffine(src, dst, rot_mat)
@@ -430,7 +388,6 @@ def erode(src, ev):
 
     '''
     e = new_dst(src)
-#    mat = cvCreateMat(3, 3, 1)
     kernel = cvCreateStructuringElementEx(3, 3, 0, 0, CV_SHAPE_RECT)
     cvErode(src, e, kernel, int(ev))
     return e
@@ -524,7 +481,6 @@ def colorspace(src, cs=CV_GRAY2BGR):
 
     '''
     if src.nChannels == 1:
-        #csrc=cvCreateImage(cvGetSize(src),8,3)
         dst = new_dst(src, nchannels=3)
         cvCvtColor(src, dst, cs)
     else:

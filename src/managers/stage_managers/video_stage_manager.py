@@ -73,6 +73,7 @@ class VideoStageManager(StageManager, Videoable):
     pxpercmy = DelegatesTo('camera_calibration_manager')
         
     auto_center = Bool(False)
+    autofocus = Button
     machine_vision_manager = Instance(MachineVisionManager)
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
@@ -136,10 +137,11 @@ class VideoStageManager(StageManager, Videoable):
                                Item('camera_ycoefficients'),
                                Item('drive_xratio'),
                                Item('drive_yratio'),
+                               Item('autofocus', show_label=False),
+                               
                                HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
                                Item('pxpercmx'),
                                Item('pxpercmy'),
-
                                HGroup(Item('calibrate_focus', show_label=False), Spring(width=20,
                                                                                           springy=False),
                                       Item('focus_z',
@@ -149,26 +151,26 @@ class VideoStageManager(StageManager, Videoable):
                                label='Camera'))
         return g
 
+    def _autofocus_fired(self):
+        self.machine_vision_manager.passive_focus(self.parent)
     
     def _move_to_point_hook(self):
-        self.autocenter()
+        if self.autocenter():
+            self._point = 0
         
     def _move_to_hole_hook(self):
-        self.autocenter()
-
+        if self.autocenter():
+            self._hole = 0
     def autocenter(self):
         #use machine vision to calculate positioning error
         if self.auto_center:
-            newpos = self.machine_vision_manager.calculate_positioning_error(self.stage_controller._x_position,
+            newpos = self.machine_vision_manager.search(self.stage_controller._x_position,
                                                                                 self.stage_controller._y_position
                                                                                 )
             if newpos:
                 
-                #nx = self.stage_controller._x_position + newpos[0]
-                #ny = self.stage_controller._y_position + newpos[1]
-                
                 self.linear_move(*newpos, calibrated_space=False)
-            
+                return True
 
 #===============================================================================
 # handlers

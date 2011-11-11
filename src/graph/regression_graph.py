@@ -94,7 +94,7 @@ class RegressionGraph(Graph):
 
         self.last_regress_time = t
 
-        if self.selected_plotid is - 1:
+        if self.selected_plotid is -1:
             for i, p in enumerate(self.plots):
                 self.regress_plot(p, i)
         else:
