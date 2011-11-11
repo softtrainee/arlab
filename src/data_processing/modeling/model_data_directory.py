@@ -34,6 +34,8 @@ class ModelDataDirectory(HasTraits):
     primary_color = Str#Color
     secondary_color = Str#Color
     
+    model_spectrum_enabled = Bool
+    model_arrhenius_enabled = Bool
     
     def _get_name(self):
         '''
@@ -47,8 +49,20 @@ class ModelDataDirectory(HasTraits):
             self.modeler.graph.set_group_visiblity(self.show, gid=self.id)
             
             self.modeler.update_graph_title()
-
-
+            
+    def _model_arrhenius_enabled_changed(self):
+        if self.modeler:
+            p = self.modeler.graph.groups['arrhenius'][self.id][1]
+            self.modeler.graph.set_plot_visibility(p, self.model_arrhenius_enabled)
+        
+            p = self.modeler.graph.groups['logr_ro'][self.id][1]
+            self.modeler.graph.set_plot_visibility(p, self.model_arrhenius_enabled)
+        
+    def _model_spectrum_enabled_changed(self):
+        if self.modeler:
+            p = self.modeler.graph.groups['spectrum'][self.id][2]
+            self.modeler.graph.set_plot_visibility(p, self.model_spectrum_enabled)
+        
     def _bind_changed(self):
         '''
         '''

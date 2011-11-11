@@ -25,7 +25,6 @@ from src.envisage.core.envisage_editor import EnvisageEditor
 
 class MEditor(EnvisageEditor):
     '''
-        G{classtree}
     '''
     id_name = 'Modeler'
     view_name = 'graph_view'

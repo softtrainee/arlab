@@ -26,7 +26,7 @@ import sys
 SRC_DIR = os.path.join(os.path.expanduser('~'),
                    'Programming',
                    'mercurial',
-                   'pychron_beta'
+                   'clarkron'
                    )
 sys.path.insert(0, SRC_DIR)
 

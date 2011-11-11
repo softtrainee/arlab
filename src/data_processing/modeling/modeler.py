@@ -290,7 +290,19 @@ class Modeler(Loggable):
                 
             except Exception, err:
                 self.info(err)
-            
+        
+        if data_directory.model_spectrum_enabled:
+            data = dl.load_model_spectrum()
+            if data is not None:
+                try:
+                    
+                    p = g.build_spectrum(*data, ngroup=False)
+                    g.color_generators[-1].next()
+                    p.color = g.color_generators[-1].next()
+                    
+                except Exception, err:
+                    self.info(err)
+        
         data = dl.load_logr_ro('logr.samp')
         if data is not None:
             try:
@@ -300,18 +312,17 @@ class Modeler(Loggable):
             except Exception, err:
                 self.info(err)
             
-            
-        data = dl.load_logr_ro('logr.dat')
-        if data is not None:
-            try:
-                p = g.build_logr_ro(ngroup=False, *data)
-                g.set_series_label('logr.dat', plotid=1, series=1)
-                print p.color
-                data_directory.secondary_color = p.color
-                p.on_trait_change(data_directory.update_scolor, 'color')
-                
-            except Exception, err:
-                self.info(err)
+        if data_directory.model_arrhenius_enabled:
+            data = dl.load_logr_ro('logr.dat')
+            if data is not None:
+                try:
+                    p = g.build_logr_ro(ngroup=False, *data)
+                    g.set_series_label('logr.dat', plotid=1, series=1)
+                    data_directory.secondary_color = p.color
+                    p.on_trait_change(data_directory.update_scolor, 'color')
+                    
+                except Exception, err:
+                    self.info(err)
             
             
         data = dl.load_cooling_history()
@@ -330,14 +341,14 @@ class Modeler(Loggable):
             except Exception, err:
                 self.info(err)
             
-            
-        data = dl.load_arrhenius('arr.dat')
-        if data is not None:
-            try:
-                g.build_arrhenius(ngroup=False, *data)
-                g.set_series_label('arr.dat', plotid=2, series=1)
-            except Exception, err:
-                self.info(err)
+        if data_directory.model_arrhenius_enabled: 
+            data = dl.load_arrhenius('arr.dat')
+            if data is not None:
+                try:
+                    g.build_arrhenius(ngroup=False, *data)
+                    g.set_series_label('arr.dat', plotid=2, series=1)
+                except Exception, err:
+                    self.info(err)
             
 
         #sync the colors
@@ -441,7 +452,10 @@ class Modeler(Loggable):
                 CheckboxColumn(name='show'),
                 CheckboxColumn(name='bind'),
                 ObjectColumn(name='primary_color', editable=False, label='Pc', style='simple'),
-                ObjectColumn(name='secondary_color', editable=False, label='Sc', style='simple')
+                ObjectColumn(name='secondary_color', editable=False, label='Sc', style='simple'),
+                CheckboxColumn(name='model_spectrum_enabled', label='Ms'),
+                CheckboxColumn(name='model_arrhenius_enabled', label='Ma'),
+                
               ]
 
         editor = TableEditor(columns=cols,
@@ -494,6 +508,8 @@ class Modeler(Loggable):
                                 modeler=self,
                                 show=True, # if len(self.data) >= 1 else False,
                                 bind=True,
+                                model_spectrum_enabled=True,
+                                model_arrhenius_enabled=True,
                                 id=pid,
                                 )
 
@@ -523,7 +539,7 @@ class Modeler(Loggable):
             #set visiblity after
             c = color_gen.next()
             d.primary_color = c
-
+            
             self.load_graph(d, gid, c)
 
             #skip a color
