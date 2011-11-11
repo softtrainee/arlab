@@ -262,7 +262,25 @@ class DataLoader(Loggable):
                 logr39.append(float(row[1]))
         f.close()
         return logr, logr39
-
+    
+    def load_model_spectrum(self):
+        
+        f, reader = self._open_reader('ages-me.dat', delimiter=' ')
+        age = []
+        ar39 = []
+        self.info('load model spectrum')
+        for row in reader:
+            if len(row) == 4:
+                ar39.append(float(row[0]))
+                age.append(float(row[2]))
+            elif len(row) == 3:
+                ar39.append(float(row[0].strip()))
+                age.append(float(row[1]))
+            #ar39.append(float(row[0].strip())
+            #age.append(float(row[1]))
+        f.close()
+        return ar39, age
+    
     def validate_data_dir(self, d):
         '''
         '''

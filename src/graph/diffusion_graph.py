@@ -50,14 +50,14 @@ class DiffusionGraph(Graph):
         names = ['Spectrum', 'LogR/Ro', 'Arrhenius', 'CoolingHistory']
         self._show_plot_editor(**{'name':names[i]})
 
-    def set_group_binding(self, id, value):
+    def set_group_binding(self, pid, value):
         '''
 
         '''
         if self.bindings is None:
             self.bindings = []
         try:
-            self.bindings[id] = value
+            self.bindings[pid] = value
         except IndexError:
             self.bindings.append(value)
 
@@ -162,23 +162,35 @@ class DiffusionGraph(Graph):
                 pass
         self.plotcontainer.invalidate_and_redraw()
 
+    def set_plot_visibility(self, plot, vis):
+        plot.visible = vis
+        self.plotcontainer.invalidate_and_redraw()
 
-    def build_spectrum(self, ar39, age, ar39_err, age_err, pid=0, **kw):
+    def build_spectrum(self, ar39, age, ar39_err=None, age_err=None, pid=0, ngroup=True, **kw):
         '''
 
         '''
-
-        a, _p = self.new_series(ar39_err, age_err, plotid=pid,
+        a = None
+        plots = []
+        if ar39_err is not None and age_err is not None:
+            a, _p = self.new_series(ar39_err, age_err, plotid=pid,
                         type='polygon',
                         color='orange')
-
+            plots.append(a)
+            
         b, _p = self.new_series(ar39, age, plotid=pid, **kw)
-
-        self.groups['spectrum'].append([b, a])
-
+        plots = [b, a] if a is not None else [b]
+        
+        if ngroup:
+            self.groups['spectrum'].append(plots)
+        else:
+            self.groups['spectrum'][-1] += plots
+            
+            
+            
         self.set_x_title('Cum. 39Ar %', plotid=pid)
         self.set_y_title('Age (Ma)', plotid=pid)
-
+        return b
 
     def build_logr_ro(self, ar39, logr, pid=1, ngroup=True, **kw):
         '''
