@@ -397,12 +397,11 @@ class Graph(HasTraits):
         '''
         '''
         p = self.plots[plotid]
-        s = 'plot%i' % series
+        s = 'plot{}'.format(series)
 
         p.showplot(s) if v else p.hideplot(s)
 
-#        self.plotcontainer.invalidate_and_redraw()
-        self.plotcontainer.request_redraw()
+        self.plotcontainer.invalidate_and_redraw()
 
     def get_x_limits(self, plotid=0):
         '''
@@ -449,7 +448,7 @@ class Graph(HasTraits):
             size = 12
         self._title_font = font
         self._title_size = size
-        font = '%s %s' % (font, size)
+        font = '{} {}'.format(font, size)
         pc.overlays.append(PlotLabel(t,
                                      component=pc,
                                  font=font,
