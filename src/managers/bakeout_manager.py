@@ -25,7 +25,7 @@ from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
 import os
 from src.helpers.paths import bakeout_config_dir, data_dir
-from src.graph.time_series_graph import TimeSeriesStreamGraph, TimeSeriesGraph, \
+from src.graph.time_series_graph import TimeSeriesStreamGraph, TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
 from src.helpers.datetime_tools import generate_datestamp
 from src.managers.data_managers.csv_data_manager import CSVDataManager
@@ -60,6 +60,8 @@ class BakeoutManager(Manager):
     _configuration = String
     
     data_buffer = List
+    data_buffer_x = List
+    
     data_name = Str
     data_count_flag = 0
 #    n_active_controllers = 0
@@ -106,22 +108,40 @@ class BakeoutManager(Manager):
                                       track_y=False
                                       )
                 
+                    self.data_buffer_x.append(nx)
+                    
                 self.graph.update_y_limits(plotid=0)
                 self.graph.update_y_limits(plotid=1)
             
                 self.write_data(self.data_name)
                 self.data_buffer = []
+                self.data_buffer_x = []
                 self.data_count_flag = 0
                 
 
     def write_data(self, name, plotid=0):
-        p = self.data_manager.frames[name]
-        h = []
-        for c in self.active_controllers:
-            h.append('{}_time'.format(c))
-            h.append('{}_temp'.format(c))
-
-        self.graph.export_raw_data(header=h, path=p, plotid=plotid)
+#        p = self.data_manager.frames[name]
+#        h = []
+#        for c in self.active_controllers:
+#            h.append('{}_time'.format(c))
+#            h.append('{}_temp'.format(c))
+#            h.append('{}_heat_power'.format(c))
+            
+            #flatten the data_buffer
+        datum = []
+        for sub, x in zip(self.data_buffer, self.data_buffer_x):
+            pid, pi, hp = sub
+            datum.append(x)
+            datum.append(pi)
+            datum.append(hp)
+            
+            
+            
+#        datum = [item for sub in self.data_buffer for i, item in enumerate(sub) if i != 0]
+#            datum.append()
+            
+        self.data_manager.write_to_frame(datum)
+#        self.graph.export_raw_data(header=h, path=p, plotid=plotid)
 
     def update_alive(self, obj, name, old, new):
         if new:
@@ -182,8 +202,14 @@ class BakeoutManager(Manager):
         #p = '/Users/Ross/Pychrondata_beta/data/bakeouts/bakeout-2011-02-17008.txt'
 
         self._parse_graph_file(g, path)
-        g.window_title = os.path.basename(path)
+        g.window_title = name = os.path.basename(path)
         
+        name, _ext = os.path.splitext(name)
+        g.set_title(name)
+        g.window_width = 0.66
+        g.window_height = 0.85
+        g.window_x = 30
+        g.window_y = 30
         g.edit_traits()
 
     def _parse_graph_file(self, graph, path, plotid=0):
@@ -191,22 +217,26 @@ class BakeoutManager(Manager):
 
         reader = csv.reader(open(path, 'r'))
         header = reader.next()
-        nseries = len(header) / 2
+        nseries = len(header) / 3
         for i in range(nseries):
 
             #set up graph
             name = header[2 * i][:-5]
             graph.new_series(type='line', render_style='connectedpoints', plotid=plotid)
+            graph.new_series(type='line', render_style='connectedpoints', plotid=plotid + 1)
             #self.graph_info[name] = dict(id = i)
 
             graph.set_series_label(name, series=i, plotid=plotid)
-
+        
         data = np.array_split(np.array([row for row in reader], dtype=float), nseries, axis=1)
         for i, da in enumerate(data):
-            x, y = np.transpose(da)
+            x, y, h = np.transpose(da)
 
             graph.set_data(x, series=i, axis=0, plotid=plotid)
             graph.set_data(y, series=i, axis=1, plotid=plotid)
+            
+            graph.set_data(x, series=i, axis=0, plotid=plotid + 1)
+            graph.set_data(h, series=i, axis=1, plotid=plotid + 1)
 
     def _open_button_fired(self):
         path = self._file_dialog_('open', default_directory=os.path.join(data_dir, 'bakeouts'))
@@ -243,7 +273,9 @@ class BakeoutManager(Manager):
             self.kill(user_kill=True)
         else:
             pid = 0
+            header = []
             self.data_buffer = []
+            self.data_buffer_x = []
             self.data_count_flag = 0
             self.graph_info = dict()
             self._graph_factory(graph=self.graph)
@@ -255,8 +287,8 @@ class BakeoutManager(Manager):
             self.data_name = dm.new_frame(directory='bakeouts',
                          base_frame_name=name)
             
-            for tr in self._get_controllers():
-                bc = self.trait_get(tr)[tr]
+            for name in self._get_controllers():
+                bc = self.trait_get(name)[name]
                 if bc.ok_to_run():
                     bc.on_trait_change(self.update_alive, 'alive')
 
@@ -264,7 +296,7 @@ class BakeoutManager(Manager):
                     self.graph.new_series(type='line', render_style='connectedpoints')
                     self.graph_info[bc.name] = dict(id=pid)
 
-                    self.graph.set_series_label(tr, series=pid)
+                    self.graph.set_series_label(name, series=pid)
 
                     self.graph.new_series(type='line', render_style='connectedpoints',
                                           plotid=1)
@@ -272,8 +304,18 @@ class BakeoutManager(Manager):
 
                     t = Thread(target=bc.run)
                     t.start()
-
+                    
+                    
+                    if pid == 0:
+                        header.append('#{}_time'.format(name))
+                    else:
+                        header.append('{}_time'.format(name))
+                    header.append('{}_temp'.format(name))
+                    header.append('{}_heat_power'.format(name))
                     pid += 1
+        
+            #set the header in for the data file
+            self.data_manager.write_to_frame(header)    
 
     def _update_interval_changed(self):
         for tr in self._get_controllers():
@@ -382,7 +424,7 @@ class BakeoutManager(Manager):
             if stream:
                 graph = TimeSeriesStreamStackedGraph()
             else:
-                graph = TimeSeriesGraph()
+                graph = TimeSeriesStackedGraph(panel_height=300)
 
         graph.clear()
 
