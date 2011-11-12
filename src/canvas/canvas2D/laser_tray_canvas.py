@@ -63,7 +63,7 @@ class LaserTrayCanvas(MapCanvas):
     crosshairs_offset = Tuple(0, 0)
 #    _jog_moving = False
     def point_exists(self, x, y, tol=1e-5):
-        for p in self.markupdict.itervalues():
+        for p in self.markupcontainer.itervalues():
             if isinstance(p, PointIndicator):
                 if abs(p.x - x) < tol and abs(p.y - y) < tol:
                     #point already in the markup dict
@@ -76,7 +76,7 @@ class LaserTrayCanvas(MapCanvas):
         
         id = 'point{}'.format(self.point_counter)
         p = PointIndicator(*self._stage_position, id=id, canvas=self)
-        self.markupdict[id] = p 
+        self.markupcontainer[id] = p 
         self.point_counter += 1
         self.request_redraw()
         return p
@@ -84,11 +84,11 @@ class LaserTrayCanvas(MapCanvas):
     def clear_points(self):
         popkeys = []
         self.point_counter = 0
-        for k, v in self.markupdict.iteritems():
+        for k, v in self.markupcontainer.iteritems():
             if isinstance(v, PointIndicator):
                 popkeys.append(k)
         for p in popkeys:
-            self.markupdict.pop(p)
+            self.markupcontainer.pop(p)
         self.request_redraw()
         
     def load_points_file(self, p):
@@ -98,16 +98,16 @@ class LaserTrayCanvas(MapCanvas):
                 id, x, y = line.split(',')
                 pt = self.point_exists(float(x), float(y))
                 if pt is not None:
-                    self.markupdict.pop(pt.id)
+                    self.markupcontainer.pop(pt.id)
                 
-                self.markupdict[id] = PointIndicator(float(x), float(y), id=id, canvas=self)
+                self.markupcontainer[id] = PointIndicator(float(x), float(y), id=id, canvas=self)
                 self.point_counter += 1
                 
         self.request_redraw()
              
     def save_points(self, p):
         lines = []
-        for _k, v in self.markupdict.iteritems(): 
+        for _k, v in self.markupcontainer.iteritems(): 
             if isinstance(v, PointIndicator):
                 lines.append(','.join(map(str, (v.id, v.x, v.y))))
         

@@ -41,11 +41,37 @@ class BaseDataCanvas(DataView):
     use_zoom = Bool(True)
 
     plot = None
-    def line_plot(self, x, y):
-        if self.plot is None:
+    def cmap_plot(self, z):
+        
+        
+        from chaco.array_plot_data import ArrayPlotData
+        from chaco.plot import Plot
+        from chaco.default_colormaps import color_map_name_dict
+        pd = ArrayPlotData()
+        pd.set_data('cmapdata', z)
+        
+        p = Plot(pd, padding=0)
+        p.img_plot('cmapdata',
+                   xbounds=(-25, 25),
+                   ybounds=(-25, 25),
+                   colormap=color_map_name_dict['hot']
+                   )
+        self.add(p)
+        return pd
+        
+    def line_plot(self, x, y, new_plot=True):
+        if self.plot is None or new_plot:
+            
+            
+            if isinstance(x, (float, int)):
+                x = [x]
+            
+            if isinstance(y, (float, int)):
+                y = [y]
+            
             self.plot = LinePlot(
-                 index=ArrayDataSource([x]),
-                 value=ArrayDataSource([y]),
+                 index=ArrayDataSource(x),
+                 value=ArrayDataSource(y),
                  index_mapper=LinearMapper(range=self.index_range),
                  value_mapper=LinearMapper(range=self.value_range)
 
@@ -119,9 +145,12 @@ class BaseDataCanvas(DataView):
 
     @on_trait_change('show_grids')
     def change_grid_visibility(self):
-        self.x_grid.visible = self.show_grids
-        self.y_grid.visible = self.show_grids
-        self.request_redraw()
+        try:
+            self.x_grid.visible = self.show_grids
+            self.y_grid.visible = self.show_grids
+            self.request_redraw()
+        except AttributeError:
+            pass
 
     def set_mapper_limits(self, mapper, limits):
         '''
@@ -202,11 +231,11 @@ class BaseDataCanvas(DataView):
         '''
         pass
 
-    def _draw(self, gc, *args, **kw):
+    def draw(self, gc, *args, **kw):
         '''
 
         '''
-        super(BaseDataCanvas, self)._draw(gc, *args, **kw)
+        super(BaseDataCanvas, self).draw(gc, *args, **kw)
 #        DataView._draw(self, gc, *args, **kw)
         gc.clip_to_rect(self.x, self.y, self.width, self.height)
         self._draw_hook(gc, *args, **kw)
