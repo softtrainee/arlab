@@ -18,6 +18,9 @@ from traits.api import HasTraits, Float, Any, Dict, Bool
 
 #============= standard library imports ========================
 import math
+from chaco.default_colormaps import color_map_name_dict
+from chaco.data_range_1d import DataRange1D
+from numpy import array
 #============= local library imports  ==========================
 def calc_rotation(x1, y1, x2, y2):
     rise = y2 - y1
@@ -35,7 +38,7 @@ def calc_rotation(x1, y1, x2, y2):
     da = math.degrees(angle)
     return da if da >= 0 else 360 + da
 class MarkupItem(HasTraits):
-    id = ''
+    mid = ''
     x = Float
     y = Float
     state = False
@@ -51,6 +54,7 @@ class MarkupItem(HasTraits):
     def render(self, gc):
         gc.begin_path()
         self.set_stroke_color(gc)
+        self.set_fill_color(gc)
         self._render_(gc)
         gc.stroke_path()
 
@@ -59,6 +63,12 @@ class MarkupItem(HasTraits):
             gc.set_stroke_color(self.active_color)
         else:
             gc.set_stroke_color(self.default_color)
+            
+    def set_fill_color(self, gc):
+        if self.state:
+            gc.set_fill_color(self.active_color)
+        else:
+            gc.set_fill_color(self.default_color)
             
     def _render_(self, gc):
         pass
@@ -140,15 +150,25 @@ class Triangle(MarkupItem):
         points = self.points
         func = self.canvas.map_screen
         if points:
-            gc.begin_path()
-            gc.move_to(*func(points[0][:2]))
-            for p in points[1:]:
-                gc.line_to(*func(p[:2]))
-                  
-            if len(points) == 3:
-                gc.line_to(*func(points[0][:2]))
             
-            gc.stroke_path()
+            as_lines = True
+            if as_lines:
+                gc.begin_path()
+                gc.move_to(*func(points[0][:2]))
+                for p in points[1:]:
+                    gc.line_to(*func(p[:2]))
+                      
+                if len(points) == 3:
+                    gc.line_to(*func(points[0][:2]))
+                gc.stroke_path()
+            else:
+                f = color_map_name_dict['hot'](DataRange1D(low_setting=0, high_setting=300))
+                for x, y, v in points:
+                    x, y = func((x, y))
+                    gc.set_fill_color(f.map_screen(array([v]))[0])
+                    gc.arc(x - 2, y - 2, 2, 0, 360)
+                    gc.fill_path()
+                    
 #            
             if self.draw_text:
                 gc.set_font_size(9)
@@ -286,7 +306,7 @@ class PointIndicator(Indicator):
         super(PointIndicator, self).__init__(x, y, *args, **kw)
         self.circle = Circle(self.x, self.y, self.radius, *args, **kw)
         self.label = Label(self.x, self.y,
-                           text=str(int(self.id[5:]) + 1),
+                           text=str(int(self.mid[5:]) + 1),
                             *args, **kw)
     def set_state(self, state):
         self.state = state

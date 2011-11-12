@@ -2,57 +2,44 @@
 from traits.api import HasTraits, Any, Float, Instance, Button, on_trait_change, Range
 from traitsui.api import View, Item, HGroup
 from src.managers.stage_managers.stage_component_editor import LaserComponentEditor
-#============= standard library imports ========================
-#============= local library imports  ==========================
+from pyface.timer.timer import Timer
 
+#============= standard library imports ========================
 import math, copy
+from numpy import linspace, meshgrid, random
+#============= local library imports  ==========================
+from threading import Thread
+
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 from src.canvas.canvas2D.markup.markup_items import Triangle, Dot
-from pyface.timer.timer import Timer
-from threading import Thread
-import random
-from chaco.plot import Plot
-from numpy.core.function_base import linspace
-from chaco.array_plot_data import ArrayPlotData
-from numpy.lib.function_base import meshgrid
-from numpy import exp, random
-#def point_calc(nx, ny):
-#    return 50 - 0.005 * (nx - 15) ** 2 + 50 - 0.005 * (ny - 35) ** 2#+random.randint(0,2)
-#def point_calc(nx, ny):
-##    print nx, ny
-##    return 50 - (nx - test_x + random.random()) ** 2 + 50 - (ny - test_y + random.random()) ** 2
-#    return 50 + 5 * random.random() - (nx - test_x) ** 2 + 50 + 10 * random.random() - (ny - test_y) ** 2
 
 class HillClimber(HasTraits):
     counter = 0
     
     parent = Any
     test = Button
-    id = 0
     
     leg_length = Range(1, 5)
     
-    dwell_time = Float(200)
+    dwell_time = Float(250)
     
     timer = Any
     
     canvas = Instance(MarkupCanvas)
     
-    test_x = Float(-15, enter_set=True, auto_set=False)
-    test_y = Float(15, enter_set=True, auto_set=False)
-    xscalar = Range(0.0025, 0.05)
-    yscalar = Range(0.0025, 0.05)
-    randomize = Range(0, 10)
+    center_x = Range(-25, 25)
+    center_y = Range(-25, 25)
+    #xscalar = Range(0.025, 1)
+    #yscalar = Range(0.025, 1)
+    randomize = Range(0, 20)
     prev2_popped = None
     prev_popped = None
     
-    @on_trait_change('test_x,test_y, xscalar, yscalar, randomize, leg_length')
+    @on_trait_change('center_x,center_y,randomize')
     def _update_test_point(self):
         try:
-            self.canvas.markupcontainer['xxtest_indicator'].x = self.test_x
-            self.canvas.markupcontainer['xxtest_indicator'].y = self.test_y
-            
-                   
+            self.canvas.markupcontainer['xxtest_indicator'].x = self.center_x
+            self.canvas.markupcontainer['xxtest_indicator'].y = self.center_y       
         except (KeyError, AttributeError):
             pass
         
@@ -60,20 +47,18 @@ class HillClimber(HasTraits):
         self.canvas.invalidate_and_redraw()
         
     def point_gen(self, nx, ny):
-        a = -self.xscalar * (nx - self.test_x) ** 2 - self.yscalar * (ny - self.test_y) ** 2
+        a = 10 - 0.1 * (nx - self.center_x) ** 2 + 10 - 0.1 * (ny - self.center_y) ** 2
         r = 0
         if self.randomize:
             if isinstance(nx, (float, int)):
-                r = random.random() * self.randomize / 10.0
+                r = random.random() * self.randomize
             else:
-                r = random.random(nx.shape) * self.randomize / 10.0
-                
-            
+                r = random.random(nx.shape) * self.randomize
         return a + r
     
     def data_gen(self):
         
-        d = linspace(-25, 25, 70)
+        d = linspace(-25, 25, 100)
         x, y = meshgrid(d, d)
         
         return self.point_gen(
@@ -138,7 +123,7 @@ class HillClimber(HasTraits):
         self.popped_counter = 0
         canvas.markupcontainer['tri0'] = t
         #xx will prevent indicator from being popped when the markupcontainer fills up
-        canvas.markupcontainer[('xxtest_indicator', 0)] = Dot(self.test_x, self.test_y, canvas=canvas)
+        canvas.markupcontainer[('xxtest_indicator', 0)] = Dot(self.center_x, self.center_y, canvas=canvas)
 #        canvas.triangles.append(t)
         canvas.request_redraw()
         
@@ -170,7 +155,7 @@ class HillClimber(HasTraits):
                 if func(self.prev2_popped, ppt):
                     self.popped_counter += 1
             
-            if self.popped_counter > 3:
+            if self.popped_counter > 1:
                 self.start_pts = [(x, y, self.point_gen(x, y)) for x, y, v in self.test_triangle.points + [self.prev2_popped]]
                 self.test_triangle.points = []
                 self.popped_counter = 0
@@ -264,8 +249,8 @@ class HillClimber(HasTraits):
     def canvas_view(self):
         v = View(Item('test', show_label=False),
                  
-                 HGroup(Item('test_x'), Item('test_y')),
-                 HGroup(Item('xscalar'), Item('yscalar')),
+                 HGroup(Item('center_x'), Item('center_y')),
+                 
                  HGroup(Item('randomize'), Item('leg_length')),
                  Item('canvas', style='custom', show_label=False,
                        editor=LaserComponentEditor(width=640, height=480))

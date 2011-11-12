@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, Str, \
-    Directory, List, on_trait_change, Property, Enum, Float, Int, Button, Color
+    Directory, List, on_trait_change, Property, Enum, Float, Int, Button, Color, Callable
 from traitsui.api import View, Item, VSplit, TableEditor, VGroup, Group
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
@@ -104,7 +104,7 @@ class RunConfiguration(HasTraits):
                     width=500,
                     height=150
                     )
-
+    
 class Modeler(Loggable):
     '''
     '''

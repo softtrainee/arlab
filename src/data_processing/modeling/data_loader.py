@@ -266,6 +266,9 @@ class DataLoader(Loggable):
     def load_model_spectrum(self):
         
         f, reader = self._open_reader('ages-me.dat', delimiter=' ')
+        if reader is None:
+            return
+        
         age = []
         ar39 = []
         self.info('load model spectrum')
