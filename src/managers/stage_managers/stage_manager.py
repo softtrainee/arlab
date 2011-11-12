@@ -130,7 +130,7 @@ class StageManager(Manager):
     def _accept_point_fired(self):
         npt = self.canvas.new_point()
         if npt:
-            self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.id, npt.x, npt.y))
+            self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.mid, npt.x, npt.y))
         
     def _load_points_fired(self):
         p = self.open_file_dialog(default_directory=os.path.join(setup_dir,
@@ -224,7 +224,7 @@ class StageManager(Manager):
 
         hole = self._get_hole_by_position(x, y)
         if hole is not None:
-            self._hole = int(hole.id)
+            self._hole = int(hole.mid)
         
         pos = (x, y)    
         if calibrated_space:
@@ -253,7 +253,7 @@ class StageManager(Manager):
                                           self.stage_controller._y_position,
                                           )
         if hole is not None:
-            self._hole = int(hole.id)
+            self._hole = int(hole.mid)
 
     def move_to_load_position(self):
         '''
@@ -604,7 +604,7 @@ class StageManager(Manager):
     def get_uncalibrated_xy(self):
 
         pos = (self.stage_controller._x_position, self.stage_controller._y_position)
-        if self.stage_controller.axes['x'].id == 2:
+        if self.stage_controller.axes['x'].mid == 2:
             pos = pos[1], pos[0]
 
         a = AffineTransform()
@@ -695,7 +695,7 @@ class StageManager(Manager):
     
     def _move_to_point(self, pt):
         pos = pt.x, pt.y
-        self.info('Move to point {}'.format(pt.id))
+        self.info('Move to point {}'.format(pt.mid))
         self.stage_controller.linear_move(block=True, *pos)
         
         self._move_to_point_hook()

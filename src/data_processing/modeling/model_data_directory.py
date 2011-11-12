@@ -47,22 +47,34 @@ class ModelDataDirectory(HasTraits):
         '''
         if self.modeler:
             self.modeler.graph.set_group_visiblity(self.show, gid=self.id)
-            
+            self.model_arrhenius_enabled = self.show
+            self.model_spectrum_enabled = self.show
             self.modeler.update_graph_title()
             
     def _model_arrhenius_enabled_changed(self):
         if self.modeler:
-            p = self.modeler.graph.groups['arrhenius'][self.id][1]
-            self.modeler.graph.set_plot_visibility(p, self.model_arrhenius_enabled)
-        
-            p = self.modeler.graph.groups['logr_ro'][self.id][1]
-            self.modeler.graph.set_plot_visibility(p, self.model_arrhenius_enabled)
-        
+            try:
+                p = self.modeler.graph.groups['arrhenius'][self.id][1]
+                self.modeler.graph.set_plot_visibility(p, self.model_arrhenius_enabled)
+            except IndexError:
+                #this group does not have a model arrhenius
+                pass
+            try:
+                p = self.modeler.graph.groups['logr_ro'][self.id][1]
+                self.modeler.graph.set_plot_visibility(p, self.model_arrhenius_enabled)
+            except IndexError:
+                #this group does not have a model logr_ro
+                pass
+            
     def _model_spectrum_enabled_changed(self):
         if self.modeler:
-            p = self.modeler.graph.groups['spectrum'][self.id][2]
-            self.modeler.graph.set_plot_visibility(p, self.model_spectrum_enabled)
-        
+            try:
+                p = self.modeler.graph.groups['spectrum'][self.id][2]
+                self.modeler.graph.set_plot_visibility(p, self.model_spectrum_enabled)
+            except IndexError:
+                #this group does not have a model spectrum
+                pass
+            
     def _bind_changed(self):
         '''
         '''
@@ -70,7 +82,7 @@ class ModelDataDirectory(HasTraits):
             self.modeler.graph.set_group_binding(self.id, self.bind)
             
     def update_pcolor(self, new):
-        new = [255 * i for i in new]
+        new = [255 * i for i in new[:2]]
         c = Color(*new)
         self.primary_color = ColourDatabase().FindName(c).lower()
         

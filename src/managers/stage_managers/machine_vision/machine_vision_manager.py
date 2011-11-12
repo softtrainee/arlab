@@ -366,79 +366,132 @@ class MachineVisionManager(Manager):
         self._passive_focus_thread = Thread(target=self._passive_focus, args=(manager,))
         self._passive_focus_thread.start()
         
-    def _passive_focus(self, manager):
+    def _passive_focus_2step(self, manager):
+        '''
+            see
+            IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
+            FOR DIGITAL STILL CAMERA
+            DOI 10.1109/30.468047  
+            
+            and
+            
+            http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
+            
+        '''
+        nominal_focus = self._passive_focus(manager, grad_operator='var', set_z=False)
         
+        window = 2
+        self._passive_focus(manager, grad_operator='sobel',
+                             fstart=nominal_focus - window,
+                             fend=nominal_focus + window,
+                             step_scalar=5
+                             )
+        
+    def _passive_focus(self, manager, grad_operator='roberts', fstart=25, fend=30, step_scalar=1, set_z=True):
+        '''
+            see
+            IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
+            FOR DIGITAL STILL CAMERA
+            DOI 10.1109/30.468047  
+            
+            and
+            
+            http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
+            
+        '''
         controller = manager.stage_manager.stage_controller
-        
-#        import time
-        fstart = 25
-        fend = 30
-        smds = []
-        steps = fend - fstart + 1
+
+        steps = step_scalar * (fend - fstart) + 1
         
         prev_zoom = manager.zoom
         zoom = 50
         self.info('setting zoom: {}'.format(zoom))
         manager.set_zoom(zoom, block=True)
+        mi, ma, fmi, fma = self._focus_sweep(controller, fstart, fend, steps, grad_operator)         
         
-        focussteps = linspace(fstart, fend, steps)
-        for fi in focussteps:
+        #print mii, focussteps[mii] , max(smds)
+        
+        self.info('passive focus results:Operator={} ImageGradmin={} (z={}), ImageGradmax={}, (z={})'.format(grad_operator, mi, fmi, ma, fma))
+        self.info('passive focus. focus z= {}'.format(fma))    
+        
+        if set_z: 
+            controller._set_z(fma)
+        
+            self.info('returning to previous zoom: {}'.format(prev_zoom))
+            manager.set_zoom(prev_zoom, block=True)
             
+        return fma
+    
+    def _focus_sweep(self, controller, start, end, steps, operator):
+        grads = []
+
+        focussteps = linspace(start, end, steps)
+        for fi in focussteps:
             #move to focal distance
             controller._set_z(fi)
             controller._block_()
 
             self.load_source(debug=True)
-            smds.append(self._calculate_smd((0, 0, int(40 + fi), int(40 + fi))))
+            grads.append(self._calculate_focus_measure(operator, (0, 0, int(40), int(40))))
+        mi = min(grads)
+        ma = max(grads)
+        fmi = focussteps[argmin(grads)]
+        fma = focussteps[argmax(grads)]
         
-        smds = array(smds)
-        mi = min(smds)
-        ma = max(smds)
-        fmi = focussteps[argmin(smds)]
-        fma = focussteps[argmax(smds)]
-        #print mii, focussteps[mii] , max(smds)
-        
-        self.info('passive focus results: SMDmin={} (z={}), SMDmax={}, (z={})'.format(mi, fmi, ma, fma))
-        self.info('passive focus. focus z= {}'.format(focussteps[mi]))    
-        
-        controller._set_z(fi)
-        
-        self.info('returning to previous zoom: {}'.format(prev_zoom))
-        manager.set_zoom(prev_zoom, block=True)
+        return mi, fmi, ma, fma
     
-    def _calculate_smd(self, roi, src=None):
-        def _smd_(v, x=True):
+    def _calculate_focus_measure(self, operator, roi, src=None):
+        def _fm_(v, oper=None, x=True):
             ni, nj = v.shape
             if x:
-                genx = xrange(ni - 1)
-                geny = xrange(nj)
-                func = lambda x, i, j:abs(x[i, j] / 255. - x[i + 1, j] / 255.)
+                if oper == 'sobel':
+                    genx = xrange(1, ni - 1)
+                    geny = xrange(1, nj - 1)
+                    func = lambda g, i, j: (g[i + 1, j - 1] + g[i + 1, j + 1] - 
+                                         g[i - 1, j - 1] - g[i - 1, j + 1] + 
+                                         2 * g[i + 1, j] - 2 * g[i - 1, j])
+                    
+                else:
+                    genx = xrange(ni - 1)
+                    geny = xrange(nj)
+                    func = lambda g, i, j:(g[i, j] / 255. - g[i + 1, j] / 255.) ** 2
             else:
-                genx = range(ni)
-                geny = range(nj - 1)
-                func = lambda x, i, j:abs(x[i, j] / 255. - x[i, j + 1] / 255.)
-            
-            return sum([func(v, i, j) for i in genx for j in geny])
-#            
-#            s = 0
-#            for i in genx:
-#                for j in geny:
-#                    s += func(v, i, j)
-#            return s
-        
-        
+                if oper == 'sobel':
+                    genx = xrange(1, ni - 1)
+                    geny = xrange(1, nj - 1)
+                    func = lambda g, i, j: (g[i - 1, j + 1] + g[i + 1, j + 1] - 
+                                            g[i - 1, j - 1] - g[i + 1, j - 1] + 
+                                            2 * g[i, j + 1] - 2 * g[i, j - 1])
+                else:
+                    genx = xrange(ni)
+                    geny = xrange(nj - 1)
+                    func = lambda g, i, j:(g[i, j] / 255. - g[i, j + 1] / 255.) ** 2
+
+
+            return sum([func(v, i, j) for i in genx for j in geny])      
         
         if src is None:
             src = self.image.source_frame
-        gsrc = grayspace(src)
         
+        gsrc = grayspace(src)
         v = subsample(gsrc, *roi).as_numpy_array()
         
-        
-        smdx = _smd_(v)
-        smdy = _smd_(v, x=False)
-        
-        return smdx + smdy 
+        if operator == 'var':
+            
+            ni, nj = v.shape
+            genx = xrange(ni)
+            geny = xrange(nj)
+            
+            mu = 1 / (ni * nj) * sum([v[i, j] for i in genx for j in geny])
+            func = lambda g, i, j:abs(g[i, j] - mu) ** 2
+            fm = 1 / (ni * nj) * sum([func(v, i, j) for i in genx for j in geny])
+            
+        else:
+            fmx = _fm_(v, oper=operator)
+            fmy = _fm_(v, x=False, oper=operator)
+            fm = fmx + fmy
+            
+        return fm
         
 
 m = MachineVisionManager()
