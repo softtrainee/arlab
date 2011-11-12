@@ -29,7 +29,6 @@ from graph import name_generator
 
 class ContourGraph(Graph):
     '''
-        G{classtree}
     '''
     line_inspectors_write_metadata = True
     editor_enabled = False

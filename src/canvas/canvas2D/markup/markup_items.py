@@ -129,8 +129,35 @@ class Line(MarkupItem):
 
         b = calc_rotation(x1, y1, x2, y2)
         self.screen_rotation = b
+        
+class Triangle(MarkupItem):
+    draw_text = False
+    def __init__(self, *args, **kw):
+        super(Triangle, self).__init__(0, 0, **kw)
+        self.points = []
+        
+    def _render_(self, gc):
+        points = self.points
+        func = self.canvas.map_screen
+        if points:
+            gc.begin_path()
+            gc.move_to(*func(points[0][:2]))
+            for p in points[1:]:
+                gc.line_to(*func(p[:2]))
+                  
+            if len(points) == 3:
+                gc.line_to(*func(points[0][:2]))
+            
+            gc.stroke_path()
+#            
+            if self.draw_text:
+                gc.set_font_size(9)
+                for x, y, v in points:
+                    x, y = self.canvas.map_screen((x, y))
+                    gc.set_text_position(x + 5, y + 5)
+                    gc.show_text('{:0.3f}'.format(v))
 
-
+        
 class Circle(MarkupItem):
     radius = 10
     def __init__(self, x, y, radius=10, *args, **kw):
@@ -292,5 +319,12 @@ class PointIndicator(Indicator):
                     2 * self.radius + 1,
                     2 * self.radius + 1
                     )
+
+class Dot(MarkupItem):
+    radius = 5
+    def _render_(self, gc):
+        x, y = self.get_xy()
+        gc.arc(x, y, self.radius, 0, 360)
+        gc.fill_path()
         
 #============= EOF ====================================

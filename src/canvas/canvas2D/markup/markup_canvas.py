@@ -22,11 +22,74 @@ from numpy import abs
 #=============local library imports  ==========================
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
 from src.canvas.canvas2D.markup.markup_items import PointIndicator
-
+import collections
+class MarkupContainer(collections.MutableMapping):
+    layers = None
+    def __init__(self, *args, **kw):
+        '''
+            default layer is 1 
+            to draw under layer 1 use layer 0
+                
+        '''
+        self.layers = [dict(), dict()]
+    
+#    def add_layer(self):
+#        self.layers.append(dict())
+#        
+#    def add_item(self, item, key, layer=0):
+#        l = self.layers[layer]
+#        l.update(key, item)
+    
+    def __iter__(self):
+        return (k for l in self.layers for k in l) 
+        
+    def __contains__(self, v):
+        return True in [v in l for l in self.layers]
+    
+    def __getitem__(self, k):
+        for l in self.layers:
+            item = next((v for key, v in l.iteritems() if key == k), None)
+            if item is not None:
+                return item
+     
+    def __setitem__(self, k, v):
+        if isinstance(k, tuple):
+            li = k[1]
+            key = k[0]
+        else:
+            li = 1
+            key = k
+        try:
+            l = self.layers[li]
+        except IndexError:
+            self.layers.append(dict())
+            l = self.layers[-1]
+        
+        
+        if len(l) > 100:
+            k = l.keys()
+            k.sort()
+            l.pop(k[0])
+            
+        l[key] = v
+            
+    def __len__(self):
+        return sum([len(l) for l in self.layers])
+    
+    def __delitem__(self, k):
+        if isinstance(k, tuple):
+            li = k[1]
+            key = k[0]
+        else:
+            li = 1
+            key = k
+        l = self.layers[li]
+        del l[key]
+        
 class MarkupCanvas(BaseDataCanvas):
     '''
     '''
-    markupdict = Dict
+    markupcontainer = None
     temp_start_pos = None
     temp_end_pos = None
     current_pos = None
@@ -36,17 +99,21 @@ class MarkupCanvas(BaseDataCanvas):
     selected_point = None
     selected_element = None
 
-    tool_state = Enum('select', 'line', 'mline', 'rect', 'point')
+    tool_state = Enum('select', 'line', 'mline', 'rect', 'point', 'noteditable')
+    def __init__(self, *args, **kw):
+        super(MarkupCanvas, self).__init__(*args, **kw)
+        self.markupcontainer = MarkupContainer()
+    
     def get_item(self, base, key):
         key = '{}{}'.format(base, key)
-        return next((v for k, v in self.markupdict.iteritems() if k == key), None)
+        return next((v for k, v in self.markupcontainer.iteritems() if k == key), None)
 
     def get_path_points(self, k):
         '''
 
         '''
         self.m
-        element = self.markupdict[k]
+        element = self.markupcontainer[k]
         if isinstance(element[0], list):
             path = []
             for lineseg in element[0]:
@@ -123,7 +190,7 @@ class MarkupCanvas(BaseDataCanvas):
                 
                 if not l == None:
                     event.handled = True
-                    e = self.markupdict[l]
+                    e = self.markupcontainer[l]
                     self.selected_element = l
                     e[2] = True
                     if 'line' in l:
@@ -161,7 +228,7 @@ class MarkupCanvas(BaseDataCanvas):
                     if self.tool_state == 'point':
                         x, y = self.map_data((event.x, event.y))
                         id = 'point{}'.format(self.point_counter)
-                        self.markupdict[id] = PointIndicator(x, y, canvas=self, id=id)
+                        self.markupcontainer[id] = PointIndicator(x, y, canvas=self, id=id)
                         self.point_counter += 1
                         event.handled = True
         self.request_redraw()
@@ -172,7 +239,7 @@ class MarkupCanvas(BaseDataCanvas):
         '''
         
         if event.character == 'Backspace' and self.selected_element is not None:
-            self.markupdict.pop(self.selected_element.id)
+            self.markupcontainer.pop(self.selected_element.id)
             self.selected_element = None
             
         self.key_set_tool_state(event)
@@ -213,23 +280,23 @@ class MarkupCanvas(BaseDataCanvas):
             ep = (ep[0] + xadj, ep[1] + yadj)
             return ep, re
 
-        element = self.markupdict[self.selected_element]
+        element = self.markupcontainer[self.selected_element]
         pt = self.selected_point
         if isinstance(pt, list):
             #multiline 
             ep, re = _update_(pt[0], element[0][pt[1]], element)
             self.selected_point = [ep, pt[1]]
-            self.markupdict[self.selected_element][0][pt[1]] = (re[0], re[1])
+            self.markupcontainer[self.selected_element][0][pt[1]] = (re[0], re[1])
 
             if 0 < pt[1] < len(element[0]) - 1:
                 ep, re = _update_(pt[0], element[0][pt[1] + 1], element)
-                self.markupdict[self.selected_element][0][pt[1] + 1] = (re[0], re[1])
+                self.markupcontainer[self.selected_element][0][pt[1] + 1] = (re[0], re[1])
 
         else:
             ep, re = _update_(pt, element, element)
 
             self.selected_point = ep
-            self.markupdict[self.selected_element] = re
+            self.markupcontainer[self.selected_element] = re
 
 #        self.invalidate_and_redraw()
         self.request_redraw()
@@ -244,7 +311,7 @@ class MarkupCanvas(BaseDataCanvas):
 
         '''
         se = self.selected_element
-        element = self.markupdict[se]
+        element = self.markupcontainer[se]
         def _adjust(container):
             xe = container[0][0]
             ye = container[0][1]
@@ -263,7 +330,7 @@ class MarkupCanvas(BaseDataCanvas):
             npts = _adjust(element)
             ndict = [npts[0], npts[1]] + element[2:]
 
-        self.markupdict[se] = ndict
+        self.markupcontainer[se] = ndict
         self.temp_start_pos = (event.x, event.y)
         #self.invalidate_and_redraw()
         self.request_redraw()
@@ -290,22 +357,22 @@ class MarkupCanvas(BaseDataCanvas):
         if px <= event.x <= b[0] + px and py <= event.y <= b[1] + py:
             self.temp_end_pos = (event.x, event.y)
 
-            #store the line in the markupdict
+            #store the line in the markupcontainer
             nline = [self.temp_start_pos, self.temp_end_pos, False]
             key = 'line{}'.format(self.line_counter)
             if self.tool_state == 'line':
-                self.markupdict[key] = nline
+                self.markupcontainer[key] = nline
                 self.line_counter += 1
 
                 #set state back to normal and redraw
                 self.event_state = 'normal'
             elif self.tool_state == 'mline':
                 pkey = 'mline{}'.format(self.line_counter - 1)
-                if pkey in self.markupdict:
-                    lines = self.markupdict[pkey][0]
+                if pkey in self.markupcontainer:
+                    lines = self.markupcontainer[pkey][0]
                     lines.append((nline[0], nline[1]))
                 else:
-                    self.markupdict['mline{}'.format(self.line_counter)] = [[(nline[0], nline[1])], None, False]
+                    self.markupcontainer['mline{}'.format(self.line_counter)] = [[(nline[0], nline[1])], None, False]
                     self.line_counter += 1
                 self.temp_start_pos = (event.x, event.y)
 
@@ -327,7 +394,7 @@ class MarkupCanvas(BaseDataCanvas):
         self.request_redraw()
 
     def rmove_mouse_move(self, event):
-        elem = self.markupdict[self.selected_element]
+        elem = self.markupcontainer[self.selected_element]
         xa, ya = self._calc_adjustment(event)
         elem[0] = [(pt[0] + xa, pt[1] + ya) for pt in elem[0]]
         self.temp_start_pos = (event.x, event.y)
@@ -338,12 +405,12 @@ class MarkupCanvas(BaseDataCanvas):
         self.end_move()
 
     def end_move(self):
-        elem = self.markupdict[self.selected_element]
+        elem = self.markupcontainer[self.selected_element]
         elem[2] = False
         self.event_state = 'normal'
 
     def rpmove_mouse_move(self, event):
-        elem = self.markupdict[self.selected_element]
+        elem = self.markupcontainer[self.selected_element]
         xa, ya = self._calc_adjustment(event)
 
 
@@ -391,7 +458,7 @@ class MarkupCanvas(BaseDataCanvas):
         self.request_redraw()
 
     def rdraw_left_down(self, event):
-        self.markupdict['rect'] = [
+        self.markupcontainer['rect'] = [
                                    [self.temp_start_pos,
                                     (self.temp_start_pos[0], self.temp_end_pos[1]),
                                     self.temp_end_pos,
@@ -435,7 +502,7 @@ class MarkupCanvas(BaseDataCanvas):
 
         '''
 
-        # draw the lines currently held in the markupdict
+        # draw the lines currently held in the markupcontainer
         self._draw_current_markup(gc)
         self._draw_markup_dict(gc)
 
@@ -476,42 +543,48 @@ class MarkupCanvas(BaseDataCanvas):
     
         '''
         gc.save_state()
-        for obj in self.markupdict.itervalues():
-            if hasattr(obj, 'render'):
-                '''
-                    uses the new markupitem object instead of a dumb list
-                '''
-                obj.render(gc)
+        
+        for l in self.markupcontainer.layers:
+            for obj in l.itervalues():
+                if hasattr(obj, 'render'):
+                    obj.render(gc)
+        
+#        for obj in self.markupcontainer.itervalues():
+#            if hasattr(obj, 'render'):
+#                '''
+#                    uses the new markupitem object instead of a dumb list
+#                '''
+#                obj.render(gc)
 
-            else:
-                
-                try:
-                    #SET THE LINE COLOR DEPENDING ON THE STATE
-                    if obj[2]:
-                        gc.set_stroke_color((1, 0, 0, 1))
-                    else:
-    
-                        c = (0, 1, 0, 1)
-                        if len(obj) >= 4:
-                            c = obj[3]
-                        gc.set_stroke_color(c)
-    
-                    if len(obj) == 5:
-                        gc.set_line_width(obj[4])
-                        self.m
-    
-                    gc.begin_path()
-                    points = []
-                    if isinstance(obj[0], list):
-                        points = obj[0]
-                    else:
-                        points.append(obj[0])
-                        points.append(obj[1])
-    
-                    gc.lines(points)
-                    gc.stroke_path()
-                except TypeError:
-                    pass
+#            else:
+#                
+#                try:
+#                    #SET THE LINE COLOR DEPENDING ON THE STATE
+#                    if obj[2]:
+#                        gc.set_stroke_color((1, 0, 0, 1))
+#                    else:
+#    
+#                        c = (0, 1, 0, 1)
+#                        if len(obj) >= 4:
+#                            c = obj[3]
+#                        gc.set_stroke_color(c)
+#    
+#                    if len(obj) == 5:
+#                        gc.set_line_width(obj[4])
+#                        self.m
+#    
+#                    gc.begin_path()
+#                    points = []
+#                    if isinstance(obj[0], list):
+#                        points = obj[0]
+#                    else:
+#                        points.append(obj[0])
+#                        points.append(obj[1])
+#    
+#                    gc.lines(points)
+#                    gc.stroke_path()
+#                except TypeError:
+#                    pass
         gc.restore_state()
 
 
@@ -521,7 +594,7 @@ class MarkupCanvas(BaseDataCanvas):
         '''
         if items is None:
 
-            items = self.markupdict.itervalues()
+            items = self.markupcontainer.itervalues()
 
         for item in items:
 
@@ -584,7 +657,7 @@ class MarkupCanvas(BaseDataCanvas):
                     if abs(yi - event.y) < tolerance:
                         return k
 
-        md = self.markupdict
+        md = self.markupcontainer
         key = None
         for k, v in md.iteritems():
             if 'line' in k:
