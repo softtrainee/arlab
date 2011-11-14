@@ -57,7 +57,8 @@ def downsample_1d(data, factor, estimator=np.mean):
 #    return np.linspace(0, len(r) - 1, len(r)), r
 
 def autocorrelation(x, nlags=100):
-    from autocorr import autocorr
+#    from autocorr import autocorr
+    from src.data_processing.time_series import autocorr
     return autocorr(x, nlags=nlags)
 
 #if __name__ == '__main__':

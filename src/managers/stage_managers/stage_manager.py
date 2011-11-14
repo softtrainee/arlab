@@ -224,7 +224,7 @@ class StageManager(Manager):
 
         hole = self._get_hole_by_position(x, y)
         if hole is not None:
-            self._hole = int(hole.mid)
+            self._hole = int(hole.id)
         
         pos = (x, y)    
         if calibrated_space:
@@ -253,7 +253,7 @@ class StageManager(Manager):
                                           self.stage_controller._y_position,
                                           )
         if hole is not None:
-            self._hole = int(hole.mid)
+            self._hole = int(hole.id)
 
     def move_to_load_position(self):
         '''
@@ -604,7 +604,7 @@ class StageManager(Manager):
     def get_uncalibrated_xy(self):
 
         pos = (self.stage_controller._x_position, self.stage_controller._y_position)
-        if self.stage_controller.axes['x'].mid == 2:
+        if self.stage_controller.axes['x'].id == 2:
             pos = pos[1], pos[0]
 
         a = AffineTransform()

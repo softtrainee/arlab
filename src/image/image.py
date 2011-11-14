@@ -39,13 +39,15 @@ class Image(HasTraits):
     width = Int
     height = Int
     _bitmap = None
+    _frame=None
     
-    def load(self, img, swap_rb=True):
+#    def load(self, img, swap_rb=True):
+    def load(self, img):
         if isinstance(img, str):
             img = load_image(img)
 
-        if swap_rb:
-            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
+#        if swap_rb:
+#            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
         
         self.source_frame = img
         self.frames = [clone(img)]
@@ -83,8 +85,9 @@ class Image(HasTraits):
 
             if gray:
                 frame = grayspace(frame)
-            return frame
-
+                
+            return frame    
+    
     def get_bitmap(self, **kw):#flip = False, swap_rb = False, mirror = True):
         '''
 
@@ -92,13 +95,16 @@ class Image(HasTraits):
 #        kw = dict()
 #        if swap_rb:
 #            kw['flag'] = CV_CVTIMG_SWAP_RB
+    
         frame = self.get_frame(**kw)
 
         if frame is not None:
-            return wx.BitmapFromBuffer(frame.width,
+            self._frame=frame
+            self._bitmap= wx.BitmapFromBuffer(frame.width,
                                        frame.height,
                                        frame.data_as_string()
                                         )
+            return self._bitmap
 #            return cvIplImageAsBitmap(frame, flip = flip, swap = swap_rb)
 #
 #            data = ctypes.string_at(frame.imageData, frame.width * frame.height * 4)

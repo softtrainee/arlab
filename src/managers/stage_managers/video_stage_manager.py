@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, String, DelegatesTo, Property, Button, Float, Bool
+from traits.api import Instance, Enum,String, DelegatesTo, Property, Button, Float, Bool
 from traitsui.api import Group, Item, HGroup, spring, Spring
 #============= standard library imports ========================
 
@@ -74,7 +74,9 @@ class VideoStageManager(StageManager, Videoable):
         
     auto_center = Bool(False)
     autofocus = Button
+    autofocus_style=Enum('2step','roberts','sobel','var')
     machine_vision_manager = Instance(MachineVisionManager)
+    
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
         
@@ -137,8 +139,8 @@ class VideoStageManager(StageManager, Videoable):
                                Item('camera_ycoefficients'),
                                Item('drive_xratio'),
                                Item('drive_yratio'),
-                               Item('autofocus', show_label=False),
-                               
+                               HGroup(Item('autofocus', show_label=False),
+                                      Item('autofocus_style',show_label=False)),
                                HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
                                Item('pxpercmx'),
                                Item('pxpercmy'),
@@ -152,7 +154,7 @@ class VideoStageManager(StageManager, Videoable):
         return g
 
     def _autofocus_fired(self):
-        self.machine_vision_manager.passive_focus(self.parent)
+        self.machine_vision_manager.passive_focus(self.parent,self.autofocus_style)
     
     def _move_to_point_hook(self):
         if self.autocenter():
