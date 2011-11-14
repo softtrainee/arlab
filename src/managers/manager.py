@@ -137,7 +137,8 @@ class Manager(ConfigLoadable):
 
             for _k, man in self.get_managers():
                 if man is not None:
-                    man.kill()
+                    if hasattr(man, 'kill'):
+                        man.kill()
 
         return not self._killed
 

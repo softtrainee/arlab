@@ -26,7 +26,7 @@ import sys
 SRC_DIR = os.path.join(os.path.expanduser('~'),
                    'Programming',
                    'mercurial',
-                   'pychron_automap'
+                   'pychron_beta'
                    )
 sys.path.insert(0, SRC_DIR)
 
@@ -137,7 +137,8 @@ class VersionInfoDisplay(HasTraits):
                 mismatch = local_info.version != '.'.join((major, minor))
 
             if mismatch:
-                self.local_version = local_info.version
+                if local_info is not None:
+                    self.local_version = local_info.version
             elif local_info is None:    
                 do_later(self.edit_traits, kind='modal')
 

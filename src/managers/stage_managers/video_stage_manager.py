@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, Enum,String, DelegatesTo, Property, Button, Float, Bool
+from traits.api import Instance,String, DelegatesTo, Property, Button, Float, Bool
 from traitsui.api import Group, Item, HGroup, spring, Spring
 #============= standard library imports ========================
 
@@ -29,6 +29,7 @@ from threading import Thread, Condition
 from pyface.timer.api import do_later
 from src.managers.stage_managers.machine_vision.machine_vision_manager import MachineVisionManager
 from apptools.preferences.preference_binding import bind_preference
+from src.managers.stage_managers.machine_vision.autofocus_manager import AutofocusManager
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -73,8 +74,14 @@ class VideoStageManager(StageManager, Videoable):
     pxpercmy = DelegatesTo('camera_calibration_manager')
         
     auto_center = Bool(False)
-    autofocus = Button
-    autofocus_style=Enum('2step','roberts','sobel','var')
+    
+    
+    autofocus_manager=Instance(AutofocusManager)
+    
+    #autofocus_button =DelegatesTo('autofocus_manager')
+    #configure_button=DelegatesTo('autofocus_manager')
+#    configure_autofocus=Button('Configure')
+    #autofocus_style=Enum('2step','sobel','var')
     machine_vision_manager = Instance(MachineVisionManager)
     
     def bind_preferences(self, pref_id):
@@ -139,23 +146,21 @@ class VideoStageManager(StageManager, Videoable):
                                Item('camera_ycoefficients'),
                                Item('drive_xratio'),
                                Item('drive_yratio'),
-                               HGroup(Item('autofocus', show_label=False),
-                                      Item('autofocus_style',show_label=False)),
-                               HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
-                               Item('pxpercmx'),
-                               Item('pxpercmy'),
-                               HGroup(Item('calibrate_focus', show_label=False), Spring(width=20,
-                                                                                          springy=False),
-                                      Item('focus_z',
-                                            label='Focus',
-                                            style='readonly'
-                                            )),
-                               label='Camera'))
+                               Item('autofocus_manager',show_label=False,style='custom'),
+                               #HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
+#                               Item('pxpercmx'),
+#                               Item('pxpercmy'),
+#                               HGroup(Item('calibrate_focus', show_label=False), Spring(width=20,
+#                                                                                          springy=False),
+#                                      Item('focus_z',
+#                                            label='Focus',
+#                                            style='readonly'
+#                                            )),
+                               label='Camera')
+                         )
+        
         return g
-
-    def _autofocus_fired(self):
-        self.machine_vision_manager.passive_focus(self.parent,self.autofocus_style)
-    
+        
     def _move_to_point_hook(self):
         if self.autocenter():
             self._point = 0
@@ -195,6 +200,11 @@ class VideoStageManager(StageManager, Videoable):
 
     def _machine_vision_manager_default(self):
         return MachineVisionManager(video=self.video) 
+    
+    def _autofocus_manager_default(self):
+        return AutofocusManager(video=self.video,
+                                manager=self.parent
+                                ) 
     
 #===============================================================================
 # Property Get/Set
