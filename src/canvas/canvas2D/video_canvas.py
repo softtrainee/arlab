@@ -27,7 +27,7 @@ class VideoCanvas(BaseDataCanvas):
     use_camera = True
     camera = Instance(Camera)
 #    use_backbuffer = True
-    padding=0
+    padding = 0
     def _camera_default(self):
         return Camera(parent=self)
 

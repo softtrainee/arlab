@@ -260,16 +260,16 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
 
         if ax_key == 'y':
-            v = (v2[1] - v1[1]) * direction * ax.sign
-            v = self._y_position + v
-            x = self._x_position
-            y = v
+            v = (v2[1] - v1[1]) * direction * ax.sign + self._y_position
+#            v = self._y_position + v
+#            x = self._x_position
+#            y = v
 
         else:
-            v = (v2[0] - v1[0]) * direction * ax.sign
-            v = self._x_position + v
-            x = v
-            y = self._y_position
+            v = (v2[0] - v1[0]) * direction * ax.sign + self._x_position
+#            v = self._x_position + v
+#            x = v
+#            y = self._y_position
 
         #self.parent.canvas.set_desired_position(x, y)
         #self.parent.canvas.set_stage_position(x, y)
@@ -357,8 +357,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
     def single_axis_move(self, key, value, block=False, mode='absolute', update=True, **kw):
         '''
         '''
-        x=None
-        y=None
+        x = None
+        y = None
         ax = self.axes[key]
         aid = ax.id
         if self.groupobj is not None:
@@ -406,10 +406,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
             self.timer = self.timer_factory(func=func)
         else:
             if x is not None and y is not None:
-                self.parent.canvas.set_stage_position(x,y)
+                self.parent.canvas.set_stage_position(x, y)
             else:
-                self._z_position=value
-                self.z_progress=value
+                self._z_position = value
+                self.z_progress = value
             
         self._axis_move(cmd, block=block)
 
@@ -734,19 +734,19 @@ ABLE TO USE THE HARDWARE JOYSTICK
         '''
            
         '''
-        pmap=dict(velocity='VA',
+        pmap = dict(velocity='VA',
                   acceleration='AC',
                   deceleration='AG')
 
         
         if pdict:
             axis = self.axes[pdict['key']]
-            cmds=[]
+            cmds = []
             for k in pdict.keys():
                 if k is not 'key':
-                    cmds.append('{}{}{}'.format(axis.id,pmap[k],pdict[k]))
+                    cmds.append('{}{}{}'.format(axis.id, pmap[k], pdict[k]))
                     
-            cmd=';'.join(cmds)
+            cmd = ';'.join(cmds)
         else:
             param_coms = [('VA', 'velocity'),
                         ('AC', 'acceleration'),

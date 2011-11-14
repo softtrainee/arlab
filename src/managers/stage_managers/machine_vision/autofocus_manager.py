@@ -28,20 +28,20 @@ class ConfigureHandler(Handler):
 #        info.object.parameters=p
         
 class FocusParameters(HasTraits):
-    fstart=Float
-    fend=Float
-    step_scalar=Float
-    style=Enum('2step', 'var', 'sobel')
+    fstart = Float
+    fend = Float
+    step_scalar = Float
+    style = Enum('2step', 'var', 'sobel')
     
-    discrete=Bool(False)
+    discrete = Bool(False)
     
-    window=Float
+    window = Float
     
-    velocity_scalar1=Float
-    velocity_scalar2=Float
+    velocity_scalar1 = Float
+    velocity_scalar2 = Float
     
     def traits_view(self):
-        v=View(
+        v = View(
                Item('fstart'),
                Item('fend'),
                Item('style'),
@@ -65,71 +65,71 @@ class AutofocusManager(Manager):
         
     '''
     
-    video=Any
-    manager=Any
-    parameters=Instance(FocusParameters)
-    configure_button=Button('configure')
+    video = Any
+    manager = Any
+    parameters = Instance(FocusParameters)
+    configure_button = Button('configure')
     
-    autofocus_button=Event
-    autofocus_label=Property(depends_on='autofocusing')
-    autofocusing=Bool
+    autofocus_button = Event
+    autofocus_label = Property(depends_on='autofocusing')
+    autofocusing = Bool
     
     def dump(self):
-        p=os.path.join(hidden_dir,'autofocus_configure')
+        p = os.path.join(hidden_dir, 'autofocus_configure')
         self.info('dumping parameters to {}'.format(p))
         with open(p, 'wb') as f:
             pickle.dump(self.parameters, f)
             
     def load(self):
-        p=os.path.join(hidden_dir,'autofocus_configure')
+        p = os.path.join(hidden_dir, 'autofocus_configure')
         if os.path.isfile(p):
             with open(p, 'rb') as f:
                 try:
-                    params=pickle.load(f)
+                    params = pickle.load(f)
                     self.info('loading parameters from {}'.format(p))
                     return params
-                except Exception,e:
+                except Exception, e:
                     print e
                     return FocusParameters()
                 
     def passive_focus(self):
-        manager=self.manager
-        oper=self.parameters.style
+        manager = self.manager
+        oper = self.parameters.style
         self.info('passive focus. operator = {}'.format(oper))
         
-        if oper=='2step':
-            target=self._passive_focus_2step
-            args=(manager,)
-            kw=dict()
+        if oper == '2step':
+            target = self._passive_focus_2step
+            args = (manager,)
+            kw = dict()
         else:
-            target=self._passive_focus_1step
-            args=(manager,)
-            kw=dict(operator=oper)
+            target = self._passive_focus_1step
+            args = (manager,)
+            kw = dict(operator=oper)
         
-        self._alive=True
+        self._alive = True
         self._passive_focus_thread = Thread(target=target, args=args, kwargs=kw)
         self._passive_focus_thread.start()
     
     def stop_focus(self):
-        self._alive=False
+        self._alive = False
         if self.manager:
             self.manager.stage_manager.stage_controller.stop()
         self.info('autofocusing stopped by user')
         
-    def _passive_focus_1step(self,manager, operator):
+    def _passive_focus_1step(self, manager, operator):
         
-        nominal_focus,fs,gs,sgs=self._passive_focus(manager, operator)
-        g=Graph()
+        nominal_focus, fs, gs, sgs = self._passive_focus(manager, operator)
+        g = Graph()
         g.new_plot(padding_top=20)
-        g.new_series(fs,gs)
+        g.new_series(fs, gs)
         g.new_series(fs, sgs)
         g.add_vertical_rule(nominal_focus)
         g.set_x_title('Z')
         g.set_y_title('FM{}'.format(operator[:3]))
-        g.window_title='Autofocus'
+        g.window_title = 'Autofocus'
         do_later(g.edit_traits)
-        self._alive=False
-        self.autofocusing=False
+        self._alive = False
+        self.autofocusing = False
         
     def _passive_focus_2step(self, manager):
         '''
@@ -145,20 +145,20 @@ class AutofocusManager(Manager):
         '''
         if not self._alive:
             return
-        args = self._passive_focus(manager, 
+        args = self._passive_focus(manager,
                                             operator='var', set_z=False,
                                              velocity_scalar=self.parameters.velocity_scalar1
                                             )
         if not self._alive:
             return
         elif args:
-            nominal_focus1,fs1,gs1,sgs1=args
+            nominal_focus1, fs1, gs1, sgs1 = args
             
         window = self.parameters.window
-        fstart=nominal_focus1-window*0.25
-        fend=nominal_focus1+ window
+        fstart = nominal_focus1 - window * 0.25
+        fend = nominal_focus1 + window
 
-        args=self._passive_focus(manager, operator='sobel',
+        args = self._passive_focus(manager, operator='sobel',
                              fstart=fstart,
                              fend=fend,
                              velocity_scalar=self.parameters.velocity_scalar2
@@ -166,32 +166,32 @@ class AutofocusManager(Manager):
         if not self._alive:
             return
         elif args:
-            nominal_focus2,fs2,gs2,sgs2=args
+            nominal_focus2, fs2, gs2, sgs2 = args
             
-        g=Graph()
+        g = Graph()
         g.new_plot(padding_top=30)
-        g.new_series(fs1,gs1)
-        g.new_series(fs1,sgs1)
+        g.new_series(fs1, gs1)
+        g.new_series(fs1, sgs1)
         g.new_plot(padding_top=30)
-        g.new_series(fs2,gs2, plotid=1)
-        g.new_series(fs2,sgs2, plotid=1)
+        g.new_series(fs2, gs2, plotid=1)
+        g.new_series(fs2, sgs2, plotid=1)
         
-        g.set_x_title('Z',plotid=1)
-        g.set_x_title('Z',plotid=0)
-        g.set_y_title('FMvar',plotid=0)
-        g.set_y_title('FMsob',plotid=1)
+        g.set_x_title('Z', plotid=1)
+        g.set_x_title('Z', plotid=0)
+        g.set_y_title('FMvar', plotid=0)
+        g.set_y_title('FMsob', plotid=1)
         
         g.add_vertical_rule(nominal_focus1)
         g.add_vertical_rule(nominal_focus2, plotid=1)
-        g.add_vertical_rule(fstart,color=(0,0,1))
-        g.add_vertical_rule(fend,color=(0,0,1))
-        g.window_title='Autofocus'
+        g.add_vertical_rule(fstart, color=(0, 0, 1))
+        g.add_vertical_rule(fend, color=(0, 0, 1))
+        g.window_title = 'Autofocus'
         
         g.set_plot_title('Sobel', plotid=1)
         g.set_plot_title('Variance')
         do_later(g.edit_traits)
-        self._alive=False
-        self.autofocusing=False
+        self._alive = False
+        self.autofocusing = False
         
     def _passive_focus(self, manager, operator='roberts', fstart=None, fend=None, step_scalar=None, set_z=True, **kw):
         '''
@@ -202,19 +202,19 @@ class AutofocusManager(Manager):
             
         '''
         if fstart is None:
-            fstart=self.parameters.fstart
+            fstart = self.parameters.fstart
         if fend is None:
-            fend=self.parameters.fend
+            fend = self.parameters.fend
             
         if step_scalar is None:
-            step_scalar=self.parameters.step_scalar
+            step_scalar = self.parameters.step_scalar
         
-        controller=None
+        controller = None
         if manager is not None:
             controller = manager.stage_manager.stage_controller
 
-        steps = step_scalar * (max(fend,fstart) - min(fend,fstart)) + 1
-        prev_zoom=0
+        steps = step_scalar * (max(fend, fstart) - min(fend, fstart)) + 1
+        prev_zoom = 0
         if manager is not None:
             prev_zoom = manager.zoom
         
@@ -227,7 +227,7 @@ class AutofocusManager(Manager):
         args = self._focus_sweep(controller, fstart, fend, steps, operator, **kw)
         
         if args and self._alive:         
-            mi, fmi,ma, fma, fs, gs,sgs=args
+            mi, fmi, ma, fma, fs, gs, sgs = args
         else:
             return 
             
@@ -250,17 +250,17 @@ class AutofocusManager(Manager):
             if manager is not None:
                 manager.set_zoom(prev_zoom, block=True)
             
-        return fma, fs, gs,sgs
+        return fma, fs, gs, sgs
     
     def _focus_sweep(self, controller, start, end, steps, operator, velocity_scalar=1):
         grads = []
-        w=200
-        h=200
-        cx=(640-w)/2
-        cy=(480-h)/2
-        roi=cx,cy,w,h
+        w = 200
+        h = 200
+        cx = (640 - w) / 2
+        cy = (480 - h) / 2
+        roi = cx, cy, w, h
         if self.parameters.discrete:
-            self.info('focus sweep start={} end={} steps={}'.format(start,end, steps))
+            self.info('focus sweep start={} end={} steps={}'.format(start, end, steps))
             focussteps = linspace(start, end, steps)
             for fi in focussteps:
                 #move to focal distance
@@ -272,7 +272,7 @@ class AutofocusManager(Manager):
                 if not self._alive:
                     return
                 
-            sgrads=smooth(grads)
+            sgrads = smooth(grads)
             fmi = focussteps[argmin(sgrads)]
             fma = focussteps[argmax(sgrads)]
         else:
@@ -283,7 +283,7 @@ class AutofocusManager(Manager):
             if not self._alive:
                 return 
             
-            self.info('focus sweep start={} end={}'.format(start,end))
+            self.info('focus sweep start={} end={}'.format(start, end))
             #move to start position
             if controller:
                 controller.set_z(start, block=True)
@@ -291,14 +291,14 @@ class AutofocusManager(Manager):
                 if not self._alive:
                     return
                  
-                vo=controller.axes['z'].velocity
+                vo = controller.axes['z'].velocity
                 
-                controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo*velocity_scalar,
+                controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity_scalar,
                                                                          key='z')
                                                               )
                 controller.set_z(end)
         
-                focussteps=[]
+                focussteps = []
                 while controller._moving_() and self._alive:
                     focussteps.append(controller.get_current_position('z'))    
                     self.load_source()
@@ -310,17 +310,17 @@ class AutofocusManager(Manager):
                                                           )
             
             else:
-                focussteps=linspace(0,10, 11)
-                grads=-(focussteps-5)**2+10+random.random(11)
+                focussteps = linspace(0, 10, 11)
+                grads = -(focussteps - 5) ** 2 + 10 + random.random(11)
             
             self.info('frames analyzed {}'.format(len(grads)))
             
-            sgrads=smooth(grads)
-            fmi=focussteps[argmin(sgrads)]
-            fma=focussteps[argmax(sgrads)]
+            sgrads = smooth(grads)
+            fmi = focussteps[argmin(sgrads)]
+            fma = focussteps[argmax(sgrads)]
  
-        mi=min(sgrads)
-        ma=max(sgrads)
+        mi = min(sgrads)
+        ma = max(sgrads)
             
         return mi, fmi, ma, fma, focussteps, grads, sgrads
     
@@ -342,7 +342,7 @@ class AutofocusManager(Manager):
         
         gsrc = grayspace(src)
         v = subsample(gsrc, *roi).as_numpy_array()
-        v=asarray(v, dtype=float)
+        v = asarray(v, dtype=float)
         
         if operator == 'var':
             '''
@@ -355,18 +355,18 @@ class AutofocusManager(Manager):
                 func = lambda g, i, j:abs(g[i, j] - mu) ** 2
                 fm = 1 / float(ni * nj) * sum([func(v, i, j) for i in genx for j in geny])
             '''
-            fm=variance(v)
+            fm = variance(v)
             
         else:
-            fm=ndsum(generic_gradient_magnitude(v,sobel, mode='nearest'))
+            fm = ndsum(generic_gradient_magnitude(v, sobel, mode='nearest'))
         return fm
     
     def _autofocus_button_fired(self):
         if not self.autofocusing:
-            self.autofocusing=True
+            self.autofocusing = True
             self.passive_focus()
         else:
-            self.autofocusing=False
+            self.autofocusing = False
             self.stop_focus()
         
     def _get_autofocus_label(self):
@@ -376,9 +376,9 @@ class AutofocusManager(Manager):
         self.edit_traits(view='configure_view')
     
     def traits_view(self):
-        v=View(
+        v = View(
                HGroup(self._button_factory('autofocus_button', 'autofocus_label'),
-                      Item('configure_button',show_label=False),
+                      Item('configure_button', show_label=False),
                       show_border=True,
                       label='Autofocus'
                       )
@@ -386,9 +386,9 @@ class AutofocusManager(Manager):
         return v
     
     def configure_view(self):
-        v=View(Item('parameters',style='custom', show_label=False),
+        v = View(Item('parameters', style='custom', show_label=False),
                handler=ConfigureHandler,
-               buttons=['OK','Cancel'],
+               buttons=['OK', 'Cancel'],
                kind='livemodal',
                title='Configure Autofocus'
                )

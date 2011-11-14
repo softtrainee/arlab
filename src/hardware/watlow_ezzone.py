@@ -150,8 +150,8 @@ class WatlowEZZone(CoreDevice):
     autotune_label = Property(depends_on='autotuning')
     autotuning = Bool
     
-    autotuning_additional_recording=15
-    acount=0
+    autotuning_additional_recording = 15
+    acount = 0
     
     configure = Button
     
@@ -264,8 +264,8 @@ class WatlowEZZone(CoreDevice):
             p = self.get_random_value()
             
         else:
-            t=0
-            p=0
+            t = 0
+            p = 0
         
         
         self.process_value = t
@@ -336,7 +336,7 @@ class WatlowEZZone(CoreDevice):
         '''
             com port 2 is the modbus port
         '''
-        register=2484 if port ==1 else 2504
+        register = 2484 if port == 1 else 2504
         r = self.read(register, response_type='int')
         try:
             return ibaudmap[str(r)] 
@@ -348,7 +348,7 @@ class WatlowEZZone(CoreDevice):
             com port 2 is the modbus port
         '''
         
-        register=2484 if port ==1 else 2504
+        register = 2484 if port == 1 else 2504
         
         try:
             value = baudmap[v]
@@ -441,18 +441,18 @@ class WatlowEZZone(CoreDevice):
             self.data_manager.write_to_frame((x, d))
         
         if self.autotuning and self.autotune_finished():
-            self.autotuning=False            
+            self.autotuning = False            
             self.info('autotuning finished')
             #requery the device
             self.initialization_hook()
-            self.acount=0
+            self.acount = 0
         
-        elif self.acount>self.autotuning_additional_recording:
+        elif self.acount > self.autotuning_additional_recording:
             #stop the timer n secs after finishing
             self.autotune_timer.Stop()
-            self.acount=0
+            self.acount = 0
         else:
-            self.acount+=1
+            self.acount += 1
             
     def autotune_finished(self, **kw):
         if self.simulation:
