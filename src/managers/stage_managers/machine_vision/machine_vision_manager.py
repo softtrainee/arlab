@@ -4,12 +4,12 @@ from traitsui.api import View, Item, Handler
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 from numpy import histogram, argmax, argmin, array, linspace, asarray, mean
-from scipy.ndimage.filters import sobel, generic_gradient_magnitude
-from scipy.ndimage import sum as ndsum
-from scipy.ndimage.measurements import variance
+#from scipy.ndimage.filters import sobel, generic_gradient_magnitude
+#from scipy.ndimage import sum as ndsum
+#from scipy.ndimage.measurements import variance
 
 from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound
-from threading import Thread
+#from threading import Thread
 #============= local library imports  ==========================
 from src.image.image_helper import draw_polygons, draw_contour_list, colorspace, \
     threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
@@ -17,9 +17,9 @@ from src.image.image_helper import draw_polygons, draw_contour_list, colorspace,
 from src.managers.manager import Manager
 from src.image.image import Image
 from src.image.image_editor import ImageEditor
-import time
-from src.graph.graph import Graph
-from src.data_processing.time_series.time_series import smooth
+#import time
+#from src.graph.graph import Graph
+#from src.data_processing.time_series.time_series import smooth
 
 class TargetResult(object):
     def __init__(self, cv, ps, cs, tv, dv, ev, br, *args, **kw):
@@ -356,233 +356,7 @@ class MachineVisionManager(Manager):
                  )
         return v
     
-    def passive_focus(self, manager, oper):
-        self.info('passive focus. operator = {}'.format(oper))
-        
-        if oper=='2step':
-            target=self._passive_focus_2step
-            args=(manager,)
-            kw=dict()
-        else:
-            target=self._passive_focus
-            args=(manager,)
-            kw=dict(operator=oper)
-            
-        self._passive_focus_thread = Thread(target=target, args=args, kwargs=kw)
-        self._passive_focus_thread.start()
-        
-    def _passive_focus_2step(self, manager):
-        '''
-            see
-            IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
-            FOR DIGITAL STILL CAMERA
-            DOI 10.1109/30.468047  
-            
-            and
-            
-            http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
-            
-        '''
-        nominal_focus1,fs1,gs1,sgs1 = self._passive_focus(manager, 
-                                            fstart=20,
-                                            fend=10,
-                                            operator='var', set_z=False,
-                                            velocity_scalar=0.25
-                                            )
-        
-        window = 2
-        fstart=nominal_focus1-window*0.25
-        fend=nominal_focus1+ window
-        nominal_focus2,fs2,gs2,sgs2=self._passive_focus(manager, operator='sobel',
-                             fstart=fstart,
-                             fend=fend,
-                             step_scalar=10,
-                             velocity_scalar=0.1
-                             )
-        
-        g=Graph()
-        g.new_plot(padding_top=30)
-        g.new_series(fs1,gs1)
-        g.new_series(fs1,sgs1)
-        g.new_plot(padding_top=30)
-        g.new_series(fs2,gs2, plotid=1)
-        g.new_series(fs2,sgs2, plotid=1)
-        
-        g.set_x_title('Z',plotid=1)
-        g.set_x_title('Z',plotid=0)
-        g.set_y_title('FMvar',plotid=0)
-        g.set_y_title('FMsobel',plotid=1)
-        
-        g.add_vertical_rule(nominal_focus1)
-        g.add_vertical_rule(nominal_focus2, plotid=1)
-        g.add_vertical_rule(fstart,color=(0,0,1))
-        g.add_vertical_rule(fend,color=(0,0,1))
-        g.window_title='Autofocus'
-        
-        g.set_title('Sobel', plotid=1)
-        g.set_title('Variance')
-        do_later(g.edit_traits)
-        
-        
-    def _passive_focus(self, manager, operator='roberts', fstart=20, fend=10, step_scalar=1, set_z=True, **kw):
-        '''
-            sweep z looking for max focus measure
-            
-            FMgrad= roberts or sobel (sobel removes noise)
-            FMvar = intensity variance 
-            
-        '''
-        
 
-        controller=None
-        if manager is not None:
-            controller = manager.stage_manager.stage_controller
-
-        steps = step_scalar * (max(fend,fstart) - min(fend,fstart)) + 1
-        prev_zoom=0
-        if manager is not None:
-            prev_zoom = manager.zoom
-        
-        zoom = 0
-        self.info('setting zoom: {}'.format(zoom))
-        if manager is not None:
-            manager.set_zoom(zoom, block=True)
-        mi, fmi,ma, fma, fs, gs,sgs = self._focus_sweep(controller, fstart, fend, steps, operator, **kw)         
-                
-        self.info('passive focus results:Operator={} ImageGradmin={} (z={}), ImageGradmax={}, (z={})'.format(operator, mi, fmi, ma, fma))
-        self.info('passive focus. focus z= {}'.format(fma))    
-        
-        if set_z: 
-            if controller is not None:
-                controller.set_z(fma)
-        
-            self.info('returning to previous zoom: {}'.format(prev_zoom))
-            if manager is not None:
-                manager.set_zoom(prev_zoom, block=True)
-            
-        return fma, fs, gs,sgs
-    
-    def _focus_sweep(self, controller, start, end, steps, operator, discrete=False, velocity_scalar=1):
-        grads = []
-        w=200
-        h=200
-        cx=(640-w)/2
-        cy=(480-h)/2
-        roi=cx,cy,w,h
-        if discrete:
-            self.info('focus sweep start={} end={} steps={}'.format(start,end, steps))
-            focussteps = linspace(start, end, steps)
-            for fi in focussteps:
-                #move to focal distance
-                if controller is not None:
-                    controller.set_z(fi, block=True)
-                self.load_source()
-                grads.append(self._calculate_focus_measure(operator, roi))
-            
-            sgrads=smooth(grads)
-            fmi = focussteps[argmin(sgrads)]
-            fma = focussteps[argmax(sgrads)]
-        else:
-            '''
-                start the z in motion and take pictures as you go
-                query controller to get current z
-            '''
-            self.info('focus sweep start={} end={}'.format(start,end))
-            #move to start position
-            controller.set_z(start, block=True)
-            
-            vo=controller.axes['z'].velocity
-            
-            controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo*velocity_scalar,
-                                                                     key='z')
-                                                          )
-            controller.set_z(end)
-        
-            focussteps=[]
-            
-            while controller._moving_():
-                focussteps.append(controller.get_current_position('z'))    
-                self.load_source()
-                grads.append(self._calculate_focus_measure(operator, roi))
-                time.sleep(0.1)
-            self.info('frames analyzed {}'.format(len(grads)))
-            
-            #return to original velocity
-            controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo,
-                                                                     key='z')
-                                                          )
-            
-            sgrads=smooth(grads)
-            fmi=focussteps[argmin(sgrads)]
-            fma=focussteps[argmax(sgrads)]
- 
-        mi=min(sgrads)
-        ma=max(sgrads)
-            
-        return mi, fmi, ma, fma, focussteps, grads, sgrads
-    
-    def _calculate_focus_measure(self, operator, roi, src=None):
-        '''
-            see
-            IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
-            FOR DIGITAL STILL CAMERA
-            DOI 10.1109/30.468047  
-            
-            and
-            
-            http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
-            
-        '''
-                
-        if src is None:
-            src = self.image.source_frame
-        
-        gsrc = grayspace(src)
-        v = subsample(gsrc, *roi).as_numpy_array()
-        v=asarray(v, dtype=float)
-        
-        if operator == 'var':
-            '''
-                slow version. use scipy.ndimage... variance for fast computation 2x speedup
-                ni, nj = v.shape
-                genx = xrange(ni)
-                geny = xrange(nj)
-                
-                mu = 1 / float(ni * nj) * sum([v[i, j] for i in genx for j in geny])
-                func = lambda g, i, j:abs(g[i, j] - mu) ** 2
-                fm = 1 / float(ni * nj) * sum([func(v, i, j) for i in genx for j in geny])
-            '''
-            fm=variance(v)
-            
-        else:
-            fm=ndsum(generic_gradient_magnitude(v,sobel, mode='nearest'))
-#        else:
-#            '''
-#             currently the slowest
-#            '''
-#            
-##            fmx = _fm_(v, oper=operator)
-##            fmy = _fm_(v, x=False, oper=operator)
-##            fmh=hypot(fmx,fmy)
-##            fms=fmx+fmy
-##            print 'roberts slow',fmh, fms
-###            
-#            def roberts(input, axis = -1, output = None, mode = "constant", cval = 0.0):
-#                output, return_value = _ni_support._get_output(output, input)
-#                correlate1d(input, [1, 0], 0, output, mode, cval, 0)
-#                correlate1d(input, [0, -1], 1, output, mode, cval, 0)
-#                
-#                correlate1d(input, [0, -1], 0, output, mode, cval, 0)
-#                correlate1d(input, [1, 0], 1, output, mode, cval, 0)
-#                
-#                return return_value
-#                
-#                
-#            fm =ndsum(generic_gradient_magnitude(v, roberts, mode='constant'))
-#            
-#            print 'roberts fast', fm
-#        print operator, fm
-        return fm
         
 
 m = MachineVisionManager()
