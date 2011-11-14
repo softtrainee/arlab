@@ -1,10 +1,13 @@
 #=============enthought library imports=======================
-from traits.api import Any, Instance, Range, Button, Int, Property, Bool
+from traits.api import Any, Instance, Range, Button, Int, Property
 from traitsui.api import View, Item, Handler
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
-#from pylab import histogram, argmax, array, argmin
-from numpy import histogram, argmax, argmin, array, linspace
+from numpy import histogram, argmax, argmin, array, linspace, asarray, mean
+from scipy.ndimage.filters import sobel, generic_gradient_magnitude
+from scipy.ndimage import sum as ndsum
+from scipy.ndimage.measurements import variance
+
 from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound
 from threading import Thread
 #============= local library imports  ==========================
@@ -14,7 +17,10 @@ from src.image.image_helper import draw_polygons, draw_contour_list, colorspace,
 from src.managers.manager import Manager
 from src.image.image import Image
 from src.image.image_editor import ImageEditor
-from src.helpers.logger_setup import setup
+import time
+from src.graph.graph import Graph
+from src.data_processing.time_series.time_series import smooth
+
 class TargetResult(object):
     def __init__(self, cv, ps, cs, tv, dv, ev, br, *args, **kw):
         self.centroid_value = cv
@@ -49,6 +55,7 @@ class MachineVisionManager(Manager):
     start_threshold_search_value = 125
     threshold_search_width = 25
 
+    debug=False
     def close_image(self):
         if self.ui is not None:
             do_later(self.ui.dispose)
@@ -130,9 +137,7 @@ class MachineVisionManager(Manager):
             
             for i in indicators:
                 self._draw_indicator(*i) 
-                
-#        if open_image:    
-#            do_later(self.edit_traits, view='image_view')
+    
             
         return results
     
@@ -204,19 +209,18 @@ class MachineVisionManager(Manager):
     
     def _set_threshold(self, v):
         self._threshold = v
-#        args = self._calculate_positioning_error(v, open_image=False)
         args = self._calculate_positioning_error(v)
         if args:
             for a in args:
                 print a.dev1, a.dev2
                 
-    def load_source(self, debug=False):
-        if debug:
+    def load_source(self):
+        if self.debug:
             src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
         else:
-            src = self.video.get_frame(flip=True, clone=True)
+            src = self.video._frame#get_frame(flip=True, clone=True, swap_rb=False)
             
-        self.image.load(src, swap_rb=True)
+        self.image.load(src)
         
         return self.image.source_frame
             
@@ -230,7 +234,6 @@ class MachineVisionManager(Manager):
         
         
         self.close_image()
-        #if open_image:    
         do_later(self.edit_traits, view='image_view')
         
         
@@ -240,7 +243,6 @@ class MachineVisionManager(Manager):
             s = start - i * expand_value
             e = end + i * expand_value
             self.info('searching... thresholding {} - {}'.format(s, e))
-#            args = self._search(s, e, open_image=i == 0, **kw)
             args = self._search(s, e, **kw)
             '''
                 args = dev1x, dev1y, dev2x, dev2y
@@ -282,7 +284,6 @@ class MachineVisionManager(Manager):
             self.info('current pos: {:0.3f},{:0.3f} calculated pos: {:0.3f}, {:0.3f} dev: {:0.3f},{:0.3f} ({:n},{:n})'.format(*args))
             return nx, ny
     
-#    def _search(self, start, end, open_image=True, right_search=True):
     def _search(self, start, end, right_search=True):
         
         dev1x = []
@@ -293,12 +294,11 @@ class MachineVisionManager(Manager):
         #make end inclusive
         for i in range(start, end + 1):
             self._threshold = i
-#            results = self.calculate_positioning_error(i, open_image=i == start and open_image)
             results = self._calculate_positioning_error(i)
             if results:
                 '''                 
                  instead of trying to figure out if the result is the left of right well
-                 if only one result is found require that both wells be identified ie len(results)==2
+                 if only one result is found require that both wells are identified ie len(results)==2
                  then determine which is the left and right
                  
                 '''
@@ -332,22 +332,17 @@ class MachineVisionManager(Manager):
                 #dev1y.append(dy)
                 dev2y.append(dy2)
             
-#        self.hist_dev1x = array(dev1x)
-#        self.hist_dev2x = array(dev2x)
-#        
-#        self.hist_dev1y = array(dev1y)
-#        self.hist_dev2y = array(dev2y)
-        
         return dev1x, dev1y, dev2x, dev2y, thresholds
         
     def _test_fired(self):
-        t = Thread(target=self.search, args=(0, 0), kwargs=dict(right_search=True, debug=True))
-        t.start()
-      
+        #t = Thread(target=self.search, args=(0, 0), kwargs=dict(right_search=True, debug=True))
+        #t.start()
+        self.passive_focus(None, '2step')
+        
     def traits_view(self):
         v = View('test')
         return v
-        
+    
     def image_view(self):
         v = View(
                  Item('threshold', show_label=False),
@@ -355,15 +350,25 @@ class MachineVisionManager(Manager):
                       width=self.image_width, height=self.image_height
                       ),
                  title='Positioning Error',
-                 handler=ImageHandler
+                 handler=ImageHandler,
+                 x=35,
+                 y=35
                  )
         return v
     
-    def passive_focus(self, manager):
+    def passive_focus(self, manager, oper):
+        self.info('passive focus. operator = {}'.format(oper))
         
-        self.info('passive focus. objective func: SMD')
-        
-        self._passive_focus_thread = Thread(target=self._passive_focus, args=(manager,))
+        if oper=='2step':
+            target=self._passive_focus_2step
+            args=(manager,)
+            kw=dict()
+        else:
+            target=self._passive_focus
+            args=(manager,)
+            kw=dict(operator=oper)
+            
+        self._passive_focus_thread = Thread(target=target, args=args, kwargs=kw)
         self._passive_focus_thread.start()
         
     def _passive_focus_2step(self, manager):
@@ -378,16 +383,145 @@ class MachineVisionManager(Manager):
             http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
             
         '''
-        nominal_focus = self._passive_focus(manager, grad_operator='var', set_z=False)
+        nominal_focus1,fs1,gs1,sgs1 = self._passive_focus(manager, 
+                                            fstart=20,
+                                            fend=10,
+                                            operator='var', set_z=False,
+                                            velocity_scalar=0.25
+                                            )
         
         window = 2
-        self._passive_focus(manager, grad_operator='sobel',
-                             fstart=nominal_focus - window,
-                             fend=nominal_focus + window,
-                             step_scalar=5
+        fstart=nominal_focus1-window*0.25
+        fend=nominal_focus1+ window
+        nominal_focus2,fs2,gs2,sgs2=self._passive_focus(manager, operator='sobel',
+                             fstart=fstart,
+                             fend=fend,
+                             step_scalar=10,
+                             velocity_scalar=0.1
                              )
         
-    def _passive_focus(self, manager, grad_operator='roberts', fstart=25, fend=30, step_scalar=1, set_z=True):
+        g=Graph()
+        g.new_plot(padding_top=30)
+        g.new_series(fs1,gs1)
+        g.new_series(fs1,sgs1)
+        g.new_plot(padding_top=30)
+        g.new_series(fs2,gs2, plotid=1)
+        g.new_series(fs2,sgs2, plotid=1)
+        
+        g.set_x_title('Z',plotid=1)
+        g.set_x_title('Z',plotid=0)
+        g.set_y_title('FMvar',plotid=0)
+        g.set_y_title('FMsobel',plotid=1)
+        
+        g.add_vertical_rule(nominal_focus1)
+        g.add_vertical_rule(nominal_focus2, plotid=1)
+        g.add_vertical_rule(fstart,color=(0,0,1))
+        g.add_vertical_rule(fend,color=(0,0,1))
+        g.window_title='Autofocus'
+        
+        g.set_title('Sobel', plotid=1)
+        g.set_title('Variance')
+        do_later(g.edit_traits)
+        
+        
+    def _passive_focus(self, manager, operator='roberts', fstart=20, fend=10, step_scalar=1, set_z=True, **kw):
+        '''
+            sweep z looking for max focus measure
+            
+            FMgrad= roberts or sobel (sobel removes noise)
+            FMvar = intensity variance 
+            
+        '''
+        
+
+        controller=None
+        if manager is not None:
+            controller = manager.stage_manager.stage_controller
+
+        steps = step_scalar * (max(fend,fstart) - min(fend,fstart)) + 1
+        prev_zoom=0
+        if manager is not None:
+            prev_zoom = manager.zoom
+        
+        zoom = 0
+        self.info('setting zoom: {}'.format(zoom))
+        if manager is not None:
+            manager.set_zoom(zoom, block=True)
+        mi, fmi,ma, fma, fs, gs,sgs = self._focus_sweep(controller, fstart, fend, steps, operator, **kw)         
+                
+        self.info('passive focus results:Operator={} ImageGradmin={} (z={}), ImageGradmax={}, (z={})'.format(operator, mi, fmi, ma, fma))
+        self.info('passive focus. focus z= {}'.format(fma))    
+        
+        if set_z: 
+            if controller is not None:
+                controller.set_z(fma)
+        
+            self.info('returning to previous zoom: {}'.format(prev_zoom))
+            if manager is not None:
+                manager.set_zoom(prev_zoom, block=True)
+            
+        return fma, fs, gs,sgs
+    
+    def _focus_sweep(self, controller, start, end, steps, operator, discrete=False, velocity_scalar=1):
+        grads = []
+        w=200
+        h=200
+        cx=(640-w)/2
+        cy=(480-h)/2
+        roi=cx,cy,w,h
+        if discrete:
+            self.info('focus sweep start={} end={} steps={}'.format(start,end, steps))
+            focussteps = linspace(start, end, steps)
+            for fi in focussteps:
+                #move to focal distance
+                if controller is not None:
+                    controller.set_z(fi, block=True)
+                self.load_source()
+                grads.append(self._calculate_focus_measure(operator, roi))
+            
+            sgrads=smooth(grads)
+            fmi = focussteps[argmin(sgrads)]
+            fma = focussteps[argmax(sgrads)]
+        else:
+            '''
+                start the z in motion and take pictures as you go
+                query controller to get current z
+            '''
+            self.info('focus sweep start={} end={}'.format(start,end))
+            #move to start position
+            controller.set_z(start, block=True)
+            
+            vo=controller.axes['z'].velocity
+            
+            controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo*velocity_scalar,
+                                                                     key='z')
+                                                          )
+            controller.set_z(end)
+        
+            focussteps=[]
+            
+            while controller._moving_():
+                focussteps.append(controller.get_current_position('z'))    
+                self.load_source()
+                grads.append(self._calculate_focus_measure(operator, roi))
+                time.sleep(0.1)
+            self.info('frames analyzed {}'.format(len(grads)))
+            
+            #return to original velocity
+            controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo,
+                                                                     key='z')
+                                                          )
+            
+            sgrads=smooth(grads)
+            fmi=focussteps[argmin(sgrads)]
+            fma=focussteps[argmax(sgrads)]
+ 
+        mi=min(sgrads)
+        ma=max(sgrads)
+            
+        return mi, fmi, ma, fma, focussteps, grads, sgrads
+    
+    def _calculate_focus_measure(self, operator, roi, src=None):
         '''
             see
             IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
@@ -399,114 +533,91 @@ class MachineVisionManager(Manager):
             http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
             
         '''
-        controller = manager.stage_manager.stage_controller
-
-        steps = step_scalar * (fend - fstart) + 1
-        
-        prev_zoom = manager.zoom
-        zoom = 50
-        self.info('setting zoom: {}'.format(zoom))
-        manager.set_zoom(zoom, block=True)
-        mi, ma, fmi, fma = self._focus_sweep(controller, fstart, fend, steps, grad_operator)         
-        
-        #print mii, focussteps[mii] , max(smds)
-        
-        self.info('passive focus results:Operator={} ImageGradmin={} (z={}), ImageGradmax={}, (z={})'.format(grad_operator, mi, fmi, ma, fma))
-        self.info('passive focus. focus z= {}'.format(fma))    
-        
-        if set_z: 
-            controller._set_z(fma)
-        
-            self.info('returning to previous zoom: {}'.format(prev_zoom))
-            manager.set_zoom(prev_zoom, block=True)
-            
-        return fma
-    
-    def _focus_sweep(self, controller, start, end, steps, operator):
-        grads = []
-
-        focussteps = linspace(start, end, steps)
-        for fi in focussteps:
-            #move to focal distance
-            controller._set_z(fi)
-            controller._block_()
-
-            self.load_source(debug=True)
-            grads.append(self._calculate_focus_measure(operator, (0, 0, int(40), int(40))))
-        mi = min(grads)
-        ma = max(grads)
-        fmi = focussteps[argmin(grads)]
-        fma = focussteps[argmax(grads)]
-        
-        return mi, fmi, ma, fma
-    
-    def _calculate_focus_measure(self, operator, roi, src=None):
-        def _fm_(v, oper=None, x=True):
-            ni, nj = v.shape
-            if x:
-                if oper == 'sobel':
-                    genx = xrange(1, ni - 1)
-                    geny = xrange(1, nj - 1)
-                    func = lambda g, i, j: (g[i + 1, j - 1] + g[i + 1, j + 1] - 
-                                         g[i - 1, j - 1] - g[i - 1, j + 1] + 
-                                         2 * g[i + 1, j] - 2 * g[i - 1, j])
-                    
-                else:
-                    genx = xrange(ni - 1)
-                    geny = xrange(nj)
-                    func = lambda g, i, j:(g[i, j] / 255. - g[i + 1, j] / 255.) ** 2
-            else:
-                if oper == 'sobel':
-                    genx = xrange(1, ni - 1)
-                    geny = xrange(1, nj - 1)
-                    func = lambda g, i, j: (g[i - 1, j + 1] + g[i + 1, j + 1] - 
-                                            g[i - 1, j - 1] - g[i + 1, j - 1] + 
-                                            2 * g[i, j + 1] - 2 * g[i, j - 1])
-                else:
-                    genx = xrange(ni)
-                    geny = xrange(nj - 1)
-                    func = lambda g, i, j:(g[i, j] / 255. - g[i, j + 1] / 255.) ** 2
-
-
-            return sum([func(v, i, j) for i in genx for j in geny])      
-        
+                
         if src is None:
             src = self.image.source_frame
         
         gsrc = grayspace(src)
         v = subsample(gsrc, *roi).as_numpy_array()
+        v=asarray(v, dtype=float)
         
         if operator == 'var':
-            
-            ni, nj = v.shape
-            genx = xrange(ni)
-            geny = xrange(nj)
-            
-            mu = 1 / (ni * nj) * sum([v[i, j] for i in genx for j in geny])
-            func = lambda g, i, j:abs(g[i, j] - mu) ** 2
-            fm = 1 / (ni * nj) * sum([func(v, i, j) for i in genx for j in geny])
+            '''
+                slow version. use scipy.ndimage... variance for fast computation 2x speedup
+                ni, nj = v.shape
+                genx = xrange(ni)
+                geny = xrange(nj)
+                
+                mu = 1 / float(ni * nj) * sum([v[i, j] for i in genx for j in geny])
+                func = lambda g, i, j:abs(g[i, j] - mu) ** 2
+                fm = 1 / float(ni * nj) * sum([func(v, i, j) for i in genx for j in geny])
+            '''
+            fm=variance(v)
             
         else:
-            fmx = _fm_(v, oper=operator)
-            fmy = _fm_(v, x=False, oper=operator)
-            fm = fmx + fmy
-            
+            fm=ndsum(generic_gradient_magnitude(v,sobel, mode='nearest'))
+#        else:
+#            '''
+#             currently the slowest
+#            '''
+#            
+##            fmx = _fm_(v, oper=operator)
+##            fmy = _fm_(v, x=False, oper=operator)
+##            fmh=hypot(fmx,fmy)
+##            fms=fmx+fmy
+##            print 'roberts slow',fmh, fms
+###            
+#            def roberts(input, axis = -1, output = None, mode = "constant", cval = 0.0):
+#                output, return_value = _ni_support._get_output(output, input)
+#                correlate1d(input, [1, 0], 0, output, mode, cval, 0)
+#                correlate1d(input, [0, -1], 1, output, mode, cval, 0)
+#                
+#                correlate1d(input, [0, -1], 0, output, mode, cval, 0)
+#                correlate1d(input, [1, 0], 1, output, mode, cval, 0)
+#                
+#                return return_value
+#                
+#                
+#            fm =ndsum(generic_gradient_magnitude(v, roberts, mode='constant'))
+#            
+#            print 'roberts fast', fm
+#        print operator, fm
         return fm
         
 
 m = MachineVisionManager()
+m.debug=True
 def timeit_func():
-    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
     m.search(0, 0)
     
 def timeit_func2():
-    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
     m.search(0, 0, right_search=False)
 
-def timeit_smd():
-    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
-    s = m.image.source_frame
-    print m._calculate_smd(s, (0, 0, 80, 80))
+#def timeit_focus_roberts():
+#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+#    m._focus_sweep(None, 0, 50, 1, 'roberts')
+#    
+#def timeit_focus_csobel():
+##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff')
+#    m._focus_sweep(None, 0, 10, 1, 'csobel')
+    
+def timeit_focus_sobel():
+#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+    #
+    m._focus_sweep(None, 0, 10, 1, 'sobel')
+    
+def timeit_focus_var():
+#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff')
+#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+    m._focus_sweep(None, 0, 10, 1, 'var')
+    
+#def timeit_smd():
+#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+#    s = m.image.source_frame
+#    print m._calculate_smd(s, (0, 0, 80, 80))
 #    m.calculate_positioning_error()
 #    #m.configure_traits()
 def time_me():
@@ -520,6 +631,29 @@ def time_me():
     n = 5
     ti = t.timeit(n)
     print 'left search time', n, ti, ti / n * 1000
+
+def time_focus():
+    from timeit import Timer
+#    t = Timer('timeit_focus_roberts()', 'from __main__ import timeit_focus_roberts')
+#    n = 5
+#    ti = t.timeit(n)
+#    print 'focus time roberts', n, ti, ti / n * 1000
+    
+    t = Timer('timeit_focus_sobel()', 'from __main__ import timeit_focus_sobel')
+    n = 5
+    ti = t.timeit(n)
+    print 'focus time sobel', n, ti, ti / n * 1000
+
+#    t = Timer('timeit_focus_csobel()', 'from __main__ import timeit_focus_csobel')
+#    n = 5
+#    ti = t.timeit(n)
+#    print 'focus time csobel', n, ti, ti / n * 1000
+#    
+    
+    t = Timer('timeit_focus_var()', 'from __main__ import timeit_focus_var')
+    n = 5
+    ti = t.timeit(n)
+    print 'focus time var', n, ti, ti / n * 1000
     
 def time_smd():
     
@@ -528,29 +662,33 @@ def time_smd():
     n = 50
     ti = t.timeit(n)
     print 'search time', n, ti, ti / n * 1000
+def timeit_comp():
+    pass
+     
+def time_comp():
     
-    
+    from timeit import Timer
+    t = Timer('timeit_comp', 'from __main__ import timeit_comp')
+    n = 50
+    ti = t.timeit(n)
+    print 'comp time', n, ti, ti / n * 1e9
     
 def main():
+    from src.helpers.logger_setup import setup
+    setup('machine_vision')
     m = MachineVisionManager()
-#    m.image.load('/Users/Ross/Desktop/testtray.tiff', swap_rb=True)
     m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
-   # m.passive_focus()
-    
-#    m.calculate_positioning_error()
-    
-#    print d.as_numpy_array()
-    
-#    print s.as_numpy_array().shape
         
     m.configure_traits()
     
 if __name__ == '__main__':
-#    setup('machine_vision')
+    #setup('machine_vision')
 #    timeit_smd()
 #    time_smd()
 #    time_me()
-    main()
+#    main()
+
+    time_comp()
 #============= EOF =====================================
 #    def polygonate(self, t, frame_id=0, skip=None, line_width=1, min_area=1000,
 #                    max_area=1e10, convextest=0):
@@ -576,3 +714,34 @@ if __name__ == '__main__':
 #            draw_polygons(newsrc, polygons, line_width)
 #            self.frames.append(newsrc)
 #            return polygons
+
+
+#ORDER OF MAGNITUDE SLOWER THAN USING SCIPY. CYTHON NOT ANY BETTER
+#        def _fm_(v, oper=None, x=True):
+#            ni, nj = v.shape
+#            if x:
+#                if oper == 'sobel':
+#                    genx = xrange(1, ni - 1)
+#                    geny = xrange(1, nj - 1)
+#                    func = lambda g, i, j: (g[i + 1, j - 1] + g[i + 1, j + 1] - 
+#                                         g[i - 1, j - 1] - g[i - 1, j + 1] + 
+#                                         2 * g[i + 1, j] - 2 * g[i - 1, j])
+#                    
+#                else:
+#                    genx = xrange(ni - 1)
+#                    geny = xrange(nj)
+#                    func = lambda g, i, j:(g[i, j] - g[i + 1, j] ) ** 2
+#            else:
+#                if oper == 'sobel':
+#                    genx = xrange(1, ni - 1)
+#                    geny = xrange(1, nj - 1)
+#                    func = lambda g, i, j: (g[i - 1, j + 1] + g[i + 1, j + 1] - 
+#                                            g[i - 1, j - 1] - g[i + 1, j - 1] + 
+#                                            2 * g[i, j + 1] - 2 * g[i, j - 1])
+#                else:
+#                    genx = xrange(ni)
+#                    geny = xrange(nj - 1)
+#                    func = lambda g, i, j:(g[i, j] - g[i, j + 1]) ** 2
+#
+#
+#            return sum([func(v, i, j) for i in genx for j in geny])  

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, Bool, Int, Button, Event, Float, Str, String, Property, List, on_trait_change
+from traits.api import Instance, Bool, Button, Event, Float, Str, String, Property, List, on_trait_change
 from traitsui.api import View, Item, HGroup, VGroup, spring, ButtonEditor, EnumEditor
 #============= standard library imports ========================
 import numpy as np
@@ -25,14 +25,14 @@ from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
 import os
 from src.helpers.paths import bakeout_config_dir, data_dir
-from src.graph.time_series_graph import TimeSeriesStreamGraph, TimeSeriesStackedGraph, \
+from src.graph.time_series_graph import TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
 from src.helpers.datetime_tools import generate_datestamp
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.core.i_core_device import ICoreDevice
 from src.graph.graph import Graph
 
-BATCH_SET_BAUDRATE = True
+BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
 class BakeoutManager(Manager):
     '''
@@ -120,28 +120,14 @@ class BakeoutManager(Manager):
                 
 
     def write_data(self, name, plotid=0):
-#        p = self.data_manager.frames[name]
-#        h = []
-#        for c in self.active_controllers:
-#            h.append('{}_time'.format(c))
-#            h.append('{}_temp'.format(c))
-#            h.append('{}_heat_power'.format(c))
-            
-            #flatten the data_buffer
         datum = []
         for sub, x in zip(self.data_buffer, self.data_buffer_x):
-            pid, pi, hp = sub
+            _pid, pi, hp = sub
             datum.append(x)
             datum.append(pi)
             datum.append(hp)
             
-            
-            
-#        datum = [item for sub in self.data_buffer for i, item in enumerate(sub) if i != 0]
-#            datum.append()
-            
         self.data_manager.write_to_frame(datum)
-#        self.graph.export_raw_data(header=h, path=p, plotid=plotid)
 
     def update_alive(self, obj, name, old, new):
         if new:
@@ -160,7 +146,7 @@ class BakeoutManager(Manager):
     def load_controllers(self):
         '''
         '''
-        scheduler = RS485Scheduler(collision_delay=25)
+        scheduler = RS485Scheduler()
         for bcn in self._get_controllers():
             bc = getattr(self, bcn)
             #set the communicators scheduler

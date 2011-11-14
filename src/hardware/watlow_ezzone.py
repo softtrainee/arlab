@@ -95,12 +95,6 @@ class WatlowEZZone(CoreDevice):
                         auto_set=False), depends_on='_D_')
     _D_ = Float(33)
 
-#    pmin = Float(0.0)
-#    pmax = Float(100.0)
-#    imin = Float(0.0)
-#    imax = Float(6000.0)
-#    dmin = Float(0.0)
-#    dmax = Float(6000.0)
 
     stablization_time = Float(3.0)
     sample_time = Float(0.25)
@@ -155,6 +149,10 @@ class WatlowEZZone(CoreDevice):
     autotune = Event
     autotune_label = Property(depends_on='autotuning')
     autotuning = Bool
+    
+    autotuning_additional_recording=15
+    acount=0
+    
     configure = Button
     
     autotune_setpoint = Property(Float(auto_set=False, enter_set=True),
@@ -208,9 +206,21 @@ class WatlowEZZone(CoreDevice):
     def initialize(self, *args, **kw):
         '''
         '''
+        self.set_baudrate('38400', port=2)
+        
         #set open loop and closed loop to zero
         self.disable()
         self.initialization_hook()
+        
+        #print self.read_baudrate()
+        #self.set_baudrate('38400')
+        
+        #self.read_nonvolative_save()
+        #self.set_nonvolatile_save(True)
+        
+        #print self.read_baudrate()
+        
+        
         return True
     
     def initialization_hook(self):
@@ -254,7 +264,8 @@ class WatlowEZZone(CoreDevice):
             p = self.get_random_value()
             
         else:
-            pass
+            t=0
+            p=0
         
         
         self.process_value = t
@@ -321,22 +332,27 @@ class WatlowEZZone(CoreDevice):
         r = self.read(ada, response_type='int')
         self.info('register {} pointing to {}'.format(ada, r))
         
-    def read_baudrate(self):
+    def read_baudrate(self, port=1):
         '''
+            com port 2 is the modbus port
         '''
-        r = self.read(2484, response_type='int')
+        register=2484 if port ==1 else 2504
+        r = self.read(register, response_type='int')
         try:
             return ibaudmap[str(r)] 
         except KeyError, e:
             print e
         
-    def set_baudrate(self, v):
+    def set_baudrate(self, v, port=1):
         '''
+            com port 2 is the modbus port
         '''
+        
+        register=2484 if port ==1 else 2504
         
         try:
             value = baudmap[v]
-            self.write(2484, value)
+            self.write(register, value)
             
         except KeyError, e:
             print e
@@ -401,7 +417,7 @@ class WatlowEZZone(CoreDevice):
         g = TimeSeriesStreamGraph()
         sp = 1.5
         if self.data_manager:
-            self.data_manager.new_frame(base_frame_name=self.name)
+            self.data_manager.new_frame(base_frame_name='{}_autotune'.format(self.name))
             
         g.new_plot(data_limit=180,
                    scan_delay=sp
@@ -419,17 +435,24 @@ class WatlowEZZone(CoreDevice):
             d = self.get_random_value(0, 100)
         else:
             d = self.get_temperature()
+            
         x = graph.record(d)
         if self.data_manager:
             self.data_manager.write_to_frame((x, d))
         
-        if self.autotune_finished():
-            self.autotune_timer.Stop()
+        if self.autotuning and self.autotune_finished():
+            self.autotuning=False            
             self.info('autotuning finished')
-            
             #requery the device
             self.initialization_hook()
-            
+            self.acount=0
+        
+        elif self.acount>self.autotuning_additional_recording:
+            #stop the timer n secs after finishing
+            self.autotune_timer.Stop()
+            self.acount=0
+        else:
+            self.acount+=1
             
     def autotune_finished(self, **kw):
         if self.simulation:

@@ -165,13 +165,16 @@ class MotionController(CoreDevice):
         '''
         '''
         return self._validate(v, 'z', self._z_position)
-
+    def set_z(self,v, **kw):
+        self.single_axis_move('z', v, **kw)
+        self._z_position = v
+        
+        
     def _set_z(self, v):
         '''
         '''
         if v is not None:
-            self.single_axis_move('z', v)
-            self._z_position = v
+            self.set_z(v)
 
     def _set_x(self, v):
         '''

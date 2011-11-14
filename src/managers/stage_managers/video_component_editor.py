@@ -14,10 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-#from traits.api import Bool
-#from enable.component_editor import ComponentEditor , _ComponentEditor
-#============= standard library imports ========================
 from wx import EVT_IDLE
+#============= standard library imports ========================
 from src.managers.stage_managers.stage_component_editor import LaserComponentEditor, \
     _LaserComponentEditor
 #============= local library imports  ==========================
@@ -35,18 +33,7 @@ class _VideoComponentEditor(_LaserComponentEditor):
         super(_VideoComponentEditor, self).init(parent)
         self.control.Bind(EVT_IDLE, self.onIdle)
 
-#        print self.context_object, self.object, self.value
-
-#        pause_canvas = False
-#        if pause_canvas:
-#            self.value.on_trait_change(self.update_editor_item,
-#                                            'pause'
-#                                            )
-#    def update_editor_item(self, obj, name, old, new):
-#        if isinstance(new, bool):
-#            self.render = not new
-
-
+        
     def onIdle(self, event):
         '''
       

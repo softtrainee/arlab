@@ -146,9 +146,12 @@ class HillClimber(HasTraits):
                          state=False)
             t.points = copy.copy(self.test_triangle.points)
 
-            canvas.markupcontainer[('tri{:03n}'.format(self.triangle_count), 0)] = t
-            self.triangle_count += 1
+            canvas.markupcontainer[('tri{:05n}'.format(self.triangle_count), 0)] = t
             
+            self.triangle_count += 1
+            if self.triangle_count>500:
+                self.triangle_count=1
+                
             ppt = self.test_triangle.points.pop(popped)
             if self.prev2_popped is not None:
                 func = lambda a, b: ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5 < 0.1

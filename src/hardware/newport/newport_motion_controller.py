@@ -64,6 +64,7 @@ class NewportMotionController(MotionController):
 
 
         return r
+    
     def axes_factory(self, config=None):
         if config is None:
 
@@ -93,6 +94,7 @@ class NewportMotionController(MotionController):
                                   )
 
             self.axes[a] = na
+            
     def load_additional_args(self, config):
         '''
         '''
@@ -256,20 +258,21 @@ ABLE TO USE THE HARDWARE JOYSTICK
         v1 = self.parent.canvas.map_data((0, 0))
         v2 = self.parent.canvas.map_data((1, 1))
 
-        v = (v2[0] - v1[0]) * direction * ax.sign
 
         if ax_key == 'y':
+            v = (v2[1] - v1[1]) * direction * ax.sign
             v = self._y_position + v
             x = self._x_position
             y = v
 
         else:
+            v = (v2[0] - v1[0]) * direction * ax.sign
             v = self._x_position + v
             x = v
             y = self._y_position
 
-        self.parent.canvas.set_desired_position(x, y)
-        self.parent.canvas.set_stage_position(x, y)
+        #self.parent.canvas.set_desired_position(x, y)
+        #self.parent.canvas.set_stage_position(x, y)
 
         self.single_axis_move(ax_key, v, block=False, mode='relative', update=False)
         setattr(self, '_{}_position'.format(ax_key), v)
@@ -354,11 +357,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
     def single_axis_move(self, key, value, block=False, mode='absolute', update=True, **kw):
         '''
         '''
-
+        x=None
+        y=None
         ax = self.axes[key]
-        id = ax.id
+        aid = ax.id
         if self.groupobj is not None:
-            if id in map(int, self.groupobj.axes):
+            if aid in map(int, self.groupobj.axes):
                 self.destroy_group()
 
         if mode == 'absolute':
@@ -366,7 +370,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         else:
             cmd = 'PR'
 
-        cmd = self._build_command(cmd, xx=id,
+        cmd = self._build_command(cmd, xx=aid,
                                   nn='{:0.5f}'.format(self._sign_correct(value, key) * ax.drive_ratio))
         func = None
 
@@ -383,7 +387,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if self._validate(value, key, cur=o) is  None:
                 value = float(value)
                 if abs(value - o) <= 0.001:
-                    return 'OK At desired position. cur={} desired={}'.format(o, value)
+                    return 'At desired position. cur={} desired={}'.format(o, value)
                 return 'invalid position {}'.format(value)
 
             self.parent.canvas.set_desired_position(x, y)
@@ -400,7 +404,13 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         if update:
             self.timer = self.timer_factory(func=func)
-
+        else:
+            if x is not None and y is not None:
+                self.parent.canvas.set_stage_position(x,y)
+            else:
+                self._z_position=value
+                self.z_progress=value
+            
         self._axis_move(cmd, block=block)
 
     def multiple_axis_move(self, axes_list, block=False):
@@ -724,23 +734,33 @@ ABLE TO USE THE HARDWARE JOYSTICK
         '''
            
         '''
+        pmap=dict(velocity='VA',
+                  acceleration='AC',
+                  deceleration='AG')
+
+        
         if pdict:
             axis = self.axes[pdict['key']]
-
+            cmds=[]
+            for k in pdict.keys():
+                if k is not 'key':
+                    cmds.append('{}{}{}'.format(axis.id,pmap[k],pdict[k]))
+                    
+            cmd=';'.join(cmds)
         else:
+            param_coms = [('VA', 'velocity'),
+                        ('AC', 'acceleration'),
+                        ('AG', 'deceleration')]
             pdict = dict(velocity=axis.velocity,
                        acceleration=axis.acceleration,
                        deceleration=axis.deceleration)
 
-        param_coms = [('VA', 'velocity'),
-                    ('AC', 'acceleration'),
-                    ('AG', 'deceleration')]
-
-        cmd = ';'.join(['{:n}{}{{{}:0.2f}}'.format(*(axis.id,) + p) for p in param_coms])
+            cmd = ';'.join(['{:n}{}{{{}:0.2f}}'.format(*(axis.id,) + p) for p in param_coms])
 
         #ex cmd
         #1VA1.00;1AC2.00;1AG2.00
-        cmd = cmd.format(**pdict)
+            cmd = cmd.format(**pdict)
+            
         if self.group_commands:
             self.tell(cmd)
         else:
@@ -748,12 +768,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 self.tell(c)
                 time.sleep(0.1)
 
-    def _get_axis_by_id(self, id):
+    def _get_axis_by_id(self, aid):
         '''
         '''
         for k in self.axes:
             a = self.axes[k]
-            if a.id == id:
+            if a.id == aid:
                 return a
 
     def _linear_move_(self, kwargs, block=False, grouped_move=True, sign_correct=True, **kw):
@@ -820,7 +840,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         while self._moving_():
             # is the sleep necessary and ehat period 
-            time.sleep(0.3)
+            time.sleep(0.05)
 
         if event is not None:
             event.set()

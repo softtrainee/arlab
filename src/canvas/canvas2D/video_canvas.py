@@ -14,11 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, Bool
-#from traitsui.api import View, Item, Group, HGroup, VGroup
-
+from traits.api import Instance
 #============= standard library imports ========================
-
 import os
 #============= local library imports  ==========================
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
@@ -29,10 +26,8 @@ class VideoCanvas(BaseDataCanvas):
     video = None
     use_camera = True
     camera = Instance(Camera)
-    pause = Bool(False)
-
-    use_backbuffer = True
-    
+#    use_backbuffer = True
+    padding=0
     def _camera_default(self):
         return Camera(parent=self)
 
@@ -40,15 +35,12 @@ class VideoCanvas(BaseDataCanvas):
         '''
 
         '''
-        self.padding_top = 0
         super(VideoCanvas, self).__init__(*args, **kw)
-
 
         self.video_underlay = VideoUnderlay(component=self, video=self.video)
 
         self.underlays.insert(0, self.video_underlay)
 
-        #self.overlays.pop()
 
         for key, d in [('x_grid', dict(line_color=(1, 1, 0),
                                      line_width=1,
