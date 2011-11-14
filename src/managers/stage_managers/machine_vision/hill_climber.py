@@ -149,8 +149,8 @@ class HillClimber(HasTraits):
             canvas.markupcontainer[('tri{:05n}'.format(self.triangle_count), 0)] = t
             
             self.triangle_count += 1
-            if self.triangle_count>500:
-                self.triangle_count=1
+            if self.triangle_count > 500:
+                self.triangle_count = 1
                 
             ppt = self.test_triangle.points.pop(popped)
             if self.prev2_popped is not None:

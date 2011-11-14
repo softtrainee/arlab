@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance,String, DelegatesTo, Property, Button, Float, Bool
+from traits.api import Instance, String, DelegatesTo, Property, Button, Float, Bool
 from traitsui.api import Group, Item, HGroup, spring, Spring
 #============= standard library imports ========================
 
@@ -76,7 +76,7 @@ class VideoStageManager(StageManager, Videoable):
     auto_center = Bool(False)
     
     
-    autofocus_manager=Instance(AutofocusManager)
+    autofocus_manager = Instance(AutofocusManager)
     
     #autofocus_button =DelegatesTo('autofocus_manager')
     #configure_button=DelegatesTo('autofocus_manager')
@@ -146,7 +146,7 @@ class VideoStageManager(StageManager, Videoable):
                                Item('camera_ycoefficients'),
                                Item('drive_xratio'),
                                Item('drive_yratio'),
-                               Item('autofocus_manager',show_label=False,style='custom'),
+                               Item('autofocus_manager', show_label=False, style='custom'),
                                #HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
 #                               Item('pxpercmx'),
 #                               Item('pxpercmy'),

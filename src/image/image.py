@@ -39,7 +39,7 @@ class Image(HasTraits):
     width = Int
     height = Int
     _bitmap = None
-    _frame=None
+    _frame = None
     
 #    def load(self, img, swap_rb=True):
     def load(self, img):
@@ -99,8 +99,8 @@ class Image(HasTraits):
         frame = self.get_frame(**kw)
 
         if frame is not None:
-            self._frame=frame
-            self._bitmap= wx.BitmapFromBuffer(frame.width,
+            self._frame = frame
+            self._bitmap = wx.BitmapFromBuffer(frame.width,
                                        frame.height,
                                        frame.data_as_string()
                                         )

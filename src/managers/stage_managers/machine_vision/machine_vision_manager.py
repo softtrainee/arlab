@@ -55,7 +55,7 @@ class MachineVisionManager(Manager):
     start_threshold_search_value = 125
     threshold_search_width = 25
 
-    debug=False
+    debug = False
     def close_image(self):
         if self.ui is not None:
             do_later(self.ui.dispose)
@@ -360,7 +360,7 @@ class MachineVisionManager(Manager):
         
 
 m = MachineVisionManager()
-m.debug=True
+m.debug = True
 def timeit_func():
 #    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
     m.search(0, 0)

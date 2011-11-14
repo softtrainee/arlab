@@ -61,7 +61,7 @@ class ArduinoFiberLightModule(ArduinoCoreDevice):
             
             
         if v is None:
-            v=0
+            v = 0
         return v / 255.0 * 100
         
     def read_state(self):

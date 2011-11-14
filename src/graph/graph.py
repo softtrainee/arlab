@@ -457,9 +457,9 @@ class Graph(HasTraits):
                                  ))
 #        pc.invalidate_and_redraw()
         pc.request_redraw()
-    def set_plot_title(self,t, plotid=0):
-        plot=self.plots[plotid]
-        plot.title=t
+    def set_plot_title(self, t, plotid=0):
+        plot = self.plots[plotid]
+        plot.title = t
     def get_x_title(self, plotid=0):
         '''
         '''
