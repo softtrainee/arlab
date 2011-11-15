@@ -169,7 +169,7 @@ class CoreDevice(ViewableDevice):
         '''
         if self._communicator is not None:
             return self._communicator.open(**kw)
-
+        
 
     def ask(self, cmd, **kw):
         '''
