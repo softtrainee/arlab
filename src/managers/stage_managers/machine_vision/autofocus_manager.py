@@ -17,6 +17,7 @@ from scipy.ndimage import sum as ndsum
 from src.helpers.paths import hidden_dir
 import os
 from src.managers.manager import Manager
+from src.image.image import Image
 
 class ConfigureHandler(Handler):
     def closed(self, info, isok):
@@ -35,7 +36,8 @@ class FocusParameters(HasTraits):
     
     discrete = Bool(False)
     
-    window = Float
+    negative_window = Float
+    positive_window = Float
     
     velocity_scalar1 = Float
     velocity_scalar2 = Float
@@ -48,8 +50,9 @@ class FocusParameters(HasTraits):
                Item('discrete'),
                Item('step_scalar', visible_when='discrete'),
                Group(
-                     Item('window'),
                      Item('velocity_scalar1'),
+                     Item('negative_window'),
+                     Item('positive_window'),
                      Item('velocity_scalar2'),
                      enabled_when='style=="2step"'
                      ),
@@ -67,19 +70,27 @@ class AutofocusManager(Manager):
     
     video = Any
     manager = Any
+    controller=Any
     parameters = Instance(FocusParameters)
     configure_button = Button('configure')
     
     autofocus_button = Event
     autofocus_label = Property(depends_on='autofocusing')
     autofocusing = Bool
-    
+    image = Instance(Image, ())
+
     def dump(self):
         p = os.path.join(hidden_dir, 'autofocus_configure')
         self.info('dumping parameters to {}'.format(p))
         with open(p, 'wb') as f:
             pickle.dump(self.parameters, f)
-            
+    def load_source(self):
+        src=self.video._frame
+        if src:
+            self.image.load(src)
+    
+        return self.image.source_frame
+
     def load(self):
         p = os.path.join(hidden_dir, 'autofocus_configure')
         if os.path.isfile(p):
@@ -106,19 +117,19 @@ class AutofocusManager(Manager):
             args = (manager,)
             kw = dict(operator=oper)
         
-        self._alive = True
         self._passive_focus_thread = Thread(target=target, args=args, kwargs=kw)
         self._passive_focus_thread.start()
     
     def stop_focus(self):
-        self._alive = False
-        if self.manager:
-            self.manager.stage_manager.stage_controller.stop()
+        
+        if self.controller:
+            self.controller.stop()
+        
         self.info('autofocusing stopped by user')
         
     def _passive_focus_1step(self, manager, operator):
         
-        nominal_focus, fs, gs, sgs = self._passive_focus(manager, operator)
+        nominal_focus, fs, gs, sgs = self._passive_focus(manager, operator, velocity_scalar=self.parameters.velocity_scalar1)
         g = Graph()
         g.new_plot(padding_top=20)
         g.new_series(fs, gs)
@@ -128,7 +139,6 @@ class AutofocusManager(Manager):
         g.set_y_title('FM{}'.format(operator[:3]))
         g.window_title = 'Autofocus'
         do_later(g.edit_traits)
-        self._alive = False
         self.autofocusing = False
         
     def _passive_focus_2step(self, manager):
@@ -143,29 +153,25 @@ class AutofocusManager(Manager):
             http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
             
         '''
-        if not self._alive:
-            return
+
         args = self._passive_focus(manager,
-                                            operator='var', set_z=False,
+                                            operator='sobel', set_z=False,
                                              velocity_scalar=self.parameters.velocity_scalar1
                                             )
-        if not self._alive:
-            return
-        elif args:
+        
+        if args:
             nominal_focus1, fs1, gs1, sgs1 = args
             
-        window = self.parameters.window
-        fstart = nominal_focus1 - window * 0.25
-        fend = nominal_focus1 + window
+        fstart = nominal_focus1 -self.parameters.negative_window
+        fend = nominal_focus1 + self.parameters.positive_window
 
         args = self._passive_focus(manager, operator='sobel',
                              fstart=fstart,
                              fend=fend,
                              velocity_scalar=self.parameters.velocity_scalar2
                              )
-        if not self._alive:
-            return
-        elif args:
+    
+        if args:
             nominal_focus2, fs2, gs2, sgs2 = args
             
         g = Graph()
@@ -178,7 +184,7 @@ class AutofocusManager(Manager):
         
         g.set_x_title('Z', plotid=1)
         g.set_x_title('Z', plotid=0)
-        g.set_y_title('FMvar', plotid=0)
+        g.set_y_title('FMsob', plotid=0)
         g.set_y_title('FMsob', plotid=1)
         
         g.add_vertical_rule(nominal_focus1)
@@ -188,12 +194,11 @@ class AutofocusManager(Manager):
         g.window_title = 'Autofocus'
         
         g.set_plot_title('Sobel', plotid=1)
-        g.set_plot_title('Variance')
+        g.set_plot_title('Sobel')
         do_later(g.edit_traits)
-        self._alive = False
         self.autofocusing = False
         
-    def _passive_focus(self, manager, operator='roberts', fstart=None, fend=None, step_scalar=None, set_z=True, **kw):
+    def _passive_focus(self, manager, operator='sobel', fstart=None, fend=None, step_scalar=None, set_z=True, **kw):
         '''
             sweep z looking for max focus measure
             
@@ -209,43 +214,32 @@ class AutofocusManager(Manager):
         if step_scalar is None:
             step_scalar = self.parameters.step_scalar
         
-        controller = None
-        if manager is not None:
-            controller = manager.stage_manager.stage_controller
-
+#        controller = None
+#        if manager is not None:
+#            controller = manager.stage_manager.stage_controller
+        controller=self.controller
+        
         steps = step_scalar * (max(fend, fstart) - min(fend, fstart)) + 1
         prev_zoom = 0
         if manager is not None:
             prev_zoom = manager.zoom
         
-        if not self._alive:
-            return
         zoom = 0
         self.info('setting zoom: {}'.format(zoom))
         if manager is not None:
             manager.set_zoom(zoom, block=True)
         args = self._focus_sweep(controller, fstart, fend, steps, operator, **kw)
         
-        if args and self._alive:         
+        if args:         
             mi, fmi, ma, fma, fs, gs, sgs = args
-        else:
-            return 
-            
-        
+      
         self.info('passive focus results:Operator={} ImageGradmin={} (z={}), ImageGradmax={}, (z={})'.format(operator, mi, fmi, ma, fma))
         self.info('passive focus. focus z= {}'.format(fma))    
         
         if set_z: 
             if controller is not None:
-                if not self._alive:
-                    return
                 controller.set_z(fma)
                 
-                if not self._alive:
-                    return
-            
-            if not self._alive:
-                return
             self.info('returning to previous zoom: {}'.format(prev_zoom))
             if manager is not None:
                 manager.set_zoom(prev_zoom, block=True)
@@ -267,10 +261,8 @@ class AutofocusManager(Manager):
                 if controller is not None:
                     controller.set_z(fi, block=True)
                 
-                self.load_source()
-                grads.append(self._calculate_focus_measure(operator, roi))
-                if not self._alive:
-                    return
+                s=self.load_source()
+                grads.append(self._calculate_focus_measure(operator, roi, src=s))
                 
             sgrads = smooth(grads)
             fmi = focussteps[argmin(sgrads)]
@@ -280,41 +272,36 @@ class AutofocusManager(Manager):
                 start the z in motion and take pictures as you go
                 query controller to get current z
             '''
-            if not self._alive:
-                return 
             
             self.info('focus sweep start={} end={}'.format(start, end))
             #move to start position
             if controller:
                 controller.set_z(start, block=True)
-            
-                if not self._alive:
-                    return
                  
                 vo = controller.axes['z'].velocity
                 
                 controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity_scalar,
                                                                          key='z')
                                                               )
+                time.sleep(1)
                 controller.set_z(end)
         
                 focussteps = []
-                while controller._moving_() and self._alive:
+                while controller._moving_() and self.autofocusing:
                     focussteps.append(controller.get_current_position('z'))    
-                    self.load_source()
-                    grads.append(self._calculate_focus_measure(operator, roi))
+                    s=self.load_source()
+                    grads.append(self._calculate_focus_measure(operator, roi, src=s))
                     time.sleep(0.1)
                 #return to original velocity
                 controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo,
                                                                          key='z')
                                                           )
-            
+                
             else:
                 focussteps = linspace(0, 10, 11)
                 grads = -(focussteps - 5) ** 2 + 10 + random.random(11)
             
             self.info('frames analyzed {}'.format(len(grads)))
-            
             sgrads = smooth(grads)
             fmi = focussteps[argmin(sgrads)]
             fma = focussteps[argmax(sgrads)]
@@ -337,8 +324,8 @@ class AutofocusManager(Manager):
             
         '''
                 
-        if src is None:
-            src = self.image.source_frame
+#        if src is None:
+#            src = self.image.source_frame
         
         gsrc = grayspace(src)
         v = subsample(gsrc, *roi).as_numpy_array()
@@ -359,6 +346,7 @@ class AutofocusManager(Manager):
             
         else:
             fm = ndsum(generic_gradient_magnitude(v, sobel, mode='nearest'))
+        
         return fm
     
     def _autofocus_button_fired(self):

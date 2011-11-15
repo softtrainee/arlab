@@ -203,7 +203,8 @@ class VideoStageManager(StageManager, Videoable):
     
     def _autofocus_manager_default(self):
         return AutofocusManager(video=self.video,
-                                manager=self.parent
+                                manager=self.parent,
+                                controller=self.stage_controller
                                 ) 
     
 #===============================================================================
@@ -317,8 +318,8 @@ if __name__ == '__main__':
 
 
     setup('stage_manager')
-    s = VideoStageManager(name='co2stage',
-                     configuration_dir_name='co2',
+    s = VideoStageManager(name='diodestage',
+                     configuration_dir_name='diode',
                      )
 
 #    i = Initializer()

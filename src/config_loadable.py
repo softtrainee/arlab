@@ -43,6 +43,7 @@ class ConfigLoadable(Loggable):
                 self.initialize(*args, **kw)
                 return True
             else:
+                self.initialize(*args, **kw)
                 self.warning('failed opening')
         else:
             self.warning('failed loading')

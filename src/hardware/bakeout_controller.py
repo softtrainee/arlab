@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import List, Float, Str, Instance, Bool, Property
+from traits.api import List,Event, Float, Str, Instance, Bool, Property
 from traitsui.api import View, Item, EnumEditor, spring, HGroup, Label, VGroup
 #from pyface.timer.api import Timer
 from src.helpers.timer import Timer
@@ -64,43 +64,16 @@ class BakeoutController(WatlowEZZone):
     ramp_scale = None
     
     update_interval = Float(1)
-    
-    
-    memory_block_address = 200
-    memory_block_len = 0
+    process_value_flag = Event
+
     def initialization_hook(self):
         '''
             suppress the normal initialization querys
             they are not necessary for the bakeout manager currently
         '''
-        #programming memory block is not working
-        self._program_memory_block()
         pass
         
-    def _program_memory_block(self):
-        '''
-            see watlow ez zone pm communications rev b nov 07
-            page 5
-            User programmable memory blocks
-        ''' 
-        
-        
-        self.memory_block_len = 4 
-        self.info('programming memory block. start address:{}, len: {}'.format(self.memory_block_address, self.memory_block_len))
-        
-        #set address block 200-203 to hold the process value and the heat power
-        #self.set_assembly_definition_address(self.memory_block_address, 360) #process value
-        #self.set_assembly_definition_address(self.memory_block_address + 1, 360) #process value
-        self.set_assembly_definition_address(160 + 40, 360) #process value
-        #self.set_assembly_definition_address(160 + 61, 361) #process value
-        
-        #self.set_assembly_definition_address(self.memory_block_address + 2, 1904) #heat power
-        #self.set_assembly_definition_address(self.memory_block_address + 3, 1904) #heat power
-        
-        #now process value and heat power can be read with a single command
-        #self.read(200, nregisters=4, response_type='float')
-        
-        
+
     def _setpoint_changed(self):
         if self.isAlive():
             self.set_closed_loop_setpoint(self.setpoint)
@@ -246,30 +219,38 @@ class BakeoutController(WatlowEZZone):
 
             self.process_value = 0
     
-    def complex_query(self, **kw):
-        if 'verbose' in kw and kw['verbose']:
-            self.info('Do complex query')
-
-        t = self.read_process_value(1, **kw)
-        hp = self.read_heat_power(**kw)
-        
-        #data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float', verbose=True)
-        data = None
-        if data is not None:
-            t = data[0]
-            hp = data[1]
-            
-        if self.simulation:
-#            t = 4 + self.closed_loop_setpoint
-            t = self.get_random_value() + self.closed_loop_setpoint
-            hp = self.get_random_value()
-            time.sleep(0.25)
-        try:
-            self.heat_power_value = hp
-            self.process_value = t
-            self.process_value_flag = True
-        except (ValueError, TypeError), e:
-            print e
+    def get_temp_and_power(self, **kw):
+        WatlowEZZone.get_temp_and_power(self, **kw)
+        self.process_value_flag=True
+    
+    def get_temperature(self, **kw):
+        t= WatlowEZZone.get_temperature(self, **kw)
+        self.process_value_flag=True
+        return t
+#    def complex_query(self, **kw):
+#        if 'verbose' in kw and kw['verbose']:
+#            self.info('Do complex query')
+#
+#        t = self.read_process_value(1, **kw)
+#        hp = self.read_heat_power(**kw)
+#        
+#        #data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float', verbose=True)
+#        data = None
+#        if data is not None:
+#            t = data[0]
+#            hp = data[1]
+#            
+#        if self.simulation:
+##            t = 4 + self.closed_loop_setpoint
+#            t = self.get_random_value() + self.closed_loop_setpoint
+#            hp = self.get_random_value()
+#            time.sleep(0.25)
+#        try:
+#            self.heat_power_value = hp
+#            self.process_value = t
+#            self.process_value_flag = True
+#        except (ValueError, TypeError), e:
+#            print e
             
 #        if t is not None and hp is not None:
 #            try:
@@ -296,7 +277,8 @@ class BakeoutController(WatlowEZZone):
             self.cnt = 0
 
         #self.get_temperature(verbose=False)
-        self.complex_query(verbose=False)
+        #self.complex_query(verbose=False)
+        self.get_temp_and_power(verbose=False)
         
         if time.time() - self.start_time > self._oduration * 3600.:
             self.end()
