@@ -307,6 +307,8 @@ class SerialCommunicator(Communicator):
 #                        time.sleep(0.0005)
 #                else:
 #                    write(cmd)
+            #print cmd, len(cmd)
+#            time.sleep(50e-9)
             write(cmd)
 
     def _read(self, is_hex=False, time_out=1, delay=None):

@@ -34,12 +34,13 @@ from threading import Thread
 #import struct
 
 class Client(HasTraits):
-    command = String('GetValveState D', enter_set=True, auto_set=False)
+    command = String('GetData', enter_set=True, auto_set=False)
     resend = Button
     receive_data_stream = Button
     response = String
-    port = Int(1063)
-    host = Str('192.168.0.65')
+    port = Int(1069)
+    #host = Str('192.168.0.65')
+    host = Str('129.138.12.145')
     kind = Enum('UDP', 'TCP')
 
     period = Float(100)
@@ -90,7 +91,6 @@ class Client(HasTraits):
         if sock is None:
             #open connection
             sock = self.get_connection()
-
         #send command
         sock.send(self.command)
         self.response = sock.recv(1024)
@@ -103,6 +103,7 @@ class Client(HasTraits):
         packet_kind = socket.SOCK_STREAM
         family = socket.AF_INET
         addr = (self.host, self.port)
+        print 'connection address', addr
         if self.kind == 'UDP':
             packet_kind = socket.SOCK_DGRAM
                     

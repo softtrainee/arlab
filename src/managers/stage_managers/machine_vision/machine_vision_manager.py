@@ -13,10 +13,11 @@ from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound
 #============= local library imports  ==========================
 from src.image.image_helper import draw_polygons, draw_contour_list, colorspace, \
     threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
-    erode, dilate, draw_rectangle, subsample, rotate
+    erode, dilate, draw_rectangle, subsample, rotate, smooth
 from src.managers.manager import Manager
 from src.image.image import Image
 from src.image.image_editor import ImageEditor
+from threading import Thread
 #import time
 #from src.graph.graph import Graph
 #from src.data_processing.time_series.time_series import smooth
@@ -50,7 +51,8 @@ class MachineVisionManager(Manager):
     test = Button
 
     image_width = Int(640)
-    image_height = Int(324)
+#    image_height = Int(324)
+    image_height = Int(324*2)
     
     start_threshold_search_value = 125
     threshold_search_width = 25
@@ -84,11 +86,12 @@ class MachineVisionManager(Manager):
 
         x = int((src.width - cw_px) / 2 + xo)
         y = int((src.height - ch_px) / 2 + yo)
-        
+
+#        smooth(src)        
         crop(src, x, y, cw_px, ch_px)
         gsrc = grayspace(src)
         self.image.frames[0] = colorspace(gsrc)
-    
+        
         if threshold_val is None:
             threshold_val = self.start_threshold_search_value
             
@@ -224,8 +227,8 @@ class MachineVisionManager(Manager):
         
         return self.image.source_frame
             
-    def search(self, cx, cy, debug=False, **kw):
-        self.load_source(debug=debug)
+    def search(self, cx, cy, **kw):
+        self.load_source()
         
         start = self.start_threshold_search_value
         end = start + self.threshold_search_width
@@ -237,8 +240,8 @@ class MachineVisionManager(Manager):
         do_later(self.edit_traits, view='image_view')
         
         
-        d = rotate(self.image.source_frame, 45)
-        self.image.source_frame = d
+#        d = rotate(self.image.source_frame, 45)
+#        self.image.source_frame = d
         for i in range(3):
             s = start - i * expand_value
             e = end + i * expand_value
@@ -334,10 +337,11 @@ class MachineVisionManager(Manager):
             
         return dev1x, dev1y, dev2x, dev2y, thresholds
         
-    def _test_fired(self):
-        #t = Thread(target=self.search, args=(0, 0), kwargs=dict(right_search=True, debug=True))
-        #t.start()
-        self.passive_focus(None, '2step')
+    def _test_fired(self):    
+    
+        t = Thread(target=self.search, args=(0, 0), kwargs=dict(right_search=True))
+        t.start()
+#        self.passive_focus(None, '2step')
         
     def traits_view(self):
         v = View('test')
@@ -450,8 +454,8 @@ def time_comp():
 def main():
     from src.helpers.logger_setup import setup
     setup('machine_vision')
-    m = MachineVisionManager()
-    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+    m = MachineVisionManager(debug=True)
+    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff')
         
     m.configure_traits()
     
@@ -460,9 +464,9 @@ if __name__ == '__main__':
 #    timeit_smd()
 #    time_smd()
 #    time_me()
-#    main()
+    main()
 
-    time_comp()
+#    time_comp()
 #============= EOF =====================================
 #    def polygonate(self, t, frame_id=0, skip=None, line_width=1, min_area=1000,
 #                    max_area=1e10, convextest=0):

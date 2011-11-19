@@ -256,10 +256,10 @@ class WatlowEZZone(CoreDevice):
             osl,osh=self.read(736, nregisters=4)
             isl,ish=self.read(388, nregisters=4)
             
-            self.output_scale_low=osl
-            self.output_scale_high=osh
-            self.input_scale_low=isl
-            self.input_scale_high=ish
+            self._output_scale_low=osl
+            self._output_scale_high=osh
+            self._input_scale_low=isl
+            self._input_scale_high=ish
 
         attrs=[
                ('read_autotune_setpoint', '_autotune_setpoint'),
