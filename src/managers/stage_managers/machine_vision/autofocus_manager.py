@@ -193,8 +193,8 @@ class AutofocusManager(Manager):
         g.add_vertical_rule(fend, color=(0, 0, 1))
         g.window_title = 'Autofocus'
         
-        g.set_plot_title('Sobel', plotid=1)
-        g.set_plot_title('Sobel')
+        #g.set_plot_title('Sobel', plotid=1)
+        #g.set_plot_title('Sobel')
         do_later(g.edit_traits)
         self.autofocusing = False
         
@@ -279,23 +279,22 @@ class AutofocusManager(Manager):
                 controller.set_z(start, block=True)
                  
                 vo = controller.axes['z'].velocity
-                
                 controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity_scalar,
-                                                                         key='z')
-                                                              )
-                time.sleep(1)
+                                                                         key='z'))
+                time.sleep(0.5)
                 controller.set_z(end)
         
                 focussteps = []
-                while controller._moving_() and self.autofocusing:
-                    focussteps.append(controller.get_current_position('z'))    
-                    s=self.load_source()
-                    grads.append(self._calculate_focus_measure(operator, roi, src=s))
+                while controller.timer.IsRunning() and self.autofocusing:
+                #while controller._moving_() and self.autofocusing:
+#                    focussteps.append(controller.get_current_position('z'))    
+                    self.load_source()
+                    focussteps.append(controller.z_progress)
+                    grads.append(self._calculate_focus_measure(operator, roi))
                     time.sleep(0.1)
                 #return to original velocity
                 controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo,
-                                                                         key='z')
-                                                          )
+                                                                         key='z'))
                 
             else:
                 focussteps = linspace(0, 10, 11)
@@ -324,8 +323,8 @@ class AutofocusManager(Manager):
             
         '''
                 
-#        if src is None:
-#            src = self.image.source_frame
+        if src is None:
+            src = self.image.source_frame
         
         gsrc = grayspace(src)
         v = subsample(gsrc, *roi).as_numpy_array()

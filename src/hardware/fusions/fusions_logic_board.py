@@ -64,7 +64,8 @@ class FusionsLogicBoard(CoreDevice):
         '''
         '''
         progress = kw['progress'] if 'progress' in kw else None
-
+        print self._communicator.handle
+        print self.ask(';LB.VER')
         #disable laser 
         if progress is not None:
             progress.change_message('Disabling Laser')
@@ -221,7 +222,9 @@ class FusionsLogicBoard(CoreDevice):
         '''
         cmd = self._build_command('ENBL 0')
         if cmd is not None:
-            resp = self._parse_response(self.ask(cmd, delay=100))
+            
+            resp = self._parse_response(self.ask(cmd))
+#            resp = self._parse_response(self.ask(cmd, delay=100))
 
             if resp == 'OK' or self.simulation:
                 return True
@@ -298,7 +301,7 @@ class FusionsLogicBoard(CoreDevice):
 
         self._enable_motor_(motor, zoom)
 
-        self.info('setting zoom to %0.1f' % zoom)
+        self.info('setting zoom to {:0.1f}'.format(zoom))
 
         motor.data_position = zoom
 

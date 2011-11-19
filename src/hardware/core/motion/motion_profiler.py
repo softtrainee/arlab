@@ -35,7 +35,7 @@ class MotionProfiler(ConfigLoadable):
     deceleration_tol = Float(0.05, enter_set=True, auto_set=False)
 
     max_velocity = Float(4, enter_set=True, auto_set=False)
-    min_velocity = Float(0.5, enter_set=True, auto_set=False)
+    min_velocity = Float(0.05, enter_set=True, auto_set=False)
 
     min_acceleration = Float(0.05)
     min_deceleration = Float(0.05)
@@ -159,16 +159,28 @@ class MotionProfiler(ConfigLoadable):
 
         cvtime = cvd / v
 
-        self.atime = atime
-        self.dtime = dtime
-        self.cvtime = cvtime
-
-        self.adisp = acd
-        self.ddisp = dcd
-        self.cvdisp = cvd
+#        self.atime = atime
+#        self.dtime = dtime
+#        self.cvtime = cvtime
+#
+#        self.adisp = acd
+#        self.ddisp = dcd
+#        self.cvdisp = cvd
 
         return (atime, dtime, cvtime), (acd, dcd, cvd),
-
+#    
+#    def calculate_corrected_parameters2(self, disp, vel, ac, dc):
+#        #assume ac==dc
+#        
+#        cv=math.sqrt(disp*ac/2.0)
+#
+#        
+#        atime=cv/ac
+#        times, _distances = self.calculate_transit_parameters(disp, cv, ac, dc)
+#        
+#        print times
+#        return cv,ac,dc
+#        
     def calculate_corrected_parameters(self, displacement, velocity, ac, dc):
         self.velocity_err = False
         self.min_acceleration_err = False
@@ -182,12 +194,15 @@ class MotionProfiler(ConfigLoadable):
             trapezodail movement 
             calculate velocity so that atime=dtime=1/2vtime
         '''
-        cv = math.sqrt(2 / 3.0 * displacement / acdc_param)
+#        cv = math.sqrt(2 / 3.0 * displacement / acdc_param)
+#        cv=math.sqrt(displacement/acdc_param*0.25)
+
+        cv=(displacement*ac/2.0)**0.5
         times, _distances = self.calculate_transit_parameters(displacement, cv, ac, dc)
 
         if sum(times) > self.max_transit_time:
             self.max_transit_err = True
-            self.info('max transit error. {} > {}'.format(sum(times), self.max_transit_time))
+            self.debug('max transit error. {} > {}'.format(sum(times), self.max_transit_time))
             #calculate the min velocity required for max_transit_time 
             #given ac and dc
             A = 0.5 * acdc_param
@@ -211,20 +226,31 @@ class MotionProfiler(ConfigLoadable):
             self.min_acceleration_err = True
 #            #calculate new acceleration for fixed accel time
             ac = cv / self.min_acceleration_time
-            self.info('minimum acceleration time err. {} > {} new accel= {}'.format(times[0],
+            self.debug('minimum acceleration time err. {} > {} new accel= {}'.format(times[0],
                                                                                      self.min_acceleration_time, ac))
             dc = ac
 #            cv = self.min_acceleration_time * ac
             times, _distances = self.calculate_transit_parameters(displacement, cv, ac, dc)
+
             if _distances[2] < 0:
-                self.trapezoidal_err = True
-                self.info('trapezoidal err. negative velocity displacement velocity= {} new velocity= {}'.format(cv, self.min_velocity))
-                cv = self.min_velocity
-                ac = self.min_acceleration
-                dc = self.min_acceleration
+                self.trapezoidal_err = True                
+                ac=displacement/(2*self.min_acceleration_time**2)
+                dc=ac
+                ncv=ac*self.min_acceleration_time
+                
+                self.debug('trapezoidal err. negative velocity displacement velocity= {} new velocity= {}'.format(cv, ncv))
+                cv=ncv
+                
+#                cv = self.min_velocity
+#                ac = self.min_acceleration
+#                dc = self.min_acceleration
+#                
+                
+                
                 #ncv, ac, dc = self.find_min(displacement, cv, ac, dc)
 #            force = True
-
+            
+#            times, _distances = self.calculate_transit_parameters(displacement, cv, ac, dc)
         return cv, ac, dc#, force
 
 #    def find_min(self, disp, v, a, d, tol=0.001):

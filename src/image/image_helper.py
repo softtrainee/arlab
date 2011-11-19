@@ -15,8 +15,6 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 #=============standard library imports ========================
-
-from thread import start_new_thread
 from numpy import array
 #=============local library imports  ==========================
 
@@ -43,7 +41,8 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
 from ctypes import POINTER
 from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT, CvVect32f, \
     cvFitEllipse2, cvCreateStructuringElementEx, CV_SHAPE_RECT, CV_RETR_CCOMP, \
-    CV_RETR_TREE, cvFilter2D, cvBoundingRect, cvPyrDown, cvPyrUp
+    CV_RETR_TREE, cvFilter2D, cvBoundingRect, cvPyrDown, cvPyrUp, cvSmooth,\
+    CV_BLUR, CV_GAUSSIAN
 from ctypes_opencv.cxcore import cvCvtSeqToArray, CV_32SC2, CV_32FC2, cvConvert, \
     CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice, CV_SEQ_FLAG_HOLE, \
     CV_32FC1, cvScalarAll, cvSet, cvSet2D, cvConvertScale, cvReleaseData, \
@@ -401,6 +400,15 @@ def dilate(src, dv):
 
 def sharpen(src):
     pass
+
+def smooth(src, inplace=False):
+    if inplace:
+        dst=new_dst(src)
+    else:
+        dst=src
+    cvSmooth(src,dst, CV_GAUSSIAN, 3, 3,0)
+#    cvNot(src,dst)
+    return dst
 
 def remove_noise(img, x, y, w, h):
     sz = cvSize(w, h)

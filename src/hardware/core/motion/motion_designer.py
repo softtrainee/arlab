@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Range, Instance
+from traits.api import HasTraits, Range, Instance, Property
 from traitsui.api import View, Item, Group
 
 #============= standard library imports ========================
@@ -24,21 +24,63 @@ from numpy import linspace
 
 from src.graph.graph import Graph
 from src.hardware.core.motion.motion_profiler import MotionProfiler
+from src.helpers.logger_setup import setup
 
 
 
 class MotionDesigner(HasTraits):
     canvas = Instance(Graph)
-    acceleration = Range(0, 8., 7.62)
-    deceleration = Range(0, 8., 7.62)
-    velocity = Range(0, 4., 3.81)
-    distance = Range(0, 10., 5)
-    beam_radius = Range(0, 1.5, 1)
-    def _anytrait_changed(self, name, old, new):
-        if name in ['acceleration', 'deceleration', 'velocity',
-                    'distance', 'beam_radius']:
-            self.replot()
+    
+    acceleration=Property(Range(0, 8., 7.62),depends_on='_acceleration')
+    _acceleration = Range(0, 8., 7.62)
+    #deceleration = Range(0, 8., 7.62)
+    velocity=Property(Range(0, 8., 3.81),depends_on='_velocity')
+    _velocity = Range(0, 8., 3.81)
 
+    distance=Property(Range(0, 10., 5),depends_on='_distance')
+    _distance = Range(0, 10., 5)
+#    beam_radius = Range(0, 1.5, 1)
+
+    
+    def _set_velocity(self,v):
+        self._velocity=v
+    
+    def _set_distance(self,d):
+        self._distance=d
+        mp=MotionProfiler()
+        cv,ac,dc=mp.calculate_corrected_parameters(self.distance, self.velocity, self.acceleration, self.acceleration)
+        times, dist=mp.calculate_transit_parameters(self.distance, cv, ac, dc)
+        self._acceleration=ac
+        self._velocity=cv
+        self.plot_velocity_profile(times,cv, 0)
+        self.plot_position_profile(*times)
+        
+        
+    def _set_acceleration(self,a):
+        self._acceleration=a
+
+    def _get_velocity(self):
+        return self._velocity
+    def _get_distance(self):
+        return self._distance
+    def _get_acceleration(self,a):
+        return self._acceleration
+    
+    
+#    def _anytrait_changed(self, name, old, new):
+#        if name in ['acceleration', 'deceleration', 'velocity',
+#            #        'distance', 
+#                    #'beam_radius'
+#                    ]:
+#            self.replot()
+#        elif name in ['distance']:
+#            mp=MotionProfiler()
+#            cv,ac,dc=mp.calculate_corrected_parameters(self.distance, self.velocity, self.acceleration, self.acceleration)
+#            times, dist=mp.calculate_transit_parameters(self.distance, cv, ac, dc)
+#            
+#            self.plot_velocity_profile(times,cv, 0)
+#            self.plot_position_profile(*times, 1)
+            
     def replot(self):
         g = self.canvas
 
@@ -49,10 +91,10 @@ class MotionDesigner(HasTraits):
 
         atime, dtime, vtime = self.velocity_profile(0)
 
-        self.position_profile(1, atime, dtime, vtime)
+        self.plot_position_profile( atime, dtime, vtime, 1)
 
 
-    def position_profile(self, plotid, atime, dtime, vtime):
+    def plot_position_profile(self,atime, dtime, vtime, ploitid=1):
         g = self.canvas
 
         x = [0]
@@ -70,28 +112,28 @@ class MotionDesigner(HasTraits):
         #plot decel
         for i in linspace(0, dtime, 50):
             x.append(atime + vtime + i)
-            p = yo + self.velocity * i - 0.5 * self.deceleration * i ** 2
+#            p = yo + self.velocity * i - 0.5 * self.deceleration * i ** 2
+            p = yo + self.velocity * i - 0.5 * self.acceleration * i ** 2
             y.append(p)
         g.new_series(x, y, render_style='connectedpoints')
 
 
         #plot beam center
-        y = [p / 2.0] * 50
-        x = linspace(0, atime + vtime + dtime, 50)
-        g.new_series(x, y)
+#        y = [p / 2.0] * 50
+#        x = linspace(0, atime + vtime + dtime, 50)
+#        g.new_series(x, y)
 
         #plot beam radius'
         #include padding in the beam radius
-        yl = [pi - self.beam_radius for pi in y]
-        yu = [pi + self.beam_radius for pi in y]
-        g.new_series(x, yl, color='blue')
-        g.new_series(x, yu, color='blue')
+       # yl = [pi - self.beam_radius for pi in y]
+        #yu = [pi + self.beam_radius for pi in y]
+        #g.new_series(x, yl, color='blue')
+        #g.new_series(x, yu, color='blue')
 
 
     def velocity_profile(self, plotid):
-        g = self.canvas
 
-        v = self.velocity
+#        v = self.velocity
         #ac = self.acceleration
         #dc = self.deceleration
 
@@ -100,8 +142,15 @@ class MotionDesigner(HasTraits):
 
 
 
-        params = m.calculate_transit_times(d, self)
-        atime, dtime, vtime = params
+        times, dists = m.calculate_transit_parameters(d, self.velocity,
+                                                         self.acceleration,
+                                                       self.acceleration)
+        self.plot_velocity_profile(times,self.velocity,plotid)
+        return times
+    
+    def plot_velocity_profile(self,times,v, plotid):
+        g = self.canvas
+        atime, dtime, vtime = times
         #error, atime, dtime, cvd = m.check_motion(v, ac, d)
         x = [0]
         y = [0]
@@ -137,10 +186,10 @@ class MotionDesigner(HasTraits):
     def traits_view(self):
         cgrp = Group(
                    Item('acceleration'),
-                   Item('deceleration'),
+                 #  Item('deceleration'),
                    Item('velocity'),
                    Item('distance'),
-                   Item('beam_radius')
+                  # Item('beam_radius')
                    )
         v = View(
                  cgrp,
@@ -156,6 +205,7 @@ class MotionDesigner(HasTraits):
 
         return g
 if __name__ == '__main__':
+    setup('motionprofiler')
     m = MotionDesigner()
     m.replot()
     m.configure_traits()
