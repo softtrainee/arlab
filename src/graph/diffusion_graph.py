@@ -16,18 +16,15 @@ limitations under the License.
 #============= enthought library imports =======================
 #============= standard library imports ========================
 import os
-from numpy import array
 #============= local library imports  ==========================
 from graph import Graph
 from src.graph.editors.diffusion_plot_editor import DiffusionPlotEditor
 
 from src.graph.graph import name_generator
 from chaco.default_colormaps import color_map_name_dict
-#from chaco.plot_factory import add_default_grids
-from chaco.data_range_1d import DataRange1D
 
 #GROUPNAMES=['spectrum','logr_ro','arrhenius','cooling_history', 'unconstrained_thermal_history']
-GROUPNAMES=['spectrum','arrhenius','cooling_history', 'unconstrained_thermal_history','logr_ro']
+GROUPNAMES=['spectrum','logr_ro','arrhenius','cooling_history', 'unconstrained_thermal_history']
 
 LABELS=dict(spectrum='Spectrum',arrhenius='Arrhenius',logr_ro='LogR/Ro',
             unconstrained_thermal_history='Uncon. Thermal History',

@@ -22,7 +22,7 @@ from chaco.api import BaseXYPlot
 from wx import Colour
 from chaco.default_colormaps import color_map_name_dict
 from chaco.base_2d_plot import Base2DPlot
-from chaco.contour_poly_plot import ContourPolyPlot
+#from chaco.contour_poly_plot import ContourPolyPlot
 from chaco.data_range_1d import DataRange1D
 
 #=============local library imports  ==========================
