@@ -36,11 +36,27 @@ class ModelerManager(EnvisageManager):
     editor_klass = MEditor
 
     selected_datum = DelegatesTo('modeler', prefix='selected')
+
+    _include_panels=None
     def _selected_changed(self, old, new):
         self._modeler = new
 
     def new_modeler(self):
-        self.open_modeler(m=self._modeler_factory())
+        
+        
+        
+        m=self._modeler_factory()
+        if self._include_panels:
+            m.include_panels=self._include_panels
+        info=m.edit_traits(view='configure_view')
+        
+        if info.result:
+            #remember this modelers include panels for the future modelers
+            self._include_panels=m.include_panels
+            
+            
+            m.refresh_graph()
+            self.open_modeler(m=m)
 
     def _get_modeler(self):
         return self._modeler
@@ -74,12 +90,12 @@ class ModelerManager(EnvisageManager):
             self.modeler.graph.save_png(path=path)
 
     def __modeler_default(self):
-        return self._modeler_factory()
-
-    def _modeler_factory(self):
-        m = Modeler()
+        m=self._modeler_factory()
         m.refresh_graph()
-
+        return m
+    
+    def _modeler_factory(self):
+        m = Modeler()        
         return m
 
     def data_select_view(self):

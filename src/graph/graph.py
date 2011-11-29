@@ -167,6 +167,7 @@ class Graph(HasTraits):
     def contextual_menu_contents(self):
         '''
         '''
+        print 'asddfsaasdfasd'
         save_actions = []
         for n, f, kw in self.get_contextual_menu_save_actions():
             save_actions.append(self.action_factory(n, f, **kw))
@@ -622,14 +623,12 @@ class Graph(HasTraits):
         '''
         '''
         p = self.plot_editor
-
         if p is None or not p.plot == self.selected_plot:
             p = self.plot_editor_klass(plot=self.selected_plot,
                            graph=self,
                            **kw
                      )
             self.plot_editor = p
-
             p.edit_traits(parent=self._control)
 
 
@@ -756,7 +755,7 @@ class Graph(HasTraits):
                 kw[k] = options[k]
 
         container = c(**kw)
-
+        print container
         #add some tools
 #        cm=ContextualMenuTool(parent=container,
 #                              component=container

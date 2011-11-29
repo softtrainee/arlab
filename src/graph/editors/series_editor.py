@@ -24,9 +24,6 @@ from wx import Colour
 #=============local library imports  ==========================
 
 class SeriesEditor(HasTraits):
-    '''
-        G{classtree}
-    '''
     name = Property(depends_on='_name')
     _name = Str
 
@@ -68,9 +65,6 @@ class SeriesEditor(HasTraits):
                     )
 
 class PolygonPlotEditor(SeriesEditor):
-    '''
-        G{classtree}
-    '''
     series = Instance(BaseXYPlot)
 
     color_ = Property
@@ -90,7 +84,6 @@ class PolygonPlotEditor(SeriesEditor):
 
         self.series.face_color = c
         self.series.edge_color = c
-#        self.series.invalidate_and_redraw()
         self.series.request_redraw()
 
 
