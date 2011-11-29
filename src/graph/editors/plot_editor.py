@@ -70,6 +70,7 @@ class PlotEditor(HasTraits):
     _selected = Any
     _prev_selected = Any
 
+    _series_editor_klass=SeriesEditor
     def __init__(self, *args, **kw):
         '''
         '''
@@ -87,10 +88,7 @@ class PlotEditor(HasTraits):
     def __selected_changed(self, old, new):
         if new is None:
             self._prev_selected = old
-
-    def _build_series_editors(self):
-        '''
-        '''
+    def _get_plots(self):
         if self.plot:
             pplot = self.plot
             self.id = self.graph.plots.index(pplot)
@@ -98,31 +96,47 @@ class PlotEditor(HasTraits):
         elif self.graph:
             pplot = self.graph.plots[self.id]
         plots = pplot.plots
-
-        self.series_editors = []
+        return plots
+    def _get_series_editor_kwargs(self,plot, sid):
+        kwargs = dict(series=plot,
+                             graph=self.graph,
+                             plotid=self.id,
+                             id=sid,
+                             name=self.graph.get_series_label(plotid=self.id, series=sid)
+                             )
+        return kwargs
+    
+    def _build_series_editors(self, editors=None):
+        '''
+        '''
+        plots=self._get_plots()
+        
+        if editors is None:
+            self.series_editors = []
+            editors=self.series_editors
+            
+            
         for key in plots:
             plot = plots[key][0]
 
             if isinstance(plot, PolygonPlot):
                 editor = PolygonPlotEditor
             else:
-                editor = SeriesEditor
+                editor = self._series_editor_klass
 
-            id = int(key[4:])
-
-            kwargs = dict(series=plot,
-                                 graph=self.graph,
-                                 plotid=self.id,
-                                 id=id,
-                                 name=self.graph.get_series_label(plotid=self.id, series=id)
-                                 )
-            self.series_editors.append(editor(**kwargs))
-            self.series_editors.sort(key=lambda x:x.id)
+            kwargs=self._get_series_editor_kwargs(plot,int(key[4:]))
+            editors.append(editor(**kwargs))
+        editors.sort(key=lambda x:x.id)
+            #self.series_editors.append(editor(**kwargs))
+            #self.series_editors.sort(key=lambda x:x.id)
 
             #plot.index_mapper.on_trait_change(self.update_x, 'updated')
             #plot.value_mapper.on_trait_change(self.update_y, 'updated')
-
         if plots:
+            self._sync_limits(plot)
+            
+    def _sync_limits(self,plot):
+        
             self._xmin, self._xmax = plot.index_range.low, plot.index_range.high
             self._ymin, self._ymax = plot.value_range.low, plot.value_range.high
             
@@ -145,31 +159,39 @@ class PlotEditor(HasTraits):
                                 )
 
         return VGroup(xgrp, ygrp, show_border=True)
-
-    def traits_view(self):
-        '''
-        '''
+    def _get_table_columns(self):
         cols = [ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show')]
+        return cols
+        
+    def _get_table_editor(self):
+        cols=self._get_table_columns()
         table_editor = TableEditor(columns=cols,
                                    selected='_selected',
                                    selection_mode='row')
+        return table_editor
+    def _get_selected_group(self):
+        grp=Group(
+                Item('selected',
+                     style='custom',
+                      show_label=False,
+                      editor=InstanceEditor(),
+                      enabled_when='selected.show',
+                      height=0.25
+                     ),
+                     show_border=True,
+                     springy=False
+                             )
+        return grp
+    def traits_view(self):
+        '''
+        '''
         v = View(VGroup(
                         self.get_axes_group(),
-                        Group(
-                            Item('selected',
-                                 style='custom',
-                                  show_label=False,
-                                  editor=InstanceEditor(),
-                                  enabled_when='selected.show',
-                                  height=0.25
-                                 ),
-                                 show_border=True,
-                                 springy=False
-                             ),
+                        self._get_selected_group(),
                         Item('series_editors',
                              style='custom',
-                             editor=table_editor,
+                             editor=self._get_table_editor(),
                              show_label=False,
                              springy=False,
                              height=0.75

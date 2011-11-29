@@ -14,13 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-
+from traits.api import Dict
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 from graph import Graph
+from src.graph.editors.diffusion_plot_editor import DiffusionPlotEditor
+import os
 
-
+GROUPNAMES=['spectrum','logr_ro','arrhenius','cooling_history']
 class DiffusionGraph(Graph):
     '''
     a graph for displaying diffusion data
@@ -36,20 +38,30 @@ class DiffusionGraph(Graph):
 #        super(DiffusionGraph,self).__init__(*args,**kw)
 #        self.new_graph()
     bindings = None
-    container_dict = dict(
-    type='g',
-    bgcolor='white',
-    padding=[25, 5, 50, 30],
-    spacing=(32, 25),
-    shape=(2, 2))
-    def show_plot_editor(self):
-        '''
-        '''
-
-        i = self.selected_plotid
-        names = ['Spectrum', 'LogR/Ro', 'Arrhenius', 'CoolingHistory']
-        self._show_plot_editor(**{'name':names[i]})
-
+#    container_dict = Dict 
+    plot_editor_klass=DiffusionPlotEditor
+    runids=None
+    
+    include_panels=None
+#    def show_plot_editor(self):
+#        '''
+#        '''
+#
+#        i = self.selected_plotid
+#        print 'i', i
+#        names = ['Spectrum', 'LogR/Ro', 'Arrhenius', 'CoolingHistory']
+#        self._show_plot_editor(**{'name':names[i]})
+#    def _container_dict_default(self):
+#        return
+    
+    def add_runid(self,rid, kind=None):
+        if kind=='path':
+            rid=os.path.basename(rid)
+        try:
+            self.runids.append(rid)
+        except AttributeError:
+            self.runids=[rid]
+            
     def set_group_binding(self, pid, value):
         '''
 
@@ -113,13 +125,21 @@ class DiffusionGraph(Graph):
         '''
         if self.groups:
             del(self.groups)
-        self.groups = dict(spectrum=[],
-                         logr_ro=[],
-                         cooling_history=[],
-                         arrhenius=[])
-
-        for _i in range(4):
-            self.new_plot(padding=5,
+            
+        self.groups=dict()
+        for key in self.include_panels:
+            self.groups[key]=[]
+            
+#        self.groups = dict(spectrum=[],
+#                         logr_ro=[],
+#                         cooling_history=[],
+#                         arrhenius=[])
+        n=len(self.include_panels)
+        padding=5 if n>2 else [25,5,50,30]
+        for _i in range(n):
+            
+            
+            self.new_plot(padding=padding,
                           pan=True,
                           zoom=True)
 
@@ -151,16 +171,19 @@ class DiffusionGraph(Graph):
           
         '''
 
-        for k in ['spectrum', 'arrhenius', 'logr_ro', 'cooling_history']:
-            g = self.groups[k]
+        for k in GROUPNAMES:#['spectrum', 'arrhenius', 'logr_ro', 'cooling_history']:
             try:
-                plots = g[gid]
-
-                for p in plots:
-                    p.visible = vis
-            except IndexError:
+                g = self.groups[k]
+                try:
+                    plots = g[gid]
+    
+                    for p in plots:
+                        p.visible = vis
+                    self.plotcontainer.invalidate_and_redraw()
+                except IndexError:
+                    pass
+            except KeyError:
                 pass
-        self.plotcontainer.invalidate_and_redraw()
 
     def set_plot_visibility(self, plot, vis):
         plot.visible = vis
@@ -172,12 +195,13 @@ class DiffusionGraph(Graph):
         '''
         a = None
         plots = []
+
         if ar39_err is not None and age_err is not None:
             a, _p = self.new_series(ar39_err, age_err, plotid=pid,
                         type='polygon',
                         color='orange')
-            plots.append(a)
-            
+            #plots.append(a)
+
         b, _p = self.new_series(ar39, age, plotid=pid, **kw)
         plots = [b, a] if a is not None else [b]
         
