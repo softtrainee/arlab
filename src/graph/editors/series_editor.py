@@ -16,10 +16,14 @@ limitations under the License.
 #=============enthought library imports=======================
 from traits.api import HasTraits, on_trait_change, \
     Instance, Bool, Int, Any, Property, Str
-from traitsui.api import View, Item, VGroup, ColorEditor
+from traitsui.api import View, Item, VGroup, ColorEditor, EnumEditor
 from chaco.api import BaseXYPlot
 #=============standard library imports ========================
 from wx import Colour
+from chaco.default_colormaps import color_map_name_dict
+from chaco.base_2d_plot import Base2DPlot
+from chaco.contour_poly_plot import ContourPolyPlot
+from chaco.data_range_1d import DataRange1D
 
 #=============local library imports  ==========================
 
@@ -63,9 +67,40 @@ class SeriesEditor(HasTraits):
                             Item('series', style='custom', show_label=False)
                            )
                     )
+class ContourPolyPlotEditor(SeriesEditor):
+#    series=Instance(ContourPolyPlot)
+    series=Instance(Base2DPlot)
+    series2=Instance(Base2DPlot)
+    cmap=Str('yarg')
+    def __init__(self, *args,**kw):
+        super(ContourPolyPlotEditor,self).__init__(*args,**kw)
+        self.cmap_names=color_map_name_dict.keys()
+    
+    def _cmap_changed(self):
+        
+        r=self.series.value.get_bounds()
+        func=color_map_name_dict[self.cmap]
+        cm=func(DataRange1D(low_setting=0,high_setting=r[1]))
+        for p in self.graph.plots[self.plotid].plots.itervalues():
+            p=p[0]
+            p.color_mapper=cm
+            p.bgcolor=cm.color_bands[0]
 
+        self.series.invalidate_and_redraw()
+        
+    def traits_view(self):
+        '''
+        '''
+        v = View(VGroup(
+                      Item('show', label='hide/show'),
+                      Item('cmap', editor=EnumEditor(name='cmap_names')
+                           )
+                      )
+                )
+        return v
+    
 class PolygonPlotEditor(SeriesEditor):
-    series = Instance(BaseXYPlot)
+    #series = Instance(BaseXYPlot)
 
     color_ = Property
     def _get_color_(self):

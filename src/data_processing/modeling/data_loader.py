@@ -19,6 +19,7 @@ from traits.api import Str
 #============= standard library imports ========================
 import os
 import csv
+from numpy import array, loadtxt
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.helpers.logger_setup import setup
@@ -31,19 +32,22 @@ class DataLoader(Loggable):
     '''
     '''
     root = Str
-    def _open_reader(self, name, root=None, delimiter=TAB):
-        '''
-            
-        '''
-
+    def _build_path(self,name, root=None):
         if root is None:
             root = self.root
         path = os.path.join(root, name)
+        return path
+    
+    def _open_reader(self, name, root=None, mode='U', delimiter=TAB, skipinitialspace=True):
+        '''
+            
+        '''
+        path=self._build_path(name, root)
 
         if os.path.isfile(path):
 
-            f = open(path, 'U')
-            return f, csv.reader(f, delimiter=delimiter, skipinitialspace=True)
+            f = open(path, mode)
+            return f, csv.reader(f, delimiter=delimiter, skipinitialspace=skipinitialspace)
         else:
             self.warning('Path does not exist {}'.format(path))
             return None, None
@@ -212,10 +216,10 @@ class DataLoader(Loggable):
     def load_arrhenius(self, name):
         '''
         '''
-        self.info('load arrhenius')
+        self.info('load arrhenius {}'.format(name))
         inv_temp = []
         log_d = []
-        f, reader = self._open_reader(name, delimiter='\t')
+        f, reader = self._open_reader(name, delimiter=TAB)
         if reader is not None:
             for row in reader:
                 if '&' not in row:
@@ -283,6 +287,61 @@ class DataLoader(Loggable):
             #age.append(float(row[1]))
         f.close()
         return ar39, age
+    
+    def load_unconstrained_thermal_history(self, contour=True):
+        self.info('loading unconstrained thermal history')
+        
+        if contour:
+#            f, reader = self._open_reader('chistall-out.dat', delimiter=TAB, mode='rb', skipinitialspace=False)
+#            if reader is None:
+#                return
+#            p=self._build_path('matx.dat')
+#            m=loadtxt(p, dtype='float')
+#            
+#            p=self._build_path('matx.dat')
+#            data=loadtxt(p, dtype='float')
+#            
+#            p=self._build_path('matx1.dat')
+#            data=loadtxt(p, dtype='float')
+#            
+            p=self._build_path('matx2.dat')
+            data=loadtxt(p, dtype='float')
+            
+
+
+            return data
+        else:
+            f, reader = self._open_reader('chistall-out.dat', delimiter=TAB, mode='rb', skipinitialspace=False)
+            if reader is None:
+                return
+            
+            
+            series=[]
+            xy=[]
+            for row in reader:
+                if row[0].startswith(' &'):
+                    xy=array(xy)
+                    series.append(xy) 
+                    xy=[]
+                    continue
+                
+                try:
+                    try:
+                        float(row[0])
+                        #xy.append(row)
+                    except ValueError:
+                        pass
+                    xy.append(map(float, [row[0].strip(),row[1].strip()]))
+                    
+                except IndexError:
+                    pass
+                
+    #        print len(series)
+            data=array(series)
+#        print type(data)
+#        print data.shape
+            f.close()
+            return data
     
     def validate_data_dir(self, d):
         '''

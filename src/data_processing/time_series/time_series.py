@@ -41,7 +41,7 @@ def seasonal_subseries(x, y, **kw):
 
     return xbins, ybins, ms
 
-def downsample_1d(data, factor, estimator=np.mean):
+def downsample_1d(data, factor=5, estimator=np.mean):
     n = data.shape[0]
     crarr = data[:n - (n % int(factor))]
     a = [crarr[i::factor] for i in range(factor)]

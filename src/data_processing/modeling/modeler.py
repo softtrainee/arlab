@@ -127,7 +127,7 @@ class Modeler(Loggable):
     run_configuration = None
 
         
-    include_panels=List(GROUPNAMES)
+    include_panels=List(GROUPNAMES[:-1])
     
     @on_trait_change('graph.status_text')
     def update_statusbar(self, object, name, value):
@@ -287,7 +287,6 @@ class Modeler(Loggable):
         
         plotidcounter=0
         
-        print 'ffooo',self.include_panels
         if 'spectrum' in self.include_panels:
             data = dl.load_spectrum()
             if data is not None:
@@ -350,7 +349,7 @@ class Modeler(Loggable):
                 data = dl.load_arrhenius('arr.dat')
                 if data is not None:
                     try:
-                        g.build_arrhenius(ngroup=False, *data)
+                        g.build_arrhenius(ngroup=False,pid=plotidcounter, *data)
                         g.set_series_label('arr.dat', plotid=plotidcounter, series=1)
                     except Exception, err:
                         self.info(err)
@@ -363,7 +362,14 @@ class Modeler(Loggable):
                     g.build_cooling_history(pid=plotidcounter,*data)
                 except Exception, err:
                     self.info(err)
-
+                    
+        if 'unconstrained_thermal_history' in self.include_panels:
+            plotidcounter+=1
+            data=dl.load_unconstrained_thermal_history()
+            if data is not None:
+                g.build_unconstrained_thermal_history(data, pid=plotidcounter)
+        
+            
         #sync the colors
         if self.sync_groups:
             for si in self.sync_groups:
@@ -397,8 +403,7 @@ class Modeler(Loggable):
         g = self.graph
         if g is None:
             
-            print self.include_panels
-            panels=['spectrum','logr_ro','arrenhius','cooling_history']
+            panels=GROUPNAMES#['spectrum','logr_ro','arrenhius','cooling_history']
             if self.include_panels:
                 panels=self.include_panels
             
@@ -407,13 +412,16 @@ class Modeler(Loggable):
             c=1
             if l>2:
                 c=2
-            
+
             g = DiffusionGraph(include_panels=panels,
                                container_dict= dict(
                                             type='h' if c==1 else 'g',
                                             bgcolor='white',
-                                            padding=[25, 5, 50, 30],
-                                            spacing=32 if c==1 else (32, 25),
+                                            padding=[10,10,40,10],
+                                            
+                                            #padding=[25, 5, 50, 30],
+                                            #spacing=(5,5),
+                                            #spacing=32 if c==1 else (32, 25),
                                             shape=(r, c)
                                             )
                                

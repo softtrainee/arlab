@@ -25,6 +25,10 @@ from series_editor import SeriesEditor, PolygonPlotEditor
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from kiva.trait_defs.kiva_font_trait import KivaFontFunc
+from src.graph.editors.series_editor import ContourPolyPlotEditor
+from chaco.contour_poly_plot import ContourPolyPlot
+from chaco.base_2d_plot import Base2DPlot
+from chaco.cmap_image_plot import CMapImagePlot
 class PlotEditorHandler(Handler):
     def closed(self, info, is_ok):
         '''
@@ -88,6 +92,7 @@ class PlotEditor(HasTraits):
     def __selected_changed(self, old, new):
         if new is None:
             self._prev_selected = old
+    
     def _get_plots(self):
         if self.plot:
             pplot = self.plot
@@ -97,6 +102,7 @@ class PlotEditor(HasTraits):
             pplot = self.graph.plots[self.id]
         plots = pplot.plots
         return plots
+    
     def _get_series_editor_kwargs(self,plot, sid):
         kwargs = dict(series=plot,
                              graph=self.graph,
@@ -104,6 +110,9 @@ class PlotEditor(HasTraits):
                              id=sid,
                              name=self.graph.get_series_label(plotid=self.id, series=sid)
                              )
+#        if plot is not None:
+#            kwargs['series']=plot
+#            
         return kwargs
     
     def _build_series_editors(self, editors=None):
@@ -114,41 +123,45 @@ class PlotEditor(HasTraits):
         if editors is None:
             self.series_editors = []
             editors=self.series_editors
-            
-            
+             
         for key in plots:
             plot = plots[key][0]
-
+                        
             if isinstance(plot, PolygonPlot):
                 editor = PolygonPlotEditor
+            elif isinstance(plot, (CMapImagePlot,ContourPolyPlot)):
+                editor=ContourPolyPlotEditor
+                
             else:
                 editor = self._series_editor_klass
 
             kwargs=self._get_series_editor_kwargs(plot,int(key[4:]))
             editors.append(editor(**kwargs))
         editors.sort(key=lambda x:x.id)
-            #self.series_editors.append(editor(**kwargs))
-            #self.series_editors.sort(key=lambda x:x.id)
 
-            #plot.index_mapper.on_trait_change(self.update_x, 'updated')
-            #plot.value_mapper.on_trait_change(self.update_y, 'updated')
         if plots:
             self._sync_limits(plot)
             
-    def _sync_limits(self,plot):
-        
+    def _sync_limits(self,plot): 
+        if isinstance(plot, Base2DPlot):
+            plow=plot.index_range.low
+            phigh=plot.index_range.high
+            self._xmin=plow[0]      
+            self._ymin=plow[1]
+            
+            self._xmax=phigh[0]      
+            self._ymax=phigh[1]
+            
+                  
+            #print plot.value_range.low
+            #print plot.value_range.high
+        else:      
             self._xmin, self._xmax = plot.index_range.low, plot.index_range.high
             self._ymin, self._ymax = plot.value_range.low, plot.value_range.high
-            
 
-    
 
     def get_axes_group(self):
-        editor = TextEditor(enter_set=True,
-                            auto_set=False,
-
-
-                            )
+        editor = TextEditor(enter_set=True,auto_set=False)
         xgrp = VGroup('xtitle', Item('xmin', editor=editor),
                                 Item('xmax', editor=editor),
                                 #Item('xcolor_', editor = ColorEditor(current_color = 'red'))
@@ -159,6 +172,7 @@ class PlotEditor(HasTraits):
                                 )
 
         return VGroup(xgrp, ygrp, show_border=True)
+    
     def _get_table_columns(self):
         cols = [ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show')]
@@ -170,6 +184,7 @@ class PlotEditor(HasTraits):
                                    selected='_selected',
                                    selection_mode='row')
         return table_editor
+    
     def _get_selected_group(self):
         grp=Group(
                 Item('selected',
@@ -183,29 +198,50 @@ class PlotEditor(HasTraits):
                      springy=False
                              )
         return grp
+    def _get_additional_groups(self):
+        pass
+    
     def traits_view(self):
         '''
         '''
-        v = View(VGroup(
-                        self.get_axes_group(),
-                        self._get_selected_group(),
-                        Item('series_editors',
+        vg=VGroup()
+        vg.content.append(self.get_axes_group())
+        vg.content.append(self._get_selected_group())
+        
+        
+        
+        vg.content.append(Item('series_editors',
                              style='custom',
                              editor=self._get_table_editor(),
                              show_label=False,
                              springy=False,
                              height=0.75
-                             ),
-                        ),
-
-                    resizable=True,
-                    height=0.8,
-                    width=275,
-                    title=self.name,
-                    handler=PlotEditorHandler,
-                    x=10,
-                    y=20
-                    )
+                             ))
+        
+        agrp=self._get_additional_groups()
+        if agrp:
+            vg.content.append(agrp)         
+#        VGroup(
+#                        self.get_axes_group(),
+#                        self._get_selected_group(),
+#                        
+#                        Item('series_editors',
+#                             style='custom',
+#                             editor=self._get_table_editor(),
+#                             show_label=False,
+#                             springy=False,
+#                             height=0.75
+#                             ),
+#                        ),         
+        v = View(vg,
+                resizable=True,
+                height=0.8,
+                width=275,
+                title=self.name,
+                handler=PlotEditorHandler,
+                x=10,
+                y=20
+                )
         return v
 
 #=============================Property Methods============================

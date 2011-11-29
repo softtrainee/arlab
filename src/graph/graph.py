@@ -399,11 +399,13 @@ class Graph(HasTraits):
         '''
         p = self.plots[plotid]
         s = 'plot{}'.format(series)
-
-        p.showplot(s) if v else p.hideplot(s)
-
-        self.plotcontainer.invalidate_and_redraw()
-
+        try:
+            p.showplot(s) if v else p.hideplot(s)
+            self.redraw()
+        except KeyError:
+            pass
+        
+        
     def get_x_limits(self, plotid=0):
         '''
         '''
@@ -531,6 +533,7 @@ class Graph(HasTraits):
                 zoomargs = kw['zoom_dict']
                 for k in zoomargs:
                     nkw[k] = zoomargs[k]
+            
             zt = ZoomTool(component=p, **nkw)
             p.overlays.append(zt)
 
@@ -711,7 +714,12 @@ class Graph(HasTraits):
 
         plot.overlays.append(l)
 
-
+    def redraw(self, force=True):
+        if force:
+            self.plotcontainer.invalidate_and_redraw()
+        else:
+            self.plotcontainer.request_redraw()
+            
     def container_factory(self):
         '''
         '''
@@ -755,7 +763,6 @@ class Graph(HasTraits):
                 kw[k] = options[k]
 
         container = c(**kw)
-        print container
         #add some tools
 #        cm=ContextualMenuTool(parent=container,
 #                              component=container

@@ -14,45 +14,57 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Dict
 #============= standard library imports ========================
-
+import os
+from numpy import array
 #============= local library imports  ==========================
 from graph import Graph
 from src.graph.editors.diffusion_plot_editor import DiffusionPlotEditor
-import os
 
-GROUPNAMES=['spectrum','logr_ro','arrhenius','cooling_history']
+from src.graph.graph import name_generator
+from chaco.default_colormaps import color_map_name_dict
+#from chaco.plot_factory import add_default_grids
+from chaco.data_range_1d import DataRange1D
+
+#GROUPNAMES=['spectrum','logr_ro','arrhenius','cooling_history', 'unconstrained_thermal_history']
+GROUPNAMES=['spectrum','arrhenius','cooling_history', 'unconstrained_thermal_history','logr_ro']
+
+LABELS=dict(spectrum='Spectrum',arrhenius='Arrhenius',logr_ro='LogR/Ro',
+            unconstrained_thermal_history='Uncon. Thermal History',
+            cooling_history='Cooling History'
+            )
 class DiffusionGraph(Graph):
     '''
     a graph for displaying diffusion data
     
-    contains 4 plots 
+    contains upto 5 plots 
     1. age-spectrum
     2.log r/ro
     3.arrhenius
     4.cooling histories
-    
+    5.unconstrained thermal histories
     '''
-#    def __init__(self,*args,**kw):
-#        super(DiffusionGraph,self).__init__(*args,**kw)
-#        self.new_graph()
-    bindings = None
-#    container_dict = Dict 
     plot_editor_klass=DiffusionPlotEditor
+
+    bindings = None
     runids=None
-    
     include_panels=None
-#    def show_plot_editor(self):
-#        '''
-#        '''
-#
-#        i = self.selected_plotid
-#        print 'i', i
-#        names = ['Spectrum', 'LogR/Ro', 'Arrhenius', 'CoolingHistory']
-#        self._show_plot_editor(**{'name':names[i]})
-#    def _container_dict_default(self):
-#        return
+    
+    zdataname_generators=None
+    def show_plot_editor(self):
+        '''
+        '''
+
+        i = self.selected_plotid
+#        names = ['Spectrum', 'LogR/Ro', 'Arrhenius', 'CoolingHistory', 'UncontrainedThermalHistory']
+#        names=self.include_panels
+        
+        names=[]
+        for n in self.include_panels:
+            names.append(LABELS[n])
+        
+        self._show_plot_editor(**{'name':names[i]})
+
     
     def add_runid(self,rid, kind=None):
         if kind=='path':
@@ -118,8 +130,8 @@ class DiffusionGraph(Graph):
                 g = self.groups['spectrum']
                 if index % 2 == 0:
                     g[i][index].trait_set(**{attr:value})
-            self.plotcontainer.invalidate_and_redraw()
-
+            self.redraw()
+            
     def new_graph(self):
         '''
         '''
@@ -130,48 +142,21 @@ class DiffusionGraph(Graph):
         for key in self.include_panels:
             self.groups[key]=[]
             
-#        self.groups = dict(spectrum=[],
-#                         logr_ro=[],
-#                         cooling_history=[],
-#                         arrhenius=[])
         n=len(self.include_panels)
-        padding=5 if n>2 else [25,5,50,30]
+        padding=[50,5,10,30]# if n>2 else [25,5,50,30]
         for _i in range(n):
-            
-            
-            self.new_plot(padding=padding,
+            a=self.new_plot(padding=padding,
                           pan=True,
-                          zoom=True)
-
-#    def container_factory(self, *args, **kw):
-#        '''
-#            @type *args: C{str}
-#            @param *args:
-#
-#            @type **kw: C{str}
-#            @param **kw:
-#        '''
-#        return self._container_factory(
-#                                       )
-#    def set_group_color(self, gid=0, series=None):
-#        '''
-#            
-#        '''
-#        for k in ['spectrum', 'arrhenius', 'logr_ro', 'cooling_history']:
-#            g = self.groups[k]
-#            try:
-#                plots = g[gid]
-#                for p in plots:
-#                    print p
-#            except IndexError:
-#                pass
-
+                          zoom=True,
+                          )
+        
+        
     def set_group_visiblity(self, vis, gid=0):
         '''
           
         '''
 
-        for k in GROUPNAMES:#['spectrum', 'arrhenius', 'logr_ro', 'cooling_history']:
+        for k in GROUPNAMES:
             try:
                 g = self.groups[k]
                 try:
@@ -179,7 +164,7 @@ class DiffusionGraph(Graph):
     
                     for p in plots:
                         p.visible = vis
-                    self.plotcontainer.invalidate_and_redraw()
+                    self.redraw()
                 except IndexError:
                     pass
             except KeyError:
@@ -187,14 +172,13 @@ class DiffusionGraph(Graph):
 
     def set_plot_visibility(self, plot, vis):
         plot.visible = vis
-        self.plotcontainer.invalidate_and_redraw()
-
+        self.redraw()
+        
     def build_spectrum(self, ar39, age, ar39_err=None, age_err=None, pid=0, ngroup=True, **kw):
         '''
 
         '''
         a = None
-        plots = []
 
         if ar39_err is not None and age_err is not None:
             a, _p = self.new_series(ar39_err, age_err, plotid=pid,
@@ -210,10 +194,9 @@ class DiffusionGraph(Graph):
         else:
             self.groups['spectrum'][-1] += plots
             
-            
-            
         self.set_x_title('Cum. 39Ar %', plotid=pid)
         self.set_y_title('Age (Ma)', plotid=pid)
+        
         return b
 
     def build_logr_ro(self, ar39, logr, pid=1, ngroup=True, **kw):
@@ -230,6 +213,7 @@ class DiffusionGraph(Graph):
 
         self.set_x_title('Cum. 39Ar %', plotid=pid)
         self.set_y_title('Log R/Ro', plotid=pid)
+        
         return a
     
     def build_arrhenius(self, T, Dta, pid=2, ngroup=True, **kw):
@@ -247,21 +231,75 @@ class DiffusionGraph(Graph):
 
         self.set_x_title('10000/T (K)', plotid=pid)
         self.set_y_title('Log Dt/a^2', plotid=pid)
-
+        
     def build_cooling_history(self, ts, Tsl, Tsh, pid=3):
         '''
-                    '''
+        '''
+        self.set_x_title('coo t (Ma)', plotid=pid)
+        self.set_y_title('Temp (C)', plotid=pid)
+        self.set_y_limits(min=100, plotid=pid)
+        a, _p = self.new_series(ts, Tsl, type='polygon',plotid=pid, color=self.color_generators[pid].next())
+        b, _p = self.new_series(ts, Tsh, type='polygon',plotid=pid, color=self.color_generators[pid].next())
+
+        self.groups['cooling_history'].append([a, b])
+        self.redraw()
+        
+    def build_unconstrained_thermal_history(self, datacontainer,pid=4, contour=True):
+    
         self.set_x_title('t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
         self.set_y_limits(min=100, plotid=pid)
-        a, _p = self.new_series(ts, Tsl, type='polygon', color=self.color_generators[pid].next())
-        b, _p = self.new_series(ts, Tsh, type='polygon', color=self.color_generators[pid].next())
+        
+        if contour:
+            if not self.zdataname_generators:
+                self.zdataname_generators = [name_generator('z')]
+            else:
+                self.zdataname_generators.append(name_generator('z'))
+            
+            zname = self.zdataname_generators[-1].next()
+            x=[10,350]
+            y=[100,600]
+            plot, names, rd = self._series_factory(x, y, plotid=pid)
+            plot.data.set_data(zname, datacontainer)
+            
+            rd['xbounds']=tuple(x)
+            rd['ybounds']=tuple(y)
+            
+            cmap='Greens'
+            cmap=color_map_name_dict.get(cmap)
+            rd['colormap'] = cmap
 
-        self.groups['cooling_history'].append([a, b])
+#            contour = plot.img_plot(zname,
+#                                    hide_grids=False,
+#                                     **rd)[0]
+            c=plot.contour_plot(zname,type='poly',poly_cmap=cmap,
+                             hide_grids=False,
+                             **rd)[0]
 
+            plot.bgcolor=c.color_mapper.color_bands[0]
+            
+            self.plotcontainer.draw_order=['background',  'underlay', 'image','plot', 'selection', 'border', 'annotation', 'overlay']
 
-
-#============= views ===================================
-
-
+#            add_default_grids(plot)
+#            self.plotcontainer.add(plot)
+            
+        else:
+            for s in datacontainer:
+                xs=s[:,0]
+                ys=s[:,1]
+                self.new_series(xs,ys)
+    
 #============= EOF ====================================
+
+#    def set_group_color(self, gid=0, series=None):
+#        '''
+#            
+#        '''
+#        for k in ['spectrum', 'arrhenius', 'logr_ro', 'cooling_history']:
+#            g = self.groups[k]
+#            try:
+#                plots = g[gid]
+#                for p in plots:
+#                    print p
+#            except IndexError:
+#                pass
