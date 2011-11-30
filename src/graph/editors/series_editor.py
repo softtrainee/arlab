@@ -20,7 +20,7 @@ from traitsui.api import View, Item, VGroup, ColorEditor, EnumEditor
 from chaco.api import BaseXYPlot
 #=============standard library imports ========================
 from wx import Colour
-from chaco.default_colormaps import color_map_name_dict
+from chaco.default_colormaps import color_map_name_dict, reverse
 from chaco.base_2d_plot import Base2DPlot
 #from chaco.contour_poly_plot import ContourPolyPlot
 from chaco.data_range_1d import DataRange1D
@@ -71,18 +71,28 @@ class SeriesEditor(HasTraits):
 class ContourPolyPlotEditor(SeriesEditor):
 #    series=Instance(ContourPolyPlot)
     series = Instance(Base2DPlot)
-    series2 = Instance(Base2DPlot)
-    cmap = Str('Greens')
+#    series2 = Instance(Base2DPlot)
+    cmap = Str('yarg')
+    reverse = Bool(False)
     def __init__(self, *args, **kw):
         super(ContourPolyPlotEditor, self).__init__(*args, **kw)
         self.cmap_names = color_map_name_dict.keys()
-    
-    def _cmap_changed(self):
+        
+    @on_trait_change('cmap,reverse')
+    def _update(self):
         
         r = self.series.value.get_bounds()
         func = color_map_name_dict[self.cmap]
+        
+        if self.reverse:
+            func = reverse(func)
+            
         cm = func(DataRange1D(low_setting=0, high_setting=r[1]))
-        for p in self.graph.plots[self.plotid].plots.itervalues():
+
+        for i, p in enumerate(self.graph.plots[self.plotid].plots.itervalues()):
+            if i == 0:
+                continue
+            
             p = p[0]
             p.color_mapper = cm
             p.bgcolor = cm.color_bands[0]
@@ -94,8 +104,10 @@ class ContourPolyPlotEditor(SeriesEditor):
         '''
         v = View(VGroup(
                       Item('show', label='hide/show'),
+                      Item('reverse'),
                       Item('cmap', editor=EnumEditor(name='cmap_names')
-                           )
+                           ),
+                      
                       )
                 )
         return v
