@@ -32,7 +32,7 @@ class DataLoader(Loggable):
     '''
     '''
     root = Str
-    def _build_path(self,name, root=None):
+    def _build_path(self, name, root=None):
         if root is None:
             root = self.root
         path = os.path.join(root, name)
@@ -42,7 +42,7 @@ class DataLoader(Loggable):
         '''
             
         '''
-        path=self._build_path(name, root)
+        path = self._build_path(name, root)
 
         if os.path.isfile(path):
 
@@ -304,10 +304,9 @@ class DataLoader(Loggable):
 #            p=self._build_path('matx1.dat')
 #            data=loadtxt(p, dtype='float')
 #            
-            p=self._build_path('matx2.dat')
-            data=loadtxt(p, dtype='float')
-            
-
+            p = self._build_path('matx2.dat')
+            if os.path.isfile(p):
+                data = loadtxt(p, dtype='float')
 
             return data
         else:
@@ -316,13 +315,13 @@ class DataLoader(Loggable):
                 return
             
             
-            series=[]
-            xy=[]
+            series = []
+            xy = []
             for row in reader:
                 if row[0].startswith(' &'):
-                    xy=array(xy)
+                    xy = array(xy)
                     series.append(xy) 
-                    xy=[]
+                    xy = []
                     continue
                 
                 try:
@@ -331,13 +330,13 @@ class DataLoader(Loggable):
                         #xy.append(row)
                     except ValueError:
                         pass
-                    xy.append(map(float, [row[0].strip(),row[1].strip()]))
+                    xy.append(map(float, [row[0].strip(), row[1].strip()]))
                     
                 except IndexError:
                     pass
                 
     #        print len(series)
-            data=array(series)
+            data = array(series)
 #        print type(data)
 #        print data.shape
             f.close()
