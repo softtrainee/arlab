@@ -29,6 +29,7 @@ from src.graph.editors.series_editor import ContourPolyPlotEditor
 from chaco.contour_poly_plot import ContourPolyPlot
 from chaco.base_2d_plot import Base2DPlot
 from chaco.cmap_image_plot import CMapImagePlot
+from chaco.base_contour_plot import BaseContourPlot
 class PlotEditorHandler(Handler):
     def closed(self, info, is_ok):
         '''
@@ -74,7 +75,7 @@ class PlotEditor(HasTraits):
     _selected = Any
     _prev_selected = Any
 
-    _series_editor_klass=SeriesEditor
+    _series_editor_klass = SeriesEditor
     def __init__(self, *args, **kw):
         '''
         '''
@@ -103,7 +104,7 @@ class PlotEditor(HasTraits):
         plots = pplot.plots
         return plots
     
-    def _get_series_editor_kwargs(self,plot, sid):
+    def _get_series_editor_kwargs(self, plot, sid):
         kwargs = dict(series=plot,
                              graph=self.graph,
                              plotid=self.id,
@@ -118,39 +119,39 @@ class PlotEditor(HasTraits):
     def _build_series_editors(self, editors=None):
         '''
         '''
-        plots=self._get_plots()
+        plots = self._get_plots()
         
         if editors is None:
             self.series_editors = []
-            editors=self.series_editors
+            editors = self.series_editors
              
         for key in plots:
             plot = plots[key][0]
                         
             if isinstance(plot, PolygonPlot):
                 editor = PolygonPlotEditor
-            elif isinstance(plot, (CMapImagePlot,ContourPolyPlot)):
-                editor=ContourPolyPlotEditor
+            elif isinstance(plot, (CMapImagePlot, BaseContourPlot)):
+                editor = ContourPolyPlotEditor
                 
             else:
                 editor = self._series_editor_klass
 
-            kwargs=self._get_series_editor_kwargs(plot,int(key[4:]))
+            kwargs = self._get_series_editor_kwargs(plot, int(key[4:]))
             editors.append(editor(**kwargs))
         editors.sort(key=lambda x:x.id)
 
         if plots:
             self._sync_limits(plot)
             
-    def _sync_limits(self,plot): 
+    def _sync_limits(self, plot): 
         if isinstance(plot, Base2DPlot):
-            plow=plot.index_range.low
-            phigh=plot.index_range.high
-            self._xmin=plow[0]      
-            self._ymin=plow[1]
+            plow = plot.index_range.low
+            phigh = plot.index_range.high
+            self._xmin = plow[0]      
+            self._ymin = plow[1]
             
-            self._xmax=phigh[0]      
-            self._ymax=phigh[1]
+            self._xmax = phigh[0]      
+            self._ymax = phigh[1]
             
                   
             #print plot.value_range.low
@@ -161,7 +162,7 @@ class PlotEditor(HasTraits):
 
 
     def get_axes_group(self):
-        editor = TextEditor(enter_set=True,auto_set=False)
+        editor = TextEditor(enter_set=True, auto_set=False)
         xgrp = VGroup('xtitle', Item('xmin', editor=editor),
                                 Item('xmax', editor=editor),
                                 #Item('xcolor_', editor = ColorEditor(current_color = 'red'))
@@ -179,14 +180,14 @@ class PlotEditor(HasTraits):
         return cols
         
     def _get_table_editor(self):
-        cols=self._get_table_columns()
+        cols = self._get_table_columns()
         table_editor = TableEditor(columns=cols,
                                    selected='_selected',
                                    selection_mode='row')
         return table_editor
     
     def _get_selected_group(self):
-        grp=Group(
+        grp = Group(
                 Item('selected',
                      style='custom',
                       show_label=False,
@@ -204,7 +205,7 @@ class PlotEditor(HasTraits):
     def traits_view(self):
         '''
         '''
-        vg=VGroup()
+        vg = VGroup()
         vg.content.append(self.get_axes_group())
         vg.content.append(self._get_selected_group())
         
@@ -218,7 +219,7 @@ class PlotEditor(HasTraits):
                              height=0.75
                              ))
         
-        agrp=self._get_additional_groups()
+        agrp = self._get_additional_groups()
         if agrp:
             vg.content.append(agrp)         
 #        VGroup(

@@ -15,6 +15,8 @@ from chaco.contour_poly_plot import ContourPolyPlot
 from chaco.cmap_image_plot import CMapImagePlot
 from src.graph.editors.series_editor import ContourPolyPlotEditor
 from chaco.base_xy_plot import BaseXYPlot
+from chaco.contour_line_plot import ContourLinePlot
+from chaco.base_contour_plot import BaseContourPlot
 class DiffusionPlotEditor(PlotEditor):
     _series_editors = List
     def _build_series_editors(self):
@@ -42,7 +44,7 @@ class DiffusionPlotEditor(PlotEditor):
                     plot = plots['plot{}'.format(i)][0]
                     
 #                elif isinstance(plot, CMapImagePlot):
-                elif isinstance(plot, ContourPolyPlot):
+                elif isinstance(plot, BaseContourPlot):
                     self.isunconstrained_thermal_history = True
 #                    i+=1
 #                    plot=plots['plot{}'.format(i)][0]

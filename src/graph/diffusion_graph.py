@@ -234,7 +234,7 @@ class DiffusionGraph(Graph):
     def build_cooling_history(self, ts, Tsl, Tsh, pid=3):
         '''
         '''
-        self.set_x_title('coo t (Ma)', plotid=pid)
+        self.set_x_title('t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
         self.set_y_limits(min=100, plotid=pid)
         a, _p = self.new_series(ts, Tsl, type='polygon', plotid=pid, color=self.color_generators[pid].next())
@@ -264,24 +264,27 @@ class DiffusionGraph(Graph):
             rd['xbounds'] = tuple(x)
             rd['ybounds'] = tuple(y)
             
-            cmap = 'Greens'
+            cmap = 'yarg'
             cmap = color_map_name_dict.get(cmap)
             rd['colormap'] = cmap
 
 #            contour = plot.img_plot(zname,
 #                                    hide_grids=False,
 #                                     **rd)[0]
-            c = plot.contour_plot(zname, type='poly', poly_cmap=cmap,
+
+            plot.contour_plot(zname,
+                             hide_grids=False,
+                             **rd)[0]
+
+            plot.contour_plot(zname, type='poly', poly_cmap=cmap,
                              hide_grids=False,
                              **rd)[0]
             
             #remove zoom
             self.plots[pid].overlays.pop()
             
-            self.plotcontainer.draw_order = ['background', 'underlay', 'image', 'plot', 'selection', 'border', 'annotation', 'overlay']
+#            self.plotcontainer.draw_order = ['background', 'underlay', 'image', 'plot', 'selection', 'border', 'annotation', 'overlay']
             
-            plot.bgcolor = c.color_mapper.color_bands[0]
-
             
         else:
             for s in datacontainer:
