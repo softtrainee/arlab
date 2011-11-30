@@ -24,9 +24,10 @@ from src.graph.graph import name_generator
 from chaco.default_colormaps import color_map_name_dict
 
 #GROUPNAMES=['spectrum','logr_ro','arrhenius','cooling_history', 'unconstrained_thermal_history']
-GROUPNAMES=['spectrum','logr_ro','arrhenius','cooling_history', 'unconstrained_thermal_history']
+#GROUPNAMES = ['spectrum', 'logr_ro', 'arrhenius', 'cooling_history', 'unconstrained_thermal_history']
+GROUPNAMES = ['spectrum', 'arrhenius', 'cooling_history', 'unconstrained_thermal_history', 'logr_ro']
 
-LABELS=dict(spectrum='Spectrum',arrhenius='Arrhenius',logr_ro='LogR/Ro',
+LABELS = dict(spectrum='Spectrum', arrhenius='Arrhenius', logr_ro='LogR/Ro',
             unconstrained_thermal_history='Uncon. Thermal History',
             cooling_history='Cooling History'
             )
@@ -41,13 +42,13 @@ class DiffusionGraph(Graph):
     4.cooling histories
     5.unconstrained thermal histories
     '''
-    plot_editor_klass=DiffusionPlotEditor
+    plot_editor_klass = DiffusionPlotEditor
 
     bindings = None
-    runids=None
-    include_panels=None
+    runids = None
+    include_panels = None
     
-    zdataname_generators=None
+    zdataname_generators = None
     def show_plot_editor(self):
         '''
         '''
@@ -56,20 +57,20 @@ class DiffusionGraph(Graph):
 #        names = ['Spectrum', 'LogR/Ro', 'Arrhenius', 'CoolingHistory', 'UncontrainedThermalHistory']
 #        names=self.include_panels
         
-        names=[]
+        names = []
         for n in self.include_panels:
             names.append(LABELS[n])
         
         self._show_plot_editor(**{'name':names[i]})
 
-    
-    def add_runid(self,rid, kind=None):
-        if kind=='path':
-            rid=os.path.basename(rid)
-        try:
-            self.runids.append(rid)
-        except AttributeError:
-            self.runids=[rid]
+    def clear(self):
+        super(DiffusionGraph, self).clear()
+        self.runids = []
+        
+    def add_runid(self, rid, kind=None):
+        if kind == 'path':
+            rid = os.path.basename(rid)
+        self.runids.append(rid)
             
     def set_group_binding(self, pid, value):
         '''
@@ -135,14 +136,15 @@ class DiffusionGraph(Graph):
         if self.groups:
             del(self.groups)
             
-        self.groups=dict()
+        self.groups = dict()
         for key in self.include_panels:
-            self.groups[key]=[]
+            self.groups[key] = []
             
-        n=len(self.include_panels)
-        padding=[50,5,10,30]# if n>2 else [25,5,50,30]
+        n = len(self.include_panels)
+        padding = [50, 5, 10, 30]# if n>2 else [25,5,50,30]
+        
         for _i in range(n):
-            a=self.new_plot(padding=padding,
+            a = self.new_plot(padding=padding,
                           pan=True,
                           zoom=True,
                           )
@@ -235,13 +237,13 @@ class DiffusionGraph(Graph):
         self.set_x_title('coo t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
         self.set_y_limits(min=100, plotid=pid)
-        a, _p = self.new_series(ts, Tsl, type='polygon',plotid=pid, color=self.color_generators[pid].next())
-        b, _p = self.new_series(ts, Tsh, type='polygon',plotid=pid, color=self.color_generators[pid].next())
+        a, _p = self.new_series(ts, Tsl, type='polygon', plotid=pid, color=self.color_generators[pid].next())
+        b, _p = self.new_series(ts, Tsh, type='polygon', plotid=pid, color=self.color_generators[pid].next())
 
         self.groups['cooling_history'].append([a, b])
         self.redraw()
         
-    def build_unconstrained_thermal_history(self, datacontainer,pid=4, contour=True):
+    def build_unconstrained_thermal_history(self, datacontainer, pid=4, contour=True):
     
         self.set_x_title('t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
@@ -254,37 +256,38 @@ class DiffusionGraph(Graph):
                 self.zdataname_generators.append(name_generator('z'))
             
             zname = self.zdataname_generators[-1].next()
-            x=[10,350]
-            y=[100,600]
+            x = [10, 350]
+            y = [100, 600]
             plot, names, rd = self._series_factory(x, y, plotid=pid)
             plot.data.set_data(zname, datacontainer)
             
-            rd['xbounds']=tuple(x)
-            rd['ybounds']=tuple(y)
+            rd['xbounds'] = tuple(x)
+            rd['ybounds'] = tuple(y)
             
-            cmap='Greens'
-            cmap=color_map_name_dict.get(cmap)
+            cmap = 'Greens'
+            cmap = color_map_name_dict.get(cmap)
             rd['colormap'] = cmap
 
 #            contour = plot.img_plot(zname,
 #                                    hide_grids=False,
 #                                     **rd)[0]
-            c=plot.contour_plot(zname,type='poly',poly_cmap=cmap,
+            c = plot.contour_plot(zname, type='poly', poly_cmap=cmap,
                              hide_grids=False,
                              **rd)[0]
-
-            plot.bgcolor=c.color_mapper.color_bands[0]
             
-            self.plotcontainer.draw_order=['background',  'underlay', 'image','plot', 'selection', 'border', 'annotation', 'overlay']
+            #remove zoom
+            self.plots[pid].overlays.pop()
+            
+            self.plotcontainer.draw_order = ['background', 'underlay', 'image', 'plot', 'selection', 'border', 'annotation', 'overlay']
+            
+            plot.bgcolor = c.color_mapper.color_bands[0]
 
-#            add_default_grids(plot)
-#            self.plotcontainer.add(plot)
             
         else:
             for s in datacontainer:
-                xs=s[:,0]
-                ys=s[:,1]
-                self.new_series(xs,ys)
+                xs = s[:, 0]
+                ys = s[:, 1]
+                self.new_series(xs, ys)
     
 #============= EOF ====================================
 

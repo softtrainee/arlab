@@ -13,6 +13,8 @@ from traitsui.extras.checkbox_column import CheckboxColumn
 from chaco.polygon_plot import PolygonPlot
 from chaco.contour_poly_plot import ContourPolyPlot
 from chaco.cmap_image_plot import CMapImagePlot
+from src.graph.editors.series_editor import ContourPolyPlotEditor
+from chaco.base_xy_plot import BaseXYPlot
 class DiffusionPlotEditor(PlotEditor):
     _series_editors = List
     def _build_series_editors(self):
@@ -30,18 +32,17 @@ class DiffusionPlotEditor(PlotEditor):
                 isspectrum = False
                 self.iscoolinghistory = False
                 plot = plots['plot{}'.format(i)][0]
-                print plots
                 if isinstance(plot, PolygonPlot):
                     if isinstance(plots['plot{}'.format(i + 1)][0], PolygonPlot):
                         self.iscoolinghistory = True
-                    else:
+                    elif not isinstance(plot, ContourPolyPlot):
                         isspectrum = True
                         i += 1
                     
                     plot = plots['plot{}'.format(i)][0]
                     
-                elif isinstance(plot, CMapImagePlot):
-#                elif isinstance(plot, ContourPolyPlot):
+#                elif isinstance(plot, CMapImagePlot):
+                elif isinstance(plot, ContourPolyPlot):
                     self.isunconstrained_thermal_history = True
 #                    i+=1
 #                    plot=plots['plot{}'.format(i)][0]
@@ -51,17 +52,16 @@ class DiffusionPlotEditor(PlotEditor):
                 kwargs['isspectrum'] = isspectrum
                 kwargs['iscoolinghistory'] = self.iscoolinghistory
                 
+                editor = None
                 if self.iscoolinghistory:
                     editor = PolyDiffusionSeriesEditor
-                elif self.isunconstrained_thermal_history:
-                    editor = ContourPolyDiffusionSeriesEditor
-#                    i+=1
-#                    plot=plots['plot{}'.format(i)][0]
-#                    kwargs['series2']=plot
-                else:
+#                elif self.isunconstrained_thermal_history:
+#                    editor = ContourPolyPlotEditor
+                elif isinstance(plot, BaseXYPlot):
                     editor = DiffusionSeriesEditor
-
-                self.series_editors.append(editor(**kwargs))
+                
+                if editor:
+                    self.series_editors.append(editor(**kwargs))
 
                 
         self._sync_limits(plots['plot0'][0])
