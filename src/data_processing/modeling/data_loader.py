@@ -306,9 +306,8 @@ class DataLoader(Loggable):
 #            
             p = self._build_path('matx2.dat')
             if os.path.isfile(p):
-                data = loadtxt(p, dtype='float')
-
-            return data
+                return loadtxt(p, dtype='float')
+            
         else:
             f, reader = self._open_reader('chistall-out.dat', delimiter=TAB, mode='rb', skipinitialspace=False)
             if reader is None:
