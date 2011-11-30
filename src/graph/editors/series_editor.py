@@ -67,24 +67,25 @@ class SeriesEditor(HasTraits):
                             Item('series', style='custom', show_label=False)
                            )
                     )
+        
 class ContourPolyPlotEditor(SeriesEditor):
 #    series=Instance(ContourPolyPlot)
-    series=Instance(Base2DPlot)
-    series2=Instance(Base2DPlot)
-    cmap=Str('yarg')
-    def __init__(self, *args,**kw):
-        super(ContourPolyPlotEditor,self).__init__(*args,**kw)
-        self.cmap_names=color_map_name_dict.keys()
+    series = Instance(Base2DPlot)
+    series2 = Instance(Base2DPlot)
+    cmap = Str('Greens')
+    def __init__(self, *args, **kw):
+        super(ContourPolyPlotEditor, self).__init__(*args, **kw)
+        self.cmap_names = color_map_name_dict.keys()
     
     def _cmap_changed(self):
         
-        r=self.series.value.get_bounds()
-        func=color_map_name_dict[self.cmap]
-        cm=func(DataRange1D(low_setting=0,high_setting=r[1]))
+        r = self.series.value.get_bounds()
+        func = color_map_name_dict[self.cmap]
+        cm = func(DataRange1D(low_setting=0, high_setting=r[1]))
         for p in self.graph.plots[self.plotid].plots.itervalues():
-            p=p[0]
-            p.color_mapper=cm
-            p.bgcolor=cm.color_bands[0]
+            p = p[0]
+            p.color_mapper = cm
+            p.bgcolor = cm.color_bands[0]
 
         self.series.invalidate_and_redraw()
         

@@ -167,7 +167,6 @@ class Graph(HasTraits):
     def contextual_menu_contents(self):
         '''
         '''
-        print 'asddfsaasdfasd'
         save_actions = []
         for n, f, kw in self.get_contextual_menu_save_actions():
             save_actions.append(self.action_factory(n, f, **kw))
