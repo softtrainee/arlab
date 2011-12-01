@@ -50,9 +50,9 @@ class ModelerManager(EnvisageManager):
         
         
         m = self._modeler_factory()
-        
-        m.line_width = self.modeler.line_width
-        m.arrhenius_plot_type = self.modeler.arrhenius_plot_type
+        if self.modeler:
+            m.logr_ro_line_width = self.modeler.logr_ro_line_width
+            m.arrhenius_plot_type = self.modeler.arrhenius_plot_type
         
         if self._include_panels:
             m.include_panels = self._include_panels

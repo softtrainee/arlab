@@ -28,12 +28,12 @@ class MDDPreferencesPage(PreferencesPage):
     id = 'pychron.mdd.preferences_page'
     name = 'MDD'
     preferences_path = 'pychron.mdd'
-    line_width = Int(1)
+    logr_ro_line_width = Int(1)
     plot_type = Enum('scatter', 'line', 'line_scatter')
     def traits_view(self):
         v = View(VGroup(
                      VGroup(
-                            Item('line_width'),
+                            Item('logr_ro_line_width', label='Line Width'),
                             show_border=True,
                             label='LogR/Ro'
                             ),
