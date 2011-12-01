@@ -105,29 +105,44 @@ class DiffusionGraph(Graph):
 
             if k == 'logr_ro':
                 if not attr in ['line_width']:
-                    g = self.groups['arrhenius']
-                    g[i][index].trait_set(**{attr:value})
-
-                g = self.groups['spectrum']
-                if index % 2 == 0:
-                    g[i][index].trait_set(**{attr:value})
-
+                    try:
+                        g = self.groups['arrhenius']
+                        g[i][index].trait_set(**{attr:value})
+                    except KeyError:
+                        pass
+                try:
+                    g = self.groups['spectrum']
+                    if index % 2 == 0:
+                        g[i][index].trait_set(**{attr:value})
+                except KeyError:
+                    pass
+                
             elif k == 'spectrum':
                 if index % 2 == 0:
                     if not attr in ['line_width']:
-                        g = self.groups['arrhenius']
+                        try:
+                            g = self.groups['arrhenius']
+                            g[i][index].trait_set(**{attr:value})
+                        except KeyError:
+                            pass
+                        
+                    try:
+                        g = self.groups['logr_ro']
                         g[i][index].trait_set(**{attr:value})
-
+                    except KeyError:
+                        pass
+            elif k == 'arrhenius':
+                try:
                     g = self.groups['logr_ro']
                     g[i][index].trait_set(**{attr:value})
-
-            elif k == 'arrhenius':
-                g = self.groups['logr_ro']
-                g[i][index].trait_set(**{attr:value})
-
-                g = self.groups['spectrum']
-                if index % 2 == 0:
-                    g[i][index].trait_set(**{attr:value})
+                except KeyError:
+                    pass
+                try:
+                    g = self.groups['spectrum']
+                    if index % 2 == 0:
+                        g[i][index].trait_set(**{attr:value})
+                except KeyError:
+                    pass
             self.redraw()
             
     def new_graph(self):
