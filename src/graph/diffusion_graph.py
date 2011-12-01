@@ -109,6 +109,18 @@ class DiffusionGraph(Graph):
                             g[i][index].trait_set(**{attr:value})
                         except KeyError:
                             pass
+                        
+                    try:
+                        g = self.groups['arrhenius']
+                        plot = g[i][index]
+                        plot.trait_set(**{attr:value})
+                        if attr == 'color':
+                            if hasattr(plot, 'scatter'):
+                                plot.scatter.color = value
+                                plot.scatter.outline_color = value
+                        
+                    except KeyError:
+                        pass
                     try:
                         g = self.groups['spectrum']
                         if index % 2 == 0:
@@ -137,6 +149,7 @@ class DiffusionGraph(Graph):
                         g[i][index].trait_set(**{attr:value})
                     except KeyError:
                         pass
+                    
                     try:
                         g = self.groups['spectrum']
                         if index % 2 == 0:
