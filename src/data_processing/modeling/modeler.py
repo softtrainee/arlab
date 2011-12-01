@@ -129,8 +129,11 @@ class Modeler(Loggable):
         
     include_panels = List(GROUPNAMES[:-1])
     
-    line_width = Int
+    line_width = Int(1)
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
+    
+    
+    
     @on_trait_change('graph.status_text')
     def update_statusbar(self, object, name, value):
         '''
@@ -317,7 +320,6 @@ class Modeler(Loggable):
             plotidcounter += 1
                         
         if 'logr_ro' in self.include_panels:
-            
             data = dl.load_logr_ro('logr.samp')
             if data is not None:
                 try:
@@ -331,7 +333,7 @@ class Modeler(Loggable):
                 data = dl.load_logr_ro('logr.dat')
                 if data is not None:
                     try:
-                        p = g.build_logr_ro(ngroup=False, pid=plotidcounter, *data)
+                        p = g.build_logr_ro(ngroup=False, line_width=self.line_width, pid=plotidcounter, *data)
                         g.set_series_label('logr.dat', plotid=plotidcounter, series=1)
                         data_directory.secondary_color = p.color
                         p.on_trait_change(data_directory.update_scolor, 'color')
@@ -344,7 +346,6 @@ class Modeler(Loggable):
             data = dl.load_arrhenius('arr.samp')
             if data is not None:
                 try:
-                    print self.arrhenius_plot_type, 'foo'
                     g.build_arrhenius(pid=plotidcounter, type=self.arrhenius_plot_type, *data)
                     g.set_series_label('arr.samp', plotid=plotidcounter, series=0)
                 except Exception, err:
@@ -575,7 +576,7 @@ class Modeler(Loggable):
             self.selected = d
 
     @on_trait_change('refresh,data[]')
-    def _update_(self):
+    def _update_(self, a, b, c, d):
         '''
         '''
         self._update_graph()
