@@ -250,7 +250,6 @@ class DiffusionGraph(Graph):
                 g[-1] += list(a)
             else:
                 g[-1].append(a)
-        print g
         self.set_x_title('10000/T (K)', plotid=pid)
         self.set_y_title('Log Dt/a^2', plotid=pid)
         
@@ -295,14 +294,14 @@ class DiffusionGraph(Graph):
 #                                    hide_grids=False,
 #                                     **rd)[0]
 
-            plot.contour_plot(zname,
+            pline = plot.contour_plot(zname,
                              hide_grids=False,
                              **rd)[0]
 
-            plot.contour_plot(zname, type='poly', poly_cmap=cmap,
+            ppoly = plot.contour_plot(zname, type='poly', poly_cmap=cmap,
                              hide_grids=False,
                              **rd)[0]
-            
+            self.groups['unconstrained_thermal_history'].append([pline, ppoly])
             #remove zoom
             self.plots[pid].overlays.pop()
             
