@@ -127,7 +127,7 @@ class Modeler(Loggable):
     run_configuration = None
 
         
-    include_panels=List(GROUPNAMES[:-1])
+    include_panels = List(GROUPNAMES[:-1])
     
     @on_trait_change('graph.status_text')
     def update_statusbar(self, object, name, value):
@@ -277,21 +277,21 @@ class Modeler(Loggable):
         '''
         data_directory.id = gid
         
-        path=data_directory.path
+        path = data_directory.path
         self.info('loading graph for {}'.format(path))
         g = self.graph
     
-        g.add_runid(path,kind='path')
+        g.add_runid(path, kind='path')
         dl = self.data_loader
         dl.root = data_directory.path
         
-        plotidcounter=0
+        plotidcounter = 0
         
         if 'spectrum' in self.include_panels:
             data = dl.load_spectrum()
             if data is not None:
                 try:
-                    g.build_spectrum(color=color, 
+                    g.build_spectrum(color=color,
                                      pid=plotidcounter,
                                      *data)
                     g.set_series_label('spec.samp-err', plotid=plotidcounter)
@@ -312,8 +312,10 @@ class Modeler(Loggable):
                         
                     except Exception, err:
                         self.info(err)
+            plotidcounter += 1
+                        
         if 'logr_ro' in self.include_panels:
-            plotidcounter+=1
+            
             data = dl.load_logr_ro('logr.samp')
             if data is not None:
                 try:
@@ -327,20 +329,20 @@ class Modeler(Loggable):
                 data = dl.load_logr_ro('logr.dat')
                 if data is not None:
                     try:
-                        p = g.build_logr_ro(ngroup=False,pid=plotidcounter, *data)
+                        p = g.build_logr_ro(ngroup=False, pid=plotidcounter, *data)
                         g.set_series_label('logr.dat', plotid=plotidcounter, series=1)
                         data_directory.secondary_color = p.color
                         p.on_trait_change(data_directory.update_scolor, 'color')
                         
                     except Exception, err:
                         self.info(err)
+            plotidcounter += 1
             
         if 'arrhenius' in self.include_panels:
-            plotidcounter+=1
             data = dl.load_arrhenius('arr.samp')
             if data is not None:
                 try:
-                    g.build_arrhenius(pid=plotidcounter,*data)
+                    g.build_arrhenius(pid=plotidcounter, *data)
                     g.set_series_label('arr.samp', plotid=plotidcounter, series=0)
                 except Exception, err:
                     self.info(err)
@@ -349,23 +351,23 @@ class Modeler(Loggable):
                 data = dl.load_arrhenius('arr.dat')
                 if data is not None:
                     try:
-                        g.build_arrhenius(ngroup=False,pid=plotidcounter, *data)
+                        g.build_arrhenius(ngroup=False, pid=plotidcounter, *data)
                         g.set_series_label('arr.dat', plotid=plotidcounter, series=1)
                     except Exception, err:
                         self.info(err)
+            plotidcounter += 1
             
         if 'cooling_history' in self.include_panels:            
-            plotidcounter+=1
             data = dl.load_cooling_history()
             if data is not None:
                 try:
-                    g.build_cooling_history(pid=plotidcounter,*data)
+                    g.build_cooling_history(pid=plotidcounter, *data)
                 except Exception, err:
                     self.info(err)
+            plotidcounter += 1
                     
         if 'unconstrained_thermal_history' in self.include_panels:
-            plotidcounter+=1
-            data=dl.load_unconstrained_thermal_history()
+            data = dl.load_unconstrained_thermal_history()
             if data is not None:
                 g.build_unconstrained_thermal_history(data, pid=plotidcounter)
         
@@ -403,21 +405,21 @@ class Modeler(Loggable):
         g = self.graph
         if g is None:
             
-            panels=GROUPNAMES#['spectrum','logr_ro','arrenhius','cooling_history']
+            panels = GROUPNAMES#['spectrum','logr_ro','arrenhius','cooling_history']
             if self.include_panels:
-                panels=self.include_panels
+                panels = self.include_panels
             
-            l=len(panels)
-            r=int(round(l/2.0))
-            c=1
-            if l>2:
-                c=2
+            l = len(panels)
+            r = int(round(l / 2.0))
+            c = 1
+            if l > 2:
+                c = 2
 
             g = DiffusionGraph(include_panels=panels,
-                               container_dict= dict(
-                                            type='h' if c==1 else 'g',
+                               container_dict=dict(
+                                            type='h' if c == 1 else 'g',
                                             bgcolor='white',
-                                            padding=[10,10,40,10],
+                                            padding=[10, 10, 40, 10],
                                             
                                             #padding=[25, 5, 50, 30],
                                             #spacing=(5,5),
@@ -527,12 +529,12 @@ class Modeler(Loggable):
         return v
     
     def configure_view(self):
-        v=View(Item('include_panels',editor=CheckListEditor(values=GROUPNAMES),
+        v = View(Item('include_panels', editor=CheckListEditor(values=GROUPNAMES),
                     show_label=False,
                     style='custom'
                     ),
                kind='modal',
-               buttons=['OK','Cancel']
+               buttons=['OK', 'Cancel']
                )
         return v
 
