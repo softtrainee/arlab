@@ -62,7 +62,7 @@ class ModelDataDirectory(HasTraits):
             try:
                 p = self.modeler.graph.groups['logr_ro'][self.id][1]
                 self.modeler.graph.set_plot_visibility(p, self.model_arrhenius_enabled)
-            except IndexError, KeyError:
+            except (IndexError, KeyError):
                 #this group does not have a model logr_ro
                 pass
             

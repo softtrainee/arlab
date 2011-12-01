@@ -197,7 +197,8 @@ class DiffusionGraph(Graph):
         if ar39_err is not None and age_err is not None:
             a, _p = self.new_series(ar39_err, age_err, plotid=pid,
                         type='polygon',
-                        color='orange')
+                        color=kw['color'] if kw.has_key('color') else 'orange'
+                        )
             #plots.append(a)
 
         b, _p = self.new_series(ar39, age, plotid=pid, **kw)
@@ -235,14 +236,21 @@ class DiffusionGraph(Graph):
             
         '''
 
-        a, _p = self.new_series(T, Dta, plotid=pid, type='scatter', marker_size=2.5, **kw)
+        a, _p = self.new_series(T, Dta, plotid=pid, marker_size=2.5, **kw)
         g = self.groups['arrhenius']
         if ngroup:
-            g.append([a])
+            
+            if isinstance(a, tuple):
+                g.append(list(a))
+            else:
+                g.append([a])
         else:
             #g[len(g) - 1].append(a)
-            g[-1].append(a)
-
+            if isinstance(a, tuple):    
+                g[-1] += list(a)
+            else:
+                g[-1].append(a)
+        print g
         self.set_x_title('10000/T (K)', plotid=pid)
         self.set_y_title('Log Dt/a^2', plotid=pid)
         
