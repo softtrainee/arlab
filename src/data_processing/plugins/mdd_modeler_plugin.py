@@ -20,10 +20,10 @@ limitations under the License.
 #============= local library imports  ==========================
 from src.data_processing.modeling.modeler_manager import ModelerManager
 from src.envisage.core.core_plugin import CorePlugin
+from apptools.preferences.preference_binding import bind_preference
 
 class MDDModelerPlugin(CorePlugin):
     '''
-        G{classtree}
     '''
     id = 'pychron.mdd'
 
@@ -38,6 +38,8 @@ class MDDModelerPlugin(CorePlugin):
         '''
         '''
         m = ModelerManager()
+        bind_preference(m.modeler, 'line_width', 'pychron.mdd.line_width')
+        bind_preference(m.modeler, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
         return m
 
 

@@ -25,7 +25,15 @@ class MDDModelerUIPlugin(CoreUIPlugin):
     '''
     id = 'pychron.mdd_modeler'
 
-
+    def _preferences_pages_default(self):
+#        from extraction_line_preferences_page import ExtractionLinePreferencesPage
+#
+#
+#        elm = self.application.get_service(EL_PROTOCOL)
+#        bind_preference(elm, 'managers', 'pychron.extraction_line')
+        from mdd_preferences_page import MDDPreferencesPage
+        return [MDDPreferencesPage]
+    
     def _action_sets_default(self):
         '''
         '''

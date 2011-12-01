@@ -129,6 +129,8 @@ class Modeler(Loggable):
         
     include_panels = List(GROUPNAMES[:-1])
     
+    line_width = Int
+    arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
     @on_trait_change('graph.status_text')
     def update_statusbar(self, object, name, value):
         '''
@@ -319,7 +321,7 @@ class Modeler(Loggable):
             data = dl.load_logr_ro('logr.samp')
             if data is not None:
                 try:
-                    p = g.build_logr_ro(pid=plotidcounter, *data)
+                    p = g.build_logr_ro(pid=plotidcounter, line_width=self.line_width, *data)
                     g.set_series_label('logr.samp', plotid=plotidcounter, series=0)
                     p.on_trait_change(data_directory.update_pcolor, 'color')
                 except Exception, err:
@@ -342,7 +344,8 @@ class Modeler(Loggable):
             data = dl.load_arrhenius('arr.samp')
             if data is not None:
                 try:
-                    g.build_arrhenius(pid=plotidcounter, *data)
+                    print self.arrhenius_plot_type, 'foo'
+                    g.build_arrhenius(pid=plotidcounter, type=self.arrhenius_plot_type, *data)
                     g.set_series_label('arr.samp', plotid=plotidcounter, series=0)
                 except Exception, err:
                     self.info(err)
@@ -351,7 +354,7 @@ class Modeler(Loggable):
                 data = dl.load_arrhenius('arr.dat')
                 if data is not None:
                     try:
-                        g.build_arrhenius(ngroup=False, pid=plotidcounter, *data)
+                        g.build_arrhenius(ngroup=False, pid=plotidcounter, type=self.arrhenius_plot_type, *data)
                         g.set_series_label('arr.dat', plotid=plotidcounter, series=1)
                     except Exception, err:
                         self.info(err)

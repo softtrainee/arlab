@@ -594,17 +594,33 @@ class Graph(HasTraits):
             return p, plot
 
         else:
+            plots = []
+            
+            line_scatter = False
             if 'type' in rd and rd['type'] == 'line_scatter':
-
-                series = plot.plot(names, type='scatter', marker_size=2,
-                                   marker='circle')
                 rd['type'] = 'line'
-            series = plot.plot(names, **rd)
+                line_scatter = True
+            s = plot.plot(names, **rd)[0]
+            plots.append(s)
+                
 
+            if line_scatter:    
+                s = plot.plot(names, type='scatter',
+                              marker_size=kw['marker_size'] if kw.has_key('marker_size') else 2,
+                              marker=kw['marker'] if kw.has_key('marker') else 'circle',
+                              color=rd['color'] if rd.has_key('color') else 'black',
+                              outline_color=rd['color'] if rd.has_key('color') else 'black',
 
-            return series[0], plot
+                                   )[0]
+                plots.append(s)
+                #rd['type'] = 'line'
+                
+            plots = tuple(plots)
+            
+            if len(plots) == 1:
+                plots = plots[0]
 
-
+            return plots, plot
 
     def show_graph_editor(self):
         '''
