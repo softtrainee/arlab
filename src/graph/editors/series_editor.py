@@ -50,11 +50,21 @@ class SeriesEditor(HasTraits):
         '''
         '''
         if name[0] != '_' and name[-1:] != '_' and name not in ['visible', 'series']:
+
+            if hasattr(obj, 'scatter'):
+    #                        if plot.kind == 'line_scatter':
+    #                    p1 = self.groups['arrhenius'][i][index]
+                p2 = obj.scatter #self.groups['arrhenius'][i][index + 1]
+    #                    print dataid, i
+                p2.trait_set(**{name:new})
+                if name == 'color':
+                    p2.outline_color = new       
             self.graph.update_group_attribute(obj, name, new, dataid=self.id / 2)
 
     def _show_changed(self, name, old, new):
         '''
         '''
+        
         self.graph.set_series_visiblity(new, plotid=self.plotid,
                                         series=self.id)
 
