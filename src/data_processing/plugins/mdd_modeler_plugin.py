@@ -38,7 +38,7 @@ class MDDModelerPlugin(CorePlugin):
         '''
         '''
         m = ModelerManager()
-        bind_preference(m.modeler, 'line_width', 'pychron.mdd.line_width')
+        bind_preference(m.modeler, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
         bind_preference(m.modeler, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
         return m
 

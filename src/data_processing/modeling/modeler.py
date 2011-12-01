@@ -129,7 +129,7 @@ class Modeler(Loggable):
         
     include_panels = List(GROUPNAMES[:-1])
     
-    line_width = Int(1)
+    logr_ro_line_width = Int(1)
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
     
     
@@ -323,7 +323,7 @@ class Modeler(Loggable):
             data = dl.load_logr_ro('logr.samp')
             if data is not None:
                 try:
-                    p = g.build_logr_ro(pid=plotidcounter, line_width=self.line_width, *data)
+                    p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
                     g.set_series_label('logr.samp', plotid=plotidcounter, series=0)
                     p.on_trait_change(data_directory.update_pcolor, 'color')
                 except Exception, err:
@@ -333,7 +333,7 @@ class Modeler(Loggable):
                 data = dl.load_logr_ro('logr.dat')
                 if data is not None:
                     try:
-                        p = g.build_logr_ro(ngroup=False, line_width=self.line_width, pid=plotidcounter, *data)
+                        p = g.build_logr_ro(ngroup=False, line_width=self.logr_ro_line_width, pid=plotidcounter, *data)
                         g.set_series_label('logr.dat', plotid=plotidcounter, series=1)
                         data_directory.secondary_color = p.color
                         p.on_trait_change(data_directory.update_scolor, 'color')
