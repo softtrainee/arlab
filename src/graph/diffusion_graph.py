@@ -109,10 +109,15 @@ class DiffusionGraph(Graph):
                             g[i][index].trait_set(**{attr:value})
                         except KeyError:
                             pass
-                        
+                    
                     try:
                         g = self.groups['arrhenius']
-                        plot = g[i][index]
+                    
+                        n = 1
+                        if hasattr(g[i][0], 'scatter'):
+                            n = 2
+                        
+                        plot = g[i][index * n]
                         plot.trait_set(**{attr:value})
                         if attr == 'color':
                             if hasattr(plot, 'scatter'):
@@ -157,8 +162,8 @@ class DiffusionGraph(Graph):
                     except KeyError:
                         pass
                 self.redraw()
-        except IndexError, e:
-            print e
+        except IndexError:
+            pass
             
     def new_graph(self):
         '''

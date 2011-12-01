@@ -22,6 +22,7 @@ from traitsui.api import View, Item
 from modeler import Modeler
 from src.envisage.core.envisage_manager import EnvisageManager
 from src.envisage.core.envisage_editor import EnvisageEditor
+from apptools.preferences.preference_binding import bind_preference
 
 class MEditor(EnvisageEditor):
     '''
@@ -50,9 +51,11 @@ class ModelerManager(EnvisageManager):
         
         
         m = self._modeler_factory()
-        if self.modeler:
-            m.logr_ro_line_width = self.modeler.logr_ro_line_width
-            m.arrhenius_plot_type = self.modeler.arrhenius_plot_type
+        bind_preference(m, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
+        bind_preference(m, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
+#        if self.modeler:
+#            m.logr_ro_line_width = self.modeler.logr_ro_line_width
+#            m.arrhenius_plot_type = self.modeler.arrhenius_plot_type
         
         if self._include_panels:
             m.include_panels = self._include_panels

@@ -161,7 +161,7 @@ class Graph(HasTraits):
         '''
         return [
                 ('Clipboard', '_render_to_clipboard', {}),
-                #('PDF', 'save_pdf', {}),
+                ('PDF', 'save_pdf', {}),
                ('PNG', 'save_png', {})]
 
     def contextual_menu_contents(self):
@@ -944,7 +944,7 @@ class Graph(HasTraits):
             if dlg.open() == OK:
                 path = dlg.path
                 self.status_text = 'Image Saved: %s' % path
-
+                
         if path is not None:
             if type == 'pdf':
                 self._render_to_pdf(filename=path)
