@@ -87,63 +87,65 @@ class DiffusionGraph(Graph):
         '''
 
         '''
-        
-        if self.bindings[dataid]:
-            index = None
-            for k in self.groups:
-                g = self.groups[k]
-                for i, pp in enumerate(g):
-                    
-                    try:
-                        index = pp.index(plot)
+        try:
+            if self.bindings[dataid]:
+                index = None
+                for k in self.groups:
+                    g = self.groups[k]
+                    for i, pp in enumerate(g):
+                        
+                        try:
+                            index = pp.index(plot)
+                            break
+                        except ValueError:
+                            continue
+    
+                    if index is not None:
                         break
-                    except ValueError:
-                        continue
-
-                if index is not None:
-                    break
-
-            if k == 'logr_ro':
-                if not attr in ['line_width']:
-                    try:
-                        g = self.groups['arrhenius']
-                        g[i][index].trait_set(**{attr:value})
-                    except KeyError:
-                        pass
-                try:
-                    g = self.groups['spectrum']
-                    if index % 2 == 0:
-                        g[i][index].trait_set(**{attr:value})
-                except KeyError:
-                    pass
-                
-            elif k == 'spectrum':
-                if index % 2 == 0:
+        
+                if k == 'logr_ro':
                     if not attr in ['line_width']:
                         try:
-                            g = self.groups['arrhenius']
                             g[i][index].trait_set(**{attr:value})
                         except KeyError:
                             pass
+                    try:
+                        g = self.groups['spectrum']
+                        if index % 2 == 0:
+                            g[i][index].trait_set(**{attr:value})
+                    except KeyError:
+                        pass
+                    
+                elif k == 'spectrum':
+                    if index % 2 == 0:
+                        if not attr in ['line_width']:
+                            try:
+                                g = self.groups['arrhenius']
+                                g[i][index].trait_set(**{attr:value})
+                            except KeyError:
+                                pass
+                            
+                        try:
+                            g = self.groups['logr_ro']
+                            g[i][index].trait_set(**{attr:value})
+                        except KeyError:
+                            pass
+                elif k == 'arrhenius':
                         
                     try:
                         g = self.groups['logr_ro']
                         g[i][index].trait_set(**{attr:value})
                     except KeyError:
                         pass
-            elif k == 'arrhenius':
-                try:
-                    g = self.groups['logr_ro']
-                    g[i][index].trait_set(**{attr:value})
-                except KeyError:
-                    pass
-                try:
-                    g = self.groups['spectrum']
-                    if index % 2 == 0:
-                        g[i][index].trait_set(**{attr:value})
-                except KeyError:
-                    pass
-            self.redraw()
+                    try:
+                        g = self.groups['spectrum']
+                        if index % 2 == 0:
+                            g[i][index].trait_set(**{attr:value})
+                    except KeyError:
+                        pass
+                self.redraw()
+        except IndexError, e:
+            print e
             
     def new_graph(self):
         '''

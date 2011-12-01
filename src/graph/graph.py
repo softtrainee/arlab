@@ -398,8 +398,9 @@ class Graph(HasTraits):
         '''
         p = self.plots[plotid]
         s = 'plot{}'.format(series)
-        try:
+        try:            
             p.showplot(s) if v else p.hideplot(s)
+
             self.redraw()
         except KeyError:
             pass
@@ -600,8 +601,9 @@ class Graph(HasTraits):
             if 'type' in rd and rd['type'] == 'line_scatter':
                 rd['type'] = 'line'
                 line_scatter = True
-            s = plot.plot(names, **rd)[0]
-            plots.append(s)
+            l = plot.plot(names, **rd)[0]
+            
+            plots.append(l)
                 
 
             if line_scatter:    
@@ -612,6 +614,8 @@ class Graph(HasTraits):
                               outline_color=rd['color'] if rd.has_key('color') else 'black',
 
                                    )[0]
+                l.scatter = s  
+                s.line = l
                 plots.append(s)
                 #rd['type'] = 'line'
                 
