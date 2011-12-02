@@ -71,7 +71,8 @@ class DiffusionGraph(Graph):
         if kind == 'path':
             rid = os.path.basename(rid)
         self.runids.append(rid)
-            
+        return rid
+     
     def set_group_binding(self, pid, value):
         '''
 

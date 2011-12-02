@@ -376,13 +376,14 @@ class Graph(HasTraits):
             r = legend.labels[series]
         except IndexError:
             pass
+        
         return r
+    
     def set_series_label(self, label, plotid=0, series=0):
         '''
         '''
 
         legend = self.plots[plotid].legend
-
         try:
             legend.labels[series] = label
         except:
