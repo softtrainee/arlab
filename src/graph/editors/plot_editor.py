@@ -216,7 +216,7 @@ class PlotEditor(HasTraits):
                              editor=self._get_table_editor(),
                              show_label=False,
                              springy=False,
-                             height=0.75
+                             height=0.25
                              ))
         
         agrp = self._get_additional_groups()

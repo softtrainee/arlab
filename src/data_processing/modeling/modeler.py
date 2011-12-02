@@ -286,7 +286,7 @@ class Modeler(Loggable):
         self.info('loading graph for {}'.format(path))
         g = self.graph
     
-        g.add_runid(path, kind='path')
+        runid = g.add_runid(path, kind='path')
         dl = self.data_loader
         dl.root = data_directory.path
         
@@ -299,8 +299,9 @@ class Modeler(Loggable):
                     g.build_spectrum(color=color,
                                      pid=plotidcounter,
                                      *data)
-                    g.set_series_label('spec.samp-err', plotid=plotidcounter)
-                    g.set_series_label('spec.samp', plotid=plotidcounter, series=1)
+                    s = 3 if data_directory.model_spectrum_enabled else 2
+                    g.set_series_label('{}.meas-err'.format(runid), plotid=plotidcounter, series=s * gid)
+                    g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=s * gid + 1)
                     
                 except Exception, err:
                     self.info(err)
@@ -311,7 +312,7 @@ class Modeler(Loggable):
                     try:
                         
                         p = g.build_spectrum(*data, ngroup=False, pid=plotidcounter)
-                        g.set_series_label('spec.dat', plotid=plotidcounter, series=2)
+                        g.set_series_label('{}.model'.format(runid), plotid=plotidcounter, series=3 * gid + 2)
                         g.color_generators[-1].next()
                         p.color = g.color_generators[-1].next()
                         
@@ -324,7 +325,8 @@ class Modeler(Loggable):
             if data is not None:
                 try:
                     p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
-                    g.set_series_label('logr.samp', plotid=plotidcounter, series=0)
+                    s = 2 if data_directory.model_arrhenius_enabled else 1
+                    g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=gid * s)
                     p.on_trait_change(data_directory.update_pcolor, 'color')
                 except Exception, err:
                     self.info(err)
@@ -334,7 +336,7 @@ class Modeler(Loggable):
                 if data is not None:
                     try:
                         p = g.build_logr_ro(ngroup=False, line_width=self.logr_ro_line_width, pid=plotidcounter, *data)
-                        g.set_series_label('logr.dat', plotid=plotidcounter, series=1)
+                        g.set_series_label('{}.model'.format(runid), plotid=plotidcounter, series=2 * gid + 1)
                         data_directory.secondary_color = p.color
                         p.on_trait_change(data_directory.update_scolor, 'color')
                         
@@ -347,7 +349,7 @@ class Modeler(Loggable):
             if data is not None:
                 try:
                     g.build_arrhenius(pid=plotidcounter, type=self.arrhenius_plot_type, *data)
-                    g.set_series_label('arr.samp', plotid=plotidcounter, series=0)
+                    g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=2 * gid)
                 except Exception, err:
                     self.info(err)
                 
@@ -356,7 +358,7 @@ class Modeler(Loggable):
                 if data is not None:
                     try:
                         g.build_arrhenius(ngroup=False, pid=plotidcounter, type=self.arrhenius_plot_type, *data)
-                        g.set_series_label('arr.dat', plotid=plotidcounter, series=1)
+                        g.set_series_label('{}.model'.format(runid), plotid=plotidcounter, series=2 * gid + 1)
                     except Exception, err:
                         self.info(err)
             plotidcounter += 1
@@ -373,8 +375,10 @@ class Modeler(Loggable):
         if 'unconstrained_thermal_history' in self.include_panels:
             data = dl.load_unconstrained_thermal_history()
             if data is not None:
-                g.build_unconstrained_thermal_history(data, pid=plotidcounter)
-        
+                try:
+                    g.build_unconstrained_thermal_history(data, pid=plotidcounter)
+                except Exception, err:
+                    self.info(err)
             
         #sync the colors
         if self.sync_groups:
