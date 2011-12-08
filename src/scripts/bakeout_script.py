@@ -70,33 +70,13 @@ class BakeoutScript(CoreScript):
             self.controller.end(script_kill=True)
         super(BakeoutScript, self).kill_script()
 
-    def wait_for_setpoint(self, sp, mean_check=True, std_check=False, mean_tolerance=5, std_tolerance=1, timeout=15):
-        '''
-
-        '''
-        self.info('waiting for setpoint equilibration')
-        if self.controller is not None:
-            if self.controller.simulation:
-                time.sleep(3)
-            else:
-                #equilibrate(sp, frequency = frequency, mean_check = True, mean_tolerance = tolerance)
-                smart_equilibrate(self,
-                                  self.controller.get_temperature,
-                                  sp,
-                                  mean_check=mean_check,
-                                  std_check=std_check,
-                                  mean_tolerance=mean_tolerance,
-                                  std_tolerance=std_tolerance,
-                                  timeout=timeout
-                                  )
-
+    
     def maintain_statement(self, mt):
         '''
         ''' 
         if self.controller is not None:
             self.controller.led.state = 2
-            if self.controller.simulation:
-                mt = 3.
+
        
         self.info('Maintaining setpoint for {} {}'.format(mt, self.scale))
         mt *= TIMEDICT[self.scale]
@@ -110,13 +90,12 @@ class BakeoutScript(CoreScript):
             self.controller._duration = self.controller._oduration - cnt * sleep_time / 3600.
             #print 'f', cnt, self.controller._duration, self.controller._oduration
             cnt += 1
-            
+        
     def goto_statement(self, setpoint):
         '''
 
         '''
         controller = self.controller
-        
         
         if setpoint > self.current_setpoint:
             name = 'heat'
@@ -137,7 +116,28 @@ class BakeoutScript(CoreScript):
             kw['std_check'] = True
             kw['std_tolerance'] = 5
             kw['timeout'] = 60
-        self.wait_for_setpoint(setpoint, **kw)
+        self._wait_for_setpoint(setpoint, **kw)
+        
+    def _wait_for_setpoint(self, sp, mean_check=True, std_check=False, mean_tolerance=5, std_tolerance=1, timeout=15):
+        '''
+
+        '''
+        self.info('waiting for setpoint equilibration')
+        if self.controller is not None:
+            if self.controller.simulation:
+                time.sleep(3)
+            else:
+                #equilibrate(sp, frequency = frequency, mean_check = True, mean_tolerance = tolerance)
+                smart_equilibrate(self,
+                                  self.controller.get_temperature,
+                                  sp,
+                                  mean_check=mean_check,
+                                  std_check=std_check,
+                                  mean_tolerance=mean_tolerance,
+                                  std_tolerance=std_tolerance,
+                                  timeout=timeout
+                                  )
+
 #============= EOF ====================================
 #    def load_file(self):
 #        '''
