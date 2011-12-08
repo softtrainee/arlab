@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import List,Event, Float, Str, Instance, Bool, Property
+from traits.api import List, Event, Float, Str, Instance, Bool, Property
 from traitsui.api import View, Item, EnumEditor, spring, HGroup, Label, VGroup
 #from pyface.timer.api import Timer
 from src.helpers.timer import Timer
@@ -198,7 +198,7 @@ class BakeoutController(WatlowEZZone):
         self.write(register, value, nregisters=2, **kw)
 
 
-    def end(self, user_kill=False, script_kill=False):
+    def end(self, user_kill=False, script_kill=False, msg=None, error=None):
         if self.isActive() and self.isAlive():
             if hasattr(self, '_timer'):
                 self._timer.Stop()
@@ -208,24 +208,30 @@ class BakeoutController(WatlowEZZone):
                     self._active_script.kill_script()
 
             self.led.state = 0
-            msg = 'bakeout finished'
+            if msg is None:
+                msg = 'bakeout finished'
+            
+            func = self.info
             if user_kill:
-                msg = '%s - Canceled by user' % msg
-                self.failure_reason = 'Canceled by user'
-
+                msg = '{} - Canceled by user'.format(msg)
+            elif error:
+                msg = error
+                func = self.warning
+                    
             self.kill()
-            self.info(msg)
+            
+            func(msg)
             self.alive = False
 
             self.process_value = 0
     
     def get_temp_and_power(self, **kw):
         WatlowEZZone.get_temp_and_power(self, **kw)
-        self.process_value_flag=True
+        self.process_value_flag = True
     
     def get_temperature(self, **kw):
-        t= WatlowEZZone.get_temperature(self, **kw)
-        self.process_value_flag=True
+        t = WatlowEZZone.get_temperature(self, **kw)
+        self.process_value_flag = True
         return t
 #    def complex_query(self, **kw):
 #        if 'verbose' in kw and kw['verbose']:

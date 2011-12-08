@@ -16,7 +16,7 @@ limitations under the License.
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-from numpy import hstack, std, mean
+from numpy import hstack 
 import time
 from Carbon.Aliases import true
 #============= local library imports  ==========================
@@ -47,21 +47,11 @@ def smart_equilibrate(*args, **kw):
     kw['frequnecy'] = None
     kw['freq_hook'] = update_frequency
 
-    equilibrate(*args, **kw)
+    return equilibrate(*args, **kw)
 
 def equilibrate(parent, temp_func, setpoint, frequency=None, freq_hook=None, timeout=1, **kw):
     '''
-        @type temp_func: C{str}
-        @param temp_func:
-
-        @type setpoint: C{str}
-        @param setpoint:
-
-        @type frequency: C{str}
-        @param frequency:
-
-        @type **kw: C{str}
-        @param **kw:
+       
     '''
     start = time.time()
     temps = []
@@ -93,27 +83,14 @@ def check_point(points, point, setpoint, n=10, mean_tolerance=1.5,
                     std_check=False,
                     **kw):
     '''
-        @type point: C{str}
-        @param point:
 
-        @type setpoint: C{str}
-        @param setpoint:
-
-        @type n: C{str}
-        @param n:
-
-        @type mean_tolerance: C{str}
-        @param mean_tolerance:
-
-        @type : C{str}
-        @param :
     '''
 
     points = hstack((points[-n + 1:], [point]))
     if len(points) >= n:
 
-        avg = mean(points)
-        stderr = std(points)
+        avg = points.mean()
+        stderr = points.std()
         if mean_check:
             #print mean(points),setpoint
             dif = abs(avg - setpoint)

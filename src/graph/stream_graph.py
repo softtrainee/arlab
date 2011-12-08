@@ -156,7 +156,7 @@ class StreamGraph(Graph):
                           )
         return x
 
-    def record(self, y, x=None, series=0, plotid=0, track_x=True, track_y=True, do_after=None, **kw):
+    def record(self, y, x=None, series=0, plotid=0, track_x=True, track_y=True, do_after=None, track_y_pad=5, ** kw):
         
         xn, yn = self.series[plotid][series]
 
@@ -175,7 +175,7 @@ class StreamGraph(Graph):
             nx = tg.next()
         else:
             nx = x
-            
+        
         ny = float(y)
 
         #update raw data
@@ -222,21 +222,29 @@ class StreamGraph(Graph):
             self.cur_min[plotid] = min(self.cur_min[plotid], min(new_yd))
                             
             if track_y and (self.track_y_min[plotid] or self.track_y_max[plotid]):
-
-                if not self.track_y_max[plotid]:
-                    ma = None
-                else:
-                    ma = self.cur_max[plotid]
+                if isinstance(track_y, tuple):
+                    mi, ma = track_y
+                    if ma is None:
+                        ma = self.cur_max[plotid]
                     
-                if not self.track_y_min[plotid]:
-                    mi = None
-                else:
-                    mi = self.cur_min[plotid]
-                
+                    if mi is None:
+                        mi = self.cur_min[plotid]
+                    
+                else:                    
+                    if not self.track_y_max[plotid]:
+                        ma = None
+                    else:
+                        ma = self.cur_max[plotid]
+                        
+                    if not self.track_y_min[plotid]:
+                        mi = None
+                    else:
+                        mi = self.cur_min[plotid]
+                    
                 self.set_y_limits(max=ma,
                               min=mi,
                               plotid=plotid,
-                              pad=5)
+                              pad=track_y_pad)
 
         if do_after:
             do_after_timer(do_after, _record_)

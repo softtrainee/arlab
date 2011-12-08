@@ -14,16 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, Bool, Button, Event, Float, Str, String, Property, List, on_trait_change
+from traits.api import Array, Instance, Bool, Button, Event, Float, Str, String, Property, List, on_trait_change
 from traitsui.api import View, Item, HGroup, VGroup, spring, ButtonEditor, EnumEditor
 #============= standard library imports ========================
 import numpy as np
+import os
+import time
+from threading import Thread
 #============= local library imports  ==========================
 from src.managers.manager import Manager, ManagerHandler
-from threading import Thread
 from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
-import os
 from src.helpers.paths import bakeout_config_dir, data_dir
 from src.graph.time_series_graph import TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
@@ -31,6 +32,8 @@ from src.helpers.datetime_tools import generate_datestamp
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.core.i_core_device import ICoreDevice
 from src.graph.graph import Graph
+from src.hardware.core.core_device import CoreDevice
+from src.hardware.gauges.granville_phillips.micro_ion_controller import MicroIonController
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
@@ -69,8 +72,18 @@ class BakeoutManager(Manager):
     
     open_button = Button
     open_label = 'Open'
-        
-        
+    gauge_controller = Instance(CoreDevice)
+    
+    
+    use_pressure_monitor = Bool(False)
+    _pressure_sampling_period = 2
+    _max_duration = 10 #10 hrs
+    _pressure_monitor_std_threshold = 1
+    _pressure_monitor_threshold = 1e-2
+    _pressure = Float
+    
+    pressure_buffer = Array
+    
     def load(self, *args, **kw):
         app = self.application
         for bo in self._get_controllers():
@@ -79,7 +92,14 @@ class BakeoutManager(Manager):
                 
             if app is not None:
                 app.register_service(ICoreDevice, bc, {'display':False})
-
+                
+        if app is not None:
+            self.gauge_controller = app.get_service(MicroIonController, query='name=="roughing_gauge_controller"')
+        else:
+            
+            gc = MicroIonController(name='roughing_gauge_controller')
+            gc.bootstrap()
+            self.gauge_controller = gc
                     
     @on_trait_change('bakeout+:process_value_flag')
     def update_graph_temperature(self, obj, name, old, new):
@@ -88,19 +108,17 @@ class BakeoutManager(Manager):
             
             pv = getattr(obj, 'process_value')
             hp = getattr(obj, 'heat_power_value')
-                        
-#            if obj.name not in self.data_buffer:
+                
             self.data_buffer.append((pid, pv, hp))
             self.data_count_flag += 1
                 
-#            n = len(self.data_buffer) 
-#            if n == len(self.active_controllers):
+
             n = self.data_count_flag
             if n == len(self.active_controllers):
                 for i, pi, hi in self.data_buffer:
                 
                     nx = self.graph.record(pi, series=i,
-                                           track_x=False, #i == n - 1
+                                           track_x=False,
                                            track_y=False
                                            )
                     self.graph.record(hi, x=nx, series=i, plotid=1,
@@ -109,16 +127,38 @@ class BakeoutManager(Manager):
                                       )
                 
                     self.data_buffer_x.append(nx)
-                    
+                      
                 self.graph.update_y_limits(plotid=0)
                 self.graph.update_y_limits(plotid=1)
             
+                self.get_pressure(nx)
                 self.write_data(self.data_name)
                 self.data_buffer = []
                 self.data_buffer_x = []
                 self.data_count_flag = 0
                 
-
+    def get_pressure(self, x):
+        self._pressure = pressure = self.gauge_controller.get_ion_pressure()
+        self.graph.record(pressure, x=x, track_y=(5e-3, None), track_y_pad=5e-3, track_x=False, plotid=2, do_later=10)
+        
+        if self.use_pressure_monitor:
+            dbuffer = self.pressure_buffer
+            window = 100
+            
+            dbuffer = np.hstack((dbuffer[-window:], pressure))
+            n = len(dbuffer)
+            std = dbuffer.std()
+            mean = dbuffer.mean()
+            if std < self._pressure_monitor_std_threshold:
+                if mean < self._pressure_monitor_threshold:
+                    self.info('pressure set point achieved:mean={} std={} n={}'.format(mean, std, n))
+            
+            dtime = self._start_time - time.time()
+            if dtime > self._max_duration:
+                for ac in self._get_active_controllers():
+                    error = 'Max duration exceeded max={:0.1f}, dur={:0.1f}'.format(self._max_duration, dtime)
+                    ac.end(error=error)
+            
     def write_data(self, name, plotid=0):
         datum = []
         for sub, x in zip(self.data_buffer, self.data_buffer_x):
@@ -126,6 +166,8 @@ class BakeoutManager(Manager):
             datum.append(x)
             datum.append(pi)
             datum.append(hp)
+        
+        datum.append(self._pressure)
             
         self.data_manager.write_to_frame(datum)
 
@@ -266,16 +308,22 @@ class BakeoutManager(Manager):
             self.graph_info = dict()
             self._graph_factory(graph=self.graph)
 
-            #setup data recording
-            self.data_manager = dm = CSVDataManager()
-
-            name = 'bakeout-{}'.format(generate_datestamp())
-            self.data_name = dm.new_frame(directory='bakeouts',
-                         base_frame_name=name)
-            
+        
+            set_dm = True
+            _alive = False
             for name in self._get_controllers():
                 bc = self.trait_get(name)[name]
                 if bc.ok_to_run():
+                    _alive = True
+                    if set_dm:
+                        #setup data recording
+                        self.data_manager = dm = CSVDataManager()
+            
+                        ni = 'bakeout-{}'.format(generate_datestamp())
+                        self.data_name = dm.new_frame(directory='bakeouts',
+                                     base_frame_name=ni)
+                        set_dm = False
+                        
                     bc.on_trait_change(self.update_alive, 'alive')
 
                     #set up graph
@@ -286,11 +334,10 @@ class BakeoutManager(Manager):
 
                     self.graph.new_series(type='line', render_style='connectedpoints',
                                           plotid=1)
-
-
+                    
+            
                     t = Thread(target=bc.run)
                     t.start()
-                    
                     
                     if pid == 0:
                         header.append('#{}_time'.format(name))
@@ -299,9 +346,57 @@ class BakeoutManager(Manager):
                     header.append('{}_temp'.format(name))
                     header.append('{}_heat_power'.format(name))
                     pid += 1
-        
-            #set the header in for the data file
-            self.data_manager.write_to_frame(header)    
+            
+            if _alive:
+                
+                #pressure plot
+                self.graph.new_series(type='line', render_style='connectedpoints',
+                                  plotid=2)
+                header.append('pressure')
+                self._start_time = time.time()
+                #start a pressure monitor thread
+#                t = Thread(target=self._pressure_monitor)
+#                t.start()
+                    
+            
+                #set the header in for the data file
+                self.data_manager.write_to_frame(header)    
+
+            
+#    def _pressure_monitor(self):
+#    
+#        window = 100
+#
+#        st = time.time()
+#       
+#        
+#        dbuffer = np.array([])
+#        
+#        success = False
+#        while time.time() - st < self._max_duration * 60 * 60:
+#            
+#            nv = self.gauge_controller.get_convectron_a_pressure()
+#            self._pressure = nv
+#            self.graph.record(nv, track_y=(5e-3, None), track_y_pad=5e-3, track_x=False, plotid=2, do_later=10)
+#
+#            if self.use_pressure_monitor:
+#                dbuffer = np.hstack((dbuffer[-window:], nv))
+#                n = len(dbuffer)
+#                std = dbuffer.std()
+#                mean = dbuffer.mean()
+#                if std < self._pressure_monitor_std_threshold:
+#                    if mean < self._pressure_monitor_threshold:
+#                        self.info('pressure set point achieved:mean={} std={} n={}'.format(mean, std, n))
+#                        success = True
+#                        break
+#                    
+#            time.sleep(self._pressure_sampling_period)
+#            if not self.isAlive():
+#                break
+#        
+#        for ac in self._get_active_controllers():
+#            ac.end(error=None if success else 'Max duration exceeded max={:0.1f}, dur={:0.1f}'.format(self._max_duration,
+#                                                                                                               time.time() - st))
 
     def _update_interval_changed(self):
         for tr in self._get_controllers():
@@ -314,31 +409,61 @@ class BakeoutManager(Manager):
     def traits_view(self):
         '''
         '''
-        controller_grp = HGroup(
-                   )
+        controller_grp = HGroup()
         for tr in self._get_controllers():
             controller_grp.content.append(Item(tr, show_label=False, style='custom'))
 
-        control = HGroup(VGroup(
+        control_grp = HGroup(VGroup(
                          Item('execute', editor=ButtonEditor(label_value='execute_label'),
                               show_label=False),
                          Item('open_button', editor=ButtonEditor(label_value='open_label'),
                               show_label=False)
                                 ),
-                        spring,
+#                        spring,
                         HGroup(Item('configuration', editor=EnumEditor(name='configurations'),
                              show_label=False),
                              Item('save', show_label=False),
 
                              ),
+                        label='Control',
+                        show_border=True
                         )
+        scan_grp = VGroup(Item('update_interval', label='Sample Period (s)'),
+                          Item('scan_window', label='Data Window (mins)'),
+                          label='Scan',
+                          show_border=True
+                          )
         
-        v = View(VGroup(control,
-                        HGroup(Item('update_interval', label='Sample Period (s)'), Item('scan_window', label='Data Window (mins)'), spring, enabled_when='not alive'),
-                        controller_grp, Item('graph', show_label=False, style='custom')),
+        pressure_grp = VGroup(
+                            HGroup(
+                                   Item('use_pressure_monitor'),
+                                   Item('_pressure_sampling_period', label='Sample Period (s)')
+                                   ),
+                            VGroup(
+                                   Item('_max_duration', label='Max. Duration (hrs)'),
+                                   Item('_pressure_monitor_std_threshold'),
+                                   Item('_pressure_monitor_threshold'),
+                                   enabled_when='use_pressure_monitor'
+                                   ),
+                            label='Pressure',
+                            show_border=True
+                            )
+        v = View(VGroup(
+                        HGroup(control_grp,
+                               HGroup(
+                                   scan_grp,
+                                   pressure_grp,
+#                                   spring,
+                                   enabled_when='not alive')
+                               ),
+                        controller_grp,
+                        Item('graph', show_label=False, style='custom')
+                        ),
                handler=ManagerHandler,
                resizable=True,
-               title='Bakeout Manager')
+               title='Bakeout Manager',
+               height=830
+               )
         return v
 
     def _get_controllers(self):
@@ -408,26 +533,27 @@ class BakeoutManager(Manager):
     def _graph_factory(self, stream=True, graph=None, **kw):
         if graph is None:
             if stream:
-                graph = TimeSeriesStreamStackedGraph()
+                graph = TimeSeriesStreamStackedGraph(panel_height=145)
             else:
                 graph = TimeSeriesStackedGraph(panel_height=300)
-
         graph.clear()
-
-        graph.new_plot(data_limit=self.scan_window * 60 / self.update_interval,
-                       scan_delay=self.update_interval,
-                       show_legend='ll',
-                       **kw
-                       )
-        graph.new_plot(data_limit=self.scan_window * 60 / self.update_interval,
-                       scan_delay=self.update_interval)
-
+        kw['data_limit'] = self.scan_window * 60 / self.update_interval
+        kw['scan_delay'] = self.update_interval
+        #temps
+        graph.new_plot(show_legend='ll', **kw)
+        
+        #heat power
+        graph.new_plot(**kw)
+        
+        #pressure
+        graph.new_plot(**kw)
+        
         graph.set_x_title('Time')
         graph.set_y_title('Temp (C)')
+        graph.set_x_limits(0, self.scan_window * 60)
         
         graph.set_y_title('Heat Power (%)', plotid=1)
-        
-        graph.set_x_limits(0, self.scan_window * 60)
+        graph.set_y_title('Pressure (torr)', plotid=2)
                 
         return graph
 
@@ -440,6 +566,7 @@ def launch_bakeout():
     b = BakeoutManager()
     b.load()
     b.load_controllers()
+    
     b.configure_traits()
 
 #============= EOF ====================================

@@ -121,7 +121,7 @@ class MicroIonController(CoreDevice):
         
     def _parse_response(self, r):
         if self.simulation or r is None:
-            r = self.get_random_value(0, 100) / 10000000.
+            r = self.get_random_value(0, 10000) / 10000.0
             
         return r
 
