@@ -32,7 +32,7 @@ C	INPUT FILES
       open(unit=30,file='arr-me.in',status='old')          	
       open(unit=17,file='temstep.in',status='old')
 
-	  open(unit=51,file='autoage-mon_config.in',status='old')
+	  open(unit=51,file='autoagemon.cl',status='old')
 
 
 C     INITIALIZATION OF OUTPUT FILES FOR XVGR SETS
@@ -46,14 +46,9 @@ C     INITIALIZATION OF OUTPUT FILES FOR XVGR SETS
 
 	
 C      print *, 'Insert Number of runnings'
-C	read *, nrun
+	read (51,*) nrun
 C       print *, 'Insert max. plateau age'
-C        read *,tt(1,1)
-
-		read(51,*)
-		read(51, '(I5)') nrun
-		read(51,*)
-		read(51,'(I5)') tt(1,1)
+      read (51,*) tt(1,1)
 
         agein=tt(1,1)     
 	idem= -tt(1,1)*nrun
@@ -81,6 +76,7 @@ C        read *,tt(1,1)
 14     d0(js)=d0(js)/4.d0 *(24.d0 *3600.d0 *365d06)
        close(30)
 C     CALCULATION OF LC
+	  nchini=0
       nsq=2
       nsum=0
       m=-1
@@ -147,6 +143,7 @@ C           write(20,'(1x,10f7.3)') (c(i),i=1,10)
              call age(i,c,ymod,dyda,nc,lista,mfit,vc,xmat,r39,xi,
      $       c40,nn,nst,ni,perc,alamda)
  42    continue
+          print *, nchini
           write(32,*) nchini,chisq
 	if (nchini.eq.0)chqmin= chisq
 

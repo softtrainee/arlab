@@ -9,27 +9,28 @@ C  A SET OF THERMAL HISTORIES.
 ***  Comment out next line to compile with old Microsoft Developer Studio
 c	character line*40
       external temfc
-	open(unit=22,file='chini.dat',status='old')        
+	open(unit=22,file='mchist-out.dat',status='old')
 	open(unit=24,file='statanal.dat')
       open(unit=26,file='average.dat')
       open(unit=29,file='confmed.dat')
 	open(unit=30,file='input.dat')
+	  open(unit=51,file='confint.cl')
       ncyc = 0
       ncurv = 0
 C	DEFINE AGE RANGE
 C  MINIMUM AGE
-	print *,'Define Age range and mesh'
-	print *, 'Input Initial age'
-	read *, agein
-      write(30,*)'Initial age= ',agein
+C	print *,'Define Age range and mesh'
+C	print *, 'Input Initial age'
+	read(51,*) agein
+C      write(30,*)'Initial age= ',agein
 C  MAXIMUM AGE
-	print *, 'Input Final age'
-	read *, agend
-	write(30,*)'Final age= ',agend
+C	print *, 'Input Final age'
+	read(51,*) agend
+C	write(30,*)'Final age= ',agend
 C  NUMBER OF AGE INTERVALS
-	print *, 'Input number of age intervals'
-	read *, nsteps
-	write(30,*)'number of age intervals= ',nsteps
+C	print *, 'Input number of age intervals'
+	read(51,*) nsteps
+C	write(30,*)'number of age intervals= ',nsteps
 	dage = (agend - agein)/nsteps
 C  READ THERMAL HISTORIES
 	ks=1
@@ -64,6 +65,7 @@ C	    MEAN OF THE DISTRIBUTION
           call mdian1(xtem,ks,xmed(j))
           call binom(ks+1,j1,j2)
           nperc = ks*.05
+          print *, nperc, ks
           if(nperc.eq.0)then
             write(29,*)'Not enough solutions to calculate 
      $       confidence intervals'
