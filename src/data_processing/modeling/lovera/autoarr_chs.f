@@ -74,29 +74,34 @@ C ***********************************************************************
 	ndom = 8
 	mdom = 3
 
+c	print *,'This program calculates all the parameters
+c     $ (i.e. E, Do, etc) necessary to model the 39Ar data.'
+c     	print *, 'However, If you want to introduce your own parameters
+c     $ enter "y" now, otherwise type "n" and relax.'
+c
 	open(unit=42, file='autoarr.cl', status='old')
-	read (42,*) yes
-
-C	print *,'This program calculates all the parameters
-C     $ (i.e. E, Do, etc) necessary to model the 39Ar data.'
-C     	print *, 'However, If you want to introduce your own parameters
-C     $ enter "y" now, otherwise type "n" and relax.'
-
 	read (42,*) yes
 
 	If(yes.eq.'y') then  
 C		print *, 'if you still want to use the default
 C     $ value of an specific parameter, type 0 at the prompt'
 C		print *
-c		print *, ' type number of max domains, <= 10, (Default is 8)'
-		read *, naux
+C		print *, ' type number of max domains, <= 10, (Default is 8)'
+		read(42,'(I5)') naux
 		if(naux.ne.0)ndom=naux
-		print *, ' type number of min domains, > 2  (Default is 3)'
-		read *, naux
+C		print *, ' type number of min domains, > 2  (Default is 3)'
+		read (42,'(I5)') naux
 		if(naux.ne.0)mdom=naux
-		print *,'to keep Do fix type 1, otherwise type 0'
-		read *, ncons
+C		print *,'to keep Do fix type 1, otherwise type 0'
+		read (42,*) ncons
+		print *, ndom,mdom,ncons
 	endif
+
+C	read(42, *)
+C	read(42,'(I5)') ndom
+C	read(42, *)
+C	read(42,'(I5)') mdom
+C	ncons=1
 
 	read(10,*)ni
 	nimax = ni
@@ -406,20 +411,20 @@ C	CALCULATION OF E AND Do/Ro^2
 	call param(ni,tinv,xlogd,wt,e,ord)
 
 	if(yes.eq.'y')then
-	    print *, 'Type activation energy in kcal/mol, E='
-	    read *,auxe
+C	    print *, 'Type activation energy in kcal/mol, E='
+	    read(42,*) auxe
 		if(auxe.ne.0) then
 		    e=auxe
-		    print *, 'Enter ordenate of log.vs.10000/t plot, 
-     *	  log(Do/ro^2)='
-		    read *,ord
+C		    print *, 'Enter ordenate of log.vs.10000/t plot,
+C     *	  log(Do/ro^2)='
+		    read(42,*) ord
 		endif
 	endif
 	slop = e*ee/(r*10000)
 	xro = (ord-slop*tinv(nix)-xlogd(nix))/2.*(1.+ (1.-f(nix))/2.)
 	if(yes.eq.'y')then
-		print *, 'type the max plateau of log(r/ro)'
-	    read *,auxro
+C		print *, 'type the max plateau of log(r/ro)'
+	    read (42,*) auxro
 		if(auxro.ne.0)xro = auxro
 	endif
 	print *,'all the parameters are set now, relax'
