@@ -39,6 +39,8 @@ from guide_overlay import GuideOverlay
 from tools.contextual_menu_tool import ContextualMenuTool
 from tools.pan_tool import MyPanTool as PanTool
 from numpy.core.numeric import Inf
+from src.graph.minor_tick_overlay import MinorTicksOverlay
+from chaco.axis import PlotAxis
 
 def name_generator(base):
     '''
@@ -336,13 +338,21 @@ class Graph(HasTraits):
         n = self.series[plotid][series]
         self.plots[plotid].data.set_data(n[axis], d)
 
-    def set_axis_traits(self, d, plotid=0, axis='x'):
+    def set_axis_traits(self, plotid=0, axis='x', **kw):
         '''
         '''
         plot = self.plots[plotid]
 
         attr = getattr(plot, '{}_axis'.format(axis))
-        attr.trait_set(**d)
+        attr.trait_set(**kw)
+    
+    def set_grid_traits(self, plotid=0, grid='x', **kw):
+        '''
+        '''
+        plot = self.plots[plotid]
+
+        attr = getattr(plot, '{}_grid'.format(grid))
+        attr.trait_set(**kw)
 
     def set_series_traits(self, d, plotid=0, series=0):
         '''
@@ -376,14 +386,13 @@ class Graph(HasTraits):
             r = legend.labels[series]
         except IndexError:
             pass
-        
         return r
-    
     def set_series_label(self, label, plotid=0, series=0):
         '''
         '''
 
         legend = self.plots[plotid].legend
+
         try:
             legend.labels[series] = label
         except:
@@ -398,15 +407,13 @@ class Graph(HasTraits):
         '''
         '''
         p = self.plots[plotid]
-        s = 'plot{}'.format(series)
-        try:            
-            p.showplot(s) if v else p.hideplot(s)
+        s = 'plot%i' % series
 
-            self.redraw()
-        except KeyError:
-            pass
-        
-        
+        p.showplot(s) if v else p.hideplot(s)
+
+#        self.plotcontainer.invalidate_and_redraw()
+        self.plotcontainer.request_redraw()
+
     def get_x_limits(self, plotid=0):
         '''
         '''
@@ -427,7 +434,7 @@ class Graph(HasTraits):
         '''
         self._set_limits(min, max, 'index', plotid, pad)
 
-    def set_tracking(self, track, plotid=0):
+    def set_x_tracking(self, track, plotid=0):
         plot = self.plots[plotid]
         if track:
             plot.index_range.tracking_amount = track
@@ -452,7 +459,7 @@ class Graph(HasTraits):
             size = 12
         self._title_font = font
         self._title_size = size
-        font = '{} {}'.format(font, size)
+        font = '%s %s' % (font, size)
         pc.overlays.append(PlotLabel(t,
                                      component=pc,
                                  font=font,
@@ -461,9 +468,7 @@ class Graph(HasTraits):
                                  ))
 #        pc.invalidate_and_redraw()
         pc.request_redraw()
-    def set_plot_title(self, t, plotid=0):
-        plot = self.plots[plotid]
-        plot.title = t
+
     def get_x_title(self, plotid=0):
         '''
         '''
@@ -534,7 +539,6 @@ class Graph(HasTraits):
                 zoomargs = kw['zoom_dict']
                 for k in zoomargs:
                     nkw[k] = zoomargs[k]
-            
             zt = ZoomTool(component=p, **nkw)
             p.overlays.append(zt)
 
@@ -596,36 +600,17 @@ class Graph(HasTraits):
             return p, plot
 
         else:
-            plots = []
-            
-            line_scatter = False
             if 'type' in rd and rd['type'] == 'line_scatter':
+
+                series = plot.plot(names, type='scatter', marker_size=2,
+                                   marker='circle')
                 rd['type'] = 'line'
-                line_scatter = True
-            l = plot.plot(names, **rd)[0]
-            
-            plots.append(l)
-                
+            series = plot.plot(names, **rd)
 
-            if line_scatter:    
-                s = plot.plot(names, type='scatter',
-                              marker_size=kw['marker_size'] if kw.has_key('marker_size') else 2,
-                              marker=kw['marker'] if kw.has_key('marker') else 'circle',
-                              color=rd['color'] if rd.has_key('color') else 'black',
-                              outline_color=rd['color'] if rd.has_key('color') else 'black',
 
-                                   )[0]
-                l.scatter = s  
-                s.line = l
-                plots.append(s)
-                #rd['type'] = 'line'
-                
-            plots = tuple(plots)
-            
-            if len(plots) == 1:
-                plots = plots[0]
+            return series[0], plot
 
-            return plots, plot
+
 
     def show_graph_editor(self):
         '''
@@ -646,12 +631,14 @@ class Graph(HasTraits):
         '''
         '''
         p = self.plot_editor
+
         if p is None or not p.plot == self.selected_plot:
             p = self.plot_editor_klass(plot=self.selected_plot,
                            graph=self,
                            **kw
                      )
             self.plot_editor = p
+
             p.edit_traits(parent=self._control)
 
 
@@ -721,25 +708,67 @@ class Graph(HasTraits):
         plot.overlays = [o for o in plot.overlays if not isinstance(o, LineInspector)]
         self.plotcontainer.request_redraw()
 
-    def add_vertical_rule(self, v, plotid=0, **kw):
+    def add_vertical_rule(self, v, plotid=0):
         plot = self.plots[plotid]
-        l = GuideOverlay(plot, value=v, orientation='v', **kw)
+        l = GuideOverlay(plot, value=v, orientation='v')
 
         plot.overlays.append(l)
 
-    def add_horizontal_rule(self, v, plotid=0, **kw):
+    def add_horizontal_rule(self, v, plotid=0):
         plot = self.plots[0]
 
-        l = GuideOverlay(plot, value=v, **kw)
+        l = GuideOverlay(plot, value=v)
 
         plot.overlays.append(l)
-
-    def redraw(self, force=True):
-        if force:
-            self.plotcontainer.invalidate_and_redraw()
-        else:
-            self.plotcontainer.request_redraw()
+    
+    def add_opposite_ticks(self, plotid=0, key=None):
+        p = self.plots[plotid]
+        if key is None:
+            for key in ['x', 'y']:
+                ax = self._plot_axis_factory(p, key, False)
+                p.underlays.append(ax)
             
+        else:
+            ax = self._plot_axis_factory(p, key, False)
+            p.underlays.append(ax)
+            
+    def _plot_axis_factory(self, p, key, normal, **kw):
+        if key == 'x':
+            m = p.index_mapper
+            if normal:
+                o = 'bottom'
+            else:
+                o = 'top'
+                kw['tick_label_formatter'] = lambda x: ''
+        else:
+            if normal:
+                o = 'left'
+            else:
+                o = 'right'
+                kw['tick_label_formatter'] = lambda x: ''
+            m = p.value_mapper
+        
+        ax = PlotAxis(component=p,
+                      mapper=m,
+                      orientation=o,
+                      axis_line_visible=False,
+                      **kw
+                      )
+        return ax
+        
+    def add_minor_xticks(self, plotid=0, **kw):
+        p = self.plots[plotid]
+        
+        
+        m = MinorTicksOverlay(component=p, orientation='v', **kw)
+        p.underlays.append(m)
+        
+    def add_minor_yticks(self, plotid=0, **kw):
+        p = self.plots[plotid]
+
+        m = MinorTicksOverlay(component=p, orientation='h', **kw)
+        p.underlays.append(m)
+
     def container_factory(self):
         '''
         '''
@@ -783,6 +812,7 @@ class Graph(HasTraits):
                 kw[k] = options[k]
 
         container = c(**kw)
+
         #add some tools
 #        cm=ContextualMenuTool(parent=container,
 #                              component=container
@@ -945,7 +975,7 @@ class Graph(HasTraits):
             if dlg.open() == OK:
                 path = dlg.path
                 self.status_text = 'Image Saved: %s' % path
-                
+
         if path is not None:
             if type == 'pdf':
                 self._render_to_pdf(filename=path)

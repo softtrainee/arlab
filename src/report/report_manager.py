@@ -36,5 +36,6 @@ class ReportManager(HasTraits):
 
 if __name__ == '__main__':
     r = ReportManager()
-    r.configure_traits()
+    r.create()
+#    r.configure_traits()
 #============= EOF =============================================

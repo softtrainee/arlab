@@ -13,6 +13,225 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+#=============enthought library imports=======================
+
+#============= standard library imports ========================
+import math
+from numpy import asarray, argmax
+from src.data_processing import constants
+#============= local library imports  ==========================
+def calculate_mswd(x, errs):
+    mswd_w = 0
+    if len(x) >= 2:
+        x = asarray(x)
+        errs = asarray(errs)
+        
+    #    xmean_u = x.mean()    
+        xmean_w, _err = calculate_weighted_mean(x, errs)
+        
+        ssw = (x - xmean_w) ** 2 / errs ** 2
+    #    ssu = (x - xmean_u) ** 2 / errs ** 2
+        
+        d = 1.0 / (len(x) - 1)
+        mswd_w = d * ssw.sum()
+    #    mswd_u = d * ssu.sum()
+    
+    return mswd_w
+
+def calculate_weighted_mean(x, errs, error=0):
+    x = asarray(x)
+    errs = asarray(errs)
+    
+    weights = asarray(map(lambda e: 1 / e ** 2, errs))
+        
+    wtot = weights.sum()
+    wmean = (weights * x).sum() / wtot
+    
+    if error == 0:
+        werr = wtot ** -0.5
+    elif error == 1:
+        werr = 1
+    return wmean, werr
+
+def calculate_arar_age(signals, ratios, ratio_errs, a37decayfactor, a39decayfactor, j, jer, d, der):
+    s40, s40er, s39, s39er, s38, s38er, s37, s37er, s36, s36er = signals
+    p36cl38cl, k4039, k3839, ca3637, ca3937, ca3837 = ratios
+    k4039er, ca3637er, ca3937er = ratio_errs
+    
+    #convert to ufloats
+    from uncertainties import ufloat
+    from uncertainties.umath import log
+    s40 = ufloat((s40, s40er))
+    s39 = ufloat((s39, s39er))
+    s38 = ufloat((s38, s38er))
+    s37 = ufloat((s37, s37er))
+    s36 = ufloat((s36, s36er))
+    k4039 = ufloat((k4039, k4039er))
+    ca3637 = ufloat((ca3637, ca3637er))
+    ca3937 = ufloat((ca3937, ca3937er))
+    j = ufloat((j, jer))
+    d = ufloat((d, der))
+    
+#    #calculate the age
+    ca37 = s37 * a37decayfactor
+    s39 = s39 * a39decayfactor
+    ca36 = ca3637 * ca37
+    ca38 = ca3837 * ca37
+    ca39 = ca3937 * ca37
+    k39 = s39 - ca39
+    k38 = k3839 * k39
+#    time_since_irradiation = math.log(1 / a37decayfactor) / (-1 * constants.lambda_37 * 365.25)
+
+    time_since_irradiation = log(1 / a37decayfactor) / (-1 * constants.lambda_37 * 365.25)
+
+    if constants.lambda_cl36 < 0.1:
+        m = p36cl38cl * constants.lambda_cl36 * time_since_irradiation
+    else:
+        m = p36cl38cl
+    mcl = m / (m * constants.atm3836 - 1)
+    cl36 = mcl * (constants.atm3836 * (s36 - ca36) - s38 + k38 + ca38)
+    atm36 = s36 - ca36 - cl36
+    
+    atm40 = atm36 * constants.atm4036
+    k40 = k39 * k4039
+    ar40rad = s40 - atm40 - k40
+    JR = j * ar40rad / k39
+#    age = (1 / constants.lambdak) * math.log(1 + JR)
+    age = (1 / constants.lambdak) * log(1 + JR)
+    
+    #===========================================================================
+    # errors mass spec copy
+    #===========================================================================
+
+    square = lambda x: x * x
+    
+    Tot40Er = s40er
+    Tot39Er = s39er
+    Tot38Er = s38er
+    Tot37Er = s37er
+    Tot36Er = s36er
+    
+    D = d
+    D2 = d * d
+    D3 = d * D2
+    D4 = d * D3
+
+    T40 = s40 / D4
+    T39 = s39 / D3
+    T38 = s39 / D2
+    T37 = s39 / D
+    T36 = s36
+    
+    A4036 = constants.atm4036
+    A3836 = constants.atm3836
+
+    s = ca3937 * D * T37
+    T = ca3637 * D * T37
+    G = D3 * T39 - s
+#    P = mcl * (ca3837 * D * T37 + A3836 * (T36 - T) - D2 * T38 + k3839 * G)
+    R = (-k4039 * G - A4036 * (T36 - T - mcl * (ca3837 * D * T37 + A3836 * (T36 - T) - D2 * T38 + k3839 * G)) + D4 * T40)
+    G2 = G * G
+    
+    er40 = square(D4 * j / G) * square(Tot40Er)
+    
+    er39 = square((j * (-D3 * k4039 + A4036 * D3 * k3839 * mcl)) / G - (D3 * j * R) / G2) * square(Tot39Er)
+
+    er38 = square(A4036 * D2 * j * mcl / G) * square(Tot38Er)
+    
+    er37 = square((j * (ca3937 * D * k4039 - A4036 * 
+            (-ca3637 * D - (-A3836 * ca3637 * D + ca3837 * D - ca3937 * D * k3839) * mcl))) 
+            / G + (ca3937 * D * j * R) / G2) * square(Tot37Er)
+    
+    er36 = square(A4036 * j * (1 - A3836 * mcl) / G) * square(Tot36Er)
+    '''
+    square((j * (4 * T40 * D3 - K4039 * (3 * D2 * T39 - Ca3937 * T37) 
+        - A4036 * (-(Ca3637 * T37) - MCl * (-(A3836 * Ca3637 * T37) 
+        + Ca3837 * T37 + K3839 * (3 * D2 * T39 - Ca3937 * T37) 
+        - 2 * D * T38)))) 
+        / (D3 * T39 - s) - (1 * j * (3 * D2 * T39 - Ca3937 * T37) 
+        * (T40 * D4 - K4039 * (D3 * T39 - s) 
+        - A4036 * (T36 - T - MCl * (-(T38 * D2) + Ca3837 * T37 * D + A3836 * (T36 - T) + K3839 * (D3 * T39 - s))))) 
+        / square(D3 * T39 - s)) * square(DiscEr)
+      '''
+    erD = square((j * (4 * T40 * D3 - k4039 * (3 * D2 * T39 - ca3937 * T37) 
+        - A4036 * (-(ca3637 * T37) - mcl * (-(A3836 * ca3637 * T37) 
+        + ca3837 * T37 + k3839 * (3 * D2 * T39 - ca3937 * T37) 
+        - 2 * D * T38)))) 
+        / (D3 * T39 - s) - (1 * j * (3 * D2 * T39 - ca3937 * T37) 
+        * (T40 * D4 - k4039 * (D3 * T39 - s) 
+        - A4036 * (T36 - T - mcl * (-(T38 * D2) + ca3837 * T37 * D + A3836 * (T36 - T) + k3839 * (D3 * T39 - s))))) 
+        / square(D3 * T39 - s)) * square(der)
+
+    er4039 = square(j * (s - D3 * T39) / G) * square(k4039er)
+    
+    er3937 = square((j * (D * k4039 * T37 - A4036 * D * k3839 * mcl * T37)) / G + (D * j * T37 * R) / G2) * square(ca3937er)
+    
+    er3637 = square(-((A4036 * j * (-D * T37 + A3836 * D * mcl * T37)) / G)) * square(ca3637er)
+    
+    erJ = square(R / G) * square(jer)
+    JRer = (er40 + er39 + er38 + er37 + er36 + erD + er4039 + er3937 + er3637 + erJ) ** 0.5
+    age_err = (1e-6 / constants.lambdak) * JRer / (1 + ar40rad / k39 * j)
+#===============================================================================
+# error pychron port 
+#===============================================================================
+#    s = ca3937 * s37 
+#    T = ca3637 * s37
+#    G = s39 - s
+#    R = (-k4039 * G - constants.atm4036 * (s36 - T - mcl * (ca3837 * s37 + constants.atm3836 * (s36 - T) - s38 + k3839 * G)) + s40)
+#    #ErComp(1) = square(D4 * j / G) * square(Tot40Er)
+#    er40 = (d ** 4 * j / G) ** 2 * s40er ** 2
+#    
+#    #square((j * (-D3 * K4039 + A4036 * D3 * K3839 * MCl)) / G - (D3 * j * R) / G2) * square(Tot39Er)
+#    d3 = d ** 3
+#    er39 = ((j * (-d3 * k4039 + constants.atm4036 * d3 * k3839 * mcl)) / G - (d3 * j * R) / G ** 2) ** 2 * s39er ** 2
+#    
+#    #square(A4036 * D2 * j * MCl / G) * square(Tot38Er)
+#    er38 = (constants.atm4036 * d * d * j * mcl / G) ** 2 * s38er ** 2
+#    
+#    #square((j * (Ca3937 * D * K4039 - A4036 * 
+#    #        (-Ca3637 * D - (-A3836 * Ca3637 * D + Ca3837 * D - Ca3937 * D * K3839) * MCl))) 
+#    #        / G + (Ca3937 * D * j * R) / G2) * square(Tot37Er)
+#    er37 = ((j * (ca3937 * d * k4039 - constants.atm4036 
+#            * (-ca3637 * d - (-constants.atm3836 * ca3637 * d + ca3837 * d - ca3937 * d * k3839) * mcl))) 
+#            / G + (ca3937 * d * j * R) / G ** 2) ** 2 * s37er ** 2
+#    
+#    #square(A4036 * j * (1 - A3836 * MCl) / G) * square(Tot36Er)
+#    er36 = (constants.atm4036 * j * (1 - constants.atm3836 * mcl) / G) ** 2 * s36er ** 2
+#    
+#    #square((j * (4 * T40 * D3 - K4039 * (3 * D2 * T39 - Ca3937 * T37) 
+#    #    -A4036 * (-(Ca3637 * T37) - MCl * (-(A3836 * Ca3637 * T37) 
+#    #    + Ca3837 * T37 + K3839 * (3 * D2 * T39 - Ca3937 * T37) 
+#    #    - 2 * D * T38)))) 
+#    #    / (D3 * T39 - s) - (1 * j * (3 * D2 * T39 - Ca3937 * T37) 
+#    #    * (T40 * D4 - K4039 * (D3 * T39 - s) 
+#    #    - A4036 * (T36 - T - MCl * (-(T38 * D2) + Ca3837 * T37 * D + A3836 * (T36 - T) + K3839 * (D3 * T39 - s))))) 
+#    #    / square(D3 * T39 - s)) * square(DiscEr)
+#        
+#    erD = ((j * (4 * s40 / d - k4039 * (3 * s39 / d - ca3937 * s37 / d)
+#        - constants.atm4036 * (-(ca3637 * s37 / d) - mcl * (-(constants.atm3836 * ca3637 * s37 / d)
+#        + ca3837 * s37 / d + k3839 * (3 * s39 / d - ca3937 * s37 / d)
+#        - 2 * s38 / d))))  
+#        / (s39 / d - s) - (1 * j * (3 * s39 / d - ca3937 * s37 / d)
+#        * (s40 / d - k4039 * (s40 / d - s)
+#        - constants.atm4036 * (s36 - T - mcl * (-(s38 / d) + ca3837 * s37 + constants.atm3836 * (s36 - T) + k3839 * (s39 / d - s)))))
+#        / (s39 / d - s) ** 2) ** 2 * der ** 2
+#    #square(j * (s - D3 * T39) / G) * square(K4039Er)
+#    er4039 = (j * (s - s39 / d) / G) ** 2 * k4039er ** 2
+#    
+#    #square((j * (D * K4039 * T37 - A4036 * D * K3839 * MCl * T37)) / G + (D * j * T37 * R) / G2) * square(Ca3937Er)
+#    er3937 = ((j * (k4039 * s37 - constants.atm4036 * k3839 * mcl * s37)) / G + (j * s37 * R) / G ** 2) ** 2 * ca3937er ** 2
+#    
+#    #square(-((A4036 * j * (-D * T37 + A3836 * D * MCl * T37)) / G)) * square(Ca3637Er)
+#    er3637 = (-((constants.atm4036 * j * (-s37 + constants.atm3836 * mcl * s37)) / G)) ** 2 * ca3637er ** 2
+#    
+#    #square(R / G) * square(JErLocal)
+#    erJ = (R / G) ** 2 * jer ** 2
+#    JRer = (er40 + er39 + er38 + er37 + er36 + erD + er4039 + er3937 + er3637 + erJ) ** 0.5
+#    age_err = (1e-6 / constants.lambdak) * JRer / (1 + ar40rad / k39 * j)
+    
+    return age / 1e6, age_err
+#============= EOF =====================================
+
 ##=============enthought library imports=======================oup
 #
 ##=============standard library imports ========================
@@ -23,10 +242,131 @@ limitations under the License.
 #import constants
 ##from data_adapter import new_unknown
 #
-##plateau definition
-#plateau_criteria = {'number_steps':3}
-#
-#def find_plateaus(ages):
+#plateau definition
+plateau_criteria = {'number_steps':3}
+
+def overlap(a1, a2, e1, e2):
+    e1 *= 2
+    e2 *= 2
+    if a1 - e1 < a2 + e2 and a1 + e1 > a2 - e2:
+        return True
+
+#===============================================================================
+# non-recursive
+#===============================================================================
+def find_plateaus(ages, errors, signals):
+    plats = []
+    platids = []
+    for i in range(len(ages)):
+        ids = _find_plateau(ages, errors, signals, i)
+        if ids is not None and ids.any():
+            start, end = ids
+            plats.append(end - start)
+            platids.append((start, end))
+    
+#    print plats, platids
+    if plats:
+        plats = asarray(plats)
+        platids = asarray(platids)
+    
+        return platids[argmax(plats)]
+        
+def _find_plateau(ages, errors, signals, start):
+    plats = []
+    platids = []
+    for i in range(1, len(ages)):
+        if check_plateau(ages, errors, signals, start, i):
+            plats.append(i - start)
+            platids.append((start, i))
+    if plats:
+        plats = asarray(plats)
+        platids = asarray(platids)
+        return platids[argmax(plats)]
+        
+def check_plateau(ages, errors, signals, start, end):
+    for i in range(start, min(len(ages), end + 1)):
+        for j in range(start, min(len(ages), end + 1)):
+            if i != j:
+                obit = not overlap(ages[i], ages[j], errors[i], errors[j])
+                mswdbit = not check_mswd(ages, errors, start, end)
+                percent_releasedbit = not check_percent_released(signals, start, end)
+                n_steps_bit = (end - start) + 1 < 3
+                if (obit or 
+                    mswdbit or 
+                    percent_releasedbit or 
+                    n_steps_bit):
+                    return False
+
+    return True
+
+def check_percent_released(signals, start, end):
+    tot = sum(signals)    
+    s = sum(signals[start:end + 1])
+    return s / tot >= 0.5
+
+def check_mswd(ages, errors, start, end):
+    a_s = ages[start:end + 1]
+    e_s = errors[start:end + 1]
+#    print calculate_mswd(a_s, e_s)
+    return True
+#===============================================================================
+# recursive
+# from timeit testing recursive method is not any faster
+#  use non recursive method instead purely for readablity
+#===============================================================================
+
+def find_plateaus_r(ages, errors, start=0, end=1, plats=None, platids=None):
+    if plats is None:
+        plats = []
+        platids = []
+        
+    if start == len(ages) or end == len(ages):
+        plats = asarray(plats)
+        platids = asarray(platids)
+        return platids[argmax(plats)]
+    else:
+        a = check_plateau_r(ages, errors, start, end)
+        if a:
+            plats.append((end - start))
+            platids.append((start, end))
+            
+            return find_plateaus_r(ages, errors, start, end + 1, plats, platids)
+        else:
+            return find_plateaus_r(ages, errors, start + 1, end + 1, plats, platids)
+
+def check_plateau_r(ages, errors, start, end, isplat=True):
+    if end < len(ages):
+        return isplat and check_plateau_r(ages, errors, start, end + 1, isplat)
+    else:
+        for i in range(start, min(len(ages), end + 1)):
+            for j in range(start, min(len(ages), end + 1)):
+                if i != j:
+                    if not overlap(ages[i], ages[j], errors[i], errors[j]):
+                        return False
+        return True
+
+ages = [10] * 50
+errors = [1] * 1
+
+def time_recursive():
+    find_plateaus_r(ages, errors)
+
+def time_non_recursive():
+    find_plateaus(ages, errors)
+    
+if __name__ == '__main__':
+    from timeit import Timer
+    t = Timer('time_recursive', 'from __main__ import time_recursive')
+    
+    n = 5
+    tr = t.timeit(n)
+    print 'time r', tr / 5
+    
+    t = Timer('time_non_recursive', 'from __main__ import time_non_recursive')
+    tr = t.timeit(n)
+    print 'time nr', tr / 5
+#    find_plateaus(ages, errors)
+#def find_plateaus(ages, errors):
 #    def __add_plateau(s, e, p, di):
 #        d = e - s
 #        if d >= plateau_criteria['number_steps']:
@@ -38,13 +378,16 @@ limitations under the License.
 #    plateaus = []
 #    plateau_lengths = []
 #    for i in range(1, len(ages)):
-#        aa1 = ages[start_i]
-#        aa2 = ages[i]
-#
-#        a1 = aa1.nominal_value
-#        a2 = aa2.nominal_value
-#        e1 = 2.0 * aa1.std_dev()
-#        e2 = 2.0 * aa2.std_dev()
+#        a1 = ages[start_i]
+#        a2 = ages[i]
+#        
+#        e1 = 2 * errors[start_i]
+#        e2 = 2 * errors[i]
+#        #a1 = aa1.nominal_value
+#        #a2 = aa2.nominal_value
+#        #e1 = 2.0 * aa1.std_dev()
+#        #e2 = 2.0 * aa2.std_dev()
+#        print a1, a2, e1, e2
 #        if not (a1 - e1) >= (a2 + e2) and not (a1 + e1) <= (a2 - e2):
 #            end_i += 1
 #        else:
@@ -62,8 +405,8 @@ limitations under the License.
 #    max_i = plateau_lengths.index(max(plateau_lengths))
 #
 #    return (plateaus[max_i][0], plateaus[max_i][1] + 1)
-#
-#
+
+
 #def age_calculation(*args):
 #    '''
 #    j, m40, m39, m38, m37, m36, production_ratio, days_since_irradiation, irradiation_time

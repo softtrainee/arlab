@@ -24,6 +24,18 @@ class StackedGraph(Graph):
     '''
     equi_stack = True
     panel_height = 100
+    def add_minor_xticks(self, plotid=0, **kw):
+        if plotid != 0:
+            kw['aux_component'] = self.plots[0]
+        
+        super(StackedGraph, self).add_minor_xticks(plotid=plotid, **kw)
+        
+    def add_minor_yticks(self, plotid=0, **kw):
+        if plotid != 0:
+            kw['aux_component'] = self.plots[0]
+        
+        super(StackedGraph, self).add_minor_yticks(plotid=plotid, **kw)
+        
     def new_plot(self, **kw):
         '''
         '''
