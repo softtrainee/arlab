@@ -768,6 +768,12 @@ class Graph(HasTraits):
 
         m = MinorTicksOverlay(component=p, orientation='h', **kw)
         p.underlays.append(m)
+    
+    def redraw(self, force=True):
+        if force:
+            self.plotcontainer.invalidate_and_redraw()
+        else:
+            self.plotcontainer.request_redraw()
 
     def container_factory(self):
         '''

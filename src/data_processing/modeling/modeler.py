@@ -14,96 +14,36 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Str, \
-    Directory, List, on_trait_change, Property, Enum, Float, Int, Button, Range
-from traitsui.api import View, Item, VSplit, TableEditor, VGroup, Group, CheckListEditor
+from traits.api import  Any, Instance, Str, \
+    Directory, List, on_trait_change, Property, Enum, Int, Button
+from traitsui.api import View, Item, VSplit, TableEditor, CheckListEditor
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from pyface.api import FileDialog, OK
+from pyface.message_dialog import information
+from pyface.directory_dialog import DirectoryDialog
 #from traitsui.menu import Action, Menu, MenuBar
-import apptools.sweet_pickle as pickle
+#import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-import shutil
 import os
-import sys
+from Queue import Queue
 
-import commands
-from threading import Thread
 #============= local library imports  ==========================
-from src.helpers.paths import modeling_data_dir as data_dir, hidden_dir
-from src.helpers.paths import LOVERA_PATH
+from src.helpers.paths import modeling_data_dir as data_dir, clovera_root, \
+    modeling_data_dir
+#from src.helpers.paths import LOVERA_PATH
 from src.graph.diffusion_graph import DiffusionGraph, GROUPNAMES
 from src.loggable import Loggable
 from src.data_processing.modeling.data_loader import DataLoader
 from src.data_processing.modeling.model_data_directory import ModelDataDirectory
 from src.helpers.color_generators import colorname_generator
 from src.data_processing.modeling.autoupdate_config_dialog import AutoupdateConfigDialog
-from traitsui.menu import ModalButtons
+from src.data_processing.modeling.fortran_exec import FortranExec
+
 
 #used to validate LOVERA_PATH            
-NECESSARY_PROGRAMS = ['filesmod.exe', 'autoarr.exe', 'autoagemon.exe']
-class RunConfiguration(HasTraits):
-    '''
-    '''
-    data_dir = Directory('~/Pychrondata_beta/data/modeling')
-    sample = Str('59702-52')
-    geometry = Enum('plane', 'sphere', 'cylinder')
-    max_domains = Int(8)
-    min_domains = Int(3)
-    nruns = Int(50)
-    max_plateau_age = Float(375)
-    def write(self):
-        error = None
-        def _write_attrs(p, names):
-            with open(p, 'w') as f:
-                for n in names:
-                    f.write('#%s\n' % n)
-                    f.write('%s\n' % getattr(self, n))
+#NECESSARY_PROGRAMS = ['filesmod.exe', 'autoarr.exe', 'autoagemon.exe']
 
-        if os.path.isdir(self.data_dir):
-            #write files mod config
-            p = os.path.join(self.data_dir, 'files_mod_config.in')
-            _write_attrs(p, ['sample'])
-
-            #write autoarr config
-            p = os.path.join(self.data_dir, 'autoarr_config.in')
-            _write_attrs(p, ['max_domains', 'min_domains'])
-
-            #write autoage-mon config
-            p = os.path.join(self.data_dir, 'autoage_mon_config.in')
-            _write_attrs(p, ['nruns', 'max_plateau_age'])
-        else:
-            error = 'Invalid data directory %s' % self.data_dir
-        return error
-
-    def traits_view(self):
-        '''
-        '''
-        files_mod_group = VGroup(Item('sample'),
-                               Item('geometry'),
-                               label='files_mod')
-        autoarr_group = VGroup(Item('max_domains'),
-                             Item('min_domains'),
-                             label='autoarr')
-        autoage_mon_group = VGroup(Item('nruns'),
-                                 Item('max_plateau_age'),
-                                 label='autoage-mon'
-                                 )
-        return View(
-                       Item('data_dir'),
-                       Group(
-                             files_mod_group,
-                             autoarr_group,
-                             autoage_mon_group,
-                             layout='tabbed'
-                            ),
-                    buttons=['OK', 'Cancel'],
-                    resizable=True,
-                    kind='modal',
-                    width=500,
-                    height=150
-                    )
-    
 class Modeler(Loggable):
     '''
     '''
@@ -132,10 +72,8 @@ class Modeler(Loggable):
     logr_ro_line_width = Int(1)
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
     
-    
-    
     @on_trait_change('graph.status_text')
-    def update_statusbar(self, object, name, value):
+    def update_statusbar(self, obj, name, value):
         '''
         '''
         if name == 'status_text':
@@ -150,113 +88,7 @@ class Modeler(Loggable):
         '''
         '''
         self.graph.set_title(self.graph_title, size=18)
-
-    def open_run_configuration(self):
-        def edit_config(*args):
-            if args:
-                m = args[0]
-            else:
-                m = RunConfiguration()
-
-            info = m.edit_traits(kind='modal')
-            if info.result:
-                with open(p, 'w') as f:
-                    pickle.dump(m, f)
-
-                return m
-
-        p = os.path.join(hidden_dir, '.run_config')
-        if os.path.isfile(p):
-            with open(p, 'rb') as f:
-                try:
-                    r = edit_config(pickle.load(f))
-                    if r is not None:
-                        self.run_configuration = r
-
-                except:
-                    r = edit_config()
-                    if r is not None:
-                        self.run_configuration = r
-        else:
-            r = edit_config()
-            if r is not None:
-                self.run_configuration = r
-
-
-    def run_model(self):
-        '''
-        '''
-
-        model_thread = Thread(target=self._run_model_)
-        model_thread.start()
-
-    def _run_model_(self, run_config=None):
-        '''
-
-        '''
-#        src_dir = os.path.join(data_dir, 'TESTDATA')
-        self.info('Running Model')
-        if run_config is None:
-            run_config = self.run_configuration
-
-        if run_config is None:
-            self.warning('no run configuration')
-        else:
-            self.info('Model Options')
-            for a in ['sample', 'geometry', 'max_domains', 'min_domains', 'nruns', 'max_plateau_age']:
-                self.info('{} = {}'.format(a, getattr(run_config, a)))
-
-            #dump the individual config files
-            error = self.run_configuration.write()
-            if error:
-                self.warning('Failed writing config file')
-                self.warning('error = {}'.format(error))
-                return
-
-            if os.path.exists(LOVERA_PATH):
-                #check to see dir has necessary programs
-                if any([not ni in os.listdir(LOVERA_PATH) for ni in  NECESSARY_PROGRAMS]):
-                    self.warning('Incomplete LOVERA_PATH {}'.format(LOVERA_PATH))
-                    return
-
-                src_dir = os.path.join(self.run_configuration.data_dir)
-
-                self.info('copying fortran programs')
-                #copy the lovera codes to src_dir
-                for f in NECESSARY_PROGRAMS:
-                    p = os.path.join(LOVERA_PATH, f)
-                    self.info('copying {} > {}'.format(p, src_dir))
-                    shutil.copy(p, src_dir)
-
-                self.info('change to directory {}'.format(src_dir))
-                #change the working directory
-                os.chdir(src_dir)
-
-            else:
-                self.warning('Invalid LOVERA_PATH {}'.format(LOVERA_PATH))
-                return
-
-            #run the lovera code
-            for cmd in ['filesmod', 'autoarr', 'autoagemon']:
-                msg = 'execute {}'.format(cmd)
-                self.status_test = msg
-                self.info(msg)
-                if sys.platform == 'win32':
-                    os.system(cmd)
-                else:
-                    status, output = commands.getstatusoutput('./{}'.format(cmd))
-                    self.info('{} {}' % (status, output))
-                    if status:
-                        break
-
-            #delete the copied programs
-
-            for f in NECESSARY_PROGRAMS:
-                os.remove(os.path.join(src_dir, f))
-
-            self.info('====== Modeling finished======')
-            self.status_text = 'modeling finished'
-
+    
     def parse_autoupdate(self):
         '''
         '''
@@ -270,12 +102,94 @@ class Modeler(Loggable):
             info = adlg.edit_traits(kind='modal')
             if info.result:
                 self.info('tempoffset = {} (C), timeoffset = {} (min)'.format(adlg.tempoffset, adlg.timeoffset))
-                self.data_loader.load_autoupdate(f.path, adlg.tempoffset, adlg.timeoffset)
-
+                rids = self.data_loader.load_autoupdate(f.path, adlg.tempoffset, adlg.timeoffset)
+                auto_files = True
+                if auto_files:
+                    for rid in rids:
+                        self.execute_files(rid, os.path.dirname(f.path) + '_data')
+            
         #path='/Users/Ross/Pychrondata_beta/data/modeling/ShapFurnace.txt' 
         #self.data_loader.load_autoupdate(path)
-
-
+    def execute_files(self, rid, root):
+        from clovera_configs import FilesConfig
+        #make a config obj
+        f = FilesConfig(rid, root)
+        
+        #write config to ./files.cl
+        f.dump()
+        
+        #now ready to run fortran
+        self._execute_fortran('files')
+    
+    def get_rid_root(self):
+        
+        d = DirectoryDialog(action='open', default_path=modeling_data_dir)
+        if d.open() == OK:
+            return os.path.basename(d.path), os.path.dirname(d.path)
+        return None, None
+    
+    def execute_autoarr(self):
+        rid, root = self.get_rid_root()
+        if rid:
+            from clovera_configs import AutoarrConfig
+            a = AutoarrConfig(rid, root)
+            info = a.edit_traits()
+            if info.result:
+                self._execute_fortran('autoarr')
+            
+    def execute_autoagemon(self):
+        rid, root = self.get_rid_root()
+        if rid:
+            from clovera_configs import AutoagemonConfig
+            a = AutoagemonConfig(rid, root)
+            info = a.edit_traits()
+            if info.result:
+                self._execute_fortran('autoagemon')
+                
+    def execute_autoagefree(self):
+        rid, root = self.get_rid_root()
+        if rid:
+            from clovera_configs import AutoagefreeConfig
+            a = AutoagefreeConfig(rid, root)
+            info = a.edit_traits()
+            if info.result:
+                self._execute_fortran('autoagefree')
+            
+    def execute_confidence_interval(self):
+        rid, root = self.get_rid_root()
+        if rid:
+            from clovera_configs import ConfidenceIntervalConfig
+            a = ConfidenceIntervalConfig(rid, root)
+            info = a.edit_traits()
+            if info.result:
+                self._execute_fortran('confint')
+            
+    def handle_stdout(self, name, t, q):
+        func = getattr(self, 'handle_{}'.format(name))
+        while t.isAlive() or not q.empty():
+            l = q.get().rstrip()
+            self.logger.info(l)
+            
+            func(l)
+            information(None, l)
+            
+    def handle_autoarr(self, m):
+        pass
+    def handle_autoagemon(self, m):
+        pass
+    def handle_autoagefree(self, m):
+        pass
+    def handle_confint(self, m):
+        pass
+            
+    def _execute_fortran(self, name):
+        self.info('excecute {}'.format(name))
+        q = Queue()
+        t = FortranExec(name, clovera_root, q)    
+        t.start()
+        
+        self.handle_stdout(name, t, q)
+        
     def load_graph(self, data_directory, gid, color):
         '''
             
@@ -499,7 +413,6 @@ class Modeler(Loggable):
         tree = Item('datum', style='custom', show_label=False, height=0.75,
                   width=0.25)
 
-
         cols = [
                 ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show'),
@@ -608,10 +521,24 @@ class Modeler(Loggable):
             color_gen.next()
 
         self.update_graph_title()
-
+        
+def runfortran():
+    q = Queue()
+    t = FortranExec('hello_world', '/Users/Ross/Desktop', q)
+    t.start()
+    
+    while t.isAlive() or not q.empty():
+        l = q.get().rstrip()
+        
+        print l
+    
+    print t.get_remaining_stdout()
+    
+        
 if __name__ == '__main__':
-    r = RunConfiguration()
-    r.configure_traits()
+    runfortran()
+#    r = RunConfiguration()
+#    r.configure_traits()
 #============= EOF ====================================
 #    setup('modeler')
 #    m = Modeler()
@@ -636,3 +563,168 @@ if __name__ == '__main__':
 #                    )
 #
 #        return v
+
+#def run_model(self):
+#        '''
+#        '''
+#
+#        model_thread = Thread(target=self._run_model_)
+#        model_thread.start()
+#
+#    def _run_model_(self, run_config=None):
+#        '''
+#
+#        '''
+##        src_dir = os.path.join(data_dir, 'TESTDATA')
+#        self.info('Running Model')
+#        if run_config is None:
+#            run_config = self.run_configuration
+#
+#        if run_config is None:
+#            self.warning('no run configuration')
+#        else:
+#            self.info('Model Options')
+#            for a in ['sample', 'geometry', 'max_domains', 'min_domains', 'nruns', 'max_plateau_age']:
+#                self.info('{} = {}'.format(a, getattr(run_config, a)))
+#
+#            #dump the individual config files
+#            error = self.run_configuration.write()
+#            if error:
+#                self.warning('Failed writing config file')
+#                self.warning('error = {}'.format(error))
+#                return
+#
+#            if os.path.exists(LOVERA_PATH):
+#                #check to see dir has necessary programs
+#                if any([not ni in os.listdir(LOVERA_PATH) for ni in  NECESSARY_PROGRAMS]):
+#                    self.warning('Incomplete LOVERA_PATH {}'.format(LOVERA_PATH))
+#                    return
+#
+#                src_dir = os.path.join(self.run_configuration.data_dir)
+#
+#                self.info('copying fortran programs')
+#                #copy the lovera codes to src_dir
+#                for f in NECESSARY_PROGRAMS:
+#                    p = os.path.join(LOVERA_PATH, f)
+#                    self.info('copying {} > {}'.format(p, src_dir))
+#                    shutil.copy(p, src_dir)
+#
+#                self.info('change to directory {}'.format(src_dir))
+#                #change the working directory
+#                os.chdir(src_dir)
+#
+#            else:
+#                self.warning('Invalid LOVERA_PATH {}'.format(LOVERA_PATH))
+#                return
+#
+#            #run the lovera code
+#            for cmd in ['filesmod', 'autoarr', 'autoagemon']:
+#                msg = 'execute {}'.format(cmd)
+#                self.status_test = msg
+#                self.info(msg)
+#                if sys.platform == 'win32':
+#                    os.system(cmd)
+#                else:
+#                    status, output = commands.getstatusoutput('./{}'.format(cmd))
+#                    self.info('{} {}' % (status, output))
+#                    if status:
+#                        break
+#
+#            #delete the copied programs
+#
+#            for f in NECESSARY_PROGRAMS:
+#                os.remove(os.path.join(src_dir, f))
+#
+#            self.info('====== Modeling finished======')
+#            self.status_text = 'modeling finished'
+#def open_run_configuration(self):
+#        def edit_config(*args):
+#            if args:
+#                m = args[0]
+#            else:
+#                m = RunConfiguration()
+#
+#            info = m.edit_traits(kind='modal')
+#            if info.result:
+#                with open(p, 'w') as f:
+#                    pickle.dump(m, f)
+#
+#                return m
+#
+#        p = os.path.join(hidden_dir, '.run_config')
+#        if os.path.isfile(p):
+#            with open(p, 'rb') as f:
+#                try:
+#                    r = edit_config(pickle.load(f))
+#                    if r is not None:
+#                        self.run_configuration = r
+#
+#                except:
+#                    r = edit_config()
+#                    if r is not None:
+#                        self.run_configuration = r
+#        else:
+#            r = edit_config()
+#            if r is not None:
+#                self.run_configuration = r
+#class RunConfiguration(HasTraits):
+#    '''
+#    '''
+#    data_dir = Directory('~/Pychrondata_beta/data/modeling')
+#    sample = Str('59702-52')
+#    geometry = Enum('plane', 'sphere', 'cylinder')
+#    max_domains = Int(8)
+#    min_domains = Int(3)
+#    nruns = Int(50)
+#    max_plateau_age = Float(375)
+#    def write(self):
+#        error = None
+#        def _write_attrs(p, names):
+#            with open(p, 'w') as f:
+#                for n in names:
+#                    f.write('#%s\n' % n)
+#                    f.write('%s\n' % getattr(self, n))
+#
+#        if os.path.isdir(self.data_dir):
+#            #write files mod config
+#            p = os.path.join(self.data_dir, 'files_mod_config.in')
+#            _write_attrs(p, ['sample'])
+#
+#            #write autoarr config
+#            p = os.path.join(self.data_dir, 'autoarr_config.in')
+#            _write_attrs(p, ['max_domains', 'min_domains'])
+#
+#            #write autoage-mon config
+#            p = os.path.join(self.data_dir, 'autoage_mon_config.in')
+#            _write_attrs(p, ['nruns', 'max_plateau_age'])
+#        else:
+#            error = 'Invalid data directory %s' % self.data_dir
+#        return error
+
+#    def traits_view(self):
+#        '''
+#        '''
+#        files_mod_group = VGroup(Item('sample'),
+#                               Item('geometry'),
+#                               label='files_mod')
+#        autoarr_group = VGroup(Item('max_domains'),
+#                             Item('min_domains'),
+#                             label='autoarr')
+#        autoage_mon_group = VGroup(Item('nruns'),
+#                                 Item('max_plateau_age'),
+#                                 label='autoage-mon'
+#                                 )
+#        return View(
+#                       Item('data_dir'),
+#                       Group(
+#                             files_mod_group,
+#                             autoarr_group,
+#                             autoage_mon_group,
+#                             layout='tabbed'
+#                            ),
+#                    buttons=['OK', 'Cancel'],
+#                    resizable=True,
+#                    kind='modal',
+#                    width=500,
+#                    height=150
+#                    )

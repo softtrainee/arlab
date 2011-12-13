@@ -20,79 +20,80 @@ from pyface.action.api import Action
 
 #============= local library imports  ==========================
 MDD_PROTOCOL = 'src.data_processing.modeling.modeler_manager.ModelerManager'
-class RunModelAction(Action):
+class AutoarrAction(Action):
     '''
-        G{classtree}
     '''
-    description = 'Run a MDD model with using a current Run Configuration'
-    name = 'Run Model'
     def perform(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         app = event.window.application
         manager = app.get_service(MDD_PROTOCOL)
-        manager.window = event.window
-        manager.run_model()
+        manager.modeler.execute_autoarr()
 
-class RunConfigurationAction(Action):
+class AutoagemonAction(Action):
     '''
-        G{classtree}
     '''
-    description = 'Edit a run configuration'
-    name = 'Run Configuration'
     def perform(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         app = event.window.application
         manager = app.get_service(MDD_PROTOCOL)
-        manager.window = event.window
-        manager.open_run_configuration()
+        manager.modeler.execute_autoagemon()
+
+class AutoagefreeAction(Action):
+    '''
+    '''
+    def perform(self, event):
+        '''
+        '''
+        app = event.window.application
+        manager = app.get_service(MDD_PROTOCOL)
+        manager.modeler.execute_autoagefree()
+        
+class ConfidenceIntervalAction(Action):
+    '''
+    '''
+    def perform(self, event):
+        '''
+        '''
+        app = event.window.application
+        manager = app.get_service(MDD_PROTOCOL)
+        manager.modeler.execute_confidence_interval()
 
 class ParseAutoupdateAction(Action):
     '''
-        G{classtree}
     '''
     description = 'Parse an autoupdate file'
     name = 'Parse Autoupdate'
     def perform(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
         app = event.window.application
         manager = app.get_service(MDD_PROTOCOL)
         manager.window = event.window
         manager.parse_autoupdate()
 
-class AddModelerAction(Action):
-    '''
-        G{classtree}
-    '''
-    description = 'Add another modeler tab'
-    name = 'Add Modeler'
-    def perform(self, event):
-        '''
-            @type event: C{str}
-            @param event:
-        '''
-        app = event.window.application
-        manager = app.get_service(MDD_PROTOCOL)
-        manager.window = event.window
-        manager.add_modeler()
+#class AddModelerAction(Action):
+#    '''
+#    '''
+#    description = 'Add another modeler tab'
+#    name = 'Add Modeler'
+#    def perform(self, event):
+#        '''
+#        '''
+#        app = event.window.application
+#        manager = app.get_service(MDD_PROTOCOL)
+#        manager.window = event.window
+#        manager.add_modeler()
+
 class NewModelAction(Action):
     '''
-        G{classtree}
     '''
-    description = 'Parse an autoupdate file'
-    name = 'Parse Autoupdate'
+
     def perform(self, event):
         '''
-            @type event: C{str}
-            @param event:
+   
         '''
         app = event.window.application
         manager = app.get_service(MDD_PROTOCOL)
