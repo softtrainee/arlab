@@ -141,6 +141,7 @@ class Modeler(Loggable):
         return None, None
     
     def execute_autoarr(self):
+        self.info('------- Autoarr -------')
         rid, root = self._get_rid_root()
         if rid:
             from clovera_configs import AutoarrConfig
@@ -148,8 +149,13 @@ class Modeler(Loggable):
             info = a.edit_traits()
             if info.result:
                 self._execute_fortran('autoarr')
+            else:
+                self.info('------- Autoarr aborted-------')
+        else:
+            self.info('------- Autoarr aborted-------')
             
     def execute_autoagemon(self):
+        self.info('------- Autoagemon -------')
         rid, root = self._get_rid_root()
         if rid:
             from clovera_configs import AutoagemonConfig
@@ -157,8 +163,14 @@ class Modeler(Loggable):
             info = a.edit_traits()
             if info.result:
                 self._execute_fortran('autoagemon')
+            else:
+                self.info('------- Autoagemon aborted-------')
+        else:
+            self.info('------- Autoagemon aborted-------')
+                
                 
     def execute_autoagefree(self):
+        self.info('------- Autoagefree -------')
         rid, root = self._get_rid_root()
         if rid:
             from clovera_configs import AutoagefreeConfig
@@ -166,8 +178,13 @@ class Modeler(Loggable):
             info = a.edit_traits()
             if info.result:
                 self._execute_fortran('autoagefree')
-            
+            else:
+                self.info('------- Autoagefree aborted-------')
+        else:
+            self.info('------- Autoagefree aborted-------')
+                
     def execute_confidence_interval(self):
+        self.info('------- Confidence Interval-------')
         rid, root = self._get_rid_root()
         if rid:
             from clovera_configs import ConfidenceIntervalConfig
@@ -175,9 +192,14 @@ class Modeler(Loggable):
             info = a.edit_traits()
             if info.result:
                 self._execute_fortran('confint')
-    
+            else:
+                self.info('------- Confidence Interval aborted-------')
+                
+        else:
+            self.info('------- Confidence Interval aborted-------')
+       
     def _execute_fortran(self, name):
-        self.info('excecute {}'.format(name))
+        self.info('excecute fortran program {}'.format(name))
         q = Queue()
         
         self._fortran_process = t = FortranProcess(name, clovera_root, q)    
@@ -195,21 +217,21 @@ class Modeler(Loggable):
             
         func = getattr(self, '_handle_{}'.format(name))
         
-        #reset clock
-        time.clock()
-        
+#        reset clock
+#        time.clock()
+        st = time.time()
         #handle std.out 
         while t.isAlive() or not q.empty():
             l = q.get().rstrip()
             _handle(l)
-            
+         
         #handle addition msgs
         for m in self._fortran_process.get_remaining_stdout():
             _handle(m)
         
-        #get time since last clock call
-        dur = time.clock()
-        self.info('run time {:0.1f} s'.format(dur))
+        dur = time.time() - st
+        self.info('{} run time {:0.1f} s'.format(name, dur))
+        self.info('------ {} finished ------'.format(name.capitalize()))
         
     def _handle_autoarr_h(self, m):
         pass
