@@ -53,8 +53,9 @@ class BaseConfig(Loggable):
         return ModalButtons[1:]
     
 class AutoUpdateParseConfig(BaseConfig):
-    tempoffset = Float
-    timeoffset = Float
+    tempoffset = Float(90)
+    timeoffset = Float(2)
+    
 
     def traits_view(self):
         v = View('tempoffset',
