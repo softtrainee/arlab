@@ -38,13 +38,31 @@ class BaseConfig(Loggable):
     def dump(self):
         if not self._dump_attrs:
             raise NotImplementedError('set _dump_attrs')
-        with open(self.get_path(), 'w') as f:
+        
+        p = self.get_path()
+        self.info('saving configuration to {}'.format(p))
+        with open(p, 'w') as f:
             txt = '\n'.join([str(getattr(self, attr)) for attr in self._dump_attrs])
             f.write(txt)
             
     def get_path(self):
         p = os.path.join(self.root, self.runid, '{}.cl'.format(self.klass_name))
         return p
+    
+    def _get_buttons(self):
+        return ModalButtons[1:]
+    
+class AutoUpdateParseConfig(BaseConfig):
+    tempoffset = Float
+    timeoffset = Float
+
+    def traits_view(self):
+        v = View('tempoffset',
+               'timeoffset',
+               buttons=self._get_buttons(),
+               kind='livemodal'
+               )
+        return v   
     
 class FilesConfig(BaseConfig):
     klass_name = 'files'
@@ -80,10 +98,10 @@ class AutoarrConfig(BaseConfig):
                Item('min_domains'),
                Item('fixed_Do'),
                Item('ordinate_Do'),
-               buttons=ModalButtons,
+               buttons=self._get_buttons(),
                handler=BaseConfigHandler,
                title='Autoarr Configuration',
-               kind='modal'
+               kind='livemodal'
                
                )
         
@@ -100,10 +118,10 @@ class AutoagemonConfig(BaseConfig):
     def traits_view(self):
         v = View(Item('nruns'),
                  Item('max_plateau_age', label='Max. Plateua Age (Ma)'),
-                 buttons=ModalButtons,
+                 buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
                  title='Autoagemon Configuration',
-                 kind='modal'
+                 kind='livemodal'
                )
         return v
     
@@ -118,10 +136,10 @@ class AutoagefreeConfig(BaseConfig):
     def traits_view(self):
         v = View(Item('nruns'),
                  Item('max_plateau_age', label='Max. Plateua Age (Ma)'),
-                 buttons=ModalButtons,
+                 buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
                  title='Autoagefree Configuration',
-                 kind='modal'
+                 kind='livemodal'
                )
         return v
     
@@ -139,10 +157,10 @@ class ConfidenceIntervalConfig(BaseConfig):
         v = View(Item('max_age'),
                  Item('min_age'),
                  Item('nsteps'),
-                 buttons=ModalButtons,
+                 buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
                  title='Confidence Interval Configuration',
-                 kind='modal'
+                 kind='livemodal'
                )
         return v
     

@@ -49,12 +49,7 @@ class Loggable(HasTraits):
                 name = self.name
             else:
                 name = self.__class__.__name__
-            
-        
-        #self.logger = new_logger(name)
 
-
-#        name = name + ' ' * (MAXLEN - len(name))
         name = '{:<{}}'.format(name, MAXLEN)
         self.logger = add_console(name=name, display=gLoggerDisplay)
 
