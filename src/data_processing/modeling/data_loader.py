@@ -73,7 +73,7 @@ class DataLoader(Loggable):
         for i in range(len(samples) - 1):
             self.info('loading sample {}'.format(names[i]))
             self.load_sample(path, samples[i], samples[i + 1], names[i], tempoffset, timeoffset)
-
+        return names
     def split_autoupdate(self, path):
         '''
         '''

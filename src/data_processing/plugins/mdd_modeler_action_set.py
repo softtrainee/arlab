@@ -24,21 +24,30 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 
 class MDDModelerActionSet(WorkbenchActionSet):
     '''
-        G{classtree}
     '''
     id = 'pychron.mdd.action_set'
 #    menus = [
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
     actions = [
-               Action(name='Run Model',
+               
+               Action(name='Autoarr',
                       path='MenuBar/MDD',
-                    class_name='src.data_processing.plugins.mdd_modeler_actions:RunModelAction'
+                    class_name='src.data_processing.plugins.mdd_modeler_actions:AutoarrAction'
                     ),
-               Action(name='Run Configuration',
+               Action(name='Autoagemon',
                       path='MenuBar/MDD',
-                    class_name='src.data_processing.plugins.mdd_modeler_actions:RunConfigurationAction'
+                    class_name='src.data_processing.plugins.mdd_modeler_actions:AutoagemonAction'
                     ),
+               Action(name='Autoagefree',
+                      path='MenuBar/MDD',
+                    class_name='src.data_processing.plugins.mdd_modeler_actions:AutoagefreeAction'
+                    ),
+               Action(name='Confidence Interval',
+                      path='MenuBar/MDD',
+                    class_name='src.data_processing.plugins.mdd_modeler_actions:ConfidenceIntervalAction'
+                    ),
+               
                Action(name='Parse Autoupdate',
                       path='MenuBar/MDD',
                     class_name='src.data_processing.plugins.mdd_modeler_actions:ParseAutoupdateAction'
