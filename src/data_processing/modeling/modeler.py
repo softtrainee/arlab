@@ -22,11 +22,14 @@ from traitsui.extras.checkbox_column import CheckboxColumn
 from pyface.api import FileDialog, OK
 from pyface.message_dialog import information
 from pyface.directory_dialog import DirectoryDialog
+#from enthought.pyface.timer import do_later
 #from traitsui.menu import Action, Menu, MenuBar
 #import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 from Queue import Queue
+from threading import Thread
+import time
 
 #============= local library imports  ==========================
 from src.helpers.paths import modeling_data_dir as data_dir, clovera_root, \
@@ -37,13 +40,13 @@ from src.loggable import Loggable
 from src.data_processing.modeling.data_loader import DataLoader
 from src.data_processing.modeling.model_data_directory import ModelDataDirectory
 from src.helpers.color_generators import colorname_generator
-from src.data_processing.modeling.autoupdate_config_dialog import AutoupdateConfigDialog
-from src.data_processing.modeling.fortran_exec import FortranExec
+from src.data_processing.modeling.fortran_process import FortranProcess
 
-
-#used to validate LOVERA_PATH            
-#NECESSARY_PROGRAMS = ['filesmod.exe', 'autoarr.exe', 'autoagemon.exe']
-
+class DummyDirectoryDialog(object):
+    path = os.path.join(modeling_data_dir, '59702-43')
+    def open(self):
+        return OK
+    
 class Modeler(Loggable):
     '''
     '''
@@ -63,32 +66,15 @@ class Modeler(Loggable):
 
     status_text = Str
     sync_groups = None
-
-    run_configuration = None
-
-        
+    
     include_panels = List(GROUPNAMES[:-1])
     
     logr_ro_line_width = Int(1)
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
     
-    @on_trait_change('graph.status_text')
-    def update_statusbar(self, obj, name, value):
-        '''
-        '''
-        if name == 'status_text':
-            self.status_text = value
-
-    def _get_graph_title(self):
-        '''
-        '''
-        return ', '.join([a.name for a in self.data if a.show])
-
-    def update_graph_title(self):
-        '''
-        '''
-        self.graph.set_title(self.graph_title, size=18)
-    
+#===============================================================================
+# fortran
+#===============================================================================
     def parse_autoupdate(self):
         '''
         '''
@@ -96,40 +82,66 @@ class Modeler(Loggable):
         f = FileDialog(action='open', default_directory=data_dir)
         if f.open() == OK:
             self.info('loading autoupdate file {}'.format(f.path))
-
+            
             #open a autoupdate config dialog
-            adlg = AutoupdateConfigDialog()
-            info = adlg.edit_traits(kind='modal')
+            from clovera_configs import AutoUpdateParseConfig
+            adlg = AutoUpdateParseConfig()
+            info = adlg.edit_traits()
             if info.result:
                 self.info('tempoffset = {} (C), timeoffset = {} (min)'.format(adlg.tempoffset, adlg.timeoffset))
                 rids = self.data_loader.load_autoupdate(f.path, adlg.tempoffset, adlg.timeoffset)
                 auto_files = True
                 if auto_files:
                     for rid in rids:
-                        self.execute_files(rid, os.path.dirname(f.path) + '_data')
+                        self.execute_files(rid=rid, root=os.path.dirname(f.path) + '_data')
             
+        #=======================================================================
+        # debug
+        #=======================================================================
         #path='/Users/Ross/Pychrondata_beta/data/modeling/ShapFurnace.txt' 
         #self.data_loader.load_autoupdate(path)
-    def execute_files(self, rid, root):
-        from clovera_configs import FilesConfig
-        #make a config obj
-        f = FilesConfig(rid, root)
         
-        #write config to ./files.cl
-        f.dump()
-        
-        #now ready to run fortran
-        self._execute_fortran('files')
+    def execute_files(self, rid=None, root=None):
+        if rid is None:
+            rid, root = self._get_rid_root()
+
+        if rid is not None:    
+            from clovera_configs import FilesConfig
+            #make a config obj
+            f = FilesConfig(rid, root)
+            
+            #write config to ./files.cl
+            f.dump()
+            
+            #change current working dir
+            os.chdir(os.path.join(root, rid))
+            
+            #now ready to run fortran
+            self._execute_fortran('files')
     
-    def get_rid_root(self):
+    def _get_rid_root(self):
+        
+        #=======================================================================
+        # #debug
+         
+#        d = DummyDirectoryDialog()
+#        =======================================================================
         
         d = DirectoryDialog(action='open', default_path=modeling_data_dir)
+        
         if d.open() == OK:
-            return os.path.basename(d.path), os.path.dirname(d.path)
+            rid = os.path.basename(d.path)
+            root = os.path.dirname(d.path)
+            
+            #set this root as the working directory
+            os.chdir(d.path)
+            self.info('setting working directory to {}'.format(d.path))
+            
+            return rid, root
         return None, None
     
     def execute_autoarr(self):
-        rid, root = self.get_rid_root()
+        rid, root = self._get_rid_root()
         if rid:
             from clovera_configs import AutoarrConfig
             a = AutoarrConfig(rid, root)
@@ -138,7 +150,7 @@ class Modeler(Loggable):
                 self._execute_fortran('autoarr')
             
     def execute_autoagemon(self):
-        rid, root = self.get_rid_root()
+        rid, root = self._get_rid_root()
         if rid:
             from clovera_configs import AutoagemonConfig
             a = AutoagemonConfig(rid, root)
@@ -147,7 +159,7 @@ class Modeler(Loggable):
                 self._execute_fortran('autoagemon')
                 
     def execute_autoagefree(self):
-        rid, root = self.get_rid_root()
+        rid, root = self._get_rid_root()
         if rid:
             from clovera_configs import AutoagefreeConfig
             a = AutoagefreeConfig(rid, root)
@@ -156,39 +168,63 @@ class Modeler(Loggable):
                 self._execute_fortran('autoagefree')
             
     def execute_confidence_interval(self):
-        rid, root = self.get_rid_root()
+        rid, root = self._get_rid_root()
         if rid:
             from clovera_configs import ConfidenceIntervalConfig
             a = ConfidenceIntervalConfig(rid, root)
             info = a.edit_traits()
             if info.result:
                 self._execute_fortran('confint')
-            
-    def handle_stdout(self, name, t, q):
-        func = getattr(self, 'handle_{}'.format(name))
-        while t.isAlive() or not q.empty():
-            l = q.get().rstrip()
-            self.logger.info(l)
-            
-            func(l)
-            information(None, l)
-            
-    def handle_autoarr(self, m):
-        pass
-    def handle_autoagemon(self, m):
-        pass
-    def handle_autoagefree(self, m):
-        pass
-    def handle_confint(self, m):
-        pass
-            
+    
     def _execute_fortran(self, name):
         self.info('excecute {}'.format(name))
         q = Queue()
-        t = FortranExec(name, clovera_root, q)    
+        
+        self._fortran_process = t = FortranProcess(name, clovera_root, q)    
         t.start()
         
-        self.handle_stdout(name, t, q)
+        t = Thread(target=self._handle_stdout, args=(name, t, q))
+        t.start()
+           
+    def _handle_stdout(self, name, t, q):
+        def _handle(msg):
+            if msg:
+                self.logger.info(msg)            
+                func(msg)
+                information(None, msg)
+            
+        func = getattr(self, '_handle_{}'.format(name))
+        
+        #reset clock
+        time.clock()
+        
+        #handle std.out 
+        while t.isAlive() or not q.empty():
+            l = q.get().rstrip()
+            _handle(l)
+            
+        #handle addition msgs
+        for m in self._fortran_process.get_remaining_stdout():
+            _handle(m)
+        
+        #get time since last clock call
+        dur = time.clock()
+        self.info('run time {:0.1f} s'.format(dur))
+        
+    def _handle_autoarr_h(self, m):
+        pass
+    def _handle_autoarr(self, m):
+        pass
+    def _handle_autoagemon(self, m):
+        pass
+    def _handle_autoagefree(self, m):
+        pass
+    def _handle_confint(self, m):
+        pass
+            
+    #===========================================================================
+    # graph
+    #===========================================================================
         
     def load_graph(self, data_directory, gid, color):
         '''
@@ -521,10 +557,26 @@ class Modeler(Loggable):
             color_gen.next()
 
         self.update_graph_title()
-        
+    
+    @on_trait_change('graph.status_text')
+    def update_statusbar(self, obj, name, value):
+        '''
+        '''
+        if name == 'status_text':
+            self.status_text = value
+
+    def _get_graph_title(self):
+        '''
+        '''
+        return ', '.join([a.name for a in self.data if a.show])
+
+    def update_graph_title(self):
+        '''
+        '''
+        self.graph.set_title(self.graph_title, size=18)
 def runfortran():
     q = Queue()
-    t = FortranExec('hello_world', '/Users/Ross/Desktop', q)
+    t = FortranProcess('hello_world', '/Users/Ross/Desktop', q)
     t.start()
     
     while t.isAlive() or not q.empty():

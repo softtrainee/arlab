@@ -17,10 +17,11 @@ limitations under the License.
 from threading import Thread
 import subprocess
 import os
+from pyface.message_dialog import warning
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-class FortranExec(Thread):
+class FortranProcess(Thread):
     _process = None
     def __init__(self, name, root, queue=None):
         Thread.__init__(self)
@@ -45,23 +46,31 @@ class FortranExec(Thread):
                     self.queue.put(p.stdout.readline())
         
         except OSError, e:
-            print e
+            warning(None, '{} - {}'.format(e, self.name))
         
     def get_remaining_stdout(self):
         if self._process:
-            return self._process.communicate()[0]
+            txt = self._process.communicate()[0]
+            if txt:
+                return txt.split('\n')
+        
+        return []
             
 if __name__ == '__main__':
     import Queue
-
+    import time
     q = Queue.Queue()
-    f = FortranExec('hello_world2', '/usr/local/clovera', q)
-    
+    d = '/Users/Ross/Desktop'
+    f = FortranProcess('hello_world', d, q)
+    print os.getcwd()
+    os.chdir(d)
     f.start()
+    time.clock()
     while f.isAlive() or not q.empty():
         l = q.get().rstrip()
-        print l
-        
-    print f.get_remaining_stdout()
+        #print l
+    
+    #print f.get_remaining_stdout()
+    print time.clock()
 #============= EOF =====================================
 
