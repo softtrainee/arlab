@@ -79,26 +79,28 @@ class AutoarrConfig(BaseConfig):
     #===========================================================================
     # config params
     #===========================================================================
-    calc_arrhenius_parameters = Bool(False)
+    automate_arrhenius_parameters = Bool(False)
     max_domains = Int
     min_domains = Int
     fixed_Do = Bool
     activation_energy = Float
     ordinate_Do = Float
     
-    _dump_attrs = ['calc_arrhenius_parameters',
+    _dump_attrs = ['automate_arrhenius_parameters',
                'max_domains',
                'min_domains',
                'fixed_Do',
+               'activation_energy',
                'ordinate_Do'
                ]
     
     def traits_view(self):
-        v = View(Item('calc_arrhenius_parameters'),
+        v = View(Item('automate_arrhenius_parameters'),
                Item('max_domains'),
                Item('min_domains'),
-               Item('fixed_Do'),
-               Item('ordinate_Do'),
+               Item('fixed_Do', label='Fixed Do.'),
+               Item('activation_energy'),
+               Item('ordinate_Do', label='Ordinate Do.'),
                buttons=self._get_buttons(),
                handler=BaseConfigHandler,
                title='Autoarr Configuration',
@@ -118,7 +120,7 @@ class AutoagemonConfig(BaseConfig):
     _dump_attrs = ['nruns', 'max_plateau_age']
     def traits_view(self):
         v = View(Item('nruns'),
-                 Item('max_plateau_age', label='Max. Plateua Age (Ma)'),
+                 Item('max_plateau_age', label='Max. Plateau Age (Ma)'),
                  buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
                  title='Autoagemon Configuration',
@@ -136,7 +138,7 @@ class AutoagefreeConfig(BaseConfig):
     _dump_attrs = ['nruns', 'max_plateau_age']
     def traits_view(self):
         v = View(Item('nruns'),
-                 Item('max_plateau_age', label='Max. Plateua Age (Ma)'),
+                 Item('max_plateau_age', label='Max. Plateau Age (Ma)'),
                  buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
                  title='Autoagefree Configuration',
@@ -155,8 +157,8 @@ class ConfidenceIntervalConfig(BaseConfig):
     
     _dump_attrs = ['max_age', 'min_age', 'nsteps']
     def traits_view(self):
-        v = View(Item('max_age'),
-                 Item('min_age'),
+        v = View(Item('max_age', label='Max. age (Ma)'),
+                 Item('min_age', label='Min. age (Ma)'),
                  Item('nsteps'),
                  buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
