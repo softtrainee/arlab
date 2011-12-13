@@ -10,7 +10,7 @@ C  crosscorrelation using the fft
       external favr
 	character  sname*50
 	character*10 mname(100)
-      open(unit=8,file='samples.lst',status='old')
+      open(unit=8,file='files.cl',status='old')
 	open(unit=25,file='cross.dat')
 	open(unit=28,file='ccross.dat')
       write(25,*)'crosscor   ','  #  ','   sample name   ',

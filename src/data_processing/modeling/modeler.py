@@ -30,7 +30,7 @@ import os
 from Queue import Queue
 from threading import Thread
 import time
-
+import sys
 #============= local library imports  ==========================
 from src.helpers.paths import modeling_data_dir as data_dir, clovera_root, \
     modeling_data_dir
@@ -85,7 +85,7 @@ class Modeler(Loggable):
             
             #open a autoupdate config dialog
             from clovera_configs import AutoUpdateParseConfig
-            adlg = AutoUpdateParseConfig()
+            adlg = AutoUpdateParseConfig('', '')
             info = adlg.edit_traits()
             if info.result:
                 self.info('tempoffset = {} (C), timeoffset = {} (min)'.format(adlg.tempoffset, adlg.timeoffset))
@@ -93,7 +93,7 @@ class Modeler(Loggable):
                 auto_files = True
                 if auto_files:
                     for rid in rids:
-                        self.execute_files(rid=rid, root=os.path.dirname(f.path) + '_data')
+                        self.execute_files(rid=rid, root=f.path+'_data')
             
         #=======================================================================
         # debug
@@ -117,7 +117,10 @@ class Modeler(Loggable):
             os.chdir(os.path.join(root, rid))
             
             #now ready to run fortran
-            self._execute_fortran('files')
+            name='files_py'
+            if sys.platform is not 'darwin':
+                name+='.exe'
+            self._execute_fortran(name)
     
     def _get_rid_root(self):
         
@@ -148,7 +151,7 @@ class Modeler(Loggable):
             a = AutoarrConfig(rid, root)
             info = a.edit_traits()
             if info.result:
-                self._execute_fortran('autoarr')
+                self._execute_fortran('autoarr_py')
             else:
                 self.info('------- Autoarr aborted-------')
         else:
@@ -162,7 +165,7 @@ class Modeler(Loggable):
             a = AutoagemonConfig(rid, root)
             info = a.edit_traits()
             if info.result:
-                self._execute_fortran('autoagemon')
+                self._execute_fortran('autoagemon_py')
             else:
                 self.info('------- Autoagemon aborted-------')
         else:
@@ -177,7 +180,7 @@ class Modeler(Loggable):
             a = AutoagefreeConfig(rid, root)
             info = a.edit_traits()
             if info.result:
-                self._execute_fortran('autoagefree')
+                self._execute_fortran('autoagefree_py')
             else:
                 self.info('------- Autoagefree aborted-------')
         else:
@@ -191,7 +194,7 @@ class Modeler(Loggable):
             a = ConfidenceIntervalConfig(rid, root)
             info = a.edit_traits()
             if info.result:
-                self._execute_fortran('confint')
+                self._execute_fortran('confint_py')
             else:
                 self.info('------- Confidence Interval aborted-------')
                 
@@ -212,10 +215,10 @@ class Modeler(Loggable):
         def _handle(msg):
             if msg:
                 self.logger.info(msg)            
-                func(msg)
-                information(None, msg)
+                #func(msg)
+                #information(None, msg)
             
-        func = getattr(self, '_handle_{}'.format(name))
+        #func = getattr(self, '_handle_{}'.format(name))
         
 #        reset clock
 #        time.clock()
@@ -233,15 +236,15 @@ class Modeler(Loggable):
         self.info('{} run time {:0.1f} s'.format(name, dur))
         self.info('------ {} finished ------'.format(name.capitalize()))
         
-    def _handle_autoarr_h(self, m):
+    def _handle_autoarr_py(self, m):
         pass
-    def _handle_autoarr(self, m):
+    def _handle_autoagemon_py(self, m):
         pass
-    def _handle_autoagemon(self, m):
+    def _handle_autoagefree_py(self, m):
         pass
-    def _handle_autoagefree(self, m):
+    def _handle_confint_py(self, m):
         pass
-    def _handle_confint(self, m):
+    def _handle_files_py(self, m):
         pass
             
     #===========================================================================

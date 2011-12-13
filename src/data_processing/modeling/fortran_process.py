@@ -18,6 +18,7 @@ from threading import Thread
 import subprocess
 import os
 from pyface.message_dialog import warning
+import sys
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -27,9 +28,13 @@ class FortranProcess(Thread):
         Thread.__init__(self)
         self.name = name
         self.root = root
-        ps = os.environ['PATH'].split(':')
+        delimiter=':'
+        if sys.platform is not 'darwin':
+            delimiter=';'
+            
+        ps = os.environ['PATH'].split(delimiter)
         if not root in ps:
-            os.environ['PATH'] += ':{}'.format(root)
+            os.environ['PATH'] += '{}{}'.format(delimiter,root)
         
         self.queue = queue
     
@@ -46,14 +51,18 @@ class FortranProcess(Thread):
                     self.queue.put(p.stdout.readline())
         
         except OSError, e:
-            warning(None, '{} - {}'.format(e, self.name))
+            #warning(None, '{} - {}'.format(e, self.name))
+            print e
         
     def get_remaining_stdout(self):
         if self._process:
-            txt = self._process.communicate()[0]
-            if txt:
-                return txt.split('\n')
-        
+            try:
+                txt = self._process.communicate()[0]
+                if txt:
+                    return txt.split('\n')
+            except Exception, e:
+                pass
+                #print 'get remaining stdout',e
         return []
             
 if __name__ == '__main__':

@@ -11,27 +11,28 @@
 	
 	open(unit=31,file='files_mod_config.in', status='old')
 	
-	read(31,*)
-	read(31,'(a50)') sname
+C	read(31,*)
+	read(31,*) yes
 C1	sname	
 C	print *, sname
-C  5	print *,'Want to read samples from list (yes)?'
+C  5	print *,'Error: List file does not exist'
 C 	read *,yes
  	
-c	if(yes(1:1).eq.'y')then
+	if(yes(1:1).eq.'y')then
 C	  print *,'Enter filename that contains the list of samples'
-C	  read(*,'(a50)')sname
-C	  kn=name(sname) 
-C	  open(unit=50,file=sname(1:kn),status='old',ERR=5)
-C	endif
-C1	if(yes(1:1).eq.'y')then
-C       read(50,'(a50)',END=501)sname
+	  read(31,'(a50)')sname
+	  kn=name(sname)
+	  open(unit=50,file=sname(1:kn),status='old')
+	endif
+1	if(yes(1:1).eq.'y')then
+       read(50,'(a50)',END=501)sname
 C	 print *,sname
-C	else
+	else
 C	 print *,'Enter sample name (stop to exit)'
-C	 read(*,'(a50)')sname
-C	 if(sname(1:4).eq.'stop')stop
-C	endif
+	 read(31,'(a50)')sname
+	 print *, sname
+	 if(sname(1:4).eq.'stop')stop
+	endif
 	kn=name(sname) 
 	open(unit=17,file=sname(1:kn)//'.in',status='old')
 	open(unit=16,file='arr.smp')
@@ -101,8 +102,8 @@ C	endif
 	close(25)
 	close(30)
 	stop
-C	goto 1
-C  501	stop
+	goto 1
+  501	stop
 	END
 
       function name(sname)  
