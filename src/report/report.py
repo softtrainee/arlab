@@ -230,7 +230,7 @@ class Report:
                                ('LINEBELOW', (0, 1), (-1, 1), 1, colors.black),
 #                            ('ALIGN', (2, 0), (2, 0), 'LEFT'),
                                ('LINEBELOW', (0, 3), (-1, 3), 1.5, colors.black),
-                               ('LINEBELOW', (0, 0), (-1, -1), 1, colors.red),
+                               #('LINEBELOW', (0, 0), (-1, -1), 1, colors.red),
                                
 #                               ('LINEBEFORE', (0, 0), (-1, -1), 1, colors.black),
                                ('ALIGN', (2, 0), (-1, -1), 'CENTER')
@@ -275,7 +275,7 @@ class Report:
         report_text = []
         
 #        report_text.append(PageBreak())
-        samples = [('AF-32', 'Groundmass Concentrate', 20.55, 0.01, 0.001, 1.0004, 0.1, 'NM-205G', '56879-01')]
+        #samples = [('AF-32', 'Groundmass Concentrate', 20.55, 0.01, 0.001, 1.0004, 0.1, 'NM-205G', '56879-01')]
         
         
         parser = AutoupdateParser()
