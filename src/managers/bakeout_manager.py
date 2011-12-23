@@ -135,9 +135,11 @@ class BakeoutManager(Manager):
                                       )
                 
                     self.data_buffer_x.append(nx)
-                      
-                self.graph.update_y_limits(plotid=0)
-                self.graph.update_y_limits(plotid=1)
+                try:
+                    self.graph.update_y_limits(plotid=self.plotids[0])
+                    self.graph.update_y_limits(plotid=self.plotids[1])
+                except IndexError:
+                    pass
                 
                 if self.include_pressure:
                     self.get_pressure(nx)
@@ -338,13 +340,14 @@ class BakeoutManager(Manager):
                     bc.on_trait_change(self.update_alive, 'alive')
 
                     #set up graph
-                    self.graph.new_series(type='line', render_style='connectedpoints')
+                    self.graph.new_series()#type='line', render_style='connectedpoints')
                     self.graph_info[bc.name] = dict(id=pid)
 
                     self.graph.set_series_label(name, series=pid)
-
-                    self.graph.new_series(type='line', render_style='connectedpoints',
-                                          plotid=1)
+                    
+                    if self.include_heat:
+                        self.graph.new_series(plotid=self.plotids[1])#type='line', render_style='connectedpoints',
+                                          
                     
             
                     t = Thread(target=bc.run)
@@ -441,7 +444,7 @@ class BakeoutManager(Manager):
                                'include_pressure',
                                'include_heat',
                                'include_temp',
-                               
+                               enabled_when='not alive'
                                ),
                         label='Control',
                         show_border=True
@@ -555,11 +558,12 @@ class BakeoutManager(Manager):
     def _graph_factory(self, stream=True, graph=None, **kw):
 
         include_bits=sum( map(int, [self.include_heat, self.include_pressure, self.include_temp]))
+        n=max(1,include_bits)
         if graph is None:
             if stream:
-                graph = TimeSeriesStreamStackedGraph(panel_height=3*145/max(1,include_bits))
+                graph = TimeSeriesStreamStackedGraph(panel_height=435/n)
             else:
-                graph = TimeSeriesStackedGraph(panel_height=300)
+                graph = TimeSeriesStackedGraph(panel_height=900/n)
         
         graph.clear()
         self.plotids=[0,1,2]
@@ -590,7 +594,6 @@ class BakeoutManager(Manager):
             graph.set_x_title('Time')
             graph.set_x_limits(0, self.scan_window * 60)
             
-        print include_bits 
         return graph
 
     def _graph_default(self):
