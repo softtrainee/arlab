@@ -50,7 +50,7 @@ class RS485Scheduler(HasTraits):
     
             r = func(*args, **kwargs)
             #print 'active count', threading.activeCount(), 'current thread', threading.currentThread()
-            #time.sleep(self.collision_delay / 1000.0)
+            time.sleep(self.collision_delay / 1000.0)
             #self._lock.release()
 
             return r

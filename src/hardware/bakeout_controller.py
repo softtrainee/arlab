@@ -259,31 +259,31 @@ class BakeoutController(WatlowEZZone):
 
             self.process_value = 0
     
-    def complex_query(self, **kw):
-        if 'verbose' in kw and kw['verbose']:
-            self.info('Do complex query')
-
-        t = self.read_process_value(1, **kw)
-        hp = self.read_heat_power(**kw)
-        
-        #data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float', verbose=True)
-        data = None
-        if data is not None:
-            t = data[0]
-            hp = data[1]
-            
-        if self.simulation:
-#            t = 4 + self.closed_loop_setpoint
-            t = self.get_random_value() + self.closed_loop_setpoint
-            hp = self.get_random_value()
-            time.sleep(0.25)
-            
-        try:
-            self.heat_power_value = hp
-            self.process_value = t
-            self.process_value_flag = True
-        except (ValueError, TypeError, UnboundLocalError), e:
-            print e
+#    def complex_query(self, **kw):
+#        if 'verbose' in kw and kw['verbose']:
+#            self.info('Do complex query')
+#
+#        t = self.read_process_value(1, **kw)
+#        hp = self.read_heat_power(**kw)
+#        
+#        #data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float', verbose=True)
+#        data = None
+#        if data is not None:
+#            t = data[0]
+#            hp = data[1]
+#            
+#        if self.simulation:
+##            t = 4 + self.closed_loop_setpoint
+#            t = self.get_random_value() + self.closed_loop_setpoint
+#            hp = self.get_random_value()
+#            time.sleep(0.25)
+#            
+#        try:
+#            self.heat_power_value = hp
+#            self.process_value = t
+#            self.process_value_flag = True
+#        except (ValueError, TypeError, UnboundLocalError), e:
+#            print e
 
     def get_temp_and_power(self, **kw):
         WatlowEZZone.get_temp_and_power(self, **kw)

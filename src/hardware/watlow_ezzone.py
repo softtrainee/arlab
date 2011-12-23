@@ -201,12 +201,12 @@ class WatlowEZZone(CoreDevice):
     #scan_func = 'get_temperature'
     scan_func = 'get_temp_and_power'
     
-    memory_blocks_enabled = Bool
-    program_memory_blocks = Bool
+    memory_blocks_enabled = Bool(True)
+    program_memory_blocks = Bool(False)
     
     _process_working_address = 200
     _process_memory_block = [360, 1904]
-    _process_memory_len = 0
+    _process_memory_len = 4
     
     def initialize(self, *args, **kw):
         '''
@@ -227,7 +227,7 @@ class WatlowEZZone(CoreDevice):
             page 5
             User programmable memory blocks
         ''' 
-        
+        self._process_memory_len=0
         self.info('programming memory block')
         for i, ta in enumerate(self._process_memory_block):
             self.set_assembly_definition_address(self._process_working_address + 2 * i, ta)
@@ -293,12 +293,17 @@ class WatlowEZZone(CoreDevice):
         else:
 
             if self.memory_blocks_enabled:
-                t, p = self.read(self._process_working_address, nregisters=self._process_mb_len, **kw)
+                args = self.read(self._process_working_address, nregisters=self._process_memory_len, **kw)
+                if not args:
+                    args=None, None
+                t,p=args
+                
             else:
                 t=self.read_process_value(1, **kw)
                 p=self.read_heat_power(**kw)
-        t= 0 if t is None else t
-        p= 0 if p is None else p
+        
+        t= self.process_value if t is None else t
+        p= self.heat_power_value if p is None else p
             
         self.process_value = t
         return PlotRecord([t, p], (0, 1), ('Temp', 'Power'))

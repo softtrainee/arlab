@@ -348,15 +348,20 @@ class SerialCommunicator(Communicator):
                         cnt = 0
                         
                     if inw != 0 and inw == prev_inw:
-                        if cnt > 2000:
+                        if cnt > 500:
                             break
                         cnt += 1
                     
-                    prev_inw = inw
                     
+                    prev_inw = inw
+                    time.sleep(1e-5)
 #                # do one more get_chars to make sure we got it all
-                time.sleep(0.025)
-                inw = get_chars()
+                time.sleep(0.01)
+                for i in range(100):
+                    inw = get_chars()
+                    time.sleep(1e-5)
+                    if inw==prev_inw:
+                        break
             
             
             if inw > 0:
