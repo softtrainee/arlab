@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import Bool
 from pyface.timer.api import do_after as do_after_timer
 
 #=============standard library imports ========================

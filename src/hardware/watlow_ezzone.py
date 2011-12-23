@@ -296,7 +296,10 @@ class WatlowEZZone(CoreDevice):
             else:
                 t = self.read_process_value(1, **kw)
                 p = self.read_heat_power(**kw)
-           
+        
+        t = 0 if t is None else t
+        p = 0 if p is None else p
+            
         self.process_value = t
         return PlotRecord([t, p], (0, 1), ('Temp', 'Power'))
     
