@@ -21,12 +21,12 @@ limitations under the License.
 import csv
 #============= local library imports  ==========================
 from src.data_processing.argon_calculations import calculate_mswd, \
-    calculate_weighted_mean, calculate_arar_age, find_plateaus, find_plateaus_r
+    calculate_weighted_mean, calculate_arar_age, find_plateaus
+    
 def formatfloat(f, n=3):
         if f > 1000:
             n -= 1
-        fmtstr = '{:' + '0.{}f'.format(n) + '}'
-        return fmtstr.format(f)
+        return '{:0.{}f}'.format(f, n)
 
 class Sample(object):
     analyses = None
@@ -63,7 +63,7 @@ class Sample(object):
         ar37er_sum = self._get_summed_err('ar37_er')
         ar36er_sum = self._get_summed_err('ar36_er')
 
-        age, err = calculate_arar_age((ar40_sum,
+        age, _err = calculate_arar_age((ar40_sum,
                                       ar40er_sum,
                                       ar39_sum,
                                       ar39er_sum,

@@ -101,8 +101,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = DeviceConnectionErrorCode(dname, logger=self)
         return result
 
-    def Open(self, manager, vname, *args):
-        result = manager.open_valve(vname)
+    def Open(self, manager, vname, sender_address, *args):
+        result = manager.open_valve(vname, sender_address)
         if result == True:
             result = 'OK'
         elif result is None:
@@ -110,8 +110,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
         
         return result
 
-    def Close(self, manager, vname, *args):
-        result = manager.close_valve(vname)
+    def Close(self, manager, vname, sender_address, *args):
+        result = manager.close_valve(vname, sender_address)
         if result == True:
             result = 'OK'
         elif result is None:

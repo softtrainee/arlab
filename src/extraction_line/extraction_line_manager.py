@@ -207,7 +207,7 @@ class ExtractionLineManager(Manager):
             return self.valve_manager.get_states()
         
 
-    def open_valve(self, name, address=None, mode='remote'):
+    def open_valve(self, name, address=None, mode='remote', sender_address=None):
         '''
         '''
         if self.valve_manager is not None:
@@ -215,7 +215,7 @@ class ExtractionLineManager(Manager):
                 name = self.valve_manager.get_name_by_address(address)
             return self._change_valve_state(name, mode, 'open')
 
-    def close_valve(self, name, address=None, mode='remote'):
+    def close_valve(self, name, address=None, mode='remote', sender_address=None):
         '''
         '''
         if self.valve_manager is not None:
@@ -223,13 +223,24 @@ class ExtractionLineManager(Manager):
             if address:
                 name = self.valve_manager.get_name_by_address(address)
 
-            return self._change_valve_state(name, mode, 'close')
+            return self._change_valve_state(name, mode, 'close', sender_address)
 
-    def _change_valve_state(self, name, mode, action):
+    def _change_valve_state(self, name, mode, action, sender_address=None):
 
         func = getattr(self.valve_manager, '{}_by_name'.format(action))
-        result = func(name, mode=mode)
-
+        
+        system, ok = self.valve_manager.check_ownership(name, sender_address)
+        if ok:
+            critical = self.valve_manager.check_critical_section()
+            if not critical:
+                result = func(name, mode=mode)
+            else:
+                result = '{} critical section enabled'.format(name)
+                self.warning(result)
+        else:
+            result = '{} owned by {}'.format(name, system)    
+            self.warning(result)
+            
         if isinstance(result, bool):
             self.canvas.update_valve_state(name, True if action == 'open' else False)
             result = True
