@@ -34,6 +34,7 @@ from src.hardware.core.i_core_device import ICoreDevice
 from src.graph.graph import Graph
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.gauges.granville_phillips.micro_ion_controller import MicroIonController
+from ConfigParser import NoSectionError
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
@@ -239,46 +240,66 @@ class BakeoutManager(Manager):
             getattr(self, tr).end(**kw)
 
     def _open_graph(self, path):
-        g = self._graph_factory(stream=False, **dict(pan=True, zoom=True))
         #p = '/Users/Ross/Pychrondata_beta/data/bakeouts/bakeout-2011-02-17008.txt'
-
-        self._parse_graph_file(g, path)
-        g.window_title = name = os.path.basename(path)
-        
-        name, _ext = os.path.splitext(name)
-        g.set_title(name)
-        g.window_width = 0.66
-        g.window_height = 0.85
-        g.window_x = 30
-        g.window_y = 30
-        g.edit_traits()
-
-    def _parse_graph_file(self, graph, path, plotid=0):
         import csv
 
         reader = csv.reader(open(path, 'r'))
+        #first line is the include bits
+        
+        l=reader.next()
+        l[0]=l[0][1:]
+        
+        ib=map(int,l)
+        graph = self._graph_factory(stream=False,include_bits=ib, **dict(pan=True, zoom=True))
+
+        #second line is a header
         header = reader.next()
+        header[0]=header[0][1:]
+        
         nseries = len(header) / 3
+       
+        plotids=self.plotids
         for i in range(nseries):
 
             #set up graph
-            name = header[2 * i][:-5]
-            graph.new_series(type='line', render_style='connectedpoints', plotid=plotid)
-            graph.new_series(type='line', render_style='connectedpoints', plotid=plotid + 1)
+            name = header[1+sum(ib) * i][:-5]
+            
+            graph.new_series(type='line', render_style='connectedpoints', plotid=plotids[0])
+            
+            if ib[1]:
+                graph.new_series(type='line', render_style='connectedpoints', plotid=plotids[1])
             #self.graph_info[name] = dict(id = i)
 
-            graph.set_series_label(name, series=i, plotid=plotid)
+            graph.set_series_label(name, series=i, plotid=plotids[0])
         
         data = np.array_split(np.array([row for row in reader], dtype=float), nseries, axis=1)
         for i, da in enumerate(data):
             x, y, h = np.transpose(da)
 
-            graph.set_data(x, series=i, axis=0, plotid=plotid)
-            graph.set_data(y, series=i, axis=1, plotid=plotid)
+            graph.set_data(x, series=i, axis=0, plotid=plotids[0])
+            graph.set_data(y, series=i, axis=1, plotid=plotids[0])
             
-            graph.set_data(x, series=i, axis=0, plotid=plotid + 1)
-            graph.set_data(h, series=i, axis=1, plotid=plotid + 1)
+            if ib[1]:
+                graph.set_data(x, series=i, axis=0, plotid=plotids[1])
+                graph.set_data(h, series=i, axis=1, plotid=plotids[1])
+            
+            if ib[2]:
+                graph.set_data(x, series=i, axis=0, plotid=plotids[2])
+                graph.set_data(h, series=i, axis=1, plotid=plotids[2])
+            
+                
+            
+        graph.window_title = name = os.path.basename(path)
+        
+        name, _ext = os.path.splitext(name)
+        graph.set_title(name)
+        graph.window_width = 0.66
+        graph.window_height = 0.85
+        graph.window_x = 30
+        graph.window_y = 30
+        graph.edit_traits()
 
+    
     def _open_button_fired(self):
         path = self._file_dialog_('open', default_directory=os.path.join(data_dir, 'bakeouts'))
         if path is not None:
@@ -289,7 +310,15 @@ class BakeoutManager(Manager):
         path = self._file_dialog_('save as', default_directory=bakeout_config_dir)
         if path is not None:
             config = self.get_configuration_writer()
-
+            config.add_section('Include')
+            config.set('Include', 'temp',self.include_temp)
+            config.set('Include', 'heat',self.include_heat)
+            config.set('Include', 'pressure',self.include_pressure)
+            
+            config.add_section('Scan')
+            config.set('Scan','interval',self.update_interval)
+            config.set('Scan','window',self.scan_window)
+            
             for tr in self._get_controllers():
                 tr_obj = getattr(self, tr)
                 config.add_section(tr)
@@ -357,8 +386,12 @@ class BakeoutManager(Manager):
                         header.append('#{}_time'.format(name))
                     else:
                         header.append('{}_time'.format(name))
-                    header.append('{}_temp'.format(name))
-                    header.append('{}_heat_power'.format(name))
+                    
+                    if self.include_temp:
+                        header.append('{}_temp'.format(name))
+                    
+                    if self.include_heat:
+                        header.append('{}_heat_power'.format(name))
                     pid += 1
             
             if _alive:
@@ -374,6 +407,10 @@ class BakeoutManager(Manager):
                     
             
                 self._start_time = time.time()
+                
+                d=map(str,map(int, [self.include_temp, self.include_heat, self.include_pressure]))
+                d[0]='#'+d[0]
+                self.data_manager.write_to_frame(d)
                 #set the header in for the data file
                 self.data_manager.write_to_frame(header)    
 
@@ -514,18 +551,35 @@ class BakeoutManager(Manager):
         config = self.get_configuration(p, warn=False)
         if config is None:
             return 
+        try:
+            self.include_temp=config.getboolean('Include', 'temp')
+            self.include_heat=config.getboolean('Include', 'heat')
+            self.include_pressure=config.getboolean('Include', 'pressure')
+        except NoSectionError:
+            pass
+        
+        try:
+            self.update_interval=config.getfloat('Scan','interval')
+            self.scan_window=config.getfloat('Scan','window')
+        except NoSectionError:
+            pass
+        
         for section in config.sections():
-            kw = dict()
-            script = self.config_get(config, section, 'script', optional=True)
-            if script:
-                kw['script'] = script
-            else:
-                kw['script'] = '---'     
-                for opt in ['duration', 'setpoint']:
-                    value = self.config_get(config, section, opt, cast='float')
-                    if value is not None:
-                        kw[opt] = value
-            getattr(self, section).trait_set(**kw)
+            
+            if section.startswith('bakeout'):
+                kw = dict()
+                script = self.config_get(config, section, 'script', optional=True)
+                if script:
+                    kw['script'] = script
+                else:
+                    kw['script'] = '---'     
+                    for opt in ['duration', 'setpoint']:
+                        value = self.config_get(config, section, opt, cast='float')
+                        if value is not None:
+                            kw[opt] = value
+                getattr(self, section).trait_set(**kw)
+            
+        
 
     def _get_configurations(self):
         return [os.path.basename(p) for p in self._configurations]
@@ -555,15 +609,18 @@ class BakeoutManager(Manager):
     def toggle_graphs(self):
         self.graph=self._graph_factory()
         
-    def _graph_factory(self, stream=True, graph=None, **kw):
-
-        include_bits=sum( map(int, [self.include_heat, self.include_pressure, self.include_temp]))
+    def _graph_factory(self, stream=True, graph=None,include_bits=None, **kw):
+        if include_bits is None:
+            include_bits=[self.include_heat, self.include_pressure, self.include_temp]
+        
+        include_bits=sum( map(int, include_bits))
+        
         n=max(1,include_bits)
         if graph is None:
             if stream:
                 graph = TimeSeriesStreamStackedGraph(panel_height=435/n)
             else:
-                graph = TimeSeriesStackedGraph(panel_height=900/n)
+                graph = TimeSeriesStackedGraph(panel_height=850/n)
         
         graph.clear()
         self.plotids=[0,1,2]
