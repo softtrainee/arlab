@@ -9,11 +9,16 @@ from numpy import histogram, argmax, argmin, array, linspace, asarray, mean
 #from scipy.ndimage.measurements import variance
 
 from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound
-#from threading import Thread
+from threading import Thread
+import time
+
 #============= local library imports  ==========================
 from src.image.image_helper import draw_polygons, draw_contour_list, colorspace, \
     threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
     erode, dilate, draw_rectangle, subsample, rotate, smooth
+#    erode, dilate, draw_rectangle, clone
+    
+
 from src.managers.manager import Manager
 from src.image.image import Image
 from src.image.image_editor import ImageEditor
@@ -40,9 +45,9 @@ class MachineVisionManager(Manager):
 
     video = Any
     image = Instance(Image, ())
-    pxpermm = 64
-    cropwidth = 3
-    cropheight = 3
+    pxpermm = 23
+    cropwidth = 6
+    cropheight = 6
     crosshairs_offsetx = 0
     crosshairs_offsety = 0
     
@@ -54,7 +59,7 @@ class MachineVisionManager(Manager):
 #    image_height = Int(324)
     image_height = Int(324*2)
     
-    start_threshold_search_value = 125
+    start_threshold_search_value = 100
     threshold_search_width = 25
 
     debug = False
@@ -68,7 +73,7 @@ class MachineVisionManager(Manager):
         return Image(width=self.image_width,
                      height=self.image_height)
         
-#    def calculate_positioning_error(self, threshold_val=None, open_image=True):
+
     def _calculate_positioning_error(self, threshold_val=None):
         src = self.image.source_frame
         
@@ -77,7 +82,7 @@ class MachineVisionManager(Manager):
         
         #for debugging calculated deviation should equal devx,devy
         xo = 0; yo = 0
-        DEBUG = True
+        DEBUG = False
         if DEBUG:
             devx = -10;cx = 75
             devy = -30;cy = 19
@@ -228,9 +233,12 @@ class MachineVisionManager(Manager):
         return self.image.source_frame
             
     def search(self, cx, cy, **kw):
+
         self.load_source()
+
         
         start = self.start_threshold_search_value
+
         end = start + self.threshold_search_width
         expand_value = 5
         found = False
@@ -255,10 +263,10 @@ class MachineVisionManager(Manager):
             '''
             if args[2] != []:
                 found = True
-                if i > 0:
-                    #this is the first threshold value to successfully locate the target
-                    #so we should use this as our future starting threshold value
-                    self.start_threshold_search_value = args[4][0]
+                #if i > 0:
+                #    #this is the first threshold value to successfully locate the target
+                #    #so we should use this as our future starting threshold value
+                #    self.start_threshold_search_value = args[4][0]-10
                 
                 break
             

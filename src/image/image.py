@@ -66,12 +66,7 @@ class Image(HasTraits):
         rframe = self._get_frame()
         if rframe is not None:
 
-            if flip and mirror:
-                cvFlip(rframe, flip_mode=2)
-            elif mirror:
-                cvFlip(rframe, flip_mode=1)
-            elif flip:
-                cvFlip(rframe)
+            
                 
             if swap_rb:
                 cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
@@ -82,7 +77,14 @@ class Image(HasTraits):
             cvResize(rframe, frame)
             if clone:
                 frame = cvCloneImage(frame)
-
+            
+            if flip and mirror:
+                cvFlip(frame, flip_mode=2)
+            elif mirror:
+                cvFlip(frame, flip_mode=1)
+            elif flip:
+                cvFlip(frame)
+            
             if gray:
                 frame = grayspace(frame)
                 

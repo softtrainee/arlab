@@ -328,7 +328,7 @@ class FusionsLaserManager(LaserManager):
     def _fiber_light_default(self):
         '''
         '''
-        return FiberLight(name='FiberLight')
+        return FiberLight(name='fiber_light')
 
 #========================== EOF ====================================
 #    def show_video_controls(self):

@@ -139,7 +139,9 @@ class FusionsDiodeManager(FusionsLaserManager):
         self.temperature_controller.set_control_mode('open')
         self.temperature_controller.set_open_loop_setpoint(0.0)
 
-
+    def set_laser_temperature(self, temp):
+        self.set_laser_power(temp,mode='closed')
+        
     def set_laser_power(self, power, mode='open'):
         ''' 
         '''
@@ -186,7 +188,7 @@ class FusionsDiodeManager(FusionsLaserManager):
 #                                                                      )
 #                                     )
 
-        path = '/Users/Ross/Pychrondata_beta/scripts/laserscripts/degas/puck1.rs'
+        path = '/Users/pychron/Pychrondata_beta/scripts/laserscripts/degas/puck1.rs'
         if path:
             dm = DegasManager()
             dm.parent = self

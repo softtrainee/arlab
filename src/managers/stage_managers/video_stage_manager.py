@@ -17,8 +17,10 @@ limitations under the License.
 from traits.api import Instance, String, DelegatesTo, Property, Button, Float, Bool
 from traitsui.api import Group, Item, HGroup, spring, Spring
 #============= standard library imports ========================
-
+import sys,os
+sys.path.append(os.path.join(os.path.expanduser('~'), 'Programming','mercurial','pychron_beta'))
 #============= local library imports  ==========================
+
 from stage_manager import StageManager
 from src.helpers.logger_setup import setup
 from src.managers.videoable import Videoable
@@ -73,15 +75,13 @@ class VideoStageManager(StageManager, Videoable):
     pxpercmx = DelegatesTo('camera_calibration_manager')
     pxpercmy = DelegatesTo('camera_calibration_manager')
         
+
     auto_center = Bool(False)
     
     
     autofocus_manager = Instance(AutofocusManager)
-    
-    #autofocus_button =DelegatesTo('autofocus_manager')
-    #configure_button=DelegatesTo('autofocus_manager')
-#    configure_autofocus=Button('Configure')
-    #autofocus_style=Enum('2step','sobel','var')
+
+
     machine_vision_manager = Instance(MachineVisionManager)
     
     def bind_preferences(self, pref_id):
@@ -175,7 +175,10 @@ class VideoStageManager(StageManager, Videoable):
                                                                                 self.stage_controller._y_position
                                                                                 )
             if newpos:
-                
+                #nx = self.stage_controller._x_position + newpos[0]
+                #ny = self.stage_controller._y_position + newpos[1]
+                self._point=0
+
                 self.linear_move(*newpos, calibrated_space=False)
                 return True
 

@@ -59,11 +59,10 @@ class ArduinoFiberLightModule(ArduinoCoreDevice):
         if self.simulation:
             v = 50
             
-            
         if v is None:
             v = 0
         return v / 255.0 * 100
-        
+
     def read_state(self):
         resp = self.ask('8;')
         v = self._parse_response(resp)

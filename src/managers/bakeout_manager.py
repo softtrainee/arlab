@@ -84,6 +84,11 @@ class BakeoutManager(Manager):
     
     pressure_buffer = Array
     
+    include_pressure=Bool
+    include_heat=Bool(True)
+    include_temp=Bool(True)
+    
+    plotids=List([0,1,2])
     def load(self, *args, **kw):
         app = self.application
         for bo in self._get_controllers():
@@ -116,12 +121,15 @@ class BakeoutManager(Manager):
             n = self.data_count_flag
             if n == len(self.active_controllers):
                 for i, pi, hi in self.data_buffer:
-                
-                    nx = self.graph.record(pi, series=i,
+                    if self.include_temp:
+                        nx = self.graph.record(pi, series=i,
                                            track_x=False,
-                                           track_y=False
+                                           track_y=False,
+                                           plotid=self.plotids[0]
                                            )
-                    self.graph.record(hi, x=nx, series=i, plotid=1,
+                    
+                    if self.include_heat:
+                        self.graph.record(hi, x=nx, series=i, plotid=self.plotids[1],
                                       track_x=i == n - 1,
                                       track_y=False
                                       )
@@ -130,8 +138,10 @@ class BakeoutManager(Manager):
                       
                 self.graph.update_y_limits(plotid=0)
                 self.graph.update_y_limits(plotid=1)
-            
-                self.get_pressure(nx)
+                
+                if self.include_pressure:
+                    self.get_pressure(nx)
+                    
                 self.write_data(self.data_name)
                 self.data_buffer = []
                 self.data_buffer_x = []
@@ -139,7 +149,7 @@ class BakeoutManager(Manager):
                 
     def get_pressure(self, x):
         self._pressure = pressure = self.gauge_controller.get_ion_pressure()
-        self.graph.record(pressure, x=x, track_y=(5e-3, None), track_y_pad=5e-3, track_x=False, plotid=2, do_later=10)
+        self.graph.record(pressure, x=x, track_y=(5e-3, None), track_y_pad=5e-3, track_x=False, plotid=self.plotids[2], do_later=10)
         
         if self.use_pressure_monitor:
             dbuffer = self.pressure_buffer
@@ -167,7 +177,8 @@ class BakeoutManager(Manager):
             datum.append(pi)
             datum.append(hp)
         
-        datum.append(self._pressure)
+        if self.include_pressure:
+            datum.append(self._pressure)
             
         self.data_manager.write_to_frame(datum)
 
@@ -348,17 +359,18 @@ class BakeoutManager(Manager):
                     pid += 1
             
             if _alive:
+                if self.include_pressure:
+                    #pressure plot
+                    self.graph.new_series(type='line', render_style='connectedpoints',
+                                      plotid=self.plotids[2])
+                    header.append('pressure')
                 
-                #pressure plot
-                self.graph.new_series(type='line', render_style='connectedpoints',
-                                  plotid=2)
-                header.append('pressure')
-                self._start_time = time.time()
                 #start a pressure monitor thread
 #                t = Thread(target=self._pressure_monitor)
 #                t.start()
                     
             
+                self._start_time = time.time()
                 #set the header in for the data file
                 self.data_manager.write_to_frame(header)    
 
@@ -425,6 +437,12 @@ class BakeoutManager(Manager):
                              Item('save', show_label=False),
 
                              ),
+                        VGroup(
+                               'include_pressure',
+                               'include_heat',
+                               'include_temp',
+                               
+                               ),
                         label='Control',
                         show_border=True
                         )
@@ -529,32 +547,50 @@ class BakeoutManager(Manager):
         
         if self.configuration is not '---':
             self._parse_config_file(self._configuration)   
-
+   
+    @on_trait_change('include_+')
+    def toggle_graphs(self):
+        self.graph=self._graph_factory()
+        
     def _graph_factory(self, stream=True, graph=None, **kw):
+
+        include_bits=sum( map(int, [self.include_heat, self.include_pressure, self.include_temp]))
         if graph is None:
             if stream:
-                graph = TimeSeriesStreamStackedGraph(panel_height=145)
+                graph = TimeSeriesStreamStackedGraph(panel_height=3*145/max(1,include_bits))
             else:
                 graph = TimeSeriesStackedGraph(panel_height=300)
+        
         graph.clear()
+        self.plotids=[0,1,2]
         kw['data_limit'] = self.scan_window * 60 / self.update_interval
         kw['scan_delay'] = self.update_interval
-        #temps
-        graph.new_plot(show_legend='ll', **kw)
         
-        #heat power
-        graph.new_plot(**kw)
+        if self.include_temp:
+            #temps
+            graph.new_plot(show_legend='ll', **kw)
+            graph.set_y_title('Temp (C)')
+        else:
+            self.plotids=[0,0,1]
+            
+        if self.include_heat:
+            #heat power
+            graph.new_plot(**kw)
+            graph.set_y_title('Heat Power (%)', plotid=self.plotids[1])
+        else:
+            self.plotids=[0,0,1]
+            
+        if self.include_pressure:
+            #pressure
+            graph.new_plot(**kw)
+            graph.set_y_title('Pressure (torr)', plotid=self.plotids[2])
         
-        #pressure
-        graph.new_plot(**kw)
-        
-        graph.set_x_title('Time')
-        graph.set_y_title('Temp (C)')
-        graph.set_x_limits(0, self.scan_window * 60)
-        
-        graph.set_y_title('Heat Power (%)', plotid=1)
-        graph.set_y_title('Pressure (torr)', plotid=2)
-                
+            
+        if include_bits:
+            graph.set_x_title('Time')
+            graph.set_x_limits(0, self.scan_window * 60)
+            
+        print include_bits 
         return graph
 
     def _graph_default(self):

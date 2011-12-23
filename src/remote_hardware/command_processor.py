@@ -159,9 +159,10 @@ class CommandProcessor(ConfigLoadable):
                 elif request_type == 'test':
                     result = data
                 else:
+                    handler=None
                     klass = '{}Handler'.format(request_type.capitalize())
                     if klass not in self._handlers:
-                        pkg = 'src.remote_hardware._handlers.{}_handler'.format(request_type.lower())
+                        pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
                         try:    
                             module = __import__(pkg, globals(), locals(), [klass])
                             factory = getattr(module, klass)
@@ -181,9 +182,9 @@ class CommandProcessor(ConfigLoadable):
                             result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
                     else:
                         handler = self._handlers[klass]
-                
+                    if handler is not None:
 #                    result = self.context_filter.get_response(handler, data)
-                    result = handler.handle(data, sender_addr)
+                        result = handler.handle(data, sender_addr)
                     
                 if isinstance(result, ErrorCode):
                     result = repr(result)

@@ -291,12 +291,15 @@ class WatlowEZZone(CoreDevice):
             p = self.get_random_value()
             
         else:
+
             if self.memory_blocks_enabled:
                 t,p=self.read(self._process_working_address,nregisters=self._process_mb_len, **kw)
             else:
                 t=self.read_process_value(1, **kw)
                 p=self.read_heat_power(**kw)
-           
+        t=0 if t is None else t
+        p=0 if p is None else p
+        
         self.process_value = t
         return PlotRecord([t, p], (0, 1), ('Temp', 'Power'))
     

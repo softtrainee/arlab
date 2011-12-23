@@ -138,8 +138,6 @@ class Initializer(Loggable):
         '''
         if device_dir is None:
             device_dir = paths.device_dir
-#        if initialization_dir is None:
-#            initialization_dir = paths.initialization_dir
 
         if manager is not None:
             self.info('loading {}'.format(name))

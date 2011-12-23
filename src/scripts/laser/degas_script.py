@@ -33,6 +33,7 @@ class DegasScript(CoreScript):
 
     parser_klass = DegasScriptParser
     setpoint = Float
+
     control_mode = Enum('closed', 'open')
 #    record_data = True
 
@@ -120,12 +121,14 @@ class DegasScript(CoreScript):
                     formatter = None
                     try:
                         vscale = args[5].strip()
+
                         def format(x):
                             if x < 1:
                                 return '{:02n}'.format(math.floor(math.log(x, 10))) if abs(math.floor(math.log(x, 10)) - math.log(x, 10)) <= 1e-6 else ''
                             else:
                                 return '{:02n}'.format(math.ceil(math.log(x, 10))) if abs(math.ceil(math.log(x, 10)) - math.log(x, 10)) <= 1e-6 else ''
                         formatter = format
+                        
                     except IndexError:
                         pass
                     
@@ -146,7 +149,7 @@ class DegasScript(CoreScript):
         metadata = []
         metadata.append(['#===========plot metadata============'])
        
-        header = ['#time', 'request_power']
+        header = ['#time', 'request_power','process_value']
         for _obj, attr, plotinfo in self.scan_setup:
             header.append(attr)
 
@@ -172,7 +175,7 @@ class DegasScript(CoreScript):
         
         g.set_series_label('Request')
         g.set_series_label('Process Value', series=1)
-            
+
         cur_plotid = 0
         for _obj, func, plotinfo in self.scan_setup:
 

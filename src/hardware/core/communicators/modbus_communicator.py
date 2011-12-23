@@ -109,7 +109,7 @@ class ModbusCommunicator(SerialCommunicator):
                 if response_type == 'register_write':
                     return True
                 ndata = int(args[2], 16)
-                data = ''.join(args[3:3 + ndata])
+                
                 dataargs = args[3:3 + ndata]
                 if len(dataargs) < ndata:
                     ndata = 4
@@ -130,10 +130,10 @@ class ModbusCommunicator(SerialCommunicator):
                             '''
                             di = ''.join([high_word, low_word])
                         else:
-                            di = ''.join([low_word, high_word])
+                            di=''.join([low_word,high_word])
                         data.append(di)
                         
-                    data = ''.join(data)
+                    data=''.join(data)
 #                else:
 #                    data = '0000'.join(dataargs)
 
@@ -149,6 +149,7 @@ class ModbusCommunicator(SerialCommunicator):
                         return resp
                      
                 else:
+                    data = ''.join(args[3:3 + ndata])
                     return int(data, 16)
 #                return struct.unpack('!f', data.decode('hex'))[0] if response_type == 'float' \
 #                        else int(data, 16)
