@@ -127,7 +127,7 @@ class BakeoutManager(Manager):
                                       )
                 
                     self.data_buffer_x.append(nx)
-                      
+                   
                 self.graph.update_y_limits(plotid=0)
                 self.graph.update_y_limits(plotid=1)
             
