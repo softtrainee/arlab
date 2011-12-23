@@ -29,7 +29,7 @@ from manager import Manager
 from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve
 from src.extraction_line.section import Section
-from src.helpers.paths import hidden_dir
+from src.helpers.paths import hidden_dir, setup_dir
 import pickle
 from pickle import PickleError
 
@@ -52,6 +52,9 @@ class ValveManager(Manager):
     quad_inlet_valve = None
     
     query_valve_state = Bool(True)
+    
+    systems = None
+    
     def kill(self):
         super(ValveManager, self).kill()
         self.save_soft_lock_state()
@@ -83,6 +86,9 @@ class ValveManager(Manager):
         self._load_valves_from_file(setup_file)
 
         self.load_soft_lock_state()
+        
+        
+        self._load_system_dict()
         #self.info('loading section definitions file')
         #open config file
         #setup_file = os.path.join(paths.extraction_line_dir, 'section_definitions.cfg')
@@ -193,7 +199,38 @@ class ValveManager(Manager):
 #
 #        if v is not None:
 #            return v.soft_lock
+    def get_system(self, addr):
+        return next((k for k, v in self.systems.iteritems() if v == addr), None)
+    
 
+    def check_critical_section(self, name):
+        '''
+             return True if in critical section
+        '''
+        v = self.get_valve_by_name(name)
+        if v is not None:
+            return v.isCritical()
+            
+    def check_ownership(self, name, sender_address):
+        v = self.get_valve_by_name(name)
+        
+        system = self.get_system(sender_address)
+        
+        if v is not None:
+            if v.system == system:
+                return True
+        
+    def set_ownership(self, name, sender_address):
+        v = self.get_valve_by_name(name)
+        if v is not None:
+            system = self.get_system(sender_address)
+            v.system = system
+            
+    def clear_ownership(self, name):
+        v = self.get_valve_by_name(name)
+        if v is not None:
+            v.system = None
+            
     def check_soft_interlocks(self, name):
         '''
             
@@ -238,10 +275,10 @@ class ValveManager(Manager):
         '''
         if address is None:
             v = self.get_valve_by_name(name)
-            id = name
+            vid = name
         else:
             v = self.get_valve_by_address(address)
-            id = address
+            vid = address
 
         result = None
         if v is not None:
@@ -261,19 +298,19 @@ class ValveManager(Manager):
                 result = True
 
         else:
-            self.warning('Valve %s not available' % id)
+            self.warning('Valve %s not available' % vid)
             #result = 'Valve %s not available' % id
 
         return result
 
-    def sample(self, id, parent):
+    def sample(self, vid, parent):
         '''
 
         '''
         #do not sample a open valve
         # fixme 
         #span a new thread to perform the the sampling
-        v = self.get_valve_by_name(id)
+        v = self.get_valve_by_name(vid)
         if self.validate(v) and not v.state:
 
             parent.open(v.name)
@@ -348,7 +385,18 @@ class ValveManager(Manager):
             return
 
         return self._actuate_(name, open_close, mode)
-
+   
+    def _load_system_dict(self):
+        config = self.configparser_factory()
+        config.read(os.path.join(setup_dir, 'system_locks.cfg'))
+        
+        self.systems = dict()
+        for sect in config.sections():
+            name = config.get(sect, 'name')
+            host = config.get(sect, 'host')
+#            names.append(name)
+            self.systems[name] = host
+    
     def _load_sections_from_file(self, path):
         '''
         '''
@@ -379,16 +427,18 @@ class ValveManager(Manager):
         self.sector_inlet_valve = c[0][0]
         self.quad_inlet_valve = c[0][1]
 
+        actid = 6
         for a in c[1:]:
             act = 'valve_controller'
-            if len(a) == 5:
-                act = a[4]
+            if len(a) == actid + 1:
+                act = a[actid]
 
             actuator = self.get_actuator_by_name(act)
             v = HardwareValve(name=a[0],
                      address=a[1],
                      actuator=actuator,
-                     interlocks=a[2].split(',')
+                     interlocks=a[2].split(','),
+                     system=a[4]
                      )
 
             s = v.get_hardware_state()
