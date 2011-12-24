@@ -21,14 +21,13 @@ from pyface.workbench.api import Perspective, PerspectiveItem
 #============= local library imports  ==========================
 class GraphPerspective(Perspective):
     '''
-        G{classtree}
     '''
     name = 'Graph'
     show_editor_area = True
 
     contents = [
                 PerspectiveItem(id='pychron.graph_manager',
-                              #width = 0.65
+                              width=0.25
                               )
               ]
 #              PerspectiveItem(id = 'hardware.devices',

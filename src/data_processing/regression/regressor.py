@@ -55,8 +55,9 @@ class Regressor(object):
         if args:
 
             coeffs = args['coefficients']
-            for xi, yi in vstack((x, y)).transpose():
-                res.append(poly1d(coeffs)(xi) - yi)
+            if coeffs is not None:
+                for xi, yi in vstack((x, y)).transpose():
+                    res.append(poly1d(coeffs)(xi) - yi)
 
         return array(res)
 

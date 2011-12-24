@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-#from traits.api import HasTraits, on_trait_change, Str, Int, Float, Button
+from traits.api import List
 #from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
@@ -22,10 +22,16 @@ limitations under the License.
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
 from src.managers.graph_manager import GraphManager
+from envisage.extension_point import ExtensionPoint
 class GraphPlugin(CorePlugin):
+    
+    handlers = ExtensionPoint(List, id='pychron.graph.handlers')
     def _service_offers_default(self):
         so = self.service_offer_factory(protocol=GraphManager,
-                                        factory=GraphManager)
+                                        factory=self._factory)
         return [so]
-
+    
+    def _factory(self):
+        return GraphManager(extension_handlers=self.handlers)
+    
 #============= EOF =============================================
