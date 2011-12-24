@@ -109,16 +109,23 @@ class CoreDevice(ViewableDevice):
 
     def set(self, v):
         pass
-
+    
+    def create_communicator(self, comm_type, port, baudrate):
+        
+        c = self._communicator_factory(comm_type)
+        c.open(port=port, baudrate=baudrate)
+        self._communicator = c
+        
+        
     def _communicator_factory(self, communicator_type):
         if communicator_type is not None:
 
             class_key = '{}Communicator'.format(communicator_type.capitalize())
-            module_path = 'src.hardware.core.communicators.{}_communicator'.format(communicator_type)
+            module_path = 'src.hardware.core.communicators.{}_communicator'.format(communicator_type.lower())
             classlist = [class_key]
 
             class_factory = __import__(module_path, fromlist=classlist)
-            return getattr(class_factory, class_key)(name='_'.join((self.name, communicator_type)),
+            return getattr(class_factory, class_key)(name='_'.join((self.name, communicator_type.lower())),
                           id_query=self.id_query,
                           id_response=self.id_response
                          )

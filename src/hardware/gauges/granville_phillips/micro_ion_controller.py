@@ -22,6 +22,8 @@ CRLF = chr(13)
 from src.hardware.core.core_device import CoreDevice
 class MicroIonController(CoreDevice):
     scan_func = 'get_pressures'
+    address = '01'
+    
     def load_additional_args(self, config, *args, **kw):
         self.address = self.config_get(config, 'General', 'address', optional=False)
         return True

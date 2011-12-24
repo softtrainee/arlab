@@ -23,6 +23,12 @@ import os
 import sys
 #=============local library imports  ==========================
 from communicator import Communicator
+
+def get_ports():
+    keyspan = glob.glob('/dev/tty.U*')
+    usb = glob.glob('/dev/tty.usb*')
+    return keyspan + usb
+
 class SerialCommunicator(Communicator):
     '''
         Base Class for devices that communicate using a rs232 serial port.
@@ -214,7 +220,7 @@ class SerialCommunicator(Communicator):
         self.info('Trying to find correct port')
 
         port = None
-        for port in self._get_ports():
+        for port in get_ports():
             self.info('trying port {}'.format(port))
             args['port'] = port
             try:
@@ -253,11 +259,7 @@ class SerialCommunicator(Communicator):
             self.handle = None
             self.simulation = True
 
-    def _get_ports(self):
-        keyspan = glob.glob('/dev/tty.U*')
-        usb = glob.glob('/dev/tty.usb*')
 
-        return keyspan + usb
 
     def _validate_address(self, port):
         '''
@@ -265,7 +267,7 @@ class SerialCommunicator(Communicator):
             valid ports start with /dev/tty.U or /dev/tty.usbmodem
     
         '''
-        valid = self._get_ports()
+        valid = get_ports()
         if port in valid:
             return True
         else:
@@ -360,7 +362,7 @@ class SerialCommunicator(Communicator):
                 for i in range(100):
                     inw = get_chars()
                     time.sleep(1e-5)
-                    if inw==prev_inw:
+                    if inw == prev_inw:
                         break
             
             

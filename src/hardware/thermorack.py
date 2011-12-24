@@ -39,14 +39,14 @@ FAULTS_TABLE = ['Tank Level Low',
               None]
 class ThermoRack(CoreDevice):
     '''
-        G{classtree}
     '''
     convert_to_C = True
+
+    scan_func = 'get_coolant_out_temperature'
 
     #===========================================================================
     # icore device interface
     #===========================================================================
-
     def set(self, v):
         pass
 
@@ -126,8 +126,6 @@ class ThermoRack(CoreDevice):
 
     def get_coolant_out_temperature(self, **kw):
         '''
-            @type **kw: C{str}
-            @param **kw:
         '''
         cmd = '%x' % int(GET_BITS + COOLANT_BITS, 2)
 
@@ -141,11 +139,6 @@ class ThermoRack(CoreDevice):
 
     def parse_response(self, resp, scale=1):
         '''
-            @type resp: C{str}
-            @param resp:
-
-            @type scale: C{str}
-            @param scale:
         '''
         # resp low byte high byte
         #flip to high byte low byte

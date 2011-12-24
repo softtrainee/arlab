@@ -13,12 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-'''
-Hardware Package contains
-
-G{packagetree }
-
-'''
 HW_PACKAGE_MAP = {'CommandProcessor':'src.messaging.command_processor',
                'RemoteCommandServer':'src.messaging.remote_command_server',
              'ArduinoSubsystem':'src.hardware.subsystems.arduino_subsystem',

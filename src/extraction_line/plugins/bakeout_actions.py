@@ -27,6 +27,7 @@ class OpenBakeoutManagerAction(Action):
         '''
 
         bmanager = self.window.application.get_service('src.managers.bakeout_manager.BakeoutManager')
+        bmanager.load()
         bmanager.load_controllers()
 
 
