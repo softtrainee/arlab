@@ -53,7 +53,6 @@ class CustomEquation(HasTraits):
 
 class RegressionEditor(HasTraits):
     '''
-        G{classtree}
     '''
     fit_type = Enum('linear', 'parabolic', 'average +/- SD', 'average +/- SEM', 'cubic', 'exponential', 'custom')
     id = Int
@@ -65,11 +64,6 @@ class RegressionEditor(HasTraits):
     intercept_error = Float
     def __init__(self, *args, **kw):
         '''
-            @type *args: C{str}
-            @param *args:
-
-            @type **kw: C{str}
-            @param **kw:
         '''
         super(RegressionEditor, self).__init__(*args, **kw)
         self.on_trait_change(self.graph._metadata_changed, 'fit_type')
@@ -77,7 +71,6 @@ class RegressionEditor(HasTraits):
     def _fit_type_changed(self):
         '''
         '''
-
         if self.fit_type == 'custom':
 
             c = CustomEquation()
@@ -98,7 +91,7 @@ class RegressionEditor(HasTraits):
 
         self.graph.fit_types[self.id] = self.fit_type
         self.graph.selected_plotid = self.id
-
+        
     def set_regression_statistics(self, rdict, plotid=0):
         '''
 

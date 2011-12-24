@@ -27,7 +27,7 @@ class BakeoutPlugin(CorePlugin):
     '''
     id = 'pychron.hardware.bakeout'
     MANAGERS = 'pychron.hardware.managers'
-
+    GRAPH_HANDLERS = 'pychron.graph.handlers'
     def _service_offers_default(self):
         '''
         '''
@@ -35,10 +35,7 @@ class BakeoutPlugin(CorePlugin):
                           protocol=BakeoutManager,
                           factory=self._factory)
 
-#        so1 = self.service_offer_factory(
-#                          protocol = GaugeManager,
-#                          #protocol = GM_PROTOCOL,
-#                          factory = self._gm_factory)
+
 
         return [so]
 
@@ -52,12 +49,19 @@ class BakeoutPlugin(CorePlugin):
         return bm
 
     managers = List(contributes_to=MANAGERS)
+    
+    
     def _managers_default(self):
         '''
         '''
         app = self.application
         return [dict(name='bakeout',
                      manager=app.get_service(BakeoutManager))]
-
+    
+    
+    graph_handlers = List(contributes_to=GRAPH_HANDLERS)
+    def _graph_handlers_default(self):
+        return [self.application.get_service(BakeoutManager)]
+    
 #============= views ===================================
 #============= EOF ====================================

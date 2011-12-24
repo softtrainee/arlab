@@ -87,8 +87,8 @@ class RegressionGraph(Graph):
         t = time.time()
         if self.last_regress_time is None:
             self.last_regress_time = t
-
-        if (t < self.last_regress_time or
+        
+        elif (t < self.last_regress_time or
                 abs(t - self.last_regress_time) < 0.75):
             return
 

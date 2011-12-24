@@ -1122,6 +1122,13 @@ class Graph(HasTraits):
             except ValueError:
                 return
         else:
+            if isinstance(pad, str):
+                #interpet pad as a percentage of the range
+                #ie '0.1' => 0.1*(ma-mi)
+                if ma is not None and mi is not None:
+                    pad = float(pad) * (ma - mi)
+                    if abs(pad - 0) < 1e-10:
+                        pad = 1
             if ma is not None:
                 ma += pad
 

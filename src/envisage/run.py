@@ -102,7 +102,7 @@ def get_user_plugins():
             
         except ImportError, e:
             klass = None
-            logger.warning('****** {} could not be imported {} ******' % (name, e))
+            logger.warning('****** {} could not be imported {} ******'.format(name, e))
         return klass
 
     #append plugins dir to the sys path

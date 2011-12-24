@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import File, Str, Directory
+from traits.api import File, Str, Directory, List
 from traitsui.api import View, Item, EnumEditor
 from chaco.api import ArrayDataSource
 #============= standard library imports ========================
@@ -28,6 +28,7 @@ from src.helpers.paths import data_dir
 from manager import Manager
 
 KIND_VALUES = dict(
+                   bakeout='Bakeout',
                    degas='Degas',
                    peak_center='Peak Center',
                    powermap='Power Map',
@@ -40,16 +41,33 @@ class GraphManager(Manager):
     path = File
     root = Directory
     kind = Str('deflection')
+    
+    
+    extension_handlers = List
     def _test_fired(self):
-        self.open_graph('inverse_isochron', path='/Users/Ross/Desktop/data.csv')
+        self.open_graph('degas', path='/Users/Ross/Pychrondata_beta/data/degas/scan001.txt')
+#        self.open_graph('inverse_isochron', path='/Users/Ross/Desktop/data.csv')
         #self.open_graph('age_spectrum', path='/Users/Ross/Desktop/test.csv')
     
     def open_graph(self, kind, path=None):
-
-        pfunc = getattr(self, '{}_parser'.format(kind))
-
-        gfunc = getattr(self, '{}_factory'.format(kind))
-
+        get_pfunc = lambda c, k:getattr(c, '{}_parser'.format(k)) 
+        get_gfunc = lambda c, k:getattr(c, '{}_factory'.format(k)) 
+        pfunc = None
+        try:
+            pfunc = get_pfunc(self, kind)
+            gfunc = get_gfunc(self, kind)
+        except AttributeError:
+            
+            for eh in self.extension_handlers:
+                try:
+                    pfunc = get_pfunc(eh, kind)
+                    gfunc = get_gfunc(eh, kind)
+                except AttributeError:
+                    raise NotImplementedError('no parser or factory for {}'.format(kind)) 
+            if not pfunc:
+                raise NotImplementedError('no parser or factory for {}'.format(kind)) 
+                
+        print pfunc, gfunc 
         if path is None:
             path = self.open_file_dialog(default_directory=data_dir)
 
@@ -90,7 +108,35 @@ class GraphManager(Manager):
         if xs:
             minmaxdata = array((xs, ys))
         return data, minmaxdata, title
-
+    
+    def degas_parser(self, path):
+        f = open(path, 'r')
+        
+        metadata = self.read_metadata(f)
+        data = loadtxt(f, delimiter=',', unpack=True)    
+        
+        title = 'foo'
+        f.close()
+        
+        return data, metadata, title 
+    
+    def read_metadata(self, fobj, delimiter=','):
+        m = []
+        for l in fobj:
+            l = l.split(delimiter)
+            if l[0].startswith('#') and '#=====' not in l[0]:
+                
+                try:
+                    m.append((l[0][1:], int(l[1]), int(l[2])))
+                except ValueError:
+                    #this it the header do really need it currently
+                    pass
+                    
+            if l[0].strip() == '#====================================':
+                break
+             
+        return m
+    
     def deflection_parser(self, path):
         return self._default_xy_parser(path)
 
@@ -278,7 +324,41 @@ class GraphManager(Manager):
                                series_kwargs={}
                                )
         return g
-
+    
+    def degas_factory(self, data, metalist, title):
+        
+        g = self.stream_stacked_factory(data=data, graph_kwargs=dict(window_title=title),
+                               #plot_kwargs=None,
+                               #series_kwargs=None
+                               )
+        curplot = 0
+        g.new_plot()
+        g.new_series(x=data[0], y=data[1])
+        
+        mi = min(data[1])
+        ma = max(data[1])
+        g.set_y_limits(mi, ma, pad='0.1')
+        
+        
+        for i, mi in enumerate(metalist):
+            x = data[0]
+            y = data[2 + i]
+            if mi[1] == curplot:
+                g.new_series(x=x, y=y, plotid=curplot)
+            else:
+                g.new_plot()
+                g.new_series(x=x, y=y)
+                curplot += 1
+            
+            mi = min(y)
+            ma = max(y)
+        
+            
+            g.set_y_limits(mi, ma, pad='0.1', plotid=curplot)
+        g.set_x_limits(min(data[0]), max(data[0]))
+    
+        return g
+    
     def peak_center_factory(self, data, minmaxdata, title):
         '''
             the centering info should written as metadata instead of recalculating it
@@ -326,7 +406,11 @@ class GraphManager(Manager):
             #trim off header
             reader.next()
             return pmp.load_graph(reader)
-
+        
+    def stream_stacked_factory(self, *args, **kw):
+        from src.graph.stream_graph import StreamStackedGraph
+        return self._graph_factory(StreamStackedGraph, *args, **kw)
+    
     def residuals_factory(self, *args, **kw):
         from src.graph.residuals_graph import ResidualsGraph
     
@@ -424,6 +508,7 @@ class GraphManager(Manager):
 
 
     def _path_changed(self):
+        print self.path
         self.open_graph(self.kind, self.path)
 
     def _root_changed(self):
