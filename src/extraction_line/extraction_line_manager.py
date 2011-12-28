@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import  Instance, Float
+from traits.api import  Instance, Float, Str
 from traitsui.api import View, Item, HGroup
 #=============standard library imports ========================
 import os
@@ -127,9 +127,27 @@ class ExtractionLineManager(Manager):
 
 #    def show_device_streamer(self):
 #        self.device_stream_manager.edit_traits(parent=self.window.control)
-
+    def bind_preferences(self):
+        from apptools.preferences.preference_binding import bind_preference
+        
+        bind_preference(self.canvas, 'style', 'pychron.extraction_line.style')
+        bind_preference(self.canvas, 'width', 'pychron.extraction_line.width')
+        bind_preference(self.canvas, 'height', 'pychron.extraction_line.height')
+        bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
+        bind_preference(self, 'close_after_minutes', 'pychron.extraction_line.close_after')
+        
+        
+        from src.extraction_line.plugins.extraction_line_preferences_page import get_valve_group_names
+        
+        for name in get_valve_group_names():
+            self.add_trait(name, Str(''))
+            self.on_trait_change(self._owner_change, name)
+            bind_preference(self, name, 'pychron.extraction_line.{}'.format(name))
+    
+    def _owner_change(self, name, value):
+        self.valve_manager.claim_section(name.split('_')[0], value.lower)
+        
     def reload_scene_graph(self):
-
         if self.canvas is not None:
             self.canvas.canvas3D.setup(canvas3D_dir, 'extractionline3D.txt')
 
@@ -224,22 +242,38 @@ class ExtractionLineManager(Manager):
                 name = self.valve_manager.get_name_by_address(address)
 
             return self._change_valve_state(name, mode, 'close', sender_address)
-
+        
+    def claim_group(self, *args):
+        return self.valve_manager.claim_group(*args)
+        
+    def release_group(self, *args):
+        return self.valve_manager.release_group(*args)
+        
     def _change_valve_state(self, name, mode, action, sender_address=None):
 
         func = getattr(self.valve_manager, '{}_by_name'.format(action))
         
-        system, ok = self.valve_manager.check_ownership(name, sender_address)
+        claimer = self.valve_manager.get_system(sender_address)
+        ok = True
+        if claimer:
+            ok = self.valve_manager.check_group_ownership(name, claimer)
+        
         if ok:
-            critical = self.valve_manager.check_critical_section()
-            if not critical:
-                result = func(name, mode=mode)
-            else:
-                result = '{} critical section enabled'.format(name)
-                self.warning(result)
+            result = func(name, mode=mode)
         else:
-            result = '{} owned by {}'.format(name, system)    
+            result = '{} owned by {}'.format(name, claimer)    
             self.warning(result)
+            
+#        system,f ok = self.valve_manager.check_ownership(name, sender_address)
+##        ok = True
+#        if ok:
+#            critical = self.valve_manager.check_critical_section()
+#            if not critical:
+#                result = func(name, mode=mode)
+#            else:
+#                result = '{} critical section enabled'.format(name)
+#                self.warning(result)
+#        else:
             
         if isinstance(result, bool):
             self.canvas.update_valve_state(name, True if action == 'open' else False)

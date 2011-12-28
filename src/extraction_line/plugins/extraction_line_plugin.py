@@ -20,7 +20,6 @@ from traits.api import List
 #============= local library imports  ==========================
 from src.extraction_line.extraction_line_manager import ExtractionLineManager
 from src.envisage.core.core_plugin import CorePlugin
-from apptools.preferences.preference_binding import bind_preference
 
 class ExtractionLinePlugin(CorePlugin):
     '''
@@ -51,12 +50,7 @@ class ExtractionLinePlugin(CorePlugin):
         '''
         '''
         elm = ExtractionLineManager()
-
-        bind_preference(elm.canvas, 'style', 'pychron.extraction_line.style')
-        bind_preference(elm.canvas, 'width', 'pychron.extraction_line.width')
-        bind_preference(elm.canvas, 'height', 'pychron.extraction_line.height')
-        bind_preference(elm, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
-        bind_preference(elm, 'close_after_minutes', 'pychron.extraction_line.close_after')
+        elm.bind_preferences()
         
         return elm
 

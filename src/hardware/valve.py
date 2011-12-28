@@ -35,8 +35,10 @@ class HardwareValve(Loggable):
     debug = False
     error = None
     software_lock = False
-    system = None
-    _critical_section = False
+    #group = None
+#    owner = None
+#    system = None
+#    _critical_section = False
 
     def __init__(self, *args, **kw):
         '''
@@ -129,14 +131,14 @@ class HardwareValve(Loggable):
 
         return result
     
-    def acquire_critical_section(self):
-        self._critical_section = True
-    
-    def release_system_lock(self):
-        self._critical_section = False
-    
-    def isCritical(self):
-        return self._critical_section
+#    def acquire_critical_section(self):
+#        self._critical_section = True
+#    
+#    def release_system_lock(self):
+#        self._critical_section = False
+#    
+#    def isCritical(self):
+#        return self._critical_section
     
     def lock(self):
         if self.state:

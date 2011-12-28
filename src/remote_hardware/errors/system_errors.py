@@ -81,5 +81,12 @@ class SystemLockErrorCode(ErrorCode):
     def __init__(self, name, locker, sender, *args, **kw):
         self.msg = self.msg.format(name, locker, sender)
         super(SystemLockErrorCode, self).__init__(*args, **kw)
+
+class InvalidValveGroupErrorCode(ErrorCode):
+    msg = 'Invalid valve group - {}'
+    code = 14
+    def __init__(self, name, *args, **kw):
+        self.msg = self.msg.format(name)
+        super(InvalidValveGroupErrorCode, self).__init__(*args, **kw)
         
 #============= EOF =====================================
