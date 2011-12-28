@@ -432,14 +432,18 @@ class ValveManager(Manager):
                      interlocks=a[2].split(','),
 #                     group=a[4]
                      )
-            if a[4] != curgrp:
-                curgrp = a[4]
-                vg = ValveGroup()
-                vg.valves = [v]
-                self.valve_groups[curgrp] = vg
-            else:
-                self.valve_groups[curgrp].valves.append(v)
-                
+            try:
+                if a[4] != curgrp:
+                    curgrp = a[4]
+                    vg = ValveGroup()
+                    vg.valves = [v]
+                    self.valve_groups[curgrp] = vg
+                else:
+                    self.valve_groups[curgrp].valves.append(v)
+            except IndexError:
+                #there is no group specified
+                pass
+            
             s = v.get_hardware_state()
 
             #update the extraction line managers canvas
