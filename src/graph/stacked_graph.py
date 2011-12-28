@@ -35,7 +35,16 @@ class StackedGraph(Graph):
             kw['aux_component'] = self.plots[0]
         
         super(StackedGraph, self).add_minor_yticks(plotid=plotid, **kw)
-        
+    
+    def container_factory(self, *args, **kw):
+        c = super(StackedGraph, self).container_factory(*args, **kw)
+        '''
+            bind to self.plotcontainer.bounds
+            allows stacked graph to resize vertically
+        '''
+        c.on_trait_change(self._bounds_changed_, 'bounds')
+        return c
+    
     def new_plot(self, **kw):
         '''
         '''
@@ -43,30 +52,28 @@ class StackedGraph(Graph):
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
                 kw['bounds'] = (50, self.panel_height)
-
+#
         if len(self.plots) == 0:
             if 'title' not in kw:
                 kw['padding_top'] = 0
-
+#
         else:
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
                 kw['bounds'] = (50, self.panel_height)
 
+            kw['padding_bottom'] = 0
             if 'title' not in kw:
                 kw['padding_top'] = 20
-                kw['padding_bottom'] = 0
             else:
                 kw['padding_top'] = 30
-                kw['padding_bottom'] = 0
 
         p = super(StackedGraph, self).new_plot(**kw)
         p.value_axis.ensure_labels_bounded = True
-        for p in self.plots[1:-1]:
+        
+        for p in self.plots[1:]:
             p.padding_top = 0
             p.padding_bottom = 0
-#        for p in self.plots:
-#            p.height = 60
 
         link = True
         if 'link' in kw:
@@ -77,4 +84,12 @@ class StackedGraph(Graph):
                 p.index_axis.visible = False
                 p.index_range = self.plots[0].index_range
                 
+    def _bounds_changed_(self, bounds):
+        '''
+            vertically resizes the stacked graph.
+            the plots are sized equally
+        '''
+        
+        for p in self.plots:
+            p.bounds[1] = bounds[1] / len(self.plots)
 #============= EOF ====================================

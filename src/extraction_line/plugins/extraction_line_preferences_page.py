@@ -14,12 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Enum, Float, Range, Bool
-from traitsui.api import Item, VGroup, HGroup, Group
+from traits.api import Enum, Float, Range, Bool, List, Str
+from traitsui.api import Item, VGroup, HGroup, Group, EnumEditor
 #============= standard library imports ========================
+from ConfigParser import ConfigParser
+import os
 
 #============= local library imports  ==========================
 from src.managers.plugins.manager_preferences_page import ManagerPreferencesPage
+from src.helpers.paths import setup_dir, extraction_line_dir
+def get_valve_group_names():
+    g = []
+    p = os.path.join(extraction_line_dir, 'valve_groups.txt')
+    with open(p, 'r') as f:
+        for l in f:
+            if l.startswith('#'):
+                continue
+            name = l.strip()
+            
+            name = '{}_owner'.format(name)
+            g.append(name)
+            
+    return g
 
 class ExtractionLinePreferencesPage(ManagerPreferencesPage):
     '''
@@ -37,15 +53,38 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
     
     query_valve_state = Bool(True)
     
-    def get_general_group(self):
+    owners = List
+    groups = List
+    
+    def _groups_default(self):
+        g = get_valve_group_names()
+        for gi in g:
+            self.add_trait(gi, Str(''))
+        return g
+    
+    def _owners_default(self):
+        o = ['']
+        config = ConfigParser()
+        config.read(os.path.join(setup_dir, 'system_locks.cfg'))
+        for s in config.sections():
+            o.append(config.get(s, 'name'))
+        return o
+    
+#============= views ===================================
+    def get_general_group(self): 
+        valve_grp_grp = VGroup()
+        for gi in self.groups:
+            valve_grp_grp.content.append(Item(gi, editor=EnumEditor(name='owners')))
+       
         return Group(Item('open_on_startup'),
                      HGroup(
                             Item('close_after', enabled_when='enable_close_after'),
                             Item('enable_close_after', show_label=False)
                             ),
-                     Item('query_valve_state')
+                     Item('query_valve_state'),
+                    valve_grp_grp
                     )
-
+        
     def get_additional_groups(self):
         canvas_group = VGroup(
                               Item('style', show_label=False),
@@ -58,131 +97,5 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
 
                 ]
 
-#============= views ===================================
 #============= EOF =====================================
-#    def traits_view(self):
-#        '''
-#        '''
-#
-#        cols = [CheckboxColumn(name = 'enabled',
-#                             ),
-#                ObjectColumn(name = 'name')
-#                             ]
-#        table_editor = TableEditor(columns = cols)
-#
-#        devices_group = VGroup(Item('devices', show_label = False,
-#                                    editor = table_editor
-#                                    ),
-#                                label = 'Devices'
-#                              )
-#        manager_group = VGroup(Item('managers', show_label = False,
-#                                    editor = table_editor
-#                                    ),
-#                                label = 'Managers'
-#                              )
-#        v = View(
-#                 manager_group,
-#                 devices_group,
-#                 canvas_group,
-#                 )
-#        return v
-#    @on_trait_change('managers.enabled, devices.enabled')
-#    def _managers_changed(self, obj, name, old, new):
-#        p = os.path.join(initialization_dir, 'extraction_line_initialization.cfg')
-#        if not os.path.isfile(p):
-#            with open(p, 'w') as f:
-#                pass
-#
-#        #overwrite the extracton_line_initialization file
-#        with open(p, 'r') as f:
-#
-#            config = ConfigParser()
-#            config.readfp(f)
-#
-#            #write the managers
-#            ms = []
-#            for m in self.managers:
-#                t = m.name
-#                if not m.enabled:
-#                    t = '_%s' % m.name
-#                ms.append(t)
-#
-#            config.set('General', 'managers', ','.join(ms))
-#
-#            #write the devices
-#            ds = []
-#            for d in self.devices:
-#                t = d.name
-#                if not d.enabled:
-#                    t = '_%s' % d.name
-#                ds.append(t)
-#            config.set('General', 'devices', ','.join(ds))
-#
-#
-#        with open(p, 'w') as f:
-#            config.write(f)
-#
-#    def read_config(self):
-#        p = os.path.join(initialization_dir, 'extraction_line_initialization.cfg')
-#        if os.path.isfile(p):
-#            with open(p, 'r') as f:
-#
-#                config = ConfigParser()
-#                config.readfp(f)
-#                return config
-#
-#    def _managers_default(self):
-#        # read the config file
-#        config = self.read_config()
-#        r = []
-#        if config is not None:
-#            managers = config.get('General', 'managers')
-#            for m in managers.split(','):
-#                m = m.strip()
-#                enabled = not m.startswith('_')
-#                if not enabled:
-#                    #strip off enabled flag char
-#                    m = m[1:]
-#                r.append(CItem(enabled = enabled,
-#
-#                                name = m))
-#        return r
-#
-#    def _devices_default(self):
-#        # read the config file
-#
-#        r = []
-#        config = self.read_config()
-#        if config is not None:
-#            if config.has_option('Genera', 'devices'):
-#                devices = config.get('General', 'devices')
-#                for d in devices.split(','):
-#                    d = d.strip()
-#                    enabled = not d.startswith('_')
-#                    if not enabled:
-#                        #strip off enabled flag char
-#                        d = d[1:]
-#                    r.append(CItem(enabled = enabled,
-#
-#                                    name = d))
-#
-#        return r
 
-#        r = []
-#        p = os.path.join(initialization_dir, 'extraction_line_initialization.cfg')
-#        if os.path.isfile(p):
-#            with open(p, 'r') as f:
-#    
-#                config = ConfigParser()
-#                config.readfp(f)
-#                
-#                managers = config.get('General', 'managers')
-#                for m in managers.split(','):
-#                    m = m.strip()
-#                    enabled = not m.startswith('_')
-#                    if not enabled:
-#                        #strip off enabled flag char
-#                        m = m[1:]
-#                    r.append(CItem(enabled = enabled,
-#    
-#                                    name = m))

@@ -16,11 +16,11 @@ limitations under the License.
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
+from threading import Thread
 #============= local library imports  ==========================
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode, \
-    InvalidArgumentsErrorCode, InvalidValveErrorCode, InvalidIPAddressErrorCode
-from threading import Thread
+    InvalidArgumentsErrorCode, InvalidValveErrorCode, InvalidIPAddressErrorCode, InvalidValveGroupErrorCode
 
 #============= views ===================================
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -61,7 +61,6 @@ class DummyELM(object):
 class SystemHandler(BaseRemoteHardwareHandler):
     extraction_line_manager = None
     manager_name = 'extraction_line_manager'
-#    def get_extraction_line_manager(self):
     def get_manager(self):
 
         if self.extraction_line_manager is None:
@@ -140,7 +139,6 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = lstate
             
         return result
-
     
     def StartRun(self, manager, *args):
         '''
@@ -233,6 +231,29 @@ class SystemHandler(BaseRemoteHardwareHandler):
             return InvalidIPAddressErrorCode(sender_addr)
         
         return 'OK'
+    
+    def ClaimGroup(self, manager, grp, sender_addr, *args):
+        rhm = self.application.get_service(RHM_PROTOCOL)
+        if rhm.validate_address(sender_addr):
+            err = manager.claim_section(grp, sender_addr)
+            if err is True:
+                return InvalidValveGroupErrorCode(grp)
+        else:    
+            return InvalidIPAddressErrorCode(sender_addr)
+        
+        return 'OK'
+        
+    def ReleaseGroup(self, manager, grp , sender_addr, *args):
+        rhm = self.application.get_service(RHM_PROTOCOL)
+        if rhm.validate_address(sender_addr):
+            err = manager.release_section(grp)
+            if err:
+                return InvalidValveGroupErrorCode(grp)
+        else:    
+            return InvalidIPAddressErrorCode(sender_addr)
+        
+        return 'OK'
+        
 #    def RemoteLaunch(self, manager, *args):
 #        #launch pychron
 #        p = '/Users/Ross/Programming/pychron/Pychron.app'

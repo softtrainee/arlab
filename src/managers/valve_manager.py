@@ -13,26 +13,27 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-'''
-'''
 #=============enthought library imports=======================
 from traits.api import Any, Dict, List, Bool
 #=============standard library imports ========================
 import time
 import os
+import pickle
+from pickle import PickleError
 #=============local library imports  ==========================
-
-from src.helpers.filetools import parse_setupfile
-
-from src.helpers import paths
 from manager import Manager
+from src.helpers.filetools import parse_setupfile
+from src.helpers import paths
 from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve
 from src.extraction_line.section import Section
 from src.helpers.paths import hidden_dir, setup_dir
-import pickle
-from pickle import PickleError
 
+class ValveGroup(object):
+    owner = None
+    valves = None
+    
+    
 class ValveManager(Manager):
     '''
     Manager to interface with the UHV and HV pneumatic valves
@@ -54,7 +55,7 @@ class ValveManager(Manager):
     query_valve_state = Bool(True)
     
     systems = None
-    
+    valve_groups = None
     def kill(self):
         super(ValveManager, self).kill()
         self.save_soft_lock_state()
@@ -86,8 +87,7 @@ class ValveManager(Manager):
         self._load_valves_from_file(setup_file)
 
         self.load_soft_lock_state()
-        
-        
+    
         self._load_system_dict()
         #self.info('loading section definitions file')
         #open config file
@@ -122,9 +122,7 @@ class ValveManager(Manager):
 
     def get_states(self):
         '''
-           
         '''
-        
         states = []
         for k, v in self.valves.items():
             states.append(k)
@@ -139,35 +137,30 @@ class ValveManager(Manager):
 
     def get_valve_by_address(self, a):
         '''
-
         '''
         return next((valve for valve in self.valves if valve.address == a), None)
 
     def get_name_by_address(self, k):
         '''
-
         '''
         v = self.get_valve_by_address(k)
         if v is not None:
             return v.name
 
     def get_valve_by_name(self, n):
-        '''
-            
+        '''    
         '''
         if n in self.valves:
             return self.valves[n]
 
     def get_evalve_by_name(self, n):
-        '''
-            
+        '''  
         '''
         return next((item for item in self.explanable_items if item.name == n), None)
 
 
     def get_state_by_name(self, n):
         '''
-          
         '''
         v = self.get_valve_by_name(n)
         state = None
@@ -194,23 +187,41 @@ class ValveManager(Manager):
         if v is not None:
             return v.software_lock
 
-#    def check_soft_lock(self, name):
-#        v = self.get_valve_by_name(name)
-#
-#        if v is not None:
-#            return v.soft_lock
+    def claim_section(self, section, addr=None, name=None):
+        try:
+            vg = self.valve_groups[section]
+        except KeyError:
+            return True
+            
+        if addr is None:
+            addr = self._get_system_address(name)
+            
+        vg.owner = addr
+        
+    def release_section(self, section):
+        try:
+            vg = self.valve_groups[section]
+        except KeyError:
+            return True
+        
+        vg.owner = None
+        
     def get_system(self, addr):
         return next((k for k, v in self.systems.iteritems() if v == addr), None)
     
-
-    def check_critical_section(self, name):
-        '''
-             return True if in critical section
-        '''
-        v = self.get_valve_by_name(name)
-        if v is not None:
-            return v.isCritical()
+    def check_group_ownership(self, name, claimer):        
+        grp = None
+        for g in self.valve_groups.itervalues():
+            for vi in g.valves:
+                if vi.name == name:
+                    grp = g
+                    break
+        r = False
+        if grp is None:
+            r = grp.owner == claimer
             
+        return r
+        
     def check_ownership(self, name, sender_address):
         v = self.get_valve_by_name(name)
         
@@ -220,22 +231,10 @@ class ValveManager(Manager):
             if v.system == system:
                 return True
         
-    def set_ownership(self, name, sender_address):
-        v = self.get_valve_by_name(name)
-        if v is not None:
-            system = self.get_system(sender_address)
-            v.system = system
-            
-    def clear_ownership(self, name):
-        v = self.get_valve_by_name(name)
-        if v is not None:
-            v.system = None
             
     def check_soft_interlocks(self, name):
+        ''' 
         '''
-            
-        '''
-
         cv = self.get_valve_by_name(name)
 
         if cv is not None:
@@ -247,25 +246,13 @@ class ValveManager(Manager):
                     if valves[v].state:
                         return True
 
-
-
-#    def open(self, *args, **kw):
-#        return self.open_by_name(*args, **kw)
-#
-#    def close(self, *args, **kw):
-#        return self.close_by_name(*args, **kw)
-
-#    def open_by_name(self, name, mode = 'auto'):
     def open_by_name(self, name, mode='normal'):
         '''
         '''
-#        return self._open_(name = name, mode = mode)
         return self._open_(name, mode)
 
-#    def close_by_name(self, name, mode = 'auto'):
     def close_by_name(self, name, mode='normal'):
         '''
-
         '''
         return self._close_(name, mode)
 
@@ -385,7 +372,10 @@ class ValveManager(Manager):
             return
 
         return self._actuate_(name, open_close, mode)
-   
+    
+    def _get_system_address(self, name):
+        return next((h for k, h in self.systems.iteritems() if k == name), None)
+    
     def _load_system_dict(self):
         config = self.configparser_factory()
         config.read(os.path.join(setup_dir, 'system_locks.cfg'))
@@ -428,6 +418,8 @@ class ValveManager(Manager):
         self.quad_inlet_valve = c[0][1]
 
         actid = 6
+        curgrp = None
+        self.valve_groups = dict()
         for a in c[1:]:
             act = 'valve_controller'
             if len(a) == actid + 1:
@@ -438,9 +430,16 @@ class ValveManager(Manager):
                      address=a[1],
                      actuator=actuator,
                      interlocks=a[2].split(','),
-                     system=a[4]
+#                     group=a[4]
                      )
-
+            if a[4] != curgrp:
+                curgrp = a[4]
+                vg = ValveGroup()
+                vg.valves = [v]
+                self.valve_groups[curgrp] = vg
+            else:
+                self.valve_groups[curgrp].valves.append(v)
+                
             s = v.get_hardware_state()
 
             #update the extraction line managers canvas

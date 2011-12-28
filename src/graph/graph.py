@@ -818,7 +818,7 @@ class Graph(HasTraits):
                 kw[k] = options[k]
 
         container = c(**kw)
-
+        
         #add some tools
 #        cm=ContextualMenuTool(parent=container,
 #                              component=container
@@ -828,7 +828,7 @@ class Graph(HasTraits):
         #gt = TraitsTool(component = container)
         #container.tools.append(gt)
         return container
-
+    
     def _crosshairs_factory(self, plot=None):
         '''
         '''
