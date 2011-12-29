@@ -27,14 +27,22 @@ client.
 ===Basic configuration====
 The remote control server listens for incoming commands using either TCP or UDP.
 By default the server is setup to use UDP. To listen for TCP commands, in the
-RemoteControlServer.cs set use_udp to False
-    line 22
-        use_udp=False;
+RemoteControlServer.cs set use_udp to false
+    line 43
+        use_udp=false;
 
 To configure the communication port set m_port to an open port on your network
 (default is 1069).
-    line 23
+    line 38
         m_port=1069;
+        
+For MassSpec 7.868 GetData should return non tagged data string
+    line 44
+        tag_data=false;
+        
+For MassSpec 7.873 GetData should return a tagged data string
+    line 44
+        tag_data=true;
 
 For the remainder of this document we will assume you are using UDP to
 communicate. Otherwise substitute TCP for UDP.
