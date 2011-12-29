@@ -49,7 +49,7 @@ class ExplanableItem(HasTraits):
         '''
         if self.canvas is not None:
             self.canvas.toggle_item_identify(self.name)
-        
+
 
 class ExplanableTurbo(ExplanableItem):
     '''

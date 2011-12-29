@@ -68,22 +68,22 @@ import time
 
 
 def test(protocol, client):
-    
+
     print '=' * 80
     print 'Testing commands'
     print '=' * 80
-    print 
+    print
     for k, v in protocol.commands.iteritems():
-        
+
         cmd = '{} {}'.format(k, v) if v is not None else k
         resp = client.ask(cmd)
         time.sleep(0.25)
-        
+
     print
     print '=' * 80
     print 'Finished testing commands'
     print '=' * 80
-    
+
 def main(launch=False):
     if launch:
         #launch pychron
@@ -92,23 +92,23 @@ def main(launch=False):
         subprocess.Popen(['python', 'remote_hardware_server.py'])
         #use testclient to send commands
         time.sleep(25)
-        
+
     from src.remote_hardware.protocols.system_protocol import SystemProtocol
 
     from src.messaging.testclient import Client
     client = Client(port=1063)
-    
+
     test(SystemProtocol(), client)
-    
+
     client.port = 1068
     test(LaserProtocol(), client)
-    
+
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--launch', action='store_true')
-    
+
     args = parser.parse_args()
     main(launch=args.launch)
 

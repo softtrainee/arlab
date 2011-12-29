@@ -25,28 +25,28 @@ def calculate_mswd(x, errs):
     if len(x) >= 2:
         x = asarray(x)
         errs = asarray(errs)
-        
+
     #    xmean_u = x.mean()    
         xmean_w, _err = calculate_weighted_mean(x, errs)
-        
+
         ssw = (x - xmean_w) ** 2 / errs ** 2
     #    ssu = (x - xmean_u) ** 2 / errs ** 2
-        
+
         d = 1.0 / (len(x) - 1)
         mswd_w = d * ssw.sum()
     #    mswd_u = d * ssu.sum()
-    
+
     return mswd_w
 
 def calculate_weighted_mean(x, errs, error=0):
     x = asarray(x)
     errs = asarray(errs)
-    
+
     weights = asarray(map(lambda e: 1 / e ** 2, errs))
-        
+
     wtot = weights.sum()
     wmean = (weights * x).sum() / wtot
-    
+
     if error == 0:
         werr = wtot ** -0.5
     elif error == 1:
@@ -57,7 +57,7 @@ def calculate_arar_age(signals, ratios, ratio_errs, a37decayfactor, a39decayfact
     s40, s40er, s39, s39er, s38, s38er, s37, s37er, s36, s36er = signals
     p36cl38cl, k4039, k3839, ca3637, ca3937, ca3837 = ratios
     k4039er, ca3637er, ca3937er = ratio_errs
-    
+
     #convert to ufloats
     from uncertainties import ufloat
     from uncertainties.umath import log
@@ -71,7 +71,7 @@ def calculate_arar_age(signals, ratios, ratio_errs, a37decayfactor, a39decayfact
     ca3937 = ufloat((ca3937, ca3937er))
     j = ufloat((j, jer))
     d = ufloat((d, der))
-    
+
 #    #calculate the age
     ca37 = s37 * a37decayfactor
     s39 = s39 * a39decayfactor
@@ -91,26 +91,26 @@ def calculate_arar_age(signals, ratios, ratio_errs, a37decayfactor, a39decayfact
     mcl = m / (m * constants.atm3836 - 1)
     cl36 = mcl * (constants.atm3836 * (s36 - ca36) - s38 + k38 + ca38)
     atm36 = s36 - ca36 - cl36
-    
+
     atm40 = atm36 * constants.atm4036
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
     JR = j * ar40rad / k39
 #    age = (1 / constants.lambdak) * math.log(1 + JR)
     age = (1 / constants.lambdak) * log(1 + JR)
-    
+
     #===========================================================================
     # errors mass spec copy
     #===========================================================================
 
     square = lambda x: x * x
-    
+
     Tot40Er = s40er
     Tot39Er = s39er
     Tot38Er = s38er
     Tot37Er = s37er
     Tot36Er = s36er
-    
+
     D = d
     D2 = d * d
     D3 = d * D2
@@ -121,7 +121,7 @@ def calculate_arar_age(signals, ratios, ratio_errs, a37decayfactor, a39decayfact
     T38 = s39 / D2
     T37 = s39 / D
     T36 = s36
-    
+
     A4036 = constants.atm4036
     A3836 = constants.atm3836
 
@@ -131,17 +131,17 @@ def calculate_arar_age(signals, ratios, ratio_errs, a37decayfactor, a39decayfact
 #    P = mcl * (ca3837 * D * T37 + A3836 * (T36 - T) - D2 * T38 + k3839 * G)
     R = (-k4039 * G - A4036 * (T36 - T - mcl * (ca3837 * D * T37 + A3836 * (T36 - T) - D2 * T38 + k3839 * G)) + D4 * T40)
     G2 = G * G
-    
+
     er40 = square(D4 * j / G) * square(Tot40Er)
-    
+
     er39 = square((j * (-D3 * k4039 + A4036 * D3 * k3839 * mcl)) / G - (D3 * j * R) / G2) * square(Tot39Er)
 
     er38 = square(A4036 * D2 * j * mcl / G) * square(Tot38Er)
-    
-    er37 = square((j * (ca3937 * D * k4039 - A4036 * 
-            (-ca3637 * D - (-A3836 * ca3637 * D + ca3837 * D - ca3937 * D * k3839) * mcl))) 
+
+    er37 = square((j * (ca3937 * D * k4039 - A4036 *
+            (-ca3637 * D - (-A3836 * ca3637 * D + ca3837 * D - ca3937 * D * k3839) * mcl)))
             / G + (ca3937 * D * j * R) / G2) * square(Tot37Er)
-    
+
     er36 = square(A4036 * j * (1 - A3836 * mcl) / G) * square(Tot36Er)
     '''
     square((j * (4 * T40 * D3 - K4039 * (3 * D2 * T39 - Ca3937 * T37) 
@@ -153,21 +153,21 @@ def calculate_arar_age(signals, ratios, ratio_errs, a37decayfactor, a39decayfact
         - A4036 * (T36 - T - MCl * (-(T38 * D2) + Ca3837 * T37 * D + A3836 * (T36 - T) + K3839 * (D3 * T39 - s))))) 
         / square(D3 * T39 - s)) * square(DiscEr)
       '''
-    erD = square((j * (4 * T40 * D3 - k4039 * (3 * D2 * T39 - ca3937 * T37) 
-        - A4036 * (-(ca3637 * T37) - mcl * (-(A3836 * ca3637 * T37) 
-        + ca3837 * T37 + k3839 * (3 * D2 * T39 - ca3937 * T37) 
-        - 2 * D * T38)))) 
-        / (D3 * T39 - s) - (1 * j * (3 * D2 * T39 - ca3937 * T37) 
-        * (T40 * D4 - k4039 * (D3 * T39 - s) 
-        - A4036 * (T36 - T - mcl * (-(T38 * D2) + ca3837 * T37 * D + A3836 * (T36 - T) + k3839 * (D3 * T39 - s))))) 
+    erD = square((j * (4 * T40 * D3 - k4039 * (3 * D2 * T39 - ca3937 * T37)
+        - A4036 * (-(ca3637 * T37) - mcl * (-(A3836 * ca3637 * T37)
+        + ca3837 * T37 + k3839 * (3 * D2 * T39 - ca3937 * T37)
+        - 2 * D * T38))))
+        / (D3 * T39 - s) - (1 * j * (3 * D2 * T39 - ca3937 * T37)
+        * (T40 * D4 - k4039 * (D3 * T39 - s)
+        - A4036 * (T36 - T - mcl * (-(T38 * D2) + ca3837 * T37 * D + A3836 * (T36 - T) + k3839 * (D3 * T39 - s)))))
         / square(D3 * T39 - s)) * square(der)
 
     er4039 = square(j * (s - D3 * T39) / G) * square(k4039er)
-    
+
     er3937 = square((j * (D * k4039 * T37 - A4036 * D * k3839 * mcl * T37)) / G + (D * j * T37 * R) / G2) * square(ca3937er)
-    
+
     er3637 = square(-((A4036 * j * (-D * T37 + A3836 * D * mcl * T37)) / G)) * square(ca3637er)
-    
+
     erJ = square(R / G) * square(jer)
     JRer = (er40 + er39 + er38 + er37 + er36 + erD + er4039 + er3937 + er3637 + erJ) ** 0.5
     age_err = (1e-6 / constants.lambdak) * JRer / (1 + ar40rad / k39 * j)
@@ -228,7 +228,7 @@ def calculate_arar_age(signals, ratios, ratio_errs, a37decayfactor, a39decayfact
 #    erJ = (R / G) ** 2 * jer ** 2
 #    JRer = (er40 + er39 + er38 + er37 + er36 + erD + er4039 + er3937 + er3637 + erJ) ** 0.5
 #    age_err = (1e-6 / constants.lambdak) * JRer / (1 + ar40rad / k39 * j)
-    
+
     return age / 1e6, age_err
 #============= EOF =====================================
 
@@ -263,14 +263,14 @@ def find_plateaus(ages, errors, signals):
             start, end = ids
             plats.append(end - start)
             platids.append((start, end))
-    
+
 #    print plats, platids
     if plats:
         plats = asarray(plats)
         platids = asarray(platids)
-    
+
         return platids[argmax(plats)]
-        
+
 def _find_plateau(ages, errors, signals, start):
     plats = []
     platids = []
@@ -282,7 +282,7 @@ def _find_plateau(ages, errors, signals, start):
         plats = asarray(plats)
         platids = asarray(platids)
         return platids[argmax(plats)]
-        
+
 def check_plateau(ages, errors, signals, start, end):
     for i in range(start, min(len(ages), end + 1)):
         for j in range(start, min(len(ages), end + 1)):
@@ -291,16 +291,16 @@ def check_plateau(ages, errors, signals, start, end):
                 mswdbit = not check_mswd(ages, errors, start, end)
                 percent_releasedbit = not check_percent_released(signals, start, end)
                 n_steps_bit = (end - start) + 1 < 3
-                if (obit or 
-                    mswdbit or 
-                    percent_releasedbit or 
+                if (obit or
+                    mswdbit or
+                    percent_releasedbit or
                     n_steps_bit):
                     return False
 
     return True
 
 def check_percent_released(signals, start, end):
-    tot = sum(signals)    
+    tot = sum(signals)
     s = sum(signals[start:end + 1])
     return s / tot >= 0.5
 
@@ -319,7 +319,7 @@ def find_plateaus_r(ages, errors, start=0, end=1, plats=None, platids=None):
     if plats is None:
         plats = []
         platids = []
-        
+
     if start == len(ages) or end == len(ages):
         plats = asarray(plats)
         platids = asarray(platids)
@@ -329,7 +329,7 @@ def find_plateaus_r(ages, errors, start=0, end=1, plats=None, platids=None):
         if a:
             plats.append((end - start))
             platids.append((start, end))
-            
+
             return find_plateaus_r(ages, errors, start, end + 1, plats, platids)
         else:
             return find_plateaus_r(ages, errors, start + 1, end + 1, plats, platids)
@@ -353,15 +353,15 @@ def time_recursive():
 
 def time_non_recursive():
     find_plateaus(ages, errors)
-    
+
 if __name__ == '__main__':
     from timeit import Timer
     t = Timer('time_recursive', 'from __main__ import time_recursive')
-    
+
     n = 5
     tr = t.timeit(n)
     print 'time r', tr / 5
-    
+
     t = Timer('time_non_recursive', 'from __main__ import time_non_recursive')
     tr = t.timeit(n)
     print 'time nr', tr / 5

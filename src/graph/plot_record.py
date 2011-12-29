@@ -20,17 +20,17 @@ class PlotRecord(object):
         self.data = data
         self.plotids = plotids
         self.labels = labels
-        
+
     def as_data_tuple(self):
         try:
             return tuple(self.data)
         except TypeError:
             return (self.data,)
-        
+
     def __str__(self, *args, **kwargs):
         fmt_str = '{}={:0.3f}'
         s = []
         for a in zip(self.labels, self.data):
             s.append(fmt_str.format(*a))
-        
+
         return ', '.join(s)

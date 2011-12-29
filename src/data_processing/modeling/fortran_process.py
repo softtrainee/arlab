@@ -28,16 +28,16 @@ class FortranProcess(Thread):
         Thread.__init__(self)
         self.name = name
         self.root = root
-        delimiter=':'
+        delimiter = ':'
         if sys.platform is not 'darwin':
-            delimiter=';'
-            
+            delimiter = ';'
+
         ps = os.environ['PATH'].split(delimiter)
         if not root in ps:
-            os.environ['PATH'] += '{}{}'.format(delimiter,root)
-        
+            os.environ['PATH'] += '{}{}'.format(delimiter, root)
+
         self.queue = queue
-    
+
     def run(self):
         try:
             p = subprocess.Popen([self.name],
@@ -49,11 +49,11 @@ class FortranProcess(Thread):
             while p.poll() == None:
                 if self.queue:
                     self.queue.put(p.stdout.readline())
-        
+
         except OSError, e:
             #warning(None, '{} - {}'.format(e, self.name))
             print e
-        
+
     def get_remaining_stdout(self):
         if self._process:
             try:
@@ -64,7 +64,7 @@ class FortranProcess(Thread):
                 pass
                 #print 'get remaining stdout',e
         return []
-            
+
 if __name__ == '__main__':
     import Queue
     import time
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     while f.isAlive() or not q.empty():
         l = q.get().rstrip()
         #print l
-    
+
     #print f.get_remaining_stdout()
     print time.clock()
 #============= EOF =====================================

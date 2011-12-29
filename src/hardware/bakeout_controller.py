@@ -62,7 +62,7 @@ class BakeoutController(WatlowEZZone):
     active = Bool(False)
     cnt = 0
     ramp_scale = None
-    
+
     update_interval = Float(1)
     process_value_flag = Event
 
@@ -72,7 +72,7 @@ class BakeoutController(WatlowEZZone):
             they are not necessary for the bakeout manager currently
         '''
         pass
-    
+
 #    def _program_memory_block(self):
 #        '''
 #            see watlow ez zone pm communications rev b nov 07
@@ -107,7 +107,7 @@ class BakeoutController(WatlowEZZone):
 #        
 #        #now process value and heat power can be read with a single command
 #        #self.read(200, nregisters=4, response_type='float')
-        
+
     def _setpoint_changed(self):
         if self.isAlive():
             self.set_closed_loop_setpoint(self.setpoint)
@@ -151,7 +151,7 @@ class BakeoutController(WatlowEZZone):
                     if not os.path.basename(f).startswith('.') and
                         os.path.isfile(os.path.join(sd, f)) and os.path.splitext(f)[1] in ['.bo' ]]
         return True
-    
+
     def ok_to_run(self):
         ok = True
         if self.script == '---':
@@ -172,7 +172,7 @@ class BakeoutController(WatlowEZZone):
 
             self._oduration = self._duration
             self._timer = Timer(self.update_interval * 1000., self._update_)
-        
+
             #set led to green
             self.led.state = 'green'
 
@@ -190,7 +190,7 @@ class BakeoutController(WatlowEZZone):
         if scale is not None and scale != self.ramp_scale:
             self.ramp_scale = scale
             self.set_ramp_scale(scale)
-            
+
         self.set_ramp_action('setpoint')
         self.set_ramp_rate(ramp)
         self.set_closed_loop_setpoint(setpoint)
@@ -201,7 +201,7 @@ class BakeoutController(WatlowEZZone):
         '''
         scalemap = {'h':39,
                   'm':57}
-        
+
         if 'value' in scalemap:
             self.info('setting ramp scale = {}'.format(value))
             value = scalemap[value]
@@ -244,21 +244,21 @@ class BakeoutController(WatlowEZZone):
             self.led.state = 0
             if msg is None:
                 msg = 'bakeout finished'
-            
+
             func = self.info
             if user_kill:
                 msg = '{} - Canceled by user'.format(msg)
             elif error:
                 msg = error
                 func = self.warning
-                    
+
             self.kill()
-            
+
             func(msg)
             self.alive = False
 
             self.process_value = 0
-    
+
 #    def complex_query(self, **kw):
 #        if 'verbose' in kw and kw['verbose']:
 #            self.info('Do complex query')
@@ -288,7 +288,7 @@ class BakeoutController(WatlowEZZone):
     def get_temp_and_power(self, **kw):
         WatlowEZZone.get_temp_and_power(self, **kw)
         self.process_value_flag = True
-    
+
     def get_temperature(self, **kw):
         t = WatlowEZZone.get_temperature(self, **kw)
         self.process_value_flag = True
@@ -317,7 +317,7 @@ class BakeoutController(WatlowEZZone):
 #            self.process_value_flag = True
 #        except (ValueError, TypeError), e:
 #            print e
-            
+
 #        if t is not None and hp is not None:
 #            try:
 #                hp = float(hp)
@@ -331,7 +331,7 @@ class BakeoutController(WatlowEZZone):
 #                return t, hp
 #            except ValueError, TypeError:
 #                pass
-            
+
     def _update_(self):
         '''
         '''
@@ -345,7 +345,7 @@ class BakeoutController(WatlowEZZone):
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
         self.get_temp_and_power(verbose=False)
-        
+
         if time.time() - self.start_time > self._oduration * 3600.:
             self.end()
 

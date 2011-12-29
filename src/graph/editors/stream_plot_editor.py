@@ -28,13 +28,13 @@ class StreamPlotEditor(PlotEditor):
 #    
 #    track_y_min = DelegatesTo('graph')
 #    track_y_max = DelegatesTo('graph')
-    
+
     track_x_max = Property(Bool(True), depends_on='graph.track_x_max')
     track_x_min = Property(Bool(True), depends_on='graph.track_x_min')
     track_y_max = Property(Bool(True), depends_on='graph.track_y_max')
     track_y_min = Property(Bool(True), depends_on='graph.track_y_min')
-    
-    
+
+
     data_limit = Property(Float(enter_set=True, auto_set=False),
                           depends_on='_data_limit')
     _data_limit = Float
@@ -47,7 +47,7 @@ class StreamPlotEditor(PlotEditor):
         if self.graph:
             self._data_limit = self.graph.data_limits[self.id]
             self._build_series_editors()
-            
+
             self.plot.index_mapper.on_trait_change(self.update_x, 'updated')
             self.plot.value_mapper.on_trait_change(self.update_y, 'updated')
 
@@ -59,7 +59,7 @@ class StreamPlotEditor(PlotEditor):
         return self.graph.track_x_min
     def _set_track_x_min(self, v):
         self.graph.track_x_min = v
-    
+
     def _get_track_y_max(self):
         return self.graph.track_y_max[self.id]
     def _set_track_y_max(self, v):
@@ -86,27 +86,27 @@ class StreamPlotEditor(PlotEditor):
                 self._ymin = nn.low
             if self.track_y_max:
                 self._ymax = nn.high
-                    
-    def _track_x_min_changed(self):    
+
+    def _track_x_min_changed(self):
         if not self.track_x_min:
             self.graph.set_x_limits(min=self._xmin, plotid=self.id)
         else:
             self.graph.force_track_x_flag = True
-            
-    def _track_x_max_changed(self):    
+
+    def _track_x_max_changed(self):
         if not self.track_x_max:
             self.graph.set_x_limits(max=self._xmax, plotid=self.id)
         else:
             self.graph.force_track_x_flag = True
-            
-    def _track_y_min_changed(self):    
+
+    def _track_y_min_changed(self):
         if not self.track_y_min:
             self.graph.set_y_limits(min=self._ymin, plotid=self.id)
-    
-    def _track_y_max_changed(self):    
+
+    def _track_y_max_changed(self):
         if not self.track_y_max:
             self.graph.set_y_limits(max=self._ymax, plotid=self.id)
-    
+
     def get_axes_group(self):
         editor = TextEditor(enter_set=True,
                             auto_set=False)
@@ -129,7 +129,7 @@ class StreamPlotEditor(PlotEditor):
         self._data_limit = v
         self.graph.data_limits[self.id] = v
         self.graph.force_track_x_flag = True
-        
+
     def _validate_data_limit(self, v):
         try:
             return float(v)

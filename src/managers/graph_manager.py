@@ -35,39 +35,39 @@ KIND_VALUES = dict(
                    xy='XY',
                    deflection='Deflection',
                    step_heat='Step Heat',
-                   
+
                    )
 class GraphManager(Manager):
     path = File
     root = Directory
     kind = Str('deflection')
-    
-    
+
+
     extension_handlers = List
     def _test_fired(self):
         self.open_graph('degas', path='/Users/Ross/Pychrondata_beta/data/degas/scan001.txt')
 #        self.open_graph('inverse_isochron', path='/Users/Ross/Desktop/data.csv')
         #self.open_graph('age_spectrum', path='/Users/Ross/Desktop/test.csv')
-    
+
     def open_graph(self, kind, path=None):
-        get_pfunc = lambda c, k:getattr(c, '{}_parser'.format(k)) 
-        get_gfunc = lambda c, k:getattr(c, '{}_factory'.format(k)) 
+        get_pfunc = lambda c, k:getattr(c, '{}_parser'.format(k))
+        get_gfunc = lambda c, k:getattr(c, '{}_factory'.format(k))
         pfunc = None
         try:
             pfunc = get_pfunc(self, kind)
             gfunc = get_gfunc(self, kind)
         except AttributeError:
-            
+
             for eh in self.extension_handlers:
                 try:
                     pfunc = get_pfunc(eh, kind)
                     gfunc = get_gfunc(eh, kind)
                 except AttributeError:
-                    raise NotImplementedError('no parser or factory for {}'.format(kind)) 
+                    raise NotImplementedError('no parser or factory for {}'.format(kind))
             if not pfunc:
-                raise NotImplementedError('no parser or factory for {}'.format(kind)) 
-                
-        print pfunc, gfunc 
+                raise NotImplementedError('no parser or factory for {}'.format(kind))
+
+        print pfunc, gfunc
         if path is None:
             path = self.open_file_dialog(default_directory=data_dir)
 
@@ -92,7 +92,7 @@ class GraphManager(Manager):
 
         title = 'adfasf'
         return xs, ys, title
-    
+
     def peak_center_parser(self, path):
         data, title = self._default_xy_parser(path)
         xs = []
@@ -108,35 +108,35 @@ class GraphManager(Manager):
         if xs:
             minmaxdata = array((xs, ys))
         return data, minmaxdata, title
-    
+
     def degas_parser(self, path):
         f = open(path, 'r')
-        
+
         metadata = self.read_metadata(f)
-        data = loadtxt(f, delimiter=',', unpack=True)    
-        
+        data = loadtxt(f, delimiter=',', unpack=True)
+
         title = 'foo'
         f.close()
-        
-        return data, metadata, title 
-    
+
+        return data, metadata, title
+
     def read_metadata(self, fobj, delimiter=','):
         m = []
         for l in fobj:
             l = l.split(delimiter)
             if l[0].startswith('#') and '#=====' not in l[0]:
-                
+
                 try:
                     m.append((l[0][1:], int(l[1]), int(l[2])))
                 except ValueError:
                     #this it the header do really need it currently
                     pass
-                    
+
             if l[0].strip() == '#====================================':
                 break
-             
+
         return m
-    
+
     def deflection_parser(self, path):
         return self._default_xy_parser(path)
 
@@ -161,7 +161,7 @@ class GraphManager(Manager):
                                               )
 
         return tt_data, ra_data, title
-    
+
     def age_spectrum_parser(self, path):
         '''
             return 2 lists of tuples 
@@ -169,13 +169,13 @@ class GraphManager(Manager):
             y=[(age,error),...]
         '''
         ar39signals = [0.1, 3, 0.25, 0.1]
-        
+
         ages = [5, 4, 3, 2, 1]
         errors = [0.25, 0.25, 0.25, 0.25]
-        
+
         total39 = sum(ar39signals)
         x = []
-        
+
         start = 0
         end = 0
         nages = []
@@ -189,38 +189,38 @@ class GraphManager(Manager):
             nages.append(ai)
             nerrors.append(ei)
         return x, zip(nages, nerrors), 'foo'
-    
+
     def inverse_isochron_parser(self, path):
         '''
             inverse isochron
             39/40 vs 36/40
         '''
         rheader, data = self._get_csv_data(path)
-        
-        
+
+
         rheader = rheader.strip().split(',')
         ar40signals = array(data[rheader.index('Ar40_')])
-        ar40signals_er = array(data[rheader.index('Ar40_Er')])        
+        ar40signals_er = array(data[rheader.index('Ar40_Er')])
         ar39signals = array(data[rheader.index('Ar39_')])
-        ar39signals_er = array(data[rheader.index('Ar39_Er')])        
+        ar39signals_er = array(data[rheader.index('Ar39_Er')])
         ar36signals = array(data[rheader.index('Ar36_')])
         ar36signals_er = array(data[rheader.index('Ar36_Er')])
-        
-        
+
+
 #        ar39signals = array([3.3, 3.35, 3.2, 3.0])
 #        
 #        ar40signals = array([4.3, 4.35, 4.2, 4.0])
 #        ar36signals = ar40signals * array([1 / 300.1, 1 / 303.1, 1 / 299.1, 1 / 305.1])
 #        
-        
+
         v1 = ar40signals
         e1 = ar40signals_er
         v2 = ar39signals
         e2 = ar39signals_er
-        
+
         err = lambda v1, e1, v2, e2:(((e1 / v1) ** 2 + (e2 / v2) ** 2) ** 0.5) * (v2 / v1)
         xers = err(v1, e1, v2, e2)
-        
+
         v2 = ar36signals
         e2 = ar36signals_er
         yers = err(v1, e1, v2, e2)
@@ -231,7 +231,7 @@ class GraphManager(Manager):
     def inverse_isochron_factory(self, xs, ys, xers, yers, title):
         from src.graph.regression_graph import RegressionGraph
         g = RegressionGraph(show_regression_editor=False)
-        
+
         g.new_plot()
         _plot, scatter, _line = g.new_series(x=xs, y=ys, marker='pixel')
 
@@ -239,17 +239,17 @@ class GraphManager(Manager):
         scatter.overlays.append(ErrorEllipseOverlay())
         scatter.xerror = ArrayDataSource(xers)
         scatter.yerror = ArrayDataSource(yers)
-        
+
         g.set_x_limits(0.125, 0.15)
         g.set_y_limits(0, 0.0035)
         return g
-        
+
     def age_spectrum_factory(self, xs, ys, title):
         g = Graph()
         g.new_plot(xtitle='Cum. 39Ark',
                    ytitle='Age (Ma)',
                    title=title)
-        
+
         x = []
         for xi in xs:
             x.append(xi[0])
@@ -258,27 +258,27 @@ class GraphManager(Manager):
 
         g.new_series(x=x, y=y)
 #                     , render_style='connectedhold')
-        
+
         ox = x[:]
         x.reverse()
         xp = ox + x
-        
+
         yu = [yi[0] + yi[1] for yi in ys]
-        
+
         yl = [yi[0] - yi[1] for yi in ys]
         yl.reverse()
-        
+
         yp = yu + yl
         g.new_series(x=xp, y=yp, type='polygon',
                      color='orange',
                      )
-        
+
         lpad = 2
         upad = 2
 #        g.set_y_limits(0, 10)
         g.set_y_limits(min(y) - lpad, max(y) + upad)
         return g
-    
+
     def powerscan_factory(self, xs, ys, title):
         g = Graph()
         return g
@@ -324,9 +324,9 @@ class GraphManager(Manager):
                                series_kwargs={}
                                )
         return g
-    
+
     def degas_factory(self, data, metalist, title):
-        
+
         g = self.stream_stacked_factory(data=data, graph_kwargs=dict(window_title=title),
                                #plot_kwargs=None,
                                #series_kwargs=None
@@ -334,12 +334,12 @@ class GraphManager(Manager):
         curplot = 0
         g.new_plot()
         g.new_series(x=data[0], y=data[1])
-        
+
         mi = min(data[1])
         ma = max(data[1])
         g.set_y_limits(mi, ma, pad='0.1')
-        
-        
+
+
         for i, mi in enumerate(metalist):
             x = data[0]
             y = data[2 + i]
@@ -349,16 +349,16 @@ class GraphManager(Manager):
                 g.new_plot()
                 g.new_series(x=x, y=y)
                 curplot += 1
-            
+
             mi = min(y)
             ma = max(y)
-        
-            
+
+
             g.set_y_limits(mi, ma, pad='0.1', plotid=curplot)
         g.set_x_limits(min(data[0]), max(data[0]))
-    
+
         return g
-    
+
     def peak_center_factory(self, data, minmaxdata, title):
         '''
             the centering info should written as metadata instead of recalculating it
@@ -406,14 +406,14 @@ class GraphManager(Manager):
             #trim off header
             reader.next()
             return pmp.load_graph(reader)
-        
+
     def stream_stacked_factory(self, *args, **kw):
         from src.graph.stream_graph import StreamStackedGraph
         return self._graph_factory(StreamStackedGraph, *args, **kw)
-    
+
     def residuals_factory(self, *args, **kw):
         from src.graph.residuals_graph import ResidualsGraph
-    
+
         klass = ResidualsGraph
         g = self._graph_factory(klass, *args, **kw)
         return g

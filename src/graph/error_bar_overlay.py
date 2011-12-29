@@ -42,8 +42,8 @@ class ErrorBarOverlay(AbstractOverlay):
         gc.move_to(nx2, nye - 10)
         gc.line_to(nx2, nye + 10)
         gc.stroke_path()
-        
-        gc.save_state()     
+
+        gc.save_state()
         gc.move_to(nx1, nye)
         gc.line_to(nx2, nye)
         gc.stroke_path()

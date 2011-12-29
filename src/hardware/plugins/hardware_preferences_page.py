@@ -33,21 +33,21 @@ class HardwarePreferencesPage(PreferencesPage):
 
     auto_find_handle = Bool
     auto_write_handle = Bool
-    
+
     system_lock_name = String
     system_lock_address = String
     enable_system_lock = Bool
 
     system_lock_names = List
     system_lock_addresses = Dict
-    
+
     @on_trait_change('system_lock_name,enable_system_lock')
     def _update(self, obj, name, new):
         try:
             addr = self.system_lock_addresses[self.system_lock_name]
         except (TypeError, KeyError):
-            return 
-        
+            return
+
         self.system_lock_address = addr
 #        
 #    def __init__(self, *args, **kw):
@@ -80,8 +80,8 @@ class HardwarePreferencesPage(PreferencesPage):
 #        self.system_lock_address = self.system_lock_addresses[self.system_lock_name]
 #        
 #        super(HardwarePreferencesPage, self).__init__(*args, **kw)
-        
-        
+
+
     def traits_view(self):
         '''
         '''

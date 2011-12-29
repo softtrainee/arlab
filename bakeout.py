@@ -30,16 +30,13 @@ sys.path.append(src)
 from src.managers.bakeout_manager import launch_bakeout
 from src.helpers.logger_setup import setup
 
-
 if __name__ == '__main__':
     '''
        Launch a bakeout manager
     '''
-
 
     setup('bakeout', level='DEBUG')
     launch_bakeout()
     os._exit(0)
 
 #============= EOF ====================================
-

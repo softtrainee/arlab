@@ -24,14 +24,14 @@ from src.envisage.core.core_plugin import CorePlugin
 from src.managers.graph_manager import GraphManager
 from envisage.extension_point import ExtensionPoint
 class GraphPlugin(CorePlugin):
-    
+
     handlers = ExtensionPoint(List, id='pychron.graph.handlers')
     def _service_offers_default(self):
         so = self.service_offer_factory(protocol=GraphManager,
                                         factory=self._factory)
         return [so]
-    
+
     def _factory(self):
         return GraphManager(extension_handlers=self.handlers)
-    
+
 #============= EOF =============================================

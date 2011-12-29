@@ -53,6 +53,6 @@ class CSVDataManager(DataManager):
             else:
                 writer.writerow(datum)
 
-    
+
 
 #============= EOF ====================================

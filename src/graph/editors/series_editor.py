@@ -58,13 +58,13 @@ class SeriesEditor(HasTraits):
     #                    print dataid, i
                 p2.trait_set(**{name:new})
                 if name == 'color':
-                    p2.outline_color = new       
+                    p2.outline_color = new
             self.graph.update_group_attribute(obj, name, new, dataid=self.id / 2)
 
     def _show_changed(self, name, old, new):
         '''
         '''
-        
+
         self.graph.set_series_visiblity(new, plotid=self.plotid,
                                         series=self.id)
 
@@ -77,7 +77,7 @@ class SeriesEditor(HasTraits):
                             Item('series', style='custom', show_label=False)
                            )
                     )
-        
+
 class ContourPolyPlotEditor(SeriesEditor):
 #    series=Instance(ContourPolyPlot)
     series = Instance(Base2DPlot)
@@ -87,28 +87,28 @@ class ContourPolyPlotEditor(SeriesEditor):
     def __init__(self, *args, **kw):
         super(ContourPolyPlotEditor, self).__init__(*args, **kw)
         self.cmap_names = color_map_name_dict.keys()
-        
+
     @on_trait_change('cmap,reverse')
     def _update(self):
-        
+
         r = self.series.value.get_bounds()
         func = color_map_name_dict[self.cmap]
-        
+
         if self.reverse:
             func = reverse(func)
-            
+
         cm = func(DataRange1D(low_setting=0, high_setting=r[1]))
 
         for i, p in enumerate(self.graph.plots[self.plotid].plots.itervalues()):
             if i == 0:
                 continue
-            
+
             p = p[0]
             p.color_mapper = cm
             p.bgcolor = cm.color_bands[0]
 
         self.series.invalidate_and_redraw()
-        
+
     def traits_view(self):
         '''
         '''
@@ -117,11 +117,11 @@ class ContourPolyPlotEditor(SeriesEditor):
                       Item('reverse'),
                       Item('cmap', editor=EnumEditor(name='cmap_names')
                            ),
-                      
+
                       )
                 )
         return v
-    
+
 class PolygonPlotEditor(SeriesEditor):
     #series = Instance(BaseXYPlot)
 

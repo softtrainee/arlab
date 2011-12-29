@@ -47,7 +47,7 @@ class HardwarePlugin(CorePlugin):
     def _service_offers_default(self):
         '''
         '''
-        
+
         so = self.service_offer_factory(
                           protocol=HardwareManager,
                           factory=self._hardware_manager_factory)
@@ -64,13 +64,13 @@ class HardwarePlugin(CorePlugin):
 
     def _hardware_manager_factory(self):
         return HardwareManager(application=self.application)
-    
+
     def _remote_hardware_manager_factory(self):
         return RemoteHardwareManager(application=self.application)
 
 #    def _system_lock_manager_factory(self):
 #        return SystemLockManager(application=self.application)
-    
+
     def start(self):
         '''
         '''

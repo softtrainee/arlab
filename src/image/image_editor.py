@@ -197,4 +197,4 @@ class ImageEditor(BasicEditorFactory):
     '''
     '''
     klass = _ImageEditor
-    
+

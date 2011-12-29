@@ -49,32 +49,32 @@ def get_top_level_modules():
 def get_data_files():
     home = os.path.expanduser('~')
     dsthome = os.path.join(home, 'pychron_data_beta')
-    
+
     data = os.path.join(os.getcwd(), 'data')
     fss = []
     for root, _dirs, files in os.walk(data):
-        
+
         try:
             ri = root.split('data/')[1]
         except IndexError:
             continue
-        
+
         dst = os.path.join(dsthome, ri)
-        
+
         #filter out hidden files
         fs = [os.path.join('data', os.path.basename(root), f)
              for f in files
                 if not f.startswith('.')]
         if fs:
-            fss.append((dst, fs))    
-            
+            fss.append((dst, fs))
+
     return fss
 #python setup.py sdist adds everything under version control
 setup(
 
     packages=find_packages(),
     py_modules=get_top_level_modules(),
-    
+
     data_files=get_data_files(),
     #info
     author=AUTHOR,

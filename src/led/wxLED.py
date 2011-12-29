@@ -56,7 +56,7 @@ class wxLED(wx.Control):
         return self._state
     def SetValue(self, v):
         self._state = v
-        
+
     def OnTimer(self, event):
         '''
 
@@ -79,7 +79,7 @@ class wxLED(wx.Control):
         #use negative values for blinking
         if s < 0:
             self.blink = True
-        
+
         s = abs(s)
         self._state = s
         self._set_led_color(s)

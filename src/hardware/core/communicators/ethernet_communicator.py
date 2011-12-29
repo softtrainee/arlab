@@ -127,7 +127,7 @@ class EthernetCommunicator(Communicator):
             if verbose:
                 self.info('no handle    {}'.format(cmd))
             return
-        
+
         self._lock.acquire()
         re = 'ERROR: Connection refused {}:{}'.format(self.host, self.port)
         handler = self.get_handler()

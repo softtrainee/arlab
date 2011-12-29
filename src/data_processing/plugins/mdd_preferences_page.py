@@ -42,7 +42,7 @@ class MDDPreferencesPage(PreferencesPage):
                            show_border=True,
                            label='Arrhenius')
                  )
-                 
+
                  )
         return v
 #    def get_general_group(self):

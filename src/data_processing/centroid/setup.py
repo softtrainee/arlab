@@ -26,11 +26,8 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
 ext_modules = [Extension("centroid", ["centroid.pyx"],
-
-				        include_dirs=[numpy.get_include(),
-                         #pychron_dir
-                         ]
-				)]
+               include_dirs=[numpy.get_include()])
+               ]
 
 setup(
   name='centroid',

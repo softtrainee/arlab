@@ -197,7 +197,7 @@ class MotionProfiler(ConfigLoadable):
 #        cv = math.sqrt(2 / 3.0 * displacement / acdc_param)
 #        cv=math.sqrt(displacement/acdc_param*0.25)
 
-        cv=(displacement*ac/2.0)**0.5
+        cv = (displacement * ac / 2.0) ** 0.5
         times, _distances = self.calculate_transit_parameters(displacement, cv, ac, dc)
 
         if sum(times) > self.max_transit_time:
@@ -233,23 +233,23 @@ class MotionProfiler(ConfigLoadable):
             times, _distances = self.calculate_transit_parameters(displacement, cv, ac, dc)
 
             if _distances[2] < 0:
-                self.trapezoidal_err = True                
-                ac=displacement/(2*self.min_acceleration_time**2)
-                dc=ac
-                ncv=ac*self.min_acceleration_time
-                
+                self.trapezoidal_err = True
+                ac = displacement / (2 * self.min_acceleration_time ** 2)
+                dc = ac
+                ncv = ac * self.min_acceleration_time
+
                 self.debug('trapezoidal err. negative velocity displacement velocity= {} new velocity= {}'.format(cv, ncv))
-                cv=ncv
-                
+                cv = ncv
+
 #                cv = self.min_velocity
 #                ac = self.min_acceleration
 #                dc = self.min_acceleration
 #                
-                
-                
+
+
                 #ncv, ac, dc = self.find_min(displacement, cv, ac, dc)
 #            force = True
-            
+
 #            times, _distances = self.calculate_transit_parameters(displacement, cv, ac, dc)
         return cv, ac, dc#, force
 

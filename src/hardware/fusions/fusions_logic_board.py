@@ -222,7 +222,7 @@ class FusionsLogicBoard(CoreDevice):
         '''
         cmd = self._build_command('ENBL 0')
         if cmd is not None:
-            
+
             resp = self._parse_response(self.ask(cmd))
 #            resp = self._parse_response(self.ask(cmd, delay=100))
 

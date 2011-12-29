@@ -37,21 +37,21 @@ class MinorTicksOverlay(AbstractOverlay):
             if self.aux_component is not None:
                 component = self.aux_component
                 print 'axu', component
-                
-                
+
+
             if self.orientation == 'v':
                 r = c.index_range
                 nt = len(component.x_axis.ticklabel_cache)
             else:
                 r = c.value_range
                 nt = len(component.y_axis.ticklabel_cache)
-                
+
             s = r.low
             e = r.high
 
             ts = auto_ticks(s, e, s, e, (nt + 2) * -self.interval, use_endpoints=self.use_endpoints)
             for ti in ts:
-            
+
                 if self.orientation == 'v':
                     ti = round(c.map_screen([[ti, 0]])[0][0])
                     if self.placement == 'normal':
@@ -67,16 +67,16 @@ class MinorTicksOverlay(AbstractOverlay):
                         x = component.x
                     else:
                         x = component.x2
-                        
+
                     args1 = x - self.tick_out, ti
                     args2 = x + self.tick_in, ti
-            
+
                 gc.move_to(*args1)
                 gc.line_to(*args2)
-                
-            
+
+
             gc.stroke_path()
-            
+
         except Exception, e:
             print e
         finally:

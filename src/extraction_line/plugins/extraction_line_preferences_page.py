@@ -31,10 +31,10 @@ def get_valve_group_names():
             if l.startswith('#'):
                 continue
             name = l.strip()
-            
+
             name = '{}_owner'.format(name)
             g.append(name)
-            
+
     return g
 
 class ExtractionLinePreferencesPage(ManagerPreferencesPage):
@@ -50,18 +50,18 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
     open_on_startup = Bool
     enable_close_after = Bool
     close_after = Range(0, 60, 60)
-    
+
     query_valve_state = Bool(True)
-    
+
     owners = List
     groups = List
-    
+
     def _groups_default(self):
         g = get_valve_group_names()
         for gi in g:
             self.add_trait(gi, Str(''))
         return g
-    
+
     def _owners_default(self):
         o = ['']
         config = ConfigParser()
@@ -69,13 +69,13 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
         for s in config.sections():
             o.append(config.get(s, 'name'))
         return o
-    
+
 #============= views ===================================
-    def get_general_group(self): 
+    def get_general_group(self):
         valve_grp_grp = VGroup()
         for gi in self.groups:
             valve_grp_grp.content.append(Item(gi, editor=EnumEditor(name='owners')))
-       
+
         return Group(Item('open_on_startup'),
                      HGroup(
                             Item('close_after', enabled_when='enable_close_after'),
@@ -84,7 +84,7 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
                      Item('query_valve_state'),
                     valve_grp_grp
                     )
-        
+
     def get_additional_groups(self):
         canvas_group = VGroup(
                               Item('style', show_label=False),

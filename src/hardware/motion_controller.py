@@ -133,14 +133,14 @@ class MotionController(CoreDevice):
             v = float(v)
             if not min <= v <= max:
                 v = None
-                
+
             if v is not None:
                 if abs(v - cur) <= 0.001:
                 	v = None
         except ValueError, e:
             #print e
             v = None
-		
+
 #        print 'validate', min, max, v
         return v
 
@@ -168,8 +168,8 @@ class MotionController(CoreDevice):
     def set_z(self, v, **kw):
         self.single_axis_move('z', v, **kw)
         self._z_position = v
-        
-        
+
+
     def _set_z(self, v):
         '''
         '''

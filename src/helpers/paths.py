@@ -99,16 +99,16 @@ def build_initialization_file(root):
         DEFAULT_DATA_PLUGINS = ['Graph', 'MDDModeler']
         DEFAULT_SOCIAL_PLUGINS = ['Twitter', 'Email']
 
-        DEFAULT_PLUGINS = (DEFAULT_GENERAL_PLUGINS + 
-                            DEFAULT_HARDWARE_PLUGINS + 
-                            DEFAULT_DATA_PLUGINS + 
+        DEFAULT_PLUGINS = (DEFAULT_GENERAL_PLUGINS +
+                            DEFAULT_HARDWARE_PLUGINS +
+                            DEFAULT_DATA_PLUGINS +
                             DEFAULT_SOCIAL_PLUGINS
                             )
-                            
+
         DEFAULT_PLUGINS.sort()
         plugins = parser.get_plugins(all=True)
         plugins.sort()
-        
+
         #add any default plugin not defined already
         uptodate = DEFAULT_PLUGINS == plugins
         if not uptodate:

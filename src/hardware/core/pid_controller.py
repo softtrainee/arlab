@@ -12,8 +12,8 @@ import math
 SETPOINT = 10
 DELAY = 250
 
-    
-    
+
+
 class PIDController(HasTraits):
     graph = Instance(Graph)
     setpoint = Float(SETPOINT)
@@ -29,16 +29,16 @@ class PIDController(HasTraits):
     def traits_view(self):
         v = View(Item('graph', show_label=False, style='custom'))
         return v
-    
-    
+
+
     def get_output(self, inp):
         v = 0
         dt = time.clock() - self._prev_time
         err = self.setpoint - v
         self._input = v
         return self._iteration(err, self.Kp, self.Ki, self.Kd, dt)
-        
-        
+
+
     def _iteration(self, error, Kp, Ki, Kd, dt):
 
         self._integral_err += (error * dt)
@@ -46,13 +46,13 @@ class PIDController(HasTraits):
         output = (Kp * error) + (Ki * self._integral_err) + (Kd * derivative)
         self._prev_err = error
         self._output = output
-        
+
         self.dev.setpoint = output
         return output
-    
+
     def __prev_err_changed(self):
         self.graph.record_multiple((self._prev_err, self._output, self._input))
-        
+
     def _graph_default(self):
         g = StreamGraph()
         g.new_plot(padding=20, data_limit=60,
@@ -62,7 +62,7 @@ class PIDController(HasTraits):
         g.new_series()
         g.new_series()
         return g
-    
+
 class Demo(HasTraits):
     test = Button
     pidcontroller = Instance(PIDController, ())
@@ -82,10 +82,10 @@ class Demo(HasTraits):
             self.timer = None
     def ontimer(self):
         self.pidcontroller.get_output(None)
-        
-        
+
+
 if __name__ == '__main__':
     d = Demo()
-    
+
     d.configure_traits()
 #============= EOF =====================================

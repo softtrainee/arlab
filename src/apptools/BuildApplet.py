@@ -74,7 +74,8 @@ def buildapplet():
             tf = tf + '.applet'
         dstfilename = EasyDialogs.AskFileForSave(message='Save application as:',
                 savedFileName=tf)
-        if not dstfilename: return
+        if not dstfilename:
+            return
         cr, tp = MacOS.GetCreatorAndType(filename)
         if tp == 'APPL':
             buildtools.update(template, filename, dstfilename)

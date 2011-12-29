@@ -37,7 +37,7 @@ class Pychron(WorkbenchApplication):
         return about_dialog
 
     def _splash_screen_default(self):
-        
+
         p = os.path.join(
                          pychron_src_dir,
                        'resources'

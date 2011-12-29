@@ -66,7 +66,7 @@ class RegressionGraph(Graph):
             self.selected = self.regression_editors[self.selected_plotid]
         except IndexError:
             pass
-        
+
     def __init__(self, *args, **kw):
         '''
         '''
@@ -87,7 +87,7 @@ class RegressionGraph(Graph):
         t = time.time()
         if self.last_regress_time is None:
             self.last_regress_time = t
-        
+
         elif (t < self.last_regress_time or
                 abs(t - self.last_regress_time) < 0.75):
             return

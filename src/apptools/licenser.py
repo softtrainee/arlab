@@ -58,12 +58,12 @@ def render_red(msg):
     print render('%(RED)s{}%(NORMAL)s'.format(msg))
 def render_blue(msg):
     print render('%(BLUE)s{}%(NORMAL)s'.format(msg))
-    
+
 def get_license(year, author):
     return "'''{}'''\n".format(APACHE.format(year, author))
-    
-def run(p, year, author, remove=False): 
-    
+
+def run(p, year, author, remove=False):
+
     if not os.path.exists(p) or (not os.path.isfile(p) and not os.path.isdir(p)):
         render_red('Invalid path {}'.format(p))
         return
@@ -72,39 +72,39 @@ def run(p, year, author, remove=False):
 
     if os.path.isdir(p):
         for root, dirnames, files in os.walk(p):
-            dirnames[:] = [d for d in dirnames if not d.startswith('.')] 
+            dirnames[:] = [d for d in dirnames if not d.startswith('.')]
             for f in files:
                 if f.startswith('.') or not f.endswith('.py'):
                     continue
-                
+
                 p = os.path.join(root, f)
                 if remove:
                     func = remove_license
                 else:
                     func = add_license
-                    
+
                 func(p, license)
-            
+
     elif os.path.isfile(p):
             add_license(p, license)
-    
+
 def remove_license(p, license):
     with open(p, 'r') as f:
         lines = ''.join([l for l in f])
-    
+
     if license in lines:
         print 'remove license from {}'.format(p)
         lines = lines.replace(license, '')
-        
+
     with open(p, 'w') as f:
         f.write(lines)
-    
+
 def add_license(p, license):
     with open(p, 'r') as f:
         lines = [l for l in f]
-        
+
     with open(p, 'w') as f:
-        
+
         #if the first 2 chars of the first line are a shebang
         #setting an interperter directive
         #skip
@@ -112,7 +112,7 @@ def add_license(p, license):
             if lines[0][:2] == '#!':
                 f.write(lines[0])
                 lines = lines[1:]
-        
+
         #if already has this license clause dont add to file
         txt = ''.join(lines)
         render_red('checking {}'.format(p))
@@ -123,7 +123,7 @@ def add_license(p, license):
             else:
                 print 'adding license to {}'.format(p)
                 f.write(license)
-                
+
         f.write(txt)
 
 if __name__ == '__main__':
@@ -132,10 +132,10 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--author', default='Jake Ross', help='copyright holder')
     parser.add_argument('-y', '--year', default=datetime.datetime.now().year, help='copyright year')
     parser.add_argument('-r', '--remove', action='store_true', help='remove license from file or directory tree')
-    
+
     args = parser.parse_args()
-    
-    
-    
+
+
+
     run(args.path, args.year, args.author, remove=args.remove)
 #============= EOF =====================================

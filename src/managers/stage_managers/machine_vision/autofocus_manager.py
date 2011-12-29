@@ -70,7 +70,7 @@ class AutofocusManager(Manager):
     
     video = Any
     manager = Any
-    controller=Any
+    controller = Any
     parameters = Instance(FocusParameters)
     configure_button = Button('configure')
     
@@ -85,7 +85,7 @@ class AutofocusManager(Manager):
         with open(p, 'wb') as f:
             pickle.dump(self.parameters, f)
     def load_source(self):
-        src=self.video._frame
+        src = self.video._frame
         if src:
             self.image.load(src)
     
@@ -162,7 +162,7 @@ class AutofocusManager(Manager):
         if args:
             nominal_focus1, fs1, gs1, sgs1 = args
             
-        fstart = nominal_focus1 -self.parameters.negative_window
+        fstart = nominal_focus1 - self.parameters.negative_window
         fend = nominal_focus1 + self.parameters.positive_window
 
         args = self._passive_focus(manager, operator='sobel',
@@ -217,7 +217,7 @@ class AutofocusManager(Manager):
 #        controller = None
 #        if manager is not None:
 #            controller = manager.stage_manager.stage_controller
-        controller=self.controller
+        controller = self.controller
         
         steps = step_scalar * (max(fend, fstart) - min(fend, fstart)) + 1
         prev_zoom = 0
@@ -261,7 +261,7 @@ class AutofocusManager(Manager):
                 if controller is not None:
                     controller.set_z(fi, block=True)
                 
-                s=self.load_source()
+                s = self.load_source()
                 grads.append(self._calculate_focus_measure(operator, roi, src=s))
                 
             sgrads = smooth(grads)

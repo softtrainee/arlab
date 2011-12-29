@@ -32,26 +32,26 @@ class MarkupContainer(collections.MutableMapping):
                 
         '''
         self.layers = [dict(), dict()]
-    
+
 #    def add_layer(self):
 #        self.layers.append(dict())
 #        
 #    def add_item(self, item, key, layer=0):
 #        l = self.layers[layer]
 #        l.update(key, item)
-    
+
     def __iter__(self):
-        return (k for l in self.layers for k in l) 
-        
+        return (k for l in self.layers for k in l)
+
     def __contains__(self, v):
         return True in [v in l for l in self.layers]
-    
+
     def __getitem__(self, k):
         for l in self.layers:
             item = next((v for key, v in l.iteritems() if key == k), None)
             if item is not None:
                 return item
-     
+
     def __setitem__(self, k, v):
         if isinstance(k, tuple):
             li = k[1]
@@ -64,18 +64,18 @@ class MarkupContainer(collections.MutableMapping):
         except IndexError:
             self.layers.append(dict())
             l = self.layers[-1]
-        
-        
+
+
         if len(l) > 100:
             k = l.keys()
             k.sort()
             l.pop(k[0])
-            
+
         l[key] = v
-            
+
     def __len__(self):
         return sum([len(l) for l in self.layers])
-    
+
     def __delitem__(self, k):
         if isinstance(k, tuple):
             li = k[1]
@@ -85,7 +85,7 @@ class MarkupContainer(collections.MutableMapping):
             key = k
         l = self.layers[li]
         del l[key]
-        
+
 class MarkupCanvas(BaseDataCanvas):
     '''
     '''
@@ -103,7 +103,7 @@ class MarkupCanvas(BaseDataCanvas):
     def __init__(self, *args, **kw):
         super(MarkupCanvas, self).__init__(*args, **kw)
         self.markupcontainer = MarkupContainer()
-    
+
     def get_item(self, base, key):
         key = '{}{}'.format(base, key)
         return next((v for k, v in self.markupcontainer.iteritems() if k == key), None)
@@ -136,7 +136,7 @@ class MarkupCanvas(BaseDataCanvas):
         a = self._over_mark_up_line(event)
 
         o = self._over_item(event)
-        
+
         self.current_pos = (event.x, event.y)
         if a is not None or o is not None:
             if self.tool_state not in ['line', 'mline', 'rect']:
@@ -160,7 +160,7 @@ class MarkupCanvas(BaseDataCanvas):
             self.selected_element.set_state(False)
         except AttributeError:
             pass
-        
+
 
 #        self.selected_point = None
 #        self.selected_element = None
@@ -173,7 +173,7 @@ class MarkupCanvas(BaseDataCanvas):
         elif self.tool_state == 'rect':
             self.event_state = 'rdraw'
             event.window.set_pointer(self.cross_pointer)
-        
+
         else:
             item = self._over_item(event)
             if item:
@@ -184,10 +184,10 @@ class MarkupCanvas(BaseDataCanvas):
                 event.item = item
             elif self.selected_element is not None:
                 self.selected_element = None
-                self.selected_point = None                
+                self.selected_point = None
             else:
                 l = self._over_mark_up_line(event)
-                
+
                 if not l == None:
                     event.handled = True
                     e = self.markupcontainer[l]
@@ -237,11 +237,11 @@ class MarkupCanvas(BaseDataCanvas):
     def normal_key_pressed(self, event):
         '''
         '''
-        
+
         if event.character == 'Backspace' and self.selected_element is not None:
             self.markupcontainer.pop(self.selected_element.mid)
             self.selected_element = None
-            
+
         self.key_set_tool_state(event)
 
 
@@ -489,7 +489,7 @@ class MarkupCanvas(BaseDataCanvas):
         elif c == 'c':
             window.set_pointer(self.cross_pointer)
             self.tool_state = 'rect'
-        
+
 
 
 
@@ -543,12 +543,12 @@ class MarkupCanvas(BaseDataCanvas):
     
         '''
         gc.save_state()
-        
+
         for l in self.markupcontainer.layers:
             for obj in l.itervalues():
                 if hasattr(obj, 'render'):
                     obj.render(gc)
-        
+
 #        for obj in self.markupcontainer.itervalues():
 #            if hasattr(obj, 'render'):
 #                '''

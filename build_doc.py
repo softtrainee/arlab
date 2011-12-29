@@ -58,12 +58,13 @@ limitations under the License.
 #    print dst, os.path.join(dst, 'epyconf.cfg')
 #    print os.path.isfile(os.path.join(dst, 'epyconf.cfg'))
 #    import subprocess
-#    subprocess.call(['epydoc', '-v', '--config', os.path.join(dst, 'epyconf.cfg')])
+#    subprocess.call(['epydoc', '-v',
+#     '--config', os.path.join(dst, 'epyconf.cfg')])
 #
 #def process_source_code(dst):
 #    '''
 #        walk the proxy source tree and process the python source files
-#        
+#
 #        1. add boiler plate docstrings to the init.py files
 #        2. add boiler plate docstrings to the source files
 #        3. add boiler plate docstrings to the classes
@@ -72,7 +73,8 @@ limitations under the License.
 #        what should be done for files with doc strings already?
 #        going to ignore unit if it has a doc string
 #        
-#        in the future we can grab the doc string (__doc__) and append it with new info
+#        in the future we can grab the doc string (__doc__) 
+#            and append it with new info
 #        
 #    
 #    '''

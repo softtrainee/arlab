@@ -56,9 +56,9 @@ class Actuator(AbstractDevice):
                 except ImportError, e:
                     self.warning(e)
                     return False
-                
+
                 factory = getattr(module, klass)
-                
+
                 self._cdevice = factory(name=klass,
                                       configuration_dir_name=self.configuration_dir_name)
 #                gdict = globals()

@@ -288,7 +288,7 @@ class Sector(MultiStateObject3D):
         super(Sector, self).render()
 
         glPushMatrix()
-        
+
         glScalef(3, 5, 5)
         self._set_material()
         self._cube_()
@@ -322,9 +322,9 @@ class Shaft(MultiStateObject3D):
 
             if i == lim:
                 self._can_(0.66, 0.5)
-                
+
             self._cylinder_(0.5, 0.5)
-            
+
             glPopMatrix()
 #        if self.state and animate:
 #            if ac % 20 == 0 and self.prev_ac != ac:
@@ -366,7 +366,7 @@ class Bone(MultiStateObject3D):
         super(Bone, self).render()
 
         glPushAttrib(GL_CURRENT_BIT)
-        
+
         glPushMatrix()
         self._set_material()
         #glTranslatef(0, 0, 0)
@@ -452,7 +452,7 @@ class TextPanel(Object2D):
 #        self._rect2D_(0, 0, 33, h)
 #
 #        self.end_render()
-        
+
 class Valve(SetStateObject3D):
     '''
     '''
@@ -568,7 +568,7 @@ class Valve(SetStateObject3D):
 
             #required so canvas shows valve state changes
             self.refresh()
-            
+
     def _draw_soft_locked_identifier(self):
         '''
         '''

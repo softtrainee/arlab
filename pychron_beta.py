@@ -139,7 +139,7 @@ class VersionInfoDisplay(HasTraits):
             if mismatch:
                 if local_info is not None:
                     self.local_version = local_info.version
-            elif local_info is None:    
+            elif local_info is None:
                 do_later(self.edit_traits, kind='modal')
 
 def main():

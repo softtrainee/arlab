@@ -48,49 +48,49 @@ class ArduinoGPActuator(GPActuator):
     
     communicator must be implement FirmataCommunicator protocol
     '''
-    
+
     def _build_command(self, cmd, value):
         delimiter = ','
         eol = ';'
         return '{}{}{}{}'.format(cmd, delimiter, value, eol)
-    
+
     def open_channel(self, obj):
         pin = obj.address
 
         self.ask(self._build_command(4, pin))
         return self._check_actuation(obj, True)
-    
+
     def close_channel(self, obj):
         pin = obj.address
         self.ask(self._build_command(5, pin))
         return self._check_actuation(obj, False)
-        
+
     def get_channel_state(self, obj):
         indicator_open_pin = obj.address + 1
         indicator_close_pin = obj.address + 2
-        
+
         opened = self.ask(self._build_command(6, indicator_open_pin))
         closed = self.ask(self._build_command(7, indicator_close_pin))
-        
+
         opened = int(opened)
-        
+
         if closed + opened == 1:
             return opened == 1
         else:
             return 'Error Ic({}) {} does not agree with Io({}) {}'.format(indicator_close_pin, closed,
                                                                           indicator_open_pin, opened)
-    
+
     def _check_actuation(self, obj, request):
         if request:
             #open pin
             pin = obj.address + 2
         else:
             pin = obj.address + 1
-        
+
         if self._communicator.digital_read(pin):
             return True
-        
-        
+
+
 #============= EOF ====================================
 
 #    def get_channel_state(self, obj):

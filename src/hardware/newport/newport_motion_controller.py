@@ -64,7 +64,7 @@ class NewportMotionController(MotionController):
 
 
         return r
-    
+
     def axes_factory(self, config=None):
         if config is None:
 
@@ -94,7 +94,7 @@ class NewportMotionController(MotionController):
                                   )
 
             self.axes[a] = na
-            
+
     def load_additional_args(self, config):
         '''
         '''
@@ -205,7 +205,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         v = self.ask('1TP?;2TP?', verbose=False)
         if v is None:
             return 0, 0
-        
+
         return map(float, v.split('\n'))
 
     def get_current_position(self, aid):
@@ -410,7 +410,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             else:
                 self._z_position = value
                 self.z_progress = value
-            
+
         self._axis_move(cmd, block=block)
 
     def multiple_axis_move(self, axes_list, block=False):
@@ -691,15 +691,15 @@ ABLE TO USE THE HARDWARE JOYSTICK
             while av is not None and abs(abs(av) - desired_velocity) > tol:
                 av = self.read_actual_velocity(axkey)
                 time.sleep(0.01)
-    
+
             event.clear()
             desired_velocity = 0
             while av is not None and abs(abs(av) - desired_velocity) > tol:
                 av = self.read_actual_velocity(axkey)
                 time.sleep(0.01)
-    
+
         event.set()
-            
+
     def read_actual_velocity(self, axkey):
         ax = self.axes[axkey]
 #        self._build_command('TV', xx = ax.id, nn = '?')
@@ -738,14 +738,14 @@ ABLE TO USE THE HARDWARE JOYSTICK
                   acceleration='AC',
                   deceleration='AG')
 
-        
+
         if pdict:
             axis = self.axes[pdict['key']]
             cmds = []
             for k in pdict.keys():
                 if k is not 'key':
                     cmds.append('{}{}{}'.format(axis.id, pmap[k], pdict[k]))
-                    
+
             cmd = ';'.join(cmds)
         else:
             param_coms = [('VA', 'velocity'),
@@ -760,7 +760,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         #ex cmd
         #1VA1.00;1AC2.00;1AG2.00
             cmd = cmd.format(**pdict)
-            
+
         if self.group_commands:
             self.tell(cmd)
         else:
@@ -858,7 +858,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if axis is not None:
             if isinstance(axis, str):
                 axis = self.axes[axis].id
-            
+
             if self.mode == 'grouped':
                 return self.group_moving()
             else:

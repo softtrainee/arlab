@@ -52,7 +52,7 @@ class VueMetrixManager(Manager):
             obj = self.control
             return getattr(obj, attr)
         else:
-            raise AttributeError, attr
+            raise AttributeError(attr)
 
 #    def start_scan(self):
 #        self.control.start_scan()

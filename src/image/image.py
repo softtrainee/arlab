@@ -40,7 +40,7 @@ class Image(HasTraits):
     height = Int
     _bitmap = None
     _frame = None
-    
+
 #    def load(self, img, swap_rb=True):
     def load(self, img):
         if isinstance(img, str):
@@ -48,7 +48,7 @@ class Image(HasTraits):
 
 #        if swap_rb:
 #            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
-        
+
         self.source_frame = img
         self.frames = [clone(img)]
 
@@ -62,12 +62,12 @@ class Image(HasTraits):
 
     def get_frame(self, flip=False, mirror=False, gray=False, swap_rb=True, clone=False):
 
-        
+
         rframe = self._get_frame()
         if rframe is not None:
 
-            
-                
+
+
             if swap_rb:
                 cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
 
@@ -77,19 +77,19 @@ class Image(HasTraits):
             cvResize(rframe, frame)
             if clone:
                 frame = cvCloneImage(frame)
-            
+
             if flip and mirror:
                 cvFlip(frame, flip_mode=2)
             elif mirror:
                 cvFlip(frame, flip_mode=1)
             elif flip:
                 cvFlip(frame)
-            
+
             if gray:
                 frame = grayspace(frame)
-                
-            return frame    
-    
+
+            return frame
+
     def get_bitmap(self, **kw):#flip = False, swap_rb = False, mirror = True):
         '''
 
@@ -97,7 +97,7 @@ class Image(HasTraits):
 #        kw = dict()
 #        if swap_rb:
 #            kw['flag'] = CV_CVTIMG_SWAP_RB
-    
+
         frame = self.get_frame(**kw)
 
         if frame is not None:
@@ -124,8 +124,8 @@ class Image(HasTraits):
 ##
 #            return self._bitmap
 
-    
-        
+
+
 
 
 #    def _source_frame_changed(self):

@@ -337,10 +337,10 @@ class SerialCommunicator(Communicator):
                 
                 ready_to_read,ready_to_write,in_err=select.select([self.handle])
                 '''
-                
+
                 start_time = time.time()
                 inw = 0
-                
+
                 prev_inw = None
                 cnt = 0
                 while (time.time() - start_time) < time_out:
@@ -348,13 +348,13 @@ class SerialCommunicator(Communicator):
                     #print prev_inw, inw, cnt
                     if prev_inw != inw:
                         cnt = 0
-                        
+
                     if inw != 0 and inw == prev_inw:
                         if cnt > 500:
                             break
                         cnt += 1
-                    
-                    
+
+
                     prev_inw = inw
                     time.sleep(1e-5)
 #                # do one more get_chars to make sure we got it all
@@ -364,8 +364,8 @@ class SerialCommunicator(Communicator):
                     time.sleep(1e-5)
                     if inw == prev_inw:
                         break
-            
-            
+
+
             if inw > 0:
                 try:
                     r = self.handle.read(inw)

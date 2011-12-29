@@ -20,16 +20,16 @@ from chaco.base_contour_plot import BaseContourPlot
 class DiffusionPlotEditor(PlotEditor):
     _series_editors = List
     def _build_series_editors(self):
-        self.series_editors = []        
-            
+        self.series_editors = []
+
         plots = self._get_plots()
-        
+
         #if plots really long means its an unconstrained thermal hist
         # and we dont want to display series editors
         if plots and len(plots) < 100:
             super(DiffusionPlotEditor, self)._build_series_editors(self._series_editors)
             for i, rid in enumerate(self.graph.runids):
-                
+
                 #hack because polygon plot needs special editor
                 isspectrum = False
                 self.iscoolinghistory = False
@@ -40,9 +40,9 @@ class DiffusionPlotEditor(PlotEditor):
                     elif not isinstance(plot, ContourPolyPlot):
                         isspectrum = True
                         i += 1
-                    
+
                     plot = plots['plot{}'.format(i)][0]
-                    
+
 #                elif isinstance(plot, CMapImagePlot):
                 elif isinstance(plot, BaseContourPlot):
                     self.isunconstrained_thermal_history = True
@@ -50,10 +50,10 @@ class DiffusionPlotEditor(PlotEditor):
 #                    plot=plots['plot{}'.format(i)][0]
 
                 kwargs = self._get_series_editor_kwargs(plot, i)
-                kwargs['runid'] = rid    
+                kwargs['runid'] = rid
                 kwargs['isspectrum'] = isspectrum
                 kwargs['iscoolinghistory'] = self.iscoolinghistory
-                
+
                 editor = None
                 if self.iscoolinghistory:
                     editor = PolyDiffusionSeriesEditor
@@ -61,13 +61,13 @@ class DiffusionPlotEditor(PlotEditor):
 #                    editor = ContourPolyPlotEditor
                 elif isinstance(plot, BaseXYPlot):
                     editor = DiffusionSeriesEditor
-                
+
                 if editor:
                     self.series_editors.append(editor(**kwargs))
 
-                
+
         self._sync_limits(plots['plot0'][0])
-            
+
     def _get_additional_groups(self):
         cols = [ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show')]
@@ -78,7 +78,7 @@ class DiffusionPlotEditor(PlotEditor):
                  editor=table_editor,
                  style='custom',
                  show_label=False
-                 
+
                  )
         return grp
 #            super(DiffusionPlotEditor,self)._build_series_editors(editors=self._series_editors)
@@ -110,5 +110,5 @@ class DiffusionPlotEditor(PlotEditor):
                 CheckboxColumn(name='show_sample', label='Sample'),
                 CheckboxColumn(name='show_model', label='Model'),
                 ]
-        
+
 #============= EOF =====================================

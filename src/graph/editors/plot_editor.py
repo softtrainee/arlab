@@ -93,7 +93,7 @@ class PlotEditor(HasTraits):
     def __selected_changed(self, old, new):
         if new is None:
             self._prev_selected = old
-    
+
     def _get_plots(self):
         if self.plot:
             pplot = self.plot
@@ -103,7 +103,7 @@ class PlotEditor(HasTraits):
             pplot = self.graph.plots[self.id]
         plots = pplot.plots
         return plots
-    
+
     def _get_series_editor_kwargs(self, plot, sid):
         kwargs = dict(series=plot,
                              graph=self.graph,
@@ -115,24 +115,24 @@ class PlotEditor(HasTraits):
 #            kwargs['series']=plot
 #            
         return kwargs
-    
+
     def _build_series_editors(self, editors=None):
         '''
         '''
         plots = self._get_plots()
-        
+
         if editors is None:
             self.series_editors = []
             editors = self.series_editors
-             
+
         for key in plots:
             plot = plots[key][0]
-                        
+
             if isinstance(plot, PolygonPlot):
                 editor = PolygonPlotEditor
             elif isinstance(plot, (CMapImagePlot, BaseContourPlot)):
                 editor = ContourPolyPlotEditor
-                
+
             else:
                 editor = self._series_editor_klass
 
@@ -142,21 +142,21 @@ class PlotEditor(HasTraits):
 
         if plots:
             self._sync_limits(plot)
-            
-    def _sync_limits(self, plot): 
+
+    def _sync_limits(self, plot):
         if isinstance(plot, Base2DPlot):
             plow = plot.index_range.low
             phigh = plot.index_range.high
-            self._xmin = plow[0]      
+            self._xmin = plow[0]
             self._ymin = plow[1]
-            
-            self._xmax = phigh[0]      
+
+            self._xmax = phigh[0]
             self._ymax = phigh[1]
-            
-                  
+
+
             #print plot.value_range.low
             #print plot.value_range.high
-        else:      
+        else:
             self._xmin, self._xmax = plot.index_range.low, plot.index_range.high
             self._ymin, self._ymax = plot.value_range.low, plot.value_range.high
 
@@ -173,19 +173,19 @@ class PlotEditor(HasTraits):
                                 )
 
         return VGroup(xgrp, ygrp, show_border=True)
-    
+
     def _get_table_columns(self):
         cols = [ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show')]
         return cols
-        
+
     def _get_table_editor(self):
         cols = self._get_table_columns()
         table_editor = TableEditor(columns=cols,
                                    selected='_selected',
                                    selection_mode='row')
         return table_editor
-    
+
     def _get_selected_group(self):
         grp = Group(
                 Item('selected',
@@ -201,16 +201,16 @@ class PlotEditor(HasTraits):
         return grp
     def _get_additional_groups(self):
         pass
-    
+
     def traits_view(self):
         '''
         '''
         vg = VGroup()
         vg.content.append(self.get_axes_group())
         vg.content.append(self._get_selected_group())
-        
-        
-        
+
+
+
         vg.content.append(Item('series_editors',
                              style='custom',
                              editor=self._get_table_editor(),
@@ -218,10 +218,10 @@ class PlotEditor(HasTraits):
                              springy=False,
                              height=0.25
                              ))
-        
+
         agrp = self._get_additional_groups()
         if agrp:
-            vg.content.append(agrp)         
+            vg.content.append(agrp)
 #        VGroup(
 #                        self.get_axes_group(),
 #                        self._get_selected_group(),

@@ -35,7 +35,7 @@ from src.graph.plot_record import PlotRecord
 
 class Alarm(HasTraits):
     alarm_str = Str
-    triggered = False   
+    triggered = False
     def get_alarm_params(self):
         als = self.alarm_str
         cond = als[0]
@@ -45,29 +45,29 @@ class Alarm(HasTraits):
         else:
             trigger = float(als[1:])
         return cond, trigger
-    
+
     def test_condition(self, value):
         cond, trigger = self.get_alarm_params()
-            
+
         expr = 'value {} {}'.format(cond, trigger)
-        
+
         triggered = eval(expr, {}, dict(value=value))
-        
+
         if triggered:
             if not self.triggered:
                 self.triggered = True
         else:
             self.triggered = False
-            
-        return self.triggered 
-    
+
+        return self.triggered
+
     def get_message(self, value):
         cond, trigger = self.get_alarm_params()
         tstamp = datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S')
 
         return '<<<<<<ALARM {}>>>>>> {} {} {}'.format(tstamp, value, cond, trigger)
-        
-        
+
+
 class CoreDevice(ViewableDevice):
     '''
     '''
@@ -82,7 +82,7 @@ class CoreDevice(ViewableDevice):
     scan_button = Event
     scan_label = Property(depends_on='_scanning')
     _scanning = Bool(False)
-    
+
     is_scanable = False
     scan_func = None
     scan_lock = None
@@ -91,17 +91,17 @@ class CoreDevice(ViewableDevice):
     scan_units = 'ms'
     record_scan_data = Bool(True)
     scan_path = Str
-    
+
     current_scan_value = 0
-    
+
     time_dict = dict(ms=1, s=1000, m=60.0 * 1000, h=60.0 * 60.0 * 1000)
     application = Any
-    
+
     no_response_counter = 0
     alarms = List(Alarm)
-    
+
     data_manager = None
-    
+
     def get(self):
         return self.current_scan_value
 #        if self.simulation:
@@ -109,14 +109,14 @@ class CoreDevice(ViewableDevice):
 
     def set(self, v):
         pass
-    
+
     def create_communicator(self, comm_type, port, baudrate):
-        
+
         c = self._communicator_factory(comm_type)
         c.open(port=port, baudrate=baudrate)
         self._communicator = c
-        
-        
+
+
     def _communicator_factory(self, communicator_type):
         if communicator_type is not None:
 
@@ -129,7 +129,7 @@ class CoreDevice(ViewableDevice):
                           id_query=self.id_query,
                           id_response=self.id_response
                          )
-            
+
 #            gdict = globals()
 #            if communicator_type in gdict:
 #                return gdict[communicator_type](name='_'.join((self.name, communicator_type)),
@@ -139,7 +139,7 @@ class CoreDevice(ViewableDevice):
     def post_initialize(self, *args, **kw):
         self.setup_scan()
         self.setup_alarms()
-            
+
     def load(self, *args, **kw):
         '''
             Load a configuration file.  
@@ -176,7 +176,7 @@ class CoreDevice(ViewableDevice):
         '''
         if self._communicator is not None:
             return self._communicator.open(**kw)
-        
+
 
     def ask(self, cmd, **kw):
         '''
@@ -227,10 +227,10 @@ class CoreDevice(ViewableDevice):
 # streamin interface
 #===============================================================================
     def setup_scan(self):
-        
-        
+
+
         #should get scan settings from the config file not the initialization.xml
-        
+
         config = self.get_configuration()
         if config.has_section('Scan'):
             if config.getboolean('Scan', 'enabled'):
@@ -238,7 +238,7 @@ class CoreDevice(ViewableDevice):
                 self.set_attribute(config, 'scan_period', 'Scan', 'period', cast='float')
                 self.set_attribute(config, 'scan_units', 'Scan', 'units')
                 self.set_attribute(config, 'record_scan_data', 'Scan', 'record', cast='boolean')
-                
+
     def setup_alarms(self):
         config = self.get_configuration()
         if config.has_section('Alarms'):
@@ -247,7 +247,7 @@ class CoreDevice(ViewableDevice):
                                          name=opt,
                                          alarm_str=config.get('Alarms', opt)
                                          ))
-                
+
     def _scan_(self, *args):
         '''
 
@@ -261,26 +261,26 @@ class CoreDevice(ViewableDevice):
 
             if v is not None:
                 self.current_scan_value = str(v)
-                
+
                 if self.record_scan_data:
                     if isinstance(v, tuple):
                         x = self.graph.record_multiple(v)
                     elif isinstance(v, PlotRecord):
                         for pi, d in zip(v.plotids, v.data):
-                            
+
                             if isinstance(d, tuple):
                                 x = self.graph.record_multiple(d, plotid=pi)
                             else:
                                 x = self.graph.record(d, plotid=pi)
                         v = v.as_data_tuple()
-                        
+
                     else:
                         x = self.graph.record(v)
                         v = (v,)
-                    
+
                     ts = generate_timestamp()
                     self.data_manager.write_to_frame((ts, x) + v)
-                
+
                 for a in self.alarms:
                     if a.test_condition(v):
 
@@ -289,9 +289,9 @@ class CoreDevice(ViewableDevice):
                         manager = self.application.get_service('src.social.twitter_manager.TwitterManager')
                         if manager is not None:
                             manager.post(alarm_msg)
-                            
+
                         break
-                    
+
             else:
                 '''
                     scan func must return a value or we will stop the scan
@@ -316,32 +316,32 @@ class CoreDevice(ViewableDevice):
         self.scan_lock.acquire()
         self._scan_(*args, **kw)
         self.scan_lock.release()
-        
+
     def start_scan(self):
         if self.timer is not None:
             self.timer.Stop()
-        
+
         self._scanning = True
         self.info('Starting scan')
         if self.record_scan_data:
             if self.data_manager is None:
                 self.data_manager = CSVDataManager()
-                
+
             self.frame_name = self.data_manager.new_frame(base_frame_name=self.name)
             self.scan_path = self.data_manager.frames[self.frame_name]
         sp = self.scan_period * self.time_dict[self.scan_units]
         self.timer = Timer(sp, self.scan)
 #        self.timer.Start()
-    
+
 
     def stop_scan(self):
         self._scanning = False
         if self.timer is not None:
-            self.timer.Stop()  
-    
+            self.timer.Stop()
+
     def _get_scan_label(self):
         return 'Start' if not self._scanning else 'Stop'
-    
+
     def _scan_button_fired(self):
         if self._scanning:
             self.stop_scan()
@@ -351,5 +351,5 @@ class CoreDevice(ViewableDevice):
     def _scan_period_changed(self):
         if self._scanning:
             self.stop_scan()
-            self.start_scan()     
+            self.start_scan()
 #========================= EOF ============================================

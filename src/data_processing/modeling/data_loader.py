@@ -37,7 +37,7 @@ class DataLoader(Loggable):
             root = self.root
         path = os.path.join(root, name)
         return path
-    
+
     def _open_reader(self, name, root=None, mode='U', delimiter=TAB, skipinitialspace=True):
         '''
             
@@ -266,13 +266,13 @@ class DataLoader(Loggable):
                 logr39.append(float(row[1]))
         f.close()
         return logr, logr39
-    
+
     def load_model_spectrum(self):
-        
+
         f, reader = self._open_reader('ages-me.dat', delimiter=' ')
         if reader is None:
             return
-        
+
         age = []
         ar39 = []
         self.info('load model spectrum')
@@ -287,10 +287,10 @@ class DataLoader(Loggable):
             #age.append(float(row[1]))
         f.close()
         return ar39, age
-    
+
     def load_unconstrained_thermal_history(self, contour=True):
         self.info('loading unconstrained thermal history')
-        
+
         if contour:
 #            f, reader = self._open_reader('chistall-out.dat', delimiter=TAB, mode='rb', skipinitialspace=False)
 #            if reader is None:
@@ -307,22 +307,22 @@ class DataLoader(Loggable):
             p = self._build_path('matx2.dat')
             if os.path.isfile(p):
                 return loadtxt(p, dtype='float')
-            
+
         else:
             f, reader = self._open_reader('chistall-out.dat', delimiter=TAB, mode='rb', skipinitialspace=False)
             if reader is None:
                 return
-            
-            
+
+
             series = []
             xy = []
             for row in reader:
                 if row[0].startswith(' &'):
                     xy = array(xy)
-                    series.append(xy) 
+                    series.append(xy)
                     xy = []
                     continue
-                
+
                 try:
                     try:
                         float(row[0])
@@ -330,17 +330,17 @@ class DataLoader(Loggable):
                     except ValueError:
                         pass
                     xy.append(map(float, [row[0].strip(), row[1].strip()]))
-                    
+
                 except IndexError:
                     pass
-                
+
     #        print len(series)
             data = array(series)
 #        print type(data)
 #        print data.shape
             f.close()
             return data
-    
+
     def validate_data_dir(self, d):
         '''
         '''

@@ -26,19 +26,19 @@ class FusionsLaserUIPlugin(CoreUIPlugin):
     def _perspectives_default(self):
         from fusions_laser_perspective import FusionsLaserPerspective
         return [FusionsLaserPerspective]
-    
+
     def _preferences_pages_default(self):
-        
+
         klass = 'Fusions{}PreferencesPage'.format(self.name.capitalize())
         module = __import__('src.lasers.plugins.fusions.{}.preferences_page'.format(self.name), fromlist=[klass])
-        
+
         return [getattr(module, klass)]
     def _action_sets_default(self):
 #        from fusions_laser_action_set import FusionsLaserActionSet
-        
+
         klass = 'Fusions{}ActionSet'.format(self.name.capitalize())
         module = __import__('src.lasers.plugins.fusions.{}.action_set'.format(self.name), fromlist=[klass])
-        
+
         return [getattr(module, klass)]
 #        return [FusionsLaserActionSet]
 
@@ -54,11 +54,11 @@ class FusionsLaserUIPlugin(CoreUIPlugin):
 #
 #
 #        return views
-    
+
     @on_trait_change('application:workbench:active_window')
     def start_manager(self, obj, name, old, new):
         lm = self.application.get_service(self._protocol)
-        
+
         pref = 'pychron.fusions.{}.open_on_startup'.format(self.name)
         if self.application.preferences.get(pref) == 'True':
             open_manager(lm)

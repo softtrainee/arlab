@@ -49,7 +49,7 @@ class AutoagefreeAction(Action):
         app = event.window.application
         manager = app.get_service(MDD_PROTOCOL)
         manager.modeler.execute_autoagefree()
-        
+
 class ConfidenceIntervalAction(Action):
     '''
     '''

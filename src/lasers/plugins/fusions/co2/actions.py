@@ -26,9 +26,9 @@ def get_manager(event, app=None):
     if app is None:
         app = event.window.application
     base = 'src.managers.laser_managers.{}'
-    
+
     manager = app.get_service(base.format('fusions_co2_manager.FusionsCO2Manager'))
-   
+
     return manager
 
 class ExecutePatternAction(Action):
@@ -105,7 +105,7 @@ class PulseAction(Action):
         if manager is not None:
             man = manager.get_pulse_manager()
             open_manager(man, view='standalone_view')
-            
+
 class PowerMapAction(Action):
     name = 'Power Map'
     def perform(self, event):

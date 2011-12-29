@@ -42,30 +42,30 @@ class ModelerManager(EnvisageManager):
 
 #    line_width = Int(1)
 #    arrhenius_plot_type = Str('scatter')
-    
+
     def _selected_changed(self, old, new):
         self._modeler = new
 
     def new_modeler(self):
-        
-        
-        
+
+
+
         m = self._modeler_factory()
         bind_preference(m, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
         bind_preference(m, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
 #        if self.modeler:
 #            m.logr_ro_line_width = self.modeler.logr_ro_line_width
 #            m.arrhenius_plot_type = self.modeler.arrhenius_plot_type
-        
+
         if self._include_panels:
             m.include_panels = self._include_panels
         info = m.edit_traits(view='configure_view')
-        
+
         if info.result:
             #remember this modelers include panels for the future modelers
             self._include_panels = m.include_panels
-            
-            
+
+
             m.refresh_graph()
             self.open_modeler(m=m)
 
@@ -104,13 +104,13 @@ class ModelerManager(EnvisageManager):
         m = self._modeler_factory()
         m.refresh_graph()
         return m
-    
+
     def _modeler_factory(self):
         m = Modeler(
 #                    line_width=self.line_width,
 #                    arrhenius_plot_type=self.arrhenius_plot_type
-                    )     
-       
+                    )
+
         return m
 
     def data_select_view(self):

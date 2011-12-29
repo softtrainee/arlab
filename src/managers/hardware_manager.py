@@ -31,7 +31,7 @@ class HardwareManager(Manager):
     def app_changed(self, obj, name, old, new):
         if name == 'application' and new:
             self.devices = new.service_registry.get_services('src.hardware.core.i_core_device.ICoreDevice',
-                                                             
+
                                                              "display==True"
                                                              )
             self.devices.sort()

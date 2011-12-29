@@ -130,7 +130,7 @@ class HardwareValve(Loggable):
             self.error = None
 
         return result
-    
+
 #    def acquire_critical_section(self):
 #        self._critical_section = True
 #    
@@ -139,7 +139,7 @@ class HardwareValve(Loggable):
 #    
 #    def isCritical(self):
 #        return self._critical_section
-    
+
     def lock(self):
         if self.state:
             self._fsm.LockOpen()
