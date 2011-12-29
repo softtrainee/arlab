@@ -1,0 +1,13 @@
+Revision info for RemoteControlServer.cs
+
+rev 001
+base revision
+
+rev 002
+added data tagging to GetData
+ GetData returns <detname>,<value>,...
+ 
+rev 003
+added tag_data flag.  set tag_data=false for MassSpec version 7.868
+tag_data=true MassSpec version 7.873 +
+
