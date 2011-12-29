@@ -35,7 +35,7 @@ class RS485Scheduler(HasTraits):
 
 #    collision_delay = Float(125)
     collision_delay = Float(25)
-    
+
     def __init__(self, *args, **kw):
         super(RS485Scheduler, self).__init__(*args, **kw)
         self._lock = Lock()
@@ -47,15 +47,15 @@ class RS485Scheduler(HasTraits):
                 args = tuple()
             if kwargs is None:
                 kwargs = dict()
-    
+
             r = func(*args, **kwargs)
             #print 'active count', threading.activeCount(), 'current thread', threading.currentThread()
             time.sleep(self.collision_delay / 1000.0)
             #self._lock.release()
 
             return r
-    
-            
-            
-               
+
+
+
+
 #============= EOF ====================================

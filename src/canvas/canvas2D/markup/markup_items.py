@@ -63,13 +63,13 @@ class MarkupItem(HasTraits):
             gc.set_stroke_color(self.active_color)
         else:
             gc.set_stroke_color(self.default_color)
-            
+
     def set_fill_color(self, gc):
         if self.state:
             gc.set_fill_color(self.active_color)
         else:
             gc.set_fill_color(self.default_color)
-            
+
     def _render_(self, gc):
         pass
 
@@ -92,7 +92,7 @@ class MarkupItem(HasTraits):
 
 class Point(MarkupItem):
     pass
-        
+
 class Line(MarkupItem):
     start_point = None
     end_point = None
@@ -139,25 +139,25 @@ class Line(MarkupItem):
 
         b = calc_rotation(x1, y1, x2, y2)
         self.screen_rotation = b
-        
+
 class Triangle(MarkupItem):
     draw_text = False
     def __init__(self, *args, **kw):
         super(Triangle, self).__init__(0, 0, **kw)
         self.points = []
-        
+
     def _render_(self, gc):
         points = self.points
         func = self.canvas.map_screen
         if points:
-            
+
             as_lines = True
             if as_lines:
                 gc.begin_path()
                 gc.move_to(*func(points[0][:2]))
                 for p in points[1:]:
                     gc.line_to(*func(p[:2]))
-                      
+
                 if len(points) == 3:
                     gc.line_to(*func(points[0][:2]))
                 gc.stroke_path()
@@ -168,7 +168,7 @@ class Triangle(MarkupItem):
                     gc.set_fill_color(f.map_screen(array([v]))[0])
                     gc.arc(x - 2, y - 2, 2, 0, 360)
                     gc.fill_path()
-                    
+
 #            
             if self.draw_text:
                 gc.set_font_size(9)
@@ -177,7 +177,7 @@ class Triangle(MarkupItem):
                     gc.set_text_position(x + 5, y + 5)
                     gc.show_text('{:0.3f}'.format(v))
 
-        
+
 class Circle(MarkupItem):
     radius = 10
     def __init__(self, x, y, radius=10, *args, **kw):
@@ -194,8 +194,8 @@ class Circle(MarkupItem):
             return True
 
 
-        
-        
+
+
 class CalibrationObject(HasTraits):
     tweak_dict = Dict
     cx = Float
@@ -281,10 +281,10 @@ class Label(MarkupItem):
     text = ''
     def _render_(self, gc):
         x, y = self.get_xy()
-        
+
         gc.set_text_position(x + 10, y + 10)
         gc.show_text(self.text)
-        
+
 class Indicator(MarkupItem):
     def __init__(self, x, y, *args, **kw):
         super(Indicator, self).__init__(x, y, *args, **kw)
@@ -313,7 +313,7 @@ class PointIndicator(Indicator):
         self.hline.state = state
         self.vline.state = state
         self.circle.state = state
-        
+
     def is_in(self, event):
         x, y = self.get_xy()
         if ((x - event.x) ** 2 + (y - event.y) ** 2) ** 0.5 < self.radius:
@@ -324,15 +324,15 @@ class PointIndicator(Indicator):
         self.vline.adjust(dx, dy)
         self.circle.adjust(dx, dy)
         self.label.adjust(dx, dy)
-        
+
     def _render_(self, gc):
         super(PointIndicator, self)._render_(gc)
-        
+
         self.circle.render(gc)
         self.label.render(gc)
-        
+
         x, y = self.get_xy()
-        
+
         if self.state:
             gc.rect(x - self.radius - 1,
                     y - self.radius - 1,
@@ -346,5 +346,5 @@ class Dot(MarkupItem):
         x, y = self.get_xy()
         gc.arc(x, y, self.radius, 0, 360)
         gc.fill_path()
-        
+
 #============= EOF ====================================

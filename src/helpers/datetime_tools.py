@@ -75,5 +75,5 @@ def diff_timestamp(end, start=0):
     h = t.seconds / 3600
     m = (t.seconds % 3600) / 60
     s = (t.seconds % 3600) % 60
-    
+
     return t, h, m, s

@@ -25,24 +25,24 @@ from src.managers.manager import Manager
 #============= local library imports  ==========================
 
 DEGAS = os.path.join(data_dir, 'degas')
-    
+
 class DegasViewer(Manager):
     open = Button
     build = Button
-    
+
     def _build_fired(self):
         self.build_graphs()
-        
+
     def _open_fired(self):
         p = self.open_file_dialog(default_directory=DEGAS)
         self.open_graph(p)
-        
+
     def traits_view(self):
         return View(
                     Item('open', show_label=False),
                     Item('build', show_label=False),
                      resizable=True)
-    
+
     def open_graph(self, p, save=False, offset=(0, 0)):
         g = TimeSeriesStackedGraph(panel_height=190)
         x = []
@@ -62,49 +62,49 @@ class DegasViewer(Manager):
                 except ValueError:
                     print p
                     return
-                
+
         g.new_plot()
         g.new_series(x, sp)
         g.set_y_limits(max=max(sp) + 5)
         g.set_x_title('Time')
         g.set_y_title('Setpoint')
-        
+
         g.new_plot()
-        g.new_series(x, ion, plotid=1, value_scale='log')    
+        g.new_series(x, ion, plotid=1, value_scale='log')
         g.set_y_title('Pressure (torr)', plotid=1)
         g.plots[1].value_axis.tick_label_formatter = lambda x: '{:0.2e}'.format(x)
-        
-        
+
+
         g.new_plot()
-        g.new_series(x, temp, plotid=2)    
+        g.new_series(x, temp, plotid=2)
         g.set_y_title('Temp (C)', plotid=2)
-    
+
         g.window_height = 780
         g.window_title = os.path.basename(p)
         g.window_x = 50 + offset[0]
         g.window_y = 50 + offset[1]
         g.set_title(os.path.basename(p))
-        
-        
+
+
         g.edit_traits()
         if save:
             name, ext = os.path.splitext(os.path.basename(p))
             p = os.path.join(DEGAS, '{}.png'.format(name))
             g.save_png(p)
-            
+
     def build_graphs(self):
         i = 0
         for p in os.listdir(DEGAS):
             if p.startswith('scan'):
                 self.open_graph(os.path.join(DEGAS, p), save=True, offset=(15 * i, 5 * i))
                 i += 1
-            
+
 def main():
     dg = DegasViewer()
     dg.configure_traits()
-    
 
-    
+
+
 if __name__ == '__main__':
     main()
 #============= EOF =====================================

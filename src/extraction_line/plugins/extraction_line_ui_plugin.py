@@ -58,19 +58,19 @@ class ExtractionLineUIPlugin(CoreUIPlugin):
         if hasattr(elm, 'valve_manager'):
             if elm.valve_manager:
                 bind_preference(elm.valve_manager, 'query_valve_state', 'pychron.extraction_line.query_valve_state')
-        
+
         bind_preference(self, 'open_on_startup', 'pychron.extraction_line.open_on_startup')
         if self.open_on_startup:
             open_manager(elm)
-        
+
         #start device streams
         for dev in elm.devices:
             if dev.is_scanable:
                 dev.start_scan()
-                
+
         if elm.gauge_manager:
             elm.gauge_manager.start_scans()
-                
+
 #============= views ===================================
 #    def _views_default(self):
 #        '''

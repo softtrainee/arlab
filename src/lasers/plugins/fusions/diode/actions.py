@@ -26,9 +26,9 @@ def get_manager(event, app=None):
     if app is None:
         app = event.window.application
     base = 'src.managers.laser_managers.{}'
-    
+
     manager = app.get_service(base.format('fusions_diode_manager.FusionsDiodeManager'))
-   
+
     return manager
 
 class ExecutePatternAction(Action):
@@ -104,7 +104,7 @@ class PulseAction(Action):
         if manager is not None:
             man = manager.get_pulse_manager()
             open_manager(man, view='standalone_view')
-            
+
 class PowerMapAction(Action):
     name = 'Power Map'
     def perform(self, event):
@@ -127,14 +127,14 @@ class OpenPowerMapAction(Action):
         if manager is not None:
 #            manager.graph_manager.open_power_map()
             manager.graph_manager.open_graph('powermap')
-            
+
 class OpenCalibrationManagerAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
             man = manager.stage_manager.calibration_manager
             open_manager(man)
-            
+
 class DegasAction(Action):
     def perform(self, event):
         manager = get_manager(event)

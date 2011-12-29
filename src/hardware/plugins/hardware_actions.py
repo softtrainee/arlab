@@ -20,7 +20,7 @@ from src.envisage.core.action_helper import open_manager
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-    
+
 class OpenHardwareManagerAction(Action):
     '''
     '''

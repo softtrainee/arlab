@@ -46,7 +46,7 @@ class DummyDirectoryDialog(object):
     path = os.path.join(modeling_data_dir, '59702-43')
     def open(self):
         return OK
-    
+
 class Modeler(Loggable):
     '''
     '''
@@ -56,7 +56,7 @@ class Modeler(Loggable):
 
     datum = Directory(value=data_dir)
     data = List(ModelDataDirectory)
-    
+
     selected = Any
 
     refresh = Button
@@ -66,12 +66,12 @@ class Modeler(Loggable):
 
     status_text = Str
     sync_groups = None
-    
+
     include_panels = List(GROUPNAMES[:-1])
-    
+
     logr_ro_line_width = Int(1)
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
-    
+
 #===============================================================================
 # fortran
 #===============================================================================
@@ -82,7 +82,7 @@ class Modeler(Loggable):
         f = FileDialog(action='open', default_directory=data_dir)
         if f.open() == OK:
             self.info('loading autoupdate file {}'.format(f.path))
-            
+
             #open a autoupdate config dialog
             from clovera_configs import AutoUpdateParseConfig
             adlg = AutoUpdateParseConfig('', '')
@@ -93,56 +93,56 @@ class Modeler(Loggable):
                 auto_files = True
                 if auto_files:
                     for rid in rids:
-                        self.execute_files(rid=rid, root=f.path+'_data')
-            
+                        self.execute_files(rid=rid, root=f.path + '_data')
+
         #=======================================================================
         # debug
         #=======================================================================
         #path='/Users/Ross/Pychrondata_beta/data/modeling/ShapFurnace.txt' 
         #self.data_loader.load_autoupdate(path)
-        
+
     def execute_files(self, rid=None, root=None):
         if rid is None:
             rid, root = self._get_rid_root()
 
-        if rid is not None:    
+        if rid is not None:
             from clovera_configs import FilesConfig
             #make a config obj
             f = FilesConfig(rid, root)
-            
+
             #write config to ./files.cl
             f.dump()
-            
+
             #change current working dir
             os.chdir(os.path.join(root, rid))
-            
+
             #now ready to run fortran
-            name='files_py'
+            name = 'files_py'
             if sys.platform is not 'darwin':
-                name+='.exe'
+                name += '.exe'
             self._execute_fortran(name)
-    
+
     def _get_rid_root(self):
-        
+
         #=======================================================================
         # #debug
-         
+
 #        d = DummyDirectoryDialog()
 #        =======================================================================
-        
+
         d = DirectoryDialog(action='open', default_path=modeling_data_dir)
-        
+
         if d.open() == OK:
             rid = os.path.basename(d.path)
             root = os.path.dirname(d.path)
-            
+
             #set this root as the working directory
             os.chdir(d.path)
             self.info('setting working directory to {}'.format(d.path))
-            
+
             return rid, root
         return None, None
-    
+
     def execute_autoarr(self):
         self.info('------- Autoarr -------')
         rid, root = self._get_rid_root()
@@ -156,7 +156,7 @@ class Modeler(Loggable):
                 self.info('------- Autoarr aborted-------')
         else:
             self.info('------- Autoarr aborted-------')
-            
+
     def execute_autoagemon(self):
         self.info('------- Autoagemon -------')
         rid, root = self._get_rid_root()
@@ -170,8 +170,8 @@ class Modeler(Loggable):
                 self.info('------- Autoagemon aborted-------')
         else:
             self.info('------- Autoagemon aborted-------')
-                
-                
+
+
     def execute_autoagefree(self):
         self.info('------- Autoagefree -------')
         rid, root = self._get_rid_root()
@@ -185,7 +185,7 @@ class Modeler(Loggable):
                 self.info('------- Autoagefree aborted-------')
         else:
             self.info('------- Autoagefree aborted-------')
-                
+
     def execute_confidence_interval(self):
         self.info('------- Confidence Interval-------')
         rid, root = self._get_rid_root()
@@ -197,29 +197,29 @@ class Modeler(Loggable):
                 self._execute_fortran('confint_py')
             else:
                 self.info('------- Confidence Interval aborted-------')
-                
+
         else:
             self.info('------- Confidence Interval aborted-------')
-       
+
     def _execute_fortran(self, name):
         self.info('excecute fortran program {}'.format(name))
         q = Queue()
-        
-        self._fortran_process = t = FortranProcess(name, clovera_root, q)    
+
+        self._fortran_process = t = FortranProcess(name, clovera_root, q)
         t.start()
-        
+
         t = Thread(target=self._handle_stdout, args=(name, t, q))
         t.start()
-           
+
     def _handle_stdout(self, name, t, q):
         def _handle(msg):
             if msg:
-                self.logger.info(msg)            
+                self.logger.info(msg)
                 #func(msg)
                 #information(None, msg)
-            
+
         #func = getattr(self, '_handle_{}'.format(name))
-        
+
 #        reset clock
 #        time.clock()
         st = time.time()
@@ -227,15 +227,15 @@ class Modeler(Loggable):
         while t.isAlive() or not q.empty():
             l = q.get().rstrip()
             _handle(l)
-         
+
         #handle addition msgs
         for m in self._fortran_process.get_remaining_stdout():
             _handle(m)
-        
+
         dur = time.time() - st
         self.info('{} run time {:0.1f} s'.format(name, dur))
         self.info('------ {} finished ------'.format(name.capitalize()))
-        
+
     def _handle_autoarr_py(self, m):
         pass
     def _handle_autoagemon_py(self, m):
@@ -246,27 +246,27 @@ class Modeler(Loggable):
         pass
     def _handle_files_py(self, m):
         pass
-            
+
     #===========================================================================
     # graph
     #===========================================================================
-        
+
     def load_graph(self, data_directory, gid, color):
         '''
             
         '''
         data_directory.id = gid
-        
+
         path = data_directory.path
         self.info('loading graph for {}'.format(path))
         g = self.graph
-    
+
         runid = g.add_runid(path, kind='path')
         dl = self.data_loader
         dl.root = data_directory.path
-        
+
         plotidcounter = 0
-        
+
         if 'spectrum' in self.include_panels:
             data = dl.load_spectrum()
             if data is not None:
@@ -277,24 +277,24 @@ class Modeler(Loggable):
                     s = 3 if data_directory.model_spectrum_enabled else 2
                     g.set_series_label('{}.meas-err'.format(runid), plotid=plotidcounter, series=s * gid)
                     g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=s * gid + 1)
-                    
+
                 except Exception, err:
                     self.info(err)
-            
+
             if data_directory.model_spectrum_enabled:
                 data = dl.load_model_spectrum()
                 if data is not None:
                     try:
-                        
+
                         p = g.build_spectrum(*data, ngroup=False, pid=plotidcounter)
                         g.set_series_label('{}.model'.format(runid), plotid=plotidcounter, series=3 * gid + 2)
                         g.color_generators[-1].next()
                         p.color = g.color_generators[-1].next()
-                        
+
                     except Exception, err:
                         self.info(err)
             plotidcounter += 1
-                        
+
         if 'logr_ro' in self.include_panels:
             data = dl.load_logr_ro('logr.samp')
             if data is not None:
@@ -305,7 +305,7 @@ class Modeler(Loggable):
                     p.on_trait_change(data_directory.update_pcolor, 'color')
                 except Exception, err:
                     self.info(err)
-                
+
             if data_directory.model_arrhenius_enabled:
                 data = dl.load_logr_ro('logr.dat')
                 if data is not None:
@@ -314,11 +314,11 @@ class Modeler(Loggable):
                         g.set_series_label('{}.model'.format(runid), plotid=plotidcounter, series=2 * gid + 1)
                         data_directory.secondary_color = p.color
                         p.on_trait_change(data_directory.update_scolor, 'color')
-                        
+
                     except Exception, err:
                         self.info(err)
             plotidcounter += 1
-            
+
         if 'arrhenius' in self.include_panels:
             data = dl.load_arrhenius('arr.samp')
             if data is not None:
@@ -327,8 +327,8 @@ class Modeler(Loggable):
                     g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=2 * gid)
                 except Exception, err:
                     self.info(err)
-                
-            if data_directory.model_arrhenius_enabled: 
+
+            if data_directory.model_arrhenius_enabled:
                 data = dl.load_arrhenius('arr.dat')
                 if data is not None:
                     try:
@@ -337,8 +337,8 @@ class Modeler(Loggable):
                     except Exception, err:
                         self.info(err)
             plotidcounter += 1
-            
-        if 'cooling_history' in self.include_panels:            
+
+        if 'cooling_history' in self.include_panels:
             data = dl.load_cooling_history()
             if data is not None:
                 try:
@@ -346,7 +346,7 @@ class Modeler(Loggable):
                 except Exception, err:
                     self.info(err)
             plotidcounter += 1
-                    
+
         if 'unconstrained_thermal_history' in self.include_panels:
             data = dl.load_unconstrained_thermal_history()
             if data is not None:
@@ -354,7 +354,7 @@ class Modeler(Loggable):
                     g.build_unconstrained_thermal_history(data, pid=plotidcounter)
                 except Exception, err:
                     self.info(err)
-            
+
         #sync the colors
         if self.sync_groups:
             for si in self.sync_groups:
@@ -387,11 +387,11 @@ class Modeler(Loggable):
 
         g = self.graph
         if g is None:
-            
+
             panels = GROUPNAMES#['spectrum','logr_ro','arrenhius','cooling_history']
             if self.include_panels:
                 panels = self.include_panels
-            
+
             l = len(panels)
             r = int(round(l / 2.0))
             c = 1
@@ -403,15 +403,15 @@ class Modeler(Loggable):
                                             type='h' if c == 1 else 'g',
                                             bgcolor='white',
                                             padding=[10, 10, 40, 10],
-                                            
+
                                             #padding=[25, 5, 50, 30],
                                             #spacing=(5,5),
                                             #spacing=32 if c==1 else (32, 25),
                                             shape=(r, c)
                                             )
-                               
+
                                )
-            
+
             self.graph = g
         else:
         #if g is not None:
@@ -482,7 +482,7 @@ class Modeler(Loggable):
                 ObjectColumn(name='secondary_color', editable=False, label='Sc', style='simple'),
                 CheckboxColumn(name='model_spectrum_enabled', label='Ms'),
                 CheckboxColumn(name='model_arrhenius_enabled', label='Ma'),
-                
+
               ]
 
         editor = TableEditor(columns=cols,
@@ -497,7 +497,7 @@ class Modeler(Loggable):
                       editor=editor,
                       width=0.25
                       )
-        
+
         v = View(Item('refresh', show_label=False),
                  VSplit(selected,
                         tree))
@@ -509,7 +509,7 @@ class Modeler(Loggable):
                     )
         v = View(graph)
         return v
-    
+
     def configure_view(self):
         v = View(Item('include_panels', editor=CheckListEditor(values=GROUPNAMES),
                     show_label=False,
@@ -558,7 +558,7 @@ class Modeler(Loggable):
         '''
         '''
         self._update_graph()
-        
+
         #force update of notes and summary 
         d = self.selected
         self.selected = None
@@ -575,14 +575,14 @@ class Modeler(Loggable):
             #set visiblity after
             c = color_gen.next()
             d.primary_color = c
-            
+
             self.load_graph(d, gid, c)
 
             #skip a color
             color_gen.next()
 
         self.update_graph_title()
-    
+
     @on_trait_change('graph.status_text')
     def update_statusbar(self, obj, name, value):
         '''
@@ -603,15 +603,15 @@ def runfortran():
     q = Queue()
     t = FortranProcess('hello_world', '/Users/Ross/Desktop', q)
     t.start()
-    
+
     while t.isAlive() or not q.empty():
         l = q.get().rstrip()
-        
+
         print l
-    
+
     print t.get_remaining_stdout()
-    
-        
+
+
 if __name__ == '__main__':
     runfortran()
 #    r = RunConfiguration()

@@ -43,7 +43,7 @@ class Video(Image):
     users = List
 
     _recording = Bool(False)
-    
+
     def open(self, user=None):
         '''
 

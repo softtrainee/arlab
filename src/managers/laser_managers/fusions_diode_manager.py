@@ -102,10 +102,10 @@ class FusionsDiodeManager(FusionsLaserManager):
 
     def get_power_slider(self):
         return None
-    
+
     def get_lens_configuration_group(self):
         return None
-    
+
     def load_lens_configurations(self):
         pass
 #    def get_laser_amps(self):
@@ -140,14 +140,14 @@ class FusionsDiodeManager(FusionsLaserManager):
         self.temperature_controller.set_open_loop_setpoint(0.0)
 
     def set_laser_temperature(self, temp):
-        self.set_laser_power(temp,mode='closed')
-        
+        self.set_laser_power(temp, mode='closed')
+
     def set_laser_power(self, power, mode='open'):
         ''' 
         '''
-        
-       
-            
+
+
+
         tc = self.temperature_controller
         if tc._control_mode != mode:
 
@@ -161,7 +161,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
         if self.fiber_light.auto_onoff and self.fiber_light.state:
             self.fiber_light.power_off()
-            
+
         #simple calls logicboard.enable_laser
         if super(FusionsDiodeManager, self).enable_laser():
             return self.control_module_manager.enable()
@@ -171,14 +171,14 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
         if self.fiber_light.auto_onoff and not self.fiber_light.state:
             self.fiber_light.power_on()
-            
+
         self.temperature_controller.disable()
         self.control_module_manager.disable()
 
         super(FusionsDiodeManager, self).disable_laser()
 
-        return True 
-    
+        return True
+
     def get_degas_manager(self):
         from degas_manager import DegasManager
 
@@ -195,8 +195,8 @@ class FusionsDiodeManager(FusionsLaserManager):
             dm.file_name = path
             dm.new_script()
             return dm
-        
-        
+
+
 #    def launch_camera_scan(self):
 #        '''
 #        '''

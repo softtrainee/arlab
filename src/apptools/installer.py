@@ -32,7 +32,7 @@ class Installer(object):
         if sys.platform == 'darwin':
             from BuildApplet import buildapplet
             print 'Building {}.py'.format(self.name)
-            
+
             sys.argv[1:] = [os.path.join(root, '{}.py'.format(self.name))]
             buildapplet()
 

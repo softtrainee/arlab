@@ -56,9 +56,9 @@ class VideoCanvas(BaseDataCanvas):
 
         if self.video:
             self.on_trait_change(self.video.update_bounds, 'bounds')
-            
+
         self.set_camera()
-        
+
     def set_camera(self):
 
         if self.use_camera:
@@ -74,5 +74,5 @@ class VideoCanvas(BaseDataCanvas):
             self.video_underlay.swap_rb = self.camera.swap_rb
             self.video_underlay.mirror = self.camera.mirror
             self.video_underlay.flip = self.camera.flip
-            
+
 #============= EOF ====================================

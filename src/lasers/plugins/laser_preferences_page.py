@@ -36,7 +36,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     desired_position_color = Color('green')
     calibration_style = Enum('pychron', 'MassSpec')
     scaling = Range(1.0, 3.0, 1.0)
-    
+
     auto_center = Bool(False)
     crosshairs_offset = Tuple(0, 0)
     crosshairs_offset_color = Color('blue')
@@ -57,6 +57,6 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                Item('scaling'),
                label='Stage',
                )
-        
+
         return [grp]
 #============= EOF ====================================

@@ -115,7 +115,7 @@ class RasterCanvas(BaseCanvas):
         gc.arc(self.centerx, self.centery, 10, 0, 360)
         gc.draw_path()
         gc.restore_state()
-    
+
     def _draw_colorbar(self, gc):
         '''
         '''
@@ -140,7 +140,7 @@ class RasterCanvas(BaseCanvas):
             gc.show_text(t)
 
         gc.restore_state()
-        
+
     def _draw_grid(self, gc):
         '''
         '''

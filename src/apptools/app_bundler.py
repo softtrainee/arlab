@@ -19,7 +19,7 @@ import argparse
 from installer import Installer
 
 def cli_install():
-    
+
     parser = argparse.ArgumentParser(description='Create a new Launchable Application')
     parser.add_argument('prefix',
                         #metavar = 'prefix', 
@@ -37,8 +37,8 @@ def cli_install():
 
     i = Installer(args.prefix, args.name, args.icon)
     i.install()
-    
+
 if __name__ == '__main__':
-    
+
     cli_install()
 #============= EOF =====================================  

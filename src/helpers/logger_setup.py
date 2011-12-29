@@ -78,9 +78,9 @@ class DisplayHandler(logging.StreamHandler):
 #                os.remove(pi)
 #                
 #    print 'clean up finished'
-                
-            
-    
+
+
+
 def setup(name, level=None):
     '''
     '''
@@ -100,13 +100,13 @@ def setup(name, level=None):
             level = getattr(logging, level)
         else:
             level = LEVEL
-            
+
         logging.basicConfig(level=level,
                         format=FORMAT,
                         filename=logpath,
                         filemode='w'
                       )
-        
+
     if use_debug_logger:
 
         #main_logger = logging.getLogger()

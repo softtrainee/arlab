@@ -110,7 +110,7 @@ class MikronGA140Pyrometer(CoreDevice):
             if response_type == 'float':
                 resp = self.get_random_value()
         else:
-            
+
             resp = resp.strip()
             if response_type == 'float':
                 try:
@@ -201,7 +201,7 @@ class MikronGA140Pyrometer(CoreDevice):
         v = min(max(v, self.emmin), self.emmax)
 
         if v != self._emissivity:
-            
+
             self.set_emissivity(v)
 #            if resp is not None or resp is not 'no':
 #                self._emissivity = v
@@ -219,7 +219,7 @@ class MikronGA140Pyrometer(CoreDevice):
         '''
             set emissivity in %
         '''
-        
+
         v = emv * 10.0 if per_mil else emv
         cmd = self._build_command('em', value=v, per_mil=per_mil)
 

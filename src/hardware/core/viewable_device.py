@@ -69,10 +69,10 @@ class ViewableDevice(ConfigLoadable):
         else:
             return True
 
-    
-    
+
+
     def _graph_default(self):
-        
+
         g = self.graph_klass(
                   container_dict=dict(padding=[10, 10, 10, 10])
                   )
@@ -80,22 +80,22 @@ class ViewableDevice(ConfigLoadable):
         self.graph_builder(g)
 
         return g
-    
+
     def graph_builder(self, g, **kw):
-        
-        
+
+
         g.new_plot(padding=[40, 5, 5, 20],
                    zoom=True,
                   pan=True,
                   **kw
                    )
         g.new_series()
-        
+
     def get_control_group(self):
         pass
     def get_configure_group(self):
         pass
-   
+
     def current_state_view(self):
         v = View(Group(
                      Item('name'),
@@ -105,9 +105,9 @@ class ViewableDevice(ConfigLoadable):
                      label='General'
                      ),
                  VGroup(Item('graph', show_label=False, style='custom'),
-                        
+
                         VGroup(Item('scan_func', label='Function', style='readonly'),
-                               
+
                                HGroup(Item('scan_period', label='Period ({})'.format(self.scan_units),
                                             #style='readonly'
                                             ), spring),
@@ -120,7 +120,7 @@ class ViewableDevice(ConfigLoadable):
                                     style='readonly',
                                     visible_when='object.record_scan_data'),
                                visible_when='object.is_scanable'),
-                        
+
                         label='Scan'
                         )
                  )
@@ -147,7 +147,7 @@ class ViewableDevice(ConfigLoadable):
         if cg:
             cg.label = 'Control'
             v.content.content.insert(0, cg)
-            
+
         if config_group:
             config_group.label = 'Configure'
             v.content.content.insert(1, config_group)

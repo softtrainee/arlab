@@ -33,10 +33,10 @@ class ModelDataDirectory(HasTraits):
     modeler = Any
     primary_color = Str#Color
     secondary_color = Str#Color
-    
+
     model_spectrum_enabled = Bool
     model_arrhenius_enabled = Bool
-    
+
     def _get_name(self):
         '''
         '''
@@ -50,7 +50,7 @@ class ModelDataDirectory(HasTraits):
             self.model_arrhenius_enabled = self.show
             self.model_spectrum_enabled = self.show
             self.modeler.update_graph_title()
-            
+
     def _model_arrhenius_enabled_changed(self):
         if self.modeler:
             try:
@@ -65,7 +65,7 @@ class ModelDataDirectory(HasTraits):
             except (IndexError, KeyError):
                 #this group does not have a model logr_ro
                 pass
-            
+
     def _model_spectrum_enabled_changed(self):
         if self.modeler:
             try:
@@ -74,18 +74,18 @@ class ModelDataDirectory(HasTraits):
             except IndexError:
                 #this group does not have a model spectrum
                 pass
-            
+
     def _bind_changed(self):
         '''
         '''
         if self.modeler:
             self.modeler.graph.set_group_binding(self.id, self.bind)
-            
+
     def update_pcolor(self, new):
         new = [255 * i for i in new[:2]]
         c = Color(*new)
         self.primary_color = ColourDatabase().FindName(c).lower()
-        
+
     def update_scolor(self, new):
         new = [255 * i for i in new]
         c = Color(*new)

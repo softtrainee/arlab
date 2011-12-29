@@ -1,18 +1,18 @@
 # Copyright: 2008 Nadia Alramli
 # License: BSD
- 
+
 """Terminal controller module
 Example of usage:
     print BG_BLUE + 'Text on blue background' + NORMAL
     print BLUE + UNDERLINE + 'Blue underlined text' + NORMAL
     print BLUE + BG_YELLOW + BOLD + 'text' + NORMAL
 """
- 
+
 import sys
- 
+
 # The current module
 MODULE = sys.modules[__name__]
- 
+
 COLORS = "BLUE GREEN CYAN RED MAGENTA YELLOW WHITE BLACK".split()
 # List of terminal controls, you can add more to the list.
 CONTROLS = {
@@ -22,14 +22,14 @@ CONTROLS = {
     'REVERSE':'rev', 'UNDERLINE':'smul', 'NORMAL':'sgr0',
     'HIDE_CURSOR':'cinvis', 'SHOW_CURSOR':'cnorm'
 }
- 
-# List of numeric capabilities
+
+#List of numeric capabilities
 VALUES = {
-    'COLUMNS':'cols', # Width of the terminal (None for unknown)
-    'LINES':'lines', # Height of the terminal (None for unknown)
+    'COLUMNS': 'cols', #Width of the terminal (None for unknown)
+    'LINES': 'lines', #Height of the terminal (None for unknown)
     'MAX_COLORS': 'colors',
 }
- 
+
 def default():
     """Set the default attribute values"""
     for color in COLORS:
@@ -39,7 +39,7 @@ def default():
         setattr(MODULE, control, '')
     for value in VALUES:
         setattr(MODULE, value, None)
- 
+
 def setup():
     """Set the terminal control strings"""
     # Initializing the terminal
@@ -48,7 +48,7 @@ def setup():
     # setab and setaf are for ANSI escape sequences
     bgColorSeq = curses.tigetstr('setab') or curses.tigetstr('setb') or ''
     fgColorSeq = curses.tigetstr('setaf') or curses.tigetstr('setf') or ''
- 
+
     for color in COLORS:
         # Get the color index from curses
         colorIndex = getattr(curses, 'COLOR_%s' % color)
@@ -64,14 +64,14 @@ def setup():
     for value in VALUES:
         # Set terminal related values
         setattr(MODULE, value, curses.tigetnum(VALUES[value]))
- 
+
 def render(text):
     """Helper function to render text easily
     Example:
     render("%(GREEN)s%(BOLD)stext%(NORMAL)s") -> a bold green text
     """
     return text % MODULE.__dict__
- 
+
 try:
     import curses
     setup()

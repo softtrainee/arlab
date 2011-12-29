@@ -47,7 +47,7 @@ class DiffusionGraph(Graph):
     bindings = None
     runids = None
     include_panels = None
-    
+
     zdataname_generators = None
     def show_plot_editor(self):
         '''
@@ -56,23 +56,23 @@ class DiffusionGraph(Graph):
         i = self.selected_plotid
 #        names = ['Spectrum', 'LogR/Ro', 'Arrhenius', 'CoolingHistory', 'UncontrainedThermalHistory']
 #        names=self.include_panels
-        
+
         names = []
         for n in self.include_panels:
             names.append(LABELS[n])
-        
+
         self._show_plot_editor(**{'name':names[i]})
 
     def clear(self):
         super(DiffusionGraph, self).clear()
         self.runids = []
-        
+
     def add_runid(self, rid, kind=None):
         if kind == 'path':
             rid = os.path.basename(rid)
         self.runids.append(rid)
         return rid
-     
+
     def set_group_binding(self, pid, value):
         '''
 
@@ -94,37 +94,37 @@ class DiffusionGraph(Graph):
                 for k in self.groups:
                     g = self.groups[k]
                     for i, pp in enumerate(g):
-                        
+
                         try:
                             index = pp.index(plot)
                             break
                         except ValueError:
                             continue
-    
+
                     if index is not None:
                         break
-        
+
                 if k == 'logr_ro':
                     if not attr in ['line_width']:
                         try:
                             g[i][index].trait_set(**{attr:value})
                         except KeyError:
                             pass
-                    
+
                     try:
                         g = self.groups['arrhenius']
-                    
+
                         n = 1
                         if hasattr(g[i][0], 'scatter'):
                             n = 2
-                        
+
                         plot = g[i][index * n]
                         plot.trait_set(**{attr:value})
                         if attr == 'color':
                             if hasattr(plot, 'scatter'):
                                 plot.scatter.color = value
                                 plot.scatter.outline_color = value
-                        
+
                     except KeyError:
                         pass
                     try:
@@ -133,7 +133,7 @@ class DiffusionGraph(Graph):
                             g[i][index].trait_set(**{attr:value})
                     except KeyError:
                         pass
-                    
+
                 elif k == 'spectrum':
                     if index % 2 == 0:
                         if not attr in ['line_width']:
@@ -142,20 +142,20 @@ class DiffusionGraph(Graph):
                                 g[i][index].trait_set(**{attr:value})
                             except KeyError:
                                 pass
-                            
+
                         try:
                             g = self.groups['logr_ro']
                             g[i][index].trait_set(**{attr:value})
                         except KeyError:
                             pass
                 elif k == 'arrhenius':
-                        
+
                     try:
                         g = self.groups['logr_ro']
                         g[i][index].trait_set(**{attr:value})
                     except KeyError:
                         pass
-                    
+
                     try:
                         g = self.groups['spectrum']
                         if index % 2 == 0:
@@ -165,27 +165,27 @@ class DiffusionGraph(Graph):
                 self.redraw()
         except IndexError:
             pass
-            
+
     def new_graph(self):
         '''
         '''
         if self.groups:
             del(self.groups)
-            
+
         self.groups = dict()
         for key in self.include_panels:
             self.groups[key] = []
-            
+
         n = len(self.include_panels)
         padding = [50, 5, 10, 30]# if n>2 else [25,5,50,30]
-        
+
         for _i in range(n):
             a = self.new_plot(padding=padding,
                           pan=True,
                           zoom=True,
                           )
-        
-        
+
+
     def set_group_visiblity(self, vis, gid=0):
         '''
           
@@ -196,7 +196,7 @@ class DiffusionGraph(Graph):
                 g = self.groups[k]
                 try:
                     plots = g[gid]
-    
+
                     for p in plots:
                         p.visible = vis
                     self.redraw()
@@ -208,7 +208,7 @@ class DiffusionGraph(Graph):
     def set_plot_visibility(self, plot, vis):
         plot.visible = vis
         self.redraw()
-        
+
     def build_spectrum(self, ar39, age, ar39_err=None, age_err=None, pid=0, ngroup=True, **kw):
         '''
 
@@ -218,21 +218,21 @@ class DiffusionGraph(Graph):
         if ar39_err is not None and age_err is not None:
             a, _p = self.new_series(ar39_err, age_err, plotid=pid,
                         type='polygon',
-                        color=kw['color'] if kw.has_key('color') else 'orange'
+                        color=kw['color'] if 'color' in kw else 'orange'
                         )
             #plots.append(a)
 
         b, _p = self.new_series(ar39, age, plotid=pid, **kw)
         plots = [b, a] if a is not None else [b]
-        
+
         if ngroup:
             self.groups['spectrum'].append(plots)
         else:
             self.groups['spectrum'][-1] += plots
-            
+
         self.set_x_title('Cum. 39Ar %', plotid=pid)
         self.set_y_title('Age (Ma)', plotid=pid)
-        
+
         return b
 
     def build_logr_ro(self, ar39, logr, pid=1, ngroup=True, **kw):
@@ -249,9 +249,9 @@ class DiffusionGraph(Graph):
 
         self.set_x_title('Cum. 39Ar %', plotid=pid)
         self.set_y_title('Log R/Ro', plotid=pid)
-        
+
         return a
-    
+
     def build_arrhenius(self, T, Dta, pid=2, ngroup=True, **kw):
         '''
             
@@ -260,20 +260,20 @@ class DiffusionGraph(Graph):
         a, _p = self.new_series(T, Dta, plotid=pid, marker_size=2.5, **kw)
         g = self.groups['arrhenius']
         if ngroup:
-            
+
             if isinstance(a, tuple):
                 g.append(list(a))
             else:
                 g.append([a])
         else:
             #g[len(g) - 1].append(a)
-            if isinstance(a, tuple):    
+            if isinstance(a, tuple):
                 g[-1] += list(a)
             else:
                 g[-1].append(a)
         self.set_x_title('10000/T (K)', plotid=pid)
         self.set_y_title('Log Dt/a^2', plotid=pid)
-        
+
     def build_cooling_history(self, ts, Tsl, Tsh, pid=3):
         '''
         '''
@@ -285,28 +285,28 @@ class DiffusionGraph(Graph):
 
         self.groups['cooling_history'].append([a, b])
         self.redraw()
-        
+
     def build_unconstrained_thermal_history(self, datacontainer, pid=4, contour=True):
-    
+
         self.set_x_title('t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
         self.set_y_limits(min=100, plotid=pid)
-        
+
         if contour:
             if not self.zdataname_generators:
                 self.zdataname_generators = [name_generator('z')]
             else:
                 self.zdataname_generators.append(name_generator('z'))
-            
+
             zname = self.zdataname_generators[-1].next()
             x = [10, 350]
             y = [100, 600]
             plot, names, rd = self._series_factory(x, y, plotid=pid)
             plot.data.set_data(zname, datacontainer)
-            
+
             rd['xbounds'] = tuple(x)
             rd['ybounds'] = tuple(y)
-            
+
             cmap = 'yarg'
             cmap = color_map_name_dict.get(cmap)
             rd['colormap'] = cmap
@@ -325,16 +325,16 @@ class DiffusionGraph(Graph):
             self.groups['unconstrained_thermal_history'].append([pline, ppoly])
             #remove zoom
             self.plots[pid].overlays.pop()
-            
+
 #            self.plotcontainer.draw_order = ['background', 'underlay', 'image', 'plot', 'selection', 'border', 'annotation', 'overlay']
-            
-            
+
+
         else:
             for s in datacontainer:
                 xs = s[:, 0]
                 ys = s[:, 1]
                 self.new_series(xs, ys)
-    
+
 #============= EOF ====================================
 
 #    def set_group_color(self, gid=0, series=None):

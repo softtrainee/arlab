@@ -30,7 +30,7 @@ class MDDModelerActionSet(WorkbenchActionSet):
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
     actions = [
-               
+
                Action(name='Autoarr',
                       path='MenuBar/MDD',
                     class_name='src.data_processing.plugins.mdd_modeler_actions:AutoarrAction'
@@ -47,7 +47,7 @@ class MDDModelerActionSet(WorkbenchActionSet):
                       path='MenuBar/MDD',
                     class_name='src.data_processing.plugins.mdd_modeler_actions:ConfidenceIntervalAction'
                     ),
-               
+
                Action(name='Parse Autoupdate',
                       path='MenuBar/MDD',
                     class_name='src.data_processing.plugins.mdd_modeler_actions:ParseAutoupdateAction'

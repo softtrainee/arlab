@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Float, Property, Str
-from traitsui.api import View, Item, VGroup, EnumEditor
+from traitsui.api import View, Item, EnumEditor
 #=============standard library imports ========================
 #import time
 #=============local library imports  ==========================
@@ -59,7 +59,9 @@ class ISeriesDevice(CoreDevice):
                 except:
                     return -1
         else:
-            return self.get_random_value(min= -10, max=10)
+            mi = -10
+            ma = 10
+            return self.get_random_value(min=mi, max=ma)
 
     def _build_command(self, cmd_type, cmd_indx):
         '''
@@ -76,7 +78,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
     input_type = Property(depends_on='_input_type')
     _input_type = Str
     id_query = '*R07'
-    
+
     def id_response(self, response):
         r = False
         if response is not None:
@@ -155,9 +157,9 @@ class DPi32TemperatureMonitor(ISeriesDevice):
                 input_class = INPUT_CLASS_MAP[int(re[:2])]
                 if input_class == 'TC':
                     self._input_type = TC_MAP[int(re[2:6])]
-                    
+
                 return True
-             
+
     def reset(self):
         '''
         '''
@@ -183,14 +185,14 @@ class DPi32TemperatureMonitor(ISeriesDevice):
                    pan=True,
                    )
         g.new_series()
-        
-        
+
+
     def traits_view(self):
         '''
         '''
         return View(Item('process_value', style='readonly'),
                     Item('input_type', editor=EnumEditor(values=TC_KEYS), show_label=False))
-    
+
 #    def current_state_view(self):
 #        v = super(DPi32TemperatureMonitor, self).current_state_view()
 #    
@@ -201,5 +203,5 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 #                                        )
 #                                 )
 #        return v
-        
+
 #============= EOF ============================================

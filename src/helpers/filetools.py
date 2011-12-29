@@ -38,7 +38,7 @@ def unique_path(root, base, filetype='txt'):
         p = os.path.join(root, '%s%03i.%s' % (base, i, filetype))
         i += 1
         cnt += 1
-        
+
     return p, cnt
 
 def str_to_bool(a):

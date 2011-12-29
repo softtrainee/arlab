@@ -22,6 +22,6 @@ from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 class HillClimberCanvas(MarkupCanvas):
     #make none editable
     tool_state = None
-    
-     
+
+
 #============= EOF =====================================

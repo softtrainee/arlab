@@ -27,15 +27,15 @@ class StackedGraph(Graph):
     def add_minor_xticks(self, plotid=0, **kw):
         if plotid != 0:
             kw['aux_component'] = self.plots[0]
-        
+
         super(StackedGraph, self).add_minor_xticks(plotid=plotid, **kw)
-        
+
     def add_minor_yticks(self, plotid=0, **kw):
         if plotid != 0:
             kw['aux_component'] = self.plots[0]
-        
+
         super(StackedGraph, self).add_minor_yticks(plotid=plotid, **kw)
-    
+
     def container_factory(self, *args, **kw):
         c = super(StackedGraph, self).container_factory(*args, **kw)
         '''
@@ -44,7 +44,7 @@ class StackedGraph(Graph):
         '''
         c.on_trait_change(self._bounds_changed_, 'bounds')
         return c
-    
+
     def new_plot(self, **kw):
         '''
         '''
@@ -70,7 +70,7 @@ class StackedGraph(Graph):
 
         p = super(StackedGraph, self).new_plot(**kw)
         p.value_axis.ensure_labels_bounded = True
-        
+
         for p in self.plots[1:]:
             p.padding_top = 0
             p.padding_bottom = 0
@@ -78,18 +78,18 @@ class StackedGraph(Graph):
         link = True
         if 'link' in kw:
             link = kw['link']
-            
+
         if len(self.plots) > 1 and link:
             for p in self.plots[1:]:
                 p.index_axis.visible = False
                 p.index_range = self.plots[0].index_range
-                
+
     def _bounds_changed_(self, bounds):
         '''
             vertically resizes the stacked graph.
             the plots are sized equally
         '''
-        
+
         for p in self.plots:
             p.bounds[1] = bounds[1] / len(self.plots)
 #============= EOF ====================================

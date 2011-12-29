@@ -91,7 +91,7 @@ class RegressionEditor(HasTraits):
 
         self.graph.fit_types[self.id] = self.fit_type
         self.graph.selected_plotid = self.id
-        
+
     def set_regression_statistics(self, rdict, plotid=0):
         '''
 

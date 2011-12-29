@@ -32,7 +32,7 @@ class FiberLight(AbstractDevice):
     power_label = Property(depends_on='state')
     state = Bool
     auto_onoff = Bool(True)
-    
+
     def load_additional_args(self, config):
         '''
 
@@ -54,20 +54,20 @@ class FiberLight(AbstractDevice):
         self.read_state()
         self.read_intensity()
         return True
-    
+
     def read_state(self):
         if self._cdevice is not None:
             if self._cdevice.read_state():
                 self.state = True
             else:
                 self.state = False
-    
+
     def read_intensity(self):
         if self._cdevice is not None:
             v = self._cdevice.read_intensity()
             if v is not None:
                 self._intensity = float('{:0.3n}'.format(v))
-        
+
     def power_on(self):
         '''
         '''
@@ -85,7 +85,7 @@ class FiberLight(AbstractDevice):
 #    @on_trait_change('intensity')
     def _get_intensity(self):
         return self._intensity
-    
+
     def _set_intensity(self, v):
         '''
         '''
@@ -109,11 +109,11 @@ class FiberLight(AbstractDevice):
         else:
             s = 'ON'
         return s
-    
+
     def get_control_group(self):
         return Group(HGroup(Item('power', editor=ButtonEditor(label_value='power_label'), show_label=False),
                             Item('intensity', format_str='%0.2f', show_label=False)
-                                 
+
                            ),
                         Item('auto_onoff'))
     def traits_view(self):

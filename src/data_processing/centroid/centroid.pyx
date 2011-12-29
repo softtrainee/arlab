@@ -18,7 +18,7 @@ def area(np.ndarray[np.float64_t, ndim=2] data):
 		a -= (p1[1] * p2[0])
 		j = i
 	return a / 2
-	
+
 def centroid(np.ndarray[np.float64_t, ndim=2] data):
 	cdef int n = data.shape[0]
 	cdef int j = n - 1
@@ -31,6 +31,6 @@ def centroid(np.ndarray[np.float64_t, ndim=2] data):
 		x += (p1[0] + p2[0]) * f
 		y += (p1[1] + p2[1]) * f
 		j = i
-	
+
 	cdef float a = area(data)
-	return x / (6 * a), y / (6 * a) 
+	return x / (6 * a), y / (6 * a)

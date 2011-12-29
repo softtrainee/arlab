@@ -15,10 +15,11 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, Float, Bool
-from traitsui.api import Group, Item, HGroup, spring, Spring
+from traitsui.api import Group, Item
 #============= standard library imports ========================
-import sys,os
-sys.path.append(os.path.join(os.path.expanduser('~'), 'Programming','mercurial','pychron_beta'))
+import sys
+import os
+sys.path.append(os.path.join(os.path.expanduser('~'), 'Programming', 'mercurial', 'pychron_beta'))
 #============= local library imports  ==========================
 
 from stage_manager import StageManager
@@ -177,7 +178,7 @@ class VideoStageManager(StageManager, Videoable):
             if newpos:
                 #nx = self.stage_controller._x_position + newpos[0]
                 #ny = self.stage_controller._y_position + newpos[1]
-                self._point=0
+                self._point = 0
 
                 self.linear_move(*newpos, calibrated_space=False)
                 return True

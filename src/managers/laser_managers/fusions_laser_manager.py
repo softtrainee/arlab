@@ -65,16 +65,16 @@ class FusionsLaserManager(LaserManager):
     pointer_label = Property(depends_on='pointer_state')
 
     step_heat_manager = None
-    
+
     lens_configuration = Str('gaussian')
     lens_configuration_dict = Dict
     lens_configuration_names = List
-    
+
     def _lens_configuration_changed(self):
-        
+
         t = Thread(target=self.set_lens_configuration)
         t.start()
-    
+
     def set_light(self, state):
         if state:
             self.fiber_light.power_off()
@@ -89,7 +89,7 @@ class FusionsLaserManager(LaserManager):
             self.step_heat_manager.kill(**kw)
 
         super(FusionsLaserManager, self).kill(**kw)
-    
+
     def load_lens_configurations(self):
         for config_name in ['gaussian', 'homogenizer']:
             self.config_path = None
@@ -97,40 +97,40 @@ class FusionsLaserManager(LaserManager):
             if config:
                 self.info('loading lens configuration {}'.format(config_name))
                 self.lens_configuration_names.append(config_name)
-                
+
                 offset = tuple(map(int, self.config_get(config, 'General', 'offset', default='0,0').split(',')))
-                
+
                 bd = self.config_get(config, 'General', 'beam', cast='float')
                 user_enabled = self.config_get(config, 'General', 'user_enabled', cast='boolean', default=True)
                 self.lens_configuration_dict[config_name] = (bd, offset, user_enabled)
-                
+
         self.set_lens_configuration('gaussian')
-        
+
     def set_lens_configuration(self, name=None):
         if name is None:
             name = self.lens_configuration
-            
+
         try:
             bd, offset, enabled = self.lens_configuration_dict[name]
         except KeyError:
             return
-        
+
         self.stage_manager.canvas.crosshairs_offset = offset
-        
+
         self.set_beam_diameter(bd, force=True)
         self.beam_enabled = enabled
-        
+
     def finish_loading(self):
         '''
         '''
 #        if self.fiber_light._cdevice is None:
 #            self.fiber_light._cdevice = self.subsystem.get_module('FiberLightModule')
-        
+
         super(FusionsLaserManager, self).finish_loading()
-        
+
         self.load_lens_configurations()
-        
-        
+
+
     @on_trait_change('pointer')
     def pointer_ononff(self):
         '''
@@ -168,8 +168,8 @@ class FusionsLaserManager(LaserManager):
             result = True
         else:
             self.info('beam disabled by lens configuration {}'.format(self.lens_configuration))
-        return result 
-    
+        return result
+
     def set_zoom(self, z, **kw):
         '''
         '''
@@ -241,12 +241,12 @@ class FusionsLaserManager(LaserManager):
             ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
             ]
         return s
-    
+
     def get_lens_configuration_group(self):
         return Item('lens_configuration',
                            editor=EnumEditor(values=self.lens_configuration_names)
                            )
-        
+
     def get_optics_group(self):
         csliders = self.get_control_sliders()
         vg = VGroup(
@@ -254,12 +254,12 @@ class FusionsLaserManager(LaserManager):
                       show_border=True,
                       label='Optics'
                       )
-        
+
         lens_config = self.get_lens_configuration_group()
         print lens_config
         if lens_config:
             vg.content.insert(0, lens_config)
-            
+
         return vg
     def __control__group__(self):
         '''
@@ -268,20 +268,20 @@ class FusionsLaserManager(LaserManager):
                            HGroup(spring,
                                   Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
                                   self._button_group_factory(self.get_control_buttons(), orientation='h'),
-                                  
+
                                   springy=True
                                   ),
-                           
+
                            show_border=True,
                            springy=True,
                            label='Power'
                            )
-        
+
         ps = self.get_power_slider()
         if ps:
             ps.springy = True
             power_grp.content.append(ps)
-        
+
         pulse_grp = HGroup(
                            #spring,
                            Item('pulse', show_label=False, style='custom'),
@@ -289,10 +289,10 @@ class FusionsLaserManager(LaserManager):
                            springy=False,
                            label='Pulse'
                            )
-        
+
         vg = VGroup()
 
-        
+
         optics_grp = self.get_optics_group()
         hg = HGroup(#spring,
                    optics_grp,
@@ -306,13 +306,13 @@ class FusionsLaserManager(LaserManager):
                   )
 #        vg.content.append(self._update_slider_group_factory(csliders))
         vg.content.append(hg)
-        
+
         ac = self.get_additional_controls()
         if ac is not None:
             vg = HGroup(vg, ac)
 
         return vg
-    
+
     def _get_pointer_label(self):
         '''
         '''

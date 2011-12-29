@@ -203,14 +203,14 @@ class ExtractionLineCanvas(HasTraits):
         else:
             obj = self.canvas3D._get_object_by_name(name)
         return obj
-    
+
     def load_canvas(self, path):
         '''
         '''
         print 'loading canvas ', path
         if self.canvas2D:
             self.canvas2D.bootstrap(path)
-    
+
 
     def update_valve_state(self, name, state, *args, **kw):
         '''

@@ -23,27 +23,27 @@ from src.hardware.core.core_device import CoreDevice
 class MicroIonController(CoreDevice):
     scan_func = 'get_pressures'
     address = '01'
-    
+
     def load_additional_args(self, config, *args, **kw):
         self.address = self.config_get(config, 'General', 'address', optional=False)
         return True
-    
+
     def graph_builder(self, g):
         CoreDevice.graph_builder(self, g, **{'show_legend':True})
         g.new_series()
         g.set_series_label('IG')
-        
+
         g.new_series()
         g.set_series_label('CG1', series=1)
 
         g.new_series()
         g.set_series_label('CG2', series=2)
-        
+
     def get_pressures(self):
         b = self.get_convectron_b_pressure()
         a = self.get_convectron_a_pressure()
         ig = self.get_ion_pressure()
-        
+
         return ig, a, b
         #return self.get_convectron_a_pressure()
 
@@ -120,11 +120,11 @@ class MicroIonController(CoreDevice):
         c = ' '.join(args)
 
         return  c
-        
+
     def _parse_response(self, r):
         if self.simulation or r is None:
             r = self.get_random_value(0, 10000) / 10000.0
-            
+
         return r
 
 ON = True

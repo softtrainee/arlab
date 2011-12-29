@@ -85,12 +85,12 @@ class InitializationParser(XMLParser):
         self.save()
 
     def get_device(self, manager, devname, plugin, element=False):
-        
+
         if plugin is None:
             man = self.get_plugin(manager)
         else:
             man = self.get_manager(manager, plugin)
-        
+
         dev = next((d for d in man.findall('device') if d.text.strip() == devname), None)
         if not element and dev:
             dev = dev.text.strip()

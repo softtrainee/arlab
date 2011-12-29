@@ -41,7 +41,7 @@ class ModbusCommunicator(SerialCommunicator):
         #super(ModbusCommunicator, self).load(config, path)
         SerialCommunicator.load(self, config, path)
         self.set_attribute(config, 'slave_address', 'Communications', 'slave_address')
-            
+
     def write(self, register, value, nregisters=1, response_type='register_write', **kw):
         '''
         '''
@@ -57,7 +57,7 @@ class ModbusCommunicator(SerialCommunicator):
         '''            
         '''
         return self.read_holding_register(register, nregisters, response_type, **kw)
-        
+
     def _execute_request(self, args, response_type, ** kw):
         '''
         '''
@@ -109,18 +109,18 @@ class ModbusCommunicator(SerialCommunicator):
                 if response_type == 'register_write':
                     return True
                 ndata = int(args[2], 16)
-                
+
                 dataargs = args[3:3 + ndata]
                 if len(dataargs) < ndata:
                     ndata = 4
                     dataargs = args[3:3 + ndata]
-                    
+
                 if ndata > 2:
                     data = []
                     for i in range(ndata / 4):
                         low_word = ''.join(dataargs[4 * i:4 * i + 2])
                         high_word = ''.join(dataargs[4 * i + 2:4 * i + 4])
-    
+
                         if self.device_word_order == 'low_high':
                             '''
                                 dataargs in low word - high word order
@@ -130,10 +130,10 @@ class ModbusCommunicator(SerialCommunicator):
                             '''
                             di = ''.join([high_word, low_word])
                         else:
-                            di=''.join([low_word,high_word])
+                            di = ''.join([low_word, high_word])
                         data.append(di)
-                        
-                    data=''.join(data)
+
+                    data = ''.join(data)
 #                else:
 #                    data = '0000'.join(dataargs)
 
@@ -141,13 +141,13 @@ class ModbusCommunicator(SerialCommunicator):
                     fmt_str = '!' + 'f' * (ndata / 4)
                     resp = struct.unpack(fmt_str, data.decode('hex'))
                     #return a single value
-                    
+
                     if ndata == 4:
                         return resp[0]
                     else:
                         #return a list of values
                         return resp
-                     
+
                 else:
                     data = ''.join(args[3:3 + ndata])
                     return int(data, 16)
@@ -165,17 +165,17 @@ class ModbusCommunicator(SerialCommunicator):
         nbytes = '{:02X}'.format(int(nregisters * 2))
 
         if isinstance(value, tuple):
-            value=''.join(map('{:04X}'.format,value))
-        else: 
+            value = ''.join(map('{:04X}'.format, value))
+        else:
             #convert decimal value to 32-bit float
             binstr = struct.pack('!f', value)
-            
+
             #convert binary string to a ascii hex string
             hexstr = binascii.hexlify(binstr)
             if self.device_word_order == 'low_high':
                 high = hexstr[:4]
                 low = hexstr[4:]
-    
+
                 #flip order of words
                 value = ''.join([low, high])
             else:
@@ -201,8 +201,8 @@ class ModbusCommunicator(SerialCommunicator):
         data_address = '{:04X}'.format(holdid)
         n = '{:04X}'.format(nregisters)
         return self._execute_request([func_code, data_address, n], response_type, **kw)
-    
-            
+
+
 #    def read_input_status(self, inputid, ninputs):
 #        '''
 #        '''

@@ -67,10 +67,10 @@ class BitmapUnderlay(AbstractOverlay):
                 gc.translate_ctm(-rx, -ry)
 
                 #correct for padding and delta size
-                dx = ((self.bitmap.GetWidth() - self.component.width - 
+                dx = ((self.bitmap.GetWidth() - self.component.width -
                       self.component.padding_left - self.component.padding_right
                       ) / 2.0)
-                dy = ((self.bitmap.GetHeight() - self.component.height - 
+                dy = ((self.bitmap.GetHeight() - self.component.height -
                       self.component.padding_top - self.component.padding_bottom
                       ) / 2.0)
 

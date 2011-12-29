@@ -68,19 +68,19 @@ class LaserTrayCanvas(MapCanvas):
                 if abs(p.x - x) < tol and abs(p.y - y) < tol:
                     #point already in the markup dict
                     return p
-        
-        
+
+
     def new_point(self):
         if self.point_exists(*self._stage_position):
             return
-        
+
         id = 'point{}'.format(self.point_counter)
         p = PointIndicator(*self._stage_position, id=id, canvas=self)
-        self.markupcontainer[id] = p 
+        self.markupcontainer[id] = p
         self.point_counter += 1
         self.request_redraw()
         return p
-    
+
     def clear_points(self):
         popkeys = []
         self.point_counter = 0
@@ -90,7 +90,7 @@ class LaserTrayCanvas(MapCanvas):
         for p in popkeys:
             self.markupcontainer.pop(p)
         self.request_redraw()
-        
+
     def load_points_file(self, p):
         self.point_counter = 0
         with open(p, 'r') as f:
@@ -99,22 +99,22 @@ class LaserTrayCanvas(MapCanvas):
                 pt = self.point_exists(float(x), float(y))
                 if pt is not None:
                     self.markupcontainer.pop(pt.id)
-                
+
                 self.markupcontainer[id] = PointIndicator(float(x), float(y), id=id, canvas=self)
                 self.point_counter += 1
-                
+
         self.request_redraw()
-             
+
     def save_points(self, p):
         lines = []
-        for _k, v in self.markupcontainer.iteritems(): 
+        for _k, v in self.markupcontainer.iteritems():
             if isinstance(v, PointIndicator):
                 lines.append(','.join(map(str, (v.id, v.x, v.y))))
-        
+
         with open(p, 'w') as f:
             f.write('\n'.join(lines))
-                
-        
+
+
     def config_view(self):
         v = View(
                Item('render_map'),
@@ -334,8 +334,8 @@ class LaserTrayCanvas(MapCanvas):
             if self.crosshairs_offset is not (0, 0):
                 pos_off = pos[0] + self.crosshairs_offset[0], pos[1] + self.crosshairs_offset[1]
                 self._draw_crosshairs(gc, pos_off, color=self.crosshairs_offset_color, kind=5)
-                
-                
+
+
 #            self._draw_crosshairs(gc, pos, color = colors1f[self.crosshairs_color])
             self._draw_crosshairs(gc, pos, color=self.crosshairs_color)
 
@@ -379,27 +379,27 @@ class LaserTrayCanvas(MapCanvas):
             return
         gc.save_state()
         gc.set_stroke_color(color)
-    
+
         if kind is not 5:
             p00 = self.x, my
             p01 = mx - radius, my
-    
+
             p10 = mx, my + radius
             p11 = mx, self.y2
-    
+
             p20 = mx + radius, my
             p21 = self.x2, my
-    
+
             p30 = mx, my - radius
             p31 = mx, self.y
-    
+
             points = [(p00, p01), (p10, p11),
                       (p20, p21), (p30, p31)]
-    
-    
-            
+
+
+
             for p1, p2 in points:
-    
+
                 gc.begin_path()
                 gc.move_to(*p1)
                 gc.line_to(*p2)
@@ -412,9 +412,9 @@ class LaserTrayCanvas(MapCanvas):
                 step = 20
                 for i in range(0, 360, step):
                     gc.arc(mx, my, radius, math.radians(i),
-                                           math.radians(i + step / 2.0))        
+                                           math.radians(i + step / 2.0))
                     gc.draw_path()
-                
+
             else:
                 gc.arc(mx, my, radius, 0, math.radians(360))
             gc.draw_path()

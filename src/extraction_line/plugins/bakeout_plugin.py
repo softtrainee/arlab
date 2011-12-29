@@ -49,19 +49,19 @@ class BakeoutPlugin(CorePlugin):
         return bm
 
     managers = List(contributes_to=MANAGERS)
-    
-    
+
+
     def _managers_default(self):
         '''
         '''
         app = self.application
         return [dict(name='bakeout',
                      manager=app.get_service(BakeoutManager))]
-    
-    
+
+
     graph_handlers = List(contributes_to=GRAPH_HANDLERS)
     def _graph_handlers_default(self):
         return [self.application.get_service(BakeoutManager)]
-    
+
 #============= views ===================================
 #============= EOF ====================================

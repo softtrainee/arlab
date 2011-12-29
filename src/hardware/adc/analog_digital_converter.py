@@ -205,7 +205,7 @@ class M1000(AnalogDigitalConverter):
 class KeithleyADC(M1000):
     '''
     '''
-    
+
 class OmegaADC(M1000):
     '''
     '''

@@ -29,7 +29,7 @@ class VideoUnderlay(AbstractOverlay):
     swap_rb = True
     mirror = False
     flip = False
-        
+
     def overlay(self, component, gc, *args, **kw):
         '''
 
@@ -44,7 +44,7 @@ class VideoUnderlay(AbstractOverlay):
                                          )
             if bitmap:
                 x = component.x
-                y = component.y        
+                y = component.y
                 dc.DrawBitmap(bitmap, x, y, False)
 
         except (AttributeError, UnboundLocalError), e:

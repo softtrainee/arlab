@@ -42,14 +42,14 @@ class BaseDataCanvas(DataView):
 
     plot = None
     def cmap_plot(self, z):
-        
-        
+
+
         from chaco.array_plot_data import ArrayPlotData
         from chaco.plot import Plot
         from chaco.default_colormaps import color_map_name_dict
         pd = ArrayPlotData()
         pd.set_data('cmapdata', z)
-        
+
         p = Plot(pd, padding=0)
         p.img_plot('cmapdata',
                    xbounds=(-25, 25),
@@ -58,17 +58,17 @@ class BaseDataCanvas(DataView):
                    )
         self.add(p)
         return pd
-        
+
     def line_plot(self, x, y, new_plot=True):
         if self.plot is None or new_plot:
-            
-            
+
+
             if isinstance(x, (float, int)):
                 x = [x]
-            
+
             if isinstance(y, (float, int)):
                 y = [y]
-            
+
             self.plot = LinePlot(
                  index=ArrayDataSource(x),
                  value=ArrayDataSource(y),

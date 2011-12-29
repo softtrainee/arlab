@@ -51,7 +51,7 @@ class ExtractionLinePlugin(CorePlugin):
         '''
         elm = ExtractionLineManager()
         elm.bind_preferences()
-        
+
         return elm
 
     managers = List(contributes_to=MANAGERS)

@@ -31,14 +31,14 @@ class MDDModelerPerspective(Perspective):
                               ),
                 PerspectiveItem(id='pychron.modeler.summary_view',
                               #width = 0.65
-                              
+
                               ),
                 PerspectiveItem(id='pychron.modeler.notes_view',
                               relative_to='pychron.modeler.summary_view',
                               #width = 0.65
                               position='bottom'
                               )
-                
+
               ]
 #              PerspectiveItem(id = 'hardware.devices',
 #                              width = 0.65

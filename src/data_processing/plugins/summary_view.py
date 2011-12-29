@@ -33,7 +33,7 @@ class SummaryView(HasTraits):
             try:
                 new = new[0]
             except (IndexError, TypeError):
-                return 
+                return
         try:
             if os.path.isdir(new.path):
                 self._parse_diffusion_parameters(new.path)
@@ -55,7 +55,7 @@ class SummaryView(HasTraits):
         p = os.path.join(root, 'param.out')
         if os.path.isfile(p):
             with open(p, 'r') as f:
-        
+
                 lines = [li.split('     ') for li in [l.strip() for l in f][-(2 + ndomains):-2]]
                 ds = []
                 for l in lines:

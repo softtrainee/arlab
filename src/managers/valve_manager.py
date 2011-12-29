@@ -115,7 +115,7 @@ class ValveManager(Manager):
 
                 for v in self.valves:
                     
-                    if sls.has_key(v) and sls[v]:
+                    if v in sls and sls[v]:
                         self.lock(v, save=False)
                     else:
                         self.unlock(v, save=False)

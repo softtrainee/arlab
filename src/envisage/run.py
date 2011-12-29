@@ -57,7 +57,7 @@ PACKAGE_DICT = dict(
                    MDDModelerUIPlugin='src.data_processing.plugins.mdd_modeler_ui_plugin',
                    SVNPlugin='src.svn.plugins.svn_plugin',
                    SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
-                   
+
                    FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
                    FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
                    FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
@@ -73,7 +73,7 @@ PACKAGE_DICT = dict(
 
                    BakeoutPlugin='src.extraction_line.plugins.bakeout_plugin',
                    BakeoutUIPlugin='src.extraction_line.plugins.bakeout_ui_plugin',
-                   
+
                    TwitterPlugin='src.social.plugins.twitter_plugin',
                    TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',
                    EmailPlugin='src.social.plugins.email_plugin',
@@ -99,7 +99,7 @@ def get_user_plugins():
         try:
             m = __import__(package, gdict, locals(), [name], -1)
             klass = getattr(m, name)
-            
+
         except ImportError, e:
             klass = None
             logger.warning('****** {} could not be imported {} ******'.format(name, e))
@@ -168,7 +168,7 @@ def launch(beta=False):
         logger.warning(err)
         warning(lab.workbench.active_window, str(err))
         lab.exit()
-        
+
     logger.info('Quiting Pychron')
 
 #============= EOF ====================================

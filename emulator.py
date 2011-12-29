@@ -22,6 +22,7 @@ import shlex
 import sys
 import select
 import socket
+
 class Server(object):
     def start_server(self, host, port):
         print 'Starting server {} {}'.format(host, port)
@@ -75,6 +76,7 @@ class Emulator(object):
     #===========================================================================
     # Pychron
     #===========================================================================
+
     def Open(self, name):
         print 'Open Valve - %s' % name
         self.state = '1'

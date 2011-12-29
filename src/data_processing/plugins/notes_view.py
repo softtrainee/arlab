@@ -32,7 +32,7 @@ class NotesView(HasTraits):
             try:
                 new = new[0]
             except (IndexError, TypeError):
-                return 
+                return
         try:
             if os.path.isdir(new.path):
 #            

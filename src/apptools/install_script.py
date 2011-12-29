@@ -24,54 +24,54 @@ from installer import Installer
 
 
 def install_pychron_suite():
-    
+
 
     parser = argparse.ArgumentParser(description='Install Pychron')
-    
+
     parser.add_argument('-d', '--data', action='store_true',
                         help='overwrite the current pychron_data directory')
     parser.add_argument('-f', '--force-data', action='store_true',
                         help='dont ask to overwrite the data dir, just do it')
     parser.add_argument('-a', '--apps-only', action='store_true',
                         help='only create the app bundles')
-    
+
     parser.add_argument('-s', '--source', action='store_true',
                         help='download source')
-    
+
     parser.add_argument('-r', '--root', type=str, nargs=1,
                         default='.',
                         help='set the root directory')
-    
+
     parser.add_argument('name', metavar='N', type=str, nargs=1,
                         default='pychron',
                         help='name of the cloned source directory')
 
-    
+
     args = parser.parse_args()
 
     #if args.root[0]:
     root = args.root[0]
-    name = args.name[0]       
+    name = args.name[0]
     src_dir = os.path.join(root, name)
 
     print 'Using {} as working dir'.format(root)
     if args.source:
-        
+
         #ask user for user name
         user = raw_input('username [jirhiker]: ')
         if not user:
             user = 'jirhiker'
-            
+
         repo = 'code.google.com/p/arlab'
         print 'cloning source for user {} from repo {}'.format(user, repo)
         repo = 'https://{}@{}'.format(user, repo)
-    
+
         base = name
         i = 0
         while os.path.exists(os.path.join(root, name)):
             name = '{}_{:03n}'.format(base, i)
             i += 1
-            
+
         #should check to make sure mercurial is installed
         #if not issue warning, install instructions and quit
         src_dir = os.path.join(root, name)
@@ -81,30 +81,30 @@ def install_pychron_suite():
         except OSError, e:
             print 'Mercurial version control is not installed'
             print 'See http://mercurial.selenic.com/'
-            return 
-        
+            return
+
         except subprocess.CalledProcessError, e:
             print e
             print 'Problem with mercurial'
             print 'See http://mercurial.selenic.com/'
-            return 
-        
+            return
+
     i = Installer('pychron_beta', 'pychron_beta')
-    
+
     i.install(src_dir)
-    
+
     i.prefix = 'remote_hardware_server'
     i.name = 'remote_hardware_server'
     i.install(src_dir)
-    
+
     i.prefix = 'bakeout'
     i.name = 'bakeout'
     i.install(src_dir)
-    
+
     #move data into place
     if not args.data:
-        return 
-    
+        return
+
     data = os.path.join(src_dir, 'data')
     home = os.path.expanduser('~')
     dst = os.path.join(home, 'pychron_data_beta')
@@ -116,13 +116,13 @@ def install_pychron_suite():
         rin = 'y'
         if not args.force_data:
             rin = raw_input('overwrite exisiting data at {} y/n [y] >> '.format(dst)).strip().lower()
-            
+
         if len(rin) == 0 or rin in ['y', 'yes']:
-            print 'copying {} -> {}'.format(data, dst)   
+            print 'copying {} -> {}'.format(data, dst)
             shutil.rmtree(dst, ignore_errors=True)
             shutil.copytree(data, dst)
-        
+
 if __name__ == '__main__':
-    
+
     install_pychron_suite()
 #============= EOF =====================================

@@ -23,17 +23,17 @@ class Timer(Thread):
         self._period = period / 1000.0
         self._func = func
         self._flag = Event()
-        
+
         self._args = args
         self._kwargs = kw
         self.start()
-    
+
     def run(self):
         while not self._flag.isSet():
             self._func(*self._args, **self._kwargs)
             self._flag.wait(self._period)
 
-        
+
     def Stop(self):
         self._flag.set()
 #============= EOF =====================================

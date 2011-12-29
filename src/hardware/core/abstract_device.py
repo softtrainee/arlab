@@ -42,7 +42,7 @@ class AbstractDevice(ViewableDevice):
 #    simulation = DelegatesTo('_cdevice')
     com_class = DelegatesTo('_cdevice')
     is_scanable = DelegatesTo('_cdevice')
-    
+
 
 #    def start(self):
 #        '''
@@ -62,20 +62,20 @@ class AbstractDevice(ViewableDevice):
         '''
         if self._cdevice is not None:
             return self._cdevice.initialize(*args, **kw)
-    
+
     def post_initialize(self, *args, **kw):
         pass
-    
+
     def open(self, **kw):
         '''
         '''
         if self._cdevice is not None:
             return self._cdevice.open(**kw)
-    
+
     def setup_scan(self, *args, **kw):
         if self._cdevice is not None:
             return self._cdevice.setup_scan(*args, **kw)
-        
+
     def load(self, *args, **kw):
         '''
         '''
@@ -93,7 +93,7 @@ class AbstractDevice(ViewableDevice):
 #        return self._cdevice.last_command
 #    def _get_last_response(self):
 #        return self._cdevice.last_response
-    
+
 #    def _get_com_class(self):
 #        if self._cdevice is not None:
 #            return self._cdevice.com_class

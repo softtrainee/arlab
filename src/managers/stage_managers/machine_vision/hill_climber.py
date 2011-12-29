@@ -5,7 +5,8 @@ from src.managers.stage_managers.stage_component_editor import LaserComponentEdi
 from pyface.timer.timer import Timer
 
 #============= standard library imports ========================
-import math, copy
+import math
+import copy
 from numpy import linspace, meshgrid, random
 #============= local library imports  ==========================
 from threading import Thread

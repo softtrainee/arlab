@@ -133,7 +133,7 @@ class Initializer(Loggable):
         super(Initializer, self).info(msg, **kw)
 
 #    def _run_(self, name=None , device_dir=None, initialization_dir=None, manager=None, plugin_name=None):
-    def _run_(self, name=None , device_dir=None, manager=None, plugin_name=None):
+    def _run_(self, name=None, device_dir=None, manager=None, plugin_name=None):
         '''
         '''
         if device_dir is None:
@@ -253,8 +253,8 @@ class Initializer(Loggable):
                 #register the device
                 if self.application is not None:
                     #display with the HardwareManager
-                    self.application.register_service(ICoreDevice, dev, {'display':True})
-                    
+                    self.application.register_service(ICoreDevice, dev, {'display': True})
+
                 devs.append(dev)
                 self.info('opening {}'.format(dev.name))
                 if not dev.open(prefs=self.device_prefs):
@@ -273,12 +273,12 @@ class Initializer(Loggable):
                 od._communicator.simulation = True
             elif result is None:
                 raise NotImplementedError
-        
+
             od.post_initialize()
-                
+
             manager.devices.append(od)
             od.application = self.application
-                
+
             if od.simulation:
                 time.sleep(0.25)
 

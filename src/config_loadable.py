@@ -124,7 +124,7 @@ class ConfigLoadable(Loggable):
                 self.configuration_dir_path = base
                 if name is None:
                     name = self.name
-                
+
                 path = os.path.join(base, '{}.cfg'.format(name))
 
         if  path is not None and os.path.isfile(path):

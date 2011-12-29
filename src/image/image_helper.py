@@ -36,12 +36,12 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
 #    cvClearMemStorage,\
 #    cvSet, cvSet2D, cvFilter2D, cvScalarAll, CV_32FC1, cvGet1D, cvSet1D, \
 #    CV_HOUGH_STANDARD,cvBoundingRect
-    
+
 
 from ctypes import POINTER
 from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT, CvVect32f, \
     cvFitEllipse2, cvCreateStructuringElementEx, CV_SHAPE_RECT, CV_RETR_CCOMP, \
-    CV_RETR_TREE, cvFilter2D, cvBoundingRect, cvPyrDown, cvPyrUp, cvSmooth,\
+    CV_RETR_TREE, cvFilter2D, cvBoundingRect, cvPyrDown, cvPyrUp, cvSmooth, \
     CV_BLUR, CV_GAUSSIAN
 from ctypes_opencv.cxcore import cvCvtSeqToArray, CV_32SC2, CV_32FC2, cvConvert, \
     CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice, CV_SEQ_FLAG_HOLE, \
@@ -58,7 +58,7 @@ def convert_seq(seq):
 
 storage = cvCreateMemStorage(0)
 def centroid(polypts):
-    
+
     pts = array([(pt.x, pt.y) for pt in polypts], dtype=float)
     return _centroid(pts)
 
@@ -162,20 +162,20 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
     polygons = []
     brs = []
     for i, cont in enumerate(contours.hrange()):
-        
+
         result = cvApproxPoly(cont, sizeof(CvContour),
                      storage, CV_POLY_APPROX_DP,
                      cvContourPerimeter(cont) * 0.001,
                       0)
-        
+
         area = abs(cvContourArea(result))
         #print result.total, area, cvCheckContourConvexity(result), cont.flags
-        
+
         if hole:
             hole_flag = cont.flags & CV_SEQ_FLAG_HOLE != 0
         else:
             hole_flag = cont.flags & CV_SEQ_FLAG_HOLE == 0
-            
+
         if (result.total >= 4
             and area > min_area
             and area < max_area
@@ -216,8 +216,8 @@ def draw_polygons(img, polygons, thickness=1, color=(0, 255, 0)):
     for pa in polygons:
         if thickness == -1:
             cvFillPoly(img, [pa], color)
-        else:    
-            cvPolyLine(img, [pa], 1, color, thickness=thickness)    
+        else:
+            cvPolyLine(img, [pa], 1, color, thickness=thickness)
 
 def draw_contour_list(src, clist, external_color=(255, 0, 0),
                       hole_color=(255, 0, 255)
@@ -403,10 +403,10 @@ def sharpen(src):
 
 def smooth(src, inplace=False):
     if inplace:
-        dst=new_dst(src)
+        dst = new_dst(src)
     else:
-        dst=src
-    cvSmooth(src,dst, CV_GAUSSIAN, 3, 3,0)
+        dst = src
+    cvSmooth(src, dst, CV_GAUSSIAN, 3, 3, 0)
 #    cvNot(src,dst)
     return dst
 
@@ -418,7 +418,7 @@ def remove_noise(img, x, y, w, h):
     #gray = cvCreateImage(sz, 8, 1)
     pyr = cvCreateImage(cvSize(int(sz.width / 2), int(sz.height / 2)), 8, 3)
 #    subimage = cvGetSubRect(timg, None, cvRect(0, 0, sz.width, sz.height))
-    
+
     # down-scale and upscale the image to filter out the noise
     cvPyrDown(subimage, pyr, 7)
     cvPyrUp(pyr, subimage, 7)
@@ -447,7 +447,7 @@ def remove_noise(img, x, y, w, h):
 #        lapv = cvGet1D(gray, i).val
 #        v = 255 * lapv[0] / maxv
 #        cvSet1D(src, i, cvScalarAll(v))
-        
+
 def contour(src):
     '''
     '''
@@ -479,7 +479,7 @@ def threshold(src, threshold, invert=False):
     kind = CV_THRESH_BINARY
     if invert:
         kind = CV_THRESH_BINARY_INV
-    
+
     cvThreshold(src, dst, threshold, 255, kind)
 
     return dst
@@ -501,7 +501,7 @@ def grayspace(src):#, width = None, height = None):
     if src.nChannels > 1:
         #gsrc=cvCreateImage(cvGetSize(src),8,1)
         dst = new_dst(src, nchannels=1)
-        
+
 #        print src.width, dst.width, src.height, dst.height
 #        print src
 #        print dst

@@ -51,12 +51,14 @@ class AerotechMotionController(MotionController):
         '''
         path = self.configuration_dir_path
         for i, a in enumerate(['x', 'y', 'z']):
+            ma = 5
+            mi = -ma
             self.axes[a] = self._axis_factory(path,
                                             name=a.upper(),
                                             parent=self,
                                             id=i + 1,
-                                            negative_limit= -5,
-                                            positive_limit=5)
+                                            negative_limit=mi,
+                                            positive_limit=ma)
 
         return True
 

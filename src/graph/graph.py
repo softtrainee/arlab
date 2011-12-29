@@ -345,7 +345,7 @@ class Graph(HasTraits):
 
         attr = getattr(plot, '{}_axis'.format(axis))
         attr.trait_set(**kw)
-    
+
     def set_grid_traits(self, plotid=0, grid='x', **kw):
         '''
         '''
@@ -584,7 +584,7 @@ class Graph(HasTraits):
         kw['plotid'] = plotid
         plot, names, rd = self._series_factory(x, y, yer=None, **kw)
         #print 'downsample', plot.use_downsample
-        
+
         plot.use_downsample = True
         if aux_plot:
             p = create_line_plot((x, y))
@@ -720,18 +720,18 @@ class Graph(HasTraits):
         l = GuideOverlay(plot, value=v)
 
         plot.overlays.append(l)
-    
+
     def add_opposite_ticks(self, plotid=0, key=None):
         p = self.plots[plotid]
         if key is None:
             for key in ['x', 'y']:
                 ax = self._plot_axis_factory(p, key, False)
                 p.underlays.append(ax)
-            
+
         else:
             ax = self._plot_axis_factory(p, key, False)
             p.underlays.append(ax)
-            
+
     def _plot_axis_factory(self, p, key, normal, **kw):
         if key == 'x':
             m = p.index_mapper
@@ -747,7 +747,7 @@ class Graph(HasTraits):
                 o = 'right'
                 kw['tick_label_formatter'] = lambda x: ''
             m = p.value_mapper
-        
+
         ax = PlotAxis(component=p,
                       mapper=m,
                       orientation=o,
@@ -755,20 +755,20 @@ class Graph(HasTraits):
                       **kw
                       )
         return ax
-        
+
     def add_minor_xticks(self, plotid=0, **kw):
         p = self.plots[plotid]
-        
-        
+
+
         m = MinorTicksOverlay(component=p, orientation='v', **kw)
         p.underlays.append(m)
-        
+
     def add_minor_yticks(self, plotid=0, **kw):
         p = self.plots[plotid]
 
         m = MinorTicksOverlay(component=p, orientation='h', **kw)
         p.underlays.append(m)
-    
+
     def redraw(self, force=True):
         if force:
             self.plotcontainer.invalidate_and_redraw()
@@ -818,7 +818,7 @@ class Graph(HasTraits):
                 kw[k] = options[k]
 
         container = c(**kw)
-        
+
         #add some tools
 #        cm=ContextualMenuTool(parent=container,
 #                              component=container
@@ -828,7 +828,7 @@ class Graph(HasTraits):
         #gt = TraitsTool(component = container)
         #container.tools.append(gt)
         return container
-    
+
     def _crosshairs_factory(self, plot=None):
         '''
         '''
@@ -1100,7 +1100,7 @@ class Graph(HasTraits):
         if scale == 'log':
             try:
                 if mi <= 0:
-                    
+
                     mi = Inf
                     for di in plot.data.list_data():
                         if 'y' in di:
@@ -1112,12 +1112,12 @@ class Graph(HasTraits):
                                     i += 1
                                 if ya[i] < mi:
                                     mi = ya[i]
-                                    
+
                             except IndexError:
                                 mi = 0.01
-                
+
                 mi = 10 ** math.floor(math.log(mi, 10))
-                
+
                 ma = 10 ** math.ceil(math.log(ma, 10))
             except ValueError:
                 return
@@ -1140,7 +1140,7 @@ class Graph(HasTraits):
             ra.low_setting = mi
         if ma is not None:
             ra.high_setting = ma
-        
+
         self.plotcontainer.request_redraw()
 
 
