@@ -27,7 +27,6 @@ from src.hardware.core.motion.motion_profiler import MotionProfiler
 from src.helpers.logger_setup import setup
 
 
-
 class MotionDesigner(HasTraits):
     canvas = Instance(Graph)
 
@@ -40,7 +39,6 @@ class MotionDesigner(HasTraits):
     distance = Property(Range(0, 10., 5), depends_on='_distance')
     _distance = Range(0, 10., 5)
 #    beam_radius = Range(0, 1.5, 1)
-
 
     def _set_velocity(self, v):
         self._velocity = v
@@ -55,17 +53,17 @@ class MotionDesigner(HasTraits):
         self.plot_velocity_profile(times, cv, 0)
         self.plot_position_profile(*times)
 
-
     def _set_acceleration(self, a):
         self._acceleration = a
 
     def _get_velocity(self):
         return self._velocity
+
     def _get_distance(self):
         return self._distance
+
     def _get_acceleration(self, a):
         return self._acceleration
-
 
 #    def _anytrait_changed(self, name, old, new):
 #        if name in ['acceleration', 'deceleration', 'velocity',
@@ -84,7 +82,6 @@ class MotionDesigner(HasTraits):
     def replot(self):
         g = self.canvas
 
-
         g.clear()
         g.new_plot(title='Velocity')
         g.new_plot(title='Position')
@@ -92,7 +89,6 @@ class MotionDesigner(HasTraits):
         atime, dtime, vtime = self.velocity_profile(0)
 
         self.plot_position_profile(atime, dtime, vtime, 1)
-
 
     def plot_position_profile(self, atime, dtime, vtime, ploitid=1):
         g = self.canvas
@@ -117,7 +113,6 @@ class MotionDesigner(HasTraits):
             y.append(p)
         g.new_series(x, y, render_style='connectedpoints')
 
-
         #plot beam center
 #        y = [p / 2.0] * 50
 #        x = linspace(0, atime + vtime + dtime, 50)
@@ -130,7 +125,6 @@ class MotionDesigner(HasTraits):
         #g.new_series(x, yl, color='blue')
         #g.new_series(x, yu, color='blue')
 
-
     def velocity_profile(self, plotid):
 
 #        v = self.velocity
@@ -139,8 +133,6 @@ class MotionDesigner(HasTraits):
 
         d = self.distance
         m = MotionProfiler()
-
-
 
         times, dists = m.calculate_transit_parameters(d, self.velocity,
                                                          self.acceleration,
@@ -170,7 +162,6 @@ class MotionDesigner(HasTraits):
 #            vc = math.sqrt((2 * d * ac) / 3.)
 #            print vc
 
-
         x.append(atime + vtime)
         y.append(v)
 #
@@ -180,8 +171,8 @@ class MotionDesigner(HasTraits):
         g.new_series(x, y, plotid=plotid, render_style='connectedpoints')
         g.set_y_limits(plotid=plotid, max=self.velocity + 5)
 
-
         return atime, dtime, vtime
+
 #============= views ===================================
     def traits_view(self):
         cgrp = Group(
@@ -200,10 +191,13 @@ class MotionDesigner(HasTraits):
                  height=700
                  )
         return v
+
     def _canvas_default(self):
         g = Graph()
 
         return g
+
+
 if __name__ == '__main__':
     setup('motionprofiler')
     m = MotionDesigner()

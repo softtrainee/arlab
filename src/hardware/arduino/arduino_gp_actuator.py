@@ -42,6 +42,8 @@ DTR will reset arduino when opening an closing a serial connection
 
 OPEN = 1
 CLOSE = 0
+
+
 class ArduinoGPActuator(GPActuator):
     '''
     Abstract module for Arduino GP Actuator
@@ -89,7 +91,6 @@ class ArduinoGPActuator(GPActuator):
 
         if self._communicator.digital_read(pin):
             return True
-
 
 #============= EOF ====================================
 
@@ -156,6 +157,4 @@ class ArduinoGPActuator(GPActuator):
 #        if self.simulation:
 #            r = True
 #        return r
-
-
-
+#============= EOF =====================================

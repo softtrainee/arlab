@@ -13,11 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
 #=============enthought library imports=======================
 from chaco.api import ColorBar, LinearMapper
 from chaco.default_colormaps import color_map_name_dict
@@ -27,11 +22,13 @@ from chaco.default_colormaps import color_map_name_dict
 from graph import Graph
 from graph import name_generator
 
+
 class ContourGraph(Graph):
     '''
     '''
     line_inspectors_write_metadata = True
     editor_enabled = False
+
     def __init__(self, *args, **kw):
         '''
         '''
@@ -45,34 +42,16 @@ class ContourGraph(Graph):
 
     def new_plot(self, add=True, **kw):
         '''
-            @type add: C{str}
-            @param add:
-
 
         '''
-        #p = super(ContourGraph, self).new_plot(add = add, **kw)
         kw['add'] = add
-        p = Graph.new_plot(self, **kw)
+        p = super(ContourGraph, self).new_plot(**kw)
         self.zdataname_generators.append(name_generator('z'))
 
         return p
 
     def new_series(self, x=None, y=None, z=None, colorbar=False, plotid=0, style='xy', **kw):
         '''
-            @type x: C{str}
-            @param x:
-
-            @type y: C{str}
-            @param y:
-
-            @type z: C{str}
-            @param z:
-
-            @type plotid: C{str}
-            @param plotid:
-
-            @type style: C{str}
-            @param style:
 
         '''
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)

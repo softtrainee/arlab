@@ -22,6 +22,8 @@ from numpy.linalg import eig
 import math
 
 #============= local library imports  ==========================
+
+
 class ErrorEllipseOverlay(AbstractOverlay):
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
@@ -34,7 +36,6 @@ class ErrorEllipseOverlay(AbstractOverlay):
         y = component.value.get_data()
         xer = component.xerror.get_data()
         yer = component.yerror.get_data()
-
 
 #        er39 = 0.00001
 #        er40 = 0.0001
@@ -53,7 +54,6 @@ class ErrorEllipseOverlay(AbstractOverlay):
             gc.restore_state()
 
     def calculate_ellipse(self, component, x, y, ox, oy, pxy,):
-
 
         covar = ox * oy * pxy
         covmat = [[ox * ox, covar],
@@ -107,7 +107,6 @@ class ErrorEllipseOverlay(AbstractOverlay):
 
         gc.lines(pts)
 
-
         gc.stroke_path()
 
 if __name__ == '__main__':
@@ -126,7 +125,6 @@ if __name__ == '__main__':
                    [covar, oy * oy]
                    ]
     w, _v = eig(covmat)
-
 
     if ox > oy:
         a = (max(w)) ** 0.5

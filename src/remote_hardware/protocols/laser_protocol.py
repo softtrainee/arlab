@@ -1,7 +1,7 @@
 '''
 Copyright 2011 Jake Ross
 
-Licensed under the Apache License:None, Version 2.0 (the "License");
+Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
@@ -15,40 +15,40 @@ limitations under the License.
 '''
 
 #=============enthought library imports=======================
-#from traits.api import HasTraits
-#from traitsui.api import View:None, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+
 class LaserProtocol:
-    commands = {'ReadLaserPower':None,
-        'GetLaserStatus':None,
-        'Enable':None,
-        'Disable':None,
-        'SetXY':'1,1',
-        'SetX':'1,1',
-        'SetY':'1',
-        'SetZ':'1',
-        'GetPosition':None,
-        'GetDriveMoving':None,
-        'GetXMoving':None,
-        'GetYMoving':None,
-        'GetZMoving':None,
-        'StopDrive':None,
-        'SetDriveHome':None,
-        'SetHomeX':None,
-        'SetHomeY':None,
-        'SetHomeZ':None,
-        'GoToHole':'1',
-        'GetJogProcedures':None,
-        'JogName':'Foo',
-        'AbortJog':None,
-        'SetBeamDiameter':'1',
-        'GetBeamDiameter':None,
-        'SetZoom':'1',
-        'GetZoom':None,
-        'SetSampleHolder':'Ba',
-        'GetSampleHolder':None,
-        'SetLaserPower':'1'
+    commands = {'ReadLaserPower': None,
+        'GetLaserStatus': None,
+        'Enable': None,
+        'Disable': None,
+        'SetXY': '1,1',
+        'SetX': '1,1',
+        'SetY': '1',
+        'SetZ': '1',
+        'GetPosition': None,
+        'GetDriveMoving': None,
+        'GetXMoving': None,
+        'GetYMoving': None,
+        'GetZMoving': None,
+        'StopDrive': None,
+        'SetDriveHome': None,
+        'SetHomeX': None,
+        'SetHomeY': None,
+        'SetHomeZ': None,
+        'GoToHole': '1',
+        'GetJogProcedures': None,
+        'JogName': 'Foo',
+        'AbortJog': None,
+        'SetBeamDiameter': '1',
+        'GetBeamDiameter': None,
+        'SetZoom': '1',
+        'GetZoom': None,
+        'SetSampleHolder': 'Ba',
+        'GetSampleHolder': None,
+        'SetLaserPower': '1'
         }
-        
+
 #============= EOF =====================================

@@ -26,6 +26,8 @@ ATTRS = ['max_velocity', 'max_transit_time',
 'min_acceleration_time', 'velocity_tol',
 'acceleration_tol', 'deceleration_tol'
 ]
+
+
 class MotionProfiler(ConfigLoadable):
 #===========================================================================    
 # configable parameters 
@@ -168,7 +170,6 @@ class MotionProfiler(ConfigLoadable):
 #        self.cvdisp = cvd
 
         return (atime, dtime, cvtime), (acd, dcd, cvd),
-#    
 #    def calculate_corrected_parameters2(self, disp, vel, ac, dc):
 #        #assume ac==dc
 #        
@@ -180,7 +181,7 @@ class MotionProfiler(ConfigLoadable):
 #        
 #        print times
 #        return cv,ac,dc
-#        
+
     def calculate_corrected_parameters(self, displacement, velocity, ac, dc):
         self.velocity_err = False
         self.min_acceleration_err = False
@@ -244,14 +245,11 @@ class MotionProfiler(ConfigLoadable):
 #                cv = self.min_velocity
 #                ac = self.min_acceleration
 #                dc = self.min_acceleration
-#                
-
-
                 #ncv, ac, dc = self.find_min(displacement, cv, ac, dc)
 #            force = True
 
 #            times, _distances = self.calculate_transit_parameters(displacement, cv, ac, dc)
-        return cv, ac, dc#, force
+        return cv, ac, dc
 
 #    def find_min(self, disp, v, a, d, tol=0.001):
 #
@@ -281,6 +279,5 @@ if __name__ == '__main__':
 
     disp = 0.01
     print 'calc parameters', m.calculate_corrected_parameters(disp, v, a, d)
-
 
 #============= EOF ====================================

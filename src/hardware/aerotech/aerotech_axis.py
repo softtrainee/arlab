@@ -21,6 +21,8 @@ from traitsui.api import View, Item, Group, RangeEditor
 #import math
 #============= local library imports  ==========================
 from src.hardware.axis import Axis
+
+
 class AerotechAxis(Axis):
     '''
     '''
@@ -48,6 +50,7 @@ class AerotechAxis(Axis):
         '''
         '''
         return self._rms_current_sample_time
+
     def _set_rms_current_sample_time(self, v):
         '''
      
@@ -78,7 +81,6 @@ class AerotechAxis(Axis):
                 value = 0
                 setattr(p, value)
 
-
     def _feedrate_changed(self):
         '''
         '''
@@ -103,7 +105,6 @@ class AerotechAxis(Axis):
 #
 #        cf = (machine_steps / prog_unit) / math.pow(10, self.metric_digits)
 
-
         self._set_parameter(n, v)
 
     def _set_parameter(self, n, v):
@@ -118,6 +119,7 @@ class AerotechAxis(Axis):
         '''
         #print name,old,new
         pass
+
     def traits_view(self):
         '''
         '''
@@ -131,5 +133,4 @@ class AerotechAxis(Axis):
                     planes,
                     traps,
                     )
-#============= views ===================================
 #============= EOF ====================================

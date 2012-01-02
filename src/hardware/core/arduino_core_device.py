@@ -18,9 +18,10 @@ limitations under the License.
 
 #============= local library imports  ==========================
 from core_device import CoreDevice
+
+
 class ArduinoCoreDevice(CoreDevice):
     '''
-        G{classtree}
     '''
     pass
 #============= EOF ====================================

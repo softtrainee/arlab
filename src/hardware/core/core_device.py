@@ -21,9 +21,7 @@ from src.helpers.timer import Timer
 import random
 from threading import Lock
 from datetime import datetime
-
 #=============local library imports  ==========================
-
 
 #from streamable import Streamable
 from viewable_device import ViewableDevice
@@ -33,9 +31,11 @@ from src.helpers.datetime_tools import generate_timestamp
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 from src.graph.plot_record import PlotRecord
 
+
 class Alarm(HasTraits):
     alarm_str = Str
     triggered = False
+
     def get_alarm_params(self):
         als = self.alarm_str
         cond = als[0]
@@ -116,7 +116,6 @@ class CoreDevice(ViewableDevice):
         c.open(port=port, baudrate=baudrate)
         self._communicator = c
 
-
     def _communicator_factory(self, communicator_type):
         if communicator_type is not None:
 
@@ -177,7 +176,6 @@ class CoreDevice(ViewableDevice):
         if self._communicator is not None:
             return self._communicator.open(**kw)
 
-
     def ask(self, cmd, **kw):
         '''
         '''
@@ -227,8 +225,6 @@ class CoreDevice(ViewableDevice):
 # streamin interface
 #===============================================================================
     def setup_scan(self):
-
-
         #should get scan settings from the config file not the initialization.xml
 
         config = self.get_configuration()
@@ -331,8 +327,6 @@ class CoreDevice(ViewableDevice):
             self.scan_path = self.data_manager.frames[self.frame_name]
         sp = self.scan_period * self.time_dict[self.scan_units]
         self.timer = Timer(sp, self.scan)
-#        self.timer.Start()
-
 
     def stop_scan(self):
         self._scanning = False

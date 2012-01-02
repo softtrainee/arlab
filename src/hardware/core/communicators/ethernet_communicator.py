@@ -19,36 +19,47 @@ import socket
 #============= local library imports  ==========================
 from communicator import Communicator
 from src.loggable import Loggable
+
+
 class Handler(Loggable):
     sock = None
+
     def get_packet(self):
         pass
+
     def send_packet(self, p):
         pass
+
     def open_socket(self, addr, timeout=0.1):
         self.address = addr
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.connect(addr)
         self.sock.settimeout(timeout)
+
     def end(self):
         pass
 
+
 class TCPHandler(Handler):
+
     def get_packet(self):
         pass
+
     def send_packet(self, p):
         pass
+
     def end(self):
         self.sock.close()
 
+
 class UDPHandler(Handler):
     datasize = 2 ** 10
+
     def open_socket(self, addr, timeout=2):
         self.address = addr
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         #self.sock.connect(addr)
         self.sock.settimeout(timeout)
-
 
     def get_packet(self):
         r = None
@@ -68,8 +79,8 @@ class UDPHandler(Handler):
         except socket.error, e:
             self.warning('send packet {}'.format(e))
 
-
         return ok
+
 
 class EthernetCommunicator(Communicator):
     '''
@@ -77,6 +88,7 @@ class EthernetCommunicator(Communicator):
     host = None
     port = None
     handler = None
+
     def load(self, config, path):
         '''
         '''

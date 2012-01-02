@@ -17,18 +17,18 @@ limitations under the License.
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-    
+
 def command_generator(cmds, vals):
     i = 0
     while 1:
         yield '{} {}'.format(cmds[i], vals[i])
         i += 1
-        
+
+
 class Protocol:
     commands = None
+
     def test_command_factory(self):
         return command_generator(self.commands.keys(), self.commands.values())
-        
-                
-#============= EOF =====================================
 
+#============= EOF =====================================

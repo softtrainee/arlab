@@ -31,6 +31,7 @@ from src.data_processing.regression.regressor import Regressor
 from editors.regression_editor import RegressionEditor
 from tools.rect_selection_tool import RectSelectionTool
 
+
 class RegressionGraph(Graph):
     '''
     '''
@@ -52,6 +53,7 @@ class RegressionGraph(Graph):
     fit_types = []
 
     use_error = False
+
     def get_intercept(self, plotid=0):
         results = self.regression_results[plotid]
         if  results is not None:
@@ -145,7 +147,7 @@ class RegressionGraph(Graph):
 
             type = 'least_squares'
             kw['fitfunc'] = fitfunc
-            kw['errfunc'] = lambda p, x, y:fitfunc(p, x) - y
+            kw['errfunc'] = lambda p, x, y: fitfunc(p, x) - y
             kw['p0'] = self.initial_guess
 
         return type, kw
@@ -170,8 +172,6 @@ class RegressionGraph(Graph):
 
 #        if self.use_error:
 #            fiterrdata = self.get_data(axis = 2)
-
-
 
         type = self.fit_types[plotid]
         type, kw = self._get_type_dict(type)
@@ -280,7 +280,6 @@ class RegressionGraph(Graph):
         kw['type'] = 'line'
         kw['render_style'] = 'connectedpoints'
 
-
         self.fit_types.append(fit_type)
 
         if x is not None and y is not None:
@@ -299,7 +298,6 @@ class RegressionGraph(Graph):
             uy = None
             lx = None
             ly = None
-
 
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
         line = plot.plot(names, **rd)[0]
@@ -340,6 +338,7 @@ class RegressionGraph(Graph):
                    height=self.window_height)
         return v
 
+
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
     pass
 
@@ -356,7 +355,7 @@ if __name__ == '__main__':
     xs = [0, 1, 2, 3, 4, 5]
     ys = [xi * 2 + 3 for xi in xs]
     ys[0] = 5
-    yer = [1, 1, 1, 1, 1, 1]#[0.2, 0.2, 0.4, 0.3, 0.6]
+    yer = [1, 1, 1, 1, 1, 1]  # [0.2, 0.2, 0.4, 0.3, 0.6]
     from src.data_processing.regression.ols import WLS
 
     w = WLS(xs, ys, yer)
@@ -377,6 +376,3 @@ if __name__ == '__main__':
     r.new_series(xs, ys, yer=yer, marker='circle', marker_size=1.5)
     r.configure_traits()
 #============= EOF ====================================
-
-
-

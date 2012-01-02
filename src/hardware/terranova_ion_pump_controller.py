@@ -21,12 +21,16 @@ from traitsui.api import View, VGroup
 
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
+
 CR = chr(13)
 STX = '*'
+
+
 class TerraNovaIonPumpController(CoreDevice):
     pressure = Float
     voltage = Float
     current = Float
+
     def read_hv_state(self):
         qry = 'HV'
         self._read_bool(qry)

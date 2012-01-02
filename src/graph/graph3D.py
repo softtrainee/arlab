@@ -41,6 +41,7 @@ def point_generator(padding, cx, cy):
 
         yield p1, p2
 
+
 class Graph3D(HasTraits):
     scene = Instance(MlabSceneModel, ())
 #    def _scene_default(self):
@@ -87,8 +88,6 @@ class Graph3D(HasTraits):
 #        s.mlab.mesh(asarray(xx), asarray(yy), asarray(zz))
 ##        s.mlab.plot3d(asarray(xx)[0], asarray(yy)[0], asarray(zz)[0], asarray(zz)[0])
 #        return s
-
-
 #        xs = []
 #        ys = []
 #        zs = []
@@ -133,12 +132,6 @@ class Graph3D(HasTraits):
 
                                            )))
         return v
-
-
-
-
-
-
 
 #============= EOF ====================================
 #if __name__ == '__main__':

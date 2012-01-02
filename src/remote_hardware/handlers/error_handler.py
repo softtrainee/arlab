@@ -22,16 +22,17 @@ from src.remote_hardware.errors.system_errors import ManagerUnavaliableErrorCode
 from src.remote_hardware.errors.error import ErrorCode
 #from src.loggable import Loggable
 
-    
+
 class ErrorHandler:
     logger = None
+
     def check_manager(self, manager, name):
         if manager is None:
-            return ManagerUnavaliableErrorCode(name, logger=self.logger) 
-            
+            return ManagerUnavaliableErrorCode(name, logger=self.logger)
+
     def check_command(self, handler, args):
         if args:
-            
+
             command_func = handler.get_func(args[0])
             if command_func is None:
                 return InvalidCommandErrorCode(args[0], logger=self.logger), None
@@ -39,7 +40,7 @@ class ErrorHandler:
                 return None, command_func
         else:
             return InvalidCommandErrorCode(logger=self.logger), None
-        
+
     def check_response(self, func, manager, args):
         '''
             performs the requested command and checks for errors
@@ -49,19 +50,18 @@ class ErrorHandler:
         err = None
         try:
             result = func(manager, *args)
-            
+
             if result is None:
                 err = NoResponseErrorCode(logger=self.logger)
             elif isinstance(result, ErrorCode):
                 err = result
 
-                
         except TypeError, e:
             err = InvalidArgumentsErrorCode(args, e, logger=self.logger)
-            
+
         return err, str(result)
-        
+
 if __name__ == '__main__':
     ec = ErrorHandler()
-    
+
 #============= EOF ============================================

@@ -21,6 +21,8 @@ from chaco.ticks import auto_ticks
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+
+
 class MinorTicksOverlay(AbstractOverlay):
     tick_in = Float(2.5)
     tick_out = Float(2.5)
@@ -29,6 +31,7 @@ class MinorTicksOverlay(AbstractOverlay):
     orientation = Enum('v', 'h')
     placement = Enum('normal', 'opposite')
     aux_component = Any
+
     def overlay(self, component, gc, *args, **kw):
         try:
             gc.save_state()
@@ -37,7 +40,6 @@ class MinorTicksOverlay(AbstractOverlay):
             if self.aux_component is not None:
                 component = self.aux_component
                 print 'axu', component
-
 
             if self.orientation == 'v':
                 r = c.index_range
@@ -74,11 +76,11 @@ class MinorTicksOverlay(AbstractOverlay):
                 gc.move_to(*args1)
                 gc.line_to(*args2)
 
-
             gc.stroke_path()
 
         except Exception, e:
             print e
         finally:
             gc.restore_state()
+
 #============= EOF =====================================

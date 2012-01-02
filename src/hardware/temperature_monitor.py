@@ -19,8 +19,8 @@ from traitsui.api import View, Item, EnumEditor
 #=============standard library imports ========================
 #import time
 #=============local library imports  ==========================
-
-
+from core.core_device import CoreDevice
+from src.hardware.core.data_helper import make_bitarray
 #from modbus.modbus_device import ModbusDevice
 #class TemperatureMonitor(ModbusDevice, Streamable):
 #    def initialize(self):
@@ -32,9 +32,9 @@ from traitsui.api import View, Item, EnumEditor
 #        if super(TemperatureMonitor, self).scan(*args) is None:
 #            self.current_value = v = self.read_temperature(verbose = False)
 #            self.stream_manager.record(v, self.name)
-from core.core_device import CoreDevice
-from src.hardware.core.data_helper import make_bitarray
 #from src.graph.time_series_graph import TimeSeriesStreamGraph
+
+
 class ISeriesDevice(CoreDevice):
     '''
         http://www.omega.com/iseries/Pdf/M3397CO.pdf
@@ -42,7 +42,6 @@ class ISeriesDevice(CoreDevice):
     prefix = '*'
     scan_func = 'read_device'
     process_value = Float
-
 
     def _parse_response(self, re):
         '''
@@ -68,9 +67,11 @@ class ISeriesDevice(CoreDevice):
         '''
         return '{}{}{}'.format(self.prefix, cmd_type, cmd_indx)
 
-INPUT_CLASS_MAP = {0:'TC', 1:'RTD', 2:'PROCESS'}
-TC_MAP = {0:'J', 1:'K', 2:'T', 3:'E', 4:'N', 5:'Din-J', 6:'R', 7:'S', 8:'B', 9:'C'}
+INPUT_CLASS_MAP = {0: 'TC', 1: 'RTD', 2: 'PROCESS'}
+TC_MAP = {0: 'J', 1: 'K', 2: 'T', 3: 'E', 4: 'N', 5: 'Din-J', 6: 'R', 7: 'S', 8: 'B', 9: 'C'}
 TC_KEYS = ['J', 'K', 'T', 'E', 'N', 'Din-J', 'R', 'S', 'B', 'C']
+
+
 class DPi32TemperatureMonitor(ISeriesDevice):
     '''
     '''
@@ -89,7 +90,6 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 
         return r
 
-
     def initialize(self, *args, **kw):
         self.info('getting input type')
         return self.read_input_type()
@@ -105,7 +105,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         '''
         self._input_type = v
         self.set_input_type(v)
-#
+
     def get_process_value(self):
         '''
         '''
@@ -139,7 +139,7 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         value = '{:02X}'.format(int(bits, 2))
 
         self._write_command(commandindex, value=value)
-#        
+
     def read_input_type(self):
         '''
         '''
@@ -186,7 +186,6 @@ class DPi32TemperatureMonitor(ISeriesDevice):
                    )
         g.new_series()
 
-
     def traits_view(self):
         '''
         '''
@@ -203,5 +202,4 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 #                                        )
 #                                 )
 #        return v
-
 #============= EOF ============================================

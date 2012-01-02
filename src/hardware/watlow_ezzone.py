@@ -33,46 +33,47 @@ from pyface.timer.do_later import do_later
 
 from src.helpers.timer import Timer
 from src.graph.plot_record import PlotRecord
-sensor_map = {'62':'off',
-                    '95':'thermocouple',
-                    '104':'volts dc',
-                    '112':'milliamps',
-                    '113':'rtd 100 ohm',
-                    '114':'rtd 1000 ohm',
-                    '155':'potentiometer',
-                    '229':'thermistor'
+sensor_map = {'62': 'off',
+                    '95': 'thermocouple',
+                    '104': 'volts dc',
+                    '112': 'milliamps',
+                    '113': 'rtd 100 ohm',
+                    '114': 'rtd 1000 ohm',
+                    '155': 'potentiometer',
+                    '229': 'thermistor'
                     }
-isensor_map = {'off':62,
-                'thermocouple':95,
-                'volts dc':104,
-                 'milliamps':112,
-                 'rtd 100 ohm':113,
-                  'rtd 1000 ohm':114,
-                'potentiometer':155,
-                    'thermistor':229
+isensor_map = {'off': 62,
+                'thermocouple': 95,
+                'volts dc': 104,
+                 'milliamps': 112,
+                 'rtd 100 ohm': 113,
+                  'rtd 1000 ohm': 114,
+                'potentiometer': 155,
+                    'thermistor': 229
                     }
-itc_map = {'B':11, 'K':48,
-                'C':15, 'N':58,
-                'D':23, 'R':80,
-                'E':26, 'S':84,
-                'F':30, 'T':93,
-                'J':46,
+itc_map = {'B': 11, 'K': 48,
+                'C': 15, 'N': 58,
+                'D': 23, 'R': 80,
+                'E': 26, 'S': 84,
+                'F': 30, 'T': 93,
+                'J': 46,
                 }
-tc_map = {'11':'B', '48':'K',
-         '15':'C', '58':'N',
-         '23':'D', '80':'R',
-         '26':'E', '84':'S',
-         '30':'F', '93':'T',
-         '46':'J'}
-autotune_aggressive_map = {'Under':99,
-                         'Critical':21,
-                         'Over':69
+tc_map = {'11': 'B', '48': 'K',
+         '15': 'C', '58': 'N',
+         '23': 'D', '80': 'R',
+         '26': 'E', '84': 'S',
+         '30': 'F', '93': 'T',
+         '46': 'J'}
+autotune_aggressive_map = {'Under': 99,
+                         'Critical': 21,
+                         'Over': 69
                          }
-yesno_map = {'59':'NO', '106':'YES'}
-truefalse_map = {'59':False, '106':True}
-heat_alogrithm_map = {'62':'off', '71':'PID', '64':'on-off'}
-baudmap = {'9600':188, '19200':189, '38400':190}
-ibaudmap = {'188':'9600', '189':'19200', '190':'38400'}
+yesno_map = {'59': 'NO', '106': 'YES'}
+truefalse_map = {'59': False, '106': True}
+heat_alogrithm_map = {'62': 'off', '71': 'PID', '64': 'on-off'}
+baudmap = {'9600': 188, '19200': 189, '38400': 190}
+ibaudmap = {'188': '9600', '189': '19200', '190': '38400'}
+
 
 class WatlowEZZone(CoreDevice):
     '''
@@ -94,7 +95,6 @@ class WatlowEZZone(CoreDevice):
     D = Property(Float(enter_set=True,
                         auto_set=False), depends_on='_D_')
     _D_ = Float(33)
-
 
     stablization_time = Float(3.0)
     sample_time = Float(0.25)
@@ -167,7 +167,6 @@ class WatlowEZZone(CoreDevice):
                                 depends_on='_enable_tru_tune')
     _enable_tru_tune = Bool
 
-
     tru_tune_band = Property(Int(auto_set=False, enter_set=True),
                                  depends_on='_tru_tune_band')
     _tru_tune_band = Int(0)
@@ -192,8 +191,8 @@ class WatlowEZZone(CoreDevice):
                                        'J'),
                                         depends_on='_thermocouple1_type')
 
-    _sensor1_type = Int#(112)
-    _thermocouple1_type = Int#(11)
+    _sensor1_type = Int
+    _thermocouple1_type = Int
 
     process_value = Float
 
@@ -280,7 +279,6 @@ class WatlowEZZone(CoreDevice):
             if v is not None:
                 setattr(self, attr, v)
 
-
     def get_temp_and_power(self, **kw):
         if 'verbose' in kw and kw['verbose']:
             self.info('Read temperature and heat power')
@@ -330,7 +328,6 @@ class WatlowEZZone(CoreDevice):
             except (ValueError, TypeError), e:
                 print 'watlow gettemperature', e
 
-
     def disable(self):
         self.info('disable')
 
@@ -366,7 +363,6 @@ class WatlowEZZone(CoreDevice):
         r = self.read(2494, response_type='int')
         print 'nonvolative save', r
 
-
     def set_assembly_definition_address(self, working_address, target_address, **kw):
         '''
         '''
@@ -381,10 +377,9 @@ class WatlowEZZone(CoreDevice):
         if check:
             r = self.read(ada, response_type='int')
             self.info('register {} pointing to {}'.format(ada, r))
-    #
             r = self.read(ada + 1, response_type='int')
             self.info('register {} pointing to {}'.format(ada + 1, r))
-    #        
+
     def read_baudrate(self, port=1):
         '''
             com port 2 is the modbus port
@@ -409,6 +404,7 @@ class WatlowEZZone(CoreDevice):
 
         except KeyError, e:
             print e
+
     def set_closed_loop_setpoint(self, setpoint, **kw):
         '''
         '''
@@ -461,6 +457,7 @@ class WatlowEZZone(CoreDevice):
 #===============================================================================
 # Autotune
 #===============================================================================
+
     def start_autotune(self, **kw):
         '''
         '''
@@ -481,7 +478,6 @@ class WatlowEZZone(CoreDevice):
         #start a query thread
         self.autotune_timer = Timer(sp * 1000, self._autotune_update, g)
         #self.autotune_timer.Start()
-
 
     def _autotune_update(self, graph):
         if self.simulation:
@@ -614,6 +610,7 @@ class WatlowEZZone(CoreDevice):
         '''
         self.info('setting time derivative = {:0.3f}'.format(value))
         self.write(1896, value, nregisters=2, **kw)
+
 #===============================================================================
 # Output
 #===============================================================================
@@ -621,8 +618,8 @@ class WatlowEZZone(CoreDevice):
         '''
         '''
 
-        inmap = {'heat':36,
-               'off':62
+        inmap = {'heat': 36,
+               'off': 62
                }
 
         if value in inmap:
@@ -665,7 +662,6 @@ class WatlowEZZone(CoreDevice):
             tc = self.read_thermocouple_type(1)
             self._thermocouple1_type = tc
 
-
     def set_thermocouple_type(self, input, value, **kw):
         '''
         '''
@@ -694,7 +690,7 @@ class WatlowEZZone(CoreDevice):
         '''
         '''
         rid = str(self.read(1012, response_type='int', **kw))
-        units_map = {'63':'On', '62':'Off'}
+        units_map = {'63': 'On', '62': 'Off'}
         return units_map[rid] if rid in units_map else None
 
     def read_heat_proportional_band(self, **kw):
@@ -779,7 +775,7 @@ class WatlowEZZone(CoreDevice):
         '''
         register = 2490 if comms == 1 else 2510
         rid = str(self.read(register, response_type='int'))
-        units_map = {'15':'C', '30':'F'}
+        units_map = {'15': 'C', '30': 'F'}
         return units_map[rid] if rid in units_map else None
 
     def read_control_mode(self, **kw):
@@ -787,7 +783,6 @@ class WatlowEZZone(CoreDevice):
         '''
         rid = self.read(1880, response_type='int', **kw)
         return 'closed' if rid == 10 else 'open'
-
 
     def read_heat_algorithm(self, **kw):
         '''
@@ -819,7 +814,7 @@ class WatlowEZZone(CoreDevice):
         '''
 
         '''
-        r_map = {'104':'volts', '112':'milliamps'}
+        r_map = {'104': 'volts', '112': 'milliamps'}
         rid = str(self.read(720, response_type='int', **kw))
         return r_map[rid] if rid in r_map else None
 
@@ -828,7 +823,7 @@ class WatlowEZZone(CoreDevice):
        
         '''
         rid = str(self.read(722, response_type='int', **kw))
-        r_map = {'36':'heat', '62':'off'}
+        r_map = {'36': 'heat', '62': 'off'}
 
         return r_map[rid] if rid in r_map else None
 
@@ -868,9 +863,6 @@ class WatlowEZZone(CoreDevice):
 #    def read_cool_power(self,**kw):
 #        register=1906
 #        return self.read(register,**kw)
-
-
-
 #    def _scan_(self, *args, **kw):
 #        '''
 #
@@ -878,7 +870,6 @@ class WatlowEZZone(CoreDevice):
 #        p = self.get_temperature()
 #        record_id = self.name
 #        self.stream_manager.record(p, record_id)
-
 
     def _get_sensor1_type(self):
         '''
@@ -939,7 +930,6 @@ class WatlowEZZone(CoreDevice):
     def _set_control_mode(self, mode):
         '''
         '''
-
         self.set_control_mode(mode)
 
     def _get_Ph(self):
@@ -1002,7 +992,6 @@ class WatlowEZZone(CoreDevice):
 #                self.set_control_mode('open')
                 self.set_time_derivative(v)
 #                self.set_control_mode('closed')
-
 
     def _get_calibration_offset(self):
         '''
@@ -1092,6 +1081,7 @@ class WatlowEZZone(CoreDevice):
             if self._validate_new(v, self._autotune_setpoint):
                 self._autotune_setpoint = v
                 self.set_autotune_setpoint(v)
+
     def _get_autotune_aggressiveness(self):
         return self._autotune_aggressiveness
 
@@ -1133,15 +1123,15 @@ class WatlowEZZone(CoreDevice):
 
     def _refresh_fired(self):
         self.initialization_hook()
-#========================= views ===========================
+
     def graph_builder(self, g, **kw):
-        g.new_plot(padding_left=40, #[40, 5, 5, 20],
+        g.new_plot(padding_left=40,
                    padding_right=5,
                    zoom=True,
                   pan=True,
                   **kw
                    )
-        g.new_plot(padding_left=40, #[40, 5, 5, 20],
+        g.new_plot(padding_left=40,
                    padding_right=5,
                    zoom=True,
                   pan=True,
@@ -1218,6 +1208,7 @@ class WatlowEZZone(CoreDevice):
                     #autotune_grp,
 
                     )
+
     def autotune_configure_view(self):
         v = View('autotune_setpoint',
                  Item('autotune_aggressiveness', label='Aggressiveness'),

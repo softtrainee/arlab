@@ -13,6 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+#=============enthought library imports=======================
+
+#============= standard library imports ========================
+
+#============= local library imports  ==========================
+
+
 def make_bitarray(data, width=8):
     '''
 
@@ -20,5 +27,4 @@ def make_bitarray(data, width=8):
     ba = ''.join(str((data >> i) & 1) for i in xrange(width - 1, -1, -1))
 
     return ba
-
-
+#============= EOF =====================================

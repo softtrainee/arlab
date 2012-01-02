@@ -19,6 +19,8 @@ from traits.api import Float
 
 #=============local library imports  ==========================
 from adc.adc_device import ADCDevice
+
+
 class PyrometerTemperatureMonitor(ADCDevice):
     '''
     '''
@@ -27,10 +29,9 @@ class PyrometerTemperatureMonitor(ADCDevice):
     amps_min = Float
     pyrometer_min = Float
     pyrometer_max = Float
+
     def load_additional_args(self, config):
         '''
-            @type config: C{str}
-            @param config:
         '''
         for s, k in [('General', 'resistance'),
                     ('General', 'amps_max'),

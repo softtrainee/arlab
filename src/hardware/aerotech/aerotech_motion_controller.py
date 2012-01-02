@@ -28,14 +28,11 @@ ACK = chr(6)
 NAK = chr(15)
 EOS = chr(10)
 EIC = 'I'
+
+
 class AerotechMotionController(MotionController):
     def initialize(self, *args, **kw):
         '''
-            @type *args: C{str}
-            @param *args:
-
-            @type **kw: C{str}
-            @param **kw:
         '''
         self._communicator._terminator = None
         self.tell('##')
@@ -46,8 +43,7 @@ class AerotechMotionController(MotionController):
 
     def load_additional_args(self, config):
         '''
-            @type config: C{str}
-            @param config:
+
         '''
         path = self.configuration_dir_path
         for i, a in enumerate(['x', 'y', 'z']):
@@ -62,14 +58,8 @@ class AerotechMotionController(MotionController):
 
         return True
 
-
     def single_axis_move(self, key, value):
         '''
-            @type key: C{str}
-            @param key:
-
-            @type value: C{str}
-            @param value:
         '''
         axis = self.axes[key]
         name = axis.name
@@ -85,11 +75,6 @@ class AerotechMotionController(MotionController):
 
     def _relative_move(self, axes, values):
         '''
-            @type axes: C{str}
-            @param axes:
-
-            @type values: C{str}
-            @param values:
         '''
 
         cmd = 'INDEX'
@@ -126,11 +111,6 @@ class AerotechMotionController(MotionController):
 
     def home(self, *args, **ke):
         '''
-            @type *args: C{str}
-            @param *args:
-
-            @type **ke: C{str}
-            @param **ke:
         '''
         cmd = 'HO'
 
@@ -142,24 +122,20 @@ class AerotechMotionController(MotionController):
 
     def get_current_position(self, key):
         '''
-            @type key: C{str}
-            @param key:
+
         '''
         cmd = 'P'
         axis = self.axes[key]
-        rtype = 4 #absolute command posisiton
+        rtype = 4  # absolute command posisiton
         axis = '%s%i' % (axis.name, rtype)
         cmd = self._build_command(cmd, axis, remote=False)
         r = self.ask(cmd)
 
         return r
+
     def set_parameter(self, pid, value):
         '''
-            @type pid: C{str}
-            @param pid:
 
-            @type value: C{str}
-            @param value:
         '''
         cmd = 'WP%i,%s' % (pid, value) + EOS
         r = self.ask(cmd)
@@ -174,8 +150,7 @@ class AerotechMotionController(MotionController):
 
     def _ensure_ack(self, r):
         '''
-            @type r: C{str}
-            @param r:
+
         '''
         r = r.strip()
         if not r == ACK:
@@ -187,17 +162,6 @@ class AerotechMotionController(MotionController):
 
     def _build_command(self, cmd, axes, values=None, remote=True):
         '''
-            @type cmd: C{str}
-            @param cmd:
-
-            @type axes: C{str}
-            @param axes:
-
-            @type values: C{str}
-            @param values:
-
-            @type remote: C{str}
-            @param remote:
         '''
 
         if values is None:
@@ -215,6 +179,7 @@ class AerotechMotionController(MotionController):
         if remote:
             cmd = EIC + cmd
         return cmd
+
     def _moving_(self):
         '''
         '''
@@ -229,13 +194,12 @@ class AerotechMotionController(MotionController):
 #        return status[4] or status[5] or status[6]
 #    
         pass
+
     def _get_status(self, n):
         '''
-            @type n: C{str}
-            @param n:
+
         '''
         cmd = 'PS'
-
 
         cmd = self._build_command(cmd, n, remote=False)
         r = self.ask(cmd)
@@ -243,10 +207,10 @@ class AerotechMotionController(MotionController):
             r = '4'
 
         return self._parse_status(r)
+
     def _parse_status(self, r):
         '''
-            @type r: C{str}
-            @param r:
+
         '''
 
         r = self._parse_response(r)
@@ -254,22 +218,16 @@ class AerotechMotionController(MotionController):
 
     def _parse_response(self, resp):
         '''
-            @type resp: C{str}
-            @param resp:
+
         '''
         if resp is not None:
             return resp.strip()
+
     def _axis_factory(self, path, **kw):
         '''
-            @type path: C{str}
-            @param path:
-
-            @type **kw: C{str}
-            @param **kw:
         '''
         a = AerotechAxis(**kw)
         a.load_parameters(path)
         return a
-#============= views ===================================
 
 #============= EOF ====================================

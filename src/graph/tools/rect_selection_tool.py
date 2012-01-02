@@ -24,9 +24,10 @@ from chaco.api import AbstractOverlay
 #=============standard library imports ========================
 from numpy import vstack
 #=============local library imports  ==========================
+
+
 class RectSelectionTool(AbstractOverlay):
     '''
-        G{classtree}
     '''
     #update_flag = Bool
     parent = Any
@@ -35,6 +36,7 @@ class RectSelectionTool(AbstractOverlay):
     hover_metadata_name = Str('hover')
     persistent_hover = False
     selection_metadata_name = Str('selections')
+
     def normal_mouse_move(self, event):
 
         control = event.window.control
@@ -64,8 +66,7 @@ class RectSelectionTool(AbstractOverlay):
 
     def _overlay_box(self, gc):
         '''
-            @type gc: C{str}
-            @param gc:
+
         '''
         if self._start_pos and self._end_pos:
             gc.save_state()
@@ -82,16 +83,12 @@ class RectSelectionTool(AbstractOverlay):
 
     def _get_selection_token(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
         return self.component.map_index((event.x, event.y), threshold=self.threshold)
 
-
     def _already_selected(self, token):
         '''
-            @type token: C{str}
-            @param token:
         '''
         already = False
         plot = self.component
@@ -107,8 +104,7 @@ class RectSelectionTool(AbstractOverlay):
 
     def normal_left_down(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
 
         if not self.others_active():
@@ -123,11 +119,9 @@ class RectSelectionTool(AbstractOverlay):
                 else:
                     self._select_token(token)
 
-
     def _deselect_token(self, token):
         '''
-            @type token: C{str}
-            @param token:
+
         '''
         plot = self.component
         for name in ('index', 'value'):
@@ -144,11 +138,6 @@ class RectSelectionTool(AbstractOverlay):
 
     def _select_token(self, token, append=True):
         '''
-            @type token: C{str}
-            @param token:
-
-            @type append: C{str}
-            @param append:
         '''
         plot = self.component
         for name in ('index', 'value'):
@@ -167,10 +156,11 @@ class RectSelectionTool(AbstractOverlay):
                         getattr(plot, name).metadata_changed = True
 #            print md
 #            plot.request_redraw()
+
     def others_active(self):
         '''
         '''
-        #a bit of a hack to prevent selection when we are in the panning
+        # a bit of a hack to prevent selection when we are in the panning
         for plot in self.parent.plots:
             for tool in plot.tools:
                 if hasattr(tool, 'state'):
@@ -178,10 +168,10 @@ class RectSelectionTool(AbstractOverlay):
                         return True
         else:
             return False
+
     def select_left_up(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
 
         self._update_selection()
@@ -191,12 +181,12 @@ class RectSelectionTool(AbstractOverlay):
 
     def select_mouse_move(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
         self._end_pos = (event.x, event.y)
         self.component.request_redraw()
         event.handled = True
+
     def _update_selection(self):
         '''
         '''
@@ -223,11 +213,9 @@ class RectSelectionTool(AbstractOverlay):
             self.component.index.metadata['selections'] = selection
             self.component.index.metadata_changed = True
 
-
     def _end_select(self, event):
         '''
-            @type event: C{str}
-            @param event:
+ 
         '''
         self.component.request_redraw()
         self.event_state = 'normal'
@@ -236,10 +224,10 @@ class RectSelectionTool(AbstractOverlay):
 
     def _start_select(self, event):
         '''
-            @type event: C{str}
-            @param event:
+ 
         '''
         self._start_pos = (event.x, event.y)
         self._end_pos = None
         self.event_state = 'select'
         event.window.set_pointer('cross')
+#============= EOF =====================================

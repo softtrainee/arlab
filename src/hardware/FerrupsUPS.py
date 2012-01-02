@@ -19,10 +19,12 @@ from datetime import datetime
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
 
+
 class FerrupsUPS(CoreDevice):
     scan_func = 'power_outage_scan'
     _power_out = False
     min_voltage_in = 5
+
     def _parse_response(self, resp):
         if self.simulation:
             resp = 'query', self.get_random_value(0, 10)
@@ -100,7 +102,6 @@ class FerrupsUPS(CoreDevice):
             #ensures True...  random 0-10
             return self.get_random_value() < 100
             #return not self._power_out
-
 
         vin = resp.split(' ')[-1]
         try:

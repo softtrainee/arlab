@@ -19,11 +19,14 @@ limitations under the License.
 
 #=============local library imports  ==========================
 from graph import Graph
+
+
 class StackedGraph(Graph):
     '''
     '''
     equi_stack = True
     panel_height = 100
+
     def add_minor_xticks(self, plotid=0, **kw):
         if plotid != 0:
             kw['aux_component'] = self.plots[0]

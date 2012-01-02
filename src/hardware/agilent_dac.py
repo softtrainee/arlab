@@ -19,9 +19,9 @@ from traits.api import Float, Str, Int
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-
-
 from src.hardware.core.core_device import CoreDevice
+
+
 class AgilentDAC(CoreDevice):
     id_query = ''
     value = Float(0)
@@ -35,6 +35,7 @@ class AgilentDAC(CoreDevice):
     def initialize(self):
         self._communicator.terminator = chr(10)
         return True
+
     #===========================================================================
     # configloadable interface
     #===========================================================================
@@ -69,7 +70,6 @@ class AgilentDAC(CoreDevice):
     #===============================================================================
     # AgilentDAC interface
     #===============================================================================
-
     def set_dac_value(self, value):
         self.value = value
         #convert real world value to dac value
@@ -79,7 +79,6 @@ class AgilentDAC(CoreDevice):
         resp = self.ask(self._build_command(cmd))
         return self._parse_response(resp)
 
-
     def read_dac_value(self,):
         cmd = 'SF'
         resp = self.ask(self._build_command(cmd))
@@ -88,9 +87,9 @@ class AgilentDAC(CoreDevice):
     #===============================================================================
     # private interface
     #===============================================================================
-
     def _build_command(self, cmd, *args, **kw):
         return cmd
 
     def _parse_response(self, resp, *args, **kw):
         return resp
+#============= EOF =====================================

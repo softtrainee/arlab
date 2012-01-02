@@ -19,9 +19,11 @@ limitations under the License.
 
 #============= local library imports  ==========================
 from graph import Graph
+
+
 class CandleGraph(Graph):
     '''
-        G{classtree}
+    
     '''
     def new_series(self, plotid=0, *args, **kw):
 

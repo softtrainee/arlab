@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Float, Property, Button, Bool, Str
-from traitsui.api import Item, spring , Group, HGroup, \
+from traitsui.api import Item, spring, Group, HGroup, \
     RangeEditor, ButtonEditor
 #=============standard library imports ========================
 
@@ -62,18 +62,17 @@ class MikronGA140Pyrometer(CoreDevice):
 #        super(MikronGA140Pyrometer, self).__init__(*args, **kw)
 #        self.emmin = 10
 #        self.emmax = 100
-
+#
 #    def _scan_(self):
 #        '''
 #        '''
 #        func = getattr(self, self.scan_func)
 #        func()
-
+#
 #    def emissivity_scan(self):
 #        '''
 #        '''
 #        self.stream_manager.record(self.emissivity, self.name)
-
 
     def initialize(self, *args, **kw):
         '''
@@ -123,27 +122,6 @@ class MikronGA140Pyrometer(CoreDevice):
                     high = int(resp[4:], 16)
                     resp = (low, high)
         return resp
-#        if resp is not None:
-#            if resp is not 'simulation':
-#                #clean null bytes and carriage returns
-#                resp = resp.strip()
-#                if response_type == 'float':
-#                    try:
-#                        resp = int(resp)
-#                    except:
-#                        resp = 0
-#                    resp /= float(scalar)
-#
-#                elif response_type == 'hex_range':
-#                    low = int(resp[:4], 16)
-#                    high = int(resp[4:], 16)
-#                    resp = (low, high)
-#            elif response_type == 'float':
-#                resp = self.get_random_value()
-#        elif response_type == 'float':
-#            resp = self.get_random_value()
-#
-#        return resp
 
     def read_temperature(self):
         '''
@@ -151,7 +129,6 @@ class MikronGA140Pyrometer(CoreDevice):
 
         cmd = self._build_command('ms')
         temp = self._parse_response(self.ask(cmd, verbose=False))
-
 
         self.temperature = temp if temp is not None else 0.0
 
@@ -187,7 +164,6 @@ class MikronGA140Pyrometer(CoreDevice):
         '''
         cmd = self._build_command('ez', value=value, single_digit=True)
         self.ask(cmd)
-
 
     def _get_emissivity(self):
         '''
@@ -236,6 +212,7 @@ class MikronGA140Pyrometer(CoreDevice):
                                 single_digit=True
                                 )
         self.ask(cmd)
+
     def _get_pointer_label(self):
         '''
         '''

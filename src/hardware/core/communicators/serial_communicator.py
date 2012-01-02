@@ -24,10 +24,12 @@ import sys
 #=============local library imports  ==========================
 from communicator import Communicator
 
+
 def get_ports():
     keyspan = glob.glob('/dev/tty.U*')
     usb = glob.glob('/dev/tty.usb*')
     return keyspan + usb
+
 
 class SerialCommunicator(Communicator):
     '''
@@ -84,8 +86,6 @@ class SerialCommunicator(Communicator):
                 stopbits = 'TWO'
             self.stopbits = getattr(serial, 'STOPBITS_%s' % stopbits.upper())
 
-
-
     def tell(self, cmd, is_hex=False, info=None, verbose=True, **kw):
         '''
            
@@ -95,7 +95,6 @@ class SerialCommunicator(Communicator):
                 info = 'no handle'
                 self.log_tell(cmd, info)
             return
-
 
         self._lock.acquire()
         self._write(cmd, is_hex=is_hex)
@@ -133,7 +132,6 @@ class SerialCommunicator(Communicator):
 
         self._lock.acquire()
         self._write(cmd, is_hex=is_hex)
-
 
         '''
            testing new delay scheme 
@@ -179,7 +177,6 @@ class SerialCommunicator(Communicator):
         if sys.platform == 'darwin':
             port = '/dev/tty.{}'.format(port)
         #=======================================================================
-
 
         args['port'] = port
 
@@ -259,8 +256,6 @@ class SerialCommunicator(Communicator):
             self.handle = None
             self.simulation = True
 
-
-
     def _validate_address(self, port):
         '''
             use glob to check the avaibable serial ports 
@@ -277,7 +272,6 @@ class SerialCommunicator(Communicator):
             else:
                 for v in valid:
                     self.warning(v)
-
 
 #            valid = '\n'.join(['%s' % v for v in valid])
 #            self.warning('''%s is not a valid port address
@@ -354,7 +348,6 @@ class SerialCommunicator(Communicator):
                             break
                         cnt += 1
 
-
                     prev_inw = inw
                     time.sleep(1e-5)
 #                # do one more get_chars to make sure we got it all
@@ -364,7 +357,6 @@ class SerialCommunicator(Communicator):
                     time.sleep(1e-5)
                     if inw == prev_inw:
                         break
-
 
             if inw > 0:
                 try:

@@ -20,9 +20,9 @@ limitations under the License.
 #============= local library imports  ==========================
 from laser_handler import LaserHandler
 
+
 class SynradHandler(LaserHandler):
     manager_name = 'Synrad'
 
 
-#============= views ===================================
 #============= EOF ====================================

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 
+
 def computeBCC(data_str):
     '''
         data str= ASCII string
@@ -50,10 +51,9 @@ def __generate_crc16_table():
     return result
 __crc16_table = __generate_crc16_table()
 
+
 def computeCRC(data, start_crc=0xffff):
     '''
-        @type start_crc: C{str}
-        @param start_crc:
     '''
     ''' Computes a crc16 on the passed in data.
     @param data The data to create a crc16 of
@@ -65,16 +65,19 @@ def computeCRC(data, start_crc=0xffff):
     '''
     crc = start_crc
     pre = lambda x: x
-    if isinstance(data, str): pre = lambda x: ord(x)
+    if isinstance(data, str):
+        pre = lambda x: ord(x)
 
-    for a in data: crc = ((crc >> 8) & 0xff) ^ __crc16_table[
-            (crc ^ pre(a)) & 0xff];
+    for a in data:
+        crc = ((crc >> 8) & 0xff) ^ __crc16_table[
+               (crc ^ pre(a)) & 0xff]
 
     #flip lo and hi bits
     crc = '%04x' % crc
 
     crc = '%s%s' % (crc[2:], crc[:2])
     return crc
+
 
 def checkCRC(data, check):
     '''

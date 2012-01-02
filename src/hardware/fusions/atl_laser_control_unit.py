@@ -26,9 +26,10 @@ EOT = chr(4)
 ENQ = chr(5)
 DLE = chr(10)
 ANSWER_ADDR = '0002'
+
+
 class ATLLaserControlUnit(CoreDevice):
     '''
-        G{classtree}
     '''
     _enabled = Bool(False)
     triggered = Bool(False)
@@ -70,28 +71,24 @@ class ATLLaserControlUnit(CoreDevice):
     burst = Bool
     nburst = Int(enter_set=True, auto_set=False)
     cburst = Int
+
     def start_update_timer(self):
         '''
         '''
         self.timer = Timer(1000, self._update_parameters)
 
-
     def set_energy(self, v):
         '''
-            @type v: C{str}
-            @param v:
         '''
         pass
+
     def set_reprate(self, v):
         '''
-            @type v: C{str}
-            @param v:
         '''
         pass
+
     def set_hv(self, v):
         '''
-            @type v: C{str}
-            @param v:
         '''
         pass
 
@@ -138,20 +135,16 @@ class ATLLaserControlUnit(CoreDevice):
         '''
         '''
         formatter = lambda x:x / 10.0
-        #read and set energy and pressure as one block
+#        read and set energy and pressure as one block
         self._update_parameter_list([('energy', formatter), 'laser_head'], 8, 2)
-        #read and set frequency and hv as one block
+#        read and set frequency and hv as one block
         self._update_parameter_list(['reprate', ('hv', formatter)], 1001, 2)
 
-        #read and set gas action
+#        read and set gas action
 
     def _anytrait_changed(self, name, value):
         '''
-            @type name: C{str}
-            @param name:
 
-            @type value: C{str}
-            @param value:
         '''
         if name in ['energy', 'reprate', 'hv']:
             f = getattr(self, 'set_%s' % name)
@@ -163,11 +156,6 @@ class ATLLaserControlUnit(CoreDevice):
 
     def _set_answer_parameters(self, start_addr_value, answer_len):
         '''
-            @type start_addr_value: C{str}
-            @param start_addr_value:
-
-            @type answer_len: C{str}
-            @param answer_len:
         '''
 
         answer_len = '%04X' % answer_len
@@ -181,11 +169,7 @@ class ATLLaserControlUnit(CoreDevice):
 
     def _build_command(self, start_addr, values):
         '''
-            @type start_addr: C{str}
-            @param start_addr:
 
-            @type values: C{str}
-            @param values:
         '''
 
         if isinstance(start_addr, int):
@@ -204,11 +188,7 @@ class ATLLaserControlUnit(CoreDevice):
 
     def _send_query(self, s, l):
         '''
-            @type s: C{str}
-            @param s:
 
-            @type l: C{str}
-            @param l:
         '''
 
         self._set_answer_parameters(s, l)
@@ -221,8 +201,7 @@ class ATLLaserControlUnit(CoreDevice):
 
     def _send_command(self, cmd):
         '''
-            @type cmd: C{str}
-            @param cmd:
+
         '''
         self._start_message()
 
@@ -242,17 +221,9 @@ class ATLLaserControlUnit(CoreDevice):
         cmd = EOT
         self.ask(cmd)
 
-
     def _parse_parameter_answers(self, resp, rstartaddr, answer_len):
         '''
-            @type resp: C{str}
-            @param resp:
-
-            @type rstartaddr: C{str}
-            @param rstartaddr:
-
-            @type answer_len: C{str}
-            @param answer_len:
+            
         '''
         #split at stx
         rargs = resp.split(STX)
@@ -287,14 +258,7 @@ class ATLLaserControlUnit(CoreDevice):
 
     def _update_parameter_list(self, names, s, l):
         '''
-            @type names: C{str}
-            @param names:
-
-            @type s: C{str}
-            @param s:
-
-            @type l: C{str}
-            @param l:
+            
         '''
         resp = self._send_query(s, l)
 
@@ -309,7 +273,6 @@ class ATLLaserControlUnit(CoreDevice):
 
             kw[n] = v
         self.trait_set(**kw)
-
 
 
 if __name__ == '__main__':

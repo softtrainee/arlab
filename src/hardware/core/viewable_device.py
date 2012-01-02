@@ -20,6 +20,8 @@ from traitsui.api import View, Item, Group, VGroup, HGroup, spring, ButtonEditor
 #=============local library imports  ==========================
 from src.config_loadable import ConfigLoadable
 from src.graph.graph import Graph
+
+
 class ViewableDevice(ConfigLoadable):
     '''
     '''
@@ -42,6 +44,7 @@ class ViewableDevice(ConfigLoadable):
     current_scan_value = CStr
 
     graph_klass = Graph
+
     def _get_config_short_path(self):
         '''
             config_path is an attribute of 
@@ -69,8 +72,6 @@ class ViewableDevice(ConfigLoadable):
         else:
             return True
 
-
-
     def _graph_default(self):
 
         g = self.graph_klass(
@@ -83,7 +84,6 @@ class ViewableDevice(ConfigLoadable):
 
     def graph_builder(self, g, **kw):
 
-
         g.new_plot(padding=[40, 5, 5, 20],
                    zoom=True,
                   pan=True,
@@ -93,6 +93,7 @@ class ViewableDevice(ConfigLoadable):
 
     def get_control_group(self):
         pass
+
     def get_configure_group(self):
         pass
 
@@ -126,6 +127,7 @@ class ViewableDevice(ConfigLoadable):
                  )
 
         return v
+
     def info_view(self):
         v = View(
                  Group(
@@ -154,10 +156,9 @@ class ViewableDevice(ConfigLoadable):
         return v
 
     def traits_view(self):
-
-
         v = View()
         cg = self.get_control_group()
         if cg:
             v.content.content.append(cg)
         return v
+#============= EOF =====================================

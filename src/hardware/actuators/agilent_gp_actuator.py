@@ -18,12 +18,14 @@ limitations under the License.
 #========== local library imports =============
 from gp_actuator import GPActuator
 
+
 class AgilentGPActuator(GPActuator):
     '''
         Abstract module for the Agilent 34903A GP AgilentGPActuator
     
     '''
     id_query = '*TST?'
+
     def id_response(self, response):
         if response.strip() == '0':
             return True
@@ -61,12 +63,14 @@ class AgilentGPActuator(GPActuator):
                     error = s
 
         return error
+
     def _get_address(self, obj):
         if isinstance(obj, (str, int)):
             addr = obj
         else:
             addr = obj.address
         return addr
+
     def get_channel_state(self, obj):
         '''
         Query the hardware for the channel state
@@ -111,4 +115,4 @@ class AgilentGPActuator(GPActuator):
         if self.simulation:
             return True
         return self.get_channel_state(obj) == True
-
+#============= EOF =====================================

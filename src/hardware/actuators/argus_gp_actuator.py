@@ -18,6 +18,7 @@ limitations under the License.
 #========== local library imports =============
 from gp_actuator import GPActuator
 
+
 class ArgusGPActuator(GPActuator):
     '''
     
@@ -66,7 +67,6 @@ class ArgusGPActuator(GPActuator):
         if r is not None and r.strip() == 'OK':
             return self.get_channel_state(obj) == False
 
-
     def open_channel(self, obj):
         '''
         '''
@@ -75,5 +75,4 @@ class ArgusGPActuator(GPActuator):
         r = self.ask(cmd)
         if r is not None and r.strip() == 'OK':
             return self.get_channel_state(obj) == True
-
-
+#============= EOF =====================================

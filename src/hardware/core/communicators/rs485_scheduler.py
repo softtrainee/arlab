@@ -16,13 +16,13 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float
 
-from threading import Lock, currentThread
-import time
-import threading
-import multiprocessing
 #============= standard library imports ========================
+from threading import Lock
+import time
 
 #============= local library imports  ==========================
+
+
 class RS485Scheduler(HasTraits):
     '''
         this class should be used when working with multiple rs485 devices on the same port. 
@@ -54,8 +54,5 @@ class RS485Scheduler(HasTraits):
             #self._lock.release()
 
             return r
-
-
-
 
 #============= EOF ====================================

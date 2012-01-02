@@ -19,12 +19,14 @@ from chaco.api import AbstractOverlay
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+
+
 class BorderOverlay(AbstractOverlay):
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
             
         '''
-        print component.outer_bounds, component.outer_position
+#        print component.outer_bounds, component.outer_position
         gc.set_stroke_color((0, 1, 0))
         x, y = component.outer_position
         w, h = component.outer_bounds

@@ -17,20 +17,22 @@ limitations under the License.
 from traits.api import List, Event, Float, Str, Instance, Bool, Property
 from traitsui.api import View, Item, EnumEditor, spring, HGroup, Label, VGroup
 #from pyface.timer.api import Timer
-from src.helpers.timer import Timer
 #============= standard library imports ========================
 import time
 import os
 #============= local library imports  ==========================
+from src.helpers.timer import Timer
+from src.scripts.bakeout_script import BakeoutScript
 from src.led.led import LED
 from src.led.led_editor import LEDEditor
-#from src.scripts.bakeout_timer_script import BakeoutTimerScript
-
 from src.helpers import paths
 from watlow_ezzone import WatlowEZZone
-from src.scripts.bakeout_script import BakeoutScript
+
+
 class BakeoutMonitor():
     pass
+
+
 class BakeoutController(WatlowEZZone):
     '''
         
@@ -149,7 +151,7 @@ class BakeoutController(WatlowEZZone):
 
         self.scripts = ['---'] + [f for f in files
                     if not os.path.basename(f).startswith('.') and
-                        os.path.isfile(os.path.join(sd, f)) and os.path.splitext(f)[1] in ['.bo' ]]
+                        os.path.isfile(os.path.join(sd, f)) and os.path.splitext(f)[1] in ['.bo']]
         return True
 
     def ok_to_run(self):
@@ -199,8 +201,8 @@ class BakeoutController(WatlowEZZone):
     def set_ramp_scale(self, value, **kw):
         '''
         '''
-        scalemap = {'h':39,
-                  'm':57}
+        scalemap = {'h': 39,
+                  'm': 57}
 
         if 'value' in scalemap:
             self.info('setting ramp scale = {}'.format(value))
@@ -212,10 +214,10 @@ class BakeoutController(WatlowEZZone):
         '''
             
         '''
-        rampmap = {'off':62,
-                 'startup':88,
-                 'setpoint':1647,
-                 'both':13}
+        rampmap = {'off': 62,
+                 'startup': 88,
+                 'setpoint': 1647,
+                 'both': 13}
 
         if value in rampmap:
             self.info('setting ramp action = {}'.format(value))
@@ -230,7 +232,6 @@ class BakeoutController(WatlowEZZone):
         self.info('setting ramp rate = {:0.3f}'.format(value))
         register = 2192
         self.write(register, value, nregisters=2, **kw)
-
 
     def end(self, user_kill=False, script_kill=False, msg=None, error=None):
         if self.isActive() and self.isAlive():

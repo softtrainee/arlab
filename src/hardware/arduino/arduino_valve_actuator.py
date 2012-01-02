@@ -21,15 +21,19 @@ limitations under the License.
 
 #============= local library imports  ==========================
 from arduino_gp_actuator import ArduinoGPActuator
+
+
 class ArduinoValveActuator(ArduinoGPActuator):
     def get_open_indicator_state(self, obj):
         '''
         '''
         pass
+
     def get_closed_indicator_state(self, obj):
         '''
         '''
         pass
+
     def get_hard_lock_indicator_state(self, obj):
         '''
         '''

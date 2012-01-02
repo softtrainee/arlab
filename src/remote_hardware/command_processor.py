@@ -29,7 +29,7 @@ from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors.system_errors import SystemLockErrorCode
 import select
 
-#class Processor(ThreadingUDPServer):
+
 class CommandProcessor(ConfigLoadable):
     '''
     listens to a specified port for incoming requests.
@@ -42,12 +42,13 @@ class CommandProcessor(ConfigLoadable):
     simulation = False
     manager = None
     _sock = None
-    
+
     system_lock_name = Str
     system_lock = Bool(False)
     system_lock_address = Str
-    
+
     _handlers = None
+
     def __init__(self, *args, **kw):
         super(CommandProcessor, self).__init__(*args, **kw)
         self.context_filter = ContextFilter()
@@ -58,13 +59,14 @@ class CommandProcessor(ConfigLoadable):
         '''
         #grab the port from the repeater config file
         config = self.get_configuration(path=os.path.join(paths.device_dir,
-                                                            'servers', 'repeater.cfg'))
+                                                        'servers',
+                                                        'repeater.cfg'
+                                                        ))
         if config:
-#            self.port = self.config_get(config, 'General', 'port', cast = 'int')
             self.path = self.config_get(config, 'General', 'path')
-                        
+
             return True
-        
+
     def close(self):
         '''
         '''
@@ -83,58 +85,56 @@ class CommandProcessor(ConfigLoadable):
             os.remove(self.path)
         except OSError:
             pass
-        
+
         self._sock.bind(self.path)
 
         self._sock.listen(10)
         self.info('listening to {}'.format(self.path))
         t = Thread(target=self._listener)
         t.start()
-        
+
         return True
-    
-    
-    def _check_system_lock(self, addr):    
+
+    def _check_system_lock(self, addr):
         '''
             return true if addr is not equal to the system lock address
             ie this isnt who locked us so we deny access
         '''
-#        print self.system_lock, self.system_lock_name, self.system_lock_address
         if self.system_lock:
             if not addr in [None, 'None']:
                 return self.system_lock_address != addr
-        
+
     def _listener(self, *args, **kw):
         '''
         '''
 
-        input = [self._sock]
+        _input = [self._sock]
         while self._listen:
-            
+
             try:
-                inputready, _outputready, _exceptready = select.select(input, [], [], 5)
-               
-                for s in inputready:
+                ins, _, _ = select.select(_input, [], [], 5)
+
+                for s in ins:
                     if s == self._sock:
                         client, _addr = self._sock.accept()
-                        input.append(client)
+                        _input.append(client)
                     else:
                         client = s
                         data = client.recv(4096)
                         if data:
-                            sender_addr, ptype, payload = data.split('|')                    
-                            #t = Thread(target=self._process_request, args=(client, sender_addr, ptype, payload))
-                            #t.start()
-                            self._process_request(client, sender_addr, ptype, payload)
-                            
+                            sender_addr, ptype, payload = data.split('|')
+                            self._process_request(client,
+                                                  sender_addr,
+                                                  ptype,
+                                                  payload)
+
                         else:
                             client.close()
-                            input.remove(client)
-                        
+                            _input.remove(client)
+
             except Exception, err:
                 self.debug('Listener Exception {}'.format(err))
-            
-                    
+
     def _end_request(self, sock, data):
         #self.debug('Result: {}'.format(data))
         try:
@@ -142,9 +142,9 @@ class CommandProcessor(ConfigLoadable):
             #sock.close()
         except Exception, err:
             self.debug('End Request Exception: {}'.format(err))
-             
+
     def _process_request(self, sock, sender_addr, request_type, data):
-        
+
         #self.debug('Request: {}, {}'.format(request_type, data.strip()))
         try:
             if self._check_system_lock(sender_addr):
@@ -152,29 +152,32 @@ class CommandProcessor(ConfigLoadable):
                                              self.system_lock_address,
                                              sender_addr, logger=self.logger))
             else:
-                
+
                 result = 'error handling'
-                if not request_type in ['System', 'Diode', 'Synrad', 'CO2', 'test']:
+                if not request_type in ['System',
+                                        'Diode',
+                                        'Synrad',
+                                        'CO2',
+                                        'test']:
                     self.warning('Invalid request type ' + request_type)
                 elif request_type == 'test':
                     result = data
                 else:
-                    handler=None
+                    handler = None
                     klass = '{}Handler'.format(request_type.capitalize())
                     if klass not in self._handlers:
                         pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
-                        try:    
+                        try:
                             module = __import__(pkg, globals(), locals(), [klass])
                             factory = getattr(module, klass)
                             handler = factory(application=self.application)
-                            self._handlers[klass] = handler    
+                            self._handlers[klass] = handler
                             '''
-                                the context filter uses the handler object to 
+                                the context filter uses the handler object to
                                 get the kind and request
                                 if the min period has elapse since last request or the message is triggered
                                 get and return the state from pychron
-                                
-                    
+
                                 pure frequency filtering could be accomplished earlier in the stream in the 
                                 Remote Hardware Server (CommandRepeater.get_response) 
                             '''
@@ -185,15 +188,15 @@ class CommandProcessor(ConfigLoadable):
                     if handler is not None:
 #                    result = self.context_filter.get_response(handler, data)
                         result = handler.handle(data, sender_addr)
-                    
+
                 if isinstance(result, ErrorCode):
                     result = repr(result)
 
             self._end_request(sock, result)
-        
+
         except Exception, err:
             self.debug('Process request Exception {}'.format(err))
-        
+
 
 #if __name__ == '__main__':
 #    setup('command server')

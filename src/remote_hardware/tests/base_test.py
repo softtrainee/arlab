@@ -23,44 +23,45 @@ from src.remote_hardware.errors.error import ErrorCode
 
 class baseTest(unittest.TestCase):
     protocol = None
+
     def _test(self, request_types, data, v):
         def success(rt):
             result = self.manager.process_server_request(rt, data)
             if isinstance(result, ErrorCode):
                 result = repr(result)
-                
+
             self.assertEqual(result, v)
 
-        if isinstance(request_types, list): 
+        if isinstance(request_types, list):
             for rt in request_types:
                 success(rt)
         else:
             success(request_types)
-        
+
     def _test_suite(self, request_types, data, v):
         def success(rt, di, vi):
             result = self.manager.process_server_request(rt, di)
             if isinstance(result, ErrorCode):
                 result = repr(result)
-                
+
             self.assertEqual(result, vi)
-            
+
         def error(rt, di, vi):
             def e(dii, vii):
                 result = self.manager.process_server_request(rt, dii)
                 self.assertIsInstance(result, vii)
-            
+
             if isinstance(di, tuple):
                 for dii, vii in zip(di, vi):
                     e(dii, vii)
             else:
                 e(di, vi)
-                
-        def failure(rt, di, vi): 
+
+        def failure(rt, di, vi):
             pass
 #            self.assertRaises(vi, self.manager.process_server_request, rt, di)
-        
-        if isinstance(request_types, list): 
+
+        if isinstance(request_types, list):
             for rt in request_types:
                 success(rt, data[0], v[0])
                 error(rt, data[1], v[1])
@@ -71,13 +72,13 @@ class baseTest(unittest.TestCase):
             except IndexError:
                 pass
             #failure(request_types, data[1], v[1])
-           
+
     def setUp(self):
         self.manager = RemoteHardwareManager()
 
         #verfiy that all commands in the protocol are tested
         p = self.protocol()
-        
+
         test = [t[4:] for t in dir(self) if t.startswith('test')]
         defs = []
         for c in p.commands:
@@ -87,15 +88,13 @@ class baseTest(unittest.TestCase):
         data='{}'
         v='OK'
         self._test(['Diode','CO2'],data,v)'''.format(c, c))
-        
-        
+
         for t in test:
             if t not in p.commands:
                 print 'surpurfluous test: {}'.format(t)
-        
+
         for d in defs:
             print d
         if defs:
             print '==============================='
 #============= EOF =====================================
-

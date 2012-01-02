@@ -22,10 +22,13 @@ from chaco.api import PlotGrid, BarPlot, ArrayDataSource, \
 #=============local library imports  ==========================
 from regression_graph import RegressionGraph
 from src.graph.guide_overlay import GuideOverlay
+
+
 class ResidualsGraph(RegressionGraph):
     '''
     '''
     xtitle = None
+
     def _plotcontainer_default(self):
         '''
         '''
@@ -34,7 +37,7 @@ class ResidualsGraph(RegressionGraph):
     def container_factory(self):
         '''
         '''
-        kw = {'type':'v', 'stack_order':'top_to_bottom'}
+        kw = {'type': 'v', 'stack_order': 'top_to_bottom'}
         for k, v in self.container_dict.iteritems():
             kw[k] = v
         return self._container_factory(**kw)
@@ -79,6 +82,7 @@ class ResidualsGraph(RegressionGraph):
         '''
         super(ResidualsGraph, self).add_datum(*args, **kw)
         self.update_residuals()
+
     def new_plot(self, *args, **kw):
         self.xtitle = kw['xtitle'] if 'xtitle' in kw else None
         return super(ResidualsGraph, self).new_plot(*args, **kw)
@@ -102,7 +106,7 @@ class ResidualsGraph(RegressionGraph):
         respos = ArrayDataSource(ressplit[3])
         xpos = ArrayDataSource(ressplit[2])
 
-        yrange = DataRange1D(ArrayDataSource(res))#, low_setting = -2, high_setting = 2)
+        yrange = DataRange1D(ArrayDataSource(res))
 
         ymapper = LinearMapper(range=yrange)
 
@@ -161,3 +165,4 @@ class ResidualsGraph(RegressionGraph):
 
         self.residual_plots = [bar, bar2]
         self.plotcontainer.add(container)
+#============= EOF =====================================

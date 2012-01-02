@@ -20,6 +20,8 @@ import binascii
 #=============local library imports  =========================
 from serial_communicator import SerialCommunicator
 from src.hardware.core.checksum_helper import computeCRC
+
+
 class ModbusCommunicator(SerialCommunicator):
     '''
         modbus message syntax
@@ -154,7 +156,6 @@ class ModbusCommunicator(SerialCommunicator):
 #                return struct.unpack('!f', data.decode('hex'))[0] if response_type == 'float' \
 #                        else int(data, 16)
 
-
     def set_multiple_registers(self, startid, nregisters, value, response_type, **kw):
         '''
         '''
@@ -187,7 +188,6 @@ class ModbusCommunicator(SerialCommunicator):
         '''
         '''
 
-
         #func_code = '06'
         #func_code = self._write_func_code
         register_addr = '{:04X}'.format(int(rid))
@@ -202,7 +202,6 @@ class ModbusCommunicator(SerialCommunicator):
         n = '{:04X}'.format(nregisters)
         return self._execute_request([func_code, data_address, n], response_type, **kw)
 
-
 #    def read_input_status(self, inputid, ninputs):
 #        '''
 #        '''
@@ -210,5 +209,4 @@ class ModbusCommunicator(SerialCommunicator):
 #        data_address = '{:04X}'.format(inputid - 10001)
 #        n = '{04x}'.format(ninputs)
 #        return self._execute_request([func_code, data_address, n])
-
-
+#============= EOF =====================================

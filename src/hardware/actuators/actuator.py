@@ -25,10 +25,12 @@ limitations under the License.
 #from argus_gp_actuator import ArgusGPActuator
 
 from src.hardware.core.abstract_device import AbstractDevice
+
 PACKAGES = dict(AgilentGPActuator='src.hardware.actuators.agilent_gp_actuator',
               ArduinoGPActuator='src.hardware.arduino.arduino_gp_actuator',
               ArgusGPActuator='src.hardware.actuators.argus_gp_actuator'
               )
+
 
 class Actuator(AbstractDevice):
     '''

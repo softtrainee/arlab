@@ -20,10 +20,13 @@ from enable.api import Interactor
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+
+
 class ContextualMenuTool(Interactor):
     '''
     '''
     parent = Any
+
     def normal_mouse_move(self, event):
         '''
         '''

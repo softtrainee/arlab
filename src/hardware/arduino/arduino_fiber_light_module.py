@@ -30,6 +30,8 @@ FiberLight Protocol ver 0.2
 9; get version        return 1,0.2
 
 '''
+
+
 class ArduinoFiberLightModule(ArduinoCoreDevice):
     def power_on(self):
         '''
@@ -44,7 +46,6 @@ class ArduinoFiberLightModule(ArduinoCoreDevice):
         cmd = 5
         cmd = self._build_command(cmd)
         self.ask(cmd)
-
 
     def set_intensity(self, v):
         '''
