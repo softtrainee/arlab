@@ -19,7 +19,6 @@ from traitsui.api import View, Item
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.data_helper import make_bitarray
 
@@ -37,6 +36,8 @@ FAULTS_TABLE = ['Tank Level Low',
               'RTD short',
               None,
               None]
+
+
 class ThermoRack(CoreDevice):
     '''
     '''
@@ -71,7 +72,6 @@ class ThermoRack(CoreDevice):
         '''
         kw['is_hex'] = True
         return super(ThermoRack, self).ask(*args, **kw)
-
 
     def set_setpoint(self, v):
         '''
@@ -153,13 +153,11 @@ class ThermoRack(CoreDevice):
 
         return resp
 
-
 #===============================================================================
 # viewabledevice protocol
 #===============================================================================
     def graph_builder(self, g):
         import numpy as np
-
 
         super(ThermoRack, self).graph_builder(g)
         x = np.linspace(0, 10, 100)
@@ -170,6 +168,5 @@ class ThermoRack(CoreDevice):
     def current_state_view(self):
         v = View(Item('graph', show_label=False, style='custom'))
         return v
-
 
 #============= EOF ====================================

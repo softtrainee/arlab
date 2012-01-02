@@ -20,11 +20,14 @@ from chaco.tools.api import ScatterInspector
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
+
+
 class ScatterTool(ScatterInspector):
     '''
     '''
     parent = Any
     plotid = Int(0)
+
     def normal_mouse_move(self, event):
         '''
       

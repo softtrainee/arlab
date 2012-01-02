@@ -23,6 +23,7 @@ from traitsui.api import View, Item, ButtonEditor, HGroup, Group
 #from src.hardware.arduino.arduino_fiber_light_module import ArduinoFiberLightModule
 from src.hardware.core.abstract_device import AbstractDevice
 
+
 class FiberLight(AbstractDevice):
     '''
     '''
@@ -101,6 +102,7 @@ class FiberLight(AbstractDevice):
             self.power_off()
         else:
             self.power_on()
+
     def _get_power_label(self):
         '''
         '''
@@ -116,6 +118,7 @@ class FiberLight(AbstractDevice):
 
                            ),
                         Item('auto_onoff'))
+
     def traits_view(self):
         return View(self.get_control_group()
                     )

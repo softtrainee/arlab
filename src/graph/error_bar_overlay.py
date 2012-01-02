@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 from chaco.api import AbstractOverlay
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+
+
 class ErrorBarOverlay(AbstractOverlay):
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
@@ -33,7 +33,7 @@ class ErrorBarOverlay(AbstractOverlay):
         xer = component.xerror.get_data()
 #        yer = component.yerror.get_data()
 #        nx, ny = component.map_screen([(x, y)])[0][0]
-        nx1, nye = component.map_screen([(x - xer, y)])[0][0]
+        nx1, _nye = component.map_screen([(x - xer, y)])[0][0]
         nx2, nye = component.map_screen([(x + xer, y)])[0][0]
 #        print nx, nxe
         gc.move_to(nx1, nye - 10)

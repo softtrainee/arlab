@@ -21,6 +21,8 @@ limitations under the License.
 
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
+
+
 class ArgusController(CoreDevice):
     pass
 #============= EOF =============================================

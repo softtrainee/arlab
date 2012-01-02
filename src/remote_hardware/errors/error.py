@@ -16,13 +16,16 @@ limitations under the License.
 #=============enthought library imports=======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+
 class ErrorCode(object):
     msg = ''
     code = None
+
     def __init__(self, logger=None):
         if logger is not None:
             logger.warning(self.msg)
-            
+
     def __repr__(self):
         return 'ERROR {} : {}'.format(self.code, self.msg)
 #============= EOF =====================================

@@ -27,17 +27,20 @@ from stacked_graph import StackedGraph
 from stream_graph import StreamGraph, StreamStackedGraph
 from graph import Graph
 
-
 HMSScales = [TimeScale(microseconds=100), TimeScale(milliseconds=10)] + \
            [TimeScale(seconds=dt) for dt in (1, 5, 15, 30)] + \
            [TimeScale(minutes=dt) for dt in (5, 15, 30)] + \
-           [TimeScale(hours=dt) for dt in (6, 12, 24)]#+\
+           [TimeScale(hours=dt) for dt in (6, 12, 24)]  # +\
 #           [TimeScale(days=dt) for dt in (1,2,7)]
+
+
 class TimeSeriesGraph(Graph):
     def smooth(self, x, **kw):
         return smooth(x, **kw)
+
     def seasonal_subseries(self, x, y, **kw):
         return seasonal_subseries(x, y, **kw)
+
     def autocorrelation(self, y, **kw):
         return autocorrelation(y, **kw)
 
@@ -73,6 +76,7 @@ class TimeSeriesGraph(Graph):
 #                #print t,underlay,underlay.title
 #
 #                return underlay
+
     def new_plot(self, *args, **kw):
         '''
         '''
@@ -85,7 +89,6 @@ class TimeSeriesGraph(Graph):
         if not time_series:
             return super(TimeSeriesGraph, self).new_series(x=x, y=y, plotid=plotid, **kw)
 
-
         xd = x
         if x is not None:
             if isinstance(x[0], str):
@@ -94,7 +97,7 @@ class TimeSeriesGraph(Graph):
                 fmt = "%Y-%m-%d %H:%M:%S"
 
                 args = x[0].split(' +')
-                timefunc = lambda xi, fmt:time.mktime(time.strptime(xi, fmt))
+                timefunc = lambda xi, fmt: time.mktime(time.strptime(xi, fmt))
 
                 if len(args) > 1:
 
@@ -139,16 +142,18 @@ class TimeSeriesGraph(Graph):
 #                underlay.tick_label_formatter=lambda x:''
 
         if plotid == 0 or timescale:
-            axis = ScalesPlotAxis(plota, orientation="bottom", # mapper=xmapper,
+            axis = ScalesPlotAxis(plota, orientation="bottom",
                                   title=title,
                                   tick_generator=ScalesTickGenerator(scale=CalendarScaleSystem(*HMSScales)
-                                                                       #scale = TimeScale()
+                                                                       # scale = TimeScale()
                                                                        )
                                     )
 
             plot.underlays.append(axis)
 
         return names
+
+
 class TimeSeriesStackedGraph(TimeSeriesGraph, StackedGraph):
     '''
     '''
@@ -159,6 +164,8 @@ class TimeSeriesStreamGraph(TimeSeriesGraph, StreamGraph):
     '''
     '''
     pass
+
+
 class TimeSeriesStreamStackedGraph(TimeSeriesGraph, StreamStackedGraph):
     '''
     '''

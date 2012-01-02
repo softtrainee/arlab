@@ -22,68 +22,57 @@ from traitsui.tabular_adapter import TabularAdapter
 from numpy import vstack
 #=============local library imports  ==========================
 
+
 class DataItem(HasTraits):
     '''
-        G{classtree}
     '''
     x = Float
     y = Float
     status = Bool(True)
+
+
 class Adapter(TabularAdapter):
     '''
-        G{classtree}
+        
     '''
     columns = [('X', 'x'), ('Y', 'y')]
 
     #DataItem_x_image=Property
     def get_bg_color(self, obj, name, row):
         '''
-            @type obj: C{str}
-            @param obj:
 
-            @type name: C{str}
-            @param name:
-
-            @type row: C{str}
-            @param row:
         '''
         if not obj.trait_get(name)[name][row].status:
             return 'red'
+
     def get_format(self, obj, trait, row, column):
         '''
-            @type obj: C{str}
-            @param obj:
 
-            @type trait: C{str}
-            @param trait:
-
-            @type row: C{str}
-            @param row:
-
-            @type column: C{str}
-            @param column:
         '''
         return '%0.3f'
 #    def _get_DataItem_x_image(self):
 #        if not self.item.status:
 #            return '@icons:red_ball'
 
+
 class DataEditor(HasTraits):
     '''
-        G{classtree}
     '''
     graph = Any
     adapter = Instance(Adapter)
+
     def __init__(self, *args, **kw):
         '''
 
         '''
         super(DataEditor, self).__init__(*args, **kw)
         self._build_()
+
     def _adapter_default(self):
         '''
         '''
         return Adapter()
+
     def _build_(self):
         '''
         '''
@@ -91,10 +80,9 @@ class DataEditor(HasTraits):
         for i in range(n):
             n, obj = self._table_factory(i)
             self.add_trait(n, obj)
+
     def _table_factory(self, id):
         '''
-            @type id: C{str}
-            @param id:
         '''
         name = 'table%i' % id
 
@@ -122,11 +110,13 @@ class DataEditor(HasTraits):
                    label='Table %i' % i)
                 content.append(t)
         return View(Group(content=content, layout='tabbed'))
+
+
 class RegressionDataItem(DataItem):
     '''
-        G{classtree}
     '''
     res = Float
+
 
 class RegressionAdapter(Adapter):
     def __init__(self, *args, **kw):
@@ -135,9 +125,9 @@ class RegressionAdapter(Adapter):
         super(RegressionAdapter, self).__init__(*args, **kw)
         self.columns.append(('Res.', 'res'))
 
+
 class RegressionDataEditor(DataEditor):
     '''
-        G{classtree}
     '''
 
     def _adapter_default(self):
@@ -153,14 +143,12 @@ class RegressionDataEditor(DataEditor):
         for i in range(n):
             name, data = self._table_factory(i)
             if name in self.traits().keys():
-                self.trait_set(**{name:data})
+                self.trait_set(**{name: data})
             else:
                 self.add_trait(name, List(data))
 
     def _load_table(self, id):
         '''
-            @type id: C{str}
-            @param id:
         '''
         x, y, res = self.graph.calc_residuals(plotid=id)
         data = vstack((x, y, res)).transpose()
@@ -174,9 +162,8 @@ class RegressionDataEditor(DataEditor):
 
     def _table_factory(self, i):
         '''
-            @type i: C{str}
-            @param i:
         '''
         name = 'table%i' % i
         data = self._load_table(i)
         return name, data
+#============= EOF =====================================

@@ -22,11 +22,14 @@ from traitsui.list_str_adapter import ListStrAdapter
 from traitsui.table_column import ObjectColumn
 #=============standard library imports ========================
 
+import re
 #=============local library imports  ==========================
 
-import re
 func_regex = re.compile(r'p\[[0-9]\]')
+
+
 class Adapter(ListStrAdapter):
+
     def get_bg_color(self, obj, trait, index):
         if index in [3]:
             return 'black'
@@ -35,9 +38,11 @@ class Adapter(ListStrAdapter):
         if index in [3]:
             return 'yellow'
 
+
 class StatsTableItem(HasTraits):
     name = Str
     value = Str
+
 
 class CustomEquation(HasTraits):
     example = 'p[0]+p[1]*cos(p[2]*x)'
@@ -51,6 +56,7 @@ class CustomEquation(HasTraits):
            buttons=['OK', 'Cancel']
            )
 
+
 class RegressionEditor(HasTraits):
     '''
     '''
@@ -62,6 +68,7 @@ class RegressionEditor(HasTraits):
 
     intercept = Float(editable=False)
     intercept_error = Float
+
     def __init__(self, *args, **kw):
         '''
         '''
@@ -140,7 +147,6 @@ class RegressionEditor(HasTraits):
             elif len(coeffs) == 4:
                 strfunc = 'y = a*x^3+b*x^2+c*x+d'
 
-
             icoef = float(coeffs[-1])
             icoef_err = 0
             if len(coeff_errs) > 0:
@@ -170,7 +176,6 @@ class RegressionEditor(HasTraits):
 
         strfunc_item = StatsTableItem(name='Fit Function',
                                     value=strfunc)
-
 
         intercept_item = StatsTableItem(name='Y Intercept',
                                       value=intercept

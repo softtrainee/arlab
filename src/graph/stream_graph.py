@@ -20,13 +20,12 @@ from pyface.timer.api import do_after as do_after_timer
 from numpy import hstack, Inf
 #=============local library imports  ==========================
 from src.graph.editors.stream_plot_editor import StreamPlotEditor
+from src.helpers.datetime_tools import current_time_generator as time_generator
 from stacked_graph import StackedGraph
 from graph import Graph
 
 #assuming a average scan rate of 1s collect at most 10 days of data
 MAX_LIMIT = int(-1 * 60 * 60 * 24 * 10)
-
-from src.helpers.datetime_tools import current_time_generator as time_generator
 
 
 class StreamGraph(Graph):
@@ -35,10 +34,8 @@ class StreamGraph(Graph):
     plot_editor_klass = StreamPlotEditor
     global_time_generator = None
 
-
     cur_min = None
     cur_max = None
-
 
 #    track_y_max = Bool(True)
 #    track_y_min = Bool(True)
@@ -54,7 +51,6 @@ class StreamGraph(Graph):
 
     track_x_max = None
     track_x_min = None
-
 
     force_track_x_flag = None
 
@@ -89,13 +85,12 @@ class StreamGraph(Graph):
         self.track_y_min.append(True)
         #self.force_track_x_flag.append(False)
 
-
-
         args = super(StreamGraph, self).new_plot(**kw)
 
         self.set_x_limits(min=0, max=dl * sd + 1, plotid=len(self.plots) - 1)
 
         return args
+
     def update_y_limits(self, plotid=0, **kw):
         if self.track_y_max[plotid]:
             ma = self.cur_max[plotid]

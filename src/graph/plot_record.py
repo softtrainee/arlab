@@ -13,9 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+
+#=============enthought library imports=======================
+#============= standard library imports ========================
+#============= local library imports  ==========================
+
+
 class PlotRecord(object):
     data = None
     plotids = None
+
     def __init__(self, data, plotids, labels, *args, **kw):
         self.data = data
         self.plotids = plotids
@@ -34,3 +41,5 @@ class PlotRecord(object):
             s.append(fmt_str.format(*a))
 
         return ', '.join(s)
+
+#============= EOF =====================================

@@ -19,14 +19,17 @@ limitations under the License.
 
 #============= standard library imports ========================
 from ctypes import cdll, create_string_buffer
+import time
 #============= local library imports  ==========================
 from src.hardware.core.communicators.communicator import Communicator
-import time
 
 NI_PATH = '/Library/Frameworks/NI488.framework/NI488'
+
+
 class GPIBCommunicator(Communicator):
 
     address = 16
+
     def load(self, config, path):
         return True
 
@@ -54,7 +57,6 @@ class GPIBCommunicator(Communicator):
             if verbose:
                 self.info('no handle    {}'.format(cmd))
             return
-
 
         self._lock.acquire()
         r = ''
@@ -91,7 +93,6 @@ class GPIBCommunicator(Communicator):
             cmd += self._terminator
             self.handle.ibwrt(self.dev_handle, cmd, len(cmd))
 
-
     def _read(self):
         if self.simulation:
             pass
@@ -110,7 +111,5 @@ if __name__ == '__main__':
 
     print g.tell('1HX')
 #    print g.ask('2TP?')
-
-
 
 #============= EOF ====================================

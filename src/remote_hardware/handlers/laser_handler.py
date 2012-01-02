@@ -14,71 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from base_remote_hardware_handler import BaseRemoteHardwareHandler
-from src.remote_hardware.errors.system_errors import InvalidArgumentsErrorCode
-
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+from src.remote_hardware.errors.system_errors import InvalidArgumentsErrorCode
+from base_remote_hardware_handler import BaseRemoteHardwareHandler
+from dummies import DummyLM
 
 DIODE_PROTOCOL = 'src.managers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
 CO2_PROTOCOL = 'src.managers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
 SYNRAD_PROTOCOL = 'src.managers.laser_managers.synrad_co2_manager.SynradCO2Manager'
 
-
-class DummyPM(object):
-    def get_pattern_names(self):
-        return ['PatternA', 'PatternB']
-    def execute_pattern(self, name):
-        pass
-    def stop_pattern(self):
-        pass
-    
-class DummySM(object):
-    pattern_manager = DummyPM()
-    x = 1
-    y = 2
-    z = 3
-    stage_map = '221-hole'
-    hole = -1
-    def linear_move_to(self, x, y):
-        return 'OK'
-    def moving(self, **kw):
-        return True
-    def stop(self):
-        return True
-    def define_home(self, *args, **kw):
-        return True
-    def do_jog(self, name):
-        pass
-    def get_uncalibrated_xy(self):
-        return 0, 0
-    def get_z(self):
-        return 1.0
-    def linear_move(self, x, y, *args, **kw):
-        pass
-    def single_axis_move(self, *args, **kw):
-        pass
-    def _set_stage_map(self, *args, **kw):
-        pass
-    def _set_hole(self, *args, **kw):
-        pass
-
-    
-class DummyLM(object):
-    stage_manager = DummySM()
-    zoom = 30
-    beam = 1.5
-    def set_beam_diameter(self, d, **kw):
-        pass
-    def set_laser_power(self, *args, **kw):
-        pass
-    def enable_laser(self):
-        return True
-    def disable_laser(self):
-        return True
-    def get_laser_watts(self):
-        return 14.0
 
 class LaserHandler(BaseRemoteHardwareHandler):
 
@@ -87,7 +33,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
     def get_manager(self):
         name = self.manager_name
-        
+
         if self.application is not None:
             protocol = CO2_PROTOCOL
             if name == 'Diode':
@@ -98,7 +44,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
             lm = self.application.get_service(protocol)
         else:
             lm = DummyLM()
-        
+
         return lm
 
     def ReadLaserPower(self, manager, *args):
@@ -129,12 +75,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
             x = float(x)
         except ValueError:
             return 'Invalid args: {}  {}'.format(data, x)
-        
+
         try:
             y = float(y)
         except ValueError:
             return 'Invalid args: {}  {}'.format(data, y)
-            
+
         err = manager.stage_manager.linear_move(x, y)
 
         return self.error_response(err)
@@ -161,7 +107,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
         smanager = manager.stage_manager
         x, y = smanager.get_uncalibrated_xy()
         z = smanager.get_z()
-        
+
         result = ','.join(['{:0.2f}' .format(i) for i in (x, y, z)])
 
         return result
@@ -207,7 +153,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
             err = manager.stage_manager._set_hole(data)
         except ValueError:
             err = InvalidArgumentsErrorCode('GoToHole', data)
-        
+
         return self.error_response(err)
 
     def GetJogProcedures(self, manager, *args):
@@ -227,12 +173,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
             bd = float(data)
         except ValueError:
             return InvalidArgumentsErrorCode('SetBeamDiameter', data, logger=self)
-        
+
         if manager.set_beam_diameter(bd, block=False):
             return 'OK'
         else:
             return 'OK - beam disabled'
-        
+
     def GetBeamDiameter(self, manager, *args):
         return manager.beam
 
@@ -253,15 +199,15 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
     def GetSampleHolder(self, manager, *args):
         return manager.stage_manager.stage_map
-    
+
     def SetLaserPower(self, manager, data, *args):
         result = 'OK'
         try:
             p = float(data)
-        except :
+        except:
             return InvalidArgumentsErrorCode('SetLaserPower', data, logger=self)
 
         manager.set_laser_power(p)
         return result
-#============= EOF ====================================
 
+#============= EOF ====================================

@@ -20,6 +20,7 @@ limitations under the License.
 #============= local library imports  ==========================
 from laser_handler import LaserHandler
 
+
 class Co2Handler(LaserHandler):
     manager_name = 'CO2'
 #    def SetLaserPower(self, manager, data):

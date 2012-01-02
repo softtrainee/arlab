@@ -31,6 +31,8 @@ LABELS = dict(spectrum='Spectrum', arrhenius='Arrhenius', logr_ro='LogR/Ro',
             unconstrained_thermal_history='Uncon. Thermal History',
             cooling_history='Cooling History'
             )
+
+
 class DiffusionGraph(Graph):
     '''
     a graph for displaying diffusion data
@@ -49,6 +51,7 @@ class DiffusionGraph(Graph):
     include_panels = None
 
     zdataname_generators = None
+
     def show_plot_editor(self):
         '''
         '''
@@ -61,7 +64,7 @@ class DiffusionGraph(Graph):
         for n in self.include_panels:
             names.append(LABELS[n])
 
-        self._show_plot_editor(**{'name':names[i]})
+        self._show_plot_editor(**{'name': names[i]})
 
     def clear(self):
         super(DiffusionGraph, self).clear()
@@ -107,7 +110,7 @@ class DiffusionGraph(Graph):
                 if k == 'logr_ro':
                     if not attr in ['line_width']:
                         try:
-                            g[i][index].trait_set(**{attr:value})
+                            g[i][index].trait_set(**{attr: value})
                         except KeyError:
                             pass
 
@@ -119,7 +122,7 @@ class DiffusionGraph(Graph):
                             n = 2
 
                         plot = g[i][index * n]
-                        plot.trait_set(**{attr:value})
+                        plot.trait_set(**{attr: value})
                         if attr == 'color':
                             if hasattr(plot, 'scatter'):
                                 plot.scatter.color = value
@@ -130,7 +133,7 @@ class DiffusionGraph(Graph):
                     try:
                         g = self.groups['spectrum']
                         if index % 2 == 0:
-                            g[i][index].trait_set(**{attr:value})
+                            g[i][index].trait_set(**{attr: value})
                     except KeyError:
                         pass
 
@@ -139,27 +142,27 @@ class DiffusionGraph(Graph):
                         if not attr in ['line_width']:
                             try:
                                 g = self.groups['arrhenius']
-                                g[i][index].trait_set(**{attr:value})
+                                g[i][index].trait_set(**{attr: value})
                             except KeyError:
                                 pass
 
                         try:
                             g = self.groups['logr_ro']
-                            g[i][index].trait_set(**{attr:value})
+                            g[i][index].trait_set(**{attr: value})
                         except KeyError:
                             pass
                 elif k == 'arrhenius':
 
                     try:
                         g = self.groups['logr_ro']
-                        g[i][index].trait_set(**{attr:value})
+                        g[i][index].trait_set(**{attr: value})
                     except KeyError:
                         pass
 
                     try:
                         g = self.groups['spectrum']
                         if index % 2 == 0:
-                            g[i][index].trait_set(**{attr:value})
+                            g[i][index].trait_set(**{attr: value})
                     except KeyError:
                         pass
                 self.redraw()
@@ -177,14 +180,13 @@ class DiffusionGraph(Graph):
             self.groups[key] = []
 
         n = len(self.include_panels)
-        padding = [50, 5, 10, 30]# if n>2 else [25,5,50,30]
+        padding = [50, 5, 10, 30]  # if n>2 else [25,5,50,30]
 
         for _i in range(n):
-            a = self.new_plot(padding=padding,
+            _ = self.new_plot(padding=padding,
                           pan=True,
                           zoom=True,
                           )
-
 
     def set_group_visiblity(self, vis, gid=0):
         '''
@@ -327,7 +329,6 @@ class DiffusionGraph(Graph):
             self.plots[pid].overlays.pop()
 
 #            self.plotcontainer.draw_order = ['background', 'underlay', 'image', 'plot', 'selection', 'border', 'annotation', 'overlay']
-
 
         else:
             for s in datacontainer:

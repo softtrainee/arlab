@@ -21,6 +21,7 @@ from enable.component_editor import ComponentEditor
 from chaco.api import PlotGraphicsContext, OverlayPlotContainer, VPlotContainer, HPlotContainer, GridPlotContainer, \
     BasePlotContainer, Plot, ArrayPlotData, PlotLabel, add_default_axes, create_line_plot
 from chaco.tools.api import ZoomTool, LineInspector
+from chaco.axis import PlotAxis
 
 from traitsui.menu import Menu, Action
 from pyface.api import FileDialog, OK
@@ -28,19 +29,19 @@ from pyface.api import FileDialog, OK
 from pyface.timer.api import do_after as do_after_timer
 #=============standard library imports ========================
 import numpy as np
+from numpy.core.numeric import Inf
 import csv
 import math
 #=============local library imports  ==========================
 from src.helpers.color_generators import colorname_generator as color_generator
+from src.graph.minor_tick_overlay import MinorTicksOverlay
 from editors.graph_editor import GraphEditor
 from editors.plot_editor import PlotEditor
 from guide_overlay import GuideOverlay
 
 from tools.contextual_menu_tool import ContextualMenuTool
 from tools.pan_tool import MyPanTool as PanTool
-from numpy.core.numeric import Inf
-from src.graph.minor_tick_overlay import MinorTicksOverlay
-from chaco.axis import PlotAxis
+
 
 def name_generator(base):
     '''
@@ -56,8 +57,11 @@ DEFAULT_IMAGE_EXT = IMAGE_EXTENSIONS[0]
 VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande', 'Times New Roman',
                'Geneva']
+
+
 def fmt(data):
     return ['%0.8f' % d for d in data]
+
 
 class Graph(HasTraits):
     '''
@@ -132,11 +136,11 @@ class Graph(HasTraits):
     _title_size = None
     _control = None
 
-
     status_text = Str
     groups = None
 
     current_pos = None
+
     def __init__(self, *args, **kw):
         '''
         '''
@@ -150,7 +154,6 @@ class Graph(HasTraits):
 
     def update_group_attribute(self, plot, attr, value, dataid=0):
         pass
-
 
     def action_factory(self, name, func, **kw):
         '''
@@ -191,7 +194,6 @@ class Graph(HasTraits):
 
                           ]
 
-
         export_menu = Menu(name='Export',
                          *export_actions)
         contents = [save_menu, crosshairs_action, export_menu]
@@ -230,6 +232,7 @@ class Graph(HasTraits):
         '''
         '''
         self._save_(type='pic', path=path)
+
     def save_pdf(self, path=None):
         '''
         '''
@@ -277,7 +280,6 @@ class Graph(HasTraits):
 
         self.set_data(x, plotid, series)
         self.set_data(y, plotid, series, axis=1)
-
 
     def clear(self):
         '''
@@ -387,6 +389,7 @@ class Graph(HasTraits):
         except IndexError:
             pass
         return r
+
     def set_series_label(self, label, plotid=0, series=0):
         '''
         '''
@@ -530,7 +533,6 @@ class Graph(HasTraits):
 
         contextmenu = kw['contextmenu'] if 'contextmenu' in kw.keys() else True
 
-
         if zoom:
             nkw = dict(tool_mode='box',
                     always_on=False
@@ -606,11 +608,7 @@ class Graph(HasTraits):
                                    marker='circle')
                 rd['type'] = 'line'
             series = plot.plot(names, **rd)
-
-
             return series[0], plot
-
-
 
     def show_graph_editor(self):
         '''
@@ -641,7 +639,6 @@ class Graph(HasTraits):
 
             p.edit_traits(parent=self._control)
 
-
     def auto_update(self, *args, **kw):
         '''
         '''
@@ -659,6 +656,7 @@ class Graph(HasTraits):
 
         series.index.set_data(np.hstack((oi, [datum[0]])))
         series.value.set_data(np.hstack((ov, [datum[1]])))
+
     def add_data(self, data, plotlist=None, **kw):
         if plotlist is None:
             plotlist = xrange(len(data))
@@ -688,11 +686,11 @@ class Graph(HasTraits):
                                   max=ma + ypadding,
                                   plotid=plotid)
 
-
         if do_after:
             do_after_timer(do_after, add)
         else:
             add()
+
     def show_crosshairs(self):
         '''
         '''
@@ -758,8 +756,6 @@ class Graph(HasTraits):
 
     def add_minor_xticks(self, plotid=0, **kw):
         p = self.plots[plotid]
-
-
         m = MinorTicksOverlay(component=p, orientation='v', **kw)
         p.underlays.append(m)
 
@@ -1135,14 +1131,12 @@ class Graph(HasTraits):
             if mi is not None:
                 mi -= pad
 
-
         if mi is not None:
             ra.low_setting = mi
         if ma is not None:
             ra.high_setting = ma
 
         self.plotcontainer.request_redraw()
-
 
     def _get_selected_plotid(self):
         '''
@@ -1167,7 +1161,6 @@ class Graph(HasTraits):
                                                      self.height)
                                              ),
                     )
-
 
         v = View(plot,
                  resizable=self.resizable,

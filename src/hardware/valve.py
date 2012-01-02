@@ -21,6 +21,8 @@ from traits.api import  Str, Any, Bool, List
 #============= local library imports  ==========================
 from state_machine.valve_FSM_sm import Valve_sm
 from src.loggable import Loggable
+
+
 class HardwareValve(Loggable):
     '''
     '''
@@ -172,7 +174,6 @@ class HardwareValve(Loggable):
         if self.success:
             self.state = True
 
-
     def _close_(self, *args, **kw):
         '''
 
@@ -198,6 +199,5 @@ class HardwareValve(Loggable):
 ##        super(HardwareValve, self).warning(msg)
 #        Loggable.warning(self, msg)
 #        self.success = False
-
 
 #============= EOF ====================================

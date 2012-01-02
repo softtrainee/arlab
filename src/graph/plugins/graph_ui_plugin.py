@@ -20,6 +20,7 @@ limitations under the License.
 from src.envisage.core.core_ui_plugin import CoreUIPlugin
 from src.managers.graph_manager import GraphManager
 
+
 class GraphUIPlugin(CoreUIPlugin):
 #    def _preferences_pages_default(self):
 #        from Graph_preferences_page import GraphPreferencesPage

@@ -18,49 +18,20 @@ limitations under the License.
 #============= standard library imports ========================
 from threading import Thread
 #============= local library imports  ==========================
-from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode, \
     InvalidArgumentsErrorCode, InvalidValveErrorCode, InvalidIPAddressErrorCode, InvalidValveGroupErrorCode
+from base_remote_hardware_handler import BaseRemoteHardwareHandler
+from dummies import DummyELM, DummyDevice
 
-#============= views ===================================
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 TM_PROTOCOL = 'src.social.twitter_manager.TwitterManager'
 RHM_PROTOCOL = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
-class DummyDevice(object):
-    def get(self):
-        return 0.1
-    def set(self, v):
-        return 'OK'
 
-alphas = [chr(i) for i in range(65, 65 + 26, 1)]
-
-class DummyELM(object):
-    def open_valve(self, v):
-        if len(v) == 1 and v in alphas:
-            return True
-        
-    def close_valve(self, v):
-        if len(v) == 1:
-            return True
-    
-    def get_valve_state(self, v):
-        return True
-    def get_valve_states(self):
-        return ','.join(map(str, [True, True, False]))
-    def get_manual_state(self, v):
-        return True
-    def get_device(self, n):
-        
-        _d = DummyDevice()
-        d = None
-        return d
-        
-    def get_software_lock(self, n):
-        return False
 
 class SystemHandler(BaseRemoteHardwareHandler):
     extraction_line_manager = None
     manager_name = 'extraction_line_manager'
+
     def get_manager(self):
 
         if self.extraction_line_manager is None:
@@ -89,7 +60,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = d.set(value)
         else:
             result = DeviceConnectionErrorCode(dname, logger=self)
-        
+
         return result
 
     def Read(self, manager, dname, *args):
@@ -106,7 +77,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = 'OK'
         elif result is None:
             result = InvalidArgumentsErrorCode('Open', vname, logger=self)
-        
+
         return result
 
     def Close(self, manager, vname, sender_address, *args):
@@ -124,7 +95,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     def GetValveStates(self, manager, *args):
-        
+
         result = manager.get_valve_states()
         if result is None:
             result = 'ERROR'
@@ -137,9 +108,9 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = False
         else:
             result = lstate
-            
+
         return result
-    
+
     def StartRun(self, manager, *args):
         '''
             data is a str in form:
@@ -149,19 +120,19 @@ class SystemHandler(BaseRemoteHardwareHandler):
         data = ' '.join(args[:-1])
         if manager.multruns_report_manager is not None:
             manager.multruns_report_manager.start_run(data)
-        
+
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
             if tm is not None:
                 tm.post('Run {} started'.format(data))
 
         return 'OK'
-    
+
     def CompleteRun(self, manager, *args):
         '''
             complete run should report age
         '''
-        
+
         data = ' '.join(args[:-1])
         if manager.multruns_report_manager is not None:
             manager.multruns_report_manager.complete_run()
@@ -170,11 +141,11 @@ class SystemHandler(BaseRemoteHardwareHandler):
             if tm is not None:
                 if 'cancel' in data.lower():
                     tm.post('Run {}'.format(data))
-                else:     
+                else:
                     tm.post('Run {} completed'.format(data))
 
         return 'OK'
-                    
+
     def StartMultRuns(self, manager, *args):
         '''
             data should be str of form:
@@ -184,33 +155,33 @@ class SystemHandler(BaseRemoteHardwareHandler):
         sender_addr = args[-1]
         data = ' '.join(args[:-1])
         if self.application is not None:
-            
+
             rhm = self.application.get_service(RHM_PROTOCOL)
             if rhm.lock_by_address(sender_addr, lock=True):
-            
+
                 if manager.multruns_report_manager is not None:
                     manager.multruns_report_manager.start_new_report(data)
-                
+
                 tm = self.application.get_service(TM_PROTOCOL)
                 if tm is not None:
                     tm.post('Mult runs start {}'.format(data))
             else:
                 return InvalidIPAddressErrorCode(sender_addr)
         return 'OK'
-            
+
     def CompleteMultRuns(self, manager, *args):
 
         sender_addr = args[-1]
         data = ' '.join(args[:-1])
-            
+
         if self.application is not None:
-            
+
             rhm = self.application.get_service(RHM_PROTOCOL)
             if rhm.lock_by_address(sender_addr, lock=False):
                 if manager.multruns_report_manager is not None:
                     t = Thread(target=manager.multruns_report_manager.complete_report)
                     t.start()
-                
+
                 tm = self.application.get_service(TM_PROTOCOL)
                 if tm is not None:
                     tm.post('Mult runs completed {}'.format(data))
@@ -218,42 +189,42 @@ class SystemHandler(BaseRemoteHardwareHandler):
                 return InvalidIPAddressErrorCode(sender_addr)
 
         return 'OK'
-     
+
     def SystemLock(self, manager, name, onoff, sender_addr, *args):
-        
+
         cp = manager.remote_hardware_manager.command_processor
         rhm = self.application.get_service(RHM_PROTOCOL)
         if rhm.validate_address(sender_addr):
             cp.system_lock = onoff in ['On', 'on', 'ON']
             if onoff:
                 cp.system_lock_address = sender_addr
-        else:    
+        else:
             return InvalidIPAddressErrorCode(sender_addr)
-        
+
         return 'OK'
-    
+
     def ClaimGroup(self, manager, grp, sender_addr, *args):
         rhm = self.application.get_service(RHM_PROTOCOL)
         if rhm.validate_address(sender_addr):
             err = manager.claim_section(grp, sender_addr)
             if err is True:
                 return InvalidValveGroupErrorCode(grp)
-        else:    
+        else:
             return InvalidIPAddressErrorCode(sender_addr)
-        
+
         return 'OK'
-        
-    def ReleaseGroup(self, manager, grp , sender_addr, *args):
+
+    def ReleaseGroup(self, manager, grp, sender_addr, *args):
         rhm = self.application.get_service(RHM_PROTOCOL)
         if rhm.validate_address(sender_addr):
             err = manager.release_section(grp)
             if err:
                 return InvalidValveGroupErrorCode(grp)
-        else:    
+        else:
             return InvalidIPAddressErrorCode(sender_addr)
-        
+
         return 'OK'
-        
+
 #    def RemoteLaunch(self, manager, *args):
 #        #launch pychron
 #        p = '/Users/Ross/Programming/pychron/Pychron.app'
@@ -264,7 +235,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
 #            result = 'ERROR: failed to launch Pychron'
 #
 #        return result   
-        
+
 #    def handle(self, data):
 #        elm = self.get_extraction_line_manager()
 #        result = 'ERROR'
@@ -284,7 +255,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
 #            else:
 #                result = 'No command passed'
 #        return str(result)
-    
+
 if __name__ == '__main__':
     v = SystemHandler()
     v.RemoteLaunch()

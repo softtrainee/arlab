@@ -23,6 +23,7 @@ from traitsui.api import View, Item
 from src.hardware.core.i_core_device import ICoreDevice
 from viewable_device import ViewableDevice
 
+
 class AbstractDevice(ViewableDevice):
     '''
     '''
@@ -42,7 +43,6 @@ class AbstractDevice(ViewableDevice):
 #    simulation = DelegatesTo('_cdevice')
     com_class = DelegatesTo('_cdevice')
     is_scanable = DelegatesTo('_cdevice')
-
 
 #    def start(self):
 #        '''
@@ -106,7 +106,6 @@ class AbstractDevice(ViewableDevice):
             r = self._cdevice.simulation
         return r
 
-
     def traits_view(self):
         v = View(Item('name', style='readonly'),
                  Item('klass', style='readonly', label='Class'),
@@ -118,3 +117,4 @@ class AbstractDevice(ViewableDevice):
 
                )
         return v
+#============= EOF =====================================

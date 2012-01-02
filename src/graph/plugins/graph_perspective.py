@@ -19,6 +19,8 @@ from pyface.workbench.api import Perspective, PerspectiveItem
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+
+
 class GraphPerspective(Perspective):
     '''
     '''
@@ -45,5 +47,4 @@ class GraphPerspective(Perspective):
 #                              width = 0.35
 #                              ),
 #              ]
-#============= views ===================================
 #============= EOF ====================================

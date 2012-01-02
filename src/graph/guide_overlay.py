@@ -20,6 +20,8 @@ from chaco.api import AbstractOverlay
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
+
+
 class GuideOverlay(AbstractOverlay):
     '''
     draws a horizontal or vertical line at the specified value
@@ -27,6 +29,7 @@ class GuideOverlay(AbstractOverlay):
     orientation = Enum('h', 'v')
     value = Float
     color = Tuple(1, 0, 0)
+
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
 
@@ -51,3 +54,5 @@ class GuideOverlay(AbstractOverlay):
         gc.line_to(x2, y2)
         gc.stroke_path()
         gc.restore_state()
+
+#============= EOF =====================================

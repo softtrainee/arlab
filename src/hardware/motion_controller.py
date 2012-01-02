@@ -18,13 +18,14 @@ from traits.api import Property, Dict, Float, Any, Instance
 from traitsui.api import View, VGroup, Item, RangeEditor
 from pyface.timer.api import Timer
 #============= standard library imports ========================
+import os
 
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
-import os
 
 UPDATE_MS = 150
+
 
 class MotionController(CoreDevice):
     '''
@@ -54,11 +55,13 @@ class MotionController(CoreDevice):
     _z_position = Float
     z_progress = Float
     motion_profiler = Instance(MotionProfiler, ())
+
     def _motion_profiler_default(self):
         mp = MotionProfiler()
         p = os.path.join(self.configuration_dir_path, 'motion_profiler.cfg')
         mp.load(p)
         return mp
+
     def traits_view(self):
         return View(self.get_control_group())
 
@@ -105,7 +108,6 @@ class MotionController(CoreDevice):
 
         self.parent.canvas.set_stage_position(x, y)
 
-
     def _get_x(self):
         '''
         '''
@@ -121,24 +123,23 @@ class MotionController(CoreDevice):
         '''
         return self._z_position
 
-
     def _validate(self, v, key, cur):
         '''
         '''
         #print 'vin', v, key, cur
-        min = self.axes[key].negative_limit
-        max = self.axes[key].positive_limit
+        mi = self.axes[key].negative_limit
+        ma = self.axes[key].positive_limit
 
         try:
             v = float(v)
-            if not min <= v <= max:
+            if not mi <= v <= ma:
                 v = None
 
             if v is not None:
                 if abs(v - cur) <= 0.001:
-                	v = None
-        except ValueError, e:
-            #print e
+                    v = None
+        except ValueError:
+
             v = None
 
 #        print 'validate', min, max, v
@@ -165,10 +166,10 @@ class MotionController(CoreDevice):
         '''
         '''
         return self._validate(v, 'z', self._z_position)
+
     def set_z(self, v, **kw):
         self.single_axis_move('z', v, **kw)
         self._z_position = v
-
 
     def _set_z(self, v):
         '''
@@ -203,6 +204,7 @@ class MotionController(CoreDevice):
         pass
 #    def _moving_(self):
 #        pass
+
     def define_home(self):
         '''
         '''

@@ -34,8 +34,9 @@ from src.remote_hardware.command_processor import CommandProcessor
 #===================================
 '''
 
+
 class RemoteHardwareManager(Manager):
-    
+
     command_processor = Instance(CommandProcessor)
     enable_hardware_server = Bool
     result = None
@@ -56,17 +57,17 @@ class RemoteHardwareManager(Manager):
 
     def stop(self):
         self.command_processor.close()
-#
+
     def _command_processor_default(self):
         cp = CommandProcessor(application=self.application)
         bind_preference(cp, 'system_lock', 'pychron.hardware.enable_system_lock')
         bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
         bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
-   
+
         config = ConfigParser.ConfigParser()
         p = os.path.join(setup_dir, 'system_locks.cfg')
         config.read(p)
-        
+
         names = []
         hosts = dict()
         for sect in config.sections():
@@ -78,9 +79,9 @@ class RemoteHardwareManager(Manager):
         pref = self.application.preferences
         pref.set('pychron.hardware.system_lock_names', names)
         pref.set('pychron.hardware.system_lock_addresses', hosts)
-        
+
         name = pref.get('pychron.hardware.system_lock_name')
-        
+
         try:
             if name:
                 pref.set('pychron.hardware.system_lock_address', hosts[name.strip("'")])
@@ -88,15 +89,16 @@ class RemoteHardwareManager(Manager):
                 pref.set('pychron.hardware.system_lock_address', hosts[names[0]])
         except Exception, err:
             print 'system lock exceptipon', err
-            
+
         pref.save()
 
         return cp
+
     def validate_address(self, addr):
-        
+
             addrs = self.application.preferences.get('pychron.hardware.system_lock_addresses')
             pairs = addrs[1:-1].split(',')
-            
+
             for p in pairs:
                 k, v = p.split(':')
                 k = k.strip()
@@ -104,7 +106,7 @@ class RemoteHardwareManager(Manager):
                 if v[1:-1] == addr:
                     return k
             self.warning('You are not using an approved ip address {}'.format(addr))
-            
+
     def lock_by_address(self, addr, lock=True):
         if lock:
             name = self.validate_address(addr)
@@ -112,7 +114,7 @@ class RemoteHardwareManager(Manager):
                 self.application.preferences.set('pychron.hardware.system_lock_address', addr)
                 self.application.preferences.set('pychron.hardware.system_lock_name', name)
                 return True
-                
+
         else:
             self.application.preferences.set('pychron.hardware.enable_system_lock', lock)
             return True

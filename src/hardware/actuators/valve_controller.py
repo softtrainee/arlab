@@ -18,9 +18,9 @@ limitations under the License.
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#from src.hardware.arduino.arduino_valve_actuator import ArduinoValveActuator
-
 from actuator import Actuator
+
+
 class ValveController(Actuator):
     def get_open_indicator_state(self, *args, **kw):
         '''
@@ -28,6 +28,7 @@ class ValveController(Actuator):
         '''
         if self._cdevice is not None:
             return self._cdevice.get_open_indicator_state(*args, **kw)
+
     def get_closed_indicator_state(self, *args, **kw):
         '''
         '''

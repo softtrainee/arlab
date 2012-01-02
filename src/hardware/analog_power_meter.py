@@ -20,10 +20,11 @@ limitations under the License.
 #=============local library imports  ==========================
 from adc.adc_device import ADCDevice
 
+
 class AnalogPowerMeter(ADCDevice):
     '''
     '''
-    range = 1.0
+    _range = 1.0
     voltage_range = 5.0
 
     def _scan_(self, *args):
@@ -37,5 +38,5 @@ class AnalogPowerMeter(ADCDevice):
     def read_power_meter(self, **kw):
         '''
         '''
-        return self.read_voltage(**kw) * self.range / self.voltage_range
+        return self.read_voltage(**kw) * self._range / self.voltage_range
 #============= EOF ==============================================

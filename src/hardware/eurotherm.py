@@ -37,6 +37,7 @@ ETX = chr(3)
 ACK = chr(6)
 NAK = chr(15)
 
+
 class Eurotherm(CoreDevice):
     '''
     '''
@@ -158,7 +159,6 @@ class Eurotherm(CoreDevice):
             builder = getattr(self, '{}_build_command'.format(self.protocol))
             #parser = getattr(self, '%s_parse_command_response' % self.protocol)
 
-
             for pi in params[1].split(';'):
                 cmd, value = pi.split(',')
 
@@ -236,7 +236,6 @@ class Eurotherm(CoreDevice):
             resp = self.get_random_value(0, 10)
 
         self.process_value = resp
-
 
         return resp
 

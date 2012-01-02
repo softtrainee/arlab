@@ -22,6 +22,8 @@ from threading import Lock
 
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
+
+
 class Communicator(ConfigLoadable):
     '''
       
@@ -29,7 +31,8 @@ class Communicator(ConfigLoadable):
     _lock = Lock
     name = Str
     simulation = Bool(True)
-    _terminator = chr(13) #'\r'
+    _terminator = chr(13)  # '\r'
+
     def __init__(self, *args, **kw):
         '''
         '''
@@ -44,6 +47,7 @@ class Communicator(ConfigLoadable):
 
     def ask(self, *args, **kw):
         pass
+
     def tell(self, *args, **kw):
         pass
 
@@ -112,7 +116,6 @@ class Communicator(ConfigLoadable):
             msg = '{} ===>> {}'.format(cmd, re)
 
         self.info(msg, decorate=False)
-
 
     def _remove_eol(self, re):
         '''

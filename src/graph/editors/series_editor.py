@@ -27,6 +27,7 @@ from chaco.data_range_1d import DataRange1D
 
 #=============local library imports  ==========================
 
+
 class SeriesEditor(HasTraits):
     name = Property(depends_on='_name')
     _name = Str
@@ -37,6 +38,7 @@ class SeriesEditor(HasTraits):
     series = Instance(BaseXYPlot)
 
     show = Bool(True)
+
     def _get_name(self):
         if not self._name:
             return 'series{:03d}'.format(self.id)
@@ -54,9 +56,9 @@ class SeriesEditor(HasTraits):
             if hasattr(obj, 'scatter'):
     #                        if plot.kind == 'line_scatter':
     #                    p1 = self.groups['arrhenius'][i][index]
-                p2 = obj.scatter #self.groups['arrhenius'][i][index + 1]
+                p2 = obj.scatter  # self.groups['arrhenius'][i][index + 1]
     #                    print dataid, i
-                p2.trait_set(**{name:new})
+                p2.trait_set(**{name: new})
                 if name == 'color':
                     p2.outline_color = new
             self.graph.update_group_attribute(obj, name, new, dataid=self.id / 2)
@@ -78,12 +80,14 @@ class SeriesEditor(HasTraits):
                            )
                     )
 
+
 class ContourPolyPlotEditor(SeriesEditor):
 #    series=Instance(ContourPolyPlot)
     series = Instance(Base2DPlot)
 #    series2 = Instance(Base2DPlot)
     cmap = Str('yarg')
     reverse = Bool(False)
+
     def __init__(self, *args, **kw):
         super(ContourPolyPlotEditor, self).__init__(*args, **kw)
         self.cmap_names = color_map_name_dict.keys()
@@ -122,10 +126,12 @@ class ContourPolyPlotEditor(SeriesEditor):
                 )
         return v
 
+
 class PolygonPlotEditor(SeriesEditor):
     #series = Instance(BaseXYPlot)
 
     color_ = Property
+
     def _get_color_(self):
         '''
         '''
@@ -143,7 +149,6 @@ class PolygonPlotEditor(SeriesEditor):
         self.series.face_color = c
         self.series.edge_color = c
         self.series.request_redraw()
-
 
     def traits_view(self):
         '''

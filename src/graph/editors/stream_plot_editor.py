@@ -20,6 +20,8 @@ from traitsui.api import Item, VGroup, TextEditor, HGroup, spring, Label
 
 #=============local library imports  ==========================
 from src.graph.editors.plot_editor import PlotEditor
+
+
 class StreamPlotEditor(PlotEditor):
     '''
     '''
@@ -33,7 +35,6 @@ class StreamPlotEditor(PlotEditor):
     track_x_min = Property(Bool(True), depends_on='graph.track_x_min')
     track_y_max = Property(Bool(True), depends_on='graph.track_y_max')
     track_y_min = Property(Bool(True), depends_on='graph.track_y_min')
-
 
     data_limit = Property(Float(enter_set=True, auto_set=False),
                           depends_on='_data_limit')
@@ -53,19 +54,25 @@ class StreamPlotEditor(PlotEditor):
 
     def _get_track_x_max(self):
         return self.graph.track_x_max
+
     def _set_track_x_max(self, v):
         self.graph.track_x_max = v
+
     def _get_track_x_min(self):
         return self.graph.track_x_min
+
     def _set_track_x_min(self, v):
         self.graph.track_x_min = v
 
     def _get_track_y_max(self):
         return self.graph.track_y_max[self.id]
+
     def _set_track_y_max(self, v):
         self.graph.track_y_max[self.id] = v
+
     def _get_track_y_min(self):
         return self.graph.track_y_min[self.id]
+
     def _set_track_y_min(self, v):
         self.graph.track_y_min[self.id] = v
 
@@ -136,5 +143,3 @@ class StreamPlotEditor(PlotEditor):
         except ValueError:
             pass
 #============= EOF ====================================
-
-

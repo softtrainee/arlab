@@ -24,11 +24,14 @@ limitations under the License.
 import time
 #=============local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
+
+
 class AnalogDigitalConverter(CoreDevice):
     '''
     '''
     scan_func = 'read_device'
     read_voltage = 0
+
     def read_device(self, **kw):
         '''
         '''
@@ -46,12 +49,14 @@ Agilent requires chr(10) as its communicator terminator
 
 '''
 
+
 class AgilentADC(AnalogDigitalConverter):
     '''
     '''
 #    def __init__(self, *args, **kw):
 #        super(AgilentADC, self).__init__(*args, **kw)
     address = None
+
     def load_additional_args(self, config):
         '''
 
@@ -65,7 +70,6 @@ class AgilentADC(AnalogDigitalConverter):
         tc = self.config_get(config, 'General', 'trigger_count', cast='int')
         self.trigger_count = tc if tc is not None else 1
         #self.trigger_count = int(setupargs[2][0])
-
 
         if slot is not None and channel is not None:
             self.address = '{}{:02n}'.format(slot, channel)
@@ -95,7 +99,6 @@ class AgilentADC(AnalogDigitalConverter):
 
             return True
 
-
     def _trigger_(self):
         '''
         '''
@@ -103,6 +106,7 @@ class AgilentADC(AnalogDigitalConverter):
         #time.sleep(0.05)
         self.tell('INIT')
         time.sleep(0.1)
+
     def read_device(self, **kw):
         '''
         '''
@@ -132,11 +136,7 @@ class AgilentADC(AnalogDigitalConverter):
         args = r.split(',')
         data = args[:-1]
 
-
         return sum([float(d) for d in data]) / self.trigger_count
-
-
-
 
 
 class M1000(AnalogDigitalConverter):
@@ -205,6 +205,8 @@ class M1000(AnalogDigitalConverter):
 class KeithleyADC(M1000):
     '''
     '''
+    pass
+
 
 class OmegaADC(M1000):
     '''
@@ -217,4 +219,4 @@ class OmegaADC(M1000):
                           remove_eol=False, replace=[chr(13), ','])
 
         return self._parse_response_(r, type='block')
-
+#============= EOF =====================================

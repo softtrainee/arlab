@@ -26,10 +26,13 @@ from pyface.constant import OK
 from src.helpers.paths import root_dir
 from src.hardware.axis import Axis
 from src.loggable import Loggable
+
+
 class Result(HasTraits):
     name = CStr
     key = CStr
     result = CStr
+
     def __init__(self, name, key, result, *args, **kw):
         super(Result, self).__init__(*args, **kw)
         self.name = name
@@ -42,6 +45,7 @@ class Result(HasTraits):
                                                  self.result
                                                  )
 
+
 class ResultsAdapter(TabularAdapter):
 
     columns = [('Name', 'name'),
@@ -49,16 +53,19 @@ class ResultsAdapter(TabularAdapter):
              #('Command', 'cmd'),
              ('Result', 'result')
              ]
+
     def get_width(self, object, trait, column):
         w = -1
         if column == 0:
             w = 290
         return w
 
+
 class ResultsReport(Loggable):
     results = List
     save = Button
     axis = Axis
+
     def _save_fired(self):
         dlg = FileDialog(default_directory=root_dir,
                          action='save as'

@@ -27,21 +27,18 @@ from traitsui.api import View, Item, \
 from wx import Colour
 import sys
 #=============local library imports  ==========================
+
+
 class GraphEditorHandler(Handler):
     def closed(self, info, is_ok):
         '''
-            @type info: C{str}
-            @param info:
-
-            @type is_ok: C{str}
-            @param is_ok:
         '''
         obj = info.object
         obj.graph_editor = None
 
+
 class GraphEditor(HasTraits):
     '''
-        G{classtree}
     '''
     graph = Any
     container = Property(depends_on='graph')
@@ -83,7 +80,7 @@ class GraphEditor(HasTraits):
         '''
 
         if sys.platform == 'win32':
-            v = [vi / 255. for vi in v ]
+            v = [vi / 255. for vi in v]
 
         self.container.bgcolor = v
 #        self.container.invalidate_and_redraw()
@@ -130,3 +127,4 @@ class GraphEditor(HasTraits):
                y=0.1,
                )
         return v
+#============= EOF =====================================

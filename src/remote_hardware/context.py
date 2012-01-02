@@ -24,12 +24,16 @@ from src.loggable import Loggable
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+
+
 class Message(object):
     request = None
     response = None
+
     def __init__(self, request, response):
         self.request = request
         self.response = response
+
 
 class Context(object):
     messages = None
@@ -37,6 +41,7 @@ class Context(object):
     kind = None
     window = None
     min_period = 2
+
     def __init__(self, kind, *args, **kw):
         self.kind = kind
 
@@ -82,8 +87,10 @@ class Context(object):
 
 TRIGGERS = dict(SetValveState='GetValveState')
 
+
 class ContextFilter(Loggable):
     _contexts_ = None
+
     def __init__(self, *args, **kw):
         super(ContextFilter, self).__init__(*args, **kw)
         self._contexts_ = dict()
@@ -104,10 +111,10 @@ class ContextFilter(Loggable):
                 ctx[te].triggered = True
 
     def get_response(self, handler, data, filter=False):
-        
+
         if filter:
             kind, request = handler.parse(data)
-            
+
             resp = True
             freqa = 0
             freqr = 0
@@ -117,12 +124,11 @@ class ContextFilter(Loggable):
                 resp = ctx.get_response()
                 freqa = ctx.get_frequency(request=request)
                 freqr = ctx.get_frequency(request=request, response=resp)
-    
+
             if resp == True:
                 resp_kind = 'Actual'
                 resp = handler.handle(data)
-    
-    
+
             self.info('kind={}, req={},res={} ({}), freqa={}, freqr={} '.format(kind, request,
                                                                                 resp_kind, resp,
                                                                                 freqa, freqr))
@@ -150,7 +156,6 @@ class Sender(Thread):
                 request = 'A'
                 response = 'True'
                 self.filter.add_message(k, request, response)
-
 
             time.sleep(0.05)
             cnt += 1

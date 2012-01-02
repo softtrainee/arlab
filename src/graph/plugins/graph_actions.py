@@ -20,12 +20,13 @@ from pyface.action.api import Action
 
 #============= local library imports  ==========================
 
+
 class OpenHardwareManagerAction(Action):
     '''
-        G{classtree}
     '''
     description = 'Open the hardware manager'
     name = 'Hardware Manager'
+
     def perform(self, event):
         '''
         '''

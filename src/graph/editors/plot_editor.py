@@ -30,6 +30,8 @@ from chaco.contour_poly_plot import ContourPolyPlot
 from chaco.base_2d_plot import Base2DPlot
 from chaco.cmap_image_plot import CMapImagePlot
 from chaco.base_contour_plot import BaseContourPlot
+
+
 class PlotEditorHandler(Handler):
     def closed(self, info, is_ok):
         '''
@@ -37,10 +39,10 @@ class PlotEditorHandler(Handler):
         obj = info.object
         obj.graph.plot_editor = None
 
+
 class PlotEditor(HasTraits):
     '''
     '''
-
 
     _xtitle = Str
     _ytitle = Str
@@ -56,7 +58,6 @@ class PlotEditor(HasTraits):
     xmin = Property(depends_on='_xmin')
     ymax = Property(depends_on='_ymax')
     ymin = Property(depends_on='_ymin')
-
 
 #    xcolor_ = Property
 #    ycolor_ = Property
@@ -76,6 +77,7 @@ class PlotEditor(HasTraits):
     _prev_selected = Any
 
     _series_editor_klass = SeriesEditor
+
     def __init__(self, *args, **kw):
         '''
         '''
@@ -138,7 +140,7 @@ class PlotEditor(HasTraits):
 
             kwargs = self._get_series_editor_kwargs(plot, int(key[4:]))
             editors.append(editor(**kwargs))
-        editors.sort(key=lambda x:x.id)
+        editors.sort(key=lambda x: x.id)
 
         if plots:
             self._sync_limits(plot)
@@ -153,13 +155,11 @@ class PlotEditor(HasTraits):
             self._xmax = phigh[0]
             self._ymax = phigh[1]
 
-
             #print plot.value_range.low
             #print plot.value_range.high
         else:
             self._xmin, self._xmax = plot.index_range.low, plot.index_range.high
             self._ymin, self._ymax = plot.value_range.low, plot.value_range.high
-
 
     def get_axes_group(self):
         editor = TextEditor(enter_set=True, auto_set=False)
@@ -199,6 +199,7 @@ class PlotEditor(HasTraits):
                      springy=False
                              )
         return grp
+
     def _get_additional_groups(self):
         pass
 
@@ -208,8 +209,6 @@ class PlotEditor(HasTraits):
         vg = VGroup()
         vg.content.append(self.get_axes_group())
         vg.content.append(self._get_selected_group())
-
-
 
         vg.content.append(Item('series_editors',
                              style='custom',
@@ -286,15 +285,12 @@ class PlotEditor(HasTraits):
         except ValueError:
             pass
 
-
     def _set_xtitle(self, v):
         self._xtitle = v
         self.graph.set_x_title(v, plotid=self.id)
 
-
     def _set_ytitle(self, v):
         self._ytitle = v
-
 
         self.graph.set_y_title(v, plotid=self.id)
 
@@ -313,7 +309,6 @@ class PlotEditor(HasTraits):
 
         kv = KivaFontFunc('Arial 24')
         plot.value_axis.title_font = kv.default
-
 
     def _set_xmin(self, v):
         self._xmin = v
@@ -344,18 +339,18 @@ class PlotEditor(HasTraits):
         return self._ymax
 
     def _validate_xmin(self, v):
-        return self._validate_float(v, test=lambda x:None if x >= self.xmax else x)
+        return self._validate_float(v, test=lambda x: None if x >= self.xmax else x)
 
     def _validate_xmax(self, v):
-        v = self._validate_float(v, test=lambda x:None if x <= self.xmin else x)
+        v = self._validate_float(v, test=lambda x: None if x <= self.xmin else x)
         return v
 
     def _validate_ymin(self, v):
-        v = self._validate_float(v, test=lambda x:None if x >= self.ymax else x)
+        v = self._validate_float(v, test=lambda x: None if x >= self.ymax else x)
         return v
 
     def _validate_ymax(self, v):
-        v = self._validate_float(v, test=lambda x:None if x <= self.ymin else x)
+        v = self._validate_float(v, test=lambda x: None if x <= self.ymin else x)
         return v
 
 #============= EOF ====================================

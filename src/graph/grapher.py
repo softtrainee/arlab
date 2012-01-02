@@ -28,17 +28,17 @@ p = os.path.join(os.path.expanduser('~'), 'Programming', 'mercurial', 'pychron_b
 sys.path.append(p)
 #============= local library imports  ==========================
 
+
 class Grapher(HasTraits):
     graph = Instance(HasTraits)
+
     def _graph_default(self):
         return self._graph_factory()
 
     def _graph_factory(self):
         from src.graph.graph import Graph
         klass = Graph
-        g = klass()
-
-        return g
+        return klass()
 
     def traits_view(self):
         v = View(Item('graph', show_label=False, style='custom'),
@@ -114,12 +114,12 @@ class Grapher(HasTraits):
             header = f.readline()
             for i, l in enumerate(header.split(',')):
                 g.set_series_label(l, series=i)
-
 #===============================================================================
 #     hardcoded additions
 #===============================================================================
         g.set_x_title('Relative Error (%)')
         g.set_y_title('Frequency')
+
 
 def do_grapher(args):
     op = args.o[0]
@@ -139,9 +139,6 @@ if __name__ == '__main__':
     parser.add_argument('-o', metavar='outputpath', type=str, nargs=1)
     args = parser.parse_args()
 
-
     do_grapher(args)
 
 #============= EOF =====================================
-
-

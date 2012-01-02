@@ -22,6 +22,7 @@ import shlex
 from src.loggable import Loggable
 from error_handler import ErrorHandler
 
+
 class BaseRemoteHardwareHandler(Loggable):
     application = Any
     error_handler = Instance(ErrorHandler, ())
@@ -30,7 +31,8 @@ class BaseRemoteHardwareHandler(Loggable):
     def _error_handler_default(self):
         eh = ErrorHandler()
         eh.logger = self
-        return eh 
+        return eh
+
     #@staticmethod
     def _make_keys(self, name):
         return [name, name.upper(), name.capitalize(), name.lower()]
@@ -51,20 +53,20 @@ class BaseRemoteHardwareHandler(Loggable):
             err, func = eh.check_command(self, args)
             #except InvalidCommandErrorCode, e:
             #    err = e
-                
+
             if err is None:
                 #hardware query happens here
-                
+
                 err, response = eh.check_response(func, manager, args[1:] + [sender_addr])
-                
+
                 if err is None:
                     return response
-                
+
         return err
 
     def get_manager(self):
         return
-    
+
     #@staticmethod
     def split_data(self, data):
         return [a.strip() for a in shlex.split(data)]
@@ -72,14 +74,8 @@ class BaseRemoteHardwareHandler(Loggable):
     def get_func(self, fstr):
         try:
             return getattr(self, fstr)
-        
+
         except AttributeError:
             pass
-            #self.warning('Invalid command {}, {:n}'.format(fstr, len(fstr)))
-
-
-
-
 
 #============= EOF ====================================
-

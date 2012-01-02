@@ -17,12 +17,12 @@ limitations under the License.
 from traits.api import  Any, Str, Int, Float, Bool, Property, on_trait_change
 from traitsui.api import View, Item
 
-#import apptools.sweet_pickle as pickle
-
 #============= standard library imports ========================
 import os
-from src.config_loadable import ConfigLoadable
 #============= local library imports  ==========================
+from src.config_loadable import ConfigLoadable
+
+
 class Axis(ConfigLoadable):
     '''
     '''
@@ -56,12 +56,16 @@ class Axis(ConfigLoadable):
 
     def _get_velocity(self):
         return self._velocity
+
     def _get_acceleration(self):
         return self._acceleration
+
     def _get_deceleration(self):
         return self._deceleration
+
     def upload_parameters_to_device(self):
         pass
+
     @on_trait_change('_velocity, _acceleration, _deceleration')
     def update_machine_values(self, obj, name, old, new):
         setattr(self, 'machine{}'.format(name), new)
@@ -80,7 +84,6 @@ class Axis(ConfigLoadable):
 
     def full_view(self):
         return self.simple_view()
-
 
     def dump(self):
         '''
@@ -105,6 +108,7 @@ class Axis(ConfigLoadable):
 ##            return p
 ##        else:
 #        self.load(pdir)
+
     def save(self):
         pass
 
@@ -127,5 +131,4 @@ class Axis(ConfigLoadable):
 #            for i in cp.items(s):
 #                params.append(i)
         return params
-#============= views ===================================
 #============= EOF ====================================

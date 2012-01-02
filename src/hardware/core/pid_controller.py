@@ -1,17 +1,16 @@
 #=============enthought library imports=======================
 from traits.api import HasTraits, Instance, Float, Button, Any
 from traitsui.api import View, Item
+from pyface.timer.timer import Timer
 
 #============= standard library imports ========================
 import time
 #============= local library imports  ==========================
 from src.graph.graph import Graph
 from src.graph.stream_graph import StreamGraph
-from pyface.timer.timer import Timer
-import math
+
 SETPOINT = 10
 DELAY = 250
-
 
 
 class PIDController(HasTraits):
@@ -26,10 +25,10 @@ class PIDController(HasTraits):
     _prev_err = Float(0)
     _output = Float(0)
     cnt = 0
+
     def traits_view(self):
         v = View(Item('graph', show_label=False, style='custom'))
         return v
-
 
     def get_output(self, inp):
         v = 0
@@ -37,7 +36,6 @@ class PIDController(HasTraits):
         err = self.setpoint - v
         self._input = v
         return self._iteration(err, self.Kp, self.Ki, self.Kd, dt)
-
 
     def _iteration(self, error, Kp, Ki, Kd, dt):
 
@@ -63,10 +61,12 @@ class PIDController(HasTraits):
         g.new_series()
         return g
 
+
 class Demo(HasTraits):
     test = Button
     pidcontroller = Instance(PIDController, ())
     timer = Any
+
     def traits_view(self):
         v = View(Item('test', show_label=False),
                Item('pidcontroller', show_label=False, style='custom'),
@@ -74,15 +74,16 @@ class Demo(HasTraits):
                height=600
                )
         return v
+
     def _test_fired(self):
         if not self.timer:
             self.timer = Timer(DELAY, self.ontimer)
         else:
             self.timer.Stop()
             self.timer = None
+
     def ontimer(self):
         self.pidcontroller.get_output(None)
-
 
 if __name__ == '__main__':
     d = Demo()
