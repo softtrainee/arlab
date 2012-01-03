@@ -72,7 +72,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     def Open(self, manager, vname, sender_address, *args):
-        result = manager.open_valve(vname, sender_address)
+        result = manager.open_valve(vname, sender_address=sender_address)
         if result == True:
             result = 'OK'
         elif result is None:
@@ -81,7 +81,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     def Close(self, manager, vname, sender_address, *args):
-        result = manager.close_valve(vname, sender_address)
+        result = manager.close_valve(vname, sender_address=sender_address)
         if result == True:
             result = 'OK'
         elif result is None:

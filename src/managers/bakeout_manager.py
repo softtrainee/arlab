@@ -226,8 +226,10 @@ class BakeoutManager(Manager):
             datum.append(x)
             if self.include_temp:
                 datum.append(pi)
+            
             if self.include_heat:
                 datum.append(hp)
+        
             if self.include_pressure:
                 datum.append(self._pressure)
 
@@ -369,7 +371,7 @@ class BakeoutManager(Manager):
 
                     # set up graph
 
-                    self.graph.new_series()
+                    self.graph.new_series()#type='line', render_style='connectedpoints')
                     self.graph_info[bc.name] = dict(id=pid)
 
                     self.graph.set_series_label(name, series=pid)
@@ -424,6 +426,7 @@ class BakeoutManager(Manager):
 #                t = Thread(target=self._pressure_monitor)
 #                t.start()
 
+            
                 self._start_time = time.time()
 
 #    def _pressure_monitor(self):
@@ -476,11 +479,8 @@ class BakeoutManager(Manager):
 
         controller_grp = HGroup()
         for tr in self._get_controllers():
-            controller_grp.content.append(Item(tr, show_label=False,
-                    style='custom'))
+            controller_grp.content.append(Item(tr, show_label=False, style='custom'))
 
-        map(int, [self.include_temp, self.include_heat,
-            self.include_pressure])
         control_grp = HGroup(VGroup(Item('execute',
                              editor=ButtonEditor(label_value='execute_label'
                              ), show_label=False,

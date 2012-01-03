@@ -125,20 +125,15 @@ def buildapplet():
             verbose = 'default'
         # Loop over all files to be processed
 
-#        print 'process', args
-        verbose = True
         for filename in args:
             print filename
             cr, tp = MacOS.GetCreatorAndType(filename)
-            try:
-                if tp == 'APPL':
-                    buildtools.update(template, filename, dstfilename)
-                else:
-                    buildtools.process(template, filename, dstfilename, 1,
-                            rsrcname=rsrcfilename, others=extras, raw=raw,
-                            progress=verbose, destroot=destroot)
-            except Exception, e:
-                pass
+            if tp == 'APPL':
+                buildtools.update(template, filename, dstfilename)
+            else:
+                buildtools.process(template, filename, dstfilename, 1,
+                        rsrcname=rsrcfilename, others=extras, raw=raw,
+                        progress=verbose, destroot=destroot)
 
 def usage():
     print "BuildApplet creates an application from a Python source file"
