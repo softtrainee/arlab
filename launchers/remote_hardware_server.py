@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 '''
 Copyright 2011 Jake Ross
 
@@ -13,28 +16,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-#!/Library/Frameworks/Python.framework/Versions/Current/bin/python
-#============= enthought library imports =======================
-#============= standard library imports ========================
+
 import os
 import sys
-#============= local library imports  ==========================
-#add src to the path
-src = os.path.join(os.path.expanduser('~'),
-                   'Programming',
-                   'mercurial',
-                   'pychron_beta'
-                   )
+
+# add src to the path
+
+src = os.path.join(os.path.expanduser('~'), 'Programming', 'mercurial',
+                   'pychron_beta')
 sys.path.append(src)
 from src.helpers.logger_setup import setup
 from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
 
-
 if __name__ == '__main__':
-    '''
-        use a Server Manager
-    '''
-
 
     setup('server')
     s = RemoteHardwareServerManager()
@@ -43,16 +37,16 @@ if __name__ == '__main__':
     os._exit(0)
 
 #    launch()
-#============= EOF ====================================
+# ============= EOF ====================================
 #
-#def read_configuration():
+# def read_configuration():
 #    '''
-#         read the server initialization file in the initialization dir. 
-#         
+#         read the server initialization file in the initialization dir.
+#
 #         ex
 #         [General]
 #         servers= server_names
-#         
+#
 #         server names refer to server configuration files
 #    '''
 #
@@ -63,9 +57,9 @@ if __name__ == '__main__':
 #    servernames = config.get('General', 'servers').split(',')
 #    return servernames
 #
-#def launch():
+# def launch():
 #    '''
-#    
+#
 #    launch the application
 #
 #    '''
@@ -79,7 +73,7 @@ if __name__ == '__main__':
 #
 #    servers = []
 #    for server_name in read_configuration():
-#        
+#
 #        #create a new RemoteCommandServer to handle TCP or UDP Protocol based commands
 #        e = RemoteCommandServer(name = server_name,
 #                               repeater = repeater,

@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 '''
 Copyright 2011 Jake Ross
 
@@ -13,32 +16,39 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-#=============enthought library imports=======================
+
 from traits.api import Any
 from pyface.api import ProgressDialog
-#=============standard library imports ========================
+
 import time
 import os
 
-from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, CLIP_CHILDREN, VERTICAL, \
-     Frame, BoxSizer, NullColor, Size, DisplaySize
-#=============local library imports  ==========================
+from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
+    CLIP_CHILDREN, VERTICAL, Frame, BoxSizer, NullColor, Size, \
+    DisplaySize
+
+# =============local library imports  ==========================
+
 from src.helpers import paths
 from src.hardware.core.i_core_device import ICoreDevice
 from src.helpers.paths import setup_dir
 from src.helpers.initialization_parser import InitializationParser
 from loggable import Loggable
 
+
 class MProgressDialog(ProgressDialog):
+
     def _create_control(self, parent):
         '''
         '''
-        style = DEFAULT_FRAME_STYLE | FRAME_NO_WINDOW_MENU | CLIP_CHILDREN
 
-        dialog = Frame(parent, -1, self.title, style=style,
-                          #size = self.size,
-                          #pos = self.position
-                          )
+        style = DEFAULT_FRAME_STYLE | FRAME_NO_WINDOW_MENU \
+            | CLIP_CHILDREN
+
+        dialog = Frame(parent, -1, self.title, style=style)
+
+                          # size = self.size,
+                          # pos = self.position
 
         sizer = BoxSizer(VERTICAL)
         dialog.SetSizer(sizer)
@@ -48,6 +58,7 @@ class MProgressDialog(ProgressDialog):
         self.dialog_size = Size(*self.size)
 
         # The 'guts' of the dialog.
+
         self._create_message(dialog, sizer)
         self._create_gauge(dialog, sizer)
         self._create_percent(dialog, sizer)
@@ -56,13 +67,16 @@ class MProgressDialog(ProgressDialog):
 
         dialog.SetClientSize(self.dialog_size)
 
-        #dialog.CentreOnParent()
+        # dialog.CentreOnParent()
 
         return dialog
 
+
 class Initializer(Loggable):
+
     '''
     '''
+
     pd = None
     name = 'Initializer'
     application = Any
@@ -71,10 +85,12 @@ class Initializer(Loggable):
     def __init__(self, *args, **kw):
         '''
         '''
+
         super(Initializer, self).__init__(*args, **kw)
         self.clear()
         self.cnt = 0
-        self.parser = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+        self.parser = InitializationParser(os.path.join(setup_dir,
+                'initialization.xml'))
 
     def clear(self):
         self.init_list = []
@@ -84,9 +100,10 @@ class Initializer(Loggable):
         '''
 
         '''
+
         ilist = self.init_list
         add = True
-        for i, il in enumerate(ilist):
+        for (i, il) in enumerate(ilist):
             if il['name'] == a['name']:
                 ilist[i] = a
                 add = False
@@ -98,6 +115,7 @@ class Initializer(Loggable):
     def run(self, application=None):
         '''
         '''
+
         self.application = application
 
         ok = True
@@ -107,7 +125,7 @@ class Initializer(Loggable):
             if not ok:
                 break
 
-        msg = 'Complete' if ok else 'Failed'
+        msg = ('Complete' if ok else 'Failed')
         self.info('Initialization {}'.format(msg))
 
         if self.pd is not None:
@@ -125,17 +143,24 @@ class Initializer(Loggable):
             if offset == pd.max - 1:
                 pd.max += 1
 
-            cont, skip = pd.update(offset + 1)
+            (cont, skip) = pd.update(offset + 1)
             if not cont or skip:
                 return
-            #time.sleep(0.1)
+
+            # time.sleep(0.1)
 
         super(Initializer, self).info(msg, **kw)
 
-#    def _run_(self, name=None , device_dir=None, initialization_dir=None, manager=None, plugin_name=None):
-    def _run_(self, name=None, device_dir=None, manager=None, plugin_name=None):
+    def _run_(
+        self,
+        name=None,
+        device_dir=None,
+        manager=None,
+        plugin_name=None,
+        ):
         '''
         '''
+
         if device_dir is None:
             device_dir = paths.device_dir
 
@@ -151,7 +176,8 @@ class Initializer(Loggable):
         parser = self.parser
         if plugin_name is None:
 
-            #remove manager from name
+            # remove manager from name
+
             idx = name.find('_manager')
             if idx is not -1:
                 name = name[:idx]
@@ -169,7 +195,9 @@ class Initializer(Loggable):
 
         if managers:
             self.info('loading managers - {}'.format(','.join(managers)))
+
 #            self.load_managers(manager, managers, device_dir, initialization_dir)
+
             self.load_managers(manager, managers, device_dir)
 
         if devices:
@@ -182,7 +210,12 @@ class Initializer(Loggable):
 
         return True
 
-    def load_managers(self, manager, managers, device_dir):
+    def load_managers(
+        self,
+        manager,
+        managers,
+        device_dir,
+        ):
         '''
         '''
 
@@ -205,7 +238,9 @@ class Initializer(Loggable):
                 break
 
             if self.application is not None:
-                #register this manager as a service
+
+                # register this manager as a service
+
                 man.application = self.application
                 self.application.register_service(type(man), man)
 
@@ -215,12 +250,20 @@ class Initializer(Loggable):
 #                     co2 = 'FusionsCO2'
 #                     )
 
-            d = dict(name=mi, device_dir=device_dir, manager=man, plugin_name=manager.name)
+            d = dict(name=mi, device_dir=device_dir, manager=man,
+                     plugin_name=manager.name)
             self.add_initialization(d)
 
-    def load_devices(self, manager, name, devices, plugin_name):
+    def load_devices(
+        self,
+        manager,
+        name,
+        devices,
+        plugin_name,
+        ):
         '''
         '''
+
         opened = []
         devs = []
         if manager is None:
@@ -232,15 +275,17 @@ class Initializer(Loggable):
                 continue
 
             dev = None
-            pdev = self.parser.get_device(name, device, plugin_name, element=True)
+            pdev = self.parser.get_device(name, device, plugin_name,
+                    element=True)
             dev_class = pdev.get('klass')
             try:
 
                 dev = getattr(manager, device)
                 if dev is None:
-                    dev = manager.create_device(device, dev_class=dev_class)
-
+                    dev = manager.create_device(device,
+                            dev_class=dev_class)
             except AttributeError:
+
                 dev = manager.create_device(device, dev_class=dev_class)
 
             if dev is None:
@@ -250,10 +295,15 @@ class Initializer(Loggable):
             self.info('loading {}'.format(dev.name))
 
             if dev.load():
-                #register the device
+
+                # register the device
+
                 if self.application is not None:
-                    #display with the HardwareManager
-                    self.application.register_service(ICoreDevice, dev, {'display': True})
+
+                    # display with the HardwareManager
+
+                    self.application.register_service(ICoreDevice, dev,
+                            {'display': True})
 
                 devs.append(dev)
                 self.info('opening {}'.format(dev.name))
@@ -265,6 +315,7 @@ class Initializer(Loggable):
                 self.info('failed loading {}'.format(dev.name))
 
 #        for od in opened:
+
         for od in devs:
             self.info('Initializing {}'.format(od.name))
             result = od.initialize(progress=self.pd)
@@ -285,17 +336,19 @@ class Initializer(Loggable):
     def load_progress(self, n):
         '''
         '''
-        pd = MProgressDialog(max=n,
-                             size=(550, 15))
+
+        pd = MProgressDialog(max=n, size=(550, 15))
 
         pd.open()
-        w, h = DisplaySize()
-        ww, _hh = pd.control.GetSize()
+        (w, h) = DisplaySize()
+        (ww, _hh) = pd.control.GetSize()
 
         pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
 
         self.pd = pd
-#========================= EOF ===================================
+
+
+# ========================= EOF ===================================
 
 #    def _get_option_list(self, config, section, option):
 #        '''

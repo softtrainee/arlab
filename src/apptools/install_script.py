@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 '''
 Copyright 2011 Jake Ross
 
@@ -13,43 +16,53 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-#============= standard library imports ========================
+
 import os
 import shutil
 import argparse
 import subprocess
-#============= local library imports  ==========================
-from installer import Installer
 
+from installer import Installer
 
 
 def install_pychron_suite():
 
-
     parser = argparse.ArgumentParser(description='Install Pychron')
 
     parser.add_argument('-d', '--data', action='store_true',
-                        help='overwrite the current pychron_data directory')
+                        help='overwrite the current pychron_data directory'
+                        )
     parser.add_argument('-f', '--force-data', action='store_true',
-                        help='dont ask to overwrite the data dir, just do it')
+                        help='dont ask to overwrite the data dir, just do it'
+                        )
     parser.add_argument('-a', '--apps-only', action='store_true',
                         help='only create the app bundles')
 
     parser.add_argument('-s', '--source', action='store_true',
                         help='download source')
 
-    parser.add_argument('-r', '--root', type=str, nargs=1,
-                        default='.',
-                        help='set the root directory')
+    parser.add_argument(
+        '-r',
+        '--root',
+        type=str,
+        nargs=1,
+        default='.',
+        help='set the root directory',
+        )
 
-    parser.add_argument('name', metavar='N', type=str, nargs=1,
-                        default='pychron',
-                        help='name of the cloned source directory')
-
+    parser.add_argument(
+        'name',
+        metavar='N',
+        type=str,
+        nargs=1,
+        default='pychron',
+        help='name of the cloned source directory',
+        )
 
     args = parser.parse_args()
 
-    #if args.root[0]:
+    # if args.root[0]:
+
     root = args.root[0]
     name = args.name[0]
     src_dir = os.path.join(root, name)
@@ -57,13 +70,15 @@ def install_pychron_suite():
     print 'Using {} as working dir'.format(root)
     if args.source:
 
-        #ask user for user name
+        # ask user for user name
+
         user = raw_input('username [jirhiker]: ')
         if not user:
             user = 'jirhiker'
 
         repo = 'code.google.com/p/arlab'
-        print 'cloning source for user {} from repo {}'.format(user, repo)
+        print 'cloning source for user {} from repo {}'.format(user,
+                repo)
         repo = 'https://{}@{}'.format(user, repo)
 
         base = name
@@ -72,18 +87,20 @@ def install_pychron_suite():
             name = '{}_{:03n}'.format(base, i)
             i += 1
 
-        #should check to make sure mercurial is installed
-        #if not issue warning, install instructions and quit
+        # should check to make sure mercurial is installed
+        # if not issue warning, install instructions and quit
+
         src_dir = os.path.join(root, name)
         cmd = 'hg clone {} {}'.format(repo, src_dir)
         try:
-            subprocess.check_call(cmd.split(' '), stdout=subprocess.PIPE)
+            subprocess.check_call(cmd.split(' '),
+                                  stdout=subprocess.PIPE)
         except OSError, e:
             print 'Mercurial version control is not installed'
             print 'See http://mercurial.selenic.com/'
             return
-
         except subprocess.CalledProcessError, e:
+
             print e
             print 'Problem with mercurial'
             print 'See http://mercurial.selenic.com/'
@@ -101,7 +118,8 @@ def install_pychron_suite():
     i.name = 'bakeout'
     i.install(src_dir)
 
-    #move data into place
+    # move data into place
+
     if not args.data:
         return
 
@@ -115,14 +133,17 @@ def install_pychron_suite():
     except OSError:
         rin = 'y'
         if not args.force_data:
-            rin = raw_input('overwrite exisiting data at {} y/n [y] >> '.format(dst)).strip().lower()
+            rin = \
+                raw_input('overwrite exisiting data at {} y/n [y] >> '.format(dst)).strip().lower()
 
         if len(rin) == 0 or rin in ['y', 'yes']:
             print 'copying {} -> {}'.format(data, dst)
             shutil.rmtree(dst, ignore_errors=True)
             shutil.copytree(data, dst)
 
+
 if __name__ == '__main__':
 
     install_pychron_suite()
-#============= EOF =====================================
+
+# ============= EOF =====================================

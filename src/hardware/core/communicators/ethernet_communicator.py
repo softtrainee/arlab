@@ -63,11 +63,16 @@ class UDPHandler(Handler):
 
     def get_packet(self):
         r = None
-        try:
-            r, _address = self.sock.recvfrom(self.datasize)
-        except socket.error, e:
+        cnt = 5
+        for _ in range(cnt):
+            try:
+                r, _address = self.sock.recvfrom(self.datasize)
+                break
+            except socket.error, e:
+                pass
+        else:
             self.warning('get packet {}'.format(e))
-            #r = 'ERROR: no connection to {}'.format(self.address)
+
         return r
 
     def send_packet(self, p):
