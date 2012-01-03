@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 '''
 Copyright 2011 Jake Ross
 
@@ -13,30 +16,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-#!/Library/Frameworks/Python.framework/Versions/Current/bin/python
-#============= enthought library imports =======================
-#============= standard library imports ========================
+
 import os
 import sys
 
-#============= local library imports  ==========================
-#add src to the path
-src = os.path.join(os.path.expanduser('~'),
-                   'Programming',
-                   'mercurial',
-                   'pychron_beta'
-                   )
+# add src to the path
+
+src = os.path.join(os.path.expanduser('~'), 'Programming', 'mercurial',
+                   'pychron_beta')
 sys.path.append(src)
+
 from src.managers.bakeout_manager import launch_bakeout
 from src.helpers.logger_setup import setup
 
 if __name__ == '__main__':
-    '''
-       Launch a bakeout manager
-    '''
 
     setup('bakeout', level='DEBUG')
     launch_bakeout()
     os._exit(0)
 
-#============= EOF ====================================
+# ============= EOF ====================================

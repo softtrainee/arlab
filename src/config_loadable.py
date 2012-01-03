@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 '''
 Copyright 2011 Jake Ross
 
@@ -13,28 +16,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-#============= enthought library imports =======================
-#============= standard library imports ========================
+
 import os
 import ConfigParser
 
-#============= local library imports  ==========================
 from src.helpers import paths
 from loggable import Loggable
 
+
 class ConfigLoadable(Loggable):
+
     '''
     '''
+
     configuration_dir_name = None
     configuration_dir_path = None
     name = None
     config_path = None
 
-
-
     def bootstrap(self, *args, **kw):
         '''
         '''
+
         self.info('load')
         if self.load(*args, **kw):
             self.info('open')
@@ -47,6 +50,7 @@ class ConfigLoadable(Loggable):
                 self.warning('failed opening')
         else:
             self.warning('failed loading')
+
     def configparser_factory(self):
         return ConfigParser.ConfigParser()
 
@@ -56,9 +60,18 @@ class ConfigLoadable(Loggable):
             r = config.options(section)
         return r
 
-    def config_get(self, config, section, option, cast=None, optional=False, default=None):
+    def config_get(
+        self,
+        config,
+        section,
+        option,
+        cast=None,
+        optional=False,
+        default=None,
+        ):
         '''
         '''
+
         if cast is not None:
             func = getattr(config, 'get%s' % cast)
         else:
@@ -67,16 +80,27 @@ class ConfigLoadable(Loggable):
         if not config.has_option(section, option):
             if not optional:
                 if self.logger is not None:
-                    self.warning('Need to specifiy {}:{}'.format(section, option))
+                    self.warning('Need to specifiy {}:{}'.format(section,
+                                 option))
 
             return default
         else:
             return func(section, option)
 
-    def set_attribute(self, config, attribute, section, option, cast=None, optional=False):
+    def set_attribute(
+        self,
+        config,
+        attribute,
+        section,
+        option,
+        cast=None,
+        optional=False,
+        ):
         '''
         '''
-        r = self.config_get(config, section, option, cast=cast, optional=optional)
+
+        r = self.config_get(config, section, option, cast=cast,
+                            optional=optional)
 
         if r is not None:
             setattr(self, attribute, r)
@@ -84,40 +108,51 @@ class ConfigLoadable(Loggable):
     def open(self, *args, **kw):
         '''
         '''
+
         return True
 
     def load(self, *args, **kw):
         '''
 
         '''
+
         return True
 
     def initialize(self, *args, **kw):
         '''
         '''
+
         return True
 
     def write_configuration(self, config, path=None):
         '''
 
         '''
+
         if path is None:
             path = self.config_path
 
         with open(path, 'w') as f:
             config.write(f)
 
-    def get_configuration(self, path=None, name=None, warn=True):
+    def get_configuration(
+        self,
+        path=None,
+        name=None,
+        warn=True,
+        ):
         '''
 
         '''
+
         if path is None:
             path = self.config_path
             if path is None:
                 device_dir = paths.device_dir
 
                 if self.configuration_dir_name:
-                    base = os.path.join(device_dir, self.configuration_dir_name)
+                    base = os.path.join(device_dir,
+                            self.configuration_dir_name)
                 else:
                     base = device_dir
 
@@ -127,7 +162,7 @@ class ConfigLoadable(Loggable):
 
                 path = os.path.join(base, '{}.cfg'.format(name))
 
-        if  path is not None and os.path.isfile(path):
+        if path is not None and os.path.isfile(path):
             config = self.configparser_factory()
             config.read(path)
             self.config_path = path
@@ -141,9 +176,8 @@ class ConfigLoadable(Loggable):
 
     def convert_config_name(self, name):
         '''
-            @type name: C{str}
-            @param name:
         '''
+
         nname = ''
         if '_' in name:
             for s in name.split('_'):
@@ -155,4 +189,6 @@ class ConfigLoadable(Loggable):
         else:
             nname = name
         return nname
-#============= EOF ====================================
+
+
+# ============= EOF ====================================
