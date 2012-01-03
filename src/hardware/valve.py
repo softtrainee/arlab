@@ -42,16 +42,21 @@ class HardwareValve(Loggable):
 #    system = None
 #    _critical_section = False
 
-    def __init__(self, *args, **kw):
+    def __init__(self,name, *args, **kw):
         '''
      
         '''
-        if 'name' in kw:
-            kw['name'] = 'VALVE-{}'.format(kw['name'])
+        kw['name'] = 'VALVE-{}'.format(name)
 
         super(HardwareValve, self).__init__(*args, **kw)
         self._fsm = Valve_sm(self)
-
+        
+    def is_name(self,name):
+        if len(name)==1:
+            name='VALVE-{}'.format(name)
+        return name==self.name
+            
+            
     def get_hardware_state(self):
         '''
         '''

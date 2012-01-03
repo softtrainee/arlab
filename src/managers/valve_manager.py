@@ -138,7 +138,7 @@ class ValveManager(Manager):
     def get_valve_by_address(self, a):
         '''
         '''
-        return next((valve for valve in self.valves if valve.address == a), None)
+        return next((valve for valve in self.valves.itervalues() if valve.address == a), None)
 
     def get_name_by_address(self, k):
         '''
@@ -213,23 +213,24 @@ class ValveManager(Manager):
         grp = None
         for g in self.valve_groups.itervalues():
             for vi in g.valves:
-                if vi.name == name:
+                if vi.is_name(name):
                     grp = g
                     break
         r = False
-        if grp is None:
+        if grp is not None:
             r = grp.owner == claimer
             
+#        print name, claimer,grp, r
         return r
         
-    def check_ownership(self, name, sender_address):
-        v = self.get_valve_by_name(name)
-        
-        system = self.get_system(sender_address)
-        
-        if v is not None:
-            if v.system == system:
-                return True
+#    def check_ownership(self, name, sender_address):
+#        v = self.get_valve_by_name(name)
+#        
+#        system = self.get_system(sender_address)
+#        
+#        if v is not None:
+#            if v.system == system:
+#                return True
         
             
     def check_soft_interlocks(self, name):
@@ -417,30 +418,43 @@ class ValveManager(Manager):
         self.sector_inlet_valve = c[0][0]
         self.quad_inlet_valve = c[0][1]
 
-        actid = 6
+        actid = 5
         curgrp = None
         self.valve_groups = dict()
+        
         for a in c[1:]:
             act = 'valve_controller'
-            if len(a) == actid + 1:
+            if len(a) == actid +1:
                 act = a[actid]
-
-            actuator = self.get_actuator_by_name(act)
-            v = HardwareValve(name=a[0],
+            
+            name=a[0]
+            actuator=self.get_actuator_by_name(act)
+            warn_no_act=True
+            if warn_no_act:
+                if actuator is None:
+                    self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.txt'.format(name))
+                
+                
+            v = HardwareValve(name,
                      address=a[1],
-                     actuator=actuator,
+                     actuator=self.get_actuator_by_name(act),
                      interlocks=a[2].split(','),
 #                     group=a[4]
                      )
             try:
-                if a[4] != curgrp:
+                if a[4] and a[4] != curgrp:
                     curgrp = a[4]
-                    vg = ValveGroup()
-                    vg.valves = [v]
-                    self.valve_groups[curgrp] = vg
+                    if self.valve_groups.has_key(curgrp):
+                        self.valve_groups[curgrp].valves.append(v)                        
+                    else:
+                        vg = ValveGroup()
+                        vg.valves = [v]
+                        self.valve_groups[curgrp] = vg
                 else:
                     self.valve_groups[curgrp].valves.append(v)
-            except IndexError:
+                    
+            except IndexError,e:
+                print e
                 #there is no group specified
                 pass
             
@@ -458,8 +472,12 @@ class ValveManager(Manager):
             ev = ExplanableValve(**args)
             ev.state = s if s is not None else False
 
-            self.valves[a[0]] = v
+            self.valves[name] = v
             self.explanable_items.append(ev)
-        
+       
+#        for k,g in self.valve_groups.iteritems():
+#            
+#            for v in g.valves:
+#                print k,v.name
 #==================== EOF ==================================
 
