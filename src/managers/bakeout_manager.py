@@ -260,6 +260,8 @@ class BakeoutManager(Manager):
         '''
 
         scheduler = RS485Scheduler()
+        program=False
+        cnt=0
         for bcn in self._get_controllers():
             bc = getattr(self, bcn)
 
@@ -269,8 +271,19 @@ class BakeoutManager(Manager):
             if bc.load():
                 if bc.open():
                     bc.set_scheduler(scheduler)
+                    
+                    
+                    # on first controller check to see if memory block programming is required
+                    # if it is apply to all subsequent controllers
+                    
+                    if cnt==0 and not bc.is_programmed():
+                        program=True
+                    bc.program_memory_blocks=program
+                    
                     bc.initialize()
-
+                    cnt+=1
+                    
+                    
 #                    if BATCH_SET_BAUDRATE:
 #                        bc.set_baudrate(BAUDRATE)
 

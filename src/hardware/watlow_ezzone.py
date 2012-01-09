@@ -201,7 +201,7 @@ class WatlowEZZone(CoreDevice):
     scan_func = 'get_temp_and_power'
 
     memory_blocks_enabled = Bool(True)
-    program_memory_blocks = Bool(False)
+    program_memory_blocks = Bool(True)
 
     _process_working_address = 200
     _process_memory_block = [360, 1904]
@@ -219,7 +219,11 @@ class WatlowEZZone(CoreDevice):
         self.initialization_hook()
 
         return True
-
+    
+    def is_programmed(self):
+        return True
+    
+    
     def _program_memory_blocks(self):
         '''
             see watlow ez zone pm communications rev b nov 07
@@ -304,6 +308,7 @@ class WatlowEZZone(CoreDevice):
         p = self.heat_power_value if p is None else p
 
         self.process_value = t
+        
         return PlotRecord([t, p], (0, 1), ('Temp', 'Power'))
 
     def get_temperature(self, **kw):
