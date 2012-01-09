@@ -188,7 +188,7 @@ class StreamGraph(Graph):
         def _record_():
             plot.data.set_data(xn, new_xd)
             plot.data.set_data(yn, new_yd)
-
+            
             if track_x and (self.track_x_min or self.track_x_max) or self.force_track_x_flag:
                 ma = new_xd[-1]
                 mi = ma - dl * self.scan_delays[plotid]

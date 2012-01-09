@@ -150,18 +150,21 @@ class BakeoutManager(Manager):
             n = self.data_count_flag
             if n == len(self.active_controllers):
                 for (i, pi, hi) in self.data_buffer:
+                    
+                    track_x=i == n - 1
                     if self.include_temp:
                         nx = self.graph.record(pi, series=i,
-                                track_x=False, track_y=False,
+                                track_x=track_x, track_y=False,
                                 plotid=self.plotids[0])
-
+                    
+                    track_x=False
                     if self.include_heat:
                         self.graph.record(
                             hi,
                             x=nx,
                             series=i,
                             plotid=self.plotids[1],
-                            track_x=i == n - 1,
+                            track_x=track_x,
                             track_y=False,
                             )
 
