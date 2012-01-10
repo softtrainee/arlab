@@ -16,6 +16,7 @@ limitations under the License.
 #=============enthought library imports=======================
 #============= standard library imports ========================
 from threading import Thread, Event
+import time
 #============= local library imports  ==========================
 class Timer(Thread):
     def __init__(self, period, func, *args, **kw):
@@ -29,9 +30,11 @@ class Timer(Thread):
         self.start()
 
     def run(self):
+        t=0
         while not self._flag.isSet():
             self._func(*self._args, **self._kwargs)
-            self._flag.wait(self._period)
+            self._flag.wait(max(0,self._period-(time.time()-t)-0.0125))
+            t=time.time()
 
 
     def Stop(self):

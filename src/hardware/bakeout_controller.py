@@ -16,12 +16,12 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import List, Event, Float, Str, Instance, Bool, Property
 from traitsui.api import View, Item, EnumEditor, spring, HGroup, Label, VGroup
-from pyface.timer.api import Timer
+#from pyface.timer.api import Timer
 #============= standard library imports ========================
 import time
 import os
 #============= local library imports  ==========================
-#from src.helpers.timer import Timer
+from src.helpers.timer import Timer
 from src.scripts.bakeout_script import BakeoutScript
 from src.led.led import LED
 from src.led.led_editor import LEDEditor
@@ -287,6 +287,7 @@ class BakeoutController(WatlowEZZone):
 #            print e
 
     def get_temp_and_power(self, **kw):
+#        kw['verbose']=True
         WatlowEZZone.get_temp_and_power(self, **kw)
         self.process_value_flag = True
 

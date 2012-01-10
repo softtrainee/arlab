@@ -21,6 +21,8 @@ import time
 import glob
 import os
 import sys
+import select
+
 #=============local library imports  ==========================
 from communicator import Communicator
 
@@ -124,7 +126,7 @@ class SerialCommunicator(Communicator):
         '''
             
         '''
-
+        
         if self.handle is None:
             if verbose:
                 self.info('no handle    {}'.format(cmd))
@@ -140,7 +142,6 @@ class SerialCommunicator(Communicator):
            
          
         '''
-
         re = self._read(is_hex=is_hex, delay=delay)
         self._lock.release()
 
@@ -322,34 +323,36 @@ class SerialCommunicator(Communicator):
 
         r = None
         if not self.simulation:
+            inw=0
             if delay is not None:
                 time.sleep(delay / 1000.)
                 inw = get_chars()
             else:
-                '''
-                use select
-                
-                ready_to_read,ready_to_write,in_err=select.select([self.handle])
-                '''
+                time.sleep(0.055)
+                ready_to_read,_,_=select.select([self.handle],[],[], 1)
+                if ready_to_read:
+                    inw=get_chars()
+#                time.sleep(1e-5)
+#                inw=get_chars()
+#                start_time = time.time()
+#                inw = 0
+#
+#                prev_inw = None
+#                cnt = 0
+#                while (time.time() - start_time) < time_out:
+#                    inw = get_chars()
+#                    #print prev_inw, inw, cnt
+#                    if prev_inw != inw:
+#                        cnt = 0
+#
+#                    if inw != 0 and inw == prev_inw:
+#                        if cnt > 500:
+#                            break
+#                        cnt += 1
+#
+#                    prev_inw = inw
+#                    time.sleep(1e-5)
 
-                start_time = time.time()
-                inw = 0
-
-                prev_inw = None
-                cnt = 0
-                while (time.time() - start_time) < time_out:
-                    inw = get_chars()
-                    #print prev_inw, inw, cnt
-                    if prev_inw != inw:
-                        cnt = 0
-
-                    if inw != 0 and inw == prev_inw:
-                        if cnt > 750:
-                            break
-                        cnt += 1
-
-                    prev_inw = inw
-                    time.sleep(1e-5)
 #                # do one more get_chars to make sure we got it all
                 #time.sleep(1e-5)
                 #inw=get_chars()
@@ -362,6 +365,7 @@ class SerialCommunicator(Communicator):
             if inw > 0:
                 try:
                     r = self.handle.read(inw)
+#                    self.handle.flush()
                     if is_hex:
                         r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
 #                        rr = ''

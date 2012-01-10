@@ -273,7 +273,7 @@ class BakeoutManager(Manager):
 
             if bc.load():
                 if bc.open():
-                    bc.set_scheduler(scheduler)
+                   # bc.set_scheduler(scheduler)
                     
                     
                     # on first controller check to see if memory block programming is required
@@ -429,6 +429,7 @@ class BakeoutManager(Manager):
 
                 for c in controllers:
                     c.run()
+                    time.sleep(0.5)
 
                 if self.include_pressure:
 
