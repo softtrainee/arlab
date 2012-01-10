@@ -60,6 +60,7 @@ class SerialCommunicator(Communicator):
     id_query = ''
     id_response = ''
 
+    read_delay=0
     def load(self, config, path):
         '''
            
@@ -88,6 +89,8 @@ class SerialCommunicator(Communicator):
                 stopbits = 'TWO'
             self.stopbits = getattr(serial, 'STOPBITS_%s' % stopbits.upper())
 
+        self.set_attribute(config,'Communications','ask_delay','ask_delay', optional=True, default=0)
+        
     def tell(self, cmd, is_hex=False, info=None, verbose=True, **kw):
         '''
            
@@ -131,19 +134,13 @@ class SerialCommunicator(Communicator):
             if verbose:
                 self.info('no handle    {}'.format(cmd))
             return
-
-        self._lock.acquire()
-        self._write(cmd, is_hex=is_hex)
-
-        '''
-           testing new delay scheme 
-           instead of delaying a set amount of time and having to tweak for 
-           each device, wait until data is available or time out time elapsed
-           
-         
-        '''
-        re = self._read(is_hex=is_hex, delay=delay)
-        self._lock.release()
+        
+        re=None
+        with self._lock:
+        #self._lock.acquire()
+            self._write(cmd, is_hex=is_hex)
+            re = self._read(is_hex=is_hex, delay=delay)
+#        self._lock.release()
 
         re = self.process_response(re, replace, remove_eol)
 
@@ -328,7 +325,7 @@ class SerialCommunicator(Communicator):
                 time.sleep(delay / 1000.)
                 inw = get_chars()
             else:
-                time.sleep(0.055)
+                time.sleep(self.read_delay)
                 ready_to_read,_,_=select.select([self.handle],[],[], 1)
                 if ready_to_read:
                     inw=get_chars()
