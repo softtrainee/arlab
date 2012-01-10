@@ -48,11 +48,11 @@ class RS485Scheduler(HasTraits):
             if kwargs is None:
                 kwargs = dict()
 
+#            time.sleep(self.collision_delay / 1000.0)
             r = func(*args, **kwargs)
-            #print 'active count', threading.activeCount(), 'current thread', threading.currentThread()
             time.sleep(self.collision_delay / 1000.0)
             #self._lock.release()
-
+            #print args,kwargs, r
             return r
 
 #============= EOF ====================================
