@@ -36,7 +36,6 @@ class Timer(Thread):
             self._flag.wait(max(0,self._period-(time.time()-t)-0.0125))
             t=time.time()
 
-
     def Stop(self):
         self._flag.set()
 #============= EOF =====================================
