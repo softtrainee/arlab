@@ -26,6 +26,23 @@ from OpenGL.GL import glScalef, glTranslatef, glRotatef, \
 from object3D import MultiStateObject3D, Object3D, SetStateObject3D
 from src.helpers.color_generators import colors1f as colors
 animate = False
+class Grid(Object3D):
+    def render(self):
+        n = 10
+        i = 2
+        yl = n
+        xl = n
+        for x in range(-n, n + 1, i):
+            self._set_material()
+            self._line2D_((x, -n), (x, n))  # vertical lines    
+            self._line2D_((-n, x), (n, x)) # horizontal lines
+
+            self._set_material(color=(0, 1, 1))
+            self._line3D_((x, 0, n), (x, 0, -n))
+
+#            self._set_material(color=(0,1,0))
+            self._line3D_((n, 0, x), (-n, 0, x))
+
 
 class Origin(Object3D):
     '''
@@ -309,7 +326,7 @@ class Shaft(MultiStateObject3D):
         super(Shaft, self).render()
 
         glPushAttrib(GL_CURRENT_BIT)
-        n = self.length
+        n = int(self.length)
         lim = n - 1
         if self.orientation in ['down', 'forward', 'backward']:
             lim = 0
@@ -458,7 +475,7 @@ class Valve(SetStateObject3D):
     '''
     valve_manager = None
 
-    label_offsets = None
+    label_offsets = (0, 3)
     soft_lock = False
 
     radius = 1

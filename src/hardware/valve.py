@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import  Str, Any, Bool, List
-
+from traits.api import  Str, Any, Bool, List, Float, Int, DelegatesTo, Property
+from traitsui.api import View, HGroup, Item, VGroup
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -27,6 +27,7 @@ class HardwareValve(Loggable):
     '''
     '''
     name = Str
+    display_name = Str
 
     address = Str
     actuator = Any
@@ -34,29 +35,50 @@ class HardwareValve(Loggable):
     success = Bool(False)
     interlocks = List
     state = Bool(False)
+    display_state = Property(depends_on='state')
+    display_software_lock = Property(depends_on='software_lock')
     debug = False
     error = None
     software_lock = False
-    #group = None
-#    owner = None
-#    system = None
-#    _critical_section = False
 
-    def __init__(self,name, *args, **kw):
+    cycle_period = Float(1)
+    cycle_n = Int(3)
+    sample_period = Float(1)
+
+    actuator_name = DelegatesTo('actuator', prefix='name')
+
+
+    canvas_valve = Any
+    position = Property
+    shaft_low = Property
+    shaft_high = Property
+
+    def _get_shaft_low(self):
+        return self.canvas_valve.low_side.orientation
+
+    def _get_shaft_high(self):
+        return self.canvas_valve.high_side.orientation
+
+    def _get_position(self):
+        return ','.join(map(str, self.canvas_valve.translate))
+
+
+    def __init__(self, name, *args, **kw):
         '''
      
         '''
+        self.display_name = name
         kw['name'] = 'VALVE-{}'.format(name)
 
         super(HardwareValve, self).__init__(*args, **kw)
         self._fsm = Valve_sm(self)
-        
-    def is_name(self,name):
-        if len(name)==1:
-            name='VALVE-{}'.format(name)
-        return name==self.name
-            
-            
+
+    def is_name(self, name):
+        if len(name) == 1:
+            name = 'VALVE-{}'.format(name)
+        return name == self.name
+
+
     def get_hardware_state(self):
         '''
         '''
@@ -195,7 +217,46 @@ class HardwareValve(Loggable):
 
         if self.success:
             self.state = False
+    def _get_display_state(self):
+        return 'Open' if self.state else 'Close'
 
+    def _get_display_software_lock(self):
+        return 'Yes' if self.software_lock else 'No'
+
+    def traits_view(self):
+        info = VGroup(
+                    Item('display_name', label='Name', style='readonly'),
+                    Item('display_software_lock', label='Locked', style='readonly'),
+                    Item('address', style='readonly'),
+                    Item('actuator_name', style='readonly'),
+                    Item('display_state', style='readonly'),
+                    show_border=True,
+                    label='Info'
+                    )
+        sample = VGroup(
+                       Item('sample_period', label='Period (s)'),
+                       label='Sample',
+                       show_border=True
+                       )
+        cycle = VGroup(
+                   Item('cycle_n', label='N'),
+                   Item('sample_period', label='Period (s)'),
+                   label='Cycle',
+                   show_border=True
+                   )
+        geometry = VGroup(
+                          Item('position', style='readonly'),
+                          Item('shaft_low', style='readonly'),
+                          Item('shaft_high', style='readonly'),
+                          label='Geometry',
+                          show_border=True
+                          )
+        return View(
+                    VGroup(info, sample, cycle, geometry),
+
+                    buttons=['OK', 'Cancel'],
+                    title='{} Properties'.format(self.name)
+                    )
 #    def warning(self, msg):
 #        '''
 #            @type msg: C{str}

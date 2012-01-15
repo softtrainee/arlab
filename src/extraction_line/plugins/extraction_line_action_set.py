@@ -21,7 +21,6 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 #============= local library imports  ==========================
 class ExtractionLineActionSet(WorkbenchActionSet):
     '''
-        G{classtree}
     '''
     id = 'pychron.extraction_line.action_set'
     actions = [

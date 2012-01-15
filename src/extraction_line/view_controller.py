@@ -29,13 +29,21 @@ import copy
 
 from src.helpers.paths import hidden_dir
 
-#picklepath = os.path.join(hidden_dir, 'user_views')
+def get_user_views():
+    return glob.glob(os.path.join(hidden_dir, 'userview*'))
 
 class ViewControllerHandler(Handler):
     def closed(self, info, is_ok):
         '''
 
         '''
+
+        #delete any previous view
+        # if they exist they will be rewritten below
+
+        for uvi in get_user_views():
+            os.remove(uvi)
+
         obj = info.object.views
         for i, v in enumerate(obj):
 
@@ -124,7 +132,7 @@ class ViewController(HasTraits):
         '''
         #if os.path.exists(picklepath):
 
-        uvfs = glob.glob(os.path.join(hidden_dir, 'userview*'))
+        uvfs = get_user_views()
         if uvfs:
             px = []
             for pa in uvfs:
@@ -147,10 +155,11 @@ class ViewController(HasTraits):
         '''
         '''
         if len(self.views):
-
             v = copy.copy(self.views[-1])
+            v.scene_graph = self.scene_graph
+            v.name = 'userview{}'.format(len(self.views) + 1)
         else:
-            v = UserView(scene_graph=self.scene_graph, name='userview')
+            v = UserView(scene_graph=self.scene_graph, name='userview1')
 
         self.scene_graph.canvas.user_views.append(v)
 

@@ -172,7 +172,7 @@ def main():
     setup('pychron', level='DEBUG')
 
     launch(beta=True)
-
+#    sys.exit()
     profile = False
     if not profile:
         os._exit(0)

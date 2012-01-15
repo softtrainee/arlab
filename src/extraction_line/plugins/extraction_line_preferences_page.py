@@ -64,10 +64,18 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
 
     def _owners_default(self):
         o = ['']
-        config = ConfigParser()
-        config.read(os.path.join(setup_dir, 'system_locks.cfg'))
-        for s in config.sections():
-            o.append(config.get(s, 'name'))
+        from src.helpers.initialization_parser import InitializationParser
+        
+        ip=InitializationParser(os.path.join(setup_dir,
+                'initialization.xml'))
+                
+        systems=ip.get_systems()
+        o=list(zip(*systems)[0])
+                
+#        config = ConfigParser()
+#        config.read(os.path.join(setup_dir, 'system_locks.cfg'))
+#        for s in config.sections():
+#            o.append(config.get(s, 'name'))
         return o
 
 #============= views ===================================

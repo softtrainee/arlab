@@ -55,7 +55,9 @@ class RichTextDisplay(HasTraits):
 
     x = Float(10)
     y = Float(20)
+
     def _do_later(self, func, args=None, obj=None):
+
         if obj is None:
             obj = self._display
 
@@ -63,17 +65,17 @@ class RichTextDisplay(HasTraits):
         if args is not None:
             if isinstance(args, tuple):
                 a = (func,) + args
+                a = args
             else:
                 a = (func, args)
+                a = (args,)
         else:
             a = (func,)
-
-        try:
-            wx.CallAfter(*a)
-        except TypeError, e:
-            print e
+            a = ()
+        func(*a)
 
     def close(self):
+
         if self.ui is not None:
             self.ui.dispose()
 

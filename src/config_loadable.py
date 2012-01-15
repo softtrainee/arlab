@@ -93,14 +93,18 @@ class ConfigLoadable(Loggable):
         attribute,
         section,
         option,
-        cast=None,
-        optional=False,
+        #cast=None,
+        #optional=False,
+        **kw
         ):
         '''
         '''
 
-        r = self.config_get(config, section, option, cast=cast,
-                            optional=optional)
+        r = self.config_get(config, section, option, 
+                            **kw
+#                            cast=cast,
+#                            optional=optional
+                            )
 
         if r is not None:
             setattr(self, attribute, r)

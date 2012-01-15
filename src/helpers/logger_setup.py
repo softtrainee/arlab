@@ -42,8 +42,12 @@ class DisplayHandler(logging.StreamHandler):
         '''
         if self.output is not None:
             msg = '{record.name}{record.message}'.format(record=record)
+#            import wx
+#            print type(self.output._display), not isinstance(self.output._display, wx._core._wxPyDeadObject)
+#            if not isinstance(self.output._display, wx._core._wxPyDeadObject):
+
             self.output.add_text(
-                                 color='red' if record.levelno > 20 else 'black',
+                                     color='red' if record.levelno > 20 else 'black',
                                  msg=msg,
                                  kind='warning' if record.levelno > 20 else 'info',
                                  )
@@ -137,14 +141,16 @@ def add_console(logger=None, name=None, display=None, level=LEVEL):
 
             #rich text or styled text handlers
             if display:
-                _class_ = 'DisplayHandler'
-                gdict = globals()
-                if _class_ in gdict:
-                    h = gdict[_class_]()
-                    h.output = display
-                    h.setLevel(LEVEL)
-                    h.setFormatter(FORMATTER)
-                    logger.addHandler(h)
+
+#                _class_ = 'DisplayHandler'
+#                gdict = globals()
+#                if _class_ in gdict:
+#                    h = gdict[_class_]()
+                h = DisplayHandler()
+                h.output = display
+                h.setLevel(LEVEL)
+                h.setFormatter(FORMATTER)
+                logger.addHandler(h)
 
     return logger
 

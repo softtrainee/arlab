@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-#from traits.api import on_trait_change
+from traits.api import on_trait_change
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -36,7 +36,15 @@ class PychronWorkbenchPlugin(CorePlugin):
     def stop(self):
         gWarningDisplay.close()
         gLoggerDisplay.close()
-#    @on_trait_change('application:gui:stopped')
+
+
+#    @on_trait_change('application:stopped')
+#    def app_stop(self, o, n, oo, nn):
+#        print 'ppp'
+#        gWarningDisplay.close()
+#        gLoggerDisplay.close()
+
+#        print o, n, oo, nn
 #    def _gui_start(self, obj, trait_name, old, new):
 #        window = self.application.workbench.active_window
 #        gLoggerDisplay.close()

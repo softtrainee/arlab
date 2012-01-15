@@ -22,7 +22,7 @@ limitations under the License.
 
 #=============standard library imports ========================
 from wx import EVT_LEFT_DOWN, EVT_RIGHT_DOWN, EVT_KEY_DOWN, EVT_KEY_UP, EVT_MOTION, EVT_LEFT_UP, EVT_MOUSEWHEEL, \
-    EVT_ENTER_WINDOW, \
+    EVT_ENTER_WINDOW, EVT_LEAVE_WINDOW, \
     StockCursor, CURSOR_CROSS, CURSOR_ARROW, CURSOR_SIZING, CURSOR_HAND
 
 
@@ -42,7 +42,6 @@ from src.canvas.popup_window import PopupWindow
 
 class InteractionCanvas3D(AnimationCanvas3D):
     '''
-        G{classtree}
     '''
     _current_pos = (0, 0)
     _hit = None
@@ -59,6 +58,7 @@ class InteractionCanvas3D(AnimationCanvas3D):
 
         EVT_MOUSEWHEEL(self, self.OnMouseWheel)
         EVT_ENTER_WINDOW(self, self.OnEnter)
+        EVT_LEAVE_WINDOW(self, self.OnLeave)
 
         EVT_RIGHT_DOWN(self, self.OnAltSelect)
         self.panner = Panner()
@@ -94,14 +94,16 @@ class InteractionCanvas3D(AnimationCanvas3D):
         '''
         handled = False
         char_code = event.GetKeyCode()
-        if char_code == 32:
+        if char_code == 32:  # space
             self.panning = True
 
             handled = True
-        elif char_code == 308:#Control
-            self._show_popup(event, position=self._current_pos)
-            handled = True
-            self.Refresh()
+#        elif char_code == 308: #  Control
+        elif char_code == 307: #  Alt
+            pass
+            #self._show_popup(event, position=self._current_pos)
+            #handled = True
+            #self.Refresh()
         else:
             #check for user views
             for v in self.user_views:
@@ -112,9 +114,9 @@ class InteractionCanvas3D(AnimationCanvas3D):
             self.Refresh()
 
         if not handled:
-            self._on_key_hook(event)
+            self._on_key_hook(event, char_code)
 
-    def _on_key_hook(self, event):
+    def _on_key_hook(self, *args):
         pass
 
     def OnSize(self, event):
@@ -129,6 +131,10 @@ class InteractionCanvas3D(AnimationCanvas3D):
         '''
         self.SetFocus()
         self.Refresh()
+
+    def OnLeave(self, event):
+        self.panning = False
+        self.dragging = False
 
     def OnMouseWheel(self, event):
         '''
@@ -175,38 +181,42 @@ class InteractionCanvas3D(AnimationCanvas3D):
 
         else:
             hit = self._gl_select_(x, y)
-            self._show_popup(event, hit=hit)
+            if hit is not None:
+                self.SetCursor(StockCursor(CURSOR_CROSS))
+            else:
+                self.SetCursor(StockCursor(CURSOR_ARROW))
+#            self._show_popup(event, hit=hit)
 
         self.Refresh()
         return hit
 
-    def _show_popup(self, event, position=None, hit=None):
-
-        if position is not None:
-            x, y = position
-            hit = self._gl_select_(x, y)
-
-        else:
-            x = event.GetX()
-            y = event.GetY()
-        show = False
-        if hit is not None:
-            self._popup_hook(hit)
-            show = hit in self.valid_hitids
-
-        if show:
-            self.popup.SetPosition(self.ClientToScreenXY(x + 5, y + 5))
-            self.SetCursor(StockCursor(CURSOR_CROSS))
-
-            if self._hit is hit or event.ControlDown():
-                self.popup.Show(True)
-            self._hit = hit
-        else:
-            self.SetCursor(StockCursor(CURSOR_ARROW))
-            self.popup.Show(False)
-
-    def _popup_hook(self, hit):
-        pass
+#    def _show_popup(self, event, position=None, hit=None):
+#
+#        if position is not None:
+#            x, y = position
+#            hit = self._gl_select_(x, y)
+#
+#        else:
+#            x = event.GetX()
+#            y = event.GetY()
+#        show = False
+#        if hit is not None:
+#            self._popup_hook(hit)
+#            show = hit in self.valid_hitids
+#
+#        if show:
+#            self.popup.SetPosition(self.ClientToScreenXY(x + 5, y + 5))
+#            self.SetCursor(StockCursor(CURSOR_CROSS))
+#
+#            if self._hit is hit or event.AltDown():
+#                self.popup.Show(True)
+#            self._hit = hit
+#        else:
+#            self.SetCursor(StockCursor(CURSOR_ARROW))
+#            self.popup.Show(False)
+#
+#    def _popup_hook(self, hit):
+#        pass
 
     def OnUnSelect(self, event):
         '''
@@ -219,10 +229,16 @@ class InteractionCanvas3D(AnimationCanvas3D):
         self.Refresh()
 
     def OnAltSelect(self, event):
+        return self._on_select(event)
+
+    def _on_select(self, event):
+        self._hit = None
         x = event.GetX()
         y = event.GetY()
         hit = self._gl_select_(x, y)
         if not (hit is None or hit not in self.valid_hitids or hit == 0):
+            self._hit = hit
+
             return hit
 
     def OnSelect(self, event):
@@ -231,8 +247,11 @@ class InteractionCanvas3D(AnimationCanvas3D):
         x = event.GetX()
         y = event.GetY()
         gw, gh = self.GetSize()
-        hit = self._gl_select_(x, y)
-        if hit is None or hit not in self.valid_hitids or hit == 0:
+
+        hit = self._on_select(event)
+        if hit is None:
+#        hit = self._gl_select_(x, y)
+#        if hit is None or hit not in self.valid_hitids or hit == 0:
 
             self.lastrotation = copy.copy(self.thisrotation)
             self.dragging = True
@@ -243,7 +262,6 @@ class InteractionCanvas3D(AnimationCanvas3D):
                 self.arcball.click(Point2fT(gw - x, gh - y))
 
         return hit
-
 
     def set_transform(self, t):
         '''
@@ -285,8 +303,7 @@ class InteractionCanvas3D(AnimationCanvas3D):
         hits = glRenderMode(GL_RENDER)
         glMatrixMode(GL_MODELVIEW)
 
-        self.scene_graph.set_view_cube_face(struct.unpack('BBB', b))
-
-        #get the top object
+        self.scene_graph.set_view_cube_face(struct.unpack('BBB', b))            #get the top object
 
         return min([(h.near, h.names[0]) for h in hits])[1] if hits else None
+

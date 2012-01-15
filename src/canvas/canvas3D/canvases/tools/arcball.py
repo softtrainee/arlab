@@ -104,7 +104,7 @@ class ArcBallT:
         # //Compute the square of the length of the vector to the point from the center
         length = sum (dot (TempPt, TempPt))
         # //If the point is mapped outside of the sphere... (length > radius squared)
-        radius = 1.0
+        radius = 2
         if (length > radius):
             # //Compute a normalizing factor (radius / sqrt(length))
             norm = radius / sqrt (length);

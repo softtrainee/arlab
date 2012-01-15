@@ -157,8 +157,9 @@ class ExtractionLineCanvas(HasTraits):
     canvas3D = Any#Instance(ExtractionLineCanvas3DDummy)
     manager = Any
     style = Enum('2D', '3D')
-    width = Float(400)
-    height = Float(400)
+    width = Float(700)
+    height = Float(700)
+
     def __init__(self, *args, **kw):
         '''
         '''

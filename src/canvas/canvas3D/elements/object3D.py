@@ -47,7 +47,7 @@ class Object3D(Node):
     color = colors['gray']
     state = False
     identify = False
-
+    rotation_points = None
     def __init__(self, *args, **kw):
         '''
         '''
@@ -55,6 +55,7 @@ class Object3D(Node):
         self.translate = (0, 0, 0)
         self.rotate = (0, 0, 0, 0)
         self.scale = (1.0, 1.0, 1.0)
+
 
         for k in kw:
             setattr(self, k, kw[k])
@@ -65,6 +66,7 @@ class Object3D(Node):
         if self.id:
             glLoadName(self.id)
             self._set_material()
+
 
     def toggle_identify(self):
         '''

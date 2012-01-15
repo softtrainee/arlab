@@ -72,8 +72,6 @@ class Canvas3D(wx.glcanvas.GLCanvas):
 
     def OnPaint(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         if not self.init:
             self._init_GL()
@@ -84,15 +82,11 @@ class Canvas3D(wx.glcanvas.GLCanvas):
 
     def OnSize(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         pass
 
     def set_background_color(self, color):
         '''
-            @type color: C{str}
-            @param color:
         '''
         if len(color) == 3:
             color += (1,)
@@ -131,16 +125,17 @@ class Canvas3D(wx.glcanvas.GLCanvas):
         '''
         '''
         glEnable(GL_LIGHTING)
-        lights = [(GL_LIGHT0, [(GL_POSITION, [1, 1, 0, 1]),
+        lights = [(GL_LIGHT0, [(GL_POSITION, [1, 1, 0, 0]),
                             (GL_AMBIENT, [0.1, 0.1, 0.1, 1]),
                             (GL_SPECULAR, [1, 1, 1, 1]),
                             (GL_DIFFUSE, [1, 1, 1, 1])
                             ]),
-                  (GL_LIGHT1, [(GL_POSITION, [0, 0, 1, 0]),
-                            (GL_AMBIENT, [0.1, 0.1, 0.1, 1]),
-                            (GL_SPECULAR, [1, 1, 1, 1]),
-                            (GL_DIFFUSE, [1, 1, 1, 1])
-                            ]),
+#                  (GL_LIGHT1, [(GL_POSITION, [0, 0, 1, 0]),
+#                            (GL_AMBIENT, [0.1, 0.1, 0.1, 1]),
+#                            (GL_SPECULAR, [1, 1, 1, 1]),
+#                            (GL_DIFFUSE, [1, 1, 1, 1])
+#                            ]
+#                   ),
                 ]
         for l, params in lights:
             glEnable(l)

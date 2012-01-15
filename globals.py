@@ -22,6 +22,7 @@ beta = False if os.path.basename(os.path.dirname(__file__)) == 'pychron' else Tr
 use_shared_memory = False
 
 use_debug_logger = False
+#use_debug_logger = True
 
 open_logger_on_launch = True
 

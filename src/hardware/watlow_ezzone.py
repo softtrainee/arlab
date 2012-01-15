@@ -421,11 +421,11 @@ class WatlowEZZone(CoreDevice):
 
         self.write(2160, setpoint, nregisters=2, **kw)
 
-#        sp = self.read_closed_loop_setpoint()
-#
-#        if sp and abs(sp - setpoint) > 0.01:
-#            self.warning('Set point not set. {} != {} retrying'.format(sp, setpoint))
-#            self.write(2160, setpoint, nregisters=2, **kw)
+        sp = self.read_closed_loop_setpoint()
+
+        if sp and abs(sp - setpoint) > 0.01:
+            self.warning('Set point not set. {} != {} retrying'.format(sp, setpoint))
+            self.write(2160, setpoint, nregisters=2, **kw)
 
     def set_open_loop_setpoint(self, setpoint, **kw):
         '''

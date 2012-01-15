@@ -33,7 +33,7 @@ from src.helpers.paths import plugins_dir, setup_dir
 from src.helpers.initialization_parser import InitializationParser
 
 from src.helpers.logger_setup import add_console
-from src.helpers.gdisplays import gLoggerDisplay
+from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
 from globals import open_logger_on_launch
 from pyface.message_dialog import warning
 
@@ -147,15 +147,14 @@ def launch(beta=False):
     '''
     '''
     logger.info('Launching Pychron')
-    plugins = [CorePlugin(),
-
-              WorkbenchPlugin(),
-              PychronWorkbenchPlugin(),
-              PychronWorkbenchUIPlugin(),
-
-             HardwarePlugin(),
-             HardwareUIPlugin()
-             ]
+    plugins = [
+               CorePlugin(),
+               WorkbenchPlugin(),
+               PychronWorkbenchPlugin(),
+               PychronWorkbenchUIPlugin(),
+               HardwarePlugin(),
+               HardwareUIPlugin()
+               ]
     plugins += get_user_plugins()
 
     lab = Pychron(plugins=plugins,

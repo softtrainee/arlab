@@ -14,10 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import  Instance, Float, Str
-from traitsui.api import View, Item, HGroup
+from traits.api import  Instance, Float, Str, List
+from traitsui.api import View, Item, HGroup, Group, ListEditor
 #=============standard library imports ========================
 import os
+import time
+from threading import Thread
 #=============local library imports  ==========================
 
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
@@ -28,6 +30,7 @@ from src.scripts.extraction_line_script import ExtractionLineScript
 
 from view_controller import ViewController
 from src.managers.manager import Manager
+
 #from src.managers.multruns_report_manager import MultrunsReportManager
 
 #Macro = None
@@ -44,23 +47,22 @@ class ExtractionLineManager(Manager):
     
     '''
     canvas = Instance(ExtractionLineCanvas)
-    canvas_width = Float(500)
-    canvas_height = Float(500)
     explanation = Instance(ExtractionLineExplanation)
-    
+
     valve_manager = Instance(Manager)
     gauge_manager = Instance(Manager)
     environmental_manager = Instance(Manager)
     device_stream_manager = Instance(Manager)
-    
+
     multruns_report_manager = Instance(Manager)
 #    multruns_report_manager = Instance(MultrunsReportManager)
-    
+
     view_controller = Instance(ViewController)
+
 #    pumping_monitor = Instance(PumpingMonitor)
 
     runscript = None
-    
+
     def get_subsystem_module(self, subsystem, module):
         '''
         '''
@@ -96,7 +98,7 @@ class ExtractionLineManager(Manager):
         if class_factory:
             kw['application'] = self.application
             m = class_factory(**kw)
-            
+
             if manager in ['gauge_manager', 'valve_manager',
                            'environmental_manager', 'device_stream_manager',
                            'multruns_report_manager'
@@ -129,35 +131,41 @@ class ExtractionLineManager(Manager):
 #        self.device_stream_manager.edit_traits(parent=self.window.control)
     def bind_preferences(self):
         from apptools.preferences.preference_binding import bind_preference
-        
         bind_preference(self.canvas, 'style', 'pychron.extraction_line.style')
         bind_preference(self.canvas, 'width', 'pychron.extraction_line.width')
         bind_preference(self.canvas, 'height', 'pychron.extraction_line.height')
+
         bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
         bind_preference(self, 'close_after_minutes', 'pychron.extraction_line.close_after')
-        
-        
+
         from src.extraction_line.plugins.extraction_line_preferences_page import get_valve_group_names
-        
+
         for name in get_valve_group_names():
             self.add_trait(name, Str(''))
             self.on_trait_change(self._owner_change, name)
             bind_preference(self, name, 'pychron.extraction_line.{}'.format(name))
-    
+
     def _owner_change(self, name, value):
         self.valve_manager.claim_section(name.split('_')[0], value.lower)
-        
+
     def reload_scene_graph(self):
+
+        #remember the explanation settings
+        iddict = dict()
+        for ev in self.explanation.explanable_items:
+            i = ev.identify
+            iddict[ev.name] = i
         if self.canvas is not None:
-            self.canvas.canvas3D.setup(canvas3D_dir, 'extractionline3D.txt')
+            self.canvas.canvas3D.setup()#canvas3D_dir, 'extractionline3D.txt')
 
             #load state
             if self.valve_manager:
                 for k, v in self.valve_manager.valves.iteritems():
                     vc = self.canvas.get_object(k)
                     if vc:
-                        vc.soft_lock = v.software_lock  
-
+                        vc.soft_lock = v.software_lock
+                        v.canvas_valve = vc
+                        vc.identify = iddict[vc.name]
 
             self.view_controller = self._view_controller_factory()
 
@@ -176,6 +184,9 @@ class ExtractionLineManager(Manager):
 #        '''
 #        if self.canvas:
 #            self.canvas.update_pressure(o.name, n, o.state)
+    def update_valve_state(self, *args, **kw):
+        if self.canvas:
+            self.canvas.update_valve_state(*args, **kw)
 
     def update_canvas2D(self, *args):
         if self.canvas:
@@ -200,30 +211,28 @@ class ExtractionLineManager(Manager):
 #        '''
 #        self.canvas.set_interactor_state(state)
 
-    def get_valve_state(self, name, address=None):
-        '''
-        '''
+    def show_valve_properties(self, name):
         if self.valve_manager is not None:
-            if address:
-                name = self.valve_manager.get_name_by_address(address)
-            state = self.valve_manager.get_state_by_name(name)
-            return state
+            self.valve_manager.show_valve_properties(name)
 
     def get_software_lock(self, name):
         if self.valve_manager is not None:
             return self.valve_manager.get_software_lock(name)
-        
+
     def set_software_lock(self, name, lock):
         if self.valve_manager is not None:
             if lock:
                 self.valve_manager.lock(name)
             else:
                 self.valve_manager.unlock(name)
-                
+
     def get_valve_states(self):
         if self.valve_manager is not None:
             return self.valve_manager.get_states()
-        
+
+    def get_valve_by_name(self, name):
+        if self.valve_manager is not None:
+            return self.valve_manager.get_valve_by_name(name)
 
     def open_valve(self, name, address=None, mode='remote', **kw):
         '''
@@ -243,28 +252,61 @@ class ExtractionLineManager(Manager):
                 name = self.valve_manager.get_name_by_address(address)
 
             return self._change_valve_state(name, mode, 'close', **kw)
-        
+
+    def sample(self, name, **kw):
+        def sample():
+            valve = self.valve_manager.get_valve_by_name(name)
+            if valve is not None:
+                self.info('start sample')
+                self.open_valve(name, **kw)
+                time.sleep(valve.sample_period)
+
+                self.info('end sample')
+                self.close_valve(name, **kw)
+
+        t = Thread(target=sample)
+        t.start()
+
+    def cycle(self, name, **kw):
+        def cycle():
+
+            valve = self.valve_manager.get_valve_by_name(name)
+            if valve is not None:
+                n = valve.cycle_n
+                period = valve.cycle_period
+
+                self.info('start cycle n={} period={}'.format(n, period))
+                for i in range(n):
+                    self.info('valve cycling iteration ={}'.format(i + 1))
+                    self.open_valve(name, **kw)
+                    time.sleep(period)
+                    self.close_valve(name, **kw)
+                    time.sleep(period)
+
+        t = Thread(target=cycle)
+        t.start()
+
     def claim_group(self, *args):
         return self.valve_manager.claim_group(*args)
-        
+
     def release_group(self, *args):
         return self.valve_manager.release_group(*args)
-        
+
     def _change_valve_state(self, name, mode, action, sender_address=None):
 
         func = getattr(self.valve_manager, '{}_by_name'.format(action))
-        
+
         claimer = self.valve_manager.get_system(sender_address)
-        owned=False
+        owned = False
         if claimer:
             owned = self.valve_manager.check_group_ownership(name, claimer)
-        
+
         if not owned:
             result = func(name, mode=mode)
         else:
-            result = '{} owned by {}'.format(name, claimer)    
+            result = '{} owned by {}'.format(name, claimer)
             self.warning(result)
-            
+
 #        system,f ok = self.valve_manager.check_ownership(name, sender_address)
 ##        ok = True
 #        if ok:
@@ -275,7 +317,7 @@ class ExtractionLineManager(Manager):
 #                result = '{} critical section enabled'.format(name)
 #                self.warning(result)
 #        else:
-            
+
         if isinstance(result, bool):
             self.canvas.update_valve_state(name, True if action == 'open' else False)
             result = True
@@ -296,12 +338,13 @@ class ExtractionLineManager(Manager):
             self.warning('{} already running'.format(runscript_name))
         else:
             self.runscript = None
-            
+
     def set_selected_explanation_item(self, obj):
+
         selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
         if selected:
             self.explanation.selected = selected
-    
+
     def traits_view(self):
         '''
         '''
@@ -311,10 +354,8 @@ class ExtractionLineManager(Manager):
                         Item('explanation', style='custom', show_label=False,
                              width=340
                              ),
-                        Item('canvas',
-                             width=self.canvas.width,
-                             height=self.canvas.height,
-                             style='custom', show_label=False),
+
+                        Item('canvas', style='custom', show_label=False)
                         ),
 
                handler=self.handler_klass,
@@ -367,7 +408,11 @@ class ExtractionLineManager(Manager):
 
 #    def _multruns_report_manager_default(self):
 #        return MultrunsReportManager(application=self.application)
-
+if __name__ == '__main__':
+    elm = ExtractionLineManager()
+    elm.bootstrap()
+    elm.canvas.style = '3D'
+    elm.configure_traits()
 
 #=================== EOF ================================
 #    def add_extraction_line_macro_delay(self):

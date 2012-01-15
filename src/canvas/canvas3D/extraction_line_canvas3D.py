@@ -18,6 +18,7 @@ limitations under the License.
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
+import wx
 
 from canvases.interaction_canvas3D import InteractionCanvas3D
 from loaders.scene_loader import SceneLoader
@@ -45,6 +46,10 @@ class ExtractionLineCanvas3D(InteractionCanvas3D):
 
     interactor_state = 'manual'
     hit = None
+
+    _popup_menu = None
+    _selected = None
+    _current = None
     def __init__(self, panel, manager):
         '''
         '''
@@ -54,13 +59,13 @@ class ExtractionLineCanvas3D(InteractionCanvas3D):
         if manager.valve_manager is not None:
             manager.valve_manager.canvas3D = self
 
-    def setup(self, setupdir=None, setupfile=None):
+#    def setup(self, setupdir=None, setupfile=None):
+    def setup(self):
         '''
         '''
         self.scene_graph = self.scene_graph_factory()
-        sl = SceneLoader()
-        sl.load_scene_graph(self.scene_graph,
-                            self.manager.valve_manager,
+        sl = SceneLoader(self.scene_graph)
+        sl.load_scene_graph(self.manager.valve_manager,
                             self)
 
     def update_popup(self, obj):
@@ -72,26 +77,79 @@ Locked: {}'''.format(obj.name,
                  )
                                 )
 
+    def OnLock(self, event):
+        self._selected.toggle_lock()
+
+    def OnSample(self, event):
+        self.manager.sample(self._selected.name, mode='normal')
+
+    def OnCycle(self, event):
+        self.manager.cycle(self._selected.name, mode='normal')
+
+    def OnCycleConfigure(self, event):
+        pass
+
+    def OnSampleConfigure(self, event):
+        pass
+
+    def OnProperties(self, event):
+        self.manager.show_valve_properties(self._selected.name)
+
+    def show_menu(self, event, obj):
+        if isinstance(obj, Valve):
+            valve = self.manager.get_valve_by_name(obj.name)
+            enabled = True
+            if valve is None:
+                enabled = False
+            self._selected = obj
+            self._popup_menu = wx.Menu()
+            panel = event.GetEventObject()
+
+            t = 'Lock'
+            lfunc = self.OnLock
+            if obj.soft_lock:
+                t = 'Unlock'
+            item = self._popup_menu.Append(-1, t)
+            item.Enable(enabled)
+            panel.Bind(wx.EVT_MENU, lfunc, item)
+
+            for t, enable in [('Sample', not self._selected.state),
+                               ('Cycle', not self._selected.state),
+                               ('Properties...', True)]:
+                item = self._popup_menu.Append(-1, t)
+                item.Enable(enable and enabled)
+                if t.endswith('...'):
+                    t = t[:-3]
+
+                panel.Bind(wx.EVT_MENU, getattr(self, 'On{}'.format(t)), item)
+
+            pos = event.GetPosition()
+            panel.PopupMenu(self._popup_menu, pos)
+            self._popup_menu.Destroy()
+
+            #obj.toggle_lock()
+            #self.update_popup(obj)
+
+            self.Refresh()
+
+
     def OnAltSelect(self, event):
         '''
         '''
         a = InteractionCanvas3D.OnAltSelect(self, event)
         if a is not None:
             obj = self.scene_graph.get_object_by_id(a)
-
-            if isinstance(obj, Valve):
-                obj.toggle_lock()
-                self.update_popup(obj)
-
-                self.Refresh()
+            self.show_menu(event, obj)
 
     def OnMotion(self, event):
         hit = InteractionCanvas3D.OnMotion(self, event)
 
         obj = self.scene_graph.get_object_by_id(hit)
         if isinstance(obj, Valve):
-            self.update_popup(obj)
-
+#            self.update_popup(obj)
+            self._current = obj
+        else:
+            self._current = None
 
     def OnSelect(self, event):
         '''
@@ -112,6 +170,7 @@ Locked: {}'''.format(obj.name,
 
                 self.manager.update_canvas2D(obj.name, obj.state, istate)
                 self.update_popup(obj)
+
             self.Refresh()
 
     def _get_object_by_name(self, name):
@@ -120,12 +179,16 @@ Locked: {}'''.format(obj.name,
         r = self.scene_graph.get_object_by_name(name)
         return r
 
-    def _popup_hook(self, hit):
-        obj = self.scene_graph.get_object_by_id(hit)
-        self.manager.set_selected_explanation_item(obj)
+#    def _popup_hook(self, hit):
+#        obj = self.scene_graph.get_object_by_id(hit)
+#        self.manager.set_selected_explanation_item(obj)
 
-    def _on_key_hook(self, event):
-        if event.MetaDown() and event.GetKeyCode() == 66:
+    def _on_key_hook(self, event, charcode):
+        if event.MetaDown():
+            if self._current is not None:
+                self._current.toggle_lock()
+
+        elif event.MetaDown() and charcode == 66:
             import webbrowser
             webbrowser.open(url_gen.next())
 
