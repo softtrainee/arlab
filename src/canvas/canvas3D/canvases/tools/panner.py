@@ -30,6 +30,9 @@ class Panner:
         '''
         '''
         scale = 16.5
-        t = [(self.start_pt[0] - pt[0]) / scale, (self.start_pt[1] - pt[1]) / scale, 0]
-        self.click(pt)
-        return t
+        try:
+            t = [(self.start_pt[0] - pt[0]) / scale, (self.start_pt[1] - pt[1]) / scale, 0]
+            self.click(pt)
+            return t
+        except:
+            pass

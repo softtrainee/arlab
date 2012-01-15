@@ -48,8 +48,6 @@ class SceneGraph(object):
     def increment_animation_counter(self):
         '''
         '''
-#        '''
-#        '''
 #        global animation_counter
         self.animation_counter += 1
 #        animation_counter += 1
@@ -97,6 +95,7 @@ class SceneGraph(object):
     def set_view_cube_rotation(self, m):
         if self.use_view_cube:
             self.root[1].matrix = m
+
     def set_view_cube_face(self, f):
         if self.use_view_cube:
             self.root[1].set_face(f)
@@ -127,15 +126,26 @@ def search(rnode, node, searchtype, searchkey):
 def traverse(node):
     '''
     '''
-    glPushMatrix()
+    def rotate():
+        if len(node.rotate) != 4:
 
-    if isinstance(node, Object3D):
-        glTranslatef(*node.translate)
-        if len(node.rotate) < 4:
             for r in node.rotate:
                 glRotatef(*r)
         else:
             glRotatef(*node.rotate)
+
+    glPushMatrix()
+    if isinstance(node, Object3D):
+
+        glTranslatef(*node.translate)
+        if node.rotation_points is not None:
+
+            glTranslatef(*node.rotation_points[0])
+            rotate()
+            glTranslatef(*node.rotation_points[1])
+
+        else:
+            rotate()
 
         glScalef(*node.scale)
         node.render()

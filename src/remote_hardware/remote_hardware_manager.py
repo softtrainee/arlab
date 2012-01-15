@@ -24,6 +24,7 @@ import os
 from src.helpers.paths import setup_dir
 from src.managers.manager import Manager
 from src.remote_hardware.command_processor import CommandProcessor
+from src.helpers.initialization_parser import InitializationParser
 
 '''
 #===================================
@@ -64,15 +65,21 @@ class RemoteHardwareManager(Manager):
         bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
         bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
 
-        config = ConfigParser.ConfigParser()
-        p = os.path.join(setup_dir, 'system_locks.cfg')
-        config.read(p)
-
+        
+        ip=InitializationParser(os.path.join(setup_dir,'initialization.xml'))
         names = []
         hosts = dict()
-        for sect in config.sections():
-            name = config.get(sect, 'name')
-            host = config.get(sect, 'host')
+        for name, host in ip.get_systems():
+#        config = ConfigParser.ConfigParser()
+#        
+#        p = os.path.join(setup_dir, 'system_locks.cfg')
+#        config.read(p)
+#
+#        for sect in config.sections():
+#            name = config.get(sect, 'name')
+#            host = config.get(sect, 'host')
+            
+            
             names.append(name)
             hosts[name] = host
 

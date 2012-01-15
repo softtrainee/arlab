@@ -24,20 +24,16 @@ from traitsui.basic_editor_factory import BasicEditorFactory
 
 class _Canvas3DEditor(Editor):
     '''
-        G{classtree}
     '''
     manager = Any
     def init(self, parent):
         '''
-            @type parent: C{str}
-            @param parent:
         '''
         self.control = self._create_control(parent)
 
     def _create_control(self, parent):
         '''
-            @type parent: C{str}
-            @param parent:
+
         '''
         from extraction_line_canvas3D import ExtractionLineCanvas3D
         panel = ExtractionLineCanvas3D(parent, self.object.manager)

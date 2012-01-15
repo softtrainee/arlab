@@ -136,4 +136,8 @@ class InitializationParser(XMLParser):
             for plugin in cat.findall(tag):
                 if plugin.text.strip() == name:
                     return plugin
+                
+    def get_systems(self):
+        p=self.get_plugin('ExtractionLine')
+        return [(s.text.strip(),s.get('master_host')) for s in p.findall('system')]
 #============= EOF =============================================

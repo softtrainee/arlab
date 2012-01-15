@@ -38,12 +38,15 @@ class AbstractDevice(ViewableDevice):
 #    last_response = Property(depends_on='_cdevice.last_response')
 #    
     scan_units = DelegatesTo('_cdevice')
+    scan_func = DelegatesTo('_cdevice')
+    scan_period = DelegatesTo('_cdevice')
+    scan_button = DelegatesTo('_cdevice')
+    scan_path = DelegatesTo('_cdevice')
     last_command = DelegatesTo('_cdevice')
     last_response = DelegatesTo('_cdevice')
 #    simulation = DelegatesTo('_cdevice')
     com_class = DelegatesTo('_cdevice')
     is_scanable = DelegatesTo('_cdevice')
-
 #    def start(self):
 #        '''
 #        '''

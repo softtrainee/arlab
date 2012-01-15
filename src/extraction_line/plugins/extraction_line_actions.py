@@ -30,7 +30,6 @@ class OpenExtractionLineManager(Action):
     def perform(self, event):
 
         man = get_manager(event.window)
-
         open_manager(man)
 
 class LoadCanvasAction(Action):
@@ -50,7 +49,7 @@ class LoadCanvasAction(Action):
 class RefreshCanvasAction(Action):
     description = 'reload the scene graph to reflect changes made to setupfiles'
     name = 'Refresh Canvas'
-    enabled = False
+#    enabled = False
     def perform(self, event):
         manager = get_manager(self.window)
         manager.window = self.window
@@ -78,10 +77,10 @@ class OpenViewControllerAction(Action):
         '''
         '''
         manager = get_manager(event.window)
-
         open_manager(manager.view_controller, kind='livemodal',
                      parent=manager.ui.control
                      )
+
 
 class OpenDeviceStreamerAction(Action):
     description = 'Open the device streamer manager'
