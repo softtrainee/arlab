@@ -33,10 +33,9 @@ from src.helpers.paths import plugins_dir, setup_dir
 from src.helpers.initialization_parser import InitializationParser
 
 from src.helpers.logger_setup import add_console
-from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
+from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay
 from globals import open_logger_on_launch
 from pyface.message_dialog import warning
-
 
 logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
 if open_logger_on_launch:
@@ -161,18 +160,21 @@ def launch(beta=False):
                   beta=beta
                   )
 
-#    try:
-#        lab.run()
-#    except Exception, err:
-#
-#        import traceback
-#        traceback.print_stack()
-#
-#        logger.warning(err)
-#        warning(lab.workbench.active_window, str(err))
-#        lab.exit()
+    try:
+        lab.run()
+    except Exception, err:
+        logger.exception('Launching error')
 
-    lab.run()
+        import traceback
+
+        tb = traceback.format_exc()
+        gTraceDisplay.add_text(tb)
+        gTraceDisplay.edit_traits(kind='livemodal')
+
+#        logger.warning(err)
+#        warning(lab.workbench.active_window, tb)
+        lab.exit()
+
 
     logger.info('Quiting Pychron')
 

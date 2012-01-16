@@ -18,7 +18,7 @@ limitations under the License.
 
 #============= local library imports  ==========================
 
-from src.managers.displays.rich_text_display import RichTextDisplay
+from src.managers.displays.rich_text_display import RichTextDisplay, ErrorDisplay
 import wx
 
 sw, sh = wx.DisplaySize()
@@ -27,11 +27,16 @@ gWarningDisplay = RichTextDisplay(
                                   width=450,
                                   default_color='red'
                                   )
-
 gLoggerDisplay = RichTextDisplay(title='Logger',
                                  width=450,
                                  x=sw - 450,
                                  y=20
+                                 )
+gTraceDisplay = ErrorDisplay(title='Error Stack',
+                                 width=825,
+                                 x=(sw - 825) / 2,
+                                 y=100,
+                                 default_color='black'
                                  )
 
 #============= EOF =============================================
