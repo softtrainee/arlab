@@ -62,7 +62,6 @@ class OpenLaserManagerAction(Action):
 
     def perform(self, event):
         manager = get_manager(event)
-        print manager
         if manager is not None:
             man = manager
             open_manager(man)

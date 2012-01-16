@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import  Instance, Float, Str, List
-from traitsui.api import View, Item, HGroup, Group, ListEditor
+from traitsui.api import View, Item, HGroup
 #=============standard library imports ========================
 import os
 import time
@@ -25,7 +25,7 @@ from threading import Thread
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
 #from src.monitors.pumping_monitor import PumpingMonitor
-from src.helpers.paths import canvas2D_dir, canvas3D_dir, scripts_dir
+from src.helpers.paths import canvas2D_dir, scripts_dir
 from src.scripts.extraction_line_script import ExtractionLineScript
 
 from view_controller import ViewController
@@ -245,12 +245,9 @@ class ExtractionLineManager(Manager):
     def close_valve(self, name, address=None, mode='remote', **kw):
         '''
         '''
-
         if self.valve_manager is not None:
-
             if address:
                 name = self.valve_manager.get_name_by_address(address)
-
             return self._change_valve_state(name, mode, 'close', **kw)
 
     def sample(self, name, **kw):

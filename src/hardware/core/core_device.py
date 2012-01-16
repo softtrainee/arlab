@@ -84,7 +84,7 @@ class CoreDevice(ViewableDevice):
     _scanning = Bool(False)
 
     is_scanable = False
-    scan_func = None
+    scan_func = Any
     scan_lock = None
     timer = None
     scan_period = Float(1000, enter_set=True, auto_set=False)

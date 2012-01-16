@@ -256,11 +256,11 @@ class FusionsLaserManager(LaserManager):
                       )
 
         lens_config = self.get_lens_configuration_group()
-        print lens_config
         if lens_config:
             vg.content.insert(0, lens_config)
 
         return vg
+
     def __control__group__(self):
         '''
         '''

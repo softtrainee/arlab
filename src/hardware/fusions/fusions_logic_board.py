@@ -64,8 +64,8 @@ class FusionsLogicBoard(CoreDevice):
         '''
         '''
         progress = kw['progress'] if 'progress' in kw else None
-        print self._communicator.handle
-        print self.ask(';LB.VER')
+        #print self._communicator.handle
+        #print self.ask(';LB.VER')
         #disable laser 
         if progress is not None:
             progress.change_message('Disabling Laser')

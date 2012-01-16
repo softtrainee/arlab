@@ -75,22 +75,22 @@ class VideoStageManager(StageManager, Videoable):
 
     pxpercmx = DelegatesTo('camera_calibration_manager')
     pxpercmy = DelegatesTo('camera_calibration_manager')
-        
+
 
     auto_center = Bool(False)
-    
-    
+
+
     autofocus_manager = Instance(AutofocusManager)
 
 
     machine_vision_manager = Instance(MachineVisionManager)
-    
+
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
-        
+
         bind_preference(self, 'auto_center', '{}.auto_center'.format(pref_id))
-        
-        
+
+
     def update_camera_params(self, obj, name, old, new):
         if name == 'focus_z':
             self.focus_z = new
@@ -159,16 +159,17 @@ class VideoStageManager(StageManager, Videoable):
 #                                            )),
                                label='Camera')
                          )
-        
+
         return g
-        
+
     def _move_to_point_hook(self):
         if self.autocenter():
             self._point = 0
-        
+
     def _move_to_hole_hook(self):
         if self.autocenter():
             self._hole = 0
+
     def autocenter(self):
         #use machine vision to calculate positioning error
         if self.auto_center:
@@ -195,7 +196,7 @@ class VideoStageManager(StageManager, Videoable):
         self.info('setting focus posiition {}'.format(z))
         self.canvas.camera.focus_z = z
         self.canvas.camera.save_focus()
-        
+
 #===============================================================================
 # Defaults 
 #===============================================================================
@@ -203,14 +204,14 @@ class VideoStageManager(StageManager, Videoable):
         return CameraCalibrationManager()
 
     def _machine_vision_manager_default(self):
-        return MachineVisionManager(video=self.video) 
-    
+        return MachineVisionManager(video=self.video)
+
     def _autofocus_manager_default(self):
         return AutofocusManager(video=self.video,
                                 manager=self.parent,
                                 controller=self.stage_controller
-                                ) 
-    
+                                )
+
 #===============================================================================
 # Property Get/Set
 #===============================================================================
@@ -231,7 +232,7 @@ class VideoStageManager(StageManager, Videoable):
         ax = self.stage_controller.axes['y']
         ax.drive_ratio = v
         ax.save()
-    
+
     def _get_camera_xcoefficients(self):
         return self._camera_xcoefficients
 
@@ -257,7 +258,7 @@ class VideoStageManager(StageManager, Videoable):
         else:
             z = 0
         self.canvas.camera.set_limits_by_zoom(z)
-    
+
     def _calculate_indicator_positions(self, shift=None):
         ccm = self.camera_calibration_manager
 
@@ -317,7 +318,7 @@ class VideoStageManager(StageManager, Videoable):
                     self.drive_xratio = rdxmm / dxmm
                     self.drive_yratio = rdymm / dymm
                 except ZeroDivisionError:
-                    self.drive_xratio = 100  
+                    self.drive_xratio = 100
 if __name__ == '__main__':
 
 
