@@ -309,6 +309,7 @@ class AutofocusManager(Manager):
 #        ma = None
 #        fmi = None
 #        fma = None
+
         sgrads = smooth(grads)
         if sgrads:
             fmi = focussteps[argmin(sgrads)]
