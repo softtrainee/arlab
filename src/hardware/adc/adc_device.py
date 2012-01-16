@@ -23,7 +23,7 @@ from src.hardware.core.abstract_device import AbstractDevice
 
 
 class ADCDevice(AbstractDevice):
-    scan_func = 'read_voltage'
+#    scan_func = 'read_voltage'
 
     def load_additional_args(self, config):
         '''

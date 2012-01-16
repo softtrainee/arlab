@@ -67,7 +67,7 @@ class StageMap(HasTraits):
         name = os.path.basename(self.file_path)
         name, _ext = os.path.splitext(name)
         return name
-        
+
     def __init__(self, *args, **kw):
         super(StageMap, self).__init__(*args, **kw)
         self.load()
@@ -94,26 +94,29 @@ class StageMap(HasTraits):
 
     def load(self):
         lines = parse_file(self.file_path)
+        if not lines:
+            return
         shape, dimension = lines[0].split(',')
         self.g_shape = shape
         self.g_dimension = float(dimension)
 
         valid_holes = lines[1].split(',')
         for hi, line in enumerate(lines[2:]):
-            try:
-                hole, x, y = line.split(',')
-            except ValueError:
-                x, y = line.split(',')
-                hole = str(hi + 1)
+            if not line.startswith('#'):
+                try:
+                    hole, x, y = line.split(',')
+                except ValueError:
+                    x, y = line.split(',')
+                    hole = str(hi + 1)
 
-            self.sample_holes.append(SampleHole(id=hole,
-                                                 x=float(x),
-                                                 y=float(y),
-                                                 render='x' if hole in valid_holes else '',
-                                                 shape=shape,
-                                                 dimension=float(dimension)
+                self.sample_holes.append(SampleHole(id=hole,
+                                                     x=float(x),
+                                                     y=float(y),
+                                                     render='x' if hole in valid_holes else '',
+                                                     shape=shape,
+                                                     dimension=float(dimension)
 
-                                                 ))
+                                                     ))
 
 #============= views ===========================================
     def traits_view(self):

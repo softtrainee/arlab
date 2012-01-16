@@ -23,6 +23,7 @@ from pyface.timer.api import do_later
 from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
 from globals import show_warnings
+import threading
 
 MAXLEN = 30
 
@@ -73,30 +74,49 @@ class Loggable(HasTraits):
 
             gWarningDisplay.add_text('{} -- {}'.format(self.logger.name.strip(),
                     msg))
+
             if decorate:
                 msg = '****** {}'.format(msg)
+            self._log_('warning', msg)
+#            self.logger.warning(msg)
 
-            self.logger.warning(msg)
-
-    def info(self, msg, decorate=True):
+    def info(self, msg, decorate=True, dolater=False):
         '''
 
         '''
 
-        if self.logger is not None:
-            if decorate:
-                msg = '====== {}'.format(msg)
+#        if self.logger is not None:
+        if decorate:
+            msg = '====== {}'.format(msg)
 
-            self.logger.info(msg)
+        self._log_('info', msg)
+#            t = threading.currentThread()
+#            if t.name is not 'MainThread':
+#                print t.name
+#                do_later(self.logger.info, msg)
+#            else:
+#                self.logger.info(msg)
 
     def debug(self, msg, decorate=True):
         '''
         '''
 
-        if self.logger is not None:
-            if decorate:
-                msg = '++++++ {}'.format(msg)
-            self.logger.debug(msg)
+#        if self.logger is not None:
+#            if decorate:
+#                msg = '++++++ {}'.format(msg)
+#            self.logger.debug(msg)
+        if decorate:
+            msg = '++++++ {}'.format(msg)
+        self._log_('debug', msg)
 
+    def _log_(self, func, msg):
+        if self.logger is None:
+            return
 
+        func = getattr(self.logger, func)
+        t = threading.currentThread()
+        if t.name is not 'MainThread':
+            do_later(func, msg)
+        else:
+            func(msg)
 # ============= EOF ====================================

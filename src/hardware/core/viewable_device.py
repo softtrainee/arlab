@@ -99,7 +99,7 @@ class ViewableDevice(ConfigLoadable):
 
     def current_state_view(self):
         v = View(Group(
-                     Item('name'),
+                     #Item('name'),
                      Item('last_command', style='readonly'),
                      Item('last_response', style='readonly'),
                      Item('current_scan_value', style='readonly'),

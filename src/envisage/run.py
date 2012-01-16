@@ -158,15 +158,21 @@ def launch(beta=False):
     plugins += get_user_plugins()
 
     lab = Pychron(plugins=plugins,
-
                   beta=beta
                   )
-    try:
-        lab.run()
-    except Exception, err:
-        logger.warning(err)
-        warning(lab.workbench.active_window, str(err))
-        lab.exit()
+
+#    try:
+#        lab.run()
+#    except Exception, err:
+#
+#        import traceback
+#        traceback.print_stack()
+#
+#        logger.warning(err)
+#        warning(lab.workbench.active_window, str(err))
+#        lab.exit()
+
+    lab.run()
 
     logger.info('Quiting Pychron')
 
