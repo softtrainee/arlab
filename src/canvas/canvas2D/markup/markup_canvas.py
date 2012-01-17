@@ -228,7 +228,7 @@ class MarkupCanvas(BaseDataCanvas):
                     if self.tool_state == 'point':
                         x, y = self.map_data((event.x, event.y))
                         pid = 'point{}'.format(self.point_counter)
-                        self.markupcontainer[pid] = PointIndicator(x, y, canvas=self, mid=id)
+                        self.markupcontainer[pid] = PointIndicator(x, y, canvas=self, identifier=pid)
                         self.point_counter += 1
                         event.handled = True
         self.request_redraw()
@@ -239,7 +239,7 @@ class MarkupCanvas(BaseDataCanvas):
         '''
 
         if event.character == 'Backspace' and self.selected_element is not None:
-            self.markupcontainer.pop(self.selected_element.mid)
+            self.markupcontainer.pop(self.selected_element.identifier)
             self.selected_element = None
 
         self.key_set_tool_state(event)

@@ -74,9 +74,9 @@ class LaserTrayCanvas(MapCanvas):
         if self.point_exists(*self._stage_position):
             return
 
-        id = 'point{}'.format(self.point_counter)
-        p = PointIndicator(*self._stage_position, id=id, canvas=self)
-        self.markupcontainer[id] = p
+        pid = 'point{}'.format(self.point_counter)
+        p = PointIndicator(*self._stage_position, identifier=pid, canvas=self)
+        self.markupcontainer[pid] = p
         self.point_counter += 1
         self.request_redraw()
         return p
@@ -95,12 +95,12 @@ class LaserTrayCanvas(MapCanvas):
         self.point_counter = 0
         with open(p, 'r') as f:
             for line in f:
-                id, x, y = line.split(',')
+                identifier, x, y = line.split(',')
                 pt = self.point_exists(float(x), float(y))
                 if pt is not None:
-                    self.markupcontainer.pop(pt.id)
+                    self.markupcontainer.pop(pt.identifier)
 
-                self.markupcontainer[id] = PointIndicator(float(x), float(y), id=id, canvas=self)
+                self.markupcontainer[identifier] = PointIndicator(float(x), float(y), identifier=identifier, canvas=self)
                 self.point_counter += 1
 
         self.request_redraw()
@@ -109,7 +109,7 @@ class LaserTrayCanvas(MapCanvas):
         lines = []
         for _k, v in self.markupcontainer.iteritems():
             if isinstance(v, PointIndicator):
-                lines.append(','.join(map(str, (v.id, v.x, v.y))))
+                lines.append(','.join(map(str, (v.identifier, v.x, v.y))))
 
         with open(p, 'w') as f:
             f.write('\n'.join(lines))

@@ -38,7 +38,7 @@ def calc_rotation(x1, y1, x2, y2):
     da = math.degrees(angle)
     return da if da >= 0 else 360 + da
 class MarkupItem(HasTraits):
-    mid = ''
+    identifier = ''
     x = Float
     y = Float
     state = False
@@ -89,6 +89,9 @@ class MarkupItem(HasTraits):
 
     def set_canvas(self, canvas):
         self.canvas = canvas
+
+    def set_state(self, state):
+        self.state = state
 
 class Point(MarkupItem):
     pass
@@ -305,8 +308,9 @@ class PointIndicator(Indicator):
     def __init__(self, x, y, *args, **kw):
         super(PointIndicator, self).__init__(x, y, *args, **kw)
         self.circle = Circle(self.x, self.y, self.radius, *args, **kw)
+        print self.identifier
         self.label = Label(self.x, self.y,
-                           text=str(int(self.mid[5:]) + 1),
+                           text=str(int(self.identifier[5:]) + 1),
                             *args, **kw)
     def set_state(self, state):
         self.state = state

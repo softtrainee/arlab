@@ -37,8 +37,8 @@ def arc_pattern(cx, cy, degrees, radius):
          only used for drawing
     '''
 
-    x = radius * cos(map(math.radians, linspace(0, degrees, 500))) + cx
-    y = radius * sin(map(math.radians, linspace(0, degrees, 500))) + cy
+    x = radius * cos(map(math.radians, linspace(0, degrees, degrees / 10.0))) + cx
+    y = radius * sin(map(math.radians, linspace(0, degrees, degrees / 10.0))) + cy
 
     xs = hstack(([cx], x))
     xs = hstack((xs, [cx]))
@@ -80,8 +80,6 @@ def random_pattern(cx, cy, walk_x, walk_y, ns, shape='circle', ** kw):
                 break
 
         yield x, y
-
-
 
 def diamond_pattern(cx, cy, width, height, **kw):
     '''

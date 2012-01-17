@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Enum, Instance, Button, Str, Property
+from traits.api import Enum, Instance, Button, Str, Property, Event, Bool
 from traitsui.api import View, Item, HGroup, InstanceEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -52,8 +52,27 @@ class PatternManager(Manager):
     pattern = Instance(Pattern, ())
     load_button = Button('Load')
     save_button = Button('Save')
+
+    execute_button = Event
+    execute_label = Property(depends_on='_alive')
+    _alive = Bool(False)
+
+    design_button = Button('Design')
     pattern_name = Str
-    _alive = False
+
+    def _get_execute_label(self):
+        return 'Execute' if not self._alive else 'Stop'
+
+    def _execute_button_fired(self):
+        if self._alive:
+            print 'ex'
+        else:
+            print 'stop'
+
+        self._alive = not self._alive
+#            self.execute_pattern()
+    def _design_button_fired(self):
+        self.edit_traits(view='pattern_maker_view')
 
     def get_pattern_names(self):
         return self.get_file_list(pattern_dir, extension='.lp')
@@ -141,6 +160,12 @@ class PatternManager(Manager):
 
         pattern.replot()
         return pattern
+
+    def view_a(self):
+        v = View(self._button_factory('execute_button', 'execute_label'),
+                 Item('design_button', show_label=False)
+                 )
+        return v
 
     def traits_view(self):
         v = View(Item('pattern', show_label=False,
