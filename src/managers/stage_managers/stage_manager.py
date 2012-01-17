@@ -121,7 +121,6 @@ class StageManager(Manager):
             self.canvas.tool_state = 'point'
         else:
             self.canvas.tool_state = 'select'
-            print self.canvas.selected_element
             if self.canvas.selected_element:
                 self.canvas.selected_element.set_state(False)
                 self.canvas.request_redraw()
@@ -130,7 +129,7 @@ class StageManager(Manager):
     def _accept_point_fired(self):
         npt = self.canvas.new_point()
         if npt:
-            self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.mid, npt.x, npt.y))
+            self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
 
     def _load_points_fired(self):
         p = self.open_file_dialog(default_directory=os.path.join(setup_dir,
@@ -478,6 +477,11 @@ class StageManager(Manager):
                      Item('tray_calibration_manager',
                           label='Calibration',
                            show_label=False, style='custom'),
+                     Item('pattern_manager',
+                          label='Pattern',
+                          editor=InstanceEditor(view='view_a'),
+                           show_label=False, style='custom'
+                          ),
 
 #                     Item('output', show_label = False, style = 'custom'),
 
@@ -552,11 +556,11 @@ class StageManager(Manager):
         '''
         '''
         return '%s Stage Manager' % self.name[:-5].capitalize()
+
     def _pattern_manager_default(self):
         return PatternManager(parent=self)
 #    def _jog_manager_default(self):
 #        return JogManager(parent = self)
-
 
     def _tray_calibration_manager_default(self):
         t = TrayCalibrationManager(parent=self,
@@ -695,7 +699,7 @@ class StageManager(Manager):
 
     def _move_to_point(self, pt):
         pos = pt.x, pt.y
-        self.info('Move to point {}'.format(pt.mid))
+        self.info('Move to point {}'.format(pt.identifier))
         self.stage_controller.linear_move(block=True, *pos)
 
         self._move_to_point_hook()

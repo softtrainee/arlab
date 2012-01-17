@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Float, Button, Instance, Range
+from traits.api import HasTraits, Bool, Float, Button, Instance, Range, Any
 from traitsui.api import View, Item, Group, HGroup, RangeEditor, spring
 from chaco.api import AbstractOverlay
 
@@ -69,19 +69,21 @@ class Pattern(HasTraits):
     cy = Float(transient=True)
     target_radius = Float(1)
 
-    overlap_overlay = OverlapOverlay
     beam_radius = Float(1, enter_set=True, auto_set=False)
     show_overlap = Bool(False)
 
     def _anytrait_changed(self, name, new):
         self.replot()
+
     def _beam_radius_changed(self):
-        self.overlap_overlay.beam_radius = self.beam_radius
+        oo = self.graph.plots[0].plots['plot0'][0].overlays[1]
+        oo.beam_radius = self.beam_radius
         self.replot()
 
     def _show_overlap_changed(self):
-        self.overlap_overlay.visible = self.show_overlap
-        self.overlap_overlay.request_redraw()
+        oo = self.graph.plots[0].plots['plot0'][0].overlays[1]
+        oo.visible = self.show_overlap
+        oo.request_redraw()
 
     def pattern_generator_factory(self, **kw):
         raise  NotImplementedError
@@ -103,8 +105,6 @@ class Pattern(HasTraits):
 
     def graph_view(self):
         v = View(Item('graph', style='custom', show_label=False),
-
-
                  )
         return v
 
@@ -127,10 +127,10 @@ class Pattern(HasTraits):
                                                       cy=self.cy,
                                                       target_radius=self.target_radius
                                                       ))
-        self.overlap_overlay = OverlapOverlay(component=lp,
+        overlap_overlay = OverlapOverlay(component=lp,
                                               visible=self.show_overlap
                                               )
-        lp.overlays.append(self.overlap_overlay)
+        lp.overlays.append(overlap_overlay)
         g.new_series()
 
         return g

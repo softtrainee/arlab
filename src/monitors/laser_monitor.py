@@ -27,7 +27,7 @@ class LaserMonitor(Monitor):
     '''
     '''
     #manager = None
-    max_duration = Float(60) # in minutes
+    max_duration = Float(0.1) # in minutes
 
     max_coolant_temp = Float(25)
 
