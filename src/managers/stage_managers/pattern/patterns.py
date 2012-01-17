@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Float, Button, Instance, Range, Any
+from traits.api import HasTraits, Bool, Float, Button, Instance, Range, Any, Str, Property
 from traitsui.api import View, Item, Group, HGroup, RangeEditor, spring
 from chaco.api import AbstractOverlay
 
@@ -25,6 +25,7 @@ from pattern_generators import square_spiral_pattern, line_spiral_pattern, rando
     polygon_pattern, arc_pattern
 
 from src.graph.graph import Graph
+import os
 
 class TargetOverlay(AbstractOverlay):
     target_radius = Float
@@ -72,6 +73,15 @@ class Pattern(HasTraits):
     beam_radius = Float(1, enter_set=True, auto_set=False)
     show_overlap = Bool(False)
 
+    path = Str
+    name = Property(depends_on='path')
+    def _get_name(self):
+        if self.path is None:
+            return ''
+        return os.path.basename(self.path).split('.')[0]
+#    graph_width = 200
+#    graph_height = 200
+
     def _anytrait_changed(self, name, new):
         self.replot()
 
@@ -104,19 +114,21 @@ class Pattern(HasTraits):
         return [pt for pt in gen_out]
 
     def graph_view(self):
-        v = View(Item('graph', style='custom', show_label=False),
+        v = View(Item('graph', style='custom', show_label=False,
+#                      width=300,
+#                      height=300
+                      ),
+                 #title=self.name
                  )
         return v
 
     def _graph_default(self):
         g = Graph(
-                  width=500,
-                  height=500,
-#                  
+
                   container_dict=dict(
                                         padding=20
                                         ))
-        g.new_plot(bounds=[500, 500],
+        g.new_plot(#bounds=[self.graph_width, self.graph_height],
                    padding=0)
         g.set_x_limits(-2, 2)
         g.set_y_limits(-2, 2)
@@ -131,7 +143,7 @@ class Pattern(HasTraits):
                                               visible=self.show_overlap
                                               )
         lp.overlays.append(overlap_overlay)
-        g.new_series()
+        g.new_series(type='scatter', marker='circle')
 
         return g
 
@@ -141,7 +153,9 @@ class Pattern(HasTraits):
                  Item('show_overlap'),
                  Item('graph',
                       resizable=False,
-                      show_label=False, style='custom')
+                      show_label=False, style='custom'),
+                 buttons=['OK', 'Cancel'],
+                 title=self.name
                  )
         return v
     def get_parameter_group(self):
@@ -165,7 +179,7 @@ class RandomPattern(Pattern):
     npoints = Range(0, 50, 10)
     regenerate = Button
     def _regenerate_fired(self):
-        self.replot()
+        self.plot()
 
     def get_parameter_group(self):
         return Group('walk_x',
@@ -200,7 +214,7 @@ class PolygonPattern(Pattern):
 class ArcPattern(Pattern):
     radius = Range(0.0, 1.0, 0.5)
     degrees = Range(0.0, 360.0, 90)
-    show_overlap = Bool(False)
+
     def get_parameter_group(self):
         return Group('radius',
                      Item('degrees', editor=RangeEditor(mode='slider',
@@ -225,8 +239,6 @@ class SpiralPattern(Pattern):
         gen_in = self.pattern_generator_factory(direction='in')
         return [pt for pt in gen_out] + [pt for pt in gen_in]
 
-
-
     def plot_in(self, ox, oy):
         pgen_in = self.pattern_generator_factory(ox=ox, #data_out[-1][0],
                                                  oy=oy, #data_out[-1][1],
@@ -234,8 +246,8 @@ class SpiralPattern(Pattern):
         data_in = array([pt for pt in pgen_in])
 
         xs, ys = transpose(data_in)
-        self.graph.set_data(xs, series=1)
-        self.graph.set_data(ys, axis=1, series=1)
+#        self.graph.set_data(xs, series=1)
+#        self.graph.set_data(ys, axis=1, series=1)
 
     def get_parameter_group(self):
         return Group('radius',

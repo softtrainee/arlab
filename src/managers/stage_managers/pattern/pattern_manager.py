@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Enum, Instance, Button, Str, Property, Event, Bool
-from traitsui.api import View, Item, HGroup, InstanceEditor
+from traits.api import Enum, Instance, Button, Str, Property, Event, Bool, DelegatesTo
+from traitsui.api import View, Item, HGroup, InstanceEditor, spring
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
@@ -49,7 +49,7 @@ class PatternManager(Manager):
                 'Random'
                 )
 
-    pattern = Instance(Pattern, ())
+    pattern = Instance(Pattern)
     load_button = Button('Load')
     save_button = Button('Save')
 
@@ -58,21 +58,32 @@ class PatternManager(Manager):
     _alive = Bool(False)
 
     design_button = Button('Design')
-    pattern_name = Str
+    pattern_name = Property(depends_on='pattern')
+
+#    show_pattern = Bool(False)
+    show_pattern = Bool(True)
+
+
+    window_x = 0.77
+    window_y = 0.05
+    def _get_pattern_name(self):
+        if not self.pattern:
+            return ''
+        else:
+            return self.pattern.name
 
     def _get_execute_label(self):
         return 'Execute' if not self._alive else 'Stop'
 
     def _execute_button_fired(self):
         if self._alive:
-            print 'ex'
+            self.stop_pattern()
         else:
-            print 'stop'
-
+            self.execute_pattern()
         self._alive = not self._alive
-#            self.execute_pattern()
+
     def _design_button_fired(self):
-        self.edit_traits(view='pattern_maker_view')
+        self.edit_traits(view='pattern_maker_view', kind='livemodal')
 
     def get_pattern_names(self):
         return self.get_file_list(pattern_dir, extension='.lp')
@@ -82,25 +93,31 @@ class PatternManager(Manager):
         self._alive = False
         self.parent.stage_controller.stop()
 
-    def execute_pattern(self, pattern_name=None, use_current=False):
+    def execute_pattern(self, pattern_name=None):#, use_current=False):
         if pattern_name is not None:
             #open pattern from file
             self.load_pattern(path=os.path.join(pattern_dir,
                                                             '{}.lp'.format(pattern_name)
                                                             ))
-        elif not use_current:
+#        elif not use_current:
             #===================================================================
             #for testing
             # path = os.path.join(pattern_dir, 'testpattern.lp')
             # self.load_pattern(path = path)
             #===================================================================
             #open a file dialog to choose pattern
+#            self.load_pattern()
+        elif self.pattern is None:
+#        if self.pattern is None:
             self.load_pattern()
-
+#            
         if self.pattern is not None:
-            self._alive = True
+
+            #self._alive = True
 #            self.edit_traits()
-            do_later(self.edit_traits)
+            if self.show_pattern:
+                do_later(self.edit_traits)
+
             t = Thread(target=self._execute_)
             t.start()
         else:
@@ -118,10 +135,24 @@ class PatternManager(Manager):
 
         pts = pat.points_factory()
         if self.kind == 'ArcPattern':
-            controller.single_axis_move('x', pat. radius)
+            controller.single_axis_move('x', pat.radius)
             controller.arc_move(pat.cx, pat.cy, pat.degrees)
         else:
-            controller.multiple_point_move(pts)
+            multipoint = False
+            if multipoint:
+                controller.multiple_point_move(pts)
+            else:
+                for x, y in pts:
+                    pat.graph.set_data([x], series=1, axis=0)
+                    pat.graph.set_data([y], series=1, axis=1)
+                    pat.graph.redraw()
+
+                    controller.linear_move(x, y, block=True)
+                    if controller.simulation:
+                        time.sleep(0.25)
+
+        pat.graph.set_data([], series=1, axis=0)
+        pat.graph.set_data([], series=1, axis=1)
 
         if controller.simulation:
             time.sleep(1)
@@ -129,28 +160,29 @@ class PatternManager(Manager):
         if self._alive:
             self.info('finished pattern {}'.format(self.pattern_name))
             self.close_ui()
+        self._alive = False
 
     def load_pattern(self, path=None):
-        self.pattern = None
         if path is None:
             path = self.open_file_dialog(default_directory=pattern_dir)
 
         if path is not None and os.path.isfile(path):
+            self.pattern = None
             with open(path, 'rb') as f:
-                self.pattern = pickle.load(f)
-
+                p = pickle.load(f)
+                p.path = path
+                self.pattern = p
                 self._kind = self.pattern.__class__.__name__.partition('Pattern')[0]
-                self.pattern_name = os.path.basename(path).split('.')[0]
                 self.info('loaded {} from {}'.format(self.pattern_name, path))
                 self.pattern.replot()
 
     def save_pattern(self):
         if not self.pattern_name:
             path, _cnt = unique_path(pattern_dir, 'pattern', filetype='lp')
-            self.pattern_name = os.path.basename(path).split('.')[0]
         else:
             path = os.path.join(pattern_dir, '{}.lp'.format(self.pattern_name))
 
+        self.pattern.path = path
         with open(path, 'wb') as f:
             pickle.dump(self.pattern, f)
         self.info('saved {} pattern to {}'.format(self.pattern_name, path))
@@ -161,9 +193,13 @@ class PatternManager(Manager):
         pattern.replot()
         return pattern
 
-    def view_a(self):
-        v = View(self._button_factory('execute_button', 'execute_label'),
-                 Item('design_button', show_label=False)
+    def execute_view(self):
+        v = View(
+                 HGroup(Item('pattern_name', label='Name', style='readonly')),
+
+                 self._button_factory('execute_button', 'execute_label', enabled='object.pattern is not None'),
+                 Item('design_button', show_label=False),
+                 Item('load_button', show_label=False),
                  )
         return v
 
@@ -172,7 +208,9 @@ class PatternManager(Manager):
                        style='custom',
                        editor=InstanceEditor(view='graph_view')),
                  handler=self.handler_klass,
-                 title=self.pattern_name
+                 title=self.pattern_name,
+                 x=self.window_x,
+                 y=self.window_y
                  )
         return v
 
@@ -181,32 +219,41 @@ class PatternManager(Manager):
                  HGroup(Item('save_button', show_label=False),
                         Item('load_button', show_label=False)),
                  Item('pattern', style='custom', show_label=False),
-                 resizable=True,
-                 width=520,
-                 height=750,
-                 title='Pattern Maker'
+#                 resizable=True,
+                 width=425,
+                 height=530,
+                 title='Pattern Maker',
+                 buttons=['OK', 'Cancel']
+#                 kind='livemodal'
                  )
         return v
 
-    def _graph_default(self):
+#    def _graph_default(self):
+#
+#        g = Graph(
+#                  width=100,
+#                  height=100,
+#                  container_dict=dict(
+#                                        padding=30
+#                                        )
+#                  )
+#        return g
 
-        g = Graph(
-                  width=400,
-                  height=400,
-                  container_dict=dict(
-                                        padding=30
-                                        )
-                  )
-        return g
-
-    def _pattern_default(self):
-        return self.pattern_factory(self.kind)
+#    def _pattern_default(self):
+#        return self.pattern_factory(self.kind)
 
     def _save_button_fired(self):
         self.save_pattern()
 
     def _load_button_fired(self):
         self.load_pattern()
+
+        info = self.pattern.edit_traits(kind='modal')
+
+        if not info.result:
+            self.pattern = None
+
+
 
     def _get_kind(self):
         return self._kind

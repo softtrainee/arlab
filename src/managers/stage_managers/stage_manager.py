@@ -479,7 +479,7 @@ class StageManager(Manager):
                            show_label=False, style='custom'),
                      Item('pattern_manager',
                           label='Pattern',
-                          editor=InstanceEditor(view='view_a'),
+                          editor=InstanceEditor(view='execute_view'),
                            show_label=False, style='custom'
                           ),
 
