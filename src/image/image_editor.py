@@ -24,8 +24,9 @@ from wx import Panel, ClientDC, \
     RED_PEN
 
 import math
+import wx
 #=============local library imports  ==========================
-from ctypes_opencv import  cvIplImageAsBitmap, cvCreateImage, CvSize, cvAddS, CvScalar, \
+from ctypes_opencv import  cvCreateImage, CvSize, cvAddS, CvScalar, \
  CvRect, cvSetImageROI, cvResize, cvResetImageROI
 from ctypes_opencv.cxcore import cvZero
 
@@ -125,10 +126,17 @@ class _ImageEditor(Editor):
         '''
         '''
 
-        bitmap = cvIplImageAsBitmap(src,
-                                    swap=False,
-                                    flip=False
-                                    )
+#        bitmap = cvIplImageAsBitmap(src,
+#                                    #swap_rb=False,
+#                                    flip=False
+#                                    )
+#        bitmap = self.value.get_bitmap()
+
+
+        bitmap = wx.BitmapFromBuffer(src.width,
+                                       src.height,
+                                       src.data_as_string()
+                                        )
         dc.DrawBitmap(bitmap, 0, 0, False)
 
     def _display_crosshair(self, dc, x, y, pen=None):
