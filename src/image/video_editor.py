@@ -41,14 +41,15 @@ class _VideoEditor(_ImageEditor):
 
         '''
         frame = self.value.get_frame()
+        return frame
 #        print frame
-        if frame is not None:
+#        if frame is not None:
 #            if tweak:
 
-            out = cvCreateImage(cvGetSize(frame), 8, 3)
+#            out = cvCreateImage(cvGetSize(frame), 8, 3)
 
 
-            return out
+#            return out
 
     def _draw(self, src):
         '''

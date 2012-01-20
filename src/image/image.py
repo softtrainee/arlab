@@ -18,12 +18,18 @@ from traits.api import HasTraits, Any, List, Int, Bool
 
 #=============standard library imports ========================
 import wx
+from numpy import asarray, flipud, ndarray
 #=============local library imports  ==========================
 
 from ctypes_opencv import cvConvertImage, cvCloneImage, \
     cvResize, cvFlip, \
-    CV_CVTIMG_SWAP_RB
+    CV_CVTIMG_SWAP_RB, cvCreateImageFromNumpyArray
 from image_helper import load_image, new_dst, grayspace, clone
+from src.image.image_helper import crop
+from ctypes_opencv.interfaces import cvCreateMatNDFromNumpyArray, pil_to_ipl
+from ctypes_opencv.cxcore import cvCreateImage, cvGetImage
+from Image import fromarray
+#from ctypes_opencv.interfaces import ipl_to_pil
 #from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
 #    draw_polygons, find_circles, find_ellipses, clone, crop, draw_contour_list, \
 #    centroid, erode
@@ -42,10 +48,22 @@ class Image(HasTraits):
     _frame = None
 
 #    def load(self, img, swap_rb=True):
-    def load(self, img):
-        if isinstance(img, str):
-            img = load_image(img)
+    def swap_rb(self):
+        cvConvertImage(self.source_frame, self.source_frame, CV_CVTIMG_SWAP_RB)
+        self.frames[0] = self.source_frame
 
+    def load(self, img, swap_rb=False):
+        if isinstance(img, str):
+            img = load_image(img, swap_rb)
+
+        elif isinstance(img, ndarray):
+#            img = cvCreateImageFromNumpyArray(img)
+#            print fromarray(img)
+            img = pil_to_ipl(fromarray(img))
+#            mat = cvCreateMatNDFromNumpyArray(img)
+#            img = cvGetImage(mat)
+
+#            FromNumpyArray(img)
 #        if swap_rb:
 #            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
 
@@ -59,6 +77,22 @@ class Image(HasTraits):
 
     def _get_frame(self):
         return self.source_frame
+
+    def get_array(self, swap_rb=True, cropbounds=None):
+        f = self.source_frame
+        if swap_rb:
+            f = clone(self.source_frame)
+            cvConvertImage(f, f, CV_CVTIMG_SWAP_RB)
+
+
+        a = f.as_numpy_array()
+        if cropbounds:
+            a = a[
+                cropbounds[0]:cropbounds[1],
+                cropbounds[2]:cropbounds[3]
+                ]
+
+        return flipud(a)#[lx / 4:-lx / 4, ly / 4:-ly / 4]
 
     def get_frame(self, flip=False, mirror=False, gray=False, swap_rb=True, clone=False):
 
@@ -99,7 +133,6 @@ class Image(HasTraits):
 #            kw['flag'] = CV_CVTIMG_SWAP_RB
 
         frame = self.get_frame(**kw)
-
         if frame is not None:
             self._frame = frame
             self._bitmap = wx.BitmapFromBuffer(frame.width,
