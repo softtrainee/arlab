@@ -776,7 +776,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if a.id == aid:
                 return a
 
-    def _linear_move_(self, kwargs, block=False, grouped_move=True, sign_correct=True, **kw):
+    def _linear_move_(self, kwargs, block=False, grouped_move=True, sign_correct=True,ratio_correct=True, **kw):
         '''
         '''
         self.configure_group(grouped_move, **kw)
@@ -784,8 +784,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
             key = k[0]
             if sign_correct:
                 axis = self.axes[key]
-
-                val = self._sign_correct(kwargs[k], key) * axis.drive_ratio
+                r=axis.drive_ratio
+                if not ratio_correct:
+                    r=1
+                val = self._sign_correct(kwargs[k], key) * r
                 kwargs[k] = val
 
         if self.mode == 'grouped':

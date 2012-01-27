@@ -53,7 +53,7 @@ class FusionsLogicBoard(CoreDevice):
     update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
 
 
-    initialize_beam = True
+    initialize_beam = False
     initialize_zoom = True
     configure = Button
 

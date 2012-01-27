@@ -116,7 +116,8 @@ class PatternManager(Manager):
         if self.pattern is not None:
             use_image_underlay = True
             if use_image_underlay:
-                img = self.parent.video.get_frame()
+            
+                img = self.parent.video._frame
 
 #                p = '/Users/ross/Desktop/foo2.tiff'
 #                img = Image()
@@ -124,7 +125,6 @@ class PatternManager(Manager):
 
 #                px = float(self.parent._camera_xcoefficients[1])
                 px = float(self.parent._camera_xcoefficients.split(',')[1])
-                print px
                 self.pattern.set_mapping(px)
                 self.pattern.reset_graph(with_image=True)
 #                self.pattern.set_image(img.source_frame)

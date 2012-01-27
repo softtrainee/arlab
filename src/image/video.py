@@ -81,8 +81,8 @@ class Video(Image):
     def _get_frame(self):
         if self.cap is not None:
             with self._lock:
-                src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
-                return load_image(src)
+#                src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
+#                return load_image(src)
 
                 return  cvQueryFrame(self.cap)
     def start_recording(self, path):

@@ -149,15 +149,15 @@ class ExtractionLineManager(Manager):
         self.valve_manager.claim_section(name.split('_')[0], value.lower)
 
     def reload_scene_graph(self):
-
         #remember the explanation settings
         iddict = dict()
         for ev in self.explanation.explanable_items:
             i = ev.identify
             iddict[ev.name] = i
+
         if self.canvas is not None:
             self.canvas.canvas3D.setup()#canvas3D_dir, 'extractionline3D.txt')
-
+            
             #load state
             if self.valve_manager:
                 for k, v in self.valve_manager.valves.iteritems():

@@ -102,17 +102,19 @@ class RemoteHardwareManager(Manager):
         return cp
 
     def validate_address(self, addr):
-
-            addrs = self.application.preferences.get('pychron.hardware.system_lock_addresses')
-            pairs = addrs[1:-1].split(',')
-
-            for p in pairs:
-                k, v = p.split(':')
-                k = k.strip()
-                v = v.strip()
-                if v[1:-1] == addr:
-                    return k
-            self.warning('You are not using an approved ip address {}'.format(addr))
+            if self.command_processor.system_lock:
+                addrs = self.application.preferences.get('pychron.hardware.system_lock_addresses')
+                pairs = addrs[1:-1].split(',')
+    
+                for p in pairs:
+                    k, v = p.split(':')
+                    k = k.strip()
+                    v = v.strip()
+                    if v[1:-1] == addr:
+                        return k
+                self.warning('You are not using an approved ip address {}'.format(addr))
+            else:
+                return addr
 
     def lock_by_address(self, addr, lock=True):
         if lock:

@@ -52,15 +52,15 @@ class _ImageEditor(Editor):
         '''
 
         obj = self.value
-
-        if obj.frames:
-            return obj.frames
-
+        try:
+            if obj.frames:
+                return obj.frames
+        except AttributeError:
+            pass
     def _create_control(self, parent, track_mouse=False):
         '''
         '''
         panel = Panel(parent, -1, style=CLIP_CHILDREN)
-
 
         panel.Bind(EVT_IDLE, self.onIdle)
         if track_mouse:

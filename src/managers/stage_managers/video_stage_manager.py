@@ -151,11 +151,9 @@ class VideoStageManager(StageManager, Videoable):
     def kill(self):
         '''
         '''
-        print 'adsf'
         super(VideoStageManager, self).kill()
         self.canvas.camera.save_calibration()
         self.video.close(user='underlay')
-        print 'sdfsdafa'
         for s in self._stage_maps:
             s.dump_correction_file()
 
@@ -216,7 +214,8 @@ class VideoStageManager(StageManager, Videoable):
 
     def _move_to_hole_hook(self, holenum, correct):
         if correct:
-            args = self._autocenter(holenum=holenum)
+            time.sleep(0.5)
+            args = self._autocenter(holenum=holenum, ntries=3)
             if args:
                 #add an adjustment value to the stage map
                 self._stage_map.set_hole_correction(holenum, *args)
@@ -224,20 +223,25 @@ class VideoStageManager(StageManager, Videoable):
 
 
     @on_trait_change('autocenter_button')
-    def _autocenter(self, holenum=None):
+    def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
         if self.auto_center:
-            newpos = self.machine_vision_manager.search(self.stage_controller._x_position,
-                                                        self.stage_controller._y_position,
-                                                        holenum=holenum
-                                                        )
-            if newpos:
-                #nx = self.stage_controller._x_position + newpos[0]
-                #ny = self.stage_controller._y_position + newpos[1]
-#                self._point = 0
-
-                self.linear_move(*newpos, block=True, calibrated_space=False)
-                return newpos
+            for _t in range(ntries):
+                newpos = self.machine_vision_manager.search(self.stage_controller._x_position,
+                                                            self.stage_controller._y_position,
+                                                            holenum=holenum
+                                                            )
+                if newpos:
+                    #nx = self.stage_controller._x_position + newpos[0]
+                    #ny = self.stage_controller._y_position + newpos[1]
+    #                self._point = 0
+                
+                    #newpos=(newpos[0]+0.01, newpos[1]+0.01)
+                    self.linear_move(*newpos, block=True, calibrated_space=False 
+                                     #ratio_correct=False
+                                 )
+                    time.sleep(0.25)
+            return newpos
 
 #===============================================================================
 # handlers
@@ -388,8 +392,8 @@ if __name__ == '__main__':
 
 
     setup('stage_manager')
-    s = VideoStageManager(name='diodestage',
-                     configuration_dir_name='diode',
+    s = VideoStageManager(name='co2stage',
+                     configuration_dir_name='co2',
                      )
 
 #    i = Initializer()
