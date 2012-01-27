@@ -182,6 +182,7 @@ class StageManager(Manager):
             sm = StageMap(file_path=path,
 
                         )
+            sm.load_correction_file()
             self._stage_maps.append(sm)
 
         self._stage_map = sm
@@ -400,7 +401,6 @@ class StageManager(Manager):
                                          editor=EnumEditor(name='object.stage_maps')),
                                     Item('_stage_map',
                                           show_label=False),
-                                    #Item('program_points', show_label=False),
 
                                      spring),
                              Item('canvas', style='custom', editor=editor ,
@@ -419,7 +419,7 @@ class StageManager(Manager):
                     #title = self.title,
                     x=10,
                     y=20,
-#                    handler = self.handler_klass
+#                    handler=self.handler_klass
                     )
 #===============================groups=====================
     def _hole__group__(self):
@@ -454,6 +454,11 @@ class StageManager(Manager):
         '''
         '''
         return Group(
+                     Item('pattern_manager',
+                          label='Pattern',
+                          editor=InstanceEditor(view='execute_view'),
+                           show_label=False, style='custom'
+                          ),
 
                      Group(
 
@@ -477,11 +482,11 @@ class StageManager(Manager):
                      Item('tray_calibration_manager',
                           label='Calibration',
                            show_label=False, style='custom'),
-                     Item('pattern_manager',
-                          label='Pattern',
-                          editor=InstanceEditor(view='execute_view'),
-                           show_label=False, style='custom'
-                          ),
+#                     Item('pattern_manager',
+#                          label='Pattern',
+#                          editor=InstanceEditor(view='execute_view'),
+#                           show_label=False, style='custom'
+#                          ),
 
 #                     Item('output', show_label = False, style = 'custom'),
 
@@ -710,19 +715,25 @@ class StageManager(Manager):
     def _move_to_hole(self, key):
         self.info('Move to hole {}'.format(key))
 #        holes = self._stage_map.holes
-        pos = self._stage_map.get_hole_pos(key)
+        pos = self._stage_map.get_corrected_hole_pos(key)
+        if pos is not None:
+            correct = True
 
-        #map the position to calibrated space
-        pos = self._map_calibrated_space(pos, key=key)
-        self.stage_controller.linear_move(block=True, *pos)
+            if abs(pos[0]) < 1e-6:
+                pos = self._stage_map.get_hole_pos(key)
+                pos = self._map_calibrated_space(pos, key=key)
+            else:
+                self.info('using previously calculated corrected position')
+                correct = False
+            #map the position to calibrated space
+            self.stage_controller.linear_move(block=True, *pos)
 
+            self._move_to_hole_hook(key, correct)
 
-        self._move_to_hole_hook()
+            self.info('Move complete')
+            self.hole_thread = None
 
-        self.info('Move complete')
-        self.hole_thread = None
-
-    def _move_to_hole_hook(self):
+    def _move_to_hole_hook(self, *args):
         pass
     def _move_to_point_hook(self):
         pass

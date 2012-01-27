@@ -24,8 +24,9 @@ import logging
 from paths import root
 from filetools import unique_path
 from globals import use_debug_logger
+from pyface.timer.do_later import do_later
 
-FORMAT = '%(name)-12s: %(asctime)s %(levelname)s %(message)s'
+FORMAT = '%(name)-12s: %(asctime)s %(levelname)-7s (%(threadName)-10s) %(message)s'
 FORMATTER = logging.Formatter(FORMAT)
 
 LEVEL = logging.DEBUG
@@ -46,11 +47,14 @@ class DisplayHandler(logging.StreamHandler):
 #            print type(self.output._display), not isinstance(self.output._display, wx._core._wxPyDeadObject)
 #            if not isinstance(self.output._display, wx._core._wxPyDeadObject):
 
-            self.output.add_text(
-                                     color='red' if record.levelno > 20 else 'black',
+            do_later(self.output.add_text, color='red' if record.levelno > 20 else 'black',
                                  msg=msg,
-                                 kind='warning' if record.levelno > 20 else 'info',
-                                 )
+                                 kind='warning' if record.levelno > 20 else 'info',)
+#            self.output.add_text(
+#                                     color='red' if record.levelno > 20 else 'black',
+#                                 msg=msg,
+#                                 kind='warning' if record.levelno > 20 else 'info',
+#                                 )
 #def clean_logdir(p, cnt):
 #    def get_basename(p):
 #        p = os.path.basename(p)

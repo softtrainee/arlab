@@ -16,7 +16,7 @@ limitations under the License.
 #from __future__ import with_statement
 #============= enthought library imports =======================
 from traits.api import Bool, Range, Enum, Color, Tuple
-from traitsui.api import  Item, Group
+from traitsui.api import  Item, Group, HGroup
 
 #============= standard library imports ========================
 
@@ -26,6 +26,7 @@ from src.managers.plugins.manager_preferences_page import ManagerPreferencesPage
 class LaserPreferencesPage(ManagerPreferencesPage):
 
     use_video = Bool(False)
+    record_lasing = Bool(False)
     show_grids = Bool(True)
     show_laser_position = Bool(True)
     show_desired_position = Bool(True)
@@ -40,10 +41,15 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     auto_center = Bool(False)
     crosshairs_offset = Tuple(0, 0)
     crosshairs_offset_color = Color('blue')
+
+    record_patterning = Bool(False)
+    show_patterning = Bool(True)
     def get_additional_groups(self):
         grp = Group(
-               Item('use_video'),
-               Item('auto_center', visible_when='use_video'),
+               Group(Item('use_video'),
+                     Item('auto_center', enabled_when='use_video'),
+                     Item('record_lasing', label='Record Lasing', enabled_when='use_video'),
+                      show_border=True, label='Video'),
                Item('show_map'),
                Item('show_grids'),
                Item('show_laser_position'),
@@ -57,6 +63,8 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                Item('scaling'),
                label='Stage',
                )
+        patgrp = Group(Item('record_patterning'),
+                       Item('show_patterning'), label='Pattern')
 
-        return [grp]
+        return [grp, patgrp]
 #============= EOF ====================================

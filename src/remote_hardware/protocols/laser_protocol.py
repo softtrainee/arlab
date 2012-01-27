@@ -40,7 +40,7 @@ class LaserProtocol:
         'SetHomeZ': None,
         'GoToHole': '1',
         'GetJogProcedures': None,
-        'JogName': 'Foo',
+        'DoJog': ('addc', 10),
         'AbortJog': None,
         'SetBeamDiameter': '1',
         'GetBeamDiameter': None,

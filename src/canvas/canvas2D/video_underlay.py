@@ -41,6 +41,7 @@ class VideoUnderlay(AbstractOverlay):
                                          flip=not self.flip,
                                          swap_rb=self.swap_rb,
                                          mirror=self.mirror,
+
                                          )
             if bitmap:
                 x = component.x

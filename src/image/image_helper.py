@@ -89,6 +89,10 @@ def lines(src, thresh=0):
         cvLine(dst, line[0], line[1], CV_RGB(255, 0, 0), 3, 8)
 
     return dst, lines
+def copy(src):
+    dst = new_dst(src)
+    cvCopy(src, dst)
+    return dst
 
 def crop(src, x, y, w, h):
     cvSetImageROI(src, new_rect(x, y, w, h))
@@ -232,6 +236,11 @@ def draw_contour_list(src, clist, external_color=(255, 0, 0),
                    255,
                    thickness=1
                    )
+def draw_lines(src, lines, color=(255, 0, 0), thickness=3):
+    if lines:
+        for p1, p2 in lines:
+
+            cvLine(src, tuple(map(int, p1)), tuple(map(int, p2)), convert_color(color), thickness, 8)
 
 def draw_rectangle(src, x, y, w, h, color=(255, 0, 0), thickness=1):
     '''
@@ -274,8 +283,15 @@ def new_video_writer(path, fps=None, frame_size=None):
         frame_size = (640, 480)
 
     w = cvCreateVideoWriter(path,
-                         # CV_FOURCC('P','I','M','1'),
-                          CV_FOURCC('X', 'v', 'i', 'D'),
+
+#                          CV_FOURCC('P', 'I', 'M', '1'),
+#                          CV_FOURCC('X', 'v', 'i', 'D'),
+#                          CV_FOURCC('D', 'I', 'V', 'X'),
+#                          CV_FOURCC('M', 'J', 'P', 'G'),
+#                          CV_FOURCC('I', '4', '2', '0'),
+                          CV_FOURCC('D', 'I', 'B', ' '),
+#                          CV_FOURCC('J', 'P', 'E', 'G'),
+
                           fps,
                           CvSize(*frame_size),
                           True
@@ -517,7 +533,6 @@ def load_image(path, swap=False):
     '''
     '''
     frame = cvLoadImage(path)
-
     if swap:
         cvConvertImage(frame, frame, CV_CVTIMG_SWAP_RB)
     return frame

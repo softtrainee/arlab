@@ -20,11 +20,16 @@ import select
 import socket
 import time
 import cPickle as pickle
+from numpy import array_split
+import zlib
+import zmq
 
 class VideoServer(HasTraits):
     video = Instance(Video)
-    host = 'localhost'
+#    host = '129.138.12.141'
+    host = '127.0.0.1'
     port = 1084
+
     _frame = None
     def _video_default(self):
         v = Video()
@@ -48,43 +53,90 @@ class VideoServer(HasTraits):
             #  need to wait moment allowing the _broadcast thread 
             #  a chance to acquire the lock
 
-            self.new_frame_ready.wait(1e-6)
+            self.new_frame_ready.wait(1e-7)
             self.new_frame_ready.set()
 
+    def _zmq_socket_factory(self, host, port):
+        context = zmq.Context()
+        sock = context.socket(zmq.PUB)
+
+        sock.bind('tcp://{}:{}'.format(host, port))
+        return sock
+
+    def _socket_factory(self, host, port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind((host, port))
+#        sock.listen(2)
+
+        return sock
+
+    def _send_data(self, sock, data):
+#        print sock.accept()
+        print sock.recvfrom(1500)
 
     def _broadcast(self):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((self.host, self.port))
+#        sock = self._zmq_socket_factory(self.host, self.port)
+        inp = []
+        for i in range(4):
+            sock = self._socket_factory(self.host, self.port + i)
+            inp.append(sock)
 
-        sock.listen(2)
+#        sock.bind((self.host, self.port))
 
-        inp = [sock]
+#        sock.listen(2)
+#        while 1:
+#            if self.new_frame_ready.isSet():
+#                with self.lock:
+#                    #if sock.recv(1024):
+#                    sock.send('<frame>' + pickle.dumps(self._frame.as_numpy_array()))
+#
+#                self.new_frame_ready.clear()
+#
+#        inp = [sock]
         while 1:
-            inputready, _, _ = select.select(inp, [], [])
-            for s in inputready:
-                if s == sock:
-                    # handle the sock socket
-                    client, _address = sock.accept()
-                    inp.append(client)
-                else:
-                    if self.new_frame_ready.isSet():
-                        data = s.recv(1024)
-                        if data:
-                            with self.lock:
-                                #print self._frame.as_numpy_array().tostring()
-                                d = self._frame.as_numpy_array()
-                                try:
-                                    s.send(pickle.dumps(d))
-                                except socket.error, e:
-                                    print e
-                            self.new_frame_ready.clear()
-                        else:
-                            s.close()
-                            inp.remove(s)
+            inputready, out, _ = select.select(inp, [], [], 0.25)
+            for o in out:
+                da = 'foo'
+                t = Thread(target=self._send_data, args=(o, da))
+                t.start()
+                t.join()
+
+#            for s in inputready:
+#                if s == sock:
+#                    # handle the sock socket
+#                    client, _address = sock.accept()
+#                    inp.append(client)
+
+#            for so in out:
+#                if self.new_frame_ready.isSet():
+#                    with self.lock:
+#                        #print self._frame.as_numpy_array().tostring()
+#                        d = self._frame.as_numpy_array()
+#                        try:
+#                            so.send(pickle.dumps(d))
+#                        except socket.error, e:
+#                            so.close()
+#                            inp.remove(so)
+#                    self.new_frame_ready.clear()
+
+#                else:
+##                    print 'seeend'
+#                    if self.new_frame_ready.isSet():
+#                       # data = s.recv(1024)
+#                       # if data:
+#                        with self.lock:
+#                            #print self._frame.as_numpy_array().tostring()
+#                            d = self._frame.as_numpy_array()
+#                            try:
+#                                s.send(pickle.dumps(d))
+#                            except socket.error, e:
+#                                print e
+#                        self.new_frame_ready.clear()
+#                        else:
+#                            s.close()
+#                            inp.remove(s)
 
         sock.close()
-
 
 
 

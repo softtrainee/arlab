@@ -14,25 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, String, DelegatesTo, Property, Button, Float, Bool
-from traitsui.api import Group, Item
+from traits.api import Instance, String, DelegatesTo, Property, Button, Float, Bool, on_trait_change
+from traitsui.api import Group, Item, HGroup
+from pyface.timer.api import do_later
+from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
-import sys
-import os
-sys.path.append(os.path.join(os.path.expanduser('~'), 'Programming', 'mercurial', 'pychron_beta'))
-#============= local library imports  ==========================
+import time
+from threading import Thread, Condition, Timer
+#import sys
+#import os
 
-from stage_manager import StageManager
+#sys.path.append(os.path.join(os.path.expanduser('~'), 'Programming', 'mercurial', 'pychron_beta'))
+#============= local library imports  ==========================
+from src.helpers.filetools import unique_path
+from src.helpers.paths import video_dir, snapshot_dir
 from src.helpers.logger_setup import setup
 from src.managers.videoable import Videoable
-from video_component_editor import VideoComponentEditor
 from src.managers.stage_managers.camera_calibration_manager import CameraCalibrationManager
-import time
-from threading import Thread, Condition
-from pyface.timer.api import do_later
 from src.managers.stage_managers.machine_vision.machine_vision_manager import MachineVisionManager
-from apptools.preferences.preference_binding import bind_preference
 from src.managers.stage_managers.machine_vision.autofocus_manager import AutofocusManager
+
+from stage_manager import StageManager
+from video_component_editor import VideoComponentEditor
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -76,20 +79,55 @@ class VideoStageManager(StageManager, Videoable):
     pxpercmx = DelegatesTo('camera_calibration_manager')
     pxpercmy = DelegatesTo('camera_calibration_manager')
 
+    auto_center = Bool(True)
 
-    auto_center = Bool(False)
-
+    autocenter_button = Button('AutoCenter')
 
     autofocus_manager = Instance(AutofocusManager)
 
-
     machine_vision_manager = Instance(MachineVisionManager)
 
+    snapshot_button = Button('Snapshot')
+    auto_save_snapshot = Bool(True)
+
+    zoom_canvas_button = Button
+    def _zoom_canvas_button_fired(self):
+        print 'asdfsafd'
+        self.canvas.set_image_zoom(10)
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
         bind_preference(self, 'auto_center', '{}.auto_center'.format(pref_id))
+        bind_preference(self.pattern_manager, 'record_patterning', '{}.record_patterning'.format(pref_id))
+        bind_preference(self.pattern_manager, 'show_patterning', '{}.show_patterning'.format(pref_id))
 
+    def start_recording(self, path=None, basename='vm_recording', use_dialog=False, user='remote'):
+        '''
+        '''
+        self.info('start video recording ')
+        if path is None:
+            if use_dialog:
+                path = self.save_file_dialog()
+            else:
+                path, _ = unique_path(video_dir, 'vm_recording', filetype='avi')
+
+        self.info('saving recording to path {}'.format(path))
+
+        self.video.open(user=user)
+
+        self.video.start_recording(path)
+
+    def stop_recording(self, user='remote'):
+        '''
+        '''
+        self.info('stop video recording')
+#        self.stop()
+        self.video.stop_recording()
+
+        #delay briefly before deleting the capture object
+        t = Timer(4, self.video.close, kwargs=dict(user=user))
+        t.start()
+#        self.video.close(user=user)
 
     def update_camera_params(self, obj, name, old, new):
         if name == 'focus_z':
@@ -113,9 +151,13 @@ class VideoStageManager(StageManager, Videoable):
     def kill(self):
         '''
         '''
+        print 'adsf'
         super(VideoStageManager, self).kill()
         self.canvas.camera.save_calibration()
         self.video.close(user='underlay')
+        print 'sdfsdafa'
+        for s in self._stage_maps:
+            s.dump_correction_file()
 
     def _canvas_factory(self):
         '''
@@ -129,6 +171,7 @@ class VideoStageManager(StageManager, Videoable):
         v = VideoLaserTrayCanvas(parent=self,
                                padding=30,
                                video=video,
+                               use_camera=True,
                                map=self._stage_map)
         return v
 
@@ -147,7 +190,12 @@ class VideoStageManager(StageManager, Videoable):
                                Item('camera_ycoefficients'),
                                Item('drive_xratio'),
                                Item('drive_yratio'),
+                               HGroup(Item('auto_center', label='Enabled'),
+                                      Item('autocenter_button', show_label=False, enabled_when='auto_center')),
+                               HGroup(Item('snapshot_button', show_label=False),
+                                      Item('auto_save_snapshot')),
                                Item('autofocus_manager', show_label=False, style='custom'),
+                               Item('zoom_canvas_button', show_label=False),
                                #HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
 #                               Item('pxpercmx'),
 #                               Item('pxpercmy'),
@@ -163,30 +211,47 @@ class VideoStageManager(StageManager, Videoable):
         return g
 
     def _move_to_point_hook(self):
-        if self.autocenter():
+        if self._autocenter():
             self._point = 0
 
-    def _move_to_hole_hook(self):
-        if self.autocenter():
-            self._hole = 0
+    def _move_to_hole_hook(self, holenum, correct):
+        if correct:
+            args = self._autocenter(holenum=holenum)
+            if args:
+                #add an adjustment value to the stage map
+                self._stage_map.set_hole_correction(holenum, *args)
+#            self._hole = 0
 
-    def autocenter(self):
+
+    @on_trait_change('autocenter_button')
+    def _autocenter(self, holenum=None):
         #use machine vision to calculate positioning error
         if self.auto_center:
             newpos = self.machine_vision_manager.search(self.stage_controller._x_position,
-                                                                                self.stage_controller._y_position
-                                                                                )
+                                                        self.stage_controller._y_position,
+                                                        holenum=holenum
+                                                        )
             if newpos:
                 #nx = self.stage_controller._x_position + newpos[0]
                 #ny = self.stage_controller._y_position + newpos[1]
-                self._point = 0
+#                self._point = 0
 
-                self.linear_move(*newpos, calibrated_space=False)
-                return True
+                self.linear_move(*newpos, block=True, calibrated_space=False)
+                return newpos
 
 #===============================================================================
 # handlers
 #===============================================================================
+    def _snapshot_button_fired(self):
+
+        if self.auto_save_snapshot:
+            path, _cnt = unique_path(root=snapshot_dir, base='snapshot', filetype='jpg')
+        else:
+            path = self.save_file_dialog()
+        if path:
+            self.info('saving snapshot {}'.format(path))
+            self.video.record_frame(path, swap_rb=False)
+
     def _calculate_fired(self):
         t = Thread(target=self._calculate_camera_parameters)
         t.start()

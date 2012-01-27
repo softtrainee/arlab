@@ -34,6 +34,10 @@ class Monitor(ConfigLoadable):
         config = self.get_configuration()
         self.set_attribute(config, 'sample_delay',
                            'General', 'sample_delay', cast='int', optional=True)
+        self._load_hook(config)
+
+    def _load_hook(self, *args):
+        pass
 
     def stop(self):
         '''

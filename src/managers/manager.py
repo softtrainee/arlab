@@ -71,8 +71,9 @@ class Manager(ConfigLoadable):
 
     handler_klass = ManagerHandler
     application = Any
-    
+
     devices = List
+    flags = List
 
     def __init__(self, *args, **kw):
         '''
@@ -93,7 +94,7 @@ class Manager(ConfigLoadable):
         def _loop():
             start = time.time()
             self.info('Window set to close after {} min'.format(self.close_after_minutes))
-            
+
             now = time.time()
             while  now - start < (self.close_after_minutes * 60) and not self._killed:
                 time.sleep(1)
@@ -120,10 +121,10 @@ class Manager(ConfigLoadable):
     def close(self, is_ok):
 #        print self.name, 'close', is_ok
         return True
-    
+
     def _kill_hook(self):
         pass
-    
+
     def kill(self, **kw):
         '''
 
@@ -132,7 +133,7 @@ class Manager(ConfigLoadable):
         if not self._killed:
             self.info('killing')
             self._kill_hook()
-            
+
             self._killed = True
 
             for _k, man in self.get_managers():
@@ -198,6 +199,35 @@ class Manager(ConfigLoadable):
             self.warning('Problem with manager class {} source'.format(klass))
         return class_factory
 
+#===============================================================================
+#  flags
+#===============================================================================
+    def add_flag(self, f):
+        from src.hardware.flag import Flag
+
+        self.flags.append(Flag(f))
+
+    def get_flag(self, name):
+        return next(([f for f in self.flags if f == name]), None)
+#    def get_flag_state(self, name):
+#        return self._flag(name, 'get')
+#
+#    def set_flag(self, name):
+#        self._flag(name, 'set')
+#
+#    def clear_flag(self, name):
+#        self._flag(name, 'clear')
+
+#    def _flag(self, name, func):
+#        f = next(([f for f in self.flags if f == name]), None)
+#        if f is not None:
+#            getattr(f, func)()
+#        else:
+#            self.warning('Invalid flag {}'.format(name))
+#===============================================================================
+# 
+#===============================================================================
+
     def create_device(self, device_name, gdict=None, dev_class=None, prefix=None):
         '''
         '''
@@ -227,7 +257,7 @@ class Manager(ConfigLoadable):
             if prefix:
                 device_name = ''.join((prefix, device_name))
 
-            
+
             if device_name in self.traits():
                 self.trait_set(**{device_name:device})
             else:

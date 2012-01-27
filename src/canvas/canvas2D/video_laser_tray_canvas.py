@@ -44,4 +44,5 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
         if self.use_camera:
             self.camera.current_position = (x, y)
 
+
 #============= EOF ====================================

@@ -73,9 +73,13 @@ plugins_dir = os.path.join(root, 'plugins')
 map_dir = os.path.join(setup_dir, 'tray_maps')
 user_points_dir = os.path.join(map_dir, 'user_points')
 
+positioning_error_dir = os.path.join(data_dir, 'positioning_error')
 snapshot_dir = os.path.join(data_dir, 'snapshots')
+video_dir = os.path.join(data_dir, 'videos')
 
 hidden_dir = os.path.join(root, '.hidden')
+
+
 
 def rec_make(pi):
     if not os.path.exists(pi):

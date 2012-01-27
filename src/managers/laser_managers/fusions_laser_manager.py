@@ -186,19 +186,33 @@ class FusionsLaserManager(LaserManager):
 
             self.stage_manager.move_to_hole(holenumber)
 
-    def enable_laser(self, mode='normal'):
-        '''
-        '''
+    def _enable_hook(self):
 
-        is_ok = self.logic_board._enable_laser_()
-        super(FusionsLaserManager, self).enable_laser(is_ok=is_ok)
-        return is_ok
+        return self.logic_board._enable_laser_()
+#        if self.logic_board._enable_laser_():
+#            if self.record_lasing:
+#                self.stage_manager.start_recording()
+#            return True
 
-    def disable_laser(self):
-        '''
-        '''
-        super(FusionsLaserManager, self).disable_laser()
+    def _disable_hook(self):
         return self.logic_board._disable_laser_()
+
+#        if self.record_lasing:
+#            self.stage_manager.stop_recording()
+#        return
+#    def enable_laser(self, mode='normal'):
+#        '''
+#        '''
+#
+#        is_ok = self.logic_board._enable_laser_()
+#        super(FusionsLaserManager, self).enable_laser(is_ok=is_ok)
+#        return is_ok
+#
+#    def disable_laser(self):
+#        '''
+#        '''
+#        super(FusionsLaserManager, self).disable_laser()
+#        return self.logic_board._disable_laser_()
 
 #    def show_step_heater(self):
 #

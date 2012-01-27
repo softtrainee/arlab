@@ -48,6 +48,7 @@ class LaserPlugin(CorePlugin):
         m = getattr(factory, self.klass[1])()
         bind_preference(m, 'use_video', '{}.use_video'.format(self.id))
         bind_preference(m, 'close_after_minutes', '{}.close_after'.format(self.id))
+        bind_preference(m, 'record_lasing', '{}.record_lasing'.format(self.id))
 
         m.stage_manager.bind_preferences(self.id)
 

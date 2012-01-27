@@ -32,7 +32,7 @@ class LaserMonitor(Monitor):
     max_coolant_temp = Float(25)
 
     gntries = 0
-    def load_additional_args(self, config):
+    def _load_hook(self, config):
         '''
         '''
 

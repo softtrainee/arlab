@@ -60,10 +60,17 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
     def Enable(self, manager, *args):
         err = manager.enable_laser()
+
+        if manager.record_lasing:
+            manager.stage_manager.start_recording()
+
         return self.error_response(err)
 
     def Disable(self, manager, *args):
         err = manager.disable_laser()
+        if manager.record_lasing:
+            manager.stage_manager.stop_recording()
+
         return self.error_response(err)
 
     def SetXY(self, manager, data, *args):

@@ -16,7 +16,8 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import Property, Dict, Float, Any, Instance
 from traitsui.api import View, VGroup, Item, RangeEditor
-from pyface.timer.api import Timer
+#from pyface.timer.api import Timer
+from src.helpers.timer import Timer
 #============= standard library imports ========================
 import os
 
@@ -106,6 +107,7 @@ class MotionController(CoreDevice):
         if not self._moving_():
             self.timer.Stop()
 
+#        self.info('setting x={:3f}, y={:3f}'.format(x, y))
         self.parent.canvas.set_stage_position(x, y)
 
     def _get_x(self):

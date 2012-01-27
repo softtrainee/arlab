@@ -164,6 +164,16 @@ class FusionsLogicBoard(CoreDevice):
 #==============================================================================
 #laser methods
 #==============================================================================
+    def repeat_command(self, callback, ntries=3):
+
+        resp = callback()
+        i = 0
+
+        while resp is None and i < ntries:
+            i += 1
+            resp = callback()
+
+        return resp
 
     def check_interlocks(self):
         '''
@@ -172,29 +182,32 @@ class FusionsLogicBoard(CoreDevice):
 
         if not self.simulation:
             cmd = self._build_command('INTLK')
-            if cmd is not None:
-                resp = None
-                i = 0
-                ntries = 3
-                while resp is None and i < ntries:
-                    resp = self._parse_response(self.ask(cmd, verbose=True, delay=100))
-                    try:
-                        resp = int(resp)
-                    except:
-                        resp = None
-                    i += 1
 
-                if resp is None:
-                    return ['Failed Response']
+            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)))
+#            if cmd is not None:
 
-                if resp != 0:
-                    LOCK_MAP = ['External', 'E-stop', 'Coolant Flow']
-                    rbits = []
-                    for i in range(16):
-                        if (resp >> i) & 1 == 1:
-                            rbits.append(i)
+#                resp = None
+#                i = 0
+#                ntries = 3
+#                while resp is None and i < ntries:
+#                    resp = self._parse_response(self.ask(cmd, verbose=True, delay=100))
+#                    try:
+#                        resp = int(resp)
+#                    except:
+#                        resp = None
+#                    i += 1
 
-                    lock_bits = [LOCK_MAP[cb] for cb in rbits]
+            if resp is None:
+                return ['Failed Response']
+
+            if resp != 0:
+                LOCK_MAP = ['External', 'E-stop', 'Coolant Flow']
+                rbits = []
+                for i in range(16):
+                    if (resp >> i) & 1 == 1:
+                        rbits.append(i)
+
+                lock_bits = [LOCK_MAP[cb] for cb in rbits]
 
 
         return lock_bits
@@ -205,11 +218,19 @@ class FusionsLogicBoard(CoreDevice):
         interlocks = self.check_interlocks()
         if not interlocks:
             cmd = self._build_command('ENBL 1')
-            if cmd is not None:
-                resp = self._parse_response(self.ask(cmd, delay=100))
-
-                if resp == 'OK' or self.simulation:
-                    return True
+            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)))
+            if resp == 'OK' or self.simulation:
+                return True
+#            cmd = self._build_command('ENBL 1')
+#            
+#            
+#            
+#            if cmd is not None:
+##                resp = self._parse_response(self.ask(cmd, delay=100))
+#                resp = self._parse_response(self.ask(cmd))
+#
+#                if resp == 'OK' or self.simulation:
+#                    return True
 
         else:
             self._disable_laser_()
@@ -221,13 +242,23 @@ class FusionsLogicBoard(CoreDevice):
         '''
         '''
         cmd = self._build_command('ENBL 0')
-        if cmd is not None:
+        ntries = 3
+        for i in range(ntries):
+            resp = self.repeat_command(lambda :self._parse_response(self.ask(cmd, verbose=True)))
+            if resp is None:
+                self.warning('LASER NOT DISABLED {}'.format(i + 1))
+            else:
+                break
 
-            resp = self._parse_response(self.ask(cmd))
-#            resp = self._parse_response(self.ask(cmd, delay=100))
-
-            if resp == 'OK' or self.simulation:
-                return True
+            if self.simulation:
+                break
+#        if cmd is not None:
+#
+#            resp = self._parse_response(self.ask(cmd))
+##            resp = self._parse_response(self.ask(cmd, delay=100))
+#
+#            if resp == 'OK' or self.simulation:
+#                return True
 
 
     def _set_laser_power_(self, *args, **kw):

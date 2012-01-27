@@ -50,6 +50,11 @@ class SystemHandler(BaseRemoteHardwareHandler):
             if protocol is None:
                 protocol = 'src.hardware.core.i_core_device.ICoreDevice'
             dev = self.application.get_service(protocol, 'name=="{}"'.format(name))
+            if dev is None:
+                #possible we are trying to get a flag
+                m = self.get_manager()
+                dev = m.get_flag(name)
+
         else:
             dev = DummyDevice()
         return dev

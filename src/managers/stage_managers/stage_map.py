@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Property, Float, List, Enum
+from traits.api import HasTraits, Str, Property, Float, List, Enum, Button, on_trait_change
 from traitsui.api import View, Item, TabularEditor, HGroup
 
 #============= standard library imports ========================
@@ -22,10 +22,15 @@ import os
 #============= local library imports  ==========================
 from src.helpers.filetools import parse_file
 from traitsui.tabular_adapter import TabularAdapter
+from src.helpers.paths import hidden_dir
+import pickle
+from src.loggable import Loggable
 class SampleHole(HasTraits):
     id = Str
     x = Float
     y = Float
+    x_cor = Float(0)
+    y_cor = Float(0)
     render = Str
     shape = Str
     dimension = Float
@@ -33,9 +38,10 @@ class SampleHole(HasTraits):
 class SampleHoleAdapter(TabularAdapter):
     columns = [('ID', 'id'),
                ('X', 'x'), ('Y', 'y'),
+               ('XCor', 'x_cor'), ('YCor', 'y_cor'),
                 ('Render', 'render')]
 
-class StageMap(HasTraits):
+class StageMap(Loggable):
     file_path = Str
     #holes = Dict
     name = Property(depends_on='file_path')
@@ -48,13 +54,61 @@ class StageMap(HasTraits):
     g_dimension = Float(enter_set=True, auto_set=False)
     g_shape = Enum('circle', 'square')
 
+    clear_corrections = Button
+    def _get_hole(self, key):
+        return next((h for h in self.sample_holes if h.id == key), None)
+
     def get_hole_pos(self, key):
         return next(((h.x, h.y) for h in self.sample_holes if h.id == key), None)
 
+    def get_corrected_hole_pos(self, key):
+        return next(((h.x_cor, h.y_cor) for h in self.sample_holes if h.id == key), None)
+
+    def load_correction_file(self):
+        p = os.path.join(hidden_dir, '{}_correction_file'.format(self.name))
+        if os.path.isfile(p):
+            cors = None
+            with open(p, 'rb') as f:
+                try:
+                    cors = pickle.load(f)
+                except pickle.PickleError, e:
+                    print e
+
+            if cors:
+
+                self.info('loaded correction file {}'.format(p))
+                for i, x, y in cors:
+                    h = self._get_hole(i)
+                    if x is not None and y is not None:
+                        h.x_cor = x
+                        h.y_cor = y
+
+    @on_trait_change('clear_corrections')
+    def clear_correction_file(self):
+        p = os.path.join(hidden_dir, '{}_correction_file'.format(self.name))
+        if os.path.isfile(p):
+            os.remove(p)
+            self.info('removed correction file {}'.format(p))
+
+        for h in self.sample_holes:
+            h.x_cor = 0
+            h.y_cor = 0
+    def dump_correction_file(self):
+
+        p = os.path.join(hidden_dir, '{}_correction_file'.format(self.name))
+        with open(p, 'wb') as f:
+            pickle.dump([(h.id, h.x_cor, h.y_cor) for h in self.sample_holes], f)
+
+        self.info('saved correction file {}'.format(p))
 #    def _get_holes(self):
 #        keys = [s.id for s in self.sample_holes]
 #        values = [(s.x, s.y) for s in self.sample_holes]
 #        return dict((keys, values))
+    def set_hole_correction(self, hn, x_cor, y_cor):
+        hole = next((h for h in self.sample_holes if h.id == hn), None)
+        if hole is not None:
+            hole.x_cor = x_cor
+            hole.y_cor = y_cor
 
     def _get_bitmap_path(self):
 
@@ -130,14 +184,16 @@ class StageMap(HasTraits):
 
         editor = TabularEditor(adapter=SampleHoleAdapter())
         v = View(
-                 HGroup(Item('g_shape', show_label=False),
-                        Item('g_dimension', show_label=False)
+                 HGroup(Item('clear_corrections', show_label=False)),
+                 HGroup(Item('g_shape'),
+                        Item('g_dimension'), show_labels=False
                         ),
 
                  Item('sample_holes',
                       show_label=False, editor=editor),
                  height=500, width=250,
-                 resizable=True
+                 resizable=True,
+                 title=self.name
                  )
         return v
 #============= EOF =============================================

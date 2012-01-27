@@ -32,9 +32,13 @@ from src.managers.stage_managers.pattern.patterns import Pattern, \
      RandomPattern, PolygonPattern, ArcPattern
 import time
 from pyface.timer.do_later import do_later
+from src.canvas.canvas2D.image_underlay import ImageUnderlay
+from src.image.image import Image
+from src.image.image_helper import clone, copy
 class PatternManager(Manager):
-    kind = Property(Enum('Arc',
+    kind = Property(Enum(
                          'Polygon',
+                         'Arc',
 
                          'LineSpiral',
                 'SquareSpiral',
@@ -42,8 +46,8 @@ class PatternManager(Manager):
                 'Random'
                 ), depends_on='_kind')
     _kind = Enum(
-                 'Arc',
                  'Polygon',
+                 'Arc',
                  'LineSpiral',
                 'SquareSpiral',
                 'Random'
@@ -60,15 +64,14 @@ class PatternManager(Manager):
     design_button = Button('Design')
     pattern_name = Property(depends_on='pattern')
 
-#    show_pattern = Bool(False)
-    show_pattern = Bool(True)
+    show_patterning = Bool(True)
+    record_patterning = Bool(False)
 
-
-    window_x = 0.77
+    window_x = 0.75
     window_y = 0.05
     def _get_pattern_name(self):
         if not self.pattern:
-            return ''
+            return 'Pattern'
         else:
             return self.pattern.name
 
@@ -80,7 +83,6 @@ class PatternManager(Manager):
             self.stop_pattern()
         else:
             self.execute_pattern()
-        self._alive = not self._alive
 
     def _design_button_fired(self):
         self.edit_traits(view='pattern_maker_view', kind='livemodal')
@@ -93,29 +95,44 @@ class PatternManager(Manager):
         self._alive = False
         self.parent.stage_controller.stop()
 
-    def execute_pattern(self, pattern_name=None):#, use_current=False):
+        if self.record_patterning:
+            self.parent.stop_recording()
+
+    def execute_pattern(self, pattern_name=None):
         if pattern_name is not None:
             #open pattern from file
             self.load_pattern(path=os.path.join(pattern_dir,
                                                             '{}.lp'.format(pattern_name)
                                                             ))
-#        elif not use_current:
             #===================================================================
             #for testing
             # path = os.path.join(pattern_dir, 'testpattern.lp')
             # self.load_pattern(path = path)
             #===================================================================
-            #open a file dialog to choose pattern
-#            self.load_pattern()
         elif self.pattern is None:
-#        if self.pattern is None:
+            #open a file dialog to choose pattern
             self.load_pattern()
 #            
         if self.pattern is not None:
+            use_image_underlay = True
+            if use_image_underlay:
+                img = self.parent.video.get_frame()
 
-            #self._alive = True
-#            self.edit_traits()
-            if self.show_pattern:
+#                p = '/Users/ross/Desktop/foo2.tiff'
+#                img = Image()
+#                img.load(p)
+
+#                px = float(self.parent._camera_xcoefficients[1])
+                px = float(self.parent._camera_xcoefficients.split(',')[1])
+                print px
+                self.pattern.set_mapping(px)
+                self.pattern.reset_graph(with_image=True)
+#                self.pattern.set_image(img.source_frame)
+#                self.pattern.set_image(img.as_numpy_array())
+                self.pattern.set_image(img)
+
+            self._alive = True
+            if self.show_patterning:
                 do_later(self.edit_traits)
 
             t = Thread(target=self._execute_)
@@ -126,7 +143,14 @@ class PatternManager(Manager):
             return err
 
     def _execute_(self):
+#        import threading
+#        print threading.currentThread()
         self.info('started pattern {}'.format(self.pattern_name))
+
+        if self.record_patterning:
+            self.parent.start_recording(basename=self.pattern_name)
+
+
         pat = self.pattern
         controller = self.parent.stage_controller
 
@@ -142,9 +166,21 @@ class PatternManager(Manager):
             if multipoint:
                 controller.multiple_point_move(pts)
             else:
+
+#                self.parent.video.new_graphics_container()
+#                px = None
+#                py = None
                 for x, y in pts:
-                    pat.graph.set_data([x], series=1, axis=0)
-                    pat.graph.set_data([y], series=1, axis=1)
+                    xi, yi = pat.map_pt(x, y)
+                    pat.graph.set_data([xi], series=1, axis=0)
+                    pat.graph.set_data([yi], series=1, axis=1)
+
+#                    if px is not None:
+#                        self.parent.video.graphics_container.add_line([(px, py), (xi, yi)])
+#
+#                    px = xi
+#                    py = yi
+
                     pat.graph.redraw()
 
                     controller.linear_move(x, y, block=True)
@@ -159,6 +195,10 @@ class PatternManager(Manager):
 
         if self._alive:
             self.info('finished pattern {}'.format(self.pattern_name))
+            if self.record_patterning:
+                self.parent.stop_recording()
+#            self.parent.video.graphics_container = None
+
             self.close_ui()
         self._alive = False
 
@@ -204,24 +244,28 @@ class PatternManager(Manager):
         return v
 
     def traits_view(self):
+        print 'name', self.pattern_name, len(self.pattern_name)
         v = View(Item('pattern', show_label=False,
                        style='custom',
                        editor=InstanceEditor(view='graph_view')),
                  handler=self.handler_klass,
                  title=self.pattern_name,
+
                  x=self.window_x,
                  y=self.window_y
                  )
         return v
 
     def pattern_maker_view(self):
-        v = View(HGroup(Item('pattern_name', label='Name'), Item('kind')),
+        v = View(
+                 HGroup(Item('pattern_name', label='Name'), Item('kind')),
                  HGroup(Item('save_button', show_label=False),
                         Item('load_button', show_label=False)),
-                 Item('pattern', style='custom', show_label=False),
-#                 resizable=True,
+                 Item('pattern', style='custom', editor=InstanceEditor(view='maker_view'),
+                       show_label=False),
+                  resizable=True,
                  width=425,
-                 height=530,
+                 height=580,
                  title='Pattern Maker',
                  buttons=['OK', 'Cancel']
 #                 kind='livemodal'
@@ -239,8 +283,8 @@ class PatternManager(Manager):
 #                  )
 #        return g
 
-#    def _pattern_default(self):
-#        return self.pattern_factory(self.kind)
+    def _pattern_default(self):
+        return self.pattern_factory(self.kind)
 
     def _save_button_fired(self):
         self.save_pattern()
@@ -275,4 +319,5 @@ if __name__ == '__main__':
     setup('pattern')
     pm = PatternManager()
     pm.configure_traits(view='pattern_maker_view')
+#    pm.configure_traits(view='execute_view')
 #============= EOF ====================================

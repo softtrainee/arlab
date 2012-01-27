@@ -173,6 +173,7 @@ class Initializer(Loggable):
 
         managers = []
         devices = []
+        flags = []
         parser = self.parser
         if plugin_name is None:
 
@@ -188,27 +189,36 @@ class Initializer(Loggable):
         if mp is not None:
             managers = parser.get_managers(mp)
             devices = parser.get_devices(mp)
+            flags = parser.get_flags(mp)
 
         pdmax = 35
         if self.pd is None or self.pd.progress_bar is None:
             self.load_progress(pdmax)
 
         if managers:
-            self.info('loading managers - {}'.format(','.join(managers)))
+            self.info('loading managers - {}'.format(', '.join(managers)))
 
 #            self.load_managers(manager, managers, device_dir, initialization_dir)
 
             self.load_managers(manager, managers, device_dir)
 
         if devices:
-            self.info('loading devices - {}'.format(','.join(devices)))
+            self.info('loading devices - {}'.format(', '.join(devices)))
             self.load_devices(manager, name, devices, plugin_name)
+
+        if flags:
+            self.info('loading flags - {}'.format(', '.join(flags)))
+            self.load_flags(manager, flags)
 
         if manager is not None:
             self.info('finish {} loading'.format(name))
             manager.finish_loading()
 
         return True
+
+    def load_flags(self, manager, flags):
+        for f in flags:
+            manager.add_flag(f)
 
     def load_managers(
         self,
