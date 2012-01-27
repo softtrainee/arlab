@@ -38,4 +38,7 @@ class Timer(Thread):
 
     def Stop(self):
         self._flag.set()
+        
+    def IsRunning(self):
+        return not self._flag.is_set()
 #============= EOF =====================================

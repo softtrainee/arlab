@@ -105,9 +105,7 @@ class SceneLoader(object):
         t = Transform()
         sg.root.add(t)
 
-
         sp = SceneParser(os.path.join(paths.canvas3D_dir, 'extraction_line3D.xml'))
-
         self.load_view_elements(sp, t)
         self.load_bones(sp, sg, vm, canvas)
         self.load_spectrometers(sp, sg)

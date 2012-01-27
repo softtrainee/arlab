@@ -324,9 +324,18 @@ class SerialCommunicator(Communicator):
                 inw = get_chars()
             else:
                 time.sleep(self.read_delay)
-                ready_to_read, _, _ = select.select([self.handle], [], [], 1)
+                ready_to_read, _, _ = select.select([self.handle], [], [], 0.25)
                 if ready_to_read:
                     inw = get_chars()
+#                    time.sleep(1e-3)
+                    cnt=0
+                    for i in xrange(8000):
+                        pinw=get_chars()
+                        if pinw!=inw:
+                            inw=pinw
+                            cnt+=1
+                            if cnt>1000:
+                                break
 
             if inw > 0:
                 try:

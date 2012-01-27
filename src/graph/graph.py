@@ -706,16 +706,16 @@ class Graph(HasTraits):
         plot.overlays = [o for o in plot.overlays if not isinstance(o, LineInspector)]
         self.plotcontainer.request_redraw()
 
-    def add_vertical_rule(self, v, plotid=0):
+    def add_vertical_rule(self, v, plotid=0,**kw):
         plot = self.plots[plotid]
-        l = GuideOverlay(plot, value=v, orientation='v')
+        l = GuideOverlay(plot, value=v, orientation='v', **kw)
 
         plot.overlays.append(l)
 
-    def add_horizontal_rule(self, v, plotid=0):
+    def add_horizontal_rule(self, v, plotid=0, **kw):
         plot = self.plots[0]
 
-        l = GuideOverlay(plot, value=v)
+        l = GuideOverlay(plot, value=v, **kw)
 
         plot.overlays.append(l)
 

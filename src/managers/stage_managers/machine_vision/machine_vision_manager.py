@@ -84,12 +84,13 @@ class MachineVisionManager(Manager):
     current_hole = None
 
     corrected_position = Property
-    _corrected_position = Tuple
+    _corrected_position = Tuple(0,0)
 
     nominal_position = Property
-    _nominal_position = Tuple
+    _nominal_position = Tuple(0,0)
 
     def _get_corrected_position(self):
+        
         return '{:5f}, {:5f}'.format(*self._corrected_position)
 
     def _get_nominal_position(self):
@@ -111,6 +112,8 @@ class MachineVisionManager(Manager):
         return self.image.source_frame
 
     def search(self, cx, cy, holenum=None, **kw):
+        self._nominal_position = (cx, cy)
+
         self.current_hole = holenum
         self.info('locating {} sample hole {}'.format(self.style, holenum))
         self.load_source()
@@ -122,7 +125,7 @@ class MachineVisionManager(Manager):
         found = False
 
         self.close_image()
-        do_after(1000, self.edit_traits, view='image_view')
+        do_after(500, self.edit_traits, view='image_view')
 
         ntries = 3
         for i in range(ntries):
@@ -164,7 +167,6 @@ class MachineVisionManager(Manager):
             nx = cx - dxmm
             ny = cy + dymm
 
-            self._nominal_position = (cx, cy)
             self._corrected_position = (nx, ny)
             #tx, ty = self._get_true_xy()
 

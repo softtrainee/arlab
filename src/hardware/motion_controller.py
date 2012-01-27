@@ -85,7 +85,7 @@ class MotionController(CoreDevice):
 
         if func is None:
             func = self._inprogress_update
-
+        self._not_moving_count=0
         return Timer(UPDATE_MS, func)
 
     def _z_inprogress_update(self):
@@ -93,10 +93,14 @@ class MotionController(CoreDevice):
         '''
         if self._moving_():
             z = self.get_current_position('z')
-            self.z_progress = z
-        else:
+            if z is not None:
+                self.z_progress = z
+        elif self._not_moving_count>3:
             self.timer.Stop()
             self.z_progress = self.z
+            
+        else:
+            self._not_moving_count+=1
 
     def _inprogress_update(self):
         '''
@@ -228,7 +232,9 @@ class MotionController(CoreDevice):
             g.content.append(Item(k, editor=editor))
             if k == 'z':
                 g.content.append(Item('z_progress', show_label=False,
-                                      editor=editor, enabled_when='0'))
+                                      editor=editor, 
+                                      enabled_when='0'
+                                      ))
         return g
 
     def linear_move(self, *args, **kw):
