@@ -43,6 +43,7 @@ class LaserManager(Manager):
     graph_manager = Instance(GraphManager, ())
     stage_manager = Instance(StageManager)
     use_video = Bool(False)
+    record_lasing = Bool(False)
 
     monitor = Instance(LaserMonitor)
     monitor_name = 'laser_monitor'
@@ -61,10 +62,10 @@ class LaserManager(Manager):
 
     def get_pulse_manager(self):
         return self.pulse
-    
+
     def _pulse_default(self):
         return Pulse(manager=self)
-    
+
     def get_power_map_manager(self):
         from power_map_manager import PowerMapManager
 
@@ -90,8 +91,10 @@ class LaserManager(Manager):
                 ]
     def get_control_sliders(self):
         pass
+
     def get_additional_controls(self):
         pass
+
     def get_power_slider(self):
         '''
         '''
@@ -109,9 +112,11 @@ class LaserManager(Manager):
 
             self.disable_laser()
 
-    def enable_laser(self, is_ok=True):
+    def enable_laser(self):
+
+#    def enable_laser(self, is_ok=True):
         self.info('enable laser')
-        if is_ok:
+        if self._enable_hook():
             self.enabled = True
             self.monitor = self.monitor_factory()
             self.monitor.monitor()
@@ -124,6 +129,8 @@ class LaserManager(Manager):
     def disable_laser(self):
         self.info('disable laser')
 
+        self._disable_hook()
+
         self.enabled = False
         #stop the laser monitor 
         #if the laser is not firing is there any reason to be running the monitor?
@@ -132,6 +139,11 @@ class LaserManager(Manager):
 
         self.enabled_led.state = 'red'
 
+    def _enable_hook(self):
+        return True
+
+    def _disable_hook(self):
+        pass
 
     def show_step_heater(self):
 
@@ -158,8 +170,8 @@ class LaserManager(Manager):
 ##            self.stage_manager.kill()
     def _kill_hook(self):
         self.disable_laser()
-        
-        
+
+
     def set_laser_monitor_duration(self, d):
         '''
             duration in minutes
@@ -209,13 +221,13 @@ class LaserManager(Manager):
     def _use_video_changed(self):
         if not self.use_video:
             self.stage_manager.video_manager.shutdown()
-        
+
         sm = self._stage_manager_factory(self.stage_args)
-        
+
         sm.stage_controller = self.stage_manager.stage_controller
         sm.stage_controller.parent = sm
         sm.bind_preferences(self.id)
-        
+
 #        sm.canvas.crosshairs_offset = self.stage_manager.canvas.crosshairs_offset
 #        bind_preference(sm.canvas, 'show_grids', '{}.show_grids'.format(self.id))
 #

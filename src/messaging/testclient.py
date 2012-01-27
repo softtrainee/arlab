@@ -52,9 +52,12 @@ class Client(HasTraits):
     _alive = Bool(False)
 
     calculated_duration = Property(depends_on=['n_periods', 'period'])
+
+    ask_id = 'A'
+
     def _get_calculated_duration(self):
         return self.period / 1000. * self.n_periods / 3600.
-    
+
     def _periodic_fired(self):
         self._alive = not self._alive
         self.periods_completed = 0
@@ -69,16 +72,16 @@ class Client(HasTraits):
             t = time.time()
             try:
                 self._send(sock=sock)
-            
+
                 self.time_remain = self.calculated_duration - self.periods_completed * self.period / 1000.0 / 3600.
                 self.periods_completed += 1
-            
+
                 time.sleep(max(0, self.period / 1000.0 - (time.time() - t)))
             except Exception, e:
                 print e
-        print 'looping complete'    
+        print 'looping complete'
         self._alive = False
-        
+
     def _get_periodic_label(self):
         return 'Periodic' if not self._alive else 'Stop'
     def _resend_fired(self):
@@ -94,11 +97,11 @@ class Client(HasTraits):
         #send command
         sock.send(self.command)
         self.response = sock.recv(1024)
-        
+
         if 'ERROR' in self.response:
             print time.strftime('%H:%M:%S'), self.response
         return sock
-    
+
     def get_connection(self):
         packet_kind = socket.SOCK_STREAM
         family = socket.AF_INET
@@ -106,24 +109,24 @@ class Client(HasTraits):
         print 'connection address', addr
         if self.kind == 'UDP':
             packet_kind = socket.SOCK_DGRAM
-                    
+
         sock = socket.socket(family, packet_kind)
         sock.settimeout(1)
         sock.connect(addr)
         return sock
-    
+
     def ask(self, command):
         conn = self.get_connection()
         conn.send(command)
         r = conn.recv(4096)
         print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)
-    
+
     def test(self):
         self.ask('StartMultRuns Foo')
         time.sleep(2)
-        
+
         self.ask('CompleteMultRuns Foo')
-        
+
 #        for i in range(500):
 #            for v in 'ABCEDFG':
 #                
@@ -135,7 +138,7 @@ class Client(HasTraits):
 #                self.ask('Close {}'.format(self.ask_id[0]))
 #                
 #            time.sleep(random.randint(0, 175) / 100.)
-                
+
     def traits_view(self):
         v = View(
                  VGroup(
@@ -145,7 +148,7 @@ class Client(HasTraits):
                           width= -300
                           ),
                      Item('resend', show_label=False),
-                     
+
                      HGroup(Item('periodic',
                                  editor=ButtonEditor(label_value='periodic_label'),
                                  show_label=False), Item('period', show_label=False),
@@ -219,7 +222,7 @@ def multiplex_test():
                )
     t = Thread(target=c.test)
 
-    
+
     #cmd = 'GetValveState C'
 #    c = Client(host='192.168.0.65',
 #               port=1063,
@@ -228,19 +231,25 @@ def multiplex_test():
 
     t.start()
 #    t2.start()
-        
-    
-    
+
+
+
 if __name__ == '__main__':
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
 #              'benchmark_unix_tcp_no_log.npz'
 #              )
-   
+
     #multiplex_test()
     c = Client()
-    c.configure_traits()
-    
+    c.host = 'localhost'
+    c.port = 1068
+    c.ask('Enable')
+    time.sleep(15)
+    c.ask('Disable')
+
+#    c.configure_traits()
+
     #===========================================================================
     #Check Remote launch snippet 
     #===========================================================================
@@ -270,8 +279,8 @@ if __name__ == '__main__':
     #    if not success:
     #        print 'Launch timed out after {}'.format(timeout)
     #===========================================================================
-        
-        
+
+
 #======================== EOF ===================================
 #    def _receive_data_stream_fired(self):
 #        sock = self.get_connection()
@@ -322,7 +331,7 @@ if __name__ == '__main__':
 #    foo = load(p)
 #    hist(foo['times'], n / 4.)
 #    show()
-    
+
 #    host = '129.138.12.145'
 #
 ##    host = 'localhost'

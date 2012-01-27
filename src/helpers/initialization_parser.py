@@ -84,6 +84,10 @@ class InitializationParser(XMLParser):
         plugin.set('enabled', 'false')
         self.save()
 
+    def get_flags(self, manager, all=False, element=False):
+        return [d if element else d.text.strip()  for d in manager.findall('flag')
+                                if all or d.get('enabled').lower() == 'true']
+
     def get_device(self, manager, devname, plugin, element=False):
 
         if plugin is None:
@@ -136,8 +140,8 @@ class InitializationParser(XMLParser):
             for plugin in cat.findall(tag):
                 if plugin.text.strip() == name:
                     return plugin
-                
+
     def get_systems(self):
-        p=self.get_plugin('ExtractionLine')
-        return [(s.text.strip(),s.get('master_host')) for s in p.findall('system')]
+        p = self.get_plugin('ExtractionLine')
+        return [(s.text.strip(), s.get('master_host')) for s in p.findall('system')]
 #============= EOF =============================================

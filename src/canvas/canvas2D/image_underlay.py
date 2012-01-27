@@ -16,7 +16,7 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import Instance
 from chaco.api import AbstractOverlay
-
+import wx
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -34,18 +34,27 @@ class ImageUnderlay(AbstractOverlay):
         '''
         try:
             gc.save_state()
-            dc = component._window.dc
-            bitmap = self.image.get_bitmap(flip=True,
-                                         swap_rb=self.swap_rb
-                                         )
-            if bitmap:
-                x = component.x
-                y = component.y
 
-                dc.DrawBitmap(bitmap, x, y, False)
+            data = self.image.get_array()
+            #data should be a numpy ndarray
 
-        except AttributeError, UnboundLocalError:
-            pass
+            gc.draw_image(data, rect=(0, 0, component.width, component.height))
+#            dc = component._window.dc
+
+           # dc = wx.PaintDC()
+            #print dc
+#            bitmap = self.image.get_bitmap(flip=True,
+#                                         swap_rb=self.swap_rb
+#                                         )
+
+#            if bitmap:
+#                x = component.x
+#                y = component.y
+#                gc.draw_image(bitmap)
+#                dc.DrawBitmap(bitmap, x, y, False)
+
+        except (AttributeError, UnboundLocalError), e:
+            print e
         finally:
             gc.restore_state()
 

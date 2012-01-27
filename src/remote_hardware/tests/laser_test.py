@@ -124,8 +124,8 @@ class LaserTest(baseTest):
         vs = ['PatternA,PatternB', InvalidCommandErrorCode]
         self._test_suite(request_types, data, vs)
 
-    def testJogName(self):
-        data = ['JogName A', ('jogName', 'JogName')]
+    def testDoJog(self):
+        data = ['DoJog A', ('jogName', 'JogName')]
         vs = ['OK', (InvalidCommandErrorCode, InvalidArgumentsErrorCode)]
         self._test_suite(request_types, data, vs)
 

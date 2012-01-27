@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import Instance, Float, Button, Int
-from traitsui.api import View, Item, RangeEditor, VGroup
+from traits.api import Instance, Float, Button, Int, Property, Event, Bool
+from traitsui.api import View, Item, RangeEditor, VGroup, HGroup
 
 #=============standard library imports ========================
 #import os
@@ -35,8 +35,11 @@ from manager import Manager
 from src.canvas.canvas2D.video_canvas import VideoCanvas
 from src.managers.stage_managers.video_component_editor import VideoComponentEditor
 from src.helpers.filetools import unique_path
-from src.helpers.paths import snapshot_dir
+from src.helpers.paths import snapshot_dir, data_dir, video_dir
 import os
+import time
+from threading import Thread
+from src.helpers.logger_setup import setup
 
 class VideoManager(Manager):
     '''
@@ -45,6 +48,12 @@ class VideoManager(Manager):
     image = Instance(Image, ())
 
     process = Button
+
+    record = Event
+    record_label = Property(depends_on='is_recording')
+    is_recording = Bool
+#    record_button = Button('Record')
+
     threshold = Float(99, auto_set=False, enter_set=True)
     angle = Float(0, auto_set=False, enter_set=True)
     erosion = Int(0, auto_set=False, enter_set=True)
@@ -53,8 +62,8 @@ class VideoManager(Manager):
     y = Int(0, auto_set=False, enter_set=True)
 
     canvas = Instance(VideoCanvas)
-    width = Int
-    height = Int
+    width = Int(640)
+    height = Int(480)
     def open_video(self, **kw):
         self.video.open(**kw)
 
@@ -64,11 +73,38 @@ class VideoManager(Manager):
     def shutdown(self):
         self.video.shutdown()
 
-    def start_recording(self, path):
+    def _get_record_label(self):
+        return 'Record' if not self.is_recording else 'Stop'
+
+
+    def _record_fired(self):
+        def _rec_():
+            self.start_recording()
+#            time.sleep(4)
+#            self.stop_recording()
+        if self.is_recording:
+            self.is_recording = False
+            self.stop_recording()
+        else:
+            self.is_recording = True
+            t = Thread(target=_rec_)
+            t.start()
+
+
+    def start_recording(self, path=None, use_dialog=False):
         '''
         '''
-        self.info('start video recording')
-        self.start()
+        self.info('start video recording ')
+        if path is None:
+            if use_dialog:
+                path = self.save_file_dialog()
+            else:
+                path, _ = unique_path(video_dir, 'vm_recording', filetype='avi')
+
+        self.info('saving recording to path {}'.format(path))
+
+
+        #self.start()
 
         self.video.start_recording(path)
 
@@ -76,7 +112,7 @@ class VideoManager(Manager):
         '''
         '''
         self.info('stop video recording')
-        self.stop()
+#        self.stop()
         self.video.stop_recording()
 
     def start(self, user=None):
@@ -196,7 +232,8 @@ class VideoManager(Manager):
 
 
     def traits_view(self):
-        v = View(Item('canvas', show_label=False,
+        v = View(self._button_factory('record', 'record_label', align='right'),
+                 Item('canvas', show_label=False,
                       resizable=False,
                       editor=VideoComponentEditor(width=self.width,
                                                     height=self.height)))
@@ -238,12 +275,14 @@ class VideoManager(Manager):
                          )
 
 if __name__ == '__main__':
+    setup('video')
     vm = VideoManager()
 
-    p = '/Users/fargo2/Desktop/laser_tray_50.tiff'
+    #p = '/Users/fargo2/Desktop/laser_tray_50.tiff'
 
-    vm.process_image(p, crop=(0, 0, 250, 250))
-    vm.configure_traits(view='image_view')
+    #vm.process_image(p, crop=(0, 0, 250, 250))
+    vm.start()
+    vm.configure_traits()#view='image_view')
 
 
 

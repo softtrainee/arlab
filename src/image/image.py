@@ -25,17 +25,31 @@ from ctypes_opencv import cvConvertImage, cvCloneImage, \
     cvResize, cvFlip, \
     CV_CVTIMG_SWAP_RB, cvCreateImageFromNumpyArray
 from image_helper import load_image, new_dst, grayspace, clone
-from src.image.image_helper import crop
+from src.image.image_helper import crop, draw_lines, save_image
 from ctypes_opencv.interfaces import cvCreateMatNDFromNumpyArray, pil_to_ipl
-from ctypes_opencv.cxcore import cvCreateImage, cvGetImage
+from ctypes_opencv.cxcore import cvCreateImage, cvGetImage, CvSize, cvZero, \
+    cvAddS, CvScalar, CvRect, cvSetImageROI, cvResetImageROI
 from Image import fromarray
+import math
 #from ctypes_opencv.interfaces import ipl_to_pil
 #from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
 #    draw_polygons, find_circles, find_ellipses, clone, crop, draw_contour_list, \
 #    centroid, erode
 #from ctypes_opencv.cxcore import CvPoint, cvRound, cvCircle
 
+class GraphicsContainer(object):
 
+    _lines = None
+
+    def add_line(self, l):
+        if self._lines is None:
+            self._lines = [l]
+        else:
+            self._lines.append(l)
+
+    @property
+    def lines(self):
+        return self._lines
 
 class Image(HasTraits):
     '''
@@ -47,10 +61,18 @@ class Image(HasTraits):
     _bitmap = None
     _frame = None
 
+    graphics_container = None
+
+    swap_rb = Bool(False)
+    flip = Bool(False)
+
+    def new_graphics_container(self):
+        self.graphics_container = GraphicsContainer()
+
 #    def load(self, img, swap_rb=True):
-    def swap_rb(self):
-        cvConvertImage(self.source_frame, self.source_frame, CV_CVTIMG_SWAP_RB)
-        self.frames[0] = self.source_frame
+#    def swap_rb(self):
+#        cvConvertImage(self.source_frame, self.source_frame, CV_CVTIMG_SWAP_RB)
+#        self.frames[0] = self.source_frame
 
     def load(self, img, swap_rb=False):
         if isinstance(img, str):
@@ -94,33 +116,55 @@ class Image(HasTraits):
 
         return flipud(a)#[lx / 4:-lx / 4, ly / 4:-ly / 4]
 
-    def get_frame(self, flip=False, mirror=False, gray=False, swap_rb=True, clone=False):
-
-
+    def get_frame(self, flip=None, mirror=False, gray=False, swap_rb=None, clone=False, croprect=None):
         rframe = self._get_frame()
         if rframe is not None:
+#            if raw:
+#                frame = rframe
+#            else:
+#                frame = new_dst(rframe, width=self.width,
+#                              height=self.height)
+            frame = new_dst(rframe, width=self.width,
+                          height=self.height)
 
+            if swap_rb is None:
+                swap_rb = self.swap_rb
 
+            self.swap_rb = swap_rb
 
             if swap_rb:
+                #cool fractal display
+#                cvConvertImage(frame, rframe, CV_CVTIMG_SWAP_RB)
                 cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
 
-            frame = new_dst(rframe, width=self.width,
-                              height=self.height)
-
             cvResize(rframe, frame)
+            rframe = frame
             if clone:
                 frame = cvCloneImage(frame)
 
+            if flip is None:
+                flip = self.flip
+
             if flip and mirror:
-                cvFlip(frame, flip_mode=2)
+                cvFlip(rframe, flip_mode=2)
             elif mirror:
-                cvFlip(frame, flip_mode=1)
+                cvFlip(rframe, flip_mode=1)
             elif flip:
-                cvFlip(frame)
+                cvFlip(rframe)
 
             if gray:
-                frame = grayspace(frame)
+                rframe = grayspace(rframe)
+
+            if self.graphics_container:
+                draw_lines(rframe, self.graphics_container.lines)
+
+            if croprect:
+
+                if len(croprect) == 2: # assume w, h
+                    args = (frame, frame.width / 2, frame.height / 2, croprect[0], croprect[1])
+                else:
+                    args = (frame,) + croprect
+                crop(*args)
 
             return frame
 
@@ -140,6 +184,48 @@ class Image(HasTraits):
                                        frame.data_as_string()
                                         )
             return self._bitmap
+
+    def render_images(self, src):
+        nsrc = len(src)
+        rows = math.floor(math.sqrt(nsrc))
+        cols = rows
+        if rows * rows < nsrc:
+            cols = rows + 1
+            if cols * rows < nsrc:
+                rows += 1
+
+        size = 300
+        #create display image
+        w = self.width
+        h = self.height
+
+        display = cvCreateImage(CvSize(w, h), 8, 3)
+
+        cvZero(display)
+        cvAddS(display, CvScalar(200, 200, 200), display)
+        padding = 12
+        m = padding
+        n = padding
+        for i, s in enumerate(src):
+            x = s.width
+            y = s.height
+            ma = float(max(x, y))
+            scale = ma / size
+            if i % cols == 0 and m != padding:
+                m = padding
+                n += size + padding
+
+            cvSetImageROI(display, CvRect(int(m), int(n), int(x / scale), int(y / scale)))
+            cvResize(s, display)
+            cvResetImageROI(display)
+            m += (padding + size)
+        return display
+
+    def save(self, path):
+        src = self.render_images(self.frames)
+        cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
+        save_image(src, path)
+
 #            return cvIplImageAsBitmap(frame, flip = flip, swap = swap_rb)
 #
 #            data = ctypes.string_at(frame.imageData, frame.width * frame.height * 4)

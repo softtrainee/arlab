@@ -47,7 +47,6 @@ BAUDRATE = '38400'
 from wx import GetDisplaySize
 DISPLAYSIZE = GetDisplaySize()
 
-
 class BakeoutManager(Manager):
 
     '''
@@ -150,14 +149,14 @@ class BakeoutManager(Manager):
             n = self.data_count_flag
             if n == len(self.active_controllers):
                 for (i, pi, hi) in self.data_buffer:
-                    
-                    track_x=i == n - 1
+
+                    track_x = i == n - 1
                     if self.include_temp:
                         nx = self.graph.record(pi, series=i,
                                 track_x=track_x, track_y=False,
                                 plotid=self.plotids[0])
-                    
-                    track_x=False
+
+                    track_x = False
                     if self.include_heat:
                         self.graph.record(
                             hi,
@@ -229,10 +228,10 @@ class BakeoutManager(Manager):
             datum.append(x)
             if self.include_temp:
                 datum.append(pi)
-            
+
             if self.include_heat:
                 datum.append(hp)
-        
+
             if self.include_pressure:
                 datum.append(self._pressure)
 
@@ -263,8 +262,8 @@ class BakeoutManager(Manager):
         '''
 
         scheduler = RS485Scheduler()
-        program=False
-        cnt=0
+        program = False
+        cnt = 0
         for bcn in self._get_controllers():
             bc = getattr(self, bcn)
 
@@ -274,19 +273,19 @@ class BakeoutManager(Manager):
             if bc.load():
                 if bc.open():
                    # bc.set_scheduler(scheduler)
-                    
-                    
+
+
                     # on first controller check to see if memory block programming is required
                     # if it is apply to all subsequent controllers
-                    
-                    if cnt==0 and not bc.is_programmed():
-                        program=True
-                    bc.program_memory_blocks=program
-                    
+
+                    if cnt == 0 and not bc.is_programmed():
+                        program = True
+                    bc.program_memory_blocks = program
+
                     bc.initialize()
-                    cnt+=1
-                    
-                    
+                    cnt += 1
+
+
 #                    if BATCH_SET_BAUDRATE:
 #                        bc.set_baudrate(BAUDRATE)
 
@@ -443,7 +442,7 @@ class BakeoutManager(Manager):
 #                t = Thread(target=self._pressure_monitor)
 #                t.start()
 
-            
+
                 self._start_time = time.time()
 
 #    def _pressure_monitor(self):

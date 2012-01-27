@@ -156,28 +156,42 @@ class FusionsDiodeManager(FusionsLaserManager):
         func = getattr(tc, 'set_{}_loop_setpoint'.format(mode))
         func(float(power))
 
-    def enable_laser(self):
-        '''
-        '''
-        if self.fiber_light.auto_onoff and self.fiber_light.state:
-            self.fiber_light.power_off()
+#    def enable_laser(self):
+#        '''
+#        '''
+#        if self.fiber_light.auto_onoff and self.fiber_light.state:
+#            self.fiber_light.power_off()
+#
+#        #simple calls logicboard.enable_laser
+#        if super(FusionsDiodeManager, self).enable_laser():
+#            return self.control_module_manager.enable()
 
-        #simple calls logicboard.enable_laser
-        if super(FusionsDiodeManager, self).enable_laser():
+    def _enable_hook(self):
+        if super(FusionsDiodeManager, self)._enable_hook():  #logic board sucessfully enabled
+            if self.fiber_light.auto_onoff and self.fiber_light.state:
+                self.fiber_light.power_off()
+
             return self.control_module_manager.enable()
 
-    def disable_laser(self):
-        '''
-        '''
+    def _disable_hook(self):
         if self.fiber_light.auto_onoff and not self.fiber_light.state:
             self.fiber_light.power_on()
 
         self.temperature_controller.disable()
         self.control_module_manager.disable()
 
-        super(FusionsDiodeManager, self).disable_laser()
-
-        return True
+#    def disable_laser(self):
+#        '''
+#        '''
+#        if self.fiber_light.auto_onoff and not self.fiber_light.state:
+#            self.fiber_light.power_on()
+#
+#        self.temperature_controller.disable()
+#        self.control_module_manager.disable()
+#
+#        super(FusionsDiodeManager, self).disable_laser()
+#
+#        return True
 
     def get_degas_manager(self):
         from degas_manager import DegasManager

@@ -74,10 +74,13 @@ def test(protocol, client):
     print '=' * 80
     print
     for k, v in protocol.commands.iteritems():
-
+        delay = 0.25
+        if isinstance(v, tuple):
+            delay = v[1]
+            v = v[0]
         cmd = '{} {}'.format(k, v) if v is not None else k
-        resp = client.ask(cmd)
-        time.sleep(0.25)
+        _resp = client.ask(cmd)
+        time.sleep(delay)
 
     print
     print '=' * 80
@@ -87,21 +90,26 @@ def test(protocol, client):
 def main(launch=False):
     if launch:
         #launch pychron
-        subprocess.Popen(['python', 'pychron_beta.py'])
+        subprocess.Popen(['python', './launchers/pychron_beta.py'])
         #launch remote hardware server
-        subprocess.Popen(['python', 'remote_hardware_server.py'])
+        subprocess.Popen(['python', './launchers/remote_hardware_server.py'])
         #use testclient to send commands
-        time.sleep(25)
+#        time.sleep()
+    else:
+#    run_test = raw_input(' execute test y/n [y]>> ') == '' or 'y'
+#    if not run_test:
+#        return
 
-    from src.remote_hardware.protocols.system_protocol import SystemProtocol
+        from src.remote_hardware.protocols.system_protocol import SystemProtocol
 
-    from src.messaging.testclient import Client
-    client = Client(port=1063)
+        from src.messaging.testclient import Client
+        client = Client(host='localhost',
+                        port=1063)
 
-    test(SystemProtocol(), client)
+    #    test(SystemProtocol(), client)
 
-    client.port = 1068
-    test(LaserProtocol(), client)
+        client.port = 1068
+        test(LaserProtocol(), client)
 
 
 if __name__ == '__main__':

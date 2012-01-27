@@ -233,6 +233,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             except ValueError:
                 f = None
         else:
+#            time.sleep(0.5)
             f = getattr(self, '_{}_position'.format(axis))
 
         return f
@@ -345,7 +346,6 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if d > tol:
             kw['displacement'] = d
             self.parent.canvas.set_desired_position(x, y)
-
             self._x_position = x
             self._y_position = y
 

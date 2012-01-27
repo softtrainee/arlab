@@ -24,7 +24,7 @@ from src.canvas.canvas2D.camera import Camera
 from src.helpers.paths import canvas2D_dir
 class VideoCanvas(BaseDataCanvas):
     video = None
-    use_camera = True
+    use_camera = False
     camera = Instance(Camera)
 #    use_backbuffer = True
     padding = 0

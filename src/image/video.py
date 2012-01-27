@@ -16,7 +16,7 @@ limitations under the License.
 #=============enthought library imports=======================
 from traits.api import  Any, Bool, Float, List, Int
 #=============standard library imports ========================
-from threading import Thread
+from threading import Thread, Lock
 
 #=============local library imports ===========================
 from ctypes_opencv import cvCreateCameraCapture, cvQueryFrame, cvWriteFrame
@@ -29,6 +29,8 @@ from image_helper import clone, save_image, new_video_writer
 from image_helper import crop as icrop
 import time
 from src.image.image import Image
+from src.image.image_helper import load_image
+
 
 class Video(Image):
     '''
@@ -43,11 +45,13 @@ class Video(Image):
     users = List
 
     _recording = Bool(False)
+    _lock = None
 
     def open(self, user=None):
         '''
 
         '''
+        self._lock = Lock()
         if self.cap is None:
             try:
                 self.cap = cvCreateCameraCapture(0)
@@ -68,67 +72,33 @@ class Video(Image):
         '''
   
         '''
-#        i = self.users.index(user)
         if user in self.users:
             i = self.users.index(user)
             self.users.pop(i)
             if not self.users:
-
                 del(self.cap)
 
-#    def update_bounds(self, obj, name, old, new):
-#        if new:
-#            self.width = new[0]
-#            self.height = new[1]
-#
-#    def get_frame(self, gray = False, flag = None, clone = False):
-#        '''
-#
-#        '''
     def _get_frame(self):
         if self.cap is not None:
+            with self._lock:
+                src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
+                return load_image(src)
 
-            return  cvQueryFrame(self.cap)
-
-
-#
-#            frame = new_dst(rframe, width = self.width,
-#                          height = self.height)
-#
-#            cvResize(rframe, frame)
-#            if flag is not None:
-#                cvConvertImage(frame, frame, flag)
-#            if clone:
-#                frame = cvCloneImage(frame)
-#
-#            if gray:
-#                frame = grayspace(frame)
-#            return frame
-#
-#    def get_bitmap(self, flip = False, swap_rb = False):
-#        '''
-#
-#        '''
-#        kw = dict()
-#        if swap_rb:
-#            kw['flag'] = CV_CVTIMG_SWAP_RB
-#
-#        frame = self.get_frame(**kw)
-#        if frame is not None:
-#            return cvIplImageAsBitmap(frame, flip = flip)
-
+                return  cvQueryFrame(self.cap)
     def start_recording(self, path):
-        fps = 5.0
+        fps = 8.0
         def __record():
             if self.cap is not None:
-                #fps = cvGetCaptureProperty(self.cap, CV_CAP_PROP_FPS)
                 self._recording = True
-                writer = new_video_writer(path)
+                writer = new_video_writer(path, fps=fps)
+#                for i in range(100):
+
+#                start = time.time()
+#                while time.time() - start < 5:
                 while self._recording:
                     st = time.time()
-                    img = cvQueryFrame(self.cap)
-                    cvWriteFrame(writer, img)
-                    d = 1 / fps - (time.time() - st)
+                    cvWriteFrame(writer, self.get_frame(swap_rb=False))#swap_rb=False))
+                    d = 1 / float(fps) - (time.time() - st)
                     if d >= 0:
                         time.sleep(d)
 
@@ -140,11 +110,10 @@ class Video(Image):
         '''
         self._recording = False
 
-    def record_frame(self, path, crop=None):
+    def record_frame(self, path, crop=None, **kw):
         '''
         '''
-
-        src = self.get_frame()
+        src = self.get_frame(**kw)
         if src is not None:
 
             if crop:
@@ -153,3 +122,4 @@ class Video(Image):
 
         return clone(src)
 
+#=================== EOF =================================================

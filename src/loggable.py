@@ -23,7 +23,6 @@ from pyface.timer.api import do_later
 from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
 from globals import show_warnings
-import threading
 
 MAXLEN = 30
 
@@ -114,9 +113,11 @@ class Loggable(HasTraits):
             return
 
         func = getattr(self.logger, func)
-        t = threading.currentThread()
-        if t.name is not 'MainThread':
-            do_later(func, msg)
-        else:
-            func(msg)
+        func(msg)
+
+#        t = threading.currentThread()
+#        if t.name is not 'MainThread':
+#            do_later(func, msg)
+#        else:
+#            func(msg)
 # ============= EOF ====================================
