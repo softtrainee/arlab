@@ -25,18 +25,29 @@ from ctypes_opencv import cvConvertImage, cvCloneImage, \
     cvResize, cvFlip, \
     CV_CVTIMG_SWAP_RB, cvCreateImageFromNumpyArray
 from image_helper import load_image, new_dst, grayspace, clone
-from src.image.image_helper import crop, draw_lines, save_image
+from src.image.image_helper import crop, draw_lines, save_image, threshold, \
+    colorspace
 from ctypes_opencv.interfaces import cvCreateMatNDFromNumpyArray, pil_to_ipl
 from ctypes_opencv.cxcore import cvCreateImage, cvGetImage, CvSize, cvZero, \
-    cvAddS, CvScalar, CvRect, cvSetImageROI, cvResetImageROI
+    cvAddS, CvScalar, CvRect, cvSetImageROI, cvResetImageROI, \
+    cvCreateImageHeader, cvSize, cvSetData, IPL_DEPTH_8U
 from Image import fromarray
 import math
+from ctypes import cast, c_byte, POINTER
+#from ctypes_opencv.cv import cvCvtColor
 #from ctypes_opencv.interfaces import ipl_to_pil
 #from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
 #    draw_polygons, find_circles, find_ellipses, clone, crop, draw_contour_list, \
 #    centroid, erode
 #from ctypes_opencv.cxcore import CvPoint, cvRound, cvCircle
-
+def my_pil_to_ipl(im_pil, nc):
+        im_ipl = cvCreateImageHeader(cvSize(im_pil.size[0], im_pil.size[1]),
+IPL_DEPTH_8U, nc)
+        data = im_pil.tostring('raw', 'L', im_pil.size[0] * nc)
+        cvSetData(im_ipl, cast(data, POINTER(c_byte)), im_pil.size[0] * nc)
+#        cvCvtColor(im_ipl, im_ipl, CV_RGB2BGR)
+        im_ipl._depends = (data,)
+        return im_ipl
 class GraphicsContainer(object):
 
     _lines = None
@@ -74,14 +85,18 @@ class Image(HasTraits):
 #        cvConvertImage(self.source_frame, self.source_frame, CV_CVTIMG_SWAP_RB)
 #        self.frames[0] = self.source_frame
 
-    def load(self, img, swap_rb=False):
+    def load(self, img, swap_rb=False, nchannels=3):
         if isinstance(img, str):
             img = load_image(img, swap_rb)
 
         elif isinstance(img, ndarray):
 #            img = cvCreateImageFromNumpyArray(img)
 #            print fromarray(img)
-            img = pil_to_ipl(fromarray(img))
+            if nchannels < 3:
+                img = my_pil_to_ipl(fromarray(img), nchannels)
+                img = colorspace(img)
+            else:
+                img = pil_to_ipl(fromarray(img))
 #            mat = cvCreateMatNDFromNumpyArray(img)
 #            img = cvGetImage(mat)
 
@@ -153,7 +168,9 @@ class Image(HasTraits):
                 cvFlip(rframe)
 
             if gray:
-                rframe = grayspace(rframe)
+                frame = grayspace(rframe)
+
+#                frame = threshold(frame, 255)
 
             if self.graphics_container:
                 draw_lines(rframe, self.graphics_container.lines)

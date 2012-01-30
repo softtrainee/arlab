@@ -26,8 +26,8 @@ import zmq
 
 class VideoServer(HasTraits):
     video = Instance(Video)
-#    host = '129.138.12.141'
-    host = '127.0.0.1'
+    host = '129.138.12.141'
+#    host = '127.0.0.1'
     port = 1084
 
     _frame = None
@@ -48,8 +48,7 @@ class VideoServer(HasTraits):
     def _grab(self):
         while 1:
             with self.lock:
-                self._frame = self.video.get_frame()
-
+                self._frame = self.video.get_frame(gray=True)
             #  need to wait moment allowing the _broadcast thread 
             #  a chance to acquire the lock
 
@@ -64,7 +63,7 @@ class VideoServer(HasTraits):
         return sock
 
     def _socket_factory(self, host, port):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((host, port))
 #        sock.listen(2)
 
@@ -76,14 +75,12 @@ class VideoServer(HasTraits):
 
     def _broadcast(self):
 #        sock = self._zmq_socket_factory(self.host, self.port)
-        inp = []
-        for i in range(4):
-            sock = self._socket_factory(self.host, self.port + i)
-            inp.append(sock)
+#        for i in range(4):
+#            inp.append(sock)
 
-#        sock.bind((self.host, self.port))
 
-#        sock.listen(2)
+        sock = self._socket_factory(self.host, self.port)
+        sock.listen(2)
 #        while 1:
 #            if self.new_frame_ready.isSet():
 #                with self.lock:
@@ -92,32 +89,32 @@ class VideoServer(HasTraits):
 #
 #                self.new_frame_ready.clear()
 #
-#        inp = [sock]
+        inp = [sock]
         while 1:
-            inputready, out, _ = select.select(inp, [], [], 0.25)
-            for o in out:
-                da = 'foo'
-                t = Thread(target=self._send_data, args=(o, da))
-                t.start()
-                t.join()
+            inputready, out, _ = select.select(inp, inp, [], 2)
+#            for o in out:
+#                da = 'foo'
+#                t = Thread(target=self._send_data, args=(o, da))
+#                t.start()
+#                t.join()
 
-#            for s in inputready:
-#                if s == sock:
-#                    # handle the sock socket
-#                    client, _address = sock.accept()
-#                    inp.append(client)
+            for s in inputready:
+                if s == sock:
+                    # handle the sock socket
+                    client, _address = sock.accept()
+                    inp.append(client)
 
-#            for so in out:
-#                if self.new_frame_ready.isSet():
-#                    with self.lock:
-#                        #print self._frame.as_numpy_array().tostring()
-#                        d = self._frame.as_numpy_array()
-#                        try:
-#                            so.send(pickle.dumps(d))
-#                        except socket.error, e:
-#                            so.close()
-#                            inp.remove(so)
-#                    self.new_frame_ready.clear()
+            for so in out:
+                if self.new_frame_ready.isSet():
+                    with self.lock:
+                        #print self._frame.as_numpy_array().tostring()
+                        d = self._frame.as_numpy_array()
+                        try:
+                            so.send(pickle.dumps(d))
+                        except socket.error, e:
+                            so.close()
+                            inp.remove(so)
+                    self.new_frame_ready.clear()
 
 #                else:
 ##                    print 'seeend'

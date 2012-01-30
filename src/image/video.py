@@ -31,7 +31,7 @@ import time
 from src.image.image import Image
 from src.image.image_helper import load_image
 
-
+DEBUG = False
 class Video(Image):
     '''
     '''
@@ -54,7 +54,10 @@ class Video(Image):
         self._lock = Lock()
         if self.cap is None:
             try:
-                self.cap = cvCreateCameraCapture(0)
+                if DEBUG:
+                    self.cap = 1
+                else:
+                    self.cap = cvCreateCameraCapture(0)
                 self.width = 640
                 self.height = 480
 
@@ -81,9 +84,9 @@ class Video(Image):
     def _get_frame(self):
         if self.cap is not None:
             with self._lock:
-#                src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
-#                return load_image(src)
-
+                if DEBUG:
+                    src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
+                    return load_image(src)
                 return  cvQueryFrame(self.cap)
     def start_recording(self, path):
         fps = 8.0
