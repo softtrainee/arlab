@@ -341,7 +341,7 @@ def new_dst(src, zero=False, width=None, height=None, nchannels=None, size=None)
     '''
     '''
 
-
+#    print nchannels
     if width is not None and height is not None:
         size = CvSize(width, height)
     elif size is None:

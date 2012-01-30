@@ -46,7 +46,7 @@ class VideoClient(HasTraits):
 
     frame_width = 640
     frame_height = 480
-    frame_depth = 3
+    frame_depth = 1
 
     test = Button
     image = Instance(Image, ())
@@ -77,8 +77,8 @@ class VideoClient(HasTraits):
         try:
             return pickle.loads(d)
         except Exception, e:
-
-            print e
+            pass
+#            print e
 
     def listen(self, udp=False):
         func = self._listen_udp if udp else  self._listen
@@ -169,8 +169,8 @@ class VideoClient(HasTraits):
 
 
         while self._stream_video:
-            for i in range(4):
-                self._socks[i].send('1')
+#            for i in range(4):
+#                self._socks[i].send('1')
 
 #            self._sock.send('1')
 #            data = self._sock.recv()#self.frame_size)
@@ -178,22 +178,23 @@ class VideoClient(HasTraits):
 ##            print type(d)
 #            self.image.load(d)
 #            self.image.swap_rb()
-#            _, _out, _ = select.select([self._sock], [self._sock], [], 0.25)
-##            print _out
-#            for s in _out:
-##                print s.send('1')
-##                s.send('1')
-#                d = None
-#                data = s.recv(self.frame_size)
-#                while 1:
+            _, _out, _ = select.select([], [self._sock], [], 1)
+#            print _out
+            for s in _out:
+#                print s.send('1')
+#                s.send('1')
+                d = None
+                data = s.recv(self.frame_size)
+#                print len(data)
+                while 1:
+
+                    d = self.unpickle(data)
+                    if d is not None:
+                        break
+                    else:
+                        data += s.recv(self.frame_size)
 #
-#                    d = self.unpickle(data)
-#                    if d is not None:
-#                        break
-#                    else:
-#                        data += s.recv(self.frame_size)
-#
-##                print type(d)
+                self.image.load(d, nchannels=1)
 
     def connect(self, udp=False):
         if udp:
@@ -202,13 +203,13 @@ class VideoClient(HasTraits):
 #            for i in range(4):
 #                si[i].connect((self.host, self.port + i))
         else:
-            import zmq
-            context = zmq.Context()
-            sock = context.socket(zmq.SUB)
-            sock.connect("udp://{}:{}".format(self.host, self.port))
-            sock.setsockopt(zmq.SUBSCRIBE, '<frame>')
-#            self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#            self._sock.connect((self.host, self.port))
+#            import zmq
+#            context = zmq.Context()
+#            sock = context.socket(zmq.SUB)
+#            sock.connect("udp://{}:{}".format(self.host, self.port))
+#            sock.setsockopt(zmq.SUBSCRIBE, '<frame>')
+            self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._sock.connect((self.host, self.port))
 #        self._sock = sock
 #        self._sock.settimeout(1e-3)
         self._stream_video = True
@@ -217,7 +218,7 @@ class VideoClient(HasTraits):
 
 if __name__ == '__main__':
     c = VideoClient()
-    udp = True
+    udp = False
 #    self.img_que = Queue.Queue(maxsize=4)
     c.connect(udp=udp)
     c.listen(udp=udp)
