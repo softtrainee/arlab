@@ -23,7 +23,7 @@ class Flag(object):
         self.name = name
 
     def get(self):
-        return self._set
+        return int(self._set)
 
     def set(self, value):
         if isinstance(value, str):
@@ -31,7 +31,8 @@ class Flag(object):
         else:
             value = bool(value)
         self._set = value
-
+        return True
+    
     def clear(self):
         self._set = False
 #======== EOF ================================

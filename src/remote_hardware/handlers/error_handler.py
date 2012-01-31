@@ -50,7 +50,7 @@ class ErrorHandler:
         err = None
         try:
             result = func(manager, *args)
-
+        
             if result is None:
                 err = NoResponseErrorCode(logger=self.logger)
             elif isinstance(result, ErrorCode):
