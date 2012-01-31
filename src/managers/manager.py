@@ -208,7 +208,8 @@ class Manager(ConfigLoadable):
         self.flags.append(Flag(f))
 
     def get_flag(self, name):
-        return next(([f for f in self.flags if f == name]), None)
+        
+        return next((f for f in self.flags if f.name == name), None)
 #    def get_flag_state(self, name):
 #        return self._flag(name, 'get')
 #
