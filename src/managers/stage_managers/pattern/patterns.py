@@ -29,6 +29,7 @@ import os
 from src.image.image import Image
 from chaco.data_range_1d import DataRange1D
 from chaco.linear_mapper import LinearMapper
+import math
 
 class TargetOverlay(AbstractOverlay):
     target_radius = Float
@@ -87,24 +88,40 @@ class Pattern(HasTraits):
     path = Str
     name = Property(depends_on='path')
 
-    image_width = 640
-    image_height = 480
+#    image_width = 640
+#    image_height = 480
+
     xbounds = (-2, 2)
     ybounds = (-2, 2)
-    pxpermm = None
-    def map_pt(self, x, y):
+#    pxpermm = None
 
-        return self.pxpermm * x + self.image_width / 2, self.pxpermm * y + self.image_height / 2
+    velocity = Float(1)
+    calculated_transit_time = Float
+#    def map_pt(self, x, y):
+#
+#        return self.pxpermm * x + self.image_width / 2, self.pxpermm * y + self.image_height / 2
 
     def _get_name(self):
         if not self.path:
             return 'Pattern'
         return os.path.basename(self.path).split('.')[0]
+
 #    graph_width = 200
 #    graph_height = 200
 
     def _anytrait_changed(self, name, new):
-        self.replot()
+        if name != 'calculated_transit_time':
+            self.replot()
+            self.calculate_transit_time()
+
+    def calculate_transit_time(self):
+        self.calculated_transit_time = self._get_path_length() * self.velocity + self._get_delay()
+
+    def _get_path_length(self):
+        return 0
+
+    def _get_delay(self):
+        return 0
 
     def _beam_radius_changed(self):
         oo = self.graph.plots[0].plots['plot0'][0].overlays[1]
@@ -116,48 +133,49 @@ class Pattern(HasTraits):
         oo.visible = self.show_overlap
         oo.request_redraw()
 
-    def set_mapping(self, px):
-        self.pxpermm = px / 10.0
-
-
-    def set_image(self, data, graph=None):
-        '''
-            px,py pixels per cm x and y
-        '''
-        if graph is None:
-            graph = self.graph
-
-#        p = graph.plots[0].plots['plot0'][0]
-#        for ui in p.underlays:
-#            if isinstance(ui, ImageUnderlay):
-#                ui.image.load(img)
-#                break
+#    def set_mapping(self, px):
+#        self.pxpermm = px / 10.0
+#
+#
+#    def set_image(self, data, graph=None):
+#        '''
+#            px,py pixels per cm x and y
+#        '''
+#        if graph is None:
+#            graph = self.graph
+#
+##        p = graph.plots[0].plots['plot0'][0]
+##        for ui in p.underlays:
+##            if isinstance(ui, ImageUnderlay):
+##                ui.image.load(img)
+##                break
+##        else:
+#        if isinstance(data, str):
+#            image = Image()
+#            image.load(data)
+#            data = image.get_array()
 #        else:
-        if isinstance(data, str):
-            image = Image()
-            image.load(data)
-            data = image.get_array()
-        else:
-            data = data.as_numpy_array()
-            data = data.copy()
-            data = flipud(data)
-
-#            mmx = px / 10.0 * (self.xbounds[1] - self.xbounds[0])
-#            mmy = py / 10.0 * (self.ybounds[1] - self.ybounds[0])
+#            data = data.as_numpy_array()
+#            data = data.copy()
+#            data = flipud(data)
 #
-#            w = 640
-#            h = 480
-#            cb = [w / 2 - mmx, w / 2 + mmx, h / 2 - mmy, h / 2 + mmy]
-#            cb = [h / 2 - mmy, h / 2 + mmy, w / 2 - mmx, w / 2 + mmx ]
-
-        graph.plots[0].data.set_data('imagedata', data)
-        graph.plots[0].img_plot('imagedata')
-
-#            io = ImageUnderlay(component=p, image=image, crop_rect=(640 / 2, 480 / 2, mmx, mmy))
+##            mmx = px / 10.0 * (self.xbounds[1] - self.xbounds[0])
+##            mmy = py / 10.0 * (self.ybounds[1] - self.ybounds[0])
+##
+##            w = 640
+##            h = 480
+##            cb = [w / 2 - mmx, w / 2 + mmx, h / 2 - mmy, h / 2 + mmy]
+##            cb = [h / 2 - mmy, h / 2 + mmy, w / 2 - mmx, w / 2 + mmx ]
 #
-#            p.underlays.append(io)
-
-        graph.redraw()
+#
+#        graph.plots[0].data.set_data('imagedata', data)
+#        graph.plots[0].img_plot('imagedata')
+#
+##            io = ImageUnderlay(component=p, image=image, crop_rect=(640 / 2, 480 / 2, mmx, mmy))
+##
+##            p.underlays.append(io)
+#
+#        graph.redraw()
 
     def pattern_generator_factory(self, **kw):
         raise  NotImplementedError
@@ -170,8 +188,8 @@ class Pattern(HasTraits):
         data_out = array([pt for pt in pgen_out])
         xs, ys = transpose(data_out)
 
-        if self.pxpermm is not None:
-            xs, ys = self.map_pt(xs, ys)
+#        if self.pxpermm is not None:
+#            xs, ys = self.map_pt(xs, ys)
 
         self.graph.set_data(xs)
         self.graph.set_data(ys, axis=1)
@@ -191,23 +209,23 @@ class Pattern(HasTraits):
                  )
         return v
 
-    def _get_crop_bounds(self):
-        px = self.pxpermm
-#        mmx = px / 10.0 * 1 / (self.xbounds[1] - self.xbounds[0])
-#        mmy = py / 10.0 * 1 / (self.ybounds[1] - self.ybounds[0])
-        windx = (self.xbounds[1] - self.xbounds[0])
-        mmx = windx * px / 2
-
-        windy = (self.ybounds[1] - self.ybounds[0])
-        mmy = windy * px / 2
-
-        w = self.image_width
-        h = self.image_height
-
-        cbx = [w / 2 - mmx, w / 2 + mmx ]
-        cby = [h / 2 - mmy, h / 2 + mmy]
-
-        return cbx, cby
+#    def _get_crop_bounds(self):
+#        px = self.pxpermm
+##        mmx = px / 10.0 * 1 / (self.xbounds[1] - self.xbounds[0])
+##        mmy = py / 10.0 * 1 / (self.ybounds[1] - self.ybounds[0])
+#        windx = (self.xbounds[1] - self.xbounds[0])
+#        mmx = windx * px / 2
+#
+#        windy = (self.ybounds[1] - self.ybounds[0])
+#        mmy = windy * px / 2
+#
+#        w = self.image_width
+#        h = self.image_height
+#
+#        cbx = [w / 2 - mmx, w / 2 + mmx ]
+#        cby = [h / 2 - mmy, h / 2 + mmy]
+#
+#        return cbx, cby
 
     def reset_graph(self, **kw):
         self.graph = self._graph_factory(**kw)
@@ -229,22 +247,22 @@ class Pattern(HasTraits):
         cby = self.ybounds
         tr = self.target_radius
 
-        if with_image:
-            px = self.pxpermm  #px is in mm
-            cbx, cby = self._get_crop_bounds()
-            #g.set_axis_traits(tick_label_formatter=lambda x: '{:0.2f}'.format((x - w / 2) / px))
-            #g.set_axis_traits(tick_label_formatter=lambda x: '{:0.2f}'.format((x - h / 2) / px), axis='y')
-
-            bx, by = g.plots[0].bounds
-            g.plots[0].x_axis.mapper = LinearMapper(high_pos=bx,
-                                                    range=DataRange1D(low_setting=self.xbounds[0],
-                                                                      high_setting=self.xbounds[1]))
-            g.plots[0].y_axis.mapper = LinearMapper(high_pos=by,
-                                                    range=DataRange1D(low_setting=self.ybounds[0],
-                                                                      high_setting=self.ybounds[1]))
-            cx += self.image_width / 2
-            cy += self.image_height / 2
-            tr *= px
+#        if with_image:
+#            px = self.pxpermm  #px is in mm
+#            cbx, cby = self._get_crop_bounds()
+#            #g.set_axis_traits(tick_label_formatter=lambda x: '{:0.2f}'.format((x - w / 2) / px))
+#            #g.set_axis_traits(tick_label_formatter=lambda x: '{:0.2f}'.format((x - h / 2) / px), axis='y')
+#
+#            bx, by = g.plots[0].bounds
+#            g.plots[0].x_axis.mapper = LinearMapper(high_pos=bx,
+#                                                    range=DataRange1D(low_setting=self.xbounds[0],
+#                                                                      high_setting=self.xbounds[1]))
+#            g.plots[0].y_axis.mapper = LinearMapper(high_pos=by,
+#                                                    range=DataRange1D(low_setting=self.ybounds[0],
+#                                                                      high_setting=self.ybounds[1]))
+#            cx += self.image_width / 2
+#            cy += self.image_height / 2
+#            tr *= px
 
         g.set_x_limits(*cbx)
         g.set_y_limits(*cby)
@@ -287,6 +305,12 @@ class Pattern(HasTraits):
     def maker_group(self):
         return Group(
                      self.get_parameter_group(),
+
+                     HGroup(Item('velocity'),
+                            Item('calculated_transit_time',
+                                 label='Time (s)',
+                                 style='readonly',
+                                 format_str='%0.1f')),
                      Item('show_overlap'),
                      Item('beam_radius', enabled_when='show_overlap'),
                      Item('graph',
@@ -349,9 +373,14 @@ class RandomPattern(Pattern):
 
 
 class PolygonPattern(Pattern):
-    nsides = Range(3, 12)
+    nsides = Range(3, 200)
     radius = Range(0.0, 1.0, 0.5)
     rotation = Range(0.0, 360.0, 0.0)
+    def _get_path_length(self):
+        return self.nsides * self.radius * math.sin(math.radians(360 / self.nsides)) + 2 * self.radius
+
+    def _get_delay(self):
+        return 0.1 * self.nsides
 
     def get_parameter_group(self):
         return Group(Item('radius'),

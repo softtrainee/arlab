@@ -1,6 +1,6 @@
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Bool, Tuple
-from traitsui.api import View, Item, Handler, HGroup, spring
+from traitsui.api import View, Item, Handler, HGroup, spring, Spring
 from pyface.timer.do_later import do_later, do_after
 #============= standard library imports ========================
 from numpy import histogram, argmax, argmin, array, linspace, asarray, mean
@@ -30,9 +30,17 @@ import os
 #import time
 #from src.graph.graph import Graph
 #from src.data_processing.time_series.time_series import smooth
-
+import random
+import time
+DEVX = random.randint(-10, 10)
+DEVY = random.randint(-10, 10)
+DEVX = 0
+DEVY = -2
+CX = 39
+CY = -41
 class TargetResult(object):
-    def __init__(self, cv, ps, cs, tv, dv, ev, br, *args, **kw):
+    def __init__(self, origin, cv, ps, cs, tv, dv, ev, br, *args, **kw):
+        self.origin = origin
         self.centroid_value = cv
         self.poly_points = ps
         self.contours = cs
@@ -40,6 +48,16 @@ class TargetResult(object):
         self.dilate_value = dv
         self.erode_value = ev
         self.bounding_rect = br
+
+    @property
+    def dev_centroid(self):
+        return (cvRound(self.origin[0] - self.centroid_value[0]),
+                cvRound(self.origin[1] - self.centroid_value[1]))
+
+    @property
+    def dev_br(self):
+        return (cvRound(self.origin[0] - self.bounding_rect[0]),
+                cvRound(self.origin[1] - self.bounding_rect[1]))
 
 class ImageHandler(Handler):
     def init(self, info):
@@ -51,11 +69,9 @@ class MachineVisionManager(Manager):
     image = Instance(Image, ())
     pxpermm = 23
 
-#    cropwidth = 6
-#    cropheight = 6
-
     cropwidth = 4
     cropheight = 4
+    cropscalar = 0.5
 
     croppixels = None
 
@@ -71,52 +87,40 @@ class MachineVisionManager(Manager):
 #    image_height = Int(324 * 2)
 
     start_threshold_search_value = 100
-    threshold_search_width = 20
+    threshold_search_width = 10
 #    threshold_search_width = 10
 
-    debug = False
-#    debug = True
+#    _debug = False
+    _debug = True
 
     style = 'co2'
-    save_positioning_error = Bool(True)
 
     title = Property
     current_hole = None
 
-    corrected_position = Property
-    _corrected_position = Tuple(0,0)
+    corrected_position = Property(depends_on='_corrected_position')
+    _corrected_position = Tuple
 
-    nominal_position = Property
-    _nominal_position = Tuple(0,0)
+    nominal_position = Property(depends_on='_nominal_position')
+    _nominal_position = Tuple
 
-    def _get_corrected_position(self):
-        
-        return '{:5f}, {:5f}'.format(*self._corrected_position)
+    use_dilation = Bool(False)
+    use_erosion = Bool(True)
+    save_positioning_error = Bool(False)
+    use_histogram = Bool(False)
 
-    def _get_nominal_position(self):
-        return '{:5f}, {:5f}'.format(*self._nominal_position)
+    def _test_fired(self):
 
-    def _get_title(self):
-        return 'Positioning Error Hole {}'.format(self.current_hole) \
-                    if self.current_hole else 'Positioing Error'
+        t = Thread(target=self.search, args=(0, 0), kwargs=dict(right_search=True))
+        t.start()
 
-    def load_source(self):
-        if self.debug:
-            src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
-            src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
-
-        else:
-            src = self.video.get_frame()#_frame#get_frame(flip=True, clone=True, swap_rb=False)
-
-        self.image.load(src)
-        return self.image.source_frame
-
-    def search(self, cx, cy, holenum=None, **kw):
+    def search(self, cx, cy, holenum=None, close_image=True, **kw):
+#        self.cropwidth = 4
+#        self.cropheight = 4
         self._nominal_position = (cx, cy)
 
         self.current_hole = holenum
-        self.info('locating {} sample hole {}'.format(self.style, holenum))
-        self.load_source()
+        self.info('locating {} sample hole {}'.format(self.style, holenum if holenum else ''))
 
         start = self.start_threshold_search_value
 
@@ -124,59 +128,89 @@ class MachineVisionManager(Manager):
         expand_value = 5
         found = False
 
-        self.close_image()
-        do_after(500, self.edit_traits, view='image_view')
+        crop_tries = 3
+        threshold_tries = 1
+        for ci in range(crop_tries):
+            if close_image:
 
-        ntries = 3
-        for i in range(ntries):
-            s = start - i * expand_value
-            e = end + i * expand_value
-            self.info('searching... thresholding image {} - {}'.format(s, e))
+                self.close_image()
+            do_after(500, self.edit_traits, view='image_view')
+            self._load_source()
 
-            args = self._search_for_well(s, e)
+            cw = (1 + ci * self.cropscalar) * self.cropwidth
+            ch = (1 + ci * self.cropscalar) * self.cropheight
 
-            '''
-                args = dev1x, dev1y, dev2x, dev2y
-                dev1== bound rect dev
-                dev2== centroid dev
-                centroid dev empirically calculates a more accurate deviation
-            '''
-            if args and args[2] != []:
-                self.info('POSITIONING ERROR DETECTED')
-                found = True
-                #if i > 0:
-                #    #this is the first threshold value to successfully locate the target
-                #    #so we should use this as our future starting threshold value
-                #    self.start_threshold_search_value = args[4][0]-10
+            self.cropwidth = cw
+            self.cropheight = ch
+            self.info('cropping image to {}mm x {}mm'.format(cw, ch))
+            for i in range(threshold_tries):
+                s = start - i * expand_value
+                e = end + i * expand_value
+                self.info('searching... thresholding image {} - {}'.format(s, e))
+
+                args = self._search_for_well(s, e, cw, ch)
+
+                '''
+                    args = results, dev1x, dev1y, dev2x, dev2y
+                    dev1== bound rect dev
+                    dev2== centroid dev
+                    centroid dev empirically calculates a more accurate deviation
+                '''
+                if args and args[3] != []:
+                    self.info('POSITIONING ERROR DETECTED')
+                    found = True
+                    #if i > 0:
+                    #    #this is the first threshold value to successfully locate the target
+                    #    #so we should use this as our future starting threshold value
+                    #    self.start_threshold_search_value = args[4][0]-10
+                    break
+            if found:
                 break
 
         if not found:
             self.warning('no target found during search. threshold {} - {}'.format(s, e))
         else:
-            def dev(d):
+
+            def hist(d):
                 f, v = histogram(array(d))
                 i = len(f)  if argmax(f) == len(f) - 1 else argmax(f)
                 return v[i]
 
-            dx = dev(args[2])
-            dy = dev(args[3])
+            if self.use_histogram:
+                dx = hist(args[3])
+                dy = hist(args[4])
+            else:
+                avg = lambda s: sum(s) / len(s)
+                dx = avg(args[3])
+                dy = avg(args[4])
+
+            ts = args[5]
+            ds = args[6]
+            es = args[7]
+#            print ts, ds, es
+            self._threshold = ts
+            src = threshold(grayspace(self.image.frames[0]), ts)
+            if ds:
+                src = dilate(src, ds)
+            if es:
+                src = erode(src, es)
+
+            self.image.frames[1] = colorspace(src)
+
+            self._draw_markup(args[0], dev=(dx, dy))
 
             #calculate the data position to move to nx,ny
-            dxmm = dx / self.pxpermm
-            dymm = dy / self.pxpermm
+            dxmm = dx / float(self.pxpermm)
+            dymm = dy / float(self.pxpermm)
             nx = cx - dxmm
             ny = cy + dymm
+            self._corrected_position = (dxmm, dymm)
 
-            self._corrected_position = (nx, ny)
-            #tx, ty = self._get_true_xy()
-
-            #self._draw_indicator(self.image.frames[0], new_point(tx - dx, ty - dy), (255, 0, 0), rect=True, size=4)
             args = cx, cy, nx, ny, dxmm, dymm, int(dx), int(dy)
 
             self.info('current pos: {:0.3f},{:0.3f} calculated pos: {:0.3f}, {:0.3f} dev: {:0.3f},{:0.3f} ({:n},{:n})'.format(*args))
 
             if self.save_positioning_error:
-
                 if holenum:
                     path, _ = unique_path(positioning_error_dir, 'positioning_error{:03n}_'.format(int(holenum)), filetype='jpg')
                     self.image.save(path)
@@ -190,20 +224,24 @@ class MachineVisionManager(Manager):
 
             return nx, ny
 
-    def _search_for_well(self, start, end):
+    def _search_for_well(self, start, end, cw, ch):
         dev1x = []
         dev1y = []
         dev2x = []
         dev2y = []
-        thresholds = []
+        ts = []
+        ds = []
+        es = []
 
+        rresults = None
         #make end inclusive
         for i in range(start, end + 1):
             self._threshold = i
             try:
-                results = self._calculate_positioning_error(i)
+                results = self._calculate_positioning_error(cw, ch, threshold_val=i)
             except Exception, e:
                 print e
+
             if results:
                 '''                 
                  instead of trying to figure out if the result is the left of right well
@@ -211,18 +249,21 @@ class MachineVisionManager(Manager):
                  then determine which is the left and right
                  
                 '''
-                thresholds.append(i)
                 if self.style == 'co2':
-                    _, _, dx, dy = self._co2_well(results)
+                    _, _, dx, dy, ti, di, ei = self._co2_well(results)
                 else:
                     _, _, dx, dy = self._diode_well(results)
 
-#                print 'threshold', i, dx, dy
                 dev2x += dx
                 dev2y += dy
-#                time.sleep(0.1)
 
-        return dev1x, dev1y, dev2x, dev2y, thresholds
+                ts.append(ti)
+                ds.append(di)
+                es.append(ei)
+                rresults = results
+
+        avg = lambda s: sum(s) / max(1, len(s))
+        return rresults, dev1x, dev1y, dev2x, dev2y, avg(ts), avg(ds), avg(es)
 
     def _diode_well(self, results, right_search=True):
         dev1x = []
@@ -261,26 +302,12 @@ class MachineVisionManager(Manager):
         return dev1x, dev1y, dev2x, dev2y
 
     def _co2_well(self, results):
-        devx = []
-        devy = []
-#        #find the well that is closest to the center
-        cx = self.croppixels[0] / 2.0
-        cy = self.croppixels[1] / 2.0
-#
-#        tol = self.pxpermm * 1
-        for r in results:
-            x, y = r.centroid_value
-#            if abs(x - cx) < tol and abs(y - cy) < tol:
-            devx.append(cx - x)
-            devy.append(cy - y)
+        devx, devy = zip(*[r.dev_centroid for r in results])
+        ts = results[0].threshold_value
+        es = results[0].erode_value
+        ds = results[0].dilate_value
 
-        return [], [], devx, devy
-
-    def _test_fired(self):
-
-        t = Thread(target=self.search, args=(0, 0), kwargs=dict(right_search=True))
-        t.start()
-#        self.passive_focus(None, '2step')
+        return [], [], devx, devy, ts, ds, es
 
     def close_image(self):
         if self.ui is not None:
@@ -293,9 +320,12 @@ class MachineVisionManager(Manager):
 
     def image_view(self):
         v = View(
-#                 Item('threshold', show_label=False),
-                 HGroup(spring, Item('nominal_position', style='readonly'),
-                        Item('corrected_position', style='readonly')),
+                 HGroup(
+                        Item('threshold', format_str='%03i', style='readonly'),
+                        #spring,
+                        Item('nominal_position', label='Nom. Pos.', style='readonly'),
+                        Item('corrected_position', label='Cor. Pos.', style='readonly')
+                        ),
                  Item('image', show_label=False, editor=ImageEditor(),
                       width=self.image_width, height=self.image_height
                       ),
@@ -306,20 +336,18 @@ class MachineVisionManager(Manager):
                  )
         return v
 
-    def _calculate_positioning_error(self, threshold_val=None):
+    def _calculate_positioning_error(self, cw, ch, threshold_val=None):
         src = self.image.source_frame
 
-        cw_px = int(self.cropwidth * self.pxpermm)
-        ch_px = int(self.cropheight * self.pxpermm)
+        cw_px = int(cw * self.pxpermm)
+        ch_px = int(ch * self.pxpermm)
 
         #for debugging calculated deviation should equal devx,devy
         xo = 0; yo = 0
-        DEBUG = False
-        if DEBUG:
-            devx = -10;cx = 75
-            devy = -30;cy = 19
-            xo = cx + devx
-            yo = cy + devy
+
+        if self._debug:
+            xo = CX + DEVX
+            yo = CY + DEVY
 
         x = int((src.width - cw_px) / 2 + xo)
         y = int((src.height - ch_px) / 2 + yo)
@@ -336,59 +364,42 @@ class MachineVisionManager(Manager):
         steps = xrange(threshold_val, threshold_val + 1, 1)
 
         results = self._threshold_loop(gsrc, steps, 0, 0)
-        if not results:
-            results = self._dilate_loop(gsrc, steps, 0)
-            if not results:
-                results = self._erode_loop(gsrc, steps)
-
         if results:
-            #add to indicators to ensure the indicator is drawn on top
-            indicators = []
-            for pi in results:
-                draw_contour_list(self.image.frames[1], pi.contours, external_color=(255, 255, 0))
-                draw_polygons(self.image.frames[0], [pi.poly_points], color=(255, 7, 0), thickness=1)
+            if not results and self.use_dilation:
+                results = self._dilate_loop(gsrc, steps, 0)
 
-                #draw the centroid in blue
-                centroid_center = new_point(*pi.centroid_value)
-                indicators.append((self.image.frames[1], centroid_center , (0, 7, 255), 'rect', 2))
-
-                #calculate bounding rect and bounding square for polygon
-                r = pi.bounding_rect
-                draw_rectangle(self.image.frames[1], r.x, r.y, r.width, r.height)
-
-                br_center = new_point(r.x + r.width / 2, r.y + r.height / 2)
-                indicators.append((self.image.frames[1],
-                                   br_center,
-                                   (255, 0, 0), 'rect', 2))
-
-                #if % diff in w and h greater than 20% than use the centroid as the calculated center
-                #otherwise use the bounding rect center            
-                dwh = abs(r.width - r.height) / float(max(r.width, r.height))
-                if dwh > 0.2:
-                    calc_center = centroid_center
-                else:
-                    calc_center = br_center
-
-                #indicate which center is chosen                
-                indicators.append((self.image.frames[0], calc_center, (255, 255, 0), 'rect', 2))
-                indicators.append((self.image.frames[1], calc_center, (255, 255, 0), 'crosshairs', 1))
-
-                dx1, dy1 = self._calculate_deviation(calc_center)
-                dx2, dy2 = self._calculate_deviation(new_point(*pi.centroid_value))
-                pi.dev1 = (dx1, dy1)
-                pi.dev2 = (dx2, dy2)
-
-            #draw the center of the image
-            true_cx, true_cy = self._get_true_xy()
-            self._draw_indicator(self.image.frames[0], new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
-            self._draw_indicator(self.image.frames[1], new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
-
-            for i in indicators:
-                self._draw_indicator(*i)
+        if not results and self.use_erosion:
+            results = self._erode_loop(gsrc, steps, dilate=self.use_dilation)
 
         return results
 
+    def _dilate_loop(self, gsrc, steps, ei):
+        for di in range(1, 4):
+            center = self._threshold_loop(gsrc, steps, di, ei)
+            if center:
+                return center
+
+    def _erode_loop(self, gsrc, steps, dilate=True):
+        for ei in range(1, 4):
+            if dilate:
+                center = self._dilate_loop(gsrc, steps, ei)
+            else:
+                center = self._threshold_loop(gsrc, steps, 0, ei)
+            if center:
+                return center
+
+    def _threshold_loop(self, gsrc, steps, *args):
+        for td in steps:
+            params = self._calc_sample_hole_position(gsrc, td, *args)
+            if params:
+                return params
+#            time.sleep(0.5)
+
     def _calc_sample_hole_position(self, gsrc, ti, dilate_val, erode_val):
+
+#        if self._debug:
+#            time.sleep(0.1)
+
         min_area = 1000
         max_area = gsrc.width * gsrc.height
         thresh_src = threshold(gsrc, ti)
@@ -411,41 +422,32 @@ class MachineVisionManager(Manager):
                 for pi, br in zip(polygons, bounding_rect):
                     if len(pi) > 4:
                         cx, cy = centroid(pi)
-                        tr = TargetResult((cx, cy), pi, contours, ti, dilate_val, erode_val, br)
-#                        print self.style, self._near_center(cx, cy)
+                        tr = TargetResult(self._get_true_xy(),
+                                          (cx, cy), pi, contours, ti, dilate_val, erode_val, br)
+
+                        if self._debug:
+                            self.debug('threshold={}, dilate={}, erode={}'.format(ti, dilate_val, erode_val))
+                            self._draw_result(self.image.frames[1], tr, pi)
+                            time.sleep(0.5)
+
                         if self.style == 'co2':
                             if self._near_center(cx, cy):
                                 found.append(tr)
                         else:
                             found.append(tr)
+
         return found
 
-    def _calculate_deviation(self, c):
-        true_cx, true_cy = self._get_true_xy()
-        return cvRound(true_cx - c.x), cvRound(true_cy - c.y)
+    def _draw_result(self, src, result, pi):
+        self._draw_indicator(src, new_point(*result.centroid_value), shape='crosshairs')
+        draw_polygons(src, [pi])
 
-    def _threshold_loop(self, gsrc, steps, *args):
-        for td in steps:
-            params = self._calc_sample_hole_position(gsrc, td, *args)
-            if params:
-                return params
-
-    def _dilate_loop(self, gsrc, steps, ei):
-        for di in range(1, 4):
-            center = self._threshold_loop(gsrc, steps, di, ei)
-            if center:
-                return center
-
-    def _erode_loop(self, gsrc, steps):
-        for ei in range(1, 4):
-            center = self._dilate_loop(gsrc, steps, ei)
-            if center:
-                return center
-
-    def _near_center(self, x, y, tol=1):
+    def _near_center(self, x, y, tol=1.5):
         cx = self.croppixels[0] / 2.0
         cy = self.croppixels[1] / 2.0
+
         tol *= self.pxpermm
+
         return abs(x - cx) < tol and abs(y - cy) < tol
 
     def _get_true_xy(self):
@@ -457,21 +459,72 @@ class MachineVisionManager(Manager):
 
         return true_cx, true_cy
 
-    def _image_default(self):
-        return Image(width=self.image_width,
-                     height=self.image_height)
+    def _load_source(self):
+        if self._debug:
+            src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
+            src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
 
-    def _get_threshold(self):
-        return self._threshold
+        else:
+            src = self.video.get_frame()#_frame#get_frame(flip=True, clone=True, swap_rb=False)
 
-    def _set_threshold(self, v):
-        self._threshold = v
-#        args = self._calculate_positioning_error(v)
-#        if args:
-#            for a in args:
-#                print a.dev1, a.dev2, 'asdfasd'
+        self.image.load(src)
+        return self.image.source_frame
 
-    def _draw_indicator(self, src, center, color, shape='circle', size=3, thickness= -1):
+    def _draw_markup(self, results, dev=None):
+        #add to indicators to ensure the indicator is drawn on top
+        indicators = []
+        for pi in results:
+
+            f1 = self.image.frames[1]
+            f0 = self.image.frames[0]
+            draw_polygons(f0, [pi.poly_points], color=(255, 7, 0), thickness=1)
+            draw_contour_list(f1, pi.contours, external_color=(255, 255, 0))
+
+            #draw the centroid in blue
+            centroid_center = new_point(*pi.centroid_value)
+            indicators.append((f1, centroid_center , (0, 255, 0), 'rect', 2))
+
+            #calculate bounding rect and bounding square for polygon
+            r = pi.bounding_rect
+            draw_rectangle(f1, r.x, r.y, r.width, r.height)
+
+            br_center = new_point(r.x + r.width / 2, r.y + r.height / 2)
+            indicators.append((f1,
+                               br_center,
+                               (255, 0, 0), 'rect', 2))
+
+#                #if % diff in w and h greater than 20% than use the centroid as the calculated center
+#                #otherwise use the bounding rect center            
+#                dwh = abs(r.width - r.height) / float(max(r.width, r.height))
+#                if dwh > 0.2:
+#                    calc_center = centroid_center
+#                else:
+#                    calc_center = br_center
+
+            calc_center = centroid_center
+            #indicate which center is chosen                
+            indicators.append((f0, calc_center, (0, 255, 255), 'crosshairs', 1))
+            indicators.append((f1, calc_center, (0, 255, 255), 'crosshairs', 1))
+
+            pi.center = calc_center
+
+        #draw the center of the image
+        true_cx, true_cy = self._get_true_xy()
+        self._draw_indicator(f0, new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
+        self._draw_indicator(f1, new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
+
+        for i in indicators:
+            self._draw_indicator(*i)
+
+
+        #draw the calculated center
+        if dev:
+
+            self._draw_indicator(f0, new_point(true_cx - dev[0],
+                                               true_cy - dev[1]), (255, 0, 255), 'crosshairs')
+
+
+    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=3, thickness= -1):
         r = size
         if shape == 'rect':
             draw_rectangle(src, center.x - r / 2, center.y - r / 2, r, r,
@@ -488,8 +541,37 @@ class MachineVisionManager(Manager):
                    )
         else:
             cvCircle(src, center, r, color, thickness=thickness, line_type=CV_AA)
+
+    def _image_default(self):
+        return Image(width=self.image_width,
+                     height=self.image_height)
+
+#===============================================================================
+# getter/setters
+#===============================================================================
+    def _get_corrected_position(self):
+        try:
+            return '{:5f}, {:5f}'.format(*self._corrected_position)
+        except IndexError:
+            pass
+
+    def _get_nominal_position(self):
+        try:
+            return '{:5f}, {:5f}'.format(*self._nominal_position)
+        except IndexError:
+            pass
+
+    def _get_title(self):
+        return 'Positioning Error Hole {}'.format(self.current_hole) \
+                    if self.current_hole else 'Positioing Error'
+    def _get_threshold(self):
+        return self._threshold
+
+    def _set_threshold(self, v):
+        self._threshold = v
+
 m = MachineVisionManager()
-m.debug = True
+m._debug = True
 def timeit_func():
 #    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
     m.search(0, 0)
@@ -579,10 +661,10 @@ def time_comp():
 def main():
     from src.helpers.logger_setup import setup
     setup('machine_vision')
-    m = MachineVisionManager(debug=True)
+    m = MachineVisionManager(_debug=True)
 #    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff')
-    m._test_fired()
-    m.configure_traits(view='image_view')
+    #m._test_fired()
+    m.configure_traits()#view='image_view')
 
 if __name__ == '__main__':
     #setup('machine_vision')

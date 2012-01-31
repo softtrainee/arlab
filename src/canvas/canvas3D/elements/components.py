@@ -523,7 +523,7 @@ class Valve(SetStateObject3D):
                 vm.unlock(self.name)
             else:
                 vm.lock(self.name)
-            self.soft_lock = not self.soft_lock
+        self.soft_lock = not self.soft_lock
 
     def sample_valve(self):
         '''

@@ -59,7 +59,7 @@ class FusionsLogicBoard(CoreDevice):
 
 
     prefix = Str
-
+    scan_func = 'read_power_meter'
     def initialize(self, *args, **kw):
         '''
         '''
@@ -91,11 +91,12 @@ class FusionsLogicBoard(CoreDevice):
 
         return True
 
-    def _build_command(self, cmd):
+    def _build_command(self, *args):
         '''
            
         '''
         if self.prefix is not None:
+            cmd = ' '.join(map(str, args))
             return ''.join((self.prefix, cmd))
         else:
             self.warning('Prefix not set')
@@ -120,35 +121,15 @@ class FusionsLogicBoard(CoreDevice):
 
         return True
 
-    def read_power_meter(self):
-        '''
-        '''
-        cmd = self._build_command('ADC1')
-        r = self._parse_response(self.ask(cmd))
-
-#        if cmd is not None:
-#            r = self._parse_response(self.ask(cmd))
-#        else:
-#            return self.current_value
-
-        if r is not None:
-            try:
-                r = float(r)
-            except:
-                self.warning('*Bad response from ADC ==> %s' % r)
-
-        return r
-
-    def _scan_(self, *args):
-        '''
-
-        '''
-
-        r = self.read_power_meter()
-
-        if r is not None:
-            self.stream_manager.record(r, self.name)
-
+#    def _scan_(self, *args):
+#        '''
+#
+#        '''
+#
+#        r = self.read_power_meter()
+#
+#        if r is not None:
+#            self.stream_manager.record(r, self.name)
 
     def _configure_fired(self):
         '''

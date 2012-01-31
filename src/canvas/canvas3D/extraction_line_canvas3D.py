@@ -184,7 +184,7 @@ Locked: {}'''.format(obj.name,
 #        self.manager.set_selected_explanation_item(obj)
 
     def _on_key_hook(self, event, charcode):
-        if event.MetaDown():
+        if event.MetaDown() and charcode == 76:
             if self._current is not None:
                 self._current.toggle_lock()
 

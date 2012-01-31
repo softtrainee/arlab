@@ -26,7 +26,7 @@ from ctypes_opencv import cvConvertImage, cvCloneImage, \
     CV_CVTIMG_SWAP_RB, cvCreateImageFromNumpyArray
 from image_helper import load_image, new_dst, grayspace, clone
 from src.image.image_helper import crop, draw_lines, save_image, threshold, \
-    colorspace
+    colorspace, subsample
 from ctypes_opencv.interfaces import cvCreateMatNDFromNumpyArray, pil_to_ipl
 from ctypes_opencv.cxcore import cvCreateImage, cvGetImage, CvSize, cvZero, \
     cvAddS, CvScalar, CvRect, cvSetImageROI, cvResetImageROI, \
@@ -178,11 +178,23 @@ class Image(HasTraits):
             if croprect:
 
                 if len(croprect) == 2: # assume w, h
-                    args = (frame, frame.width / 2, frame.height / 2, croprect[0], croprect[1])
+#                    args = (frame, (frame.width - croprect[0]) / 2, (frame.height - croprect[1]) / 2, croprect[0], croprect[1])
+                    croprect = (frame.width - croprect[0]) / 2, (frame.height - croprect[1]) / 2, croprect[0], croprect[1]
                 else:
-                    args = (frame,) + croprect
-                crop(*args)
+                    pass
+#                    args = (frame,) + croprect
+                d = frame.as_numpy_array()
+                rs = croprect[0]
+                re = croprect[0] + croprect[2]
+                cs = croprect[1]
+                ce = croprect[1] + croprect[3]
+                d = d[cs:ce, rs:re]
 
+                frame = pil_to_ipl(fromarray(d))
+
+#                crop(*args)
+#                frame = subsample(*args)
+                #pixelcrop(*args)
             return frame
 
     def get_bitmap(self, **kw):#flip = False, swap_rb = False, mirror = True):
@@ -242,6 +254,15 @@ class Image(HasTraits):
         src = self.render_images(self.frames)
         cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
         save_image(src, path)
+
+    def _draw_crosshairs(self, src):
+        r = 10
+        pts = [[(src.width / 2, 0), (src.width / 2, src.height / 2 - r)],
+               [(src.width / 2, src.height / 2 + r), (src.width / 2, src.height)],
+               [(0, src.height / 2), (src.width / 2 - r, src.height / 2)],
+               [(src.width / 2 + r, src.height / 2), (src.width , src.height / 2)],
+               ]
+        draw_lines(src, pts, color=(0, 255, 255), thickness=1)
 
 #            return cvIplImageAsBitmap(frame, flip = flip, swap = swap_rb)
 #

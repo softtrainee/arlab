@@ -30,15 +30,19 @@ class Timer(Thread):
         self.start()
 
     def run(self):
-        t=0
+        t = time.time()
         while not self._flag.isSet():
             self._func(*self._args, **self._kwargs)
-            self._flag.wait(max(0,self._period-(time.time()-t)-0.0125))
-            t=time.time()
+
+            ww = self._period - (time.time() - t) - 0.0125
+            w = max(0, ww)
+
+            self._flag.wait(w)
+            t = time.time()
 
     def Stop(self):
         self._flag.set()
-        
+
     def IsRunning(self):
         return not self._flag.is_set()
 #============= EOF =====================================
