@@ -90,6 +90,7 @@ class CoreDevice(ViewableDevice):
     scan_period = Float(1000, enter_set=True, auto_set=False)
     scan_units = 'ms'
     record_scan_data = Bool(True)
+    graph_scan_data = Bool(True)
     scan_path = Str
 
     current_scan_value = 0
@@ -97,7 +98,7 @@ class CoreDevice(ViewableDevice):
     time_dict = dict(ms=1, s=1000, m=60.0 * 1000, h=60.0 * 60.0 * 1000)
     application = Any
 
-    no_response_counter = 0
+    _no_response_counter = 0
     alarms = List(Alarm)
 
     data_manager = None
@@ -234,6 +235,7 @@ class CoreDevice(ViewableDevice):
                 self.set_attribute(config, 'scan_period', 'Scan', 'period', cast='float')
                 self.set_attribute(config, 'scan_units', 'Scan', 'units')
                 self.set_attribute(config, 'record_scan_data', 'Scan', 'record', cast='boolean')
+                self.set_attribute(config, 'graph_scan_data', 'Scan', 'graph', cast='boolean')
 
     def setup_alarms(self):
         config = self.get_configuration()
@@ -250,7 +252,7 @@ class CoreDevice(ViewableDevice):
         '''
         if self.scan_func:
             try:
-                v = getattr(self, self.scan_func)()
+                v = getattr(self, self.scan_func)(verbose=False)
             except AttributeError, e:
                 print e
                 return
@@ -258,7 +260,7 @@ class CoreDevice(ViewableDevice):
             if v is not None:
                 self.current_scan_value = str(v)
 
-                if self.record_scan_data:
+                if self.graph_scan_data:
                     if isinstance(v, tuple):
                         x = self.graph.record_multiple(v)
                     elif isinstance(v, PlotRecord):
@@ -274,6 +276,7 @@ class CoreDevice(ViewableDevice):
                         x = self.graph.record(v)
                         v = (v,)
 
+                if self.record_scan_data:
                     ts = generate_timestamp()
                     self.data_manager.write_to_frame((ts, x) + v)
 
@@ -294,13 +297,14 @@ class CoreDevice(ViewableDevice):
                     since the timer runs on the main thread any long comms timeouts
                     slow user interaction
                 '''
-                if self.no_response_counter > 3:
-                    self.info('no response. stopping scan')
+                if self._no_response_counter > 3:
                     self.timer.Stop()
-                    self.no_response_counter = 0
+                    self.info('no response. stopping scan')
+                    self._scanning = False
+                    self._no_response_counter = 0
+
                 else:
-                    self.info('no response {}'.format(self.no_response_counter))
-                    self.no_response_counter += 1
+                    self._no_response_counter += 1
 
     def scan(self, *args, **kw):
         '''
@@ -309,9 +313,8 @@ class CoreDevice(ViewableDevice):
         if self.scan_lock is None:
             self.scan_lock = Lock()
 
-        self.scan_lock.acquire()
-        self._scan_(*args, **kw)
-        self.scan_lock.release()
+        with self.scan_lock:
+            self._scan_(*args, **kw)
 
     def start_scan(self):
         if self.timer is not None:

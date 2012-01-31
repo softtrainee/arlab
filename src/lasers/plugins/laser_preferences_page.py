@@ -36,7 +36,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     crosshairs_color = Color('maroon')
     desired_position_color = Color('green')
     calibration_style = Enum('pychron', 'MassSpec')
-    scaling = Range(1.0, 3.0, 1.0)
+    scaling = Range(10, 20, 10)
 
     auto_center = Bool(False)
     crosshairs_offset = Tuple(0, 0)

@@ -308,6 +308,14 @@ class SerialCommunicator(Communicator):
             use the serial handle to read available bytes from the serial buffer
             
         '''
+        def eread(inw):
+            r = None
+            try:
+                r = self.handle.read(inw)
+            except (OSError, IOError), e:
+                self.warning(e)
+            return r
+
         def get_chars():
             c = 0
             try:
@@ -316,43 +324,63 @@ class SerialCommunicator(Communicator):
                 self.warning(e)
             return c
 
+        def get_line():
+            inw = get_chars()
+            r = eread(inw)
+            isline = r.endswith('\n') or r.endswith('\r') if r else False
+            return isline, r, inw
+
         r = None
-        if not self.simulation:
+        if self.simulation:
+            r = 'simulation'
+        else:
             inw = 0
             if delay is not None:
                 time.sleep(delay / 1000.)
                 inw = get_chars()
+                r = eread(inw)
             else:
                 time.sleep(self.read_delay)
-                ready_to_read, _, _ = select.select([self.handle], [], [], 0.25)
+                ready_to_read, _, _ = select.select([self.handle], [], [], 0.5)
                 if ready_to_read:
-                    inw = get_chars()
-#                    time.sleep(1e-3)
-                    cnt=0
-                    for i in xrange(8000):
-                        pinw=get_chars()
-                        if pinw!=inw:
-                            inw=pinw
-                            cnt+=1
-                            if cnt>1000:
+                    isline, r, c = get_line()
+                    if not isline:
+                        pcnt = 0
+                        cnt = 0
+                        for _ in xrange(8000):
+                            isline, r, c = get_line()
+                            if isline:
                                 break
 
-            if inw > 0:
-                try:
-                    r = self.handle.read(inw)
-#                    self.handle.flush()
-                    if is_hex:
-                        r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
-#                        rr = ''
-#                        for ri in r:
-#                            rr += '{:02X}' % ord(ri)
-#                        r = rr
+                            if pcnt == c:
+                                cnt += 1
+                            else:
+                                cnt = 0
 
-                except (OSError, IOError), e:
-                    self.warning(e)
+                            pcnt = c
+                            if cnt > 500:
+                                break
 
-        else:
-            r = 'simulation'
+            if is_hex:
+                r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
 
         return r
+#            if inw > 0:
+#                try:
+#                    r = self.handle.read(inw)
+##                    self.handle.flush()
+#                    if is_hex:
+#                        r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
+##                        rr = ''
+##                        for ri in r:
+##                            rr += '{:02X}' % ord(ri)
+##                        r = rr
+#
+#                except (OSError, IOError), e:
+#                    self.warning(e)
+
+#        else:
+#            r = 'simulation'
+#
+#        return r
 #===================== EOF ==========================================

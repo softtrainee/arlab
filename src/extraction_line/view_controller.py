@@ -112,12 +112,13 @@ class UserView(HasTraits):
 class ViewController(HasTraits):
     '''
     '''
-    views = List(UserView)
+    views = List
 
     scene_graph = Any#(transient = True)
-    def __init__(self, *args, **kw):
-        super(ViewController, self).__init__(*args, **kw)
-        self.views = self.views_factory()
+#    def __init__(self, *args, **kw):
+#        super(ViewController, self).__init__(*args, **kw)
+    def _views_default(self):
+        return self.views_factory()
 
 #    def _bu_fired(self):
 #        '''

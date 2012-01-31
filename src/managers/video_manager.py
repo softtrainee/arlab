@@ -107,6 +107,8 @@ class VideoManager(Manager):
         #self.start()
 
         self.video.start_recording(path)
+        time.sleep(5)
+        self.stop_recording()
 
     def stop_recording(self):
         '''
@@ -114,6 +116,7 @@ class VideoManager(Manager):
         self.info('stop video recording')
 #        self.stop()
         self.video.stop_recording()
+        self.is_recording = False
 
     def start(self, user=None):
         '''

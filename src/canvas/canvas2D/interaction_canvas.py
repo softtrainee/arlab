@@ -21,7 +21,6 @@ limitations under the License.
 from base_data_canvas import BaseDataCanvas
 class InteractionCanvas(BaseDataCanvas):
     '''
-        G{classtree}
     '''
     def __init__(self, *args, **kw):
         '''
@@ -34,8 +33,6 @@ class InteractionCanvas(BaseDataCanvas):
 
     def normal_mouse_move(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         self.cur_pos = [event.x, event.y]
 
@@ -55,15 +52,11 @@ class InteractionCanvas(BaseDataCanvas):
 
     def select_mouse_move(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         self.normal_mouse_move(event)
 
     def select_left_down(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         event.handled = True
         for compdict in self.component_groups:
@@ -73,11 +66,6 @@ class InteractionCanvas(BaseDataCanvas):
 
     def _over_components(self, event, compdict):
         '''
-            @type event: C{str}
-            @param event:
-
-            @type compdict: C{str}
-            @param compdict:
         '''
         x = event.x
         y = event.y

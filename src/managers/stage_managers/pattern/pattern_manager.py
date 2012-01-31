@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import Enum, Instance, Button, Str, Property, Event, Bool, DelegatesTo
-from traitsui.api import View, Item, HGroup, InstanceEditor, spring
+from traitsui.api import View, Item, HGroup, VGroup, InstanceEditor, spring
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
@@ -75,6 +75,7 @@ class PatternManager(Manager):
         else:
             return self.pattern.name
 
+
     def _get_execute_label(self):
         return 'Execute' if not self._alive else 'Stop'
 
@@ -113,23 +114,23 @@ class PatternManager(Manager):
             #open a file dialog to choose pattern
             self.load_pattern()
 #            
-        if self.pattern is not None:
-            use_image_underlay = True
-            if use_image_underlay:
-            
-                img = self.parent.video._frame
-
-#                p = '/Users/ross/Desktop/foo2.tiff'
-#                img = Image()
-#                img.load(p)
-
-#                px = float(self.parent._camera_xcoefficients[1])
-                px = float(self.parent._camera_xcoefficients.split(',')[1])
-                self.pattern.set_mapping(px)
-                self.pattern.reset_graph(with_image=True)
-#                self.pattern.set_image(img.source_frame)
-#                self.pattern.set_image(img.as_numpy_array())
-                self.pattern.set_image(img)
+#        if self.pattern is not None:
+#            px = float(self.parent._camera_xcoefficients.split(',')[1])
+#            self.pattern.set_mapping(px)
+#            use_image_underlay = False
+#            if use_image_underlay:
+#
+#                img = self.parent.video._frame
+#
+##                p = '/Users/ross/Desktop/foo2.tiff'
+##                img = Image()
+##                img.load(p)
+#
+##                px = float(self.parent._camera_xcoefficients[1])
+#                self.pattern.reset_graph(with_image=True)
+##                self.pattern.set_image(img.source_frame)
+##                self.pattern.set_image(img.as_numpy_array())
+#                self.pattern.set_image(img)
 
             self._alive = True
             if self.show_patterning:
@@ -156,7 +157,6 @@ class PatternManager(Manager):
 
         pat.cx = controller._x_position
         pat.cy = controller._y_position
-
         pts = pat.points_factory()
         if self.kind == 'ArcPattern':
             controller.single_axis_move('x', pat.radius)
@@ -170,10 +170,37 @@ class PatternManager(Manager):
 #                self.parent.video.new_graphics_container()
 #                px = None
 #                py = None
-                for x, y in pts:
-                    xi, yi = pat.map_pt(x, y)
-                    pat.graph.set_data([xi], series=1, axis=0)
-                    pat.graph.set_data([yi], series=1, axis=1)
+
+                def get_eq(p1, p2):
+                    m = (p1[1] - p2[1]) / (p1[0] - p2[0])
+                    b = p2[1] - m * p2[0]
+                    return m, b
+
+                from numpy import linspace
+                pxy = None
+                for i, xy in enumerate(pts):
+                    x = xy[0]
+                    y = xy[1]
+#                    print 'asdf', controller.simulation, i
+                    if controller.simulation and i > 0:
+                        controller.linear_move(x, y, block=True, velocity=pat.velocity)
+                        m, b = get_eq(xy, pxy)
+                        for i in linspace(pxy[0], x, 10):
+                            yii = m * i + b
+                            pat.graph.set_data([i], series=1, axis=0)
+                            pat.graph.set_data([yii], series=1, axis=1)
+                            pat.graph.redraw()
+                            time.sleep(0.15)
+                    else:
+
+#                    xi, yi = pat.map_pt(x, y)
+                        pat.graph.set_data([x], series=1, axis=0)
+                        pat.graph.set_data([y], series=1, axis=1)
+                        pat.graph.redraw()
+
+                        controller.linear_move(x, y, block=True)
+                    pxy = xy
+
 
 #                    if px is not None:
 #                        self.parent.video.graphics_container.add_line([(px, py), (xi, yi)])
@@ -181,11 +208,9 @@ class PatternManager(Manager):
 #                    px = xi
 #                    py = yi
 
-                    pat.graph.redraw()
 
-                    controller.linear_move(x, y, block=True)
-                    if controller.simulation:
-                        time.sleep(0.25)
+#                    if controller.simulation:
+#                        time.sleep(0.25)
 
         pat.graph.set_data([], series=1, axis=0)
         pat.graph.set_data([], series=1, axis=1)
@@ -217,20 +242,26 @@ class PatternManager(Manager):
                 self.pattern.replot()
 
     def save_pattern(self):
-        if not self.pattern_name:
-            path, _cnt = unique_path(pattern_dir, 'pattern', filetype='lp')
-        else:
-            path = os.path.join(pattern_dir, '{}.lp'.format(self.pattern_name))
+#        if not self.pattern_name:
+#            path, _cnt = unique_path(pattern_dir, 'pattern', filetype='lp')
+#        else:
+#            path = os.path.join(pattern_dir, '{}.lp'.format(self.pattern_name))
 
-        self.pattern.path = path
-        with open(path, 'wb') as f:
-            pickle.dump(self.pattern, f)
-        self.info('saved {} pattern to {}'.format(self.pattern_name, path))
+        path = self.save_file_dialog(default_directory=pattern_dir)
+
+        if path:
+            if not path.endswith('.lp'):
+                path += '.lp'
+            self.pattern.path = path
+            with open(path, 'wb') as f:
+                pickle.dump(self.pattern, f)
+            self.info('saved {} pattern to {}'.format(self.pattern_name, path))
 
     def pattern_factory(self, kind):
         pattern = globals()['{}Pattern'.format(kind)]()
 
         pattern.replot()
+        pattern.calculate_transit_time()
         return pattern
 
     def execute_view(self):
@@ -257,15 +288,12 @@ class PatternManager(Manager):
         return v
 
     def pattern_maker_view(self):
-        v = View(
-                 HGroup(Item('pattern_name', label='Name'), Item('kind')),
-                 HGroup(Item('save_button', show_label=False),
-                        Item('load_button', show_label=False)),
+        v = View(HGroup(Item('save_button'), Item('load_button'), Item('kind'), show_labels=False),
                  Item('pattern', style='custom', editor=InstanceEditor(view='maker_view'),
                        show_label=False),
                   resizable=True,
                  width=425,
-                 height=580,
+                 height=605,
                  title='Pattern Maker',
                  buttons=['OK', 'Cancel']
 #                 kind='livemodal'

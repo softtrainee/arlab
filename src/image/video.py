@@ -29,7 +29,7 @@ from image_helper import clone, save_image, new_video_writer
 from image_helper import crop as icrop
 import time
 from src.image.image import Image
-from src.image.image_helper import load_image
+from src.image.image_helper import load_image, draw_lines
 
 DEBUG = False
 class Video(Image):
@@ -90,17 +90,20 @@ class Video(Image):
                 return  cvQueryFrame(self.cap)
     def start_recording(self, path):
         fps = 8.0
+        size = 640 / 2, 480 / 2
         def __record():
             if self.cap is not None:
                 self._recording = True
-                writer = new_video_writer(path, fps=fps)
-#                for i in range(100):
+                writer = new_video_writer(path, fps=fps,
+                                          frame_size=size
+                                          )
 
-#                start = time.time()
-#                while time.time() - start < 5:
                 while self._recording:
                     st = time.time()
-                    cvWriteFrame(writer, self.get_frame(swap_rb=False))#swap_rb=False))
+                    src = self.get_frame(swap_rb=True, croprect=size)
+
+                    self._draw_crosshairs(src)
+                    cvWriteFrame(writer, src)
                     d = 1 / float(fps) - (time.time() - st)
                     if d >= 0:
                         time.sleep(d)

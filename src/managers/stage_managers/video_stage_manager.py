@@ -90,10 +90,6 @@ class VideoStageManager(StageManager, Videoable):
     snapshot_button = Button('Snapshot')
     auto_save_snapshot = Bool(True)
 
-    zoom_canvas_button = Button
-    def _zoom_canvas_button_fired(self):
-        print 'asdfsafd'
-        self.canvas.set_image_zoom(10)
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
@@ -174,8 +170,8 @@ class VideoStageManager(StageManager, Videoable):
         return v
 
     def _canvas_editor_factory(self):
-        w = self.canvas.camera.width * self.canvas.scaling
-        h = self.canvas.camera.height * self.canvas.scaling
+        w = self.canvas.camera.width * self.canvas.scaling / 10.
+        h = self.canvas.camera.height * self.canvas.scaling / 10.
         l = self.canvas.padding_left
         r = self.canvas.padding_right
         t = self.canvas.padding_top
@@ -193,7 +189,6 @@ class VideoStageManager(StageManager, Videoable):
                                HGroup(Item('snapshot_button', show_label=False),
                                       Item('auto_save_snapshot')),
                                Item('autofocus_manager', show_label=False, style='custom'),
-                               Item('zoom_canvas_button', show_label=False),
                                #HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
 #                               Item('pxpercmx'),
 #                               Item('pxpercmy'),
@@ -208,12 +203,12 @@ class VideoStageManager(StageManager, Videoable):
 
         return g
 
-    def _move_to_point_hook(self):
-        if self._autocenter():
-            self._point = 0
+#    def _move_to_point_hook(self):
+#        if self._autocenter():
+#            self._point = 0
 
     def _move_to_hole_hook(self, holenum, correct):
-        if correct:
+        if correct and self.auto_center:
             time.sleep(0.5)
             args = self._autocenter(holenum=holenum, ntries=3)
             if args:
@@ -226,21 +221,23 @@ class VideoStageManager(StageManager, Videoable):
     def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
         if self.auto_center:
-            for _t in range(ntries):
+
+            for _t in range(max(1, ntries)):
                 newpos = self.machine_vision_manager.search(self.stage_controller._x_position,
                                                             self.stage_controller._y_position,
-                                                            holenum=holenum
+                                                            holenum=None if isinstance(holenum, str) else holenum,
                                                             )
                 if newpos:
                     #nx = self.stage_controller._x_position + newpos[0]
                     #ny = self.stage_controller._y_position + newpos[1]
     #                self._point = 0
-                
+
                     #newpos=(newpos[0]+0.01, newpos[1]+0.01)
-                    self.linear_move(*newpos, block=True, calibrated_space=False 
+                    self.linear_move(*newpos, block=True, calibrated_space=False
                                      #ratio_correct=False
                                  )
                     time.sleep(0.25)
+
             return newpos
 
 #===============================================================================

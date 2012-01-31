@@ -287,9 +287,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
         cmd = self._build_command('HQ', xx=self.groupobj.id, nn=10)
         self.tell(cmd, verbose=True)
 
+        avaliable_spaces = 10
         while 1:
             #isue the first 10 points and wait
-            for x, y in points[:10]:
+            for x, y in points[:avaliable_spaces]:
                 #sign correct each point
                 x = self._sign_correct(x, 'x')
                 y = self._sign_correct(y, 'y')
@@ -297,16 +298,19 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 self.tell(cmd, verbose=True)
 
             waiting = True
+            resp = 0
             while waiting and not self.simulation:
                 cmd = self._build_query('HQ', xx=self.groupobj.id)
                 resp = self.ask(cmd, verbose=False)
                 if resp is not None:
                     resp = resp.strip()
-                    waiting = True if int(resp) != 10 else False
+                    resp = int(resp)
+                    waiting = True if resp < 6 else False
                 else:
                     break
                 time.sleep(0.05)
-            points = points[10:]
+            points = points[avaliable_spaces:]
+            avaliable_spaces = resp
             if not points:
                 break
 
@@ -660,7 +664,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                       obj.machine_velocity != obj.velocity)
         return change
 
-    def configure_group(self, group, displacement=None, **kw):
+    def configure_group(self, group, displacement=None, velocity=None, **kw):
         gobj = self.groupobj
         if not gobj and group:
             self.logger.warn('GROUPED MOVE NOT ENABLED')
@@ -668,8 +672,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
             return False
 
         if group:
-            change = self._check_motion_parameters(displacement, gobj)
+            if velocity is not None:
+                gobj.velocity = velocity
 
+            change = self._check_motion_parameters(displacement, gobj)
 
         if self.mode == 'grouped':
             if not group:
@@ -776,18 +782,15 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if a.id == aid:
                 return a
 
-    def _linear_move_(self, kwargs, block=False, grouped_move=True, sign_correct=True,ratio_correct=True, **kw):
+    def _linear_move_(self, kwargs, block=False, grouped_move=True, sign_correct=True, **kw):
         '''
         '''
         self.configure_group(grouped_move, **kw)
         for k in kwargs:
             key = k[0]
             if sign_correct:
-                axis = self.axes[key]
-                r=axis.drive_ratio
-                if not ratio_correct:
-                    r=1
-                val = self._sign_correct(kwargs[k], key) * r
+#                axis = self.axes[key]
+                val = self._sign_correct(kwargs[k], key, ratio=True)
                 kwargs[k] = val
 
         if self.mode == 'grouped':
@@ -826,12 +829,15 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if block:
             self._block_()
 
-    def _sign_correct(self, val, key):
+    def _sign_correct(self, val, key, ratio=True):
         '''
         '''
         axis = self.axes[key]
+        r = 1
+        if ratio:
+            r = axis.drive_ratio
 
-        return val * axis.sign
+        return val * axis.sign * r
 
     def _block_(self, event=None):
         '''
