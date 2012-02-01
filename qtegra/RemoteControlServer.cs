@@ -18,7 +18,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
-__version__=002
+__version__=003
 */
 using System.IO;
 using System.Text;
@@ -39,9 +39,8 @@ class RemoteControl
 	public static TcpListener listener;
 	public static Socket udp_sock;
 	
-	
 	private static bool use_udp=true;
-	private static bool tag_data=false;
+	private static bool tag_data=true;
 	
 	public static string scan_data;
 	
@@ -54,13 +53,18 @@ class RemoteControl
 	public const int CLOSE = 0;
 	
 	public static IRMSBaseCore Instrument;
-    public static IRMSBaseMeasurementInfo m_restoreMeasurementInfo;
+	public static IRMSBaseMeasurementInfo m_restoreMeasurementInfo;
     
-    public static double last_y_symmetry=-11.36;
+	private static double last_y_symmetry=0;
+	private static bool isblanked=false;
 	
 	public static void Main ()
 	{
 		Instrument= ArgusMC;
+		
+		//init parameters
+		Instrument.GetParameter("Y-Symmetry Set", out last_y_symmetry);
+		
 		GetTuningSettings();
 		PrepareEnvironment();
 		
@@ -172,14 +176,37 @@ class RemoteControl
 			break;
 			
 		case "BlankBeam":
-			double killValue=last_y_symmetry;
+			double yval=last_y_symmetry;
+			bool blankbeam=false;
 			if (args[1]=="true")
 			{
-				//remember the non blanking Y-Symmetry value
-				Instrument.GetParameter("Y-Symmetry Set", out last_y_symmetry);
-				killValue=-50;
+				if(!isblanked)
+				{
+					//remember the non blanking Y-Symmetry value
+					Instrument.GetParameter("Y-Symmetry Set", out last_y_symmetry);
+					yval=-50;
+					isblanked=true;
+					blankbeam=true;
+				}
 			}
-			result=SetParameter("Y-Symmetry Set",killValue);
+			else
+			{
+				if(isblanked)
+				{
+					isblanked=false;
+					blankbeam=true;
+					result=SetParameter("Y-Symmetry Set",yval);
+				}
+			}
+			
+			result="OK";
+			if(blankbeam)
+			{
+				result=SetParameter("Y-Symmetry Set",yval);
+			}
+			
+			
+			
 			break;
 			
 //============================================================================================
@@ -335,6 +362,7 @@ class RemoteControl
 			break;
 			
 		case "SetYSymmetry":
+			last_y_symmetry=Convert.ToDouble(args[1]);
 			result=SetParameter("Y-Symmetry Set",Convert.ToDouble(args[1]));
 			break;
 		
@@ -847,5 +875,3 @@ class RemoteControl
 		return string.Empty;
 	}
 }
-
-
