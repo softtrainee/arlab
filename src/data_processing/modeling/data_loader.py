@@ -296,10 +296,10 @@ class DataLoader(Loggable):
         sseries = []
         series = []
         for row in reader:
-            if row[0].startswith('&'):
+            if row[0].startswith('@'):
                 continue
 
-            if row[0].startswith('#'):
+            if row[0].startswith('&'):
                 sseries.append(series)
                 series = []
 
