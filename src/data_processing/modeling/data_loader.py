@@ -304,7 +304,10 @@ class DataLoader(Loggable):
                 series = []
 
             else:
-                series.append(map(float, row))
+                try:
+                    series.append(map(float, row))
+                except ValueError:
+                    pass
 
         f.close()
         return sseries
