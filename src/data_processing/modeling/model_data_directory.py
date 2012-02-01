@@ -37,7 +37,7 @@ class ModelDataDirectory(HasTraits):
     model_spectrum_enabled = Bool
     model_arrhenius_enabled = Bool
 
-    inverse_model_spectrum_enabled = Bool(True)
+    inverse_model_spectrum_enabled = Bool
 
     def _get_name(self):
         '''
@@ -73,6 +73,15 @@ class ModelDataDirectory(HasTraits):
             try:
                 p = self.modeler.graph.groups['spectrum'][self.id][2]
                 self.modeler.graph.set_plot_visibility(p, self.model_spectrum_enabled)
+            except IndexError:
+                #this group does not have a model spectrum
+                pass
+
+    def _inverse_model_spectrum_enabled_changed(self):
+        if self.modeler:
+            try:
+                p = self.modeler.graph.groups['spectrum'][self.id][3]
+                self.modeler.graph.set_plot_visibility(p, self.inverse_model_spectrum_enabled)
             except IndexError:
                 #this group does not have a model spectrum
                 pass

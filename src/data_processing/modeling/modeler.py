@@ -562,6 +562,7 @@ class Modeler(Loggable):
                                 show=True, # if len(self.data) >= 1 else False,
                                 bind=True,
                                 model_spectrum_enabled=True,
+                                inverse_model_spectrum_enabled=True,
                                 model_arrhenius_enabled=True,
                                 id=pid,
                                 )
