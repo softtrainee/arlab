@@ -289,28 +289,31 @@ class DataLoader(Loggable):
         return ar39, age
 
     def load_inverse_model_spectrum(self):
-        f, reader = self._open_reader('mages-out.dat', delimiter=' ')
+        f, reader = self._open_reader('mages-out.dat', delimiter=TAB)
 
         self.info('load inverse model spectrum')
-
-        sseries = []
-        series = []
+        xs = []
+        ys = []
+        x = []
+        y = []
         for row in reader:
             if row[0].startswith('@'):
                 continue
-
             if row[0].startswith('&'):
-                sseries.append(series)
-                series = []
+                xs.append(x)
+                ys.append(y)
+                x = []
+                y = []
 
             else:
                 try:
-                    series.append(map(float, row))
+                    x.append(float(row[0]))
+                    y.append(float(row[1]))
                 except ValueError:
                     pass
 
         f.close()
-        return sseries
+        return xs, ys
 
     def load_unconstrained_thermal_history(self, contour=True):
         self.info('loading unconstrained thermal history')
