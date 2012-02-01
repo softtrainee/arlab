@@ -299,8 +299,8 @@ class Modeler(Loggable):
                 data = dl.load_inverse_model_spectrum()
                 if data is not None:
                     try:
-                        for di in data:
-                            p = g.build_spectrum(*di, ngroup=False, pid=plotidcounter)
+                        for ar39, age in data:
+                            p = g.build_spectrum(ar39, age, ngroup=False, pid=plotidcounter)
 #                        g.set_series_label('{}.inverse'.format(runid), plotid=plotidcounter, series=3 * gid + 2)
 #                        g.color_generators[-1].next()
 #                        p.color = g.color_generators[-1].next()
@@ -497,6 +497,7 @@ class Modeler(Loggable):
                 ObjectColumn(name='primary_color', editable=False, label='Pc', style='simple'),
                 ObjectColumn(name='secondary_color', editable=False, label='Sc', style='simple'),
                 CheckboxColumn(name='model_spectrum_enabled', label='Ms'),
+                CheckboxColumn(name='inverse_model_arrhenius_enabled', label='IMs'),
                 CheckboxColumn(name='model_arrhenius_enabled', label='Ma'),
 
               ]
