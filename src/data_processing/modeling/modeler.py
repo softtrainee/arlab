@@ -293,6 +293,22 @@ class Modeler(Loggable):
 
                     except Exception, err:
                         self.info(err)
+
+            if data_directory.inverse_model_spectrum_enabled:
+
+                data = dl.load_inverse_model_spectrum()
+                if data is not None:
+                    try:
+                        for di in data:
+                            p = g.build_spectrum(*di, ngroup=False, pid=plotidcounter)
+#                        g.set_series_label('{}.inverse'.format(runid), plotid=plotidcounter, series=3 * gid + 2)
+#                        g.color_generators[-1].next()
+#                        p.color = g.color_generators[-1].next()
+
+                    except Exception, err:
+                        self.info(err)
+
+
             plotidcounter += 1
 
         if 'logr_ro' in self.include_panels:

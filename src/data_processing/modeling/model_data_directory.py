@@ -37,6 +37,8 @@ class ModelDataDirectory(HasTraits):
     model_spectrum_enabled = Bool
     model_arrhenius_enabled = Bool
 
+    inverse_model_spectrum_enabled = Bool(True)
+
     def _get_name(self):
         '''
         '''
