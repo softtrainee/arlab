@@ -22,8 +22,8 @@ import cPickle as pickle
 
 class VideoServer(HasTraits):
     video = Instance(Video)
-    host = '129.138.12.141'
-#    host = '127.0.0.1'
+#    host = '129.138.12.141'
+    host = '127.0.0.1'
     port = 1084
 
     _frame = None
@@ -75,7 +75,7 @@ class VideoServer(HasTraits):
                     with self.lock:
                         d = self._frame.as_numpy_array()
                         try:
-                            so.send(pickle.dumps(d))
+                            so.sendall(pickle.dumps(d))
                         except socket.error:
                             so.close()
                             inp.remove(so)
