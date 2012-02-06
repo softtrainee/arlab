@@ -25,6 +25,7 @@ import sys
 from threading import Thread
 from numpy import array, vstack
 import Queue
+import time
 
 # add src to the path
 
@@ -74,25 +75,26 @@ class VideoClient(HasTraits):
     def _listen(self):
         print 'lisenting'
 
-
+        fp = 1 / 10.0
         while self._stream_video:
+            t = time.time()
             _, _out, _ = select.select([], [self._sock], [], 1)
-#            print _out
+
             for s in _out:
-#                print s.send('1')
-#                s.send('1')
                 d = None
                 data = s.recv(self.frame_size)
-#                print len(data)
-                while 1:
+#                d = self.unpickle(data)
 
+                while 1:
                     d = self.unpickle(data)
                     if d is not None:
                         break
                     else:
                         data += s.recv(self.frame_size)
-#
+
                 self.image.load(d, nchannels=1)
+
+            time.sleep(max(0.001, fp - (time.time() - t)))
 
     def connect(self, udp=False):
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
