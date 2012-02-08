@@ -497,7 +497,7 @@ class Modeler(Loggable):
                 ObjectColumn(name='primary_color', editable=False, label='Pc', style='simple'),
                 ObjectColumn(name='secondary_color', editable=False, label='Sc', style='simple'),
                 CheckboxColumn(name='model_spectrum_enabled', label='Ms'),
-                CheckboxColumn(name='inverse_model_arrhenius_enabled', label='IMs'),
+                CheckboxColumn(name='inverse_model_spectrum_enabled', label='IMs'),
                 CheckboxColumn(name='model_arrhenius_enabled', label='Ma'),
 
               ]

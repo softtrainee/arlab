@@ -33,6 +33,7 @@ class H5DataManager(DataManager):
         _df, table = self._get_parent(table)
         setattr(table.attrs, key, value)
         table.flush()
+
     def record(self, values, table):
         '''
 
@@ -52,7 +53,7 @@ class H5DataManager(DataManager):
         p = self._new_frame_path(*args, **kw)
 
         self._frame = openFile(p, mode='w')
-
+        return self._frame
     def add_table(self, table, table_style='Timestamp', parent='root'):
         '''
 

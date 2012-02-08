@@ -31,7 +31,6 @@ from src.helpers.color_generators import colors8i as colors
 
 from src.hardware.motion_controller import MotionController
 from src.helpers.paths import map_dir, setup_dir, user_points_dir
-from src.managers.stage_managers.affine import AffineTransform
 from src.helpers.logger_setup import setup
 
 from src.managers.motion_controller_managers.motion_controller_manager import MotionControllerManager
@@ -40,6 +39,7 @@ from src.managers.stage_managers.stage_component_editor import LaserComponentEdi
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem
 from pattern.pattern_manager import PatternManager
 from src.managers.stage_managers.stage_map import StageMap
+from src.managers.stage_managers.affine import AffineTransform
 
 class StageManager(Manager):
     '''
@@ -234,9 +234,7 @@ class StageManager(Manager):
 
     def _get_hole_by_position(self, x, y, tol=0.1):
         if self._stage_map:
-            hole = next((hole for hole in self._stage_map.sample_holes
-                          if abs(hole.x - x) < tol and abs(hole.y - y) < tol), None)
-            return hole
+           return self._stage_map._get_hole_by_position(x, y)
 
 #
 #    def do_pattern(self, patternname):
@@ -622,37 +620,34 @@ class StageManager(Manager):
         if ca:
             rot = ca.get_rotation()
             cpos = ca.get_center_position()
-            a.translate(-cpos[0], -cpos[1])
-            a.translate(*cpos)
-            a.rotate(-rot)
-            a.translate(-cpos[0], -cpos[1])
-
-            pos = a.transformPt(pos)
+#            a.translate(-cpos[0], -cpos[1])
+#            a.translate(*cpos)
+#            a.rotate(-rot)
+#            a.translate(-cpos[0], -cpos[1])
+#
+#            pos = a.transformPt(pos)
+            pos = self.stage_map.map_to_uncalibration(pos)
 
         return pos
 
 
     def _map_calibrated_space(self, pos, key=None):
-        map = self._stage_map
+        smap = self._stage_map
 
         #use a affine transform object to map
-        a = AffineTransform()
+
         canvas = self.canvas
         ca = canvas.calibration_item
+
         if ca:
             rot = ca.get_rotation()
             cpos = ca.get_center_position()
 
             if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
-                a.translate(*ca.tweak_dict[key])
+                t = ca.tweak_dict[key]
+#                a.translate(*ca.tweak_dict[key])
+            pos = smap.map_to_calibration(pos, cpos, rot, translate=t)
 
-            a.translate(*cpos)
-            a.rotate(rot)
-            a.translate(-cpos[0], -cpos[1])
-
-            a.translate(*cpos)
-
-            pos = a.transformPt(pos)
         return pos
 
     def _set_hole(self, v):

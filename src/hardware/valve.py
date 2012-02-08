@@ -82,20 +82,18 @@ class HardwareValve(Loggable):
     def get_hardware_state(self):
         '''
         '''
+        result = None
         if self.actuator is not None:
-            r = self.actuator.get_channel_state(self)
-            if r is None:
-                r = False
-        else:
-            r = False
+            result = self.actuator.get_channel_state(self)
+            if result is not None:
+                self.state = result
 
-        self.state = r
-        if r:
-            self._fsm.ROpen()
-        else:
-            self._fsm.RClose()
+                if result:
+                    self._fsm.ROpen()
+                else:
+                    self._fsm.RClose()
 
-        return r
+        return result
 
     def get_hard_lock(self):
         '''
@@ -132,6 +130,7 @@ class HardwareValve(Loggable):
         self.debug = mode == 'debug'
 
         self._fsm.Open()
+
 #        if mode in ['auto', 'manual', 'debug', 'remote']:
 #            self._fsm.Open()
 
@@ -192,7 +191,7 @@ class HardwareValve(Loggable):
         '''
         r = False
         if self.actuator is not None:
-            if self.debug:
+            if self.debug or self.actuator.simulation:
                 r = True
             else:
                 r = True if self.actuator.open_channel(self) else False
@@ -200,15 +199,15 @@ class HardwareValve(Loggable):
         self.success = r
         if self.success:
             self.state = True
+        print 'open', self.success, self.state
 
     def _close_(self, *args, **kw):
         '''
 
         '''
-
         r = False
         if self.actuator is not None:
-            if self.debug:
+            if self.debug or self.actuator.simulation:
                 r = True
             else:
                 r = True if self.actuator.close_channel(self) else False
@@ -217,6 +216,8 @@ class HardwareValve(Loggable):
 
         if self.success:
             self.state = False
+        print 'close', self.success, self.state
+
     def _get_display_state(self):
         return 'Open' if self.state else 'Close'
 

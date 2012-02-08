@@ -179,6 +179,7 @@ class ValveManager(Manager):
             else:
                 v.state = state
 
+
         return state
 
     def get_actuator_by_name(self, name):

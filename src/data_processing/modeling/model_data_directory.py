@@ -80,8 +80,9 @@ class ModelDataDirectory(HasTraits):
     def _inverse_model_spectrum_enabled_changed(self):
         if self.modeler:
             try:
-                p = self.modeler.graph.groups['spectrum'][self.id][3]
-                self.modeler.graph.set_plot_visibility(p, self.inverse_model_spectrum_enabled)
+                ps = self.modeler.graph.groups['spectrum'][self.id][3:]
+                for pi in ps:
+                    self.modeler.graph.set_plot_visibility(pi, self.inverse_model_spectrum_enabled)
             except IndexError:
                 #this group does not have a model spectrum
                 pass

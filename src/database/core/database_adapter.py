@@ -43,7 +43,7 @@ class DatabaseAdapter(Loggable):
     kind = Str('mysql')
     user = Str('root')
     host = Str('localhost')
-    dbname = Str('pychrondb_beta')
+    dbname = Str('pychrondb')
     password = Password('Argon')
     use_db = Bool
 
@@ -130,13 +130,15 @@ class DatabaseAdapter(Loggable):
                 result = record
             return result
 
-#    def _get_session(self, sess):
-#        '''
-#    
-#        '''
-#        if sess is None:
-#        sess = self.session_factory()
-#        return sess
+    def get_session(self):
+        '''
+    
+        '''
+        if self.sess is None:
+            self.sess = self.session_factory()
+
+        return self.sess
+
     def flush(self):
         self.sess.flush()
 

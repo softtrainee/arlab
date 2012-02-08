@@ -148,8 +148,10 @@ Locked: {}'''.format(obj.name,
         if isinstance(obj, Valve):
 #            self.update_popup(obj)
             self._current = obj
+            self.manager.set_selected_explanation_item(obj)
         else:
             self._current = None
+
 
     def OnSelect(self, event):
         '''
@@ -169,7 +171,7 @@ Locked: {}'''.format(obj.name,
                     obj.sample_valve()
 
                 self.manager.update_canvas2D(obj.name, obj.state, istate)
-                self.update_popup(obj)
+#                self.update_popup(obj)
 
             self.Refresh()
 
