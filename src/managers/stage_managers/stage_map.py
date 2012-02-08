@@ -25,6 +25,8 @@ from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.paths import hidden_dir
 import pickle
 from src.loggable import Loggable
+from src.managers.stage_managers.affine import AffineTransform
+
 class SampleHole(HasTraits):
     id = Str
     x = Float
@@ -55,6 +57,29 @@ class StageMap(Loggable):
     g_shape = Enum('circle', 'square')
 
     clear_corrections = Button
+    def map_to_uncalibration(self, pos, cpos, rot):
+        a = AffineTransform()
+        a.translate(-cpos[0], -cpos[1])
+        a.translate(*cpos)
+        a.rotate(-rot)
+        a.translate(-cpos[0], -cpos[1])
+
+        pos = a.transformPt(pos)
+        return pos
+
+    def map_to_calibration(self, pos, cpos, rot, translate=None):
+        a = AffineTransform()
+        if translate:
+            a.translate(*translate)
+
+        a.translate(*cpos)
+        a.rotate(rot)
+        a.translate(-cpos[0], -cpos[1])
+        a.translate(*cpos)
+
+        pos = a.transformPt(pos)
+        return pos
+
     def _get_hole(self, key):
         return next((h for h in self.sample_holes if h.id == key), None)
 
@@ -109,6 +134,26 @@ class StageMap(Loggable):
         if hole is not None:
             hole.x_cor = x_cor
             hole.y_cor = y_cor
+
+    def _get_hole_by_position(self, x, y, tol=None):
+        if tol is None:
+            tol = self.g_dimension
+
+#        hole = next((hole for hole in self.sample_holes
+#                      if abs(hole.x - x) < tol and abs(hole.y - y) < tol), None)
+        fholes = []
+        devx = []
+#        devy = []
+
+        for hole in self.sample_holes:
+            if abs(hole.x - x) < tol and abs(hole.y - y) < tol:
+                fholes.append(hole)
+                devx.append(abs(hole.x - x))
+#                devy.append(abs(hole.y - y))
+
+        if fholes:
+            return fholes[devx.index(min(devx))]
+
 
     def _get_bitmap_path(self):
 

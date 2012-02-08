@@ -76,7 +76,7 @@ class Image(HasTraits):
 
     swap_rb = Bool(False)
     flip = Bool(False)
-
+    panel_size = Int(300)
     def new_graphics_container(self):
         self.graphics_container = GraphicsContainer()
 
@@ -223,7 +223,8 @@ class Image(HasTraits):
             if cols * rows < nsrc:
                 rows += 1
 
-        size = 300
+#        size = 300
+        size = self.panel_size
         #create display image
         w = self.width
         h = self.height

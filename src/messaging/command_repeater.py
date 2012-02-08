@@ -25,6 +25,7 @@ from src.led.led_editor import LEDEditor
 import random
 from src.helpers.paths import pychron_src_dir
 from src.remote_hardware.errors.system_errors import PychronCommunicationErrorCode
+from threading import Lock
 
 
 class CRHandler(Handler):
@@ -61,9 +62,9 @@ class CommandRepeater(ConfigLoadable):
         elif r == ra:
             self.led.state = 'green'
             connected = True
-            
+
         return connected
-    
+
     def _path_changed(self, old, new):
         '''
         '''
@@ -95,15 +96,16 @@ class CommandRepeater(ConfigLoadable):
             self.path = self.config_get(config, 'General', 'path')
             self.info('configured for {}'.format(self.path))
             return True
-    
+
     def open(self, *args, **kw):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(3)
-        
-        
-        self._sock = sock 
+        self._sock = sock
+
+        #create a sync lock
+        self._lock = Lock()
         return True
-            
+
     def remote_launch(self, name):
         import subprocess, os
         #launch pychron
@@ -115,59 +117,68 @@ class CommandRepeater(ConfigLoadable):
             result = 'ERROR: failed to launch Pychron'
 
         return result
-    
+
     def get_response(self, rid, data, sender_address):
         '''
 
         '''
         #intercept the pychron ready command
         #sent a test query 
-        
-        ready_flag = False
-        if data == 'PychronReady':
-            ready_flag = True
-            data = '{:0.3f}'.format(random.random())
-            rid = 'test'
-        
-        elif data == 'RemoteLaunch':
-            return self.remote_launch('pychron')
-        
-        try:        
-            self._sock.connect(self.path)
-        except socket.error:
-            #_sock is already connected
-            pass
-        
-        try:
-            self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
-            result = self._sock.recv(4096)
-            self.led.state = 'green'
-        except socket.error, e:
-            
-            is_ok = False
-            retries = 0
-            if str(e) in ['Errno 32', 'Errno 9']:
-                retries = 2
-            #use a retry loop only if error is a broken pipe
-            for _i in range(retries):
-                try:
+        with self._lock:
+            ready_flag = False
+            if data == 'PychronReady':
+                ready_flag = True
+                data = '{:0.3f}'.format(random.random())
+                rid = 'test'
+
+            elif data == 'RemoteLaunch':
+                return self.remote_launch('pychron')
+
+            try:
+                self._sock.connect(self.path)
+            except socket.error:
+                #_sock is already connected
+                pass
+
+            try:
+                self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
+                result = self._sock.recv(4096)
+                self.led.state = 'green'
+            except socket.error, e:
+                is_ok = False
+                retries = 0
+                for ei in ['Errno 32', 'Errno 9', 'Errno 11']:
+                    if ei in str(e):
+                        retries = 3
+                        break
+
+                self.debug('send failed - {} - retrying n={}'.format(e, retries))
+
+                #use a retry loop only if error is a broken pipe
+                for _i in range(retries):
+                    try:
+                        self.open()
+                        try:
+                            self._sock.connect(self.path)
+                        except socket.error:
+                            pass
+
+                        self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
+                        result = self._sock.recv(4096)
+                        is_ok = True
+                    except socket.error, e:
+                        print e
+
+                if not is_ok:
+                    #pychron is not running
+                    self.led.state = 'red'
                     self.open()
-                    self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
-                    result = self._sock.recv(4096)
-                    is_ok = True
-                except socket.error:
-                    pass
-                    
-            if not is_ok:
-                #pychron is not running
-                self.led.state = 'red'
-                self.open()
-                return repr(PychronCommunicationErrorCode(self.path, e))
-            
-        if ready_flag and data == result:
-            result = 'OK'
-        
-        return result
+                    return repr(PychronCommunicationErrorCode(self.path, e))
+
+            if ready_flag and data == result:
+                result = 'OK'
+
+            return result
 #============= EOF ====================================
 
 #===============================================================================

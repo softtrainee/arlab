@@ -48,6 +48,7 @@ class CommandProcessor(ConfigLoadable):
     system_lock_address = Str
 
     _handlers = None
+    _threaded = True
 
     def __init__(self, *args, **kw):
         super(CommandProcessor, self).__init__(*args, **kw)
@@ -122,11 +123,14 @@ class CommandProcessor(ConfigLoadable):
                         client = s
                         data = client.recv(4096)
                         if data:
-                            sender_addr, ptype, payload = data.split('|')
-                            self._process_request(client,
-                                                  sender_addr,
-                                                  ptype,
-                                                  payload)
+#                            sender_addr, ptype, payload = data.split('|')
+                            args = [client] + data.split('|')
+#                            args = client, sender_addr, ptype, payload
+                            if self._threaded:
+                                t = Thread(target=self._process_request, args=args)
+                                t.start()
+                            else:
+                                self._process_request(*args)
 
                         else:
                             client.close()

@@ -21,12 +21,16 @@ import shlex
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from error_handler import ErrorHandler
+from threading import Lock
 
 
 class BaseRemoteHardwareHandler(Loggable):
     application = Any
     error_handler = Instance(ErrorHandler, ())
     manager_name = 'Manager'
+    def __init__(self, *args, **kw):
+        super(BaseRemoteHardwareHandler, self).__init__(*args, **kw)
+        self._manager_lock = Lock()
 
     def _error_handler_default(self):
         eh = ErrorHandler()
@@ -42,25 +46,26 @@ class BaseRemoteHardwareHandler(Loggable):
         return args[0], ' '.join(args[1:])
 
     def handle(self, data, sender_addr):
-        eh = self.error_handler
-        manager = self.get_manager()
-        err = eh.check_manager(manager, self.manager_name)
-        if err is None:
-            #str list split by shlex
-            #first arg is the command
-            args = self.split_data(data)
-            #try:
-            err, func = eh.check_command(self, args)
-            #except InvalidCommandErrorCode, e:
-            #    err = e
-
+        with self._manager_lock:
+            eh = self.error_handler
+            manager = self.get_manager()
+            err = eh.check_manager(manager, self.manager_name)
             if err is None:
-                #hardware query happens here
-
-                err, response = eh.check_response(func, manager, args[1:] + [sender_addr])
+                #str list split by shlex
+                #first arg is the command
+                args = self.split_data(data)
+                #try:
+                err, func = eh.check_command(self, args)
+                #except InvalidCommandErrorCode, e:
+                #    err = e
 
                 if err is None:
-                    return response
+                    #hardware query happens here
+
+                    err, response = eh.check_response(func, manager, args[1:] + [sender_addr])
+
+                    if err is None:
+                        return response
 
         return err
 

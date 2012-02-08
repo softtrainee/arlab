@@ -25,6 +25,7 @@ limitations under the License.
 #from argus_gp_actuator import ArgusGPActuator
 
 from src.hardware.core.abstract_device import AbstractDevice
+import time
 
 PACKAGES = dict(AgilentGPActuator='src.hardware.actuators.agilent_gp_actuator',
               ArduinoGPActuator='src.hardware.arduino.arduino_gp_actuator',
@@ -77,7 +78,11 @@ class Actuator(AbstractDevice):
         '''
 
         if self._cdevice is not None:
-            return  self._cdevice.open_channel(*args, **kw)
+
+            r = self._cdevice.open_channel(*args, **kw)
+            if self.simulation:
+                time.sleep(0.005)
+            return r
         else:
             return True
 
@@ -86,7 +91,10 @@ class Actuator(AbstractDevice):
             
         '''
         if self._cdevice is not None:
-            return self._cdevice.close_channel(*args, **kw)
+            r = self._cdevice.close_channel(*args, **kw)
+            if self.simulation:
+                time.sleep(0.005)
+            return r
         else:
             return True
 
@@ -96,6 +104,9 @@ class Actuator(AbstractDevice):
         '''
 
         if self._cdevice is not None:
-            return self._cdevice.get_channel_state(*args, **kw)
+            r = self._cdevice.get_channel_state(*args, **kw)
+            if self.simulation:
+                time.sleep(0.005)
+            return r
 
 #============= EOF ====================================

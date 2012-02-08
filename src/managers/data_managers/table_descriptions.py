@@ -63,6 +63,9 @@ class PowerMapTableDescription(IsDescription):
     y = Float32Col()
     power = Float32Col()
 
+class AnalysesTableDescription(IsDescription):
+    time = Float32Col()
+    y = Float32Col()
 
 def table_description_factory(table_name):
     '''

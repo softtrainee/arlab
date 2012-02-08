@@ -88,6 +88,7 @@ class Video(Image):
                     src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
                     return load_image(src)
                 return  cvQueryFrame(self.cap)
+
     def start_recording(self, path):
         fps = 8.0
         size = 640 / 2, 480 / 2

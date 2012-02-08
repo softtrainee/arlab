@@ -197,7 +197,7 @@ class RichTextDisplay(HasTraits):
             if len(self.text) > 500:
                 a = self.text.pop(0)[0]
                 self._display.Remove(0, len(a) + 1)
-                self._display.SetInsertionPointEnd()()
+                self._display.SetInsertionPointEnd()
 #                self._do_later('Remove', args=(0, len(a) + 1))
 #                self._do_later('SetInsertionPointEnd')
         else:

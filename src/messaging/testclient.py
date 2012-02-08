@@ -39,8 +39,10 @@ class Client(HasTraits):
     receive_data_stream = Button
     response = String
     port = Int(1069)
+#    port = Int(8080)
     #host = Str('192.168.0.65')
-    host = Str('129.138.12.145')
+#    host = Str('129.138.12.145')
+    host = 'localhost'
     kind = Enum('UDP', 'TCP')
 
     period = Float(100)
@@ -67,11 +69,11 @@ class Client(HasTraits):
 
     def _loop(self):
         self.time_remain = self.calculated_duration
-        sock = self.get_connection()
+#        sock = self.get_connection()
         while self._alive and self.periods_completed <= self.n_periods:
             t = time.time()
             try:
-                self._send(sock=sock)
+                self._send(sock=None)
 
                 self.time_remain = self.calculated_duration - self.periods_completed * self.period / 1000.0 / 3600.
                 self.periods_completed += 1
@@ -97,7 +99,7 @@ class Client(HasTraits):
         #send command
         sock.send(self.command)
         self.response = sock.recv(1024)
-
+        print self.response, 'foo'
         if 'ERROR' in self.response:
             print time.strftime('%H:%M:%S'), self.response
         return sock
@@ -242,13 +244,14 @@ if __name__ == '__main__':
 
     #multiplex_test()
     c = Client()
-    c.host = 'localhost'
-    c.port = 1068
-    c.ask('Enable')
-    time.sleep(15)
-    c.ask('Disable')
 
-#    c.configure_traits()
+#    c.host = 'localhost'
+#    c.port = 1068
+#    c.ask('Enable')
+#    time.sleep(15)
+#    c.ask('Disable')
+
+    c.configure_traits()
 
     #===========================================================================
     #Check Remote launch snippet 

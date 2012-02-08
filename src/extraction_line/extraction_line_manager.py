@@ -157,7 +157,7 @@ class ExtractionLineManager(Manager):
 
         if self.canvas is not None:
             self.canvas.canvas3D.setup()#canvas3D_dir, 'extractionline3D.txt')
-            
+
             #load state
             if self.valve_manager:
                 for k, v in self.valve_manager.valves.iteritems():
@@ -229,6 +229,7 @@ class ExtractionLineManager(Manager):
     def get_valve_state(self, name):
         if self.valve_manager is not None:
             return self.valve_manager.get_state_by_name(name)
+
     def get_valve_states(self):
         if self.valve_manager is not None:
             return self.valve_manager.get_states()

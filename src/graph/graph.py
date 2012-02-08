@@ -41,6 +41,7 @@ from guide_overlay import GuideOverlay
 
 from tools.contextual_menu_tool import ContextualMenuTool
 from tools.pan_tool import MyPanTool as PanTool
+from chaco.data_label import DataLabel
 
 
 def name_generator(base):
@@ -398,8 +399,11 @@ class Graph(HasTraits):
 
         try:
             legend.labels[series] = label
-        except:
+        except Exception, e:
             legend.labels.append(label)
+
+        print legend.plots
+        print legend.labels
 
     def clear_legend(self, keys, plotid=0):
         legend = self.plots[plotid].legend
@@ -492,11 +496,20 @@ class Graph(HasTraits):
         '''
         self._set_title('y_axis', title, plotid)
 
-    def add_plot_label(self, txt, plotid=0):
+    def add_plot_label(self, txt, x, y, plotid=0):
         '''
         '''
-        self.plots[plotid].overlays.append(PlotLabel(txt, x=50, y=100))
+#         
+        self.plots[plotid].overlays.append(PlotLabel(txt, x=x, y=y))
 
+    def add_data_label(self, x, y, plotid=0):
+        print self.plots, plotid
+        plot = self.plots[plotid]
+        label = DataLabel(component=plot, data_point=(x, y),
+                          label_position="top left", padding=40,
+                          bgcolor="lightgray",
+                          border_visible=False)
+        plot.overlays.append(label)
     def add_guide(self, value, orientation='h', plotid=0, color=(0, 0, 0)):
         '''
         '''
@@ -582,7 +595,6 @@ class Graph(HasTraits):
         '''
         if plotid is None:
             plotid = len(self.plots) - 1
-
         kw['plotid'] = plotid
         plot, names, rd = self._series_factory(x, y, yer=None, **kw)
         #print 'downsample', plot.use_downsample
@@ -605,7 +617,7 @@ class Graph(HasTraits):
             if 'type' in rd and rd['type'] == 'line_scatter':
 
                 series = plot.plot(names, type='scatter', marker_size=2,
-                                   marker='circle')
+                                   marker='circle', color=rd['color'], outline_color=rd['color'])
                 rd['type'] = 'line'
             series = plot.plot(names, **rd)
             return series[0], plot
@@ -706,7 +718,7 @@ class Graph(HasTraits):
         plot.overlays = [o for o in plot.overlays if not isinstance(o, LineInspector)]
         self.plotcontainer.request_redraw()
 
-    def add_vertical_rule(self, v, plotid=0,**kw):
+    def add_vertical_rule(self, v, plotid=0, **kw):
         plot = self.plots[plotid]
         l = GuideOverlay(plot, value=v, orientation='v', **kw)
 
