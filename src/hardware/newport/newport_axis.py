@@ -230,23 +230,41 @@ class NewportAxis(Axis):
 
 
     read_parameters = Button
+    def _validate_velocity(self, v):
+        return self._validate_float(v)
+
     def _set_velocity(self, v):
-        self._velocity = v
         self.nominal_velocity = v
+
+        self.trait_set(_velocity=v, trait_change_notify=False)
         if self.loaded:
             com = self.parent._build_command(COMMAND_MAP['velocity'], xx=self.id, nn=v)
             self.parent.tell(com)
 
+    def _validate_acceleration(self, v):
+        return self._validate_float(v)
+
+    def _validate_deceleration(self, v):
+        return self._validate_float(v)
+
+    def _validate_float(self, v):
+        try:
+            v = float(v)
+            return v
+        except ValueError:
+            pass
+
     def _set_acceleration(self, v):
-        self._acceleration = v
         self.nominal_acceleration = v
+        self.trait_set(_acceleration=v, trait_change_notify=False)
         if self.loaded:
             com = self.parent._build_command(COMMAND_MAP['acceleration'], xx=self.id, nn=v)
             self.parent.tell(com)
 
     def _set_deceleration(self, v):
-        self._deceleration = v
         self.nominal_deceleration = v
+
+        self.trait_set(_deceleration=v, trait_change_notify=False)
         if self.loaded:
             com = self.parent._build_command(COMMAND_MAP['deceleration'], xx=self.id, nn=v)
             self.parent.tell(com)
@@ -269,7 +287,6 @@ class NewportAxis(Axis):
                     if name == 'TRAJECTORY_MODES':
                         value += 1
 
-
             cmd = self.parent._build_command(cmd, xx=self.id, nn=value)
             self.parent.tell(cmd)
 
@@ -285,6 +302,8 @@ class NewportAxis(Axis):
   
         '''
         self.loaded = False
+
+
         for key, value in self._get_parameters(path):
             if ',' not in value:
                 if key[0] == '_':
@@ -562,6 +581,7 @@ class NewportAxis(Axis):
                     new += 1
 
                 cmd = self.parent._build_command(attr, xx=self.id, nn=new)
+                print 'telling ', cmd, name
                 self.parent.tell(cmd)
 
 

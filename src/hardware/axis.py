@@ -119,8 +119,10 @@ class Axis(ConfigLoadable):
 #        cp = ConfigParser.ConfigParser()
 #        cp.read())
         params = []
+#        if path is None:
+        if not os.path.isfile(path):
+            path = os.path.join(path, '{}axis.cfg'.format(self.name))
 
-        path = os.path.join(path, '{}axis.cfg'.format(self.name))
         cp = self.get_configuration(path)
 
         return [item for s in cp.sections() for item in cp.items(s)]

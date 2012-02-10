@@ -193,6 +193,8 @@ class StageManager(Manager):
         #load the points file
         #self.canvas.load_points_file(self.points_file)
 
+        #load defaults
+        self._default_z = self.config_get(config, 'Defaults', 'z', default=13)
 
     def initialize_stage(self):
         self.canvas.parent = self
@@ -310,7 +312,7 @@ class StageManager(Manager):
     def _home_(self):
         '''
         '''
-        define_home = True
+#        define_home = True
         if self.home_option == 'Home All':
 
             msg = 'homing all motors'
@@ -322,14 +324,15 @@ class StageManager(Manager):
             homed = ['x', 'y']
             home_kwargs = dict(x= -25, y= -25)
         else:
-            define_home = False
+#            define_home = 
             msg = 'homing {}'.format(self.home_option)
+            home_kwargs = {self.home_option:-25 if self.home_option in ['X', 'Y'] else 50}
             homed = [self.home_option.lower().strip()]
 
         self.info(msg)
 
-        if define_home:
-            self.stage_controller.set_home_position(**home_kwargs)
+        #if define_home:
+        self.stage_controller.set_home_position(**home_kwargs)
 
         self.stage_controller.home(homed)
 
@@ -337,10 +340,8 @@ class StageManager(Manager):
             #will be a positive limit error in z
             self.stage_controller.read_error()
 
-            #add nominal to config file
-            nominal = 13
-            self.info('setting z to nominal {} '.format(nominal))
-            self.stage_controller._set_z(nominal)
+            self.info('setting z to nominal position. {} mm '.format(self._default_z))
+            self.stage_controller._set_z(self._default_z)
             self.stage_controller._block_()
 
         time.sleep(0.5)
@@ -465,7 +466,8 @@ class StageManager(Manager):
                                  style='custom'),
                            label='Canvas'),
 
-                     Group(Item('motion_controller_manager', style='custom', show_label=False),
+                     Group(Item('motion_controller_manager', editor=InstanceEditor(view='configure_view'),
+                                 style='custom', show_label=False),
                            Item('motion_profiler', style='custom', show_label=False),
                            label='Motion'
                            ),
