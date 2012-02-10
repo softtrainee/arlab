@@ -181,11 +181,15 @@ ABLE TO USE THE HARDWARE JOYSTICK
                     if line[0] != '#':
                         self.ask(line)
 
-    def save_axes_parameters(self):
+    def save_axes_parameters(self, axis=None):
         '''
         '''
+        if axis is None:
+            axes = self.axes.itervalues()
+        else:
+            axes = [axis]
 
-        for a in self.axes.itervalues():
+        for a in axes:
             a.save()
 
         com = 'SM'

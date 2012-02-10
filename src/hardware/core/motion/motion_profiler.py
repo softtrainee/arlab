@@ -139,7 +139,7 @@ class MotionProfiler(ConfigLoadable):
                   dv / mv > self.velocity_tol or
                   dac / mac > self.acceleration_tol or
                   ddc / mdc > self.deceleration_tol)
-        return change, nv, nac, ndc
+        return change, nv, max(0.1, nac), max(0.1, ndc)
 
     def calculate_transit_parameters(self, displacement, v, ac, dc):
         '''
