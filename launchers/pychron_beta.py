@@ -25,7 +25,7 @@ import sys
 # always change back to pychron_beta before committing
 
 SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
-                       'mercurial', 'pychron_beta')
+                       'mercurial', 'pychron_beta1.0')
 sys.path.insert(0, SRC_DIR)
 
 from src.envisage.run import launch

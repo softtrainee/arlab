@@ -194,7 +194,7 @@ class StageManager(Manager):
         #self.canvas.load_points_file(self.points_file)
 
         #load defaults
-        self._default_z = self.config_get(config, 'Defaults', 'z', default=13)
+        self._default_z = self.config_get(config, 'Defaults', 'z', default=13, cast='float')
 
     def initialize_stage(self):
         self.canvas.parent = self
@@ -644,7 +644,7 @@ class StageManager(Manager):
         if ca:
             rot = ca.get_rotation()
             cpos = ca.get_center_position()
-
+            t=None
             if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
                 t = ca.tweak_dict[key]
 #                a.translate(*ca.tweak_dict[key])
@@ -660,7 +660,6 @@ class StageManager(Manager):
         if self.canvas.markup:
             self.warning_dialog('Cannot move while adding/editing points')
             return
-
 
         if self.hole_thread is None and v is not self._hole:
             pos = self._stage_map.get_hole_pos(str(v))

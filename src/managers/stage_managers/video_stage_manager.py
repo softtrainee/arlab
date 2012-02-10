@@ -210,7 +210,7 @@ class VideoStageManager(StageManager, Videoable):
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.auto_center:
             time.sleep(0.5)
-            args = self._autocenter(holenum=holenum, ntries=3)
+            args = self._autocenter(holenum=holenum, ntries=1)
             if args:
                 #add an adjustment value to the stage map
                 self._stage_map.set_hole_correction(holenum, *args)

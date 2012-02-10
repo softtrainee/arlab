@@ -25,13 +25,15 @@ from src.helpers.initialization_parser import InitializationParser
 HOME = os.path.expanduser('~')
 home = 'Pychrondata'
 
+version='1.2'
+
 from globals import beta
 
 host_url = 'https://arlab.googlecode.com/svn'
 project_root = 'trunk'
 
 if beta:
-    home = '{}_beta'.format(home)
+    home = '{}_beta{}'.format(home, version)
     project_root = 'branches/pychron'
 
 project_home = os.path.join(host_url, project_root)
