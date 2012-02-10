@@ -98,7 +98,7 @@ class CommandRepeater(ConfigLoadable):
             return True
 
     def open(self, *args, **kw):
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         sock.settimeout(3)
         self._sock = sock
 
@@ -142,7 +142,9 @@ class CommandRepeater(ConfigLoadable):
 
             try:
                 self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
+
                 result = self._sock.recv(4096)
+
                 self.led.state = 'green'
             except socket.error, e:
                 is_ok = False
@@ -164,7 +166,9 @@ class CommandRepeater(ConfigLoadable):
                             pass
 
                         self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
+
                         result = self._sock.recv(4096)
+
                         is_ok = True
                     except socket.error, e:
                         print e

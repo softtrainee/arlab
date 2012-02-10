@@ -28,6 +28,7 @@ from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors.system_errors import SystemLockErrorCode
 import select
+from asyncore import dispatcher_with_send
 
 
 class CommandProcessor(ConfigLoadable):
@@ -80,7 +81,7 @@ class CommandProcessor(ConfigLoadable):
         '''
 
         '''
-        self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
         self._sock.setblocking(False)
         try:
             os.remove(self.path)
@@ -91,6 +92,8 @@ class CommandProcessor(ConfigLoadable):
 
         self._sock.listen(10)
         self.info('listening to {}'.format(self.path))
+
+
         t = Thread(target=self._listener)
         t.start()
 
@@ -200,6 +203,8 @@ class CommandProcessor(ConfigLoadable):
 
         except Exception, err:
             self.debug('Process request Exception {}'.format(err))
+
+
 
 
 #if __name__ == '__main__':
