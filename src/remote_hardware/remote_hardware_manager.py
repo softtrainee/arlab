@@ -82,7 +82,7 @@ class RemoteHardwareManager(Manager):
             
             names.append(name)
             hosts[name] = host
-
+        
         pref = self.application.preferences
         pref.set('pychron.hardware.system_lock_names', names)
         pref.set('pychron.hardware.system_lock_addresses', hosts)
@@ -91,11 +91,11 @@ class RemoteHardwareManager(Manager):
 
         try:
             if name:
-                pref.set('pychron.hardware.system_lock_address', hosts[name.strip("'")])
+                pref.set('pychron.hardware.system_lock_address', hosts[name.strip("'").lower()])
             else:
-                pref.set('pychron.hardware.system_lock_address', hosts[names[0]])
+                pref.set('pychron.hardware.system_lock_address', hosts[names[0].lower()])
         except Exception, err:
-            print 'system lock exceptipon', err
+            print 'system lock exception', err
 
         pref.save()
 

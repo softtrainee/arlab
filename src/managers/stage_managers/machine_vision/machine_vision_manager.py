@@ -97,16 +97,18 @@ class MachineVisionManager(Manager):
     _threshold = Int
     test = Button
 
-    image_width = Int(int(640 * 1.5))
-    image_height = Int(int(324 * 1.5))
+#    image_width = Int(int(640 * 1.5))
+#    image_height = Int(int(324 * 1.5))
+    image_width = Int(int(640))
+    image_height = Int(int(324))
 #    image_height = Int(324 * 2)
 
-    start_threshold_search_value = 100
-    threshold_search_width = 10
+    start_threshold_search_value = 90
+    threshold_search_width = 20
 #    threshold_search_width = 10
 
-#    _debug = False
-    _debug = True
+    _debug = False
+#    _debug = True
 
 #    style = 'co2'
 
@@ -146,17 +148,17 @@ class MachineVisionManager(Manager):
         p = os.path.join(setup_dir, 'tray_maps', '221-hole.txt')
         sm = StageMap(file_path=p)
 
-#        center_x = self.parent.stage_controller.x
-#        center_y = self.parent.stage_controller.x
-#        ca = self.parent.canvas.calibration_item
-#        if ca is not None:
-#            rot = ca.get_rotation()
-#            cpos = ca.get_center_position()
+        center_mx = self.parent.stage_controller.x
+        center_my = self.parent.stage_controller.y
+        ca = self.parent.canvas.calibration_item
+        if ca is not None:
+            rot = ca.get_rotation()
+            cpos = ca.get_center_position()
 #        
-        center_mx = 3.596
-        center_my = -13.321
-        cpos = -2.066, -0.695
-        rot = 358.099
+#        center_mx = 3.596
+#        center_my = -13.321
+#        cpos = -2.066, -0.695
+#        rot = 358.099
 
         tm = TrayMapper(image=self.image,
                         stage_map=sm,
@@ -185,7 +187,7 @@ class MachineVisionManager(Manager):
         found = False
 
         crop_tries = 3
-        threshold_tries = 1
+        threshold_tries = 3
 
         self.hole_detector.pxpermm = self.pxpermm
         self.hole_detector._debug = self._debug
@@ -202,8 +204,8 @@ class MachineVisionManager(Manager):
             cw = (1 + ci * self.cropscalar) * self.cropwidth
             ch = (1 + ci * self.cropscalar) * self.cropheight
 
-            self.cropwidth = cw
-            self.cropheight = ch
+#            self.cropwidth = cw
+#            self.cropheight = ch
             self.info('cropping image to {}mm x {}mm'.format(cw, ch))
             for i in range(threshold_tries):
                 s = start - i * expand_value

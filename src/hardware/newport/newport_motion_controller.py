@@ -233,7 +233,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             try:
                 f = float(f)
 
-                f = self._sign_correct(f, axis) / ax.drive_ratio
+                f = self._sign_correct(f, axis, ratio=False) / ax.drive_ratio
             except ValueError:
                 f = None
         else:
@@ -377,7 +377,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             cmd = 'PA'
         else:
             cmd = 'PR'
-
+            
         cmd = self._build_command(cmd, xx=aid,
                                   nn='{:0.5f}'.format(self._sign_correct(value, key) * ax.drive_ratio))
         func = None
@@ -840,7 +840,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         r = 1
         if ratio:
             r = axis.drive_ratio
-
+            
         return val * axis.sign * r
 
     def _block_(self, event=None):

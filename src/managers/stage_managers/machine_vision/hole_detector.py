@@ -301,7 +301,7 @@ class HoleDetector(Loggable):
                                 color=color
                                 )
 
-    def _near_center(self, x, y, tol=1.5):
+    def _near_center(self, x, y, tol=1):
         cx = self.croppixels[0] / 2.0
         cy = self.croppixels[1] / 2.0
 
