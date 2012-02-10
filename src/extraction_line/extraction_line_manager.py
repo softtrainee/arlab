@@ -226,6 +226,10 @@ class ExtractionLineManager(Manager):
             else:
                 self.valve_manager.unlock(name)
 
+    def get_valve_lock_states(self):
+        if self.valve_manager is not None:
+            return self.valve_manager.get_software_locks()
+
     def get_valve_state(self, name):
         if self.valve_manager is not None:
             return self.valve_manager.get_state_by_name(name)
@@ -233,6 +237,7 @@ class ExtractionLineManager(Manager):
     def get_valve_states(self):
         if self.valve_manager is not None:
             return self.valve_manager.get_states()
+
 
     def get_valve_by_name(self, name):
         if self.valve_manager is not None:

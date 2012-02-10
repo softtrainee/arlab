@@ -23,6 +23,7 @@ from protocol import Protocol
 class SystemProtocol(Protocol):
     commands = {'Open': 'D', 'Close': 'D',
               'GetValveState': 'D', 'GetValveStates': None, 'GetManualState': 'A',
+              'GetValveLockStates':None,
               'Read': 'foo', 'Set': 'foo 1',
               #'RemoteLaunch': None,
               #'PychronReady': None,
