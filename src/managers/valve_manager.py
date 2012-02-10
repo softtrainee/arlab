@@ -126,6 +126,20 @@ class ValveManager(Manager):
                     else:
                         self.unlock(v, save=False)
 
+    def get_software_locks(self):
+        locks = []
+        for k, v in self.valves.items():
+            locks.append(k)
+            locks.append('1' if v.software_lock else '0')
+
+#            if self.query_valve_state:
+#                s = self.get_state_by_name(k)
+#            else:
+#                s = v.state
+
+
+        return ''.join(locks)
+
     def get_states(self):
         '''
         '''

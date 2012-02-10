@@ -59,7 +59,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             dev = DummyDevice()
         return dev
 
-    def Set(self, manager, dname, value,sender_address, *args):
+    def Set(self, manager, dname, value, sender_address, *args):
         d = self.get_device(dname)
         if d is not None:
             result = d.set(value)
@@ -68,7 +68,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
         return result
 
-    def Read(self, manager, dname,sender_address, *args):
+    def Read(self, manager, dname, sender_address, *args):
         d = self.get_device(dname)
         if d is not None:
             result = d.get()
@@ -77,11 +77,11 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     def Open(self, manager, vname, sender_address, *args):
-        
+
         #intercept flags
         if vname.startswith('Flag'):
-            return self.Set(manager, vname[4:],1, sender_address,*args)
-        
+            return self.Set(manager, vname[4:], 1, sender_address, *args)
+
         result = manager.open_valve(vname, sender_address=sender_address)
         if result == True:
             result = 'OK'
@@ -93,8 +93,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
     def Close(self, manager, vname, sender_address, *args):
         #intercept flags
         if vname.startswith('Flag'):
-            return self.Set(manager, vname[4:],0, sender_address,*args)
-        
+            return self.Set(manager, vname[4:], 0, sender_address, *args)
+
         result = manager.close_valve(vname, sender_address=sender_address)
         if result == True:
             result = 'OK'
@@ -111,6 +111,13 @@ class SystemHandler(BaseRemoteHardwareHandler):
     def GetValveStates(self, manager, *args):
 
         result = manager.get_valve_states()
+        if result is None:
+            result = 'ERROR'
+        return result
+
+    def GetValveLockStates(self, manager, vname, *args):
+
+        result = manager.get_valve_lock_states()
         if result is None:
             result = 'ERROR'
         return result

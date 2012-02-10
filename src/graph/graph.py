@@ -402,8 +402,8 @@ class Graph(HasTraits):
         except Exception, e:
             legend.labels.append(label)
 
-        print legend.plots
-        print legend.labels
+#        print legend.plots
+#        print legend.labels
 
     def clear_legend(self, keys, plotid=0):
         legend = self.plots[plotid].legend
@@ -503,7 +503,7 @@ class Graph(HasTraits):
         self.plots[plotid].overlays.append(PlotLabel(txt, x=x, y=y))
 
     def add_data_label(self, x, y, plotid=0):
-        print self.plots, plotid
+        #print self.plots, plotid
         plot = self.plots[plotid]
         label = DataLabel(component=plot, data_point=(x, y),
                           label_position="top left", padding=40,

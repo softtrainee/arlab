@@ -29,7 +29,8 @@ class DeadTime():
 
     def read_csv(self):
 
-        p = '/Users/ross/Desktop/deadtime_full'
+        p = '/Users/ross/Desktop/deadtime_full_obama'
+        #p = '/Users/ross/Desktop/deadtime_jan2'
         f = open(p, 'U')
         reader = csv.reader(f, delimiter='\t')
 
@@ -95,7 +96,7 @@ if __name__ == '__main__':
     g.new_plot(padding=[30, 10, 20, 40], show_legend=True)
     nshots = d.read_csv()
 #    taus = range(5, 40, 5)
-    taus = linspace(5, 30, 41)
+    taus = linspace(0, 30, 41)
     rratios1 = []
     mswds1 = []
 
