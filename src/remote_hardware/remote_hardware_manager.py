@@ -18,13 +18,12 @@ from traits.api import Instance, Bool, on_trait_change
 from apptools.preferences.preference_binding import bind_preference
 
 #============= standard library imports ========================
-import ConfigParser
 import os
 #============= local library imports  ==========================
 from src.helpers.paths import setup_dir
 from src.managers.manager import Manager
-from src.remote_hardware.command_processor import CommandProcessor
 from src.helpers.initialization_parser import InitializationParser
+from src.remote_hardware.command_processor import CommandProcessor
 
 '''
 #===================================
@@ -65,8 +64,8 @@ class RemoteHardwareManager(Manager):
         bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
         bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
 
-        
-        ip=InitializationParser(os.path.join(setup_dir,'initialization.xml'))
+
+        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
         names = []
         hosts = dict()
         for name, host in ip.get_systems():
@@ -78,11 +77,11 @@ class RemoteHardwareManager(Manager):
 #        for sect in config.sections():
 #            name = config.get(sect, 'name')
 #            host = config.get(sect, 'host')
-            
-            
+
+
             names.append(name)
             hosts[name] = host
-        
+
         pref = self.application.preferences
         pref.set('pychron.hardware.system_lock_names', names)
         pref.set('pychron.hardware.system_lock_addresses', hosts)
@@ -105,7 +104,7 @@ class RemoteHardwareManager(Manager):
             if self.command_processor.system_lock:
                 addrs = self.application.preferences.get('pychron.hardware.system_lock_addresses')
                 pairs = addrs[1:-1].split(',')
-    
+
                 for p in pairs:
                     k, v = p.split(':')
                     k = k.strip()
