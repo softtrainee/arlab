@@ -62,14 +62,21 @@ class LaserHandler(BaseRemoteHardwareHandler):
         err = manager.enable_laser()
 
         if manager.record_lasing:
-            manager.stage_manager.start_recording()
+            
+            #get the extraction line manager's current rid
+            elm=self.application.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+            rid=elm.multruns_report_manager.get_current_rid()
+            if rid is None:
+                rid='testrid_001'
+                
+            manager.stage_manager.start_recording(basename=rid)
 
         return self.error_response(err)
 
     def Disable(self, manager, *args):
         err = manager.disable_laser()
         if manager.record_lasing:
-            manager.stage_manager.stop_recording()
+            manager.stage_manager.stop_recording(delay=5)
 
         return self.error_response(err)
 
@@ -88,7 +95,10 @@ class LaserHandler(BaseRemoteHardwareHandler):
         except ValueError:
             return 'Invalid args: {}  {}'.format(data, y)
 
-        err = manager.stage_manager.linear_move(x, y)
+        #need to remember x,y so we can fool mass spec that we are position
+        manager.stage_manager._temp_position=x,y
+        err=manager.stage_manager.set_xy(x,y)
+        #err = manager.stage_manager.linear_move(x, y)
 
         return self.error_response(err)
 
@@ -111,9 +121,14 @@ class LaserHandler(BaseRemoteHardwareHandler):
         return self._set_axis(manager, 'z', data)
 
     def GetPosition(self, manager, *args):
+        
         smanager = manager.stage_manager
-        x, y = smanager.get_uncalibrated_xy()
         z = smanager.get_z()
+        if smanager._temp_position is not None and not smanager.moving():
+            x,y=smanager._temp_position
+            smanager._temp_position=None
+        else:
+            x, y = smanager.get_uncalibrated_xy()
 
         result = ','.join(['{:0.2f}' .format(i) for i in (x, y, z)])
 

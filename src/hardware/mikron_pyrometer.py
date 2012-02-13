@@ -123,12 +123,12 @@ class MikronGA140Pyrometer(CoreDevice):
                     resp = (low, high)
         return resp
 
-    def read_temperature(self):
+    def read_temperature(self, **kw):
         '''
         '''
 
         cmd = self._build_command('ms')
-        temp = self._parse_response(self.ask(cmd, verbose=False))
+        temp = self._parse_response(self.ask(cmd, **kw))
 
         self.temperature = temp if temp is not None else 0.0
 

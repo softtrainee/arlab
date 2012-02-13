@@ -167,8 +167,6 @@ class Image(HasTraits):
             elif flip:
                 cvFlip(rframe)
 
-            if gray:
-                frame = grayspace(rframe)
 
 #                frame = threshold(frame, 255)
 
@@ -195,6 +193,9 @@ class Image(HasTraits):
 #                crop(*args)
 #                frame = subsample(*args)
                 #pixelcrop(*args)
+            if gray:
+                frame = grayspace(frame)
+
             return frame
 
     def get_bitmap(self, **kw):#flip = False, swap_rb = False, mirror = True):

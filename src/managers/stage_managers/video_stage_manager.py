@@ -105,7 +105,7 @@ class VideoStageManager(StageManager, Videoable):
             if use_dialog:
                 path = self.save_file_dialog()
             else:
-                path, _ = unique_path(video_dir, 'vm_recording', filetype='avi')
+                path, _ = unique_path(video_dir, basename, filetype='avi')
 
         self.info('saving recording to path {}'.format(path))
 
@@ -113,15 +113,20 @@ class VideoStageManager(StageManager, Videoable):
 
         self.video.start_recording(path)
 
-    def stop_recording(self, user='remote'):
+    def stop_recording(self, user='remote', delay=0.1):
         '''
         '''
-        self.info('stop video recording')
-#        self.stop()
-        self.video.stop_recording()
-
-        #delay briefly before deleting the capture object
-        t = Timer(4, self.video.close, kwargs=dict(user=user))
+        def close():
+            self.info('stop video recording')
+    #        self.stop()
+            self.video.stop_recording()
+            time.sleep(4)
+            self.video.close(user=user)
+            #delay briefly before deleting the capture object
+#            t = Timer(4, self.video.close, kwargs=dict(user=user))
+#            t.start()
+            
+        t=Timer(delay, close)
         t.start()
 #        self.video.close(user=user)
 
@@ -170,8 +175,8 @@ class VideoStageManager(StageManager, Videoable):
         return v
 
     def _canvas_editor_factory(self):
-        w = self.canvas.camera.width * self.canvas.scaling / 10.
-        h = self.canvas.camera.height * self.canvas.scaling / 10.
+        w = self.canvas.camera.width * int(self.canvas.scaling*10) / 10.
+        h = self.canvas.camera.height * int(self.canvas.scaling*10) / 10.
         l = self.canvas.padding_left
         r = self.canvas.padding_right
         t = self.canvas.padding_top
@@ -209,12 +214,14 @@ class VideoStageManager(StageManager, Videoable):
 
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.auto_center:
-            time.sleep(0.5)
-            args = self._autocenter(holenum=holenum, ntries=1)
+            time.sleep(0.75)
+            self.video.open(user='autocenter')
+            args = self._autocenter(holenum=holenum, ntries=2)
             if args:
                 #add an adjustment value to the stage map
                 self._stage_map.set_hole_correction(holenum, *args)
 #            self._hole = 0
+            self.video.close(user='autocenter')
 
 
     @on_trait_change('autocenter_button')
@@ -223,6 +230,8 @@ class VideoStageManager(StageManager, Videoable):
         if self.auto_center:
 
             for _t in range(max(1, ntries)):
+                
+                
                 newpos = self.machine_vision_manager.search(self.stage_controller._x_position,
                                                             self.stage_controller._y_position,
                                                             holenum=None if isinstance(holenum, str) else holenum,
@@ -233,12 +242,14 @@ class VideoStageManager(StageManager, Videoable):
     #                self._point = 0
 
                     #newpos=(newpos[0]+0.01, newpos[1]+0.01)
-                    self.linear_move(*newpos, block=True, calibrated_space=False
+                    self.linear_move(*newpos, block=True, calibrated_space=False,
                                      #ratio_correct=False
+                                     update_hole=False
                                  )
-                    time.sleep(0.25)
+                    return newpos
+                time.sleep(0.25)
+                
 
-            return newpos
 
 #===============================================================================
 # handlers

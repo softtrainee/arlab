@@ -69,7 +69,14 @@ class Report(HasTraits):
 class MultrunsReportManager(Manager):
     #email_manager = Any
     current_report = None
+    def get_current_rid(self):
+        cr=self.current_report
+        if cr is not None:
+            if cr.runs:
+                return cr.runs[-1].rid
+        
     def start_new_report(self, name):
+        self.info('starting new mult runs report {}'.format(name))
         self.current_report = Report(name)
         
     def complete_report(self):
@@ -77,17 +84,18 @@ class MultrunsReportManager(Manager):
             self.current_report.complete()
             self.send_report()
             
-        
     def start_run(self, r):
+#        print 'start run ?',r, self.current_report
         if self.current_report is not None:
-            print 'start run'
+            self.info('start run {}'.format(r))
+#            print 'start run'
             self.current_report.start_run(r)
         
     def complete_run(self):
         if self.current_report is not None:
+            self.info('complete run')
             self.current_report.complete_run()
         
-
     def send_report(self):
         if self.application is not None:        
             em = self.application.get_service('src.social.email_manager.EmailManager')
