@@ -101,7 +101,7 @@ class Video(Image):
 
                 while self._recording:
                     st = time.time()
-                    src = self.get_frame(swap_rb=True, croprect=size)
+                    src = self.get_frame(gray=True, clone=True, croprect=size)
 
                     self._draw_crosshairs(src)
                     cvWriteFrame(writer, src)

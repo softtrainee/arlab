@@ -183,7 +183,7 @@ class MachineVisionManager(Manager):
         start = self.start_threshold_search_value
 
         end = start + self.threshold_search_width
-        expand_value = 5
+        expand_value = 10
         found = False
 
         crop_tries = 3

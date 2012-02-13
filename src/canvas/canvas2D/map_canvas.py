@@ -183,7 +183,7 @@ class MapCanvas(MarkupCanvas):
 ###                #translate to the center pos
 #              #  gc.translate_ctm(cx, cy)
 #              #  gc.translate_ctm(ox, oy)
-                gc.translate_ctm(cx - ox + 1, cy - oy + 1)
+                gc.translate_ctm(cx - ox, cy - oy)
 
 #                sw,sh=0.99,0.99
 #                gc.scale_ctm(sw,sh)

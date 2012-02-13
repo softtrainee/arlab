@@ -98,12 +98,13 @@ class StageManager(Manager):
     point = Property(Int(enter_set=True, auto_set=False), depends_on='_point')
     _point = Int
 
-
     canvas_editor_klass = LaserComponentEditor
 
     tray_calibration_manager = Instance(TrayCalibrationManager, ())
 
     motion_profiler = DelegatesTo('stage_controller')
+
+    _temp_position=None
 
     def _test_fired(self):
 #        self.do_pattern('testpattern')
@@ -219,41 +220,48 @@ class StageManager(Manager):
     def single_axis_move(self, *args, **kw):
         return self.stage_controller.single_axis_move(*args, **kw)
 
-    def linear_move(self, x, y, calibrated_space=True, **kw):
+    def linear_move(self, x, y, update_hole=True,calibrated_space=True, **kw):
 
         #x = self.stage_controller._sign_correct(x, 'x')
         #y = self.stage_controller._sign_correct(y, 'y')
-
-        hole = self._get_hole_by_position(x, y)
-        if hole is not None:
-            self._hole = int(hole.id)
+        if update_hole:
+            hole = self._get_hole_by_position(x, y)
+            if hole is not None:
+                self._hole = int(hole.id)
 
         pos = (x, y)
         if calibrated_space:
             pos = self._map_calibrated_space(pos)
 
         self.stage_controller.linear_move(*pos, **kw)
-
+    
+    def set_xy(self,x,y):
+        hole=self._get_hole_by_position(x, y)
+        if hole:
+            self.hole=int(hole.id)
+        else:
+            self.linear_move(x,y)
+        
     def _get_hole_by_position(self, x, y, tol=0.1):
         if self._stage_map:
-           return self._stage_map._get_hole_by_position(x, y)
+            return self._stage_map._get_hole_by_position(x, y)
 
 #
 #    def do_pattern(self, patternname):
 #        return self.pattern_manager.execute_pattern(patternname)
 
-    def update_axes(self):
+    def update_axes(self,update_hole=True):
         '''
         '''
         self.info('querying axis positions')
         self.stage_controller.update_axes()
-
-        #check to see if we are at a hole         
-        hole = self._get_hole_by_position(self.stage_controller._x_position,
-                                          self.stage_controller._y_position,
-                                          )
-        if hole is not None:
-            self._hole = int(hole.id)
+        if update_hole:
+            #check to see if we are at a hole         
+            hole = self._get_hole_by_position(self.stage_controller._x_position,
+                                              self.stage_controller._y_position,
+                                              )
+            if hole is not None:
+                self._hole = int(hole.id)
 
     def move_to_load_position(self):
         '''
@@ -335,16 +343,20 @@ class StageManager(Manager):
         self.stage_controller.set_home_position(**home_kwargs)
 
         self.stage_controller.home(homed)
-
         if 'z' in homed and 'z' in self.stage_controller.axes:
             #will be a positive limit error in z
-            self.stage_controller.read_error()
+#            self.stage_controller.read_error()
 
+            time.sleep(0.25)
             self.info('setting z to nominal position. {} mm '.format(self._default_z))
-            self.stage_controller._set_z(self._default_z)
-            self.stage_controller._block_()
+            self.stage_controller.single_axis_move('z',self._default_z,block=True)
+            self.stage_controller._z_position=self._default_z
+            
+#            self.stage_controller._set_z(self._default_z)
+##            time.sleep(0.1)
+#            self.stage_controller._block_(axis='z')
 
-        time.sleep(0.5)
+        time.sleep(0.25)
 
         #the stage controller should  think x and y are at -25,-25
         self.stage_controller._x_position = -25
@@ -628,7 +640,7 @@ class StageManager(Manager):
 #            a.translate(-cpos[0], -cpos[1])
 #
 #            pos = a.transformPt(pos)
-            pos = self.stage_map.map_to_uncalibration(pos)
+            pos = self._stage_map.map_to_uncalibration(pos, cpos, rot)
 
         return pos
 
@@ -714,7 +726,6 @@ class StageManager(Manager):
         pos = self._stage_map.get_corrected_hole_pos(key)
         if pos is not None:
             correct = True
-
             if abs(pos[0]) < 1e-6:
                 pos = self._stage_map.get_hole_pos(key)
                 pos = self._map_calibrated_space(pos, key=key)
@@ -727,6 +738,7 @@ class StageManager(Manager):
             self._move_to_hole_hook(key, correct)
 
             self.info('Move complete')
+            self.update_axes(update_hole=False)
             self.hole_thread = None
 
     def _move_to_hole_hook(self, *args):

@@ -25,7 +25,7 @@ import os
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
 
-UPDATE_MS = 150
+UPDATE_MS = 300
 
 
 class MotionController(CoreDevice):

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Property, Float, List, Enum, Button, on_trait_change
+from traits.api import HasTraits, Str, Property, CFloat, Float, List, Enum, Button, on_trait_change
 from traitsui.api import View, Item, TabularEditor, HGroup
 
 #============= standard library imports ========================
@@ -31,8 +31,8 @@ class SampleHole(HasTraits):
     id = Str
     x = Float
     y = Float
-    x_cor = Float(0)
-    y_cor = Float(0)
+    x_cor = CFloat(0)
+    y_cor = CFloat(0)
     render = Str
     shape = Str
     dimension = Float

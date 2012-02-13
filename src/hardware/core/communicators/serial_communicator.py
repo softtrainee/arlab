@@ -25,6 +25,7 @@ import select
 
 #=============local library imports  ==========================
 from communicator import Communicator
+from threading import currentThread
 
 
 def get_ports():
@@ -100,13 +101,14 @@ class SerialCommunicator(Communicator):
                 info = 'no handle'
                 self.log_tell(cmd, info)
             return
+        
+        with self._lock:
+#            self._lock.acquire()
+            self._write(cmd, is_hex=is_hex)
+            if verbose:
+                self.log_tell(cmd, info)
 
-        self._lock.acquire()
-        self._write(cmd, is_hex=is_hex)
-        if verbose:
-            self.log_tell(cmd, info)
-
-        self._lock.release()
+#        self._lock.release()
 
 #    def write(self, *args, **kw):
 #        '''
@@ -120,10 +122,11 @@ class SerialCommunicator(Communicator):
     def read(self, *args, **kw):
         '''
         '''
-        self._lock.acquire()
-        r = self._read(*args, **kw)
-        self._lock.release()
-        return r
+        with self._lock:
+            #self._lock.acquire()
+            r = self._read(*args, **kw)
+            #self._lock.release()
+            return r
 
     def ask(self, cmd, is_hex=False, verbose=True, delay=None, replace=None, remove_eol=True, info=None):
         '''
@@ -140,11 +143,12 @@ class SerialCommunicator(Communicator):
             self._write(cmd, is_hex=is_hex)
             re = self._read(is_hex=is_hex, delay=delay)
 
-        re = self.process_response(re, replace, remove_eol)
-
-        if verbose:
-            self.log_response(cmd, re, info)
-
+            re = self.process_response(re, replace, remove_eol)
+    
+            if verbose:
+                #self.debug('lock acquired by {}'.format(currentThread().name))
+                self.log_response(cmd, re, info)
+                #self.debug('lock released by {}'.format(currentThread().name))
         return re
 
     def open(self, **kw):

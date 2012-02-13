@@ -81,8 +81,8 @@ class CommandProcessor(ConfigLoadable):
         '''
 
         '''
-        self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        self._sock.setblocking(False)
+#        self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             os.remove(self.path)
         except OSError:
@@ -91,6 +91,8 @@ class CommandProcessor(ConfigLoadable):
         self._sock.bind(self.path)
 
         self._sock.listen(10)
+        self._sock.setblocking(False)
+        
         self.info('listening to {}'.format(self.path))
 
 
@@ -114,6 +116,17 @@ class CommandProcessor(ConfigLoadable):
 
         _input = [self._sock]
         while self._listen:
+#            try:
+#                data=self._sock.recv(4096)
+#                
+#                if data:
+#                    args = [self._sock] + data.split('|')
+#    
+#                    if self._threaded:
+#                        t = Thread(target=self._process_request, args=args)
+#                        t.start()
+#                    else:
+#                        self._process_request(*args)
 
             try:
                 ins, _, _ = select.select(_input, [], [], 5)
@@ -202,6 +215,13 @@ class CommandProcessor(ConfigLoadable):
             self._end_request(sock, result)
 
         except Exception, err:
+            import traceback
+
+            tb = traceback.format_exc()
+            #gTraceDisplay.add_text(tb)
+            #gTraceDisplay.edit_traits(kind='livemodal')
+            self.debug(tb)
+            
             self.debug('Process request Exception {}'.format(err))
 
 

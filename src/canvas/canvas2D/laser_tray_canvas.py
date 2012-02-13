@@ -69,7 +69,6 @@ class LaserTrayCanvas(MapCanvas):
                     #point already in the markup dict
                     return p
 
-
     def new_point(self):
         if self.point_exists(*self._stage_position):
             return
@@ -113,7 +112,6 @@ class LaserTrayCanvas(MapCanvas):
 
         with open(p, 'w') as f:
             f.write('\n'.join(lines))
-
 
     def config_view(self):
         v = View(
@@ -344,8 +342,8 @@ class LaserTrayCanvas(MapCanvas):
     def _draw_crosshairs(self, gc, xy, color=(1, 0, 0), kind=None):
         '''
         '''
-        mx = xy[0] + 1
-        my = xy[1] + 1
+        mx = xy[0]
+        my = xy[1]
 
 #===============================================================================
 #             

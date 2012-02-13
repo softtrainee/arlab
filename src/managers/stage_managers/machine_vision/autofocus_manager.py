@@ -307,7 +307,8 @@ class AutofocusManager(Manager):
                 #while controller._moving_() and self.autofocusing:
 #                    focussteps.append(controller.get_current_position('z'))    
                     self.load_source()
-                    focussteps.append(controller.z_progress)
+#                    focussteps.append(controller.z_progress)
+                    focussteps.append(controller.get_current_position('z'))
                     grads.append(self._calculate_focus_measure(operator, roi))
                     time.sleep(0.1)
                 #return to original velocity

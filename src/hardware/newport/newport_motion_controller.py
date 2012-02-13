@@ -410,7 +410,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
         else:
             func = self._z_inprogress_update
 
-        if update:
+        if block:
+            block=key
+        self._axis_move(cmd, block=block)
+        
+    
+        if update and not block:
             self.timer = self.timer_factory(func=func)
         else:
             if x is not None and y is not None:
@@ -419,7 +424,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 self._z_position = value
                 self.z_progress = value
 
-        self._axis_move(cmd, block=block)
+#        if block:
+#            block=key
+            
 
     def multiple_axis_move(self, axes_list, block=False):
         '''
@@ -501,9 +508,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
 #            cmd = self._build_command('OR', xx = axis, nn = )
 
-        self.timer = self.timer_factory()
+#        self.timer = self.timer_factory()
         if self.group_commands:
             self.tell(cmd)
+            
             if block:
                 self._block_()
         else:
@@ -818,6 +826,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         if block:
             self._block_()
+            self.info('move to {x:0.5f},{y:0.5f} complete'.format(**kwargs))
+            self.update_axes()
 
     def _axis_move(self, com, block=False):
         '''
@@ -831,7 +841,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 time.sleep(0.1)
 
         if block:
-            self._block_()
+            self._block_(axis=block)
 
     def _sign_correct(self, val, key, ratio=True):
         '''
@@ -843,17 +853,16 @@ ABLE TO USE THE HARDWARE JOYSTICK
             
         return val * axis.sign * r
 
-    def _block_(self, event=None):
+    def _block_(self,axis=None, event=None):
         '''
         '''
-
         if event is not None:
             event.clear()
 
-        while self._moving_():
+        while self._moving_(axis=axis):
             # is the sleep necessary and ehat period 
-            time.sleep(0.05)
-
+            time.sleep(0.1)
+            
         if event is not None:
             event.set()
 
@@ -874,7 +883,15 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if self.mode == 'grouped':
                 return self.group_moving()
             else:
-                return True if self.ask(self._build_command('MD?', xx=axis)) == '0' else False
+                for _ in range(5):
+                    r=self.ask(self._build_command('MD?', xx=axis),
+                                verbose=False
+                                )
+                    if r in ['0', '1']:
+                        break
+#                    time.sleep(0.25)
+#                time.sleep(0.5)
+                return True if r=='0' else False
 
         moving = False
         if not self.simulation:

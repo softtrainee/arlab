@@ -98,7 +98,8 @@ class CommandRepeater(ConfigLoadable):
             return True
 
     def open(self, *args, **kw):
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+#        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(3)
         self._sock = sock
 
@@ -122,6 +123,7 @@ class CommandRepeater(ConfigLoadable):
         '''
 
         '''
+        print rid, data, sender_address
         #intercept the pychron ready command
         #sent a test query 
         with self._lock:
@@ -133,7 +135,7 @@ class CommandRepeater(ConfigLoadable):
 
             elif data == 'RemoteLaunch':
                 return self.remote_launch('pychron')
-
+#
             try:
                 self._sock.connect(self.path)
             except socket.error:
@@ -141,6 +143,7 @@ class CommandRepeater(ConfigLoadable):
                 pass
 
             try:
+#                self._sock.sendto('{}|{}|{}'.format(sender_address, rid, data),self.path)
                 self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
 
                 result = self._sock.recv(4096)

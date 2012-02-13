@@ -53,7 +53,7 @@ class FusionsLogicBoard(CoreDevice):
     update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
 
 
-    initialize_beam = False
+    initialize_beam =False
     initialize_zoom = True
     configure = Button
 
@@ -178,9 +178,14 @@ class FusionsLogicBoard(CoreDevice):
 #                        resp = None
 #                    i += 1
 
+            try:
+                resp=int(resp)
+            except ValueError:
+                resp=None
+            
             if resp is None:
                 return ['Failed Response']
-
+            
             if resp != 0:
                 LOCK_MAP = ['External', 'E-stop', 'Coolant Flow']
                 rbits = []
