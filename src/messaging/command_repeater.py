@@ -27,6 +27,7 @@ from src.helpers.paths import pychron_src_dir
 from src.remote_hardware.errors.system_errors import PychronCommunicationErrorCode
 from threading import Lock
 
+from globals import ipc_dgram
 
 class CRHandler(Handler):
     def init(self, info):
@@ -98,8 +99,13 @@ class CommandRepeater(ConfigLoadable):
             return True
 
     def open(self, *args, **kw):
-#        sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+
+        kind = socket.SOCK_STREAM
+        if ipc_dgram:
+            kind = socket.SOCK_DGRAM
+
+        sock = socket.socket(socket.AF_UNIX, kind)
+
         sock.settimeout(3)
         self._sock = sock
 
@@ -123,7 +129,6 @@ class CommandRepeater(ConfigLoadable):
         '''
 
         '''
-        print rid, data, sender_address
         #intercept the pychron ready command
         #sent a test query 
         with self._lock:
@@ -135,7 +140,7 @@ class CommandRepeater(ConfigLoadable):
 
             elif data == 'RemoteLaunch':
                 return self.remote_launch('pychron')
-#
+
             try:
                 self._sock.connect(self.path)
             except socket.error:
@@ -143,9 +148,8 @@ class CommandRepeater(ConfigLoadable):
                 pass
 
             try:
-#                self._sock.sendto('{}|{}|{}'.format(sender_address, rid, data),self.path)
-                self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
 
+                self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
                 result = self._sock.recv(4096)
 
                 self.led.state = 'green'

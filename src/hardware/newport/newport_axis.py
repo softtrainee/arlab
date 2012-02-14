@@ -612,16 +612,14 @@ class NewportAxis(Axis):
 #                print self, e
 
     def save(self):
-#
-#        cp = ConfigParser.ConfigParser()
-#        p = os.path.join(self.config_path, '{}axis.cfg'.format(self.name))
-#        print p
-#        cp.read(p)
+
         self.info('saving parameters to {}'.format(self.config_path))
         cp = self.get_configuration()
-        cp.set('General', 'velocity', self.velocity)
-        cp.set('General', 'acceleration', self.acceleration)
-        cp.set('General', 'deceleration', self.deceleration)
+
+        #ensure 0 is not saved causing the axis to not move
+        cp.set('General', 'velocity', max(0.1, self.velocity))
+        cp.set('General', 'acceleration', max(0.1, self.acceleration))
+        cp.set('General', 'deceleration', max(0.1, self.deceleration))
         for sect in cp.sections():
             for attr in cp.options(sect):
                 val = getattr(self, attr)

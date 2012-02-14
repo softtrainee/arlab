@@ -82,6 +82,7 @@ class VideoStageManager(StageManager, Videoable):
     auto_center = Bool(True)
 
     autocenter_button = Button('AutoCenter')
+    mapcenters_button = Button('Map Centers')
 
     autofocus_manager = Instance(AutofocusManager)
 
@@ -185,12 +186,15 @@ class VideoStageManager(StageManager, Videoable):
                                         height=h + t + b)
     def _sconfig__group__(self):
         g = super(VideoStageManager, self)._sconfig__group__()
+        mv = Group(HGroup(Item('auto_center', label='Enabled'),
+                          Item('autocenter_button', show_label=False, enabled_when='auto_center')),
+                   Item('mapcenters_button', show_label=False),
+                   label='Machine Vision', show_border=True)
         g.content.append(Group(Item('camera_xcoefficients'),
                                Item('camera_ycoefficients'),
                                Item('drive_xratio'),
                                Item('drive_yratio'),
-                               HGroup(Item('auto_center', label='Enabled'),
-                                      Item('autocenter_button', show_label=False, enabled_when='auto_center')),
+                               mv,
                                HGroup(Item('snapshot_button', show_label=False),
                                       Item('auto_save_snapshot')),
                                Item('autofocus_manager', show_label=False, style='custom'),
@@ -254,6 +258,24 @@ class VideoStageManager(StageManager, Videoable):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _mapcenters_button_fired(self):
+        self.info('Mapping all holes for {}'.format(self.stage_map))
+        mv = self.machine_vision_manager
+        sm = self._stage_map
+        #enumerate the current stage map holes
+        for hole in sm.sample_holes:
+            self.info('finding center of hole= {} ({},{}) '.format(hole.id, hole.x, hole.y))
+            self.hole = hole.id
+            x = self.stage_controller._x_position
+            y = self.stage_controller._y_position
+
+            time.sleep(0.25)
+            newpos = mv.search(x, y, hole.id)
+            if newpos:
+                self.info('calculated center of hole= {} ({},{}) '.format(hole.id, *newpos))
+                sm.set_hole_correction(hole.id, *newpos)
+            time.sleep(0.25)
+
     def _snapshot_button_fired(self):
 
         if self.auto_save_snapshot:

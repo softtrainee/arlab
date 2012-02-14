@@ -14,18 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 
+try:
+    from image_helper import *
+except (ImportError, AttributeError):
+    from pyopencv_image_helper import *
 
-import os
 
-
-beta = False if os.path.basename(os.path.dirname(__file__)) == 'pychron' else True
-use_shared_memory = False
-
-use_debug_logger = False
-#use_debug_logger = True
-
-open_logger_on_launch = False
-
-show_warnings = False
-
-ipc_dgram = True
+def get_size(src):
+    try:
+        return src.size()
+    except AttributeError:
+        return src.width, src.height

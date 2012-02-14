@@ -18,49 +18,29 @@ from traits.api import HasTraits, Any, List, Int, Bool
 
 #=============standard library imports ========================
 import wx
-from numpy import asarray, flipud, ndarray
+from numpy import asarray, flipud, ndarray, hstack, array, ones, vstack, zeros
 #=============local library imports  ==========================
+from cvwrapper import colorspace, swapRB, grayspace, cvFlip, \
+    draw_lines, add_scalar, new_dst, \
+    resize, asMat, frompil, save_image, load_image, get_size#, setImageROI, resetImageROI
+    #cvSetImageROI, cvResetImageROI
 
-from ctypes_opencv import cvConvertImage, cvCloneImage, \
-    cvResize, cvFlip, \
-    CV_CVTIMG_SWAP_RB, cvCreateImageFromNumpyArray
-from image_helper import load_image, new_dst, grayspace, clone
-from src.image.image_helper import crop, draw_lines, save_image, threshold, \
-    colorspace, subsample
-from ctypes_opencv.interfaces import cvCreateMatNDFromNumpyArray, pil_to_ipl
-from ctypes_opencv.cxcore import cvCreateImage, cvGetImage, CvSize, cvZero, \
-    cvAddS, CvScalar, CvRect, cvSetImageROI, cvResetImageROI, \
-    cvCreateImageHeader, cvSize, cvSetData, IPL_DEPTH_8U
-from Image import fromarray
-import math
-from ctypes import cast, c_byte, POINTER
-#from ctypes_opencv.cv import cvCvtColor
-#from ctypes_opencv.interfaces import ipl_to_pil
-#from src.image.image_helper import threshold, colorspace, contour, get_polygons, \
-#    draw_polygons, find_circles, find_ellipses, clone, crop, draw_contour_list, \
-#    centroid, erode
-#from ctypes_opencv.cxcore import CvPoint, cvRound, cvCircle
-def my_pil_to_ipl(im_pil, nc):
-        im_ipl = cvCreateImageHeader(cvSize(im_pil.size[0], im_pil.size[1]),
-IPL_DEPTH_8U, nc)
-        data = im_pil.tostring('raw', 'L', im_pil.size[0] * nc)
-        cvSetData(im_ipl, cast(data, POINTER(c_byte)), im_pil.size[0] * nc)
-#        cvCvtColor(im_ipl, im_ipl, CV_RGB2BGR)
-        im_ipl._depends = (data,)
-        return im_ipl
-class GraphicsContainer(object):
+#class GraphicsContainer(object):
+#
+#    _lines = None
+#
+#    def add_line(self, l):
+#        if self._lines is None:
+#            self._lines = [l]
+#        else:
+#            self._lines.append(l)
+#
+#    @property
+#    def lines(self):
+#        return self._lines
+#from numpy.core.numeric import zeros
+import Image as PILImage
 
-    _lines = None
-
-    def add_line(self, l):
-        if self._lines is None:
-            self._lines = [l]
-        else:
-            self._lines.append(l)
-
-    @property
-    def lines(self):
-        return self._lines
 
 class Image(HasTraits):
     '''
@@ -77,8 +57,9 @@ class Image(HasTraits):
     swap_rb = Bool(False)
     flip = Bool(False)
     panel_size = Int(300)
-    def new_graphics_container(self):
-        self.graphics_container = GraphicsContainer()
+
+#    def new_graphics_container(self):
+#        self.graphics_container = GraphicsContainer()
 
 #    def load(self, img, swap_rb=True):
 #    def swap_rb(self):
@@ -92,35 +73,37 @@ class Image(HasTraits):
         elif isinstance(img, ndarray):
 #            img = cvCreateImageFromNumpyArray(img)
 #            print fromarray(img)
-            if nchannels < 3:
-                img = my_pil_to_ipl(fromarray(img), nchannels)
-                img = colorspace(img)
-            else:
-                img = pil_to_ipl(fromarray(img))
+#            if nchannels < 3:
+#                img = my_pil_to_ipl(fromarray(img), nchannels)
+#                img = colorspace(img)
+#            else:
+#                img = pil_to_ipl(fromarray(img))
 #            mat = cvCreateMatNDFromNumpyArray(img)
 #            img = cvGetImage(mat)
-
+            pass
 #            FromNumpyArray(img)
 #        if swap_rb:
 #            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
 
         self.source_frame = img
-        self.frames = [clone(img)]
+#        self.frames = [clone(img)]
+        self.frames = [img.clone()]
 
     def update_bounds(self, obj, name, old, new):
         if new:
             self.width = new[0]
             self.height = new[1]
 
-    def _get_frame(self):
+    def _get_frame(self, **kw):
         return self.source_frame
 
     def get_array(self, swap_rb=True, cropbounds=None):
         f = self.source_frame
         if swap_rb:
-            f = clone(self.source_frame)
-            cvConvertImage(f, f, CV_CVTIMG_SWAP_RB)
-
+            f = self.source_frame.clone()
+            f = swapRB(f)
+#            f = clone(self.source_frame)
+#            cv.convertImage(f, f, CV_CVTIMG_SWAP_RB)
 
         a = f.as_numpy_array()
         if cropbounds:
@@ -131,16 +114,17 @@ class Image(HasTraits):
 
         return flipud(a)#[lx / 4:-lx / 4, ly / 4:-ly / 4]
 
-    def get_frame(self, flip=None, mirror=False, gray=False, swap_rb=None, clone=False, croprect=None):
-        rframe = self._get_frame()
-        if rframe is not None:
+    def get_frame(self, flip=None, mirror=False, gray=False, swap_rb=None,
+                  clone=False, croprect=None, size=None, **kw):
+        frame = self._get_frame(**kw)
+        if frame is not None:
 #            if raw:
 #                frame = rframe
 #            else:
 #                frame = new_dst(rframe, width=self.width,
 #                              height=self.height)
-            frame = new_dst(rframe, width=self.width,
-                          height=self.height)
+#            frame = new_dst(rframe, width=self.width,
+#                          height=self.height)
 
             if swap_rb is None:
                 swap_rb = self.swap_rb
@@ -150,51 +134,61 @@ class Image(HasTraits):
             if swap_rb:
                 #cool fractal display
 #                cvConvertImage(frame, rframe, CV_CVTIMG_SWAP_RB)
-                cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
+#                cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
+#                rframe = swapRB(rframe)
+                frame = swapRB(frame)
 
-            cvResize(rframe, frame)
-            rframe = frame
+#            cvResize(rframe, frame)
+#            rframe = frame
             if clone:
-                frame = cvCloneImage(frame)
+#                frame = cvCloneImage(frame)
+                frame = frame.clone()
 
             if flip is None:
                 flip = self.flip
 
             if flip and mirror:
-                cvFlip(rframe, flip_mode=2)
+                cvFlip(frame, flip_mode=2)
             elif mirror:
-                cvFlip(rframe, flip_mode=1)
+                cvFlip(frame, flip_mode=1)
             elif flip:
-                cvFlip(rframe)
+                cvFlip(frame, 0)
 
+            if gray:
+                frame = grayspace(frame)
 
 #                frame = threshold(frame, 255)
 
-            if self.graphics_container:
-                draw_lines(rframe, self.graphics_container.lines)
+#            if self.graphics_container:
+#                draw_lines(rframe, self.graphics_container.lines)
 
             if croprect:
 
                 if len(croprect) == 2: # assume w, h
 #                    args = (frame, (frame.width - croprect[0]) / 2, (frame.height - croprect[1]) / 2, croprect[0], croprect[1])
-                    croprect = (frame.width - croprect[0]) / 2, (frame.height - croprect[1]) / 2, croprect[0], croprect[1]
+
+                    w, h = get_size(frame)
+                    croprect = (w - croprect[0]) / 2, (h - croprect[1]) / 2, croprect[0], croprect[1]
                 else:
                     pass
 #                    args = (frame,) + croprect
-                d = frame.as_numpy_array()
+                #d = frame.as_numpy_array()
+                d = frame.ndarray
                 rs = croprect[0]
                 re = croprect[0] + croprect[2]
                 cs = croprect[1]
                 ce = croprect[1] + croprect[3]
                 d = d[cs:ce, rs:re]
-
-                frame = pil_to_ipl(fromarray(d))
+                frame = asMat(d)
+#                frame = pil_to_ipl(fromarray(d))
 
 #                crop(*args)
 #                frame = subsample(*args)
                 #pixelcrop(*args)
-            if gray:
-                frame = grayspace(frame)
+
+            if size:
+                frame = resize(frame, *size)
+
 
             return frame
 
@@ -205,67 +199,112 @@ class Image(HasTraits):
 #        kw = dict()
 #        if swap_rb:
 #            kw['flag'] = CV_CVTIMG_SWAP_RB
-
         frame = self.get_frame(**kw)
-        if frame is not None:
-            self._frame = frame
-            self._bitmap = wx.BitmapFromBuffer(frame.width,
+        try:
+            return frame.to_wx_bitmap()
+        except AttributeError:
+            if frame is not None:
+                self._frame = frame
+                return wx.BitmapFromBuffer(frame.width,
                                        frame.height,
                                        frame.data_as_string()
                                         )
-            return self._bitmap
 
     def render_images(self, src):
-        nsrc = len(src)
-        rows = math.floor(math.sqrt(nsrc))
-        cols = rows
-        if rows * rows < nsrc:
-            cols = rows + 1
-            if cols * rows < nsrc:
-                rows += 1
 
-#        size = 300
-        size = self.panel_size
-        #create display image
-        w = self.width
-        h = self.height
+        w = sum([s.size()[0] for s in src])
+        h = sum([s.size()[1] for s in src])
 
-        display = cvCreateImage(CvSize(w, h), 8, 3)
+        display = new_dst(w, h, 3)
 
-        cvZero(display)
-        cvAddS(display, CvScalar(200, 200, 200), display)
-        padding = 12
-        m = padding
-        n = padding
-        for i, s in enumerate(src):
-            x = s.width
-            y = s.height
-            ma = float(max(x, y))
-            scale = ma / size
-            if i % cols == 0 and m != padding:
-                m = padding
-                n += size + padding
+        s1 = src[0].ndarray
+        s2 = src[1].ndarray
 
-            cvSetImageROI(display, CvRect(int(m), int(n), int(x / scale), int(y / scale)))
-            cvResize(s, display)
-            cvResetImageROI(display)
-            m += (padding + size)
+        npad = 2
+        pad = asMat(zeros((s1.shape[0], npad, s1.shape[2]), 'uint8'))
+        add_scalar(pad, (255, 255, 255))
+
+        s1 = hstack((pad.ndarray, s1))
+        s1 = hstack((s1, pad.ndarray))
+        s1 = hstack((s1, s2))
+        da = hstack((s1, pad.ndarray))
+
+        vpad = asMat(zeros((npad, da.shape[1], da.shape[2]), 'uint8'))
+        add_scalar(vpad, (255, 255, 255))
+        da = vstack((vpad.ndarray, da))
+        da = vstack((da, vpad.ndarray))
+
+        i1 = PILImage.fromarray(da)
+        composite = frompil(i1)
+
+        resize(composite, 640, 320, dst=display)
+
         return display
 
-    def save(self, path):
-        src = self.render_images(self.frames)
-        cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
+    def save(self, path, src=None):
+        if src is None:
+            src = self.render_images(self.frames)
+#        cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
+#        src = swapRB(src)
         save_image(src, path)
 
     def _draw_crosshairs(self, src):
         r = 10
-        pts = [[(src.width / 2, 0), (src.width / 2, src.height / 2 - r)],
-               [(src.width / 2, src.height / 2 + r), (src.width / 2, src.height)],
-               [(0, src.height / 2), (src.width / 2 - r, src.height / 2)],
-               [(src.width / 2 + r, src.height / 2), (src.width , src.height / 2)],
+
+        w, h = map(int, get_size(src))
+        pts = [[(w / 2, 0), (w / 2, h / 2 - r)],
+               [(w / 2, h / 2 + r), (w / 2, h)],
+               [(0, h / 2), (w / 2 - r, h / 2)],
+               [(w / 2 + r, h / 2), (w, h / 2)],
                ]
         draw_lines(src, pts, color=(0, 255, 255), thickness=1)
-
+#======== EOF ================================
+#    def render_images1(self, src):
+#        nsrc = len(src)
+#        rows = math.floor(math.sqrt(nsrc))
+#        cols = rows
+#        if rows * rows < nsrc:
+#            cols = rows + 1
+#            if cols * rows < nsrc:
+#                rows += 1
+#
+##        size = 300
+#        size = self.panel_size
+#        #create display image
+#        w = self.width
+#        h = self.height
+#
+##        display = cvCreateImage(CvSize(w, h), 8, 3)
+##        display = cvCreateImage(CvSize(w, h), 8, 3)
+##        display = new_color_dst(w, h)
+#        display = new_dst(w, h, 3)
+##        zero(display)
+#        add_scalar(display, 100)
+#        #cvAddS(display, CvScalar(200, 200, 200), display)
+#        padding = 12
+#        m = padding
+#        n = padding
+#        for i, s in enumerate(src[:0]):
+#
+##            x = s.width
+##            y = s.height
+#            x, y = get_size(s)
+#
+#            ma = float(max(x, y))
+#            scale = ma / size
+#            if i % cols == 0 and m != padding:
+#                m = padding
+#                n += size + padding
+#            display.adjustROI(m, n, int(x / scale), int(y / scale))
+#
+##            setImageROI(display, new_rect(int(m), int(n), int(x / scale),
+##                                            int(y / scale)))
+#            resize(s, 640, 480, dst=display)
+#            display.adjustROI(0, 0, w, h)
+##            resetImageROI(display)
+#            m += (padding + size)
+#
+#        return display
 #            return cvIplImageAsBitmap(frame, flip = flip, swap = swap_rb)
 #
 #            data = ctypes.string_at(frame.imageData, frame.width * frame.height * 4)

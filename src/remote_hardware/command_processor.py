@@ -29,6 +29,7 @@ from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors.system_errors import SystemLockErrorCode
 import select
 from asyncore import dispatcher_with_send
+from globals import ipc_dgram
 
 
 class CommandProcessor(ConfigLoadable):
@@ -81,8 +82,15 @@ class CommandProcessor(ConfigLoadable):
         '''
 
         '''
-#        self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-        self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        kind = socket.SOCK_STREAM
+        if ipc_dgram:
+            kind = socket.SOCK_DGRAM
+
+        self._sock = socket.socket(socket.AF_UNIX, kind)
+
+        if not ipc_dgram:
+            self._sock.setblocking(False)
+
         try:
             os.remove(self.path)
         except OSError:
@@ -90,9 +98,8 @@ class CommandProcessor(ConfigLoadable):
 
         self._sock.bind(self.path)
 
-        self._sock.listen(10)
-        self._sock.setblocking(False)
-        
+        if not ipc_dgram:
+            self._sock.listen(10)
         self.info('listening to {}'.format(self.path))
 
 
@@ -110,55 +117,66 @@ class CommandProcessor(ConfigLoadable):
             if not addr in [None, 'None']:
                 return self.system_lock_address != addr
 
+    def _stream_listener(self, _input):
+        ins, _, _ = select.select(_input, [], [], 5)
+
+        for s in ins:
+            if s == self._sock:
+                client, _addr = self._sock.accept()
+                _input.append(client)
+            else:
+                data = s.recv(4096)
+                if data:
+#                            sender_addr, ptype, payload = data.split('|')
+                    args = [s] + data.split('|')
+#                            args = client, sender_addr, ptype, payload
+                    if self._threaded:
+                        t = Thread(target=self._process_request, args=args)
+                        t.start()
+                    else:
+                        self._process_request(*args)
+
+                else:
+                    s.close()
+                    _input.remove(s)
+
+    def _dgram_listener(self):
+        data, address = self._sock.recvfrom(4096)
+
+        if data is None:
+            args = [self._sock] + data.split('|')
+            if self._threaded:
+                t = Thread(target=self._process_request, args=args)
+                t.start()
+            else:
+                self._process_request(*args)
+
     def _listener(self, *args, **kw):
         '''
         '''
 
         _input = [self._sock]
         while self._listen:
-#            try:
-#                data=self._sock.recv(4096)
-#                
-#                if data:
-#                    args = [self._sock] + data.split('|')
-#    
-#                    if self._threaded:
-#                        t = Thread(target=self._process_request, args=args)
-#                        t.start()
-#                    else:
-#                        self._process_request(*args)
-
             try:
-                ins, _, _ = select.select(_input, [], [], 5)
+                if ipc_dgram:
+                    self._dgram_listener()
+                else:
+                    self._stream_listener(_input)
 
-                for s in ins:
-                    if s == self._sock:
-                        client, _addr = self._sock.accept()
-                        _input.append(client)
-                    else:
-                        client = s
-                        data = client.recv(4096)
-                        if data:
-#                            sender_addr, ptype, payload = data.split('|')
-                            args = [client] + data.split('|')
-#                            args = client, sender_addr, ptype, payload
-                            if self._threaded:
-                                t = Thread(target=self._process_request, args=args)
-                                t.start()
-                            else:
-                                self._process_request(*args)
-
-                        else:
-                            client.close()
-                            _input.remove(client)
 
             except Exception, err:
                 self.debug('Listener Exception {}'.format(err))
+                import traceback
+                tb = traceback.format_exc()
+                self.debug(tb)
 
     def _end_request(self, sock, data):
         #self.debug('Result: {}'.format(data))
         try:
-            sock.send(data)
+            if ipc_dgram:
+                sock.sendto(data, self.path)
+            else:
+                sock.send(data)
             #sock.close()
         except Exception, err:
             self.debug('End Request Exception: {}'.format(err))
@@ -218,8 +236,6 @@ class CommandProcessor(ConfigLoadable):
             import traceback
 
             tb = traceback.format_exc()
-            #gTraceDisplay.add_text(tb)
-            #gTraceDisplay.edit_traits(kind='livemodal')
             self.debug(tb)
             
             self.debug('Process request Exception {}'.format(err))

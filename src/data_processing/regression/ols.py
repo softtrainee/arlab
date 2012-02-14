@@ -17,7 +17,7 @@ limitations under the License.
 
 #============= standard library imports ========================
 import numpy as np
-import scikits.statsmodels as sm
+import scikits.statsmodels.api as sm
 
 #============= local library imports  ==========================
 
@@ -47,7 +47,9 @@ class OLS(object):
         self.X = np.asarray(x)
         self.Y = np.asarray(y)
         self._ols = sm.OLS(self.Y, np.vander(self.X, order))
-        self.results = self._ols.results
+
+
+        self.results = self._ols.fit()
 
     def get_coefficients(self):
         return self._get_result_param('params')

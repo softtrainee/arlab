@@ -104,7 +104,7 @@ class StageManager(Manager):
 
     motion_profiler = DelegatesTo('stage_controller')
 
-    _temp_position=None
+    _temp_position = None
 
     def _test_fired(self):
 #        self.do_pattern('testpattern')
@@ -220,7 +220,7 @@ class StageManager(Manager):
     def single_axis_move(self, *args, **kw):
         return self.stage_controller.single_axis_move(*args, **kw)
 
-    def linear_move(self, x, y, update_hole=True,calibrated_space=True, **kw):
+    def linear_move(self, x, y, update_hole=True, calibrated_space=True, **kw):
 
         #x = self.stage_controller._sign_correct(x, 'x')
         #y = self.stage_controller._sign_correct(y, 'y')
@@ -234,14 +234,14 @@ class StageManager(Manager):
             pos = self._map_calibrated_space(pos)
 
         self.stage_controller.linear_move(*pos, **kw)
-    
-    def set_xy(self,x,y):
-        hole=self._get_hole_by_position(x, y)
+
+    def set_xy(self, x, y):
+        hole = self._get_hole_by_position(x, y)
         if hole:
-            self.hole=int(hole.id)
+            self.hole = int(hole.id)
         else:
-            self.linear_move(x,y)
-        
+            self.linear_move(x, y)
+
     def _get_hole_by_position(self, x, y, tol=0.1):
         if self._stage_map:
             return self._stage_map._get_hole_by_position(x, y)
@@ -250,7 +250,7 @@ class StageManager(Manager):
 #    def do_pattern(self, patternname):
 #        return self.pattern_manager.execute_pattern(patternname)
 
-    def update_axes(self,update_hole=True):
+    def update_axes(self, update_hole=True):
         '''
         '''
         self.info('querying axis positions')
@@ -349,9 +349,9 @@ class StageManager(Manager):
 
             time.sleep(0.25)
             self.info('setting z to nominal position. {} mm '.format(self._default_z))
-            self.stage_controller.single_axis_move('z',self._default_z,block=True)
-            self.stage_controller._z_position=self._default_z
-            
+            self.stage_controller.single_axis_move('z', self._default_z, block=True)
+            self.stage_controller._z_position = self._default_z
+
 #            self.stage_controller._set_z(self._default_z)
 ##            time.sleep(0.1)
 #            self.stage_controller._block_(axis='z')
@@ -656,7 +656,7 @@ class StageManager(Manager):
         if ca:
             rot = ca.get_rotation()
             cpos = ca.get_center_position()
-            t=None
+            t = None
             if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
                 t = ca.tweak_dict[key]
 #                a.translate(*ca.tweak_dict[key])
@@ -767,10 +767,10 @@ if __name__ == '__main__':
 
 
     setup('stage_manager')
-
+    name = 'diode'
     s = StageManager(
-                     name='co2stage',
-                     configuration_dir_name='co2',
+                     name='{}stage'.format(name),
+                     configuration_dir_name=name,
                      #parent = DummyParent(),
                      window_width=945,
                      window_height=545

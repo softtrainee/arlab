@@ -17,7 +17,7 @@ limitations under the License.
 from traits.api import Any
 #============= standard library imports ========================
 from src.managers.stage_managers.machine_vision.hole_detector import HoleDetector
-from src.image.image_helper import colorspace, grayspace, draw_rectangle, \
+from src.image.cvwrapper import colorspace, grayspace, draw_rectangle, \
     new_point
 import time
 

@@ -366,7 +366,8 @@ class SerialCommunicator(Communicator):
                                 break
 
             if is_hex:
-                r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
+                if r:
+                    r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
 
         return r
 #            if inw > 0:
