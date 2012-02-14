@@ -34,7 +34,7 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
     CV_8UC3, CV_8UC1, CV_HIST_ARRAY, CV_THRESH_BINARY_INV, CV_THRESH_BINARY, \
     CV_CVTIMG_SWAP_RB, CV_AA, CV_POLY_APPROX_DP, \
     sizeof, \
-    cvCreateVideoWriter, CV_FOURCC
+    cvCreateVideoWriter, CV_FOURCC, cvAddS, cvScalarAll, cvCreateCameraCapture
     #unused
 #    cvClearMemStorage,\
 #    cvSet, cvSet2D, cvFilter2D, cvScalarAll, CV_32FC1, cvGet1D, cvSet1D, \
@@ -42,6 +42,8 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
 
 
 from ctypes import POINTER
+
+from ctypes_opencv.interfaces import cvCreateImageFromNumpyArray, pil_to_ipl
 from ctypes_opencv.cv import cvCreateStructuringElementEx, CV_SHAPE_RECT, \
     cvBoundingRect, cvPyrDown, cvPyrUp, cvSmooth, \
     CV_GAUSSIAN
@@ -49,8 +51,42 @@ from ctypes_opencv.cxcore import cvRound, cvFillPoly, cvSize, CV_SEQ_FLAG_HOLE
 
 from src.data_processing.centroid.centroid import centroid as _centroid
 from threading import Thread
+from Image import fromarray
 
 storage = cvCreateMemStorage(0)
+
+
+def get_capture_device(name):
+    print 'ia m useign ctypes opencv'
+    return cvCreateCameraCapture(name)
+
+
+def frompil(src):
+    return pil_to_ipl(fromarray(src))
+
+def asMat(src):
+    img = cvCreateImageFromNumpyArray(src)
+
+    return img
+
+
+def resize(src):
+    pass
+
+
+def add_scalar(src, v):
+    if isinstance(v, int):
+        v = (v,) * src.channels()
+
+    cvAddS(src, cvScalarAll(*v), src)
+
+
+def swapRB(src):
+    cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
+
+
+def cvFlip(src, mode):
+    cvConvertImage(src, src, mode)
 
 
 def convert_seq(seq):
