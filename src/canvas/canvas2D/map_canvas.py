@@ -42,7 +42,7 @@ class MapCanvas(MarkupCanvas):
     use_valid_holes = Bool(True)
     show_indicators = Bool(True)
 
-    scaling = Float(10)
+    scaling = Float(1.0)
 
     def __init__(self, *args, **kw):
         super(MapCanvas, self).__init__(*args, **kw)
