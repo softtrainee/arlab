@@ -32,9 +32,10 @@ from src.managers.stage_managers.pattern.patterns import Pattern, \
      RandomPattern, PolygonPattern, ArcPattern
 import time
 from pyface.timer.do_later import do_later
-from src.canvas.canvas2D.image_underlay import ImageUnderlay
-from src.image.image import Image
-from src.image.image_helper import clone, copy
+#from src.canvas.canvas2D.image_underlay import ImageUnderlay
+#from src.image.image import Image
+#from src.image.image_helper import clone, copy
+
 class PatternManager(Manager):
     kind = Property(Enum(
                          'Polygon',

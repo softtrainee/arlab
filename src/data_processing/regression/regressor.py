@@ -106,11 +106,9 @@ class Regressor(object):
 
     def least_squares(self, x, y, **kw):
         return self._regress_(x, y, 'least_squares', **kw)
+
     def weighted_least_squares(self, x, y, **kw):
         return self._regress_(x, y, 'weighted_least_squares', **kw)
-
-
-
 
     def get_degree(self, kind):
         degree = None
@@ -243,8 +241,6 @@ class Regressor(object):
             yreturn = fitfunc(coeffs, xreturn)
             ymodel = fitfunc(coeffs, x)
             lcly, ucly = self.calc_confidence_interval(95, x, y, ymodel, xreturn, yreturn)
-
-
 
         if degree and len(x) >= degree + 1:
 

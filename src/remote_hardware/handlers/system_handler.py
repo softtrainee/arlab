@@ -109,14 +109,12 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     def GetValveStates(self, manager, *args):
-
         result = manager.get_valve_states()
         if result is None:
             result = 'ERROR'
         return result
 
     def GetValveLockStates(self, manager, vname, *args):
-
         result = manager.get_valve_lock_states()
         if result is None:
             result = 'ERROR'

@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import Any, Instance, Range, Button, Int, Property, Bool, Tuple, DelegatesTo
-from traitsui.api import View, Item, Handler, HGroup, spring, Spring
+from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
+    DelegatesTo
+from traitsui.api import View, Item, Handler, HGroup
 from pyface.timer.do_later import do_later, do_after
 #============= standard library imports ========================
 from numpy import histogram, argmax, argmin, array, linspace, asarray, mean
@@ -23,16 +24,15 @@ from numpy import histogram, argmax, argmin, array, linspace, asarray, mean
 #from scipy.ndimage import sum as ndsum
 #from scipy.ndimage.measurements import variance
 
-from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound, cvPutText, cvScalar, \
-    cvFont, cvPoint
+#from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound, \
+#    cvPutText, cvScalar, cvFont, cvPoint
 
 #============= local library imports  ==========================
-from src.image.image_helper import draw_polygons, draw_contour_list, colorspace, \
-    threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
-    erode, dilate, draw_rectangle, subsample, rotate, smooth, clone, \
-    convert_color, draw_lines
-#    erode, dilate, draw_rectangle, clone
-
+#from src.image.image_helper import draw_polygons, draw_contour_list, \
+from src.image.cvwrapper import draw_polygons, draw_contour_list, \
+    threshold, grayspace, new_point, \
+    erode, dilate, draw_rectangle, \
+    draw_lines, colorspace, draw_circle
 
 from src.managers.manager import Manager
 from src.image.image import Image
@@ -42,51 +42,53 @@ from src.helpers.paths import  positioning_error_dir, setup_dir
 from src.helpers.filetools import unique_path
 from threading import Thread
 import os
-#import time
 #from src.graph.graph import Graph
 #from src.data_processing.time_series.time_series import smooth
-import random
-import time
-from src.managers.stage_managers.machine_vision.hole_detector import HoleDetector
-from src.managers.stage_managers.machine_vision.tray_mapper import TrayMapper
-DEVX = random.randint(-10, 10)
-DEVY = random.randint(-10, 10)
-DEVX = 0
-DEVY = -2
-CX = 39
-CY = -41
-class TargetResult(object):
-    def __init__(self, origin, cv, ps, cs, tv, dv, ev, br, *args, **kw):
-        self.origin = origin
-        self.centroid_value = cv
-        self.poly_points = ps
-        self.contours = cs
-        self.threshold_value = tv
-        self.dilate_value = dv
-        self.erode_value = ev
-        self.bounding_rect = br
+#import random
 
-    @property
-    def dev_centroid(self):
-        return (cvRound(self.origin[0] - self.centroid_value[0]),
-                cvRound(self.origin[1] - self.centroid_value[1]))
+from hole_detector import HoleDetector
+from tray_mapper import TrayMapper
+#DEVX = random.randint(-10, 10)
+#DEVY = random.randint(-10, 10)
+#DEVX = 0
+#DEVY = -2
+#CX = 39
+#CY = -41
 
-    @property
-    def dev_br(self):
-        return (cvRound(self.origin[0] - self.bounding_rect[0]),
-                cvRound(self.origin[1] - self.bounding_rect[1]))
 
+#class TargetResult(object):
+#
+#    def __init__(self, origin, cv, ps, cs, tv, dv, ev, br, *args, **kw):
+#        self.origin = origin
+#        self.centroid_value = cv
+#        self.poly_points = ps
+#        self.contours = cs
+#        self.threshold_value = tv
+#        self.dilate_value = dv
+#        self.erode_value = ev
+#        self.bounding_rect = br
+#
+#    @property
+#    def dev_centroid(self):
+#        return (cvRound(self.origin[0] - self.centroid_value[0]),
+#                cvRound(self.origin[1] - self.centroid_value[1]))
+#
+#    @property
+#    def dev_br(self):
+#        return (cvRound(self.origin[0] - self.bounding_rect[0]),
+#                cvRound(self.origin[1] - self.bounding_rect[1]))
+#
+#
 class ImageHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
+
 
 class MachineVisionManager(Manager):
 
     video = Any
     image = Instance(Image, ())
     pxpermm = 23
-
-
 
     croppixels = None
 
@@ -100,15 +102,18 @@ class MachineVisionManager(Manager):
 #    image_width = Int(int(640 * 1.5))
 #    image_height = Int(int(324 * 1.5))
     image_width = Int(int(640))
-    image_height = Int(int(324))
+    image_height = Int(324)
+#    image_height = Int(int(324))
 #    image_height = Int(324 * 2)
 
-    start_threshold_search_value = 90
-    threshold_search_width = 20
+    start_threshold_search_value = 99
+    threshold_search_width = 5
+    crop_tries = 1
+    threshold_tries = 1
 #    threshold_search_width = 10
 
-    _debug = False
-#    _debug = True
+#    _debug = False
+    _debug = True
 
 #    style = 'co2'
 
@@ -122,10 +127,10 @@ class MachineVisionManager(Manager):
     _nominal_position = Tuple
 
     hole_detector = Instance(HoleDetector, ())
-    use_dilation = DelegatesTo('hole_detector')#Bool(False)
-    use_erosion = DelegatesTo('hole_detector')#Bool(True)
-    save_positioning_error = DelegatesTo('hole_detector')#Bool(False)
-    use_histogram = DelegatesTo('hole_detector')#Bool(False)
+    use_dilation = DelegatesTo('hole_detector')
+    use_erosion = DelegatesTo('hole_detector')
+    save_positioning_error = DelegatesTo('hole_detector')
+    use_histogram = DelegatesTo('hole_detector')
 
     cropwidth = DelegatesTo('hole_detector')
     cropheight = DelegatesTo('hole_detector')
@@ -135,14 +140,15 @@ class MachineVisionManager(Manager):
 
     def _test_fired(self):
 
-#        t = Thread(target=self.search, args=(0, 0), kwargs=dict(right_search=True))
-#        t.start()
-        t = Thread(target=self.map_holes)
+        t = Thread(target=self.search, args=(0, 0),
+                   kwargs=dict(right_search=True))
         t.start()
+#        t = Thread(target=self.map_holes)
+#        t.start()
 
     def map_holes(self):
         self._load_source()
-        self.image.panel_size = 450
+#        self.image.panel_size = 450
 
         from src.managers.stage_managers.stage_map import StageMap
         p = os.path.join(setup_dir, 'tray_maps', '221-hole.txt')
@@ -154,7 +160,7 @@ class MachineVisionManager(Manager):
         if ca is not None:
             rot = ca.get_rotation()
             cpos = ca.get_center_position()
-#        
+
 #        center_mx = 3.596
 #        center_my = -13.321
 #        cpos = -2.066, -0.695
@@ -178,22 +184,20 @@ class MachineVisionManager(Manager):
         self._nominal_position = (cx, cy)
 
         self.current_hole = holenum
-        self.info('locating {} sample hole {}'.format(self.style, holenum if holenum else ''))
+        self.info('locating {} sample hole {}'.format(self.style,
+                                                holenum if holenum else ''))
 
         start = self.start_threshold_search_value
 
         end = start + self.threshold_search_width
-        expand_value = 10
+        expand_value = 5
         found = False
-
-        crop_tries = 3
-        threshold_tries = 3
 
         self.hole_detector.pxpermm = self.pxpermm
         self.hole_detector._debug = self._debug
         self.hole_detector.image = self.image
 
-        for ci in range(crop_tries):
+        for ci in range(self.crop_tries):
             if close_image:
                 self.close_image()
 
@@ -207,32 +211,39 @@ class MachineVisionManager(Manager):
 #            self.cropwidth = cw
 #            self.cropheight = ch
             self.info('cropping image to {}mm x {}mm'.format(cw, ch))
-            for i in range(threshold_tries):
+            for i in range(self.threshold_tries):
                 s = start - i * expand_value
                 e = end + i * expand_value
-                self.info('searching... thresholding image {} - {}'.format(s, e))
+                self.info('searching... thresholding image {} - {}'.format(s,
+                                                                           e))
 
                 args = self.hole_detector._search_for_well(src, s, e, cw, ch)
-
                 '''
                     args = results, dev1x, dev1y, dev2x, dev2y
                     dev1== bound rect dev
                     dev2== centroid dev
-                    centroid dev empirically calculates a more accurate deviation
+                    centroid dev empirically calculates a
+                    more accurate deviation
                 '''
                 if args and args[3] != []:
                     self.info('POSITIONING ERROR DETECTED')
                     found = True
-                    #if i > 0:
-                    #    #this is the first threshold value to successfully locate the target
-                    #    #so we should use this as our future starting threshold value
-                    #    self.start_threshold_search_value = args[4][0]-10
+                    '''
+                    if i > 0:
+                        this is the first threshold value to successfully
+                        locate the target
+                        so we should use this as our future starting threshold
+                        value
+                        self.start_threshold_search_value = args[4][0]-10
+                    '''
                     break
             if found:
                 break
 
         if not found:
-            self.warning('no target found during search. threshold {} - {}'.format(s, e))
+            self.warning('no target found during search. threshold {} - {}'.
+                         format(s, e))
+            self.hole_detector.draw_center_indicator(self.image.frames[0])
         else:
 
             def hist(d):
@@ -261,7 +272,7 @@ class MachineVisionManager(Manager):
 
             self.image.frames[1] = colorspace(src)
 
-            self._draw_markup(args[0], dev=(dx, dy))
+            self.hole_detector._draw_markup(args[0], dev=(dx, dy))
 
             #calculate the data position to move to nx,ny
             dxmm = dx / float(self.pxpermm)
@@ -270,7 +281,7 @@ class MachineVisionManager(Manager):
             ny = cy + dymm
             self._corrected_position = (dxmm, dymm)
 
-            args = cx, cy, nx, ny, dxmm, dymm, int(dx), int(dy)
+            args = cx, cy, nx, ny, dxmm, dymm, round(dx), round(dy)#int(dx), int(dy)
 
             self.info('current pos: {:0.3f},{:0.3f} calculated pos: {:0.3f}, {:0.3f} dev: {:0.3f},{:0.3f} ({:n},{:n})'.format(*args))
 
@@ -394,12 +405,16 @@ class MachineVisionManager(Manager):
                         Item('corrected_position', label='Cor. Pos.', style='readonly')
                         ),
                  Item('image', show_label=False, editor=ImageEditor(),
-                      width=self.image_width, height=self.image_height
+                      width=self.image_width,
+                      height=self.image_height
                       ),
                  title=self.title,
                  handler=ImageHandler,
                  x=35,
-                 y=35
+                 y=35,
+                 width=680,
+                 height=self.image_height + 50,
+                 resizable=True
                  )
         return v
 
@@ -408,6 +423,7 @@ class MachineVisionManager(Manager):
             src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
             src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
             src = '/Users/ross/Desktop/tray_screen_shot3.596--13.321.tiff'
+#            src = '/Users/ross/Documents/testimage1.tiff'
 #            src = '/Users/ross/Desktop/foo1 copy.tiff'
 
         else:
@@ -416,77 +432,82 @@ class MachineVisionManager(Manager):
         self.image.load(src)
         return self.image.source_frame
 
-    def _draw_markup(self, results, dev=None):
-        #add to indicators to ensure the indicator is drawn on top
-        indicators = []
-        for pi in results:
-
-            f1 = self.image.frames[1]
-            f0 = self.image.frames[0]
-            draw_polygons(f0, [pi.poly_points], color=(255, 7, 0), thickness=1)
-            draw_contour_list(f1, pi.contours, external_color=(255, 255, 0))
-
-            #draw the centroid in blue
-            centroid_center = new_point(*pi.centroid_value)
-            indicators.append((f1, centroid_center , (0, 255, 0), 'rect', 2))
-
-            #calculate bounding rect and bounding square for polygon
-            r = pi.bounding_rect
-            draw_rectangle(f1, r.x, r.y, r.width, r.height)
-
-            br_center = new_point(r.x + r.width / 2, r.y + r.height / 2)
-            indicators.append((f1,
-                               br_center,
-                               (255, 0, 0), 'rect', 2))
-
-#                #if % diff in w and h greater than 20% than use the centroid as the calculated center
-#                #otherwise use the bounding rect center            
-#                dwh = abs(r.width - r.height) / float(max(r.width, r.height))
-#                if dwh > 0.2:
-#                    calc_center = centroid_center
-#                else:
-#                    calc_center = br_center
-
-            calc_center = centroid_center
-            #indicate which center is chosen                
-            indicators.append((f0, calc_center, (0, 255, 255), 'crosshairs', 1))
-            indicators.append((f1, calc_center, (0, 255, 255), 'crosshairs', 1))
-
-            pi.center = calc_center
-
-        #draw the center of the image
-        true_cx, true_cy = self.hole_detector._get_true_xy()
-        self._draw_indicator(f0, new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
-        self._draw_indicator(f1, new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
-
-        for i in indicators:
-            self._draw_indicator(*i)
-
-
-        #draw the calculated center
-        if dev:
-
-            self._draw_indicator(f0, new_point(true_cx - dev[0],
-                                               true_cy - dev[1]), (255, 0, 255), 'crosshairs')
-
-
-    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=3, thickness= -1):
-        r = size
-        if shape == 'rect':
-            draw_rectangle(src, center.x - r / 2, center.y - r / 2, r, r,
-                           color=color,
-                           thickness=thickness)
-        elif shape == 'crosshairs':
-            draw_lines(src,
-                   [[(center.x - size, center.y),
-                    (center.x + size, center.y)],
-                    [(center.x, center.y - size),
-                     (center.x, center.y + size)]],
-                       color=color,
-                       thickness=1
-                   )
-        else:
-            cvCircle(src, center, r, color, thickness=thickness, line_type=CV_AA)
+#    def _draw_markup(self, results, dev=None):
+#        #add to indicators to ensure the indicator is drawn on top
+#        indicators = []
+#        for pi in results:
+#
+#            f1 = self.image.frames[1]
+#            f0 = self.image.frames[0]
+#            draw_polygons(f0, [pi.poly_points2], color=(0, 255, 0), thickness=2)
+#            draw_polygons(f0, [pi.poly_points], color=(255, 7, 0), thickness=1)
+#
+#            draw_contour_list(f1, pi.contours, hierarchy=pi.hierarchy, external_color=(255, 255, 0))
+#
+#            #draw the centroid in blue
+#            centroid_center = new_point(*pi.centroid_value)
+#            indicators.append((f1, centroid_center , (0, 255, 0), 'rect', 2))
+#
+#            centroid_center2 = new_point(*pi.centroid_value2)
+#
+#            indicators.append((f0, centroid_center2 , (0, 255, 0), 'rect', 2))
+#
+#            #calculate bounding rect and bounding square for polygon
+#            r = pi.bounding_rect
+#            draw_rectangle(f1, r.x, r.y, r.width, r.height)
+#
+#            br_center = new_point(r.x + r.width / 2, r.y + r.height / 2)
+#            indicators.append((f1,
+#                               br_center,
+#                               (255, 0, 0), 'rect', 2))
+#
+##                #if % diff in w and h greater than 20% than use the centroid as the calculated center
+##                #otherwise use the bounding rect center            
+##                dwh = abs(r.width - r.height) / float(max(r.width, r.height))
+##                if dwh > 0.2:
+##                    calc_center = centroid_center
+##                else:
+##                    calc_center = br_center
+#
+#            calc_center = centroid_center
+#            #indicate which center is chosen                
+#            indicators.append((f0, calc_center, (0, 255, 255), 'crosshairs', 1))
+#            indicators.append((f1, calc_center, (0, 255, 255), 'crosshairs', 1))
+#
+#            pi.center = calc_center
+#
+#        #draw the center of the image
+#        true_cx, true_cy = self.hole_detector._get_true_xy()
+#        self._draw_indicator(f0, new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
+#        self._draw_indicator(f1, new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
+#
+#        for i in indicators:
+#            self._draw_indicator(*i)
+#
+#        #draw the calculated center
+#        if dev:
+#
+#            self._draw_indicator(f0, new_point(true_cx - dev[0],
+#                                               true_cy - dev[1]), (255, 0, 255), 'crosshairs')
+#
+#    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=3, thickness= -1):
+#        r = size
+#        if shape == 'rect':
+#            draw_rectangle(src, center.x - r / 2, center.y - r / 2, r, r,
+#                           color=color,
+#                           thickness=thickness)
+#        elif shape == 'crosshairs':
+#            draw_lines(src,
+#                   [[(center.x - size, center.y),
+#                    (center.x + size, center.y)],
+#                    [(center.x, center.y - size),
+#                     (center.x, center.y + size)]],
+#                       color=color,
+#                       thickness=1
+#                   )
+#        else:
+##            cvCircle(src, center, r, color, thickness=thickness, line_type=CV_AA)
+#            draw_circle(src, center, r, color, thickness=thickness)
 
     def _image_default(self):
         return Image(width=self.image_width,
@@ -516,99 +537,13 @@ class MachineVisionManager(Manager):
     def _set_threshold(self, v):
         self._threshold = v
 
-m = MachineVisionManager()
-m._debug = True
-def timeit_func():
-#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
-    m.search(0, 0)
-
-def timeit_func2():
-#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
-    m.search(0, 0, right_search=False)
-
-#def timeit_focus_roberts():
-#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
-#    m._focus_sweep(None, 0, 50, 1, 'roberts')
-#    
-#def timeit_focus_csobel():
-##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
-#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff')
-#    m._focus_sweep(None, 0, 10, 1, 'csobel')
-
-def timeit_focus_sobel():
-#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
-    #
-    m._focus_sweep(None, 0, 10, 1, 'sobel')
-
-def timeit_focus_var():
-#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff')
-#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
-    m._focus_sweep(None, 0, 10, 1, 'var')
-
-#def timeit_smd():
-#    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
-#    s = m.image.source_frame
-#    print m._calculate_smd(s, (0, 0, 80, 80))
-#    m.calculate_positioning_error()
-#    #m.configure_traits()
-def time_me():
-    from timeit import Timer
-    t = Timer('timeit_func()', 'from __main__ import timeit_func')
-    n = 5
-    ti = t.timeit(n)
-    print 'right search time', n, ti, ti / n * 1000
-
-    t = Timer('timeit_func2()', 'from __main__ import timeit_func2')
-    n = 5
-    ti = t.timeit(n)
-    print 'left search time', n, ti, ti / n * 1000
-
-def time_focus():
-    from timeit import Timer
-#    t = Timer('timeit_focus_roberts()', 'from __main__ import timeit_focus_roberts')
-#    n = 5
-#    ti = t.timeit(n)
-#    print 'focus time roberts', n, ti, ti / n * 1000
-
-    t = Timer('timeit_focus_sobel()', 'from __main__ import timeit_focus_sobel')
-    n = 5
-    ti = t.timeit(n)
-    print 'focus time sobel', n, ti, ti / n * 1000
-
-#    t = Timer('timeit_focus_csobel()', 'from __main__ import timeit_focus_csobel')
-#    n = 5
-#    ti = t.timeit(n)
-#    print 'focus time csobel', n, ti, ti / n * 1000
-#    
-
-    t = Timer('timeit_focus_var()', 'from __main__ import timeit_focus_var')
-    n = 5
-    ti = t.timeit(n)
-    print 'focus time var', n, ti, ti / n * 1000
-
-def time_smd():
-
-    from timeit import Timer
-    t = Timer('timeit_smd', 'from __main__ import timeit_smd')
-    n = 50
-    ti = t.timeit(n)
-    print 'search time', n, ti, ti / n * 1000
-def timeit_comp():
-    pass
-
-def time_comp():
-
-    from timeit import Timer
-    t = Timer('timeit_comp', 'from __main__ import timeit_comp')
-    n = 50
-    ti = t.timeit(n)
-    print 'comp time', n, ti, ti / n * 1e9
 
 def main():
     from src.helpers.logger_setup import setup
     setup('machine_vision')
     m = MachineVisionManager(_debug=True)
 #    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff')
+#    m._load_source()
     #m._test_fired()
     m.configure_traits()#view='image_view')
 
@@ -621,6 +556,94 @@ if __name__ == '__main__':
 
 #    time_comp()
 #============= EOF =====================================
+#m = MachineVisionManager()
+#m._debug = True
+#def timeit_func():
+##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+#    m.search(0, 0)
+#
+#def timeit_func2():
+##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+#    m.search(0, 0, right_search=False)
+#
+##def timeit_focus_roberts():
+##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+##    m._focus_sweep(None, 0, 50, 1, 'roberts')
+##    
+##def timeit_focus_csobel():
+###    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff')
+##    m._focus_sweep(None, 0, 10, 1, 'csobel')
+#
+#def timeit_focus_sobel():
+##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+#    #
+#    m._focus_sweep(None, 0, 10, 1, 'sobel')
+#
+#def timeit_focus_var():
+##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff')
+##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+#    m._focus_sweep(None, 0, 10, 1, 'var')
+#
+##def timeit_smd():
+##    m.image.load('/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff', swap_rb=True)
+##    s = m.image.source_frame
+##    print m._calculate_smd(s, (0, 0, 80, 80))
+##    m.calculate_positioning_error()
+##    #m.configure_traits()
+#def time_me():
+#    from timeit import Timer
+#    t = Timer('timeit_func()', 'from __main__ import timeit_func')
+#    n = 5
+#    ti = t.timeit(n)
+#    print 'right search time', n, ti, ti / n * 1000
+#
+#    t = Timer('timeit_func2()', 'from __main__ import timeit_func2')
+#    n = 5
+#    ti = t.timeit(n)
+#    print 'left search time', n, ti, ti / n * 1000
+#
+#def time_focus():
+#    from timeit import Timer
+##    t = Timer('timeit_focus_roberts()', 'from __main__ import timeit_focus_roberts')
+##    n = 5
+##    ti = t.timeit(n)
+##    print 'focus time roberts', n, ti, ti / n * 1000
+#
+#    t = Timer('timeit_focus_sobel()', 'from __main__ import timeit_focus_sobel')
+#    n = 5
+#    ti = t.timeit(n)
+#    print 'focus time sobel', n, ti, ti / n * 1000
+#
+##    t = Timer('timeit_focus_csobel()', 'from __main__ import timeit_focus_csobel')
+##    n = 5
+##    ti = t.timeit(n)
+##    print 'focus time csobel', n, ti, ti / n * 1000
+##    
+#
+#    t = Timer('timeit_focus_var()', 'from __main__ import timeit_focus_var')
+#    n = 5
+#    ti = t.timeit(n)
+#    print 'focus time var', n, ti, ti / n * 1000
+#
+#def time_smd():
+#
+#    from timeit import Timer
+#    t = Timer('timeit_smd', 'from __main__ import timeit_smd')
+#    n = 50
+#    ti = t.timeit(n)
+#    print 'search time', n, ti, ti / n * 1000
+#def timeit_comp():
+#    pass
+#
+#def time_comp():
+#
+#    from timeit import Timer
+#    t = Timer('timeit_comp', 'from __main__ import timeit_comp')
+#    n = 50
+#    ti = t.timeit(n)
+#    print 'comp time', n, ti, ti / n * 1e9
+
 #    def polygonate(self, t, frame_id=0, skip=None, line_width=1, min_area=1000,
 #                    max_area=1e10, convextest=0):
 #        gsrc = self.threshold(t)

@@ -14,23 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import HasTraits, Float, Any, Instance, Range, Button, Int, Property, Bool, Tuple
+from traits.api import HasTraits, Float, Any, Instance, Range, Button, Int, \
+    Property, Bool, Tuple
 from traitsui.api import View, Item, Handler, HGroup, spring, Spring
 from pyface.timer.do_later import do_later, do_after
 #============= standard library imports ========================
 from numpy import histogram, argmax, argmin, array, linspace, asarray, mean
+from numpy.ma import masked_array
 #from scipy.ndimage.filters import sobel, generic_gradient_magnitude
 #from scipy.ndimage import sum as ndsum
 #from scipy.ndimage.measurements import variance
 
-from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound, cvPutText, cvScalar, \
-    cvFont, cvPoint
+#from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound
 
 #============= local library imports  ==========================
-from src.image.image_helper import draw_polygons, draw_contour_list, colorspace, \
+from src.image.cvwrapper import draw_polygons, draw_contour_list, \
     threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
-    erode, dilate, draw_rectangle, subsample, rotate, smooth, clone, \
-    convert_color, draw_lines
+    erode, dilate, draw_rectangle, draw_lines, colorspace, draw_circle, get_size
 #    erode, dilate, draw_rectangle, clone
 
 #from src.managers.manager import Manager
@@ -50,15 +50,21 @@ from src.loggable import Loggable
 DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
 DEVX = 0
-DEVY = -2
-CX = 39
-CY = -41
+DEVY = 0
+CX = 2
+CY = -2
+
+
 class TargetResult(object):
-    def __init__(self, origin, cv, ps, cs, tv, dv, ev, br, *args, **kw):
+    def __init__(self, origin, cv, cv2, ps, ps2,
+                 cs, hier, tv, dv, ev, br, *args, **kw):
         self.origin = origin
         self.centroid_value = cv
+        self.centroid_value2 = cv2
         self.poly_points = ps
+        self.poly_points2 = ps2
         self.contours = cs
+        self.hierarchy = hier
         self.threshold_value = tv
         self.dilate_value = dv
         self.erode_value = ev
@@ -66,21 +72,27 @@ class TargetResult(object):
 
     @property
     def dev_centroid(self):
-        return (cvRound(self.origin[0] - self.centroid_value[0]),
-                cvRound(self.origin[1] - self.centroid_value[1]))
+        return ((self.origin[0] - self.centroid_value[0]),
+                (self.origin[1] - self.centroid_value[1]))
 
     @property
     def dev_br(self):
-        return (cvRound(self.origin[0] - self.bounding_rect[0]),
-                cvRound(self.origin[1] - self.bounding_rect[1]))
+        return ((self.origin[0] - self.bounding_rect[0]),
+                (self.origin[1] - self.bounding_rect[1]))
+
     @property
     def aspect_ratio(self):
         return self.bounding_rect.width / float(self.bounding_rect.height)
+
     @property
     def area(self):
         return self.bounding_rect.width * self.bounding_rect.height
+
+
 class HoleDetector(Loggable):
     pxpermm = Float
+
+    radius_mm = Float(1.5)
     _debug = False
 #    video = Any
     image = Instance(Image)
@@ -95,7 +107,7 @@ class HoleDetector(Loggable):
     style = 'co2'
 
     use_dilation = Bool(False)
-    use_erosion = Bool(True)
+    use_erosion = Bool(False)
     save_positioning_error = Bool(False)
     use_histogram = Bool(False)
 
@@ -113,16 +125,22 @@ class HoleDetector(Loggable):
         for i in range(start, end + 1):
             self._threshold = i
             try:
-                results = self._calculate_positioning_error(src, cw, ch, threshold_val=i)
+                results = self._calculate_positioning_error(src, cw, ch,
+                                                            threshold_val=i)
             except Exception, e:
+                import traceback
+
+                tb = traceback.format_exc()
+                print tb
                 print e
 
             if results:
-                '''                 
-                 instead of trying to figure out if the result is the left of right well
-                 if only one result is found require that both wells are identified ie len(results)==2
+                '''
+                 instead of trying to figure out if the result
+                 is the left of right well
+                 if only one result is found require that both wells
+                 are identified ie len(results)==2
                  then determine which is the left and right
-                 
                 '''
                 if self.style == 'co2':
                     _, _, dx, dy, ti, di, ei = self._co2_well(results)
@@ -197,12 +215,15 @@ class HoleDetector(Loggable):
             xo = CX + DEVX
             yo = CY + DEVY
 
-        x = int((src.width - cw_px) / 2 + xo)
-        y = int((src.height - ch_px) / 2 + yo)
+#        print xo, yo
+        w, h = get_size(src)
+        x = int((w - cw_px) / 2 + xo)
+        y = int((h - ch_px) / 2 + yo)
 
 #        smooth(src)        
         self.croppixels = (cw_px, ch_px)
-        crop(src, x, y, cw_px, ch_px)
+        src = crop(src, x, y, cw_px, ch_px)
+
         gsrc = grayspace(src)
         self.image.frames[0] = colorspace(gsrc)
 
@@ -237,21 +258,23 @@ class HoleDetector(Loggable):
                 return center
 
     def _threshold_loop(self, gsrc, steps, *args):
+        radius = 1.5 * self.pxpermm
+
+#        w, h = get_size(self.image.source_frame)
+        ma = 3.1415926535 * radius ** 2 * (4 * self.croppixels[0] / 640.)
+        mi = 0.25 * ma
+
         for td in steps:
-            params = self._calc_sample_hole_position(gsrc, td, *args)
+            params = self._calc_sample_hole_position(gsrc, td, min_area=mi, max_area=ma, *args)
+
             if params:
+#                print params
                 return params
 #            time.sleep(0.5)
 
     def _calc_sample_hole_position(self, gsrc, ti, dilate_val, erode_val, min_area=1000, max_area=None):
 
-#        if self._debug:
-#            time.sleep(0.1)
-
-#        min_area = 1000
-        if max_area is None:
-            max_area = gsrc.width * gsrc.height
-
+#        w, h = get_size(gsrc)
 
         thresh_src = threshold(gsrc, ti)
 
@@ -266,22 +289,43 @@ class HoleDetector(Loggable):
             self.image.frames.append(colorspace(thresh_src))
 
         found = []
-        _n, contours = contour(thresh_src)
+        contours, hierarchy = contour(thresh_src)
+
         if contours:
-            polygons, bounding_rect = get_polygons(contours, min_area, max_area, 0)
+            polygons, bounding_rect = get_polygons(contours, hierarchy, min_area, max_area, 0)
             if polygons:
                 for pi, br in zip(polygons, bounding_rect):
                     if len(pi) > 4:
+                        # 1. calculate the centroid
                         cx, cy = centroid(pi)
-                        tr = TargetResult(self._get_true_xy(),
-                                          (cx, cy), pi, contours, ti, dilate_val, erode_val, br)
+                        use_radius_filter = True
+                        if use_radius_filter:
+                            # 2. calculate distances
+                            tol = 1.3 * self.pxpermm * self.radius_mm
+                            disp = lambda p:((p.x - cx) ** 2 + (p.y - cy) ** 2) ** 0.5
+                            disps = map(disp, pi)
 
+                            #filter by tol
+                            fpi = filter(lambda p:p[1] < tol, zip(pi, disps))
+                            if fpi:
+                                pii, disps = zip(*fpi)
+                            else:
+                                pii = pi
+                            # 3. recalc centroid
+                            cx2, cy2 = centroid(pii)
+                        else:
+                            pii = pi
+                            cx2, cy2 = cx, cy
+
+                        tr = TargetResult(self._get_true_xy(),
+                                          (cx, cy), (cx2, cy2), pi, pii, contours, hierarchy,
+                                           ti, dilate_val, erode_val, br)
                         if self._debug:
 #                            self.debug('threshold={}, dilate={}, erode={}'.format(ti, dilate_val, erode_val))
                             self._draw_result(self.image.frames[1], tr)
-                            time.sleep(0.5)
+                            time.sleep(0.2)
 
-                        if self.style == 'co2':
+                        if self.style == 'co2' and not self._debug:
                             if self._near_center(cx, cy):
                                 found.append(tr)
                         else:
@@ -326,7 +370,8 @@ class HoleDetector(Loggable):
             f1 = self.image.frames[1]
             f0 = self.image.frames[0]
             draw_polygons(f0, [pi.poly_points], color=(255, 7, 0), thickness=1)
-            draw_contour_list(f1, pi.contours, external_color=(255, 255, 0))
+            draw_contour_list(f1, pi.contours, hierarchy=pi.hierarchy,)
+                              #external_color=(255, 255, 0))
 
             #draw the centroid in blue
             centroid_center = new_point(*pi.centroid_value)
@@ -351,28 +396,38 @@ class HoleDetector(Loggable):
 
             calc_center = centroid_center
             #indicate which center is chosen                
-            indicators.append((f0, calc_center, (0, 255, 255), 'crosshairs', 1))
-            indicators.append((f1, calc_center, (0, 255, 255), 'crosshairs', 1))
+            #indicators.append((f0, calc_center, (0, 255, 255), 'crosshairs', 4))
+#            indicators.append((f1, calc_center, (0, 255, 255), 'crosshairs', 1))
 
             pi.center = calc_center
 
         #draw the center of the image
         true_cx, true_cy = self._get_true_xy()
-        self._draw_indicator(f0, new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
-        self._draw_indicator(f1, new_point(true_cx, true_cy), (255, 255, 0), 'crosshairs')
+
+        l = 1.5 * self.pxpermm / 2.0
+        self._draw_indicator(f0, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
+        self._draw_indicator(f1, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
 
         for i in indicators:
             self._draw_indicator(*i)
 
-        #draw the calculated center
+#        #draw the calculated center
         if dev:
             self._draw_indicator(f0, new_point(true_cx - dev[0],
                                                true_cy - dev[1]), (255, 0, 255), 'crosshairs')
 
-    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=3, thickness= -1):
+    def draw_center_indicator(self, src):
+
+        w, h = get_size(src)
+        x = float(w / 2)
+        y = float(h / 2)
+        self._draw_indicator(src, new_point(x, y), shape='crosshairs', color=(0, 0, 255), size=10)
+        self._draw_indicator(src, new_point(*self._get_true_xy()), shape='crosshairs')
+
+    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
         r = size
         if shape == 'rect':
-            draw_rectangle(src, center.x - r / 2, center.y - r / 2, r, r,
+            draw_rectangle(src, center.x - r / 2., center.y - r / 2., r, r,
                            color=color,
                            thickness=thickness)
         elif shape == 'crosshairs':
@@ -385,6 +440,7 @@ class HoleDetector(Loggable):
                        thickness=1
                    )
         else:
-            cvCircle(src, center, r, color, thickness=thickness, line_type=CV_AA)
+            draw_circle(src, center, r, color=color, thickness=thickness)
+
 
 #============= EOF =====================================

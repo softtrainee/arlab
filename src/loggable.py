@@ -109,6 +109,7 @@ class Loggable(HasTraits):
 #            self.logger.debug(msg)
         if decorate:
             msg = '++++++ {}'.format(msg)
+
         self._log_('debug', msg)
 
     def _log_(self, func, msg):

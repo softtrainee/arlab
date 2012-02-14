@@ -23,12 +23,12 @@ from wx import Panel, ClientDC, \
     CLIP_CHILDREN, EVT_MOTION, EVT_LEFT_DOWN, EVT_IDLE, \
     RED_PEN
 
-import math
+#import math
 import wx
 #=============local library imports  ==========================
-from ctypes_opencv import  cvCreateImage, CvSize, cvAddS, CvScalar, \
- CvRect, cvSetImageROI, cvResize, cvResetImageROI
-from ctypes_opencv.cxcore import cvZero
+#from ctypes_opencv import  cvCreateImage, CvSize, cvAddS, CvScalar, \
+# CvRect, cvSetImageROI, cvResize, cvResetImageROI
+#from ctypes_opencv.cxcore import cvZero
 
 
 class _ImageEditor(Editor):
@@ -36,6 +36,7 @@ class _ImageEditor(Editor):
     '''
 
     points = List
+
     def init(self, parent):
         '''
         '''
@@ -57,6 +58,7 @@ class _ImageEditor(Editor):
                 return obj.frames
         except AttributeError:
             pass
+
     def _create_control(self, parent, track_mouse=False):
         '''
         '''
@@ -72,7 +74,6 @@ class _ImageEditor(Editor):
 
     def onLeftDown(self, event):
         '''
-      
         '''
         self.value.mouse_x = x = event.GetX()
         self.value.mouse_y = y = event.GetY()
@@ -131,12 +132,15 @@ class _ImageEditor(Editor):
 #                                    flip=False
 #                                    )
 #        bitmap = self.value.get_bitmap()
-
-
-        bitmap = wx.BitmapFromBuffer(src.width,
-                                       src.height,
-                                       src.data_as_string()
-                                        )
+        try:
+            bitmap = src.to_wx_bitmap()
+#            for d in dir(src):
+#                print d
+        except AttributeError, e:
+            print e
+            bitmap = wx.BitmapFromBuffer(src.width, src.height,
+                                           src.data
+                                            )
         dc.DrawBitmap(bitmap, 0, 0, False)
 
     def _display_crosshair(self, dc, x, y, pen=None):
@@ -150,9 +154,10 @@ class _ImageEditor(Editor):
     def _display_images(self, dc, src):
         '''
         '''
-        if isinstance(src, list):
-            if len(src) > 1:
-                display = self.value.render_images(src)
+        display = self.value.render_images(src)
+#        if isinstance(src, list):
+#            if len(src) > 1:
+#                display = self.value.render_images(src)
 #                nsrc = len(src)
 #                rows = math.floor(math.sqrt(nsrc))
 #                cols = rows
@@ -187,11 +192,12 @@ class _ImageEditor(Editor):
 #                    cvResize(s, display)
 #                    cvResetImageROI(display)
 #                    m += (padding + size)
-            else:
-                display = src[0]
+#            else:
+#                display = 
 
-        else:
-            display = src
+#        else:
+#            display = src
+
         self._display_image(dc, display)
 
     def _display_points(self, dc, ptlist, radius=5):
@@ -201,6 +207,7 @@ class _ImageEditor(Editor):
             params = pt + (radius,)
 
             dc.DrawCircle(*params)
+
 
 class ImageEditor(BasicEditorFactory):
     '''

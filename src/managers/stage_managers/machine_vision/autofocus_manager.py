@@ -25,7 +25,10 @@ from numpy import linspace, argmin, argmax, asarray, random
 from src.graph.graph import Graph
 from src.data_processing.time_series.time_series import smooth
 import time
-from src.image.image_helper import grayspace, subsample
+
+#from src.image.image_helper import grayspace, subsample
+from src.image.cvwrapper import grayspace
+
 from scipy.ndimage.measurements import variance
 from scipy.ndimage.filters import generic_gradient_magnitude, sobel
 from scipy.ndimage import sum as ndsum
@@ -33,6 +36,7 @@ from src.helpers.paths import hidden_dir
 import os
 from src.managers.manager import Manager
 from src.image.image import Image
+
 
 class ConfigureHandler(Handler):
     def closed(self, info, isok):
@@ -42,6 +46,7 @@ class ConfigureHandler(Handler):
 #    def init(self, info):
 #        p=info.object.load()
 #        info.object.parameters=p
+
 
 class FocusParameters(HasTraits):
     fstart = Float(20)
@@ -73,6 +78,7 @@ class FocusParameters(HasTraits):
                      ),
                )
         return v
+
 
 class AutofocusManager(Manager):
     '''
@@ -353,8 +359,11 @@ class AutofocusManager(Manager):
             src = self.image.source_frame
 
         gsrc = grayspace(src)
-        v = subsample(gsrc, *roi).as_numpy_array()
-        v = asarray(v, dtype=float)
+#        v = subsample(gsrc, *roi).as_numpy_array()
+#        v = asarray(v, dtype=float)
+#        v = subsample(gsrc, *roi)
+        x, y, w, h = roi
+        v = gsrc[y:y + h, x:x + w]
 
         if operator == 'var':
             '''

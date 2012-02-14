@@ -19,8 +19,10 @@ from numpy import array
 #=============local library imports  ==========================
 
 from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
-    cvWarpAffine, cv2DRotationMatrix, cvAvg, cvAvgSdv, cvMinMaxLoc, cvZero, cvPolyLine, cvLoadImage, \
-    cvConvertImage, cvSaveImage, cvDrawContours, cvFindContours, cvThreshold, cvSubS, cvCheckContourConvexity, \
+    cvWarpAffine, cv2DRotationMatrix, cvAvg, cvAvgSdv, cvMinMaxLoc, cvZero, \
+    cvPolyLine, cvLoadImage, \
+    cvConvertImage, cvSaveImage, cvDrawContours, cvFindContours, cvThreshold, \
+    cvSubS, cvCheckContourConvexity, \
     cvCalcBackProject, cvCalcHist, cvCreateHist, \
     cvEqualizeHist, cvCopy, cvSetImageCOI, cvSetImageROI, cvNot, \
     cvCanny, cvHoughLines2, cvGetSize, cvCvtColor, cvCloneImage, cvCreateImage, cvLine, \
@@ -29,7 +31,8 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
     cvGetSeqElem, cvCreateSeq, cvApproxPoly, cvContourPerimeter, cvContourArea, \
     CvPoint, CvPoint2D32f, CvRect, CvSize, CvScalar, CvSeq, CvContour, \
     CV_GRAY2BGR, CV_BGR2GRAY, CV_HOUGH_PROBABILISTIC, CV_PI, CV_RGB, \
-    CV_8UC3, CV_8UC1, CV_HIST_ARRAY, CV_THRESH_BINARY_INV, CV_THRESH_BINARY, CV_CVTIMG_SWAP_RB, CV_AA, CV_POLY_APPROX_DP, \
+    CV_8UC3, CV_8UC1, CV_HIST_ARRAY, CV_THRESH_BINARY_INV, CV_THRESH_BINARY, \
+    CV_CVTIMG_SWAP_RB, CV_AA, CV_POLY_APPROX_DP, \
     sizeof, \
     cvCreateVideoWriter, CV_FOURCC
     #unused
@@ -39,16 +42,15 @@ from ctypes_opencv import cvErode, cvDilate, cvGetSubRect, cvCreateMat, \
 
 
 from ctypes import POINTER
-from ctypes_opencv.cv import cvHoughCircles, CV_HOUGH_GRADIENT, CvVect32f, \
-    cvFitEllipse2, cvCreateStructuringElementEx, CV_SHAPE_RECT, CV_RETR_CCOMP, \
-    CV_RETR_TREE, cvFilter2D, cvBoundingRect, cvPyrDown, cvPyrUp, cvSmooth, \
-    CV_BLUR, CV_GAUSSIAN
-from ctypes_opencv.cxcore import cvCvtSeqToArray, CV_32SC2, CV_32FC2, cvConvert, \
-    CvBox2D, cvRound, CV_WHOLE_SEQ_END_INDEX, cvSlice, CV_SEQ_FLAG_HOLE, \
-    CV_32FC1, cvScalarAll, cvSet, cvSet2D, cvConvertScale, cvReleaseData, \
-    cvGet1D, cvSet1D, cvFillPoly, cvSize, cvRect
+from ctypes_opencv.cv import cvCreateStructuringElementEx, CV_SHAPE_RECT, \
+    cvBoundingRect, cvPyrDown, cvPyrUp, cvSmooth, \
+    CV_GAUSSIAN
+from ctypes_opencv.cxcore import cvRound, cvFillPoly, cvSize, CV_SEQ_FLAG_HOLE
+
 from src.data_processing.centroid.centroid import centroid as _centroid
 from threading import Thread
+
+storage = cvCreateMemStorage(0)
 
 
 def convert_seq(seq):
@@ -56,11 +58,11 @@ def convert_seq(seq):
     return [si.contents for si in s]
 
 
-storage = cvCreateMemStorage(0)
 def centroid(polypts):
 
     pts = array([(pt.x, pt.y) for pt in polypts], dtype=float)
     return _centroid(pts)
+
 
 def lines(src, thresh=0):
     '''
@@ -82,20 +84,25 @@ def lines(src, thresh=0):
                 zero=True
                 )
 
-    lines = cvHoughLines2(src, storage, CV_HOUGH_PROBABILISTIC, 1, CV_PI / 180, int(thresh), 100, 100)
-#    lines = cvHoughLines2(src, storage, CV_HOUGH_STANDARD, 1, CV_PI / 180, int(thresh))#, 50, 10)
+    lines = cvHoughLines2(src, storage,
+                          CV_HOUGH_PROBABILISTIC, 1, CV_PI / 180,
+                          int(thresh), 100, 100)
     lines = lines.asarrayptr(POINTER(CvPoint))
     for line in lines:
         cvLine(dst, line[0], line[1], CV_RGB(255, 0, 0), 3, 8)
 
     return dst, lines
+
+
 def copy(src):
     dst = new_dst(src)
     cvCopy(src, dst)
     return dst
 
+
 def crop(src, x, y, w, h):
     cvSetImageROI(src, new_rect(x, y, w, h))
+
 
 def subsample(src, x, y, width, height):
     '''
@@ -103,13 +110,14 @@ def subsample(src, x, y, width, height):
     rect = CvRect(x, y, width, height)
 
     if src.nChannels == 3:
-        type = CV_8UC3
+        t = CV_8UC3
     else:
-        type = CV_8UC1
-    subrect = cvCreateMat(width, height, type)
+        t = CV_8UC1
+    subrect = cvCreateMat(width, height, t)
 
     cvGetSubRect(clone(src), subrect, rect)
     return subrect
+
 
 def equalize(src):
     '''
@@ -118,28 +126,28 @@ def equalize(src):
     cvEqualizeHist(src, dst)
     return dst
 
+
 def histogram(src):
     '''
     '''
     size = (30, 32)
-    type = CV_HIST_ARRAY
-    hist = cvCreateHist(size, type)
+    hist = cvCreateHist(size, CV_HIST_ARRAY)
 
     h_plane = cvCreateImage(cvGetSize(src), src.depth, 1)
     s_plane = cvCreateImage(cvGetSize(src), src.depth, 1)
     #v_plane = cvCreateImage(cvGetSize(src), src.depth, 1)
-#    
     for chan, plane in [(1, h_plane), (2, s_plane)]:
         cvSetImageCOI(src, chan)
         cvCopy(src, plane)
 
     cvSetImageCOI(src, 0)
     planes = (h_plane, s_plane)
-#    
+
     cvCalcHist(planes, hist, 0, 0)
     dst = new_dst(src, nchannels=1)
     cvCalcBackProject(planes, dst, hist)
     return dst
+
 
 def colorspace1D(src, channel='r'):
     '''
@@ -193,6 +201,7 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
 
     return [(p.asarray(CvPoint)) for p in polygons], brs
 
+
 def convert_color(color):
     '''
     '''
@@ -202,6 +211,7 @@ def convert_color(color):
     else:
         color = CvScalar(color)
     return color
+
 
 def draw_point(src, pt, color=(255, 0, 0), thickness= -1):
     '''
@@ -213,6 +223,7 @@ def draw_point(src, pt, color=(255, 0, 0), thickness= -1):
     color = convert_color(color)
     cvCircle(src, pt, 5, color, thickness=thickness)
 
+
 def draw_polygons(img, polygons, thickness=1, color=(0, 255, 0)):
     '''
     '''
@@ -222,6 +233,7 @@ def draw_polygons(img, polygons, thickness=1, color=(0, 255, 0)):
             cvFillPoly(img, [pa], color)
         else:
             cvPolyLine(img, [pa], 1, color, thickness=thickness)
+
 
 def draw_contour_list(src, clist, external_color=(255, 0, 0),
                       hole_color=(255, 0, 255)
@@ -236,19 +248,23 @@ def draw_contour_list(src, clist, external_color=(255, 0, 0),
                    255,
                    thickness=1
                    )
+
+
 def draw_lines(src, lines, color=(255, 0, 0), thickness=3):
     if lines:
         for p1, p2 in lines:
 
-            cvLine(src, tuple(map(int, p1)), tuple(map(int, p2)), convert_color(color), thickness, 8)
+            cvLine(src, tuple(map(int, p1)), tuple(map(int, p2)),
+                   convert_color(color), thickness, 8)
+
 
 def draw_rectangle(src, x, y, w, h, color=(255, 0, 0), thickness=1):
     '''
-        
     '''
     p1 = new_point(x, y)
     p2 = new_point(x + w, y + h)
     cvRectangle(src, p1, p2, convert_color(color), thickness=thickness)
+
 
 def draw_squares(img, squares):
     '''
@@ -268,11 +284,12 @@ def draw_squares(img, squares):
         pt.append(sqr_arr[i + 3])
 
         # draw the square as a closed polyline
-        cvPolyLine(dst, [pt], 1, CV_RGB(0, 255, 0), 3, CV_AA, 0);
+        cvPolyLine(dst, [pt], 1, CV_RGB(0, 255, 0), 3, CV_AA, 0)
         i += 4
         pts.append(pt)
 
     return dst, pts
+
 
 def new_video_writer(path, fps=None, frame_size=None):
     '''
@@ -281,7 +298,6 @@ def new_video_writer(path, fps=None, frame_size=None):
         fps = 5
     if frame_size is None:
         frame_size = (640, 480)
-
     w = cvCreateVideoWriter(path,
 
 #                          CV_FOURCC('P', 'I', 'M', '1'),
@@ -289,8 +305,9 @@ def new_video_writer(path, fps=None, frame_size=None):
 #                          CV_FOURCC('D', 'I', 'V', 'X'),
 #                          CV_FOURCC('M', 'J', 'P', 'G'),
 #                          CV_FOURCC('I', '4', '2', '0'),
-                          CV_FOURCC('D', 'I', 'B', ' '),
+#                          CV_FOURCC('D', 'I', 'B', ' '),
 #                          CV_FOURCC('J', 'P', 'E', 'G'),
+                            CV_FOURCC('F', 'L', 'V', '1'),
 
                           fps,
                           CvSize(*frame_size),
@@ -299,6 +316,7 @@ def new_video_writer(path, fps=None, frame_size=None):
 
     return w
 
+
 def new_mask(src, x, y, w, h):
     '''
 
@@ -306,8 +324,10 @@ def new_mask(src, x, y, w, h):
     dst = new_dst(src, nchannels=1)
     cvZero(dst)
 
-    draw_rectangle(dst, CvPoint(x, y), CvPoint(x + w, y + h), color=1, fill=True)
+    draw_rectangle(dst, CvPoint(x, y), CvPoint(x + w, y + h),
+                   color=1, fill=True)
     return dst
+
 
 def new_rect(x, y, w, h):
     '''
@@ -315,10 +335,12 @@ def new_rect(x, y, w, h):
     '''
     return CvRect(x, y, w, h)
 
+
 def new_point(x, y):
     '''
     '''
     return CvPoint(cvRound(x), cvRound(y))
+
 
 def new_size(src):
     '''
@@ -326,6 +348,7 @@ def new_size(src):
 
     return CvSize(src.width & -2,
                   src.height & -2)
+
 
 def new_seq(data=None):
     '''
@@ -337,7 +360,9 @@ def new_seq(data=None):
             seq.append(d)
     return seq
 
-def new_dst(src, zero=False, width=None, height=None, nchannels=None, size=None):
+
+def new_dst(src, zero=False, width=None,
+            height=None, nchannels=None, size=None):
     '''
     '''
 
@@ -355,6 +380,7 @@ def new_dst(src, zero=False, width=None, height=None, nchannels=None, size=None)
         cvZero(img)
     return img
 
+
 def rotate(src, angle, center=None):
     '''
     '''
@@ -365,15 +391,18 @@ def rotate(src, angle, center=None):
     cvWarpAffine(src, dst, rot_mat)
     return dst
 
+
 def clone(src):
     '''
     '''
     return cvCloneImage(src)
 
+
 def avg(src):
     '''
     '''
     return cvAvg(src)
+
 
 def avg_std(src):
     '''
@@ -383,11 +412,11 @@ def avg_std(src):
     cvAvgSdv(src, mean, std_dev)
     return mean, std_dev
 
+
 def get_min_max_location(src, region):
     '''
 
     '''
-
     minpt = CvPoint()
     maxpt = CvPoint()
     minval, maxval = cvMinMaxLoc(grayspace(src),
@@ -398,6 +427,7 @@ def get_min_max_location(src, region):
                        )
     return minval, maxval, minpt, maxpt
 
+
 def erode(src, ev):
     '''
 
@@ -407,6 +437,7 @@ def erode(src, ev):
     cvErode(src, e, kernel, int(ev))
     return e
 
+
 def dilate(src, dv):
     '''
     '''
@@ -414,8 +445,10 @@ def dilate(src, dv):
     cvDilate(d, d, 0, dv)
     return d
 
+
 def sharpen(src):
     pass
+
 
 def smooth(src, inplace=False):
     if inplace:
@@ -425,6 +458,7 @@ def smooth(src, inplace=False):
     cvSmooth(src, dst, CV_GAUSSIAN, 3, 3, 0)
 #    cvNot(src,dst)
     return dst
+
 
 def remove_noise(img, x, y, w, h):
     sz = cvSize(w, h)
@@ -441,28 +475,24 @@ def remove_noise(img, x, y, w, h):
     return subimage
 #    gray = grayspace(src)
 #    lapl = grayspace(src)
-#    
 ##    print lapl.width, lapl.height
 ##    print gray.width, gray.height
-#    
 #    kernel = cvCreateMat(3, 3, CV_8UC1)
 #    cvSet(kernel, cvScalarAll(-1.0))
 #    cvSet2D(kernel, 1, 1, cvScalarAll(1.0))
-##    
 #    cvFilter2D(gray, lapl, kernel)
-#    
 #    minv, maxv = cvMinMaxLoc(lapl)
 #    print maxv
 #    for i in xrange(0, lapl.width * lapl.height - 1):
 #        lapv = cvGet1D(lapl, i).val
 #        v = 255 * lapv[0] / maxv
         #cvSet1D(src, i, cvScalarAll(v))
-##        
 #    minv, maxv = cvMinMaxLoc(gray)
 #    for i in xrange(0, lapl.width * lapl.height):
 #        lapv = cvGet1D(gray, i).val
 #        v = 255 * lapv[0] / maxv
 #        cvSet1D(src, i, cvScalarAll(v))
+
 
 def contour(src):
     '''
@@ -470,6 +500,7 @@ def contour(src):
 
     tsrc = clone(src)
     return cvFindContours(tsrc, storage)
+
 
 def canny(src, lt, ht):
     '''
@@ -488,6 +519,7 @@ def canny(src, lt, ht):
 
     return dst
 
+
 def threshold(src, threshold, invert=False):
     '''
     '''
@@ -500,6 +532,7 @@ def threshold(src, threshold, invert=False):
 
     return dst
 
+
 def colorspace(src, cs=CV_GRAY2BGR):
     '''
 
@@ -510,6 +543,7 @@ def colorspace(src, cs=CV_GRAY2BGR):
     else:
         dst = src
     return dst
+
 
 def grayspace(src):#, width = None, height = None):
     '''
@@ -529,6 +563,7 @@ def grayspace(src):#, width = None, height = None):
     #return dst2
     return dst
 
+
 def load_image(path, swap=False):
     '''
     '''
@@ -536,6 +571,7 @@ def load_image(path, swap=False):
     if swap:
         cvConvertImage(frame, frame, CV_CVTIMG_SWAP_RB)
     return frame
+
 
 def save_image(src, path):
     '''
@@ -556,7 +592,7 @@ def save_image(src, path):
 #    dx2 = pt2.x - pt0.x;
 #    dy2 = pt2.y - pt0.y;
 #    return (dx1*dx2 + dy1*dy2)/sqrt((dx1*dx1 + dy1*dy1)*(dx2*dx2 + dy2*dy2) + 1e-10);
-#    
+
 
 #============================ EOF =================
 #def find_ellipses(src, contours):
