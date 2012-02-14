@@ -21,7 +21,8 @@ from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
 
 from src.helpers.logger_setup import add_console
-from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
+from src.helpers.gdisplays import gWarningDisplay
+#from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
 from globals import show_warnings
 
 MAXLEN = 30
@@ -59,8 +60,10 @@ class Loggable(HasTraits):
                 name = self.__class__.__name__
 
         name = '{:<{}}'.format(name, MAXLEN)
-        self.logger = add_console(name=name, display=gLoggerDisplay)
-
+        #self.logger = add_console(name=name, display=gLoggerDisplay)
+        #disable the gLoggerDisplay
+        self.logger=add_console(name=name)
+        
     def warning(self, msg, decorate=True):
         '''
  

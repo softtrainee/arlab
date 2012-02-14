@@ -25,6 +25,7 @@ from paths import root
 from filetools import unique_path
 from globals import use_debug_logger
 from pyface.timer.do_later import do_later
+import shutil
 
 FORMAT = '%(name)-12s: %(asctime)s %(levelname)-7s (%(threadName)-10s) %(message)s'
 FORMATTER = logging.Formatter(FORMAT)
@@ -97,8 +98,12 @@ def setup(name, level=None):
     if not os.path.isdir(bdir):
         os.mkdir(bdir)
 
-    logpath, _cnt = unique_path(bdir, name, filetype='log')
-
+    logpath=os.path.join(bdir, '{}_current.log'.format(name))
+    if os.path.isfile(logpath):
+        backup_logpath, _cnt = unique_path(bdir, name, filetype='log')
+        shutil.copyfile(logpath, backup_logpath)
+        os.remove(logpath)
+    
     if sys.version.split(' ')[0] < '2.4.0':
         logging.basicConfig()
     else:
