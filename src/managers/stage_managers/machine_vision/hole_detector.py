@@ -203,7 +203,6 @@ class HoleDetector(Loggable):
         return [], [], devx, devy, ts, ds, es
 
     def _calculate_positioning_error(self, src, cw, ch, threshold_val=None):
-#        src = self.image.source_frame
 
         cw_px = int(cw * self.pxpermm)
         ch_px = int(ch * self.pxpermm)
@@ -215,12 +214,11 @@ class HoleDetector(Loggable):
             xo = CX + DEVX
             yo = CY + DEVY
 
-#        print xo, yo
         w, h = get_size(src)
         x = int((w - cw_px) / 2 + xo)
         y = int((h - ch_px) / 2 + yo)
 
-#        smooth(src)        
+#        smooth(src) 
         self.croppixels = (cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
 
@@ -292,7 +290,7 @@ class HoleDetector(Loggable):
         contours, hierarchy = contour(thresh_src)
 
         if contours:
-            polygons, bounding_rect = get_polygons(contours, hierarchy, min_area, max_area, 0)
+            polygons, bounding_rect = get_polygons(contours, hierarchy, min_area, max_area)
             if polygons:
                 for pi, br in zip(polygons, bounding_rect):
                     if len(pi) > 4:
@@ -317,7 +315,7 @@ class HoleDetector(Loggable):
                             pii = pi
                             cx2, cy2 = cx, cy
 
-                        tr = TargetResult(self._get_true_xy(),
+                        tr = TargetResult(self._get_true_xy(gsrc),
                                           (cx, cy), (cx2, cy2), pi, pii, contours, hierarchy,
                                            ti, dilate_val, erode_val, br)
                         if self._debug:
@@ -353,14 +351,17 @@ class HoleDetector(Loggable):
 
         return abs(x - cx) < tol and abs(y - cy) < tol
 
-    def _get_true_xy(self):
-        cw_px = self.cropwidth * self.pxpermm
-        ch_px = self.cropheight * self.pxpermm
+    def _get_true_xy(self, src):
+#        cw_px = self.cropwidth * self.pxpermm
+#        ch_px = self.cropheight * self.pxpermm
+#
+#        true_cx = cw_px / 2.0 + self.crosshairs_offsetx
+#        true_cy = ch_px / 2.0 + self.crosshairs_offsety
+        w, h = get_size(src)
+        x = float(w / 2)
+        y = float(h / 2)
 
-        true_cx = cw_px / 2.0 + self.crosshairs_offsetx
-        true_cy = ch_px / 2.0 + self.crosshairs_offsety
-
-        return true_cx, true_cy
+        return x, y
 
     def _draw_markup(self, results, dev=None):
         #add to indicators to ensure the indicator is drawn on top
@@ -402,11 +403,13 @@ class HoleDetector(Loggable):
             pi.center = calc_center
 
         #draw the center of the image
-        true_cx, true_cy = self._get_true_xy()
+        true_cx, true_cy = self._get_true_xy(f0)
 
         l = 1.5 * self.pxpermm / 2.0
-        self._draw_indicator(f0, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
-        self._draw_indicator(f1, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
+        #self._draw_indicator(f0, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
+        #self._draw_indicator(f1, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
+        self.draw_center_indicator(f0)
+        self.draw_center_indicator(f1)
 
         for i in indicators:
             self._draw_indicator(*i)
@@ -416,13 +419,13 @@ class HoleDetector(Loggable):
             self._draw_indicator(f0, new_point(true_cx - dev[0],
                                                true_cy - dev[1]), (255, 0, 255), 'crosshairs')
 
-    def draw_center_indicator(self, src):
+    def draw_center_indicator(self, src, color=(0, 0, 255), size=10):
 
-        w, h = get_size(src)
-        x = float(w / 2)
-        y = float(h / 2)
-        self._draw_indicator(src, new_point(x, y), shape='crosshairs', color=(0, 0, 255), size=10)
-        self._draw_indicator(src, new_point(*self._get_true_xy()), shape='crosshairs')
+#        w, h = get_size(src)
+#        x = float(w / 2)
+#        y = float(h / 2)
+#        self._draw_indicator(src, new_point(x, y), shape='crosshairs', color=color, size=size)
+        self._draw_indicator(src, new_point(*self._get_true_xy(src)), shape='crosshairs')
 
     def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
         r = size

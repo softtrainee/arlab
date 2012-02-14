@@ -106,14 +106,14 @@ class MachineVisionManager(Manager):
 #    image_height = Int(int(324))
 #    image_height = Int(324 * 2)
 
-    start_threshold_search_value = 99
-    threshold_search_width = 5
-    crop_tries = 1
-    threshold_tries = 1
+    start_threshold_search_value = 80
+    threshold_search_width = 3
+    crop_tries = 2
+    threshold_tries = 3
 #    threshold_search_width = 10
 
-#    _debug = False
-    _debug = True
+    _debug = False
+#    _debug = True
 
 #    style = 'co2'
 
@@ -424,7 +424,7 @@ class MachineVisionManager(Manager):
             src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
             src = '/Users/ross/Desktop/tray_screen_shot3.596--13.321.tiff'
 #            src = '/Users/ross/Documents/testimage1.tiff'
-#            src = '/Users/ross/Desktop/foo1 copy.tiff'
+            src = '/Users/ross/Desktop/snapshot003.jpg'
 
         else:
             src = self.video.get_frame()#_frame#get_frame(flip=True, clone=True, swap_rb=False)
