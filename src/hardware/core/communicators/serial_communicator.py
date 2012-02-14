@@ -89,9 +89,11 @@ class SerialCommunicator(Communicator):
             elif stopbits == '2':
                 stopbits = 'TWO'
             self.stopbits = getattr(serial, 'STOPBITS_%s' % stopbits.upper())
-
-        self.set_attribute(config, 'Communications', 'read_delay', 'read_delay', optional=True, default=0)
-
+        
+        self.set_attribute(config, 'read_delay','Communications',  'read_delay', 
+                           cast='float',optional=True, default=0.0
+                           )
+        
     def tell(self, cmd, is_hex=False, info=None, verbose=True, **kw):
         '''
            
@@ -149,6 +151,9 @@ class SerialCommunicator(Communicator):
                 #self.debug('lock acquired by {}'.format(currentThread().name))
                 self.log_response(cmd, re, info)
                 #self.debug('lock released by {}'.format(currentThread().name))
+        
+#            time.sleep(0.005)
+            
         return re
 
     def open(self, **kw):
@@ -351,11 +356,10 @@ class SerialCommunicator(Communicator):
                     if not isline:
                         pcnt = 0
                         cnt = 0
-                        for _ in xrange(8000):
+                        for _ in xrange(20000):
                             isline, r, c = get_line()
                             if isline:
                                 break
-
                             if pcnt == c:
                                 cnt += 1
                             else:

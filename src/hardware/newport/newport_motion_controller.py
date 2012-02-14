@@ -51,6 +51,8 @@ class NewportMotionController(MotionController):
         if progress is not None:
             progress.change_message('Testing controller communications')
 
+
+
         r = True if self.get_current_position('x') is not None else False
         msg = 'Communications Fail' if not r else 'Communications Success'
         if progress is not None:
@@ -227,7 +229,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
             axis = ax.name
 
         cmd = self._build_query('TP', xx=aid)
-        f = self.ask(cmd, verbose=False)
+        f = self.ask(cmd, 
+                     #verbose=False
+                     )
 
         if f != 'simulation' and f is not None:
             try:

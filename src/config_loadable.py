@@ -105,7 +105,6 @@ class ConfigLoadable(Loggable):
 #                            cast=cast,
 #                            optional=optional
                             )
-
         if r is not None:
             setattr(self, attribute, r)
 
