@@ -28,8 +28,8 @@ from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors.system_errors import SystemLockErrorCode
 import select
-from asyncore import dispatcher_with_send
 from globals import ipc_dgram
+BUFSIZE = 2048
 
 
 class CommandProcessor(ConfigLoadable):
@@ -100,8 +100,9 @@ class CommandProcessor(ConfigLoadable):
 
         if not ipc_dgram:
             self._sock.listen(10)
-        self.info('listening to {}'.format(self.path))
 
+        self.info('listening to {} using {}'.format(self.path,
+                        'DATAGRAM' if ipc_dgram else 'STREAM'))
 
         t = Thread(target=self._listener)
         t.start()
@@ -125,7 +126,7 @@ class CommandProcessor(ConfigLoadable):
                 client, _addr = self._sock.accept()
                 _input.append(client)
             else:
-                data = s.recv(4096)
+                data = s.recv(BUFSIZE)
                 if data:
 #                            sender_addr, ptype, payload = data.split('|')
                     args = [s] + data.split('|')
@@ -135,13 +136,12 @@ class CommandProcessor(ConfigLoadable):
                         t.start()
                     else:
                         self._process_request(*args)
-
                 else:
                     s.close()
                     _input.remove(s)
 
     def _dgram_listener(self):
-        data, address = self._sock.recvfrom(4096)
+        data, address = self._sock.recvfrom(BUFSIZE)
 
         if data is None:
             args = [self._sock] + data.split('|')
@@ -162,7 +162,6 @@ class CommandProcessor(ConfigLoadable):
                     self._dgram_listener()
                 else:
                     self._stream_listener(_input)
-
 
             except Exception, err:
                 self.debug('Listener Exception {}'.format(err))
@@ -237,7 +236,7 @@ class CommandProcessor(ConfigLoadable):
 
             tb = traceback.format_exc()
             self.debug(tb)
-            
+
             self.debug('Process request Exception {}'.format(err))
 
 
