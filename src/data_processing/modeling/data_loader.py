@@ -290,6 +290,8 @@ class DataLoader(Loggable):
 
     def load_inverse_model_spectrum(self):
         f, reader = self._open_reader('mages-out.dat', delimiter=TAB)
+        if reader is None:
+            return
 
         self.info('load inverse model spectrum')
         xs = []
