@@ -288,9 +288,10 @@ class BakeoutController(WatlowEZZone):
 
     def get_temp_and_power(self, **kw):
 #        kw['verbose']=True
-        WatlowEZZone.get_temp_and_power(self, **kw)
+        pr=WatlowEZZone.get_temp_and_power(self, **kw)
         self.process_value_flag = True
-
+        return pr
+    
     def get_temperature(self, **kw):
         t = WatlowEZZone.get_temperature(self, **kw)
         self.process_value_flag = True
