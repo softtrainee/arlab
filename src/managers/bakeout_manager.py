@@ -145,11 +145,11 @@ class BakeoutManager(Manager):
 
             self.data_buffer.append((pid, pv, hp))
             self.data_count_flag += 1
-
+            
             n = self.data_count_flag
             if n == len(self.active_controllers):
                 for (i, pi, hi) in self.data_buffer:
-
+                    
                     track_x = i == n - 1
                     if self.include_temp:
                         nx = self.graph.record(pi, series=i,
@@ -273,13 +273,16 @@ class BakeoutManager(Manager):
             if bc.load():
                 if bc.open():
                    # bc.set_scheduler(scheduler)
-
-
                     # on first controller check to see if memory block programming is required
                     # if it is apply to all subsequent controllers
 
-                    if cnt == 0 and not bc.is_programmed():
-                        program = True
+                    if cnt == 0:
+                        if not bc.is_programmed():
+                            program = True
+                        self.info('Watlow controllers require programming. Programming automatically' if program else 
+                                  'Watlow controllers are properly programmed'
+                                  )
+ 
                     bc.program_memory_blocks = program
 
                     bc.initialize()
