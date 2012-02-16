@@ -28,6 +28,7 @@ class Installer(object):
     prefix = None
     name = None
     icon_name = None
+    version = ''
 
     def __init__(
         self,
@@ -50,9 +51,30 @@ class Installer(object):
             # ===================================================================
             # run build applet
             # ===================================================================
+            op = os.path.join(launchers_root,
+                            '{}.py'.format(self.name))
+            sys.argv[1:] = [op]
 
-            sys.argv[1:] = [os.path.join(launchers_root,
-                            '{}.py'.format(self.name))]
+            #set the version in the script
+            #of = open(op, 'r')
+            np = op + '~'
+            os.rename(op, np)
+            dst = open(op, 'w')
+            src = open(np, 'r')
+
+            _version = "'{}'\n".format(self.version)
+            print 'setting to version {}'.format(_version)
+            for line in src:
+                if line.startswith('version'):
+                    line = 'version = {}'.format(_version)
+
+                dst.write(line)
+
+            #close temp file
+            src.close()
+            dst.close()
+            os.unlink(src.name)
+
             buildapplet()
 
             dist_root = os.path.join(launchers_root,

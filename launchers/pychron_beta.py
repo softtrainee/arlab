@@ -18,10 +18,13 @@ limitations under the License.
 '''
 
 import os
-
+import sys
 # add src to the path
-from path_updater import include_path
-SRC_DIR = include_path(__file__, level=2)
+version = ''
+SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
+                     'mercurial',
+                     'pychron_beta{}'.format(version))
+sys.path.insert(0, SRC_DIR)
 
 from src.envisage.run import launch
 from src.helpers.logger_setup import setup
