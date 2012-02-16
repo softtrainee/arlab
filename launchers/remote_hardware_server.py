@@ -16,12 +16,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-
 import os
-
+import sys
 # add src to the path
-from path_updater import include_path
-include_path(__file__, level=2)
+version = ''
+SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
+                     'mercurial',
+                     'pychron_beta{}'.format(version))
+sys.path.insert(0, SRC_DIR)
 
 from src.helpers.logger_setup import setup
 from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager

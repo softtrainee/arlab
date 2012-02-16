@@ -41,6 +41,12 @@ def install_pychron_suite():
     parser.add_argument('-s', '--source', action='store_true',
                         help='download source')
 
+    parser.add_argument('-v', '--version',
+                        nargs=1,
+                        type=str,
+                        default=[''],
+                        help='set the version number e.g 1.0')
+
     parser.add_argument(
         '-r',
         '--root',
@@ -65,6 +71,9 @@ def install_pychron_suite():
 
     root = args.root[0]
     name = args.name[0]
+
+    version = args.version[0]
+
     src_dir = os.path.join(root, name)
 
     print 'Using {} as working dir'.format(root)
@@ -107,7 +116,7 @@ def install_pychron_suite():
             return
 
     i = Installer('pychron_beta', 'pychron_beta')
-
+    i.version = version
     i.install(src_dir)
 
     i.prefix = 'remote_hardware_server'
