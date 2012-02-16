@@ -26,15 +26,17 @@ from pattern_generators import square_spiral_pattern, line_spiral_pattern, rando
 
 from src.graph.graph import Graph
 import os
-from src.image.image import Image
-from chaco.data_range_1d import DataRange1D
-from chaco.linear_mapper import LinearMapper
+#from src.image.image import Image
+#from chaco.data_range_1d import DataRange1D
+#from chaco.linear_mapper import LinearMapper
 import math
+
 
 class TargetOverlay(AbstractOverlay):
     target_radius = Float
     cx = Float
     cy = Float
+
     def overlay(self, component, gc, *args, **kw):
         gc.save_state()
         x, y = self.component.map_screen([(self.cx, self.cy)])[0]
@@ -42,13 +44,15 @@ class TargetOverlay(AbstractOverlay):
         r = abs(pts[0][0] - pts[1][0])
 
         gc.begin_path()
-        gc.arc(x + 1 , y + 1 , r, 0, 360)
+        gc.arc(x + 1, y + 1, r, 0, 360)
         gc.stroke_path()
 
         gc.restore_state()
 
+
 class OverlapOverlay(AbstractOverlay):
     beam_radius = Float(1)
+
     def overlay(self, component, gc, *args, **kw):
         gc.save_state()
         gc.clip_to_rect(component.x,
@@ -69,7 +73,6 @@ class OverlapOverlay(AbstractOverlay):
             gc.arc(xi, yi, rad, 0, 360)
             gc.draw_path()
             i += 1
-
 
         gc.restore_state()
 
@@ -115,7 +118,8 @@ class Pattern(HasTraits):
             self.calculate_transit_time()
 
     def calculate_transit_time(self):
-        self.calculated_transit_time = self._get_path_length() * self.velocity + self._get_delay()
+        self.calculated_transit_time = (self._get_path_length() *
+                                        self.velocity + self._get_delay())
 
     def _get_path_length(self):
         return 0
@@ -229,7 +233,7 @@ class Pattern(HasTraits):
 
     def reset_graph(self, **kw):
         self.graph = self._graph_factory(**kw)
-#        pass
+
     def _graph_factory(self, with_image=False):
         g = Graph(
 
@@ -282,10 +286,6 @@ class Pattern(HasTraits):
 
     def _graph_default(self):
         return self._graph_factory()
-
-
-
-
 #        p = '/Users/ross/Desktop/foo2.tiff'
 #
 #        i = Image()#width=640, height=480)
@@ -295,13 +295,12 @@ class Pattern(HasTraits):
 #        from chaco.image_data import ImageData
 #        image = ImageData.fromfile(p)
 ##        print image._data
-
-
 #        crop(i.source_frame, 0, 0, 300, 300)
         #self.pattern.graph.plots[0].plots['plot0'][0].overlays.append(ImageUnderlay(image=i))
         #self.pattern.graph.plots[0].plots[0].underlays.append(ImageUnderlay(image=i))
 #        io = ImageUnderlay(component=lp, image=i, visible=False)
 #        lp.overlays.append(io)
+
     def maker_group(self):
         return Group(
                      self.get_parameter_group(),
@@ -319,6 +318,7 @@ class Pattern(HasTraits):
                        show_border=True,
                        label='Pattern'
                        )
+
     def maker_view(self):
         v = View(self.maker_group(),
                  buttons=['OK', 'Cancel'],
@@ -338,22 +338,12 @@ class Pattern(HasTraits):
         raise NotImplementedError
 
 
-#class DiamondPattern(Pattern):
-#    width = Float(1)
-#    height = Float(1)
-#    def get_parameter_group(self):
-#        return Group('width',
-#                     'height'
-#                     )
-#    def pattern_generator_factory(self, **kw):
-#        return diamond_pattern(self.cx, self.cy, self.width, self.height, **kw)
-
-
 class RandomPattern(Pattern):
     walk_x = Float(1)
     walk_y = Float(1)
     npoints = Range(0, 50, 10)
     regenerate = Button
+
     def _regenerate_fired(self):
         self.plot()
 
@@ -365,7 +355,8 @@ class RandomPattern(Pattern):
                      )
 
     def pattern_generator_factory(self, **kw):
-        return random_pattern(self.cx, self.cy, self.walk_x, self.walk_y, self.npoints, **kw)
+        return random_pattern(self.cx, self.cy, self.walk_x,
+                              self.walk_y, self.npoints, **kw)
 
     def points_factory(self):
         gen_out = self.pattern_generator_factory()
@@ -376,8 +367,10 @@ class PolygonPattern(Pattern):
     nsides = Range(3, 200)
     radius = Range(0.0, 1.0, 0.5)
     rotation = Range(0.0, 360.0, 0.0)
+
     def _get_path_length(self):
-        return self.nsides * self.radius * math.sin(math.radians(360 / self.nsides)) + 2 * self.radius
+        return (self.nsides * self.radius *
+                math.sin(math.radians(360 / self.nsides)) + 2 * self.radius)
 
     def _get_delay(self):
         return 0.1 * self.nsides
@@ -390,8 +383,11 @@ class PolygonPattern(Pattern):
                                                          high=360
                                                          ))
                      )
+
     def pattern_generator_factory(self, **kw):
-        return polygon_pattern(self.cx, self.cy, self.radius, self.nsides, rotation=self.rotation)
+        return polygon_pattern(self.cx, self.cy,
+                               self.radius, self.nsides, rotation=self.rotation)
+
 
 class ArcPattern(Pattern):
     radius = Range(0.0, 1.0, 0.5)
@@ -404,14 +400,17 @@ class ArcPattern(Pattern):
                                                         high=360
                                                         ))
                      )
+
     def pattern_generator_factory(self, **kw):
         return arc_pattern(self.cx, self.cy, self.degrees, self.radius)
+
 
 class SpiralPattern(Pattern):
 
     nsteps = Range(1, 10, 2)
     radius = Range(0.01, 0.5, 0.1)
     percent_change = Range(0.01, 5.0, 0.8)
+
     def replot(self):
         ox, oy = self.plot()
         self.plot_in(ox, oy)
@@ -437,8 +436,10 @@ class SpiralPattern(Pattern):
                      'percent_change',
                      )
 
+
 class LineSpiralPattern(SpiralPattern):
     step_scalar = Range(0, 20, 5)
+
     def get_parameter_group(self):
         g = super(LineSpiralPattern, self).get_parameter_group()
         g.content.append(Item('step_scalar'))
@@ -451,6 +452,7 @@ class LineSpiralPattern(SpiralPattern):
                                       self.step_scalar,
                                       **kw
                                       )
+
 
 class SquareSpiralPattern(SpiralPattern):
     def pattern_generator_factory(self, **kw):

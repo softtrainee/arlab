@@ -17,8 +17,8 @@ limitations under the License.
 try:
     from image_helper import *
 except (ImportError, AttributeError), e:
-    print e
     from pyopencv_image_helper import *
+
 
 def get_size(src):
     try:
