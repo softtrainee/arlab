@@ -196,6 +196,43 @@ def contour(src):
     return c, h
 
 
+def canny(src, dst, t1, t2):
+    cv.Canny(src, dst, t1, t2, 3)
+
+
+def sobel(src, dst, xorder, yorder, aperture=3):
+    cv.Sobel(src, dst, 3, xorder, yorder, aperture)
+#    draw_rectangle(dst, 10, 10, 50, 50)
+
+    ndst = src.clone()
+    cv.convertScaleAbs(dst, ndst)
+    cv.bitwise_not(ndst, ndst)
+    return ndst
+
+
+def denoise(src):
+    dst = src.clone()
+
+    cv.pyrUp(src, dst)
+    cv.pyrDown(dst, src)
+#    return src
+
+
+def smooth(src):
+    dst = src.clone()
+    cv.smooth(src, dst, cv.CV_BLUR, 3, 3, 0)
+    return dst
+
+
+def find_circles(src, min_area):
+
+    c = cv.HoughCircles(src, 3, min_area, 50, 200)
+
+    for ci in c.tolist():
+        ci = map(int, ci)
+        draw_circle(src, new_point(ci[0], ci[1]), ci[2])
+
+
 def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
                  convextest=True, hole=True):
     '''
@@ -206,7 +243,7 @@ def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
     for cont, hi in zip(contours, hierarchy.tolist()):
         cont = cv.asMat(cont)
 #        for i in [0.01, 0.02, 0.04]:
-        for i in [0.06]:
+        for i in [0.01]:
             m = cv.arcLength(cont, True)
             result = cv.approxPolyDP_int(cont, m * 0.01, True
                                          #cv.arcLength(cont, False),
@@ -229,12 +266,17 @@ def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
                 and cv.isContourConvex(res_mat) == bool(convextest)
                 and hole_flag
                     ):
-
                 polygons.append(result)
                 brs.append(cv.boundingRect(res_mat))
 
 #    print len(polygons), len(contours), area
     return polygons, brs
+
+
+def add_images(s1, s2):
+    dst = s1.clone()
+    cv.add(s1, s2, dst)
+    return dst
 
 
 #===============================================================================
@@ -245,10 +287,11 @@ def convert_color(color):
     '''
     if isinstance(color, tuple):
 #        color = (color[2], color[1], color[0])
-        color = (color[0], color[1], color[2])
+#        color = (color[0], color[1], color[2])
         color = cv.CV_RGB(*color)
     else:
         color = cv.Scalar(color)
+
     return color
 
 
@@ -326,8 +369,13 @@ def draw_rectangle(src, x, y, w, h, color=(255, 0, 0), thickness=1):
     cv.rectangle(src, p1, p2, convert_color(color), thickness=thickness)
 
 
-def draw_circle(src, center, radius, color=(255, 0, 0), thickness=1):
-    cv.circle(src, center, radius, convert_color(color), thickness=thickness, line_type=cv.CV_AA)
+def draw_circle(src, center, radius, color=(255.0, 0, 0), thickness=1):
+    cv.circle(src, center, radius,
+              convert_color(color),
+#              cv.CV_RGB(255, 0, 0),
+              thickness=thickness,
+              lineType=cv.CV_AA
+              )
 
 
 def cvFlip(src, mode):
@@ -366,6 +414,7 @@ def get_fps(cap):
 
 def save_image(src, path):
     cv.imwrite(path, src)
+
 
 if __name__ == '__main__':
     cv.namedWindow('foo', 1)

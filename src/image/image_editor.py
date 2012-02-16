@@ -132,16 +132,18 @@ class _ImageEditor(Editor):
 #                                    flip=False
 #                                    )
 #        bitmap = self.value.get_bitmap()
-        try:
-            bitmap = src.to_wx_bitmap()
-#            for d in dir(src):
-#                print d
-        except AttributeError, e:
-            print e
-            bitmap = wx.BitmapFromBuffer(src.width, src.height,
-                                           src.data
-                                            )
-        dc.DrawBitmap(bitmap, 0, 0, False)
+        if src is not None:
+            try:
+                bitmap = src.to_wx_bitmap()
+    #            for d in dir(src):
+    #                print d
+            except AttributeError, e:
+                print e
+
+                bitmap = wx.BitmapFromBuffer(src.width, src.height,
+                                               src.data
+                                                )
+            dc.DrawBitmap(bitmap, 0, 0, False)
 
     def _display_crosshair(self, dc, x, y, pen=None):
         '''

@@ -25,7 +25,8 @@ from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.paths import hidden_dir
 import pickle
 from src.loggable import Loggable
-from src.managers.stage_managers.affine import AffineTransform
+from affine import AffineTransform
+
 
 class SampleHole(HasTraits):
     id = Str
@@ -37,11 +38,13 @@ class SampleHole(HasTraits):
     shape = Str
     dimension = Float
 
+
 class SampleHoleAdapter(TabularAdapter):
     columns = [('ID', 'id'),
                ('X', 'x'), ('Y', 'y'),
                ('XCor', 'x_cor'), ('YCor', 'y_cor'),
                 ('Render', 'render')]
+
 
 class StageMap(Loggable):
     file_path = Str
@@ -57,6 +60,7 @@ class StageMap(Loggable):
     g_shape = Enum('circle', 'square')
 
     clear_corrections = Button
+
     def map_to_uncalibration(self, pos, cpos, rot):
         a = AffineTransform()
         a.translate(-cpos[0], -cpos[1])
@@ -84,10 +88,12 @@ class StageMap(Loggable):
         return next((h for h in self.sample_holes if h.id == key), None)
 
     def get_hole_pos(self, key):
-        return next(((h.x, h.y) for h in self.sample_holes if h.id == key), None)
+        return next(((h.x, h.y)
+                     for h in self.sample_holes if h.id == key), None)
 
     def get_corrected_hole_pos(self, key):
-        return next(((h.x_cor, h.y_cor) for h in self.sample_holes if h.id == key), None)
+        return next(((h.x_cor, h.y_cor)
+                     for h in self.sample_holes if h.id == key), None)
 
     def load_correction_file(self):
         p = os.path.join(hidden_dir, '{}_correction_file'.format(self.name))
@@ -118,17 +124,16 @@ class StageMap(Loggable):
         for h in self.sample_holes:
             h.x_cor = 0
             h.y_cor = 0
+
     def dump_correction_file(self):
 
         p = os.path.join(hidden_dir, '{}_correction_file'.format(self.name))
         with open(p, 'wb') as f:
-            pickle.dump([(h.id, h.x_cor, h.y_cor) for h in self.sample_holes], f)
+            pickle.dump([(h.id, h.x_cor, h.y_cor)
+                         for h in self.sample_holes], f)
 
         self.info('saved correction file {}'.format(p))
-#    def _get_holes(self):
-#        keys = [s.id for s in self.sample_holes]
-#        values = [(s.x, s.y) for s in self.sample_holes]
-#        return dict((keys, values))
+
     def set_hole_correction(self, hn, x_cor, y_cor):
         hole = next((h for h in self.sample_holes if h.id == hn), None)
         if hole is not None:
@@ -139,21 +144,13 @@ class StageMap(Loggable):
         if tol is None:
             tol = self.g_dimension
 
-#        hole = next((hole for hole in self.sample_holes
-#                      if abs(hole.x - x) < tol and abs(hole.y - y) < tol), None)
-        fholes = []
-        devx = []
-#        devy = []
-
-        for hole in self.sample_holes:
-            if abs(hole.x - x) < tol and abs(hole.y - y) < tol:
-                fholes.append(hole)
-                devx.append(abs(hole.x - x))
-#                devy.append(abs(hole.y - y))
-
-        if fholes:
-            return fholes[devx.index(min(devx))]
-
+        pythag = lambda hi:((hi.x - x) ** 2 + (hi.y - y) ** 2) ** 0.5
+        holes = [(hole, pythag(hole)) for hole in self.sample_holes
+                 if abs(hole.x - x) < tol and abs(hole.y - y) < tol]
+        if holes:
+            #sort holes by deviation 
+            sorted(holes, lambda a, b: cmp(a[1], b[1]))
+            return holes[0]
 
     def _get_bitmap_path(self):
 

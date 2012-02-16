@@ -33,13 +33,16 @@ from src.hardware.motion_controller import MotionController
 from src.helpers.paths import map_dir, setup_dir, user_points_dir
 from src.helpers.logger_setup import setup
 
-from src.managers.motion_controller_managers.motion_controller_manager import MotionControllerManager
-from src.managers.stage_managers.tray_calibration_manager import TrayCalibrationManager
-from src.managers.stage_managers.stage_component_editor import LaserComponentEditor
+from src.managers.motion_controller_managers.motion_controller_manager \
+    import MotionControllerManager
+from tray_calibration_manager import TrayCalibrationManager
+from stage_component_editor import LaserComponentEditor
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem
 from pattern.pattern_manager import PatternManager
+#from stage_map import StageMap
 from src.managers.stage_managers.stage_map import StageMap
-from src.managers.stage_managers.affine import AffineTransform
+from affine import AffineTransform
+
 
 class StageManager(Manager):
     '''
@@ -60,7 +63,6 @@ class StageManager(Manager):
     canvas = Instance(LaserTrayCanvas)
     output = Instance(RichTextDisplay)
 
-
     #===========================================================================
     # buttons
     #===========================================================================
@@ -72,7 +74,6 @@ class StageManager(Manager):
     joystick_label = String('Enable Joystick')
     joystick = Bool(False)
     joystick_timer = None
-
 
     buttons = List([('home', None, None),
 #                    ('jog', 'jog_label', None),
@@ -210,7 +211,7 @@ class StageManager(Manager):
 
     def add_output(self, msg, color=None):
         '''
-          
+
         '''
         if not color:
             color = colors['black']
@@ -743,6 +744,7 @@ class StageManager(Manager):
 
     def _move_to_hole_hook(self, *args):
         pass
+
     def _move_to_point_hook(self):
         pass
 #class DummyParent(HasTraits):
@@ -764,7 +766,6 @@ class StageManager(Manager):
 #    simulation_led = Instance(LED, ())
 
 if __name__ == '__main__':
-
 
     setup('stage_manager')
     name = 'diode'

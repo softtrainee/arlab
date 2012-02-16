@@ -36,10 +36,7 @@ MASSSPEC_HELP = '''1. Locate center hole
 '''
 class TrayCalibrationManager(Manager):
     '''
-    
-        calibration points need to be saved in data space
-
-        
+        calibration points need to be saved in data space        
     '''
     calibrate = Button
 #    calibration_label = Property(depends_on = 'calibration_step')
@@ -55,9 +52,10 @@ class TrayCalibrationManager(Manager):
 #    _rotation = Float(enter_set = True, auto_set = False)
     rotation = Float
     canvas = LaserTrayCanvas
-    calibration_style = Enum('pychron', 'MassSpec')
+    calibration_style = Enum('MassSpec', 'pychron', 'MassSpec')
     calibration_help = Property(depends_on='_calibration_help')
-    _calibration_help = Str
+#    _calibration_help = Str(PYCHRON_HELP)
+    _calibration_help = Str(MASSSPEC_HELP)
 #    def _get_rotation(self):
 #        return self._rotation
 
@@ -84,7 +82,7 @@ class TrayCalibrationManager(Manager):
 
     def _calibrate_fired(self):
         '''
-            turns the markup calibration canvas on 
+            turns the markup calibration canvas on
             by setting canvas.calibrate= True
         '''
 
@@ -95,7 +93,8 @@ class TrayCalibrationManager(Manager):
 
         if self.calibration_style == 'MassSpec':
             if self.calibration_step == 'Calibrate':
-                calibration = canvas.new_calibration_item(self.x, self.y, 0, kind=self.calibration_style)
+                calibration = canvas.new_calibration_item(self.x,
+                        self.y, 0, kind=self.calibration_style)
                 self.calibration_step = 'Locate Center'
             elif self.calibration_step == 'Locate Center':
                 canvas.calibration_item.set_center(x, y)
@@ -117,7 +116,8 @@ class TrayCalibrationManager(Manager):
             canvas.markupcontainer['calibration_indicator'] = calibration
 
             calibration.on_trait_change(self.update_xy, 'center.[x,y]')
-            calibration.on_trait_change(self.update_rotation, 'line.data_rotation')
+            calibration.on_trait_change(self.update_rotation,
+                                         'line.data_rotation')
 
             canvas.calibrate = True
         canvas.request_redraw()
@@ -133,8 +133,10 @@ class TrayCalibrationManager(Manager):
                         if isinstance(calibration, CalibrationObject):
                             self._calibration_help = PYCHRON_HELP
                         calibration.set_canvas(self.canvas)
-                        calibration.on_trait_change(self.update_xy, 'center.[x,y]')
-                        calibration.on_trait_change(self.update_rotation, 'line.data_rotation')
+                        calibration.on_trait_change(self.update_xy,
+                                                     'center.[x,y]')
+                        calibration.on_trait_change(self.update_rotation,
+                                                     'line.data_rotation')
 
                     self.canvas.calibration_item = calibration
 
@@ -147,6 +149,10 @@ class TrayCalibrationManager(Manager):
                     print e
 
     def save_calibration(self):
+
+        #delete the corrections file
+        self.parent._stage_map.clear_correction_file()
+
         ca = self.canvas.calibration_item
         if  ca is not None:
             self.info('saving calibration')
@@ -212,7 +218,12 @@ class TrayCalibrationManager(Manager):
                  Item('y', format_str='%0.3f', style='readonly'),
                  Item('rotation', format_str='%0.3f', style='readonly'),
                  VGroup(
-                        Item('calibration_help', style='readonly', show_label=False, springy=True)
+                        Item('calibration_help', style='readonly',
+                             show_label=False,
+                             height=2,
+#                             springy=True
+                             ),
+                        #springy=True
                         )
 
                 )

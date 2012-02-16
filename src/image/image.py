@@ -20,7 +20,7 @@ from traits.api import HasTraits, Any, List, Int, Bool
 import wx
 from numpy import asarray, flipud, ndarray, hstack, array, ones, vstack, zeros
 #=============local library imports  ==========================
-from cvwrapper import colorspace, swapRB, grayspace, cvFlip, \
+from cvwrapper import swapRB, grayspace, cvFlip, \
     draw_lines, add_scalar, new_dst, \
     resize, asMat, frompil, save_image, load_image, get_size#, setImageROI, resetImageROI
     #cvSetImageROI, cvResetImageROI
@@ -86,6 +86,7 @@ class Image(HasTraits):
 #            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
 
         self.source_frame = img
+
 #        self.frames = [clone(img)]
         self.frames = [img.clone()]
 
@@ -189,7 +190,6 @@ class Image(HasTraits):
             if size:
                 frame = resize(frame, *size)
 
-
             return frame
 
     def get_bitmap(self, **kw):#flip = False, swap_rb = False, mirror = True):
@@ -216,13 +216,15 @@ class Image(HasTraits):
         h = sum([s.size()[1] for s in src])
 
         display = new_dst(w, h, 3)
-
-        s1 = src[0].ndarray
-        s2 = src[1].ndarray
+        try:
+            s1 = src[0].ndarray
+            s2 = src[1].ndarray
+        except IndexError:
+            return
 
         npad = 2
         pad = asMat(zeros((s1.shape[0], npad, s1.shape[2]), 'uint8'))
-        add_scalar(pad, (255, 255, 255))
+        add_scalar(pad, (255, 255, 25))
 
         s1 = hstack((pad.ndarray, s1))
         s1 = hstack((s1, pad.ndarray))
@@ -230,7 +232,7 @@ class Image(HasTraits):
         da = hstack((s1, pad.ndarray))
 
         vpad = asMat(zeros((npad, da.shape[1], da.shape[2]), 'uint8'))
-        add_scalar(vpad, (255, 255, 255))
+        add_scalar(vpad, (255, 25, 255))
         da = vstack((vpad.ndarray, da))
         da = vstack((da, vpad.ndarray))
 

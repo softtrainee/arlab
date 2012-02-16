@@ -16,11 +16,11 @@ limitations under the License.
 #=============enthought library imports=======================
 from traits.api import HasTraits, Float, Any, Instance, Range, Button, Int, \
     Property, Bool, Tuple
-from traitsui.api import View, Item, Handler, HGroup, spring, Spring
-from pyface.timer.do_later import do_later, do_after
+#from traitsui.api import View, Item, Handler, HGroup, spring, Spring
+#from pyface.timer.do_later import do_later, do_after
 #============= standard library imports ========================
 from numpy import histogram, argmax, argmin, array, linspace, asarray, mean
-from numpy.ma import masked_array
+#from numpy.ma import masked_array
 #from scipy.ndimage.filters import sobel, generic_gradient_magnitude
 #from scipy.ndimage import sum as ndsum
 #from scipy.ndimage.measurements import variance
@@ -30,7 +30,8 @@ from numpy.ma import masked_array
 #============= local library imports  ==========================
 from src.image.cvwrapper import draw_polygons, draw_contour_list, \
     threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
-    erode, dilate, draw_rectangle, draw_lines, colorspace, draw_circle, get_size
+    draw_rectangle, draw_lines, colorspace, draw_circle, get_size, \
+    dilate, erode, denoise, smooth, find_circles#, add_images
 #    erode, dilate, draw_rectangle, clone
 
 #from src.managers.manager import Manager
@@ -47,6 +48,9 @@ from src.image.image import Image
 import random
 import time
 from src.loggable import Loggable
+from src.helpers.paths import positioning_error_dir
+from src.helpers.filetools import unique_path
+import os
 DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
 DEVX = 0
@@ -109,9 +113,144 @@ class HoleDetector(Loggable):
     use_dilation = Bool(False)
     use_erosion = Bool(False)
     save_positioning_error = Bool(False)
-    use_histogram = Bool(False)
+    use_histogram = Bool(True)
+    use_smoothing = Bool(True)
+
+    start_threshold_search_value = 80
+    threshold_search_width = 3
+    crop_tries = 2
+    threshold_tries = 3
+
+    def search(self, cx, cy, holenum=None, close_image=True, **kw):
+#        self.cropwidth = 4
+#        self.cropheight = 4
+        self._nominal_position = (cx, cy)
+
+        self.current_hole = holenum
+        self.info('locating {} sample hole {}'.format(self.style,
+                                                holenum if holenum else ''))
+
+        start = self.start_threshold_search_value
+
+        end = start + self.threshold_search_width
+        expand_value = 5
+        found = False
+
+#        self.pxpermm = self.pxpermm
+#        self.hole_detector._debug = self._debug
+#        self.hole_detector.image = self.image
+
+        for ci in range(self.crop_tries):
+            if close_image:
+                self.parent.close_image()
+
+            self.parent.show_image()
+
+            src = self.parent.load_source()
+#            src = self.image.source_frame
+
+            cw = (1 + ci * self.cropscalar) * self.cropwidth
+            ch = (1 + ci * self.cropscalar) * self.cropheight
+
+#            self.cropwidth = cw
+#            self.cropheight = ch
+            self.info('cropping image to {}mm x {}mm'.format(cw, ch))
+            for i in range(self.threshold_tries):
+                s = start - i * expand_value
+                e = end + i * expand_value
+                self.info('searching... thresholding image {} - {}'.format(s,
+                                                                           e))
+
+                args = self._search_for_well(src, s, e, cw, ch)
+                '''
+                    args = results, dev1x, dev1y, dev2x, dev2y
+                    dev1== bound rect dev
+                    dev2== centroid dev
+                    centroid dev empirically calculates a
+                    more accurate deviation
+                '''
+                if args and args[3] != []:
+                    self.info('POSITIONING ERROR DETECTED')
+                    found = True
+                    '''
+                    if i > 0:
+                        this is the first threshold value to successfully
+                        locate the target
+                        so we should use this as our future starting threshold
+                        value
+                        self.start_threshold_search_value = args[4][0]-10
+                    '''
+                    break
+            if found:
+                break
+
+        if not found:
+            self.warning('no target found during search. threshold {} - {}'.
+                         format(s, e))
+            self.draw_center_indicator(self.image.frames[0])
+        else:
+
+            def hist(d):
+                f, v = histogram(array(d))
+                i = len(f)  if argmax(f) == len(f) - 1 else argmax(f)
+                return v[i]
+
+            if self.use_histogram:
+                dx = hist(args[3])
+                dy = hist(args[4])
+            else:
+                avg = lambda s: sum(s) / len(s)
+                dx = avg(args[3])
+                dy = avg(args[4])
+
+            ts = args[5]
+            ds = args[6]
+            es = args[7]
+#            print ts, ds, es
+            self._threshold = ts
+            gsrc = grayspace(self.image.frames[0])
+
+            if self.use_smoothing:
+                gsrc = smooth(gsrc)
+
+            src = threshold(gsrc, ts)
+            if ds:
+                src = dilate(src, ds)
+            if es:
+                src = erode(src, es)
+
+            self.image.frames[1] = colorspace(src)
+
+            self._draw_markup(args[0], dev=(dx, dy))
+
+            #calculate the data position to move to nx,ny
+            dxmm = dx / float(self.pxpermm)
+            dymm = dy / float(self.pxpermm)
+            nx = cx - dxmm
+            ny = cy + dymm
+            self._corrected_position = (dxmm, dymm)
+
+            args = cx, cy, nx, ny, dxmm, dymm, round(dx), round(dy)#int(dx), int(dy)
+
+            self.info('current pos: {:0.3f},{:0.3f} calculated pos: {:0.3f}, {:0.3f} dev: {:0.3f},{:0.3f} ({:n},{:n})'.format(*args))
+
+            if self.save_positioning_error:
+                if holenum:
+                    path, _ = unique_path(positioning_error_dir,
+                                          'positioning_error{:03n}_'.format(int(holenum)), filetype='jpg')
+                    self.image.save(path)
+                    #save an associated text file with some metadata
+                    head, _ = os.path.splitext(path)
+                    with open(head + '.txt', 'w') as f:
+                        f.write('hole={}\n'.format(holenum))
+                        f.write('nominal pos=   {:5f}, {:5f}\n'.format(cx, cy))
+                        f.write('corrected pos= {:5f}, {:5f}\n'.format(nx, ny))
+                        f.write('deviation=     {:5f}, {:5f}'.format(dxmm, dymm))
+
+            return nx, ny
 
     def _search_for_well(self, src, start, end, cw, ch):
+
         dev1x = []
         dev1y = []
         dev2x = []
@@ -135,13 +274,6 @@ class HoleDetector(Loggable):
                 print e
 
             if results:
-                '''
-                 instead of trying to figure out if the result
-                 is the left of right well
-                 if only one result is found require that both wells
-                 are identified ie len(results)==2
-                 then determine which is the left and right
-                '''
                 if self.style == 'co2':
                     _, _, dx, dy, ti, di, ei = self._co2_well(results)
                 else:
@@ -155,7 +287,8 @@ class HoleDetector(Loggable):
                 es.append(ei)
                 rresults = results
 
-        avg = lambda s: sum(s) / max(1, len(s))
+#        avg = lambda s: sum(s) / max(1, len(s))
+        avg = lambda s: s[-1] if s else 0
         return rresults, dev1x, dev1y, dev2x, dev2y, avg(ts), avg(ds), avg(es)
 
     def _diode_well(self, results, right_search=True):
@@ -196,10 +329,15 @@ class HoleDetector(Loggable):
 
     def _co2_well(self, results):
         devx, devy = zip(*[r.dev_centroid for r in results])
-        ts = results[0].threshold_value
-        es = results[0].erode_value
-        ds = results[0].dilate_value
+        # multiple holes may have been identified 
+        # select the hole with the smallest average deviation
 
+        ind = max(0, len(results) / 2)
+#        ind = 0
+        ts = results[ind].threshold_value
+        es = results[ind].erode_value
+        ds = results[ind].dilate_value
+#        print ts, es, ds
         return [], [], devx, devy, ts, ds, es
 
     def _calculate_positioning_error(self, src, cw, ch, threshold_val=None):
@@ -218,17 +356,21 @@ class HoleDetector(Loggable):
         x = int((w - cw_px) / 2 + xo)
         y = int((h - ch_px) / 2 + yo)
 
-#        smooth(src) 
         self.croppixels = (cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
 
         gsrc = grayspace(src)
+
         self.image.frames[0] = colorspace(gsrc)
+
+#        denoise(gsrc)
+        if self.use_smoothing:
+            gsrc = smooth(gsrc)
 
         if threshold_val is None:
             threshold_val = self.start_threshold_search_value
 
-        steps = xrange(threshold_val, threshold_val + 1, 1)
+        steps = range(threshold_val, threshold_val + 1, 1)
 
         results = self._threshold_loop(gsrc, steps, 0, 0)
         if results:
@@ -262,6 +404,13 @@ class HoleDetector(Loggable):
         ma = 3.1415926535 * radius ** 2 * (4 * self.croppixels[0] / 640.)
         mi = 0.25 * ma
 
+#        use_canny = True
+#        if use_canny:
+#            esrc = gsrc.clone()
+#            edges = canny(gsrc, esrc, steps[0], steps[-1])
+#            print edges
+
+#        else:
         for td in steps:
             params = self._calc_sample_hole_position(gsrc, td, min_area=mi, max_area=ma, *args)
 
@@ -271,21 +420,22 @@ class HoleDetector(Loggable):
 #            time.sleep(0.5)
 
     def _calc_sample_hole_position(self, gsrc, ti, dilate_val, erode_val, min_area=1000, max_area=None):
-
-#        w, h = get_size(gsrc)
-
         thresh_src = threshold(gsrc, ti)
-
         if dilate_val:
             thresh_src = dilate(thresh_src, dilate_val)
         if erode_val:
             thresh_src = erode(thresh_src, erode_val)
 
         if len(self.image.frames) == 2:
+#            self.image.frames[0] = colorspace(othresh_src)
             self.image.frames[1] = colorspace(thresh_src)
         else:
+#            self.image.frames[0] = colorspace(othresh_src)
             self.image.frames.append(colorspace(thresh_src))
-
+#            self.image.frames.append(colorspace(esrc))
+#            time.sleep(1)
+#        time.sleep(0.5)
+#        return
         found = []
         contours, hierarchy = contour(thresh_src)
 
@@ -321,7 +471,7 @@ class HoleDetector(Loggable):
                         if self._debug:
 #                            self.debug('threshold={}, dilate={}, erode={}'.format(ti, dilate_val, erode_val))
                             self._draw_result(self.image.frames[1], tr)
-                            time.sleep(0.2)
+#                            time.sleep(0.5)
 
                         if self.style == 'co2' and not self._debug:
                             if self._near_center(cx, cy):
@@ -370,9 +520,9 @@ class HoleDetector(Loggable):
 
             f1 = self.image.frames[1]
             f0 = self.image.frames[0]
-            draw_polygons(f0, [pi.poly_points], color=(255, 7, 0), thickness=1)
-            draw_contour_list(f1, pi.contours, hierarchy=pi.hierarchy,)
-                              #external_color=(255, 255, 0))
+            draw_polygons(f0, [pi.poly_points], color=(255, 255, 0), thickness=1)
+            draw_contour_list(f1, pi.contours, hierarchy=pi.hierarchy)
+
 
             #draw the centroid in blue
             centroid_center = new_point(*pi.centroid_value)
@@ -417,7 +567,7 @@ class HoleDetector(Loggable):
 #        #draw the calculated center
         if dev:
             self._draw_indicator(f0, new_point(true_cx - dev[0],
-                                               true_cy - dev[1]), (255, 0, 255), 'crosshairs')
+                                               true_cy - dev[1]), (255, 255, 0), 'crosshairs')
 
     def draw_center_indicator(self, src, color=(0, 0, 255), size=10):
 
@@ -425,7 +575,10 @@ class HoleDetector(Loggable):
 #        x = float(w / 2)
 #        y = float(h / 2)
 #        self._draw_indicator(src, new_point(x, y), shape='crosshairs', color=color, size=size)
-        self._draw_indicator(src, new_point(*self._get_true_xy(src)), shape='crosshairs')
+        self._draw_indicator(src, new_point(*self._get_true_xy(src)),
+                             shape='crosshairs',
+                             color=(0, 0, 255),
+                             size=10)
 
     def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
         r = size

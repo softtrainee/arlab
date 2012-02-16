@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, String, DelegatesTo, Property, Button, Float, Bool, on_trait_change
+from traits.api import Instance, String, DelegatesTo, Property, Button, \
+ Float, Bool, on_trait_change
 from traitsui.api import Group, Item, HGroup
 from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
@@ -30,9 +31,9 @@ from src.helpers.filetools import unique_path
 from src.helpers.paths import video_dir, snapshot_dir
 from src.helpers.logger_setup import setup
 from src.managers.videoable import Videoable
-from src.managers.stage_managers.camera_calibration_manager import CameraCalibrationManager
-from src.managers.stage_managers.machine_vision.machine_vision_manager import MachineVisionManager
-from src.managers.stage_managers.machine_vision.autofocus_manager import AutofocusManager
+from camera_calibration_manager import CameraCalibrationManager
+from machine_vision.machine_vision_manager import MachineVisionManager
+from machine_vision.autofocus_manager import AutofocusManager
 
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
@@ -126,8 +127,8 @@ class VideoStageManager(StageManager, Videoable):
             #delay briefly before deleting the capture object
 #            t = Timer(4, self.video.close, kwargs=dict(user=user))
 #            t.start()
-            
-        t=Timer(delay, close)
+
+        t = Timer(delay, close)
         t.start()
 #        self.video.close(user=user)
 
@@ -176,8 +177,8 @@ class VideoStageManager(StageManager, Videoable):
         return v
 
     def _canvas_editor_factory(self):
-        w = self.canvas.camera.width * int(self.canvas.scaling*10) / 10.
-        h = self.canvas.camera.height * int(self.canvas.scaling*10) / 10.
+        w = self.canvas.camera.width * int(self.canvas.scaling * 10) / 10.
+        h = self.canvas.camera.height * int(self.canvas.scaling * 10) / 10.
         l = self.canvas.padding_left
         r = self.canvas.padding_right
         t = self.canvas.padding_top
@@ -234,8 +235,8 @@ class VideoStageManager(StageManager, Videoable):
         if self.auto_center:
 
             for _t in range(max(1, ntries)):
-                
-                
+
+
                 newpos = self.machine_vision_manager.search(self.stage_controller._x_position,
                                                             self.stage_controller._y_position,
                                                             holenum=None if isinstance(holenum, str) else holenum,
@@ -252,7 +253,7 @@ class VideoStageManager(StageManager, Videoable):
                                  )
                     return newpos
                 time.sleep(0.25)
-                
+
 
 
 #===============================================================================
