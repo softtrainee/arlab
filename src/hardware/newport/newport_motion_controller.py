@@ -230,7 +230,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         cmd = self._build_query('TP', xx=aid)
         f = self.ask(cmd, 
-                     #verbose=False
+                     verbose=False
                      )
 
         if f != 'simulation' and f is not None:

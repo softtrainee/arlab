@@ -242,14 +242,9 @@ def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
     brs = []
     for cont, hi in zip(contours, hierarchy.tolist()):
         cont = cv.asMat(cont)
-#        for i in [0.01, 0.02, 0.04]:
         for i in [0.01]:
             m = cv.arcLength(cont, True)
-            result = cv.approxPolyDP_int(cont, m * 0.01, True
-                                         #cv.arcLength(cont, False),
-                                         #cv.arcLength(cont, False) * i,
-                                         #False
-                                         )
+            result = cv.approxPolyDP_int(cont, m * 0.01, True)
             res_mat = cv.asMat(result)
             area = abs(cv.contourArea(res_mat))
 
@@ -257,7 +252,8 @@ def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
                 hole_flag = hi[3] != -1
             else:
                 hole_flag = True
-
+                
+#            print 'checking',len(result), area,area>min_area, area<max_area,cv.isContourConvex(res_mat) == bool(convextest), hole_flag 
 #            print cv.isContourConvex(res_mat), convextest
             if (len(result) > 5
                 and area > min_area
@@ -266,6 +262,7 @@ def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
                 and cv.isContourConvex(res_mat) == bool(convextest)
                 and hole_flag
                     ):
+
                 polygons.append(result)
                 brs.append(cv.boundingRect(res_mat))
 

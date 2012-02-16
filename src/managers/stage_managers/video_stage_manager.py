@@ -229,11 +229,16 @@ class VideoStageManager(StageManager, Videoable):
             self.video.close(user='autocenter')
 
 
-    @on_trait_change('autocenter_button')
+    #@on_trait_change('autocenter_button')
+    def _autocenter_button_fired(self):
+        
+        
+        t=Thread(target=self._autocenter)
+        t.start()
+        
     def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
         if self.auto_center:
-
             for _t in range(max(1, ntries)):
 
 

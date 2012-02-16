@@ -101,8 +101,8 @@ class HoleDetector(Loggable):
 #    video = Any
     image = Instance(Image)
 
-    cropwidth = 4
-    cropheight = 4
+    cropwidth = 5
+    cropheight = 5
     cropscalar = 0.5
 
     crosshairs_offsetx = 0
@@ -110,7 +110,7 @@ class HoleDetector(Loggable):
 
     style = 'co2'
 
-    use_dilation = Bool(False)
+    use_dilation = Bool(True)
     use_erosion = Bool(False)
     save_positioning_error = Bool(False)
     use_histogram = Bool(True)
@@ -329,8 +329,6 @@ class HoleDetector(Loggable):
 
     def _co2_well(self, results):
         devx, devy = zip(*[r.dev_centroid for r in results])
-        # multiple holes may have been identified 
-        # select the hole with the smallest average deviation
 
         ind = max(0, len(results) / 2)
 #        ind = 0
@@ -356,6 +354,7 @@ class HoleDetector(Loggable):
         x = int((w - cw_px) / 2 + xo)
         y = int((h - ch_px) / 2 + yo)
 
+#        smooth(src) 
         self.croppixels = (cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
 
@@ -370,7 +369,7 @@ class HoleDetector(Loggable):
         if threshold_val is None:
             threshold_val = self.start_threshold_search_value
 
-        steps = range(threshold_val, threshold_val + 1, 1)
+        steps = xrange(threshold_val, threshold_val + 1, 1)
 
         results = self._threshold_loop(gsrc, steps, 0, 0)
         if results:
@@ -402,43 +401,39 @@ class HoleDetector(Loggable):
 
 #        w, h = get_size(self.image.source_frame)
         ma = 3.1415926535 * radius ** 2 * (4 * self.croppixels[0] / 640.)
-        mi = 0.25 * ma
-
-#        use_canny = True
-#        if use_canny:
-#            esrc = gsrc.clone()
-#            edges = canny(gsrc, esrc, steps[0], steps[-1])
-#            print edges
-
-#        else:
+#        mi = 0.25 * ma
+        mi=100
+        
         for td in steps:
             params = self._calc_sample_hole_position(gsrc, td, min_area=mi, max_area=ma, *args)
 
             if params:
 #                print params
+#                for p in params:
+#                    self._draw_result(self.image.frames[1], p)
+#                    time.sleep(0.1)
                 return params
-#            time.sleep(0.5)
+#            time.sleep(0.1)
 
     def _calc_sample_hole_position(self, gsrc, ti, dilate_val, erode_val, min_area=1000, max_area=None):
         thresh_src = threshold(gsrc, ti)
+
         if dilate_val:
             thresh_src = dilate(thresh_src, dilate_val)
         if erode_val:
             thresh_src = erode(thresh_src, erode_val)
 
         if len(self.image.frames) == 2:
-#            self.image.frames[0] = colorspace(othresh_src)
             self.image.frames[1] = colorspace(thresh_src)
         else:
-#            self.image.frames[0] = colorspace(othresh_src)
             self.image.frames.append(colorspace(thresh_src))
-#            self.image.frames.append(colorspace(esrc))
-#            time.sleep(1)
-#        time.sleep(0.5)
-#        return
+
         found = []
         contours, hierarchy = contour(thresh_src)
-
+        
+        #f=self.image.frames[1]
+        #draw_contour_list(f, contours)
+#        time.sleep(0.1)
         if contours:
             polygons, bounding_rect = get_polygons(contours, hierarchy, min_area, max_area)
             if polygons:
@@ -446,7 +441,7 @@ class HoleDetector(Loggable):
                     if len(pi) > 4:
                         # 1. calculate the centroid
                         cx, cy = centroid(pi)
-                        use_radius_filter = True
+                        use_radius_filter = False
                         if use_radius_filter:
                             # 2. calculate distances
                             tol = 1.3 * self.pxpermm * self.radius_mm
@@ -471,7 +466,7 @@ class HoleDetector(Loggable):
                         if self._debug:
 #                            self.debug('threshold={}, dilate={}, erode={}'.format(ti, dilate_val, erode_val))
                             self._draw_result(self.image.frames[1], tr)
-#                            time.sleep(0.5)
+#                            time.sleep(0.2)
 
                         if self.style == 'co2' and not self._debug:
                             if self._near_center(cx, cy):

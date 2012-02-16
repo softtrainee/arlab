@@ -28,4 +28,5 @@ open_logger_on_launch = False
 
 show_warnings = False
 
+#using ipc_dgram is currently not working
 ipc_dgram = False

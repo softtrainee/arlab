@@ -126,12 +126,7 @@ class _ImageEditor(Editor):
     def _display_image(self, dc, src):
         '''
         '''
-
-#        bitmap = cvIplImageAsBitmap(src,
-#                                    #swap_rb=False,
-#                                    flip=False
-#                                    )
-#        bitmap = self.value.get_bitmap()
+        
         if src is not None:
             try:
                 bitmap = src.to_wx_bitmap()

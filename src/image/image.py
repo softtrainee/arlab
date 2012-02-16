@@ -211,7 +211,7 @@ class Image(HasTraits):
                                         )
 
     def render_images(self, src):
-
+        
         w = sum([s.size()[0] for s in src])
         h = sum([s.size()[1] for s in src])
 
@@ -221,34 +221,40 @@ class Image(HasTraits):
             s2 = src[1].ndarray
         except IndexError:
             return
-
-        npad = 2
-        pad = asMat(zeros((s1.shape[0], npad, s1.shape[2]), 'uint8'))
-        add_scalar(pad, (255, 255, 25))
-
-        s1 = hstack((pad.ndarray, s1))
-        s1 = hstack((s1, pad.ndarray))
-        s1 = hstack((s1, s2))
-        da = hstack((s1, pad.ndarray))
-
-        vpad = asMat(zeros((npad, da.shape[1], da.shape[2]), 'uint8'))
-        add_scalar(vpad, (255, 25, 255))
-        da = vstack((vpad.ndarray, da))
-        da = vstack((da, vpad.ndarray))
-
-        i1 = PILImage.fromarray(da)
-        composite = frompil(i1)
-
-        resize(composite, 640, 320, dst=display)
-
+        try:
+            s1 = src[0].ndarray
+            s2 = src[1].ndarray
+    
+            npad = 2
+            pad = asMat(zeros((s1.shape[0], npad, s1.shape[2]), 'uint8'))
+            add_scalar(pad, (255, 0, 255))
+    
+            s1 = hstack((pad.ndarray, s1))
+            s1 = hstack((s1, pad.ndarray))
+            s1 = hstack((s1, s2))
+            da = hstack((s1, pad.ndarray))
+    
+            vpad = asMat(zeros((npad, da.shape[1], da.shape[2]), 'uint8'))
+            add_scalar(vpad, (0, 255, 255))
+            da = vstack((vpad.ndarray, da))
+            da = vstack((da, vpad.ndarray))
+    
+            i1 = PILImage.fromarray(da)
+            composite = frompil(i1)
+    
+            resize(composite, 640, 320, dst=display)
+        except TypeError:
+            pass
         return display
 
     def save(self, path, src=None):
         if src is None:
             src = self.render_images(self.frames)
+        display = new_dst(640, 480, 3)
+        resize(src,640,480,dst=display)
 #        cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
 #        src = swapRB(src)
-        save_image(src, path)
+        save_image(display, path)
 
     def _draw_crosshairs(self, src):
         r = 10

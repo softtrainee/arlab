@@ -103,7 +103,7 @@ class MachineVisionManager(Manager):
     image_height = Int(324)
 
     _debug = False
-
+    
     title = Property
     current_hole = None
 
@@ -204,7 +204,7 @@ class MachineVisionManager(Manager):
             src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
             src = '/Users/ross/Desktop/tray_screen_shot3.596--13.321.tiff'
 #            src = '/Users/ross/Documents/testimage1.tiff'
-            src = '/Users/ross/Desktop/snapshot003.jpg'
+#            src = '/Users/ross/Desktop/foo1 copy.tiff'
 
         else:
             src = self.video.get_frame()
