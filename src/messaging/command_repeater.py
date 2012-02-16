@@ -28,6 +28,7 @@ from src.remote_hardware.errors.system_errors import PychronCommunicationErrorCo
 from threading import Lock
 
 from globals import ipc_dgram
+from src.helpers.logger_setup import setup
 
 class CRHandler(Handler):
     def init(self, info):
@@ -46,51 +47,10 @@ class CommandRepeater(ConfigLoadable):
     led = Instance(LED, ())
 
 
-    def _test_fired(self):
-        '''
-        '''
-        self.test_connection()
-
-    def test_connection(self):
-        '''
-        '''
-        ra = '{:0.3f}'.format(random.random())
-
-        r = self.get_response('test', ra, None)
-        connected = False
-        if 'ERROR 6' in r:
-            self.led.state = 'red'
-        elif r == ra:
-            self.led.state = 'green'
-            connected = True
-
-        return connected
-
-    def _path_changed(self, old, new):
-        '''
-        '''
-        if old:
-            self.info('reconfigured for {}'.format(self.path))
-
-    def traits_view(self):
-        '''
-        '''
-        v = View(
-                 'path',
-                    HGroup(
-                           Item('led', editor=LEDEditor(), show_label=False),
-                           Item('test', show_label=False),
-
-                           ),
-                    handler=CRHandler,
-                    )
-        return v
 
     def load(self, *args, **kw):
         '''
-
         '''
-
         config = self.get_configuration()
 
         if config:
@@ -113,29 +73,17 @@ class CommandRepeater(ConfigLoadable):
         self._lock = Lock()
         return True
 
-    def remote_launch(self, name):
-        import subprocess, os
-        #launch pychron
-        p = os.path.join(pychron_src_dir, '{}.app'.format(name))
-        result = 'OK'
-        try:
-            subprocess.Popen(['open', p])
-        except OSError:
-            result = 'ERROR: failed to launch Pychron'
-
-        return result
-
     def get_response(self, rid, data, sender_address):
         '''
-
         '''
         #intercept the pychron ready command
-        #sent a test query 
+        #sent a test query
         with self._lock:
             ready_flag = False
+            ready_data = ''
             if data == 'PychronReady':
                 ready_flag = True
-                data = '{:0.3f}'.format(random.random())
+                ready_data = '{:0.3f}'.format(random.random())
                 rid = 'test'
 
             elif data == 'RemoteLaunch':
@@ -147,49 +95,169 @@ class CommandRepeater(ConfigLoadable):
                 #_sock is already connected
                 pass
 
-            try:
+            s = '{}|{}|{}'.format(sender_address, rid, data)
+            send_success, rd = self._send_(s)
+            if send_success:
+                read_success, rd = self._read_()
+                if read_success:
+                    self.led.state = 'green'
 
-                self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
-                result = self._sock.recv(4096)
-
-                self.led.state = 'green'
-            except socket.error, e:
-                is_ok = False
-                retries = 0
-                for ei in ['Errno 32', 'Errno 9', 'Errno 11']:
-                    if ei in str(e):
-                        retries = 3
-                        break
-
-                self.debug('send failed - {} - retrying n={}'.format(e, retries))
-
-                #use a retry loop only if error is a broken pipe
-                for _i in range(retries):
-                    try:
-                        self.open()
-                        try:
-                            self._sock.connect(self.path)
-                        except socket.error:
-                            pass
-
-                        self._sock.send('{}|{}|{}'.format(sender_address, rid, data))
-
-                        result = self._sock.recv(4096)
-
-                        is_ok = True
-                    except socket.error, e:
-                        print e
-
-                if not is_ok:
-                    #pychron is not running
-                    self.led.state = 'red'
-                    self.open()
-                    return repr(PychronCommunicationErrorCode(self.path, e))
-
-            if ready_flag and data == result:
-                result = 'OK'
+            if send_success and read_success:
+                if ready_flag and ready_data == rd:
+                    rd = 'OK'
+                result = rd
+            else:
+                self.led.state = 'red'
+                result = repr(PychronCommunicationErrorCode(self.path, rd))
 
             return result
+#            try:
+#
+#                self._sock.send()
+#                self.led.state = 'green'
+#            except socket.error, e:
+#            result = self._sock.recv(2048)
+#            if not is_ok:
+#            #pychron is not running
+#            self.led.state = 'red'
+#            self.open()
+#            return repr(PychronCommunicationErrorCode(self.path, e))
+#        else:
+#            return result
+#            if ready_flag and data == result:
+#                result = 'OK'
+#
+#            return result
+
+#===============================================================================
+# commands
+#===============================================================================
+    def test_connection(self):
+        '''
+        '''
+        ra = '{:0.3f}'.format(random.random())
+
+        r = self.get_response('test', ra, None)
+        connected = False
+        if 'ERROR 6' in r:
+            self.led.state = 'red'
+        elif r == ra:
+            self.led.state = 'green'
+            connected = True
+
+        self.debug('Connection State - {}'.format(connected))
+        return connected
+
+    def remote_launch(self, name):
+        import subprocess
+        import os
+        #launch pychron
+        p = os.path.join(pychron_src_dir, '{}.app'.format(name))
+        result = 'OK'
+        try:
+            subprocess.Popen(['open', p])
+        except OSError:
+            result = 'ERROR: failed to launch Pychron'
+
+        return result
+
+#===============================================================================
+# response helpers
+#===============================================================================
+    def _send_(self, s):
+        success = True
+        e = None
+        try:
+            self._sock.send(s)
+        except socket.error, e:
+            success = self._handle_socket_send_error(e, s)
+
+        return success, e
+
+    def _read_(self):
+        rd = None
+        try:
+            rd = self._sock.recv(2048)
+            success = True
+        except socket.error, e:
+            success, rd = self._handle_socket_read_error(e)
+
+        return success, rd
+
+    def _handle_socket_send_error(self, e, s):
+        retries = 0
+        for ei in ['Errno 32', 'Errno 9', 'Errno 11']:
+            if ei in str(e):
+                retries = 3
+                break
+
+        self.info('send failed - {} - retrying n={}'.format(e, retries))
+
+        #use a retry loop only if error is a broken pipe
+        for i in range(retries):
+            try:
+                self.open()
+                try:
+                    self._sock.connect(self.path)
+                except socket.error, e:
+                    self.debug('connecting to {} failed. {}'.
+                               format(self.path, e))
+
+                self._sock.send(s)
+                self.debug('send success on retry {}'.format(i + 1))
+                return True
+
+            except socket.error, e:
+                self.debug('send retry {} failed. {}'.format(i + 1, e))
+
+        self.info('send failed after {} retries. {}'.format(retries, e))
+
+    def _handle_socket_read_error(self, e):
+        return False, e
+
+#==============================================================================
+# View
+#==============================================================================
+    def _path_changed(self, old, new):
+        '''
+        '''
+        if old:
+            self.info('reconfigured for {}'.format(self.path))
+
+    def _test_fired(self):
+        '''
+        '''
+        self.test_connection()
+
+    def traits_view(self):
+        '''
+        '''
+        v = View(
+                 'path',
+                    HGroup(
+                           Item('led', editor=LEDEditor(), show_label=False),
+                           Item('test', show_label=False),
+
+                           ),
+                    handler=CRHandler,
+                    )
+        return v
+
+
+def profiling():
+    import profile
+
+    repeator = CommandRepeater(configuration_dir_name='servers',
+                               name='repeater')
+#    repeator.load()
+    repeator.bootstrap()
+#    repeator.test_connection()
+
+    profile.runctx('repeator.get_response(*args)', globals(), {'repeator':repeator, 'args':(1, 2, 3) })
+
+if __name__ == '__main__':
+    setup('profile_repeator')
+    profiling()
 #============= EOF ====================================
 
 #===============================================================================
