@@ -28,4 +28,4 @@ open_logger_on_launch = False
 
 show_warnings = False
 
-ipc_dgram = True
+ipc_dgram = False

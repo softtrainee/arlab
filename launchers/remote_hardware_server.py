@@ -18,13 +18,11 @@ limitations under the License.
 '''
 
 import os
-import sys
 
 # add src to the path
+from path_updater import include_path
+include_path(__file__, level=2)
 
-src = os.path.join(os.path.expanduser('~'), 'Programming', 'mercurial',
-                   'pychron_beta')
-sys.path.append(src)
 from src.helpers.logger_setup import setup
 from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
 

@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 '''
 Copyright 2011 Jake Ross
 
@@ -16,20 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-
+import sys
 import os
 
-# add src to the path
-from path_updater import include_path
-include_path(__file__, level=2)
 
-from src.managers.bakeout_manager import launch_bakeout
-from src.helpers.logger_setup import setup
+def include_path(p, level=1):
+    '''
+    level includes how many levels we are in the root
+    src/launchers/path  level=2
+    src/path level=1
+    '''
+    for _ in range(level):
+        p = os.path.dirname(p)
+    ps = sys.path
+    if not p in ps:
+        ps.insert(0, p)
 
-if __name__ == '__main__':
+    return p
 
-    setup('bakeout', level='DEBUG')
-    launch_bakeout()
-    os._exit(0)
-
-# ============= EOF ====================================
+#======== EOF ================================
