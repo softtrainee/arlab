@@ -18,15 +18,10 @@ limitations under the License.
 '''
 
 import os
-import sys
 
 # add src to the path
-
-# always change back to pychron_beta before committing
-
-SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
-                       'mercurial', 'pychron_beta1.0')
-sys.path.insert(0, SRC_DIR)
+from path_updater import include_path
+SRC_DIR = include_path(__file__, level=2)
 
 from src.envisage.run import launch
 from src.helpers.logger_setup import setup
@@ -172,12 +167,7 @@ def main():
     setup('pychron', level='DEBUG')
 
     launch(beta=True)
-#    sys.exit()
-    profile = False
-    if not profile:
-        os._exit(0)
-    else:
-        sys.exit()
+    os._exit(0)
 
 
 if __name__ == '__main__':
