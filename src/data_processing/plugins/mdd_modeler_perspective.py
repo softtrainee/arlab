@@ -15,10 +15,11 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from pyface.workbench.api import Perspective, PerspectiveItem
-
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+
+
 class MDDModelerPerspective(Perspective):
     '''
     '''
