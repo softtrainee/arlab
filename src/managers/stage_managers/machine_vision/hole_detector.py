@@ -94,16 +94,17 @@ class TargetResult(object):
 
 
 class HoleDetector(Loggable):
-    pxpermm = Float
+    parent=Any(transient=True)
+    pxpermm = Float(23)
 
     radius_mm = Float(1.5)
     _debug = False
 #    video = Any
     image = Instance(Image, transient=True)
 
-    cropwidth = 5
-    cropheight = 5
-    crop_expansion_scalar = 0.5
+    cropwidth = Float(5)
+    cropheight = Float(5)
+    crop_expansion_scalar = Float(0.5)
 
     crosshairs_offsetx = 0
     crosshairs_offsety = 0
@@ -147,14 +148,12 @@ class HoleDetector(Loggable):
 
             self.parent.show_image()
 
-            src = self.parent.load_source()
+            src = self.parent.load_source().clone()
 #            src = self.image.source_frame
 
             cw = (1 + ci * self.crop_expansion_scalar) * self.cropwidth
             ch = (1 + ci * self.crop_expansion_scalar) * self.cropheight
 
-#            self.cropwidth = cw
-#            self.cropheight = ch
             self.info('cropping image to {}mm x {}mm'.format(cw, ch))
             for i in range(self.threshold_tries):
                 s = start - i * expand_value
@@ -208,7 +207,7 @@ class HoleDetector(Loggable):
             ds = args[6]
             es = args[7]
 #            print ts, ds, es
-            self._threshold = ts
+            self.parent._threshold = ts
             gsrc = grayspace(self.image.frames[0])
 
             if self.use_smoothing:
@@ -262,6 +261,7 @@ class HoleDetector(Loggable):
 
         rresults = None
         #make end inclusive
+        
         for i in range(start, end + 1):
             self._threshold = i
             try:
@@ -340,7 +340,7 @@ class HoleDetector(Loggable):
         return [], [], devx, devy, ts, ds, es
 
     def _calculate_positioning_error(self, src, cw, ch, threshold_val=None):
-
+        
         cw_px = int(cw * self.pxpermm)
         ch_px = int(ch * self.pxpermm)
 
@@ -358,7 +358,7 @@ class HoleDetector(Loggable):
 #        smooth(src) 
         self.croppixels = (cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
-
+        
         gsrc = grayspace(src)
 
         self.image.frames[0] = colorspace(gsrc)

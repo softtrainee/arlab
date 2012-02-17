@@ -33,7 +33,7 @@ from src.helpers.paths import setup_dir, hidden_dir
 #from src.data_processing.time_series.time_series import smooth
 #import random
 
-from hole_detector import HoleDetector
+from src.managers.stage_managers.machine_vision.hole_detector import HoleDetector
 from tray_mapper import TrayMapper
 
 
@@ -71,7 +71,7 @@ class MachineVisionManager(Manager):
     nominal_position = Property(depends_on='_nominal_position')
     _nominal_position = Tuple
 
-    hole_detector = Instance(HoleDetector, ())
+    hole_detector = Instance(HoleDetector)
 
     style = DelegatesTo('hole_detector')
     use_dilation = DelegatesTo('hole_detector')
@@ -101,6 +101,10 @@ class MachineVisionManager(Manager):
 #        t.start()
 #        t = Thread(target=self.map_holes)
 #        t.start()
+    def search(self,*args, **kw):
+        if self.hole_detector is not None:
+            return self.hole_detector.search(*args, **kw)
+            
     def dump_hole_detector(self):
 
         p = os.path.join(hidden_dir, 'hole_detector')
@@ -116,7 +120,10 @@ class MachineVisionManager(Manager):
                     hd = pickle.load(f)
                 except Exception:
                     pass
-
+            
+        hd.parent=self
+        hd.image=self.image
+        hd.pxpermm=self.pxpermm
         return hd
 
     def map_holes(self):
