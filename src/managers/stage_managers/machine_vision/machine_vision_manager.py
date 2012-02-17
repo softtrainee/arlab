@@ -18,67 +18,25 @@ from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
     DelegatesTo
 from traitsui.api import View, Item, Handler, HGroup
 from pyface.timer.do_later import do_later, do_after
+import apptools.sweet_pickle as pickle
+
 #============= standard library imports ========================
-from numpy import histogram, argmax, argmin, array, linspace, asarray, mean
-#from scipy.ndimage.filters import sobel, generic_gradient_magnitude
-#from scipy.ndimage import sum as ndsum
-#from scipy.ndimage.measurements import variance
 
-#from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound, \
-#    cvPutText, cvScalar, cvFont, cvPoint
-
+import os
 #============= local library imports  ==========================
-#from src.image.image_helper import draw_polygons, draw_contour_list, \
-#from src.image.cvwrapper import draw_polygons, draw_contour_list, \
-#    threshold, grayspace, new_point, \
-#    erode, dilate, draw_rectangle, \
-#    draw_lines, colorspace, draw_circle
-from src.image.cvwrapper import threshold, grayspace, colorspace, erode, dilate
 from src.managers.manager import Manager
 from src.image.image import Image
 from src.image.image_editor import ImageEditor
 
-from src.helpers.paths import  positioning_error_dir, setup_dir
-from src.helpers.filetools import unique_path
-from threading import Thread
-import os
+from src.helpers.paths import setup_dir, hidden_dir
 #from src.graph.graph import Graph
 #from src.data_processing.time_series.time_series import smooth
 #import random
 
 from hole_detector import HoleDetector
 from tray_mapper import TrayMapper
-#DEVX = random.randint(-10, 10)
-#DEVY = random.randint(-10, 10)
-#DEVX = 0
-#DEVY = -2
-#CX = 39
-#CY = -41
 
 
-#class TargetResult(object):
-#
-#    def __init__(self, origin, cv, ps, cs, tv, dv, ev, br, *args, **kw):
-#        self.origin = origin
-#        self.centroid_value = cv
-#        self.poly_points = ps
-#        self.contours = cs
-#        self.threshold_value = tv
-#        self.dilate_value = dv
-#        self.erode_value = ev
-#        self.bounding_rect = br
-#
-#    @property
-#    def dev_centroid(self):
-#        return (cvRound(self.origin[0] - self.centroid_value[0]),
-#                cvRound(self.origin[1] - self.centroid_value[1]))
-#
-#    @property
-#    def dev_br(self):
-#        return (cvRound(self.origin[0] - self.bounding_rect[0]),
-#                cvRound(self.origin[1] - self.bounding_rect[1]))
-#
-#
 class ImageHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
@@ -103,7 +61,7 @@ class MachineVisionManager(Manager):
     image_height = Int(324)
 
     _debug = False
-    
+
     title = Property
     current_hole = None
 
@@ -116,19 +74,50 @@ class MachineVisionManager(Manager):
     hole_detector = Instance(HoleDetector, ())
 
     style = DelegatesTo('hole_detector')
+    use_dilation = DelegatesTo('hole_detector')
+    use_erosion = DelegatesTo('hole_detector')
+    save_positioning_error = DelegatesTo('hole_detector')
+    use_histogram = DelegatesTo('hole_detector')
+    use_smoothing = DelegatesTo('hole_detector')
+
+    start_threshold_search_value = DelegatesTo('hole_detector')
+    threshold_search_width = DelegatesTo('hole_detector')
+    crop_tries = DelegatesTo('hole_detector')
+    crop_expansion_scalar = DelegatesTo('hole_detector')
+    threshold_tries = DelegatesTo('hole_detector')
+    threshold_expansion_scalar = DelegatesTo('hole_detector')
 
     def _test_fired(self):
 
-        self.hole_detector.parent = self
-        self.hole_detector.pxpermm = self.pxpermm
-        self.hole_detector._debug = self._debug
-        self.hole_detector.image = self.image
+        self.edit_traits(view='configure_view')
 
-        t = Thread(target=self.hole_detector.search, args=(0, 0),
-                   kwargs=dict(right_search=True))
-        t.start()
+#        self.hole_detector.parent = self
+#        self.hole_detector.pxpermm = self.pxpermm
+#        self.hole_detector._debug = self._debug
+#        self.hole_detector.image = self.image
+#
+#        t = Thread(target=self.hole_detector.search, args=(0, 0),
+#                   kwargs=dict(right_search=True))
+#        t.start()
 #        t = Thread(target=self.map_holes)
 #        t.start()
+    def dump_hole_detector(self):
+
+        p = os.path.join(hidden_dir, 'hole_detector')
+        with open(p, 'wb') as f:
+            pickle.dump(self.hole_detector, f)
+
+    def load_hole_detector(self):
+        hd = HoleDetector()
+        p = os.path.join(hidden_dir, 'hole_detector')
+        if os.path.isfile(p):
+            with open(p, 'rb') as f:
+                try:
+                    hd = pickle.load(f)
+                except Exception:
+                    pass
+
+        return hd
 
     def map_holes(self):
         self.load_source()
@@ -174,6 +163,25 @@ class MachineVisionManager(Manager):
         v = View('test')
         return v
 
+    def configure_view(self):
+        v = View(Item('use_dilation'),
+                Item('use_erosion'),
+                Item('save_positioning_error'),
+                Item('use_histogram'),
+                Item('use_smoothing'),
+
+                Item('start_threshold_search_value'),
+                Item('threshold_search_width'),
+                Item('threshold_expansion_scalar'),
+                Item('threshold_tries'),
+                Item('crop_tries'),
+                Item('crop_expansion_scalar'),
+                buttons=['OK', 'Cancel'],
+                title='Configure Hole Detector'
+                )
+
+        return v
+
     def image_view(self):
         v = View(
                  HGroup(
@@ -216,6 +224,8 @@ class MachineVisionManager(Manager):
         return Image(width=self.image_width,
                      height=self.image_height)
 
+    def _hole_detector_default(self):
+        return self.load_hole_detector()
 #===============================================================================
 # getter/setters
 #===============================================================================
@@ -247,7 +257,7 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import setup
     setup('machine_vision')
     m = MachineVisionManager(_debug=True)
-    m.configure_traits()
+    m.configure_traits(view='configure_view')
 
 #    time_comp()
 #============= EOF =====================================

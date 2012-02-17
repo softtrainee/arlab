@@ -33,7 +33,7 @@ from src.image.image import Image
 #from src.image.image_helper import load_image
 #from multiprocessing.process import Process
 from cvwrapper import get_capture_device, query_frame, write_frame, \
-    load_image, new_video_writer, get_fps
+    load_image, new_video_writer, grayspace
 
 DEBUG = False
 
@@ -118,7 +118,7 @@ class Video(Image):
                     with self._lock:
                         src = self._frame
                         self._draw_crosshairs(src)
-                        write_frame(writer, src)
+                        write_frame(writer, grayspace(src))
 
 #                    cvWriteFrame(writer, src)
                     d = fps - (time.time() - st)
