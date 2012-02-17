@@ -221,8 +221,9 @@ class WatlowEZZone(CoreDevice):
         return True
 
     def is_programmed(self):
-        return True
-
+        r=self.get_temp_and_power()
+        if r is not None:
+            return r.data[0]>1
 
     def _program_memory_blocks(self):
         '''
@@ -309,6 +310,7 @@ class WatlowEZZone(CoreDevice):
         p = self.heat_power_value if p is None else p
 
         self.process_value = t
+        self.heat_power_value=p
 
         if 'verbose' in kw and kw['verbose']:
             self.info('Temperature= {} Power= {}'.format(t, p))

@@ -273,12 +273,17 @@ class BakeoutManager(Manager):
                 bc.set_scheduler(scheduler)
 
                 if bc.open():
-
+                    
                     # on first controller check to see if memory block programming is required
                     # if it is apply to all subsequent controllers
 
-                    if cnt == 0 and not bc.is_programmed():
-                        program = True
+                    if cnt == 0:
+                        if not bc.is_programmed():
+                            program = True
+                        self.info('Watlow controllers require programming. Programming automatically' if program else 
+                                  'Watlow controllers are properly programmed'
+                                  )
+ 
                     bc.program_memory_blocks = program
 
                     bc.initialize()
