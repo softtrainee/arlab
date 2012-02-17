@@ -269,11 +269,10 @@ class BakeoutManager(Manager):
 
             # set the communicators scheduler
             # used to synchronize access to port
-
             if bc.load():
-                if bc.open():
-                   # bc.set_scheduler(scheduler)
+                bc.set_scheduler(scheduler)
 
+                if bc.open():
 
                     # on first controller check to see if memory block programming is required
                     # if it is apply to all subsequent controllers
@@ -364,6 +363,10 @@ class BakeoutManager(Manager):
             self._load_configurations()
 
     def _execute_fired(self):
+        t = Thread(target=self._execute_)
+        t.start()
+
+    def _execute_(self):
         '''
         '''
 
@@ -385,8 +388,7 @@ class BakeoutManager(Manager):
                     bc.on_trait_change(self.update_alive, 'alive')
 
                     # set up graph
-
-                    self.graph.new_series()#type='line', render_style='connectedpoints')
+                    self.graph.new_series()
                     self.graph_info[bc.name] = dict(id=pid)
 
                     self.graph.set_series_label(name, series=pid)
@@ -441,7 +443,6 @@ class BakeoutManager(Manager):
                 # start a pressure monitor thread
 #                t = Thread(target=self._pressure_monitor)
 #                t.start()
-
 
                 self._start_time = time.time()
 
