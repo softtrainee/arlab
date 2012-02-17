@@ -1,0 +1,8 @@
+Remote Control Server Changes
+
+2/1/2012
+version 003
+
+fixed beam blanking. will not unblank unless already blanked and vice versa
+solutions mass spec issue of excessive blank and  unblinking commands
+
