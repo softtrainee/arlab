@@ -25,6 +25,7 @@ from traitsui.api import Item, VGroup, RangeEditor
 
 import os
 #=============local library imports  ==========================
+from globals import initialize_zoom, initialize_beam
 from fusions_motor_configurer import FusionsMotorConfigurer
 from src.hardware.core.core_device import CoreDevice
 
@@ -52,12 +53,8 @@ class FusionsLogicBoard(CoreDevice):
     zoom_enabled = DelegatesTo('zoom_motor', prefix='enabled')
     update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
 
-
-    initialize_beam =False
-    initialize_zoom = True
     configure = Button
-
-
+    
     prefix = Str
     scan_func = 'read_power_meter'
     def initialize(self, *args, **kw):
@@ -79,12 +76,12 @@ class FusionsLogicBoard(CoreDevice):
         #initialize Kerr devices
         self.motor_microcontroller.initialize(*args, **kw)
 
-        if self.initialize_zoom:
+        if initialize_zoom:
             zm = self.zoom_motor
             zm.initialize(*args, **kw)
             self.set_zoom(zm.nominal_position)
 
-        if self.initialize_beam:
+        if initialize_beam:
             bm = self.beam_motor
             bm.initialize(*args, **kw)
             self.set_beam_diameter(bm.nominal_position)
