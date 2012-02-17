@@ -53,7 +53,7 @@ class FusionsLogicBoard(CoreDevice):
     update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
 
 
-    initialize_beam =False
+    initialize_beam = False
     initialize_zoom = True
     configure = Button
 
@@ -145,12 +145,13 @@ class FusionsLogicBoard(CoreDevice):
 #==============================================================================
 #laser methods
 #==============================================================================
-    def repeat_command(self, callback, ntries=3):
+    def repeat_command(self, callback, ntries=3, check_val=None):
 
         resp = callback()
         i = 0
 
-        while resp is None and i < ntries:
+        while (resp is None and i < ntries or
+               (check_val is not None and resp != check_val)):
             i += 1
             resp = callback()
 
@@ -179,13 +180,13 @@ class FusionsLogicBoard(CoreDevice):
 #                    i += 1
 
             try:
-                resp=int(resp)
+                resp = int(resp)
             except ValueError:
-                resp=None
-            
+                resp = None
+
             if resp is None:
                 return ['Failed Response']
-            
+
             if resp != 0:
                 LOCK_MAP = ['External', 'E-stop', 'Coolant Flow']
                 rbits = []
@@ -204,7 +205,9 @@ class FusionsLogicBoard(CoreDevice):
         interlocks = self.check_interlocks()
         if not interlocks:
             cmd = self._build_command('ENBL 1')
-            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)))
+            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)),
+                                       check_val='OK'
+                                       )
             if resp == 'OK' or self.simulation:
                 return True
 #            cmd = self._build_command('ENBL 1')

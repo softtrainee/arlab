@@ -393,6 +393,12 @@ class Graph(HasTraits):
 
     def set_series_label(self, label, plotid=0, series=0):
         '''
+        
+            A chaco update requires that the legends labels match the keys in the plot dict
+            
+            save the plots from the dict
+            resave them with label as the key
+            
         '''
 
         legend = self.plots[plotid].legend
@@ -402,8 +408,17 @@ class Graph(HasTraits):
         except Exception, e:
             legend.labels.append(label)
 
-#        print legend.plots
+        if isinstance(series, int):
+            series = 'plot{}'.format(series)
+
+        plots = self.plots[plotid].plots[series]
+        self.plots[plotid].plots[label] = plots
+        self.plots[plotid].plots.pop(series)
+
+#        print legend.plots['plot0'][0].visible
 #        print legend.labels
+#        legend.hide_invisible_plots = False
+#        legend._cached_label_names = legend.labels
 
     def clear_legend(self, keys, plotid=0):
         legend = self.plots[plotid].legend
