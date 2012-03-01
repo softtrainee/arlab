@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+import time
 '''
 Fusions Control board 
 a combination of the logic board and the kerr microcontroller 
@@ -142,16 +143,26 @@ class FusionsLogicBoard(CoreDevice):
 #==============================================================================
 #laser methods
 #==============================================================================
-    def repeat_command(self, callback, ntries=3, check_val=None):
-
-        resp = callback()
-        i = 0
-
-        while (resp is None and i < ntries or 
-                (check_val is not None and resp!=check_val)):
-            i += 1
-            resp = callback()
-
+    def repeat_command(self, callback, ntries=3, check_val=None, check_type=None):
+        
+        for i in range(ntries+1):
+            resp=callback()
+            self.debug('repeat command callback {} response = {} len={} '.format(i+1,resp,len(resp) if resp else None))
+            if check_val is not None:
+                if resp==check_val:
+                    break
+                
+            if check_type is not None:
+                try:
+                    resp=check_type(resp)
+                except ValueError:
+                    resp=None
+            
+            if resp is not None:
+                break
+            
+            #time.sleep(0.05)
+            
         return resp
 
     def check_interlocks(self):
@@ -162,7 +173,7 @@ class FusionsLogicBoard(CoreDevice):
         if not self.simulation:
             cmd = self._build_command('INTLK')
 
-            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)))
+            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)), check_type=int)
 #            if cmd is not None:
 
 #                resp = None
@@ -193,7 +204,6 @@ class FusionsLogicBoard(CoreDevice):
 
                 lock_bits = [LOCK_MAP[cb] for cb in rbits]
 
-
         return lock_bits
 
     def _enable_laser_(self):
@@ -205,22 +215,14 @@ class FusionsLogicBoard(CoreDevice):
             resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)), check_val='OK')
             if resp == 'OK' or self.simulation:
                 return True
-#            cmd = self._build_command('ENBL 1')
-#            
-#            
-#            
-#            if cmd is not None:
-##                resp = self._parse_response(self.ask(cmd, delay=100))
-#                resp = self._parse_response(self.ask(cmd))
-#
-#                if resp == 'OK' or self.simulation:
-#                    return True
 
         else:
             self._disable_laser_()
             self.warning('Cannot fire. Interlocks enabled')
             for i in interlocks:
                 self.warning(i)
+                
+            return ','.join(interlocks)
 
     def _disable_laser_(self):
         '''
@@ -228,7 +230,7 @@ class FusionsLogicBoard(CoreDevice):
         cmd = self._build_command('ENBL 0')
         ntries = 3
         for i in range(ntries):
-            resp = self.repeat_command(lambda :self._parse_response(self.ask(cmd, verbose=True)))
+            resp = self.repeat_command(lambda :self._parse_response(self.ask(cmd, verbose=True)), check_val='OK')
             if resp is None:
                 self.warning('LASER NOT DISABLED {}'.format(i + 1))
             else:
@@ -236,6 +238,8 @@ class FusionsLogicBoard(CoreDevice):
 
             if self.simulation:
                 break
+        else:
+            return 'laser was not disabled'
 #        if cmd is not None:
 #
 #            resp = self._parse_response(self.ask(cmd))
