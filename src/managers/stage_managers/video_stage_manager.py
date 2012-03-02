@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
- Float, Bool
+ Float, Bool, Event, Str, Directory
 from traitsui.api import Group, Item, HGroup
 from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
@@ -34,6 +34,7 @@ from src.managers.machine_vision.autofocus_manager import AutofocusManager
 
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
+import os
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -90,6 +91,12 @@ class VideoStageManager(StageManager, Videoable):
     snapshot_button = Button('Snapshot')
     auto_save_snapshot = Bool(True)
 
+    record = Event
+    record_label = Property(depends_on='is_recording')
+    is_recording = Bool
+     
+    video_directory=Directory
+    
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
@@ -97,9 +104,14 @@ class VideoStageManager(StageManager, Videoable):
         bind_preference(self.pattern_manager,
                         'record_patterning',
                          '{}.record_patterning'.format(pref_id))
+        
         bind_preference(self.pattern_manager,
                          'show_patterning',
                          '{}.show_patterning'.format(pref_id))
+        
+        bind_preference(self, 'video_directory',
+                        '{}.video_directory'.format(pref_id)
+                        )
 
     def start_recording(self, path=None, basename='vm_recording', use_dialog=False, user='remote'):
         '''
@@ -109,7 +121,14 @@ class VideoStageManager(StageManager, Videoable):
             if use_dialog:
                 path = self.save_file_dialog()
             else:
-                path, _ = unique_path(video_dir, basename, filetype='avi')
+                vd=self.video_directory if self.video_directory else video_dir 
+                path, _ = unique_path(vd, basename, filetype='avi')
+                
+        d=os.path.dirname(path)
+        if not os.path.isdir(d):
+            self.warning('invalid directory {}'.format(d))
+            self.warning('using default directory')
+            path, _ = unique_path(video_dir, basename, filetype='avi')
 
         self.info('saving recording to path {}'.format(path))
 
@@ -202,6 +221,9 @@ class VideoStageManager(StageManager, Videoable):
                                mv,
                                HGroup(Item('snapshot_button', show_label=False),
                                       Item('auto_save_snapshot')),
+                               HGroup(self._button_factory('record', 'record_label'),
+                                      #Item('auto_save_snapshot')
+                                      ),
                                Item('autofocus_manager', show_label=False, style='custom'),
                                #HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
 #                               Item('pxpercmx'),
@@ -303,6 +325,19 @@ class VideoStageManager(StageManager, Videoable):
         if path:
             self.info('saving snapshot {}'.format(path))
             self.video.record_frame(path, swap_rb=False)
+    
+    def _record_fired(self):
+        def _rec_():
+            self.start_recording()
+#            time.sleep(4)
+#            self.stop_recording()
+        if self.is_recording:
+            self.is_recording = False
+            self.stop_recording()
+        else:
+            self.is_recording = True
+            t = Thread(target=_rec_)
+            t.start()
 
     def _calculate_fired(self):
         t = Thread(target=self._calculate_camera_parameters)
@@ -436,6 +471,10 @@ class VideoStageManager(StageManager, Videoable):
                     self.drive_yratio = rdymm / dymm
                 except ZeroDivisionError:
                     self.drive_xratio = 100
+                    
+    def _get_record_label(self):
+        return 'Record' if not self.is_recording else 'Stop'
+    
 if __name__ == '__main__':
 
     setup('stage_manager')
