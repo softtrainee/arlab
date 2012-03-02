@@ -52,7 +52,7 @@ def frompil(src):
 def load_image(path, swap=False):
     '''
     '''
-    frame = cv.imread(path)
+    frame = cv.imread(path, 1)
 #    if swap:
 #        cv.convertImage(frame, frame, cv.CV_CVTIMG_SWAP_RB)
     return frame
@@ -140,9 +140,21 @@ def swapRB(src):
 #
 #    return dst
 
-def new_dst(width, height, depth):
-    dst = cv.asMat(zeros((width, height, depth), 'uint8'))
+def convert(src, dst):
+    cv.convertScaleAbs(src, dst)
     return dst
+
+def accumulate(src, dst):
+    cv.accumulate(src, dst)
+
+def running_average(src, dst):
+    cv.accumulate(src, dst)
+
+
+def new_dst(width=640, height=480, depth=3, mode='uint8'):
+    dst = cv.asMat(zeros((height, width, depth), mode))
+    return dst
+
 
 def add_scalar(src, v):
     if isinstance(v, int):
@@ -196,8 +208,10 @@ def contour(src):
     return c, h
 
 
-def canny(src, dst, t1, t2):
+def canny(src, t1, t2):
+    dst = src.clone()
     cv.Canny(src, dst, t1, t2, 3)
+    return dst
 
 
 def sobel(src, dst, xorder, yorder, aperture=3):
@@ -224,22 +238,138 @@ def smooth(src):
     return dst
 
 
+def get_focus_measure(src, kind):
+#    from numpy import r_
+#    from scipy import fft
+#    from pylab import plot, show
+#    w = 100
+#    h = 100
+#    x = (640 - w) / 2
+#    y = (480 - h) / 2
+#    src = crop(src, x, y, w, h)
+#    src = grayspace(src)
+#    d = src.ndarray
+#
+##    print d[0]
+##    print d[-1]
+#    fftsig = fft(d)
+#    d = abs(fftsig)
+#    print d.shape
+#    dst = src.clone()
+#    cv.convertScaleAbs(cv.asMat(d), dst, 1, 0)
+#    return dst
+
+#    xs = xrange(len(ys))
+#    plot(xs, ys)
+#    show()
+#    N = len(d)
+#    f = 50000 * r_[0:(N / 2)] / N
+#    n = len(f)
+##    print f
+#    d = d.transpose()
+#    d = abs(fftsig[:n]) / N
+#    print d
+##    plot(f, d[0], 'b', f, d[1], 'g', f, d[2], 'r')
+#    plot(f, d)
+#    show()
+
+    planes = cv.vector_Mat()
+    src = cv.asMat(src)
+    laplace = cv.Mat(src.size(), cv.CV_16SC1)
+    colorlaplace = cv.Mat(src.size(), cv.CV_8UC3)
+
+    cv.split(src, planes)
+    for plane in planes:
+        cv.Laplacian(plane, laplace, 3)
+        cv.convertScaleAbs(laplace, plane, 1, 0)
+
+    cv.merge(planes, colorlaplace)
+    f = colorlaplace.ndarray.flatten()
+#    f.sort()
+#    print f[-int(len(f) * 0.1):], int(len(f) * 0.1), len(f)
+#    len(f)
+    return f[-int(len(f) * 0.1):].mean()
+
+
+def get_frequency_content(src):
+    gsrc = grayspace(src)
+    dst = src.clone()
+    from numpy.fft import fft, fftfreq
+    from numpy import abs
+    from pylab import plot, show
+#    print
+    signal = fft(gsrc.ndarray[240])
+    ys = abs(signal.real)
+    xs = fftfreq(signal.size)
+    plot(xs, ys)
+    show()
+
+#    signal = cv.asMat(signal.real)
+#    cv.convertScaleAbs(signal, dst)
+#    return colorspace(dst)
+#    print signal.real
+    return src
+
+
+#    print fftfreq(signal.size)
+#    dst = cv.Mat(src.size(), cv.CV_32FC1)
+#
+#    dst1 = cv.asMat(src.ndarray.astype('float32'), cv.CV_32FC1)
+#    src.convertTo(dst1, cv.CV_32FC1)
+#    print dst1
+#    cv.dft(dst1, dst)
+
+#    return colorlaplace
+
 def find_circles(src, min_area):
 
-    c = cv.HoughCircles(src, 3, min_area, 50, 200)
+    c = cv.HoughCircles(src,
+                        3,
+                        100,
+                        60,
+                        10,
+                        )
 
-    for ci in c.tolist():
-        ci = map(int, ci)
-        draw_circle(src, new_point(ci[0], ci[1]), ci[2])
+    return c
 
+
+def isolate_color(src, channel):
+    planes = cv.vector_Mat()
+    cv.split(src, planes)
+    w, h = src.size()
+    for i in range(3):
+        if i == channel:
+            continue
+        planes[i] = cv.Mat(src.size(), cv.CV_8UC1)
+
+    dst = cv.Mat(src.size(), cv.CV_8UC3)
+    cv.merge(planes,
+              dst)
+    print dst
+    return dst
+
+
+def find_lines(src, t1, minlen=100):
+#    dst = canny(src, t1, t2)
+
+    dst = threshold(src, t1, invert=True)
+    lines = cv.HoughLinesP(dst, 1, cv.CV_PI / 180, 5, minlen, 20)
+#    print lines
+    dst = colorspace(dst)
+    for l in lines:
+        cv.line(dst, new_point(int(l[0]), int(l[1])),
+                new_point(int(l[2]), int(l[3])), convert_color((255, 0, 0)),
+                3, 8)
+    return dst, lines
 
 def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
-                 convextest=True, hole=True):
+                 convextest=True, hole=True, nsizes=5):
     '''
     '''
 
     polygons = []
     brs = []
+    areas = []
     for cont, hi in zip(contours, hierarchy.tolist()):
         cont = cv.asMat(cont)
         for i in [0.01]:
@@ -252,10 +382,10 @@ def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
                 hole_flag = hi[3] != -1
             else:
                 hole_flag = True
-                
+
 #            print 'checking',len(result), area,area>min_area, area<max_area,cv.isContourConvex(res_mat) == bool(convextest), hole_flag 
 #            print cv.isContourConvex(res_mat), convextest
-            if (len(result) > 5
+            if (len(result) > nsizes
                 and area > min_area
                 and area < max_area
                 #and area < 3e6
@@ -265,9 +395,9 @@ def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
 
                 polygons.append(result)
                 brs.append(cv.boundingRect(res_mat))
-
+                areas.append(area)
 #    print len(polygons), len(contours), area
-    return polygons, brs
+    return polygons, brs, areas
 
 
 def add_images(s1, s2):

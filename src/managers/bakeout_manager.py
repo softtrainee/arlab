@@ -40,6 +40,7 @@ from src.graph.graph import Graph
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.gauges.granville_phillips.micro_ion_controller import MicroIonController
 from ConfigParser import NoSectionError
+from src.managers.script_manager import ScriptManager
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
@@ -67,6 +68,8 @@ class BakeoutManager(Manager):
 
     execute = Event
     save = Button
+    edit_scripts_button = Button('Edit Scripts')
+
     execute_label = Property(depends_on='alive')
     alive = Bool(False)
 
@@ -106,13 +109,19 @@ class BakeoutManager(Manager):
 
     execute_ok = Property
 
+    script_editor = Instance(ScriptManager)
+
+    def _script_editor_default(self):
+        m = ScriptManager(kind='Bakeout')
+        return m
+
     def _get_execute_ok(self):
         return sum(map(int, [self.include_temp, self.include_heat,
                    self.include_pressure])) > 0
 
     def load(self, *args, **kw):
         app = self.application
-        for bo in self._get_controllers():
+        for bo in self._get_controller_names():
             bc = self._controller_factory(bo)
             self.trait_set(**{bo: bc})
 
@@ -250,7 +259,7 @@ class BakeoutManager(Manager):
             self.alive = self.isAlive()
 
     def isAlive(self):
-        for tr in self._get_controllers():
+        for tr in self._get_controller_names():
             tr = getattr(self, tr)
             if tr.isActive() and tr.isAlive():
                 return True
@@ -264,31 +273,30 @@ class BakeoutManager(Manager):
         scheduler = RS485Scheduler()
         program = False
         cnt = 0
-        for bcn in self._get_controllers():
-            bc = getattr(self, bcn)
-
+#        for bcn in self._get_controller_names():
+#            bc = getattr(self, bcn)
+        for bc in self._get_controllers():
             # set the communicators scheduler
             # used to synchronize access to port
             if bc.load():
                 bc.set_scheduler(scheduler)
 
                 if bc.open():
-                    
+
                     # on first controller check to see if memory block programming is required
                     # if it is apply to all subsequent controllers
 
                     if cnt == 0:
                         if not bc.is_programmed():
                             program = True
-                        self.info('Watlow controllers require programming. Programming automatically' if program else 
+                        self.info('Watlow controllers require programming. Programming automatically' if program else
                                   'Watlow controllers are properly programmed'
                                   )
- 
+
                     bc.program_memory_blocks = program
 
                     bc.initialize()
                     cnt += 1
-
 
 #                    if BATCH_SET_BAUDRATE:
 #                        bc.set_baudrate(BAUDRATE)
@@ -312,7 +320,7 @@ class BakeoutManager(Manager):
         else:
             super(BakeoutManager, self).kill()
 
-        for tr in self._get_controllers():
+        for tr in self._get_controller_names():
             getattr(self, tr).end(**kw)
 
     def _open_graph(self, path):
@@ -327,6 +335,15 @@ class BakeoutManager(Manager):
         graph.window_x = 30
         graph.window_y = 30
         graph.edit_traits()
+
+    def _edit_scripts_button_fired(self):
+        se = self.script_editor
+        if se.save_path:
+            se.title = 'Script Editor {}'.format(se.save_path)
+
+        se.edit_traits(kind='livemodal')
+        for ci in self._get_controllers():
+            ci.load_scripts()
 
     def _open_button_fired(self):
         path = self._file_dialog_('open',
@@ -350,7 +367,7 @@ class BakeoutManager(Manager):
             config.set('Scan', 'interval', self.update_interval)
             config.set('Scan', 'window', self.scan_window)
 
-            for tr in self._get_controllers():
+            for tr in self._get_controller_names():
                 tr_obj = getattr(self, tr)
                 config.add_section(tr)
 
@@ -386,7 +403,7 @@ class BakeoutManager(Manager):
             self.graph_info = dict()
             self._graph_factory(graph=self.graph)
             controllers = []
-            for name in self._get_controllers():
+            for name in self._get_controller_names():
                 bc = self.trait_get(name)[name]
                 if bc.ok_to_run():
 
@@ -487,7 +504,7 @@ class BakeoutManager(Manager):
 #                                                                                                               time.time() - st))
 
     def _update_interval_changed(self):
-        for tr in self._get_controllers():
+        for tr in self._get_controller_names():
             bc = self.trait_get(tr)[tr]
             bc.update_interval = self.update_interval
 
@@ -498,10 +515,10 @@ class BakeoutManager(Manager):
     def traits_view(self):
         '''
         '''
-
         controller_grp = HGroup()
-        for tr in self._get_controllers():
-            controller_grp.content.append(Item(tr, show_label=False, style='custom'))
+        for tr in self._get_controller_names():
+            controller_grp.content.append(Item(tr,
+                                     show_label=False, style='custom'))
 
         control_grp = HGroup(VGroup(Item('execute',
                              editor=ButtonEditor(label_value='execute_label'
@@ -509,14 +526,17 @@ class BakeoutManager(Manager):
                              enabled_when='execute_ok'),
                              Item('open_button',
                              editor=ButtonEditor(label_value='open_label'
-                             ), show_label=False)),
+                             ), show_label=False),
+                            Item('edit_scripts_button', show_label=False)
+                                    ),
                              HGroup(Item('configuration',
                              editor=EnumEditor(name='configurations'),
                              show_label=False), Item('save',
                              show_label=False)),
                              VGroup('include_pressure', 'include_heat',
                              'include_temp', enabled_when='not alive'),
-                             label='Control', show_border=True)  #                        spring,
+                             label='Control', show_border=True),
+
         scan_grp = VGroup(Item('update_interval',
                           label='Sample Period (s)'), Item('scan_window'
                           , label='Data Window (mins)'), label='Scan',
@@ -535,10 +555,10 @@ class BakeoutManager(Manager):
                  pressure_grp, enabled_when='not alive')),
                  controller_grp, Item('graph', show_label=False,
                  style='custom')), handler=ManagerHandler,
-                 resizable=True, title='Bakeout Manager', height=830)  #                                   spring,
+                 resizable=True, title='Bakeout Manager', height=830)
         return v
 
-    def _get_controllers(self):
+    def _get_controller_names(self):
         '''
         '''
 
@@ -546,10 +566,13 @@ class BakeoutManager(Manager):
         c.sort()
         return c
 
+    def _get_controllers(self):
+        return [getattr(self, tr)
+                for tr in self._get_controller_names()]
+
     def _get_active_controllers(self):
         ac = []
         for tr in self._get_controllers():
-            tr = getattr(self, tr)
             if tr.isActive() and tr.isAlive():
                 ac.append(tr)
         return ac
@@ -611,7 +634,7 @@ class BakeoutManager(Manager):
         return ('Stop' if self.alive else 'Execute')
 
     def __configuration_changed(self):
-        for tr in self._get_controllers():
+        for tr in self._get_controller_names():
             kw = dict()
             tr_obj = getattr(self, tr)
             for attr in ['duration', 'setpoint']:

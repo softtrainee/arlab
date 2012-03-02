@@ -27,6 +27,8 @@ class Error(HasTraits):
     file = Str
     linenum = Int
     error = Str
+
+
 class ScriptValidator(HasTraits):
     '''
     '''
@@ -42,15 +44,13 @@ class ScriptValidator(HasTraits):
 
                 self.errors.append(error)
 
-    def validate(self, script, file=None):
+    def validate(self, text, parser, file=None):
         '''
         '''
-
         #get the parser associated with the script
 
-
-        text = script.text
-        parser = script._script.parser
+#        text = script.text
+#        parser = script._script.parser
 
         #check each line for errors
         #for name, linenum, e in self.parser.parse(text):

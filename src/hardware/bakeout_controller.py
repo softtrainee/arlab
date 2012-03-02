@@ -146,13 +146,17 @@ class BakeoutController(WatlowEZZone):
     def load_additional_args(self, config):
         '''
         '''
+        self.load_scripts()
+        return True
+
+    def load_scripts(self):
         sd = os.path.join(paths.scripts_dir, 'bakeoutscripts')
         files = os.listdir(sd)
 
         self.scripts = ['---'] + [f for f in files
                     if not os.path.basename(f).startswith('.') and
-                        os.path.isfile(os.path.join(sd, f)) and os.path.splitext(f)[1] in ['.bo']]
-        return True
+                        os.path.isfile(os.path.join(sd, f)) and
+                        os.path.splitext(f)[1] in ['.bo']]
 
     def ok_to_run(self):
         ok = True
@@ -185,7 +189,7 @@ class BakeoutController(WatlowEZZone):
             t.bootstrap()
             self._active_script = t
             self._timer = Timer(self.update_interval * 1000., self._update2_)
-            
+
     def ramp_to_setpoint(self, ramp, setpoint, scale):
         '''
         '''
@@ -288,10 +292,10 @@ class BakeoutController(WatlowEZZone):
 
     def get_temp_and_power(self, **kw):
 #        kw['verbose']=True
-        pr=WatlowEZZone.get_temp_and_power(self, **kw)
+        pr = WatlowEZZone.get_temp_and_power(self, **kw)
         self.process_value_flag = True
         return pr
-    
+
     def get_temperature(self, **kw):
         t = WatlowEZZone.get_temperature(self, **kw)
         self.process_value_flag = True

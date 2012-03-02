@@ -20,11 +20,14 @@ limitations under the License.
 #============= local library imports  ==========================
 from src.scripts.core.core_script_parser import CoreScriptParser
 
+
 class BakeoutScriptParser(CoreScriptParser):
     COMMAND_KEYS = ['CONFIG', 'GOTO', 'MAINTAIN']
+
     def raw_parse(self, args):
         error = None
         sargs = 'Setpoint(C), Duration(min)'
+#        print args
         if len(args) < 2 or (len(args) == 2 and not args[1]):
             error = 'Not enough args ' + sargs
         elif len(args) > 2:
@@ -34,12 +37,12 @@ class BakeoutScriptParser(CoreScriptParser):
 
             error = self._check_number(args)
 
-
         return error, args
+
     def _goto_parse(self, linenum, **kw):
-        
+
         return self._get_float()
-    
+
     def _maintain_parse(self, linenum, **kw):
         return self._get_float()
 #============= EOF ====================================

@@ -16,12 +16,10 @@ limitations under the License.
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
     DelegatesTo
-from traitsui.api import View, Item, Handler, HGroup
+from traitsui.api import View, Item, Handler, HGroup, Group
 from pyface.timer.do_later import do_later, do_after
 import apptools.sweet_pickle as pickle
-
 #============= standard library imports ========================
-
 import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
@@ -29,12 +27,11 @@ from src.image.image import Image
 from src.image.image_editor import ImageEditor
 
 from src.helpers.paths import setup_dir, hidden_dir
-#from src.graph.graph import Graph
-#from src.data_processing.time_series.time_series import smooth
-#import random
 
-from src.managers.stage_managers.machine_vision.hole_detector import HoleDetector
-from tray_mapper import TrayMapper
+
+from src.managers.machine_vision.detectors.hole_detector import HoleDetector
+from detectors.tray_mapper import TrayMapper
+from src.managers.machine_vision.detectors.zoom_calibration_detector import ZoomCalibrationDetector
 
 
 class ImageHandler(Handler):
@@ -45,6 +42,9 @@ class ImageHandler(Handler):
 class MachineVisionManager(Manager):
 
     video = Any
+    stage_controller = Any
+    laser_manager = Any
+    autofocus_manager = Any
     image = Instance(Image, ())
     pxpermm = 23
 
@@ -87,24 +87,26 @@ class MachineVisionManager(Manager):
     threshold_tries = DelegatesTo('hole_detector')
     threshold_expansion_scalar = DelegatesTo('hole_detector')
 
+    calibration_detector = Any
+
+    testing = False
+
     def _test_fired(self):
+        from threading import Thread
+        if not self.testing:
+            self.testing = True
+            d = ZoomCalibrationDetector(parent=self,
+                                        image=self.image,
+                                        pxpermm=self.pxpermm)
+            t = Thread(target=d.do_zoom_calibration)
+            t.start()
+        else:
+            self.testing = False
 
-        self.edit_traits(view='configure_view')
-
-#        self.hole_detector.parent = self
-#        self.hole_detector.pxpermm = self.pxpermm
-#        self.hole_detector._debug = self._debug
-#        self.hole_detector.image = self.image
-#
-#        t = Thread(target=self.hole_detector.search, args=(0, 0),
-#                   kwargs=dict(right_search=True))
-#        t.start()
-#        t = Thread(target=self.map_holes)
-#        t.start()
-    def search(self,*args, **kw):
+    def search(self, *args, **kw):
         if self.hole_detector is not None:
             return self.hole_detector.search(*args, **kw)
-            
+
     def dump_hole_detector(self):
 
         p = os.path.join(hidden_dir, 'hole_detector')
@@ -120,10 +122,10 @@ class MachineVisionManager(Manager):
                     hd = pickle.load(f)
                 except Exception:
                     pass
-            
-        hd.parent=self
-        hd.image=self.image
-        hd.pxpermm=self.pxpermm
+
+        hd.parent = self
+        hd.image = self.image
+        hd.pxpermm = self.pxpermm
         return hd
 
     def map_holes(self):
@@ -171,20 +173,28 @@ class MachineVisionManager(Manager):
         return v
 
     def configure_view(self):
-        v = View(Item('use_dilation'),
-                Item('use_erosion'),
-                Item('save_positioning_error'),
-                Item('use_histogram'),
-                Item('use_smoothing'),
+        search_grp = Group(Item('start_threshold_search_value'),
+                            Item('threshold_search_width'),
+                            Item('threshold_expansion_scalar'),
+                            Item('threshold_tries'),
+                            Item('crop_tries'),
+                            Item('crop_expansion_scalar'),
+                            show_border=True,
+                           label='Search')
 
-                Item('start_threshold_search_value'),
-                Item('threshold_search_width'),
-                Item('threshold_expansion_scalar'),
-                Item('threshold_tries'),
-                Item('crop_tries'),
-                Item('crop_expansion_scalar'),
-                buttons=['OK', 'Cancel'],
-                title='Configure Hole Detector'
+        process_grp = Group(
+                            Item('use_smoothing'),
+                            Item('use_dilation'),
+                            Item('use_erosion'),
+                            Item('use_histogram'),
+                            show_border=True,
+                           label='Process')
+        v = View(
+                 search_grp,
+                 process_grp,
+                 Item('save_positioning_error'),
+                 buttons=['OK', 'Cancel'],
+                 title='Configure Hole Detector'
                 )
 
         return v
@@ -192,7 +202,9 @@ class MachineVisionManager(Manager):
     def image_view(self):
         v = View(
                  HGroup(
-                        Item('threshold', format_str='%03i', style='readonly'),
+                        Item('threshold', format_str='%03i',
+                             #style='readonly'
+                             ),
                         #spring,
                         Item('nominal_position', label='Nom. Pos.',
                              style='readonly'),
@@ -213,17 +225,25 @@ class MachineVisionManager(Manager):
                  )
         return v
 
-    def load_source(self):
+    def load_source(self, path=None):
         if self._debug:
-            src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
-            src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
-            src = '/Users/ross/Desktop/tray_screen_shot3.596--13.321.tiff'
-#            src = '/Users/ross/Documents/testimage1.tiff'
-#            src = '/Users/ross/Desktop/foo1 copy.tiff'
+            if path is None:
+                src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
+                src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
+                src = '/Users/ross/Desktop/tray_screen_shot3.596--13.321.tiff'
+                src = '/Users/ross/Desktop/snapshot006.jpg'
+                src = '/Users/ross/Desktop/snapshot007-10mm.jpg'
+    #            src = '/Users/ross/Desktop/snapshot007--4.jpg'
+                src = '/Users/ross/Desktop/snapshot008-14.jpg'
+                src = '/Users/ross/Desktop/testimage.png'
+    #            src = '/Users/ross/Documents/testimage1.tiff'
+    #            src = '/Users/ross/Desktop/foo1 copy.tiff'
+                src = '/Users/ross/Pychrondata_beta1.2/data/snapshots/snapshot010.jpg'
+            else:
+                src = path
 
         else:
             src = self.video.get_frame()
-
         self.image.load(src)
         return self.image.source_frame
 
@@ -233,9 +253,10 @@ class MachineVisionManager(Manager):
 
     def _hole_detector_default(self):
         return self.load_hole_detector()
-#===============================================================================
+
+#==============================================================================
 # getter/setters
-#===============================================================================
+#==============================================================================
     def _get_corrected_position(self):
         try:
             return '{:5f}, {:5f}'.format(*self._corrected_position)
@@ -258,13 +279,15 @@ class MachineVisionManager(Manager):
     def _set_threshold(self, v):
         self._threshold = v
 
+#        self.calibration_detector.update_threshold(v)
+
 
 if __name__ == '__main__':
 
     from src.helpers.logger_setup import setup
     setup('machine_vision')
     m = MachineVisionManager(_debug=True)
-    m.configure_traits(view='configure_view')
+    m.configure_traits()
 
 #    time_comp()
 #============= EOF =====================================

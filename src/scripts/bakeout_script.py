@@ -24,6 +24,7 @@ from src.scripts.core.core_script import CoreScript
 from bakeout_script_parser import BakeoutScriptParser
 
 TIMEDICT = dict(s=1, m=60.0, h=60.0 * 60.0)
+
 class BakeoutScript(CoreScript):
     '''
     '''
@@ -34,9 +35,11 @@ class BakeoutScript(CoreScript):
     scale = 'h'
     maintain_time = 1
     controller = None
-    
+
     kind = None
     current_setpoint = 0
+
+    @classmethod
     def get_documentation(self):
         from src.scripts.core.html_builder import HTMLDoc, HTMLText
         doc = HTMLDoc(attribs='bgcolor = "#ffffcc" text = "#000000"')
@@ -44,7 +47,7 @@ class BakeoutScript(CoreScript):
         doc.add_heading('Parameters', heading=3)
         doc.add_text('Setpoint (C), Duration (min)')
         doc.add_list(['Setpoint (C) -- Bakeout Controller Setpoint',
-                      'Duration (min) -- Heating duration'
+                      'Duration (hrs) -- Heating duration'
                       ])
         table = doc.add_table(attribs='bgcolor="#D3D3D3" width="90%"')
         r1 = HTMLText('Ex.', face='courier', size='2')
@@ -56,31 +59,28 @@ class BakeoutScript(CoreScript):
         return str(doc)
 
     def raw_statement(self, args):
-        
+
         #change the setpoint temp
         if self.controller is not None:
             self.controller.setpoint = float(args[0])
-
+            self.controller._duration = float(args[1])
         #wait for dur 
         self.wait(float(args[1]) * TIMEDICT[self.scale])
-        
-    
+
     def kill_script(self):
         if self.controller is not None:
             self.controller.end(script_kill=True)
         super(BakeoutScript, self).kill_script()
 
-    
     def maintain_statement(self, mt):
         '''
-        ''' 
+        '''
         if self.controller is not None:
             self.controller.led.state = 2
 
-       
         self.info('Maintaining setpoint for {} {}'.format(mt, self.scale))
         mt *= TIMEDICT[self.scale]
-        
+
         st = time.time()
         self.controller.duration = mt / 3600.
         cnt = 1
@@ -90,18 +90,18 @@ class BakeoutScript(CoreScript):
             self.controller._duration = self.controller._oduration - cnt * sleep_time / 3600.
             #print 'f', cnt, self.controller._duration, self.controller._oduration
             cnt += 1
-        
+
     def goto_statement(self, setpoint):
         '''
 
         '''
         controller = self.controller
-        
+
         if setpoint > self.current_setpoint:
             name = 'heat'
         else:
             name = 'cool'
-    
+
         ramp = float(getattr(self, '{}_ramp'.format(name)))
         #sp = getattr(self, '{}_setpoint'.format(name))
 
@@ -117,8 +117,9 @@ class BakeoutScript(CoreScript):
             kw['std_tolerance'] = 5
             kw['timeout'] = 60
         self._wait_for_setpoint(setpoint, **kw)
-        
-    def _wait_for_setpoint(self, sp, mean_check=True, std_check=False, mean_tolerance=5, std_tolerance=1, timeout=15):
+
+    def _wait_for_setpoint(self, sp, mean_check=True, std_check=False,
+                            mean_tolerance=5, std_tolerance=1, timeout=15):
         '''
 
         '''

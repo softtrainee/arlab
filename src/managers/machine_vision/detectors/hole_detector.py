@@ -46,11 +46,12 @@ from src.image.image import Image
 #from src.graph.graph import Graph
 #from src.data_processing.time_series.time_series import smooth
 import random
-import time
-from src.loggable import Loggable
+#import time
+#from src.loggable import Loggable
 from src.helpers.paths import positioning_error_dir
 from src.helpers.filetools import unique_path
 import os
+from detector import Detector
 DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
 DEVX = 0
@@ -93,14 +94,13 @@ class TargetResult(object):
         return self.bounding_rect.width * self.bounding_rect.height
 
 
-class HoleDetector(Loggable):
-    parent=Any(transient=True)
-    pxpermm = Float(23)
+class HoleDetector(Detector):
+#    parent=Any(transient=True)
 
     radius_mm = Float(1.5)
     _debug = False
 #    video = Any
-    image = Instance(Image, transient=True)
+#    image = Instance(Image, transient=True)
 
     cropwidth = Float(5)
     cropheight = Float(5)
@@ -261,7 +261,7 @@ class HoleDetector(Loggable):
 
         rresults = None
         #make end inclusive
-        
+
         for i in range(start, end + 1):
             self._threshold = i
             try:
@@ -340,7 +340,7 @@ class HoleDetector(Loggable):
         return [], [], devx, devy, ts, ds, es
 
     def _calculate_positioning_error(self, src, cw, ch, threshold_val=None):
-        
+
         cw_px = int(cw * self.pxpermm)
         ch_px = int(ch * self.pxpermm)
 
@@ -358,7 +358,7 @@ class HoleDetector(Loggable):
 #        smooth(src) 
         self.croppixels = (cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
-        
+
         gsrc = grayspace(src)
 
         self.image.frames[0] = colorspace(gsrc)
@@ -436,7 +436,7 @@ class HoleDetector(Loggable):
         #draw_contour_list(f, contours)
 #        time.sleep(0.1)
         if contours:
-            polygons, bounding_rect = get_polygons(contours, hierarchy, min_area, max_area)
+            polygons, bounding_rect, _areas = get_polygons(contours, hierarchy, min_area, max_area)
             if polygons:
                 for pi, br in zip(polygons, bounding_rect):
                     if len(pi) > 4:

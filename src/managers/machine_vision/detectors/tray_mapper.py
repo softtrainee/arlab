@@ -16,12 +16,11 @@ limitations under the License.
 #=============enthought library imports=======================
 from traits.api import Any
 #============= standard library imports ========================
-from src.managers.stage_managers.machine_vision.hole_detector import HoleDetector
+#============= local library imports  ==========================
+from hole_detector import HoleDetector
 from src.image.cvwrapper import colorspace, grayspace, draw_rectangle, \
     new_point
-import time
 
-#============= local library imports  ==========================
 
 class TrayMapper(HoleDetector):
     style = 'co2_mapper'
@@ -73,20 +72,23 @@ class TrayMapper(HoleDetector):
 
     def map_holes(self):
         self.correction_dict = dict()
-        regions = [(0, 0)]#, (1, 1)]
+        regions = [(0, 0)]
         mapped_holes = 0
         n = len(self.stage_map.sample_holes)
         for r in regions:
             mapped_holes += self.map_holes_in_region(r)
-            self.info('mapped {} of {} holes ({:0.1f}%)'.format(mapped_holes, n, mapped_holes / float(n) * 100))
+            self.info('mapped {} of {} holes ({:0.1f}%)'.format(mapped_holes,
+                                            n, mapped_holes / float(n) * 100))
 
         non_cor = self._get_non_corrected()
         if non_cor:
-            self.info('no correction found for {}'.format(' '.join(map(str, non_cor))))
+            self.info('no correction found for {}'.format(
+                                ' '.join(map(str, non_cor))))
             for ni in non_cor:
                 mx, my = self.stage_map.get_hole_pos(str(ni))
                 w, h = 20
-                draw_rectangle(self.image.frames[1], mx - w / 2, my - h / 2, w, h, color=(255, 255, 0), thickness=2)
+                draw_rectangle(self.image.frames[1], mx - w / 2, my - h / 2,
+                         w, h, color=(255, 255, 0), thickness=2)
 
     def map_holes_in_region(self, region):
         gsrc = grayspace(self.image.source_frame)
@@ -98,26 +100,31 @@ class TrayMapper(HoleDetector):
         atol = 500
         mapped_holes = 0
         for ti in range(t_s, t_e + 1):
-            results = self._calc_sample_hole_position(gsrc, ti, 0, 0, max_area=2000)
+            results = self._calc_sample_hole_position(gsrc, ti,
+                                            0, 0, max_area=2000)
             if results:
                 c = 0
                 for r in results:
-                    if abs(r.aspect_ratio - 1) < tol and abs(r.area - a) < atol:
-#                        self._draw_result(self.image.frames[1], r, with_br=True, thickness=2)
+                    if (abs(r.aspect_ratio - 1) < tol
+                        and abs(r.area - a) < atol):
+#                        self._draw_result(self.image.frames[1],
+#                                 r, with_br=True, thickness=2)
                         c += 1
 
-                        #convert centroid into mm 
-                        mmx, mmy = self.map_mm(*r.centroid_value)
+                        # convert centroid into mm
+                        cargs = self.map_mm(*r.centroid_value)
                         cpos = self.calibrated_center
                         rot = self.calibrated_rotation
 
-                        mmx, mmy = self.stage_map.map_to_calibration((mmx, mmy), cpos, rot)
+                        mmx, mmy = self.stage_map.map_to_calibration(cargs,
+                                                                    cpos, rot)
 
                         #check for a match to the stage map
                         hole = self.stage_map._get_hole_by_position(mmx, mmy)
                         if hole is not None:
                             if self._add_correction(hole.id, (mmx, mmy)):
-                                self._draw_result(self.image.frames[0], r, with_br=True, thickness=2)
+                                self._draw_result(self.image.frames[0], r,
+                                                   with_br=True, thickness=2)
 
                                 tx = hole.x
                                 ty = hole.y
@@ -127,12 +134,14 @@ class TrayMapper(HoleDetector):
 #                                print rot
 #                                rot = 0
 
-                                pos = self.stage_map.map_to_uncalibration(pos, cpos, rot)
+                                pos = self.stage_map.map_to_uncalibration(pos,
+                                                                    cpos, rot)
 
                                 #map to screen
                                 pos = self.map_screen(*pos)
 
-                                self._draw_indicator(self.image.frames[0], new_point(*pos), color=(255, 255, 0))
+                                self._draw_indicator(self.image.frames[0],
+                                        new_point(*pos), color=(255, 255, 0))
 
                                 mapped_holes += 1
 #                                print mapped_holes, hole.id
