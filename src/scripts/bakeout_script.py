@@ -63,7 +63,7 @@ class BakeoutScript(CoreScript):
         #change the setpoint temp
         if self.controller is not None:
             self.controller.setpoint = float(args[0])
-            self.controller._duration = float(args[1])
+            self.controller.duration = float(args[1])
         #wait for dur 
         self.wait(float(args[1]) * TIMEDICT[self.scale])
 
