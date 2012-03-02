@@ -25,7 +25,7 @@ from src.helpers.initialization_parser import InitializationParser
 HOME = os.path.expanduser('~')
 home = 'Pychrondata'
 
-version='1.4'
+version = '1.4'
 
 from globals import beta
 

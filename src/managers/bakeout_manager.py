@@ -253,19 +253,22 @@ class BakeoutManager(Manager):
         old,
         new,
         ):
+        print obj, name, old, new
         if new:
             self.alive = new
         else:
-            self.alive = self.isAlive()
+            self.alive = bool(len( self._get_active_controllers()))#self.isAlive()
 
-    def isAlive(self):
-        for tr in self._get_controller_names():
-            tr = getattr(self, tr)
-            if tr.isActive() and tr.isAlive():
-                return True
-
-        return False
-
+#    def isAlive(self):
+##        for tr in self._get_controller_names():
+##        
+##            tr = getattr(self, tr)
+##            if tr.isActive() and tr.isAlive():
+##                return True
+##
+##        return False
+#        return
+#    
     def load_controllers(self):
         '''
         '''
@@ -393,7 +396,7 @@ class BakeoutManager(Manager):
         '''
         '''
 
-        if self.isAlive():
+        if self.alive:
             self.kill(user_kill=True)
         else:
             pid = 0

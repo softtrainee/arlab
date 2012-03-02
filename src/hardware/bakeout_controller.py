@@ -69,6 +69,7 @@ class BakeoutController(WatlowEZZone):
     process_value_flag = Event
 
     _active_script = None
+    _oduration=0
     def initialization_hook(self):
         '''
             suppress the normal initialization querys
@@ -142,7 +143,10 @@ class BakeoutController(WatlowEZZone):
     def kill(self):
         if self.isAlive() and self.isActive():
             self.info('killing')
-            self.set_closed_loop_setpoint(0)
+            if self._active_script is not None:
+                self._active_script._alive=False
+            else:
+                self.set_closed_loop_setpoint(0)
 
     def load_additional_args(self, config):
         '''
