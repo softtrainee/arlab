@@ -29,8 +29,8 @@ from src.helpers.paths import video_dir, snapshot_dir
 from src.helpers.logger_setup import setup
 from src.managers.videoable import Videoable
 from camera_calibration_manager import CameraCalibrationManager
-from machine_vision.machine_vision_manager import MachineVisionManager
-from machine_vision.autofocus_manager import AutofocusManager
+from src.managers.machine_vision.machine_vision_manager import MachineVisionManager
+from src.managers.machine_vision.autofocus_manager import AutofocusManager
 
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor

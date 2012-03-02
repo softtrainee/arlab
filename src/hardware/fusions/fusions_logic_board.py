@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-import time
 '''
 Fusions Control board 
 a combination of the logic board and the kerr microcontroller 
@@ -23,7 +22,7 @@ see Photon Machines Logic Board Command Set for additional information
 from traits.api import  Instance, DelegatesTo, Str, Button
 from traitsui.api import Item, VGroup, RangeEditor
 #=============standard library imports ========================
-
+import time
 import os
 #=============local library imports  ==========================
 from globals import initialize_zoom, initialize_beam
@@ -188,13 +187,13 @@ class FusionsLogicBoard(CoreDevice):
 #                    i += 1
 
             try:
-                resp=int(resp)
+                resp = int(resp)
             except ValueError:
-                resp=None
-            
+                resp = None
+
             if resp is None:
                 return ['Failed Response']
-            
+
             if resp != 0:
                 LOCK_MAP = ['External', 'E-stop', 'Coolant Flow']
                 rbits = []
@@ -212,7 +211,9 @@ class FusionsLogicBoard(CoreDevice):
         interlocks = self.check_interlocks()
         if not interlocks:
             cmd = self._build_command('ENBL 1')
-            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)), check_val='OK')
+            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)),
+                                       check_val='OK'
+                                       )
             if resp == 'OK' or self.simulation:
                 return True
 
