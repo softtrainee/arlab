@@ -68,6 +68,7 @@ class BakeoutController(WatlowEZZone):
     update_interval = Float(1)
     process_value_flag = Event
 
+    _active_script = None
     def initialization_hook(self):
         '''
             suppress the normal initialization querys
@@ -152,11 +153,10 @@ class BakeoutController(WatlowEZZone):
     def load_scripts(self):
         sd = os.path.join(paths.scripts_dir, 'bakeoutscripts')
         files = os.listdir(sd)
-
         self.scripts = ['---'] + [f for f in files
                     if not os.path.basename(f).startswith('.') and
                         os.path.isfile(os.path.join(sd, f)) and
-                        os.path.splitext(f)[1] in ['.bo']]
+                         os.path.splitext(f)[1] in ['.bo']]
 
     def ok_to_run(self):
         ok = True
@@ -172,23 +172,24 @@ class BakeoutController(WatlowEZZone):
         self.start_time = time.time()
         self.active = True
         self.alive = True
+
+        #set led to green
+        self.led.state = 'green'
         if self.script == '---':
             self.set_control_mode('closed')
             self.set_closed_loop_setpoint(self.setpoint)
 
             self._oduration = self._duration
-            self._timer = Timer(self.update_interval * 1000., self._update_)
-
-            #set led to green
-            self.led.state = 'green'
+#            self._timer = Timer(self.update_interval * 1000., self._update_)
 
         else:
-            t = BakeoutScript(source_dir=os.path.join(paths.scripts_dir, 'bakeoutscripts'),
+            t = BakeoutScript(source_dir=os.path.join(paths.scripts_dir,
+                                                      'bakeoutscripts'),
                                  file_name=self.script,
                                  controller=self)
             t.bootstrap()
             self._active_script = t
-            self._timer = Timer(self.update_interval * 1000., self._update2_)
+        self._timer = Timer(self.update_interval * 1000., self._update_)
 
     def ramp_to_setpoint(self, ramp, setpoint, scale):
         '''
@@ -216,7 +217,6 @@ class BakeoutController(WatlowEZZone):
 
     def set_ramp_action(self, value, **kw):
         '''
-            
         '''
         rampmap = {'off': 62,
                  'startup': 88,
@@ -231,7 +231,6 @@ class BakeoutController(WatlowEZZone):
 
     def set_ramp_rate(self, value, **kw):
         '''
-          
         '''
         self.info('setting ramp rate = {:0.3f}'.format(value))
         register = 2192
@@ -242,9 +241,10 @@ class BakeoutController(WatlowEZZone):
             if hasattr(self, '_timer'):
                 self._timer.Stop()
 
-            if hasattr(self, '_active_script'):
+            if self._active_script is not None:
                 if not script_kill:
                     self._active_script.kill_script()
+                    self._active_script = None
 
             self.led.state = 0
             if msg is None:
@@ -352,9 +352,9 @@ class BakeoutController(WatlowEZZone):
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
         self.get_temp_and_power(verbose=False)
-
-        if time.time() - self.start_time > self._oduration * 3600.:
-            self.end()
+        if self._active_script is None:
+            if time.time() - self.start_time > self._oduration * 3600.:
+                self.end()
 
     def _update2_(self):
         '''
@@ -391,7 +391,8 @@ class BakeoutController(WatlowEZZone):
                  VGroup(
                     header_grp,
                     VGroup(
-                            Item('script', show_label=False, editor=EnumEditor(name='scripts')),
+                            Item('script', show_label=False, editor=EnumEditor(name='scripts'
+                                                                               )),
                             Item('duration', label='Duration (hrs)', show_label=show_label, enabled_when='script=="---"', format_str='%0.3f'),
                             Item('setpoint', label='Setpoint (C)', show_label=show_label, enabled_when='script=="---"', format_str='%0.2f'),
                             Item('process_value', label='Temp (C)', show_label=show_label, style='readonly', format_str='%0.1f')
