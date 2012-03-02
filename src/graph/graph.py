@@ -14,19 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import HasTraits, Instance, Any, Bool, List, Str, Property, Dict
-from traitsui.api import View, Item
+from traits.api import HasTraits, Instance, Any, Bool, \
+        List, Str, Property, Dict
+from traitsui.api import View, Item, Handler
 
 from enable.component_editor import ComponentEditor
-from chaco.api import PlotGraphicsContext, OverlayPlotContainer, VPlotContainer, HPlotContainer, GridPlotContainer, \
-    BasePlotContainer, Plot, ArrayPlotData, PlotLabel, add_default_axes, create_line_plot
+from chaco.api import PlotGraphicsContext, OverlayPlotContainer, \
+    VPlotContainer, HPlotContainer, GridPlotContainer, \
+    BasePlotContainer, Plot, ArrayPlotData, PlotLabel, \
+    add_default_axes, create_line_plot
 from chaco.tools.api import ZoomTool, LineInspector
 from chaco.axis import PlotAxis
 
 from traitsui.menu import Menu, Action
 from pyface.api import FileDialog, OK
 
-from pyface.timer.api import do_after as do_after_timer
+from pyface.timer.api import do_after as do_after_timer, do_later
 #=============standard library imports ========================
 import numpy as np
 from numpy.core.numeric import Inf
@@ -62,6 +65,11 @@ VALID_FONTS = ['Helvetica', 'Arial',
 
 def fmt(data):
     return ['%0.8f' % d for d in data]
+
+
+class GraphHandler(Handler):
+    def init(self, info):
+        info.object.ui = info.ui
 
 
 class Graph(HasTraits):
@@ -281,6 +289,11 @@ class Graph(HasTraits):
 
         self.set_data(x, plotid, series)
         self.set_data(y, plotid, series, axis=1)
+
+    def close(self):
+        if self.ui is not None:
+            do_later(self.ui.dispose)
+        self.ui = None
 
     def clear(self):
         '''
@@ -1196,6 +1209,7 @@ class Graph(HasTraits):
                  height=self.window_height,
                  x=self.window_x,
                  y=self.window_y,
+                 handler=GraphHandler,
 #                 statusbar = 'status_text',
                  )
         return v
