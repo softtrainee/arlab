@@ -145,11 +145,11 @@ class BakeoutManager(Manager):
 
             self.data_buffer.append((pid, pv, hp))
             self.data_count_flag += 1
-            
+
             n = self.data_count_flag
             if n == len(self.active_controllers):
                 for (i, pi, hi) in self.data_buffer:
-                    
+
                     track_x = i == n - 1
                     if self.include_temp:
                         nx = self.graph.record(pi, series=i,
@@ -273,7 +273,7 @@ class BakeoutManager(Manager):
                 bc.set_scheduler(scheduler)
 
                 if bc.open():
-                   # bc.set_scheduler(scheduler)
+                    
                     # on first controller check to see if memory block programming is required
                     # if it is apply to all subsequent controllers
 
@@ -393,8 +393,7 @@ class BakeoutManager(Manager):
                     bc.on_trait_change(self.update_alive, 'alive')
 
                     # set up graph
-
-                    self.graph.new_series()#type='line', render_style='connectedpoints')
+                    self.graph.new_series()
                     self.graph_info[bc.name] = dict(id=pid)
 
                     self.graph.set_series_label(name, series=pid)
