@@ -342,6 +342,7 @@ class BakeoutManager(Manager):
             se.title = 'Script Editor {}'.format(se.save_path)
 
         se.edit_traits(kind='livemodal')
+
         for ci in self._get_controllers():
             ci.load_scripts()
 

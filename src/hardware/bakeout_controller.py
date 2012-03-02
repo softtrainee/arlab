@@ -391,7 +391,7 @@ class BakeoutController(WatlowEZZone):
                  VGroup(
                     header_grp,
                     VGroup(
-                            Item('script', show_label=False, editor=EnumEditor(values=self.scripts)),
+                            Item('script', show_label=False, editor=EnumEditor(name='scripts')),
                             Item('duration', label='Duration (hrs)', show_label=show_label, enabled_when='script=="---"', format_str='%0.3f'),
                             Item('setpoint', label='Setpoint (C)', show_label=show_label, enabled_when='script=="---"', format_str='%0.2f'),
                             Item('process_value', label='Temp (C)', show_label=show_label, style='readonly', format_str='%0.1f')
