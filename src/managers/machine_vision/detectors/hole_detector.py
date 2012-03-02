@@ -112,7 +112,7 @@ class HoleDetector(Detector):
     style = 'co2'
 
     use_dilation = Bool(True)
-    use_erosion = Bool(False)
+    use_erosion = Bool(True)
     save_positioning_error = Bool(False)
     use_histogram = Bool(True)
     use_smoothing = Bool(True)

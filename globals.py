@@ -32,5 +32,5 @@ show_warnings = False
 ipc_dgram = False
 
 #fusions logic board flags
-initialize_beam =True
+initialize_beam =False
 initialize_zoom = True
