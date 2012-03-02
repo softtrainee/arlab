@@ -326,7 +326,7 @@ class VideoStageManager(StageManager, Videoable):
     def _autofocus_manager_default(self):
         return AutofocusManager(video=self.video,
                                 manager=self.parent,
-                                controller=self.stage_controller
+                                stage_controller=self.stage_controller
                                 )
 
 #==============================================================================
