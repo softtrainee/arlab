@@ -33,19 +33,18 @@ class _VideoComponentEditor(_LaserComponentEditor):
         super(_VideoComponentEditor, self).init(parent)
         self.control.Bind(EVT_IDLE, self.onIdle)
 
-        
     def onIdle(self, event):
         '''
       
         '''
-
-
         if self.control is not None:
 
             self.control.Refresh()
 
-        #force  the control to refresh perodically rendering a smooth video stream
-        event.RequestMore()
+        if not self.value.pause:
+            #force  the control to refresh perodically rendering a smooth video stream
+            event.RequestMore()
+
 
 class VideoComponentEditor(LaserComponentEditor):
     '''

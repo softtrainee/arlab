@@ -48,6 +48,7 @@ class VideoManager(Manager):
     image = Instance(Image, ())
 
     process = Button
+    pause = Button
 
     record = Event
     record_label = Property(depends_on='is_recording')
@@ -76,6 +77,8 @@ class VideoManager(Manager):
     def _get_record_label(self):
         return 'Record' if not self.is_recording else 'Stop'
 
+    def _pause_fired(self):
+        self.canvas.pause = not self.canvas.pause
 
     def _record_fired(self):
         def _rec_():
@@ -103,12 +106,10 @@ class VideoManager(Manager):
 
         self.info('saving recording to path {}'.format(path))
 
-
         #self.start()
-
         self.video.start_recording(path)
-        time.sleep(5)
-        self.stop_recording()
+#        time.sleep(5)
+#        self.stop_recording()
 
     def stop_recording(self):
         '''
@@ -235,7 +236,10 @@ class VideoManager(Manager):
 
 
     def traits_view(self):
-        v = View(self._button_factory('record', 'record_label', align='right'),
+        v = View(
+                 HGroup(
+                        self._button_factory('record', 'record_label', align='right'),
+                        Item('pause')),
                  Item('canvas', show_label=False,
                       resizable=False,
                       editor=VideoComponentEditor(width=self.width,

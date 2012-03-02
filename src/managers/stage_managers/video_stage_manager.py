@@ -15,17 +15,14 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
- Float, Bool, on_trait_change
+ Float, Bool
 from traitsui.api import Group, Item, HGroup
 from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 import time
 from threading import Thread, Condition, Timer
-#import sys
-#import os
 
-#sys.path.append(os.path.join(os.path.expanduser('~'), 'Programming', 'mercurial', 'pychron_beta'))
 #============= local library imports  ==========================
 from src.helpers.filetools import unique_path
 from src.helpers.paths import video_dir, snapshot_dir
@@ -65,15 +62,15 @@ class VideoStageManager(StageManager, Videoable):
     calibrate_focus = Button
     focus_z = Float
 
-    drive_xratio = Property(Float(enter_set=True,
-                                   auto_set=False
-                                   ), depends_on='_drive_xratio')
-    _drive_xratio = Float
-
-    drive_yratio = Property(Float(enter_set=True,
-                                   auto_set=False
-                                   ), depends_on='_drive_yratio')
-    _drive_yratio = Float
+#    drive_xratio = Property(Float(enter_set=True,
+#                                   auto_set=False
+#                                   ), depends_on='_drive_xratio')
+#    _drive_xratio = Float
+#
+#    drive_yratio = Property(Float(enter_set=True,
+#                                   auto_set=False
+#                                   ), depends_on='_drive_yratio')
+#    _drive_yratio = Float
 
     calculate_offsets = Bool
 
@@ -84,6 +81,7 @@ class VideoStageManager(StageManager, Videoable):
 
     autocenter_button = Button('AutoCenter')
     mapcenters_button = Button('Map Centers')
+    configure_mv_button = Button('Configure')
 
     autofocus_manager = Instance(AutofocusManager)
 
@@ -96,8 +94,12 @@ class VideoStageManager(StageManager, Videoable):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
         bind_preference(self, 'auto_center', '{}.auto_center'.format(pref_id))
-        bind_preference(self.pattern_manager, 'record_patterning', '{}.record_patterning'.format(pref_id))
-        bind_preference(self.pattern_manager, 'show_patterning', '{}.show_patterning'.format(pref_id))
+        bind_preference(self.pattern_manager,
+                        'record_patterning',
+                         '{}.record_patterning'.format(pref_id))
+        bind_preference(self.pattern_manager,
+                         'show_patterning',
+                         '{}.show_patterning'.format(pref_id))
 
     def start_recording(self, path=None, basename='vm_recording', use_dialog=False, user='remote'):
         '''
@@ -112,7 +114,6 @@ class VideoStageManager(StageManager, Videoable):
         self.info('saving recording to path {}'.format(path))
 
         self.video.open(user=user)
-
         self.video.start_recording(path)
 
     def stop_recording(self, user='remote', delay=0.1):
@@ -185,16 +186,19 @@ class VideoStageManager(StageManager, Videoable):
         b = self.canvas.padding_bottom
         return self.canvas_editor_klass(width=w + l + r,
                                         height=h + t + b)
+
     def _sconfig__group__(self):
         g = super(VideoStageManager, self)._sconfig__group__()
         mv = Group(HGroup(Item('auto_center', label='Enabled'),
                           Item('autocenter_button', show_label=False, enabled_when='auto_center')),
                    Item('mapcenters_button', show_label=False),
+                   Item('configure_mv_button', show_label=False),
                    label='Machine Vision', show_border=True)
+
         g.content.append(Group(Item('camera_xcoefficients'),
                                Item('camera_ycoefficients'),
-                               Item('drive_xratio'),
-                               Item('drive_yratio'),
+                               #Item('drive_xratio'),
+                               #Item('drive_yratio'),
                                mv,
                                HGroup(Item('snapshot_button', show_label=False),
                                       Item('auto_save_snapshot')),
@@ -231,11 +235,11 @@ class VideoStageManager(StageManager, Videoable):
 
     #@on_trait_change('autocenter_button')
     def _autocenter_button_fired(self):
-        
-        
-        t=Thread(target=self._autocenter)
+
+
+        t = Thread(target=self._autocenter)
         t.start()
-        
+
     def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
         if self.auto_center:
@@ -259,33 +263,41 @@ class VideoStageManager(StageManager, Videoable):
                     return newpos
                 time.sleep(0.25)
 
-
-
-#===============================================================================
+#==============================================================================
 # handlers
-#===============================================================================
+#==============================================================================
+    def _configure_mv_button_fired(self):
+        info = self.machine_vision_manager.edit_traits(view='configure_view',
+                                                kind='livemodal')
+        if info.result:
+            self.machine_vision_manager.dump_hole_detector()
+
     def _mapcenters_button_fired(self):
         self.info('Mapping all holes for {}'.format(self.stage_map))
         mv = self.machine_vision_manager
         sm = self._stage_map
         #enumerate the current stage map holes
         for hole in sm.sample_holes:
-            self.info('finding center of hole= {} ({},{}) '.format(hole.id, hole.x, hole.y))
-            self.hole = hole.id
+            self.info('finding center of hole= {} ({},{}) '.format(hole.id,
+                                                                    hole.x,
+                                                                     hole.y))
+            self.hole = int(hole.id)
             x = self.stage_controller._x_position
             y = self.stage_controller._y_position
 
             time.sleep(0.25)
             newpos = mv.search(x, y, hole.id)
             if newpos:
-                self.info('calculated center of hole= {} ({},{}) '.format(hole.id, *newpos))
+                self.info('calculated center of hole= {} ({},{}) '.format(hole.id,
+                                                                           *newpos))
                 sm.set_hole_correction(hole.id, *newpos)
             time.sleep(0.25)
 
     def _snapshot_button_fired(self):
 
         if self.auto_save_snapshot:
-            path, _cnt = unique_path(root=snapshot_dir, base='snapshot', filetype='jpg')
+            path, _cnt = unique_path(root=snapshot_dir, base='snapshot',
+                                      filetype='jpg')
         else:
             path = self.save_file_dialog()
         if path:
@@ -302,9 +314,9 @@ class VideoStageManager(StageManager, Videoable):
         self.canvas.camera.focus_z = z
         self.canvas.camera.save_focus()
 
-#===============================================================================
-# Defaults 
-#===============================================================================
+#==============================================================================
+# Defaults
+#==============================================================================
     def _camera_calibration_manager_default(self):
         return CameraCalibrationManager()
 
@@ -317,26 +329,26 @@ class VideoStageManager(StageManager, Videoable):
                                 controller=self.stage_controller
                                 )
 
-#===============================================================================
+#==============================================================================
 # Property Get/Set
-#===============================================================================
-    def _get_drive_xratio(self):
-        return self._drive_xratio
-
-    def _set_drive_xratio(self, v):
-        self._drive_xratio = v
-        ax = self.stage_controller.axes['x']
-        ax.drive_ratio = v
-        ax.save()
-
-    def _get_drive_yratio(self):
-        return self._drive_yratio
-
-    def _set_drive_yratio(self, v):
-        self._drive_yratio = v
-        ax = self.stage_controller.axes['y']
-        ax.drive_ratio = v
-        ax.save()
+#==============================================================================
+#    def _get_drive_xratio(self):
+#        return self._drive_xratio
+#
+#    def _set_drive_xratio(self, v):
+#        self._drive_xratio = v
+#        ax = self.stage_controller.axes['x']
+#        ax.drive_ratio = v
+#        ax.save()
+#
+#    def _get_drive_yratio(self):
+#        return self._drive_yratio
+#
+#    def _set_drive_yratio(self, v):
+#        self._drive_yratio = v
+#        ax = self.stage_controller.axes['y']
+#        ax.drive_ratio = v
+#        ax.save()
 
     def _get_camera_xcoefficients(self):
         return self._camera_xcoefficients
@@ -426,18 +438,15 @@ class VideoStageManager(StageManager, Videoable):
                     self.drive_xratio = 100
 if __name__ == '__main__':
 
-
     setup('stage_manager')
     s = VideoStageManager(name='co2stage',
                      configuration_dir_name='co2',
                      )
-
 #    i = Initializer()
 #    i.add_initialization(dict(name = 'stage_manager',
 #                              manager = s
 #                              ))
 #    i.run()
-
 
     s.load()
     s.stage_controller.bootstrap()

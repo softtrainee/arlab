@@ -30,3 +30,7 @@ show_warnings = False
 
 #using ipc_dgram is currently not working
 ipc_dgram = False
+
+#fusions logic board flags
+initialize_beam =True
+initialize_zoom = True

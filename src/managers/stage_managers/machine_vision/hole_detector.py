@@ -94,16 +94,17 @@ class TargetResult(object):
 
 
 class HoleDetector(Loggable):
-    pxpermm = Float
+    parent=Any(transient=True)
+    pxpermm = Float(23)
 
     radius_mm = Float(1.5)
     _debug = False
 #    video = Any
-    image = Instance(Image)
+    image = Instance(Image, transient=True)
 
-    cropwidth = 5
-    cropheight = 5
-    cropscalar = 0.5
+    cropwidth = Float(5)
+    cropheight = Float(5)
+    crop_expansion_scalar = Float(0.5)
 
     crosshairs_offsetx = 0
     crosshairs_offsety = 0
@@ -116,10 +117,11 @@ class HoleDetector(Loggable):
     use_histogram = Bool(True)
     use_smoothing = Bool(True)
 
-    start_threshold_search_value = 80
-    threshold_search_width = 3
-    crop_tries = 2
-    threshold_tries = 3
+    start_threshold_search_value = Int(80)
+    threshold_search_width = Int(3)
+    crop_tries = Range(0, 102, 1)  # > 101 makes it a spinner
+    threshold_tries = Range(0, 102, 1)
+    threshold_expansion_scalar = Int(5)
 
     def search(self, cx, cy, holenum=None, close_image=True, **kw):
 #        self.cropwidth = 4
@@ -133,7 +135,7 @@ class HoleDetector(Loggable):
         start = self.start_threshold_search_value
 
         end = start + self.threshold_search_width
-        expand_value = 5
+        expand_value = self.threshold_expansion_scalar
         found = False
 
 #        self.pxpermm = self.pxpermm
@@ -146,14 +148,12 @@ class HoleDetector(Loggable):
 
             self.parent.show_image()
 
-            src = self.parent.load_source()
+            src = self.parent.load_source().clone()
 #            src = self.image.source_frame
 
-            cw = (1 + ci * self.cropscalar) * self.cropwidth
-            ch = (1 + ci * self.cropscalar) * self.cropheight
+            cw = (1 + ci * self.crop_expansion_scalar) * self.cropwidth
+            ch = (1 + ci * self.crop_expansion_scalar) * self.cropheight
 
-#            self.cropwidth = cw
-#            self.cropheight = ch
             self.info('cropping image to {}mm x {}mm'.format(cw, ch))
             for i in range(self.threshold_tries):
                 s = start - i * expand_value
@@ -207,7 +207,7 @@ class HoleDetector(Loggable):
             ds = args[6]
             es = args[7]
 #            print ts, ds, es
-            self._threshold = ts
+            self.parent._threshold = ts
             gsrc = grayspace(self.image.frames[0])
 
             if self.use_smoothing:
@@ -261,6 +261,7 @@ class HoleDetector(Loggable):
 
         rresults = None
         #make end inclusive
+        
         for i in range(start, end + 1):
             self._threshold = i
             try:
@@ -339,7 +340,7 @@ class HoleDetector(Loggable):
         return [], [], devx, devy, ts, ds, es
 
     def _calculate_positioning_error(self, src, cw, ch, threshold_val=None):
-
+        
         cw_px = int(cw * self.pxpermm)
         ch_px = int(ch * self.pxpermm)
 
@@ -357,7 +358,7 @@ class HoleDetector(Loggable):
 #        smooth(src) 
         self.croppixels = (cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
-
+        
         gsrc = grayspace(src)
 
         self.image.frames[0] = colorspace(gsrc)
@@ -402,8 +403,8 @@ class HoleDetector(Loggable):
 #        w, h = get_size(self.image.source_frame)
         ma = 3.1415926535 * radius ** 2 * (4 * self.croppixels[0] / 640.)
 #        mi = 0.25 * ma
-        mi=100
-        
+        mi = 100
+
         for td in steps:
             params = self._calc_sample_hole_position(gsrc, td, min_area=mi, max_area=ma, *args)
 
@@ -430,7 +431,7 @@ class HoleDetector(Loggable):
 
         found = []
         contours, hierarchy = contour(thresh_src)
-        
+
         #f=self.image.frames[1]
         #draw_contour_list(f, contours)
 #        time.sleep(0.1)

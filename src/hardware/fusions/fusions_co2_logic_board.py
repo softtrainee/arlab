@@ -58,16 +58,30 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         '''
         cmd = self._build_command('PDC', '0.00')
         self._request_power = 0.0
-        self.ask(cmd)
-        return FusionsLogicBoard._disable_laser_(self)
+        
+        callback=lambda :self.parse_response(self.ask(cmd)) 
+        resp=self.repeat_command(callback, check_val='OK')
+        if resp is not None:
+            return FusionsLogicBoard._disable_laser_(self)
+        else:
+            msg='failed to disable co2 laser'
+            self.warning(msg)
+            return msg
 
     def _enable_laser_(self):
         '''
         '''
         cmd = self._build_command('PWE', '1')
-#        self.ask(self.prefix + 'PWE 1')
-        self.ask(cmd)
-        return FusionsLogicBoard._enable_laser_(self)
+
+        callback=lambda :self.parse_response(self.ask(cmd)) 
+        resp=self.repeat_command(callback, check_val='OK')
+        if resp is not None:
+        
+            return FusionsLogicBoard._enable_laser_(self)
+        else:
+            msg='failed to enable co2 laser'
+            self.warning(msg)
+            return msg
 
     def _set_laser_power_(self, request_pwr):
         '''
@@ -82,11 +96,7 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
             PDC sets the laser Duty Cycle
         '''
         self._request_power = request_pwr
-#
-#        cmd = 'PDC'
-#        cmd = ''.join([self.prefix, cmd, ' %0.2f' % request_pwr])
 
-        #cmd=self.prefix + 'PWW %s' % request_pwr
         cmd = self._build_command('PDC', '{:0.2f}'.format(request_pwr))
         self.ask(cmd)
 

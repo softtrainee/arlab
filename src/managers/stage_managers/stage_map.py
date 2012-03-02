@@ -150,7 +150,7 @@ class StageMap(Loggable):
         if holes:
             #sort holes by deviation 
             sorted(holes, lambda a, b: cmp(a[1], b[1]))
-            return holes[0]
+            return holes[0][0]
 
     def _get_bitmap_path(self):
 
