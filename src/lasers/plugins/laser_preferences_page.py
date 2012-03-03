@@ -51,7 +51,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                Group(Item('use_video'),
                      Item('auto_center', enabled_when='use_video'),
                      Item('record_lasing', label='Record Lasing', enabled_when='use_video'),
-                     Item('video_directory', label='Save to', enabled_when='use_video'),
+                     Item('video_directory', label='Save to', enabled_when='record_lasing'),
                       show_border=True, label='Video'),
                Item('show_map'),
                Item('show_grids'),
