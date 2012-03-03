@@ -50,7 +50,7 @@ class CommandProcessor(ConfigLoadable):
     system_lock_address = Str
 
     _handlers = None
-    _threaded = True
+    _threaded = False
 
     def __init__(self, *args, **kw):
         super(CommandProcessor, self).__init__(*args, **kw)
@@ -135,7 +135,11 @@ class CommandProcessor(ConfigLoadable):
                         t = Thread(target=self._process_request, args=args)
                         t.start()
                     else:
-                        self._process_request(*args)
+                        if len(args)==4:
+                            self._process_request(*args)
+                        else:
+                            self.debug('data = {}'.format(data))
+                            self.debug('too many args {}, {}'.format(len(args), args))
                 else:
                     s.close()
                     _input.remove(s)
