@@ -36,7 +36,7 @@ from src.helpers.paths import hidden_dir
 import os
 from src.managers.manager import Manager
 from src.image.image import Image
-from src.managers.machine_vision.focus_parameters import FocusParameters
+from src.machine_vision.focus_parameters import FocusParameters
 
 
 class ConfigureHandler(Handler):
@@ -44,18 +44,14 @@ class ConfigureHandler(Handler):
         if isok:
             info.object.dump()
 
-#    def init(self, info):
-#        p=info.object.load()
-#        info.object.parameters=p
-
 
 class AutofocusManager(Manager):
     '''
         currently uses passive focus techniques
         see
-        
+
         http://en.wikipedia.org/wiki/Autofocus
-        
+
     '''
 
     video = Any

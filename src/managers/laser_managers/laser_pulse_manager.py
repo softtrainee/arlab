@@ -36,13 +36,13 @@ class Pulse(HasTraits):
     pulse_label = Property(depends_on='pulsing')
     pulsing = Bool(False)
     enabled = Bool(False)
-    
+
     disable_at_end = Bool(False)
-    
+
     @on_trait_change('manager:enabled')
     def upad(self, obj, name, old, new):
         self.enabled = new
-        
+
     def _duration_changed(self):
         self.wait_control.wtime = self.duration
         self.wait_control._current_time = self.duration
@@ -58,26 +58,26 @@ class Pulse(HasTraits):
         self._duration_changed()
 
         condition = Condition()
-        
+
         condition.acquire()
 
         man = self.manager
         if man is not None:
             #man.enable_laser()
             man.set_laser_power(self.power)
-            
+
         self.wait_control.start(condition)
         condition.wait()
         condition.release()
         self.pulsing = False
-        
+
         if man is not None:
             if self.disable_at_end:
                 man.disable_laser()
             else:
                 man.set_laser_power(0)
-            
-            
+
+
 
     def _get_pulse_label(self):
         return 'Fire' if not self.pulsing else 'Stop'
@@ -90,7 +90,7 @@ class Pulse(HasTraits):
             self.pulsing = True
             t = Thread(target=self.start)
             t.start()
-        
+
     def traits_view(self):
         v = View(
                  HGroup(Item('power'), spring, Item('pulse_button',
@@ -98,7 +98,7 @@ class Pulse(HasTraits):
                                             show_label=False,
                                             enabled_when='object.enabled'
                                             )),
-                 
+
                  Item('duration'),
                Item('wait_control', show_label=False, style='custom'),
                kind='live'

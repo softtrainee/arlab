@@ -296,7 +296,7 @@ class ExtractionLineScriptParser(CoreScriptParser):
 #                    error = 'Extra args %s' % extra_args
         return error, valve_token, action
 
-        
+
     def _wait_parse(self, linenum, **kw):
         '''
             

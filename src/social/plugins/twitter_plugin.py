@@ -25,7 +25,7 @@ class TwitterPlugin(CorePlugin):
                                        factory=self._factory
                                        )]
         return so
-    
+
     def _factory(self):
         return TwitterManager()
 #============= EOF =============================================

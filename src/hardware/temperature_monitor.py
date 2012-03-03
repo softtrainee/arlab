@@ -111,12 +111,12 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         '''
         return self.process_value
 
-    def read_temperature(self,**kw):
+    def read_temperature(self, **kw):
         '''
         '''
         commandindex = '01'
         com = self._build_command('V', commandindex)
-        x = self._parse_response(self.ask(com, 
+        x = self._parse_response(self.ask(com,
                                           #delay=400,
                                         **kw
                                               ))

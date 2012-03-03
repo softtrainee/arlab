@@ -100,7 +100,7 @@ class ConfigLoadable(Loggable):
         '''
         '''
 
-        r = self.config_get(config, section, option, 
+        r = self.config_get(config, section, option,
                             **kw
 #                            cast=cast,
 #                            optional=optional

@@ -23,10 +23,10 @@ def color_generator():
 
             'FF14F0FF', #yellow
             'FF7800F0',
-            
-            'FF780078',#purple 120,0,120
-            'FF783CF0',#pink 240,60,120
-            
+
+            'FF780078', #purple 120,0,120
+            'FF783CF0', #pink 240,60,120
+
             ]
     while 1:
         yield colors[i]
@@ -111,7 +111,7 @@ def make_placemarker_from_source(srcpath, placemarker_dir, display_figure):
         <displayName>%s</displayName>
         <value>%%s</value>
         </Data>
-    ''' % (item,item))
+    ''' % (item, item))
     if display_figure:
         pmf.write('''<Data name="figure">
         <![CDATA[<img src="%s"></img>]]>

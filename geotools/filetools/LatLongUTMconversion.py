@@ -41,7 +41,7 @@ _ellipsoid = [
 	[ 21, "WGS 66", 6378145, 0.006694542],
 	[ 22, "WGS-72", 6378135, 0.006694318],
 	[ 23, "WGS-84", 6378137, 0.00669438],
-	[24, 'NAD-27',6378206.4, 0.00676865799761] #see http://www.gps.caltech.edu/classes/ge167/HW2/utm2ll.m
+	[24, 'NAD-27', 6378206.4, 0.00676865799761] #see http://www.gps.caltech.edu/classes/ge167/HW2/utm2ll.m
 ]
 
 #Reference ellipsoids derived from Peter H. Dana's website- 
@@ -57,7 +57,7 @@ _ellipsoid = [
 #def LLtoUTM(int ReferenceEllipsoid, const double Lat, const double Long, 
 #			 double &UTMNorthing, double &UTMEasting, char* UTMZone)
 
-def LLtoUTM(ReferenceEllipsoid, Lat, Long, zone = None):
+def LLtoUTM(ReferenceEllipsoid, Lat, Long, zone=None):
 
     a = _ellipsoid[ReferenceEllipsoid][_EquatorialRadius]
     eccSquared = _ellipsoid[ReferenceEllipsoid][_eccentricitySquared]
@@ -136,15 +136,15 @@ def _UTMLetterDesignator(Lat):
     elif 16 > Lat >= 8: return 'P'
     elif  8 > Lat >= 0: return 'N'
     elif  0 > Lat >= -8: return 'M'
-    elif - 8 > Lat >= -16: return 'L'
-    elif - 16 > Lat >= -24: return 'K'
-    elif - 24 > Lat >= -32: return 'J'
-    elif - 32 > Lat >= -40: return 'H'
-    elif - 40 > Lat >= -48: return 'G'
-    elif - 48 > Lat >= -56: return 'F'
-    elif - 56 > Lat >= -64: return 'E'
-    elif - 64 > Lat >= -72: return 'D'
-    elif - 72 > Lat >= -80: return 'C'
+    elif -8 > Lat >= -16: return 'L'
+    elif -16 > Lat >= -24: return 'K'
+    elif -24 > Lat >= -32: return 'J'
+    elif -32 > Lat >= -40: return 'H'
+    elif -40 > Lat >= -48: return 'G'
+    elif -48 > Lat >= -56: return 'F'
+    elif -56 > Lat >= -64: return 'E'
+    elif -64 > Lat >= -72: return 'D'
+    elif -72 > Lat >= -80: return 'C'
     else: return 'Z'	# if the Latitude is outside the UTM limits
 
 #void UTMtoLL(int ReferenceEllipsoid, const double UTMNorthing, const double UTMEasting, const char* UTMZone,

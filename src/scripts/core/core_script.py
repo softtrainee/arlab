@@ -112,11 +112,11 @@ class CoreScript(Loggable):
                 s.kill_script()
 
             fr = self.manager.failure_reason if self.manager is not None else failure_reason
-            
-            
+
+
             if user_cancel:
                 self.info('run canceled by user')
-                
+
             elif fr is not None:
                 self.info(fr)
 
@@ -139,7 +139,7 @@ class CoreScript(Loggable):
         r = self._alive
         if not self._alive:
             return False
-        
+
         if self._thread is not None:
             r = self._thread.isAlive()
 
@@ -153,7 +153,7 @@ class CoreScript(Loggable):
         #self._alive = r
         #print 'isAlive', self._thread.isAlive(), self.manager.enabled, r
         return r
-    
+
     def graph_view(self, **kw):
         return View(Item('graph', show_label=False, style='custom'), resizable=True)
     def set_graph(self):
@@ -197,25 +197,25 @@ class CoreScript(Loggable):
             self.run()
 
     def run(self):
-        
+
         self.info('parsing {}'.format(self.file_name))
-                
+
         errors = self.parser.parse(self._file_contents_, check_header=False)
 #        print errors
         error = False
-        
+
         for e in errors:
             if e[2] is not None:
                 error = True
                 self.warning('Line: {} - {}'.format(e[1], e[2]))
-                
+
         if not error:
             #self._ok_to_run = True
             self.info('{} started'.format(self.file_name))
             if self._pre_run_():
                 self._alive = True
-                
-                
+
+
                 for i, line in enumerate(self._file_contents_):
                     if self.isAlive():
                         self._run_command(i, line)
@@ -230,7 +230,7 @@ class CoreScript(Loggable):
 
     def _execute_script(self):
         raise NotImplementedError
-    
+
     def _post_run(self):
         return True
     def _pre_run_(self):
@@ -265,13 +265,13 @@ class CoreScript(Loggable):
 
     def raw_statement(self, a):
         pass
-    
+
     def config_statement(self, config_dict):
         for key in config_dict:
             if hasattr(self, key):
                 value = config_dict[key]
                 setattr(self, key, value)
-                
+
     def wait(self, dur):
         st = time.time()
         while time.time() - st < dur:

@@ -98,12 +98,12 @@ def setup(name, level=None):
     if not os.path.isdir(bdir):
         os.mkdir(bdir)
 
-    logpath=os.path.join(bdir, '{}_current.log'.format(name))
+    logpath = os.path.join(bdir, '{}_current.log'.format(name))
     if os.path.isfile(logpath):
         backup_logpath, _cnt = unique_path(bdir, name, filetype='log')
         shutil.copyfile(logpath, backup_logpath)
         os.remove(logpath)
-    
+
     if sys.version.split(' ')[0] < '2.4.0':
         logging.basicConfig()
     else:

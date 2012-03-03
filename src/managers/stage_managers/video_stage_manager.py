@@ -29,8 +29,8 @@ from src.helpers.paths import video_dir, snapshot_dir
 from src.helpers.logger_setup import setup
 from src.managers.videoable import Videoable
 from camera_calibration_manager import CameraCalibrationManager
-from src.managers.machine_vision.machine_vision_manager import MachineVisionManager
-from src.managers.machine_vision.autofocus_manager import AutofocusManager
+from src.machine_vision.machine_vision_manager import MachineVisionManager
+from src.machine_vision.autofocus_manager import AutofocusManager
 
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
@@ -94,9 +94,9 @@ class VideoStageManager(StageManager, Videoable):
     record = Event
     record_label = Property(depends_on='is_recording')
     is_recording = Bool
-     
-    video_directory=Directory
-    
+
+    video_directory = Directory
+
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
@@ -104,11 +104,11 @@ class VideoStageManager(StageManager, Videoable):
         bind_preference(self.pattern_manager,
                         'record_patterning',
                          '{}.record_patterning'.format(pref_id))
-        
+
         bind_preference(self.pattern_manager,
                          'show_patterning',
                          '{}.show_patterning'.format(pref_id))
-        
+
         bind_preference(self, 'video_directory',
                         '{}.video_directory'.format(pref_id)
                         )
@@ -121,10 +121,10 @@ class VideoStageManager(StageManager, Videoable):
             if use_dialog:
                 path = self.save_file_dialog()
             else:
-                vd=self.video_directory if self.video_directory else video_dir 
+                vd = self.video_directory if self.video_directory else video_dir
                 path, _ = unique_path(vd, basename, filetype='avi')
-                
-        d=os.path.dirname(path)
+
+        d = os.path.dirname(path)
         if not os.path.isdir(d):
             self.warning('invalid directory {}'.format(d))
             self.warning('using default directory')
@@ -325,7 +325,7 @@ class VideoStageManager(StageManager, Videoable):
         if path:
             self.info('saving snapshot {}'.format(path))
             self.video.record_frame(path, swap_rb=False)
-    
+
     def _record_fired(self):
         def _rec_():
             self.start_recording()
@@ -471,10 +471,10 @@ class VideoStageManager(StageManager, Videoable):
                     self.drive_yratio = rdymm / dymm
                 except ZeroDivisionError:
                     self.drive_xratio = 100
-                    
+
     def _get_record_label(self):
         return 'Record' if not self.is_recording else 'Stop'
-    
+
 if __name__ == '__main__':
 
     setup('stage_manager')

@@ -89,11 +89,11 @@ class SerialCommunicator(Communicator):
             elif stopbits == '2':
                 stopbits = 'TWO'
             self.stopbits = getattr(serial, 'STOPBITS_%s' % stopbits.upper())
-        
-        self.set_attribute(config, 'read_delay','Communications',  'read_delay', 
-                           cast='float',optional=True, default=0.05
+
+        self.set_attribute(config, 'read_delay', 'Communications', 'read_delay',
+                           cast='float', optional=True, default=0.05
                            )
-        
+
     def tell(self, cmd, is_hex=False, info=None, verbose=True, **kw):
         '''
            
@@ -103,7 +103,7 @@ class SerialCommunicator(Communicator):
                 info = 'no handle'
                 self.log_tell(cmd, info)
             return
-        
+
         with self._lock:
 #            self._lock.acquire()
             self._write(cmd, is_hex=is_hex)
@@ -146,14 +146,14 @@ class SerialCommunicator(Communicator):
             re = self._read(is_hex=is_hex, delay=delay)
 
             re = self.process_response(re, replace, remove_eol)
-    
+
             if verbose:
                 #self.debug('lock acquired by {}'.format(currentThread().name))
                 self.log_response(cmd, re, info)
                 #self.debug('lock released by {}'.format(currentThread().name))
-        
+
 #            time.sleep(0.005)
-            
+
         return re
 
     def open(self, **kw):

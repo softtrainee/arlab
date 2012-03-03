@@ -16,7 +16,7 @@ limitations under the License.
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-from numpy import hstack 
+from numpy import hstack
 import time
 from Carbon.Aliases import true
 #============= local library imports  ==========================

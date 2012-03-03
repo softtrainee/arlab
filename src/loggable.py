@@ -62,8 +62,8 @@ class Loggable(HasTraits):
         name = '{:<{}}'.format(name, MAXLEN)
         #self.logger = add_console(name=name, display=gLoggerDisplay)
         #disable the gLoggerDisplay
-        self.logger=add_console(name=name)
-        
+        self.logger = add_console(name=name)
+
     def warning(self, msg, decorate=True):
         '''
  

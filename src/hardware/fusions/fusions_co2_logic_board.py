@@ -58,13 +58,13 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         '''
         cmd = self._build_command('PDC', '0.00')
         self._request_power = 0.0
-        
-        callback=lambda :self._parse_response(self.ask(cmd)) 
-        resp=self.repeat_command(callback, check_val='OK')
+
+        callback = lambda :self._parse_response(self.ask(cmd))
+        resp = self.repeat_command(callback, check_val='OK')
         if resp is not None:
             return FusionsLogicBoard._disable_laser_(self)
         else:
-            msg='failed to disable co2 laser'
+            msg = 'failed to disable co2 laser'
             self.warning(msg)
             return msg
 
@@ -73,13 +73,13 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         '''
         cmd = self._build_command('PWE', '1')
 
-        callback=lambda :self._parse_response(self.ask(cmd)) 
-        resp=self.repeat_command(callback, check_val='OK')
+        callback = lambda :self._parse_response(self.ask(cmd))
+        resp = self.repeat_command(callback, check_val='OK')
         if resp is not None:
-        
+
             return FusionsLogicBoard._enable_laser_(self)
         else:
-            msg='failed to enable co2 laser'
+            msg = 'failed to enable co2 laser'
             self.warning(msg)
             return msg
 

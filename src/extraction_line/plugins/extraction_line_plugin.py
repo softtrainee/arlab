@@ -60,12 +60,12 @@ class ExtractionLinePlugin(CorePlugin):
     def _managers_default(self):
         '''
         '''
-        
-        app =self.application
+
+        app = self.application
         return [
                 dict(
                      name='extraction_line',
-                     manager=app.get_service(ExtractionLineManager)), 
+                     manager=app.get_service(ExtractionLineManager)),
                 ]
 
 #============= EOF ====================================

@@ -54,7 +54,7 @@ class FusionsLogicBoard(CoreDevice):
     update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
 
     configure = Button
-    
+
     prefix = Str
     scan_func = 'read_power_meter'
     def initialize(self, *args, **kw):
@@ -143,25 +143,25 @@ class FusionsLogicBoard(CoreDevice):
 #laser methods
 #==============================================================================
     def repeat_command(self, callback, ntries=3, check_val=None, check_type=None):
-        
-        for i in range(ntries+1):
-            resp=callback()
-            self.debug('repeat command callback {} response = {} len={} '.format(i+1,resp,len(resp) if resp else None))
+
+        for i in range(ntries + 1):
+            resp = callback()
+            self.debug('repeat command callback {} response = {} len={} '.format(i + 1, resp, len(resp) if resp else None))
             if check_val is not None:
-                if resp==check_val:
+                if resp == check_val:
                     break
-                
+
             if check_type is not None:
                 try:
-                    resp=check_type(resp)
+                    resp = check_type(resp)
                 except ValueError:
-                    resp=None
-            
+                    resp = None
+
             if resp is not None:
                 break
-            
+
             #time.sleep(0.05)
-            
+
         return resp
 
     def check_interlocks(self):
@@ -222,7 +222,7 @@ class FusionsLogicBoard(CoreDevice):
             self.warning('Cannot fire. Interlocks enabled')
             for i in interlocks:
                 self.warning(i)
-                
+
             return ','.join(interlocks)
 
     def _disable_laser_(self):

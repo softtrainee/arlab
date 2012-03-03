@@ -39,7 +39,7 @@ class Installer(object):
         self.prefix = prefix
         self.name = name
         self.icon_name = icon_name
-    def change_version(self,op):
+    def change_version(self, op):
         np = op + '~'
         os.rename(op, np)
         dst = open(op, 'w')
@@ -57,7 +57,7 @@ class Installer(object):
         src.close()
         dst.close()
         os.unlink(src.name)
-            
+
     def install(self, root):
         if sys.platform == 'darwin':
             from BuildApplet import buildapplet
@@ -76,7 +76,7 @@ class Installer(object):
             #set the version in the script
             #of = open(op, 'r')
             self.change_version(op)
-            self.change_version(os.path.join(root,'src','helpers','paths.py'))
+            self.change_version(os.path.join(root, 'src', 'helpers', 'paths.py'))
 
             buildapplet()
 

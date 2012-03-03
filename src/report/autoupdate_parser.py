@@ -22,7 +22,7 @@ import csv
 #============= local library imports  ==========================
 from src.data_processing.argon_calculations import calculate_mswd, \
     calculate_weighted_mean, calculate_arar_age, find_plateaus
-    
+
 def formatfloat(f, n=3):
         if f > 1000:
             n -= 1
@@ -37,7 +37,7 @@ class Sample(object):
     def finish(self):
         self._calculate_cumulative39()
         self.find_plateau_steps()
-        
+
     def _calculate_cumulative39(self):
         s = sum([a.ar39_ for a in self.analyses])
         pv = 0
@@ -45,12 +45,12 @@ class Sample(object):
             v = a.ar39_ / s * 100
             pv += v
             a.ar39_percent = pv
-        
+
     def _get_summed_err(self, k):
         return reduce(lambda x, y:(x ** 2 + y ** 2) ** 0.5, [getattr(a, k) for a in self.analyses])
-        
+
     def _calculate_isotopic_recombination(self):
-        
+
         ar40_sum = sum([a.ar40_ for a in self.analyses])
         ar39_sum = sum([a.ar39_ for a in self.analyses])
         ar38_sum = sum([a.ar38_ for a in self.analyses])
@@ -73,13 +73,13 @@ class Sample(object):
                                       ar37er_sum,
                                       ar36_sum,
                                       ar36er_sum),
-                                      
+
                                       (a.p36cl38cl,
                                        a.k4039, a.k3839,
                                        a.ca3637, a.ca3937, a.ca3837),
-                                      
+
                                       (a.k4039er, a.ca3637er, a.ca3937er),
-                                      
+
                                       a.a37decayfactor,
                                       a.a39decayfactor,
                                       a.j,
@@ -90,89 +90,89 @@ class Sample(object):
 #        print '{:0.2f}'.format(2 * err.nominal_value), err.nominal_value / age.std_dev()
 #        print '{:0.2f}'.format(2 * err.nominal_value),
 #        print  '{:0.2f}'.format(4 * age.std_dev())
-        
+
         return age.nominal_value, 4 * age.std_dev()
-    
+
     def get_isotopic_recombination_age(self):
         a, e = self._calculate_isotopic_recombination()
-        
-        
+
+
         return a, e
-    
+
     def get_kca(self, plateau=False):
         if plateau:
             kcas = [a.k_over_ca for a in self.analyses if a.plateau_status]
             kerr = [a.k_over_ca_er for a in self.analyses if a.plateau_status]
             kca, err = calculate_weighted_mean(kcas, kerr)
-            
+
         else:
             kcas = [a.k_over_ca for a in self.analyses]
             err = 0
             kca = 0
         return kca, err
-        
+
     def get_plateau_age(self, nsigma=2):
         x, errs = self._get_plateau_ages()
         a, e = calculate_weighted_mean(x, errs)
-        
+
         mswd = self.get_mswd()
         return a, nsigma * e * mswd ** 0.5
-    
+
     def get_plateau_percent39(self):
         s = 0
         tot = self.get_total39()
         for a in self.analyses:
             if a.plateau_status:
                 s += a.ar39_moles
-        
+
         return s / tot * 100
-    
+
     def get_total39(self, plateau=False):
-        
+
         if plateau:
             s = [a.ar39_moles for a in self.analyses if a.plateau_status]
         else:
             s = [a.ar39_moles for a in self.analyses]
-            
+
         return sum(s)
-    
+
     def get_mswd(self, all_steps=False):
         x, errs = self._get_plateau_ages(all_steps)
         mw = calculate_mswd(x, errs)
         return mw
-    
+
     def _get_plateau_ages(self, all_steps=False):
         x = [a.age for a in self.analyses if a.plateau_status or all_steps]
         errs = [a.age_er for a in self.analyses if a.plateau_status or all_steps]
         return x, errs
-    
+
     def get_nsteps(self):
         return len(self.analyses)
-    
+
     def get_plateau_steps(self):
         ps = [a.suffix for a in self.analyses if a.plateau_status]
         if ps:
             return ps[0], ps[-1], len(ps)
-    
+
     def find_plateau_steps(self):
         ages, errs = self._get_plateau_ages(all_steps=True)
         signals = [a.ar39_ for a in self.analyses]
         plat = find_plateaus(ages, errs, signals)
         if plat[0] == plat[1]:
             msg = 'no plateau found'
-            
+
         else:
-            tot = sum(signals)    
+            tot = sum(signals)
             per = sum(signals[plat[0]:plat[1] + 1]) / tot * 100
             a = [chr(i) for i in range(65, 65 + 26)]
             msg = '{}-{} {}'.format(a[plat[0]], a[plat[1]], '%0.1f' % per)
-          
+
             for a in self.analyses[plat[0]:plat[1] + 1]:
                 a.plateau_status = True
                 a.status = ''
         print self.name, msg
 #        print ages[plat[0]:plat[1] + 1]
-        
+
 class Analysis(object):
     plateau_status = False
     status = 'X'
@@ -199,7 +199,7 @@ class Analysis(object):
     ar37_er = None
     ar36_ = None
     ar36_er = None
-    
+
     p36cl38cl = None
     k4039 = None
     k4039er = None
@@ -209,10 +209,10 @@ class Analysis(object):
     ca3937 = None
     ca3937er = None
     ca3837 = None
-    
+
     a37decayfactor = None
     a39decayfactor = None
-    
+
     d = None
     der = None
     def get_data(self):
@@ -235,7 +235,7 @@ class Analysis(object):
                 v = formatfloat(v, n=fmt)
             d.append(v)
         return d
-    
+
 class AutoupdateParser(object):
     header = None
     line = None
@@ -248,8 +248,8 @@ class AutoupdateParser(object):
             return default
 #        print len(line), self.header.index(key), v
         return cast(v)
-    
-   
+
+
     def _parse_rid(self, rid):
         l_number = rid.split('-')[0] + '-'
         suffix = ''
@@ -260,20 +260,20 @@ class AutoupdateParser(object):
             except:
                 suffix += s
         return l_number, suffix
-    
+
     def _parse_comment(self):
         comment = self.get_value('Comment', cast=str)
-        
+
         weight = comment.split(',')[1].split('mg')[0].strip()
-        
+
         return weight,
-    
+
     def parse(self, p):
         with open(p, 'U') as f:
             reader = csv.reader(f, delimiter='\t')
 
             reader = csv.reader(f, delimiter=',')
-            
+
             header = reader.next()
             self.header = header
             cursample = None
@@ -281,21 +281,21 @@ class AutoupdateParser(object):
             for line in reader:
                 self.line = line
                 try:
-                
+
                     sample = self.get_value('Sample', cast=str)
                     rid = self.get_value('Run_ID', cast=str)
                     l_number, suffix = self._parse_rid(rid)
-                   
-                            
+
+
                     if cursample is None or cursample.name != sample:
                         if cursample is not None:
                             samples.append(cursample)
-                        
+
 #                            cursample._calculate_cumulative39()
                             cursample.finish()
                         s = Sample(sample)
                         weight, = self._parse_comment()
-                        
+
                         j = self.get_value('J', cast=float)
                         jer = self.get_value('J_Er', cast=float)
                         jer_percent = formatfloat(jer / j * 100, n=2)
@@ -311,8 +311,8 @@ class AutoupdateParser(object):
                                          weight=weight
                                          )
                         cursample = s
-                        
-                    
+
+
 #                    status = self.get_value('Status', cast=str) 
                     a = Analysis()
 #                    a.status = status
@@ -327,11 +327,11 @@ class AutoupdateParser(object):
                     a.percent_40rad = self.get_value('PctAr40Rad')
                     a.age = self.get_value('Age')
                     a.age_er = self.get_value('Age_Er')
-                    
+
 #                    a.plateau_status = False if 'x' in status.lower() else True
-                    
+
                     a.ar39_ = self.get_value('Ar39_')
-                    
+
                     a.ar40_ = self.get_value('Ar40_')
                     a.ar40_er = self.get_value('Ar40_Er')
                     a.ar39_ = self.get_value('Ar39_')
@@ -351,14 +351,14 @@ class AutoupdateParser(object):
                     a.ca3937 = self.get_value('Ca_39_Over_37')
                     a.ca3937er = self.get_value('Ca_39_Over_37_Er')
                     a.ca3837 = self.get_value('Ca_38_Over_37')
-                    
+
                     a.a37decayfactor = self.get_value('37_Decay')
                     a.a39decayfactor = self.get_value('39_Decay')
                     a.j = self.get_value('J')
                     a.jer = self.get_value('J_Er')
                     a.d = self.get_value('Ar40_Disc')
                     a.der = self.get_value('Ar40_DiscEr')
-                    
+
                     cursample.analyses.append(a)
 
                 except IndexError, e:
@@ -367,19 +367,19 @@ class AutoupdateParser(object):
                         cursample._calculate_cumulative39()
                     #finished reading analyses
                     break
-            
+
             return samples
-                
-                
-                
-            
+
+
+
+
 if __name__ == '__main__':
     p = AutoupdateParser()
     pa = '/Users/Ross/Documents/Antarctica/MinnaBluff/data/gm-06.csv'
     samples = p.parse(pa)
-    
-            
-            
+
+
+
 #============= EOF =====================================
 #    COLUMN_NAMES = ['Run_ID',
 #                    'Sample',

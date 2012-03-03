@@ -15,7 +15,7 @@ from mpl_toolkits.mplot3d import axes3d
 from kmlwriter.filetools.import_file_tools import import_csv, get_col_index
 def _time_slice(ages, data):
     n = int(max(ages))
-    indes = digitize(ages, bins = range(n))
+    indes = digitize(ages, bins=range(n))
     bins = range(n)
 
 
@@ -80,7 +80,7 @@ def create_elevation_plot(p):
         x, y, z, xx, yy, zz = _plot(t, index_dict)
         if len(x) >= 1:
             if two_d or len(x) > 2:
-                a = subplot(tag[k], wspace = 0)
+                a = subplot(tag[k], wspace=0)
 #            for i in range(len(x)):
 #                a.text(x[i],y[i],'df')
             #print k
@@ -108,7 +108,7 @@ def create_elevation_plot(p):
                 r = a.get_position()
                 a.get_xaxis().set_visible(False)
                 a.get_yaxis().set_visible(False)
-                ax = axes3d.Axes3D(fig, rect = r)
+                ax = axes3d.Axes3D(fig, rect=r)
                 ax.contourf3D(xx, yy, zz, 20)
                 ax.scatter(x, y)
                 ax.scatter(x, y, z)

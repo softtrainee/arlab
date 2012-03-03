@@ -257,7 +257,7 @@ class BakeoutManager(Manager):
         if new:
             self.alive = new
         else:
-            self.alive = bool(len( self._get_active_controllers()))#self.isAlive()
+            self.alive = bool(len(self._get_active_controllers()))#self.isAlive()
 
 #    def isAlive(self):
 ##        for tr in self._get_controller_names():

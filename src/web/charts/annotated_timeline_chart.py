@@ -4,13 +4,13 @@
 def annotated_timeline(title=None, width=None, height=None, **kw):
     if title is None:
         title = 'Foo'
-        
+
     if height is None:
         height = 300
-        
+
     if width is None:
         width = 75
-        
+
     kw['height'] = height
     kw['width'] = width
     kw['title'] = title
@@ -42,6 +42,6 @@ def annotated_timeline(title=None, width=None, height=None, **kw):
     </body>
 </html>
 '''
-     
-    return s % kw   
+
+    return s % kw
 #============= EOF =====================================

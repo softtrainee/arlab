@@ -28,10 +28,9 @@ from src.image.image_editor import ImageEditor
 
 from src.helpers.paths import setup_dir, hidden_dir
 
-
-from src.managers.machine_vision.detectors.hole_detector import HoleDetector
 from detectors.tray_mapper import TrayMapper
-from src.managers.machine_vision.detectors.zoom_calibration_detector import ZoomCalibrationDetector
+from src.machine_vision.detectors.hole_detector import HoleDetector
+from src.machine_vision.detectors.zoom_calibration_detector import ZoomCalibrationDetector
 
 
 class ImageHandler(Handler):

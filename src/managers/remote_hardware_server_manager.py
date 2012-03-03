@@ -37,7 +37,7 @@ class RemoteHardwareServerManager(Manager):
 
     def _selected_changed(self):
         self.repeater = self.selected.repeater
-        
+
     def load(self):
         '''
         '''
@@ -57,8 +57,8 @@ class RemoteHardwareServerManager(Manager):
         '''
 
         config = ConfigParser.ConfigParser()
-        
-        
+
+
         path = os.path.join(setup_dir, 'rhs.cfg')
         config.read(path)
 

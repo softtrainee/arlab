@@ -59,7 +59,7 @@ class PowerMapManager(Manager):
     def _start_button_fired(self):
         if not self.script.isAlive():
             self.script.kind = self.kind
-            
+
             self.script.bootstrap()
         else:
             self.script.kill_script(user_cancel=True)

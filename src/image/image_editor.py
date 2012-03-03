@@ -126,7 +126,7 @@ class _ImageEditor(Editor):
     def _display_image(self, dc, src):
         '''
         '''
-        
+
         if src is not None:
             try:
                 bitmap = src.to_wx_bitmap()

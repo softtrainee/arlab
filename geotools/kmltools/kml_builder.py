@@ -19,7 +19,7 @@ from kml_writer_configuration import *
 log = logging.getLogger('kmlwriter')
 
 names = flatten([(x.capitalize(), x.upper(), x) for x in ['sample name', 'sample_name', 'name', 'Sample Name', 'Sample_Name']])
-    
+
 def display_available(li):
     p = [key for key in li]
     s = ''
@@ -36,7 +36,7 @@ def parse_for_schema(placemarker, sample, conf, source_header):
 
     placemarkerfile = open(conf.placemarker_dict[placemarker], 'r')
     s = placemarkerfile.read()
-   
+
     import xml.parsers.expat as xmlp
     parser = xmlp.ParserCreate()
     parser.StartElementHandler = start_element
@@ -44,7 +44,7 @@ def parse_for_schema(placemarker, sample, conf, source_header):
     parser.Parse(s)
     if conf.display_figure:
         arguments.append('figure')
-        
+
     arguments.append('Longitude')
     arguments.append('Latitude')
     arguments.append('Lon')
@@ -56,17 +56,17 @@ def parse_for_schema(placemarker, sample, conf, source_header):
         if item == 'figure':
             item = conf.image_tag
             i = source_header.index(item)
-            
+
             arg = '%s/%s/%s.png' % (conf.source_dir, conf.image_dir, sample[i])
         else:
-            
+
             try:
                 i = source_header.index(item)
                 arg = sample[i]
                 args += (arg,)
             except ValueError:
                 pass
-        
+
     return args
 
 def parse_source(conf):
@@ -78,7 +78,7 @@ def parse_source(conf):
 
     for s in conf.data:
         print s
-        
+
 def parse_src(scrname, src_file, output_file, placemarker, style, schema, conf):
 
     #samples=[i.split(',') for i in src_file]
@@ -96,34 +96,34 @@ def parse_src(scrname, src_file, output_file, placemarker, style, schema, conf):
     name_index = find_col(names, source_header)
     ages = ['age', 'Age']
     age_index = find_col(ages, source_header)
-   
-    
+
+
     for s in reader:
         if conf.age_only:
-            pname=s[age_index]
+            pname = s[age_index]
         elif conf.name_only:
-            pname=s[name_index]
+            pname = s[name_index]
         elif conf.age_in_name:
            # print 'agi', age_index, name_index
             pname = '%s, %s' % (s[name_index], s[age_index])
         elif conf.no_name:
-            pname=''
+            pname = ''
         else:
             pname = s[name_index]
 
-        
+
         #baseargs = (pname, style, schema)
-        baseargs=(pname,style)
+        baseargs = (pname, style)
         args = parse_for_schema(placemarker, s, conf, source_header)
-       
-        
+
+
         args = baseargs + args
         #print placemarker_template,len(args)
         placemark = placemarker_template % args
         output_file.write(placemark)
     output_file.write(endfolder())
 
-def load_schemas(of,schema_list, log):
+def load_schemas(of, schema_list, log):
     log.info('=====loading schemas=======')
     for schema in schema_list:
         schema = schema_list[schema]
@@ -133,7 +133,7 @@ def load_schemas(of,schema_list, log):
         s = f.read()
         of.write(s)
         f.close()
-            
+
 def build_kml_file(conf):
     kmlheader = '''<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.2">
@@ -180,7 +180,7 @@ def build_kml_file(conf):
             s = f.read()
             of.write(s)
             f.close()
-            
+
         use_default = conf.use_default
         for src in srcps:
             log.info('loading placemarks for %s' % os.path.basename(src))

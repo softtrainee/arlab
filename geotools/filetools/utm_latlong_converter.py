@@ -16,19 +16,19 @@ from filetools.import_file_tools import find_col, flatten
 def convert_utm_ll(p, zone):
     f = open(p, 'U')
     dir = os.path.dirname(p)
-    
+
     pp = os.path.basename(p).split('.')[0] + '_latlong.txt'
-    npath=os.path.join(dir,pp)
-    
+    npath = os.path.join(dir, pp)
+
     nf = open(npath, 'w')
-    
+
     nwriter = csv.writer(nf)
-    reader = csv.reader(f,delimiter='\t')
+    reader = csv.reader(f, delimiter='\t')
     header = reader.next()
 
     utms = flatten([(x.capitalize(), x.upper(), x) for x in ['utm']])
     utm_index = find_col(utms, header)
-    print header,utm_index
+    print header, utm_index
     header[utm_index] = 'Latitude'
     header.insert(utm_index + 1, 'Longitude')
 
@@ -40,7 +40,7 @@ def convert_utm_ll(p, zone):
         args = utmcol.split(utm_delimiter)
         e = args[0]
         n = args[1]
-        long,lat= UTMtoLL(23, float(n), float(e), zone)
+        long, lat = UTMtoLL(23, float(n), float(e), zone)
 
         row[utm_index] = lat
         row.insert(utm_index, long)

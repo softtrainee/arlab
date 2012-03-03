@@ -10,8 +10,8 @@ class Server:
     port = 8080
     def start_server(self):
         #initalize our resources
-        
-        
+
+
         resource = Resource()
         resource.putChild('bakeout', BakeoutPage())
         factory = Site(resource)

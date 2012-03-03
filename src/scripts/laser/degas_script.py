@@ -97,7 +97,7 @@ class DegasScript(CoreScript):
         self.scan_setup = []
         #plotid = 0
         #series = 0
-        
+
         #first line should be scan period
         self.scan_period = float(self._file_contents_[0].strip())
         self._file_contents_.pop(0)
@@ -116,7 +116,7 @@ class DegasScript(CoreScript):
                         label=args[2],
                         plotid=int(args[3]),
                         series=int(args[4]))
-                    
+
                     vscale = 'linear'
                     formatter = None
                     try:
@@ -128,14 +128,14 @@ class DegasScript(CoreScript):
                             else:
                                 return '{:02n}'.format(math.ceil(math.log(x, 10))) if abs(math.ceil(math.log(x, 10)) - math.log(x, 10)) <= 1e-6 else ''
                         formatter = format
-                        
+
                     except IndexError:
                         pass
-                    
+
                     d['formatter'] = formatter
-                        
+
                     d['value_scale'] = vscale
-                    
+
                     self.scan_setup.append((obj, func, d))
 
 
@@ -148,8 +148,8 @@ class DegasScript(CoreScript):
     def get_frame_header(self):
         metadata = []
         metadata.append(['#===========plot metadata============'])
-       
-        header = ['#time', 'request_power','process_value']
+
+        header = ['#time', 'request_power', 'process_value']
         for _obj, attr, plotinfo in self.scan_setup:
             header.append(attr)
 
@@ -165,14 +165,14 @@ class DegasScript(CoreScript):
         g = TimeSeriesStreamStackedGraph(
                                          panel_height=175
                                          #window_title='Degas Scan %s' % self.file_name
-                                         )        
+                                         )
         g.new_plot(show_legend='ur')
         g.set_x_title('Time')
         g.set_y_title('Setpoint (C)')
-            
+
         g.new_series()
         g.new_series()
-        
+
         g.set_series_label('Request')
         g.set_series_label('Process Value', series=1)
 
@@ -184,15 +184,15 @@ class DegasScript(CoreScript):
             label = plotinfo['label']
             value_scale = plotinfo['value_scale']
             formatter = plotinfo['formatter']
-            
-            
+
+
             if not cur_plotid == plotid:
                 g.new_plot(show_legend='ur')
                 cur_plotid = plotid
 
             if formatter:
                 g.plots[cur_plotid].value_axis.tick_label_formatter = formatter
-                
+
             g.new_series(type='line', value_scale=value_scale, render_style='connectedpoints', plotid=cur_plotid)
             if label is None:
                 label = func
@@ -201,13 +201,13 @@ class DegasScript(CoreScript):
 
         g.set_y_title('Pressure', plotid=1)
         g.set_y_title('Temp', plotid=2)
-        
+
         self.scan_timer = Timer(self.scan_period * 1000,
                               self._scan_
                               )
-        
+
         self.graph = g
-        
+
     def _scan_(self):
         if hasattr(self, 'timestamp_gen'):
             timestamp = self.timestamp_gen.next()
@@ -217,8 +217,8 @@ class DegasScript(CoreScript):
 
         pv = self.manager.temperature_controller.process_value
         drow = [timestamp, self.setpoint, pv]
-        
-        for obj, attr, info in self.scan_setup:    
+
+        for obj, attr, info in self.scan_setup:
             manager, device = obj.split('.')
             if manager == 'laser':
                 manager = self.manager
@@ -230,21 +230,21 @@ class DegasScript(CoreScript):
             try:
                 dev = getattr(manager, device)
                 attr = getattr(dev, attr)
-                
+
                 if type(attr).__name__ == 'instancemethod':
                     v = attr()
                     self.graph.record(v, **info)
             except AttributeError, e:
                 self.warning(e)
                 self.kill_script(failure_reason=e, force=True)
-            
+
             drow.append(v)
-        
+
         self.graph.record(self.setpoint, plotid=0)
         self.graph.record(pv, plotid=0, series=1)
-        
+
         self.data_manager.write_to_frame(drow)
-        
+
     def _pre_run_(self):
         if self.manager.enable_laser():
             return True
@@ -279,9 +279,9 @@ class DegasScript(CoreScript):
                 manager.set_laser_power(pwr, mode=self.control_mode)
         self.wait(dur)
 
-    
+
     def _kill_script(self):
         self.scan_timer.Stop()
         self.manager.emergency_shutoff()
-    
+
 #============= EOF ====================================

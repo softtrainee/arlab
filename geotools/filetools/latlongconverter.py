@@ -18,12 +18,12 @@ def main():
 
     source_dir = os.path.dirname(input_file)
     #input_file = 'test_data.csv'
-    output_file='/Users/Ross/Programming/Geotools/data/2_new.txt'
+    output_file = '/Users/Ross/Programming/Geotools/data/2_new.txt'
     #output_file = raw_input('output file >> ')
     #output_file='out_test_data_csv.txt'
-    
+
     f = open(input_file, 'U')
-    reader = csv.reader(f, delimiter = ',')
+    reader = csv.reader(f, delimiter=',')
     ndata = []
     first = True
     for row in reader:
@@ -49,7 +49,7 @@ def main():
     writer = csv.writer(nf)
     map(writer.writerow, ndata)
     nf.close()
-def convert(l, type = 'space'):
+def convert(l, type='space'):
     if l != '':
         #d, m, s = l.split(' ')
         if type == 'tab':

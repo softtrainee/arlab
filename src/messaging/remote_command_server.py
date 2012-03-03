@@ -82,7 +82,7 @@ class RemoteCommandServer(ConfigLoadable):
 
     run_time = Str
     led = Instance(LED, ())
-    
+
     def _repeater_default(self):
         '''
         '''
@@ -91,7 +91,7 @@ class RemoteCommandServer(ConfigLoadable):
                                configuration_dir_name='servers')
         c.bootstrap()
         return c
-    
+
     def _repeater_fails_changed(self, old, new):
         if new != 0:
             self.repeater.led.state = 0
@@ -161,10 +161,10 @@ class RemoteCommandServer(ConfigLoadable):
         '''
         #from tcp_server import TCPServer
         #from udp_server import UDPServer
-        
-        module = __import__('src.messaging.{}_server'.format(klass[:3].lower()), fromlist=[klass]) 
+
+        module = __import__('src.messaging.{}_server'.format(klass[:3].lower()), fromlist=[klass])
         factory = getattr(module, klass)
-        
+
 #        gdict = globals()
 #        if handler in gdict:
 #            handler_klass = gdict[handler]
@@ -196,7 +196,7 @@ class RemoteCommandServer(ConfigLoadable):
                     self._server.handle_request()
 #                    if threading.activeCount() < THREAD_LIMIT:
 #                        self._server.handle_request()
-                    
+
             except:
                 pass
         self._server.socket.close()
@@ -263,9 +263,9 @@ class RemoteCommandServer(ConfigLoadable):
 #        h = t.seconds / 3600
 #        m = (t.seconds % 3600) / 60
 #        s = (t.seconds % 3600) % 60
-                
+
         t, h, m, s = diff_timestamp(datetime.datetime.now(), self.start_time)
-        
+
 
         rt = '{:02n}:{:02n}:{:02n}'.format(h, m, s)
         if t.days:

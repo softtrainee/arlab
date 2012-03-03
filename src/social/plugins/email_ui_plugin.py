@@ -24,10 +24,10 @@ class EmailUIPlugin(CoreUIPlugin):
     def _preferences_pages_default(self):
         from email_preferences_page import EmailPreferencesPage
         return [EmailPreferencesPage]
-    
+
     def _views_default(self):
         return [self._create_user_view]
-    
+
     def _create_user_view(self, *args, **kw):
         args = dict(id='social.email.users',
                     name='Users',
@@ -44,7 +44,7 @@ class EmailUIPlugin(CoreUIPlugin):
     def stop(self):
         em = self.application.get_service(EmailManager)
         em.save_users()
-        
-        
+
+
         #em.broadcast('fadsfasdfasdf')
 #============= EOF =====================================

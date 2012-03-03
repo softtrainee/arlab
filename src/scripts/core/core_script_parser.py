@@ -61,18 +61,18 @@ class CoreScriptParser(object):
         '''
 
         '''
-        
+
         errors = []
 
         if text is not None:
-           
+
             if isinstance(text, str):
                 text = text.split('\n')
-            
+
             self.text = text
             for linenum, line in enumerate(text):
                 errors.append(self._check_line(linenum + 1, line.strip()))
-            
+
         return errors
 
     def _raw_parse(self, linenum, line=None):
@@ -81,7 +81,7 @@ class CoreScriptParser(object):
 
         args = line.split(',')
         return self.raw_parse(args)
-    
+
     def _config_parse(self, linenum, **kw):
         kw = dict()
         error = None
@@ -109,7 +109,7 @@ class CoreScriptParser(object):
                             kw[key] = bval
 
                 token = self._lexer.get_token()
-                
+
         return error, kw
     def _get_float(self):
         lexer = self._lexer
@@ -132,7 +132,7 @@ class CoreScriptParser(object):
             error = 'Specify a float or interpolation argument'
 
         return error, t
-    
+
     def _get_int(self):
         lexer = self._lexer
         error = None
@@ -154,7 +154,7 @@ class CoreScriptParser(object):
             error = 'Specify a int or interpolation argument'
 
         return error, t
-    
+
     def _check_number(self, args):
         errora = []
         error = None

@@ -44,8 +44,8 @@ class LaserPreferencesPage(ManagerPreferencesPage):
 
     record_patterning = Bool(False)
     show_patterning = Bool(True)
-    video_directory=Directory
-    
+    video_directory = Directory
+
     def get_additional_groups(self):
         grp = Group(
                Group(Item('use_video'),

@@ -52,4 +52,3 @@ def calculate_centroid(np.ndarray[np.float64_t, ndim=2] data):
 #		#include this point
 #		if d<tol:
 #			np.hstack((ndata,data[i])
-			

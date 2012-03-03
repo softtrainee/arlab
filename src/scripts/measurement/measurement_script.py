@@ -17,7 +17,7 @@ limitations under the License.
 from pyface.timer.api import Timer, do_after
 #============= standard library imports ========================
 import time
-from numpy import array, vstack 
+from numpy import array, vstack
 #============= local library imports  ==========================
 from src.scripts.core.core_script import CoreScript
 from src.helpers.datetime_tools import time_generator

@@ -73,11 +73,11 @@ def betaFraction(x, p, q):
         # even index for d 
         d = m * (q - m) * x / ((p_minus + m2) * (p + m2))
         h = 1.0 + d * h
-        if abs(h) < XMININ: 
+        if abs(h) < XMININ:
             h = XMININ
         h = 1.0 / h;
         c = 1.0 + d / c;
-        if abs(c) < XMININ: 
+        if abs(c) < XMININ:
             c = XMININ
         frac *= h * c;
 

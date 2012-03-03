@@ -38,11 +38,11 @@ class ManagerPreferencesPage(PreferencesPage):
     devices = List(transient=True)
     managers = List(transient=True)
     plugin_name = None
-    
+
     open_on_startup = Bool
     enable_close_after = Bool
     close_after = Range(0, 60, 60)
-    
+
     def __init__(self, *args, **kw):
         super(ManagerPreferencesPage, self).__init__(*args, **kw)
         p = os.path.join(setup_dir, 'initialization.xml')
@@ -91,7 +91,7 @@ class ManagerPreferencesPage(PreferencesPage):
 
     def get_additional_groups(self):
         return []
-    
+
     def get_general_group(self):
         return Group(Item('open_on_startup'),
                      HGroup(

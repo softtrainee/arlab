@@ -27,7 +27,7 @@ class KMLWriterConfiguration:
     use_default = False
     display_figure = False
     age_in_name = False
-    age_only=False
-    
+    age_only = False
+
     image_tag = 'L#'
 

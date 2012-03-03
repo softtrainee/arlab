@@ -32,7 +32,7 @@ class Flag(object):
             value = bool(value)
         self._set = value
         return True
-    
+
     def clear(self):
         self._set = False
 #======== EOF ================================

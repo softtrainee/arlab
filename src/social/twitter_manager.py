@@ -52,8 +52,8 @@ try:
     import twitter
 except ImportError, e:
     print 'install twitter', e
-    
-    
+
+
 class Crediential(HasTraits):
     user_name = Str('root')
     password = Password('jir812')
@@ -72,7 +72,7 @@ class TwitterManager(Manager):
                buttons=['OK', 'Cancel']
                )
         return v
-    
+
     def __init__(self, *args, **kw):
         super(TwitterManager, self).__init__(*args, **kw)
 #        self.get_twitter()
@@ -113,8 +113,8 @@ class TwitterManager(Manager):
 #                    information(None, msg)
 #                    
 #                sys.exit()
-                
-                
+
+
 #                import pkg_resources
 ##                dist=pkg_resources.Distribution.from_location('/Library/Frameworks/Python.framework/Versions/7.1/lib/python2.7/site-packages',
 ##                                                         'python_twitter-0.8.2-py2.7.egg'
@@ -133,14 +133,14 @@ class TwitterManager(Manager):
 #                               access_token_key='27101038-lzzwYplffclywtSAWnfbuB3ovrnPgmqkWMFqO2jvf',
 #                               access_token_secret='BOea1U7aUoQXJEQ1CldvrK5RkjLImfXGls6PbuQw'
 #                               )
-        
+
     def verify(self):
         if self.tapi is not None:
             print self.tapi.VerifyCredentials()
-        
-    
+
+
     def post(self, msg):
-        
+
         if self.tapi is not None:
             def _post():
                 try:
@@ -148,11 +148,11 @@ class TwitterManager(Manager):
                     self.info('Posted - {}'.format(msg))
                 except twitter.TwitterError:
                     pass
-            
+
             t = Thread(target=_post)
             t.start()
-            
-                
+
+
 if __name__ == '__main__':
     m = TwitterManager()
     m.get_twitter()
@@ -167,5 +167,5 @@ if __name__ == '__main__':
     m.post('test mesgffff')
 #    m=App()
 #    m.configure_traits()
-    
+
 #============= EOF ==============================================

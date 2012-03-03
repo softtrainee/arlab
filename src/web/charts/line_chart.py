@@ -5,17 +5,17 @@
 def line(width=None, height=None, line_width=None, **kw):
     if height is None:
         height = 300
-        
+
     if width is None:
         width = 75
-    
+
     if line_width is None:
         line_width = 1
-        
+
     kw['height'] = height
     kw['width'] = width
     kw['line_width'] = line_width
-        
+
     s = '''
 <html>
     <head>
@@ -42,6 +42,6 @@ def line(width=None, height=None, line_width=None, **kw):
     </body>
 </html>
 '''
-     
-    return s % kw   
+
+    return s % kw
 #============= EOF =====================================
