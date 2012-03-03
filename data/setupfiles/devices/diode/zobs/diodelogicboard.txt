@@ -1,0 +1,13 @@
+#diode control board setup file
+#serial port location, baudrate
+#/dev/tty.usbmodemfd171,19200
+/dev/tty.usbmodemfa271,19200
+#device prefix
+;LB.
+#zoom setupfile
+zoom_motor.txt
+#beam setupfile
+beam_motor.txt
+
+
+
