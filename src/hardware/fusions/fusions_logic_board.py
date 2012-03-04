@@ -14,15 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 '''
-Fusions Control board 
-a combination of the logic board and the kerr microcontroller 
+Fusions Control board
+a combination of the logic board and the kerr microcontroller
 see Photon Machines Logic Board Command Set for additional information
 '''
 #=============enthought library imports=======================
 from traits.api import  Instance, DelegatesTo, Str, Button
 from traitsui.api import Item, VGroup, RangeEditor
 #=============standard library imports ========================
-import time
 import os
 #=============local library imports  ==========================
 from globals import initialize_zoom, initialize_beam
@@ -32,6 +31,7 @@ from src.hardware.core.core_device import CoreDevice
 from src.hardware.kerr.kerr_snap_motor import KerrSnapMotor
 from src.hardware.kerr.kerr_microcontroller import KerrMicrocontroller
 from src.hardware.kerr.kerr_motor import KerrMotor
+
 
 class FusionsLogicBoard(CoreDevice):
     '''
@@ -57,13 +57,13 @@ class FusionsLogicBoard(CoreDevice):
 
     prefix = Str
     scan_func = 'read_power_meter'
+
     def initialize(self, *args, **kw):
         '''
         '''
         progress = kw['progress'] if 'progress' in kw else None
-        #print self._communicator.handle
-        #print self.ask(';LB.VER')
-        #disable laser 
+
+        #disable laser
         if progress is not None:
             progress.change_message('Disabling Laser')
         self._disable_laser_()
@@ -90,7 +90,6 @@ class FusionsLogicBoard(CoreDevice):
 
     def _build_command(self, *args):
         '''
-           
         '''
         if self.prefix is not None:
             cmd = ' '.join(map(str, args))
@@ -100,7 +99,6 @@ class FusionsLogicBoard(CoreDevice):
 
     def load_additional_args(self, config):
         '''
-           
         '''
 
         self.prefix = self.config_get(config, 'General', 'prefix')
@@ -118,16 +116,6 @@ class FusionsLogicBoard(CoreDevice):
 
         return True
 
-#    def _scan_(self, *args):
-#        '''
-#
-#        '''
-#
-#        r = self.read_power_meter()
-#
-#        if r is not None:
-#            self.stream_manager.record(r, self.name)
-
     def _configure_fired(self):
         '''
         '''
@@ -142,11 +130,16 @@ class FusionsLogicBoard(CoreDevice):
 #==============================================================================
 #laser methods
 #==============================================================================
-    def repeat_command(self, callback, ntries=3, check_val=None, check_type=None):
+    def repeat_command(self, cmd, ntries=3, check_val=None, check_type=None,
+                       verbose=True):
 
+        cmd = self._build_command(cmd)
         for i in range(ntries + 1):
-            resp = callback()
-            self.debug('repeat command callback {} response = {} len={} '.format(i + 1, resp, len(resp) if resp else None))
+            resp = self._parse_response(self.ask(cmd, verbose=verbose))
+            m = 'repeat command {} response = {} len={} '.format(i + 1,
+                                            resp,
+                                            len(resp) if resp else None)
+            self.debug(m)
             if check_val is not None:
                 if resp == check_val:
                     break
@@ -160,8 +153,6 @@ class FusionsLogicBoard(CoreDevice):
             if resp is not None:
                 break
 
-            #time.sleep(0.05)
-
         return resp
 
     def check_interlocks(self):
@@ -170,21 +161,7 @@ class FusionsLogicBoard(CoreDevice):
         lock_bits = []
 
         if not self.simulation:
-            cmd = self._build_command('INTLK')
-
-            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)), check_type=int)
-#            if cmd is not None:
-
-#                resp = None
-#                i = 0
-#                ntries = 3
-#                while resp is None and i < ntries:
-#                    resp = self._parse_response(self.ask(cmd, verbose=True, delay=100))
-#                    try:
-#                        resp = int(resp)
-#                    except:
-#                        resp = None
-#                    i += 1
+            resp = self.repeat_command('INTLK', check_type=int)
 
             try:
                 resp = int(resp)
@@ -210,10 +187,8 @@ class FusionsLogicBoard(CoreDevice):
         '''
         interlocks = self.check_interlocks()
         if not interlocks:
-            cmd = self._build_command('ENBL 1')
-            resp = self.repeat_command(lambda : self._parse_response(self.ask(cmd, verbose=True)),
-                                       check_val='OK'
-                                       )
+
+            resp = self.repeat_command('ENBL 1', check_val='OK')
             if resp == 'OK' or self.simulation:
                 return True
 
@@ -228,10 +203,9 @@ class FusionsLogicBoard(CoreDevice):
     def _disable_laser_(self):
         '''
         '''
-        cmd = self._build_command('ENBL 0')
         ntries = 3
         for i in range(ntries):
-            resp = self.repeat_command(lambda :self._parse_response(self.ask(cmd, verbose=True)), check_val='OK')
+            resp = self.repeat_command('ENBL 0', check_val='OK')
             if resp is None:
                 self.warning('LASER NOT DISABLED {}'.format(i + 1))
             else:
@@ -241,24 +215,14 @@ class FusionsLogicBoard(CoreDevice):
                 break
         else:
             return 'laser was not disabled'
-#        if cmd is not None:
-#
-#            resp = self._parse_response(self.ask(cmd))
-##            resp = self._parse_response(self.ask(cmd, delay=100))
-#
-#            if resp == 'OK' or self.simulation:
-#                return True
-
 
     def _set_laser_power_(self, *args, **kw):
         '''
-           
         '''
         pass
 
     def set_pointer_onoff(self, onoff):
         '''
-           
         '''
         if onoff:
             cmd = 'DRV1 1'
@@ -290,6 +254,7 @@ class FusionsLogicBoard(CoreDevice):
         '''
         '''
         return KerrSnapMotor(name='beam', parent=self)
+
 #==============================================================================
 #motor methods
 #==============================================================================
@@ -366,5 +331,3 @@ class FusionsLogicBoard(CoreDevice):
                       )
 
 #================== EOF ================================================
-
-

@@ -132,8 +132,8 @@ class VideoStageManager(StageManager, Videoable):
 
         self.info('saving recording to path {}'.format(path))
 
-        self.video.open(user=user)
-        self.video.start_recording(path)
+#        self.video.open(user=user)
+        self.video.start_recording(path, user=user)
 
     def stop_recording(self, user='remote', delay=0.1):
         '''

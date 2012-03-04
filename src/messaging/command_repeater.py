@@ -46,15 +46,13 @@ class CommandRepeater(ConfigLoadable):
     test = Button
     led = Instance(LED, ())
 
-
-
     def load(self, *args, **kw):
         '''
         '''
         config = self.get_configuration()
 
         if config:
-            self.path = self.config_get(config, 'General', 'path')
+            self.path = self.config_get(config, 'Repeater', 'path')
             self.info('configured for {}'.format(self.path))
             return True
 
@@ -66,7 +64,7 @@ class CommandRepeater(ConfigLoadable):
 
         sock = socket.socket(socket.AF_UNIX, kind)
 
-        sock.settimeout(3)
+        sock.settimeout(1)
         self._sock = sock
 
         #create a sync lock

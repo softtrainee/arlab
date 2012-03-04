@@ -57,18 +57,18 @@ class CommandProcessor(ConfigLoadable):
         self.context_filter = ContextFilter()
         self._handlers = dict()
 
-    def load(self, *args, **kw):
-        '''
-        '''
-        #grab the port from the repeater config file
-        config = self.get_configuration(path=os.path.join(paths.device_dir,
-                                                        'servers',
-                                                        'repeater.cfg'
-                                                        ))
-        if config:
-            self.path = self.config_get(config, 'General', 'path')
-
-            return True
+#    def load(self, *args, **kw):
+#        '''
+#        '''
+#        #grab the port from the repeater config file
+#        config = self.get_configuration(path=os.path.join(paths.device_dir,
+#                                                        'servers',
+#                                                        'repeater.cfg'
+#                                                        ))
+#        if config:
+#            self.path = self.config_get(config, 'General', 'path')
+#
+#            return True
 
     def close(self):
         '''
@@ -92,7 +92,7 @@ class CommandProcessor(ConfigLoadable):
             self._sock.setblocking(False)
 
         try:
-            os.remove(self.path)
+            os.unlink(self.path)
         except OSError:
             pass
 
@@ -135,7 +135,7 @@ class CommandProcessor(ConfigLoadable):
                         t = Thread(target=self._process_request, args=args)
                         t.start()
                     else:
-                        if len(args)==4:
+                        if len(args) == 4:
                             self._process_request(*args)
                         else:
                             self.debug('data = {}'.format(data))
