@@ -72,8 +72,11 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
         '''
         parser = self.parser
         cats = []
-        for g in parser.get_groups():
+        for g in parser.get_plugin_groups():
             ps = parser.get_plugins_as_elements(g)
+            if not ps:
+                continue
+
             plugins = []
             for pi in ps:
                 plugin = Plugin(name=pi.text.strip(),

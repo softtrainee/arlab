@@ -60,11 +60,13 @@ class DataManager(Manager):
         self.info('New frame {}'.format(path))
         return path
 
-
-    def add_time_stamped_value(self, value, frame_key):
+    def add_time_stamped_value(self, value, frame_key=None):
         '''
 
         '''
+        if frame_key is None:
+            frame_key = self._current_frame
+
         frame = self._get_frame(frame_key)
         if frame is not None:
             datum = (generate_timestamp(), value)

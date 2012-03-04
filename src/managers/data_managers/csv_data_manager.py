@@ -18,10 +18,22 @@ from data_manager import DataManager
 
 #============= standard library imports ========================
 import csv
+from numpy import loadtxt
+from pylab import datestr2num
+import time
+from matplotlib.dates import num2date
 #============= local library imports  ==========================
 class CSVDataManager(DataManager):
     '''
     '''
+    def load(self, frame_key=None):
+        if frame_key is None:
+            frame_key = self._current_frame
+
+        frame = self._get_frame(frame_key)
+        if frame is not None:
+            converters = {0:datestr2num}
+            return loadtxt(frame, converters=converters, delimiter=',')
 
     def write_metadata(self, md, frame_key=None):
 
@@ -53,6 +65,15 @@ class CSVDataManager(DataManager):
             else:
                 writer.writerow(datum)
 
-
+if __name__ == '__main__':
+    d = CSVDataManager()
+    d.new_frame()
+    for i in range(3):
+        d.add_time_stamped_value(i)
+        time.sleep(1)
+    x, y = d.load().transpose()
+    print x
+    for xi in x:
+        print num2date(xi).second
 
 #============= EOF ====================================

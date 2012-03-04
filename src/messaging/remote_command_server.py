@@ -86,8 +86,10 @@ class RemoteCommandServer(ConfigLoadable):
     def _repeater_default(self):
         '''
         '''
-        c = CommandRepeater(name='repeater',
+
+        c = CommandRepeater(
                             logger_name='{}_repeater'.format(self.name),
+                            name=self.name,
                                configuration_dir_name='servers')
         c.bootstrap()
         return c

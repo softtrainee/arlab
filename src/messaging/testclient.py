@@ -104,21 +104,23 @@ class Client(HasTraits):
             print time.strftime('%H:%M:%S'), self.response
         return sock
 
-    def get_connection(self):
+    def get_connection(self, port=None):
         packet_kind = socket.SOCK_STREAM
         family = socket.AF_INET
-        addr = (self.host, self.port)
+        if port is None:
+            port = self.port
+        addr = (self.host, port)
         print 'connection address', addr
         if self.kind == 'UDP':
             packet_kind = socket.SOCK_DGRAM
 
         sock = socket.socket(family, packet_kind)
-        sock.settimeout(1)
+        sock.settimeout(5)
         sock.connect(addr)
         return sock
 
-    def ask(self, command):
-        conn = self.get_connection()
+    def ask(self, command, port=None):
+        conn = self.get_connection(port=port)
         conn.send(command)
         r = conn.recv(4096)
         print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)

@@ -26,6 +26,7 @@ from src.graph.graph import Graph
 #from src.graph.stacked_graph import StackedGraph
 from src.helpers.paths import data_dir
 from manager import Manager
+from matplotlib.dates import datestr2num
 
 KIND_VALUES = dict(
                    bakeout='Bakeout',
@@ -35,17 +36,20 @@ KIND_VALUES = dict(
                    xy='XY',
                    deflection='Deflection',
                    step_heat='Step Heat',
+                   powerrecord='Power Record'
 
                    )
+
 class GraphManager(Manager):
     path = File
     root = Directory
     kind = Str('deflection')
 
-
     extension_handlers = List
+
     def _test_fired(self):
-        self.open_graph('degas', path='/Users/Ross/Pychrondata_beta/data/degas/scan001.txt')
+#        self.open_graph('degas', path='/Users/Ross/Pychrondata_beta/data/degas/scan001.txt')
+        self.open_graph('powerrecord', path='/Users/ross/Pychrondata_beta1.4/data/scans/scan005.txt')
 #        self.open_graph('inverse_isochron', path='/Users/Ross/Desktop/data.csv')
         #self.open_graph('age_spectrum', path='/Users/Ross/Desktop/test.csv')
 
@@ -67,16 +71,18 @@ class GraphManager(Manager):
             if not pfunc:
                 raise NotImplementedError('no parser or factory for {}'.format(kind))
 
-        print pfunc, gfunc
+#        print pfunc, gfunc
         if path is None:
             path = self.open_file_dialog(default_directory=data_dir)
 
-
+#        print path
         if path is not None and os.path.exists(path):
             args = pfunc(path)
+#            print args
             if args[0] is not None:
                 graph = gfunc(*args)
                 graph.name = os.path.basename(path)
+#                print graph
                 if self.application is not None:
                     from src.envisage.core.envisage_editor import EnvisageEditor
                     self.application.workbench.edit(graph,
@@ -86,6 +92,13 @@ class GraphManager(Manager):
 #===============================================================================
 # parsers
 #===============================================================================
+    def powerrecord_parser(self, path):
+        converters = {0:datestr2num}
+        x, y = loadtxt(path, converters=converters, delimiter=',', unpack=True)
+        #normalize to 0 
+        x = [(xi - x[0]) * 3600 * 24 for xi in x]
+        return x, y , path
+
     def powerscan_parser(self, path):
         xs = [1, 2, 3, 4, 5]
         ys = [3, 4, 10, 11, 14]
@@ -141,10 +154,10 @@ class GraphManager(Manager):
         return self._default_xy_parser(path)
 
     def powermap_parser(self, path):
-        title = 'Graph'
-        if path is None:
-            path = self.open_file_dialog()
-            title = os.path.basename(path)
+#        title = 'Graph'
+#        if path is None:
+#            path = self.open_file_dialog()
+        title = os.path.basename(path)
 
         return path, title
 
@@ -278,6 +291,17 @@ class GraphManager(Manager):
 #        g.set_y_limits(0, 10)
         g.set_y_limits(min(y) - lpad, max(y) + upad)
         return g
+
+    def powerrecord_factory(self, xs, ys, path):
+        name = os.path.splitext(os.path.basename(path))[0]
+        return self.graph_factory(data=(xs, ys), graph_kwargs={'window_title':path},
+                                  series_kwargs={},
+                                  plot_kwargs=dict(xtitle='time (s)',
+                                               ytitle='8bit power',
+                                               title='Time vs Power ({})'.format(name) ,
+                                               )
+                                  )
+
 
     def powerscan_factory(self, xs, ys, title):
         g = Graph()

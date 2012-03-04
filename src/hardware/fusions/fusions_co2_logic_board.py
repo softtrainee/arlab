@@ -20,6 +20,7 @@ from traits.api import Float, Property
 #=============local library imports  ==========================
 from fusions_logic_board import FusionsLogicBoard
 
+
 class FusionsCO2LogicBoard(FusionsLogicBoard):
     '''
     '''
@@ -29,13 +30,13 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
     request_powermin = Float(0)
     request_powermax = Float(100)
 
-
-
     def load_additional_args(self, config):
         '''
         '''
-        self.set_attribute(config, 'request_powermin', 'General', 'power min', cast='float')
-        self.set_attribute(config, 'request_powermax', 'General', 'power max', cast='float')
+        self.set_attribute(config, 'request_powermin', 'General',
+                           'power min', cast='float')
+        self.set_attribute(config, 'request_powermax', 'General',
+                            'power max', cast='float')
 
         return super(FusionsCO2LogicBoard, self).load_additional_args(config)
 
@@ -59,8 +60,8 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         cmd = self._build_command('PDC', '0.00')
         self._request_power = 0.0
 
-        callback = lambda :self._parse_response(self.ask(cmd))
-        resp = self.repeat_command(callback, check_val='OK')
+#        callback = lambda :self._parse_response(self.ask(cmd))
+        resp = self.repeat_command(cmd, check_val='OK')
         if resp is not None:
             return FusionsLogicBoard._disable_laser_(self)
         else:
@@ -73,8 +74,8 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         '''
         cmd = self._build_command('PWE', '1')
 
-        callback = lambda :self._parse_response(self.ask(cmd))
-        resp = self.repeat_command(callback, check_val='OK')
+#        callback = lambda :self._parse_response(self.ask(cmd))
+        resp = self.repeat_command(cmd, check_val='OK')
         if resp is not None:
 
             return FusionsLogicBoard._enable_laser_(self)

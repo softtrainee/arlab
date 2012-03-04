@@ -15,7 +15,7 @@ limitations under the License.
 '''
 
 #=============enthought library imports=======================
-from traits.api import Button, DelegatesTo#, Property, on_trait_change, String, Int, Float, Button, Bool, Event, Range
+from traits.api import Button, DelegatesTo
 #=============standard library imports ========================
 #=============local library imports  ==========================
 
@@ -24,12 +24,11 @@ from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
 from src.monitors.co2_laser_monitor import CO2LaserMonitor
 #from hardware.analog_digital_converter import AgilentADC
 #from hardware.newport_esp301_motioncontroller import ESPMotionController
-
 #from src.helpers import paths
+
 
 class FusionsCO2Manager(FusionsLaserManager):
     '''
-        
     '''
     name = 'FusionsCO2'
     id = 'pychron.fusions.co2'
@@ -46,7 +45,6 @@ class FusionsCO2Manager(FusionsLaserManager):
 
     def set_laser_power(self, rp):
         '''
-            
         '''
         self.info('request power %0.3f' % rp)
         self.logic_board._set_laser_power_(rp)

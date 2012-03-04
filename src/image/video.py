@@ -96,15 +96,18 @@ class Video(Image):
                     return load_image(src)
 
                 self._frame = query_frame(self.cap)
-                return self._frame
+            return self._frame
 
 #                return  cvQueryFrame(self.cap)
 
-    def start_recording(self, path):
+    def start_recording(self, path, user=None):
         fps = 1 / 8.
         size = 640 / 2, 480 / 2
 
         def __record():
+            if self.cap is None:
+                self.open(user=user)
+
             if self.cap is not None:
                 self._recording = True
 
@@ -114,20 +117,18 @@ class Video(Image):
 
                 while self._recording:
                     st = time.time()
-#                    src = self.get_frame(swap_rb=False, croprect=size)
-                    with self._lock:
-                        src = self._frame
-                        self._draw_crosshairs(src)
-                        write_frame(writer, grayspace(src))
+                    src = self._frame
 
-#                    cvWriteFrame(writer, src)
+                    if src is None:
+                        src = self.get_frame(clone=True)
+                    self._draw_crosshairs(src)
+                    write_frame(writer, grayspace(src))
+
                     d = fps - (time.time() - st)
                     if d >= 0:
                         time.sleep(d)
 
         t = Thread(target=__record)
-#        t = Process(target=__record)
-
         t.start()
 
     def stop_recording(self):

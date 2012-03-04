@@ -81,6 +81,10 @@ class LaserActionSet(WorkbenchActionSet):
                        path='MenuBar/Lasers/Results',
                        class_name='src.lasers.plugins.laser_actions:OpenPowerMapAction'
                        ),
+               Action(name='Open Power Recording',
+                       path='MenuBar/Lasers/Results',
+                       class_name='src.lasers.plugins.laser_actions:OpenPowerRecordGraphAction'
+                       )
 
 
 

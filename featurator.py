@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 from src.remote_hardware.protocols.laser_protocol import LaserProtocol
+from threading import Thread, Lock
 
 '''
 test features of pychron using unittest
@@ -87,7 +88,7 @@ def test(protocol, client):
     print 'Finished testing commands'
     print '=' * 80
 
-def main(launch=False):
+def main(launch=False, simulator=False):
     if launch:
         #launch pychron
         subprocess.Popen(['python', './launchers/pychron_beta.py'])
@@ -99,26 +100,48 @@ def main(launch=False):
 #    run_test = raw_input(' execute test y/n [y]>> ') == '' or 'y'
 #    if not run_test:
 #        return
-
-        from src.remote_hardware.protocols.system_protocol import SystemProtocol
-
         from src.messaging.testclient import Client
         client = Client(host='localhost',
                         port=1063)
+        if simulator:
+            mass_spec_simulator(client)
+        else:
+            from src.remote_hardware.protocols.system_protocol import SystemProtocol
 
-    #    test(SystemProtocol(), client)
+            test(SystemProtocol(), client)
 
-        client.port = 1068
-        test(LaserProtocol(), client)
+            client.port = 1068
+            test(LaserProtocol(), client)
 
+
+def mass_spec_simulator(client):
+    _lock = Lock()
+
+    def _sim():
+        for i in range(100):
+            with _lock:
+                client.ask('GetValveStates', port=1063)
+            time.sleep(1)
+
+    t = Thread(target=_sim)
+    t.start()
+
+    time.sleep(1)
+
+    for cmd, d in [('Enable', 5), ('Disable', 0.1)]:
+        with _lock:
+            client.ask(cmd, port=1067)
+        time.sleep(d)
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--launch', action='store_true')
+    parser.add_argument('-s', '--simulator', action='store_true')
 
     args = parser.parse_args()
-    main(launch=args.launch)
+    main(launch=args.launch,
+         simulator=args.simulator)
 
 #============= EOF =====================================
 

@@ -13,28 +13,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from threading import Thread
-from src.led.led import LED
 '''
 '''
 #=============enthought library imports=======================
-from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, on_trait_change, Event, Bool
+from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
+    on_trait_change, Event, Bool
 from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor
 from pyface.timer.do_later import do_later
-#from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
+from threading import Thread
 import time
 #=============local library imports  ==========================
-#from src.managers.stage_managers.stage_manager import StageManager
-#from src.managers.stage_managers.video_stage_manager import VideoStageManager
 
+from src.helpers.timer import Timer
+from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
-#from src.hardware.subsystems.arduino_subsystem import ArduinoSubsystem
-#from src.managers.step_heat_manager import StepHeatManager
 from src.led.led_editor import LEDEditor
 
 from laser_manager import LaserManager
+
 
 class FusionsLaserManager(LaserManager):
     '''
@@ -69,6 +67,22 @@ class FusionsLaserManager(LaserManager):
     lens_configuration = Str('gaussian')
     lens_configuration_dict = Dict
     lens_configuration_names = List
+
+    power_timer = None
+
+    def _record_power(self):
+        p = self.get_laser_watts()
+        self.data_manager.add_time_stamped_value(p)
+
+    def start_power_recording(self, rid):
+        self.data_manager = CSVDataManager()
+        self.data_manager.new_frame(directory='co2power',
+                                    base_frame_name=rid)
+        self.power_timer = Timer(900, self._record_power)
+
+    def stop_power_recording(self):
+        if self.power_timer:
+            self.power_timer.Stop()
 
     def _lens_configuration_changed(self):
 
@@ -129,7 +143,6 @@ class FusionsLaserManager(LaserManager):
         super(FusionsLaserManager, self).finish_loading()
 
         self.load_lens_configurations()
-
 
     @on_trait_change('pointer')
     def pointer_ononff(self):

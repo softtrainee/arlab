@@ -27,7 +27,7 @@ class InitializationParser(XMLParser):
         self.save()
 
     def get_plugins(self, category=None, all=False):
-        tree = self._tree
+        tree = self._tree.find('plugins')
 
         if category:
             cat = tree.find(category)
@@ -42,10 +42,14 @@ class InitializationParser(XMLParser):
         return [p.text.strip() for p in plugins if all or p.get('enabled').lower() == 'true']
 
     def get_plugins_as_elements(self, category):
-        tree = self._tree
-
+        tree = self._tree.find('plugins')
         cat = tree.find(category)
-        return cat.findall('plugin')
+        if cat is not None:
+            return cat.findall('plugin')
+
+    def get_plugin_groups(self):
+        elem = self._tree.find('plugins')
+        return [t.tag for t in list(elem)]
 
     def get_groups(self):
         tree = self._tree
@@ -130,7 +134,7 @@ class InitializationParser(XMLParser):
         return man
 
     def _get_element(self, category, name, tag='plugin'):
-        tree = self._tree
+        tree = self._tree.find('plugins')
         if category is None:
             for p in tree.iter(tag=tag):
                 if p.text.strip() == name:
@@ -144,4 +148,13 @@ class InitializationParser(XMLParser):
     def get_systems(self):
         p = self.get_plugin('ExtractionLine')
         return [(s.text.strip(), s.get('master_host')) for s in p.findall('system')]
+
+    def get_processors(self):
+
+        cat = self._tree.find('remotehardware')
+        pi = None
+        if cat is not None:
+            pi = cat.findall('processor')
+
+        return [pii.text.strip() for pii in (pi if pi else [])]
 #============= EOF =============================================

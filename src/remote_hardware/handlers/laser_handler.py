@@ -47,6 +47,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         return lm
 
+    def get_elm(self):
+        if self.application:
+            protocol = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+            elm = self.application.get_service(protocol)
+            return elm
+
     def ReadLaserPower(self, manager, *args):
         '''
             return watts
@@ -62,13 +68,16 @@ class LaserHandler(BaseRemoteHardwareHandler):
         err = manager.enable_laser()
 
         if manager.record_lasing:
-
+            elm = self.get_elm()
             #get the extraction line manager's current rid
-            elm = self.application.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
-            rid = elm.multruns_report_manager.get_current_rid()
-            if rid is None:
-                rid = 'testrid_001'
+            mrm = elm.multruns_report_manager
 
+            rid = mrm.get_current_rid() if mrm else 'testrid_001'
+
+#            if rid is None:
+#                rid = 'testrid_001'
+
+            manager.start_power_recording(rid)
             manager.stage_manager.start_recording(basename=rid)
 
         return self.error_response(err)
@@ -76,6 +85,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def Disable(self, manager, *args):
         err = manager.disable_laser()
         if manager.record_lasing:
+            manager.stop_power_recording()
             manager.stage_manager.stop_recording(delay=5)
 
         return self.error_response(err)

@@ -112,6 +112,12 @@ class LaserManager(Manager):
 
             self.disable_laser()
 
+    def start_power_recording(self, *args, **kw):
+        pass
+
+    def stop_power_recording(self, *args, **kw):
+        pass
+
     def enable_laser(self):
 
 #    def enable_laser(self, is_ok=True):

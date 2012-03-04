@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, Bool, on_trait_change
+from traits.api import Instance, Bool, on_trait_change, List
 from apptools.preferences.preference_binding import bind_preference
 
 #============= standard library imports ========================
@@ -38,47 +38,66 @@ from src.remote_hardware.command_processor import CommandProcessor
 class RemoteHardwareManager(Manager):
 
     command_processor = Instance(CommandProcessor)
+    processors = List
     enable_hardware_server = Bool
     result = None
 #    def __init__(self, *args, **kw):
 #        super(RemoteHardwareManager, self).__init__(*args, **kw)
+    system_lock = Bool(False)
+
+    def _processors_default(self):
+        ps = []
+        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+
+        for pi in ip.get_processors():
+            ps.append(self._command_processor_factory(pi))
+        return ps
 
     def bootstrap(self):
         if self.enable_hardware_server:
-            self.command_processor.manager = self
-            self.command_processor.bootstrap()
+            for p in self.processors:
+                p.manager = self
+                p.bootstrap()
+#            self.command_processor.manager = self
+#            self.command_processor.bootstrap()
 
     @on_trait_change('enable_hardware_server')
     def enabled_changed(self):
         if self.enable_hardware_server:
             self.bootstrap()
         else:
-            self.command_processor.close()
+            self.stop()
+#            for p in self.processors:
+#                p.close()
+#            self.command_processor.close()
 
     def stop(self):
-        self.command_processor.close()
+        for p in self.processors:
+            p.close()
+#        self.command_processor.close()
 
-    def _command_processor_default(self):
-        cp = CommandProcessor(application=self.application)
+    def _command_processor_factory(self, path):
+
+        name = path.split('-')[-1]
+#    def _command_processor_default(self):
+        cp = CommandProcessor(application=self.application,
+                              path=path,
+                              name=name)
+
+        self.bind_preferences(cp)
+        return cp
+
+    def bind_preferences(self, cp):
+        bind_preference(self, 'system_lock', 'pychron.hardware.enable_system_lock')
+
         bind_preference(cp, 'system_lock', 'pychron.hardware.enable_system_lock')
         bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
         bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
-
 
         ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
         names = []
         hosts = dict()
         for name, host in ip.get_systems():
-#        config = ConfigParser.ConfigParser()
-#        
-#        p = os.path.join(setup_dir, 'system_locks.cfg')
-#        config.read(p)
-#
-#        for sect in config.sections():
-#            name = config.get(sect, 'name')
-#            host = config.get(sect, 'host')
-
-
             names.append(name)
             hosts[name] = host
 
@@ -90,30 +109,32 @@ class RemoteHardwareManager(Manager):
 
         try:
             if name:
-                pref.set('pychron.hardware.system_lock_address', hosts[name.strip("'").lower()])
+                pref.set('pychron.hardware.system_lock_address',
+                          hosts[name.strip("'").lower()])
             else:
-                pref.set('pychron.hardware.system_lock_address', hosts[names[0].lower()])
+                pref.set('pychron.hardware.system_lock_address',
+                          hosts[names[0].lower()])
         except Exception, err:
             print 'system lock exception', err
 
         pref.save()
 
-        return cp
-
     def validate_address(self, addr):
-            if self.command_processor.system_lock:
-                addrs = self.application.preferences.get('pychron.hardware.system_lock_addresses')
-                pairs = addrs[1:-1].split(',')
 
-                for p in pairs:
-                    k, v = p.split(':')
-                    k = k.strip()
-                    v = v.strip()
-                    if v[1:-1] == addr:
-                        return k
-                self.warning('You are not using an approved ip address {}'.format(addr))
-            else:
-                return addr
+        if self.system_lock:
+            addrs = self.application.preferences.get('pychron.hardware.system_lock_addresses')
+            pairs = addrs[1:-1].split(',')
+
+            for p in pairs:
+                k, v = p.split(':')
+                k = k.strip()
+                v = v.strip()
+                if v[1:-1] == addr:
+                    return k
+            self.warning('You are not using an approved ip address {}'.format(addr))
+        else:
+            return addr
+
 
     def lock_by_address(self, addr, lock=True):
         if lock:

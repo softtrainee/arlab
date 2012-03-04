@@ -32,17 +32,22 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
 #           ]
     name = 'CO2'
     action_path = 'src.lasers.plugins.fusions.co2'
+
     def _actions_default(self):
         return [
 #               Action(name = 'Stage Manager',
 #                      path = 'MenuBar/Lasers',
 #                      class_name = 'src.lasers.plugins.fusions_laser_actions:OpenStageManagerAction'),
-#                
+
                 Action(name='Laser Manager',
                        path='MenuBar/Lasers/{}'.format(self.name),
                        class_name='{}.actions:OpenLaserManagerAction'.format(self.action_path)
 #                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
                        ),
+                Action(name='Open Power Recording',
+                       path='MenuBar/Lasers/Results',
+                       class_name='{}.actions:OpenPowerRecordGraphAction'.format(self.action_path)
+                       )
 
 ##                Action(name='Configure Motion Controller',
 ##                       path='MenuBar/Lasers/{}'.format(self.name),
