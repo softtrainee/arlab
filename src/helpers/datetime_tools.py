@@ -41,7 +41,7 @@ def current_time_generator(start):
         i += 1
 
 
-def generate_timestamp(resolution='seconds'):
+def generate_datetimestamp(resolution='seconds'):
     '''
     '''
     ti = time.time()

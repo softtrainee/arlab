@@ -65,7 +65,7 @@ class ExtractionLineUIPlugin(CoreUIPlugin):
 
         #start device streams
         for dev in elm.devices:
-            if dev.is_scanable:
+            if dev.is_scanable and dev.auto_start:
                 dev.start_scan()
 
         if elm.gauge_manager:
