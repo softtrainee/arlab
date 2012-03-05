@@ -64,7 +64,7 @@ class CommandRepeater(ConfigLoadable):
 
         sock = socket.socket(socket.AF_UNIX, kind)
 
-        sock.settimeout(1)
+        sock.settimeout(2)
         self._sock = sock
 
         #create a sync lock

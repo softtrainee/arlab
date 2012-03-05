@@ -199,7 +199,7 @@ class HardwareValve(Loggable):
         self.success = r
         if self.success:
             self.state = True
-        print 'open', self.success, self.state
+#        print 'open', self.success, self.state
 
     def _close_(self, *args, **kw):
         '''
@@ -216,7 +216,7 @@ class HardwareValve(Loggable):
 
         if self.success:
             self.state = False
-        print 'close', self.success, self.state
+#        print 'close', self.success, self.state
 
     def _get_display_state(self):
         return 'Open' if self.state else 'Close'
