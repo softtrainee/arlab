@@ -105,8 +105,8 @@ class Video(Image):
         size = 640 / 2, 480 / 2
 
         def __record():
-            if self.cap is None:
-                self.open(user=user)
+#            if self.cap is None:
+#                self.open(user=user)
 
             if self.cap is not None:
                 self._recording = True

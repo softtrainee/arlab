@@ -73,7 +73,7 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
         parser = self.parser
         cats = []
         for g in parser.get_plugin_groups():
-            ps = parser.get_plugins_as_elements(g)
+            ps = parser.get_plugins(g, element=True)
             if not ps:
                 continue
 

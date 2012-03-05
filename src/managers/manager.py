@@ -184,9 +184,9 @@ class Manager(ConfigLoadable):
 
         return dev
 
-
     def get_default_managers(self):
         return []
+
     def get_manager_factory(self, package, klass):
 #        print package, klass
         class_factory = None

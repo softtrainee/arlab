@@ -130,7 +130,7 @@ class FusionsLogicBoard(CoreDevice):
 #==============================================================================
 #laser methods
 #==============================================================================
-    def repeat_command(self, cmd, ntries=3, check_val=None, check_type=None,
+    def repeat_command(self, cmd, ntries=2, check_val=None, check_type=None,
                        verbose=True):
 
         cmd = self._build_command(cmd)
@@ -141,14 +141,20 @@ class FusionsLogicBoard(CoreDevice):
                                             len(resp) if resp else None)
             self.debug(m)
             if check_val is not None:
+                if self.simulation:
+                    resp = check_val
+
                 if resp == check_val:
                     break
 
             if check_type is not None:
-                try:
-                    resp = check_type(resp)
-                except ValueError:
-                    resp = None
+                if self.simulation:
+                    resp = 1
+                else:
+                    try:
+                        resp = check_type(resp)
+                    except ValueError:
+                        resp = None
 
             if resp is not None:
                 break

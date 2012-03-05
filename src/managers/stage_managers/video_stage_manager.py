@@ -130,10 +130,12 @@ class VideoStageManager(StageManager, Videoable):
             self.warning('using default directory')
             path, _ = unique_path(video_dir, basename, filetype='avi')
 
-        self.info('saving recording to path {}'.format(path))
-
-#        self.video.open(user=user)
-        self.video.start_recording(path, user=user)
+        if self.video.cap is not None:
+            self.info('saving recording to path {}'.format(path))
+            #        self.video.open(user=user)
+            self.video.start_recording(path, user=user)
+        else:
+            self.info('video capture device not opened. cannot record')
 
     def stop_recording(self, user='remote', delay=0.1):
         '''
@@ -147,9 +149,9 @@ class VideoStageManager(StageManager, Videoable):
             #delay briefly before deleting the capture object
 #            t = Timer(4, self.video.close, kwargs=dict(user=user))
 #            t.start()
-
-        t = Timer(delay, close)
-        t.start()
+        if self.video._recording:
+            t = Timer(delay, close)
+            t.start()
 #        self.video.close(user=user)
 
     def update_camera_params(self, obj, name, old, new):

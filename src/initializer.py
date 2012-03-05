@@ -197,9 +197,6 @@ class Initializer(Loggable):
 
         if managers:
             self.info('loading managers - {}'.format(', '.join(managers)))
-
-#            self.load_managers(manager, managers, device_dir, initialization_dir)
-
             self.load_managers(manager, managers, device_dir)
 
         if devices:
