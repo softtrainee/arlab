@@ -71,12 +71,12 @@ class DataManager(Manager):
         if frame is not None:
             if rawtime:
                 if self.time_gen is None:
-                    self.time_gen=time_generator()
-                    t=0
+                    self.time_gen = time_generator()
+                    t = 0
                 else:
-                    t=self.time_gen.next()
+                    t = self.time_gen.next()
             else:
-                t=generate_datetimestamp()
+                t = generate_datetimestamp()
             datum = (t, value)
             self.new_writer(frame, datum)
 
