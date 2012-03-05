@@ -122,8 +122,12 @@ class Client(HasTraits):
     def ask(self, command, port=None):
         conn = self.get_connection(port=port)
         conn.send(command)
-        r = conn.recv(4096)
-        print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)
+        try:
+            r = conn.recv(4096)
+            print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)
+        except socket.error, e:
+            print e
+
 
     def test(self):
         self.ask('StartMultRuns Foo')

@@ -20,6 +20,7 @@ limitations under the License.
 #============= local library imports  ==========================
 from SocketServer import BaseRequestHandler
 
+
 class MessagingHandler(BaseRequestHandler):
     def handle(self):
         '''
@@ -35,7 +36,6 @@ class MessagingHandler(BaseRequestHandler):
             if 'ERROR 6' in response:
                 self.server.increment_repeater_fails()
 
-
             self.server.info('Sent: %s' % response.strip())
             self.server.parent.cur_rpacket = data
             self.server.parent.cur_spacket = response
@@ -47,6 +47,7 @@ class MessagingHandler(BaseRequestHandler):
         '''
         '''
         pass
+
     def send_packet(self):
         '''
         '''

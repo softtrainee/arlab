@@ -184,7 +184,8 @@ class CommandRepeater(ConfigLoadable):
 
     def _handle_socket_send_error(self, e, s):
         retries = 0
-        for ei in ['Errno 32', 'Errno 9', 'Errno 11', 'timeout']:
+
+        for ei in ['Errno 32', 'Errno 9', 'Errno 11']:
             if ei in str(e):
                 retries = 3
                 break
@@ -211,6 +212,11 @@ class CommandRepeater(ConfigLoadable):
         self.info('send failed after {} retries. {}'.format(retries, e))
 
     def _handle_socket_read_error(self, e):
+        self.debug('read error {}'.format(e))
+        if 'timed out' in e:
+            self.debug('read timed out. doing recursive retry')
+            return self._read_()
+
         return False, e
 
 #==============================================================================
