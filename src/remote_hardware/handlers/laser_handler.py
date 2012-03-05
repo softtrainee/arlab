@@ -20,6 +20,7 @@ limitations under the License.
 from src.remote_hardware.errors.system_errors import InvalidArgumentsErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from dummies import DummyLM
+from threading import Thread
 
 DIODE_PROTOCOL = 'src.managers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
 CO2_PROTOCOL = 'src.managers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
@@ -68,18 +69,20 @@ class LaserHandler(BaseRemoteHardwareHandler):
         err = manager.enable_laser()
 
         if manager.record_lasing:
-            elm = self.get_elm()
-            #get the extraction line manager's current rid
-            mrm = elm.multruns_report_manager
-
-            rid = mrm.get_current_rid() if mrm else 'testrid_001'
-
-#            if rid is None:
-#                rid = 'testrid_001'
-
-            manager.start_power_recording(rid)
-            manager.stage_manager.start_recording(basename=rid)
-
+            def record():
+                elm = self.get_elm()
+                #get the extraction line manager's current rid
+                mrm = elm.multruns_report_manager
+    
+                rid = mrm.get_current_rid() if mrm else 'testrid_001'
+    
+    #            if rid is None:
+    #                rid = 'testrid_001'
+    
+                manager.start_power_recording(rid)
+                manager.stage_manager.start_recording(basename=rid)
+            t=Thread(target=record)
+            t.start()
         return self.error_response(err)
 
     def Disable(self, manager, *args):
