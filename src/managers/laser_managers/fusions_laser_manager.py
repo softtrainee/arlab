@@ -79,6 +79,7 @@ class FusionsLaserManager(LaserManager):
             try:
                 self.power_graph.record(p)
             except Exception, e:
+                self.info(e)
                 print 'record power ', e
 
     def open_power_graph(self):

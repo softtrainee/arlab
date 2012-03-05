@@ -31,7 +31,8 @@ class DataManager(Manager):
     _extension = 'txt'
     frames = Dict
     _current_frame = ''
-
+    time_gen=None
+    
     def new_frame(self, *args, **kw):
         '''
         '''
