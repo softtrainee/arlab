@@ -21,7 +21,7 @@ from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
 from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor
 from pyface.timer.do_later import do_later
 #=============standard library imports ========================
-from threading import Thread
+from threading import Thread, Timer as DoLaterTimer
 import time
 #=============local library imports  ==========================
 
@@ -81,8 +81,13 @@ class FusionsLaserManager(LaserManager):
         self.power_timer = Timer(900, self._record_power)
 
     def stop_power_recording(self):
+
         if self.power_timer:
-            self.power_timer.Stop()
+            n = 5
+            self.info('Stopping power recording in {} seconds'.format(n))
+            t = DoLaterTimer(n, self.power_timer.Stop)
+            t.start()
+#            self.power_timer.Stop()
 
     def _lens_configuration_changed(self):
 
