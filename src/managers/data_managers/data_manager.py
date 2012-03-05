@@ -23,7 +23,7 @@ import os
 from src.helpers import paths
 from src.helpers.filetools import unique_path
 from src.managers.manager import Manager
-from src.helpers.datetime_tools import generate_timestamp
+from src.helpers.datetime_tools import generate_datetimestamp, time_generator
 
 class DataManager(Manager):
     '''
@@ -60,7 +60,7 @@ class DataManager(Manager):
         self.info('New frame {}'.format(path))
         return path
 
-    def add_time_stamped_value(self, value, frame_key=None):
+    def add_time_stamped_value(self, value, frame_key=None, rawtime=False):
         '''
 
         '''
@@ -69,7 +69,15 @@ class DataManager(Manager):
 
         frame = self._get_frame(frame_key)
         if frame is not None:
-            datum = (generate_timestamp(), value)
+            if rawtime:
+                if self.time_gen is None:
+                    self.time_gen=time_generator()
+                    t=0
+                else:
+                    t=self.time_gen.next()
+            else:
+                t=generate_datetimestamp()
+            datum = (t, value)
             self.new_writer(frame, datum)
 
     def _get_frame(self, key):

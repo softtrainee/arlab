@@ -27,7 +27,7 @@ import shutil
 #============= local library imports  ==========================
 from src.helpers.paths import root
 from src.helpers.filetools import unique_path
-from src.helpers.datetime_tools import generate_timestamp
+from src.helpers.datetime_tools import generate_datetimestamp
 
 #============= views ===================================
 class LaserShot(HasTraits):
@@ -107,7 +107,7 @@ class LaserShotHistory(HasTraits):
         n = len(self.history)
 
         shot = LaserShot(id=n,
-                       timestamp=generate_timestamp(),
+                       timestamp=generate_datetimestamp(),
                        **kw)
         self.history.append(shot)
         self.__dump()

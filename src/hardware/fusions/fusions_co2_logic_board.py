@@ -40,7 +40,7 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
 
         return super(FusionsCO2LogicBoard, self).load_additional_args(config)
 
-    def read_power_meter(self, verbose=True):
+    def read_power_meter(self, verbose=False):
         '''
         '''
         cmd = self._build_command('ADC1')
@@ -51,8 +51,9 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
                 r = float(r)
             except:
                 self.warning('*Bad response from ADC ==> %s' % r)
-
-        return self.get_random_value() if r is None else r
+                r=None
+        
+        return r
 
     def _disable_laser_(self):
         '''

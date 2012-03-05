@@ -24,7 +24,7 @@ import os
 #============= local library imports  ==========================
 from src.scripts.core.core_script import CoreScript
 from src.helpers.filetools import parse_file
-from src.helpers.datetime_tools import generate_timestamp
+from src.helpers.datetime_tools import generate_datetimestamp
 from wait_dialog import WaitDialog
 from extraction_line_script_parser import ExtractionLineScriptParser
 #from src.scripts.analysis.analysis_script import AnalysisScript
@@ -113,7 +113,7 @@ class ExtractionLineScript(CoreScript):
 
     def set_time_zero_statement(self):
 
-        msg = 'time zero %s' % generate_timestamp()
+        msg = 'time zero %s' % generate_datetimestamp()
         self.time_zero = time.time()
 
         self.log_statement(msg)

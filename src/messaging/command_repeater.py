@@ -184,7 +184,7 @@ class CommandRepeater(ConfigLoadable):
 
     def _handle_socket_send_error(self, e, s):
         retries = 0
-        for ei in ['Errno 32', 'Errno 9', 'Errno 11']:
+        for ei in ['Errno 32', 'Errno 9', 'Errno 11', 'timeout']:
             if ei in str(e):
                 retries = 3
                 break

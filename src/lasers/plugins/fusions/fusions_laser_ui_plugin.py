@@ -64,7 +64,7 @@ class FusionsLaserUIPlugin(CoreUIPlugin):
             open_manager(lm)
 
         for dev in lm.devices:
-            if dev.is_scanable:
+            if dev.is_scanable and dev.auto_start:
                 dev.start_scan()
 #    def create_power_map_view(self, **kw):
 #        obj = PowerMapViewer(application = self.application)

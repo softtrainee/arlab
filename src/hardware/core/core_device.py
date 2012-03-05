@@ -27,7 +27,7 @@ from datetime import datetime
 from viewable_device import ViewableDevice
 from i_core_device import ICoreDevice
 from src.managers.data_managers.csv_data_manager import CSVDataManager
-from src.helpers.datetime_tools import generate_timestamp
+from src.helpers.datetime_tools import generate_datetimestamp
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 from src.graph.plot_record import PlotRecord
 
@@ -92,6 +92,7 @@ class CoreDevice(ViewableDevice):
     record_scan_data = Bool(True)
     graph_scan_data = Bool(True)
     scan_path = Str
+    auto_start=Bool(False)
 
     current_scan_value = 0
 
@@ -232,6 +233,7 @@ class CoreDevice(ViewableDevice):
         if config.has_section('Scan'):
             if config.getboolean('Scan', 'enabled'):
                 self.is_scanable = True
+                self.set_attribute(config, 'auto_start', 'Scan', 'auto_start', cast='boolean', default=True)
                 self.set_attribute(config, 'scan_period', 'Scan', 'period', cast='float')
                 self.set_attribute(config, 'scan_units', 'Scan', 'units')
                 self.set_attribute(config, 'record_scan_data', 'Scan', 'record', cast='boolean')
@@ -277,7 +279,7 @@ class CoreDevice(ViewableDevice):
                         v = (v,)
 
                 if self.record_scan_data:
-                    ts = generate_timestamp()
+                    ts = generate_datetimestamp()
                     self.data_manager.write_to_frame((ts, x) + v)
 
                 for a in self.alarms:

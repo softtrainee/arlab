@@ -60,10 +60,10 @@ class VueMetrixManager(Manager):
 #    def opened(self):
 #        self.start()
 
-    def finish_loading(self):
-        super(VueMetrixManager, self).finish_loading()
-        if self.is_scanable:
-            self.start_scan()
+#    def finish_loading(self):
+#        super(VueMetrixManager, self).finish_loading()
+#        if self.is_scanable:
+#            self.start_scan()
 
 
     def _control_default(self):
