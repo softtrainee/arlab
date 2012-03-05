@@ -19,6 +19,7 @@ from traits.api import on_trait_change
 #============= local library imports  ==========================
 from src.canvas.canvas2D.video_canvas import VideoCanvas
 from laser_tray_canvas import LaserTrayCanvas
+from src.canvas.canvas2D.markup.markup_items import Rectangle
 
 
 class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
@@ -36,7 +37,6 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
 
     def set_stage_position(self, x, y):
         '''
-   
         '''
         super(VideoLaserTrayCanvas, self).set_stage_position(x, y)
         self.adjust_limits('x', x)
@@ -44,5 +44,7 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
         if self.use_camera:
             self.camera.current_position = (x, y)
 
+    def add_markup_rect(self, x, y, w, h):
+        self.markupcontainer['croprect'] = Rectangle(x=x - 40, y=y - 15, width=w, height=h)
 
 #============= EOF ====================================

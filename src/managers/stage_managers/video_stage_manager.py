@@ -358,12 +358,17 @@ class VideoStageManager(StageManager, Videoable):
         return CameraCalibrationManager()
 
     def _machine_vision_manager_default(self):
-        return MachineVisionManager(video=self.video)
+        return MachineVisionManager(video=self.video,
+                                    stage_controller=self.stage_controller,
+                                    laser_manager=self.parent,
+                                    autofocus_manager=self.autofocus_manager
+                                    )
 
     def _autofocus_manager_default(self):
         return AutofocusManager(video=self.video,
-                                manager=self.parent,
-                                stage_controller=self.stage_controller
+                                laser_manager=self.parent,
+                                stage_controller=self.stage_controller,
+                                canvas=self.canvas
                                 )
 
 #==============================================================================

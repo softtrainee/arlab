@@ -82,9 +82,9 @@ class FusionsLaserManager(LaserManager):
                 self.info(e)
                 print 'record power ', e
 
-    def open_power_graph(self):
+    def open_power_graph(self, rid):
         if self.power_graph is None:
-            g = StreamGraph()
+            g = StreamGraph(window_title='Power Readback - {}'.format(rid))
             g.new_plot(data_limit=60,
                        scan_delay=1,
                        xtitle='time (s)',
@@ -104,7 +104,7 @@ class FusionsLaserManager(LaserManager):
         do_later(self.power_graph.edit_traits)
 
     def start_power_recording(self, rid):
-        self.open_power_graph()
+        self.open_power_graph(rid)
 
         self.data_manager = CSVDataManager()
         self.data_manager.new_frame(directory='co2power',

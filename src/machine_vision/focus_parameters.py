@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import HasTraits, Float, Enum, Bool
+from traits.api import HasTraits, Float, Enum, Bool, Int
 from traitsui.api import View, Item, Group
 #============= standard library imports ========================
 
@@ -35,6 +35,9 @@ class FocusParameters(HasTraits):
 
     velocity_scalar1 = Float(1)
     velocity_scalar2 = Float(1)
+
+    crop_width = Int(300)
+    cropt_height = Int(300)
 
     def traits_view(self):
         v = View(
