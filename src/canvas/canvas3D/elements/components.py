@@ -556,7 +556,6 @@ class Valve(SetStateObject3D):
         self._finish_state_change(False, success=s)
         return s
 
-
 #    def set_hard_lock(self, lock):
 #        '''
 #        '''
@@ -617,7 +616,7 @@ class Valve(SetStateObject3D):
 
     def _draw_halo(self):
         glPushAttrib(GL_CURRENT_BIT)
-        self._set_material((0, 0, 1), alpha=0.3)
+        self._set_material((1, 1, 0), alpha=0.3)
         self._sphere_(radius=1.5)
         glPopAttrib()
 
