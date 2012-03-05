@@ -47,11 +47,12 @@ class HardwareValve(Loggable):
 
     actuator_name = DelegatesTo('actuator', prefix='name')
 
-
     canvas_valve = Any
     position = Property
     shaft_low = Property
     shaft_high = Property
+
+    query_valve_state = Bool(True)
 
     def _get_shaft_low(self):
         return self.canvas_valve.low_side.orientation
@@ -61,7 +62,6 @@ class HardwareValve(Loggable):
 
     def _get_position(self):
         return ','.join(map(str, self.canvas_valve.translate))
-
 
     def __init__(self, name, *args, **kw):
         '''
