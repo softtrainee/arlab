@@ -96,6 +96,16 @@ class MarkupItem(HasTraits):
 class Point(MarkupItem):
     pass
 
+class Rectangle(MarkupItem):
+    width = 0
+    height = 0
+    x = 0
+    y = 0
+
+    def _render_(self, gc):
+        gc.rect(self.x, self.y, self.x + self.width, self.y + self.height)
+
+
 class Line(MarkupItem):
     start_point = None
     end_point = None

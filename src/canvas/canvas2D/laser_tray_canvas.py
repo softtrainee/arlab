@@ -23,6 +23,7 @@ from src.canvas.canvas2D.map_canvas import MapCanvas
 import math
 from src.canvas.canvas2D.markup.markup_items import PointIndicator
 
+
 class LaserTrayCanvas(MapCanvas):
     '''
     '''
@@ -51,7 +52,6 @@ class LaserTrayCanvas(MapCanvas):
     desired_position_color = Color(0x008000)
     show_laser_position = Bool(True)
 
-
     use_zoom = False
 
     beam_radius = 1
@@ -62,6 +62,7 @@ class LaserTrayCanvas(MapCanvas):
     crosshairs_radius = Range(0.0, 4.0, 1.0)
     crosshairs_offset = Tuple(0, 0)
 #    _jog_moving = False
+
     def point_exists(self, x, y, tol=1e-5):
         for p in self.markupcontainer.itervalues():
             if isinstance(p, PointIndicator):

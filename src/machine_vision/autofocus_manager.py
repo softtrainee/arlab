@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from traits.api import HasTraits, Float, Enum, Bool, Any, Instance, Button, Property, Event
-from traitsui.api import View, Item, Group, Handler, HGroup
+from traits.api import Bool, Any, Instance, Button, Property, Event, on_trait_change
+from traitsui.api import View, Item, Handler, HGroup
 from pyface.timer.do_later import do_later
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from threading import Thread
-from numpy import linspace, argmin, argmax, asarray, random
+from numpy import linspace, argmin, argmax, random
 #============= local library imports  ==========================
 from src.graph.graph import Graph
 from src.data_processing.time_series.time_series import smooth
@@ -57,6 +57,7 @@ class AutofocusManager(Manager):
     video = Any
     laser_manager = Any
     stage_controller = Any
+    canvas = Any
     parameters = Instance(FocusParameters)
     configure_button = Button('configure')
 
@@ -146,16 +147,13 @@ class AutofocusManager(Manager):
             see
             IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
             FOR DIGITAL STILL CAMERA
-            DOI 10.1109/30.468047  
-            
+            DOI 10.1109/30.468047
             and
-            
             http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
-            
         '''
         args = self._passive_focus(operator=operator, set_z=False,
-                                             velocity_scalar=self.parameters.velocity_scalar1
-                                            )
+                             velocity_scalar=self.parameters.velocity_scalar1
+                            )
 
         if args:
             nominal_focus1, fs1, gs1, sgs1 = args
@@ -199,10 +197,8 @@ class AutofocusManager(Manager):
                        step_scalar=None, set_z=True, zoom=0, **kw):
         '''
             sweep z looking for max focus measure
-            
             FMgrad= roberts or sobel (sobel removes noise)
-            FMvar = intensity variance 
-            
+            FMvar = intensity variance
         '''
         self.autofocusing = True
 
@@ -257,11 +253,13 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         if velocity_scalar is None:
             velocity_scalar = self.parameters.velocity_scalar1
         grads = []
-        w = 300
-        h = 300
+        w = self.parameters.crop_width
+        h = self.parameters.crop_height
         cx = (640 - w) / 2
         cy = (480 - h) / 2
         roi = cx, cy, w, h
+
+        self.canvas.add_markup_rect(*roi)
 
         controller = self.stage_controller
         if self.parameters.discrete:
@@ -311,11 +309,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
             self.info('frames analyzed {}'.format(len(grads)))
 
-#        mi = None
-#        ma = None
-#        fmi = None
-#        fma = None
-
+#        self.canvas.markupcontainer.pop('croprect')
         if grads is not None:
             sgrads = smooth(grads)
             fmi = focussteps[argmin(sgrads)]
@@ -332,11 +326,8 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
             FOR DIGITAL STILL CAMERA
             DOI 10.1109/30.468047  
-            
             and
-            
             http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
-            
         '''
 
         if src is None:
@@ -355,7 +346,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
                 ni, nj = v.shape
                 genx = xrange(ni)
                 geny = xrange(nj)
-                
+
                 mu = 1 / float(ni * nj) * sum([v[i, j] for i in genx for j in geny])
                 func = lambda g, i, j:abs(g[i, j] - mu) ** 2
                 fm = 1 / float(ni * nj) * sum([func(v, i, j) for i in genx for j in geny])
@@ -383,6 +374,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _configure_button_fired(self):
         self.edit_traits(view='configure_view')
 
+
     def traits_view(self):
         v = View(
                HGroup(self._button_factory('autofocus_button', 'autofocus_label'),
@@ -392,6 +384,10 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
                       )
                )
         return v
+
+    @on_trait_change('parameters:crop_width')
+    def _crop_rect_update(self):
+        pass
 
     def configure_view(self):
         v = View(Item('parameters', style='custom', show_label=False),
