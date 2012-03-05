@@ -73,15 +73,16 @@ class LaserHandler(BaseRemoteHardwareHandler):
                 elm = self.get_elm()
                 #get the extraction line manager's current rid
                 mrm = elm.multruns_report_manager
-    
+
                 rid = mrm.get_current_rid() if mrm else 'testrid_001'
-    
+
     #            if rid is None:
     #                rid = 'testrid_001'
-    
+
                 manager.start_power_recording(rid)
                 manager.stage_manager.start_recording(basename=rid)
-            t=Thread(target=record)
+
+            t = Thread(target=record)
             t.start()
         return self.error_response(err)
 

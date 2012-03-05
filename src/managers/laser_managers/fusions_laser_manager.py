@@ -70,41 +70,41 @@ class FusionsLaserManager(LaserManager):
     lens_configuration_names = List
 
     power_timer = None
-    power_graph=None
-    
+    power_graph = None
+
     def _record_power(self):
         p = self.get_laser_watts()
         if p is not None:
-            self.data_manager.add_time_stamped_value(p)
+            self.data_manager.add_time_stamped_value(p, rawtime=True)
             try:
                 self.power_graph.record(p)
-            except Exception,e:
+            except Exception, e:
                 print 'record power ', e
-    
+
     def open_power_graph(self):
         if self.power_graph is None:
-            g=StreamGraph()
-            g.new_plot(data_limit=60, 
+            g = StreamGraph()
+            g.new_plot(data_limit=60,
                        scan_delay=1,
                        xtitle='time (s)',
                        ytitle='8bit power')
             g.new_series()
-            self.power_graph=g
+            self.power_graph = g
         else:
-            g=self.power_graph
+            g = self.power_graph
             g.close()
             g.clear()
-            g.new_plot(data_limit=60, 
+            g.new_plot(data_limit=60,
                        scan_delay=1,
                        xtitle='time (s)',
                        ytitle='8bit power')
             g.new_series()
-            
+
         do_later(self.power_graph.edit_traits)
-            
+
     def start_power_recording(self, rid):
         self.open_power_graph()
-        
+
         self.data_manager = CSVDataManager()
         self.data_manager.new_frame(directory='co2power',
                                     base_frame_name=rid)
