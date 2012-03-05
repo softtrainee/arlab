@@ -50,9 +50,12 @@ class ExtractionLineExplanation(HasTraits):
     selection_ok = False
 
     def on_selection(self, s):
-        if self.selection_ok:
-            if s is not None:
-                s.identify = not s.identify
+        if self.selection_ok and s is not None:
+            for ei in self.explanable_items:
+                if ei != s:
+                    ei.identify = False
+
+            s.identify = not s.identify
 
     def _show_hide_fired(self):
         '''
