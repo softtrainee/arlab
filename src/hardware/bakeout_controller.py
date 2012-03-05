@@ -145,8 +145,8 @@ class BakeoutController(WatlowEZZone):
             self.info('killing')
             if self._active_script is not None:
                 self._active_script._alive = False
-            else:
-                self.set_closed_loop_setpoint(0)
+            
+            self.set_closed_loop_setpoint(0)
 
     def load_additional_args(self, config):
         '''
