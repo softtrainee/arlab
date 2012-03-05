@@ -50,7 +50,7 @@ class CommandProcessor(ConfigLoadable):
     system_lock_address = Str
 
     _handlers = None
-    _threaded = False
+
 
     def __init__(self, *args, **kw):
         super(CommandProcessor, self).__init__(*args, **kw)
@@ -87,7 +87,7 @@ class CommandProcessor(ConfigLoadable):
             kind = socket.SOCK_DGRAM
 
         self._sock = socket.socket(socket.AF_UNIX, kind)
-
+        #self._sock.settimeout(1)
         if not ipc_dgram:
             self._sock.setblocking(False)
 
@@ -129,31 +129,40 @@ class CommandProcessor(ConfigLoadable):
                 data = s.recv(BUFSIZE)
                 if data:
 #                            sender_addr, ptype, payload = data.split('|')
-                    args = [s] + data.split('|')
-#                            args = client, sender_addr, ptype, payload
-                    if self._threaded:
-                        t = Thread(target=self._process_request, args=args)
-                        t.start()
-                    else:
-                        if len(args) == 4:
-                            self._process_request(*args)
-                        else:
-                            self.debug('data = {}'.format(data))
-                            self.debug('too many args {}, {}'.format(len(args), args))
+                    self._process_data(s, data)
                 else:
                     s.close()
                     _input.remove(s)
 
-    def _dgram_listener(self):
-        data, address = self._sock.recvfrom(BUFSIZE)
+    def _process_data(self, sock, data):
+        args = [sock] + data.split('|')
+#                            args = client, sender_addr, ptype, payload
+        if len(args) == 4:
+#                        process request should be blocking
+#                        dont spawn a new thread
+            self._process_request(*args)
+        else:
+            self.debug('data = {}'.format(data))
+            self.debug('too many args {}, {}'.format(len(args), args))
+        return args
 
-        if data is None:
-            args = [self._sock] + data.split('|')
-            if self._threaded:
-                t = Thread(target=self._process_request, args=args)
-                t.start()
-            else:
-                self._process_request(*args)
+    def _dgram_listener(self):
+        print 'daga'
+        try:
+            data, address = self._sock.recv(BUFSIZE)
+            print data, address, 'f'
+            if data is not None:
+                self._process_data(self._sock, data)
+        except socket.error:
+            pass
+#            args = [self._sock] + data.split('|')
+#            if len(args) == 4:
+##            if self._threaded:
+##                t = Thread(target=self._process_request, args=args)
+##                t.start()
+##            else:
+#                self._process_request(*args)
+
 
     def _listener(self, *args, **kw):
         '''
