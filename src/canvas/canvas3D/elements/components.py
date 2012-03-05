@@ -312,6 +312,7 @@ class Sector(MultiStateObject3D):
 
         glPopMatrix()
 
+
 class Shaft(MultiStateObject3D):
     '''
     '''
@@ -319,6 +320,7 @@ class Shaft(MultiStateObject3D):
     prev_ac = 0
     orientation = None
     length = 6
+
     def render(self):
         '''
 
@@ -352,6 +354,7 @@ class Shaft(MultiStateObject3D):
 #            self.prev_ac = ac
         glPopAttrib()
 
+
 def shift(l):
     '''
     '''
@@ -362,6 +365,7 @@ def shift(l):
     rl += [l[i] for i in range(len(l) - 1)]
     return rl
 
+
 def deshift(l):
     '''
     '''
@@ -371,6 +375,7 @@ def deshift(l):
 
     rl += [l[i] for i in range(len(l) - 1)]
     return rl
+
 
 class Bone(MultiStateObject3D):
     '''
@@ -395,6 +400,7 @@ class Bone(MultiStateObject3D):
 
         glPopAttrib()
 
+
 class Object2D(Object3D):
     '''
     '''
@@ -414,17 +420,20 @@ class Object2D(Object3D):
         glPopMatrix()
         glEnable(GL_DEPTH_TEST)
 
+
 class TextPanel(Object2D):
     '''
     '''
     fields = None
     title = ''
+
     def __init__(self, *args, **kw):
         '''
         '''
         super(TextPanel, self).__init__(*args, **kw)
 
-        self.fields = [(0, False, 'pressure'), (0, False, 'pressure'), (0, False, 'pressure'),
+        self.fields = [(0, False, 'pressure'), (0, False, 'pressure'),
+                        (0, False, 'pressure'),
                        (0, False, 'pumping_dur'), (0, False, 'idle_dur')]
 
 #    def render(self):
@@ -470,6 +479,7 @@ class TextPanel(Object2D):
 #
 #        self.end_render()
 
+
 class Valve(SetStateObject3D):
     '''
     '''
@@ -484,11 +494,9 @@ class Valve(SetStateObject3D):
 
     def __init__(self, *args):
         '''
-            
         '''
         super(Valve, self).__init__(*args)
         self.connections = []
-
 
     def render(self):
         '''
@@ -502,8 +510,8 @@ class Valve(SetStateObject3D):
         #glPopAttrib()
 
         if self.identify:
-
-            self._text_(self.name, self.label_offsets)
+            self._draw_halo()
+#            self._text_(self.name, self.label_offsets)
 
         if self.soft_lock:
             self._draw_soft_locked_identifier()

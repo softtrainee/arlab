@@ -15,7 +15,8 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import HasTraits, Any, Event, List, Bool, Property
-from traitsui.api import View, Item, HGroup, VGroup, TableEditor, ButtonEditor
+from traitsui.api import View, Item, HGroup, VGroup, TableEditor, ButtonEditor, \
+    Handler
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 
@@ -25,7 +26,14 @@ from traitsui.extras.checkbox_column import CheckboxColumn
 #=============local library imports  ==========================
 #from filetools import parse_setupfile
 
-from explanable_item import ExplanableTurbo#, Valve
+from explanable_item import ExplanableTurbo
+
+
+class ELEHandler(Handler):
+    def init(self, info):
+        if not info.initialized:
+            info.object.selection_ok = True
+
 
 class ExtractionLineExplanation(HasTraits):
     '''
@@ -36,11 +44,15 @@ class ExtractionLineExplanation(HasTraits):
     show_hide = Event
     label = Property(depends_on='identify')
 
-
     identify = Bool(False)
     #canvas = Any
     selected = Any
+    selection_ok = False
 
+    def on_selection(self, s):
+        if self.selection_ok:
+            if s is not None:
+                s.identify = not s.identify
 
     def _show_hide_fired(self):
         '''
@@ -75,15 +87,17 @@ class ExtractionLineExplanation(HasTraits):
     def traits_view(self):
         '''
         '''
-        self.legend_editor = TableEditor(columns=[ObjectColumn(name='name', editable=False),
-                                           ObjectColumn(name='description', editable=False),
-                                           ObjectColumn(name='state_property', editable=False, label='State'),
-                                           CheckboxColumn(name='identify'),
-                                           ObjectColumn(name='lock_property', editable=False, label='Lock')
-                                           ],
-                                           selected='selected'
-                                #editable = False,
-                                )
+        self.legend_editor = TableEditor(columns=[ObjectColumn(name='name',
+                                                        editable=False),
+           ObjectColumn(name='description', editable=False),
+           ObjectColumn(name='state_property', editable=False, label='State'),
+#                                           CheckboxColumn(name='identify'),
+           ObjectColumn(name='lock_property', editable=False, label='Lock')
+           ],
+           selected='selected',
+           on_select=self.on_selection
+                            #editable = False,
+                            )
         v = View(
                VGroup(HGroup(
                        Item('show_hide', editor=ButtonEditor(label_value='label'),
@@ -98,7 +112,7 @@ class ExtractionLineExplanation(HasTraits):
 
 
                       ),
-
+                 handler=ELEHandler
                 #resizable = True,
                 #scrollable = True,
                 )
