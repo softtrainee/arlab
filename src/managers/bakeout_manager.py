@@ -253,7 +253,7 @@ class BakeoutManager(Manager):
         old,
         new,
         ):
-        print obj, name, old, new
+#        print obj, name, old, new
         if new:
             self.alive = new
         else:
@@ -395,10 +395,11 @@ class BakeoutManager(Manager):
     def _execute_(self):
         '''
         '''
-
         if self.alive:
             self.kill(user_kill=True)
+            self.alive = False
         else:
+            self.alive = True
             pid = 0
             header = []
             self.data_buffer = []
@@ -456,7 +457,7 @@ class BakeoutManager(Manager):
 
                 for c in controllers:
                     c.run()
-                    time.sleep(0.5)
+#                    time.sleep(0.5)
 
                 if self.include_pressure:
 
@@ -531,7 +532,9 @@ class BakeoutManager(Manager):
                              Item('open_button',
                              editor=ButtonEditor(label_value='open_label'
                              ), show_label=False),
-                            Item('edit_scripts_button', show_label=False)
+                            Item('edit_scripts_button', show_label=False,
+                                 enabled_when='not alive'
+                                 )
                                     ),
                              HGroup(Item('configuration',
                              editor=EnumEditor(name='configurations'),

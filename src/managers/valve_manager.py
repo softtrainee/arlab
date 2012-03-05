@@ -137,21 +137,20 @@ class ValveManager(Manager):
 #            else:
 #                s = v.state
 
-
         return ''.join(locks)
 
     def get_states(self):
         '''
         '''
         states = []
-        for k, v in self.valves.items():
+        for k, _ in self.valves.items():
             states.append(k)
-            if self.query_valve_state:
-                s = self.get_state_by_name(k)
-            else:
-                s = v.state
+#            if self.query_valve_state:
+#                s = self.get_state_by_name(k)
+#            else:
+#                s = v.state
+            s = self.get_state_by_name(k)
             states.append('1' if s else '0')
-
 
         return ''.join(states)
 
@@ -178,21 +177,19 @@ class ValveManager(Manager):
         '''
         return next((item for item in self.explanable_items if item.name == n), None)
 
-
     def get_state_by_name(self, n):
         '''
         '''
         v = self.get_valve_by_name(n)
         state = None
         if v is not None:
-            if self.query_valve_state:
+            if self.query_valve_state and v.query_valve_state:
                 state = v.get_hardware_state()#actuator.get_channel_state(v)
 
             if state is None:
                 state = v.state
             else:
                 v.state = state
-
 
         return state
 
@@ -456,7 +453,7 @@ class ValveManager(Manager):
         self.sector_inlet_valve = c[0][0]
         self.quad_inlet_valve = c[0][1]
 
-        actid = 5
+        actid = 6
         curgrp = None
         self.valve_groups = dict()
 
@@ -472,17 +469,17 @@ class ValveManager(Manager):
                 if actuator is None:
                     self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.txt'.format(name))
 
-
             v = HardwareValve(name,
                      address=a[1],
                      actuator=self.get_actuator_by_name(act),
                      interlocks=a[2].split(','),
+                     query_valve_state=a[4] in ['True', 'true']
 #                     group=a[4]
                      )
             try:
-                if a[4] and a[4] != curgrp:
-                    curgrp = a[4]
-                    if self.valve_groups.has_key(curgrp):
+                if a[5] and a[5] != curgrp:
+                    curgrp = a[5]
+                    if curgrp in self.valve_groups:
                         self.valve_groups[curgrp].valves.append(v)
                     else:
                         vg = ValveGroup()
