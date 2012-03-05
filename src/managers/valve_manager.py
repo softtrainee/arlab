@@ -468,7 +468,7 @@ class ValveManager(Manager):
             if warn_no_act:
                 if actuator is None:
                     self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.txt'.format(name))
-
+            print a
             v = HardwareValve(name,
                      address=a[1],
                      actuator=self.get_actuator_by_name(act),
