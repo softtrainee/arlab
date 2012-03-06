@@ -118,9 +118,9 @@ class HoleDetector(Detector):
     use_smoothing = Bool(True)
 
     start_threshold_search_value = Int(80)
-    threshold_search_width = Int(3)
+    threshold_search_width = Int(20)
     crop_tries = Range(0, 102, 1)  # > 101 makes it a spinner
-    threshold_tries = Range(0, 102, 1)
+    threshold_tries = Range(0, 102, 2)
     threshold_expansion_scalar = Int(5)
 
     def search(self, cx, cy, holenum=None, close_image=True, **kw):
@@ -405,7 +405,7 @@ class HoleDetector(Detector):
 #        w, h = get_size(self.image.source_frame)
         ma = 3.1415926535 * radius ** 2 * (4 * self.croppixels[0] / 640.)
 #        mi = 0.25 * ma
-        mi = 100
+        mi = ma*0.25
 
         for td in steps:
             params = self._calc_sample_hole_position(gsrc, td, min_area=mi, max_area=ma, *args)

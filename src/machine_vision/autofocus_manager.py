@@ -309,7 +309,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
             self.info('frames analyzed {}'.format(len(grads)))
 
-#        self.canvas.markupcontainer.pop('croprect')
+        self.canvas.markupcontainer.pop('croprect')
         if grads is not None:
             sgrads = smooth(grads)
             fmi = focussteps[argmin(sgrads)]
