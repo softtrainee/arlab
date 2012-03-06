@@ -102,10 +102,11 @@ class ExtractionLineExplanation(HasTraits):
                             #editable = False,
                             )
         v = View(
-               VGroup(HGroup(
-                       Item('show_hide', editor=ButtonEditor(label_value='label'),
-                           show_label=False,
-                           springy=False)),
+               VGroup(
+#                      HGroup(
+#                       Item('show_hide', editor=ButtonEditor(label_value='label'),
+#                           show_label=False,
+#                           springy=False)),
 
                       Item('explanable_items',
                            editor=self.legend_editor,

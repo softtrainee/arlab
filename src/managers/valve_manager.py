@@ -28,6 +28,7 @@ from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve
 from src.extraction_line.section import Section
 from src.helpers.paths import hidden_dir, setup_dir
+from src.helpers.valve_parser import ValveParser
 
 class ValveGroup(object):
     owner = None
@@ -89,7 +90,7 @@ class ValveManager(Manager):
 
         self.info('loading valve definitions file ')
         #open config file
-        setup_file = os.path.join(paths.extraction_line_dir, 'valves.txt')
+        setup_file = os.path.join(paths.extraction_line_dir, 'valves.xml')
         self._load_valves_from_file(setup_file)
 
         self.load_soft_lock_state()
@@ -195,9 +196,10 @@ class ValveManager(Manager):
 
     def get_actuator_by_name(self, name):
         if self.actuators:
-            for a in self.actuators:
-                if a.name == name:
-                    return a
+#            for a in self.actuators:
+#                if a.name == name:
+#                    return a
+            return next((a for a in self.actuators if a.name == name), None)
 
     def get_software_lock(self, name):
         v = self.get_valve_by_name(name)
@@ -445,74 +447,139 @@ class ValveManager(Manager):
                 self.sections.append(section)
 
     def _load_valves_from_file(self, path):
-        '''
+        def factory(v):
+            name, hv = self._valve_factory(v)
+            self._load_explanation_valve(hv)
+            self.valves[name] = hv
+            return hv
 
-        '''
-        c = parse_setupfile(path)
-
-        self.sector_inlet_valve = c[0][0]
-        self.quad_inlet_valve = c[0][1]
-
-        actid = 6
-        curgrp = None
         self.valve_groups = dict()
+        parser = ValveParser(path)
+        for g in parser.get_groups():
+            valves = [factory(v) for v in parser.get_valves(group=g)]
+            self.valve_groups[g.text.strip()] = valves
 
-        for a in c[1:]:
-            act = 'valve_controller'
-            if len(a) == actid + 1:
-                act = a[actid]
+        for v in parser.get_valves():
+            factory(v)
 
-            name = a[0]
-            actuator = self.get_actuator_by_name(act)
-            warn_no_act = True
-            if warn_no_act:
-                if actuator is None:
-                    self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.txt'.format(name))
-            print a
-            v = HardwareValve(name,
-                     address=a[1],
-                     actuator=self.get_actuator_by_name(act),
-                     interlocks=a[2].split(','),
-                     query_valve_state=a[4] in ['True', 'true']
-#                     group=a[4]
-                     )
-            try:
-                if a[5] and a[5] != curgrp:
-                    curgrp = a[5]
-                    if curgrp in self.valve_groups:
-                        self.valve_groups[curgrp].valves.append(v)
-                    else:
-                        vg = ValveGroup()
-                        vg.valves = [v]
-                        self.valve_groups[curgrp] = vg
-                else:
-                    self.valve_groups[curgrp].valves.append(v)
+    def _valve_factory(self, v_elem):
+        name = v_elem.text.strip()
+        address = v_elem.find('address')
+        act_elem = v_elem.find('actuator')
+        description = v_elem.find('description')
+        interlocks = [i.text.strip() for i in v_elem.findall('interlock')]
+        if description is not None:
+            description = description.text.strip()
 
-            except IndexError:
+        actname = act_elem.text.strip() if act_elem is not None else 'valve_controller'
+        actuator = self.get_actuator_by_name(actname)
+        if actuator is None:
+            self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.txt'.format(name))
 
-                #there is no group specified
-                pass
+        qs = True
+        vqs = v_elem.get('query_state')
+        if vqs:
+            qs = vqs == 'true'
 
-            s = v.get_hardware_state()
+        hv = HardwareValve(name,
+                           address=address.text.strip() if address is not None else '',
+                           actuator=actuator,
+                           description=description,
+                           query_state=qs,
+                           interlocks=interlocks
+                           )
+        return name, hv
 
-            #update the extraction line managers canvas
+    def _load_explanation_valve(self, v):
+        s = v.get_hardware_state()
+
+        #update the extraction line managers canvas
 #            self.parent.canvas.update_valve_state(v.name[-1], s)
-            self.parent.update_valve_state(v.name[-1], s)
-            args = dict(name=a[0],
-                        address=a[1],
-                        description=a[3],
-                        canvas=self.parent.canvas,
+        name = v.name[-1]
+        self.parent.update_valve_state(name, s)
+#        args = dict(
+#                    )
+        ev = ExplanableValve(name=name,
+                    address=v.address,
+                    description=v.description,
+                    canvas=self.parent.canvas,)
+        ev.state = s if s is not None else False
 
-                        )
-            ev = ExplanableValve(**args)
-            ev.state = s if s is not None else False
+        self.explanable_items.append(ev)
 
-            self.valves[name] = v
-            self.explanable_items.append(ev)
+
+if __name__ == '__main__':
+    v = ValveManager()
+    p = os.path.join(paths.extraction_line_dir, 'valves.xml')
+    v._load_valves_from_file(p)
+#==================== EOF ==================================
+#def _load_valves_from_filetxt(self, path):
+#        '''
+#
+#        '''
+#        c = parse_setupfile(path)
+#
+#        self.sector_inlet_valve = c[0][0]
+#        self.quad_inlet_valve = c[0][1]
+#
+#        actid = 6
+#        curgrp = None
+#        self.valve_groups = dict()
+#
+#        for a in c[1:]:
+#            act = 'valve_controller'
+#            if len(a) == actid + 1:
+#                act = a[actid]
+#
+#            name = a[0]
+#            actuator = self.get_actuator_by_name(act)
+#            warn_no_act = True
+#            if warn_no_act:
+#                if actuator is None:
+#                    self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.txt'.format(name))
+#            print a
+#            v = HardwareValve(name,
+#                     address=a[1],
+#                     actuator=self.get_actuator_by_name(act),
+#                     interlocks=a[2].split(','),
+#                     query_valve_state=a[4] in ['True', 'true']
+##                     group=a[4]
+#                     )
+#            try:
+#                if a[5] and a[5] != curgrp:
+#                    curgrp = a[5]
+#                    if curgrp in self.valve_groups:
+#                        self.valve_groups[curgrp].valves.append(v)
+#                    else:
+#                        vg = ValveGroup()
+#                        vg.valves = [v]
+#                        self.valve_groups[curgrp] = vg
+#                else:
+#                    self.valve_groups[curgrp].valves.append(v)
+#
+#            except IndexError:
+#
+#                #there is no group specified
+#                pass
+#
+#            s = v.get_hardware_state()
+#
+#            #update the extraction line managers canvas
+##            self.parent.canvas.update_valve_state(v.name[-1], s)
+#            self.parent.update_valve_state(v.name[-1], s)
+#            args = dict(name=a[0],
+#                        address=a[1],
+#                        description=a[3],
+#                        canvas=self.parent.canvas,
+#
+#                        )
+#            ev = ExplanableValve(**args)
+#            ev.state = s if s is not None else False
+#
+#            self.valves[name] = v
+#            self.explanable_items.append(ev)
 
 #        for k,g in self.valve_groups.iteritems():
 #            
 #            for v in g.valves:
 #                print k,v.name
-#==================== EOF ==================================
-
