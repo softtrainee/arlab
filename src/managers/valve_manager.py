@@ -88,7 +88,6 @@ class ValveManager(Manager):
 
                 self.info('comm. device = {} '.format(a._cdevice.__class__.__name__))
 
-        self.info('loading valve definitions file ')
         #open config file
         setup_file = os.path.join(paths.extraction_line_dir, 'valves.xml')
         self._load_valves_from_file(setup_file)
@@ -447,6 +446,9 @@ class ValveManager(Manager):
                 self.sections.append(section)
 
     def _load_valves_from_file(self, path):
+        '''
+        '''
+        self.info('loading valve definitions file  {}'.format(path))
         def factory(v):
             name, hv = self._valve_factory(v)
             self._load_explanation_valve(hv)
@@ -474,7 +476,7 @@ class ValveManager(Manager):
         actname = act_elem.text.strip() if act_elem is not None else 'valve_controller'
         actuator = self.get_actuator_by_name(actname)
         if actuator is None:
-            self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.txt'.format(name))
+            self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.xml'.format(name))
 
         qs = True
         vqs = v_elem.get('query_state')

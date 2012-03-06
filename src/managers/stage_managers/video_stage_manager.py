@@ -187,14 +187,13 @@ class VideoStageManager(StageManager, Videoable):
         def _clean_():
             #clean the video directory
             if self.video_directory:
-                self.info('Cleaning video directory on process {}'.format(os.getpid()))
+                self.info('Cleaning video directory')
                 if os.path.isdir(self.video_directory):
                     vdc = VideoDirectoryMaintainceScript(archive_days=3)
                     vdc.clean(self.video_directory)
 
         p = Process(target=_clean_)
         p.start()
-        self.info('main process {}'.format(os.getpid()))
 
     def _canvas_factory(self):
         '''
