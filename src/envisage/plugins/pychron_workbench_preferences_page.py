@@ -73,7 +73,7 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
         parser = self.parser
         cats = []
         for g in parser.get_plugin_groups():
-            ps = parser.get_plugins(g, element=True)
+            ps = parser.get_plugins(g, element=True, all=True)
             if not ps:
                 continue
 
@@ -93,7 +93,6 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
 
         return cats
 
-
     def traits_view(self):
         '''
         '''
@@ -104,7 +103,13 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
         v = View(Item('categories', editor=editor,
                        show_label=False,
                        style='custom'
-                       ))
+                       ),
+                 resizable=True
+                 )
         return v
+
+if __name__ == '__main__':
+    d = PychronWorkbenchPreferencesPage()
+    d.configure_traits()
 #============= views ===================================
 #============= EOF ====================================

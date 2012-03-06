@@ -37,7 +37,7 @@ class FocusParameters(HasTraits):
     velocity_scalar2 = Float(1)
 
     crop_width = Int(300)
-    cropt_height = Int(300)
+    crop_height = Int(300)
 
     def traits_view(self):
         v = View(
@@ -51,6 +51,8 @@ class FocusParameters(HasTraits):
                      Item('negative_window'),
                      Item('positive_window'),
                      Item('velocity_scalar2'),
+                     Item('crop_width'),
+                     Item('crop_height')
 #                     enabled_when='style=="2step"'
                      ),
                )

@@ -35,6 +35,8 @@ from src.machine_vision.autofocus_manager import AutofocusManager
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
 import os
+from video_clean_script import VideoDirectoryMaintainceScript
+from multiprocessing.process import Process
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -181,6 +183,18 @@ class VideoStageManager(StageManager, Videoable):
         self.video.close(user='underlay')
         for s in self._stage_maps:
             s.dump_correction_file()
+
+        def _clean_():
+            #clean the video directory
+            if self.video_directory:
+                self.info('Cleaning video directory on process {}'.format(os.getpid()))
+                if os.path.isdir(self.video_directory):
+                    vdc = VideoDirectoryMaintainceScript(archive_days=3)
+                    vdc.clean(self.video_directory)
+
+        p = Process(target=_clean_)
+        p.start()
+        self.info('main process {}'.format(os.getpid()))
 
     def _canvas_factory(self):
         '''
