@@ -84,7 +84,9 @@ class FusionsLaserManager(LaserManager):
 
     def open_power_graph(self, rid):
         if self.power_graph is None:
-            g = StreamGraph(window_title='Power Readback - {}'.format(rid))
+            g = StreamGraph(window_title='Power Readback - {}'.format(rid),
+                            window_x=0.62,
+                            window_y=0.1)
             g.new_plot(data_limit=60,
                        scan_delay=1,
                        xtitle='time (s)',

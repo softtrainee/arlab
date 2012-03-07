@@ -183,7 +183,7 @@ class ValveManager(Manager):
         v = self.get_valve_by_name(n)
         state = None
         if v is not None:
-            if self.query_valve_state and v.query_valve_state:
+            if self.query_valve_state and v.query_state:
                 state = v.get_hardware_state()#actuator.get_channel_state(v)
 
             if state is None:
@@ -459,7 +459,9 @@ class ValveManager(Manager):
         parser = ValveParser(path)
         for g in parser.get_groups():
             valves = [factory(v) for v in parser.get_valves(group=g)]
-            self.valve_groups[g.text.strip()] = valves
+            vg=ValveGroup()
+            vg.valves=valves
+            self.valve_groups[g.text.strip()] = vg
 
         for v in parser.get_valves():
             factory(v)
@@ -482,7 +484,6 @@ class ValveManager(Manager):
         vqs = v_elem.get('query_state')
         if vqs:
             qs = vqs == 'true'
-
         hv = HardwareValve(name,
                            address=address.text.strip() if address is not None else '',
                            actuator=actuator,
