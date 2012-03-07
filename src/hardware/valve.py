@@ -52,7 +52,7 @@ class HardwareValve(Loggable):
     shaft_low = Property
     shaft_high = Property
 
-    query_valve_state = Bool(True)
+    query_state = Bool(True)
 
     def _get_shaft_low(self):
         return self.canvas_valve.low_side.orientation

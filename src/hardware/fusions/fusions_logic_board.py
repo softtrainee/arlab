@@ -146,6 +146,8 @@ class FusionsLogicBoard(CoreDevice):
 
                 if resp == check_val:
                     break
+                else:
+                    continue
 
             if check_type is not None:
                 if self.simulation:
@@ -154,7 +156,7 @@ class FusionsLogicBoard(CoreDevice):
                     try:
                         resp = check_type(resp)
                     except ValueError:
-                        resp = None
+                        continue
 
             if resp is not None:
                 break
