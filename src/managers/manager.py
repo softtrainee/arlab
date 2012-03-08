@@ -210,6 +210,18 @@ class Manager(ConfigLoadable):
     def get_flag(self, name):
 
         return next((f for f in self.flags if f.name == name), None)
+
+    def set_flag(self, name):
+        return self._set_flag(name, True)
+
+    def clear_flag(self, name):
+        return self._set_flag(name, False)
+
+    def _set_flag(self, name, val):
+        flag = self.get_flag(name)
+        if flag is not None:
+            flag.set(val)
+            return True
 #    def get_flag_state(self, name):
 #        return self._flag(name, 'get')
 #

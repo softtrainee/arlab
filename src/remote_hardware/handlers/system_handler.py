@@ -21,7 +21,7 @@ from threading import Thread
 from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode, \
     InvalidArgumentsErrorCode, InvalidValveErrorCode, InvalidIPAddressErrorCode, InvalidValveGroupErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
-from dummies import DummyELM, DummyDevice
+from dummies import DummyELM
 
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 TM_PROTOCOL = 'src.social.twitter_manager.TwitterManager'
@@ -45,19 +45,19 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
         return elm
 
-    def get_device(self, name, protocol=None):
-        if self.application is not None:
-            if protocol is None:
-                protocol = 'src.hardware.core.i_core_device.ICoreDevice'
-            dev = self.application.get_service(protocol, 'name=="{}"'.format(name))
-            if dev is None:
-                #possible we are trying to get a flag
-                m = self.get_manager()
-                dev = m.get_flag(name)
-
-        else:
-            dev = DummyDevice()
-        return dev
+#    def get_device(self, name, protocol=None):
+#        if self.application is not None:
+#            if protocol is None:
+#                protocol = 'src.hardware.core.i_core_device.ICoreDevice'
+#            dev = self.application.get_service(protocol, 'name=="{}"'.format(name))
+#            if dev is None:
+#                #possible we are trying to get a flag
+#                m = self.get_manager()
+#                dev = m.get_flag(name)
+#
+#        else:
+#            dev = DummyDevice()
+#        return dev
 
     def Set(self, manager, dname, value, sender_address, *args):
         d = self.get_device(dname)

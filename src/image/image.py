@@ -212,15 +212,18 @@ class Image(HasTraits):
 
     def render_images(self, src):
 
-        w = sum([s.size()[0] for s in src])
-        h = sum([s.size()[1] for s in src])
-
+#        w = sum([s.size()[0] for s in src])
+#        h = sum([s.size()[1] for s in src])
+        w = 640
+        h = 480
         display = new_dst(w, h, 3)
         try:
             s1 = src[0].ndarray
             s2 = src[1].ndarray
         except IndexError:
-            return
+            resize(src[0], 640, 480, dst=display)
+            return display
+
         try:
             s1 = src[0].ndarray
             s2 = src[1].ndarray
@@ -245,6 +248,7 @@ class Image(HasTraits):
             resize(composite, 640, 320, dst=display)
         except TypeError:
             pass
+
         return display
 
     def save(self, path, src=None):

@@ -76,9 +76,15 @@ def new_point(x, y):
 #==============================================================================
 # manipulation functions
 #==============================================================================
-def crop(src, x, y, w, h):
+def crop(src, x, y, w, h, mat=True):
+    v = src[y:y + h, x:x + w]
+    if mat:
+        v = cv.asMat(v)
+    return v
+#    return cv.asMat(v)
 #    cv.setImageROI(src, new_rect(x, y, w, h))
-    return cv.asMat(src[y:y + h, x:x + w])
+#    print y, y + h, x, x + w, src.size()
+#    return cv.asMat(src[y:y + h, x:x + w])
 
 
 def colorspace(src, cs=None):
