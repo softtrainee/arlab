@@ -46,6 +46,7 @@ class FusionsCO2Manager(FusionsLaserManager):
     def set_laser_power(self, rp):
         '''
         '''
+        super(FusionsCO2Manager, self).set_laser_power(rp)
         self.info('request power %0.3f' % rp)
         self.logic_board._set_laser_power_(rp)
 

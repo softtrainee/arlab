@@ -54,6 +54,7 @@ class Grapher(HasTraits):
         data = loadtxt(datapath, delimiter=',', skiprows=1)
         func(data, datapath)
 
+
     def scatter(self, dataarr, datapath):
         g = self.graph
         g.new_plot(padding=[30, 10, 30, 30],

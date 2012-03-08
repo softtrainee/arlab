@@ -103,7 +103,7 @@ class Rectangle(MarkupItem):
     y = 0
 
     def _render_(self, gc):
-        gc.rect(self.x, self.y, self.x + self.width, self.y + self.height)
+        gc.rect(self.x, self.y, self.width, self.height)
 
 
 class Line(MarkupItem):

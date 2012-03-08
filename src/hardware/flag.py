@@ -35,4 +35,5 @@ class Flag(object):
 
     def clear(self):
         self._set = False
+
 #======== EOF ================================

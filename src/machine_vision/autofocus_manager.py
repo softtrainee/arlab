@@ -27,7 +27,7 @@ from src.data_processing.time_series.time_series import smooth
 import time
 
 #from src.image.image_helper import grayspace, subsample
-from src.image.cvwrapper import grayspace, get_focus_measure
+from src.image.cvwrapper import grayspace, get_focus_measure, crop, resize
 
 from scipy.ndimage.measurements import variance
 from scipy.ndimage.filters import generic_gradient_magnitude, sobel
@@ -37,6 +37,7 @@ import os
 from src.managers.manager import Manager
 from src.image.image import Image
 from src.machine_vision.focus_parameters import FocusParameters
+from src.image.image_editor import ImageEditor
 
 
 class ConfigureHandler(Handler):
@@ -106,8 +107,11 @@ class AutofocusManager(Manager):
             target = self._passive_focus_1step
             kw = dict(operator=oper)
 
+#        self.load_source()
+#        self.image.frames.append(self.image.source_frame)
+#        self.edit_traits(view='image_view')
+
         self._passive_focus_thread = Thread(target=target, kwargs=kw)
-#        self._passive_focus_thread = Thread(target=target, args=args, kwargs=kw)
         self._passive_focus_thread.start()
 
     def stop_focus(self):
@@ -118,10 +122,7 @@ class AutofocusManager(Manager):
         self.info('autofocusing stopped by user')
 
     def _passive_focus_1step(self, operator, **kw):
-        nominal_focus, fs, gs, sgs = self._passive_focus(operator,
-                            #velocity_scalar=self.parameters.velocity_scalar1,
-                            **kw
-                            )
+        nominal_focus, fs, gs, sgs = self._passive_focus(operator, **kw)
 
         self.autofocusing = False
 
@@ -240,7 +241,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
                     vo = controller.axes['z'].velocity
                     pdict = dict(velocity=vo * 0.5, key='z')
                     controller._set_single_axis_motion_parameters(pdict=pdict)
-                    controller.set_z(fma, block=True)
+                    controller.single_axis_move('z', fma, block=True)
 
                 if manager is not None:
                     if prev_zoom is not None:
@@ -249,26 +250,37 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
             return fma, fs, gs, sgs
 
-    def _focus_sweep(self, start, end, steps, operator, velocity_scalar=None):
-        if velocity_scalar is None:
-            velocity_scalar = self.parameters.velocity_scalar1
-        grads = []
+    def _get_roi(self):
         w = self.parameters.crop_width
         h = self.parameters.crop_height
         cx = (640 - w) / 2
         cy = (480 - h) / 2
         roi = cx, cy, w, h
+        return roi
 
-        self.canvas.add_markup_rect(*roi)
+    def _add_focus_area_rect(self, cx, cy, w, h):
+        pl = self.canvas.padding_left
+        pb = self.canvas.padding_bottom
+        self.canvas.add_markup_rect(cx + pl, cy + pb, w, h)
+
+    def _focus_sweep(self, start, end, steps, operator, velocity_scalar=None):
+        if velocity_scalar is None:
+            velocity_scalar = self.parameters.velocity_scalar1
+        grads = []
+        roi = self._get_roi()
+#        cx, cy, w, h = roi
+#        s = self.load_source()
+#        s = resize(s, 640, 480)
+#        self.image.frames[0] = crop(s, *roi)
+        self._add_focus_area_rect(*roi)
 
         controller = self.stage_controller
         if self.parameters.discrete:
             self.info_later('focus sweep start={} end={} steps={}'.format(start, end, steps))
             focussteps = linspace(start, end, steps)
             for fi in focussteps:
-                #move to focal distance
                 if controller is not None:
-                    controller.set_z(fi, block=True)
+                    controller.single_axis_move('z', fi, block=True)
 
                 s = self.load_source()
                 grads.append(self._calculate_focus_measure(operator, roi, src=s))
@@ -285,17 +297,21 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             self.info('focus sweep start={} end={}'.format(start, end))
             #move to start position
             if controller:
-                controller.set_z(start, block=True)
+                controller.single_axis_move('z', start, block=True)
 
                 vo = controller.axes['z'].velocity
                 controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity_scalar,
-                                                                         key='z'))
+                                                            key='z'))
                 time.sleep(0.25)
-                controller.set_z(end)
+                controller.single_axis_move('z', end)
 
                 focussteps = []
+#                s = self.load_source()
+#                s = resize(s, 640, 480)
+#                self.image.frames[0] = crop(s, *roi)
                 while controller.timer.IsRunning() and self.autofocusing:
                     self.load_source()
+#                    self.image.frames[0] = crop(s, *roi)
                     focussteps.append(controller.get_current_position('z'))
                     grads.append(self._calculate_focus_measure(operator, roi))
                     time.sleep(0.1)
@@ -325,7 +341,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             see
             IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
             FOR DIGITAL STILL CAMERA
-            DOI 10.1109/30.468047  
+            DOI 10.1109/30.468047
             and
             http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
         '''
@@ -334,11 +350,12 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             src = self.image.source_frame
 
         gsrc = grayspace(src)
-#        v = subsample(gsrc, *roi).as_numpy_array()
-#        v = asarray(v, dtype=float)
-#        v = subsample(gsrc, *roi)
-        x, y, w, h = roi
-        v = gsrc[y:y + h, x:x + w]
+
+        #need to resize to 640,480. this is the space the roi is in
+#        x, y, w, h = roi
+#        v = gsrc[y:y + h, x:x + w]
+        s = resize(gsrc, 640, 480)
+        v = crop(s, *roi, mat=False)
 
         if operator == 'var':
             '''
@@ -372,8 +389,19 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         return 'Autofocus' if not self.autofocusing else 'Stop'
 
     def _configure_button_fired(self):
-        self.edit_traits(view='configure_view')
+        info = self.edit_traits(view='configure_view', kind='livemodal')
+        if info.result:
+            try:
+                self.canvas.markupcontainer.pop('croprect')
+            except KeyError:
+                pass
 
+    def image_view(self):
+        v = View(Item('image', show_label=False, editor=ImageEditor(),
+                      width=640,
+                      height=480,
+                       style='custom'))
+        return v
 
     def traits_view(self):
         v = View(
@@ -385,16 +413,19 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
                )
         return v
 
-    @on_trait_change('parameters:crop_width')
+    @on_trait_change('parameters:[_crop_width,_crop_height]')
     def _crop_rect_update(self):
-        pass
+        roi = self._get_roi()
+        self._add_focus_area_rect(*roi)
 
     def configure_view(self):
         v = View(Item('parameters', style='custom', show_label=False),
                handler=ConfigureHandler,
                buttons=['OK', 'Cancel'],
                kind='livemodal',
-               title='Configure Autofocus'
+               title='Configure Autofocus',
+               x=0.80,
+               y=0.05
                )
         return v
 

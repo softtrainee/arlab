@@ -416,10 +416,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         if block:
             block = key
-        self._axis_move(cmd, block=block)
 
-
-        if update and not block:
+        if update:
+#        if update and not block:
             self.timer = self.timer_factory(func=func)
         else:
             if x is not None and y is not None:
@@ -428,9 +427,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 self._z_position = value
                 self.z_progress = value
 
-#        if block:
-#            block=key
-
+        self._axis_move(cmd, block=block)
 
     def multiple_axis_move(self, axes_list, block=False):
         '''

@@ -85,12 +85,16 @@ class FusionsLaserManager(LaserManager):
     def open_power_graph(self, rid):
         if self.power_graph is None:
             g = StreamGraph(window_title='Power Readback - {}'.format(rid),
-                            window_x=0.62,
-                            window_y=0.1)
+                            window_x=0.01,
+                            window_y=0.4,
+                            container_dict=dict(padding=5)
+                            )
             g.new_plot(data_limit=60,
                        scan_delay=1,
                        xtitle='time (s)',
-                       ytitle='8bit power')
+                       ytitle='8bit power',
+
+                       )
             g.new_series()
             self.power_graph = g
         else:
@@ -103,7 +107,8 @@ class FusionsLaserManager(LaserManager):
                        ytitle='8bit power')
             g.new_series()
 
-        do_later(self.power_graph.edit_traits)
+        self.power_graph.configure_traits()
+#        do_later(self.power_graph.edit_traits)
 
     def start_power_recording(self, rid):
         self.open_power_graph(rid)
@@ -114,6 +119,21 @@ class FusionsLaserManager(LaserManager):
         self.power_timer = Timer(1000, self._record_power)
 
     def stop_power_recording(self):
+
+        def _stop():
+            self.power_timer.Stop()
+            '''
+                analyze the power graph
+                if requested power greater than 1.5 
+                average power should be greater than 2 
+            '''
+            if self._requested_power > 1.5:
+                ps = self.power_graph.get_data(axis=1)
+                a = sum(ps) / len(ps)
+                if a < 2:
+                    self.warning('Does not appear laser fired. Average power reading ={}'.format(a))
+
+
 
         if self.power_timer:
             n = 5
@@ -394,7 +414,11 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         return FiberLight(name='fiber_light')
+if __name__ == '__main__':
 
+    d = FusionsLaserManager()
+    d.open_power_graph('1')
+#    d.configure_traits()
 #========================== EOF ====================================
 #    def show_video_controls(self):
 #        '''

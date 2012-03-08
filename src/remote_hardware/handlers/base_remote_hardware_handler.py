@@ -23,11 +23,13 @@ from src.loggable import Loggable
 from error_handler import ErrorHandler
 from threading import Lock
 
+from dummies import DummyDevice
 
 class BaseRemoteHardwareHandler(Loggable):
     application = Any
     error_handler = Instance(ErrorHandler, ())
     manager_name = 'Manager'
+
     def __init__(self, *args, **kw):
         super(BaseRemoteHardwareHandler, self).__init__(*args, **kw)
         self._manager_lock = Lock()
@@ -60,9 +62,8 @@ class BaseRemoteHardwareHandler(Loggable):
                 #    err = e
 
                 if err is None:
-                    #hardware query happens here
-
-                    err, response = eh.check_response(func, manager, args[1:] + [sender_addr])
+                    err, response = eh.check_response(func, manager, args[1:] +
+                                                      [sender_addr])
 
                     if err is None:
                         return response
@@ -82,5 +83,22 @@ class BaseRemoteHardwareHandler(Loggable):
 
         except AttributeError:
             pass
+
+    def get_device(self, name, protocol=None):
+
+        if self.application is not None:
+            if protocol is None:
+                protocol = 'src.hardware.core.i_core_device.ICoreDevice'
+            dev = self.application.get_service(protocol, 'name=="{}"'.format(name))
+            if dev is None:
+                #possible we are trying to get a flag
+                m = self.get_manager()
+                if m:
+                    dev = m.get_flag(name)
+                else:
+                    dev = DummyDevice()
+        else:
+            dev = DummyDevice()
+        return dev
 
 #============= EOF ====================================

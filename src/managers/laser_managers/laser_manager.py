@@ -55,6 +55,8 @@ class LaserManager(Manager):
     status_text = Str
     pulse = Instance(Pulse)
 
+    _requested_power = None
+
     @on_trait_change('stage_manager:canvas:current_position')
     def update_status_bar(self, obj, name, old, new):
         if isinstance(new, tuple):
@@ -123,14 +125,21 @@ class LaserManager(Manager):
 #    def enable_laser(self, is_ok=True):
         self.info('enable laser')
         if self._enable_hook():
+            if self.clear_flag('enable_error_flag'):
+                self.debug('clearing enable error flag')
+
             self.enabled = True
             self.monitor = self.monitor_factory()
             self.monitor.monitor()
             self.enabled_led.state = 'green'
         else:
-            self.failure_reason = 'Could not enable laser'
-            self.disable_laser()
+#            self.failure_reason = 'Could not enable laser'
+            self.warning('Could not enable laser')
 
+            if self.set_flag('enable_error_flag'):
+                self.debug('setting enable_error_flag')
+
+            self.disable_laser()
 
     def disable_laser(self):
         self.info('disable laser')
@@ -144,6 +153,7 @@ class LaserManager(Manager):
             self.monitor.stop()
 
         self.enabled_led.state = 'red'
+        self._requested_power = None
 
     def _enable_hook(self):
         return True
@@ -159,11 +169,10 @@ class LaserManager(Manager):
         self.step_heat_manager = shm
         shm.edit_traits()
 
-    def set_laser_power(self, *args, **kw):
+    def set_laser_power(self, power, *args, **kw):
         '''
         '''
-
-        pass
+        self._requested_power = power
 
 #    def kill(self, **kw):
 #        '''
