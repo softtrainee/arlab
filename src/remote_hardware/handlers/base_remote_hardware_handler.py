@@ -23,7 +23,11 @@ from src.loggable import Loggable
 from error_handler import ErrorHandler
 from threading import Lock
 
-from dummies import DummyDevice
+from dummies import DummyDevice, DummyLM
+
+DIODE_PROTOCOL = 'src.managers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
+CO2_PROTOCOL = 'src.managers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
+SYNRAD_PROTOCOL = 'src.managers.laser_managers.synrad_co2_manager.SynradCO2Manager'
 
 class BaseRemoteHardwareHandler(Loggable):
     application = Any
@@ -100,5 +104,22 @@ class BaseRemoteHardwareHandler(Loggable):
         else:
             dev = DummyDevice()
         return dev
+
+    def get_laser_manager(self, name=None):
+        if name is None:
+            name = self.manager_name
+
+        if self.application is not None:
+            protocol = CO2_PROTOCOL
+            if name == 'Diode':
+                protocol = DIODE_PROTOCOL
+            elif name == 'Synrad':
+                protocol = SYNRAD_PROTOCOL
+
+            lm = self.application.get_service(protocol)
+        else:
+            lm = DummyLM()
+
+        return lm
 
 #============= EOF ====================================

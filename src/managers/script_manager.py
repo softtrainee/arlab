@@ -206,6 +206,6 @@ Are you sure you want to save ?'''.format(is_are, n, e_es))
 
 if __name__ == '__main__':
     setup('scripts')
-    s = ScriptManager()
+    s = ScriptManager(kind='ExtractionLine')
     s.configure_traits()
 #============= EOF =============================================

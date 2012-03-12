@@ -76,6 +76,7 @@ class FusionsLaserManager(LaserManager):
         p = self.get_laser_watts()
         if p is not None:
             self.data_manager.add_time_stamped_value(p, rawtime=True)
+
             try:
                 self.power_graph.record(p)
             except Exception, e:
@@ -107,8 +108,12 @@ class FusionsLaserManager(LaserManager):
                        ytitle='8bit power')
             g.new_series()
 
-        self.power_graph.configure_traits()
-#        do_later(self.power_graph.edit_traits)
+#        self.power_graph.edit_traits()
+        do_later(self.power_graph.edit_traits)
+
+    def _dispose_optional_windows_hook(self):
+        if self.power_graph is not None:
+            self.power_graph.close()
 
     def start_power_recording(self, rid):
         self.open_power_graph(rid)
@@ -132,8 +137,6 @@ class FusionsLaserManager(LaserManager):
                 a = sum(ps) / len(ps)
                 if a < 2:
                     self.warning('Does not appear laser fired. Average power reading ={}'.format(a))
-
-
 
         if self.power_timer:
             n = 5

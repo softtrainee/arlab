@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #=============enthought library imports=======================
-from chaco.axis import PlotAxis as ScalesPlotAxis
+from chaco.api import PlotAxis as ScalesPlotAxis
 from chaco.scales.api import CalendarScaleSystem, TimeScale
 from chaco.scales_tick_generator import ScalesTickGenerator
 #=============standard library imports ========================
@@ -30,8 +30,8 @@ from graph import Graph
 HMSScales = [TimeScale(microseconds=100), TimeScale(milliseconds=10)] + \
            [TimeScale(seconds=dt) for dt in (1, 5, 15, 30)] + \
            [TimeScale(minutes=dt) for dt in (5, 15, 30)] + \
-           [TimeScale(hours=dt) for dt in (6, 12, 24)]  # +\
-#           [TimeScale(days=dt) for dt in (1,2,7)]
+           [TimeScale(hours=dt) for dt in (6, 12, 24)] # + \
+#           [TimeScale(days=dt) for dt in (1, 2, 7)]
 
 
 class TimeSeriesGraph(Graph):

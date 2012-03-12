@@ -31,6 +31,7 @@ class ExtractionLineScriptParser(CoreScriptParser):
                 'ENABLE_LASER', 'DISABLE_LASER', 'SET_LASER_POWER', 'CLOSE_STAGE_MANAGER',
                 'SET_BEAM_DIAMETER', 'SET_TIME_ZERO', 'CONFIG', 'DEFINE', 'SNIFF', 'EXTRACTION_ANALYSIS'
                 ]
+
     def _get_subroutine_path_(self, subroutine):
         '''
             @type subroutine: C{str}
@@ -41,12 +42,10 @@ class ExtractionLineScriptParser(CoreScriptParser):
             for b in subroutine.split('.'):
                 sub = os.path.join(sub, b)
             subroutine = sub
-            return os.path.join(RUNSCRIPT_DIR, '%s.rs' % subroutine)
+        return os.path.join(RUNSCRIPT_DIR, '%s.rs' % subroutine)
 
     def _check_valid_subroutine_(self, subroutine):
         '''
-            @type subroutine: C{str}
-            @param subroutine:
         '''
         path = self._get_subroutine_path_(subroutine.strip())
 
@@ -245,8 +244,7 @@ class ExtractionLineScriptParser(CoreScriptParser):
 
     def _sub_parse(self, linenum, **kw):
         '''
-            @type linenum: C{str}
-            @param linenum:
+
         '''
         lexer = self._lexer
         error = None
@@ -267,6 +265,11 @@ class ExtractionLineScriptParser(CoreScriptParser):
                 with open(subpath, 'r') as f:
                     error = self.parse(f.read())
                     self.script_name = '-'
+
+        error = [ei for ei in error if ei[2]]
+#        print 'sub parse errr', error
+        if not error:
+            error = None
 
         return error, subpath
 
@@ -314,9 +317,9 @@ class ExtractionLineScriptParser(CoreScriptParser):
                 l, r = condition.split(key)
                 l = 'self.%s' % l
                 try:
-                    int(r)
+                    float(r)
                 except ValueError:
-                    if not "'" in r:
+                    if not "'" in r and r not in ['True', 'False']:
                         #assume quotes not apostrophe
                         r = 'self.%s' % r
 

@@ -24,6 +24,11 @@ class Run(object):
     rid = None
     start = None
     end = None
+
+
+    kind = 'co2'
+    holenum = 0
+
     def __init__(self, rid):
         self.rid = rid
         self.start = datetime.strftime(datetime.today(), '%Y-%m-%d %H:%M:%S')
@@ -34,11 +39,13 @@ class Run(object):
     def to_report(self):
         return '{:<15}{:<30}{}'.format(self.rid, self.start, self.end)
 
+
 class Report(HasTraits):
     name = None
     runs = List(Run)
     start = None
     end = None
+
     def __init__(self, name, *args, **kw):
         super(Report, self).__init__(*args, **kw)
         self.name = name
@@ -52,6 +59,8 @@ class Report(HasTraits):
             self.runs[-1].set_complete_time()
         except IndexError, e:
             print e, 'Report.complete_run'
+
+        return self.runs[-1]
 
     def start_run(self, r):
         self.runs.append(Run(r))
@@ -94,8 +103,9 @@ class MultrunsReportManager(Manager):
 
     def complete_run(self):
         if self.current_report is not None:
-            self.info('complete run')
-            self.current_report.complete_run()
+            rid = self.current_report.complete_run()
+            self.info('complete run {}'.format(rid))
+            return rid
 
     def send_report(self):
         if self.application is not None:

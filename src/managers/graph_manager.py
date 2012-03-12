@@ -29,7 +29,9 @@ from manager import Manager
 from matplotlib.dates import datestr2num
 from src.data_processing.time_series.time_series import downsample_1d, smooth
 from src.graph.time_series_graph import TimeSeriesGraph
-
+import dateutil
+import time
+from datetime import datetime
 KIND_VALUES = dict(
                    tempmonitor='Temp Monitor',
                    bakeout='Bakeout',
@@ -97,13 +99,15 @@ class GraphManager(Manager):
 # parsers
 #===============================================================================
     def _scan_parser(self, path, nargs=2, normalize=True, downsample=False, zero_filter=False):
-        converters = {0:datestr2num}
-        args = loadtxt(path, converters=converters, delimiter=',', unpack=True)
-        print args.shape
+
+        converters = {0:lambda x: time.mktime(dateutil.parser.parse(x).timetuple())}
+        args = loadtxt(path,
+                       converters=converters,
+                       delimiter=',', unpack=True)
         if nargs == 2:
             x, y = args
         else:
-            _, x, y = args
+            t, x, y = args
 
         if downsample:
             x = downsample_1d(x, factor=downsample)
@@ -112,6 +116,8 @@ class GraphManager(Manager):
         if normalize:
             #normalize to 0 
             x = [(xi - x[0]) * 3600 * 24 for xi in x]
+        else:
+            x = t
 
         if zero_filter:
             args = zip(x, y)

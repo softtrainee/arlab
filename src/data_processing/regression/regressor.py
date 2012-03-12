@@ -111,15 +111,17 @@ class Regressor(object):
         return self._regress_(x, y, 'weighted_least_squares', **kw)
 
     def get_degree(self, kind):
-        degree = None
-        if kind == 'linear':
-            degree = 1
-        elif kind == 'parabolic':
-            degree = 2
-        elif kind == 'cubic':
-            degree = 3
-        elif kind == 'average':
-            degree = 0
+        if isinstance(kind, str):
+            if kind == 'linear':
+                degree = 1
+            elif kind == 'parabolic':
+                degree = 2
+            elif kind == 'cubic':
+                degree = 3
+            elif kind == 'average':
+                degree = 0
+        else:
+            degree = kind
         return degree
 
     def _regress_(self, x, y, kind, data_range=None, npts=None, **kw):

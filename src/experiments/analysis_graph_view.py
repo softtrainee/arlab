@@ -22,7 +22,7 @@ from traitsui.api import View, Item, ListEditor
 #============= local library imports  ==========================
 from experiment import Experiment
 from src.graph.graph import Graph
-from analysis import Analysis
+from analysis import AutomatedRun
 class AnalysisGraphView(HasTraits):
     '''
         G{classtree}
@@ -66,7 +66,7 @@ class AnalysisGraphView(HasTraits):
             @type new: C{str}
             @param new:
         '''
-        if isinstance(new, Analysis):
+        if isinstance(new, AutomatedRun):
             if new.graph not in self.graphs:
                 self.graphs.append(new.graph)
                 self.selected = new.graph

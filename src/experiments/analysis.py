@@ -35,7 +35,7 @@ from src.extraction_line.extraction_line_manager import ExtractionLineManager
 from threading import Condition
 prep_script_dir = os.path.join(scripts_dir, 'prep_scripts')
 
-class Analysis(Loggable):
+class AutomatedRun(Loggable):
     '''
     '''
     kind = Enum('analysis', 'blank')
@@ -113,7 +113,7 @@ class Analysis(Loggable):
         '''
            
         '''
-        super(Analysis, self).__init__(*args, **kw)
+        super(AutomatedRun, self).__init__(*args, **kw)
         self.load_heating_schedules()
         self.load_prep_scripts()
 
@@ -323,12 +323,12 @@ class Analysis(Loggable):
             self.experiment.analyses.append(b)
 
 
-        self.name = 'Analysis %i' % len(self.experiment.analyses)
+        self.name = 'AutomatedRun %i' % len(self.experiment.analyses)
         if self.use_schedule:
             for s in self._heating_schedule.steps:
                 nobj = self.clone_traits()
                 nobj.power = s.power
-                nobj.name = 'Analysis %i' % len(self.experiment.analyses)
+                nobj.name = 'AutomatedRun %i' % len(self.experiment.analyses)
                 nobj.database = self.database
                 self.experiment.analyses.append(nobj)
 

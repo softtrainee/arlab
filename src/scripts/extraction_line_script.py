@@ -61,8 +61,12 @@ class ExtractionLineScript(CoreScript):
     hole = 0
     kind = Enum('analysis', 'blank')
     debug = False
+    eq_time = 15
 
-
+    @classmethod
+    def get_documentation(self):
+        from src.scripts.core.html_builder import HTMLDoc, HTMLText
+        return ''
 
     def _get_interpolation_value(self, key):
         value = 0
@@ -96,15 +100,15 @@ class ExtractionLineScript(CoreScript):
         #so that the script will wait for the daughter before finishing 
         #self.daughter_threads.append(t)
 
-    def extraction_analysis_statement(self, *args):
-        #bootstrap an analysis script
-        an = MeasurementScript(
-                            source_dir=os.path.join(scripts_dir, 'analysis'),
-                            file_name='test.rs'
-
-                            )
-        an.bootstrap()
-        self.stoppable_scripts.append(an)
+#    def extraction_analysis_statement(self, *args):
+#        #bootstrap an analysis script
+#        an = MeasurementScript(
+#                            source_dir=os.path.join(scripts_dir, 'analysis'),
+#                            file_name='test.rs'
+#
+#                            )
+#        an.bootstrap()
+#        self.stoppable_scripts.append(an)
 
     def define_statement(self, define_dict):
         for key in define_dict:
@@ -118,9 +122,12 @@ class ExtractionLineScript(CoreScript):
 
         self.log_statement(msg)
 
+    def get_time_zero(self, eqtime):
+        return self.time_zero + eqtime * 2 / 3.0
+
     def wait_statement(self, wtime, N=5):
         '''
-        
+
         '''
 
         start_time = time.time()
@@ -151,14 +158,12 @@ class ExtractionLineScript(CoreScript):
         '''
         '''
         if eval(condition):
-            self.run_command(tout)
+            self._run_command(-1, tout)
         elif fout is not None:
-            self.run_command(fout)
+            self._run_command(-1, fout)
 
     def log_statement(self, msg):
         '''
-            @type msg: C{str}
-            @param msg:
         '''
         if msg.startswith("'"):
             msg = msg[1:]
@@ -170,17 +175,7 @@ class ExtractionLineScript(CoreScript):
 
     def for_statement(self, start, lim, step, command):
         '''
-            @type start: C{str}
-            @param start:
 
-            @type lim: C{str}
-            @param lim:
-
-            @type step: C{str}
-            @param step:
-
-            @type command: C{str}
-            @param command:
         '''
         for i in range(start, lim, step):
             for c in command:
@@ -232,7 +227,9 @@ class ExtractionLineScript(CoreScript):
             if self.debug:
                 kw['mode'] = 'debug'
 
-            getattr(self.manager, fname)(valve_name, **kw)
+            resp = getattr(self.manager, fname)(valve_name, **kw)
+            if resp:
+                time.sleep(1)
 
     def sub_statement(self, subpath):
         '''
@@ -240,8 +237,8 @@ class ExtractionLineScript(CoreScript):
             @param subpath:
         '''
         #c = self.cond
-        for cmd in parse_file(subpath):
-            self.run_command(cmd)
+        for i, cmd in enumerate(parse_file(subpath)):
+            self._run_command(i, cmd)
             #ri = ExtractionLineScriptItem(self, c, cmd, self.logger)
             #ri.start()
 

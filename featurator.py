@@ -115,29 +115,41 @@ def main(launch=False, simulator=False):
 
 
 def mass_spec_simulator(client):
-    _lock = Lock()
+    client.ask('StartMultRuns Foo')
+    client.ask('StartRun DDD')
 
-    def _sim():
-        for i in range(100):
-            with _lock:
-                client.ask('GetValveStates', port=1063)
-            time.sleep(1)
+    client.ask('SetXY 10,10', port=1067)
+    client.ask('Enable', port=1067)
+    time.sleep(3)
+    client.ask('Disable', port=1067)
+    time.sleep(3)
+    client.ask('CompleteRun DDD')
 
-    t = Thread(target=_sim)
-    t.start()
-
-    time.sleep(1)
-
-    for cmd, d in [('Enable', 5), ('Disable', 0.1)]:
-        with _lock:
-            client.ask(cmd, port=1067)
-        time.sleep(d)
+#    _lock = Lock()
+#
+#    def _sim():
+#        for i in range(100):
+#            with _lock:
+#                client.ask('GetValveStates', port=1063)
+#            time.sleep(1)
+#
+#    t = Thread(target=_sim)
+#    t.start()
+#
+#    time.sleep(1)
+#
+#    for cmd, d in [('Enable', 5), ('Disable', 0.1)]:
+#        with _lock:
+#            client.ask(cmd, port=1067)
+#        time.sleep(d)
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--launch', action='store_true')
     parser.add_argument('-s', '--simulator', action='store_true')
+
+
 
     args = parser.parse_args()
     main(launch=args.launch,

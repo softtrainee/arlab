@@ -55,17 +55,29 @@ class ISeriesDevice(CoreDevice):
             if len(args) > 1:
                 try:
                     return float(args[1])
-                except:
-                    return -1
-        else:
-            mi = -10
-            ma = 10
-            return self.get_random_value(min=mi, max=ma)
+                except ValueError:
+                    pass
+#        else:
+#            mi = -10
+#            ma = 10
+#            return self.get_random_value(min=mi, max=ma)
 
     def _build_command(self, cmd_type, cmd_indx):
         '''
         '''
         return '{}{}{}'.format(self.prefix, cmd_type, cmd_indx)
+
+    def _write_command(self, commandindex, value=None):
+        '''
+        '''
+        args = [self.prefix, 'W', commandindex]
+
+        if value is not None:
+            args += [str(value)]
+        self.ask(''.join(args),
+                 #delay = 400
+                 )
+
 
 INPUT_CLASS_MAP = {0: 'TC', 1: 'RTD', 2: 'PROCESS'}
 TC_MAP = {0: 'J', 1: 'K', 2: 'T', 3: 'E', 4: 'N', 5: 'Din-J', 6: 'R', 7: 'S', 8: 'B', 9: 'C'}
@@ -101,7 +113,6 @@ class DPi32TemperatureMonitor(ISeriesDevice):
 
     def _set_input_type(self, v):
         '''
-            
         '''
         self._input_type = v
         self.set_input_type(v)
@@ -115,15 +126,33 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         '''
         '''
         commandindex = '01'
-        com = self._build_command('V', commandindex)
-        x = self._parse_response(self.ask(com,
-                                          #delay=400,
-                                        **kw
-                                              ))
+#        com = self._build_command('V', commandindex)
+        com = ('V', commandindex)
+#        kw.update(verbose=False)
+        x = self.repeat_command(com, check_type=float, **kw)
         if x is not None:
             self.process_value = x
-
             return x
+
+    def set_busformat(self):
+        commandindex = '1F'
+
+        sep = 0 #space
+        flow = 0 #continoues
+        mode = 0 #rs232
+        echo = 1 #echo
+        linefeed = 1
+        modbus = 0
+
+        bits = '00{}{}{}{}{}{}'.format(sep,
+                                       flow,
+                                       mode,
+                                       echo,
+                                       linefeed,
+                                       modbus
+                                       )
+        value = '{:02X}'.format(int(bits, 2))
+        self._write_command(commandindex, value)
 
     def set_input_type(self, v):
         '''
@@ -144,11 +173,13 @@ class DPi32TemperatureMonitor(ISeriesDevice):
     def read_input_type(self):
         '''
         '''
-        commandindex = '07'
-        com = self._build_command('R', commandindex)
+#        commandindex = '07'
+#        com = self._build_command('R', commandindex)
 
-        re = self.ask(com)
+#        re = self.ask(com)
 
+        cmd = 'R', '07'
+        re = self.repeat_command(cmd)
         if re is not None:
             re = re.strip()
             #strip off first three command characters
@@ -166,17 +197,6 @@ class DPi32TemperatureMonitor(ISeriesDevice):
         '''
         c = self._build_command('Z', '02')
         self.ask(c)
-
-    def _write_command(self, commandindex, value=None):
-        '''
-        '''
-        args = [self.prefix, 'W', commandindex]
-
-        if value is not None:
-            args += [str(value)]
-        self.ask(''.join(args),
-                 #delay = 400
-                 )
 
     def graph_builder(self, g):
         g.new_plot(

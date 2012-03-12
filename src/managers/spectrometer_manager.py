@@ -56,6 +56,20 @@ class SpectrometerManager(Manager):
     databuffer = DelegatesTo('spectrometer')
 
     center_paths = List
+
+
+    def set_dac(self, v):
+        self.spectrometer.magnet.set_dac(v)
+
+    def get_intensities(self, detector=None, **kw):
+        data = self.spectrometer.get_intensities(**kw)
+        if data is not None:
+            data = data[DETECTOR_ORDER.index(self.reference_detector)]
+        return data
+
+    def get_intensity(self, detector, **kw):
+        return self.get_intensities(detector, **kw)
+
     def load(self):
 
         self.spectrometer.load()
@@ -102,13 +116,14 @@ class SpectrometerManager(Manager):
         #set steering voltage to zero
         self.spectrometer.deflection_calibration()
         self.defscanning = False
+
     def open_magfield_calibration(self):
         mag = self.spectrometer.magnet
         mag.update_graph()
         mag.graph.edit_traits()
 
     def peak_center(self, **kw):
-        self.spectrometer.peak_center(**kw)
+        return self.spectrometer.peak_center(**kw)
 
     def _update_hover(self, obj, name, old, new):
         if new is not None:
@@ -121,7 +136,6 @@ class SpectrometerManager(Manager):
             except IndexError:
                 return
             g.read_xy(p, header=True)
-
 
             xs, ys, mx, my = self.spectrometer.calculate_peak_center(g.get_data(), g.get_data(axis=1))
             g.new_series(x=xs, y=ys, type='scatter')

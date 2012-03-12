@@ -63,7 +63,6 @@ class CoreScriptParser(object):
         '''
 
         errors = []
-
         if text is not None:
 
             if isinstance(text, str):

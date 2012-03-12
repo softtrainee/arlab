@@ -19,7 +19,7 @@ from traits.api import HasTraits, Float
 #============= standard library imports ========================
 from threading import Lock, Thread, Condition
 import time
-from Queue import Queue
+from Queue import Queue, Empty
 from src.helpers.logger_setup import add_console
 from src.loggable import Loggable
 
@@ -64,7 +64,10 @@ class RS485Scheduler(Loggable):
         _cond.notify()
         _cond.release()
 
-        r = self._buffer.get()
+        try:
+            r = self._buffer.get(timeout=1)
+        except Empty:
+            r = None
         #self.debug('asked {} got {}'.format(args, r))
         return r
 
@@ -80,33 +83,19 @@ class Consumer(Thread):
 
     def run(self):
         while 1:
-                self.cond.acquire()
-#            with self.cond:
-                while self._q.empty():
-#                    print self._q.qsize()
-                    self.cond.wait()
+            self.cond.acquire()
+            while self._q.empty():
+                self.cond.wait(timeout=0.1)
 
-                st = time.time()
-#                self.logger.info('trying to get ')
-                func, args, kwargs, buf = self._q.get()
-                r = func(*args, **kwargs)
-                buf.put(r)
+            st = time.time()
+            func, args, kwargs, buf = self._q.get()
+            r = func(*args, **kwargs)
 
-                self.cond.release()
-                time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
+            buf.put(r)
 
-#        with self._lock:
-#        #self._lock.acquire()
-#            if args is None:
-#                args = tuple()
-#            if kwargs is None:
-#                kwargs = dict()
-#
-##            time.sleep(self.collision_delay / 1000.0)
-#            r = func(*args, **kwargs)
-#            time.sleep(self.collision_delay / 1000.0)
-#            #self._lock.release()
-#            #print args,kwargs, r
-#            return r
+            self.cond.release()
+            time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
+
+
 
 #============= EOF ====================================

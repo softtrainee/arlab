@@ -19,12 +19,8 @@ limitations under the License.
 #============= local library imports  ==========================
 from src.remote_hardware.errors.system_errors import InvalidArgumentsErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
-from dummies import DummyLM
+#from dummies import DummyLM
 from threading import Thread
-
-DIODE_PROTOCOL = 'src.managers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
-CO2_PROTOCOL = 'src.managers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
-SYNRAD_PROTOCOL = 'src.managers.laser_managers.synrad_co2_manager.SynradCO2Manager'
 
 
 class LaserHandler(BaseRemoteHardwareHandler):
@@ -33,20 +29,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
         return 'OK' if (err is None or err is True) else err
 
     def get_manager(self):
-        name = self.manager_name
-
-        if self.application is not None:
-            protocol = CO2_PROTOCOL
-            if name == 'Diode':
-                protocol = DIODE_PROTOCOL
-            elif name == 'Synrad':
-                protocol = SYNRAD_PROTOCOL
-
-            lm = self.application.get_service(protocol)
-        else:
-            lm = DummyLM()
-
-        return lm
+        return self.get_laser_manager()
 
     def get_elm(self):
         if self.application:
@@ -111,7 +94,9 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         #need to remember x,y so we can fool mass spec that we are at position
         manager.stage_manager._temp_position = x, y
+
         err = manager.stage_manager.set_xy(x, y)
+
         #err = manager.stage_manager.linear_move(x, y)
 
         return self.error_response(err)

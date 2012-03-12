@@ -27,11 +27,15 @@ class Source(SpectrometerDevice):
     current_hv = Float(4500)
 
     def read_hv(self):
-        r = self.microcontroller.ask('GetHighVoltage')
-        try:
-            r = float(r)
-        except:
-            r = self.nominal_hv
+        if self.microcontroller is None:
+            r = 4500
+
+        else:
+            r = self.microcontroller.ask('GetHighVoltage')
+            try:
+                r = float(r)
+            except:
+                r = self.nominal_hv
 
         self.current_hv = r
         return r

@@ -995,11 +995,14 @@ class Graph(HasTraits):
             c = kw['color']
 
         if 'type' in kw:
+
             if kw['type'] == 'bar':
                 colorkey = 'fill_color'
             elif kw['type'] == 'polygon':
                 colorkey = 'face_color'
                 kw['edge_color'] = c
+            elif kw['type'] == 'scatter':
+                kw['outline_color'] = c
 
         for k, v in [('render_style', 'connectedpoints'),
                      (colorkey, c)

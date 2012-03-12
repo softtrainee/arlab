@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import  Any, DelegatesTo
+from traits.api import  Any, DelegatesTo, Property
 #from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
@@ -25,7 +25,15 @@ from src.loggable import Loggable
 class SpectrometerDevice(Loggable):
     microcontroller = Any
 
-    simulation = DelegatesTo('microcontroller')
+#    simulation = DelegatesTo('microcontroller')
+
+    simulation = Property
+    def _get_simulation(self):
+        s = True
+        if self.microcontroller:
+            s = self.microcontroller.simulation
+        return s
+
     def finish_loading(self):
         pass
 
