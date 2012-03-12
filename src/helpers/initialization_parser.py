@@ -148,8 +148,8 @@ class InitializationParser(XMLParser):
             else:
                 name = ''.join([a.capitalize() for a in name.split('_')])
         else:
-            name = name.capitalize()
-
+            name = name[0].upper()+name[1:]
+        print name
         return self._get_element(category, name)
 
     def get_manager(self, name, plugin):

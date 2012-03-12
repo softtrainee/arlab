@@ -307,8 +307,10 @@ class ExtractionLineManager(Manager):
         if claimer:
             owned = self.valve_manager.check_group_ownership(name, claimer)
 
+        change=False
         if not owned:
-            result = func(name, mode=mode)
+            result,change = func(name, mode=mode)
+             
         else:
             result = '{} owned by {}'.format(name, claimer)
             self.warning(result)
@@ -328,7 +330,7 @@ class ExtractionLineManager(Manager):
             self.canvas.update_valve_state(name, True if action == 'open' else False)
             result = True
 
-        return result
+        return result, change
 
     def execute_run_script(self, runscript_name):
         runscript_dir = os.path.join(scripts_dir, 'runscripts')

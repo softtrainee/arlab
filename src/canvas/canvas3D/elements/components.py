@@ -572,9 +572,9 @@ class Valve(SetStateObject3D):
 
         if self.valve_manager is not None:
             if state:
-                s = self.valve_manager.open_by_name(self.name)
+                s,_ = self.valve_manager.open_by_name(self.name)
             else:
-                s = self.valve_manager.close_by_name(self.name)
+                s,_ = self.valve_manager.close_by_name(self.name)
 
             return s
 

@@ -57,6 +57,8 @@ class ISeriesDevice(CoreDevice):
                     return float(args[1])
                 except ValueError:
                     pass
+                
+            return re
 #        else:
 #            mi = -10
 #            ma = 10

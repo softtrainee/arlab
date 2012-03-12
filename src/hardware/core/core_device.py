@@ -253,7 +253,7 @@ class CoreDevice(ViewableDevice):
                 else:
                     try:
                         resp = check_type(resp)
-                    except ValueError:
+                    except (ValueError, TypeError):
                         continue
 
             if resp is not None:
