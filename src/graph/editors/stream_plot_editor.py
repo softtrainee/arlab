@@ -119,12 +119,20 @@ class StreamPlotEditor(PlotEditor):
                             auto_set=False)
         xgrp = VGroup('xtitle',
                       HGroup(spring, Label('Track')),
-                      HGroup(Item('xmin', editor=editor, format_str='%0.3f', enabled_when='not track_x_min'), spring, Item('track_x_min', show_label=False)),
-                      HGroup(Item('xmax', editor=editor, format_str='%0.3f', enabled_when='not track_x_max'), spring, Item('track_x_max', show_label=False))
+                      HGroup(Item('xmin', editor=editor, format_str='%0.3f',
+                                  enabled_when='not object.track_x_min'), spring,
+                             Item('track_x_min', show_label=False)),
+                      HGroup(Item('xmax', editor=editor, format_str='%0.3f',
+                                  enabled_when='not object.track_x_max'), spring,
+                             Item('track_x_max', show_label=False))
                       )
         ygrp = VGroup('ytitle',
-                      HGroup(Item('ymin', editor=editor, format_str='%0.3f', enabled_when='not track_y_min'), spring, Item('track_y_min', show_label=False)),
-                      HGroup(Item('ymax', editor=editor, format_str='%0.3f', enabled_when='not track_y_max'), spring, Item('track_y_max', show_label=False)),
+                      HGroup(Item('ymin', editor=editor, format_str='%0.3f',
+                                   enabled_when='not object.track_y_min'), spring,
+                              Item('track_y_min', show_label=False)),
+                      HGroup(Item('ymax', editor=editor, format_str='%0.3f',
+                                  enabled_when='not object.track_y_max'), spring,
+                              Item('track_y_max', show_label=False)),
                       )
 
         return VGroup(Item('data_limit'), xgrp, ygrp, show_border=True)

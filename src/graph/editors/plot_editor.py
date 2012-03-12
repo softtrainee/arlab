@@ -107,15 +107,14 @@ class PlotEditor(HasTraits):
         return plots
 
     def _get_series_editor_kwargs(self, plot, sid):
+        n = self.graph.get_series_label(plotid=self.id, series=sid)
         kwargs = dict(series=plot,
                              graph=self.graph,
                              plotid=self.id,
                              id=sid,
-                             name=self.graph.get_series_label(plotid=self.id, series=sid)
+                             name=n
                              )
-#        if plot is not None:
-#            kwargs['series']=plot
-#            
+
         return kwargs
 
     def _build_series_editors(self, editors=None):
@@ -127,7 +126,7 @@ class PlotEditor(HasTraits):
             self.series_editors = []
             editors = self.series_editors
 
-        for key in plots:
+        for i, key in enumerate(plots):
             plot = plots[key][0]
 
             if isinstance(plot, PolygonPlot):
@@ -137,8 +136,9 @@ class PlotEditor(HasTraits):
 
             else:
                 editor = self._series_editor_klass
+#            series = get_series_id()
 
-            kwargs = self._get_series_editor_kwargs(plot, int(key[4:]))
+            kwargs = self._get_series_editor_kwargs(plot, i)
             editors.append(editor(**kwargs))
         editors.sort(key=lambda x: x.id)
 

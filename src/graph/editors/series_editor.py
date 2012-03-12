@@ -68,7 +68,9 @@ class SeriesEditor(HasTraits):
         '''
 
         self.graph.set_series_visiblity(new, plotid=self.plotid,
-                                        series=self.id)
+                                        series=self.name
+
+                                        )
 
     def traits_view(self):
         '''

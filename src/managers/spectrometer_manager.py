@@ -57,7 +57,6 @@ class SpectrometerManager(Manager):
 
     center_paths = List
 
-
     def set_dac(self, v):
         self.spectrometer.magnet.set_dac(v)
 
@@ -71,8 +70,8 @@ class SpectrometerManager(Manager):
         return self.get_intensities(detector, **kw)
 
     def load(self):
-
         self.spectrometer.load()
+        return True
 #    def opened(self):
 #        self.popup = PopupWindow(self.ui.control)
 
@@ -96,7 +95,7 @@ class SpectrometerManager(Manager):
         sg.plots[0].underlays.pop(3)
         sg.plots[0].underlays.pop(0)
         self.scan_graph = sg
-        self.spectrometer._timer_factory()
+#        self.spectrometer._timer_factory()
 
         #set device microcontrollers
         self.spectrometer.set_microcontroller(self.spectrometer_microcontroller)

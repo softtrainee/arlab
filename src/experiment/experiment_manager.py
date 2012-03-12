@@ -254,15 +254,21 @@ class ExperimentManager(Manager):
 
         return array(cor_h1), array(cor_cdd)
 
+    def get_spectrometer_manager(self):
+        if self.spectrometer_manager is None:
+            protocol = 'src.managers.spectrometer_manager.SpectrometerManager'
+            if self.application is not None:
+                sm = self.spectrometer_manager = self.application.get_service(protocol)
+        else:
+            sm = self.spectrometer_manager
+        return sm
+
     def do_automated_runs(self):
         self._alive = True
         self.info('start automated runs')
         self.csv_data_manager = CSVDataManager()
 
-        if self.spectrometer_manager is None:
-            protocol = 'src.managers.spectrometer_manager.SpectrometerManager'
-            if self.application is not None:
-                self.spectrometer_manager = self.application.get_service(protocol)
+        sm = self.get_spectrometer_manager()
 
         n = len(self.experiment.automated_runs)
         for i, arun in enumerate(self.experiment.automated_runs):
@@ -270,7 +276,8 @@ class ExperimentManager(Manager):
             arun.spectrometer_manager = self.spectrometer_manager
             arun.experiment_manager = self
             if self.mode == 'client':
-                man = RemoteExtractionLineManager()
+                man = RemoteExtractionLineManager(host='129.138.12.153',
+                                                  port=1061)
                 self.extraction_line_manager = man
 
             arun.extraction_line_manager = self.extraction_line_manager
@@ -469,7 +476,9 @@ class ExperimentManager(Manager):
         exp.edit_traits()
 
     def _test2_fired(self):
-        self.analyze_data()
+        sm = self.get_spectrometer_manager()
+        print sm.spectrometer_microcontroller
+#        self.analyze_data()
 
     def _test_fired(self):
         if self.isAlive():
