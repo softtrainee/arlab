@@ -24,7 +24,7 @@ import apptools.sweet_pickle as pickle
 from threading import Thread
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
-from analysis import Analysis
+from analysis import AutomatedRun
 from src.graph.graph import Graph
 from spectrometer_dummy import Spectrometer
 from src.extraction_line.extraction_line_manager import ExtractionLineManager
@@ -33,13 +33,13 @@ from src.envisage.core.envisage_editable import EnvisageEditable
 class Experiment(EnvisageEditable):
     '''
     '''
-    analyses = List(Analysis)
-    blanks = List(Analysis)
+    analyses = List(AutomatedRun)
+    blanks = List(AutomatedRun)
     database = Instance(DatabaseAdapter, transient=True)
     extraction_line_manager = Instance(ExtractionLineManager, transient=True)
     graph = Instance(Graph, transient=True)
 
-    active_analysis = Instance(Analysis)
+    active_analysis = Instance(AutomatedRun)
 
     spectrometer = Instance(Spectrometer, transient=True)
     file_extension = '.pxp'
@@ -158,7 +158,7 @@ class Experiment(EnvisageEditable):
 
     def _analysis_factory(self, *args, **kw):
         self.dirty = True
-        a = Analysis(database=self.database,
+        a = AutomatedRun(database=self.database,
                      experiment=self,
                      **kw)
         return a
@@ -199,6 +199,6 @@ class Experiment(EnvisageEditable):
 
 if __name__ == '__main__':
     e = Experiment()
-    #e = Analysis()
+    #e = AutomatedRun()
     e.configure_traits()
 #============= EOF ====================================

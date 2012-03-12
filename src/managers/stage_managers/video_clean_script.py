@@ -91,8 +91,13 @@ class VideoDirectoryMaintainceScript(Loggable):
 
         src = os.path.join(root, p)
         dst = os.path.join(march, p)
+
         self.info('Archiving {:30s} to ./archive/{}/{}'.format(p, year, month))
-        shutil.move(src, dst)
+        try:
+            shutil.move(src, dst)
+        except Exception, e:
+            self.warning('Archiving failed')
+            self.warning(e)
 
 if __name__ == '__main__':
     setup('video_main')

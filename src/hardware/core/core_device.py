@@ -92,7 +92,7 @@ class CoreDevice(ViewableDevice):
     record_scan_data = Bool(True)
     graph_scan_data = Bool(True)
     scan_path = Str
-    auto_start=Bool(False)
+    auto_start = Bool(False)
 
     current_scan_value = 0
 
@@ -208,7 +208,7 @@ class CoreDevice(ViewableDevice):
         if self._communicator is not None:
             return self._communicator.read(*args, **kw)
 
-    def get_random_value(self, min=0, max=10):
+    def get_random_value(self, mi=0, ma=10):
         '''
             convienent method for getting a random integer between min and max
             
@@ -217,11 +217,49 @@ class CoreDevice(ViewableDevice):
                 max=10
 
         '''
-        return random.randint(min, max)
+        return random.randint(mi, ma)
 
     def set_scheduler(self, s):
         if self._communicator is not None:
             self._communicator.scheduler = s
+
+    def repeat_command(self, cmd, ntries=2, check_val=None, check_type=None,
+                       verbose=True):
+
+        if isinstance(cmd, tuple):
+            cmd = self._build_command(*cmd)
+        else:
+            cmd = self._build_command(cmd)
+
+        for i in range(ntries + 1):
+            resp = self._parse_response(self.ask(cmd, verbose=verbose))
+            if verbose:
+                m = 'repeat command {} response = {} len={} '.format(i + 1,
+                                                resp,
+                                                len(resp) if resp else None)
+                self.debug(m)
+            if check_val is not None:
+                if self.simulation:
+                    resp = check_val
+
+                if resp == check_val:
+                    break
+                else:
+                    continue
+
+            if check_type is not None:
+                if self.simulation:
+                    resp = random.randint(1, 10)
+                else:
+                    try:
+                        resp = check_type(resp)
+                    except ValueError:
+                        continue
+
+            if resp is not None:
+                break
+
+        return resp
 
 #===============================================================================
 # streamin interface

@@ -22,27 +22,35 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 
 #============= local library imports  ==========================
 
+BASE = 'src.experiment.plugins.experiment_actions'
+PATH = 'MenuBar/Experiment'
+
+
 class ExperimentActionSet(WorkbenchActionSet):
     '''
-        G{classtree}
     '''
     id = 'pychron.experiment.action_set'
 #    menus = [
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
     actions = [Action(name='New Experiment',
-                      path='MenuBar/File',
-                    class_name='src.experiments.plugins.experiment_actions:NewExperimentAction'
+                      path=PATH,
+                    class_name='{}:NewExperimentAction'.format(BASE)
 
                     ),
                 Action(name='Open Experiment',
-                       path='MenuBar/File',
-                       class_name='src.experiments.plugins.experiment_actions:OpenExperimentAction'
+                       path=PATH,
+                       class_name='{}:OpenExperimentAction'.format(BASE)
 
                        ),
                 Action(name='Recall',
-                       path='MenuBar/File',
-                       class_name='src.experiments.plugins.experiment_actions:RecallAnalysisAction'
+                       path=PATH,
+                       class_name='{}:RecallAnalysisAction'.format(BASE)
+
+                       ),
+                Action(name='Execute',
+                       path=PATH,
+                       class_name='{}:ExecuteExperimentAction'.format(BASE)
 
                        )
              ]

@@ -81,14 +81,16 @@ class CoreScript(Loggable):
 
         #load the file 
         p = os.path.join(self.source_dir, self.file_name)
-        self.file_path = p
-        self._file_contents_ = parse_file(p)
         ok = False
-        if self.load():
-            #if self.set_data_frame():
-            self.set_graph()
-            self.start(new_thread)
-            ok = True
+
+        if os.path.isfile(p):
+            self.file_path = p
+            self._file_contents_ = parse_file(p)
+            if self.load():
+                #if self.set_data_frame():
+                self.set_graph()
+                ok = self.start(new_thread)
+#                ok = True
 
         if not ok:
             self._alive = False
@@ -194,7 +196,7 @@ class CoreScript(Loggable):
             self._thread = Thread(target=self.run)
             self._thread.start()
         else:
-            self.run()
+            return self.run()
 
     def run(self):
 
@@ -215,12 +217,13 @@ class CoreScript(Loggable):
             if self._pre_run_():
                 self._alive = True
 
-
                 for i, line in enumerate(self._file_contents_):
                     if self.isAlive():
                         self._run_command(i, line)
         else:
             self.warning('parsing unsuccessful')
+            return
+
         #join any daughter threads before finishing
         for d in self.daughter_threads:
             d.join()
@@ -228,14 +231,16 @@ class CoreScript(Loggable):
         if self._post_run():
             self.kill_script()
 
+        return True
+
     def _execute_script(self):
         raise NotImplementedError
 
     def _post_run(self):
         return True
-    def _pre_run_(self):
-        return True
 
+    def _pre_run_(self):
+        return self._file_contents_ is not None
 
     def _run_command(self, linenum, cmd, infor=False):
         '''

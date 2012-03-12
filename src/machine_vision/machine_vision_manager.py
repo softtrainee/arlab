@@ -270,7 +270,7 @@ class MachineVisionManager(Manager):
 
     def _get_title(self):
         return 'Positioning Error Hole {}'.format(self.current_hole) \
-                    if self.current_hole else 'Positioing Error'
+                    if self.current_hole else 'Positioning Error'
 
     def _get_threshold(self):
         return self._threshold

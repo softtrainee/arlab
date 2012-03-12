@@ -173,7 +173,7 @@ class Sample(object):
         print self.name, msg
 #        print ages[plat[0]:plat[1] + 1]
 
-class Analysis(object):
+class AutomatedRun(object):
     plateau_status = False
     status = 'X'
     suffix = None
@@ -314,7 +314,7 @@ class AutoupdateParser(object):
 
 
 #                    status = self.get_value('Status', cast=str) 
-                    a = Analysis()
+                    a = AutomatedRun()
 #                    a.status = status
                     a.suffix = suffix
                     a.pwr_requested = self.get_value('Pwr_Requested', cast=str)

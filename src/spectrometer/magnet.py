@@ -76,8 +76,14 @@ class Magnet(SpectrometerDevice):
         if isinstance(mass, str):
             mass = MOLECULAR_WEIGHTS[mass]
 
-        dac_value = reg.get_value('parabolic', data, mass)
+        print data, mass
+        if data:
+            dac_value = reg.get_value('parabolic', data, mass)
+        else:
+            dac_value = 4
+
         return dac_value
+
     def set_axial_mass(self, x, hv_correction=1):
         '''
             set the axial detector to mass x
@@ -94,15 +100,19 @@ class Magnet(SpectrometerDevice):
 
     def set_dac(self, v):
         self._magnet_dac = v
-        _r = self.microcontroller.ask('SetMagnetDAC {}'.format(v), verbose=True)
-        time.sleep(self.settling_time)
+        if self.microcontroller:
+            _r = self.microcontroller.ask('SetMagnetDAC {}'.format(v), verbose=True)
+            time.sleep(self.settling_time)
 
     def read_dac(self):
-        r = self.microcontroller.ask('GetMagnetDAC')
-        try:
-            r = float(r)
-        except:
-            pass
+        if self.microcontroller is None:
+            r = 0
+        else:
+            r = self.microcontroller.ask('GetMagnetDAC')
+            try:
+                r = float(r)
+            except:
+                pass
         return r
 
     def update_mftable(self, key, value):

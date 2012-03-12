@@ -57,6 +57,35 @@ class LaserManager(Manager):
 
     _requested_power = None
 
+    def dispose_optional_windows(self):
+        if self.use_video:
+            self.stage_manager.machine_vision_manager.close_image()
+
+        self._dispose_optional_windows_hook()
+
+    def _dispose_optional_windows_hook(self):
+        pass
+
+#        import wx
+#        ls = self._get_optional_window_labels()
+#        if ls:
+#            for li in ls:
+#                w = wx.FindWindowByLabel(li)
+#                if w is not None:
+#                    w.Destroy()
+#
+#    def _get_optional_window_labels(self):
+#        labels = []
+#
+#        hl = self._get_optional_window_labels_hook()
+#        if hl:
+#            labels += hl
+#
+#        return labels
+#
+#    def _get_optional_window_labels_hook(self):
+#        pass
+
     @on_trait_change('stage_manager:canvas:current_position')
     def update_status_bar(self, obj, name, old, new):
         if isinstance(new, tuple):

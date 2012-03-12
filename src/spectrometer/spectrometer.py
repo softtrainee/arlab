@@ -64,7 +64,7 @@ class Spectrometer(SpectrometerDevice):
     integration_time = Enum(0.065536, 0.131072, 0.262144, 0.524288,
                             1.048576, 2.097152, 4.194304, 8.388608,
                             16.777216, 33.554432, 67.108864)
-    reference_detector = Str
+    reference_detector = Str('H1')
     magnet_dac = DelegatesTo('magnet')
     _magnet_dac = DelegatesTo('magnet')
 
@@ -99,6 +99,9 @@ class Spectrometer(SpectrometerDevice):
 
 
     _alive = False
+
+    peak_center_graph = None
+
     def deflection_calibration(self):
         self.info('Deflection Calibration')
 
@@ -231,8 +234,8 @@ class Spectrometer(SpectrometerDevice):
 
     def set_magnet_position(self, v):
         #get the detector we are aiming for
-        _target_det = self._detectors[self.reference_detector]
-        #get position relative to axial
+#        _target_det = self._detectors[self.reference_detector]
+#        get position relative to axial
 #        rp = target_det.relative_position
         #convert to axial space
         #x = v / rp
@@ -250,8 +253,9 @@ class Spectrometer(SpectrometerDevice):
         self.set_magnet_position(MOLECULAR_WEIGHTS[self.molecular_weight])
 
     def _integration_time_changed(self):
-        self.microcontroller.ask('SetIntegrationTime {}'.format(self.integration_time))
-        self.reset_scan_timer()
+        if self.microcontroller:
+            self.microcontroller.ask('SetIntegrationTime {}'.format(self.integration_time))
+            self.reset_scan_timer()
 
 #===============================================================================
 # timers
@@ -283,7 +287,7 @@ class Spectrometer(SpectrometerDevice):
         return self._alive
 
 
-    def peak_center(self, update_mftable=False, graph=None, update_pos=True, center_pos=None, mass=True):
+    def peak_center(self, update_mftable=False, graph=None, update_pos=True, center_pos=None):
         '''
             default is to set position by mass
             if mass is a str it needs to be a mol wt key ie Ar40
@@ -292,18 +296,28 @@ class Spectrometer(SpectrometerDevice):
         self.peak_center_results = None
         self.info('Peak center')
         if graph is None:
-            graph = Graph(window_title='Peak Centering',
-                          window_x=300 + self.pc_window_cnt * 25,
-                          window_y=25 + self.pc_window_cnt * 25
-                          )
-            self.pc_window_cnt += 1
+            if self.peak_center_graph is None:
+                graph = Graph(window_title='Peak Centering',
+                              window_x=300 + self.pc_window_cnt * 25,
+                              window_y=25 + self.pc_window_cnt * 25
+                              )
+                self.pc_window_cnt += 1
+                do_later(graph.edit_traits)
+                self.peak_center_graph = graph
+            else:
+                graph = self.peak_center_graph
+                graph.clear()
 
-        do_later(graph.edit_traits)
+#        else:
+#            graph.clear()
+#            graph.close()
+
         #graph.edit_traits()
         '''
             center pos needs to be ne axial dac units now
         '''
-        if isinstance(center_pos, str) or mass:
+
+        if isinstance(center_pos, str):
             '''
                 passing in a mol weight key ie Ar40
                 get_dac_for_mass can take a str or a float 
@@ -332,10 +346,13 @@ class Spectrometer(SpectrometerDevice):
             end = m + wnd * (i + 1)
             self.info('Scan parameters center={} start={} end={} step width={}'.format(m, start, end, self.pc_step_width))
 
-            self._peak_center_graph_factory(graph, start, end, title=m)
+            self._peak_center_graph_factory(graph, start, end)
 
             width = self.pc_step_width
-            if self.simulation:
+            try:
+                if self.simulation:
+                    width = 0.001
+            except AttributeError:
                 width = 0.001
 
             self.intensities = []
@@ -344,7 +361,8 @@ class Spectrometer(SpectrometerDevice):
             dac_values = np.linspace(start, end, nsteps)
             self.peak_generator = psuedo_peak(m + 0.001, start, end, nsteps)
 
-            if self.scan_timer.IsRunning():
+
+            if self.scan_timer and self.scan_timer.IsRunning():
                 self.scan_timer.Stop()
 
             t = Thread(target=self.scan_dac, args=(dac_values, graph))
@@ -372,6 +390,7 @@ class Spectrometer(SpectrometerDevice):
         elif update_pos:
 #            force magnet update
             self.set_magnet_position(MOLECULAR_WEIGHTS[self.molecular_weight])
+
 
     def finish_peak_center(self, graph, dac_values, intensities, plotid=0):
         result = self.calculate_peak_center(dac_values, intensities)
@@ -413,15 +432,18 @@ class Spectrometer(SpectrometerDevice):
                 dac = gen.next()
                 self.magnet.set_dac(dac)
                 time.sleep(period)
-                data = self.get_intensities()
-                if data is not None:
-                    if self.simulation:
-                        intensity = self.peak_generator.next()
-                    else:
-                        intensity = data[DETECTOR_ORDER.index(self.reference_detector)]
 
-                    self.intensities.append(intensity)
-                    do_after(1, graph.add_datum, (dac, intensity), update_y_limits=True)
+                data = self.get_intensities()
+                if self.simulation:
+                    intensity = self.peak_generator.next()
+                if data is not None:
+#                    if self.simulation:
+#                        intensity = self.peak_generator.next()
+#                    else:
+                    intensity = data[DETECTOR_ORDER.index(self.reference_detector)]
+
+                self.intensities.append(intensity)
+                do_after(1, graph.add_datum, (dac, intensity), update_y_limits=True)
 
             except StopIteration:
                 break
@@ -588,17 +610,18 @@ class Spectrometer(SpectrometerDevice):
 # load
 #===============================================================================
     def load_configurations(self):
-        scc = self.microcontroller.ask('GetSubCupConfigurationList Argon', verbose=False)
-        if 'ERROR' not in scc:
-            self.sub_cup_configurations = scc.split('\r')
-        else:
-            self.sub_cup_configurations = ['A', 'B', 'C']
+        self.sub_cup_configurations = ['A', 'B', 'C']
+        self._sub_cup_configuration = 'B'
+        if self.microcontroller is not None:
 
-        n = self.microcontroller.ask('GetActiveSubCupConfiguration')
-        if 'ERROR' not in n:
-            self._sub_cup_configuration = n
-        else:
-            self._sub_cup_configuration = 'B'
+            scc = self.microcontroller.ask('GetSubCupConfigurationList Argon', verbose=False)
+            if 'ERROR' not in scc:
+                self.sub_cup_configurations = scc.split('\r')
+
+            n = self.microcontroller.ask('GetActiveSubCupConfiguration')
+            if 'ERROR' not in n:
+                self._sub_cup_configuration = n
+
 
         self.molecular_weight = 'Ar40'
 
@@ -621,26 +644,49 @@ class Spectrometer(SpectrometerDevice):
 #===============================================================================
 # signals
 #===============================================================================
-    def get_intensities(self, record=True):
+    def get_intensities(self, record=True, tagged=True):
+        if not self.microcontroller:
+            return
+
         datastr = self.microcontroller.ask('GetData', verbose=False)
+        keys = []
+        signals = []
         if not 'ERROR' in datastr:
             try:
                 data = [float(d) for d in datastr.split(',')]
             except:
-                return
+
+                if tagged:
+                    data = [d for d in datastr.split(',')]
+                    for i in range(0, len(data), 2):
+                        keys.append(data[i])
+                        signals.append(float(data[i + 1]))
+
         else:
             data = [5 + random.random() for _i in range(6)]
 
-        #update the detector current value
-        for det, dat in zip(self.detectors, data):
+        if not tagged:
+            #update the detector current value
+            for det, dat in zip(self.detectors, data):
 
-            if det.active:
-                det.intensity = dat
-            else:
-                det.intensity = 0
+                if det.active:
+                    det.intensity = dat
+                else:
+                    det.intensity = 0
+            rdata = data
+        else:
+            data = []
+            rdata = []
+            for det in self.detectors:
+                sig = 0
+                if det.name in keys:
+                    sig = signals[keys.index(det.name)]
+                rdata.append(sig)
+                data.append((det.name, sig))
 
         if record:
-            self.databuffer = ','.join([str(yi) for yi in data])
+            self.databuffer = ','.join([str(yi) for yi in rdata])
+
         return data
 
     def get_intensity(self, key):

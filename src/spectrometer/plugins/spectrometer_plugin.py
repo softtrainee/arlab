@@ -22,6 +22,8 @@ from traits.api import List
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
 from src.managers.spectrometer_manager import SpectrometerManager
+
+
 class SpectrometerPlugin(CorePlugin):
     MANAGERS = 'pychron.hardware.managers'
 
@@ -33,6 +35,7 @@ class SpectrometerPlugin(CorePlugin):
                           factory=self._factory)
 
         return [so]
+
     def _factory(self, *args, **kw):
         return SpectrometerManager()
 

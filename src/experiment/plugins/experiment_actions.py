@@ -19,53 +19,56 @@ from pyface.action.api import Action
 
 #============= local library imports  ==========================
 
+def get_manager(event):
+    app = event.window.application
+    manager = app.get_service('src.experiment.experiment_manager.ExperimentManager')
+    return manager
+
+
+class ExecuteExperimentAction(Action):
+    name = 'Execute'
+    def perform(self, event):
+        man = get_manager(event)
+        man.edit_traits(view='execute_view')
+
+
 class NewExperimentAction(Action):
     '''
-        G{classtree}
     '''
     description = 'Create a new experiment'
     name = 'New Experiment'
+
     def perform(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
-        app = event.window.application
-        manager = app.get_service('src.experiments.experiments_manager.ExperimentsManager')
-        manager.window = event.window
-        manager.new()
+        manager = get_manager()
+        manager.new_experiment()
+
 
 class OpenExperimentAction(Action):
     '''
-        G{classtree}
     '''
     description = 'Create a Open experiment'
     name = 'Open Experiment'
+
     def perform(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
-        app = event.window.application
-        manager = app.get_service('src.experiments.experiments_manager.ExperimentsManager')
-        manager.window = event.window
+        manager = get_manager(event)
         manager.open()
+
 
 class RecallAnalysisAction(Action):
     '''
-        G{classtree}
     '''
     description = 'Recall an Analysis'
     name = 'Recall Analysis'
     accelerator = 'Ctrl+R'
+
     def perform(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
-        app = event.window.application
-        manager = app.get_service('src.experiments.experiments_manager.ExperimentsManager')
-        manager.window = event.window
+        manager = get_manager()
         manager.recall_analysis()
 
 #============= EOF ====================================

@@ -15,15 +15,17 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from src.managers.data_managers.db_data_manager import DBDataManager
-from src.database.pychron_database_adapter import PychronDatabaseAdapter
+#from src.database.pychron_database_adapter import PychronDatabaseAdapter
 from src.helpers.filetools import parse_file
+from src.database.pychron_adapter import PychronAdapter
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 class PychronDBDataManager(DBDataManager):
     def _database_default(self):
-        return PychronDatabaseAdapter()
+#        return PychronDatabaseAdapter()
+        return PychronAdapter()
 
     def _import_(self):
         '''

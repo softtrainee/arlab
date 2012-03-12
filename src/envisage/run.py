@@ -44,8 +44,8 @@ if open_logger_on_launch:
 PACKAGE_DICT = dict(
                    DatabasePlugin='src.database.plugins.database_plugin',
                    DatabaseUIPlugin='src.database.plugins.database_ui_plugin',
-                   ExperimentPlugin='src.experiments.plugins.experiment_plugin',
-                   ExperimentUIPlugin='src.experiments.plugins.experiment_ui_plugin',
+                   ExperimentPlugin='src.experiment.plugins.experiment_plugin',
+                   ExperimentUIPlugin='src.experiment.plugins.experiment_ui_plugin',
                    ScriptPlugin='src.scripts.plugins.script_plugin',
                    ScriptUIPlugin='src.scripts.plugins.script_ui_plugin',
                    ExtractionLinePlugin='src.extraction_line.plugins.extraction_line_plugin',
