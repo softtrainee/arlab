@@ -89,8 +89,7 @@ class Initializer(Loggable):
         super(Initializer, self).__init__(*args, **kw)
         self.clear()
         self.cnt = 0
-        self.parser = InitializationParser(os.path.join(setup_dir,
-                'initialization.xml'))
+        self.parser = InitializationParser()
 
     def clear(self):
         self.init_list = []

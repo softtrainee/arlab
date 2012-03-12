@@ -26,7 +26,7 @@ from src.loggable import Loggable
 from src.scripts.extraction_line_script import ExtractionLineScript
 #from src.scripts.measurement.measurement_script import MeasurementScript
 from src.experiment.heat_schedule import HeatStep
-from src.graph.graph import Graph
+#from src.graph.graph import Graph
 from src.graph.stacked_graph import StackedGraph
 from pyface.timer.do_later import do_later
 import random
@@ -109,6 +109,8 @@ class AutomatedRun(Loggable):
 
     isblank = False
 
+    _debug = False
+
     def do_extraction(self):
         self.info('extraction')
         self.state = 'extraction'
@@ -171,7 +173,6 @@ class AutomatedRun(Loggable):
                          marker_size=1.25,
                          label=l, plotid=i)
 
-        g.set_x_limits(0, self.ncounts + self.nbaseline_counts)
         self.graph = g
         do_later(self.graph.edit_traits)
 
@@ -183,6 +184,9 @@ class AutomatedRun(Loggable):
                       series=0
                       )
 
+        g.set_x_limits(0,
+                       self.ncounts + 10)
+
     def do_baseline(self, dac, starttime):
         dm = self.data_manager
         dm.new_frame(directory='automated_runs',
@@ -192,6 +196,8 @@ class AutomatedRun(Loggable):
                        self.baseline_mass, starttime,
                        series=1
                        )
+        self.graph.set_x_limits(0,
+                       self.ncounts + self.nbaseline_counts + 10)
 
     def regress(self):
         r = Regressor()
@@ -225,18 +231,16 @@ class AutomatedRun(Loggable):
         if sm is not None:
             sm.spectrometer.set_magnet_position(refmass)
 
-        data = None
-        step = 30
-        for i in xrange(0, ncounts, step):
+        for i in xrange(0, ncounts, 10):
             self.info('collecting point {}'.format(i + 1))
 
-            m = self.integration_time * 0.99 if sm is not None else 0.01
+            m = self.integration_time * 0.99 if not self._debug else 0.01
             time.sleep(m)
 
-            if sm is not None:
+            if not self._debug:
                 data = sm.get_intensities(tagged=True)
-
-            if data is None:
+                keys, signals = zip(*data)
+            else:
                 keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
                 if series == 1:
                     signals = [10, 1000, 8, 8, 8, 3]
@@ -246,19 +250,20 @@ class AutomatedRun(Loggable):
                                0.1, 1, 0.1, (0.001 * (i - 2000 + r)) ** 2
                                ]
 
-            else:
-                keys, signals = zip(*data)
-
             h1 = signals[keys.index('H1')]
             cdd = signals[keys.index('CDD')]
 
-            x = time.time() - starttime if sm is not None else i + starttime
-
+#            x = time.time() - starttime if sm is not None else i + starttime
+            x = i + starttime
             dm.write_to_frame((x, h1, cdd))
+
+            if i % 100 == 0:
+                self.graph.set_x_limits(0, min(i + 100, self.ncounts + self.nbaseline_counts))
 
             self.graph.add_datum((x, h1), series=series, do_after=1)
             self.graph.add_datum((x, cdd), series=series,
                                   plotid=1, do_after=1)
+
     def finish(self, success):
         '''
             use a DBDataManager to save the analysis to database

@@ -38,6 +38,7 @@ from uncertainties import ufloat
 from src.data_processing.argon_calculations import calculate_mswd
 from src.graph.graph import Graph
 
+DEBUG = True
 
 #class AutomatedAnalysisParameters(HasTraits):
 #    runscript_name = Str
@@ -69,7 +70,7 @@ class ExperimentManager(Manager):
 
     _alive = False
 
-    mode = 'client'
+    mode = 'normal'
     equilibration_time = 0.1
 
     test2 = Button
@@ -283,6 +284,7 @@ class ExperimentManager(Manager):
 
             self.info('Start automated run {}'.format(arun.identifier))
 
+            arun._debug = DEBUG
             if arun.identifier == 'B':
                 arun.isblank = True
 
@@ -309,17 +311,20 @@ class ExperimentManager(Manager):
             event.wait()
             self.debug('inlet opened')
 
-            st = time.time()
-            if self.spectrometer_manager is None:
+            if DEBUG:
                 st = 0
+            else:
+                st = time.time()
+
             arun.state = 'measurement'
             arun.do_measurement(st, i)
 
             if not self._continue_check():
                     break
 
-            if self.spectrometer_manager is None:
+            if DEBUG:
                 st = arun.ncounts
+
             arun.do_baseline(self._dac_baseline, st)
 
             if not self._continue_check():

@@ -19,6 +19,8 @@ limitations under the License.
 #============= local library imports  ==========================
 from src.experiment.experiment_manager import ExperimentManager
 from src.envisage.core.core_plugin import CorePlugin
+from src.helpers.initialization_parser import InitializationParser
+
 
 class ExperimentPlugin(CorePlugin):
     '''
@@ -47,5 +49,12 @@ class ExperimentPlugin(CorePlugin):
         '''
 
         '''
-        return ExperimentManager(application=self.application)
+
+        ip = InitializationParser()
+        plugin = ip.get_plugin('Experiment', category='general')
+        mode = plugin.get('mode')
+
+        return ExperimentManager(application=self.application,
+                                 mode=mode
+                                 )
 #============= EOF ====================================

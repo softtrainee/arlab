@@ -20,10 +20,11 @@ from apptools.preferences.ui.api import PreferencesPage
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 #============= standard library imports ========================
-import os
+
 #============= local library imports  ==========================
 from src.helpers.initialization_parser import InitializationParser
-from src.helpers.paths import setup_dir
+
+
 class CItem(HasTraits):
     enabled = Bool
     name = Str
@@ -45,8 +46,8 @@ class ManagerPreferencesPage(PreferencesPage):
 
     def __init__(self, *args, **kw):
         super(ManagerPreferencesPage, self).__init__(*args, **kw)
-        p = os.path.join(setup_dir, 'initialization.xml')
-        self.parser = InitializationParser(p)
+#        p = os.path.join(setup_dir, 'initialization.xml')
+        self.parser = InitializationParser()
 
     @on_trait_change('managers:enabled')
     def _managers_changed(self, obj, name, old, new):

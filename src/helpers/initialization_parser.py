@@ -15,12 +15,19 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from xml_parser import XMLParser
+import os
+from src.helpers.paths import setup_dir
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
 class InitializationParser(XMLParser):
+    def __init__(self, *args, **kw):
+        p = os.path.join(setup_dir, 'initialization.xml')
+        super(InitializationParser, self).__init__(p, *args, **kw)
+
     def add_plugin(self, category, name):
+
         tree = self._tree
 
         cat = tree.find(category)
