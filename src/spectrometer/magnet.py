@@ -175,7 +175,7 @@ class Magnet(SpectrometerDevice):
 
     def load(self):
         p = os.path.join(setup_dir, 'spectrometer', 'mftable.csv')
-        with open(p, 'r') as f:
+        with open(p, 'U') as f:
             reader = csv.reader(f)
             xs = []
             ys = []

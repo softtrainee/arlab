@@ -32,6 +32,7 @@ class RemoteManager(Manager):
             self.info('-----ask----- {} ==> {}'.format(cmd, r))
         except socket.error, e:
             self.warning(e)
+
         return r
 
     def get_connection(self, port=None):

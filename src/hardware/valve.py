@@ -126,6 +126,7 @@ class HardwareValve(Loggable):
         '''
 
         '''
+        self._state_change = False
         self.info('%s open' % mode)
         self.debug = mode == 'debug'
 
@@ -139,12 +140,13 @@ class HardwareValve(Loggable):
             result = self.error
             self.error = None
 
-        return result
+        return result, self._state_change
 
     def close(self, mode='normal'):
         '''
 
         '''
+        self._state_change = False
         self.info('%s close' % mode)
 
         self.debug = mode == 'debug'
@@ -157,7 +159,7 @@ class HardwareValve(Loggable):
             result = self.error
             self.error = None
 
-        return result
+        return result, self._state_change
 
 #    def acquire_critical_section(self):
 #        self._critical_section = True
@@ -199,6 +201,7 @@ class HardwareValve(Loggable):
         self.success = r
         if self.success:
             self.state = True
+            self._state_change = True
 #        print 'open', self.success, self.state
 
     def _close_(self, *args, **kw):
@@ -216,6 +219,7 @@ class HardwareValve(Loggable):
 
         if self.success:
             self.state = False
+            self._state_change = True
 #        print 'close', self.success, self.state
 
     def _get_display_state(self):

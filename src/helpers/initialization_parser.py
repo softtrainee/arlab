@@ -147,6 +147,8 @@ class InitializationParser(XMLParser):
                 name = name.split('_')[0].capitalize() + 'CO2'
             else:
                 name = ''.join([a.capitalize() for a in name.split('_')])
+        else:
+            name = name.capitalize()
 
         return self._get_element(category, name)
 

@@ -252,10 +252,10 @@ class Spectrometer(SpectrometerDevice):
     def _molecular_weight_changed(self):
         self.set_magnet_position(MOLECULAR_WEIGHTS[self.molecular_weight])
 
-    def _integration_time_changed(self):
-        if self.microcontroller:
-            self.microcontroller.ask('SetIntegrationTime {}'.format(self.integration_time))
-            self.reset_scan_timer()
+#    def _integration_time_changed(self):
+#        if self.microcontroller:
+#            self.microcontroller.ask('SetIntegrationTime {}'.format(self.integration_time))
+#            self.reset_scan_timer()
 
 #===============================================================================
 # timers

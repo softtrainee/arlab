@@ -82,9 +82,9 @@ class SystemHandler(BaseRemoteHardwareHandler):
         if vname.startswith('Flag'):
             return self.Set(manager, vname[4:], 1, sender_address, *args)
 
-        result = manager.open_valve(vname, sender_address=sender_address)
+        result, change = manager.open_valve(vname, sender_address=sender_address)
         if result == True:
-            result = 'OK'
+            result = 'OK' if change else 'ok'
         elif result is None:
             result = InvalidArgumentsErrorCode('Open', vname, logger=self)
 
@@ -95,9 +95,9 @@ class SystemHandler(BaseRemoteHardwareHandler):
         if vname.startswith('Flag'):
             return self.Set(manager, vname[4:], 0, sender_address, *args)
 
-        result = manager.close_valve(vname, sender_address=sender_address)
+        result, change = manager.close_valve(vname, sender_address=sender_address)
         if result == True:
-            result = 'OK'
+            result = 'OK' if change else 'ok'
         elif result is None:
             result = InvalidArgumentsErrorCode('Close', vname, logger=self)
         return result

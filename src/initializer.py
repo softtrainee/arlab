@@ -21,7 +21,6 @@ from traits.api import Any
 from pyface.api import ProgressDialog
 
 import time
-import os
 
 from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
     CLIP_CHILDREN, VERTICAL, Frame, BoxSizer, NullColor, Size, \
@@ -31,7 +30,6 @@ from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
 
 from src.helpers import paths
 from src.hardware.core.i_core_device import ICoreDevice
-from src.helpers.paths import setup_dir
 from src.helpers.initialization_parser import InitializationParser
 from loggable import Loggable
 
@@ -181,10 +179,12 @@ class Initializer(Loggable):
             idx = name.find('_manager')
             if idx is not -1:
                 name = name[:idx]
+#            print name
             mp = parser.get_plugin(name)
         else:
             mp = parser.get_manager(name, plugin_name)
 
+        print mp
         if mp is not None:
             managers = parser.get_managers(mp)
             devices = parser.get_devices(mp)
@@ -226,12 +226,12 @@ class Initializer(Loggable):
         '''
 
         for mi in managers:
-            self.info('load {}'.format(mi))
 
             man = None
             if mi == '':
                 continue
 
+            self.info('load {}'.format(mi))
             try:
                 man = getattr(manager, mi)
                 if man is None:

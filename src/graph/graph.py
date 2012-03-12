@@ -398,10 +398,12 @@ class Graph(HasTraits):
     def get_series_label(self, plotid=0, series=0):
         r = ''
         legend = self.plots[plotid].legend
+#        print legend.labels
         try:
             r = legend.labels[series]
         except IndexError:
             pass
+
         return r
 
     def set_series_label(self, label, plotid=0, series=0):
@@ -442,12 +444,12 @@ class Graph(HasTraits):
         '''
         '''
         p = self.plots[plotid]
-        s = 'plot%i' % series
 
-        p.showplot(s) if v else p.hideplot(s)
+        if isinstance(series, int):
+            series = 'plot%i' % series
+        p.showplot(series) if v else p.hideplot(series)
 
-#        self.plotcontainer.invalidate_and_redraw()
-        self.plotcontainer.request_redraw()
+        self.plotcontainer.invalidate_and_redraw()
 
     def get_x_limits(self, plotid=0):
         '''

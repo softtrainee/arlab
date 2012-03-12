@@ -279,6 +279,7 @@ class ValveManager(Manager):
     def _actuate_(self, name, open_close, mode, address=None):
         '''
         '''
+        change = False
         if address is None:
             v = self.get_valve_by_name(name)
             vid = name
@@ -291,7 +292,7 @@ class ValveManager(Manager):
 
             act = getattr(v, open_close)
 
-            result = act(mode=mode)
+            result, change = act(mode=mode)
             if isinstance(result, bool):#else its an error message
 
                 ve = self.get_evalve_by_name(name)
@@ -307,7 +308,7 @@ class ValveManager(Manager):
             self.warning('Valve %s not available' % vid)
             #result = 'Valve %s not available' % id
 
-        return result
+        return result, change
 
     def sample(self, name, period):
         v = self.get_valve_by_name(name)
