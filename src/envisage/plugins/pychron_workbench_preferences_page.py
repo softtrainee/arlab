@@ -19,18 +19,18 @@ from traitsui.api import View, Item, TableEditor, ListEditor
 from apptools.preferences.ui.api import PreferencesPage
 from traitsui.extras.checkbox_column import CheckboxColumn
 from traitsui.table_column import ObjectColumn
-
 #============= standard library imports ========================
-import os
 #============= local library imports  ==========================
-from src.helpers.paths import setup_dir
 from src.helpers.initialization_parser import InitializationParser
+
+
 class Plugin(HasTraits):
     '''
     '''
     name = Str
     enabled = Bool
     category = Str
+
 
 class PluginCategory(HasTraits):
     plugins = List
@@ -64,8 +64,8 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
 
     def __init__(self, *args, **kw):
         super(PychronWorkbenchPreferencesPage, self).__init__(*args, **kw)
-        p = os.path.join(setup_dir, 'initialization.xml')
-        self.parser = InitializationParser(p)
+#        p = os.path.join(setup_dir, 'initialization.xml')
+        self.parser = InitializationParser()
 
     def _categories_default(self):
         '''

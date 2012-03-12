@@ -19,7 +19,6 @@ from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
 from envisage.api import Plugin
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
-import os
 import sys
 #============= local library imports  ==========================
 from pychron_application import Pychron
@@ -29,7 +28,7 @@ from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 from src.hardware.plugins.hardware_plugin import HardwarePlugin
 from src.hardware.plugins.hardware_ui_plugin import HardwareUIPlugin
 
-from src.helpers.paths import plugins_dir, setup_dir
+from src.helpers.paths import plugins_dir
 from src.helpers.initialization_parser import InitializationParser
 
 from src.helpers.logger_setup import add_console
@@ -108,7 +107,7 @@ def get_user_plugins():
     sys.path.append(plugins_dir)
 
     plugins = []
-    ps = InitializationParser(os.path.join(setup_dir, 'initialization.xml')).get_plugins()
+    ps = InitializationParser().get_plugins()
     for p in ps:
         pp = []
         gdict = globals()

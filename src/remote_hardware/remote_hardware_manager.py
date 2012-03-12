@@ -18,9 +18,7 @@ from traits.api import Instance, Bool, on_trait_change, List
 from apptools.preferences.preference_binding import bind_preference
 
 #============= standard library imports ========================
-import os
 #============= local library imports  ==========================
-from src.helpers.paths import setup_dir
 from src.managers.manager import Manager
 from src.helpers.initialization_parser import InitializationParser
 from src.remote_hardware.command_processor import CommandProcessor
@@ -47,7 +45,8 @@ class RemoteHardwareManager(Manager):
 
     def _processors_default(self):
         ps = []
-        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+#        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+        ip = InitializationParser()
 
         for pi in ip.get_processors():
             ps.append(self._command_processor_factory(pi))
@@ -94,7 +93,8 @@ class RemoteHardwareManager(Manager):
         bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
         bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
 
-        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+#        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+        ip = InitializationParser()
         names = []
         hosts = dict()
         for name, host in ip.get_systems():

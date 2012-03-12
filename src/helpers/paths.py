@@ -20,7 +20,6 @@ add a path verification function
 make sure directory exists and build if not
 '''
 import os
-from src.helpers.initialization_parser import InitializationParser
 
 HOME = os.path.expanduser('~')
 home = 'Pychrondata'
@@ -94,7 +93,8 @@ def rec_make(pi):
 def build_initialization_file(root):
     p = os.path.join(root, 'initialization.xml')
     if os.path.isfile(p):
-        parser = InitializationParser(p)
+        from src.helpers.initialization_parser import InitializationParser
+        parser = InitializationParser()
 
         DEFAULT_GENERAL_PLUGINS = ['Database', 'SVN']
         DEFAULT_HARDWARE_PLUGINS = ['ExtractionLine',

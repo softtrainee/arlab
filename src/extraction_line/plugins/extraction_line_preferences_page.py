@@ -17,12 +17,12 @@ limitations under the License.
 from traits.api import Enum, Float, Range, Bool, List, Str
 from traitsui.api import Item, VGroup, HGroup, Group, EnumEditor
 #============= standard library imports ========================
-from ConfigParser import ConfigParser
 import os
 
 #============= local library imports  ==========================
 from src.managers.plugins.manager_preferences_page import ManagerPreferencesPage
-from src.helpers.paths import setup_dir, extraction_line_dir
+from src.helpers.paths import extraction_line_dir
+
 def get_valve_group_names():
     g = []
     p = os.path.join(extraction_line_dir, 'valve_groups.txt')
@@ -66,8 +66,7 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
         o = ['']
         from src.helpers.initialization_parser import InitializationParser
 
-        ip = InitializationParser(os.path.join(setup_dir,
-                'initialization.xml'))
+        ip = InitializationParser()
 
         systems = ip.get_systems()
         o = list(zip(*systems)[0])

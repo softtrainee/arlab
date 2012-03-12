@@ -16,19 +16,18 @@ limitations under the License.
 #=============enthought library imports=======================
 from traits.api import Any, Dict, List, Bool
 #=============standard library imports ========================
-import time
 import os
 import pickle
 from pickle import PickleError
 #=============local library imports  ==========================
 from manager import Manager
-from src.helpers.filetools import parse_setupfile
 from src.helpers import paths
 from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve
 from src.extraction_line.section import Section
-from src.helpers.paths import hidden_dir, setup_dir
+from src.helpers.paths import hidden_dir
 from src.helpers.valve_parser import ValveParser
+
 
 class ValveGroup(object):
     owner = None
@@ -410,7 +409,8 @@ class ValveManager(Manager):
 #        config = self.configparser_factory()
 
         from src.helpers.initialization_parser import InitializationParser
-        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+#        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+        ip = InitializationParser()
 
         self.systems = dict()
         for name, host in ip.get_systems():
@@ -459,8 +459,8 @@ class ValveManager(Manager):
         parser = ValveParser(path)
         for g in parser.get_groups():
             valves = [factory(v) for v in parser.get_valves(group=g)]
-            vg=ValveGroup()
-            vg.valves=valves
+            vg = ValveGroup()
+            vg.valves = valves
             self.valve_groups[g.text.strip()] = vg
 
         for v in parser.get_valves():
