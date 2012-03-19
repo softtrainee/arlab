@@ -127,7 +127,6 @@ class HoleDetector(Detector):
 #        self.cropwidth = 4
 #        self.cropheight = 4
         self._nominal_position = (cx, cy)
-
         self.current_hole = holenum
         self.info('locating {} sample hole {}'.format(self.style,
                                                 holenum if holenum else ''))

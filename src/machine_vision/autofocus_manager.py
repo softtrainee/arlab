@@ -253,8 +253,8 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _get_roi(self):
         w = self.parameters.crop_width
         h = self.parameters.crop_height
-        cx = (640 - w) / 2
-        cy = (480 - h) / 2
+        cx = (640*self.canvas.scaling - w) / 2
+        cy = (480*self.canvas.scaling - h) / 2
         roi = cx, cy, w, h
         return roi
 

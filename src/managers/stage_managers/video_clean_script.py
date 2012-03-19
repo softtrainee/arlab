@@ -31,7 +31,7 @@ MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', \
 
 
 class VideoDirectoryMaintainceScript(Loggable):
-    archive_days = Int(3)
+    archive_days = Int(30)
 
     def clean(self, root):
         archive_date = datetime.today() - timedelta(days=self.archive_days)
