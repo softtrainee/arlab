@@ -102,7 +102,7 @@ class AutomatedRun(Loggable):
     sample_data_record = Any
 
     ncounts = Int(2000)
-    nbaseline_counts = Int(100)
+    nbaseline_counts = Int(120)
     reference_mass = 39.962
     baseline_mass = 33.5
     integration_time = 1
@@ -110,6 +110,9 @@ class AutomatedRun(Loggable):
     isblank = False
 
     _debug = False
+
+    delay_before_baseline = 10
+    magnet_settling_time = 1
 
     def do_extraction(self):
         self.info('extraction')
@@ -143,11 +146,11 @@ class AutomatedRun(Loggable):
         else:
             return False
 
-    def do_peak_center(self):
+    def do_peak_center(self, **kw):
         sm = self.spectrometer_manager
         if sm is not None:
             sm.spectrometer._alive = True
-            sm.peak_center()
+            sm.peak_center(**kw)
             sm.spectrometer._alive = False
 
     def do_measurement(self, starttime, count=0):
@@ -178,35 +181,60 @@ class AutomatedRun(Loggable):
 
         do_later(self.experiment_manager.ui.control.Raise)
 
-        self.info('measuring signal intensities')
-        self._measure(self.ncounts,
-                      self.reference_mass, starttime,
-                      series=0
+        ncounts = self.ncounts
+        if self.isblank:
+            ncounts = 400
+
+        self.info('measuring signal intensities. collecting {} counts'.format(ncounts))
+        if self.spectrometer_manager:
+            self.spectrometer_manager.spectrometer.set_magnet_position(self.reference_mass)
+        time.sleep(self.magnet_settling_time)
+        self._measure(ncounts,
+                      starttime,
+                      series=0,
+                      update_x=True
                       )
 
-        g.set_x_limits(0,
-                       self.ncounts + 10)
+#        g.set_x_limits(0,
+#                       self.ncounts + self.nbaseline_counts + self.delay_before_baseline)
 
     def do_baseline(self, dac, starttime):
         dm = self.data_manager
         dm.new_frame(directory='automated_runs',
                      base_frame_name='{}-baseline'.format(self.identifier))
         self.info('measuring baseline intensities')
-        self._measure(self.nbaseline_counts,
-                       self.baseline_mass, starttime,
-                       series=1
-                       )
+
+        ncounts = 400 if self.isblank else self.ncounts
+
         self.graph.set_x_limits(0,
-                       self.ncounts + self.nbaseline_counts + 10)
+                       ncounts + self.nbaseline_counts + self.delay_before_baseline)
+        if self.spectrometer_manager:
+            self.spectrometer_manager.spectrometer.set_magnet_position(self.baseline_mass,
+                                                          dac=5.86)
+
+        self.info('delay before baseline')
+        time.sleep(self.delay_before_baseline)
+
+        self._measure(self.nbaseline_counts,
+                       starttime,
+                       series=1,
+
+                       update_x=False
+                       )
 
     def regress(self):
         r = Regressor()
         g = self.graph
 
+        time_zero_offset = int(self.experiment_manager.equilibration_time * 2 / 3.)
         for pi in range(len(g.plots)):
-            x = g.get_data(plotid=pi)
-            y = g.get_data(plotid=pi, axis=1)
+            x = g.get_data(plotid=pi)[time_zero_offset:]
+            y = g.get_data(plotid=pi, axis=1)[time_zero_offset:]
             rdict = r._regress_(x, y, 2)
+
+            self.info('intercept {}+/-{}'.format(rdict['coefficients'][2],
+                                                 rdict['coeff_errors'][2]
+                                                 ))
             g.new_series(rdict['x'],
                          rdict['y'],
                          plotid=pi, color='black')
@@ -222,17 +250,16 @@ class AutomatedRun(Loggable):
                          rdict['lower_y'],
                          **kw
                          )
+            g.redraw()
 
-    def _measure(self, ncounts, refmass, starttime, series=0):
+    def _measure(self, ncounts, starttime, series=0,
+                 update_x=False):
         dm = self.data_manager
         sm = self.spectrometer_manager
 
-        #set magnet to be on the peak
-        if sm is not None:
-            sm.spectrometer.set_magnet_position(refmass)
-
-        for i in xrange(0, ncounts, 10):
-            self.info('collecting point {}'.format(i + 1))
+        for i in xrange(0, ncounts, 1):
+            if i % 50 == 0:
+                self.info('collecting point {}'.format(i + 1))
 
             m = self.integration_time * 0.99 if not self._debug else 0.01
             time.sleep(m)
@@ -253,12 +280,12 @@ class AutomatedRun(Loggable):
             h1 = signals[keys.index('H1')]
             cdd = signals[keys.index('CDD')]
 
-#            x = time.time() - starttime if sm is not None else i + starttime
-            x = i + starttime
+            x = time.time() - starttime if not self._debug else i + starttime
+
             dm.write_to_frame((x, h1, cdd))
 
-            if i % 100 == 0:
-                self.graph.set_x_limits(0, min(i + 100, self.ncounts + self.nbaseline_counts))
+            if i % 100 == 0 and update_x:
+                self.graph.set_x_limits(0, min(i + 100, ncounts + self.nbaseline_counts + self.delay_before_baseline))
 
             self.graph.add_datum((x, h1), series=series, do_after=1)
             self.graph.add_datum((x, cdd), series=series,

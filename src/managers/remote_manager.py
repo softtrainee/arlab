@@ -29,6 +29,7 @@ class RemoteManager(Manager):
         conn.send(cmd)
         try:
             r = conn.recv(4096)
+            r = r.strip()
             self.info('-----ask----- {} ==> {}'.format(cmd, r))
         except socket.error, e:
             self.warning(e)

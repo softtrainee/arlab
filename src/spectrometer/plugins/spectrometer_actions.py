@@ -34,5 +34,8 @@ class PeakCenterAction(Action):
         app = event.window.application
 
         manager = app.get_service(SPECTROMETER_PROTOCOL)
-        manager.peak_center()
+
+        manager.peak_center(threaded=True,
+                            update_mftable=True
+                            )
 #============= EOF ====================================

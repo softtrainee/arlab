@@ -93,6 +93,7 @@ class StackedGraph(Graph):
             the plots are sized equally
         '''
 
+        pt = self.plotcontainer.padding_top
         for p in self.plots:
-            p.bounds[1] = bounds[1] / len(self.plots)
+            p.bounds[1] = (bounds[1] - pt) / len(self.plots)
 #============= EOF ====================================

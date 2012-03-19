@@ -70,6 +70,7 @@ class BakeoutController(WatlowEZZone):
 
     _active_script = None
     _oduration = 0
+
     def initialization_hook(self):
         '''
             suppress the normal initialization querys
@@ -145,7 +146,7 @@ class BakeoutController(WatlowEZZone):
             self.info('killing')
             if self._active_script is not None:
                 self._active_script._alive = False
-            
+
             self.set_closed_loop_setpoint(0)
 
     def load_additional_args(self, config):
@@ -265,8 +266,9 @@ class BakeoutController(WatlowEZZone):
 
             func(msg)
             self.alive = False
+            self.active = False
 
-            self.process_value = 0
+#            self.process_value = 0
 
 #    def complex_query(self, **kw):
 #        if 'verbose' in kw and kw['verbose']:
@@ -295,7 +297,7 @@ class BakeoutController(WatlowEZZone):
 #            print e
 
     def get_temp_and_power(self, **kw):
-#        kw['verbose']=True
+        kw['verbose'] = True
         pr = WatlowEZZone.get_temp_and_power(self, **kw)
         self.process_value_flag = True
         return pr

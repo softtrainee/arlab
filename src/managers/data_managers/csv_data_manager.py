@@ -26,6 +26,8 @@ from matplotlib.dates import num2date
 class CSVDataManager(DataManager):
     '''
     '''
+
+    format_str = '{:0.3f}'
     def load(self, frame_key=None):
         if frame_key is None:
             frame_key = self._current_frame
@@ -63,6 +65,11 @@ class CSVDataManager(DataManager):
             if isinstance(datum[0], (list, tuple)):
                 writer.writerows(datum)
             else:
+                try:
+                    datum = [self.format_str.format(d) for d in datum]
+                except Exception:
+                    pass
+
                 writer.writerow(datum)
 
 if __name__ == '__main__':

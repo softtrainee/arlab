@@ -47,28 +47,28 @@ class DatabaseAdapter(Loggable):
     password = Password('Argon')
     use_db = Bool
 
-    test_func = None
-    window = Any
+    test_func = 'get_rids'
+#    window = Any
 
-    @on_trait_change('[user,host,password,dbname, use_db]')
-    def connect_attributes_changed(self, obj, name, old, new):
-        if name == 'use_db':
-            if new:
-                self.connect()
-            else:
-                self.connected = False
-        else:
-            self.connect()
-
-        #refresh the open database views
-        sess = None
-        if self.window:
-            for v in self.window.views:
-                if v.category == 'Database':
-                    sess = v.obj.load(sess=sess)
-
-        if sess is not None:
-            sess.close()
+#    @on_trait_change('[user,host,password,dbname, use_db]')
+#    def connect_attributes_changed(self, obj, name, old, new):
+#        if name == 'use_db':
+#            if new:
+#                self.connect()
+#            else:
+#                self.connected = False
+#        else:
+#            self.connect()
+#
+#        #refresh the open database views
+#        sess = None
+#        if self.window:
+#            for v in self.window.views:
+#                if v.category == 'Database':
+#                    sess = v.obj.load(sess=sess)
+#
+#        if sess is not None:
+#            sess.close()
 
     def connect(self):
         '''
@@ -93,7 +93,8 @@ class DatabaseAdapter(Loggable):
         try:
             connected = True
             if self.test_func is not None:
-                _users, sess = getattr(self, self.test_func)(sess=sess)
+                getattr(self, self.test_func)
+#                _users, sess = getattr(self, self.test_func)(sess=sess)
 
         except:
             self.warning('connection failed %s@%s/%s' % (self.user, self.host,
@@ -102,19 +103,19 @@ class DatabaseAdapter(Loggable):
 
         finally:
             if sess is not None:
+                self.info('closing session')
                 sess.close()
 
         return connected
 
     def _new_engine(self, kind, user, host, db, password):
         '''
-            
+
         '''
 
         url = create_url(kind, user, host, db, password=password)
         self.info('url = %s' % url)
         self.engine = create_engine(url)
-
 
     def _get_record(self, record, func, sess):
         '''
@@ -132,15 +133,31 @@ class DatabaseAdapter(Loggable):
 
     def get_session(self):
         '''
-    
         '''
         if self.sess is None:
             self.sess = self.session_factory()
 
         return self.sess
 
+    def delete(self, item):
+        if self.sess is not None:
+            self.sess.delete(item)
+
+    def commit(self):
+        if self.sess is not None:
+            self.sess.commit()
+
     def flush(self):
-        self.sess.flush()
+        if self.sess is not None:
+            self.sess.flush()
+
+    def rollback(self):
+        if self.sess is not None:
+            self.sess.rollback()
+
+    def close(self):
+        if self.sess is not None:
+            self.sess.close()
 
     def traits_view(self):
         v = View('user',

@@ -170,8 +170,24 @@ def main():
     setup('pychron', level='DEBUG')
 
     launch(beta=True)
+#    os._exit(0)
+
+def profile_code():
+    '''
+    '''
+
+    import cProfile
+#    app_path = '/Users/Ross/Programming/pychron_beta/application_launch.py'
+#    l = open(app_path, 'r')
+    cProfile.run('main()', 'profile.out')
+    import pstats
+    p = pstats.Stats('profile.out')
+    p.strip_dirs()
+    p.sort_stats('time')
+
+    p.print_stats(1000)
+
     os._exit(0)
-
-
+#    sys.exit()
 if __name__ == '__main__':
-    main()
+    profile_code()

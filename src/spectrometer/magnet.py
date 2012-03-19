@@ -76,7 +76,6 @@ class Magnet(SpectrometerDevice):
         if isinstance(mass, str):
             mass = MOLECULAR_WEIGHTS[mass]
 
-        print data, mass
         if data:
             dac_value = reg.get_value('parabolic', data, mass)
         else:
@@ -84,19 +83,21 @@ class Magnet(SpectrometerDevice):
 
         return dac_value
 
-    def set_axial_mass(self, x, hv_correction=1):
+    def set_axial_mass(self, x, hv_correction=1, dac=None):
         '''
             set the axial detector to mass x
         '''
         reg = self.regressor
 
-        data = [[MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
-                self.mftable[1]
-                ]
-        dac_value = reg.get_value('parabolic', data, x)
+        if dac is None:
+            data = [[MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
+                    self.mftable[1]
+                    ]
+            dac = reg.get_value('parabolic', data, x) * hv_correction
+
         #print x, dac_value, hv_correction
 
-        self.set_dac(dac_value * hv_correction)
+        self.set_dac(dac)
 
     def set_dac(self, v):
         self._magnet_dac = v
@@ -127,8 +128,8 @@ class Magnet(SpectrometerDevice):
         for i, xi in enumerate(xs):
             mass = MOLECULAR_WEIGHTS[xi]
             refmass = MOLECULAR_WEIGHTS[key]
-
-            ys[i] -= delta * math.sqrt(mass / refmass)
+#            ys[i] -= delta * math.sqrt(mass / refmass)
+            ys[i] = value
 
         self.dump()
 

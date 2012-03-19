@@ -282,7 +282,7 @@ class Report:
 
         p = '/Users/Ross/Documents/Antarctica/MinnaBluff/data/test.csv'
         p = '/Users/Ross/Documents/Antarctica/MinnaBluff/data/af50.csv'
-        p = '/Users/Ross/Documents/Antarctica/MinnaBluff/data/gm-06.csv'
+        p = '/Users/ross/Antarctica/MinnaBluff/data/gm-06.csv'
 
         samples = parser.parse(p)
         ta = self._build_spectrum_table(1, samples)

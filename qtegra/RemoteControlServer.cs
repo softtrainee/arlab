@@ -1,4 +1,4 @@
-﻿// RegisterAssembly: DefinitionsCore.dll
+// RegisterAssembly: DefinitionsCore.dll
 // RegisterAssembly: BasicHardware.dll
 // RegisterAssembly: PluginManager.dll
 // RegisterAssembly: HardwareClient.dll
@@ -18,7 +18,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 
-__version__=003
+__version__=004
 */
 using System.IO;
 using System.Text;
@@ -139,6 +139,9 @@ class RemoteControl
 	//		Error Responses:
 	//			Error: Invalid Command   - the command is poorly formated or does not exist. 
 	//			Error: could not set <hardware> to <value> 
+	
+    //==========Generic Device===============================================
+	//      Get <name> -  name is any valid device currently listed in the hardware database
 	//====================================================================================================================================
 	
 	private static string ParseAndExecuteCommand (string cmd)
@@ -430,12 +433,21 @@ class RemoteControl
         	result=SetParameter("CDD Supply Set", Convert.ToDouble(args[1]));
             break;
 		    	    
+//============================================================================================
+//    Generic
+//============================================================================================			
+		case "Get":
+			if(Instrument.GetParameter(args[1], out r))
+			{
+				result=r.ToString();
+			}
+			break;
 		}
 
-		
 		return result;
 	}
 	
+ 	
 	private static bool PrepareEnvironment()
       {
         m_restoreMeasurementInfo=Instrument.MeasurementInfo;

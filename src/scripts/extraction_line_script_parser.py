@@ -265,9 +265,8 @@ class ExtractionLineScriptParser(CoreScriptParser):
                 with open(subpath, 'r') as f:
                     error = self.parse(f.read())
                     self.script_name = '-'
+                    error = [ei for ei in error if ei[2]]
 
-        error = [ei for ei in error if ei[2]]
-#        print 'sub parse errr', error
         if not error:
             error = None
 

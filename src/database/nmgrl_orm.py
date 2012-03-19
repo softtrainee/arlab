@@ -39,12 +39,16 @@ class DetectorTable(Base):
     DetectorTypeID = Column(Integer, default=0)
     EMV = Column(Float, default=0)
     Gain = Column(Float, default=0)
-    Disc = Column(Float, default=0)
+    Disc = Column(Float, default=1)
     DiscEr = Column(Float, default=0)
-    ICFactor = Column(Float, default=0)
+    ICFactor = Column(Float, default=1)
     ICFactorEr = Column(Float, default=0)
+    IonCounterDeadtimeSec = Column(Float, default=0)
+    Label = Column(String(40))
 
     isotopes = relation('IsotopeTable')
+
+
 class IsotopeResultsTable(Base):
     '''
     iso = intercept - bkgrd
@@ -52,7 +56,7 @@ class IsotopeResultsTable(Base):
     __tablename__ = 'IsotopeResultsTable'
     Counter = Column(Integer, primary_key=True)
     LastSaved = Column(DateTime)
-    IsotopeID = Column(Integer)
+    IsotopeID = Column(Integer, ForeignKey('IsotopeTable.IsotopeID'))
     DataReductionSessionID = Column(Integer)
     InterceptEr = Column(Float)
     Intercept = Column(Float)
@@ -75,10 +79,20 @@ class IsotopeResultsTable(Base):
     PeakScaleFactor = Column(Float)
 
 
+class AnalysesChangeableItemsTable(Base):
+    __tablename__ = 'AnalysesChangeableItemsTable'
+    ChangeableItemsID = Column(Integer, primary_key=True)
+    AnalysisID = Column(Integer, ForeignKey('AnalysesTable.AnalysisID'))
+    Disc = Column(Float, default=1)
+    DiscEr = Column(Float, default=0)
+    History = Column(String, default='')
+    StatusReason = Column(Integer, default=1)
+    StatusLevel = Column(Integer, default=1)
+    SignalNormalizationFactor = Column(Float, default=1)
+
 
 class AnalysesTable(Base):
     '''
-        G{classtree}
     '''
     __tablename__ = 'AnalysesTable'
     AnalysisID = Column(Integer, primary_key=True)
@@ -94,8 +108,14 @@ class AnalysesTable(Base):
     ManifoldOpt = Column(Integer, default=0)
     OriginalImportID = Column(String(1), default=0)
     RedundantSampleID = Column(Integer, ForeignKey('SampleTable.SampleID'))
+    RunDateTime = Column(DateTime)
+    LoginSessionID = Column(Integer)
+    SpecRunType = Column(Integer)
+
     isotopes = relation('IsotopeTable', backref='AnalysesTable')
     araranalyses = relation('ArArAnalysisTable', backref='AnalysesTable')
+    changeable = relation('AnalysesChangeableItemsTable', uselist=False)
+
 
 class ArArAnalysisTable(Base):
     '''
@@ -119,9 +139,9 @@ class ArArAnalysisTable(Base):
     Tot37Er = Column(Float, default=0)
     Tot36Er = Column(Float, default=0)
 
+
 class BaselinesTable(Base):
     '''
-        G{classtree}
     '''
     __tablename__ = 'baselinestable'
     BslnID = Column(Integer, primary_key=True)
@@ -129,9 +149,9 @@ class BaselinesTable(Base):
     NumCnts = Column(Integer)
     PeakTimeBlob = Column(BLOB, nullable=True)
 
+
 class MaterialTable(Base):
     '''
-        G{classtree}
     '''
     __tablename__ = 'MaterialTable'
     ID = Column(Integer, primary_key=True)
@@ -139,9 +159,9 @@ class MaterialTable(Base):
 
     irradpositions = relation('IrradiationPositionTable')
 
+
 class IrradiationPositionTable(Base):
     '''
-        G{classtree}
     '''
     __tablename__ = 'IrradiationPositionTable'
 
@@ -160,22 +180,23 @@ class IrradiationPositionTable(Base):
     JEr = Column(Float, nullable=True)
 
     analyses = relation('AnalysesTable')
+
+
 class IsotopeTable(Base):
     '''
-        G{classtree}
     '''
 
     __tablename__ = 'IsotopeTable'
     IsotopeID = Column(Integer, primary_key=True)
     AnalysisID = Column(Integer, ForeignKey('AnalysesTable.AnalysisID'))
     DetectorID = Column(Integer, ForeignKey('DetectorTable.DetectorID'))
-    BkgdDetectorID = Column(Float, nullable=True)
+    BkgdDetectorID = Column(Integer, nullable=True)
     Label = Column(String(40))
     NumCnts = Column(Integer)
     NCyc = Column(Integer, nullable=True)
     #CycleStartIndexList
     #CycleStartIndexblob
-    BslnID = Column(Float, ForeignKey('BaselinesTable.BslnID'))
+    BslnID = Column(Integer, ForeignKey('baselinestable.BslnID'))
     RatNumerator = Column(Integer, nullable=True)
     RatDenominator = Column(Integer, nullable=True)
     HallProbeAtStartOfRun = Column(Float, nullable=True)
@@ -183,9 +204,11 @@ class IsotopeTable(Base):
 
     peak_time_series = relation('PeakTimeTable')
 
+    results = relation('IsotopeResultsTable')
+
+
 class SampleTable(Base):
     '''
-        G{classtree}
     '''
     __tablename__ = 'SampleTable'
     SampleID = Column(Integer, primary_key=True)
@@ -206,9 +229,10 @@ class SampleTable(Base):
 
     irradpositions = relation('IrradiationPositionTable')
     analyses = relation('AnalysesTable')
+
+
 class PeakTimeTable(Base):
     '''
-        G{classtree}
     '''
     __tablename__ = 'PeakTimeTable'
     Counter = Column(Integer, primary_key=True)

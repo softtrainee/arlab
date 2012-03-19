@@ -35,10 +35,12 @@ from src.helpers.paths import scripts_dir, data_dir
 from src.scripts.extraction_line_script import ExtractionLineScript
 from src.data_processing.regression.ols import OLS
 from uncertainties import ufloat
-from src.data_processing.argon_calculations import calculate_mswd
+from src.data_processing.statistical_calculations import calculate_mswd
 from src.graph.graph import Graph
+from src.data_processing.time_series.time_series import smooth
+from src.graph.stacked_graph import StackedGraph
 
-DEBUG = True
+DEBUG = False
 
 #class AutomatedAnalysisParameters(HasTraits):
 #    runscript_name = Str
@@ -71,7 +73,7 @@ class ExperimentManager(Manager):
     _alive = False
 
     mode = 'normal'
-    equilibration_time = 0.1
+    equilibration_time = 15
 
     test2 = Button
 
@@ -114,10 +116,61 @@ class ExperimentManager(Manager):
 #===============================================================================
 # gather data
 #===============================================================================
-        runlist = ['B-01', 'A-01', 'A-02', 'A-03', 'A-04', 'B-02']
+        runlist = ['B-01', 'A-01', 'A-02', 'A-03', 'A-04', 'B-02',
+                   'A-05', 'A-06', 'A-07', 'B-03'
+                   ]
 
-        blanks, airs, unknowns, a_bs, b_bs, u_bs = self.gather_data(runlist)
-        self.permuate_data(blanks, airs, a_bs, b_bs)
+        blanks, airs, unknowns, b_bs, a_bs, u_bs = self.gather_data(runlist)
+#        self.permuate_data(blanks, airs, a_bs, b_bs)
+
+        self.plot_air_series(blanks, airs, b_bs, a_bs)
+
+    def plot_air_series(self, blanks, airs,
+                        blank_baselines,
+                        air_baselines):
+        g = StackedGraph()
+        g.new_plot(xtitle='npts',
+                   ytitle='40/36')
+        g.new_plot(ytitle='40/36 err')
+        g.new_plot(ytitle='Population SD')
+
+#        xs = [100, 200, 500, 1000, 2000]
+        xs = range(100, 2000, 100)
+        cor_ratioss = [self.calculate_ratios(ni, blanks, airs,
+                                             blank_baselines,
+                                   air_baselines,
+                                  )
+                     for ni in xs
+                     ]
+
+        n = len(airs['h1'])
+        scatter_args = dict(type='scatter', marker='circle',
+                         marker_size=1.75)
+
+        for i in range(n):
+#            g.new_series(plotid=0, **scatter_args)
+#            g.new_series(plotid=1, **scatter_args)
+            g.new_series(plotid=0)
+            g.new_series(plotid=1)
+
+        g.new_series(plotid=2, **scatter_args)
+        for ci, xi in zip(cor_ratioss, xs):
+#            print ci
+            ms, sds = zip(*[(i.nominal_value, i.std_dev()) for i in ci])
+            ms = array(ms)
+            sds = array(sds)
+#            print SD
+            for si in range(n):
+                g.add_datum((xi, ms[si]), plotid=0, series=si)
+                g.add_datum((xi, sds[si]), plotid=1, series=si)
+
+            g.add_datum((xi, ms.std()), plotid=2, series=0)
+
+#            g.new_series(xs, ms, type='scatter', plotid=0)
+#            g.new_series(xs, sds, type='scatter', plotid=1)
+
+        g.set_x_limits(0, xs[-1] + 100)
+        g.edit_traits()
 
     def gather_data(self, runlist):
         blanks = dict()
@@ -128,16 +181,20 @@ class ExperimentManager(Manager):
         unknown_baselines = dict()
 
         for rid in runlist:
+            self.info('loading run {} signal file'.format(rid))
             #open signal file
             p = os.path.join(data_dir,
                             'automated_runs',
+                            'mswd_counting_experiment',
                             '{}-intensity001.txt'.format(rid))
             xs, h1s, cdds = loadtxt(p, unpack=True, delimiter=',',
                         skiprows=int(2 / 3. * self.equilibration_time))
 
+            self.info('loading run {} baseline file'.format(rid))
             #open baseline file
             p = os.path.join(data_dir,
                              'automated_runs',
+                             'mswd_counting_experiment',
                              '{}-baseline001.txt'.format(rid))
             _xs_baseline, h1s_baseline, cdds_baseline = loadtxt(p,
                                             unpack=True, delimiter=',')
@@ -149,8 +206,8 @@ class ExperimentManager(Manager):
 #===============================================================================
 # 
 #===============================================================================
-            h1_baseline = 0
-            cdd_baseline = 0
+#            h1_baseline = 0
+#            cdd_baseline = 0
 
             #if the sample is a blank add to blank list
             if rid.startswith('B'):
@@ -186,29 +243,56 @@ class ExperimentManager(Manager):
                    )
         g.edit_traits()
 
-        s = 4
+        s = 10
         e = 2000
-        step = 100
+        step = 10
         nxs = arange(s, e, step)
 
         mswds = [self._calculate_mswd(ni,
                 blanks, airs, blank_baselines, air_baselines) for ni in nxs]
 
         g.new_series(nxs, mswds)
+        snxs = smooth(nxs)
+        smswds = smooth(mswds)
+        g.new_series(snxs, smswds)
+        g.add_horizontal_rule(1)
+
         g.redraw()
 
     def _calculate_mswd(self, ni, blanks, airs,
                          blank_baselines, air_baselines):
+
+        cor_ratios = self.calculate_ratios(ni, blanks, airs,
+                                           blank_baselines, air_baselines)
+        verbose = False
+        if verbose:
+            self.info('40Ar/36Ar for npts {}'.format(ni))
+            self.info('average={} n={}'.format(cor_ratios.mean(),
+                                           cor_ratios.shape[0]
+                                           ))
+
+        x, errs = zip(*[(cr.nominal_value,
+                         cr.std_dev()) for cr in cor_ratios])
+#
+        return calculate_mswd(x, errs)
+
+    def calculate_ratios(self, ni, blanks, airs,
+                            blank_baselines,
+                            air_baselines):
         permutate_blanks = False
         if permutate_blanks:
             ti = ni
         else:
             ti = -1
+
         h1bs, cddbs = self._calculate_correct_intercept(blanks, blank_baselines,
                                                         dict(h1=0, cdd=0),
                                                         truncate=ti)
-        h1bs = h1bs.mean(), cddbs.mean()
-        h1bs, cddbs = 0, 0
+
+        h1bs, cddbs = h1bs.mean(), cddbs.mean()
+#        h1bs, cddbs = 0, 0
+#        print 'asdfas', len(airs['h1']), len(airs['cdd'])
+#        print 'asdfas', len(air_baselines['h1']), len(air_baselines['cdd'])
         cor_h1, cor_cdd = self._calculate_correct_intercept(airs,
                                                             air_baselines,
                                                                 dict(h1=h1bs,
@@ -218,15 +302,14 @@ class ExperimentManager(Manager):
                                                             )
 
         cor_ratios = cor_h1 / cor_cdd
-        x, errs = zip(*[(cr.nominal_value,
-                         cr.std_dev()) for cr in cor_ratios])
-#
-        return calculate_mswd(x, errs)
+
+        return cor_ratios
 
     def _calculate_correct_intercept(self, signals, baselines,
                                       blanks, truncate= -1):
         cor_h1 = []
         cor_cdd = []
+
 
         for (xs, h1s), h1b, (xs2, cdds), cddb in zip(signals['h1'],
                                                baselines['h1'],
@@ -255,12 +338,12 @@ class ExperimentManager(Manager):
         return array(cor_h1), array(cor_cdd)
 
     def get_spectrometer_manager(self):
-        if self.spectrometer_manager is None:
+        sm = self.spectrometer_manager
+        if sm is None:
             protocol = 'src.managers.spectrometer_manager.SpectrometerManager'
             if self.application is not None:
                 sm = self.spectrometer_manager = self.application.get_service(protocol)
-        else:
-            sm = self.spectrometer_manager
+
         return sm
 
     def do_automated_runs(self):
@@ -292,7 +375,7 @@ class ExperimentManager(Manager):
             self.info('Start automated run {}'.format(arun.identifier))
 
             arun._debug = DEBUG
-            if arun.identifier == 'B':
+            if arun.identifier.startswith('B'):
                 arun.isblank = True
 
             arun.state = 'extraction'
@@ -339,7 +422,8 @@ class ExperimentManager(Manager):
 
             arun.regress()
 
-            arun.do_peak_center()
+            arun.do_peak_center(update_mftable=True, center_pos='Ar40')
+            self.extraction_line_manager.open_valve('V')
             self.info('Automated run {} finished'.format(arun.identifier))
             if not self._continue_check():
                     break
@@ -356,7 +440,7 @@ class ExperimentManager(Manager):
                     break
                 time.sleep(0.5)
 
-
+        self.valves_to_idle()
         self.info('automated runs complete')
 
     def _continue_check(self):
@@ -369,10 +453,16 @@ class ExperimentManager(Manager):
     def isAlive(self):
         return self._alive
 
-    def valves_to_idle(self):
+    def valves_to_idle(self, name=None):
+        if name is not None:
+            name = 'valves_to_idle_{}.rs'.format(name)
+        else:
+            name = 'valves_to_idle.rs'
+
+#        name = 'valves_to_idle_measure.rs'
         els = ExtractionLineScript(
                             source_dir=os.path.join(scripts_dir, 'runscripts'),
-                            file_name='valves_to_idle.rs',
+                            file_name=name,
 
                             #hole=self.position,
                             #heat_duration=self.duration,
@@ -382,8 +472,9 @@ class ExperimentManager(Manager):
                             )
 
         a = els.bootstrap(new_thread=False)
-        if a:
-            els.join()
+        if not a:
+#            els.join()
+            self.warning('Problem with Extraction Line script {}'.format(name))
 
     def do_equilibration(self, event):
 
@@ -410,7 +501,7 @@ class ExperimentManager(Manager):
             self.info('finish equilibration')
             if elm:
                 elm.close_valve(inlet_id)
-                self.valves_to_idle()
+                self.valves_to_idle(name='measure')
 
         self.info('starting equilibration')
         t = Thread(target=eq, args=(event,))
@@ -476,9 +567,9 @@ class ExperimentManager(Manager):
         exp.edit_traits()
 
     def _test2_fired(self):
-        sm = self.get_spectrometer_manager()
-        print sm.spectrometer_microcontroller
-#        self.analyze_data()
+#        sm = self.get_spectrometer_manager()
+#        print sm.spectrometer_microcontroller
+        self.analyze_data()
 
     def _test_fired(self):
         if self.isAlive():
@@ -489,7 +580,7 @@ class ExperimentManager(Manager):
         #target = self.spectrometer_manager.deflection_calibration
             target = self.do_automated_runs
             t = Thread(target=target)
-            t.start()
+#            t.start()
 
 #    def _add_fired(self):
 #        self.experiment.analyses.append(self.experiment.analysis)

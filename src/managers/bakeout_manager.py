@@ -25,7 +25,7 @@ from traitsui.api import View, Item, HGroup, VGroup, spring, \
 import numpy as np
 import os
 import time
-from threading import Thread
+from threading import Thread, Lock
 
 from src.managers.manager import Manager, ManagerHandler
 from src.hardware.bakeout_controller import BakeoutController
@@ -47,6 +47,7 @@ BAUDRATE = '38400'
 
 from wx import GetDisplaySize
 DISPLAYSIZE = GetDisplaySize()
+
 
 class BakeoutManager(Manager):
 
@@ -111,6 +112,8 @@ class BakeoutManager(Manager):
 
     script_editor = Instance(ScriptManager)
 
+    _nactivated_controllers = 0
+
     def _script_editor_default(self):
         m = ScriptManager(kind='Bakeout')
         return m
@@ -151,12 +154,12 @@ class BakeoutManager(Manager):
 
             pv = getattr(obj, 'process_value')
             hp = getattr(obj, 'heat_power_value')
-
-            self.data_buffer.append((pid, pv, hp))
+            with self._buffer_lock:
+                self.data_buffer.append((pid, pv, hp))
             self.data_count_flag += 1
 
             n = self.data_count_flag
-            if n == len(self.active_controllers):
+            if n >= len(self.active_controllers):
                 for (i, pi, hi) in self.data_buffer:
 
                     track_x = i == n - 1
@@ -175,8 +178,8 @@ class BakeoutManager(Manager):
                             track_x=track_x,
                             track_y=False,
                             )
-
-                    self.data_buffer_x.append(nx)
+                    with self._buffer_lock:
+                        self.data_buffer_x.append(nx)
                 try:
                     self.graph.update_y_limits(plotid=self.plotids[0])
                     self.graph.update_y_limits(plotid=self.plotids[1])
@@ -186,10 +189,12 @@ class BakeoutManager(Manager):
                 if self.include_pressure:
                     self.get_pressure(nx)
 
-                self.write_data(self.data_name)
-                self.data_buffer = []
-                self.data_buffer_x = []
-                self.data_count_flag = 0
+                with self._buffer_lock:
+                    self.write_data()
+
+                    self.data_buffer = []
+                    self.data_buffer_x = []
+                    self.data_count_flag = 0
 
     def get_pressure(self, x):
         if self.gauge_controller:
@@ -230,21 +235,36 @@ class BakeoutManager(Manager):
                             dtime)
                     ac.end(error=error)
 
-    def write_data(self, name, plotid=0):
-        datum = []
+    def write_data(self):
+
+        ns = sum(map(int, [self.include_heat,
+                           self.include_pressure, self.include_temp])) + 1
+        container = [0, ] * ns * self._nactivated_controllers
+
         for (sub, x) in zip(self.data_buffer, self.data_buffer_x):
-            (_pid, pi, hp) = sub
-            datum.append(x)
+            s = 1
+            (pid, pi, hp) = sub
+
+            ind = pid * ns
+            container[ind] = x
+
             if self.include_temp:
-                datum.append(pi)
+                container[ind + s] = pi
+                s += 1
 
             if self.include_heat:
-                datum.append(hp)
+                container[ind + s] = hp
+                s += 1
 
             if self.include_pressure:
-                datum.append(self._pressure)
+                container[ind + s] = self._pressure
 
-        self.data_manager.write_to_frame(datum)
+        for i in range(self._nactivated_controllers):
+            ind = i * ns
+            if container[ind] < 0.001:
+                container[ind] = x
+
+        self.data_manager.write_to_frame(container)
 
     def update_alive(
         self,
@@ -328,10 +348,13 @@ class BakeoutManager(Manager):
 
     def _open_graph(self, path):
 
-        # p = '/Users/Ross/Pychrondata_beta/data/bakeouts/bakeout-2011-02-17008.txt'
-
         graph = self.bakeout_factory(ph=0.65,
-                *self.bakeout_parser(path))
+                *self.bakeout_parser(path),
+                container_dict=dict(bgcolor='red',
+                                    fill_bg=True,
+                                    padding_top=60
+                                    )
+                )
 
         graph.window_width = 0.66
         graph.window_height = 0.85
@@ -353,8 +376,11 @@ class BakeoutManager(Manager):
         path = self._file_dialog_('open',
                                   default_directory=os.path.join(data_dir,
                                   'bakeouts'))
+#        path = '/Users/ross/Desktop/bakeout-2012-03-16027.txt'
+#        path = '/Users/ross/Desktop/bakeout-test.txt'
         if path is not None:
             self._open_graph(path)
+#        self._open_graph(None)
 
     def _save_fired(self):
 
@@ -395,6 +421,8 @@ class BakeoutManager(Manager):
     def _execute_(self):
         '''
         '''
+        self._buffer_lock = Lock()
+
         if self.alive:
             self.kill(user_kill=True)
             self.alive = False
@@ -454,6 +482,8 @@ class BakeoutManager(Manager):
                 # set the header in for the data file
 
                 self.data_manager.write_to_frame(header)
+
+                self._nactivated_controllers = len(controllers)
 
                 for c in controllers:
                     c.run()
@@ -578,11 +608,14 @@ class BakeoutManager(Manager):
                 for tr in self._get_controller_names()]
 
     def _get_active_controllers(self):
-        ac = []
-        for tr in self._get_controllers():
-            if tr.isActive() and tr.isAlive():
-                ac.append(tr)
-        return ac
+#        ac = []
+#        for tr in self._get_controllers():
+#            if tr.isActive() and tr.isAlive():
+#                ac.append(tr)
+
+        return [tr for tr in self._get_controllers() if tr.isActive()
+                and tr.isAlive()
+                ]
 
     def _load_configurations(self):
         '''
@@ -668,22 +701,26 @@ class BakeoutManager(Manager):
         data,
         path,
         ph=0.5,
+        **kw
         ):
 
         ph = DISPLAYSIZE.height * ph / max(1, sum(include_bits))
+
         graph = self._graph_factory(stream=False,
                                     include_bits=include_bits,
-                                    panel_height=ph, **dict(pan=True,
-                                    zoom=True))
+                                    panel_height=ph,
+                                    plot_kwargs=dict(pan=True, zoom=True),
+                                     **kw)
         plotids = self.plotids
         for i in range(nseries):
 
             # set up graph
-
-            name = (header[1 + sum(include_bits) * i])[:-5]
-            for i in range(3):
-                if include_bits[i]:
-                    graph.new_series(plotid=plotids[i])
+            name = (header[(1 + sum(include_bits)) * i])[:-5]
+            for j in range(3):
+                if include_bits[j]:
+                    graph.new_series(plotid=plotids[j])
+                    graph.set_series_label(name, series=i,
+                                           plotid=plotids[j])
 
 #            if include_bits[1]:
 #                graph.new_series(plotid=plotids[1])
@@ -691,12 +728,13 @@ class BakeoutManager(Manager):
 #            if include_bits[2]:
 #                graph.new_series(plotid=plotids[2])
 
-            if include_bits[0]:
-                graph.set_series_label(name, series=i,
-                        plotid=plotids[0])
-            elif include_bits[1]:
-                graph.set_series_label(name, series=i,
-                        plotid=plotids[1])
+#            for j in range(3):
+#                if include_bits[j]:
+#                    graph.set_series_label(name, series=i,
+#                                           plotid=plotids[j])
+#            elif include_bits[1]:
+#                graph.set_series_label(name, series='bakeout{}'.format(i),
+#                        plotid=plotids[1])
 
         for (i, da) in enumerate(data):
             da = np.transpose(da)
@@ -735,23 +773,25 @@ class BakeoutManager(Manager):
 
     def bakeout_parser(self, path):
         import csv
-        reader = csv.reader(open(path, 'r'))
+        with open(path, 'r') as f:
+#            reader = csv.reader(open(path, 'r'))
+            reader = csv.reader(f)
 
-        # first line is the include bits
+            # first line is the include bits
+            l = reader.next()
+            l[0] = (l[0])[1:]
+#
+            ib = map(int, l)
 
-        l = reader.next()
-        l[0] = (l[0])[1:]
+            # second line is a header
+            header = reader.next()
+            header[0] = (header[0])[1:]
+            nseries = len(header) / (sum(ib) + 1)
+            data = np.genfromtxt(f, delimiter=',',
+                                 invalid_raise=False
+                                 )
+            data = np.array_split(data, nseries, axis=1)
 
-        ib = map(int, l)
-
-        # second line is a header
-
-        header = reader.next()
-        header[0] = (header[0])[1:]
-        nseries = len(header) / (sum(ib) + 1)
-
-        data = np.array_split(np.array([row for row in reader],
-                              dtype=float), nseries, axis=1)
         return (header, nseries, ib, data, path)
 
     # ------------------------------------------------------------------------------
@@ -762,8 +802,13 @@ class BakeoutManager(Manager):
         graph=None,
         include_bits=None,
         panel_height=None,
+        plot_kwargs=None,
         **kw
         ):
+
+        if plot_kwargs is None:
+            plot_kwargs = dict()
+
         if include_bits is None:
             include_bits = [self.include_temp, self.include_heat,
                             self.include_pressure]
@@ -772,14 +817,15 @@ class BakeoutManager(Manager):
         if graph is None:
 
             if stream:
-                graph = TimeSeriesStreamStackedGraph(panel_height=435
-                        / n)
+                graph = TimeSeriesStreamStackedGraph(panel_height=435 / n,
+                                    container_dict=dict(padding_top=30),
+                         **kw)
             else:
                 if panel_height is None:
                     panel_height = DISPLAYSIZE.height * 0.65 / n
 
                 graph = \
-                    TimeSeriesStackedGraph(panel_height=panel_height)
+                    TimeSeriesStackedGraph(panel_height=panel_height, **kw)
 
         graph.clear()
         kw['data_limit'] = self.scan_window * 60 / self.update_interval

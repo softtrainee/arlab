@@ -34,12 +34,19 @@ class Experiment(HasTraits):
     def _automated_runs_default(self):
         return [
 
-                AutomatedRun(identifier='B'),
+                AutomatedRun(identifier='B-01'),
                 AutomatedRun(identifier='A-01'),
                 AutomatedRun(identifier='A-02'),
                 AutomatedRun(identifier='A-03'),
                 AutomatedRun(identifier='A-04'),
-                AutomatedRun(identifier='B'),
+                AutomatedRun(identifier='B-02'),
+                AutomatedRun(identifier='A-05'),
+                AutomatedRun(identifier='A-06'),
+                AutomatedRun(identifier='A-07'),
+                AutomatedRun(identifier='A-08'),
+                AutomatedRun(identifier='A-09'),
+                AutomatedRun(identifier='A-10'),
+                AutomatedRun(identifier='B-03'),
 
                 ]
 

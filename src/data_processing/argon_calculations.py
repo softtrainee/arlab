@@ -20,44 +20,15 @@ import math
 from numpy import asarray, argmax
 from src.data_processing import constants
 #============= local library imports  ==========================
-def calculate_mswd(x, errs):
-    mswd_w = 0
-    if len(x) >= 2:
-        x = asarray(x)
-        errs = asarray(errs)
+from statistical_calculations import calculate_mswd, calculate_weighted_mean
 
-    #    xmean_u = x.mean()    
-        xmean_w, _err = calculate_weighted_mean(x, errs)
-
-        ssw = (x - xmean_w) ** 2 / errs ** 2
-    #    ssu = (x - xmean_u) ** 2 / errs ** 2
-
-        d = 1.0 / (len(x) - 1)
-        mswd_w = d * ssw.sum()
-    #    mswd_u = d * ssu.sum()
-
-    return mswd_w
-
-def calculate_weighted_mean(x, errs, error=0):
-    x = asarray(x)
-    errs = asarray(errs)
-
-    weights = asarray(map(lambda e: 1 / e ** 2, errs))
-
-    wtot = weights.sum()
-    wmean = (weights * x).sum() / wtot
-
-    if error == 0:
-        werr = wtot ** -0.5
-    elif error == 1:
-        werr = 1
-    return wmean, werr
-
-def calculate_arar_age(signals, ratios, ratio_errs, a37decayfactor, a39decayfactor, j, jer, d, der):
+def calculate_arar_age(signals, ratios, ratio_errs,
+                       a37decayfactor, a39decayfactor, j, jer, d, der):
     s40, s40er, s39, s39er, s38, s38er, s37, s37er, s36, s36er = signals
     p36cl38cl, k4039, k3839, ca3637, ca3937, ca3837 = ratios
     k4039er, ca3637er, ca3937er = ratio_errs
-
+#    a37decayfactor = 1
+#    a39decayfactor = 1
     #convert to ufloats
     from uncertainties import ufloat
     from uncertainties.umath import log

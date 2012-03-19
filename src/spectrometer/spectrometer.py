@@ -64,6 +64,7 @@ class Spectrometer(SpectrometerDevice):
     integration_time = Enum(0.065536, 0.131072, 0.262144, 0.524288,
                             1.048576, 2.097152, 4.194304, 8.388608,
                             16.777216, 33.554432, 67.108864)
+
     reference_detector = Str('H1')
     magnet_dac = DelegatesTo('magnet')
     _magnet_dac = DelegatesTo('magnet')
@@ -76,7 +77,7 @@ class Spectrometer(SpectrometerDevice):
 
     databuffer = String
 
-    molecular_weight = Str
+    molecular_weight = Str('Ar40')
     sub_cup_configurations = List
 
     sub_cup_configuration = Property(depends_on='_sub_cup_configuration')
@@ -94,7 +95,7 @@ class Spectrometer(SpectrometerDevice):
     dc_npeak_centers = Int(3)
 
     pc_window_cnt = 0
-    pc_window = Float(0.01)
+    pc_window = Float(0.015)
     pc_step_width = Float(0.0005)
 
 
@@ -232,7 +233,7 @@ class Spectrometer(SpectrometerDevice):
             cur = self.source.read_hv()
         return self.source.nominal_hv / cur
 
-    def set_magnet_position(self, v):
+    def set_magnet_position(self, v, dac=None):
         #get the detector we are aiming for
 #        _target_det = self._detectors[self.reference_detector]
 #        get position relative to axial
@@ -245,7 +246,7 @@ class Spectrometer(SpectrometerDevice):
         #need to adjust for the steering voltage on this detector
 #        sv = target_det.steering_voltage
 
-        self.magnet.set_axial_mass(v, hv_correction)
+        self.magnet.set_axial_mass(v, hv_correction, dac=dac)
 #===============================================================================
 # change handlers
 #===============================================================================
@@ -302,11 +303,13 @@ class Spectrometer(SpectrometerDevice):
                               window_y=25 + self.pc_window_cnt * 25
                               )
                 self.pc_window_cnt += 1
-                do_later(graph.edit_traits)
                 self.peak_center_graph = graph
             else:
                 graph = self.peak_center_graph
-                graph.clear()
+
+        graph.close()
+        graph.clear()
+        do_later(graph.edit_traits)
 
 #        else:
 #            graph.clear()
@@ -361,7 +364,6 @@ class Spectrometer(SpectrometerDevice):
             dac_values = np.linspace(start, end, nsteps)
             self.peak_generator = psuedo_peak(m + 0.001, start, end, nsteps)
 
-
             if self.scan_timer and self.scan_timer.IsRunning():
                 self.scan_timer.Stop()
 
@@ -404,7 +406,8 @@ class Spectrometer(SpectrometerDevice):
 
             graph.add_vertical_rule(xs[1])
             self.peak_center_results = result
-            xs = result[0]
+#            xs = result[0]
+
             #adjust the center position for nominal high voltage
             refpos = xs[1] / self.get_hv_correction(current=True)
             self.info('''{} Peak center results
@@ -425,6 +428,12 @@ class Spectrometer(SpectrometerDevice):
             period = 0.05
 
         gen = (i for i in dac_values)
+
+
+        #move to first position and delay 
+        self.magnet.set_dac(gen.next())
+        time.sleep(2)
+
         while 1:
             if not self.isAlive():
                 break
@@ -436,14 +445,20 @@ class Spectrometer(SpectrometerDevice):
                 data = self.get_intensities()
                 if self.simulation:
                     intensity = self.peak_generator.next()
+
                 if data is not None:
 #                    if self.simulation:
 #                        intensity = self.peak_generator.next()
 #                    else:
-                    intensity = data[DETECTOR_ORDER.index(self.reference_detector)]
 
+                    intensity = data[DETECTOR_ORDER.index(self.reference_detector)][1]
+#                print intensity, self.reference_detector
                 self.intensities.append(intensity)
-                do_after(1, graph.add_datum, (dac, intensity), update_y_limits=True)
+                graph.add_datum(
+                                (dac, intensity),
+                                update_y_limits=True,
+                                do_after=1)
+#                do_after(1, graph.add_datum, (dac, intensity), update_y_limits=True)
 
             except StopIteration:
                 break
@@ -615,13 +630,14 @@ class Spectrometer(SpectrometerDevice):
         if self.microcontroller is not None:
 
             scc = self.microcontroller.ask('GetSubCupConfigurationList Argon', verbose=False)
-            if 'ERROR' not in scc:
-                self.sub_cup_configurations = scc.split('\r')
+            if scc:
+                if 'ERROR' not in scc:
+                    self.sub_cup_configurations = scc.split('\r')
 
             n = self.microcontroller.ask('GetActiveSubCupConfiguration')
-            if 'ERROR' not in n:
-                self._sub_cup_configuration = n
-
+            if n:
+                if 'ERROR' not in n:
+                    self._sub_cup_configuration = n
 
         self.molecular_weight = 'Ar40'
 
@@ -630,7 +646,7 @@ class Spectrometer(SpectrometerDevice):
                                 'AX':'3:AX',
                                 'L1':'4:L1', 'L2':'5:L2',
                                  'CDD':'6:CDD'}
-        self.reference_detector = 'AX'
+#        self.reference_detector = 'AX'
 
         self._detectors = dict(H2=Detector(name='H2', relative_position=1.2, active=True),
                               H1=Detector(name='H1', relative_position=1.1, active=True),

@@ -26,7 +26,7 @@ from src.graph.stacked_graph import StackedGraph
 
 from multiprocessing import Pool
 from src.data_processing.regression.ols import OLS
-from src.data_processing.argon_calculations import calculate_mswd
+from src.data_processing.statistical_calculations import calculate_mswd
 
 def mcalculate_mswd(d):
     return calculate_mswd(*d)

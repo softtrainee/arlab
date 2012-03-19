@@ -179,12 +179,10 @@ class Initializer(Loggable):
             idx = name.find('_manager')
             if idx is not -1:
                 name = name[:idx]
-            print name
             mp = parser.get_plugin(name)
         else:
             mp = parser.get_manager(name, plugin_name)
 
-        print mp
         if mp is not None:
             managers = parser.get_managers(mp)
             devices = parser.get_devices(mp)

@@ -20,13 +20,15 @@ limitations under the License.
 #============= standard library imports ========================
 import csv
 #============= local library imports  ==========================
-from src.data_processing.argon_calculations import calculate_mswd, \
-    calculate_weighted_mean, calculate_arar_age, find_plateaus
+from src.data_processing.statistical_calculations import calculate_mswd, calculate_weighted_mean
+from src.data_processing.argon_calculations import calculate_arar_age, find_plateaus
+
 
 def formatfloat(f, n=3):
         if f > 1000:
             n -= 1
         return '{:0.{}f}'.format(f, n)
+
 
 class Sample(object):
     analyses = None
@@ -91,7 +93,7 @@ class Sample(object):
 #        print '{:0.2f}'.format(2 * err.nominal_value),
 #        print  '{:0.2f}'.format(4 * age.std_dev())
 
-        return age.nominal_value, 4 * age.std_dev()
+        return age.nominal_value, 2 * age.std_dev() ** 0.5 / len(self.analyses)
 
     def get_isotopic_recombination_age(self):
         a, e = self._calculate_isotopic_recombination()
@@ -375,8 +377,10 @@ class AutoupdateParser(object):
 
 if __name__ == '__main__':
     p = AutoupdateParser()
-    pa = '/Users/Ross/Documents/Antarctica/MinnaBluff/data/gm-06.csv'
+    pa = '/Users/ross/Antarctica/MinnaBluff/data/gm-06.csv'
     samples = p.parse(pa)
+
+    print samples[0].get_isotopic_recombination_age()
 
 
 

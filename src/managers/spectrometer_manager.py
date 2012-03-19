@@ -57,12 +57,13 @@ class SpectrometerManager(Manager):
 
     center_paths = List
 
+    reference_detector = 'H1'
     def set_dac(self, v):
         self.spectrometer.magnet.set_dac(v)
 
     def get_intensities(self, detector=None, **kw):
         data = self.spectrometer.get_intensities(**kw)
-        if data is not None:
+        if detector is not None:
             data = data[DETECTOR_ORDER.index(self.reference_detector)]
         return data
 
@@ -121,8 +122,14 @@ class SpectrometerManager(Manager):
         mag.update_graph()
         mag.graph.edit_traits()
 
-    def peak_center(self, **kw):
-        return self.spectrometer.peak_center(**kw)
+    def peak_center(self, threaded=False, **kw):
+        self.spectrometer._alive = True
+        func = self.spectrometer.peak_center
+        if threaded:
+            t = Thread(target=func, kwargs=kw)
+            t.start()
+        else:
+            return func(**kw)
 
     def _update_hover(self, obj, name, old, new):
         if new is not None:
