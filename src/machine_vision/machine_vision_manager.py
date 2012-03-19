@@ -114,6 +114,7 @@ class MachineVisionManager(Manager):
 
     def load_hole_detector(self):
         hd = HoleDetector()
+        
         p = os.path.join(hidden_dir, 'hole_detector')
         if os.path.isfile(p):
             with open(p, 'rb') as f:
@@ -121,10 +122,12 @@ class MachineVisionManager(Manager):
                     hd = pickle.load(f)
                 except Exception:
                     pass
-
+        
         hd.parent = self
         hd.image = self.image
         hd.pxpermm = self.pxpermm
+        hd.name='hole_detector'
+        
         return hd
 
     def map_holes(self):
