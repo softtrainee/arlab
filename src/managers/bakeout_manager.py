@@ -405,7 +405,7 @@ class BakeoutManager(Manager):
                 if script != '---':
                     config.set(tr, 'script', script)
                 else:
-                    for attr in ['duration', 'setpoint']:
+                    for attr in ['duration', 'setpoint', 'record_process']:
                         config.set(tr, attr, getattr(tr_obj, attr))
 
             with open(path, 'w') as f:
@@ -659,6 +659,12 @@ class BakeoutManager(Manager):
                                 cast='float')
                         if value is not None:
                             kw[opt] = value
+
+                    kw['record_process'] = self.config_get(config, section, 'record_process',
+                                                           default=False,
+                                                           optional=True,
+                                                           cast='boolean'
+                                                           )
                 getattr(self, section).trait_set(**kw)
 
     def _get_configurations(self):
@@ -677,8 +683,11 @@ class BakeoutManager(Manager):
         for tr in self._get_controller_names():
             kw = dict()
             tr_obj = getattr(self, tr)
-            for attr in ['duration', 'setpoint']:
-                kw[attr] = 0
+            for attr, v in [('duration', 0),
+                             ('setpoint', 0),
+                             ('record_process', False)]:
+                kw[attr] = v
+
             kw['script'] = '---'
             tr_obj.trait_set(**kw)
 

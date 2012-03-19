@@ -682,6 +682,11 @@ class WatlowEZZone(CoreDevice):
 
         self.write(register, v, **kw)
 
+    def set_high_power_scale(self, value, **kw):
+        self.info('set high power scale {}'.format(value))
+        register = 746
+        v = max(0, min(100, value))
+        self.write(register, v, **kw)
 #    def duty_cycle_increment(self):
 #        '''
 #        simple keep track off the number of times an output state is true and 
@@ -870,6 +875,9 @@ class WatlowEZZone(CoreDevice):
             return str(self.read(1914, response_type='int', **kw))
         except ValueError:
             pass
+
+    def read_high_power_scale(self, **kw):
+        return self.read(746, nregisters=2, **kw)
 
 #    def read_cool_power(self,**kw):
 #        register=1906
