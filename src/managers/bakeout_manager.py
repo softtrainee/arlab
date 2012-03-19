@@ -156,29 +156,31 @@ class BakeoutManager(Manager):
             hp = getattr(obj, 'heat_power_value')
             with self._buffer_lock:
                 self.data_buffer.append((pid, pv, hp))
+                self.info('adding {} {}'.format(obj.name, pid))
+                
             self.data_count_flag += 1
-
+            
             n = self.data_count_flag
             if n >= len(self.active_controllers):
-                for (i, pi, hi) in self.data_buffer:
-
-                    track_x = i == n - 1
-                    if self.include_temp:
-                        nx = self.graph.record(pi, series=i,
-                                track_x=track_x, track_y=False,
-                                plotid=self.plotids[0])
-
-                    track_x = False
-                    if self.include_heat:
-                        self.graph.record(
-                            hi,
-                            x=nx,
-                            series=i,
-                            plotid=self.plotids[1],
-                            track_x=track_x,
-                            track_y=False,
-                            )
-                    with self._buffer_lock:
+                with self._buffer_lock:
+                    for (i, pi, hi) in self.data_buffer:
+                        self.info('recording {} {}'.format(i,pi))
+                        track_x = i == n - 1
+                        if self.include_temp:
+                            nx = self.graph.record(pi, series=i,
+                                    track_x=track_x, track_y=False,
+                                    plotid=self.plotids[0])
+    
+                        track_x = False
+                        if self.include_heat:
+                            self.graph.record(
+                                hi,
+                                x=nx,
+                                series=i,
+                                plotid=self.plotids[1],
+                                track_x=track_x,
+                                track_y=False,
+                                )
                         self.data_buffer_x.append(nx)
                 try:
                     self.graph.update_y_limits(plotid=self.plotids[0])
