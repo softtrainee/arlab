@@ -419,7 +419,7 @@ class BakeoutController(WatlowEZZone):
                                  spring,
                                    Item('process_value', show_label=False,
                                   style='readonly', format_str='%0.1f'),
-#                                   spring,
+                                   spring,
                                    Item('record_process', show_label=False),
                                    springy=False
                                    )
@@ -436,7 +436,7 @@ class BakeoutController(WatlowEZZone):
                                    Item('process_value', label='Temp (C)',
                                         show_label=False,
                                   style='readonly', format_str='%0.1f'),
-#                                   spring,
+                                   spring,
                                    Item('record_process', show_label=False),
                                    springy=False
                                    )
