@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import List, Event, Float, Str, Instance, Bool, Property
-from traitsui.api import View, Item, EnumEditor, spring, HGroup, Label, VGroup
+from traitsui.api import View, Item, EnumEditor, spring, HGroup, Label, VGroup, Spring
 #from pyface.timer.api import Timer
 #============= standard library imports ========================
 import time
@@ -71,12 +71,37 @@ class BakeoutController(WatlowEZZone):
     _active_script = None
     _oduration = 0
 
+    record_process = Bool(False)
+
+    max_output = Property(Float(enter_set=True, auto_set=False),
+                          depends_on='_max_output')
+    _max_output = Float
+
+    def _record_process_changed(self):
+        if self.record_process:
+            if self._duration < 0.0001:
+                self._duration = 100
+
+    def _validate_max_output(self, v):
+        try:
+            return float(v)
+        except Exception:
+            pass
+
+    def _set_max_output(self, v):
+        self._max_output = v
+        self.set_high_power_scale(v)
+
+    def _get_max_output(self):
+        return self._max_output
+
     def initialization_hook(self):
         '''
             suppress the normal initialization querys
             they are not necessary for the bakeout manager currently
         '''
-        pass
+        #read the current max output setting
+        self._max_output = self.read_high_power_scale()
 
 #    def _program_memory_block(self):
 #        '''
@@ -165,8 +190,11 @@ class BakeoutController(WatlowEZZone):
 
     def ok_to_run(self):
         ok = True
-        if self.script == '---':
-            ok = not (self.setpoint == 0 or self.duration == 0)
+        if not self.record_process:
+            if self.script == '---':
+                ok = not (self.setpoint == 0 or self.duration == 0)
+        else:
+            ok = not self.duration == 0
 
         return ok
 
@@ -376,6 +404,7 @@ class BakeoutController(WatlowEZZone):
             show_label = True
             header_grp = HGroup(spring,
                             HGroup(
+#                                   spring,
                                    Label(self.name[-1]),
                                   # spring,
                                    Item('led', editor=LEDEditor(),
@@ -384,6 +413,16 @@ class BakeoutController(WatlowEZZone):
                             ),
                             springy=True
                             )
+            process_grp = HGroup(
+                                 Spring(width=35, springy=False),
+                                 Label('Temp. (C)'),
+                                 spring,
+                                   Item('process_value', show_label=False,
+                                  style='readonly', format_str='%0.1f'),
+#                                   spring,
+                                   Item('record_process', show_label=False),
+                                   springy=False
+                                   )
         else:
             header_grp = HGroup(
                             HGroup(
@@ -392,16 +431,34 @@ class BakeoutController(WatlowEZZone):
                                         show_label=False, style='custom'),
                                 springy=True
                                 ))
-
+            process_grp = HGroup(
+                                   spring,
+                                   Item('process_value', label='Temp (C)',
+                                        show_label=False,
+                                  style='readonly', format_str='%0.1f'),
+#                                   spring,
+                                   Item('record_process', show_label=False),
+                                   springy=False
+                                   )
         v = View(
                  VGroup(
                     header_grp,
                     VGroup(
-                            Item('script', show_label=False, editor=EnumEditor(name='scripts'
-                                                                               )),
-                            Item('duration', label='Duration (hrs)', show_label=show_label, enabled_when='script=="---"', format_str='%0.3f'),
-                            Item('setpoint', label='Setpoint (C)', show_label=show_label, enabled_when='script=="---"', format_str='%0.2f'),
-                            Item('process_value', label='Temp (C)', show_label=show_label, style='readonly', format_str='%0.1f')
+                            Item('script', show_label=False,
+                                 editor=EnumEditor(name='scripts')),
+                            Item('duration', label='Duration (hrs)',
+                                 show_label=show_label,
+                                 enabled_when='script=="---"',
+                                 format_str='%0.3f'),
+                            Item('setpoint', label='Setpoint (C)',
+                                  show_label=show_label,
+                                  enabled_when='script=="---"',
+                                  format_str='%0.2f'),
+                            Item('max_output', label='Max.Out (%)',
+                                 format_str='%0.2f',
+                                 show_label=show_label,
+                                 enabled_when='not object.alive'),
+                            process_grp
                             )
                         )
                )
