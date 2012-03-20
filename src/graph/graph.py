@@ -1177,12 +1177,13 @@ class Graph(HasTraits):
                 mi -= pad
 
         if mi is not None:
-            ra.low_setting = mi
+            if mi<ra.high_setting:
+                ra.low_setting = mi
         if ma is not None:
-            ra.high_setting = ma
-
-        self.plotcontainer.request_redraw()
-
+            if ma>ra.low_setting:
+                ra.high_setting = ma
+        
+        self.redraw()
     def _get_selected_plotid(self):
         '''
         '''

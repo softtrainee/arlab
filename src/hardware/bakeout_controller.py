@@ -76,7 +76,6 @@ class BakeoutController(WatlowEZZone):
     max_output = Property(Float(enter_set=True, auto_set=False),
                           depends_on='_max_output')
     _max_output = Float
-
     def _record_process_changed(self):
         if self.record_process:
             if self._duration < 0.0001:
@@ -168,6 +167,7 @@ class BakeoutController(WatlowEZZone):
         return self.active
 
     def kill(self):
+        self.led.state = 'red'
         if self.isAlive() and self.isActive():
             self.info('killing')
             if self._active_script is not None:
@@ -271,6 +271,7 @@ class BakeoutController(WatlowEZZone):
         self.write(register, value, nregisters=2, **kw)
 
     def end(self, user_kill=False, script_kill=False, msg=None, error=None):
+        self.led.state='red'
         if self.isActive() and self.isAlive():
             if hasattr(self, '_timer'):
                 self._timer.Stop()
@@ -280,7 +281,6 @@ class BakeoutController(WatlowEZZone):
                     self._active_script.kill_script()
                     self._active_script = None
 
-            self.led.state = 0
             if msg is None:
                 msg = 'bakeout finished'
 
@@ -326,7 +326,6 @@ class BakeoutController(WatlowEZZone):
 #            print e
 
     def get_temp_and_power(self, **kw):
-        kw['verbose'] = True
         pr = WatlowEZZone.get_temp_and_power(self, **kw)
         self.process_value_flag = True
         return pr
@@ -387,14 +386,12 @@ class BakeoutController(WatlowEZZone):
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
         self.get_temp_and_power(verbose=False)
+#        if self.run_func:
+#            self.run_func(verbose=True)
+#            
         if self._active_script is None:
             if time.time() - self.start_time > self._oduration * 3600.:
                 self.end()
-
-    def _update2_(self):
-        '''
-        '''
-        self.temp = self.get_temperature()
 
 #============= views ===================================
     def traits_view(self):

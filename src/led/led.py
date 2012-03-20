@@ -32,6 +32,8 @@ class LED(HasTraits):
             self._state = COLORS.index(v)
         else:
             self._state = v
+            
+        self.trait_property_changed('state', 0)
 
     def _get_state(self):
         return self._state

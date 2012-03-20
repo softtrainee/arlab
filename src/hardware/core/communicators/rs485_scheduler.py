@@ -42,12 +42,13 @@ class RS485Scheduler(Loggable):
     def __init__(self, *args, **kw):
         super(RS485Scheduler, self).__init__(*args, **kw)
 #        self._lock = Lock()
-        self._condition = Condition()
+#        self._condition = Condition()
         self._command_queue = Queue()
         self._buffer = Queue()
 
         consumer = Consumer(self._command_queue,
-                            self._condition,
+                            self._buffer,
+#                            self._condition,
                             self.collision_delay)
         consumer.start()
 
@@ -57,15 +58,23 @@ class RS485Scheduler(Loggable):
         if kwargs is None:
             kwargs = dict()
 
-        _cond = self._condition
-        _cond.acquire()
-
-        self._command_queue.put((func, args, kwargs, self._buffer))
-        _cond.notify()
-        _cond.release()
+#        _cond = self._condition
+#        while not self._buffer.empty():
+#            time.sleep(0.001)
+        
+#        self._buffer.jo/in()
+#        _cond.acquire()   
+        
+#        print self._buffer.qsize()
+        self._command_queue.put((func, args, kwargs))
+#        _cond.notify()
+#        _cond.release()
 
         try:
-            r = self._buffer.get(timeout=1)
+            r = self._buffer.get(timeout=0.5)
+            
+            
+#            self._buffer.task_done()
         except Empty:
             r = None
         #self.debug('asked {} got {}'.format(args, r))
@@ -74,27 +83,29 @@ class RS485Scheduler(Loggable):
 
 class Consumer(Thread):
 
-    def __init__(self, q, cond, cd):
+    def __init__(self, q, b, cd):
         Thread.__init__(self)
         self._q = q
+        self._buf=b
         self.logger = add_console(name='consumer')
-        self.cond = cond
+#        self.cond = cond
         self.cd = cd
 
     def run(self):
         while 1:
-            self.cond.acquire()
+#            self.cond.acquire()
             while self._q.empty():
-                self.cond.wait(timeout=0.05)
+                time.sleep(0.001)
+#                self.cond.wait(timeout=0.05)
 
             st = time.time()
-            func, args, kwargs, buf = self._q.get()
+            func, args, kwargs = self._q.get()
             r = func(*args, **kwargs)
+            self._buf.put(r)
+#            self.cond.release()
 
-            buf.put(r)
 
-            self.cond.release()
-#            time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
+            time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
 
 
 

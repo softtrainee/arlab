@@ -182,8 +182,12 @@ class BakeoutManager(Manager):
                     track_y=False,
                     )
             self.data_buffer_x.append(nx)
+            
         try:
             self.graph.update_y_limits(plotid=self.plotids[0])
+        except IndexError:
+            pass
+        try:
             self.graph.update_y_limits(plotid=self.plotids[1])
         except IndexError:
             pass
@@ -421,94 +425,92 @@ class BakeoutManager(Manager):
             self._load_configurations()
 
     def _execute_fired(self):
-        t = Thread(target=self._execute_)
-        t.start()
+        if self.alive:
+            self.alive=False
+            self.kill(user_kill=True)
+        else:
+            self.alive = True
+            t = Thread(target=self._execute_)
+            t.start()
 
     def _execute_(self):
         '''
         '''
         self._buffer_lock = Lock()
+        pid = 0
+        header = []
+        self.data_buffer = []
+        self.data_buffer_x = []
+        self.data_count_flag = 0
+        self.graph_info = dict()
+        self.graph = self._graph_factory()
 
-        if self.alive:
-            self.kill(user_kill=True)
-            self.alive = False
-        else:
-            self.alive = True
-            pid = 0
-            header = []
-            self.data_buffer = []
-            self.data_buffer_x = []
-            self.data_count_flag = 0
-            self.graph_info = dict()
-            self.graph = self._graph_factory()
+        controllers = []
+        for name in self._get_controller_names():
+            bc = self.trait_get(name)[name]
+            if bc.ok_to_run():
 
-            controllers = []
-            for name in self._get_controller_names():
-                bc = self.trait_get(name)[name]
-                if bc.ok_to_run():
+                bc.on_trait_change(self.update_alive, 'alive')
 
-                    bc.on_trait_change(self.update_alive, 'alive')
+                # set up graph
+                self.graph.new_series()
+                self.graph_info[bc.name] = dict(id=pid)
 
-                    # set up graph
-                    self.graph.new_series()
-                    self.graph_info[bc.name] = dict(id=pid)
+                self.graph.set_series_label(name, series=pid)
 
-                    self.graph.set_series_label(name, series=pid)
+                if self.include_heat:
+                    self.graph.new_series(plotid=self.plotids[1])
 
-                    if self.include_heat:
-                        self.graph.new_series(plotid=self.plotids[1])
+                if pid == 0:
+                    header.append('#{}_time'.format(name))
+                else:
+                    header.append('{}_time'.format(name))
 
-                    if pid == 0:
-                        header.append('#{}_time'.format(name))
-                    else:
-                        header.append('{}_time'.format(name))
+                if self.include_temp:
+                    header.append('{}_temp'.format(name))
 
-                    if self.include_temp:
-                        header.append('{}_temp'.format(name))
-
-                    if self.include_heat:
-                        header.append('{}_heat_power'.format(name))
-
-                    if self.include_pressure:
-                        header.append('pressure')
-
-                    controllers.append(bc)
-
-                    pid += 1
-
-            if controllers:
-                self.data_manager = dm = CSVDataManager()
-                ni = 'bakeout-{}'.format(generate_datestamp())
-                self.data_name = dm.new_frame(directory='bakeouts',
-                        base_frame_name=ni)
-                d = map(str, map(int, [self.include_temp,
-                        self.include_heat, self.include_pressure]))
-                d[0] = '#' + d[0]
-                self.data_manager.write_to_frame(d)
-
-                # set the header in for the data file
-
-                self.data_manager.write_to_frame(header)
-
-                self._nactivated_controllers = len(controllers)
-
-                for c in controllers:
-                    c.run()
-#                    time.sleep(0.5)
+                if self.include_heat:
+                    header.append('{}_heat_power'.format(name))
 
                 if self.include_pressure:
+                    header.append('pressure')
 
-                    # pressure plot
+                controllers.append(bc)
 
-                    self.graph.new_series(type='line',
-                            render_style='connectedpoints',
-                            plotid=self.plotids[2])
+                pid += 1
 
-                # start a pressure monitor thread
+        if controllers:
+            self.data_manager = dm = CSVDataManager()
+            ni = 'bakeout-{}'.format(generate_datestamp())
+            self.data_name = dm.new_frame(directory='bakeouts',
+                    base_frame_name=ni)
+            d = map(str, map(int, [self.include_temp,
+                    self.include_heat, self.include_pressure]))
+            d[0] = '#' + d[0]
+            self.data_manager.write_to_frame(d)
+
+            # set the header in for the data file
+
+            self.data_manager.write_to_frame(header)
+
+            self._nactivated_controllers = len(controllers)
+
+            for c in controllers:
+                c.run()
+
+            if self.include_pressure:
+
+                # pressure plot
+
+                self.graph.new_series(type='line',
+                        render_style='connectedpoints',
+                        plotid=self.plotids[2])
+
+            # start a pressure monitor thread
 #                t = Thread(target=self._pressure_monitor)
 #                t.start()
 
-                self._start_time = time.time()
+            self._start_time = time.time()
 
 #    def _pressure_monitor(self):
 #
