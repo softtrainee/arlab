@@ -91,7 +91,8 @@ class BakeoutController(WatlowEZZone):
     def _set_max_output(self, v):
         self._max_output = v
         self.set_high_power_scale(v)
-
+        self.read_high_power_scale()
+        
     def _get_max_output(self):
         return self._max_output
 
