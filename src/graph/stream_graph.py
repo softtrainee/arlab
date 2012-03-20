@@ -189,15 +189,18 @@ class StreamGraph(Graph):
             plot.data.set_data(xn, new_xd)
             plot.data.set_data(yn, new_yd)
 
-            if track_x and (self.track_x_min or self.track_x_max) or self.force_track_x_flag:
+            if track_x and (self.track_x_min or self.track_x_max) \
+                 or self.force_track_x_flag:
                 ma = new_xd[-1]
-                mi = ma - dl * self.scan_delays[plotid]
-
-                if self.force_track_x_flag or ma >= dl * self.scan_delays[plotid]:
+                sd = self.scan_delays[plotid]
+                pad = 10
+                mi = ma - dl * sd + pad
+                if self.force_track_x_flag or \
+                     ma >= dl * sd - pad:
 
                     if self.force_track_x_flag:
                         self.force_track_x_flag = False
-                        ma = dl * self.scan_delays[plotid]
+                        ma = dl * sd
                     if not self.track_x_max:
                         ma = None
 
@@ -206,10 +209,10 @@ class StreamGraph(Graph):
                     else:
                         mi = max(1, mi)
 
-                    self.set_x_limits(max=ma,
+                    self.set_x_limits(max=ma + pad,
                               min=mi,
                               plotid=plotid,
-                              pad=1
+#                              pad=10 * self.scan_delays[plotid]
                               )
 
             self.cur_max[plotid] = max(self.cur_max[plotid], max(new_yd))

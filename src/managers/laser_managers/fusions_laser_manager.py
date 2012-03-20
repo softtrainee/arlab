@@ -127,6 +127,7 @@ class FusionsLaserManager(LaserManager):
 
         def _stop():
             self.power_timer.Stop()
+            self.info('Power recording stopped')
             '''
                 analyze the power graph
                 if requested power greater than 1.5 
@@ -141,7 +142,7 @@ class FusionsLaserManager(LaserManager):
         if self.power_timer:
             n = 5
             self.info('Stopping power recording in {} seconds'.format(n))
-            t = DoLaterTimer(n, self.power_timer.Stop)
+            t = DoLaterTimer(n, _stop)
             t.start()
 #            self.power_timer.Stop()
 

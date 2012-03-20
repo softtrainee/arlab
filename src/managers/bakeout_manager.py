@@ -156,47 +156,46 @@ class BakeoutManager(Manager):
             hp = getattr(obj, 'heat_power_value')
             with self._buffer_lock:
                 self.data_buffer.append((pid, pv, hp))
-                self.info('adding {} {} {}'.format(obj.name, pid, pv))
-                
-                self.data_count_flag += 1
-                
-                n = self.data_count_flag
-                if n >= len(self.active_controllers):
-                    #with self._buffer_lock:
-                    for (i, pi, hi) in self.data_buffer:
-#                        self.info('recording {} {}'.format(i,pi))
-                        track_x = i == n - 1
-                        if self.include_temp:
-                            nx = self.graph.record(pi, series=i,
-                                    track_x=track_x, track_y=False,
-                                    plotid=self.plotids[0])
-    
-                        track_x = False
-                        if self.include_heat:
-                            self.graph.record(
-                                hi,
-                                x=nx,
-                                series=i,
-                                plotid=self.plotids[1],
-                                track_x=track_x,
-                                track_y=False,
-                                )
-                        self.data_buffer_x.append(nx)
-                    try:
-                        self.graph.update_y_limits(plotid=self.plotids[0])
-                        self.graph.update_y_limits(plotid=self.plotids[1])
-                    except IndexError:
-                        pass
-    
-                    if self.include_pressure:
-                        self.get_pressure(nx)
-    
-                    #with self._buffer_lock:
-                    self.write_data()
 
-                    self.data_buffer = []
-                    self.data_buffer_x = []
-                    self.data_count_flag = 0
+                self.data_count_flag += 1
+
+                if self.data_count_flag >= len(self.active_controllers):
+                    self._graph_()
+
+    def _graph_(self):
+        for (i, pi, hi) in self.data_buffer:
+            track_x = i == self.data_count_flag - 1
+            if self.include_temp:
+                nx = self.graph.record(pi, series=i,
+                        track_x=track_x, track_y=False,
+                        plotid=self.plotids[0],
+                        do_later=1)
+
+            track_x = False
+            if self.include_heat:
+                self.graph.record(
+                    hi,
+                    x=nx,
+                    series=i,
+                    plotid=self.plotids[1],
+                    track_x=track_x,
+                    track_y=False,
+                    )
+            self.data_buffer_x.append(nx)
+        try:
+            self.graph.update_y_limits(plotid=self.plotids[0])
+            self.graph.update_y_limits(plotid=self.plotids[1])
+        except IndexError:
+            pass
+
+        if self.include_pressure:
+            self.get_pressure(nx)
+
+        self.write_data()
+
+        self.data_buffer = []
+        self.data_buffer_x = []
+        self.data_count_flag = 0
 
     def get_pressure(self, x):
         if self.gauge_controller:
@@ -388,6 +387,10 @@ class BakeoutManager(Manager):
 
         path = self._file_dialog_('save as',
                                   default_directory=bakeout_config_dir)
+
+        if not path.endswith('.cfg'):
+            path += '.cfg'
+
         if path is not None:
             config = self.get_configuration_writer()
             config.add_section('Include')
@@ -436,7 +439,8 @@ class BakeoutManager(Manager):
             self.data_buffer_x = []
             self.data_count_flag = 0
             self.graph_info = dict()
-            self._graph_factory(graph=self.graph)
+            self.graph = self._graph_factory()
+
             controllers = []
             for name in self._get_controller_names():
                 bc = self.trait_get(name)[name]
@@ -679,7 +683,7 @@ class BakeoutManager(Manager):
         self._configuration = os.path.join(bakeout_config_dir, c)
 
     def _get_execute_label(self):
-        return ('Stop' if self.alive else 'Execute')
+        return 'Stop' if self.alive else 'Execute'
 
     def __configuration_changed(self):
         for tr in self._get_controller_names():
@@ -722,7 +726,6 @@ class BakeoutManager(Manager):
                                     panel_height=ph,
                                     plot_kwargs=dict(pan=True, zoom=True),
                                      **kw)
-        graph.redraw()
         plotids = self.plotids
         for i in range(nseries):
 

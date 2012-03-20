@@ -156,11 +156,12 @@ class SystemHandler(BaseRemoteHardwareHandler):
         mrm = manager.multruns_report_manager
         if mrm is not None:
             run = mrm.complete_run()
+
             # clean up any open windows
             # close power recording, close autocenter
-            if run and run.kind == 'co2':
-                lm = self.get_laser_manager(name='co2')
-                lm.dispose_optional_windows()
+#            if run and run.kind == 'co2':
+#                lm = self.get_laser_manager(name='co2')
+#                lm.dispose_optional_windows()
 
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
