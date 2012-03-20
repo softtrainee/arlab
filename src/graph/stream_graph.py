@@ -92,13 +92,16 @@ class StreamGraph(Graph):
         return args
 
     def update_y_limits(self, plotid=0, **kw):
-        if self.track_y_max[plotid]:
-            ma = self.cur_max[plotid]
-        else:
+        ma=-1
+        mi=1e10
+        for k,v in self.plots[plotid].plots.iteritems():
+            ma=max(ma,max(v[0].value.get_data()))
+            mi=min(mi,min(v[0].value.get_data()))
+            
+        if not self.track_y_max[plotid]:
             ma = None
-        if self.track_y_min[plotid]:
-            mi = self.cur_min[plotid]
-        else:
+            
+        if not self.track_y_min[plotid]:
             mi = None
 
         self.set_y_limits(min=mi, max=ma, plotid=plotid, pad=5)
@@ -180,11 +183,16 @@ class StreamGraph(Graph):
         self.raw_y[plotid][series] = hstack((ry[MAX_LIMIT:], [ny]))
 
         dl = self.data_limits[plotid]
-
-        lim = MAX_LIMIT
+        sd=self.scan_delays[plotid]
+        
+#        lim = MAX_LIMIT
+        pad = 10
+        lim=-dl*sd+pad
         new_xd = hstack((xd[lim:], [nx]))
         new_yd = hstack((yd[lim:], [ny]))
-
+        self.cur_max[plotid] = max(self.cur_max[plotid], max(new_yd))
+        self.cur_min[plotid] = min(self.cur_min[plotid], min(new_yd))
+        
         def _record_():
             plot.data.set_data(xn, new_xd)
             plot.data.set_data(yn, new_yd)
@@ -193,7 +201,6 @@ class StreamGraph(Graph):
                  or self.force_track_x_flag:
                 ma = new_xd[-1]
                 sd = self.scan_delays[plotid]
-                pad = 10
                 mi = ma - dl * sd + pad
                 if self.force_track_x_flag or \
                      ma >= dl * sd - pad:
@@ -215,9 +222,6 @@ class StreamGraph(Graph):
 #                              pad=10 * self.scan_delays[plotid]
                               )
 
-            self.cur_max[plotid] = max(self.cur_max[plotid], max(new_yd))
-            self.cur_min[plotid] = min(self.cur_min[plotid], min(new_yd))
-
             if track_y and (self.track_y_min[plotid] or self.track_y_max[plotid]):
                 if isinstance(track_y, tuple):
                     mi, ma = track_y
@@ -237,7 +241,6 @@ class StreamGraph(Graph):
                         mi = None
                     else:
                         mi = self.cur_min[plotid]
-
                 self.set_y_limits(max=ma,
                               min=mi,
                               plotid=plotid,
