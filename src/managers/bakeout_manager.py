@@ -351,8 +351,9 @@ class BakeoutManager(Manager):
 
         graph = self.bakeout_factory(ph=0.65,
                 *self.bakeout_parser(path),
-                container_dict=dict(bgcolor='red',
-                                    fill_bg=True,
+                container_dict=dict(
+                                    #bgcolor='red',
+                                    #fill_bg=True,
                                     padding_top=60
                                     )
                 )
@@ -751,15 +752,17 @@ class BakeoutManager(Manager):
 #                graph.set_series_label(name, series='bakeout{}'.format(i),
 #                        plotid=plotids[1])
 
+        ma = -1
         for (i, da) in enumerate(data):
             da = np.transpose(da)
             x = da[0]
             if include_bits[0]:
                 y = da[1]
+                ma = max(ma, max(y))
                 graph.set_data(x, series=i, axis=0, plotid=plotids[0])
                 graph.set_data(da[1], series=i, axis=1,
                                plotid=plotids[0])
-                graph.set_y_limits(min(y), max(y), pad='0.1',
+                graph.set_y_limits(min(y), ma, pad='0.1',
                                    plotid=plotids[0])
 
             if include_bits[1]:

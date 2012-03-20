@@ -16,11 +16,12 @@ limitations under the License.
 #=============enthought library imports=======================
 
 #============= standard library imports ========================
-import math
 from numpy import asarray, argmax
 from src.data_processing import constants
 #============= local library imports  ==========================
-from statistical_calculations import calculate_mswd, calculate_weighted_mean
+#from statistical_calculations import calculate_mswd, \
+#     calculate_weighted_mean
+
 
 def calculate_arar_age(signals, ratios, ratio_errs,
                        a37decayfactor, a39decayfactor, j, jer, d, der):
@@ -32,6 +33,7 @@ def calculate_arar_age(signals, ratios, ratio_errs,
     #convert to ufloats
     from uncertainties import ufloat
     from uncertainties.umath import log
+
     s40 = ufloat((s40, s40er))
     s39 = ufloat((s39, s39er))
     s38 = ufloat((s38, s38er))
@@ -51,9 +53,9 @@ def calculate_arar_age(signals, ratios, ratio_errs,
     ca39 = ca3937 * ca37
     k39 = s39 - ca39
     k38 = k3839 * k39
-#    time_since_irradiation = math.log(1 / a37decayfactor) / (-1 * constants.lambda_37 * 365.25)
 
-    time_since_irradiation = log(1 / a37decayfactor) / (-1 * constants.lambda_37 * 365.25)
+    time_since_irradiation = (log(1 / a37decayfactor) /
+                        (-1 * constants.lambda_37 * 365.25))
 
     if constants.lambda_cl36 < 0.1:
         m = p36cl38cl * constants.lambda_cl36 * time_since_irradiation
@@ -70,9 +72,9 @@ def calculate_arar_age(signals, ratios, ratio_errs,
 #    age = (1 / constants.lambdak) * math.log(1 + JR)
     age = (1 / constants.lambdak) * log(1 + JR)
 
-    #===========================================================================
+    #==========================================================================
     # errors mass spec copy
-    #===========================================================================
+    #==========================================================================
 
     square = lambda x: x * x
 
@@ -276,8 +278,8 @@ def check_percent_released(signals, start, end):
     return s / tot >= 0.5
 
 def check_mswd(ages, errors, start, end):
-    a_s = ages[start:end + 1]
-    e_s = errors[start:end + 1]
+#    a_s = ages[start:end + 1]
+#    e_s = errors[start:end + 1]
 #    print calculate_mswd(a_s, e_s)
     return True
 #===============================================================================
