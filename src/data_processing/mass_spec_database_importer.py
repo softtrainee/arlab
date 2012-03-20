@@ -237,27 +237,6 @@ class MassSpecDatabaseImporter(Manager):
                 _pk = self._db.add_peaktimeblob(self._build_timeblob(t, v),
                                       dbisotope=dbisotope)
 
-#    def connect(self):
-#        '''
-#            establish a database connection
-#            creates _db object 
-#        '''
-#        debug = True
-#        dbtype = 'mysql'
-#        if debug:
-#            user = 'root'
-#            dbname = 'argustestdata'
-#            host = 'localhost'
-#            password = None
-#        else:
-#            user = 'massspec'
-#            dbname = 'Argustestdatabase'
-#            host = '129.138.12.131'
-#            password = 'DBArgon'
-#        self.info('connecting to %s@%s' % (dbname, host))
-#
-#        self._db = NMGRLDatabaseAdapter(dbtype, user, host, dbname, password)
-
     def _build_timeblob(self, t, v):
         '''
         '''
@@ -315,6 +294,26 @@ if __name__ == '__main__':
 #                     'upload_config.txt')
 #    d.upload_data(p)
 #============= EOF ====================================
+#    def connect(self):
+#        '''
+#            establish a database connection
+#            creates _db object 
+#        '''
+#        debug = True
+#        dbtype = 'mysql'
+#        if debug:
+#            user = 'root'
+#            dbname = 'argustestdata'
+#            host = 'localhost'
+#            password = None
+#        else:
+#            user = 'massspec'
+#            dbname = 'Argustestdatabase'
+#            host = '129.138.12.131'
+#            password = 'DBArgon'
+#        self.info('connecting to %s@%s' % (dbname, host))
+#
+#        self._db = NMGRLDatabaseAdapter(dbtype, user, host, dbname, password)
             #add a araranalysis
 #        sess = self._db.add_arar_analysis(dict(), sess=sess, dbanalysis=dbanalysis)
 
