@@ -156,15 +156,15 @@ class BakeoutManager(Manager):
             hp = getattr(obj, 'heat_power_value')
             with self._buffer_lock:
                 self.data_buffer.append((pid, pv, hp))
-                self.info('adding {} {}'.format(obj.name, pid))
+                self.info('adding {} {} {}'.format(obj.name, pid, pv))
                 
-            self.data_count_flag += 1
-            
-            n = self.data_count_flag
-            if n >= len(self.active_controllers):
-                with self._buffer_lock:
+                self.data_count_flag += 1
+                
+                n = self.data_count_flag
+                if n >= len(self.active_controllers):
+                    #with self._buffer_lock:
                     for (i, pi, hi) in self.data_buffer:
-                        self.info('recording {} {}'.format(i,pi))
+#                        self.info('recording {} {}'.format(i,pi))
                         track_x = i == n - 1
                         if self.include_temp:
                             nx = self.graph.record(pi, series=i,
@@ -182,16 +182,16 @@ class BakeoutManager(Manager):
                                 track_y=False,
                                 )
                         self.data_buffer_x.append(nx)
-                try:
-                    self.graph.update_y_limits(plotid=self.plotids[0])
-                    self.graph.update_y_limits(plotid=self.plotids[1])
-                except IndexError:
-                    pass
-
-                if self.include_pressure:
-                    self.get_pressure(nx)
-
-                with self._buffer_lock:
+                    try:
+                        self.graph.update_y_limits(plotid=self.plotids[0])
+                        self.graph.update_y_limits(plotid=self.plotids[1])
+                    except IndexError:
+                        pass
+    
+                    if self.include_pressure:
+                        self.get_pressure(nx)
+    
+                    #with self._buffer_lock:
                     self.write_data()
 
                     self.data_buffer = []
@@ -722,6 +722,7 @@ class BakeoutManager(Manager):
                                     panel_height=ph,
                                     plot_kwargs=dict(pan=True, zoom=True),
                                      **kw)
+        graph.redraw()
         plotids = self.plotids
         for i in range(nseries):
 
