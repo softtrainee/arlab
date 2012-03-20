@@ -496,7 +496,7 @@ class VideoStageManager(StageManager, Videoable):
         return 'Record' if not self.is_recording else 'Stop'
 
 if __name__ == '__main__':
-    name = 'diode'
+    name = 'co2'
     setup('stage_manager')
     s = VideoStageManager(name='{}stage'.format(name),
                      configuration_dir_name=name,
