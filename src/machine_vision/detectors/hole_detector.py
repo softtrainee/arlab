@@ -223,7 +223,8 @@ class HoleDetector(Detector):
             self._draw_markup(args[0], dev=(dx, dy))
 
             #calculate the data position to move to nx,ny
-            dxmm = (dx + 1) / float(self.pxpermm)
+            dxmm = (dx) / float(self.pxpermm)
+                
             dymm = (dy + 1) / float(self.pxpermm)
             nx = cx - dxmm
             ny = cy + dymm
