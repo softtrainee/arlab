@@ -20,7 +20,8 @@ from traitsui.api import View, Item
 from threading import Thread, Event
 import os
 import time
-from numpy import loadtxt, array, arange
+from numpy import loadtxt, array, arange, diagonal, sqrt
+import math
 #============= local library imports  ==========================
 #from src.initializer import Initializer
 from src.managers.spectrometer_manager import SpectrometerManager
@@ -129,14 +130,28 @@ class ExperimentManager(Manager):
                         blank_baselines,
                         air_baselines):
         g = StackedGraph()
-        g.new_plot(xtitle='npts',
-                   ytitle='40/36')
-        g.new_plot(ytitle='40/36 err')
-        g.new_plot(ytitle='Population SD')
+#        g.new_plot(xtitle='npts',
+#                   ytitle='40/36')
+#        g.new_plot(ytitle='40/36 err')
+        g.new_plot(ytitle='Population SD',
+                   show_legend=True
+                   )
 
 #        xs = [100, 200, 500, 1000, 2000]
+        for si, fit in enumerate([
+                                  ('linear', 1), ('parabolic', 2),
+                                  ('cubic', 3),
+                                  ('exponential', 'quick_exponential')
+                                  ]):
+            self._plot_air_series(g, fit, si, blanks, airs, blank_baselines, air_baselines)
+
+        g.set_y_limits(0, 1)
+        g.edit_traits()
+
+    def _plot_air_series(self, g, fit, si, blanks, airs, blank_baselines, air_baselines):
         xs = range(100, 2000, 100)
-        cor_ratioss = [self.calculate_ratios(ni, blanks, airs,
+        name, fit = fit
+        cor_ratioss = [self.calculate_ratios(ni, fit, blanks, airs,
                                              blank_baselines,
                                    air_baselines,
                                   )
@@ -144,33 +159,34 @@ class ExperimentManager(Manager):
                      ]
 
         n = len(airs['h1'])
-        scatter_args = dict(type='scatter', marker='circle',
-                         marker_size=1.75)
+#        scatter_args = dict(type='scatter', marker='circle',
+#                         marker_size=1.75)
+        scatter_args = dict()
+#        for i in range(n):
+##            g.new_series(plotid=0, **scatter_args)
+##            g.new_series(plotid=1, **scatter_args)
+#            g.new_series(plotid=0)
+#            g.new_series(plotid=1)
 
-        for i in range(n):
-#            g.new_series(plotid=0, **scatter_args)
-#            g.new_series(plotid=1, **scatter_args)
-            g.new_series(plotid=0)
-            g.new_series(plotid=1)
+        g.new_series(plotid=0, **scatter_args)
 
-        g.new_series(plotid=2, **scatter_args)
+        g.set_series_label(name, series=si)
         for ci, xi in zip(cor_ratioss, xs):
 #            print ci
             ms, sds = zip(*[(i.nominal_value, i.std_dev()) for i in ci])
             ms = array(ms)
             sds = array(sds)
 #            print SD
-            for si in range(n):
-                g.add_datum((xi, ms[si]), plotid=0, series=si)
-                g.add_datum((xi, sds[si]), plotid=1, series=si)
+#            for si in range(n):
+#                g.add_datum((xi, ms[si]), plotid=0, series=si)
+#                g.add_datum((xi, sds[si]), plotid=1, series=si)
 
-            g.add_datum((xi, ms.std()), plotid=2, series=0)
+            g.add_datum((xi, ms.std()), plotid=0, series=si)
 
 #            g.new_series(xs, ms, type='scatter', plotid=0)
 #            g.new_series(xs, sds, type='scatter', plotid=1)
 
         g.set_x_limits(0, xs[-1] + 100)
-        g.edit_traits()
 
     def gather_data(self, runlist):
         blanks = dict()
@@ -259,10 +275,10 @@ class ExperimentManager(Manager):
 
         g.redraw()
 
-    def _calculate_mswd(self, ni, blanks, airs,
+    def _calculate_mswd(self, ni, fit, blanks, airs,
                          blank_baselines, air_baselines):
 
-        cor_ratios = self.calculate_ratios(ni, blanks, airs,
+        cor_ratios = self.calculate_ratios(ni, fit, blanks, airs,
                                            blank_baselines, air_baselines)
         verbose = False
         if verbose:
@@ -276,7 +292,7 @@ class ExperimentManager(Manager):
 #
         return calculate_mswd(x, errs)
 
-    def calculate_ratios(self, ni, blanks, airs,
+    def calculate_ratios(self, ni, fit, blanks, airs,
                             blank_baselines,
                             air_baselines):
         permutate_blanks = False
@@ -285,7 +301,7 @@ class ExperimentManager(Manager):
         else:
             ti = -1
 
-        h1bs, cddbs = self._calculate_correct_intercept(blanks, blank_baselines,
+        h1bs, cddbs = self._calculate_correct_intercept(fit, blanks, blank_baselines,
                                                         dict(h1=0, cdd=0),
                                                         truncate=ti)
 
@@ -293,7 +309,8 @@ class ExperimentManager(Manager):
 #        h1bs, cddbs = 0, 0
 #        print 'asdfas', len(airs['h1']), len(airs['cdd'])
 #        print 'asdfas', len(air_baselines['h1']), len(air_baselines['cdd'])
-        cor_h1, cor_cdd = self._calculate_correct_intercept(airs,
+        cor_h1, cor_cdd = self._calculate_correct_intercept(fit,
+                                                            airs,
                                                             air_baselines,
                                                                 dict(h1=h1bs,
                                                                      cdd=cddbs
@@ -305,24 +322,35 @@ class ExperimentManager(Manager):
 
         return cor_ratios
 
-    def _calculate_correct_intercept(self, signals, baselines,
+    def _calculate_correct_intercept(self, fit, signals, baselines,
                                       blanks, truncate= -1):
         cor_h1 = []
         cor_cdd = []
 
+        from src.data_processing.regression.regressor import Regressor
+        r = Regressor()
 
         for (xs, h1s), h1b, (xs2, cdds), cddb in zip(signals['h1'],
                                                baselines['h1'],
                                                signals['cdd'],
                                                baselines['cdd']
                                                ):
+            if fit == 'quick_exponential':
+                c, ce = r.quick_exponential(xs[:truncate], h1s[:truncate])
+                h1_int = ufloat((c[0],
+                                 ce[0]))
 
-            o = OLS(xs[:truncate], h1s[:truncate], fitdegree=2)
-            h1_int = ufloat((o.get_coefficients()[2],
-                            o.get_coefficient_standard_errors()[2]))
-            o = OLS(xs2[:truncate], cdds[:truncate], fitdegree=2)
-            cdd_int = ufloat((o.get_coefficients()[2],
-                            o.get_coefficient_standard_errors()[2]))
+                c, ce = r.quick_exponential(xs2[:truncate], cdds[:truncate])
+
+                cdd_int = ufloat((c[0],
+                               ce[0]))
+            else:
+                o = OLS(xs[:truncate], h1s[:truncate], fitdegree=fit)
+                h1_int = ufloat((o.get_coefficients()[fit],
+                                o.get_coefficient_standard_errors()[fit]))
+                o = OLS(xs2[:truncate], cdds[:truncate], fitdegree=fit)
+                cdd_int = ufloat((o.get_coefficients()[fit],
+                                o.get_coefficient_standard_errors()[fit]))
 
             #apply baseline correction
             h1_cor_int = h1_int - h1b

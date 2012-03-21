@@ -85,6 +85,35 @@ class Regressor(object):
         '''
         return self._regress_(x, y, 'linear', **kw)
 
+    def quick_exponential(self, x, y):
+#        kw = dict()
+        fitfunc = lambda p, x:p[0] * exp(p[1] * x)
+        errfunc = lambda p, x, y: fitfunc(p, x) - y
+
+        #do a linear fit first to estimate the initial guess
+        #p0=[intercept, slope]
+
+#        r = self.linear(x, y)
+
+        slope, intercept = polyfit(x, y, 1)
+#        slope, intercept = r['coefficients']
+        p0 = [intercept, slope]
+
+        from scipy import optimize
+        coeffs, cov_params, _infodict, _msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
+                                    full_output=1,
+                                    #maxfev = 1000
+                                     )
+        while ier != 1:
+            p0 = [pi / 2.0 for pi in p0]
+            coeffs, cov_params, _infodict, _msg, ier = optimize.leastsq(errfunc, p0[:], args=(x, y),
+                                full_output=1,
+                            #    maxfev = 1000
+                            )
+        coeff_errors = sqrt(diagonal(cov_params))
+
+        return coeffs, coeff_errors
+
     def exponential(self, x, y, **kw):
 
         ff = lambda p, x:p[0] * exp(p[1] * x)
@@ -111,6 +140,7 @@ class Regressor(object):
         return self._regress_(x, y, 'weighted_least_squares', **kw)
 
     def get_degree(self, kind):
+        degree = None
         if isinstance(kind, str):
             if kind == 'linear':
                 degree = 1
@@ -122,6 +152,7 @@ class Regressor(object):
                 degree = 0
         else:
             degree = kind
+
         return degree
 
     def _regress_(self, x, y, kind, data_range=None, npts=None, **kw):
