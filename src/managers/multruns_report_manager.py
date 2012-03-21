@@ -59,7 +59,8 @@ class Report(HasTraits):
             self.runs[-1].set_complete_time()
         except IndexError, e:
             print e, 'Report.complete_run'
-
+            return 
+        
         return self.runs[-1]
 
     def start_run(self, r):
@@ -104,8 +105,9 @@ class MultrunsReportManager(Manager):
     def complete_run(self):
         if self.current_report is not None:
             run = self.current_report.complete_run()
-            self.info('complete run {}'.format(run.rid))
-            return run.rid
+            if run is not None:
+                self.info('complete run {}'.format(run.rid))
+                return run.rid
 
     def send_report(self):
         if self.application is not None:

@@ -499,7 +499,7 @@ class ValveManager(Manager):
 
         #update the extraction line managers canvas
 #            self.parent.canvas.update_valve_state(v.name[-1], s)
-        name = v.name[-1]
+        name = v.name.split('-')[1]
         self.parent.update_valve_state(name, s)
 #        args = dict(
 #                    )

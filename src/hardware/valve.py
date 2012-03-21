@@ -85,13 +85,15 @@ class HardwareValve(Loggable):
         result = None
         if self.actuator is not None:
             result = self.actuator.get_channel_state(self)
-            if result is not None:
+            if isinstance(result, bool):
                 self.state = result
 
                 if result:
                     self._fsm.ROpen()
                 else:
                     self._fsm.RClose()
+            else:
+                result=False
 
         return result
 
