@@ -18,8 +18,11 @@ limitations under the License.
 #============= standard library imports ========================
 from threading import Thread
 #============= local library imports  ==========================
-from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode, \
-    InvalidArgumentsErrorCode, InvalidValveErrorCode, InvalidIPAddressErrorCode, InvalidValveGroupErrorCode
+from src.remote_hardware.errors.system_errors import \
+    DeviceConnectionErrorCode, \
+    InvalidArgumentsErrorCode, InvalidValveErrorCode, \
+    InvalidIPAddressErrorCode, InvalidValveGroupErrorCode, \
+    ValveSoftwareLockErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from dummies import DummyELM
 
@@ -82,12 +85,14 @@ class SystemHandler(BaseRemoteHardwareHandler):
         if vname.startswith('Flag'):
             return self.Set(manager, vname[4:], 1, sender_address, *args)
 
-        result, change = manager.open_valve(vname, sender_address=sender_address)
+        result, change = manager.open_valve(vname,
+                            sender_address=sender_address)
         if result == True:
             result = 'OK' if change else 'ok'
         elif result is None:
             result = InvalidArgumentsErrorCode('Open', vname, logger=self)
-
+        else:
+            result = ValveSoftwareLockErrorCode(vname, logger=self)
         return result
 
     def Close(self, manager, vname, sender_address, *args):
@@ -95,11 +100,14 @@ class SystemHandler(BaseRemoteHardwareHandler):
         if vname.startswith('Flag'):
             return self.Set(manager, vname[4:], 0, sender_address, *args)
 
-        result, change = manager.close_valve(vname, sender_address=sender_address)
+        result, change = manager.close_valve(vname,
+                            sender_address=sender_address)
         if result == True:
             result = 'OK' if change else 'ok'
         elif result is None:
             result = InvalidArgumentsErrorCode('Close', vname, logger=self)
+        else:
+            result = ValveSoftwareLockErrorCode(vname, logger=self)
         return result
 
     def GetValveState(self, manager, vname, *args):
@@ -133,8 +141,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
     def StartRun(self, manager, *args):
         '''
             data is a str in form:
-            
-            RID,Sample,Power/Temp 
+            RID,Sample,Power/Temp
         '''
         data = ' '.join(args[:-1])
         if manager.multruns_report_manager is not None:
@@ -159,9 +166,9 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
             # clean up any open windows
             # close power recording, close autocenter
-#            if run and run.kind == 'co2':
-#                lm = self.get_laser_manager(name='co2')
-#                lm.dispose_optional_windows()
+            if run and run.kind == 'co2':
+                lm = self.get_laser_manager(name='co2')
+                lm.dispose_optional_windows()
 
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
@@ -176,7 +183,6 @@ class SystemHandler(BaseRemoteHardwareHandler):
     def StartMultRuns(self, manager, *args):
         '''
             data should be str of form:
-            
             NSamples,
         '''
         sender_addr = args[-1]
@@ -206,7 +212,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
             rhm = self.application.get_service(RHM_PROTOCOL)
             if rhm.lock_by_address(sender_addr, lock=False):
                 if manager.multruns_report_manager is not None:
-                    t = Thread(target=manager.multruns_report_manager.complete_report)
+                    tar = manager.multruns_report_manager.complete_report
+                    t = Thread(target=tar)
                     t.start()
 
                 tm = self.application.get_service(TM_PROTOCOL)
@@ -252,87 +259,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
         return 'OK'
 
-#    def RemoteLaunch(self, manager, *args):
-#        #launch pychron
-#        p = '/Users/Ross/Programming/pychron/Pychron.app'
-#        result = 'OK'
-#        try:
-#            subprocess.Popen(['open', p])
-#        except OSError:
-#            result = 'ERROR: failed to launch Pychron'
-#
-#        return result   
-
-#    def handle(self, data):
-#        elm = self.get_extraction_line_manager()
-#        result = 'ERROR'
-#        if elm is None:
-#            self.warning('Extraction Line Manager not available')
-#        else:
-#            args = self.split_data(data)
-#            if args:
-#                action = args[0]
-#
-#                func = self._get_func(action)
-#                if func is not None:
-#                    try:
-#                        result = func(*args[1:])
-#                    except TypeError:
-#                        result = 'Invalid arguments passed {}'.format(args[1:])
-#            else:
-#                result = 'No command passed'
-#        return str(result)
 
 if __name__ == '__main__':
     v = SystemHandler()
     v.RemoteLaunch()
 #============= EOF ====================================
-            #if action in self._make_keys('set'):
-#                dname = args[1]
-#                d = self.get_device(dname)
-#                if d is not None:
-#                    result = d.set(args[2])
-
-#            elif action in self._make_keys('read'):
-#                dname = args[1]
-#                d = self.get_device(dname)
-#                if d is not None:
-#                    result = d.get()
-
-#            elif action in self._make_keys('open'):
-#                result = elm.open_valve(args[1])
-#                if result == True:
-#                    result = 'OK'
-#
-#            elif action in self._make_keys('close'):
-#                result = elm.close_valve(args[1])
-#                if result == True:
-#                    result = 'OK'
-
-#            elif action == 'GetValveState':
-#                result = elm.get_valve_state(args[1])
-
-#            elif action == 'GetValveStates':
-#                result = elm.get_valve_states()
-#                if result is None:
-#                    result = 'ERROR'
-
-#            elif action == 'GetManualState':
-#                result = elm.get_manual_state(args[1])
-#                if result is None:
-#                    result = 'ERROR'
-#            else:
-#                self.warning('Invalid command %s, %i' % (data, len(data)))
-
-#        return str(result)
-#            if '.' in data:
-#                obj, func = data.split('.')
-#
-#                t = elm.get_device(obj)
-#                if t is not None:
-#                    if hasattr(t, func):
-#                        result = getattr(t, func)()
-#                    else:
-#                        self.warning('Invalid func %s' % func)
-#            else:
-#                self.warning('Invalid command %s' % data)

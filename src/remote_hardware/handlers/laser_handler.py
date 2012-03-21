@@ -21,6 +21,8 @@ from src.remote_hardware.errors.system_errors import InvalidArgumentsErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 #from dummies import DummyLM
 from threading import Thread
+from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
+    EnableErrorCode
 
 
 class LaserHandler(BaseRemoteHardwareHandler):
@@ -50,6 +52,10 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
     def Enable(self, manager, *args):
         err = manager.enable_laser()
+        if err is None:
+            err = LogicBoardCommErrorCode()
+        elif isinstance(err, str):
+            err = EnableErrorCode(err)
 
         if manager.record_lasing:
             def record():
@@ -71,6 +77,11 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
     def Disable(self, manager, *args):
         err = manager.disable_laser()
+        if err is None:
+            err = LogicBoardCommErrorCode()
+        elif isinstance(err, str):
+            err = DisableErrorCode(err)
+
         if manager.record_lasing:
             manager.stop_power_recording()
             manager.stage_manager.stop_recording(delay=5)

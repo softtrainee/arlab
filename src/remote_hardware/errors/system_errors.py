@@ -47,6 +47,15 @@ class InvalidValveErrorCode(ErrorCode):
         super(InvalidValveErrorCode, self).__init__(*args, **kw)
 
 
+class InvalidValveGroupErrorCode(ErrorCode):
+    msg = 'Invalid valve group - {}'
+    code = 14
+
+    def __init__(self, name, *args, **kw):
+        self.msg = self.msg.format(name)
+        super(InvalidValveGroupErrorCode, self).__init__(*args, **kw)
+
+
 #====== initialization problems with pychron    
 class ManagerUnavaliableErrorCode(ErrorCode):
     msg = 'manager unavaliable: {}'
@@ -99,12 +108,13 @@ class SystemLockErrorCode(ErrorCode):
         super(SystemLockErrorCode, self).__init__(*args, **kw)
 
 
-class InvalidValveGroupErrorCode(ErrorCode):
-    msg = 'Invalid valve group - {}'
+#======= runtime errors ------
+class ValveSoftwareLockErrorCode(ErrorCode):
+    msg = 'Valve {} is software locked'
     code = 14
 
     def __init__(self, name, *args, **kw):
         self.msg = self.msg.format(name)
-        super(InvalidValveGroupErrorCode, self).__init__(*args, **kw)
+        super(ValveSoftwareLockErrorCode, self).__init__(*args, **kw)
 
 #============= EOF =====================================

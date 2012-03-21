@@ -153,7 +153,8 @@ class LaserManager(Manager):
 
 #    def enable_laser(self, is_ok=True):
         self.info('enable laser')
-        if self._enable_hook():
+        enabled = self._enable_hook()
+        if isinstance(enabled, bool) and enabled:
             if self.clear_flag('enable_error_flag'):
                 self.debug('clearing enable error flag')
 
@@ -169,11 +170,12 @@ class LaserManager(Manager):
                 self.debug('setting enable_error_flag')
 
             self.disable_laser()
+        return enabled
 
     def disable_laser(self):
         self.info('disable laser')
 
-        self._disable_hook()
+        enabled = self._disable_hook()
 
         self.enabled = False
         #stop the laser monitor 
@@ -183,6 +185,8 @@ class LaserManager(Manager):
 
         self.enabled_led.state = 'red'
         self._requested_power = None
+
+        return enabled
 
     def _enable_hook(self):
         return True

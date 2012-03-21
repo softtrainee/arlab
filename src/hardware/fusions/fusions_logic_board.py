@@ -171,11 +171,12 @@ class FusionsLogicBoard(CoreDevice):
 
         else:
             self._disable_laser_()
-            self.warning('Cannot fire. Interlocks enabled')
+            msg = 'Cannot fire. Interlocks enabled '
+            self.warning(msg)
             for i in interlocks:
                 self.warning(i)
 
-            return ','.join(interlocks)
+            return msg + ','.join(interlocks)
 
     def _disable_laser_(self):
         '''

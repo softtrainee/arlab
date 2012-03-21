@@ -236,7 +236,7 @@ class CoreDevice(ViewableDevice):
             if verbose:
                 m = 'repeat command {} response = {} len={} '.format(i + 1,
                                                 resp,
-                                                len(resp) if resp else None)
+                                                len(str(resp)) if resp is not None else None)
                 self.debug(m)
             if check_val is not None:
                 if self.simulation:
