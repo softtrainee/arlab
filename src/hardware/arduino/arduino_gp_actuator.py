@@ -18,6 +18,7 @@ limitations under the License.
 
 #========== local library imports =============
 from src.hardware.actuators.gp_actuator import GPActuator
+import time
 
 '''
 Arduino Firmware syntax
@@ -50,7 +51,17 @@ class ArduinoGPActuator(GPActuator):
     
     communicator must be implement FirmataCommunicator protocol
     '''
-
+    def open(self, **kw):
+        super(ArduinoGPActuator,self).open(**kw)
+        time.sleep(0.5)
+        
+    def _parse_response(self,resp):
+        if resp is not None:
+            args=resp.split(',')
+            if len(args)==2:
+                if args[0]=='1':
+                    return int(args[1][:-1])
+        
     def _build_command(self, cmd, value):
         delimiter = ','
         eol = ';'
@@ -68,29 +79,47 @@ class ArduinoGPActuator(GPActuator):
         return self._check_actuation(obj, False)
 
     def get_channel_state(self, obj):
-        indicator_open_pin = obj.address + 1
-        indicator_close_pin = obj.address + 2
+        indicator_open_pin = int(obj.address) - 1
+        indicator_close_pin = int(obj.address) - 2
 
         opened = self.ask(self._build_command(6, indicator_open_pin))
         closed = self.ask(self._build_command(7, indicator_close_pin))
-
-        opened = int(opened)
-
-        if closed + opened == 1:
-            return opened == 1
-        else:
-            return 'Error Ic({}) {} does not agree with Io({}) {}'.format(indicator_close_pin, closed,
+        
+        opened=self._parse_response(opened)
+        closed=self._parse_response(closed)
+        
+        err_msg='Error Ic({}) {} does not agree with Io({}) {}'.format(indicator_close_pin, closed,
                                                                           indicator_open_pin, opened)
-
+        try:
+            s=closed+opened
+        except (TypeError,ValueError, AttributeError):
+        
+            return err_msg
+        
+        print opened
+        if s == 1:
+            return opened == 0
+        else:
+            return err_msg
+        
+#    def ask(self,*args,**kw):
+#        return super(ArduinoGPActuator,self).ask(*args,**kw)
+    
     def _check_actuation(self, obj, request):
         if request:
             #open pin
-            pin = obj.address + 2
+            pin = int(obj.address) -1
+            cmd=6
         else:
-            pin = obj.address + 1
-
-        if self._communicator.digital_read(pin):
-            return True
+            pin = int(obj.address) -2
+            cmd=7
+        
+        state=self.ask(self._build_command(cmd, pin))
+        state=self._parse_response(state)
+        if state is not None:
+            return bool(state)
+#        if self._communicator.digital_read(pin):
+#            return True
 
 #============= EOF ====================================
 

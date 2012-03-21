@@ -98,15 +98,15 @@ class FusionsLaserManager(LaserManager):
                        )
             g.new_series()
             self.power_graph = g
-        else:
-            g = self.power_graph
-            g.close()
-            g.clear()
-            g.new_plot(data_limit=60,
-                       scan_delay=1,
-                       xtitle='time (s)',
-                       ytitle='8bit power')
-            g.new_series()
+#        else:
+#            g = self.power_graph
+#            g.close()
+#            g.clear()
+#            g.new_plot(data_limit=60,
+#                       scan_delay=1,
+#                       xtitle='time (s)',
+#                       ytitle='8bit power')
+#            g.new_series()
 
 #        self.power_graph.edit_traits()
         do_later(self.power_graph.edit_traits)
@@ -116,6 +116,9 @@ class FusionsLaserManager(LaserManager):
             self.power_graph.close()
 
     def start_power_recording(self, rid):
+        if self.power_graph is not None:
+            self.power_graph.close()
+            
         self.open_power_graph(rid)
 
         self.data_manager = CSVDataManager()

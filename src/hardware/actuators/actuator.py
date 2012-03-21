@@ -29,7 +29,10 @@ import time
 
 PACKAGES = dict(AgilentGPActuator='src.hardware.actuators.agilent_gp_actuator',
               ArduinoGPActuator='src.hardware.arduino.arduino_gp_actuator',
-              ArgusGPActuator='src.hardware.actuators.argus_gp_actuator'
+#              ObamaArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
+#              JanArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
+              ArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
+              
               )
 
 
@@ -49,20 +52,26 @@ class Actuator(AbstractDevice):
 #            #if a subsystem is specified dont want to create our on instance of a GPActuator
 #            pass
 
-        self._type = klass = self.config_get(config, 'General', 'type')
+        klass =name= self.config_get(config, 'General', 'type')
+        
+        if 'Argus' in klass:
+            klass='ArgusGPActuator'
+            
+        self._type=klass
         if klass is not None:
             if 'subsystem' in klass:
                 pass
             else:
+
                 try:
                     module = __import__(PACKAGES[klass], fromlist=[klass])
                 except ImportError, e:
                     self.warning(e)
                     return False
-
+                  
                 factory = getattr(module, klass)
 
-                self._cdevice = factory(name=klass,
+                self._cdevice = factory(name=name,
                                       configuration_dir_name=self.configuration_dir_name)
 #                gdict = globals()
 #                if class_type in gdict:

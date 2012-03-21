@@ -154,7 +154,8 @@ class ExtractionLineManager(Manager):
         for ev in self.explanation.explanable_items:
             i = ev.identify
             iddict[ev.name] = i
-
+        print iddict
+        
         if self.canvas is not None:
             self.canvas.canvas3D.setup()#canvas3D_dir, 'extractionline3D.txt')
 
