@@ -107,7 +107,7 @@ class MultrunsReportManager(Manager):
             run = self.current_report.complete_run()
             if run is not None:
                 self.info('complete run {}'.format(run.rid))
-                return run.rid
+                return run
 
     def send_report(self):
         if self.application is not None:

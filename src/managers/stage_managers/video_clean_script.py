@@ -48,7 +48,8 @@ class VideoDirectoryMaintainceScript(Loggable):
         self._clean_archive(root)
 
     def _get_files(self, root):
-        return [p for p in os.listdir(root) if not p.startswith('.')]
+        return [p for p in os.listdir(root) 
+                if not p.startswith('.') and os.path.isfile(p)]
 
     def _clean_archive(self, root):
         arch = os.path.join(root, 'archive')

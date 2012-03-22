@@ -242,7 +242,9 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
                     pdict = dict(velocity=vo * 0.5, key='z')
                     controller._set_single_axis_motion_parameters(pdict=pdict)
                     controller.single_axis_move('z', fma, block=True)
-
+                    controller._z_position=fma
+                    controller.z_progress=fma
+                    
                 if manager is not None:
                     if prev_zoom is not None:
                         self.info('returning to previous zoom: {}'.format(prev_zoom))

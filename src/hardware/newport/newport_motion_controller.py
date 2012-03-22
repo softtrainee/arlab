@@ -238,6 +238,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 f = float(f)
 
                 f = self._sign_correct(f, axis, ratio=False) / ax.drive_ratio
+        
             except ValueError:
                 f = None
         else:
@@ -862,7 +863,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         while self._moving_(axis=axis):
             # is the sleep necessary and ehat period 
-            time.sleep(0.1)
+            time.sleep(0.01)
 
         if event is not None:
             event.set()
