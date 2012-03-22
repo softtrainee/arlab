@@ -294,6 +294,7 @@ class Manager(ConfigLoadable):
         dlg = FileDialog(action=action, **kw)
         if dlg.open() == OK:
             return dlg.path
+    
 
     def _led_editor_factory(self, window, editor):
         '''

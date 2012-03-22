@@ -139,6 +139,7 @@ class BakeoutController(WatlowEZZone):
 #        #self.read(200, nregisters=4, response_type='float')
 
     def _setpoint_changed(self):
+#        print 'setpoint change', self.isAlive()
         if self.isAlive():
             self.set_closed_loop_setpoint(self.setpoint)
 
@@ -184,6 +185,9 @@ class BakeoutController(WatlowEZZone):
     def load_scripts(self):
         sd = os.path.join(paths.scripts_dir, 'bakeoutscripts')
         files = os.listdir(sd)
+        
+#        files=[f.replace(':','/') for f in files]
+        
         self.scripts = ['---'] + [f for f in files
                     if not os.path.basename(f).startswith('.') and
                         os.path.isfile(os.path.join(sd, f)) and
@@ -217,6 +221,7 @@ class BakeoutController(WatlowEZZone):
 #            self._timer = Timer(self.update_interval * 1000., self._update_)
 
         else:
+            
             t = BakeoutScript(source_dir=os.path.join(paths.scripts_dir,
                                                       'bakeoutscripts'),
                                  file_name=self.script,
@@ -385,7 +390,7 @@ class BakeoutController(WatlowEZZone):
 
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
-        self.get_temp_and_power(verbose=False)
+        self.get_temp_and_power(verbose=True)
 #        if self.run_func:
 #            self.run_func(verbose=True)
 #            

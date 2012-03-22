@@ -357,14 +357,15 @@ class StageManager(Manager):
 ##            time.sleep(0.1)
 #            self.stage_controller._block_(axis='z')
 
-        time.sleep(0.25)
-
-        #the stage controller should  think x and y are at -25,-25
-        self.stage_controller._x_position = -25
-        self.stage_controller._y_position = -25
-
-        self.info('moving to center')
-        self.stage_controller.linear_move(0, 0, block=True, sign_correct=False)
+        if self.home_option=='XY':
+            time.sleep(0.25)
+            
+            #the stage controller should  think x and y are at -25,-25
+            self.stage_controller._x_position = -25
+            self.stage_controller._y_position = -25
+    
+            self.info('moving to center')
+            self.stage_controller.linear_move(0, 0, block=True, sign_correct=False)
 
 #======================= Button handlers =======================
     def _ejoystick_fired(self):
