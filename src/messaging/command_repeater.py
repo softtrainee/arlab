@@ -172,13 +172,13 @@ class CommandRepeater(ConfigLoadable):
 
         return success, e
 
-    def _read_(self):
+    def _read_(self,count=0):
         rd = None
         try:
             rd = self._sock.recv(2048)
             success = True
         except socket.error, e:
-            success, rd = self._handle_socket_read_error(e)
+            success, rd = self._handle_socket_read_error(e, count)
 
         return success, rd
 
@@ -211,11 +211,11 @@ class CommandRepeater(ConfigLoadable):
 
         self.info('send failed after {} retries. {}'.format(retries, e))
 
-    def _handle_socket_read_error(self, e):
+    def _handle_socket_read_error(self, e, count):
         self.debug('read error {}'.format(e))
-        if 'timed out' in e:
+        if 'timed out' in e and count<3:
             self.debug('read timed out. doing recursive retry')
-            return self._read_()
+            return self._read_(count=count)
 
         return False, e
 
