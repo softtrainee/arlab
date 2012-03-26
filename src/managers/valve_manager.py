@@ -294,15 +294,15 @@ class ValveManager(Manager):
 
             result, change = act(mode=mode)
             if isinstance(result, bool):#else its an error message
-
-                ve = self.get_evalve_by_name(name)
-                ve.state = True if open_close == 'open' else False
+                if result:
+                    ve = self.get_evalve_by_name(name)
+                    ve.state = True if open_close == 'open' else False
 
 #                update the section state
 #                for s in self.sections:
 #                    s.update_state(action, v, self.valves, self.sample_gas_type, self.canvas3D.scene_graph)
 
-                result = True
+                #result = True
 
         else:
             self.warning('Valve %s not available' % vid)
