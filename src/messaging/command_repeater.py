@@ -215,7 +215,7 @@ class CommandRepeater(ConfigLoadable):
         self.debug('read error {}'.format(e))
         if 'timed out' in e and count<3:
             self.debug('read timed out. doing recursive retry')
-            return self._read_(count=count)
+            return self._read_(count=count+1)
 
         return False, e
 
