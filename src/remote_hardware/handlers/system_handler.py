@@ -25,6 +25,7 @@ from src.remote_hardware.errors.system_errors import \
     ValveSoftwareLockErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from dummies import DummyELM
+from src.envisage.core.action_helper import open_manager
 
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 TM_PROTOCOL = 'src.social.twitter_manager.TwitterManager'
@@ -145,7 +146,11 @@ class SystemHandler(BaseRemoteHardwareHandler):
         '''
         data = ' '.join(args[:-1])
         if manager.multruns_report_manager is not None:
-            manager.multruns_report_manager.start_run(data)
+            run = manager.multruns_report_manager.start_run(data)
+
+            if run and run.kind == 'co2':
+                lm = self.get_laser_manager(name='co2')
+                open_manager(lm)
 
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)

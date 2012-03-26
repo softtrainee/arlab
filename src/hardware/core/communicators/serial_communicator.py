@@ -62,6 +62,7 @@ class SerialCommunicator(Communicator):
     id_response = ''
 
     read_delay = None
+    read_terminator = None
     def load(self, config, path):
         '''
            
@@ -93,6 +94,9 @@ class SerialCommunicator(Communicator):
         self.set_attribute(config, 'read_delay', 'Communications', 'read_delay',
                            cast='float', optional=True, default=0.05
                            )
+
+        self.set_attribute(config, 'read_terminator', 'Communications', 'terminator',
+                           optional=True, default=None)
 
     def tell(self, cmd, is_hex=False, info=None, verbose=True, **kw):
         '''
@@ -333,10 +337,17 @@ class SerialCommunicator(Communicator):
                 self.warning(e)
             return c
 
-        def get_line():
+        def get_line(terminator=None):
+
             inw = get_chars()
             r = eread(inw)
-            isline = r.endswith('\n') or r.endswith('\r') if r else False
+            if terminator is None:
+                t1 = '\n'
+                t2 = '\r'
+                isline = r.endswith(t1) or r.endswith(t2) if r is not None else False
+            else:
+                isline = r.strip().endswith(terminator) if r is not None else False
+#            print isline, r, inw
             return isline, r, inw
 
         r = None
@@ -352,12 +363,13 @@ class SerialCommunicator(Communicator):
                 time.sleep(self.read_delay)
                 ready_to_read, _, _ = select.select([self.handle], [], [], 0.5)
                 if ready_to_read:
-                    isline, r, c = get_line()
+#                    print ready_to_read
+                    isline, r, c = get_line(terminator=self.read_terminator)
                     if not is_hex and not isline:
                         pcnt = 0
                         cnt = 0
                         for _ in xrange(200000):
-                            isline, r, c = get_line()
+                            isline, r, c = get_line(terminator=self.read_terminator)
                             if isline:
                                 break
                             if pcnt == c:
@@ -366,7 +378,7 @@ class SerialCommunicator(Communicator):
                                 cnt = 0
 
                             pcnt = c
-                            if cnt > 500:
+                            if cnt > 50000:
                                 break
 
             if is_hex:

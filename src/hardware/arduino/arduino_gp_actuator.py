@@ -57,33 +57,48 @@ class ArduinoGPActuator(GPActuator):
 
     def _parse_response(self, resp):
         if resp is not None:
-            args = resp.split(',')
-            if len(args) == 2:
-                if args[0] == '1':
-                    try:
-                        return int(args[1][:-1])
-                    except ValueError:
-                        return args[1][:-1]
+            resp = resp.strip()
 
-    def _build_command(self, cmd, value):
-        delimiter = ','
-        eol = ';'
-        return '{}{}{}{}'.format(cmd, delimiter, value, eol)
+        try:
+            return int(resp.strip())
+        except (TypeError, ValueError, AttributeError):
+            return resp
+
+#        if resp is not None:
+#            args = resp.split(',')
+#            if len(args) == 2:
+#                if args[0] == '1':
+#                    try:
+#                        return int(args[1][:-1])
+#                    except ValueError:
+#                        return args[1][:-1]
+
+    def _build_command(self, cmd, pin, state):
+#        delimiter = ','
+        eol = '\r\n'
+        if state is None:
+            r = '{} {}{}'.format(cmd, pin, eol)
+        else:
+            r = '{} {} {}{}'.format(cmd, pin, state, eol)
+#        return '{}{}{}{}'.format(cmd, delimiter, value, eol)
+        return r
 
     def open_channel(self, obj):
         pin = obj.address
 
 #        self.ask(self._build_command(4, pin))
-        cmd = (4, pin)
-        self.repeat_command(cmd, ntries=3, check_val='opened')
+#        cmd = (4, pin)
+        cmd = ('w', pin, 1)
+        self.repeat_command(cmd, ntries=3, check_val='OK')
 
         return self._check_actuation(obj, True)
 
     def close_channel(self, obj):
         pin = obj.address
 #        self.ask(self._build_command(5, pin))
-        cmd = (5, pin)
-        self.repeat_command(cmd, ntries=3, check_val='closed')
+#        cmd = (5, pin)
+        cmd = ('w', pin, 0)
+        self.repeat_command(cmd, ntries=3, check_val='OK')
         return self._check_actuation(obj, False)
 
     def get_channel_state(self, obj):
@@ -96,9 +111,10 @@ class ArduinoGPActuator(GPActuator):
 #        opened = self._parse_response(opened)
 #        closed = self._parse_response(closed)
 
-        opened = self.repeat_command((6, indicator_open_pin),
+        opened = self.repeat_command(('r', indicator_open_pin, None),
                                      ntries=3, check_type=int)
-        closed = self.repeat_command((7, indicator_close_pin),
+
+        closed = self.repeat_command(('r', indicator_close_pin, None),
                                       ntries=3, check_type=int)
 
         err_msg = 'Error Ic({}) {} does not agree with Io({}) {}'.format(indicator_close_pin, closed,
@@ -109,7 +125,7 @@ class ArduinoGPActuator(GPActuator):
 
             return err_msg
 
-        print opened
+#        print opened
         if s == 1:
             return opened == 0
         else:
@@ -119,15 +135,14 @@ class ArduinoGPActuator(GPActuator):
 #        return super(ArduinoGPActuator,self).ask(*args,**kw)
 
     def _check_actuation(self, obj, request):
+        cmd = 'r'
         if request:
             #open pin
             pin = int(obj.address) - 1
-            cmd = 6
         else:
             pin = int(obj.address) - 2
-            cmd = 7
 
-        state = self.repeat_command((cmd, pin), ntries=3,
+        state = self.repeat_command((cmd, pin, None), ntries=3,
                                     check_type=int)
 
 #        state = self.ask(self._build_command(cmd, pin))
