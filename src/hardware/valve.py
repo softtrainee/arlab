@@ -142,6 +142,9 @@ class HardwareValve(Loggable):
             result = self.error
             self.error = None
 
+        if not result:
+            self._fsm.RClose()
+
         return result, self._state_change
 
     def close(self, mode='normal'):
@@ -161,6 +164,8 @@ class HardwareValve(Loggable):
             result = self.error
             self.error = None
 
+        if not result:
+            self._fsm.ROpen()
         return result, self._state_change
 
 #    def acquire_critical_section(self):
@@ -204,6 +209,7 @@ class HardwareValve(Loggable):
         if self.success:
             self.state = True
             self._state_change = True
+
 #        print 'open', self.success, self.state
 
     def _close_(self, *args, **kw):
@@ -222,6 +228,7 @@ class HardwareValve(Loggable):
         if self.success:
             self.state = False
             self._state_change = True
+
 #        print 'close', self.success, self.state
 
     def _get_display_state(self):

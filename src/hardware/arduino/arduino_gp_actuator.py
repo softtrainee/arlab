@@ -126,8 +126,10 @@ class ArduinoGPActuator(GPActuator):
             return err_msg
 
 #        print opened
+        print s
         if s == 1:
-            return opened == 0
+
+            return opened == 1
         else:
             return err_msg
 
@@ -135,6 +137,7 @@ class ArduinoGPActuator(GPActuator):
 #        return super(ArduinoGPActuator,self).ask(*args,**kw)
 
     def _check_actuation(self, obj, request):
+        #time.sleep(0.25)
         cmd = 'r'
         if request:
             #open pin
@@ -142,13 +145,27 @@ class ArduinoGPActuator(GPActuator):
         else:
             pin = int(obj.address) - 2
 
-        state = self.repeat_command((cmd, pin, None), ntries=3,
-                                    check_type=int)
+        state = None
+        ntries = 6
+        i = 0
+        while state is None and i < ntries:
+            state = self.repeat_command((cmd, pin, None), ntries=3,
+                                        check_type=int,
+                                        )
+            i += 1
+            if bool(state):
+                break
 
+            state = None
+            time.sleep(0.05)
+
+#        print request, pin, state,
 #        state = self.ask(self._build_command(cmd, pin))
 #        state = self._parse_response(state)
         if state is not None:
             return bool(state)
+#        return True
+
 #        if self._communicator.digital_read(pin):
 #            return True
 
