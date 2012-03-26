@@ -59,12 +59,13 @@ class Report(HasTraits):
             self.runs[-1].set_complete_time()
         except IndexError, e:
             print e, 'Report.complete_run'
-            return 
-        
+            return
+
         return self.runs[-1]
 
     def start_run(self, r):
         self.runs.append(Run(r))
+        return self.runs[-1]
 
     def generate_report(self):
         multruns_info = '{}\nStart: {}\nEnd  :{}'.format(self.name,

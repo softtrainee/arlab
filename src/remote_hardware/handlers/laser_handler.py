@@ -22,7 +22,7 @@ from base_remote_hardware_handler import BaseRemoteHardwareHandler
 #from dummies import DummyLM
 from threading import Thread
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
-    EnableErrorCode
+    EnableErrorCode, DisableErrorCode
 
 
 class LaserHandler(BaseRemoteHardwareHandler):

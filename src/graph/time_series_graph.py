@@ -19,6 +19,7 @@ from chaco.scales.api import CalendarScaleSystem, TimeScale
 from chaco.scales_tick_generator import ScalesTickGenerator
 #=============standard library imports ========================
 import time
+from numpy import array
 #=============local library imports  ==========================
 from src.data_processing.time_series.time_series import smooth, \
     seasonal_subseries, autocorrelation, downsample_1d
@@ -83,7 +84,9 @@ class TimeSeriesGraph(Graph):
         kw['pan'] = 'x' if not 'pan' in kw else kw['pan']
         super(TimeSeriesGraph, self).new_plot(*args, **kw)
 
-    def new_series(self, x=None, y=None, plotid=0, normalize=False, time_series=True, timescale=False, downsample=None, ** kw):
+    def new_series(self, x=None, y=None, plotid=0, normalize=False,
+                   time_series=True, timescale=False, downsample=None,
+                   use_smooth=False, scale=None, ** kw):
         '''
         '''
         if not time_series:
@@ -106,13 +109,22 @@ class TimeSeriesGraph(Graph):
                     fmt = '%a %b %d %H:%M:%S %Y'
                     xd = [timefunc(xi, fmt) for xi in x]
 
-                if normalize:
-
-                    xd = [xi - xd[0] for xi in xd]
 
         if downsample:
             xd = downsample_1d(x, downsample)
             y = downsample_1d(y, downsample)
+
+        if use_smooth:
+            y = smooth(y)
+
+        if xd is not None:
+            xd = array(xd)
+            if normalize:
+    #            xd = [xi - xd[0] for xi in xd]
+                xd = xd - xd[0]
+
+            if scale:
+                xd = xd * scale
 
         plot, names, rd = self._series_factory(xd, y, None, plotid=plotid, **kw)
         if 'type' in rd:
@@ -120,6 +132,7 @@ class TimeSeriesGraph(Graph):
                 plot.plot(names, type='scatter', marker_size=2,
                                    marker='circle')
                 rd['type'] = 'line'
+
         plota = plot.plot(names, **rd)[0]
 
 #        print plota.use_downsampling

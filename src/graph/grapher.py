@@ -54,6 +54,15 @@ class Grapher(HasTraits):
         data = loadtxt(datapath, delimiter=',', skiprows=1)
         func(data, datapath)
 
+    def multi_line(self, data, path):
+        g = self.graph
+        g.new_plot()
+        _r, c = data.shape
+        for ci in range(0, c, 2):
+            xs = data[:, ci]
+            ys = data[:, ci + 1]
+            g.new_series(xs, ys)
+
 
     def scatter(self, dataarr, datapath):
         g = self.graph

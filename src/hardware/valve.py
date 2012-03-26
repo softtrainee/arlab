@@ -42,7 +42,7 @@ class HardwareValve(Loggable):
     software_lock = False
 
     cycle_period = Float(1)
-    cycle_n = Int(3)
+    cycle_n = Int(10)
     sample_period = Float(1)
 
     actuator_name = DelegatesTo('actuator', prefix='name')
@@ -93,7 +93,7 @@ class HardwareValve(Loggable):
                 else:
                     self._fsm.RClose()
             else:
-                result=False
+                result = False
 
         return result
 

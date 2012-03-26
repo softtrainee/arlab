@@ -1052,6 +1052,9 @@ class Graph(HasTraits):
         '''
         from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 
+        if not filename.endswith('.pdf'):
+            filename += '.pdf'
+
         gc = PdfPlotGraphicsContext(filename=filename,
                                   pdf_canvas=canvas,
                                   pagesize='letter',

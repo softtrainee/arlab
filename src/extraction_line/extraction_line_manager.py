@@ -154,8 +154,7 @@ class ExtractionLineManager(Manager):
         for ev in self.explanation.explanable_items:
             i = ev.identify
             iddict[ev.name] = i
-        print iddict
-        
+
         if self.canvas is not None:
             self.canvas.canvas3D.setup()#canvas3D_dir, 'extractionline3D.txt')
 
@@ -308,10 +307,10 @@ class ExtractionLineManager(Manager):
         if claimer:
             owned = self.valve_manager.check_group_ownership(name, claimer)
 
-        change=False
+        change = False
         if not owned:
-            result,change = func(name, mode=mode)
-             
+            result, change = func(name, mode=mode)
+
         else:
             result = '{} owned by {}'.format(name, claimer)
             self.warning(result)
