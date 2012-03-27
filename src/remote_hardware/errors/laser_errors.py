@@ -23,7 +23,7 @@ class LogicBoardCommErrorCode(ErrorCode):
 
 class EnableErrorCode(ErrorCode):
     msg = 'Laser failed to enable {}'
-    code = 101
+    code = 102
 
     def __init__(self, reason, *args, **kw):
         self.msg = self.msg.format(reason)
@@ -32,7 +32,7 @@ class EnableErrorCode(ErrorCode):
 
 class DisableErrorCode(ErrorCode):
     msg = 'Laser failed to disable {}'
-    code = 102
+    code = 103
 
     def __init__(self, reason, *args, **kw):
         self.msg = self.msg.format(reason)
