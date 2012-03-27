@@ -1,0 +1,4 @@
+#diode control module setup file
+#serial port location, baudrate
+/dev/tty.usbmodem1a21,115200
+
