@@ -24,6 +24,7 @@ from canvases.interaction_canvas3D import InteractionCanvas3D
 from loaders.scene_loader import SceneLoader
 from elements.components import Valve
 
+
 def url_generator():
     i = 1
 
@@ -38,6 +39,7 @@ def url_generator():
             i = 1
 url_gen = url_generator()
 
+
 class ExtractionLineCanvas3D(InteractionCanvas3D):
     '''
     '''
@@ -50,6 +52,7 @@ class ExtractionLineCanvas3D(InteractionCanvas3D):
     _popup_menu = None
     _selected = None
     _current = None
+
     def __init__(self, panel, manager):
         '''
         '''
@@ -113,8 +116,14 @@ Locked: {}'''.format(obj.name,
             item.Enable(enabled)
             panel.Bind(wx.EVT_MENU, lfunc, item)
 
-            for t, enable in [('Sample', not self._selected.state),
-                               ('Cycle', not self._selected.state),
+            en = not self._selected.state
+            try:
+                en = en and not self._selected.soft_lock
+            except AttributeError:
+                pass
+
+            for t, enable in [('Sample', en),
+                               ('Cycle', en),
                                ('Properties...', True)]:
                 item = self._popup_menu.Append(-1, t)
                 item.Enable(enable and enabled)
@@ -190,6 +199,7 @@ Locked: {}'''.format(obj.name,
             if self._current is not None:
                 self._current.toggle_lock()
 
+        #CMD-B
         elif event.MetaDown() and charcode == 66:
             import webbrowser
             webbrowser.open(url_gen.next())

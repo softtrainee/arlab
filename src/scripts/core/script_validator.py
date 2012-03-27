@@ -51,7 +51,7 @@ class ScriptValidator(HasTraits):
 
 #        text = script.text
 #        parser = script._script.parser
-        print text, parser
+        #print text, parser
         #check each line for errors
         #for name, linenum, e in self.parser.parse(text):
         for name, linenum, e in parser.parse(text):

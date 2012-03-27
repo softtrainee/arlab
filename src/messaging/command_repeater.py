@@ -24,7 +24,7 @@ from src.led.led import LED
 from src.led.led_editor import LEDEditor
 import random
 from src.helpers.paths import pychron_src_dir
-from src.remote_hardware.errors.system_errors import PychronCommunicationErrorCode
+from src.remote_hardware.errors.system_errors import PychronCommErrorCode
 from threading import Lock
 
 from globals import ipc_dgram
@@ -106,7 +106,7 @@ class CommandRepeater(ConfigLoadable):
                 result = rd
             else:
                 self.led.state = 'red'
-                result = repr(PychronCommunicationErrorCode(self.path, rd))
+                result = repr(PychronCommErrorCode(self.path, rd))
 
             return result
 #            try:
@@ -119,7 +119,7 @@ class CommandRepeater(ConfigLoadable):
 #            #pychron is not running
 #            self.led.state = 'red'
 #            self.open()
-#            return repr(PychronCommunicationErrorCode(self.path, e))
+#            return repr(PychronCommErrorCode(self.path, e))
 #        else:
 #            return result
 #            if ready_flag and data == result:

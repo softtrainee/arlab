@@ -19,7 +19,7 @@ limitations under the License.
 import os
 import sys
 # add src to the path
-version = '1.4'
+version = ''
 SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                      'mercurial',
                      'pychron_beta{}'.format(version))
