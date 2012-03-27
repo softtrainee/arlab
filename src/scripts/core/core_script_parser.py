@@ -110,10 +110,12 @@ class CoreScriptParser(object):
                 token = self._lexer.get_token()
 
         return error, kw
+
     def _get_float(self):
         lexer = self._lexer
         error = None
         ti = lexer.get_token()
+        print 'getfloat', ti
         t = None
         if ti:
             try:
@@ -131,6 +133,12 @@ class CoreScriptParser(object):
             error = 'Specify a float or interpolation argument'
 
         return error, t
+
+    def _get_str(self):
+        lexer = self._lexer
+        ti = lexer.get_token()
+        error = self._check_extra_args(lexer)
+        return error, ti
 
     def _get_int(self):
         lexer = self._lexer
@@ -153,6 +161,15 @@ class CoreScriptParser(object):
             error = 'Specify a int or interpolation argument'
 
         return error, t
+
+    def _check_float(self, n):
+        err = None
+        try:
+            n = float(n)
+        except (ValueError, AttributeError):
+            err = 'Invalid float arg {}'.format(n)
+
+        return err, n
 
     def _check_number(self, args):
         errora = []

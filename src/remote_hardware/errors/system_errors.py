@@ -90,13 +90,13 @@ class NoResponseErrorCode(ErrorCode):
     code = 11
 
 
-class PychronCommunicationErrorCode(ErrorCode):
+class PychronCommErrorCode(ErrorCode):
     msg = 'could not communicate with pychron through {}. socket.error = {}'
     code = 12
 
     def __init__(self, path, err, *args, **kw):
         self.msg = self.msg.format(path, err)
-        super(PychronCommunicationErrorCode, self).__init__(*args, **kw)
+        super(PychronCommErrorCode, self).__init__(*args, **kw)
 
 
 class SystemLockErrorCode(ErrorCode):
@@ -116,5 +116,14 @@ class ValveSoftwareLockErrorCode(ErrorCode):
     def __init__(self, name, *args, **kw):
         self.msg = self.msg.format(name)
         super(ValveSoftwareLockErrorCode, self).__init__(*args, **kw)
+
+
+class ValveActuationErrorCode(ErrorCode):
+    msg = 'Valve {} failed to actuate {}'
+    code = 14
+
+    def __init__(self, name, action, *args, **kw):
+        self.msg = self.msg.format(name, action)
+        super(ValveActuationErrorCode, self).__init__(*args, **kw)
 
 #============= EOF =====================================

@@ -56,8 +56,12 @@ class TrayCalibrationManager(Manager):
     calibration_help = Property(depends_on='_calibration_help')
 #    _calibration_help = Str(PYCHRON_HELP)
     _calibration_help = Str(MASSSPEC_HELP)
+    _calibrating = False
 #    def _get_rotation(self):
 #        return self._rotation
+
+    def isCalibrating(self):
+        return self._calibrating
 
     def _cancel_fired(self):
         canvas = self.canvas
@@ -93,6 +97,7 @@ class TrayCalibrationManager(Manager):
 
         if self.calibration_style == 'MassSpec':
             if self.calibration_step == 'Calibrate':
+                self._calibrating = True
                 calibration = canvas.new_calibration_item(self.x,
                         self.y, 0, kind=self.calibration_style)
                 self.calibration_step = 'Locate Center'
@@ -105,6 +110,7 @@ class TrayCalibrationManager(Manager):
                 self.rotation = canvas.calibration_item.get_rotation()
                 self.save_calibration()
                 self.calibration_step = 'Calibrate'
+                self._calibrating = False
 
         else:
 

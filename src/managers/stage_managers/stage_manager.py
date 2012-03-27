@@ -357,13 +357,13 @@ class StageManager(Manager):
 ##            time.sleep(0.1)
 #            self.stage_controller._block_(axis='z')
 
-        if self.home_option=='XY':
+        if self.home_option == 'XY':
             time.sleep(0.25)
-            
+
             #the stage controller should  think x and y are at -25,-25
             self.stage_controller._x_position = -25
             self.stage_controller._y_position = -25
-    
+
             self.info('moving to center')
             self.stage_controller.linear_move(0, 0, block=True, sign_correct=False)
 
@@ -736,8 +736,8 @@ class StageManager(Manager):
                 correct = False
             #map the position to calibrated space
             self.stage_controller.linear_move(block=True, *pos)
-
-            self._move_to_hole_hook(key, correct)
+            if not self.tray_calibration_manager.isCalibrating():
+                self._move_to_hole_hook(key, correct)
 
             self.info('Move complete')
             self.update_axes(update_hole=False)
