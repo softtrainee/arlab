@@ -193,6 +193,8 @@ class FusionsLogicBoard(CoreDevice):
                 break
         else:
             return 'laser was not disabled'
+        
+        return True
 
     def _set_laser_power_(self, *args, **kw):
         '''

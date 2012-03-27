@@ -19,6 +19,7 @@ limitations under the License.
 #========== local library imports =============
 from src.hardware.actuators.gp_actuator import GPActuator
 import time
+from pyface.message_dialog import warning
 
 '''
 Arduino Firmware syntax
@@ -117,20 +118,22 @@ class ArduinoGPActuator(GPActuator):
         closed = self.repeat_command(('r', indicator_close_pin, None),
                                       ntries=3, check_type=int)
 
-        err_msg = 'Error Ic({}) {} does not agree with Io({}) {}'.format(indicator_close_pin, closed,
+        err_msg = '{}-{} not functioning properly\nIc (pin={} state={}) does not agree with Io (pin={} state={})'.format(obj.name,
+                                                                                           obj.description,
+                                                                                          indicator_close_pin, closed,
                                                                           indicator_open_pin, opened)
         try:
             s = closed + opened
         except (TypeError, ValueError, AttributeError):
-
+            #warning(None,err_msg)
             return err_msg
-
+        
 #        print opened
-        print s
         if s == 1:
-
             return opened == 1
         else:
+            
+            #warning(None, err_msg)
             return err_msg
 
 #    def ask(self,*args,**kw):
