@@ -58,15 +58,61 @@ class BakeoutScript(CoreScript):
 
         return str(doc)
 
+    def ramp_statement(self, args):
+        c = self.controller
+
+        if c is not None:
+            if not c.isAlive():
+                return
+
+            setpoint = float(args[0])
+            ramp_rate = float(args[1])
+            try:
+                unit_name = args[2]
+                unit = TIMEDICT[unit_name]
+            except (IndexError, KeyError):
+                unit_name = 's'
+                unit = 1
+
+            try:
+                n_update = float(args[3])
+            except IndexError:
+                n_update = 1
+
+            s_start = c.closed_loop_setpoint
+            s_end = setpoint
+            self.info('ramping from {} to {}, rate= {} C/{}'.format(s_start,
+                                                                    s_end,
+                                                                    ramp_rate,
+                                                                    unit_name
+                                                                    ))
+
+            ramp_rate_hrs = (ramp_rate / unit) * 3600.
+            dt = s_end - s_start
+            c.duration = abs(dt / ramp_rate_hrs)
+            step = int(ramp_rate / n_update)
+            for si in xrange(int(s_start), int(s_end) + step, step):
+                if not c.isAlive():
+                    break
+
+                self.set_setpoint(si)
+                time.sleep(unit / n_update)
+
+    def set_setpoint(self, sp):
+        if self.controller.setpoint == sp:
+            if self.controller.isAlive():
+                self.controller.set_closed_loop_setpoint(sp)
+        else:
+            self.controller.setpoint = sp
+
+
+
     def raw_statement(self, args):
 
         #change the setpoint temp
         if self.controller is not None:
-            sp=float(args[0])
-            if self.controller.setpoint==sp:
-                self.controller.set_closed_loop_setpoint(sp)
-            else:
-                self.controller.setpoint = sp
+            sp = float(args[0])
+            self.set_setpoint(sp)
             self.controller.duration = float(args[1])
         #wait for dur 
         self.wait(float(args[1]) * TIMEDICT[self.scale])
