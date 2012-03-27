@@ -22,7 +22,7 @@ from src.scripts.core.core_script_parser import CoreScriptParser
 
 
 class BakeoutScriptParser(CoreScriptParser):
-    COMMAND_KEYS = ['CONFIG', 'GOTO', 'MAINTAIN']
+    COMMAND_KEYS = ['CONFIG', 'GOTO', 'MAINTAIN', 'RAMP']
 
     def raw_parse(self, args):
         error = None
@@ -38,6 +38,40 @@ class BakeoutScriptParser(CoreScriptParser):
             error = self._check_number(args)
 
         return error, args
+
+    def _ramp_parse(self, linenum, **kw):
+#        print 'adasd'
+#        print '----------------'
+        err = 'Not enough args'
+
+        tok = self.get_token()
+        toks = tok.split(',')
+        nargs = len(toks)
+
+        tdict = {'m':'m', 's':'s', 'h':'h' }
+
+        check_time_units = lambda x: tdict[x]
+        arg_map = [float, float, check_time_units, int]
+        args = None
+        if not toks[-1] == '' and nargs <= 4 and nargs >= 2:
+            args = []
+            for ti, am in zip(toks, arg_map):
+                try:
+                    args.append(am(ti))
+                except (ValueError, AttributeError), e:
+                    if not ti in ['', None]:
+                        err = str(e)
+                    break
+                except KeyError:
+                    err = 'Invalid time unit {}'.format(ti)
+                    break
+            else:
+                err = None
+
+        elif nargs > 4:
+            err = 'Too many arguments'
+
+        return err, args
 
     def _goto_parse(self, linenum, **kw):
 
