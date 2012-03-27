@@ -22,7 +22,7 @@ from src.remote_hardware.errors.system_errors import \
     DeviceConnectionErrorCode, \
     InvalidArgumentsErrorCode, InvalidValveErrorCode, \
     InvalidIPAddressErrorCode, InvalidValveGroupErrorCode, \
-    ValveSoftwareLockErrorCode
+    ValveSoftwareLockErrorCode, ValveActuationErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from dummies import DummyELM
 from src.envisage.core.action_helper import open_manager
@@ -81,19 +81,22 @@ class SystemHandler(BaseRemoteHardwareHandler):
         return result
 
     def Open(self, manager, vname, sender_address, *args):
-
         #intercept flags
         if vname.startswith('Flag'):
             return self.Set(manager, vname[4:], 1, sender_address, *args)
 
         result, change = manager.open_valve(vname,
                             sender_address=sender_address)
+
         if result == True:
             result = 'OK' if change else 'ok'
         elif result is None:
             result = InvalidArgumentsErrorCode('Open', vname, logger=self)
-        else:
+        elif result == 'software lock enabled':
             result = ValveSoftwareLockErrorCode(vname, logger=self)
+        else:
+            result = ValveActuationErrorCode(vname, 'open', logger=self)
+
         return result
 
     def Close(self, manager, vname, sender_address, *args):
@@ -107,8 +110,11 @@ class SystemHandler(BaseRemoteHardwareHandler):
             result = 'OK' if change else 'ok'
         elif result is None:
             result = InvalidArgumentsErrorCode('Close', vname, logger=self)
-        else:
+        elif result == 'software lock enabled':
             result = ValveSoftwareLockErrorCode(vname, logger=self)
+        else:
+            result = ValveActuationErrorCode(vname, 'close', logger=self)
+
         return result
 
     def GetValveState(self, manager, vname, *args):
@@ -119,23 +125,22 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
     def GetValveStates(self, manager, *args):
         result = manager.get_valve_states()
-        if result is None:
-            result = 'ERROR'
+#        if result is None:
+#            result = 'ERROR'
         return result
 
     def GetValveLockStates(self, manager, vname, *args):
         result = manager.get_valve_lock_states()
-        if result is None:
-            result = 'ERROR'
+#        if result is None:
+#            result = 'ERROR'
         return result
 
     def GetManualState(self, manager, vname, *args):
-        lstate = manager.get_software_lock(vname)
-        if lstate is None:
-            result = 'ERROR: {} name available'.format(vname)
-            result = False
-        else:
-            result = lstate
+        result = manager.get_software_lock(vname)
+        if result is None:
+            result = InvalidValveErrorCode(vname)
+#            result = 'ERROR: {} name available'.format(vname)
+#            result = False
 
         return result
 
