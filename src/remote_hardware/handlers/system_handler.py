@@ -83,7 +83,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
     def Open(self, manager, vname, sender_address, *args):
         #intercept flags
         if vname.endswith('Flag'):
-            r = self.Set(manager, vname, 0, sender_address, *args)
+            r = self.Set(manager, vname, 1, sender_address, *args)
             return 'OK' if r else 'Error setting flag'
 
         result, change = manager.open_valve(vname,
