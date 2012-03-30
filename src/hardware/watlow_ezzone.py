@@ -33,6 +33,7 @@ from pyface.timer.do_later import do_later
 
 from src.helpers.timer import Timer
 from src.graph.plot_record import PlotRecord
+import time
 sensor_map = {'62': 'off',
                     '95': 'thermocouple',
                     '104': 'volts dc',
@@ -424,7 +425,7 @@ class WatlowEZZone(CoreDevice):
         self._clsetpoint = setpoint
 
         self.write(2160, setpoint, nregisters=2, **kw)
-
+        time.sleep(0.025)
         sp = self.read_closed_loop_setpoint()
         try:
             e=abs(sp - setpoint) > 0.01
