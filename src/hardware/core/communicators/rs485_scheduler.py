@@ -37,7 +37,7 @@ class RS485Scheduler(Loggable):
     '''
 
 #    collision_delay = Float(125)
-    collision_delay = Float(25)
+    collision_delay = Float(100)
 
     def __init__(self, *args, **kw):
         super(RS485Scheduler, self).__init__(*args, **kw)
@@ -71,9 +71,7 @@ class RS485Scheduler(Loggable):
 #        _cond.release()
 
         try:
-            r = self._buffer.get(timeout=0.5)
-            
-            
+            r = self._buffer.get(timeout=0.5) 
 #            self._buffer.task_done()
         except Empty:
             r = None
@@ -98,14 +96,17 @@ class Consumer(Thread):
                 time.sleep(0.001)
 #                self.cond.wait(timeout=0.05)
 
-            st = time.time()
+           # st = time.time()
             func, args, kwargs = self._q.get()
+            while not self._buf.empty():
+                time.sleep(0.001)
+                
             r = func(*args, **kwargs)
             self._buf.put(r)
 #            self.cond.release()
 
-
-            time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
+#            time.sleep(self.cd/1000.)
+#            time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
 
 
 

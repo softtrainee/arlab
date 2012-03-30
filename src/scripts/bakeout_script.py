@@ -81,6 +81,7 @@ class BakeoutScript(CoreScript):
 
             step = int(ramp_rate / n_update)
             s_start = max(30,c.closed_loop_setpoint+step)
+#            s_start=c.closed_loop_setpoint
             s_end = setpoint
             self.info('ramping from {} to {}, rate= {} C/{}'.format(s_start,
                                                                     s_end,
@@ -94,7 +95,7 @@ class BakeoutScript(CoreScript):
             for si in xrange(int(s_start), int(s_end) + step, step):
                 if not c.isAlive():
                     break
-
+                
                 self.set_setpoint(si)
                 time.sleep(unit / n_update)
 
