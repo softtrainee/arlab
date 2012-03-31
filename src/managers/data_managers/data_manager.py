@@ -25,14 +25,18 @@ from src.helpers.filetools import unique_path
 from src.managers.manager import Manager
 from src.helpers.datetime_tools import generate_datetimestamp, time_generator
 
+
 class DataManager(Manager):
     '''
     '''
     _extension = 'txt'
     frames = Dict
     _current_frame = ''
-    time_gen=None
-    
+    time_gen = None
+
+    def close(self):
+        pass
+
     def new_frame(self, *args, **kw):
         '''
         '''

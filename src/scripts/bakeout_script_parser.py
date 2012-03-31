@@ -48,12 +48,14 @@ class BakeoutScriptParser(CoreScriptParser):
         toks = tok.split(',')
         nargs = len(toks)
 
-        tdict = {'m':'m', 's':'s', 'h':'h' }
+        #tdict = {'m':'m', 's':'s', 'h':'h' }
 
-        check_time_units = lambda x: tdict[x]
-        arg_map = [float, float, check_time_units, int]
+#        check_time_units = lambda x: tdict[x]
+#        arg_map = [float, float, float, check_time_units, int]
+        arg_map = [float, float, float, float]#, check_time_units, int]
         args = None
-        if not toks[-1] == '' and nargs <= 4 and nargs >= 2:
+#        if not toks[-1] == '' and nargs <= 5 and nargs >= 2:
+        if not toks[-1] == '' and 2 <= nargs <= 4:
             args = []
             for ti, am in zip(toks, arg_map):
                 try:
@@ -62,9 +64,9 @@ class BakeoutScriptParser(CoreScriptParser):
                     if not ti in ['', None]:
                         err = str(e)
                     break
-                except KeyError:
-                    err = 'Invalid time unit {}'.format(ti)
-                    break
+#                except KeyError:
+#                    err = 'Invalid time unit {}'.format(ti)
+#                    break
             else:
                 err = None
 

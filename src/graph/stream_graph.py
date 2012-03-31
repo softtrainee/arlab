@@ -92,15 +92,19 @@ class StreamGraph(Graph):
         return args
 
     def update_y_limits(self, plotid=0, **kw):
-        ma=-1
-        mi=1e10
-        for k,v in self.plots[plotid].plots.iteritems():
-            ma=max(ma,max(v[0].value.get_data()))
-            mi=min(mi,min(v[0].value.get_data()))
-            
+        ma = -1
+        mi = 1e10
+        for k, v in self.plots[plotid].plots.iteritems():
+            ds = v[0].value.get_data()
+            try:
+                ma = max(ma, max(ds))
+                mi = min(mi, min(ds))
+            except ValueError:
+                return
+
         if not self.track_y_max[plotid]:
             ma = None
-            
+
         if not self.track_y_min[plotid]:
             mi = None
 
@@ -183,16 +187,16 @@ class StreamGraph(Graph):
         self.raw_y[plotid][series] = hstack((ry[MAX_LIMIT:], [ny]))
 
         dl = self.data_limits[plotid]
-        sd=self.scan_delays[plotid]
-        
+        sd = self.scan_delays[plotid]
+
 #        lim = MAX_LIMIT
         pad = 10
-        lim=-dl*sd+pad
+        lim = -dl * sd + pad
         new_xd = hstack((xd[lim:], [nx]))
         new_yd = hstack((yd[lim:], [ny]))
         self.cur_max[plotid] = max(self.cur_max[plotid], max(new_yd))
         self.cur_min[plotid] = min(self.cur_min[plotid], min(new_yd))
-        
+
         def _record_():
             plot.data.set_data(xn, new_xd)
             plot.data.set_data(yn, new_yd)

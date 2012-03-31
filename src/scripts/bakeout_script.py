@@ -16,14 +16,16 @@ limitations under the License.
 #============= enthought library imports =======================
 #============= standard library imports ========================
 import time
-#============= local library imports  ==========================
+from numpy import linspace
 
+#============= local library imports  ==========================
 
 from src.scripts.core.script_helper import smart_equilibrate#, equilibrate
 from src.scripts.core.core_script import CoreScript
 from bakeout_script_parser import BakeoutScriptParser
 
 TIMEDICT = dict(s=1, m=60.0, h=60.0 * 60.0)
+
 
 class BakeoutScript(CoreScript):
     '''
@@ -56,6 +58,9 @@ class BakeoutScript(CoreScript):
         r2 = HTMLText('150,360', face='courier', size='2')
         table.add_row([r2])
 
+        doc.add_text('ramp Setpoint, Ramp Rate C/hr, [start, period]')
+#        doc.add_text('ramp Start,Setpoint, Ramp Rate C/unit, unit, freq')
+
         return str(doc)
 
     def ramp_statement(self, args):
@@ -65,39 +70,62 @@ class BakeoutScript(CoreScript):
             if not c.isAlive():
                 return
 
-            setpoint = float(args[0])
-            ramp_rate = float(args[1])
+            setpoint = args[0]
+            ramp_rate_hrs = args[1]
             try:
-                unit_name = args[2]
-                unit = TIMEDICT[unit_name]
-            except (IndexError, KeyError):
-                unit_name = 's'
-                unit = 1
-
-            try:
-                n_update = float(args[3])
+                s_start = args[2]
             except IndexError:
-                n_update = 1
+                s_start = max(30, c.closed_loop_setpoint)
 
-            step = int(ramp_rate / n_update)
-            s_start = max(30,c.closed_loop_setpoint+step)
+            try:
+                period = args[3]
+            except IndexError:
+                period = 2.
+#            try:
+#                unit_name = args[2]
+#                unit = TIMEDICT[unit_name]
+#            except (IndexError, KeyError):
+#                unit_name = 'h'
+#                unit = 3600
+#
+#            try:
+#                change_freq = float(args[3])
+#            except IndexError:
+#                change_freq = 0.25
+#            p1 = 1 / period
+#            print ramp_rate_hrs/
+#            periodhrs = period * 1 / 3600.
+#            step = ramp_rate_hrs * (periodhrs)
+
 #            s_start=c.closed_loop_setpoint
             s_end = setpoint
-            self.info('ramping from {} to {}, rate= {} C/{}'.format(s_start,
+            self.info('ramping from {} to {} rate= {} C/h, period= {} s'.format(s_start,
                                                                     s_end,
-                                                                    ramp_rate,
-                                                                    unit_name
+                                                                    ramp_rate_hrs,
+                                                                    period
                                                                     ))
 
-            ramp_rate_hrs = (ramp_rate / unit) * 3600.
+#            ramp_rate_hrs = (ramp_rate / unit) * 3600.
             dt = s_end - s_start
-            c.duration = abs(dt / ramp_rate_hrs)
-            for si in xrange(int(s_start), int(s_end) + step, step):
-                if not c.isAlive():
-                    break
-                
+            c.duration = dur = abs(dt / ramp_rate_hrs)
+            steps = linspace(s_start, s_end, dur * 3600 / float(period))
+            for si in steps:
+#            if step < 1:
+##                step = int()
+#                scalar = 1 / float(step)
+#                step = int(scalar)
+#                gen = xrange(int(s_start), int(s_end * step) + step, step)
+#            else:
+#                scalar = 1
+#                gen = xrange(int(s_start), int(s_end) + step, step)
+#            for si in gen:
+#                if not c.isAlive():
+#                    break
+#
+#                print si, si / scalar
+#                si /= scalar
                 self.set_setpoint(si)
-                time.sleep(unit / n_update)
+                time.sleep(period)
 
     def set_setpoint(self, sp):
         if self.controller.setpoint == sp:

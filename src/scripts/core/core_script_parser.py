@@ -123,7 +123,7 @@ class CoreScriptParser(object):
             except ValueError:
                 #see if this is a interpolation key
                 if ti[0] == '%':
-                    t = ti
+                    t = self._get_interpolation_value(ti)
                 else:
                     error = 'Invalid float argument {}'.ti
 
@@ -131,6 +131,8 @@ class CoreScriptParser(object):
 
         else:
             error = 'Specify a float or interpolation argument'
+
+
 
         return error, t
 
@@ -234,11 +236,28 @@ class CoreScriptParser(object):
                         arg = rargs.pop(i)
                         rkw.update([arg.split('=')])
         return error, rargs, rkw
+
     def _check_extra_args(self, lexer):
         extra_args = lexer.get_token()
         if extra_args:
             return 'Extra args %s' % extra_args
+
     def _to_bool(self, arg):
         return True if arg in ['True', 'T', 'true', 't', '1'] else False
+
+    def _get_interpolation_value(self, key):
+        value = 0
+        if self.script is not None:
+
+            if key[0] == '%':
+                key = key[1:]
+
+            try:
+                value = getattr(self.script, key)
+            except AttributeError, e:
+                self.warning_statement(e)
+
+        self.log_statement('Interpolated value for %s = %s' % (key, value))
+        return value
 #============= views ===================================
 #============= EOF ====================================

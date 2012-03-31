@@ -68,20 +68,7 @@ class ExtractionLineScript(CoreScript):
         from src.scripts.core.html_builder import HTMLDoc, HTMLText
         return ''
 
-    def _get_interpolation_value(self, key):
-        value = 0
-        if self.script is not None:
 
-            if key[0] == '%':
-                key = key[1:]
-
-            try:
-                value = getattr(self.script, key)
-            except AttributeError, e:
-                self.warning_statement(e)
-
-        self.log_statement('Interpolated value for %s = %s' % (key, value))
-        return value
 
     #===========================================================================
     # statements

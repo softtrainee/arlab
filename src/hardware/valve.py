@@ -53,8 +53,8 @@ class HardwareValve(Loggable):
     shaft_high = Property
 
     query_state = Bool(True)
-    description=Str
-    
+    description = Str
+
     def _get_shaft_low(self):
         return self.canvas_valve.low_side.orientation
 
@@ -169,7 +169,7 @@ class HardwareValve(Loggable):
         if not result:
             pass
             #self._fsm.ROpen()
-            
+
         return result, self._state_change
 
 #    def acquire_critical_section(self):
@@ -202,7 +202,7 @@ class HardwareValve(Loggable):
         '''
 
         '''
-        r = False
+        r = True
         if self.actuator is not None:
             if self.debug or self.actuator.simulation:
                 r = True
@@ -220,7 +220,7 @@ class HardwareValve(Loggable):
         '''
 
         '''
-        r = False
+        r = True
         if self.actuator is not None:
             if self.debug or self.actuator.simulation:
                 r = True

@@ -68,12 +68,15 @@ class HTMLDoc(object):
         super(HTMLDoc, self).__init__()
         self.attribs = attribs
         self.elements = []
+
     def add_text(self, t):
-        self.elements.append(t + '\n')
+        self.elements.append(t + '<br />')
+
     def add_table(self, **kw):
         t = Table(**kw)
         self.elements.append(t)
         return t
+
     def add_list(self, items=None, kind='unordered'):
         lklass = HTMLList
         if kind == 'ordered':
@@ -93,8 +96,9 @@ class HTMLDoc(object):
         s = ''
         for element in self.elements:
             s += str(element)
-
-        return '%s%s</body>' % (stag, s)
+        p = '%s%s</body>' % (stag, s)
+        print p
+        return p
 
     def add_heading(self, h, **kw):
         h = HTMLText(h, **kw)
