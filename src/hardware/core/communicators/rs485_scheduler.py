@@ -61,17 +61,20 @@ class RS485Scheduler(Loggable):
 #        _cond = self._condition
 #        while not self._buffer.empty():
 #            time.sleep(0.001)
-        
+
 #        self._buffer.jo/in()
 #        _cond.acquire()   
-        
+
 #        print self._buffer.qsize()
+        while not self._buffer.empty():
+            time.sleep(0.001)
+
         self._command_queue.put((func, args, kwargs))
 #        _cond.notify()
 #        _cond.release()
 
         try:
-            r = self._buffer.get(timeout=0.5) 
+            r = self._buffer.get(timeout=0.5)
 #            self._buffer.task_done()
         except Empty:
             r = None
@@ -84,7 +87,7 @@ class Consumer(Thread):
     def __init__(self, q, b, cd):
         Thread.__init__(self)
         self._q = q
-        self._buf=b
+        self._buf = b
         self.logger = add_console(name='consumer')
 #        self.cond = cond
         self.cd = cd
@@ -93,15 +96,15 @@ class Consumer(Thread):
         while 1:
 #            self.cond.acquire()
             while self._q.empty():
-                time.sleep(0.001)
+                time.sleep(0.0001)
 #                self.cond.wait(timeout=0.05)
-
-           # st = time.time()
+#            st = time.time()
             func, args, kwargs = self._q.get()
             while not self._buf.empty():
-                time.sleep(0.001)
-                
+                time.sleep(0.0001)
+
             r = func(*args, **kwargs)
+#            self.logger.info(r)
             self._buf.put(r)
 #            self.cond.release()
 

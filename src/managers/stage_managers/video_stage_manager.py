@@ -99,6 +99,8 @@ class VideoStageManager(StageManager, Videoable):
 
     video_directory = Directory
 
+    recording_zoom = Float
+
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
@@ -114,8 +116,12 @@ class VideoStageManager(StageManager, Videoable):
         bind_preference(self, 'video_directory',
                         '{}.video_directory'.format(pref_id)
                         )
+        bind_preference(self, 'recording_zoom',
+                        '{}.recording_zoom'.format(pref_id)
+                        )
 
-    def start_recording(self, path=None, basename='vm_recording', use_dialog=False, user='remote'):
+    def start_recording(self, path=None, basename='vm_recording',
+                         use_dialog=False, user='remote'):
         '''
         '''
         self.info('start video recording ')
@@ -132,12 +138,12 @@ class VideoStageManager(StageManager, Videoable):
             self.warning('using default directory')
             path, _ = unique_path(video_dir, basename, filetype='avi')
 
-#        if self.video.cap is not None:
         self.info('saving recording to path {}'.format(path))
-        #        self.video.open(user=user)
+
+        #zoom in for recording
+        self.parent.set_zoom(self.recording_zoom, block=True)
+
         self.video.start_recording(path, user=user)
-#        else:
-#            self.info('video capture device not opened. cannot record')
 
     def stop_recording(self, user='remote', delay=0.1):
         '''
@@ -260,7 +266,7 @@ class VideoStageManager(StageManager, Videoable):
 
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.auto_center:
-            time.sleep(0.75)
+#            time.sleep(0.75)
             self.video.open(user='autocenter')
             args = self._autocenter(holenum=holenum, ntries=2)
             if args:
@@ -269,36 +275,36 @@ class VideoStageManager(StageManager, Videoable):
 #            self._hole = 0
             self.video.close(user='autocenter')
 
-
     #@on_trait_change('autocenter_button')
     def _autocenter_button_fired(self):
-
 
         t = Thread(target=self._autocenter)
         t.start()
 
     def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
+
         if self.auto_center:
+            newpos = None
             for _t in range(max(1, ntries)):
+                newpos = self.machine_vision_manager.search(
+                        self.stage_controller._x_position,
+                        self.stage_controller._y_position,
+                        holenum=None if isinstance(holenum, str) else holenum)
 
-
-                newpos = self.machine_vision_manager.search(self.stage_controller._x_position,
-                                                            self.stage_controller._y_position,
-                                                            holenum=None if isinstance(holenum, str) else holenum,
-                                                            )
                 if newpos:
                     #nx = self.stage_controller._x_position + newpos[0]
                     #ny = self.stage_controller._y_position + newpos[1]
     #                self._point = 0
 
                     #newpos=(newpos[0]+0.01, newpos[1]+0.01)
-                    self.linear_move(*newpos, block=True, calibrated_space=False,
+                    self.linear_move(*newpos, block=True,
+                                     calibrated_space=False,
                                      #ratio_correct=False
                                      update_hole=False
                                  )
-                    return newpos
                 time.sleep(0.25)
+            return newpos
 
 #==============================================================================
 # handlers

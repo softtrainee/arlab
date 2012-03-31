@@ -21,6 +21,10 @@ limitations under the License.
 from tables import Float32Col, StringCol, IsDescription
 #============= local library imports  ==========================
 
+class TimeSeriesTableDescription(IsDescription):
+    time = Float32Col()
+    value = Float32Col()
+
 
 class CameraScanTableDescription(IsDescription):
     '''

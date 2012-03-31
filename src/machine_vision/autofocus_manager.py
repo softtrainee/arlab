@@ -242,9 +242,9 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
                     pdict = dict(velocity=vo * 0.5, key='z')
                     controller._set_single_axis_motion_parameters(pdict=pdict)
                     controller.single_axis_move('z', fma, block=True)
-                    controller._z_position=fma
-                    controller.z_progress=fma
-                    
+                    controller._z_position = fma
+                    controller.z_progress = fma
+
                 if manager is not None:
                     if prev_zoom is not None:
                         self.info('returning to previous zoom: {}'.format(prev_zoom))
@@ -255,9 +255,11 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _get_roi(self):
         w = self.parameters.crop_width
         h = self.parameters.crop_height
-        cx = (640*self.canvas.scaling - w) / 2
-        cy = (480*self.canvas.scaling - h) / 2
+
+        cx = (640 * self.canvas.scaling - w) / 2
+        cy = (480 * self.canvas.scaling - h) / 2
         roi = cx, cy, w, h
+
         return roi
 
     def _add_focus_area_rect(self, cx, cy, w, h):
@@ -304,7 +306,11 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
                 vo = controller.axes['z'].velocity
                 controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity_scalar,
                                                             key='z'))
-                time.sleep(0.25)
+
+                time.sleep(0.1)
+                #explicitly check for motion
+                controller.block(axis='z')
+
                 controller.single_axis_move('z', end)
 
                 focussteps = []

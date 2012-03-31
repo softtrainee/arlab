@@ -51,8 +51,8 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
                 r = float(r)
             except:
                 self.warning('*Bad response from ADC ==> %s' % r)
-                r=None
-        
+                r = None
+
         return r
 
     def _disable_laser_(self):
@@ -100,6 +100,7 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         self._request_power = request_pwr
 
         cmd = self._build_command('PDC', '{:0.2f}'.format(request_pwr))
+
         self.ask(cmd)
 
     def _get_request_power(self):

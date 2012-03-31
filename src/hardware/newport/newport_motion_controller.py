@@ -238,7 +238,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 f = float(f)
 
                 f = self._sign_correct(f, axis, ratio=False) / ax.drive_ratio
-        
+
             except ValueError:
                 f = None
         else:
@@ -521,6 +521,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 self.tell(c)
                 if block:
                     self._block_()
+
+    def block(self, *args, **kw):
+        self._block_(*args, **kw)
 
     def block_group(self, n=10):
         cmd = '1HQ%i' % n
@@ -810,8 +813,6 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if self.mode == 'grouped':
 
             gid = self.groupobj.id
-
-
             st = '{:n}HL{x:0.5f},{y:0.5f}'.format(gid, **kwargs)
 #            this switch is accomplished by the group_parameter axes orer 
 #            axes=2,1
@@ -860,6 +861,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
         '''
         if event is not None:
             event.clear()
+
+        time.sleep(0.05)
 
         while self._moving_(axis=axis):
             # is the sleep necessary and ehat period 

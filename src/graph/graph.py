@@ -626,31 +626,37 @@ class Graph(HasTraits):
         if plotid is None:
             plotid = len(self.plots) - 1
         kw['plotid'] = plotid
-        plot, names, rd = self._series_factory(x, y, yer=None, **kw)
-        #print 'downsample', plot.use_downsample
+        plotobj, names, rd = self._series_factory(x, y, yer=None, **kw)
+        #print 'downsample', plotobj.use_downsample
 
-        plot.use_downsample = True
+        plotobj.use_downsample = True
         if aux_plot:
-            p = create_line_plot((x, y))
-            l, b = add_default_axes(p)
+            renderer = create_line_plot((x, y))
+            l, b = add_default_axes(renderer)
 
             l.orientation = 'right'
             b.orientation = 'top'
 
-            plot.add(p)
-            plot.plots['plot%s' % names[0][-1:][0]
-                       ] = [p]
+            plotobj.add(renderer)
+            plotobj.plots['plotobj%s' % names[0][-1:][0]
+                       ] = [renderer]
 
-            return p, plot
+            return renderer, plotobj
 
         else:
-            if 'type' in rd and rd['type'] == 'line_scatter':
+            if 'type' in rd:
+                if rd['type'] == 'line_scatter':
 
-                series = plot.plot(names, type='scatter', marker_size=2,
-                                   marker='circle', color=rd['color'], outline_color=rd['color'])
-                rd['type'] = 'line'
-            series = plot.plot(names, **rd)
-            return series[0], plot
+                    renderer = plotobj.plot(names, type='scatter', marker_size=2,
+                                       marker='circle', color=rd['color'],
+                                        outline_color=rd['color'])
+                    rd['type'] = 'line'
+
+                elif rd['type'] == 'scatter':
+                    rd['outline_color'] = rd['color']
+
+            renderer = plotobj.plot(names, **rd)
+            return renderer[0], plotobj
 
     def show_graph_editor(self):
         '''

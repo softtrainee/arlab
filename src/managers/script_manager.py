@@ -83,6 +83,8 @@ class ScriptManager(Manager):
     script_validator = Instance(ScriptValidator, ())
     title = 'Script Editor - '
 
+    default_directory_name = Str
+
     def _help_message_default(self):
         return self._get_help()
 
@@ -99,11 +101,17 @@ Are you sure you want to save ?'''.format(is_are, n, e_es))
 
         return r
 
+    def _get_default_directory(self):
+        if self.default_directory_name:
+            return os.path.join(scripts_dir, self.default_directory_name)
+        else:
+            return scripts_dir
+
     def save_as(self):
         if not self._check_save():
             return
 
-        p = self.save_file_dialog(default_directory=scripts_dir)
+        p = self.save_file_dialog(default_directory=self._get_default_directory())
 #        p = '/Users/ross/Desktop/foo.txt'
         if p is not None:
             ext = SCRIPT_EXTENSIONS[self.kind.lower()]
@@ -122,7 +130,7 @@ Are you sure you want to save ?'''.format(is_are, n, e_es))
         self.save_enabled = False
 
     def open_script(self):
-        p = self.open_file_dialog(default_directory=scripts_dir)
+        p = self.open_file_dialog(default_directory=self._get_default_directory())
 #        p = '/Users/ross/Desktop/foo.txt'
         if p is not None:
             self._load_script(p)

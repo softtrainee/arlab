@@ -15,13 +15,14 @@ limitations under the License.
 '''
 #from __future__ import with_statement
 #============= enthought library imports =======================
-from traits.api import Bool, Range, Enum, Color, Tuple, Directory
+from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Float
 from traitsui.api import  Item, Group, HGroup
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 from src.managers.plugins.manager_preferences_page import ManagerPreferencesPage
+
 
 class LaserPreferencesPage(ManagerPreferencesPage):
 
@@ -45,23 +46,31 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     record_patterning = Bool(False)
     show_patterning = Bool(True)
     video_directory = Directory
+    recording_zoom = Float(0)
 
     def get_additional_groups(self):
         grp = Group(
                Group(Item('use_video'),
                      Item('auto_center', enabled_when='use_video'),
-                     Item('record_lasing', label='Record Lasing', enabled_when='use_video'),
-                     Item('video_directory', label='Save to', enabled_when='record_lasing'),
+                     Item('record_lasing', label='Record Lasing',
+                           enabled_when='use_video'),
+                     Item('video_directory', label='Save to',
+                          enabled_when='record_lasing'),
+                     Item('recording_zoom', label='Zoom',
+                          enabled_when='record_lasing'),
                       show_border=True, label='Video'),
                Item('show_map'),
                Item('show_grids'),
                Item('show_laser_position'),
                Item('show_desired_position'),
-               Item('desired_position_color', show_label=False, enabled_when='show_desired_position'),
-               Item('crosshairs_kind', label='Crosshairs', enabled_when='show_laser_position'),
+               Item('desired_position_color', show_label=False,
+                     enabled_when='show_desired_position'),
+               Item('crosshairs_kind', label='Crosshairs',
+                     enabled_when='show_laser_position'),
                Item('crosshairs_color', enabled_when='show_laser_position'),
                Item('crosshairs_offset'),
-               Item('crosshairs_offset_color', show_label=False, enabled_when='crosshairs_offset!=(0,0)'),
+               Item('crosshairs_offset_color', show_label=False,
+                    enabled_when='crosshairs_offset!=(0,0)'),
                Item('calibration_style'),
                Item('scaling'),
                label='Stage',
