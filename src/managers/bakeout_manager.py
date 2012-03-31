@@ -564,8 +564,6 @@ class BakeoutManager(Manager):
 #===============================================================================
 #    def _get_process_value(self):
 #        while 1:
-#            
-
     @on_trait_change('bakeout+:process_value_flag')
     def update_graph_temperature(
         self,
