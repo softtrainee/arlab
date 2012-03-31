@@ -91,7 +91,7 @@ class BakeoutController(WatlowEZZone):
         self._max_output = v
         self.set_high_power_scale(v)
         self.read_high_power_scale()
-        
+
     def _get_max_output(self):
         return self._max_output
 
@@ -185,9 +185,9 @@ class BakeoutController(WatlowEZZone):
     def load_scripts(self):
         sd = os.path.join(paths.scripts_dir, 'bakeoutscripts')
         files = os.listdir(sd)
-        
+
 #        files=[f.replace(':','/') for f in files]
-        
+
         self.scripts = ['---'] + [f for f in files
                     if not os.path.basename(f).startswith('.') and
                         os.path.isfile(os.path.join(sd, f)) and
@@ -221,7 +221,7 @@ class BakeoutController(WatlowEZZone):
 #            self._timer = Timer(self.update_interval * 1000., self._update_)
 
         else:
-            
+
             t = BakeoutScript(source_dir=os.path.join(paths.scripts_dir,
                                                       'bakeoutscripts'),
                                  file_name=self.script,
@@ -276,7 +276,7 @@ class BakeoutController(WatlowEZZone):
         self.write(register, value, nregisters=2, **kw)
 
     def end(self, user_kill=False, script_kill=False, msg=None, error=None):
-        self.led.state='red'
+        self.led.state = 'red'
         if self.isActive() and self.isAlive():
             if hasattr(self, '_timer'):
                 self._timer.Stop()
@@ -390,7 +390,8 @@ class BakeoutController(WatlowEZZone):
 
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
-        self.get_temp_and_power(verbose=True)
+#        self.get_temp_and_power(verbose=True)
+        self.get_temp_and_power(verbose=False)
 #        if self.run_func:
 #            self.run_func(verbose=True)
 #            

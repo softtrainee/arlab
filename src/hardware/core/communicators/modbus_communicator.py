@@ -26,7 +26,6 @@ class ModbusCommunicator(SerialCommunicator):
     '''
         modbus message syntax
         [Device address][function code][data][error check]
-    
     '''
 
     slave_address = '01'
@@ -38,27 +37,31 @@ class ModbusCommunicator(SerialCommunicator):
 
     def load(self, config, path):
         '''
-            
         '''
-        #super(ModbusCommunicator, self).load(config, path)
-        SerialCommunicator.load(self, config, path)
-        self.set_attribute(config, 'slave_address', 'Communications', 'slave_address')
+        super(ModbusCommunicator, self).load(config, path)
+#        SerialCommunicator.load(self, config, path)
+        self.set_attribute(config, 'slave_address',
+                            'Communications', 'slave_address')
 
-    def write(self, register, value, nregisters=1, response_type='register_write', **kw):
+    def write(self, register, value, nregisters=1,
+               response_type='register_write', **kw):
         '''
         '''
         if nregisters == 1:
-            return self.set_single_register(register, value, response_type, **kw)
+            return self.set_single_register(register, value,
+                                            response_type, **kw)
         else:
-            return self.set_multiple_registers(register, nregisters, value, response_type, **kw)
+            return self.set_multiple_registers(register, nregisters, value,
+                                               response_type, **kw)
 
     def tell(self, *args, **kw):
         return self.write(*args, **kw)
 
     def read(self, register, response_type='float', nregisters=1, **kw):
-        '''            
         '''
-        return self.read_holding_register(register, nregisters, response_type, **kw)
+        '''
+        return self.read_holding_register(register,
+                                          nregisters, response_type, **kw)
 
     def _execute_request(self, args, response_type, ** kw):
         '''
@@ -81,7 +84,7 @@ class ModbusCommunicator(SerialCommunicator):
         else:
             resp = self.ask(cmd, **kw)
 
-        return self._parse_response(resp, response_type)
+        return self._parse_response(cmd, resp, response_type)
 
     def _parse_hexstr(self, hexstr, return_type='hex'):
         '''
@@ -92,12 +95,16 @@ class ModbusCommunicator(SerialCommunicator):
         else:
             return [hexstr[i:i + 2] for i in gen]
 
-    def _parse_response(self, resp, response_type):
+    def _parse_response(self, cmd, resp, response_type):
         '''
         '''
         if resp is not None and resp is not 'simulation':
 
             args = self._parse_hexstr(resp)
+            if args[0] != cmd[:2]:
+                self.warning('{} != {}     {} >> {}'.format(cmd[:2],
+                                                args[0], cmd, resp))
+                return
 
             #check the crc
             cargs = self._parse_hexstr(resp, return_type='int')
@@ -106,7 +113,6 @@ class ModbusCommunicator(SerialCommunicator):
             calc_crc = computeCRC(cargs[:-2])
             if not crc.upper() == calc_crc.upper():
                 self.warning('Returned CRC ({}) does not match calculated ({})'.format(crc, calc_crc))
-#                self.handle.flushInput()
             else:
                 if response_type == 'register_write':
                     return True
@@ -136,8 +142,6 @@ class ModbusCommunicator(SerialCommunicator):
                         data.append(di)
 
                     data = ''.join(data)
-#                else:
-#                    data = '0000'.join(dataargs)
 
                 if response_type == 'float':
                     fmt_str = '!' + 'f' * (ndata / 4)
@@ -153,10 +157,9 @@ class ModbusCommunicator(SerialCommunicator):
                 else:
                     data = ''.join(args[3:3 + ndata])
                     return int(data, 16)
-#                return struct.unpack('!f', data.decode('hex'))[0] if response_type == 'float' \
-#                        else int(data, 16)
 
-    def set_multiple_registers(self, startid, nregisters, value, response_type, **kw):
+    def set_multiple_registers(self, startid,
+                                nregisters, value, response_type, **kw):
         '''
         '''
 
@@ -182,25 +185,27 @@ class ModbusCommunicator(SerialCommunicator):
             else:
                 value = hexstr
 
-        return self._execute_request([func_code, data_address, n, nbytes, value], response_type, **kw)
+        return self._execute_request([func_code, data_address, n,
+                                      nbytes, value],
+                                     response_type, **kw)
 
-    def set_single_register(self, rid, value, response_type, func_code='06', ** kw):
+    def set_single_register(self, rid, value,
+                            response_type, func_code='06', ** kw):
         '''
         '''
-
-        #func_code = '06'
-        #func_code = self._write_func_code
         register_addr = '{:04X}'.format(int(rid))
         value = '{:04X}'.format(int(value))
-        return self._execute_request([func_code, register_addr, value], response_type, **kw)
+        return self._execute_request([func_code, register_addr, value],
+                                     response_type, **kw)
 
     def read_holding_register(self, holdid, nregisters, response_type, **kw):
-        '''         
+        '''
         '''
         func_code = '03'
         data_address = '{:04X}'.format(holdid)
         n = '{:04X}'.format(nregisters)
-        return self._execute_request([func_code, data_address, n], response_type, **kw)
+        return self._execute_request([func_code, data_address, n],
+                                      response_type, **kw)
 
 #    def read_input_status(self, inputid, ninputs):
 #        '''
