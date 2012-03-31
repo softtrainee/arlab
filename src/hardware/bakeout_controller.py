@@ -213,6 +213,7 @@ class BakeoutController(WatlowEZZone):
 
         #set led to green
         self.led.state = 'green'
+        time.sleep(0.005)
         if self.script == '---':
             self.set_control_mode('closed')
             self.set_closed_loop_setpoint(self.setpoint)

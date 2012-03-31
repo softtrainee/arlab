@@ -95,7 +95,11 @@ class H5DataManager(DataManager):
         return
 
     def open_data(self, path):
-        self._frame = openFile(path, 'r')
+        try:
+            self._frame = openFile(path, 'r')
+            return True
+        except ValueError:
+            return False
 
     def close(self):
         try:

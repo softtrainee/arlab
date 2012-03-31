@@ -80,7 +80,7 @@ class BakeoutScript(CoreScript):
             try:
                 period = args[3]
             except IndexError:
-                period = 2.
+                period = 60.
 #            try:
 #                unit_name = args[2]
 #                unit = TIMEDICT[unit_name]
@@ -124,13 +124,28 @@ class BakeoutScript(CoreScript):
 #
 #                print si, si / scalar
 #                si /= scalar
+                if not c.isAlive():
+                    break
+                
                 self.set_setpoint(si)
-                time.sleep(period)
+#                c.set_closed_loop_setpoint(si)
+                if period>10:
+                    for i in xrange(int(period)):
+                        if not c.isAlive():
+                            break
+                        time.sleep(1)
+                    else:
+                        continue
+                    
+                    break
+                    
+                else:    
+                    time.sleep(period)
 
     def set_setpoint(self, sp):
         if self.controller.setpoint == sp:
-            if self.controller.isAlive():
-                self.controller.set_closed_loop_setpoint(sp)
+            #if self.controller.isAlive():
+            self.controller.set_closed_loop_setpoint(sp)
         else:
             self.controller.setpoint = sp
 

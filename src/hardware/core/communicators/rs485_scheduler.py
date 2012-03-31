@@ -25,7 +25,7 @@ from src.loggable import Loggable
 
 #============= local library imports  ==========================
 
-
+SINGLE_ITEM_BUF=True
 class RS485Scheduler(Loggable):
     '''
         this class should be used when working with multiple rs485 devices on the same port. 
@@ -66,7 +66,7 @@ class RS485Scheduler(Loggable):
 #        _cond.acquire()   
 
 #        print self._buffer.qsize()
-        while not self._buffer.empty():
+        while SINGLE_ITEM_BUF and not self._buffer.empty():
             time.sleep(0.001)
 
         self._command_queue.put((func, args, kwargs))
@@ -83,7 +83,7 @@ class RS485Scheduler(Loggable):
 
 
 class Consumer(Thread):
-
+    
     def __init__(self, q, b, cd):
         Thread.__init__(self)
         self._q = q
@@ -100,7 +100,8 @@ class Consumer(Thread):
 #                self.cond.wait(timeout=0.05)
 #            st = time.time()
             func, args, kwargs = self._q.get()
-            while not self._buf.empty():
+            
+            while SINGLE_ITEM_BUF and not self._buf.empty():
                 time.sleep(0.0001)
 
             r = func(*args, **kwargs)
