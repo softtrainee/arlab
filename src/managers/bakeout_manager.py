@@ -365,7 +365,7 @@ class BakeoutManager(Manager):
             kwargs = dict(series=i,
                         track_x=ci == len(self.data_buffer) - 1,
                         track_y=False,
-                        #do_later=1
+                        do_later=50
                         )
 
             if self.include_temp:
