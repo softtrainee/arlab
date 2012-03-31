@@ -97,7 +97,6 @@ class HTMLDoc(object):
         for element in self.elements:
             s += str(element)
         p = '%s%s</body>' % (stag, s)
-        print p
         return p
 
     def add_heading(self, h, **kw):

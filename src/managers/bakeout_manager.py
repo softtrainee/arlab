@@ -41,7 +41,6 @@ from src.hardware.core.core_device import CoreDevice
 from src.hardware.gauges.granville_phillips.micro_ion_controller import MicroIonController
 from ConfigParser import NoSectionError
 from src.managers.script_manager import ScriptManager
-from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.managers.data_managers.data_manager import DataManager
 
 BATCH_SET_BAUDRATE = False
@@ -70,7 +69,11 @@ class BakeoutParameters(HasTraits):
 class BakeoutGraphViewer(HasTraits):
     graph = Instance(Graph)
     bakeouts = List
-
+    title=Str
+    window_x=Float
+    window_y=Float
+    window_width=Float
+    window_height=Float
     def new_controller(self, name):
         bc = BakeoutParameters(name=name)
         self.bakeouts.append(bc)
@@ -86,7 +89,12 @@ class BakeoutGraphViewer(HasTraits):
         v = View(HSplit(Item('graph', style='custom', show_label=False),
                         bakeout_group
                         ),
-                 resizable=True
+                 resizable=True,
+                 title=self.title,
+                 x=self.window_x,
+                 y=self.window_y,
+                 width=self.window_width,
+                 height=self.window_height
                  )
         return v
 
@@ -353,9 +361,9 @@ class BakeoutManager(Manager):
             self._start_time = time.time()
 
     def _graph_(self):
-        for (_name, i, pi, hi) in self.data_buffer:
+        for ci,(_name, i, pi, hi) in enumerate(self.data_buffer):
             kwargs = dict(series=i,
-                        track_x=i == self.data_count_flag - 1,
+                        track_x=ci == len(self.data_buffer) - 1,
                         track_y=False,
                         #do_later=1
                         )
@@ -529,6 +537,9 @@ class BakeoutManager(Manager):
         ish5 = True if path.endswith('.h5') else False
 
         args = self._bakeout_parser(path, ish5)
+        if args is None:
+            return 
+        
         names = args[0]
         attrs = args[-1]
 
@@ -543,7 +554,13 @@ class BakeoutManager(Manager):
                 )
 
         if ish5:
-            b = BakeoutGraphViewer(graph=graph)
+            b = BakeoutGraphViewer(graph=graph,
+                                   title=path,
+                                   window_x=30,
+                                   window_y=30,
+                                   window_width=0.66,
+                                   window_height=0.85
+                                   )
             for name, ais in zip(names, attrs):
                 bc = b.new_controller(name)
                 for key, value in ais.iteritems():
@@ -621,6 +638,8 @@ class BakeoutManager(Manager):
         return bc
 
     def _data_manager_factory(self, controllers, header, style='csv'):
+        from src.managers.data_managers.h5_data_manager import H5DataManager
+
         dm = CSVDataManager() if style == 'csv' else H5DataManager()
 
         ni = 'bakeout-{}'.format(generate_datestamp())
@@ -680,10 +699,12 @@ class BakeoutManager(Manager):
                                     plot_kwargs=dict(pan=True, zoom=True),
                                      **kw)
         plotids = self.plotids
-#        print names, nseries
-        for i in range(nseries / sum(include_bits)):
+#        print names, nseries, include_bits
+#        for i in range(nseries / sum(include_bits)):
+#            print i
             # set up graph
-            name = names[i]#[i / sum(include_bits)]
+#            name = names[i]#[i / sum(include_bits)]
+        for i,name in enumerate(names):
             for j in range(3):
                 if include_bits[j]:
                     graph.new_series(plotid=plotids[j])
@@ -797,9 +818,13 @@ class BakeoutManager(Manager):
                 container[ind] = x
 
         self.data_manager.write_to_frame(container)
+        
     def _bakeout_h5_parser(self, path):
+        from src.managers.data_managers.h5_data_manager import H5DataManager
         dm = H5DataManager()
-        dm.open_data(path)
+        if not dm.open_data(path):
+            return 
+        
         controllers = dm.get_groups()
         datagrps = []
         attrs = []

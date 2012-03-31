@@ -432,6 +432,7 @@ class WatlowEZZone(CoreDevice):
         except Exception,_ee:
             e=True
             
+        time.sleep(0.025)
         if sp and e:
             self.warning('Set point not set. {} != {} retrying'.format(sp, setpoint))
             self.write(2160, setpoint, nregisters=2, **kw)
