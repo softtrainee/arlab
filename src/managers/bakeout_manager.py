@@ -44,6 +44,7 @@ from ConfigParser import NoSectionError
 from src.managers.script_manager import ScriptManager
 from src.managers.data_managers.data_manager import DataManager
 from src.helpers.archiver import Archiver
+from src.managers.data_managers.h5_data_manager import H5DataManager
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
@@ -166,6 +167,18 @@ class BakeoutManager(Manager):
 
     _nactivated_controllers = 0
     data_manager = Instance(DataManager)
+
+#    def _convert_to_h5(self, path):
+#        args = self._bakeout_csv_parser(path)
+#        (names, nseries, ib, data, path, attrs) = args
+#        dm = H5DataManager()
+#        dm.new_frame()
+#        for n, d in zip(names, data):
+#            g = dm.new_group(n)
+#            print d.transpose()
+#            dm.new_array('/{}'.format(n), 'data', d.transpose())
+#
+#        dm.close()
 
 #===============================================================================
 # Button handlers
@@ -392,7 +405,7 @@ class BakeoutManager(Manager):
         if self.include_pressure:
             self._get_pressure(nx)
 
-        self._write_data()
+#        self._write_data()
 
         self.data_buffer = []
         self.data_buffer_x = []
@@ -601,6 +614,7 @@ class BakeoutManager(Manager):
                 self.data_count_flag += 1
 
                 if self.data_count_flag >= len(self.active_controllers):
+                    self._write_data()
                     do_after_timer(1, self._graph_)
 
     def _update_interval_changed(self):
@@ -1093,7 +1107,6 @@ def launch_bakeout():
     b.configure_traits()
 
 ##bm = BakeoutManager()
-##path = os.path.join(data_dir, 'bakeouts', 'bakeout-2012-03-31007')
 #
 #
 #def load_h5():
@@ -1103,7 +1116,10 @@ def launch_bakeout():
 #def load_csv():
 #    bm._bakeout_csv_parser(path + '.txt')
 #
-#if __name__ == '__main__':
+if __name__ == '__main__':
+    path = os.path.join(data_dir, 'bakeouts', 'bakeout-2012-03-31007.txt')
+    b = BakeoutManager()
+#    b._convert_to_h5(path)
 #    n = 10
 #    from timeit import Timer
 #    t = Timer('load_h5()', 'from __main__ import load_h5')

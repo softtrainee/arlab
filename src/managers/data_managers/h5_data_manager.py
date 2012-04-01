@@ -78,6 +78,9 @@ class H5DataManager(DataManager):
                                         table_description_factory(table_style))
         return table
 
+    def new_array(self, group, name, data):
+        self._frame.createArray(group, name, data)
+
     def get_table(self, name, group):
         f = self._frame
         try:
