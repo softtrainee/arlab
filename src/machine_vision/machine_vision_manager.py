@@ -286,8 +286,8 @@ class MachineVisionManager(Manager):
 
 if __name__ == '__main__':
 
-    from src.helpers.logger_setup import setup
-    setup('machine_vision')
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('machine_vision')
     m = MachineVisionManager(_debug=True)
     m.configure_traits()
 

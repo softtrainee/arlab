@@ -26,7 +26,7 @@ from threading import Thread, Condition, Timer
 #============= local library imports  ==========================
 from src.helpers.filetools import unique_path
 from src.helpers.paths import video_dir, snapshot_dir
-from src.helpers.logger_setup import setup
+from src.helpers.logger_setup import logging_setup
 from src.managers.videoable import Videoable
 from camera_calibration_manager import CameraCalibrationManager
 from src.machine_vision.machine_vision_manager import MachineVisionManager
@@ -35,8 +35,9 @@ from src.machine_vision.autofocus_manager import AutofocusManager
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
 import os
-from video_clean_script import VideoDirectoryMaintainceScript
+#from video_clean_script import VideoDirectoryMaintainceScript
 from multiprocessing.process import Process
+from src.helpers.archiver import Archiver
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -190,16 +191,25 @@ class VideoStageManager(StageManager, Videoable):
         for s in self._stage_maps:
             s.dump_correction_file()
 
-        def _clean_():
-            #clean the video directory
-            if self.video_directory:
-                self.info('Cleaning video directory')
-                if os.path.isdir(self.video_directory):
-                    vdc = VideoDirectoryMaintainceScript(archive_days=3)
-                    vdc.clean(self.video_directory)
+        if self.video_directory:
+            self.info('Cleaning video directory')
+            if os.path.isdir(self.video_directory):
+                ar = Archiver(archive_days=3,
+                              root=self.video_directory)
+                ar.clean()
 
-        p = Process(target=_clean_)
-        p.start()
+
+
+#        def _clean_():
+#            #clean the video directory
+#            if self.video_directory:
+#                self.info('Cleaning video directory')
+#                if os.path.isdir(self.video_directory):
+#                    ar = Archiver(archive_days=3)
+#                    ar.clean(self.video_directory)
+
+#        p = Process(target=_clean_)
+#        p.start()
 
     def _canvas_factory(self):
         '''
@@ -503,7 +513,7 @@ class VideoStageManager(StageManager, Videoable):
 
 if __name__ == '__main__':
     name = 'co2'
-    setup('stage_manager')
+    logging_setup('stage_manager')
     s = VideoStageManager(name='{}stage'.format(name),
                      configuration_dir_name=name,
                      )

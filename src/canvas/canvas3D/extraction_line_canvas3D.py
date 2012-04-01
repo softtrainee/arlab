@@ -62,7 +62,7 @@ class ExtractionLineCanvas3D(InteractionCanvas3D):
         if manager.valve_manager is not None:
             manager.valve_manager.canvas3D = self
 
-#    def setup(self, setupdir=None, setupfile=None):
+#    def logging_setup(self, setupdir=None, setupfile=None):
     def setup(self):
         '''
         '''

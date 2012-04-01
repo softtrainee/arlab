@@ -27,7 +27,7 @@ import math
 from src.managers.spectrometer_manager import SpectrometerManager
 from src.managers.manager import Manager
 from src.managers.remote_manager import RemoteExtractionLineManager
-from src.helpers.logger_setup import setup
+from src.helpers.logger_setup import logging_setup
 #from src.helpers.paths import scripts_dir
 from src.managers.data_managers.pychron_db_data_manager import PychronDBDataManager
 from src.experiment.experiment import Experiment
@@ -651,7 +651,7 @@ class ExperimentManager(Manager):
         return self.traits_view()
 
 if __name__ == '__main__':
-    setup('experiment_manager')
+    logging_setup('experiment_manager')
 
 
 #    s = SpectrometerManager()

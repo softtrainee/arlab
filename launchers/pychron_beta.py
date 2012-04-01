@@ -27,7 +27,7 @@ SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
 sys.path.insert(0, SRC_DIR)
 
 from src.envisage.run import launch
-from src.helpers.logger_setup import setup
+from src.helpers.logger_setup import logging_setup
 from src.helpers.paths import build_directories
 
 from traits.api import HasTraits, Str, Bool, Property
@@ -167,7 +167,7 @@ def main():
                            'version_info.txt'))
     a.check()
 
-    setup('pychron', level='DEBUG')
+    logging_setup('pychron', level='DEBUG')
 
     launch(beta=True)
 #    os._exit(0)

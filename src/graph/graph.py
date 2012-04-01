@@ -461,15 +461,15 @@ class Graph(HasTraits):
         '''
         return self._get_limits('value', plotid=plotid)
 
-    def set_y_limits(self, min=None, max=None, pad=0, plotid=0):
+    def set_y_limits(self, min=None, max=None, pad=0, plotid=0, **kw):
         '''
         '''
-        self._set_limits(min, max, 'value', plotid, pad)
+        self._set_limits(min, max, 'value', plotid, pad, **kw)
 
-    def set_x_limits(self, min=None, max=None, pad=0, plotid=0):
+    def set_x_limits(self, min=None, max=None, pad=0, plotid=0, **kw):
         '''
         '''
-        self._set_limits(min, max, 'index', plotid, pad)
+        self._set_limits(min, max, 'index', plotid, pad, **kw)
 
     def set_x_tracking(self, track, plotid=0):
         plot = self.plots[plotid]
@@ -1140,7 +1140,7 @@ class Graph(HasTraits):
             print e
 
 #    def _set_limits(self, mi, ma, axis, plotid, auto, track, pad):
-    def _set_limits(self, mi, ma, axis, plotid, pad):
+    def _set_limits(self, mi, ma, axis, plotid, pad, force=True):
         '''
         '''
         plot = self.plots[plotid]
@@ -1192,7 +1192,7 @@ class Graph(HasTraits):
             if ma > ra.low_setting:
                 ra.high_setting = ma
 
-        self.redraw()
+        self.redraw(force=force)
     def _get_selected_plotid(self):
         '''
         '''

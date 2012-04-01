@@ -80,8 +80,11 @@ class H5DataManager(DataManager):
 
     def get_table(self, name, group):
         f = self._frame
-        grp = getattr(f.root, group)
-        return getattr(grp, name)
+        try:
+            grp = getattr(f.root, group)
+            return getattr(grp, name)
+        except AttributeError:
+            pass
 
     def get_groups(self):
         return [g for g in self._frame.walkGroups() if g != self._frame.root]

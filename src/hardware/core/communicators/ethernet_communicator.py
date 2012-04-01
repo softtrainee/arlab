@@ -55,7 +55,7 @@ class TCPHandler(Handler):
 class UDPHandler(Handler):
     datasize = 2 ** 10
 
-    def open_socket(self, addr, timeout=2):
+    def open_socket(self, addr, timeout=0.1):
         self.address = addr
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         #self.sock.connect(addr)
@@ -136,10 +136,18 @@ class EthernetCommunicator(Communicator):
         self.handler = h
         return h
 
+    def _reset_connection(self):
+        self.handler = None
+
     def ask(self, cmd, verbose=True, info=None, *args, **kw):
         '''
 
         '''
+
+        def _ask():
+            if handler.send_packet(cmd):
+                return handler.get_packet()
+
         if self.simulation:
             if verbose:
                 self.info('no handle    {}'.format(cmd))
@@ -152,15 +160,24 @@ class EthernetCommunicator(Communicator):
             self._lock.release()
             return 'simulation'
 
-        if handler.send_packet(cmd):
-            r = handler.get_packet()
+#        if handler.send_packet(cmd):
+#            r = handler.get_packet()
+
+        r = _ask()
+        if r is not None:
             self._lock.release()
-            if r is not None:
-                re = r
+#            if r is not None:
+#                re = r
+#            else:
+#                self._reset_connection()
         else:
+            self._reset_connection()
+            r = _ask()
             self._lock.release()
 
-        re = self.process_response(re)
+        if r is not None:
+            re = self.process_response(r)
+
         handler.end()
         if verbose:
             self.log_response(cmd, re, info)
