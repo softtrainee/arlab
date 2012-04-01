@@ -351,10 +351,12 @@ class BakeoutManager(Manager):
 
             for c in controllers:
                 c.run()
+                time.sleep(0.01)
 
-            time.sleep(0.01)
+            time.sleep(1)
             for c in controllers:
                 c.start_timer()
+                time.sleep(0.01)
 
             if self.include_pressure:
 

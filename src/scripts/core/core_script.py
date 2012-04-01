@@ -278,10 +278,18 @@ class CoreScript(Loggable):
 
     def wait(self, dur):
         st = time.time()
+        cnt=0
         while time.time() - st < dur:
             if not self.isAlive():
+                cnt+=1
+            else:
+                cnt=0
+                
+            if cnt>3:
                 break
-            time.sleep(0.01)
+            time.sleep(0.1)
+            
+        self.info('WAITING OVER')
 
     def _data_manager_factory(self):
         '''

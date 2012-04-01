@@ -190,10 +190,10 @@ class StreamGraph(Graph):
         dl = self.data_limits[plotid]
         sd = self.scan_delays[plotid]
 
-#        lim = MAX_LIMIT
+        lim = MAX_LIMIT
         pad = 10
 #        print lim
-        lim = -dl / sd + pad
+#        lim = -dl * sd + pad
         new_xd = hstack((xd[lim:], [nx]))
         new_yd = hstack((yd[lim:], [ny]))
 

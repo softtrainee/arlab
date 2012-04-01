@@ -20,14 +20,14 @@ limitations under the License.
 import os
 import sys
 # add src to the path
-version = ''
+version = '1.4'
 SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                      'mercurial',
                      'pychron_beta{}'.format(version))
 sys.path.insert(0, SRC_DIR)
 
 from src.envisage.run import launch
-from src.helpers.logger_setup import logging_setup
+from src.helpers.logger_setup import setup
 from src.helpers.paths import build_directories
 
 from traits.api import HasTraits, Str, Bool, Property
@@ -167,7 +167,7 @@ def main():
                            'version_info.txt'))
     a.check()
 
-    logging_setup('pychron', level='DEBUG')
+    setup('pychron', level='DEBUG')
 
     launch(beta=True)
 #    os._exit(0)
