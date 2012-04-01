@@ -173,8 +173,9 @@ class BakeoutController(WatlowEZZone):
             self.info('killing')
             if self._active_script is not None:
                 self._active_script._alive = False
-
-            self.set_closed_loop_setpoint(0)
+            
+            if abs(self.setpoint)>0.001:
+                self.set_closed_loop_setpoint(0)
 
     def load_additional_args(self, config):
         '''
@@ -224,7 +225,8 @@ class BakeoutController(WatlowEZZone):
 
         else:
 
-            t = BakeoutScript(source_dir=os.path.join(paths.scripts_dir,
+            t = BakeoutScript(name='{}_script'.format(self.name),
+                              source_dir=os.path.join(paths.scripts_dir,
                                                       'bakeoutscripts'),
                                  file_name=self.script,
                                  controller=self)

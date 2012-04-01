@@ -351,12 +351,12 @@ class BakeoutManager(Manager):
 
             for c in controllers:
                 c.run()
-                time.sleep(0.01)
+#                time.sleep(0.01)
 
-            time.sleep(1)
+            time.sleep(0.5)
             for c in controllers:
                 c.start_timer()
-                time.sleep(0.01)
+#                time.sleep(0.05)
 
             if self.include_pressure:
 
@@ -478,7 +478,7 @@ class BakeoutManager(Manager):
             # used to synchronize access to port
             if bc.load():
                 bc.set_scheduler(scheduler)
-
+                
                 if bc.open():
                     '''
                         on first controller check to see if

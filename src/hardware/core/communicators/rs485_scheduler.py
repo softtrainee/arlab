@@ -26,8 +26,11 @@ from src.loggable import Loggable
 #============= local library imports  ==========================
 
 SINGLE_ITEM_BUF=True
+#SINGLE_ITEM_BUF=False
 class RS485Scheduler(Loggable):
     '''
+    
+        
         this class should be used when working with multiple rs485 devices on the same port. 
         
         it uses a simple lock and sleep cycle to avoid collision on the data lines
@@ -37,20 +40,20 @@ class RS485Scheduler(Loggable):
     '''
 
 #    collision_delay = Float(125)
-    collision_delay = Float(100)
+    collision_delay = Float(75)
 
     def __init__(self, *args, **kw):
         super(RS485Scheduler, self).__init__(*args, **kw)
-#        self._lock = Lock()
+        self._lock = Lock()
 #        self._condition = Condition()
-        self._command_queue = Queue()
-        self._buffer = Queue()
-
-        consumer = Consumer(self._command_queue,
-                            self._buffer,
-#                            self._condition,
-                            self.collision_delay)
-        consumer.start()
+#        self._command_queue = Queue()
+#        self._buffer = Queue()
+#
+#        consumer = Consumer(self._command_queue,
+#                            self._buffer,
+##                            self._condition,
+#                            self.collision_delay)
+#        consumer.start()
 
     def schedule(self, func, args=None, kwargs=None):
         if args is None:
@@ -58,28 +61,18 @@ class RS485Scheduler(Loggable):
         if kwargs is None:
             kwargs = dict()
 
-#        _cond = self._condition
-#        while not self._buffer.empty():
-#            time.sleep(0.001)
-
-#        self._buffer.jo/in()
-#        _cond.acquire()   
-
-#        print self._buffer.qsize()
-        while SINGLE_ITEM_BUF and not self._buffer.empty():
-            time.sleep(0.001)
-
-        self._command_queue.put((func, args, kwargs))
-#        _cond.notify()
-#        _cond.release()
-
-        try:
-            r = self._buffer.get(timeout=0.5)
-#            self._buffer.task_done()
-        except Empty:
-            r = None
-        #self.debug('asked {} got {}'.format(args, r))
-        return r
+#        while SINGLE_ITEM_BUF and not self._buffer.empty():
+#            time.sleep(0.0001)
+#
+#        self._command_queue.put((func, args, kwargs))
+#
+#        try:
+#            r = self._buffer.get(timeout=0.5)
+#        except Empty:
+#            r = None
+            
+        with self._lock:
+            return func(*args,**kwargs)
 
 
 class Consumer(Thread):
@@ -96,13 +89,13 @@ class Consumer(Thread):
         while 1:
 #            self.cond.acquire()
             while self._q.empty():
-                time.sleep(0.001)
+                time.sleep(0.0001)
 #                self.cond.wait(timeout=0.05)
 #            st = time.time()
             func, args, kwargs = self._q.get()
             
             while SINGLE_ITEM_BUF and not self._buf.empty():
-                time.sleep(0.001)
+                time.sleep(0.0001)
 
             r = func(*args, **kwargs)
 #            self.logger.info(r)
