@@ -352,6 +352,10 @@ class BakeoutManager(Manager):
             for c in controllers:
                 c.run()
 
+            time.sleep(0.01)
+            for c in controllers:
+                c.start_timer()
+
             if self.include_pressure:
 
                 # pressure plot

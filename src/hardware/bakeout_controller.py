@@ -229,6 +229,8 @@ class BakeoutController(WatlowEZZone):
                                  controller=self)
             t.bootstrap()
             self._active_script = t
+
+    def start_timer(self):
         self._timer = Timer(self.update_interval * 1000., self._update_)
 
     def ramp_to_setpoint(self, ramp, setpoint, scale):

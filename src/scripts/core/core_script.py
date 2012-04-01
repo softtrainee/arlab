@@ -267,7 +267,6 @@ class CoreScript(Loggable):
 
         func(*parser(0, line=cmd)[1:])
 
-
     def raw_statement(self, a):
         pass
 
