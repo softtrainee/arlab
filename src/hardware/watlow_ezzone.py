@@ -26,7 +26,7 @@ from traitsui.api import View, HGroup, Item, Group, VGroup, EnumEditor, RangeEdi
 #                               'Programming', 'mercurial', 'pychron_beta'))
 
 from core.core_device import CoreDevice
-from src.helpers.logger_setup import setup
+from src.helpers.logger_setup import logging_setup
 from src.graph.time_series_graph import TimeSeriesStreamGraph, \
     TimeSeriesStreamStackedGraph
 from pyface.timer.do_later import do_later
@@ -1261,7 +1261,7 @@ class WatlowEZZone(CoreDevice):
         return View(self.get_configure_group())
 
 if __name__ == '__main__':
-    setup('foo')
+    logging_setup('foo')
     w = WatlowEZZone(name='temperature_controller',
                      configuration_dir_name='diode')
     w.bootstrap()

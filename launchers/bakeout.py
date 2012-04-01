@@ -26,11 +26,11 @@ SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
 sys.path.insert(0, SRC_DIR)
 
 from src.managers.bakeout_manager import launch_bakeout
-from src.helpers.logger_setup import setup
+from src.helpers.logger_setup import logging_setup
 
 if __name__ == '__main__':
 
-    setup('bakeout', level='DEBUG')
+    logging_setup('bakeout', level='DEBUG')
     launch_bakeout()
     os._exit(0)
 

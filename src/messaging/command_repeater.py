@@ -28,7 +28,7 @@ from src.remote_hardware.errors.system_errors import PychronCommErrorCode
 from threading import Lock
 
 from globals import ipc_dgram
-from src.helpers.logger_setup import setup
+from src.helpers.logger_setup import logging_setup
 
 class CRHandler(Handler):
     def init(self, info):
@@ -260,7 +260,7 @@ def profiling():
     profile.runctx('repeator.get_response(*args)', globals(), {'repeator':repeator, 'args':(1, 2, 3) })
 
 if __name__ == '__main__':
-    setup('profile_repeator')
+    logging_setup('profile_repeator')
     profiling()
 #============= EOF ====================================
 

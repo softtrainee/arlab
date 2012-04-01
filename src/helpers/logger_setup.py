@@ -89,7 +89,7 @@ class DisplayHandler(logging.StreamHandler):
 #    print 'clean up finished'
 
 
-def setup(name, level=None):
+def logging_setup(name, level=None):
     '''
     '''
 

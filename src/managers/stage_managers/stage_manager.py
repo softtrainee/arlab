@@ -31,7 +31,7 @@ from src.helpers.color_generators import colors8i as colors
 
 from src.hardware.motion_controller import MotionController
 from src.helpers.paths import map_dir, setup_dir, user_points_dir
-from src.helpers.logger_setup import setup
+from src.helpers.logger_setup import logging_setup
 
 from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
@@ -768,7 +768,7 @@ class StageManager(Manager):
 
 if __name__ == '__main__':
 
-    setup('stage_manager')
+    logging_setup('stage_manager')
     name = 'diode'
     s = StageManager(
                      name='{}stage'.format(name),

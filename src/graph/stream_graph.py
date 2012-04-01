@@ -108,7 +108,7 @@ class StreamGraph(Graph):
         if not self.track_y_min[plotid]:
             mi = None
 
-        self.set_y_limits(min=mi, max=ma, plotid=plotid, pad=5)
+        self.set_y_limits(min=mi, max=ma, plotid=plotid, pad=5, **kw)
 
     def set_scan_delay(self, v, plotid=0):
         self.scan_delays[plotid] = v
@@ -157,7 +157,8 @@ class StreamGraph(Graph):
                           )
         return x
 
-    def record(self, y, x=None, series=0, plotid=0, track_x=True, track_y=True, do_after=None, track_y_pad=5, ** kw):
+    def record(self, y, x=None, series=0, plotid=0,
+               track_x=True, track_y=True, do_after=None, track_y_pad=5, ** kw):
 
         xn, yn = self.series[plotid][series]
 
@@ -191,16 +192,15 @@ class StreamGraph(Graph):
 
 #        lim = MAX_LIMIT
         pad = 10
-        lim = -dl * sd + pad
+#        print lim
+        lim = -dl / sd + pad
         new_xd = hstack((xd[lim:], [nx]))
         new_yd = hstack((yd[lim:], [ny]))
+
         self.cur_max[plotid] = max(self.cur_max[plotid], max(new_yd))
         self.cur_min[plotid] = min(self.cur_min[plotid], min(new_yd))
 
         def _record_():
-            plot.data.set_data(xn, new_xd)
-            plot.data.set_data(yn, new_yd)
-
             if track_x and (self.track_x_min or self.track_x_max) \
                  or self.force_track_x_flag:
                 ma = new_xd[-1]
@@ -223,6 +223,7 @@ class StreamGraph(Graph):
                     self.set_x_limits(max=ma + pad,
                               min=mi,
                               plotid=plotid,
+#                              force=False
 #                              pad=10 * self.scan_delays[plotid]
                               )
 
@@ -248,7 +249,12 @@ class StreamGraph(Graph):
                 self.set_y_limits(max=ma,
                               min=mi,
                               plotid=plotid,
-                              pad=track_y_pad)
+                              pad=track_y_pad,
+                              force=False
+                              )
+            plot.data.set_data(xn, new_xd)
+            plot.data.set_data(yn, new_yd)
+#            self.redraw()
 
         if do_after:
             do_after_timer(do_after, _record_)

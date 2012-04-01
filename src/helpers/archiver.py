@@ -13,16 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from src.helpers.logger_setup import setup
+from multiprocessing.process import Process
 '''
     1. find all files older than Y
         - move to archive
     2. remove archive directories older than X
 '''
-from traits.api import Int
+from traits.api import Range, Int, Bool, Str
 import os
 import shutil
 from datetime import datetime, timedelta
+
 
 from src.loggable import Loggable
 
@@ -30,13 +31,28 @@ MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', \
                'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
 
-class VideoDirectoryMaintainceScript(Loggable):
-    archive_days = Int(30)
+class Archiver(Loggable):
+    archive_days = Range(1, 31)
+    archive_months = Range(1, 12, 3)
+    clean_archives = Bool(True)
+    root = Str
 
-    def clean(self, root):
+    def clean(self, spawn_process=True):
+        if spawn_process:
+            p = Process(target=self._clean)
+            p.start()
+        else:
+            self._clean()
+
+    def _clean(self):
+        root = self.root
+        if not root:
+            return
+
         archive_date = datetime.today() - timedelta(days=self.archive_days)
-        self.info('Videos older than {} will be archived'.format(archive_date))
+        self.info('Files older than {} will be archived'.format(archive_date))
         for p in self._get_files(root):
+#            print p
             rp = os.path.join(root, p)
             result = os.stat(rp)
             mt = result.st_mtime
@@ -44,16 +60,17 @@ class VideoDirectoryMaintainceScript(Loggable):
             if creation_date < archive_date:
                 self._archive(root, p)
 
-        self.info('Archives older than 3 months will be deleted')
-        self._clean_archive(root)
+        if self.clean_archives:
+            self._clean_archive(root)
 
     def _get_files(self, root):
-        return [p for p in os.listdir(root) 
-                if not p.startswith('.') and os.path.isfile(p)]
+        return [p for p in os.listdir(root)
+                if not p.startswith('.') and os.path.isfile(os.path.join(root, p))]
 
     def _clean_archive(self, root):
+        self.info('Archives older than {} months will be deleted'.format(self.archive_months))
         arch = os.path.join(root, 'archive')
-        rdate = datetime.today() - timedelta(days=3 * 30)
+        rdate = datetime.today() - timedelta(days=self.archive_months * 30)
 
         if os.path.isdir(arch):
             for year_dir in self._get_files(arch):
@@ -101,8 +118,9 @@ class VideoDirectoryMaintainceScript(Loggable):
             self.warning(e)
 
 if __name__ == '__main__':
-    setup('video_main')
-    c = VideoDirectoryMaintainceScript(trim_days=30)
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('video_main')
+    c = Archiver(trim_days=30)
     root = '/Users/ross/Desktop/test'
     c.clean(root)
 

@@ -27,6 +27,10 @@ from src.hardware.valve import HardwareValve
 from src.extraction_line.section import Section
 from src.helpers.paths import hidden_dir
 from src.helpers.valve_parser import ValveParser
+from threading import Timer, Thread, Condition, Event
+import time
+from src.loggable import Loggable
+from src.helpers.logger_setup import logging_setup
 
 
 class ValveGroup(object):
@@ -138,20 +142,39 @@ class ValveManager(Manager):
 
         return ''.join(locks)
 
-    def get_states(self):
-        '''
-        '''
+    def _get_states(self, times_up_event):
         states = []
         for k, _ in self.valves.items():
+#        for k in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']:
+            if times_up_event.isSet():
+                break
+
             states.append(k)
-#            if self.query_valve_state:
-#                s = self.get_state_by_name(k)
-#            else:
-#                s = v.state
+#            self.info('geting state for {}'.format(k))
             s = self.get_state_by_name(k)
+#            self.info('got {} for {}'.format(s, k))
             states.append('1' if s else '0')
 
         return ''.join(states)
+
+    def get_states(self, timeout=1):
+        '''
+            use event and timer to allow for partial responses
+            the timer t will set the event in timeout seconds
+
+            after the timer is started _get_states is called
+            _get_states loops thru the valves querying their state
+
+            each iteration the times_up_event is checked to see it
+            has fired if it has the the loop breaks and returns the
+            states word
+        '''
+        times_up_event = Event()
+        t = Timer(timeout, lambda: times_up_event.set())
+        t.start()
+        states = self._get_states(times_up_event)
+
+        return states
 
     def get_valve_by_address(self, a):
         '''
@@ -512,10 +535,42 @@ class ValveManager(Manager):
         self.explanable_items.append(ev)
 
 
+class Foo(Loggable):
+    def get_state_by_name(self, m):
+        time.sleep(0.5)
+        return True
+
+    def _get_states(self, times_up_event):
+        states = []
+        for k in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']:
+            if times_up_event.isSet():
+                break
+
+            states.append(k)
+            self.info('geting state for {}'.format(k))
+            s = self.get_state_by_name(k)
+            self.info('got {} for {}'.format(s, k))
+            states.append('1' if s else '0')
+
+        return ''.join(states)
+
+    def get_states(self):
+        times_up_event = Event()
+        t = Timer(1, lambda: times_up_event.set())
+        t.start()
+        states = self._get_states(times_up_event)
+        return states
+
 if __name__ == '__main__':
-    v = ValveManager()
-    p = os.path.join(paths.extraction_line_dir, 'valves.xml')
-    v._load_valves_from_file(p)
+#    v = ValveManager()
+#    p = os.path.join(paths.extraction_line_dir, 'valves.xml')
+#    v._load_valves_from_file(p)
+    logging_setup('foo')
+    f = Foo()
+    for i in range(10):
+        r = f.get_states()
+        print r, len(r)
+
 #==================== EOF ==================================
 #def _load_valves_from_filetxt(self, path):
 #        '''

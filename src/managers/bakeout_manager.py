@@ -21,6 +21,7 @@ from traits.api import HasTraits, Array, Instance, Bool, Button, Event, \
     Float, Str, String, Property, List, on_trait_change
 from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring, \
     ButtonEditor, EnumEditor, ListEditor
+from pyface.timer.api import do_after as do_after_timer
 
 import numpy as np
 import os
@@ -42,6 +43,7 @@ from src.hardware.gauges.granville_phillips.micro_ion_controller import MicroIon
 from ConfigParser import NoSectionError
 from src.managers.script_manager import ScriptManager
 from src.managers.data_managers.data_manager import DataManager
+from src.helpers.archiver import Archiver
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
@@ -69,11 +71,11 @@ class BakeoutParameters(HasTraits):
 class BakeoutGraphViewer(HasTraits):
     graph = Instance(Graph)
     bakeouts = List
-    title=Str
-    window_x=Float
-    window_y=Float
-    window_width=Float
-    window_height=Float
+    title = Str
+    window_x = Float
+    window_y = Float
+    window_width = Float
+    window_height = Float
     def new_controller(self, name):
         bc = BakeoutParameters(name=name)
         self.bakeouts.append(bc)
@@ -164,7 +166,8 @@ class BakeoutManager(Manager):
 
     _nactivated_controllers = 0
     data_manager = Instance(DataManager)
-    #===============================================================================
+
+#===============================================================================
 # Button handlers
 #===============================================================================
     def _edit_scripts_button_fired(self):
@@ -183,12 +186,8 @@ class BakeoutManager(Manager):
                                   'bakeouts'),
                                   wildcard='Data files (*.h5,*.csv, *.txt)|*.h5;*.csv;*.txt'
                                   )
-#        path = '/Users/ross/Desktop/bakeout-2012-03-16027.txt'
-#        path = '/Users/ross/Desktop/bakeout-test.txt'
-       # path = '/Users/ross/Pychrondata_beta1.4/data/bakeouts/bakeout-2012-03-30004.h5'
         if path is not None:
             self._open_graph(path)
-#        self._open_graph(None)
 
     def _save_fired(self):
 
@@ -235,10 +234,6 @@ class BakeoutManager(Manager):
             t = Thread(target=self._execute_)
             t.start()
 
-
-
-
-
     def load(self, *args, **kw):
         app = self.application
         for bo in self._get_controller_names():
@@ -260,8 +255,6 @@ class BakeoutManager(Manager):
 
         self._load_controllers()
 
-
-
     def update_alive(
         self,
         obj,
@@ -269,7 +262,6 @@ class BakeoutManager(Manager):
         old,
         new,
         ):
-#        print obj, name, old, new
         if new:
             self.alive = new
         else:
@@ -280,6 +272,8 @@ class BakeoutManager(Manager):
         '''
         if self.data_manager is not None:
             self.data_manager.close()
+
+        self._clean_archive()
 
         if 'user_kill' in kw:
             if not kw['user_kill']:
@@ -344,7 +338,6 @@ class BakeoutManager(Manager):
 
             for c in controllers:
                 c.run()
-#                time.sleep(0.075)
 
             if self.include_pressure:
 
@@ -359,13 +352,16 @@ class BakeoutManager(Manager):
 #                t.start()
 
             self._start_time = time.time()
+        else:
+            self.alive = False
 
     def _graph_(self):
-        for ci,(_name, i, pi, hi) in enumerate(self.data_buffer):
+        for ci, (_name, i, pi, hi) in enumerate(self.data_buffer):
+            track_x = ci == len(self.data_buffer) - 1
             kwargs = dict(series=i,
-                        track_x=ci == len(self.data_buffer) - 1,
+                        track_x=track_x,
                         track_y=False,
-                        do_later=50
+#                        do_later=10
                         )
 
             if self.include_temp:
@@ -375,16 +371,21 @@ class BakeoutManager(Manager):
             if self.include_heat:
                 kwargs['plotid'] = self.plotids[1]
                 kwargs['x'] = nx
+                kwargs['track_x'] = False if self.include_temp else track_x
                 self.graph.record(hi, **kwargs)
 
             self.data_buffer_x.append(nx)
 
         try:
-            self.graph.update_y_limits(plotid=self.plotids[0])
+            self.graph.update_y_limits(plotid=self.plotids[0]
+                                       #, force=False
+                                       )
         except IndexError:
             pass
         try:
-            self.graph.update_y_limits(plotid=self.plotids[1])
+            self.graph.update_y_limits(plotid=self.plotids[1]
+                                       #, force=False
+                                       )
         except IndexError:
             pass
 
@@ -396,7 +397,6 @@ class BakeoutManager(Manager):
         self.data_buffer = []
         self.data_buffer_x = []
         self.data_count_flag = 0
-#                                                                                       time.time() - st))
 
 # ============= views ===================================
     def traits_view(self):
@@ -416,7 +416,7 @@ class BakeoutManager(Manager):
                              ), show_label=False),
                             Item('edit_scripts_button', show_label=False,
                                  enabled_when='not alive'
-                                 )
+                                 ),
                                     ),
                              HGroup(Item('configuration',
                              editor=EnumEditor(name='configurations'),
@@ -461,16 +461,18 @@ class BakeoutManager(Manager):
                 bc.set_scheduler(scheduler)
 
                 if bc.open():
+                    '''
+                        on first controller check to see if
+                        memory block programming is required
 
-                    # on first controller check to see if memory block programming is required
-                    # if it is apply to all subsequent controllers
-
+                        if it is apply to all subsequent controllers
+                    '''
                     if cnt == 0:
                         if not bc.is_programmed():
                             program = True
-                        self.info('Watlow controllers require programming. Programming automatically' if program else
-                                  'Watlow controllers are properly programmed'
-                                  )
+                        m1 = 'Watlow controllers require programming. Programming automatically'
+                        m2 = 'Watlow controllers are properly programmed'
+                        self.info(m1 if program else m2)
 
                     bc.program_memory_blocks = program
 
@@ -526,7 +528,8 @@ class BakeoutManager(Manager):
                         if value is not None:
                             kw[opt] = value
 
-                    kw['record_process'] = self.config_get(config, section, 'record_process',
+                    kw['record_process'] = self.config_get(config, section,
+                                                           'record_process',
                                                            default=False,
                                                            optional=True,
                                                            cast='boolean'
@@ -538,11 +541,9 @@ class BakeoutManager(Manager):
 
         args = self._bakeout_parser(path, ish5)
         if args is None:
-            return 
-        
+            return
         names = args[0]
         attrs = args[-1]
-
         graph = self._bakeout_factory(ph=0.65,
                 *args,
                 container_dict=dict(
@@ -576,9 +577,9 @@ class BakeoutManager(Manager):
             graph.window_y = 30
             graph.edit_traits()
 
-#===============================================================================
+#==============================================================================
 #     trait change handlers
-#===============================================================================
+#==============================================================================
 #    def _get_process_value(self):
 #        while 1:
     @on_trait_change('bakeout+:process_value_flag')
@@ -600,7 +601,7 @@ class BakeoutManager(Manager):
                 self.data_count_flag += 1
 
                 if self.data_count_flag >= len(self.active_controllers):
-                    self._graph_()
+                    do_after_timer(1, self._graph_)
 
     def _update_interval_changed(self):
         for tr in self._get_controller_names():
@@ -628,9 +629,15 @@ class BakeoutManager(Manager):
     def _toggle_graphs(self):
         self.graph = self._graph_factory()
 
-    # ===========================================================================
-    # factories
-    # ===========================================================================
+    def _clean_archive(self):
+        root = os.path.join(data_dir, 'bakeouts')
+        self.info('cleaning bakeout data directory {}'.format(root))
+        a = Archiver(root=root, archive_days=14)
+        a.clean()
+
+# ==========================================================================
+# factories
+# ==========================================================================
     def _controller_factory(self, name):
         bc = BakeoutController(name=name,
                                configuration_dir_name='bakeout',
@@ -643,7 +650,7 @@ class BakeoutManager(Manager):
         dm = CSVDataManager() if style == 'csv' else H5DataManager()
 
         ni = 'bakeout-{}'.format(generate_datestamp())
-        dn = dm.new_frame(directory='bakeouts',
+        _dn = dm.new_frame(directory='bakeouts',
                 base_frame_name=ni)
 
         if style == 'csv':
@@ -704,7 +711,7 @@ class BakeoutManager(Manager):
 #            print i
             # set up graph
 #            name = names[i]#[i / sum(include_bits)]
-        for i,name in enumerate(names):
+        for i, name in enumerate(names):
             for j in range(3):
                 if include_bits[j]:
                     graph.new_series(plotid=plotids[j])
@@ -769,10 +776,14 @@ class BakeoutManager(Manager):
             return self._bakeout_csv_parser(path)
 
     def _write_data(self):
+
         if isinstance(self.data_manager, CSVDataManager):
             self._write_csv_data()
         else:
             self._write_h5_data()
+#        for i in range(100):
+#            self._write_csv_data()
+#            self._write_h5_data()
 
     def _write_h5_data(self):
         dm = self.data_manager
@@ -783,11 +794,12 @@ class BakeoutManager(Manager):
                                   ]:
                 if inc:
                     table = dm.get_table(ti, name)
-                    row = table.row
-                    row['time'] = xi
-                    row['value'] = di
-                    row.append()
-                    table.flush()
+                    if table is not None:
+                        row = table.row
+                        row['time'] = xi
+                        row['value'] = di
+                        row.append()
+                        table.flush()
 
     def _write_csv_data(self):
         ns = sum(map(int, [self.include_heat,
@@ -817,14 +829,14 @@ class BakeoutManager(Manager):
             if container[ind] < 0.001:
                 container[ind] = x
 
-        self.data_manager.write_to_frame(container)
-        
+        self.data_manager2.write_to_frame(container)
+
     def _bakeout_h5_parser(self, path):
         from src.managers.data_managers.h5_data_manager import H5DataManager
         dm = H5DataManager()
         if not dm.open_data(path):
-            return 
-        
+            return
+
         controllers = dm.get_groups()
         datagrps = []
         attrs = []
@@ -874,11 +886,13 @@ class BakeoutManager(Manager):
             nseries = len(header) / (sum(ib) + 1)
             names = [(header[(1 + sum(ib)) * i])[:-5] for i in range(nseries)]
 
-            data = np.genfromtxt(f, delimiter=',',
-                                 invalid_raise=False
-                                 )
-            data = np.array_split(data, nseries, axis=1)
+#            average load time for 2MB file =0.42 s (n=10)
+#            data = np.loadtxt(f, delimiter=',')
 
+#            average load time for 2MB file = 0.19 s (n=10)
+            data = np.array([r for r in reader], dtype=float)
+
+            data = np.array_split(data, nseries, axis=1)
         return (names, nseries, ib, data, path, attrs)
 
     def _graph_factory(
@@ -995,9 +1009,9 @@ class BakeoutManager(Manager):
         return sum(map(int, [self.include_temp, self.include_heat,
                    self.include_pressure])) > 0
 
-#===============================================================================
+#==============================================================================
 # Pressure
-#===============================================================================
+#==============================================================================
     def _get_pressure(self, x):
         if self.gauge_controller:
             pressure = self.gauge_controller.get_ion_pressure()
@@ -1051,7 +1065,8 @@ class BakeoutManager(Manager):
 #
 #            nv = self.gauge_controller.get_convectron_a_pressure()
 #            self._pressure = nv
-#            self.graph.record(nv, track_y=(5e-3, None), track_y_pad=5e-3, track_x=False, plotid=2, do_later=10)
+#            self.graph.record(nv, track_y=(5e-3, None), track_y_pad=5e-3, 
+#                    track_x=False, plotid=2, do_later=10)
 #
 #            if self.use_pressure_monitor:
 #                dbuffer = np.hstack((dbuffer[-window:], nv))
@@ -1060,7 +1075,8 @@ class BakeoutManager(Manager):
 #                mean = dbuffer.mean()
 #                if std < self._pressure_monitor_std_threshold:
 #                    if mean < self._pressure_monitor_threshold:
-#                        self.info('pressure set point achieved:mean={} std={} n={}'.format(mean, std, n))
+#                        self.info('pressure set point achieved:mean={} std={}
+#                                     n={}'.format(mean, std, n))
 #                        success = True
 #                        break
 #
@@ -1070,13 +1086,32 @@ class BakeoutManager(Manager):
 #
 #        for ac in self._get_active_controllers():
 #            ac.end(error=None if success else 'Max duration exceeded max={:0.1f}, dur={:0.1f}'.format(self._max_duration,
-#                            
+
 def launch_bakeout():
     b = BakeoutManager()
     b.load()
-#    b.load_controllers()
-
     b.configure_traits()
 
-
+##bm = BakeoutManager()
+##path = os.path.join(data_dir, 'bakeouts', 'bakeout-2012-03-31007')
+#
+#
+#def load_h5():
+#    bm._bakeout_h5_parser(path + '.h5')
+#
+#
+#def load_csv():
+#    bm._bakeout_csv_parser(path + '.txt')
+#
+#if __name__ == '__main__':
+#    n = 10
+#    from timeit import Timer
+#    t = Timer('load_h5()', 'from __main__ import load_h5')
+#    h5_time = t.timeit(n) / float(n)
+#    print 'h5', h5_time
+#
+#    t = Timer('load_csv()', 'from __main__ import load_csv')
+#    csv_time = t.timeit(n) / float(n)
+#
+#    print 'csv', csv_time
 # ============= EOF ====================================

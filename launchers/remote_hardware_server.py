@@ -25,12 +25,12 @@ SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                      'pychron_beta{}'.format(version))
 sys.path.insert(0, SRC_DIR)
 
-from src.helpers.logger_setup import setup
+from src.helpers.logger_setup import logging_setup
 from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
 
 if __name__ == '__main__':
 
-    setup('server')
+    logging_setup('server')
     s = RemoteHardwareServerManager()
     s.load()
     s.configure_traits()
