@@ -159,6 +159,7 @@ class BakeoutScript(CoreScript):
             self.set_setpoint(sp)
             self.controller.duration = float(args[1])
         #wait for dur 
+        self.info('wating {}'.format(float(args[1]) * TIMEDICT[self.scale]) )
         self.wait(float(args[1]) * TIMEDICT[self.scale])
 
     def kill_script(self):

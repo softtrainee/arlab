@@ -220,6 +220,7 @@ class BakeoutController(WatlowEZZone):
 
             self._oduration = self._duration
 #            self._timer = Timer(self.update_interval * 1000., self._update_)
+            self._duration_timeout=True
 
         else:
 
@@ -227,10 +228,12 @@ class BakeoutController(WatlowEZZone):
                                                       'bakeoutscripts'),
                                  file_name=self.script,
                                  controller=self)
-            t.bootstrap()
             self._active_script = t
+            self._duration_timeout=False
+            t.bootstrap()
 
     def start_timer(self):
+        self.led.state='green'
         self._timer = Timer(self.update_interval * 1000., self._update_)
 
     def ramp_to_setpoint(self, ramp, setpoint, scale):
@@ -397,8 +400,8 @@ class BakeoutController(WatlowEZZone):
         self.get_temp_and_power(verbose=False)
 #        if self.run_func:
 #            self.run_func(verbose=True)
-#            
-        if self._active_script is None:
+
+        if self._duration_timeout:
             if time.time() - self.start_time > self._oduration * 3600.:
                 self.end()
 

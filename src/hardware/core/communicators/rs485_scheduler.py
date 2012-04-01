@@ -96,13 +96,13 @@ class Consumer(Thread):
         while 1:
 #            self.cond.acquire()
             while self._q.empty():
-                time.sleep(0.0001)
+                time.sleep(0.001)
 #                self.cond.wait(timeout=0.05)
 #            st = time.time()
             func, args, kwargs = self._q.get()
             
             while SINGLE_ITEM_BUF and not self._buf.empty():
-                time.sleep(0.0001)
+                time.sleep(0.001)
 
             r = func(*args, **kwargs)
 #            self.logger.info(r)
