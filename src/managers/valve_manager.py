@@ -31,6 +31,8 @@ from threading import Timer, Thread, Condition, Event
 import time
 from src.loggable import Loggable
 from src.helpers.logger_setup import logging_setup
+import random
+from Queue import Queue
 
 
 class ValveGroup(object):
@@ -168,13 +170,36 @@ class ValveManager(Manager):
             each iteration the times_up_event is checked to see it
             has fired if it has the the loop breaks and returns the
             states word
+        
+            to prevent the communicator from blocking longer then the times up event
+            the _gs_thread is joined and timeouts out after 1.01s 
         '''
-        times_up_event = Event()
-        t = Timer(timeout, lambda: times_up_event.set())
-        t.start()
-        states = self._get_states(times_up_event)
 
-        return states
+        states_queue = Queue()
+        times_up_event = Event()
+        t = Timer(1, lambda: times_up_event.set())
+        t.start()
+
+        _gs_thread = Thread(target=self._get_states, args=(times_up_event, states_queue))
+        _gs_thread.start()
+        _gs_thread.join(timeout=1.01)
+
+
+
+        #ensure word has even number of elements
+        s = ''
+        i = 0
+        n = states_queue.qsize()
+        if n % 2 != 0:
+            c = n / 2 * 2
+        else:
+            c = n
+
+        while not states_queue.empty() and i < c:
+            s += states_queue.get_nowait()
+            i += 1
+
+        return s
 
     def get_valve_by_address(self, a):
         '''
@@ -537,29 +562,66 @@ class ValveManager(Manager):
 
 class Foo(Loggable):
     def get_state_by_name(self, m):
-        time.sleep(0.5)
+        b = random.randint(1, 5) / 50.0
+        r = 0.1 + b
+#        r = 3
+        self.info('sleep {}'.format(r))
+        time.sleep(r)
         return True
 
-    def _get_states(self, times_up_event):
-        states = []
-        for k in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']:
+    def _get_states(self, times_up_event, sq):
+#        self.states = []
+        for k in ['A', 'B', 'Ca', 'Dn', 'Es', 'F', 'G', 'H', 'I']:
             if times_up_event.isSet():
                 break
 
-            states.append(k)
-            self.info('geting state for {}'.format(k))
+            sq.put(k)
+#            self.info('geting state for {}'.format(k))
             s = self.get_state_by_name(k)
-            self.info('got {} for {}'.format(s, k))
-            states.append('1' if s else '0')
+#            self.info('got {} for {}'.format(s, k))
+            if times_up_event.isSet():
+                break
+            sq.put('1' if s else '0')
 
-        return ''.join(states)
+        #return ''.join(states)
 
     def get_states(self):
+        '''
+            with this method you need to ensure the communicators timeout
+            is sufficiently low. the communicator will block until a response
+            or a timeout. the times up event only breaks between state queries.
+        
+        '''
+        states_queue = Queue()
         times_up_event = Event()
         t = Timer(1, lambda: times_up_event.set())
         t.start()
-        states = self._get_states(times_up_event)
-        return states
+#        states = self._get_states(times_up_event)
+#        return states
+        t = Thread(target=self._get_states, args=(times_up_event, states_queue))
+        t.start()
+        t.join(timeout=1.1)
+        s = ''
+
+        n = states_queue.qsize()
+        if n % 2 != 0:
+            c = n / 2 * 2
+        else:
+            c = n
+
+        i = 0
+        while not states_queue.empty() and i < c:
+            s += states_queue.get_nowait()
+            i += 1
+
+#        n = len(s)
+#        if n % 2 != 0:
+#            sn = s[:n / 2 * 2]
+#        else:
+#            sn = s
+#        s = ''.join(self.states)
+        self.info('states = {}'.format(s))
+        return s
 
 if __name__ == '__main__':
 #    v = ValveManager()
@@ -569,7 +631,8 @@ if __name__ == '__main__':
     f = Foo()
     for i in range(10):
         r = f.get_states()
-        print r, len(r)
+        time.sleep(2)
+        #print r, len(r)
 
 #==================== EOF ==================================
 #def _load_valves_from_filetxt(self, path):
