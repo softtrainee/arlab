@@ -146,6 +146,7 @@ class SerialCommunicator(Communicator):
 
         #re=None
         with self._lock:
+#            self.info('acquiring lock {}'.format(self._lock))
             self._write(cmd, is_hex=is_hex)
             re = self._read(is_hex=is_hex, delay=delay)
 
@@ -157,9 +158,9 @@ class SerialCommunicator(Communicator):
                 #self.debug('lock released by {}'.format(currentThread().name))
 
 #            time.sleep(0.005)
-
-        return re
-
+#            self.info('release lock {}'.format(self._lock))
+            return re
+    
     def open(self, **kw):
         '''
             Use pyserial to create a handle connected to port wth baudrate 

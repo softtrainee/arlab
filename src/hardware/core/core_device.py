@@ -222,6 +222,7 @@ class CoreDevice(ViewableDevice):
     def set_scheduler(self, s):
         if self._communicator is not None:
             self._communicator.scheduler = s
+#            self._communicator._lock=s._lock
 
     def repeat_command(self, cmd, ntries=2, check_val=None, check_type=None,
                        verbose=True):

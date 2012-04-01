@@ -89,6 +89,7 @@ class CoreScript(Loggable):
             if self.load():
                 #if self.set_data_frame():
                 self.set_graph()
+                self._alive=True
                 ok = self.start(new_thread)
 #                ok = True
 
@@ -139,11 +140,13 @@ class CoreScript(Loggable):
             this is way too confusing should be simplified
         '''
         r = self._alive
+        
         if not self._alive:
             return False
 
         if self._thread is not None:
             r = self._thread.isAlive()
+            
 
         if hasattr(self.manager, 'enabled'):
             r = self.manager.enabled and r
@@ -195,6 +198,7 @@ class CoreScript(Loggable):
         if new_thread:
             self._thread = Thread(target=self.run)
             self._thread.start()
+            return True
         else:
             return self.run()
 
