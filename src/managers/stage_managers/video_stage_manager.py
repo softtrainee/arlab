@@ -102,6 +102,8 @@ class VideoStageManager(StageManager, Videoable):
 
     recording_zoom = Float
 
+    _previous_zoom = 0
+
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
@@ -142,6 +144,7 @@ class VideoStageManager(StageManager, Videoable):
         self.info('saving recording to path {}'.format(path))
 
         #zoom in for recording
+        self._previous_zoom = self.parent.zoom
         self.parent.set_zoom(self.recording_zoom, block=True)
 
         self.video.start_recording(path, user=user)
@@ -153,6 +156,7 @@ class VideoStageManager(StageManager, Videoable):
             self.info('stop video recording')
     #        self.stop()
             self.video.stop_recording()
+            self.parent.set_zoom(self._previous_zoom)
             time.sleep(4)
             self.video.close(user=user)
             #delay briefly before deleting the capture object

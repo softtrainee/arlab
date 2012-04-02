@@ -33,6 +33,8 @@ class DataManager(Manager):
     frames = Dict
     _current_frame = ''
     time_gen = None
+    def get_current_path(self):
+        pass
 
     def close(self):
         pass

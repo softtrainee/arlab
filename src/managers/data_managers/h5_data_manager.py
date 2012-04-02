@@ -57,6 +57,10 @@ class H5DataManager(DataManager):
         nr.append()
         ptable.flush()
 
+    def get_current_path(self):
+        if self._frame is not None:
+            return self._frame.filename
+
     def new_frame(self, *args, **kw):
         '''
             

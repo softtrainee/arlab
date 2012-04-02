@@ -16,90 +16,43 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-
-from traits.api import HasTraits, Array, Instance, Bool, Button, Event, \
+#============= enthought library imports  ==========================
+from traits.api import Array, Instance, Bool, Button, Event, \
     Float, Str, String, Property, List, on_trait_change
 from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring, \
-    ButtonEditor, EnumEditor, ListEditor
+    ButtonEditor, EnumEditor
 from pyface.timer.api import do_after as do_after_timer
-
+#============= standard library imports  ==========================
 import numpy as np
 import os
 import time
 from threading import Thread, Lock
-
+from ConfigParser import NoSectionError
+#============= local library imports  ==========================
 from src.managers.manager import Manager, ManagerHandler
 from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
 from src.helpers.paths import bakeout_config_dir, data_dir, scripts_dir
 from src.graph.time_series_graph import TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
-from src.helpers.datetime_tools import generate_datestamp
+from src.helpers.datetime_tools import generate_datestamp, get_datetime
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.core.i_core_device import ICoreDevice
 from src.graph.graph import Graph
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.gauges.granville_phillips.micro_ion_controller import MicroIonController
-from ConfigParser import NoSectionError
 from src.managers.script_manager import ScriptManager
 from src.managers.data_managers.data_manager import DataManager
 from src.helpers.archiver import Archiver
-from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
+from src.database.bakeout_adapter import BakeoutAdapter
+from src.database.data_warehouse import DataWarehouse
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
 
 from wx import GetDisplaySize
 DISPLAYSIZE = GetDisplaySize()
-
-class BakeoutParameters(HasTraits):
-    setpoint = Float
-    duration = Float
-    max_output = Float
-    script = Str
-    name = Str
-    script_text = Str
-    view = View(
-               Item('duration', style='readonly'),
-               Item('setpoint', style='readonly'),
-               Item('max_output', style='readonly'),
-               Item('script', style='readonly'),
-               Item('script_text', show_label=False, style='custom',
-                    enabled_when='0')
-                               )
-
-
-class BakeoutGraphViewer(HasTraits):
-    graph = Instance(Graph)
-    bakeouts = List
-    title = Str
-    window_x = Float
-    window_y = Float
-    window_width = Float
-    window_height = Float
-    def new_controller(self, name):
-        bc = BakeoutParameters(name=name)
-        self.bakeouts.append(bc)
-        return bc
-
-    def traits_view(self):
-        bakeout_group = Item('bakeouts', style='custom',
-                             show_label=False,
-                             editor=ListEditor(use_notebook=True,
-                                                           dock_style='tab',
-                                                           page_name='.name'
-                                                           ))
-        v = View(HSplit(Item('graph', style='custom', show_label=False),
-                        bakeout_group
-                        ),
-                 resizable=True,
-                 title=self.title,
-                 x=self.window_x,
-                 y=self.window_y,
-                 width=self.window_width,
-                 height=self.window_height
-                 )
-        return v
 
 
 class BakeoutManager(Manager):
@@ -179,10 +132,46 @@ class BakeoutManager(Manager):
 #            dm.new_array('/{}'.format(n), 'data', d.transpose())
 #
 #        dm.close()
+#==============================================================================
+# database 
+#==============================================================================
+    def _add_bakeout_to_db(self, controllers, path):
+        db = BakeoutAdapter(dbname='bakeoutdb',
+                            password='Argon')
+        db.connect()
 
-#===============================================================================
+        d = get_datetime()
+
+        args = dict(rundate=str(d.date()),
+                    runtime=str(d.time()))
+
+        #add to BakeoutTable
+        b = db.add_bakeout(**args)
+
+        n = os.path.basename(path)
+        r = os.path.dirname(path)
+
+        #add to PathTable
+        db.add_path(b, root=r, filename=n)
+
+        args = dict(commit=False)
+#        for c in self._get_active_controllers():
+
+        #add to ControllerTable
+        for c in controllers:
+            args['name'] = c.name
+            args['script'] = c.script
+            args['setpoint'] = c.setpoint
+            args['duration'] = c.duration
+            _ci = db.add_controller(b, **args)
+
+#            b.controllers.append(ci)
+
+        db.commit()
+
+#==============================================================================
 # Button handlers
-#===============================================================================
+#==============================================================================
     def _edit_scripts_button_fired(self):
         se = self.script_editor
         if se.save_path:
@@ -194,11 +183,23 @@ class BakeoutManager(Manager):
             ci.load_scripts()
 
     def _open_button_fired(self):
-        path = self._file_dialog_('open',
-                                  default_directory=os.path.join(data_dir,
-                                  'bakeouts'),
-                                  wildcard='Data files (*.h5,*.csv, *.txt)|*.h5;*.csv;*.txt'
-                                  )
+        use_db = True
+        if use_db:
+            db = BakeoutAdapter(dbname='bakeoutdb',
+                                password='Argon')
+            db.connect()
+            db.open_selector()
+        else:
+            path = self._file_dialog_('open',
+                                      default_directory=os.path.join(data_dir,
+                                      '.bakeouts'),
+                                      wildcard='Data files (*.h5,*.csv, *.txt)|*.h5;*.csv;*.txt'
+                                      )
+
+            db = BakeoutAdapter(dbname='bakeoutdb',
+                                password='Argon')
+            db.connect()
+
         if path is not None:
             self._open_graph(path)
 
@@ -347,6 +348,8 @@ class BakeoutManager(Manager):
             self.data_manager = self._data_manager_factory(controllers, header,
                                                            style='h5')
 
+            self._add_bakeout_to_db(controllers, self.data_manager.get_current_path())
+
             self._nactivated_controllers = len(controllers)
 
             for c in controllers:
@@ -478,7 +481,7 @@ class BakeoutManager(Manager):
             # used to synchronize access to port
             if bc.load():
                 bc.set_scheduler(scheduler)
-                
+
                 if bc.open():
                     '''
                         on first controller check to see if
@@ -500,6 +503,7 @@ class BakeoutManager(Manager):
 
 #                    if BATCH_SET_BAUDRATE:
 #                        bc.set_baudrate(BAUDRATE)
+                bc.start_timer()
 
         self._load_configurations()
         return True
@@ -556,6 +560,7 @@ class BakeoutManager(Manager):
                 getattr(self, section).trait_set(**kw)
 
     def _open_graph(self, path):
+
         ish5 = True if path.endswith('.h5') else False
 
         args = self._bakeout_parser(path, ish5)
@@ -670,7 +675,12 @@ class BakeoutManager(Manager):
         dm = CSVDataManager() if style == 'csv' else H5DataManager()
 
         ni = 'bakeout-{}'.format(generate_datestamp())
-        _dn = dm.new_frame(directory='bakeouts',
+
+        base_dir = '.bakeouts'
+        dw = DataWarehouse(root=os.path.join(data_dir, base_dir))
+        dw.build_warehouse()
+
+        _dn = dm.new_frame(directory=dw.get_current_dir(),
                 base_frame_name=ni)
 
         if style == 'csv':
@@ -1125,6 +1135,9 @@ def launch_bakeout():
 if __name__ == '__main__':
     path = os.path.join(data_dir, 'bakeouts', 'bakeout-2012-03-31007.txt')
     b = BakeoutManager()
+    b.load()
+    b._add_bakeout_to_db()
+    print 'asdf'
 #    b._convert_to_h5(path)
 #    n = 10
 #    from timeit import Timer

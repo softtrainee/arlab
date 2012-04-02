@@ -14,10 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 from src.database.core.database_adapter import DatabaseAdapter
-from src.database.pychron_orm import Analyses, Paths, Intercepts, AnalysisTypes, \
-    Spectrometers
+from src.database.pychron_orm import Analyses, Paths, Intercepts, \
+     AnalysisTypes, Spectrometers
+
 
 class PychronAdapter(DatabaseAdapter):
+    test_func = 'get_rids'
+
 #===============================================================================
 #    getters
 #===============================================================================
@@ -25,8 +28,6 @@ class PychronAdapter(DatabaseAdapter):
 #        sess = self.get_session()
 #        q = sess.query(Paths)
 #        s = q.filter_by(name='analyses')
-
-
         q = self._get_query(Paths, name='analyses')
         p = q.one()
         p = p.path
@@ -49,9 +50,10 @@ class PychronAdapter(DatabaseAdapter):
         q = sess.query(klass)
         q = q.filter_by(**clause)
         return q
-#===============================================================================
-#   adders
-#===============================================================================
+
+#==============================================================================
+#   adder
+#==============================================================================
     def add_intercepts(self, **kw):
         o = Intercepts(**kw)
         self._add_item(o)

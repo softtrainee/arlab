@@ -76,6 +76,9 @@ class BakeoutController(WatlowEZZone):
     max_output = Property(Float(enter_set=True, auto_set=False),
                           depends_on='_max_output')
     _max_output = Float
+    _duration_timeout = False
+
+    _timer = None
     def _record_process_changed(self):
         if self.record_process:
             if self._duration < 0.0001:
@@ -173,8 +176,8 @@ class BakeoutController(WatlowEZZone):
             self.info('killing')
             if self._active_script is not None:
                 self._active_script._alive = False
-            
-            if abs(self.setpoint)>0.001:
+
+            if abs(self.setpoint) > 0.001:
                 self.set_closed_loop_setpoint(0)
 
     def load_additional_args(self, config):
@@ -221,7 +224,7 @@ class BakeoutController(WatlowEZZone):
 
             self._oduration = self._duration
 #            self._timer = Timer(self.update_interval * 1000., self._update_)
-            self._duration_timeout=True
+            self._duration_timeout = True
 
         else:
 
@@ -231,11 +234,14 @@ class BakeoutController(WatlowEZZone):
                                  file_name=self.script,
                                  controller=self)
             self._active_script = t
-            self._duration_timeout=False
+            self._duration_timeout = False
             t.bootstrap()
 
     def start_timer(self):
-        self.led.state='green'
+#        self.led.state='green'
+        if self._timer is not None:
+            self._timer.Stop()
+
         self._timer = Timer(self.update_interval * 1000., self._update_)
 
     def ramp_to_setpoint(self, ramp, setpoint, scale):
@@ -340,7 +346,9 @@ class BakeoutController(WatlowEZZone):
 
     def get_temp_and_power(self, **kw):
         pr = WatlowEZZone.get_temp_and_power(self, **kw)
-        self.process_value_flag = True
+        if self.isAlive():
+            self.process_value_flag = True
+
         return pr
 
     def get_temperature(self, **kw):
@@ -389,12 +397,12 @@ class BakeoutController(WatlowEZZone):
     def _update_(self):
         '''
         '''
-
-        self.cnt += self.update_interval
-        nsecs = 15
-        if self.cnt >= nsecs:
-            self._duration -= (nsecs + self.cnt % nsecs) / 3600.
-            self.cnt = 0
+        if self.isAlive():
+            self.cnt += self.update_interval
+            nsecs = 15
+            if self.cnt >= nsecs:
+                self._duration -= (nsecs + self.cnt % nsecs) / 3600.
+                self.cnt = 0
 
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)

@@ -307,8 +307,8 @@ class WatlowEZZone(CoreDevice):
             t = self.get_random_value() + self.closed_loop_setpoint
             p = self.get_random_value()
 
-        t = self.process_value if t is None else t
-        p = self.heat_power_value if p is None else p
+        t = self.process_value if t is None else min(t, 2000)
+        p = self.heat_power_value if p is None else max(0, min(p, 100))
 
         self.process_value = t
         self.heat_power_value = p
@@ -428,10 +428,10 @@ class WatlowEZZone(CoreDevice):
         time.sleep(0.025)
         sp = self.read_closed_loop_setpoint()
         try:
-            e=abs(sp - setpoint) > 0.01
-        except Exception,_ee:
-            e=True
-            
+            e = abs(sp - setpoint) > 0.01
+        except Exception, _ee:
+            e = True
+
         time.sleep(0.025)
         if sp and e:
             self.warning('Set point not set. {} != {} retrying'.format(sp, setpoint))
@@ -688,12 +688,12 @@ class WatlowEZZone(CoreDevice):
 
         self.write(register, v, **kw)
 
-    def set_high_power_scale(self, value,output=2, **kw):
+    def set_high_power_scale(self, value, output=2, **kw):
         self.info('set high power scale {}'.format(value))
-        register = 898 if output==1 else 928        
+        register = 898 if output == 1 else 928
 
         v = max(0, min(100, value))
-        self.write(register, v,nregisters=2, **kw)
+        self.write(register, v, nregisters=2, **kw)
 #    def duty_cycle_increment(self):
 #        '''
 #        simple keep track off the number of times an output state is true and 
@@ -883,9 +883,9 @@ class WatlowEZZone(CoreDevice):
         except ValueError:
             pass
 
-    def read_high_power_scale(self,output=2, **kw):
-        register = 898 if output==1 else 928        
-        r=self.read(register, nregisters=2, **kw)
+    def read_high_power_scale(self, output=2, **kw):
+        register = 898 if output == 1 else 928
+        r = self.read(register, nregisters=2, **kw)
         self.info('reading high power scale {}'.format(r))
         return r
 #    def read_cool_power(self,**kw):
