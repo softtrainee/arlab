@@ -143,21 +143,20 @@ class ValveManager(Manager):
 
         return ''.join(locks)
 
-    def _get_states(self, times_up_event):
-        states = []
+    
+    def _get_states(self, times_up_event, sq):
         for k, _ in self.valves.items():
-#        for k in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']:
             if times_up_event.isSet():
                 break
 
-            states.append(k)
+            sq.put(k)
 #            self.info('geting state for {}'.format(k))
             s = self.get_state_by_name(k)
 #            self.info('got {} for {}'.format(s, k))
-            states.append('1' if s else '0')
-
-        return ''.join(states)
-
+            if times_up_event.isSet():
+                break
+            sq.put('1' if s else '0')
+    
     def get_states(self, timeout=1):
         '''
             use event and timer to allow for partial responses
@@ -182,8 +181,6 @@ class ValveManager(Manager):
         _gs_thread = Thread(target=self._get_states, args=(times_up_event, states_queue))
         _gs_thread.start()
         _gs_thread.join(timeout=1.01)
-
-
 
         #ensure word has even number of elements
         s = ''

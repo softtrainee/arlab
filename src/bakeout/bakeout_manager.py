@@ -288,7 +288,9 @@ class BakeoutManager(Manager):
         if self.data_manager is not None:
             self.data_manager.close()
 
-        self._clean_archive()
+        clean_archive=False
+        if clean_archive:
+            self._clean_archive()
 
         if 'user_kill' in kw:
             if not kw['user_kill']:
@@ -676,7 +678,7 @@ class BakeoutManager(Manager):
 
         ni = 'bakeout-{}'.format(generate_datestamp())
 
-        base_dir = 'bakeouts'
+        base_dir = '.bakeouts'
         dw = DataWarehouse(root=os.path.join(data_dir, base_dir))
         dw.build_warehouse()
 
