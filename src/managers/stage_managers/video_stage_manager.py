@@ -26,7 +26,6 @@ from threading import Thread, Condition, Timer
 #============= local library imports  ==========================
 from src.helpers.filetools import unique_path
 from src.helpers.paths import video_dir, snapshot_dir
-from src.helpers.logger_setup import logging_setup
 from src.managers.videoable import Videoable
 from camera_calibration_manager import CameraCalibrationManager
 from src.machine_vision.machine_vision_manager import MachineVisionManager
@@ -516,6 +515,8 @@ class VideoStageManager(StageManager, Videoable):
         return 'Record' if not self.is_recording else 'Stop'
 
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+
     name = 'co2'
     logging_setup('stage_manager')
     s = VideoStageManager(name='{}stage'.format(name),

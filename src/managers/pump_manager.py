@@ -17,7 +17,7 @@ from traits.api import HasTraits, Instance, Str, Event, Property, Bool, Int
 from traitsui.api import View, Item, HGroup, ButtonEditor
 from src.managers.manager import Manager
 from src.hardware.core.core_device import CoreDevice
-from src.helpers.logger_setup import setup
+
 
 class PumpController(CoreDevice):
     name = Str
@@ -106,7 +106,8 @@ class PumpManager(Manager):
 
 
 if __name__ == '__main__':
-    setup(name='pumpman')
+    from src.helpers.logger_setup import logging_setup
+    logging_setup(name='pumpman')
     c = PumpManager()
     c.load_controllers()
     c.configure_traits()

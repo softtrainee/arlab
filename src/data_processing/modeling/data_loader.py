@@ -22,7 +22,7 @@ import csv
 from numpy import array, loadtxt
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.helpers.logger_setup import setup
+
 TAB = chr(9)
 LABTABLE = {"temp":67, "time":73, "39Armol":80, "er39Ar":81, "Age":19, "erAge":20, "terAge":21, "SenseMol":26} # autoupdate column numbers for each header of interest
 #REQUIRED_FILES = ['logr.samp', 'logr.dat', 'arr.samp', 'arr.dat']
@@ -382,7 +382,8 @@ class DataLoader(Loggable):
         return True
 
 if __name__ == '__main__':
-    setup('dataloader')
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('dataloader')
     d = DataLoader()
     path = '/Users/Ross/Pychrondata_beta/data/modeling/ShapFurnace.txt'
     d.load_autoupdate(path, 0, 0)

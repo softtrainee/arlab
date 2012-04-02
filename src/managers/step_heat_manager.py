@@ -22,7 +22,6 @@ import time
 import os
 
 #============= local library imports  ==========================
-from src.helpers.logger_setup import setup
 from src.graph.graph import Graph
 from src.managers.manager import Manager
 from threading import Thread
@@ -240,7 +239,9 @@ class StepHeatManager(Manager, Videoable):
         return v
 
 if __name__ == '__main__':
-    setup('stepheater')
+    from src.helpers.logger_setup import logging_setup
+
+    logging_setup('stepheater')
     class DummyManager(object):
         def set_laser_power(self, *args):
             pass

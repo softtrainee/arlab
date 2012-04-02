@@ -189,6 +189,7 @@ class BakeoutManager(Manager):
                                 password='Argon')
             db.connect()
             db.open_selector()
+
         else:
             path = self._file_dialog_('open',
                                       default_directory=os.path.join(data_dir,
@@ -196,12 +197,12 @@ class BakeoutManager(Manager):
                                       wildcard='Data files (*.h5,*.csv, *.txt)|*.h5;*.csv;*.txt'
                                       )
 
-            db = BakeoutAdapter(dbname='bakeoutdb',
-                                password='Argon')
-            db.connect()
+#            db = BakeoutAdapter(dbname='bakeoutdb',
+#                                password='Argon')
+#            db.connect()
 
-        if path is not None:
-            self._open_graph(path)
+#        if path is not None:
+#            self._open_graph(path)
 
     def _save_fired(self):
 
@@ -414,7 +415,7 @@ class BakeoutManager(Manager):
         if self.include_pressure:
             self._get_pressure(nx)
 
-#        self._write_data()
+        self._write_data()
 
         self.data_buffer = []
         self.data_buffer_x = []
@@ -559,47 +560,47 @@ class BakeoutManager(Manager):
                                                            )
                 getattr(self, section).trait_set(**kw)
 
-    def _open_graph(self, path):
-
-        ish5 = True if path.endswith('.h5') else False
-
-        args = self._bakeout_parser(path, ish5)
-        if args is None:
-            return
-        names = args[0]
-        attrs = args[-1]
-        graph = self._bakeout_factory(ph=0.65,
-                *args,
-                container_dict=dict(
-                                    #bgcolor='red',
-                                    #fill_bg=True,
-                                    padding_top=60
-                                    ),
-                transpose_data=not ish5
-                )
-
-        if ish5:
-            b = BakeoutGraphViewer(graph=graph,
-                                   title=path,
-                                   window_x=30,
-                                   window_y=30,
-                                   window_width=0.66,
-                                   window_height=0.85
-                                   )
-            for name, ais in zip(names, attrs):
-                bc = b.new_controller(name)
-                for key, value in ais.iteritems():
-                    setattr(bc, key, value)
-
-            b.edit_traits()
-
-        else:
-            graph.window_title = name = os.path.basename(path)
-            graph.window_width = 0.66
-            graph.window_height = 0.85
-            graph.window_x = 30
-            graph.window_y = 30
-            graph.edit_traits()
+#    def _open_graph(self, path):
+#
+#        ish5 = True if path.endswith('.h5') else False
+#
+#        args = self._bakeout_parser(path, ish5)
+#        if args is None:
+#            return
+#        names = args[0]
+#        attrs = args[-1]
+#        graph = self._bakeout_factory(ph=0.65,
+#                *args,
+#                container_dict=dict(
+#                                    #bgcolor='red',
+#                                    #fill_bg=True,
+#                                    padding_top=60
+#                                    ),
+#                transpose_data=not ish5
+#                )
+#
+#        if ish5:
+#            b = BakeoutGraphViewer(graph=graph,
+#                                   title=path,
+#                                   window_x=30,
+#                                   window_y=30,
+#                                   window_width=0.66,
+#                                   window_height=0.85
+#                                   )
+#            for name, ais in zip(names, attrs):
+#                bc = b.new_controller(name)
+#                for key, value in ais.iteritems():
+#                    setattr(bc, key, value)
+#
+#            b.edit_traits()
+#
+#        else:
+#            graph.window_title = name = os.path.basename(path)
+#            graph.window_width = 0.66
+#            graph.window_height = 0.85
+#            graph.window_x = 30
+#            graph.window_y = 30
+#            graph.edit_traits()
 
 #==============================================================================
 #     trait change handlers
@@ -625,7 +626,6 @@ class BakeoutManager(Manager):
                 self.data_count_flag += 1
 
                 if self.data_count_flag >= len(self.active_controllers):
-                    self._write_data()
                     do_after_timer(1, self._graph_)
 
     def _update_interval_changed(self):
@@ -676,7 +676,7 @@ class BakeoutManager(Manager):
 
         ni = 'bakeout-{}'.format(generate_datestamp())
 
-        base_dir = '.bakeouts'
+        base_dir = 'bakeouts'
         dw = DataWarehouse(root=os.path.join(data_dir, base_dir))
         dw.build_warehouse()
 
@@ -714,96 +714,96 @@ class BakeoutManager(Manager):
                 dm.set_group_attribute(cgrp, 'script_text', txt)
         return dm
 
-    def _bakeout_factory(
-        self,
-#        header,
-        names,
-        nseries,
-        include_bits,
-        data,
-        path,
-        attrs,
-        ph=0.5,
-        transpose_data=True,
-        ** kw
-        ):
+#    def _bakeout_factory(
+#        self,
+##        header,
+#        names,
+#        nseries,
+#        include_bits,
+#        data,
+#        path,
+#        attrs,
+#        ph=0.5,
+#        transpose_data=True,
+#        ** kw
+#        ):
+#
+#        ph = DISPLAYSIZE.height * ph / max(1, sum(include_bits))
+#
+#        graph = self._graph_factory(stream=False,
+#                                    include_bits=include_bits,
+#                                    panel_height=ph,
+#                                    plot_kwargs=dict(pan=True, zoom=True),
+#                                     **kw)
+#        plotids = self.plotids
+##        print names, nseries, include_bits
+##        for i in range(nseries / sum(include_bits)):
+##            print i
+#            # set up graph
+##            name = names[i]#[i / sum(include_bits)]
+#        for i, name in enumerate(names):
+#            for j in range(3):
+#                if include_bits[j]:
+#                    graph.new_series(plotid=plotids[j])
+#                    graph.set_series_label(name, series=i,
+#                                           plotid=plotids[j])
+#
+#        ma0 = -1
+#        mi0 = 1e8
+#        ma1 = -1
+#        mi1 = 1e8
+#        ma2 = -1
+#        mi2 = 1e8
+#
+#        for (i, da) in enumerate(data):
+#
+#            if transpose_data:
+#                da = np.transpose(da)
+#
+#            x = da[0]
+#            if include_bits[0]:
+#                y = da[1]
+#                ma0 = max(ma0, max(y))
+#                mi0 = min(mi0, min(y))
+#                graph.set_data(x, series=i, axis=0, plotid=plotids[0])
+#                graph.set_data(da[1], series=i, axis=1,
+#                               plotid=plotids[0])
+#                graph.set_y_limits(mi0, ma0, pad='0.1',
+#                                   plotid=plotids[0])
+#
+#            if include_bits[1]:
+#                y = da[2]
+#                ma1 = max(ma1, max(y))
+#                mi1 = min(mi1, min(y))
+#                graph.set_data(x, series=i, axis=0, plotid=plotids[1])
+#                graph.set_data(y, series=i, axis=1, plotid=plotids[1])
+#                graph.set_y_limits(mi1, ma1, pad='0.1',
+#                                   plotid=plotids[1])
+#
+#            if include_bits[2]:
+#                y = da[3]
+#                ma2 = max(ma2, max(y))
+#                mi2 = min(mi2, min(y))
+#                graph.set_data(x, series=i, axis=0, plotid=plotids[2])
+#                graph.set_data(y, series=i, axis=1, plotid=plotids[2])
+#                graph.set_y_limits(mi2, ma2, pad='0.1',
+#                                   plotid=plotids[2])
+#
+#                # prevent multiple pressure plots
+#
+#                include_bits[2] = False
+#
+#        graph.set_x_limits(min(x), max(x))
+#        (name, _ext) = os.path.splitext(name)
+#        graph.set_title(name)
+#        return graph
 
-        ph = DISPLAYSIZE.height * ph / max(1, sum(include_bits))
-
-        graph = self._graph_factory(stream=False,
-                                    include_bits=include_bits,
-                                    panel_height=ph,
-                                    plot_kwargs=dict(pan=True, zoom=True),
-                                     **kw)
-        plotids = self.plotids
-#        print names, nseries, include_bits
-#        for i in range(nseries / sum(include_bits)):
-#            print i
-            # set up graph
-#            name = names[i]#[i / sum(include_bits)]
-        for i, name in enumerate(names):
-            for j in range(3):
-                if include_bits[j]:
-                    graph.new_series(plotid=plotids[j])
-                    graph.set_series_label(name, series=i,
-                                           plotid=plotids[j])
-
-        ma0 = -1
-        mi0 = 1e8
-        ma1 = -1
-        mi1 = 1e8
-        ma2 = -1
-        mi2 = 1e8
-
-        for (i, da) in enumerate(data):
-
-            if transpose_data:
-                da = np.transpose(da)
-
-            x = da[0]
-            if include_bits[0]:
-                y = da[1]
-                ma0 = max(ma0, max(y))
-                mi0 = min(mi0, min(y))
-                graph.set_data(x, series=i, axis=0, plotid=plotids[0])
-                graph.set_data(da[1], series=i, axis=1,
-                               plotid=plotids[0])
-                graph.set_y_limits(mi0, ma0, pad='0.1',
-                                   plotid=plotids[0])
-
-            if include_bits[1]:
-                y = da[2]
-                ma1 = max(ma1, max(y))
-                mi1 = min(mi1, min(y))
-                graph.set_data(x, series=i, axis=0, plotid=plotids[1])
-                graph.set_data(y, series=i, axis=1, plotid=plotids[1])
-                graph.set_y_limits(mi1, ma1, pad='0.1',
-                                   plotid=plotids[1])
-
-            if include_bits[2]:
-                y = da[3]
-                ma2 = max(ma2, max(y))
-                mi2 = min(mi2, min(y))
-                graph.set_data(x, series=i, axis=0, plotid=plotids[2])
-                graph.set_data(y, series=i, axis=1, plotid=plotids[2])
-                graph.set_y_limits(mi2, ma2, pad='0.1',
-                                   plotid=plotids[2])
-
-                # prevent multiple pressure plots
-
-                include_bits[2] = False
-
-        graph.set_x_limits(min(x), max(x))
-        (name, _ext) = os.path.splitext(name)
-        graph.set_title(name)
-        return graph
-
-    def _bakeout_parser(self, path, ish5):
-
-        if ish5:
-            return self._bakeout_h5_parser(path)
-        else:
-            return self._bakeout_csv_parser(path)
+#    def _bakeout_parser(self, path, ish5):
+#
+#        if ish5:
+#            return self._bakeout_h5_parser(path)
+#        else:
+#            return self._bakeout_csv_parser(path)
 
     def _write_data(self):
 
@@ -861,69 +861,69 @@ class BakeoutManager(Manager):
 
         self.data_manager2.write_to_frame(container)
 
-    def _bakeout_h5_parser(self, path):
-        from src.managers.data_managers.h5_data_manager import H5DataManager
-        dm = H5DataManager()
-        if not dm.open_data(path):
-            return
-
-        controllers = dm.get_groups()
-        datagrps = []
-        attrs = []
-        ib = [0, 0, 0]
-        for ci in controllers:
-
-            attrs_i = dict()
-            for ai in ['script', 'setpoint', 'duration', 'script_text']:
-                attrs_i[ai] = getattr(ci._v_attrs, ai)
-            attrs.append(attrs_i)
-            data = []
-            for i, ti in enumerate(['temp', 'heat']):
-                try:
-                    table = getattr(ci, ti)
-                    xs = [x['time'] for x in table]
-                    ys = [x['value'] for x in table]
-                    if i == 0:
-                        data.append(xs)
-                    data.append(ys)
-                    ib[i] = 1
-                except Exception, e:
-                    print 'bakeout_manager._bakeout_h5_parser', e
-
-            if data:
-                datagrps.append(data)
-
-        names = [ci._v_name for ci in controllers]
-        nseries = len(controllers) * sum(ib)
-        return names, nseries, ib, np.array(datagrps), path, attrs
-
-    def _bakeout_csv_parser(self, path):
-        import csv
-        attrs = None
-        with open(path, 'r') as f:
-#            reader = csv.reader(open(path, 'r'))
-            reader = csv.reader(f)
-
-            # first line is the include bits
-            l = reader.next()
-            l[0] = (l[0])[1:]
+#    def _bakeout_h5_parser(self, path):
+#        from src.managers.data_managers.h5_data_manager import H5DataManager
+#        dm = H5DataManager()
+#        if not dm.open_data(path):
+#            return
 #
-            ib = map(int, l)
-
-            # second line is a header
-            header = reader.next()
-            header[0] = (header[0])[1:]
-            nseries = len(header) / (sum(ib) + 1)
-            names = [(header[(1 + sum(ib)) * i])[:-5] for i in range(nseries)]
-
-#            average load time for 2MB file =0.42 s (n=10)
-#            data = np.loadtxt(f, delimiter=',')
-
-#            average load time for 2MB file = 0.19 s (n=10)
-            data = np.array([r for r in reader], dtype=float)
-
-            data = np.array_split(data, nseries, axis=1)
-        return (names, nseries, ib, data, path, attrs)
+#        controllers = dm.get_groups()
+#        datagrps = []
+#        attrs = []
+#        ib = [0, 0, 0]
+#        for ci in controllers:
+#
+#            attrs_i = dict()
+#            for ai in ['script', 'setpoint', 'duration', 'script_text']:
+#                attrs_i[ai] = getattr(ci._v_attrs, ai)
+#            attrs.append(attrs_i)
+#            data = []
+#            for i, ti in enumerate(['temp', 'heat']):
+#                try:
+#                    table = getattr(ci, ti)
+#                    xs = [x['time'] for x in table]
+#                    ys = [x['value'] for x in table]
+#                    if i == 0:
+#                        data.append(xs)
+#                    data.append(ys)
+#                    ib[i] = 1
+#                except Exception, e:
+#                    print 'bakeout_manager._bakeout_h5_parser', e
+#
+#            if data:
+#                datagrps.append(data)
+#
+#        names = [ci._v_name for ci in controllers]
+#        nseries = len(controllers) * sum(ib)
+#        return names, nseries, ib, np.array(datagrps), path, attrs
+#
+#    def _bakeout_csv_parser(self, path):
+#        import csv
+#        attrs = None
+#        with open(path, 'r') as f:
+##            reader = csv.reader(open(path, 'r'))
+#            reader = csv.reader(f)
+#
+#            # first line is the include bits
+#            l = reader.next()
+#            l[0] = (l[0])[1:]
+##
+#            ib = map(int, l)
+#
+#            # second line is a header
+#            header = reader.next()
+#            header[0] = (header[0])[1:]
+#            nseries = len(header) / (sum(ib) + 1)
+#            names = [(header[(1 + sum(ib)) * i])[:-5] for i in range(nseries)]
+#
+##            average load time for 2MB file =0.42 s (n=10)
+##            data = np.loadtxt(f, delimiter=',')
+#
+##            average load time for 2MB file = 0.19 s (n=10)
+#            data = np.array([r for r in reader], dtype=float)
+#
+#            data = np.array_split(data, nseries, axis=1)
+#        return (names, nseries, ib, data, path, attrs)
 
     def _graph_factory(
         self,

@@ -24,7 +24,6 @@ from numpy import linspace
 
 from src.graph.graph import Graph
 from src.hardware.core.motion.motion_profiler import MotionProfiler
-from src.helpers.logger_setup import setup
 
 
 class MotionDesigner(HasTraits):
@@ -199,7 +198,9 @@ class MotionDesigner(HasTraits):
 
 
 if __name__ == '__main__':
-    setup('motionprofiler')
+    from src.helpers.logger_setup import logging_setup
+
+    logging_setup('motionprofiler')
     m = MotionDesigner()
     m.replot()
     m.configure_traits()
