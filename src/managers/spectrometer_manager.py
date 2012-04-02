@@ -27,7 +27,7 @@ from threading import Thread
 from src.managers.manager import Manager
 from src.graph.graph import Graph
 from src.initializer import Initializer
-from src.helpers.logger_setup import setup
+
 
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 from src.spectrometer.spectrometer import Spectrometer, DETECTOR_ORDER
@@ -293,7 +293,8 @@ class SpectrometerManager(Manager):
                     handler=self.handler_klass
                     )
 if __name__ == '__main__':
-    setup('spectrometer')
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('spectrometer')
     s = SpectrometerManager()
     ini = Initializer()
     ini.add_initialization(dict(name='spectrometer_manager',

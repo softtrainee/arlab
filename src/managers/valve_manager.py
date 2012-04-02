@@ -30,7 +30,6 @@ from src.helpers.valve_parser import ValveParser
 from threading import Timer, Thread, Condition, Event
 import time
 from src.loggable import Loggable
-from src.helpers.logger_setup import logging_setup
 import random
 from Queue import Queue
 
@@ -627,6 +626,8 @@ if __name__ == '__main__':
 #    v = ValveManager()
 #    p = os.path.join(paths.extraction_line_dir, 'valves.xml')
 #    v._load_valves_from_file(p)
+    from src.helpers.logger_setup import logging_setup
+
     logging_setup('foo')
     f = Foo()
     for i in range(10):

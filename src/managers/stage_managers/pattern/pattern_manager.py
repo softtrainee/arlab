@@ -24,8 +24,8 @@ from threading import Thread
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.helpers.paths import pattern_dir
-from src.helpers.filetools import unique_path
-from src.helpers.logger_setup import setup
+#from src.helpers.filetools import unique_path
+#from src.helpers.logger_setup import logging_setup
 from src.graph.graph import Graph
 from src.managers.stage_managers.pattern.patterns import Pattern, \
      LineSpiralPattern, SquareSpiralPattern, \
@@ -326,8 +326,6 @@ class PatternManager(Manager):
         if not info.result:
             self.pattern = None
 
-
-
     def _get_kind(self):
         return self._kind
 
@@ -345,7 +343,8 @@ class PatternManager(Manager):
 #                print e
 
 if __name__ == '__main__':
-    setup('pattern')
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('pattern')
     pm = PatternManager()
     pm.configure_traits(view='pattern_maker_view')
 #    pm.configure_traits(view='execute_view')

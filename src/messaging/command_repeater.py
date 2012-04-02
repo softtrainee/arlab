@@ -28,7 +28,6 @@ from src.remote_hardware.errors.system_errors import PychronCommErrorCode
 from threading import Lock
 
 from globals import ipc_dgram
-from src.helpers.logger_setup import logging_setup
 
 class CRHandler(Handler):
     def init(self, info):
@@ -172,7 +171,7 @@ class CommandRepeater(ConfigLoadable):
 
         return success, e
 
-    def _read_(self,count=0):
+    def _read_(self, count=0):
         rd = None
         try:
             rd = self._sock.recv(2048)
@@ -213,9 +212,9 @@ class CommandRepeater(ConfigLoadable):
 
     def _handle_socket_read_error(self, e, count):
         self.debug('read error {}'.format(e))
-        if 'timed out' in e and count<3:
+        if 'timed out' in e and count < 3:
             self.debug('read timed out. doing recursive retry')
-            return self._read_(count=count+1)
+            return self._read_(count=count + 1)
 
         return False, e
 
@@ -260,6 +259,8 @@ def profiling():
     profile.runctx('repeator.get_response(*args)', globals(), {'repeator':repeator, 'args':(1, 2, 3) })
 
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+
     logging_setup('profile_repeator')
     profiling()
 #============= EOF ====================================

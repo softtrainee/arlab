@@ -276,8 +276,8 @@ class ATLLaserControlUnit(CoreDevice):
 
 
 if __name__ == '__main__':
-    from src.helpers.logger_setup import setup
-    setup('atl')
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('atl')
     a = ATLLaserControlUnit(name='ATLLaserControlUnit',
                           configuration_dir_name='uv')
     a.bootstrap()

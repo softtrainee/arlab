@@ -39,7 +39,6 @@ from src.helpers.paths import snapshot_dir, data_dir, video_dir
 import os
 import time
 from threading import Thread
-from src.helpers.logger_setup import setup
 
 class VideoManager(Manager):
     '''
@@ -282,7 +281,9 @@ class VideoManager(Manager):
                          )
 
 if __name__ == '__main__':
-    setup('video')
+    from src.helpers.logger_setup import logging_setup
+
+    logging_setup('video')
     vm = VideoManager()
 
     #p = '/Users/fargo2/Desktop/laser_tray_50.tiff'

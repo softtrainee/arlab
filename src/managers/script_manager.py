@@ -26,7 +26,6 @@ from wx import stc
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from traitsui.menu import Action
-from src.helpers.logger_setup import logging_setup
 from src.scripts.core.script_validator import ScriptValidator
 from src.helpers.paths import scripts_dir
 #from traitsui.wx.code_editor import SourceEditor
@@ -214,6 +213,8 @@ Are you sure you want to save ?'''.format(is_are, n, e_es))
         return v
 
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+
     logging_setup('scripts')
 #    s = ScriptManager(kind='ExtractionLine')
     s = ScriptManager(kind='Bakeout')

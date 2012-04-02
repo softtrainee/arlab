@@ -27,7 +27,6 @@ from numpy import loadtxt
 from src.database.nmgrl_database_adapter import NMGRLDatabaseAdapter
 from src.loggable import Loggable
 #from src.helpers.paths import data_dir
-from src.helpers.logger_setup import logging_setup
 from src.data_processing.regression.ols import OLS
 from src.managers.manager import Manager
 
@@ -281,6 +280,7 @@ class MassSpecDatabaseImporter(Manager):
             self.upload_data(p)
 
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
 
     logging_setup('db_import')
     d = MassSpecDatabaseImporter()
