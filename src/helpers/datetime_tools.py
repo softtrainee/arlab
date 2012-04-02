@@ -53,14 +53,26 @@ def generate_datetimestamp(resolution='seconds'):
     return r
 
 def generate_datestamp():
-    return time.strftime('%Y-%m-%d')
+    return get_date()
 
-def get_datetime(timestamp):
+def get_datetime(timestamp=None):
+    if timestamp is None:
+        timestamp = time.time()
+
     if isinstance(timestamp, float):
         d = datetime.fromtimestamp(timestamp)
     else:
         d = datetime.strptime(timestamp, ISO_FORMAT_STR)
     return d
+
+def get_date():
+    return time.strftime('%Y-%m-%d')
+
+def get_time(timestamp=None):
+    if timestamp is None:
+        timestamp = time.time()
+    t = time.mktime(timestamp.timetuple())
+    return t
 
 def convert_timestamp(timestamp):
     t = get_datetime(timestamp)

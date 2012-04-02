@@ -25,7 +25,7 @@ SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                      'pychron_beta{}'.format(version))
 sys.path.insert(0, SRC_DIR)
 
-from src.managers.bakeout_manager import launch_bakeout
+from src.bakeout.bakeout_manager import launch_bakeout
 from src.helpers.logger_setup import logging_setup
 
 if __name__ == '__main__':

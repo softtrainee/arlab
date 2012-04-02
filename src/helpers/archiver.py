@@ -32,8 +32,9 @@ MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', \
 
 
 class Archiver(Loggable):
-    archive_days = Range(1, 31)
-    archive_months = Range(1, 12, 3)
+    archive_hours = Range(0, 23, 0)
+    archive_days = Range(0, 31, 0)
+    archive_months = Range(0, 12, 3)
     clean_archives = Bool(True)
     root = Str
 
@@ -48,9 +49,11 @@ class Archiver(Loggable):
         root = self.root
         if not root:
             return
-
-        archive_date = datetime.today() - timedelta(days=self.archive_days)
+        archive_date = datetime.today() - timedelta(days=self.archive_days,
+                                                    hours=self.archive_hours
+                                                    )
         self.info('Files older than {} will be archived'.format(archive_date))
+        cnt = 0
         for p in self._get_files(root):
 #            print p
             rp = os.path.join(root, p)
@@ -59,6 +62,10 @@ class Archiver(Loggable):
             creation_date = datetime.fromtimestamp(mt)
             if creation_date < archive_date:
                 self._archive(root, p)
+                cnt += 1
+
+        if cnt > 0:
+            self.info('Archived {} files'.format(cnt))
 
         if self.clean_archives:
             self._clean_archive(root)

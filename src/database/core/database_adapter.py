@@ -47,7 +47,6 @@ class DatabaseAdapter(Loggable):
     password = Password('Argon')
     use_db = Bool
 
-    test_func = 'get_rids'
 #    window = Any
 
 #    @on_trait_change('[user,host,password,dbname, use_db]')
@@ -70,7 +69,7 @@ class DatabaseAdapter(Loggable):
 #        if sess is not None:
 #            sess.close()
 
-    def connect(self):
+    def connect(self, test=True):
         '''
         '''
         args = []
@@ -81,15 +80,16 @@ class DatabaseAdapter(Loggable):
         self.info('connecting to database')
 
         self.session_factory = sessionmaker(bind=self.engine)
-
-        if self._test_db_connection():
-            self.connected = True
-        else:
-            self.connected = False
+        if test:
+            if self._test_db_connection():
+                self.connected = True
+            else:
+                self.connected = False
 
     def _test_db_connection(self):
         self.connected = True
         sess = self.session_factory()
+        self.info('testing database connection')
         try:
             connected = True
             if self.test_func is not None:
@@ -103,7 +103,7 @@ class DatabaseAdapter(Loggable):
 
         finally:
             if sess is not None:
-                self.info('closing session')
+                self.info('closing test session')
                 sess.close()
 
         return connected
