@@ -18,7 +18,7 @@ limitations under the License.
 '''
 #============= enthought library imports  ==========================
 from traits.api import Array, Instance, Bool, Button, Event, \
-    Float, Str, String, Property, List, on_trait_change
+    Float, Str, String, Property, List, on_trait_change, Dict
 from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring, \
     ButtonEditor, EnumEditor
 from pyface.timer.api import do_after as do_after_timer
@@ -109,7 +109,7 @@ class BakeoutManager(Manager):
     pressure_buffer = Array
 
     include_pressure = Bool
-    include_heat = Bool(True)
+    include_heat = Bool(False)
     include_temp = Bool(True)
 
     plotids = List([0, 1, 2])
@@ -120,7 +120,7 @@ class BakeoutManager(Manager):
 
     _nactivated_controllers = 0
     data_manager = Instance(DataManager)
-
+    graph_info=Dict
 #    def _convert_to_h5(self, path):
 #        args = self._bakeout_csv_parser(path)
 #        (names, nseries, ib, data, path, attrs) = args
@@ -239,16 +239,36 @@ class BakeoutManager(Manager):
 
             self._set_configuration(path)
             self._load_configurations()
+            
+    def reset_general_scan(self):
+        self.info('Starting general scan')
+        self._buffer_lock = Lock()
 
+        #reset the graph
+        self.graph=self._graph_factory()
+        for i,name in enumerate(self._get_controller_names()):
+            self._setup_graph(name, i)
+
+        cs=self._get_controllers()
+        for c in cs:
+        #reset the general timers
+            c.start_timer()
+            
     def _execute_fired(self):
         if self.alive:
             self.alive = False
             self.kill(user_kill=True)
+            
+            self.reset_general_scan()
+   
         else:
             self.alive = True
             t = Thread(target=self._execute_)
             t.start()
-
+            
+    def opened(self):
+        self.reset_general_scan()
+        
     def load(self, *args, **kw):
         app = self.application
         for bo in self._get_controller_names():
@@ -298,7 +318,15 @@ class BakeoutManager(Manager):
 
         for tr in self._get_controller_names():
             getattr(self, tr).end(**kw)
+            
+    def _setup_graph(self, name, pid):
+        self.graph.new_series()
+        self.graph_info[name] = dict(id=pid)
 
+        self.graph.set_series_label(name, series=pid)
+        if self.include_heat:
+            self.graph.new_series(plotid=self.plotids[1])
+        
     def _execute_(self):
         '''
         '''
@@ -308,25 +336,26 @@ class BakeoutManager(Manager):
         self.data_buffer = []
         self.data_buffer_x = []
         self.data_count_flag = 0
-        self.graph_info = dict()
         self.graph = self._graph_factory()
 
         controllers = []
-        for name in self._get_controller_names():
-            bc = self.trait_get(name)[name]
+        for bc in self._get_controllers():
+            name=bc.name
+#        for name in self._get_controller_names():
+#            bc = self.trait_get(name)[name]
             if bc.ok_to_run():
 
                 bc.on_trait_change(self.update_alive, 'alive')
 
                 # set up graph
-                self.graph.new_series()
-                self.graph_info[bc.name] = dict(id=pid)
+#                self.graph.new_series()
+#                self.graph_info[bc.name] = dict(id=pid)
+#
+#                self.graph.set_series_label(name, series=pid)
 
-                self.graph.set_series_label(name, series=pid)
-
-                if self.include_heat:
-                    self.graph.new_series(plotid=self.plotids[1])
-
+#                if self.include_heat:
+#                    self.graph.new_series(plotid=self.plotids[1])
+                self._setup_graph(name,pid)
                 if pid == 0:
                     header.append('#{}_time'.format(name))
                 else:
@@ -414,8 +443,9 @@ class BakeoutManager(Manager):
 
         if self.include_pressure:
             self._get_pressure(nx)
-
-        self._write_data()
+        
+        if self.alive:
+            self._write_data()
 
         self.data_buffer = []
         self.data_buffer_x = []
@@ -504,7 +534,7 @@ class BakeoutManager(Manager):
 
 #                    if BATCH_SET_BAUDRATE:
 #                        bc.set_baudrate(BAUDRATE)
-                bc.start_timer()
+#                bc.start_timer()
 
         self._load_configurations()
         return True
@@ -615,18 +645,31 @@ class BakeoutManager(Manager):
         old,
         new,
         ):
-        if obj.isAlive():
+        
+        if self.alive and not obj.isAlive():
+            return
+        
+        try:
             pid = self.graph_info[obj.name]['id']
+        except KeyError:
+            return 
+        
+        pv = getattr(obj, 'process_value')
+        hp = getattr(obj, 'heat_power_value')
+        with self._buffer_lock:
+            self.data_buffer.append((obj.name, pid, pv, hp))
 
-            pv = getattr(obj, 'process_value')
-            hp = getattr(obj, 'heat_power_value')
-            with self._buffer_lock:
-                self.data_buffer.append((obj.name, pid, pv, hp))
+            self.data_count_flag += 1
 
-                self.data_count_flag += 1
-
-                if self.data_count_flag >= len(self.active_controllers):
-                    do_after_timer(1, self._graph_)
+            if self.alive:
+                n=len(self.active_controllers)
+            else:
+                n=len(self._get_controller_names())
+                
+            if self.data_count_flag >= n:
+                do_after_timer(1, self._graph_)
+            
+                
 
     def _update_interval_changed(self):
         for tr in self._get_controller_names():
