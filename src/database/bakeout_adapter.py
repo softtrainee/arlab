@@ -151,7 +151,15 @@ class DBSelector(Loggable):
 
         if s is not None:
             if s.id in self.opened_windows:
-                self.opened_windows[s.id].control.Raise()
+                c=self.opened_windows[s.id].control
+                if c is None:
+                    self.opened_windows.pop(s.id)
+                else:
+                    try:
+                        c.Raise()
+                    except:
+                        self.opened_windows.pop(s.id)
+                        
             else:
                 s.load_graph()
                 s.window_x = self.wx

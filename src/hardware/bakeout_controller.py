@@ -347,8 +347,8 @@ class BakeoutController(WatlowEZZone):
 
     def get_temp_and_power(self, **kw):
         pr = WatlowEZZone.get_temp_and_power(self, **kw)
-        if self.isAlive():
-            self.process_value_flag = True
+        #if self.isAlive():
+        self.process_value_flag = True
 
         return pr
 

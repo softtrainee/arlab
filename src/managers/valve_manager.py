@@ -32,6 +32,7 @@ import time
 from src.loggable import Loggable
 import random
 from Queue import Queue
+from src.hardware.actuators.argus_gp_actuator import ArgusGPActuator
 
 
 class ValveGroup(object):
@@ -145,17 +146,36 @@ class ValveManager(Manager):
 
     
     def _get_states(self, times_up_event, sq):
-        for k, _ in self.valves.items():
-            if times_up_event.isSet():
-                break
-
-            sq.put(k)
+        def _gstate(ki):
+            sq.put(ki)
 #            self.info('geting state for {}'.format(k))
-            s = self.get_state_by_name(k)
+            s = self.get_state_by_name(ki)
 #            self.info('got {} for {}'.format(s, k))
+#            if times_up_event.isSet():
+#                break
+            sq.put('1' if s else '0')
+            
+        dv=[]
+        for k,v in self.valves.iteritems():
+#        for k, _ in self.valves.items():
+            if isinstance(v.actuator, ArgusGPActuator):
+                dv.append(k)
+                if times_up_event.isSet():
+                    break
+                continue
+                
             if times_up_event.isSet():
                 break
-            sq.put('1' if s else '0')
+            
+            _gstate(k)
+
+        if times_up_event.isSet():
+            return
+        
+        for k in dv:
+            if times_up_event.isSet():
+                break
+            _gstate(k)        
     
     def get_states(self, timeout=1):
         '''
