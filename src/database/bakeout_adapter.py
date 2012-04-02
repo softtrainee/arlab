@@ -13,26 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from src.database.core.database_adapter import DatabaseAdapter
-from src.database.pychron_orm import Analyses, Paths, Intercepts, \
-     AnalysisTypes, Spectrometers
-from src.database.bakeout_orm import BakeoutTable, ControllerTable, PathTable
-
 from traits.api import HasTraits, Str, Button, List, Any, Long, Event, \
-    Date, Time, Instance, Dict
-from traitsui.api import View, Item, TabularEditor, EnumEditor, HGroup
+    Date, Time, Instance, Dict, DelegatesTo
+from traitsui.api import View, Item, TabularEditor, EnumEditor, \
+    HGroup, VGroup, Group, ListEditor, HSplit
 from traitsui.tabular_adapter import TabularAdapter
 
 from datetime import datetime, timedelta
-import numpy as np
-
-from src.helpers.datetime_tools import get_datetime, get_date
-
 from wx import GetDisplaySize
-from src.graph.graph import Graph
-from src.graph.time_series_graph import TimeSeriesStackedGraph
 import os
+
+from src.database.core.database_adapter import DatabaseAdapter
+from src.database.bakeout_orm import BakeoutTable, ControllerTable, PathTable
+from src.helpers.datetime_tools import  get_date
 from src.loggable import Loggable
+from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
+
 DISPLAYSIZE = GetDisplaySize()
 
 class DBResult(HasTraits):
@@ -48,246 +44,18 @@ class DBResult(HasTraits):
     window_y = 0.1
     title = Str
 
-    graph = Instance(Graph)
-
-
-
-    def _bakeout_h5_parser(self, path):
-        from src.managers.data_managers.h5_data_manager import H5DataManager
-        dm = H5DataManager()
-        if not dm.open_data(path):
-            return
-
-        controllers = dm.get_groups()
-        datagrps = []
-        attrs = []
-        ib = [0, 0, 0]
-        for ci in controllers:
-
-            attrs_i = dict()
-            for ai in ['script', 'setpoint', 'duration', 'script_text']:
-                attrs_i[ai] = getattr(ci._v_attrs, ai)
-            attrs.append(attrs_i)
-            data = []
-            for i, ti in enumerate(['temp', 'heat']):
-                try:
-                    table = getattr(ci, ti)
-                    xs = [x['time'] for x in table]
-#                    print 'xs', xs
-                    ys = [x['value'] for x in table]
-                    if i == 0:
-                        data.append(xs)
-                    data.append(ys)
-                    ib[i] = 1
-                except Exception, _:
-                    pass
-#                    print 'bakeout_manager._bakeout_h5_parser', e
-
-            if data:
-                datagrps.append(data)
-
-        names = [ci._v_name for ci in controllers]
-        nseries = len(controllers) * sum(ib)
-        return names, nseries, ib, np.array(datagrps), path, attrs
-
-    def _bakeout_csv_parser(self, path):
-        import csv
-        attrs = None
-        with open(path, 'r') as f:
-#            reader = csv.reader(open(path, 'r'))
-            reader = csv.reader(f)
-
-            # first line is the include bits
-            l = reader.next()
-            l[0] = (l[0])[1:]
-#
-            ib = map(int, l)
-
-            # second line is a header
-            header = reader.next()
-            header[0] = (header[0])[1:]
-            nseries = len(header) / (sum(ib) + 1)
-            names = [(header[(1 + sum(ib)) * i])[:-5] for i in range(nseries)]
-
-#            average load time for 2MB file =0.42 s (n=10)
-#            data = np.loadtxt(f, delimiter=',')
-
-#            average load time for 2MB file = 0.19 s (n=10)
-            data = np.array([r for r in reader], dtype=float)
-
-            data = np.array_split(data, nseries, axis=1)
-        return (names, nseries, ib, data, path, attrs)
-
-    def _load_graph(self, path):
-
-        ish5 = True if path.endswith('.h5') else False
-
-        if ish5:
-            args = self._bakeout_h5_parser(path)
-        else:
-            args = self._bakeout_csv_parser(path)
-
-        if args is None:
-            return
-#        names = args[0]
-#        attrs = args[-1]
-        self.graph = self._bakeout_graph_factory(ph=0.65,
-                *args,
-                container_dict=dict(
-                                    #bgcolor='red',
-                                    #fill_bg=True,
-                                    padding_top=60
-                                    ),
-                transpose_data=not ish5
-                )
-
-    def _graph_factory(
-        self,
-        include_bits=None,
-        panel_height=None,
-        plot_kwargs=None,
-        **kw
-        ):
-
-        if plot_kwargs is None:
-            plot_kwargs = dict()
-
-        if include_bits is None:
-            include_bits = [self.include_temp, self.include_heat,
-                            self.include_pressure]
-
-        n = max(1, sum(map(int, include_bits)))
-#        if graph is None:
-        if panel_height is None:
-            panel_height = DISPLAYSIZE.height * 0.65 / n
-
-        graph = TimeSeriesStackedGraph(panel_height=panel_height,
-                                        **kw)
-
-        graph.clear()
-        #kw['data_limit'] = self.scan_window * 60 / self.update_interval
-        #kw['scan_delay'] = self.update_interval
-
-        self.plotids = [0, 1, 2]
-
-        # temps
-
-        if include_bits[0]:
-            graph.new_plot(show_legend='ll', **kw)
-            graph.set_y_title('Temp (C)')
-        else:
-            self.plotids = [0, 0, 1]
-
-        # heat power
-
-        if include_bits[1]:
-            graph.new_plot(**kw)
-            graph.set_y_title('Heat Power (%)', plotid=self.plotids[1])
-        elif not include_bits[0]:
-            self.plotids = [0, 0, 0]
-        else:
-            self.plotids = [0, 0, 1]
-
-        # pressure
-
-#        if include_bits[2]:
-#            graph.new_plot(**kw)
-#            graph.set_y_title('Pressure (torr)', plotid=self.plotids[2])
-#
-#        if include_bits:
-#            graph.set_x_title('Time')
-#            graph.set_x_limits(0, self.scan_window * 60)
-
-        return graph
-
-    def _bakeout_graph_factory(
-        self,
-#        header,
-        names,
-        nseries,
-        include_bits,
-        data,
-        path,
-        attrs,
-        ph=0.5,
-        transpose_data=True,
-        ** kw
-        ):
-
-        ph = DISPLAYSIZE.height * ph / max(1, sum(include_bits))
-
-        graph = self._graph_factory(stream=False,
-                                    include_bits=include_bits,
-                                    panel_height=ph,
-                                    plot_kwargs=dict(pan=True, zoom=True),
-                                     **kw)
-        plotids = self.plotids
-#        print names, nseries, include_bits
-#        for i in range(nseries / sum(include_bits)):
-#            print i
-            # set up graph
-#            name = names[i]#[i / sum(include_bits)]
-        for i, name in enumerate(names):
-            for j in range(3):
-                if include_bits[j]:
-                    graph.new_series(plotid=plotids[j])
-                    graph.set_series_label(name, series=i,
-                                           plotid=plotids[j])
-
-        ma0 = -1
-        mi0 = 1e8
-        ma1 = -1
-        mi1 = 1e8
-        ma2 = -1
-        mi2 = 1e8
-#        print data
-        for (i, da) in enumerate(data):
-
-            if transpose_data:
-                da = np.transpose(da)
-
-            x = da[0]
-            if include_bits[0]:
-                y = da[1]
-                ma0 = max(ma0, max(y))
-                mi0 = min(mi0, min(y))
-                graph.set_data(x, series=i, axis=0, plotid=plotids[0])
-                graph.set_data(da[1], series=i, axis=1,
-                               plotid=plotids[0])
-                graph.set_y_limits(mi0, ma0, pad='0.1',
-                                   plotid=plotids[0])
-
-            if include_bits[1]:
-                y = da[2]
-                ma1 = max(ma1, max(y))
-                mi1 = min(mi1, min(y))
-                graph.set_data(x, series=i, axis=0, plotid=plotids[1])
-                graph.set_data(y, series=i, axis=1, plotid=plotids[1])
-                graph.set_y_limits(mi1, ma1, pad='0.1',
-                                   plotid=plotids[1])
-
-            if include_bits[2]:
-                y = da[3]
-                ma2 = max(ma2, max(y))
-                mi2 = min(mi2, min(y))
-                graph.set_data(x, series=i, axis=0, plotid=plotids[2])
-                graph.set_data(y, series=i, axis=1, plotid=plotids[2])
-                graph.set_y_limits(mi2, ma2, pad='0.1',
-                                   plotid=plotids[2])
-
-                # prevent multiple pressure plots
-
-                include_bits[2] = False
-
-        graph.set_x_limits(min(x), max(x))
-#        (name, _ext) = os.path.splitext(name)
-#        graph.set_title(name)
-        return graph
+#    graph = Instance(Graph)
+    viewer = Instance(BakeoutGraphViewer)
+#    bakeouts = DelegatesTo('viewer')
+    graph = DelegatesTo('viewer')
+    summary = DelegatesTo('viewer')
 
     def load_graph(self):
-        self._load_graph(os.path.join(self.directory,
+        self.viewer = BakeoutGraphViewer()
+        p = os.path.join(self.directory,
                                       self.filename
-                                      ))
+                                      )
+        self.viewer.load(p)
 
     def load(self):
         dbr = self._db_result
@@ -299,22 +67,46 @@ class DBResult(HasTraits):
             if p is not None:
                 self.directory = p.root
                 self.filename = p.filename
-
-
-
             self.title = 'Bakeout {}'.format(self.id)
 
     def traits_view(self):
-        return View(
-                    Item('id', style='readonly', label='ID'),
+        info_grp = VGroup(
+                          VGroup(Item('id', style='readonly', label='ID'),
                     Item('rundate', style='readonly', label='Run Date'),
                     Item('runtime', style='readonly', label='Run Time'), # enabled_when='0',)
                     Item('directory', style='readonly'),
-                    Item('filename', style='readonly'),
-                    Item('graph', show_label=False, style='custom'),
+                    Item('filename', style='readonly')),
+                VGroup(Item('summary',
+                            show_label=False,
+#                            enabled_when='0', 
+                            style='custom')),
+                          label='Info'
+                          )
+#                    Group(Item('bakeouts',
+#                               show_label=False,
+#                               style='custom',
+#                               editor=ListEditor(use_notebook=True,
+#                                                           dock_style='tab',
+#                                                           page_name='.name'
+#                                                           ))),
+#                    layout='tabbed'
+#                    )
 
-                    width=600,
-                    height=300,
+        return View(
+#                    VGroup(
+#                    Item('viewer', show_label=False, style='custom'),
+#                    Group(info_grp,
+#                          layout='tabbed'),
+#                    Group(Item('viewer', show_label=False, style='custom'),
+#                          layout='tabbed'),
+                    Group(
+                    Item('graph', width=0.75, show_label=False, style='custom'),
+                    info_grp,
+                    layout='tabbed'
+                    ),
+
+                    width=800,
+                    height=0.85,
                     resizable=True,
                     x=self.window_x,
                     y=self.window_y,
@@ -323,7 +115,10 @@ class DBResult(HasTraits):
 
 
 class DBResultsAdapter(TabularAdapter):
-    columns = [('ID', 'id')]
+    columns = [('ID', 'id'),
+               ('Date', 'rundate'),
+               ('Time', 'runtime')
+               ]
 
 COMPARISONS = dict(num=['=', '<', '>', '<=', '>='],
                    negative_num=['=', '<', '<=']
@@ -347,8 +142,8 @@ class DBSelector(Loggable):
     dclicked = Event
     selected = Any
 
-    wx = 0.5
-    wy = 0.5
+    wx = 0.4
+    wy = 0.1
     opened_windows = Dict
 
     def _dclicked_fired(self):
@@ -369,8 +164,8 @@ class DBSelector(Loggable):
                 self.wy += 0.03
 
                 if self.wy > 0.65:
-                    self.wx = 0.5
-                    self.wy = 0.5
+                    self.wx = 0.4
+                    self.wy = 0.1
 
     def _parameter_changed(self):
         c = COMPARATOR_TYPE[self.parameter]
@@ -414,7 +209,7 @@ class DBSelector(Loggable):
         return s
 
     def _execute_fired(self):
-        self._execute_()
+        self._execute()
 
     def _execute_(self):
         self.results = []
@@ -441,7 +236,8 @@ class DBSelector(Loggable):
 
         editor = TabularEditor(adapter=DBResultsAdapter(),
                                dclicked='object.dclicked',
-                               selected='object.selected'
+                               selected='object.selected',
+                               editable=False
                                )
         v = View(
 
