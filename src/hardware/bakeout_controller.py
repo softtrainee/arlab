@@ -83,6 +83,7 @@ class BakeoutController(WatlowEZZone):
         if self.record_process:
             if self._duration < 0.0001:
                 self._duration = 100
+            self.script='---'
 
     def _validate_max_output(self, v):
         try:

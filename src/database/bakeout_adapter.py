@@ -79,8 +79,9 @@ class DBResult(HasTraits):
                         data.append(xs)
                     data.append(ys)
                     ib[i] = 1
-                except Exception, e:
-                    print 'bakeout_manager._bakeout_h5_parser', e
+                except Exception, _:
+                    pass
+#                    print 'bakeout_manager._bakeout_h5_parser', e
 
             if data:
                 datagrps.append(data)
@@ -413,7 +414,7 @@ class DBSelector(Loggable):
         return s
 
     def _execute_fired(self):
-        self._execute()
+        self._execute_()
 
     def _execute_(self):
         self.results = []

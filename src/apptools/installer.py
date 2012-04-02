@@ -41,6 +41,7 @@ class Installer(object):
         self.icon_name = icon_name
     def change_version(self, op):
         np = op + '~'
+        
         os.rename(op, np)
         dst = open(op, 'w')
         src = open(np, 'r')

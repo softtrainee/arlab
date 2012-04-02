@@ -115,7 +115,7 @@ def install_pychron_suite():
             print 'See http://mercurial.selenic.com/'
             return
 
-    i = Installer('pychron_beta', 'pychron_beta')
+    i = Installer('pychron', 'pychron')
     i.version = version
     i.install(src_dir)
 
