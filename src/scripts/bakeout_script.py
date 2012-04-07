@@ -126,20 +126,20 @@ class BakeoutScript(CoreScript):
 #                si /= scalar
                 if not c.isAlive():
                     break
-                
+
                 self.set_setpoint(si)
 #                c.set_closed_loop_setpoint(si)
-                if period>10:
+                if period > 10:
                     for i in xrange(int(period)):
                         if not c.isAlive():
                             break
                         time.sleep(1)
                     else:
                         continue
-                    
+
                     break
-                    
-                else:    
+
+                else:
                     time.sleep(period)
 
     def set_setpoint(self, sp):
@@ -159,7 +159,7 @@ class BakeoutScript(CoreScript):
             self.set_setpoint(sp)
             self.controller.duration = float(args[1])
         #wait for dur 
-        self.info('wating {}'.format(float(args[1]) * TIMEDICT[self.scale]) )
+        self.info('waiting {}'.format(float(args[1]) * TIMEDICT[self.scale]))
         self.wait(float(args[1]) * TIMEDICT[self.scale])
 
     def kill_script(self):

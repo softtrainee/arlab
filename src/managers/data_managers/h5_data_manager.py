@@ -21,6 +21,7 @@ from numpy import array
 #============= local library imports  ==========================
 from data_manager import DataManager
 from table_descriptions import table_description_factory
+import os
 
 
 class H5DataManager(DataManager):
@@ -59,14 +60,31 @@ class H5DataManager(DataManager):
 
     def get_current_path(self):
         if self._frame is not None:
+#            for d in dir(self._frame):
+#                print d
             return self._frame.filename
+
+    def lock_path(self, p):
+        import os
+        import stat
+        os.chmod(p, stat.S_IROTH | stat.S_IRGRP | stat.S_IREAD)
+
+    def delete_frame(self):
+        p = self.get_current_path()
+        try:
+            os.remove(p)
+        except Exception, e:
+            print e
 
     def new_frame(self, *args, **kw):
         '''
-            
+
         '''
         p = self._new_frame_path(*args, **kw)
         self._frame = openFile(p, mode='w')
+
+#        self.lock_path(p)
+
         return self._frame
 
     def new_group(self, group_name, parent='root', description=''):
@@ -113,7 +131,7 @@ class H5DataManager(DataManager):
 
     def close(self):
         try:
-            self.info('saving data to file')
+#            self.info('saving data to file')
             self._frame.close()
         except Exception, e:
             print e

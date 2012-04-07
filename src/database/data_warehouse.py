@@ -48,18 +48,28 @@ class DataWarehouse(Loggable):
 
         yd = self._create_subdir(self.root, y)
         md = self._create_subdir(yd, m)
+
+
+
         return md
 
     def _create_subdir(self, root, d):
         d = os.path.join(root, str(d))
         if not os.path.isdir(d):
             os.mkdir(d)
+
+#        self._lock_path(d)
         return d
 
+    def _lock_path(self, p):
+        import stat
+        os.chown(p, 0, -1)
+#        os.chmod(p, stat.S_IROTH | stat.S_IRGRP | stat.S_IREAD)
 
 if __name__ == '__main__':
-    d = DataWarehouse(root='/Users/ross/Desktop/bat')
+    d = DataWarehouse(root='/usr/local/pychron/bakeoutdb')
     d.build_warehouse()
+
 
 
 

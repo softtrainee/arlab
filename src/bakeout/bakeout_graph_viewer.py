@@ -18,7 +18,7 @@ limitations under the License.
 '''
 #============= enthought library imports  ==========================
 from traits.api import HasTraits, Instance, \
-    Float, Str, List, Property
+    Float, Str, List, Property, Button
 from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring, \
     ListEditor, Group
 #============= standard library imports  ==========================
@@ -28,6 +28,12 @@ from wx import GetDisplaySize
 #============= local library imports  ==========================
 from src.graph.graph import Graph
 from src.graph.time_series_graph import TimeSeriesStackedGraph
+import os
+import csv
+from src.helpers.paths import data_dir
+from pyface.file_dialog import FileDialog
+from pyface.constant import OK
+from src.loggable import Loggable
 
 DISPLAYSIZE = GetDisplaySize()
 
@@ -57,7 +63,8 @@ class BakeoutParameters(HasTraits):
 
         return '\n'.join((s0, s1, s2, self.script_text))
 
-class BakeoutGraphViewer(HasTraits):
+
+class BakeoutGraphViewer(Loggable):
     graph = Instance(Graph)
     bakeouts = List
     summary = Property(depends_on='bakeouts')
@@ -66,6 +73,74 @@ class BakeoutGraphViewer(HasTraits):
     window_y = Float
     window_width = Float
     window_height = Float
+
+    path = Str
+
+    export_button = Button('Export CSV')
+
+    def _export_button_fired(self):
+        self._export_csv()
+
+    def _get_export_path(self):
+        dlg = FileDialog(action='save as',
+                         default_directory=data_dir,
+                         wildcard='CSV (*.csv, *.txt)|*.csv;*.txt'
+                         )
+
+        if dlg.open() == OK:
+            p = dlg.path
+            if not p.endswith('.csv'):
+                if not p.endswith('.txt'):
+                    p += '.csv'
+
+            return p
+
+    def _export_csv(self):
+        if os.path.isfile(self.path):
+            args = self._bakeout_h5_parser(self.path)
+            data = args[3]
+            names = args[0]
+
+            op = self._get_export_path()
+#            op = '/Users/ross/Desktop/exporttest.csv'
+            if op is None:
+                return
+
+            self.info('exporting {} to {}'.format(self.title,
+                                                  op))
+            with open(op, 'w') as f:
+                writer = csv.writer(f)
+                ibs = args[2]
+                j = 0
+                ncols = 2 * sum(ibs)
+                trows = []
+                for d in data:
+                    rows = zip(*d)
+                    for k, ri in enumerate(rows):
+                        try:
+                            row = trows[k]
+                        except IndexError:
+                            row = ['', ] * (2 * sum(ibs) * args[1])
+
+                        for i, rii in enumerate(ri):
+                            row[i + j] = rii
+
+                        try:
+                            trows[k] = row
+                        except IndexError:
+                            trows.append(row)
+                    j += ncols
+
+                header = []
+                for n in names:
+                    header.append('{} time'.format(n))
+                    for ib, ibn in zip(ibs, ['temp', 'heat', 'pressure']):
+                        if ib:
+                            header.append(ibn)
+
+                writer.writerow(header)
+                for row in trows:
+                    writer.writerow(row)
 
     def _get_summary(self):
         s = '\n'.join([str(bi) for bi in self.bakeouts])
@@ -84,22 +159,25 @@ class BakeoutGraphViewer(HasTraits):
         for ci in controllers:
 
             attrs_i = dict(name=ci._v_name)
-            for ai in ['script', 'setpoint', 'duration', 'script_text']:
+            for ai in ['script', 'setpoint',
+                        'duration', 'max_output',
+                        'script_text']:
                 attrs_i[ai] = getattr(ci._v_attrs, ai)
             attrs.append(attrs_i)
             data = []
             for i, ti in enumerate(['temp', 'heat']):
                 try:
                     table = getattr(ci, ti)
-                    xs = [x['time'] for x in table]
+                except Exception, _:
+                    continue
+                xs = [x['time'] for x in table]
 #                    print 'xs', xs
-                    ys = [x['value'] for x in table]
-                    if i == 0:
-                        data.append(xs)
-                    data.append(ys)
-                    ib[i] = 1
-                except Exception, e:
-                    print 'bakeout_manager._bakeout_h5_parser', e
+                ys = [x['value'] for x in table]
+                if i == 0:
+                    data.append(xs)
+                data.append(ys)
+                ib[i] = 1
+#                    print 'bakeout_manager._bakeout_h5_parser', e
 
             if data:
                 datagrps.append(data)
@@ -137,7 +215,7 @@ class BakeoutGraphViewer(HasTraits):
         return (names, nseries, ib, data, path, attrs)
 
     def load(self, path):
-
+        self.path = path
         args = self._load_graph(path)
         if args:
             attrs = args[-1]
@@ -335,5 +413,12 @@ class BakeoutGraphViewer(HasTraits):
                  height=self.window_height
                  )
         return v
+
+if __name__ == '__main__':
+    d = BakeoutGraphViewer()
+    p = '/Users/ross/Pychrondata1.4/data/bakeouts/2012/APR/bakeout-2012-04-02054.h5'
+    d.load(p)
+    d._export_csv()
+
 
 # ============= EOF ====================================
