@@ -158,6 +158,7 @@ class DatabaseAdapter(Loggable):
     def close(self):
         if self.sess is not None:
             self.sess.close()
+            self.sess = None
 
     def traits_view(self):
         v = View('user',

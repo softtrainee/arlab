@@ -13,10 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from traits.api import HasTraits, Str, Button, List, Any, Long, Event, \
-    Date, Time, Instance, Dict, DelegatesTo
+from traits.api import HasTraits, Str, String, Button, List, Any, Long, Event, \
+    Date, Time, Instance, Dict, DelegatesTo, Property
 from traitsui.api import View, Item, TabularEditor, EnumEditor, \
-    HGroup, VGroup, Group, ListEditor, HSplit
+    HGroup, VGroup, Group, spring
 from traitsui.tabular_adapter import TabularAdapter
 
 from datetime import datetime, timedelta
@@ -31,8 +31,9 @@ from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
 
 DISPLAYSIZE = GetDisplaySize()
 
+
 class DBResult(HasTraits):
-    id = Long
+    _id = Long
     _db_result = Any
 
     rundate = Date
@@ -49,9 +50,10 @@ class DBResult(HasTraits):
 #    bakeouts = DelegatesTo('viewer')
     graph = DelegatesTo('viewer')
     summary = DelegatesTo('viewer')
+    export_button = DelegatesTo('viewer')
 
     def load_graph(self):
-        self.viewer = BakeoutGraphViewer()
+        self.viewer = BakeoutGraphViewer(title=self.title)
         p = os.path.join(self.directory,
                                       self.filename
                                       )
@@ -60,48 +62,36 @@ class DBResult(HasTraits):
     def load(self):
         dbr = self._db_result
         if dbr is not None:
-            self.id = dbr.id
+            self._id = dbr.id
             self.rundate = dbr.rundate
             self.runtime = dbr.runtime
             p = dbr.path
             if p is not None:
                 self.directory = p.root
                 self.filename = p.filename
-            self.title = 'Bakeout {}'.format(self.id)
+
+            self.title = 'Bakeout {}'.format(self._id)
 
     def traits_view(self):
-        info_grp = VGroup(
-                          VGroup(Item('id', style='readonly', label='ID'),
+        interface_grp = VGroup(
+                          VGroup(Item('_id', style='readonly', label='ID'),
                     Item('rundate', style='readonly', label='Run Date'),
-                    Item('runtime', style='readonly', label='Run Time'), # enabled_when='0',)
+                    Item('runtime', style='readonly', label='Run Time'),
                     Item('directory', style='readonly'),
                     Item('filename', style='readonly')),
                 VGroup(Item('summary',
                             show_label=False,
-#                            enabled_when='0', 
                             style='custom')),
-                          label='Info'
-                          )
-#                    Group(Item('bakeouts',
-#                               show_label=False,
-#                               style='custom',
-#                               editor=ListEditor(use_notebook=True,
-#                                                           dock_style='tab',
-#                                                           page_name='.name'
-#                                                           ))),
-#                    layout='tabbed'
-#                    )
+                       HGroup(spring, Item('export_button',
+                                            show_label=False),),
+                    label='Info',
+                    )
 
         return View(
-#                    VGroup(
-#                    Item('viewer', show_label=False, style='custom'),
-#                    Group(info_grp,
-#                          layout='tabbed'),
-#                    Group(Item('viewer', show_label=False, style='custom'),
-#                          layout='tabbed'),
                     Group(
-                    Item('graph', width=0.75, show_label=False, style='custom'),
-                    info_grp,
+                    interface_grp,
+                    Item('graph', width=0.75, show_label=False,
+                         style='custom'),
                     layout='tabbed'
                     ),
 
@@ -115,7 +105,7 @@ class DBResult(HasTraits):
 
 
 class DBResultsAdapter(TabularAdapter):
-    columns = [('ID', 'id'),
+    columns = [('ID', '_id'),
                ('Date', 'rundate'),
                ('Time', 'runtime')
                ]
@@ -123,17 +113,19 @@ class DBResultsAdapter(TabularAdapter):
 COMPARISONS = dict(num=['=', '<', '>', '<=', '>='],
                    negative_num=['=', '<', '<=']
                    )
-COMPARATOR_TYPE = {'id':'num',
-                    'this month':'negative_num'
-                    }
+#COMPARATOR_TYPE = {'id': 'num',
+##                    'this month': 'negative_num'
+#                    }
 
 
 class DBSelector(Loggable):
-    parameter = Str('rundate')
+    parameter = String('BakeoutTable.rundate')
+    _parameters = Property
     comparator = Str('=')
-    _comparisons = List(COMPARISONS['num'])
+#    _comparisons = List(COMPARISONS['num'])
+    _comparisons = List(['=', '<', '>', '<=', '>=', '!=', 'like'])
     criteria = Str('this month')
-
+    comparator_types = Property
     execute = Button
     results = List
 
@@ -146,88 +138,131 @@ class DBSelector(Loggable):
     wy = 0.1
     opened_windows = Dict
 
+#    def _get_comparator_types(self):
+#        return ['=', '<', '>', '<=', '>=', '!=', 'like']
+
+    def _get__parameters(self):
+
+        b = BakeoutTable
+
+        f = lambda x:[str(col)
+                           for col in x.__table__.columns]
+        params = f(b)
+        c = ControllerTable
+        params += f(c)
+        return list(params)
+
     def _dclicked_fired(self):
         s = self.selected
 
         if s is not None:
-            if s.id in self.opened_windows:
-                c=self.opened_windows[s.id].control
+            if s._id in self.opened_windows:
+                c = self.opened_windows[s._id].control
                 if c is None:
-                    self.opened_windows.pop(s.id)
+                    self.opened_windows.pop(s._id)
                 else:
                     try:
                         c.Raise()
                     except:
-                        self.opened_windows.pop(s.id)
-                        
+                        self.opened_windows.pop(s._id)
+
             else:
-                s.load_graph()
-                s.window_x = self.wx
-                s.window_y = self.wy
+                try:
+                    s.load_graph()
+                    s.window_x = self.wx
+                    s.window_y = self.wy
 
-                info = s.edit_traits()
-                self.opened_windows[s.id] = info
+                    info = s.edit_traits()
+                    self.opened_windows[s._id] = info
 
-                self.wx += 0.005
-                self.wy += 0.03
+                    self.wx += 0.005
+                    self.wy += 0.03
 
-                if self.wy > 0.65:
-                    self.wx = 0.4
-                    self.wy = 0.1
+                    if self.wy > 0.65:
+                        self.wx = 0.4
+                        self.wy = 0.1
+                except Exception, e:
+                    self.warning(e)
 
-    def _parameter_changed(self):
-        c = COMPARATOR_TYPE[self.parameter]
-        self._comparisons = COMPARISONS[c]
+#    def _parameter_changed(self):
+#
+##        c = COMPARATOR_TYPE[self.parameter]
+#        c = self.comparator_types[self.parameter]
+#        self._comparisons = COMPARISONS[c]
 
-    def _criteria_changed(self):
-        try:
-            c = COMPARATOR_TYPE[self.criteria]
-            self._comparisons = COMPARISONS[c]
-        except KeyError, _:
-            pass
+#    def _criteria_changed(self):
+#        try:
+#            c = COMPARATOR_TYPE[self.criteria]
+#            self._comparisons = COMPARISONS[c]
+#        except KeyError, _:
+#            pass
+    def _between(self, p, l, g):
+        return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)
 
     def _get_filter_str(self):
-        if self.parameter == 'rundate':
+        if 'rundate' in self.parameter:
             c = self.criteria.replace('/', '-')
             if self.criteria == 'today':
                 c = get_date()
             elif self.criteria == 'this month':
                 d = datetime.today().date()
                 today = get_date()
-                if self.comparator == '=':
+                if '=' in self.comparator:
                     d = d - timedelta(days=d.day)
-                    c = '{}{}"{}" AND {}{}"{}"'.format(self.parameter,
-                                                   '>=',
-                                                   d,
-                                                   self.parameter,
-                                                   '<=',
-                                                   today
-                                                   )
-
+                    c = self._between(self.parameter, today, d)
                     return c
                 else:
                     c = d - timedelta(days=d.day - 1)
             c = '"{}"'.format(c)
+        elif 'runtime' in self.parameter:
+            args = self.criteria.split(':')
+            if len(args) in [1, 2] and self.comparator == '=':
+                base = ['00', ] * (3 - len(args))
+                g = ':'.join(args + base)
+                try:
+                    a = [int(ai) + (1 if len(args) - 1 == i else 0)
+                        for i, ai in enumerate(args)]
+                except ValueError:
+                    return None
+
+                f = ':'.join(['{:n}', ] * (len(args)) + base)
+                l = f.format(*a)
+                c = self._between(self.parameter, l, g)
+                return c
+            else:
+                c = ':'.join(args + ['00', ] * (3 - len(args)))
+
         else:
             c = self.criteria
 
+        c = '"{}"'.format(c)
         s = ''.join((self.parameter,
                    self.comparator,
                    c))
         return s
 
     def _execute_fired(self):
-        self._execute()
+        self._execute_()
 
     def _execute_(self):
-        self.results = []
         db = self._db
         if db is not None:
+#            self.info(s)
             s = self._get_filter_str()
-            dbs = db.get_bakeouts(filter_str=s)
+            if s is None:
+                return
+
+            table, _col = self.parameter.split('.')
+            kw = dict(filter_str=s)
+            if not table == 'BakeoutTable':
+                kw['join_table'] = table
+
+            dbs = db.get_bakeouts(**kw)
+
             self.info('query {} returned {} results'.format(s,
                                     len(dbs) if dbs else 0))
             if dbs:
+                self.results = []
                 for di in dbs:
                     d = DBResult(_db_result=di)
                     d.load()
@@ -236,7 +271,7 @@ class DBSelector(Loggable):
     def traits_view(self):
 
         qgrp = HGroup(
-                Item('parameter'),
+                Item('parameter', editor=EnumEditor(name='_parameters')),
                 Item('comparator', editor=EnumEditor(name='_comparisons')),
                 Item('criteria'),
                 show_labels=False
@@ -268,17 +303,92 @@ class DBSelector(Loggable):
 
 class BakeoutAdapter(DatabaseAdapter):
     test_func = None
-#===============================================================================
+#==============================================================================
 #    getters
-#===============================================================================
+#==============================================================================
 
-    def get_bakeouts(self, filter_str=None):
+    def get_bakeouts(self, join_table=None, filter_str=None):
         try:
-            q = self._get_query(BakeoutTable, filter_str=filter_str)
-            return q.all()
-        except Exception:
-            pass
+            if isinstance(join_table, str):
+                join_table = globals()[join_table]
 
+            q = self._get_query(BakeoutTable, join_table=join_table,
+                                 filter_str=filter_str)
+            return q.all()
+        except Exception, e:
+            print e
+
+    def _get_query(self, klass, join_table=None, filter_str=None, **clause):
+        sess = self.get_session()
+        q = sess.query(klass)
+
+        if join_table is not None:
+            q = q.join(join_table)
+
+        if filter_str:
+            q = q.filter(filter_str)
+        else:
+            q = q.filter_by(**clause)
+        return q
+
+    def open_selector(self):
+        s = DBSelector(_db=self)
+        s._execute_()
+        s.edit_traits()
+
+#=============================================================================
+#   adder
+#=============================================================================
+    def add_bakeout(self, commit=False, **kw):
+        b = BakeoutTable(**kw)
+        self._add_item(b, commit)
+        return b
+
+    def add_controller(self, bakeout, commit=False, **kw):
+        c = ControllerTable(**kw)
+        bakeout.controllers.append(c)
+        if commit:
+            self.commit()
+#        self._add_item(c, commit)
+        return c
+
+    def add_path(self, bakeout, commit=False, **kw):
+        p = PathTable(**kw)
+        bakeout.path = p
+        if commit:
+            self.commit()
+#        self._add_item(c, commit)
+        return p
+
+    def _add_item(self, obj, commit):
+        sess = self.get_session()
+        sess.add(obj)
+        if commit:
+            sess.commit()
+
+#    def get_bakeouts2(self):
+#        sess = self.get_session()
+##        clause = dict(ControllerTable.script='---')
+#        qcol = 'setpoint'
+#        col = getattr(ControllerTable, qcol)
+#        cond = 100
+#        q = sess.query(BakeoutTable).join(ControllerTable).filter(col < cond)
+#        print q.all()
+
+if __name__ == '__main__':
+    db = BakeoutAdapter(dbname='bakeoutdb',
+                            password='Argon')
+    db.connect()
+
+    dbs = DBSelector(_db=db)
+    dbs._execute_()
+    dbs.configure_traits()
+#    print db.get_bakeouts(join_table='ControllerTable',
+#                    filter_str='ControllerTable.script="---"'
+#                    )
+
+
+#======== EOF ================================
 #    def get_analyses_path(self):
 ##        sess = self.get_session()
 ##        q = sess.query(Paths)
@@ -299,53 +409,6 @@ class BakeoutAdapter(DatabaseAdapter):
 #    def get_spectrometer(self, **kw):
 #        q = self._get_query(Spectrometers, **kw)
 #        return q.one()
-
-    def _get_query(self, klass, filter_str=None, **clause):
-        sess = self.get_session()
-        q = sess.query(klass)
-        if filter_str:
-            q = q.filter(filter_str)
-        else:
-            q = q.filter_by(**clause)
-        return q
-
-    def open_selector(self):
-        s = DBSelector(_db=self)
-        s._execute_()
-        s.edit_traits()#kind='livemodal')
-
-#==============================================================================
-#   adder
-#==============================================================================
-    def add_bakeout(self, commit=True, **kw):
-        b = BakeoutTable(**kw)
-        self._add_item(b, commit)
-        return b
-
-    def add_controller(self, bakeout, commit=True, **kw):
-        c = ControllerTable(**kw)
-        bakeout.controllers.append(c)
-        if commit:
-            self.commit()
-#        self._add_item(c, commit)
-        return c
-
-    def add_path(self, bakeout, commit=True, **kw):
-        p = PathTable(**kw)
-        bakeout.path = p
-        if commit:
-            self.commit()
-#        self._add_item(c, commit)
-        return p
-
-    def _add_item(self, obj, commit):
-        sess = self.get_session()
-        sess.add(obj)
-        if commit:
-            sess.commit()
-
-
-#======== EOF ================================
 #    def add_intercepts(self, **kw):
 #        o = Intercepts(**kw)
 #        self._add_item(o)
@@ -353,12 +416,12 @@ class BakeoutAdapter(DatabaseAdapter):
 #    def add_analysis(self, atype=None, spectype=None, **kw):
 #        if atype is not None:
 #            a = self.get_analysis_type(name=atype)
-#            kw['type_id'] = a.id
+#            kw['type_id'] = a._id
 #
 #        if spectype is not None:
 #            s = self.get_spectrometer(name=spectype)
-#            kw['spectrometer_id'] = s.id
+#            kw['spectrometer_id'] = s._id
 #
 #        o = Analyses(**kw)
 #        self._add_item(o)
-#        return o.id
+#        return o._id

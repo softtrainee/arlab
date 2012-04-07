@@ -99,6 +99,7 @@ def logging_setup(name, level=None):
         os.mkdir(bdir)
 
     logpath = os.path.join(bdir, '{}_current.log'.format(name))
+
     if os.path.isfile(logpath):
         backup_logpath, _cnt = unique_path(bdir, name, filetype='log')
         shutil.copyfile(logpath, backup_logpath)
@@ -113,6 +114,7 @@ def logging_setup(name, level=None):
         else:
             level = LEVEL
 
+#        print 'ffff'
         logging.basicConfig(level=level,
                         format=FORMAT,
                         filename=logpath,
@@ -125,14 +127,15 @@ def logging_setup(name, level=None):
         #main_logger.setLevel(logging.NOTSET)
         add_console(name='main', level=logging.NOTSET)
 
+
 def add_console(logger=None, name=None, display=None, level=LEVEL):
     '''
 
     '''
-
     if name:
         logger = new_logger(name)
 
+#    print logger, name
     if logger and logger not in LOGGER_LIST:
         LOGGER_LIST.append(logger)
         #print use_debug_logger, name

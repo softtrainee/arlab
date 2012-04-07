@@ -75,15 +75,16 @@ class BakeoutController(WatlowEZZone):
 
     max_output = Property(Float(enter_set=True, auto_set=False),
                           depends_on='_max_output')
-    _max_output = Float
+    _max_output = Float(100)
     _duration_timeout = False
 
     _timer = None
+
     def _record_process_changed(self):
         if self.record_process:
             if self._duration < 0.0001:
                 self._duration = 100
-            self.script='---'
+            self.script = '---'
 
     def _validate_max_output(self, v):
         try:
@@ -237,6 +238,10 @@ class BakeoutController(WatlowEZZone):
             self._active_script = t
             self._duration_timeout = False
             t.bootstrap()
+
+    def stop_timer(self):
+        if self._timer is not None:
+            self._timer.Stop()
 
     def start_timer(self):
 #        self.led.state='green'

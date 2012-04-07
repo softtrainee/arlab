@@ -18,7 +18,7 @@ limitations under the License.
 '''
 #============= enthought library imports  ==========================
 from traits.api import Array, Instance, Bool, Button, Event, \
-    Float, Str, String, Property, List, on_trait_change, Dict
+    Float, Str, String, Property, List, on_trait_change, Dict, Any
 from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring, \
     ButtonEditor, EnumEditor
 from pyface.timer.api import do_after as do_after_timer
@@ -47,6 +47,10 @@ from src.helpers.archiver import Archiver
 from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
 from src.database.bakeout_adapter import BakeoutAdapter
 from src.database.data_warehouse import DataWarehouse
+from src.scripts.core.process_view import ProcessView
+from pyface.timer.do_later import do_later
+from pyface.wx.dialog import confirmation
+from pyface.constant import NO, YES
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
@@ -120,7 +124,10 @@ class BakeoutManager(Manager):
 
     _nactivated_controllers = 0
     data_manager = Instance(DataManager)
-    graph_info=Dict
+    graph_info = Dict
+
+    database = Any
+    _suppress_commit = False
 #    def _convert_to_h5(self, path):
 #        args = self._bakeout_csv_parser(path)
 #        (names, nseries, ib, data, path, attrs) = args
@@ -135,11 +142,15 @@ class BakeoutManager(Manager):
 #==============================================================================
 # database 
 #==============================================================================
-    def _add_bakeout_to_db(self, controllers, path):
+    def _database_default(self):
         db = BakeoutAdapter(dbname='bakeoutdb',
                             password='Argon')
         db.connect()
 
+        return db
+
+    def _add_bakeout_to_db(self, controllers, path):
+        db = self.database
         d = get_datetime()
 
         args = dict(rundate=str(d.date()),
@@ -154,8 +165,7 @@ class BakeoutManager(Manager):
         #add to PathTable
         db.add_path(b, root=r, filename=n)
 
-        args = dict(commit=False)
-#        for c in self._get_active_controllers():
+        args = dict()
 
         #add to ControllerTable
         for c in controllers:
@@ -164,10 +174,6 @@ class BakeoutManager(Manager):
             args['setpoint'] = c.setpoint
             args['duration'] = c.duration
             _ci = db.add_controller(b, **args)
-
-#            b.controllers.append(ci)
-
-        db.commit()
 
 #==============================================================================
 # Button handlers
@@ -239,36 +245,54 @@ class BakeoutManager(Manager):
 
             self._set_configuration(path)
             self._load_configurations()
-            
+
     def reset_general_scan(self):
         self.info('Starting general scan')
         self._buffer_lock = Lock()
 
         #reset the graph
-        self.graph=self._graph_factory()
-        for i,name in enumerate(self._get_controller_names()):
+        self.graph = self._graph_factory()
+        for i, name in enumerate(self._get_controller_names()):
             self._setup_graph(name, i)
 
-        cs=self._get_controllers()
+        cs = self._get_controllers()
         for c in cs:
         #reset the general timers
             c.start_timer()
-            
+
     def _execute_fired(self):
         if self.alive:
+
+            self._suppress_commit = True
+            self.kill(user_kill=True,
+                      close=False
+                      )
+            self._suppress_commit = False
+
+            result = confirmation(None, 'Save to DB')
+            if result == 5104:
+                self.info('rolling back')
+                self.database.rollback()
+                self.database.close()
+
+                self.data_manager.delete_frame()
+            else:
+                self.database.commit()
+
+            if self.data_manager is not None:
+                self.data_manager.close()
+
             self.alive = False
-            self.kill(user_kill=True)
-            
             self.reset_general_scan()
-   
+
         else:
             self.alive = True
             t = Thread(target=self._execute_)
             t.start()
-            
+
     def opened(self):
         self.reset_general_scan()
-        
+
     def load(self, *args, **kw):
         app = self.application
         for bo in self._get_controller_names():
@@ -302,13 +326,19 @@ class BakeoutManager(Manager):
         else:
             self.alive = bool(len(self._get_active_controllers()))
 
-    def kill(self, **kw):
+    def _alive_changed(self, name, old, new):
+        if old and not new and not self._suppress_commit:
+            self.info('Bakeout finished - commit session to db')
+            self.database.commit()
+
+    def kill(self, close=True, **kw):
         '''
         '''
-        if self.data_manager is not None:
+
+        if self.data_manager is not None and close:
             self.data_manager.close()
 
-        self._clean_archive()
+#        self._clean_archive()
 
         if 'user_kill' in kw:
             if not kw['user_kill']:
@@ -316,9 +346,9 @@ class BakeoutManager(Manager):
         else:
             super(BakeoutManager, self).kill()
 
-        for tr in self._get_controller_names():
-            getattr(self, tr).end(**kw)
-            
+        for c in self._get_controllers():
+            c.end(**kw)
+
     def _setup_graph(self, name, pid):
         self.graph.new_series()
         self.graph_info[name] = dict(id=pid)
@@ -326,7 +356,7 @@ class BakeoutManager(Manager):
         self.graph.set_series_label(name, series=pid)
         if self.include_heat:
             self.graph.new_series(plotid=self.plotids[1])
-        
+
     def _execute_(self):
         '''
         '''
@@ -336,11 +366,14 @@ class BakeoutManager(Manager):
         self.data_buffer = []
         self.data_buffer_x = []
         self.data_count_flag = 0
+        for c in self._get_controllers():
+            c.stop_timer()
+
         self.graph = self._graph_factory()
 
         controllers = []
         for bc in self._get_controllers():
-            name=bc.name
+            name = bc.name
 #        for name in self._get_controller_names():
 #            bc = self.trait_get(name)[name]
             if bc.ok_to_run():
@@ -355,7 +388,7 @@ class BakeoutManager(Manager):
 
 #                if self.include_heat:
 #                    self.graph.new_series(plotid=self.plotids[1])
-                self._setup_graph(name,pid)
+                self._setup_graph(name, pid)
                 if pid == 0:
                     header.append('#{}_time'.format(name))
                 else:
@@ -378,23 +411,27 @@ class BakeoutManager(Manager):
             self.data_manager = self._data_manager_factory(controllers, header,
                                                            style='h5')
 
-            self._add_bakeout_to_db(controllers, self.data_manager.get_current_path())
+            self._add_bakeout_to_db(controllers,
+                                    self.data_manager.get_current_path())
 
             self._nactivated_controllers = len(controllers)
 
+            pv = ProcessView()
             for c in controllers:
                 c.run()
-#                time.sleep(0.01)
+                a = c._active_script
+                if a is not None:
+                    pv.add_script(c.name, a)
+
+            if pv.scripts:
+                do_later(pv.edit_traits)
 
             time.sleep(0.5)
             for c in controllers:
                 c.start_timer()
-#                time.sleep(0.05)
 
             if self.include_pressure:
-
                 # pressure plot
-
                 self.graph.new_series(type='line',
                         render_style='connectedpoints',
                         plotid=self.plotids[2])
@@ -406,6 +443,7 @@ class BakeoutManager(Manager):
             self._start_time = time.time()
         else:
             self.alive = False
+            self.reset_general_scan()
 
     def _graph_(self):
         for ci, (_name, i, pi, hi) in enumerate(self.data_buffer):
@@ -443,7 +481,7 @@ class BakeoutManager(Manager):
 
         if self.include_pressure:
             self._get_pressure(nx)
-        
+
         if self.alive:
             self._write_data()
 
@@ -645,15 +683,15 @@ class BakeoutManager(Manager):
         old,
         new,
         ):
-        
+
         if self.alive and not obj.isAlive():
             return
-        
+
         try:
             pid = self.graph_info[obj.name]['id']
         except KeyError:
-            return 
-        
+            return
+
         pv = getattr(obj, 'process_value')
         hp = getattr(obj, 'heat_power_value')
         with self._buffer_lock:
@@ -662,14 +700,14 @@ class BakeoutManager(Manager):
             self.data_count_flag += 1
 
             if self.alive:
-                n=len(self.active_controllers)
+                n = len(self.active_controllers)
             else:
-                n=len(self._get_controller_names())
-                
+                n = len(self._get_controller_names())
+
             if self.data_count_flag >= n:
                 do_after_timer(1, self._graph_)
-            
-                
+
+
 
     def _update_interval_changed(self):
         for tr in self._get_controller_names():
@@ -692,10 +730,13 @@ class BakeoutManager(Manager):
 
         if self.configuration is not '---':
             self._parse_config_file(self._configuration)
+#        self.reset_general_scan()
+
 
     @on_trait_change('include_+')
     def _toggle_graphs(self):
         self.graph = self._graph_factory()
+        self.reset_general_scan()
 
     def _clean_archive(self):
         root = os.path.join(data_dir, 'bakeouts')
@@ -719,8 +760,11 @@ class BakeoutManager(Manager):
 
         ni = 'bakeout-{}'.format(generate_datestamp())
 
-        base_dir = 'bakeouts'
-        dw = DataWarehouse(root=os.path.join(data_dir, base_dir))
+#        base_dir = '.bakeouts'
+#        base_dir = 'bakeouts'
+        root = '/usr/local/pychron/bakeoutdb'
+        dw = DataWarehouse(root=root)
+#                           os.path.join(data_dir, base_dir))
         dw.build_warehouse()
 
         _dn = dm.new_frame(directory=dw.get_current_dir(),
