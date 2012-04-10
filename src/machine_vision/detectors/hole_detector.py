@@ -105,7 +105,7 @@ class HoleDetector(Detector):
     threshold_tries = Range(0, 102, 2)
     threshold_expansion_scalar = Int(5)
 
-    def _edge_segmentation(self, src):
+    def _edge_segmentation(self, src, **kw):
         from scipy import ndimage
         from skimage.filter import canny
 
@@ -117,7 +117,7 @@ class HoleDetector(Detector):
         self.working_image.frames[0] = colorspace(p)
         return self._locate_targets(p, hole=False)
 
-    def _region_segmentation(self, src, **kw):
+    def _region_segmentation(self, src, tlow=100, thigh=150, **kw):
         from skimage.filter import sobel
         from skimage.morphology import watershed, is_local_maximum
         ndsrc = src.ndarray
@@ -131,9 +131,7 @@ class HoleDetector(Detector):
 #        from pylab import show, hist
 #        hist(ndsrc.ravel(), bins=range(0, 256))
 #        do_later(show)
-
-        tlow = 100
-        thigh = 150
+        self.info('{},{}'.format(tlow, thigh))
         markers = zeros_like(ndsrc)
         markers[ndsrc < tlow] = 1
         markers[ndsrc > thigh] = 255
@@ -167,7 +165,7 @@ class HoleDetector(Detector):
         targets = self._locate_targets(src, hole=False, **kw)
         return targets
 
-    def _threshold_segmentation(self, src):
+    def _threshold_segmentation(self, src, **kw):
         start = self.start_threshold_search_value
         end = start + self.threshold_search_width
         expand_value = self.threshold_expansion_scalar
@@ -350,7 +348,7 @@ class HoleDetector(Detector):
         #draw the center of the image
         true_cx, true_cy = self._get_true_xy(f0)
 
-        l = 1.5 * self.pxpermm / 2.0
+#        l = 1.5 * self.pxpermm / 2.0
         #self._draw_indicator(f0, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
         #self._draw_indicator(f1, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
         self._draw_center_indicator(f0)

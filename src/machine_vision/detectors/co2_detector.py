@@ -30,7 +30,6 @@ class CO2HoleDetector(HoleDetector):
         self.working_image.frames = [None]
 
     def locate_sample_well(self, cx, cy, holenum=None, **kw):
-        from skimage.exposure import rescale_intensity
         self._reset_image()
 
 #        self.cropwidth = 4
@@ -41,7 +40,7 @@ class CO2HoleDetector(HoleDetector):
 
 #        for ci in range(self.crop_tries):
 #        self.parent.close_image()
-        self.parent.show_image()
+
 
         src = self.parent.load_source().clone()
         src = grayspace(src)
@@ -61,6 +60,7 @@ class CO2HoleDetector(HoleDetector):
             src = self._crop_image(src, cw, ch)
 
         if self.use_contrast_equalization:
+            from skimage.exposure import rescale_intensity
             self.info('maximizing image contrast')
             src = src.ndarray
             # Contrast stretching
@@ -76,35 +76,59 @@ class CO2HoleDetector(HoleDetector):
 
         self.image.frames[0] = colorspace(src)
         self.working_image.frames[0] = colorspace(src)
+        self.parent.show_image()
 
-        self.info('using {} segmentation'.format(self.segmentation_style))
-        func = getattr(self, '_{}_segmentation'.format(self.segmentation_style))
+        npos = self._segment_source(src, self.segmentation_style, cx, cy, holenum)
+        if not npos:
+            #try another segementation style
+            for s in ['threshold', 'edge', 'region']:
+                if s is not self.segmentation_style:
+                    npos = self._segment_source(src, s, cx, cy, holenum)
+                    if npos:
+                        break
 
-        def foo(si):
-            args = func(si)
+
+        return npos
+
+#                return self._get_corrected_position(args, cx, cy, holenum)
+    def _segment_source(self, src, style, cx, cy, holenum):
+        def segment(si, **kw):
+            args = func(si, **kw)
             if args:
                 npos = self._get_corrected_position(args, cx, cy, holenum)
                 if npos:
                     return npos
 
-        if self.use_dilation:
-            ndilation = 2
-            for i in range(ndilation):
-                self.info('target not found. increasing dilation')
-                self.info('dilating image (increase white areas). value={}'.format(i + 1))
-    #            src = dilate(src, self._dilation_value)
-                src = dilate(src, i + 1)
-                self.image.frames[0] = colorspace(src)
-                self.working_image.frames[0] = colorspace(src)
-                npos = foo(src)
+        self.info('using {} segmentation'.format(style))
+        func = getattr(self, '_{}_segmentation'.format(style))
+        retries = 5
+        s = 5
+        for j in range(retries):
+            params = dict()
+            if self.use_dilation:
+                ndilation = 2
+                for i in range(ndilation):
+                    self.info('target not found. increasing dilation')
+                    self.info('dilating image (increase white areas). value={}'.format(i + 1))
+        #            src = dilate(src, self._dilation_value)
+                    osrc = dilate(src, i)
+                    self.image.frames[0] = colorspace(osrc)
+                    self.working_image.frames[0] = colorspace(osrc)
+            else:
+                osrc = src
 
-                if npos:
-                    return npos
-#                return self._get_corrected_position(args, cx, cy, holenum)
+            if self.segmentation_style == 'region':
+                params['tlow'] = 125 - s * j
+                params['thigh'] = 125 + s * j
+            import time
+#            time.sleep(2)
+            npos = segment(osrc, **params)
+            if npos:
+                return npos
 
     def _get_corrected_position(self, args, cx, cy, holenum):
 
-        mi = 0
+        mi = 500
         if args is None:
             return
 
