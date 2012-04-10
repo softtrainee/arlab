@@ -121,9 +121,14 @@ class Rectangle(MarkupItem):
         if self.use_border:
             self._render_border(gc, x, y, w, h)
         gc.set_fill_color((0, 0, 0))
-        gc.set_text_position(x + w / 4.0, y + h / 4.0)
-        gc.show_text(str(self.name))
-        gc.draw_path()
+
+        if self.name:
+            t = str(self.name)
+            tw = gc.get_full_text_extent(t)[0]
+            x = x + w / 2.0 - tw / 2.0
+            gc.set_text_position(x, y + h / 2 - 6)
+            gc.show_text(str(self.name))
+            gc.draw_path()
 
     def _render_border(self, gc, x, y, w, h):
         gc.set_stroke_color((0, 0, 0))
@@ -360,16 +365,21 @@ class CalibrationItem(MarkupItem, CalibrationObject):
         elif self.right.is_in(event):
             self.tool_state = 'rotate'
             return True
+
+
 class Label(MarkupItem):
     text = ''
     use_border = True
+
     def _render_(self, gc):
         x, y = self.get_xy()
 
         if self.use_border:
-            w = gc.get_full_text_extent(self.text)[0] + 2
+            gc.set_line_width(2)
+            offset = 5
+            w = gc.get_full_text_extent(self.text)[0] + 2 * offset
             gc.set_stroke_color((0, 0, 0))
-            gc.rect(x - 2, y - 2, w + 2, 14)
+            gc.rect(x - offset, y - offset, w, 18)
             gc.stroke_path()
 
         gc.set_fill_color((0, 0, 0))
