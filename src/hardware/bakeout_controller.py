@@ -197,7 +197,7 @@ class BakeoutController(WatlowEZZone):
         self.scripts = ['---'] + [f for f in files
                     if not os.path.basename(f).startswith('.') and
                         os.path.isfile(os.path.join(sd, f)) and
-                         os.path.splitext(f)[1] in ['.bo']]
+                         os.path.splitext(f)[1] in ['.py', '.bo']]
 
     def ok_to_run(self):
         ok = True
@@ -229,15 +229,24 @@ class BakeoutController(WatlowEZZone):
             self._duration_timeout = True
 
         else:
-
-            t = BakeoutScript(name='{}_script'.format(self.name),
-                              source_dir=os.path.join(paths.scripts_dir,
-                                                      'bakeoutscripts'),
-                                 file_name=self.script,
-                                 controller=self)
-            self._active_script = t
             self._duration_timeout = False
-            t.bootstrap()
+            if self.script.endswith('.bo'):
+                t = BakeoutScript(name='{}_script'.format(self.name),
+                                  source_dir=os.path.join(paths.scripts_dir,
+                                                          'bakeoutscripts'),
+                                     file_name=self.script,
+                                     controller=self)
+                t.bootstrap()
+            else:
+                from src.scripts.pyscripts.bakeout_pyscript import BakeoutPyScript
+                t = BakeoutPyScript(root=os.path.join(paths.scripts_dir,
+                                                          'bakeoutscripts'),
+                                    name=self.script,
+                                    controller=self)
+                t.bootstrap()
+                t.execute(new_thread=True)
+
+            self._active_script = t
 
     def stop_timer(self):
         if self._timer is not None:
@@ -303,7 +312,7 @@ class BakeoutController(WatlowEZZone):
 
             if self._active_script is not None:
                 if not script_kill:
-                    self._active_script.kill_script()
+                    self._active_script.cancel()
                     self._active_script = None
 
             if msg is None:

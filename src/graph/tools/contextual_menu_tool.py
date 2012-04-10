@@ -74,7 +74,6 @@ class ContextualMenuTool(Interactor):
             wxmenu.Destroy()
 
         comps = self.component.components_at(event.x, event.y)
-
         if comps:
             plot = comps[0]
             self.parent.selected_plot = plot

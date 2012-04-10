@@ -209,6 +209,7 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
 
     polygons = []
     brs = []
+    areas = []
     for i, cont in enumerate(contours.hrange()):
 
         result = cvApproxPoly(cont, sizeof(CvContour),
@@ -218,7 +219,6 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
 
         area = abs(cvContourArea(result))
         #print result.total, area, cvCheckContourConvexity(result), cont.flags
-
         if hole:
             hole_flag = cont.flags & CV_SEQ_FLAG_HOLE != 0
         else:
@@ -226,7 +226,7 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
 
         if (result.total >= 4
             and area > min_area
-            and area < max_area
+            #and area < max_area
             #and area < 3e6
             and cvCheckContourConvexity(result) == convextest
             and hole_flag
@@ -235,7 +235,10 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
             polygons.append(new_seq([ra[i] for i in range(result.total)]))
             brs.append(cvBoundingRect(result))
 
-    return [(p.asarray(CvPoint)) for p in polygons], brs
+            area = abs(cvContourArea(result))
+            areas.append(area)
+
+    return [(p.asarray(CvPoint)) for p in polygons], brs, areas
 
 
 def convert_color(color):

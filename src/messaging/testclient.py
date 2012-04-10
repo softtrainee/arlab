@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, String, Button, Int, Str, Enum, Float, Bool, Event, Property
-from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor
+from traits.api import HasTraits, String, Button, Int, Str, Enum, \
+    Float, Bool, Event, Property, List
+from traitsui.api import View, Item, HGroup, VGroup, ButtonEditor, EnumEditor
 
 #============= standard library imports ========================
 
@@ -33,8 +34,11 @@ import time
 from threading import Thread
 #import struct
 
+
 class Client(HasTraits):
-    command = String('GetData', enter_set=True, auto_set=False)
+    command = Property(String('GetData', enter_set=True, auto_set=False),
+                       depends_on='_command')
+    _command = Str
     resend = Button
     receive_data_stream = Button
     response = String
@@ -56,7 +60,8 @@ class Client(HasTraits):
     calculated_duration = Property(depends_on=['n_periods', 'period'])
 
     ask_id = 'A'
-
+    sent_commands = List
+    pcommand = Str
     def _get_calculated_duration(self):
         return self.period / 1000. * self.n_periods / 3600.
 
@@ -86,11 +91,21 @@ class Client(HasTraits):
 
     def _get_periodic_label(self):
         return 'Periodic' if not self._alive else 'Stop'
+
     def _resend_fired(self):
         self._send()
 
-    def _command_changed(self):
+    def _set_command(self, v):
+#    def _command_changed(self):
+        self._command = v
+        self.sent_commands.append(v)
         self._send()
+
+    def _get_command(self):
+        return self._command
+
+    def _pcommand_changed(self):
+        self._command = self._pcommand
 
     def _send(self, sock=None):
         if sock is None:
@@ -99,7 +114,7 @@ class Client(HasTraits):
         #send command
         sock.send(self.command)
         self.response = sock.recv(1024)
-        print self.response, 'foo'
+#        print self.response, 'foo'
         if 'ERROR' in self.response:
             print time.strftime('%H:%M:%S'), self.response
         return sock
@@ -110,7 +125,7 @@ class Client(HasTraits):
         if port is None:
             port = self.port
         addr = (self.host, port)
-        print 'connection address', addr
+#        print 'connection address', addr
         if self.kind == 'UDP':
             packet_kind = socket.SOCK_DGRAM
 
@@ -127,7 +142,6 @@ class Client(HasTraits):
             print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)
         except socket.error, e:
             print e
-
 
     def test(self):
         self.ask('StartMultRuns Foo')
@@ -155,6 +169,7 @@ class Client(HasTraits):
                      Item('response', show_label=False, style='custom',
                           width= -300
                           ),
+                     Item('pcommand', editor=EnumEditor(name='object.sent_commands')),
                      Item('resend', show_label=False),
 
                      HGroup(Item('periodic',

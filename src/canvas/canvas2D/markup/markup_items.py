@@ -37,6 +37,7 @@ def calc_rotation(x1, y1, x2, y2):
 
     da = math.degrees(angle)
     return da if da >= 0 else 360 + da
+
 class MarkupItem(HasTraits):
     identifier = ''
     x = Float
@@ -87,6 +88,10 @@ class MarkupItem(HasTraits):
         offset = 1
         return x + offset, y + offset
 
+    def get_wh(self):
+        (w, h), (ox, oy) = self.canvas.map_screen([(self.width, self.height), (0, 0)])
+        return w - ox, h - oy
+
     def set_canvas(self, canvas):
         self.canvas = canvas
 
@@ -96,6 +101,7 @@ class MarkupItem(HasTraits):
 class Point(MarkupItem):
     pass
 
+
 class Rectangle(MarkupItem):
     width = 0
     height = 0
@@ -103,26 +109,74 @@ class Rectangle(MarkupItem):
     y = 0
 
     def _render_(self, gc):
-        gc.rect(self.x, self.y, self.width, self.height)
+        x, y = self.get_xy()
+        w, h = self.get_wh()
+        gc.rect(x, y, w, h)
+        gc.draw_path()
 
+        gc.set_fill_color((0, 0, 0))
+        gc.set_text_position(x + w / 4.0, y + h / 4.0)
+        gc.show_text(str(self.name))
+        gc.draw_path()
+
+
+class Valve(Rectangle):
+    soft_lock = False
+    width = 2
+    height = 2
+    def _render_(self, gc):
+#        if self.state:
+#                        gc.set_fill_color((0, 1, 0))
+#                    else:
+#                        if item.selected:
+#                            gc.set_fill_color((1, 1, 0))
+#                        else:
+#                            gc.set_fill_color((1, 0, 0))
+
+        x, y = self.get_xy()
+        w, h = self.get_wh()
+        gc.rect(x, y, w, h)
+        gc.draw_path()
+
+        #print item.name, item.soft_lock
+        if self.soft_lock:
+            gc.save_state()
+            gc.set_fill_color((0, 0, 0, 0))
+            gc.set_stroke_color((0, 0.75, 1))
+            gc.set_line_width(3)
+            gc.rect(x - 2, y - 2, w + 4, h + 4)
+            gc.draw_path()
+#            gc.restore_state()
+        gc.set_fill_color((0, 0, 0))
+        gc.set_text_position(x + w / 4.0, y + h / 4.0)
+        gc.show_text(self.name)
+        gc.draw_path()
 
 class Line(MarkupItem):
     start_point = None
     end_point = None
     screen_rotation = Float
     data_rotation = Float
-
+    width = 1
     def __init__(self, p1, p2, *args, **kw):
+
+        if isinstance(p1, tuple):
+            p1 = Point(*p1, **kw)
+        if isinstance(p2, tuple):
+            p2 = Point(*p2, **kw)
+
         self.start_point = p1
         self.end_point = p2
 
         super(Line, self).__init__(0, 0, *args, **kw)
+
     def set_canvas(self, canvas):
         self.start_point.set_canvas(canvas)
         self.end_point.set_canvas(canvas)
 
     def _render_(self, gc):
 #        gc.begin_path()
+        gc.set_line_width(self.width)
         x, y = self.start_point.get_xy()
         #x, y = self.canvas.map_screen([(self.start_point.x, self.start_point.y)])[0]
         gc.move_to(x, y)

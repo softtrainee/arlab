@@ -115,6 +115,8 @@ class RemoteHardwareManager(Manager):
                 pref.set('pychron.hardware.system_lock_address',
                           hosts[names[0].lower()])
         except Exception, err:
+            import traceback
+            traceback.print_exc()
             print 'system lock exception', err
 
         pref.save()

@@ -113,6 +113,12 @@ class CoreScript(Loggable):
 #            return True
         return True
 
+    def cancel(self, **kw):
+        '''
+            required to implement PyScript protocol
+        '''
+        self.kill_script()
+
     def kill_script(self, failure_reason=None, force=False, user_cancel=False):
         if self.isAlive() or force:
             self._kill_script()
@@ -120,8 +126,8 @@ class CoreScript(Loggable):
             for s in self.stoppable_scripts:
                 s.kill_script()
 
-            fr = self.manager.failure_reason if self.manager is not None else failure_reason
-
+            fr = self.manager.failure_reason \
+                if self.manager is not None else failure_reason
 
             if user_cancel:
                 self.info('run canceled by user')

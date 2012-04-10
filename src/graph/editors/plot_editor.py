@@ -103,17 +103,21 @@ class PlotEditor(HasTraits):
 
         elif self.graph:
             pplot = self.graph.plots[self.id]
+
         plots = pplot.plots
         return plots
 
-    def _get_series_editor_kwargs(self, plot, sid):
-        n = self.graph.get_series_label(plotid=self.id, series=sid)
+    def _get_series_editor_kwargs(self, plot, _id, sid=None):
+#        print sid
         kwargs = dict(series=plot,
                              graph=self.graph,
                              plotid=self.id,
-                             id=sid,
-                             name=n
+                             id=_id,
+#                             name=n
                              )
+        if sid is not None:
+            n = self.graph.get_series_label(plotid=self.id, series=sid)
+            kwargs['name'] = n
 
         return kwargs
 
@@ -126,9 +130,12 @@ class PlotEditor(HasTraits):
             self.series_editors = []
             editors = self.series_editors
 
-        for i, key in enumerate(plots):
-            plot = plots[key][0]
+        series_filter = True if len(plots) > 10 else False
 
+        for i, (key, plot) in enumerate(plots.iteritems()):
+#        for i, key in enumerate(plots):
+#            plot = plots[key][0]i
+            plot = plot[0]
             if isinstance(plot, PolygonPlot):
                 editor = PolygonPlotEditor
             elif isinstance(plot, (CMapImagePlot, BaseContourPlot)):
@@ -136,12 +143,17 @@ class PlotEditor(HasTraits):
 
             else:
                 editor = self._series_editor_klass
-#            series = get_series_id()
 
-            kwargs = self._get_series_editor_kwargs(plot, i)
+            kwargs = self._get_series_editor_kwargs(plot, i, sid=key)
+            if series_filter and not kwargs['name']:
+                continue
+
             editors.append(editor(**kwargs))
+
         editors.sort(key=lambda x: x.id)
 
+        if len(editors) > 20:
+            self._series_editors = editors[:10]
         if plots:
             self._sync_limits(plot)
 

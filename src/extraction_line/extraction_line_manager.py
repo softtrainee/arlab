@@ -30,6 +30,7 @@ from src.scripts.extraction_line_script import ExtractionLineScript
 
 from view_controller import ViewController
 from src.managers.manager import Manager
+from src.scripts.pyscripts.pyscript_editor import PyScriptManager
 
 #from src.managers.multruns_report_manager import MultrunsReportManager
 
@@ -62,6 +63,8 @@ class ExtractionLineManager(Manager):
 #    pumping_monitor = Instance(PumpingMonitor)
 
     runscript = None
+
+    pyscript_editor = Instance(PyScriptManager)
 
     def get_subsystem_module(self, subsystem, module):
         '''
@@ -149,14 +152,24 @@ class ExtractionLineManager(Manager):
         self.valve_manager.claim_section(name.split('_')[0], value.lower)
 
     def reload_scene_graph(self):
-        #remember the explanation settings
+
         iddict = dict()
+        #remember the explanation settings
         for ev in self.explanation.explanable_items:
             i = ev.identify
             iddict[ev.name] = i
 
         if self.canvas is not None:
-            self.canvas.canvas3D.setup()#canvas3D_dir, 'extractionline3D.txt')
+            if self.canvas.style == '2D':
+                p = os.path.join(canvas2D_dir, 'canvas.xml')
+                self.canvas.load_canvas_file(p)
+            else:
+                self.canvas.canvas3D.setup()#canvas3D_dir, 'extractionline3D.txt')
+
+#        if self.canvas.style == '2D':
+##            self.canvas.invalidate_and_redraw()
+#        else:
+#            if self.canvas is not None:
 
             #load state
             if self.valve_manager:
@@ -347,6 +360,30 @@ class ExtractionLineManager(Manager):
         else:
             self.runscript = None
 
+    def execute_pyscript(self, name):
+        if not name.endswith('.py'):
+            name += '.py'
+
+        p = os.path.join(scripts_dir, 'pyscripts', name)
+        if not os.path.isfile(p):
+            return p
+
+        pe = self.pyscript_editor
+        return pe.execute_script(path=p)
+
+    def get_script_state(self, key):
+        return self.pyscript_editor.get_script_state(key)
+
+    def open_pyscript_editor(self):
+#        from src.scripts.pyscripts.pyscript import PyScript
+#        p = PyScript(root=os.path.join(scripts_dir, 'pyscripts'),
+#                          name='test.py',
+#                          manager=self)
+#        p.execute(new_thread=True)
+#        pe = (parent=self)
+#        pe.edit_traits()
+        self.pyscript_editor.edit_traits()
+
     def set_selected_explanation_item(self, obj):
 
         selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
@@ -392,6 +429,8 @@ class ExtractionLineManager(Manager):
 #=================== defaults ===========================
 #    def _view_controller_default(self):
 #        return self._view_controller_factory()
+    def _pyscript_editor_default(self):
+        return PyScriptManager(parent=self)
 
     def _explanation_default(self):
         '''
@@ -419,7 +458,7 @@ class ExtractionLineManager(Manager):
 if __name__ == '__main__':
     elm = ExtractionLineManager()
     elm.bootstrap()
-    elm.canvas.style = '3D'
+    elm.canvas.style = '2D'
     elm.configure_traits()
 
 #=================== EOF ================================

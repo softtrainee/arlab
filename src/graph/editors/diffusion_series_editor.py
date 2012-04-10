@@ -12,21 +12,34 @@ class DiffusionSeriesEditor(SeriesEditor):
     runid = Str
     show_sample = Bool(True)
     show_model = Bool(True)
+    show_inverse_model = Bool(True)
     isspectrum = Bool(False)
     iscoolinghistory = Bool(False)
+
+    def _show_inverse_model_changed(self):
+        if self.isspectrum:
+            try:
+                plots = self.graph.groups['inverse_model_spectrum']
+            except KeyError:
+                return
+            for p in plots:
+                p = p[0]
+                p.visible = self.show_inverse_model
+
+            self.graph.redraw()
 
     def _show_sample_changed(self):
         if self.isspectrum:
             #toggles visibility of the error envelope
             self.graph.set_series_visiblity(self.show_sample, plotid=self.plotid,
-                                            series=self.id - 1)
+                                            series='{}.meas-err'.format(self.runid))
 
         self.graph.set_series_visiblity(self.show_sample, plotid=self.plotid,
-                                        series=self.id)
+                                        series='{}.meas'.format(self.runid))
 
     def _show_model_changed(self):
         self.graph.set_series_visiblity(self.show_model, plotid=self.plotid,
-                                        series=self.id + 1)
+                                        series='{}.model'.format(self.runid))
 
 
 class PolyDiffusionSeriesEditor(PolygonPlotEditor, DiffusionSeriesEditor):

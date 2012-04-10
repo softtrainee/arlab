@@ -17,6 +17,13 @@ limitations under the License.
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.remote_hardware.errors.error import ErrorCode
+class PyScriptErrorCode(ErrorCode):
+    msg = 'invalid pyscript {} does not exist'
+    code = 14
+
+    def __init__(self, path, *args, **kw):
+        self.msg = self.msg.format(path)
+        super(PyScriptErrorCode, self).__init__(*args, **kw)
 
 
 #===== debug errors =====

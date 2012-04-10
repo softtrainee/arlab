@@ -29,7 +29,8 @@ from src.data_processing.centroid.centroid import centroid as _centroid
 #    return cv.asMat(src[x:]
 def resize(src, w, h, dst=None):
     if dst is None:
-        dst = cv.Mat()
+        dst = src.clone()
+
     cv.resize(src, dst, cv.Size(w, h))
     return dst
 
@@ -77,6 +78,7 @@ def new_point(x, y):
 # manipulation functions
 #==============================================================================
 def crop(src, x, y, w, h, mat=True):
+#    print y, y + h, x, x + w
     v = src[y:y + h, x:x + w]
     if mat:
         v = cv.asMat(v)
@@ -376,32 +378,38 @@ def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
     polygons = []
     brs = []
     areas = []
+
     for cont, hi in zip(contours, hierarchy.tolist()):
         cont = cv.asMat(cont)
-        for i in [0.01]:
-            m = cv.arcLength(cont, True)
-            result = cv.approxPolyDP_int(cont, m * 0.01, True)
-            res_mat = cv.asMat(result)
-            area = abs(cv.contourArea(res_mat))
+#        for i in [0.01]:
+        m = cv.arcLength(cont, True)
+        result = cv.approxPolyDP_int(cont, m * 0.01, True)
+        res_mat = cv.asMat(result)
+        area = abs(cv.contourArea(res_mat))
 
-            if hole:
-                hole_flag = hi[3] != -1
-            else:
-                hole_flag = True
+        if hole:
+            hole_flag = hi[3] != -1
+        else:
+            hole_flag = True
 
+#        print cv.isContourConvex(res_mat)
+#        print result
 #            print 'checking',len(result), area,area>min_area, area<max_area,cv.isContourConvex(res_mat) == bool(convextest), hole_flag 
 #            print cv.isContourConvex(res_mat), convextest
-            if (len(result) > nsizes
-                and area > min_area
-                and area < max_area
-                #and area < 3e6
-                and cv.isContourConvex(res_mat) == bool(convextest)
-                and hole_flag
-                    ):
+        if (len(result) > nsizes
+            and area > min_area
+            and area < max_area
+            #and area < 3e6
+#            and cv.isContourConvex(res_mat) == bool(convextest)
+            and hole_flag
+                ):
 
-                polygons.append(result)
-                brs.append(cv.boundingRect(res_mat))
-                areas.append(area)
+            if convextest and not cv.isContourConvex(res_mat):
+                continue
+
+            polygons.append(result)
+            brs.append(cv.boundingRect(res_mat))
+            areas.append(area)
 #    print len(polygons), len(contours), area
     return polygons, brs, areas
 
@@ -456,7 +464,8 @@ def draw_polygons(img, polygons, thickness=1, color=(0, 255, 0)):
 
 def draw_contour_list(src, clist, hierarchy=None,
                        external_color=(0, 0, 255),
-                      hole_color=(255, 255, 0)
+                      hole_color=(255, 0, 255),
+                      thickness=1
                       ):
     '''
     '''
@@ -471,6 +480,8 @@ def draw_contour_list(src, clist, hierarchy=None,
         hierarchy = [[True] * 4] * len(clist)
 
     for hi, ci in zip(hierarchy, clist):
+
+        color = hole_color if hi[3] != -1 else external_color
         p = cv.vector_vector_Point2i()
         #if hi[3]
         p.create([ci])
@@ -479,9 +490,9 @@ def draw_contour_list(src, clist, hierarchy=None,
 #                   clist,
                     - 1,
                    #convert_color(external_color),
-                   convert_color(hole_color),
+                   convert_color(color),
                    #255,
-                   thickness=1
+                   thickness=thickness
                    )
 
 

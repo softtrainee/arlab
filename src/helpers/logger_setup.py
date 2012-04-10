@@ -128,12 +128,23 @@ def logging_setup(name, level=None):
         add_console(name='main', level=logging.NOTSET)
 
 
-def add_console(logger=None, name=None, display=None, level=LEVEL):
+MAXLEN = 30
+def add_console(logger=None, name=None,
+                display=None, level=LEVEL, unique=False):
     '''
 
     '''
     if name:
-        logger = new_logger(name)
+        n = '{:<{}}'.format(name, MAXLEN)
+        logger = new_logger(n)
+#        if unique:
+#            i = 1
+#            while logger in LOGGER_LIST:
+#                n = '{}-{:03n}'.format(name, i)
+#                n = '{:<{}}'.format(n, MAXLEN)
+#
+#                logger = new_logger(n)
+#                i += 1
 
 #    print logger, name
     if logger and logger not in LOGGER_LIST:

@@ -25,12 +25,13 @@ from src.envisage.core.envisage_manager import EnvisageManager
 from src.helpers.paths import canvas2D_dir
 class CEditor(EnvisageEditor):
     '''
-        G{classtree}
+       
     '''
     id_name = 'Canvas'
+
 class CanvasManager(EnvisageManager):
     '''
-        G{classtree}
+       
     '''
     canvas_designer = Instance(CanvasDesigner)
     _selected_item = DelegatesTo('canvas_designer')

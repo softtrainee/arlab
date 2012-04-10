@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Property, Bool
+from traits.api import HasTraits, Float, Property, Bool, Str
 from traitsui.api import View, Item, RangeEditor, Handler
 from pyface.timer.timer import Timer
+from traitsui.menu import Action
 
 #============= standard library imports ========================
 
@@ -25,9 +26,13 @@ class WDHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
 
-    def closed(self, info, is_okd):
-        info.object.closed()
+    def closed(self, info, is_ok):
+        info.object.closed(is_ok)
         return True
+
+    def _continue(self, info):
+        info.object._continue()
+
 class WaitDialog(HasTraits):
     condition = None
     wtime = Float
@@ -37,6 +42,13 @@ class WaitDialog(HasTraits):
     auto_start = Bool(True)
     timer = None
     title = 'Wait'
+    message = Str
+
+    _continued = False
+    _canceled = False
+
+    window_width = Float(0.45)
+
     def __init__(self, *args, **kw):
         super(WaitDialog, self).__init__(*args, **kw)
         self._current_time = self.wtime
@@ -46,6 +58,7 @@ class WaitDialog(HasTraits):
     def start(self, condition=None):
         self.condition = condition
         self.timer = Timer(1000, self._update_time)
+        self._continued = False
 
     def _get_current_time(self):
         return self._current_time
@@ -59,7 +72,7 @@ class WaitDialog(HasTraits):
                 self.timer.Stop()
 
             try:
-                self.condition.notify()
+                self.condition.notifyAll()
                 self.condition.release()
             except (RuntimeError, AttributeError):
                 pass
@@ -72,19 +85,40 @@ class WaitDialog(HasTraits):
         self._current_time -= 1
 
     def close(self):
-        self.ui.dispose()
+        if self.timer is not None:
+            self.timer.Stop()
+        try:
+            self.ui.dispose()
+        except:
+            pass
 
-    def closed(self):
+    def closed(self, ok):
+        if not ok:
+            self._canceled = True
+        else:
+            self._canceled = False
+        self._current_time = -1
+
+    def _continue(self):
+        self._continued = True
         self._current_time = -1
 
     def traits_view(self):
 
-        kw = dict(buttons=['Cancel'],
+        kw = dict(buttons=['Cancel',
+                           Action(name='Continue',
+                                  action='_continue')
+                           ],
                   handler=WDHandler,
+                  width=self.window_width
                   )
         if self.title is not None:
             kw['title'] = self.title
-        return View(Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
+
+        return View(
+
+                    Item('message', show_label=False, style='readonly'),
+                    Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
                                                            low_name='low_name',
                                                            high_name='wtime'
                                                            )),

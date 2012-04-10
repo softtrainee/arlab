@@ -19,6 +19,8 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+BASENAME = 'src.extraction_line.plugins.extraction_line_actions:{}'
+MPATH = 'MenuBar/Extraction Line'
 class ExtractionLineActionSet(WorkbenchActionSet):
     '''
     '''
@@ -26,23 +28,29 @@ class ExtractionLineActionSet(WorkbenchActionSet):
     actions = [
 
                Action(name='Extraction Line Manager',
-                      path='MenuBar/Extraction Line',
-                      class_name='src.extraction_line.plugins.extraction_line_actions:OpenExtractionLineManager'
+                      path=MPATH,
+                      class_name=BASENAME.format('OpenExtractionLineManager')
                       ),
 
                Action(name='Load Canvas',
-                      path='MenuBar/Extraction Line',
-                      class_name='src.extraction_line.plugins.extraction_line_actions:LoadCanvasAction'),
+                      path=MPATH,
+                      class_name=BASENAME.format('LoadCanvasAction')
+                      ),
                Action(name='Refresh Canvas',
-                      path='MenuBar/Extraction Line',
-                      class_name='src.extraction_line.plugins.extraction_line_actions:RefreshCanvasAction'),
+                      path=MPATH,
+                      class_name=BASENAME.format('RefreshCanvasAction')
+                      ),
                Action(name='Canvas Views',
-                      path='MenuBar/Extraction Line',
-                      class_name='src.extraction_line.plugins.extraction_line_actions:OpenViewControllerAction'),
-               Action(name='Device Streamer',
-                      path='MenuBar/Extraction Line',
-                      class_name='src.extraction_line.plugins.extraction_line_actions:OpenDeviceStreamerAction'),
-
+                      path=MPATH,
+                      class_name=BASENAME.format('OpenViewControllerAction')
+                      ),
+                Action(name='Open PyScript Editor',
+                       path=MPATH,
+                       class_name=BASENAME.format('OpenPyScriptEditorAction'),
+#               Action(name='Device Streamer',
+#                      path='MenuBar/Extraction Line',
+#                      class_name='src.extraction_line.plugins.extraction_line_actions:OpenDeviceStreamerAction'),
+                       )
 
               ]
 #============= EOF ====================================

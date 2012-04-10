@@ -201,15 +201,15 @@ class RemoteCommandServer(ConfigLoadable):
 
             except:
                 pass
-        self._server.socket.close()
-
+#        self._server.socket.close()
 
     def shutdown(self):
         '''
         '''
+        self._connected = False
         if self._server is not None:
-            #self._server.shutdown()
-            #self._server.socket.close()
+#            self._server.shutdown()
+            self._server.socket.close()
 
             self._running = False
 
@@ -296,12 +296,15 @@ class RemoteCommandServer(ConfigLoadable):
     def _save_fired(self):
         '''
         '''
+
+        self.shutdown()
         config = self.get_configuration()
         for attr in ['host', 'port']:
             a = getattr(self, attr)
             setattr(self, 'loaded_{}'.format(attr), a)
             config.set('General', attr, a)
             self.write_configuration(config)
+            self.load()
         self._dirty = False
 
     def _server_button_fired(self):

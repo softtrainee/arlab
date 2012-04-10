@@ -226,9 +226,15 @@ class DiffusionGraph(Graph):
 
         b, _p = self.new_series(ar39, age, plotid=pid, **kw)
         plots = [b, a] if a is not None else [b]
-
-        if ngroup:
+        if ngroup is True:
             self.groups['spectrum'].append(plots)
+        elif isinstance(ngroup, str):
+            try:
+                self.groups[ngroup].append(plots)
+#                print self.groups[ngroup]
+            except KeyError:
+                self.groups[ngroup] = [plots]
+
         else:
             self.groups['spectrum'][-1] += plots
 
@@ -289,7 +295,6 @@ class DiffusionGraph(Graph):
         self.redraw()
 
     def build_unconstrained_thermal_history(self, datacontainer, pid=4, contour=True):
-
         self.set_x_title('t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
         self.set_y_limits(min=100, plotid=pid)
