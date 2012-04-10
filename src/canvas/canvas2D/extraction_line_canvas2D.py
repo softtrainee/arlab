@@ -122,6 +122,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                 vv = self.valves[key]
                 v.state = vv.state
                 v.soft_lock = vv.soft_lock
+
             self.markupcontainer[key] = v
             ndict[key] = v
 
