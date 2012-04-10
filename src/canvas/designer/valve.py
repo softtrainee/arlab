@@ -31,6 +31,7 @@ class Valve(HasTraits):
     identify = Bool
     selected = Bool
     soft_lock = Bool
+
     def _get_pos(self):
         '''
         '''

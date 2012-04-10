@@ -63,8 +63,6 @@ class BaseDataCanvas(DataView):
 
     def line_plot(self, x, y, new_plot=True):
         if self.plot is None or new_plot:
-
-
             if isinstance(x, (float, int)):
                 x = [x]
 

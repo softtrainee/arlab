@@ -25,8 +25,6 @@ from src.helpers.gdisplays import gWarningDisplay
 #from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
 from globals import show_warnings
 
-MAXLEN = 30
-
 
 class Loggable(HasTraits):
 
@@ -35,38 +33,27 @@ class Loggable(HasTraits):
 
     logger = Any(transient=True)
     name = String
-
+    logger_name = String
     # logger_display = None
 
-    def __init__(self, *args, **kw):
-        '''
-        '''
-
-        super(Loggable, self).__init__(*args, **kw)
-        self._add_logger(*args, **kw)
-
-    @on_trait_change('name')
-    def _add_logger(self, *args, **kw):
+    @on_trait_change('name, logger_name')
+    def _add_logger(self):
         '''
 
         '''
+        if self.logger_name:
+            name = self.logger_name
+        elif self.name:
+            name = self.name
+        else:
+            name = self.__class__.__name__
 
-        try:
-            name = kw['logger_name']
-        except KeyError:
-            if self.name:
-                name = self.name
-            else:
-                name = self.__class__.__name__
-
-        name = '{:<{}}'.format(name, MAXLEN)
         #self.logger = add_console(name=name, display=gLoggerDisplay)
         #disable the gLoggerDisplay
         self.logger = add_console(name=name)
 
     def warning(self, msg, decorate=True):
         '''
- 
         '''
 
         if self.logger is not None:

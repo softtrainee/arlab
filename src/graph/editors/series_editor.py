@@ -51,6 +51,8 @@ class SeriesEditor(HasTraits):
     def _series_changed(self, obj, name, new):
         '''
         '''
+#        print obj, name, new
+
         if name[0] != '_' and name[-1:] != '_' and name not in ['visible', 'series']:
 
             if hasattr(obj, 'scatter'):
@@ -62,6 +64,11 @@ class SeriesEditor(HasTraits):
                 if name == 'color':
                     p2.outline_color = new
             self.graph.update_group_attribute(obj, name, new, dataid=self.id / 2)
+#            print 'rder', self.id
+#            p = self.graph.plots[0]
+#            for k, v in p.plots.iteritems():
+#                print k, v
+#            self.graph.redraw()
 
     def _show_changed(self, name, old, new):
         '''

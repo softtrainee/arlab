@@ -18,11 +18,13 @@ from traits.api import HasTraits, Any, List, Int, Bool
 
 #=============standard library imports ========================
 import wx
-from numpy import asarray, flipud, ndarray, hstack, array, ones, vstack, zeros
+from numpy import asarray, flipud, ndarray, hstack, array, ones, vstack, zeros, \
+    percentile
 #=============local library imports  ==========================
 from cvwrapper import swapRB, grayspace, cvFlip, \
     draw_lines, add_scalar, new_dst, \
-    resize, asMat, frompil, save_image, load_image, get_size#, setImageROI, resetImageROI
+    resize, asMat, frompil, save_image, load_image, \
+    get_size, smooth, denoise#, setImageROI, resetImageROI
     #cvSetImageROI, cvResetImageROI
 
 #class GraphicsContainer(object):
@@ -214,15 +216,17 @@ class Image(HasTraits):
 
 #        w = sum([s.size()[0] for s in src])
 #        h = sum([s.size()[1] for s in src])
-        w = 640
-        h = 480
+        w = 600
+        h = 590
         display = new_dst(w, h, 3)
         try:
             s1 = src[0].ndarray
             s2 = src[1].ndarray
         except IndexError:
-            resize(src[0], 640, 480, dst=display)
+            resize(src[0], w, h, dst=display)
             return display
+        except TypeError:
+            return
 
         try:
             s1 = src[0].ndarray
@@ -245,7 +249,7 @@ class Image(HasTraits):
             i1 = PILImage.fromarray(da)
             composite = frompil(i1)
 
-            resize(composite, 640, 320, dst=display)
+            resize(composite, w, h, dst=display)
         except TypeError:
             pass
 

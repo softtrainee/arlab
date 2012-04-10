@@ -21,54 +21,63 @@ from chaco.base_contour_plot import BaseContourPlot
 
 class DiffusionPlotEditor(PlotEditor):
     _series_editors = List
+    iscoolinghistory = False
 
     def _build_series_editors(self):
         self.series_editors = []
-
         plots = self._get_plots()
-
         #if plots really long means its an unconstrained thermal hist
         # and we dont want to display series editors
-        if plots and len(plots) < 100:
-            super(DiffusionPlotEditor, self)._build_series_editors(self._series_editors)
-            for i, rid in enumerate(self.graph.runids):
+#        if plots and len(plots) < 100:
+        super(DiffusionPlotEditor, self)._build_series_editors(self._series_editors)
+#        print self.graph.runids
+        for i, rid in enumerate(self.graph.runids):
+#            print rid
+            #hack because polygon plot needs special editor
+            isspectrum = True
+            self.iscoolinghistory = False
+#            plot = plots['plot{}'.format(i)][0]
+            _name, plot = plots.popitem()
+            plot = plot[0]
+            if isinstance(plot, PolygonPlot):
+                if isinstance(plots['plot{}'.format(i + 1)][0], PolygonPlot):
+                    self.iscoolinghistory = True
+                    isspectrum = False
+                elif not isinstance(plot, ContourPolyPlot):
+                    isspectrum = True
+                    i += 1
 
-                #hack because polygon plot needs special editor
-                isspectrum = False
-                self.iscoolinghistory = False
-                plot = plots['plot{}'.format(i)][0]
-                if isinstance(plot, PolygonPlot):
-                    if isinstance(plots['plot{}'.format(i + 1)][0], PolygonPlot):
-                        self.iscoolinghistory = True
-                    elif not isinstance(plot, ContourPolyPlot):
-                        isspectrum = True
-                        i += 1
-
-                    plot = plots['plot{}'.format(i)][0]
+#                plot = plots['plot{}'.format(i)][0]
 
 #                elif isinstance(plot, CMapImagePlot):
-                elif isinstance(plot, BaseContourPlot):
-                    self.isunconstrained_thermal_history = True
+            elif isinstance(plot, BaseContourPlot):
+                self.isunconstrained_thermal_history = True
+                isspectrum = False
 #                    i+=1
 #                    plot=plots['plot{}'.format(i)][0]
 
-                kwargs = self._get_series_editor_kwargs(plot, i)
-                kwargs['runid'] = rid
-                kwargs['isspectrum'] = isspectrum
-                kwargs['iscoolinghistory'] = self.iscoolinghistory
+            kwargs = self._get_series_editor_kwargs(plot, i)
+            kwargs['runid'] = rid
+            kwargs['isspectrum'] = isspectrum
+            kwargs['iscoolinghistory'] = self.iscoolinghistory
 
-                editor = None
-                if self.iscoolinghistory:
-                    editor = PolyDiffusionSeriesEditor
+            editor = None
+            if self.iscoolinghistory:
+                editor = PolyDiffusionSeriesEditor
 #                elif self.isunconstrained_thermal_history:
 #                    editor = ContourPolyPlotEditor
-                elif isinstance(plot, BaseXYPlot):
-                    editor = DiffusionSeriesEditor
+            elif isinstance(plot, BaseXYPlot):
+                editor = DiffusionSeriesEditor
 
-                if editor:
-                    self.series_editors.append(editor(**kwargs))
+            if editor:
+                self.series_editors.append(editor(**kwargs))
 
-        self._sync_limits(plots['plot0'][0])
+        self._sync_limits(plot)
+#        try:
+#            self._sync_limits(plots['plot0'][0])
+#        except KeyError, e:
+#            print e
+#        self._sync_limits(pi)
 
     def _get_additional_groups(self):
         cols = [ObjectColumn(name='name', editable=False),
@@ -111,6 +120,7 @@ class DiffusionPlotEditor(PlotEditor):
             return [ObjectColumn(name='runid', editable=False),
                 CheckboxColumn(name='show_sample', label='Sample'),
                 CheckboxColumn(name='show_model', label='Model'),
+                CheckboxColumn(name='show_inverse_model', label='Inv. Model')
                 ]
 
 #============= EOF =====================================

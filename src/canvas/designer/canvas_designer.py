@@ -27,7 +27,6 @@ from src.helpers.paths import canvas2D_dir
 from src.envisage.core.envisage_editable import EnvisageEditable
 class CanvasDesigner(EnvisageEditable):
     '''
-        G{classtree}
     '''
     canvas = Instance(DesignerCanvas)
 

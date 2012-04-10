@@ -188,35 +188,37 @@ class DesignerCanvas(ExtractionLineCanvas2D):
 
     def key_set_tool_state(self, event):
         '''
-            @type event: C{str}
-            @param event:
+
         '''
-        c = event.character
-        window = event.window
-        if c == 'v':
-            self.tool_state = 'valve'
-            window.set_pointer(self.cross_pointer)
-            self.add_item('valve')
-        elif c == 'p':
-            e = CanvasPreviewer()
-            e.canvas.items = self.items
-            e.edit_traits()
+        try:
+            c = event.character
+            window = event.window
+            if c == 'v':
+                self.tool_state = 'valve'
+                window.set_pointer(self.cross_pointer)
+                self.add_item('valve')
+            elif c == 'p':
+                e = CanvasPreviewer()
+                e.canvas.items = self.items
+                e.edit_traits()
 
-        elif c == 'Backspace':
-            if self.selected_items:
-                for i in self.selected_items:
-                    self.items.remove(i)
+            elif c == 'Backspace':
+                if self.selected_items:
+                    for i in self.selected_items:
+                        self.items.remove(i)
+                else:
+                    self.items.pop(self.selected_id)
+
+            elif c == 'c':
+                self.items = []
+
             else:
-                self.items.pop(self.selected_id)
-
-        elif c == 'c':
-            self.items = []
-
-        else:
-            ExtractionLineCanvas2D.key_set_tool_state(event)
-            #super(DesignerCanvas, self).key_set_tool_state(event)
-
+                ExtractionLineCanvas2D.key_set_tool_state(event)
+                #super(DesignerCanvas, self).key_set_tool_state(event)
+        except:
+            pass
         self.invalidate_and_redraw()
+
     def check_collision(self, item, srect):
         '''
             @type item: C{str}

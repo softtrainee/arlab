@@ -27,18 +27,12 @@ from src.config_loadable import ConfigLoadable
 from src.hardware import HW_PACKAGE_MAP
 from threading import Thread
 import time
+from src.viewable import Viewable, ViewableHandler
 
-class ManagerHandler(Handler):
+class ManagerHandler(ViewableHandler):
     '''
         
     '''
-    def init(self, info):
-        info.object.ui = info.ui
-        info.object.opened()
-
-    def close(self, info, is_ok):
-        return info.object.close(is_ok)
-
     def closed(self, info, is_ok):
         '''
         '''
@@ -46,7 +40,8 @@ class ManagerHandler(Handler):
         info.object.kill()
         return True
 
-class Manager(ConfigLoadable):
+
+class Manager(ConfigLoadable, Viewable):
     '''
     '''
 
@@ -66,8 +61,6 @@ class Manager(ConfigLoadable):
     failure_reason = None
     enable_close_after = Bool
     close_after_minutes = Int #in minutes
-
-    ui = Any
 
     handler_klass = ManagerHandler
     application = Any
@@ -111,16 +104,16 @@ class Manager(ConfigLoadable):
             man._killed = False
 
 
-    def close_ui(self):
-        if self.ui is not None:
-            #disposes 50 ms from now
-            do_after(1, self.ui.dispose)
-            #sleep a little so everything has time to update
-            #time.sleep(0.05)
+#    def close_ui(self):
+#        if self.ui is not None:
+#            #disposes 50 ms from now
+#            do_after(1, self.ui.dispose)
+#            #sleep a little so everything has time to update
+#            #time.sleep(0.05)
 
-    def close(self, is_ok):
-#        print self.name, 'close', is_ok
-        return True
+#    def close(self, is_ok):
+##        print self.name, 'close', is_ok
+#        return True
 
     def _kill_hook(self):
         pass
@@ -294,7 +287,7 @@ class Manager(ConfigLoadable):
         dlg = FileDialog(action=action, **kw)
         if dlg.open() == OK:
             return dlg.path
-    
+
 
     def _led_editor_factory(self, window, editor):
         '''

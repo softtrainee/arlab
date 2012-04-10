@@ -86,6 +86,7 @@ class MarkupContainer(collections.MutableMapping):
         l = self.layers[li]
         del l[key]
 
+
 class MarkupCanvas(BaseDataCanvas):
     '''
     '''
@@ -237,10 +238,12 @@ class MarkupCanvas(BaseDataCanvas):
     def normal_key_pressed(self, event):
         '''
         '''
-
-        if event.character == 'Backspace' and self.selected_element is not None:
-            self.markupcontainer.pop(self.selected_element.identifier)
-            self.selected_element = None
+        try:
+            if event.character == 'Backspace' and self.selected_element is not None:
+                self.markupcontainer.pop(self.selected_element.identifier)
+                self.selected_element = None
+        except:
+            pass
 
         self.key_set_tool_state(event)
 
@@ -476,20 +479,23 @@ class MarkupCanvas(BaseDataCanvas):
     def key_set_tool_state(self, event):
         '''
         '''
-        c = event.character
-        window = event.window
-        if c == 's':
-            self.tool_state = 'select'
-        elif c == 'l':
-            window.set_pointer(self.cross_pointer)
-            self.tool_state = 'line'
-        elif c == 'm':
-            window.set_pointer(self.cross_pointer)
-            self.tool_state = 'mline'
-        elif c == 'c':
-            window.set_pointer(self.cross_pointer)
-            self.tool_state = 'rect'
+        try:
+            c = event.character
+            window = event.window
+            if c == 's':
+                self.tool_state = 'select'
+            elif c == 'l':
+                window.set_pointer(self.cross_pointer)
+                self.tool_state = 'line'
+            elif c == 'm':
+                window.set_pointer(self.cross_pointer)
+                self.tool_state = 'mline'
+            elif c == 'c':
+                window.set_pointer(self.cross_pointer)
+                self.tool_state = 'rect'
 
+        except:
+            pass
 
 
 

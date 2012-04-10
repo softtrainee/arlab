@@ -398,7 +398,11 @@ class Graph(HasTraits):
     def get_series_label(self, plotid=0, series=0):
         r = ''
         legend = self.plots[plotid].legend
-#        print legend.labels
+        if isinstance(series, str):
+            if series in legend.labels:
+                return series
+            return
+
         try:
             r = legend.labels[series]
         except IndexError:
@@ -677,7 +681,6 @@ class Graph(HasTraits):
         '''
         '''
         p = self.plot_editor
-
         if p is None or not p.plot == self.selected_plot:
             p = self.plot_editor_klass(plot=self.selected_plot,
                            graph=self,

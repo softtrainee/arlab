@@ -274,6 +274,7 @@ class Modeler(Loggable):
                                      pid=plotidcounter,
                                      *data)
                     s = 3 if data_directory.model_spectrum_enabled else 2
+                    s += 1 if data_directory.inverse_model_spectrum_enabled else 0
                     g.set_series_label('{}.meas-err'.format(runid), plotid=plotidcounter, series=s * gid)
                     g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=s * gid + 1)
 
@@ -297,11 +298,12 @@ class Modeler(Loggable):
                 data = dl.load_inverse_model_spectrum()
                 if data is not None:
                     try:
+                        s = 3 if data_directory.model_spectrum_enabled else 2
                         for ar39, age in zip(*data):
                             p = g.build_spectrum(ar39, age,
-                                                 ngroup=False,
+                                                 ngroup='inverse_model_spectrum',
                                                  pid=plotidcounter)
-#                        g.set_series_label('{}.inverse'.format(runid), plotid=plotidcounter, series=3 * gid + 2)
+#                        g.set_series_label('{}.inverse'.format(runid), plotid=plotidcounter, series=3 * gid + 3)
 #                        g.color_generators[-1].next()
 #                        p.color = g.color_generators[-1].next()
 

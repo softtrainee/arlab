@@ -16,22 +16,26 @@ limitations under the License.
 #=============enthought library imports=======================
 from traits.api import Any
 #============= standard library imports ========================
+import numpy as np
 #============= local library imports  ==========================
 from hole_detector import HoleDetector
 from src.image.cvwrapper import colorspace, grayspace, draw_rectangle, \
-    new_point
-
+    new_point, asMat, erode, dilate
+import time
+from pyface.timer.do_later import do_later
+#from src.image.pyopencv_image_helper import asMat
 
 class TrayMapper(HoleDetector):
-    style = 'co2_mapper'
-    center_mx = 0
-    center_my = 0
-
+#    style = 'co2_mapper'
+#    center_mx = 0
+#    center_my = 0
+#
     image_width = 640
     image_height = 480
     stage_map = Any
 
     correction_dict = None
+
     def _get_non_corrected(self):
         nholes = len(self.stage_map.sample_holes)
         set(range(1, nholes + 1)) - set(map(int, self.correction_dict.keys()))
@@ -71,6 +75,8 @@ class TrayMapper(HoleDetector):
         return sx, sy
 
     def map_holes(self):
+        self.parent.show_image()
+
         self.correction_dict = dict()
         regions = [(0, 0)]
         mapped_holes = 0
@@ -87,63 +93,133 @@ class TrayMapper(HoleDetector):
             for ni in non_cor:
                 mx, my = self.stage_map.get_hole_pos(str(ni))
                 w, h = 20
-                draw_rectangle(self.image.frames[1], mx - w / 2, my - h / 2,
-                         w, h, color=(255, 255, 0), thickness=2)
+#                draw_rectangle(self.image.frames[1], mx - w / 2, my - h / 2,
+#                         w, h, color=(255, 255, 0), thickness=2)
+
+#    def _region_segmentation(self, src):
+#        ndsrc = src.ndarray
+#        from scipy import ndimage
+#
+#        bins, edges = np.histogram(ndsrc.ravel(), bins=np.arange(0, 256))
+##        cen = np.argmax(bins)
+#
+##        tlow = edges[max(0, cen - 1)]
+##        thigh = edges[min(len(edges), cen + 1)]
+#
+##        from pylab import show, hist
+##        hist(ndsrc.ravel(), bins=np.arange(0, 256))
+##        do_later(show)
+#        tlow = 80
+#        thigh = 130
+#        markers = np.zeros_like(ndsrc)
+#        markers[ndsrc < tlow] = 1
+#        markers[ndsrc > thigh] = 255
+#
+#        from skimage.filter import sobel
+#        from skimage.morphology import watershed
+#        el_map = sobel(ndsrc)
+##        el_map = ndimage.binary_opening(el_map)
+##        el_map = ndimage.binary_closing(el_map)
+##        print el_map * 255
+#        segm = watershed(el_map, markers)
+#        segm = np.invert(segm)
+#
+##        ndsrc = ndimage.binary_fill_holes(ndsrc)
+##        print 'ddd', segm
+#
+##        import matplotlib.pyplot as plt
+##        plt.imshow(segm, interpolation='nearest')
+##        plt.imshow(markers, cmap=plt.cm.spectral, interpolation='nearest')
+##        plt.show()
+#        return asMat(np.asarray(segm, 'uint8'))
+##        return asMat(np.asarray(el_map * 255, 'uint8'))
+
+
 
     def map_holes_in_region(self, region):
-        gsrc = grayspace(self.image.source_frame)
+#        self.image.contrast_equalize()
+#        self.image.smooth()
+
+#        self.use_dilation = False
+#        self.use_erosion = False
+        src = self.image.source_frame
+        gsrc = grayspace(src)
+
         self.image.frames[0] = colorspace(gsrc)
-        t_s = 100
-        t_e = t_s + 60
+        self.working_image.frames = [colorspace(gsrc)]
+        t_s = 75
+        t_e = t_s + 10
         tol = 0.07
         a = 1800
         atol = 500
         mapped_holes = 0
-        for ti in range(t_s, t_e + 1):
-            results = self._calc_sample_hole_position(gsrc, ti,
-                                            0, 0, max_area=2000)
-            if results:
-                c = 0
-                for r in results:
-                    if (abs(r.aspect_ratio - 1) < tol
-                        and abs(r.area - a) < atol):
+#        r = 50
+        m = 100
+#        for ti in range(t_s, t_e + 1):
+        osrc = gsrc.clone()
+#        for ti in range(2, 40, 1):
+#            time.sleep(0.5)
+
+        osrc = dilate(osrc, 1)
+        osrc = erode(osrc, 1)
+        results = self._region_segmentation(osrc,
+                                            min_area=1000,
+                                            max_area=a,
+                                            convextest=False
+                                            )
+
+
+#            gsrc = self._edge_segmentation(gsrc)
+#        results = self._calc_sample_hole_position(gsrc, 0,
+#                                        0, 0,
+#                                        max_area=2000,
+#                                        convextest=False,
+#                                        hole=False
+#                                        )
+        if results:
+            self.info('calculated n results {}'.format(len(results)))
+            c = 0
+
+            for r in results:
+                if (abs(r.aspect_ratio - 1) < tol
+                    and abs(r.area - a) < atol):
 #                        self._draw_result(self.image.frames[1],
 #                                 r, with_br=True, thickness=2)
-                        c += 1
+                    c += 1
 
-                        # convert centroid into mm
-                        cargs = self.map_mm(*r.centroid_value)
-                        cpos = self.calibrated_center
-                        rot = self.calibrated_rotation
+                    # convert centroid into mm
+                    cargs = self.map_mm(*r.centroid_value)
+                    cpos = self.calibrated_center
+                    rot = self.calibrated_rotation
 
-                        mmx, mmy = self.stage_map.map_to_calibration(cargs,
-                                                                    cpos, rot)
+                    mmx, mmy = self.stage_map.map_to_calibration(cargs,
+                                                                cpos, rot)
 
-                        #check for a match to the stage map
-                        hole = self.stage_map._get_hole_by_position(mmx, mmy)
-                        if hole is not None:
-                            if self._add_correction(hole.id, (mmx, mmy)):
-                                self._draw_result(self.image.frames[0], r,
-                                                   with_br=True, thickness=2)
+                    #check for a match to the stage map
+                    hole = self.stage_map._get_hole_by_position(mmx, mmy)
+                    if hole is not None:
+                        if self._add_correction(hole.id, (mmx, mmy)):
+                            self._draw_result(self.image.frames[0], r,
+                                               with_br=False, thickness=2)
 
-                                tx = hole.x
-                                ty = hole.y
+                            tx = hole.x
+                            ty = hole.y
 
-                                #map to calibrated space
-                                pos = (tx, ty)
+                            #map to calibrated space
+                            pos = (tx, ty)
 #                                print rot
 #                                rot = 0
 
-                                pos = self.stage_map.map_to_uncalibration(pos,
-                                                                    cpos, rot)
+                            pos = self.stage_map.map_to_uncalibration(pos,
+                                                                cpos, rot)
 
-                                #map to screen
-                                pos = self.map_screen(*pos)
+                            #map to screen
+                            pos = self.map_screen(*pos)
 
-                                self._draw_indicator(self.image.frames[0],
-                                        new_point(*pos), color=(255, 255, 0))
+#                                self._draw_indicator(self.image.frames[0],
+#                                        new_point(*pos), color=(255, 255, 0))
 
-                                mapped_holes += 1
+                            mapped_holes += 1
 #                                print mapped_holes, hole.id
 #                        else:
 #                            print 'not locating ', mmx, mmy
@@ -160,6 +236,8 @@ class TrayMapper(HoleDetector):
         return mapped_holes
 
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('machine_visionasfd')
     t = TrayMapper(center_mx=3.596,
                    center_my= -13.321,
                    pxpermm=23)

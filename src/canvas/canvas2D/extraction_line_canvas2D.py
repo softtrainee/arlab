@@ -14,21 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Int, Any
+from traits.api import Int, Any, Str
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================`
 
 #============= local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
-from src.canvas.designer.valve import Valve
+#from src.canvas.designer.valve import Valve
+from src.canvas.canvas2D.markup.markup_items import Rectangle, Valve, Line
 W = 2
 H = 2
 class ExtractionLineCanvas2D(MarkupCanvas):
     '''
     '''
     items = None
-    active_item = Int(-1)
-    selected_id = Int(-1)
+    active_item = Any
+    selected_id = Str
     show_axes = False
     show_grids = False
     use_zoom = False
@@ -37,11 +38,13 @@ class ExtractionLineCanvas2D(MarkupCanvas):
     padding_bottom = 0
     padding_top = 0
     manager = Any
+
     def __init__(self, *args, **kw):
         '''
         '''
         super(ExtractionLineCanvas2D, self).__init__(*args, **kw)
-        self.items = []
+        self.items = dict()
+
     def toggle_item_identify(self, name):
         v = self._get_valve_by_name(name)
         if v is not None:
@@ -61,46 +64,127 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         '''
         
         '''
-
-        return next((i for i in self.items if i.__class__.__name__ == 'Valve' and i.name == name), None)
+        return next((i for i in self.items.itervalues() if i.__class__.__name__ == 'Valve' and i.name == name), None)
 #        for i in self.items:
 #            if i.__class__.__name__ == 'Valve':
 #                if i.name == name:
 #                    return i
     def _get_object_by_name(self, name):
-        return next((i for i in self.items if i.name == name), None)
+        return next((i for i in self.items.itervalues() if i.name == name), None)
 
+#    def _bootstrap(self, path):
+#        ''' 
+#        '''
+#        self.items = []
+#        items = None
+#        try:
+#            f = open(path, 'r')
+#            items = pickle.load(f)
+#            f.close()
+#        except:
+#            pass
+#        return items
+#
+#    def bootstrap(self, path):
+#        '''
+#
+#        '''
+#        items = self._bootstrap(path)
+#        if items:
+#            self.items = items
+    def load_canvas_file(self, p):
+        from src.helpers.canvas_parser import CanvasParser
+        cp = CanvasParser(p)
 
-    def _bootstrap(self, path):
-        ''' 
-        '''
-        self.items = []
-        items = None
-        try:
-            f = open(path, 'r')
-            items = pickle.load(f)
-            f.close()
-        except:
-            pass
-        return items
+#        def get_translation(elem):
+#            return map(float, elem.find('translation').text.split(','))
+#
+#        def get_dimensions(elem):
+#            return 
 
-    def bootstrap(self, path):
-        '''
+        def get_floats(elem, name):
+            return map(float, elem.find(name).text.split(','))
 
-        '''
-        items = self._bootstrap(path)
-        if items:
-            self.items = items
+        for v in cp.get_valves():
+            key = v.text.strip()
+#            print key, map(float, v.find('translation').text.split(','))
+            self.items[key] = v = Valve(*get_floats(v, 'translation'),
+                                    name=key,
+                                    canvas=self)
+            self.markupcontainer[key] = v
+
+        def new_rectangle(elem, c):
+            key = elem.text.strip()
+            x, y = get_floats(elem, 'translation')
+            w, h = get_floats(elem, 'dimension')
+            self.markupcontainer[key] = Rectangle(x, y, width=w, height=h,
+                                                canvas=self,
+                                                name=key,
+                                                default_color=c)
+
+        for b in cp.get_stages():
+            new_rectangle(b, (0.8, 0.8, 0.8))
+
+        for s in cp.get_spectrometers():
+            new_rectangle(s, (0, 0.8, 0.8))
+
+        for t in cp.get_turbos():
+            new_rectangle(t, (0, 0, 0.8))
+            key = t.text.strip()
+
+        for i, c in enumerate(cp.get_connections()):
+            start = c.find('start')
+            end = c.find('end')
+            skey = start.text.strip()
+            ekey = end.text.strip()
+
+            try:
+                orient = c.get('orientation')
+            except:
+                orient = None
+
+            x = self.markupcontainer[skey].x
+            y = self.markupcontainer[skey].y
+
+            try:
+                ox, oy = map(float, start.get('offset').split(','))
+            except:
+                ox = 1
+                oy = 1
+            x += ox
+            y += oy
+
+            x1 = self.markupcontainer[ekey].x
+            y1 = self.markupcontainer[ekey].y
+#            ox, oy = map(float, end.get('offset').split(','))
+
+            try:
+                ox, oy = map(float, end.get('offset').split(','))
+            except:
+                ox = 1
+                oy = 1
+
+            x1 += ox
+            y1 += oy
+            if orient == 'vertical':
+                x1 = x
+            elif orient == 'horizontal':
+                y1 = y
+
+            l = Line((x, y), (x1, y1), canvas=self, width=5)
+            self.markupcontainer[('con{:03}'.format(i), 0)] = l
+
         self.invalidate_and_redraw()
 
     def _over_item(self, event):
         x = event.x
         y = event.y
-        for k, item in enumerate(self.items):
+#        for k, item in enumerate(self.items):
+        for k, item in self.items.iteritems():
             if item.__class__.__name__ == 'Valve':
 
-                mx, my = self.map_screen([item.pos])[0]
-
+#                mx, my = self.map_screen([item.])[0]
+                mx, my = item.get_xy()
                 w, h = self._get_wh(W, H)
                 mx += w / 2.0
                 my += h / 2.0
@@ -119,12 +203,12 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
         k, item = self._over_item(event)
         if item is not None:
-            self.active_item = k
+            self.active_item = item
             self.event_state = 'select'
             event.window.set_pointer(self.select_pointer)
             self.manager.set_selected_explanation_item(item)
         else:
-            self.active_item = -1
+            self.active_item = None
             self.event_state = 'normal'
             event.window.set_pointer(self.normal_pointer)
         event.handled = True
@@ -137,7 +221,8 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         self.normal_mouse_move(event)
 
     def select_right_down(self, event):
-        item = self.items[self.active_item]
+        item = self.active_item
+#        item = self.items[self.active_item]
         item.soft_lock = lock = not item.soft_lock
         self.manager.set_software_lock(item.name, lock)
         event.handled = True
@@ -147,8 +232,10 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         '''
     
         '''
-        item = self.items[self.active_item]
-
+#        item = self.items[self.active_item]
+        item = self.active_item
+        if item is None:
+            return
 
         state = item.state
         state = not state
@@ -157,75 +244,79 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         if self.manager is not None:
             if state:
 #                if self.manager.open_valve(item.name, mode = 'manual'):
-                if self.manager.open_valve(item.name, mode='manual'):
+                if self.manager.open_valve(item.name, mode='normal'):
                     ok = True
             else:
 #                if self.manager.close_valve(item.name, mode = 'manual'):
-                if self.manager.close_valve(item.name, mode='manual'):
+                if self.manager.close_valve(item.name, mode='normal'):
                     ok = True
         else:
             ok = True
 
+        ok = True
         if ok and not item.soft_lock:
             item.state = state
+
         self.invalidate_and_redraw()
 
-    def _draw_hook(self, gc, *args, **kw):
-        '''
+#    def _draw_hook(self, gc, *args, **kw):
+#        '''
+#
+#        '''
+##        MarkupCanvas._draw_hook(self, gc, *args, **kw)
+#        super(ExtractionLineCanvas2D, self)._draw_hook(gc, *args, **kw)
+#        self._draw_items(gc)
+#        self._draw_markup_dict(gc)
 
-        '''
-#        MarkupCanvas._draw_hook(self, gc, *args, **kw)
-        super(ExtractionLineCanvas2D, self)._draw_hook(gc, *args, **kw)
-        self._draw_items(gc)
-
-    def _draw_items(self, gc):
-        '''
-        '''
-        gc.save_state()
-        for item in self.items:
-            if isinstance(item, Valve):
-#            if item.__class__.__name__ == 'Valve':
-                if item.pos:
-                    pos = tuple(self.map_screen([item.pos])[0])
-                    w, h = self._get_wh(W, H)
-                    args = pos + (w, h)
-
-                    if item.state:
-                        gc.set_fill_color((0, 1, 0))
-                    else:
-                        if item.selected:
-                            gc.set_fill_color((1, 1, 0))
-                        else:
-                            gc.set_fill_color((1, 0, 0))
-
-                    gc.rect(*args)
-                    gc.draw_path()
-
-                    #print item.name, item.soft_lock
-                    if item.soft_lock:
-                        gc.save_state()
-                        gc.set_fill_color((0, 0, 0, 0))
-                        gc.set_stroke_color((0, 0.75, 1))
-                        gc.set_line_width(3)
-                        gc.rect(pos[0] - 2, pos[1] - 2, w + 4, h + 4)
-                        gc.draw_path()
-                        gc.restore_state()
-
-                    if not item.identify:
-                        gc.set_fill_color((0, 0, 0))
-#                        if item.state:
+#    def _draw_items(self, gc):
+#        '''
+#        '''
+#        gc.save_state()
+##        for item in self.items:
+#        for item in self.items.itervalues():
+#            if isinstance(item, Valve):
+##            if item.__class__.__name__ == 'Valve':
+#                if item.pos:
+#                    pos = tuple(self.map_screen([item.pos])[0])
+#                    w, h = self._get_wh(W, H)
+#                    args = pos + (w, h)
+#
+#                    if item.state:
+#                        gc.set_fill_color((0, 1, 0))
+#                    else:
+#                        if item.selected:
+#                            gc.set_fill_color((1, 1, 0))
 #                        else:
-#                            gc.set_fill_color((0, 1, 0))
-
-                        try:
-                            gc.set_text_position(pos[0] + w / 4.0, pos[1] + h / 4.0)
-                            gc.show_text(str(item.name))
-                        except RuntimeError, e:
-                            print e
-                        finally:
-                            gc.draw_path()
-
-        gc.restore_state()
+#                            gc.set_fill_color((1, 0, 0))
+#
+#                    gc.rect(*args)
+#                    gc.draw_path()
+#
+#                    #print item.name, item.soft_lock
+#                    if item.soft_lock:
+#                        gc.save_state()
+#                        gc.set_fill_color((0, 0, 0, 0))
+#                        gc.set_stroke_color((0, 0.75, 1))
+#                        gc.set_line_width(3)
+#                        gc.rect(pos[0] - 2, pos[1] - 2, w + 4, h + 4)
+#                        gc.draw_path()
+#                        gc.restore_state()
+#
+#                    if not item.identify:
+#                        gc.set_fill_color((0, 0, 0))
+##                        if item.state:
+##                        else:
+##                            gc.set_fill_color((0, 1, 0))
+#
+#                        try:
+#                            gc.set_text_position(pos[0] + w / 4.0, pos[1] + h / 4.0)
+#                            gc.show_text(str(item.name))
+#                        except RuntimeError, e:
+#                            print e
+#                        finally:
+#                            gc.draw_path()
+#
+#        gc.restore_state()
 
 #============= views ===================================
 #============= EOF ====================================

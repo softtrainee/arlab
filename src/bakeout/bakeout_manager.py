@@ -18,7 +18,7 @@ limitations under the License.
 '''
 #============= enthought library imports  ==========================
 from traits.api import Array, Instance, Bool, Button, Event, \
-    Float, Str, String, Property, List, on_trait_change, Dict, Any
+    Float, Str, String, Property, List, on_trait_change, Dict, Any, Enum
 from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring, \
     ButtonEditor, EnumEditor
 from pyface.timer.api import do_after as do_after_timer
@@ -51,6 +51,7 @@ from src.scripts.core.process_view import ProcessView
 from pyface.timer.do_later import do_later
 from pyface.wx.dialog import confirmation
 from pyface.constant import NO, YES
+from src.scripts.pyscripts.pyscript_editor import PyScriptManager
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'
@@ -120,7 +121,8 @@ class BakeoutManager(Manager):
 
     execute_ok = Property
 
-    script_editor = Instance(ScriptManager)
+    script_editor = Any
+    script_style = Enum('pyscript', 'textscript')
 
     _nactivated_controllers = 0
     data_manager = Instance(DataManager)
@@ -415,16 +417,18 @@ class BakeoutManager(Manager):
                                     self.data_manager.get_current_path())
 
             self._nactivated_controllers = len(controllers)
+            try:
+                pv = ProcessView()
+                for c in controllers:
+                    c.run()
+                    a = c._active_script
+                    if a is not None:
+                        pv.add_script(c.name, a)
 
-            pv = ProcessView()
-            for c in controllers:
-                c.run()
-                a = c._active_script
-                if a is not None:
-                    pv.add_script(c.name, a)
-
-            if pv.scripts:
-                do_later(pv.edit_traits)
+                if pv.scripts:
+                    do_later(pv.edit_traits)
+            except Exception, _e:
+                print _e
 
             time.sleep(0.5)
             for c in controllers:
@@ -1084,8 +1088,15 @@ class BakeoutManager(Manager):
         return g
 
     def _script_editor_default(self):
-        m = ScriptManager(kind='Bakeout',
-                          default_directory_name='bakeoutscripts')
+        kw = dict(kind='Bakeout',
+                  default_directory_name='bakeoutscripts')
+        if self.script_style == 'pyscript':
+            klass = PyScriptManager
+            kw['execute_visible'] = False
+        else:
+            klass = ScriptManager
+
+        m = klass(**kw)
         return m
 
     def _get_configurations(self):

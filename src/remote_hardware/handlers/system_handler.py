@@ -249,6 +249,20 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
         return 'OK'
 
+    def PychronScript(self, manager, name, *args):
+        result = manager.execute_pyscript(name)
+
+        #result should be a unique key that mass spec can use to identify this
+        #script
+
+        return result
+
+    def ScriptState(self, manager, uuid, *args):
+        result = manager.get_script_state(uuid)
+        return result
+#===============================================================================
+# not current used
+#===============================================================================
     def ClaimGroup(self, manager, grp, sender_addr, *args):
         rhm = self.application.get_service(RHM_PROTOCOL)
         if rhm.validate_address(sender_addr):

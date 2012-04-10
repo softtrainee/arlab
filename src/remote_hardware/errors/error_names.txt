@@ -33,7 +33,10 @@ ManagerUnavaliableError	Pychron is not configured with the requested manager
 
 ValveSoftwareLockError  Valve is locked
 	action - Check for continue
-	
+
+PyScriptError Invalid script name
+	action - stop
+
 #====================================================================
 # Debugging Errors
 #====================================================================

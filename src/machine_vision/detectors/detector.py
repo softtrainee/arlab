@@ -20,6 +20,7 @@ from src.loggable import Loggable
 class Detector(Loggable):
     parent = Any(transient=True)
     image = Any(transient=True)
+    working_image = Any(transient=True)
     pxpermm = Float(23)
 
 
