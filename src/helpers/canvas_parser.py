@@ -24,37 +24,40 @@ from src.helpers.xml_parser import XMLParser
 class CanvasParser(XMLParser):
     '''
     '''
-    def get_valves(self, group=None, element=True):
-        return self._get_elements(group, element, 'valve')
-#        if group is None:
-#            group = self._tree
-#        return [v if element else v.text.strip()
-#                for v in group.findall('valve')]
+#    def get_valves(self, group=None, element=True):
+#        return self._get_elements(group, element, 'valve')
+##        if group is None:
+##            group = self._tree
+##        return [v if element else v.text.strip()
+##                for v in group.findall('valve')]
+#
+#    def get_stages(self, group=None, element=True):
+#        return self._get_elements(group, element, 'stage')
+##        if group is None:
+##            group = self._tree
+##        return [v if element else v.text.strip()
+##                for v in group.findall('stage')]
+#
+#    def get_connections(self, group=None, element=True):
+#        return self._get_elements(group, element, 'connection')
+##        if group is None:
+##            group = self._tree
+##        return [v if element else v.text.strip()
+##                for v in group.findall('connection')]
+#    def get_spectrometers(self, group=None, element=True):
+#        return self._get_elements(group, element, 'spectrometer')
+#
+#    def get_turbos(self, group=None, element=True):
+#        return self._get_elements(group, element, 'turbo')
+#
+#    def get_labels(self, group=None, element=True):
+#        return self._get_elements(group, element, 'label')
+#
+#    def get_getters(self, group=None, element=True):
+#        return self._get_elements(group, element, 'getter')
 
-    def get_stages(self, group=None, element=True):
-        return self._get_elements(group, element, 'stage')
-#        if group is None:
-#            group = self._tree
-#        return [v if element else v.text.strip()
-#                for v in group.findall('stage')]
-
-    def get_connections(self, group=None, element=True):
-        return self._get_elements(group, element, 'connection')
-#        if group is None:
-#            group = self._tree
-#        return [v if element else v.text.strip()
-#                for v in group.findall('connection')]
-    def get_spectrometers(self, group=None, element=True):
-        return self._get_elements(group, element, 'spectrometer')
-
-    def get_turbos(self, group=None, element=True):
-        return self._get_elements(group, element, 'turbo')
-
-    def get_labels(self, group=None, element=True):
-        return self._get_elements(group, element, 'label')
-
-    def get_getters(self, group=None, element=True):
-        return self._get_elements(group, element, 'getter')
+    def get_elements(self, name):
+        return self._get_elements(None, True, name)
 
     def _get_elements(self, group, element, name):
         if group is None:

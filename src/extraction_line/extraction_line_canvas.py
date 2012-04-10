@@ -211,7 +211,6 @@ class ExtractionLineCanvas(HasTraits):
         if self.canvas2D:
             self.canvas2D.load_canvas_file(path)
 
-
     def update_valve_state(self, name, state, *args, **kw):
         '''
             do the specific canvas action

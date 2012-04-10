@@ -108,14 +108,33 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         def get_floats(elem, name):
             return map(float, elem.find(name).text.split(','))
 
+        color_dict = dict()
+        #get default colors
+        for c in cp._tree.findall('color'):
+            t = c.text.strip()
+            k = c.get('tag')
+            co = map(float, t.split(',')) if ',' in t else t
+
+            if k == 'bgcolor':
+                self.bgcolor = co
+            else:
+                color_dict[k] = co
+
+        #get any origin offset
+        ox = 0
+        oy = 0
+
+        o = cp._tree.find('origin')
+        if o is not None:
+            ox, oy = map(float, o.text.split(','))
+
         self.markupcontainer.clear()
         ndict = dict()
-        for v in cp.get_valves():
+        for v in cp.get_elements('valve'):
             key = v.text.strip()
 #            print key, map(float, v.find('translation').text.split(','))
-            v = Valve(*get_floats(v, 'translation'),
-                                    name=key,
-
+            x, y = get_floats(v, 'translation')
+            v = Valve(x + ox, y + oy, name=key,
                                     canvas=self)
             #sync the states
             if key in self.valves:
@@ -132,32 +151,44 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             key = elem.text.strip()
             x, y = get_floats(elem, 'translation')
             w, h = get_floats(elem, 'dimension')
-            self.markupcontainer[key] = Rectangle(x, y, width=w, height=h,
+            self.markupcontainer[key] = Rectangle(x + ox, y + oy, width=w, height=h,
                                                 canvas=self,
                                                 name=key,
                                                 line_width=lw,
                                                 default_color=c)
 
-        for b in cp.get_stages():
-            new_rectangle(b, (0.8, 0.8, 0.8), lw=5)
+        for b in cp.get_elements('stage'):
+            if 'stage' in color_dict:
+                c = color_dict['stage']
+            else:
+                c = (0.8, 0.8, 0.8)
+            new_rectangle(b, c, lw=5)
 
-        for s in cp.get_spectrometers():
-            new_rectangle(s, (0, 0.8, 0.8))
+        for s in cp.get_elements('spectrometer'):
+            if 'spectrometer' in color_dict:
+                c = color_dict['spectrometer']
+            else:
+                c = (0, 0.8, 0.8)
+            new_rectangle(s, c)
 
-        for t in cp.get_turbos():
-            new_rectangle(t, (0, 0.5, 0.8))
+        for t in cp.get_elements('turbo'):
+            if 'turbo' in color_dict:
+                c = color_dict['turbo']
+            else:
+                c = (0, 0.5, 0.8)
+            new_rectangle(t, c)
 #            key = t.text.strip()
 
-        for i, l in enumerate(cp.get_labels()):
+        for i, l in enumerate(cp.get_elements('label')):
             x, y = map(float, l.find('translation').text.split(','))
-            l = Label(x, y,
+            l = Label(x + ox, y + oy,
                       text=l.text.strip(),
                       canvas=self,
 
                       )
             self.markupcontainer['{:03}'.format(i)] = l
 
-        for g in cp.get_getters():
+        for g in cp.get_elements('getter'):
             v = self.markupcontainer[g.get('valve')]
             w, h = 5, 2
             key = g.text.strip()
@@ -167,7 +198,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
                                                 line_width=2,
                                                 default_color=(0, 0.5, 0))
 
-        for i, c in enumerate(cp.get_connections()):
+        for i, c in enumerate(cp.get_elements('connection')):
             start = c.find('start')
             end = c.find('end')
             skey = start.text.strip()
@@ -222,11 +253,14 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
 #                mx, my = self.map_screen([item.])[0]
                 mx, my = item.get_xy()
-                w, h = self._get_wh(W, H)
-                mx += w / 2.0
-                my += h / 2.0
-                if abs(mx - x) < w and abs(my - y) < h:
+                w, h = item.get_wh()
+                if mx <= x <= (mx + w) and my <= y <= (my + h):
                     return k, item
+#                mx += w / 2.0
+#                my += h / 2.0
+#                print mx, my, w, h
+#                if abs(mx - x) < w and abs(my - y) < h:
+#                    return k, item
 
         return None, None
 
@@ -257,12 +291,71 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         '''
         self.normal_mouse_move(event)
 
-    def select_right_down(self, event):
+    def OnLock(self, event):
         item = self.active_item
-#        item = self.valves[self.active_item]
         item.soft_lock = lock = not item.soft_lock
         self.manager.set_software_lock(item.name, lock)
-        event.handled = True
+
+    def OnSample(self, event):
+        pass
+    def OnCycle(self, event):
+        pass
+    def OnProperties(self, event):
+        pass
+    def _show_menu(self, event, obj):
+        enabled = True
+        import wx
+
+#        n = self.active_item.name
+#        obj = self.manager.get_valve_by_name()
+        if obj is None:
+            enabled = False
+
+#        self._selected = obj
+        self._popup_menu = wx.Menu()
+
+        panel = event.window.control#GetEventObject()
+        t = 'Lock'
+        lfunc = self.OnLock
+        if obj.soft_lock:
+            t = 'Unlock'
+
+        item = self._popup_menu.Append(-1, t)
+        item.Enable(enabled)
+        panel.Bind(wx.EVT_MENU, lfunc, item)
+
+        en = not obj.state
+        try:
+            en = en and not obj.soft_lock
+        except AttributeError:
+            pass
+
+        for t, enable in [('Sample', en),
+                           ('Cycle', en),
+                           ('Properties...', True)]:
+            item = self._popup_menu.Append(-1, t)
+            item.Enable(enable and enabled)
+            if t.endswith('...'):
+                t = t[:-3]
+
+            panel.Bind(wx.EVT_MENU, getattr(self, 'On{}'.format(t)), item)
+
+        pos = event.x, panel.Size[1] - event.y
+
+        panel.PopupMenu(self._popup_menu, pos)
+        self._popup_menu.Destroy()
+        self.invalidate_and_redraw()
+
+    def select_right_down(self, event):
+        item = self.active_item
+
+        if item is not None and isinstance(item, Valve):
+            self._show_menu(event, item)
+
+#        item = self.valves[self.active_item]
+#        item.soft_lock = lock = not item.soft_lock
+#        self.manager.set_software_lock(item.name, lock)
+#        event.handled = True
         self.invalidate_and_redraw()
 
     def select_left_down(self, event):
