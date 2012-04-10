@@ -137,7 +137,8 @@ class Valve(Rectangle):
     soft_lock = False
     width = 2
     height = 2
-#    def _render_(self, gc):
+    def _render_(self, gc):
+        super(Valve, self)._render_(gc)
 ##        if self.state:
 ##                        gc.set_fill_color((0, 1, 0))
 ##                    else:
@@ -146,22 +147,22 @@ class Valve(Rectangle):
 ##                        else:
 ##                            gc.set_fill_color((1, 0, 0))
 #
-#        x, y = self.get_xy()
-#        w, h = self.get_wh()
+        x, y = self.get_xy()
+        w, h = self.get_wh()
 #        gc.rect(x, y, w, h)
 #        gc.draw_path()
 #        if self.use_border:
 #            self._render_border(gc, w, y, w, h)
 #
 #        #print item.name, item.soft_lock
-#        if self.soft_lock:
-#            gc.save_state()
-#            gc.set_fill_color((0, 0, 0, 0))
-#            gc.set_stroke_color((0, 0.75, 1))
-#            gc.set_line_width(3)
-#            gc.rect(x - 2, y - 2, w + 4, h + 4)
-#            gc.draw_path()
-##            gc.restore_state()
+        if self.soft_lock:
+            gc.save_state()
+            gc.set_fill_color((0, 0, 0, 0))
+            gc.set_stroke_color((0, 0, 1))
+            gc.set_line_width(5)
+            gc.rect(x - 2, y - 2, w + 4, h + 4)
+            gc.draw_path()
+#            gc.restore_state()
 #        gc.set_fill_color((0, 0, 0))
 #        gc.set_text_position(x + w / 4.0, y + h / 4.0)
 #        gc.show_text(self.name)
