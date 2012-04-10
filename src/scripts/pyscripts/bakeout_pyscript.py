@@ -72,6 +72,7 @@ class BakeoutPyScript(PyScript):
         dur = abs(dT / rate)
         if c is not None:
             c.duration = dur
+            
         steps = linspace(start, setpoint, dur * 3600 / float(period))
         for si in steps:
             if self._cancel:
@@ -99,7 +100,8 @@ class BakeoutPyScript(PyScript):
         c = self.controller
         if c is not None:
             self._set_setpoint(temp)
-            self.controller.duration = duration
+            #convert back to hours
+            self.controller.duration = duration/3600.
 
         self._block(duration)
 

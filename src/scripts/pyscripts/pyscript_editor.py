@@ -192,8 +192,8 @@ class PyScriptManager(Manager):
         self.help_message = m
 
     def open_script(self):
-#        p = self.open_file_dialog(default_directory=self._get_default_directory())
-        p = os.path.join(self._get_default_directory(), 'test.py')
+        p = self.open_file_dialog(default_directory=self._get_default_directory())
+#        p = os.path.join(self._get_default_directory(), 'test.py')
         if p is not None:
             self._load_script(p)
             self.save_path = p

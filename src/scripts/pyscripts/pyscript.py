@@ -172,7 +172,10 @@ class PyScript(Loggable):
             self._wait_dialog.close()
 
         self._cancel_hook()
-
+    
+    def _cancel_hook(self):
+        pass
+    
     def bootstrap(self, load=True):
         self._interval_flag = Event()
         self._interval_stack = Queue()
