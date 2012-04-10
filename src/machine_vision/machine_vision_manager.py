@@ -16,7 +16,7 @@ limitations under the License.
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
     DelegatesTo
-from traitsui.api import View, Item, Handler, HGroup, Group
+from traitsui.api import View, Item, Handler, HGroup, Group, spring
 from pyface.timer.do_later import do_later, do_after
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -67,10 +67,10 @@ class MachineVisionManager(Manager):
     current_hole = None
 
     corrected_position = Property(depends_on='_corrected_position')
-    _corrected_position = Tuple
+    _corrected_position = Tuple(0, 0)
 
     nominal_position = Property(depends_on='_nominal_position')
-    _nominal_position = Tuple
+    _nominal_position = Tuple(0, 0)
 
     hole_detector = Instance(CO2HoleDetector)
 
@@ -257,6 +257,7 @@ class MachineVisionManager(Manager):
                         #spring,
                         Item('nominal_position', label='Nom. Pos.',
                              style='readonly'),
+
                         Item('corrected_position', label='Cor. Pos.',
                              style='readonly')
                         ),
@@ -280,6 +281,7 @@ class MachineVisionManager(Manager):
                 src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
                 src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
                 src = '/Users/ross/Desktop/tray_screen_shot3.596--13.321.tiff'
+                src = '/Users/ross/Sandbox/snapshot001.jpg'
 #                src = '/Users/ross/Desktop/watershed_test.tif'
 #                src = '/Users/ross/Desktop/snapshot006.jpg'
 #                src = '/Users/ross/Desktop/snapshot007-10mm.jpg'
@@ -316,13 +318,13 @@ class MachineVisionManager(Manager):
 #==============================================================================
     def _get_corrected_position(self):
         try:
-            return '{:5f}, {:5f}'.format(*self._corrected_position)
+            return '{:3f}, {:3f}'.format(*self._corrected_position)
         except IndexError:
             pass
 
     def _get_nominal_position(self):
         try:
-            return '{:5f}, {:5f}'.format(*self._nominal_position)
+            return '{:3f}, {:3f}'.format(*self._nominal_position)
         except IndexError:
             pass
 
