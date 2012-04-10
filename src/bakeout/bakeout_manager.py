@@ -428,7 +428,8 @@ class BakeoutManager(Manager):
                 if pv.scripts:
                     do_later(pv.edit_traits)
             except Exception, _e:
-                print _e
+                #this isnt a .bo script not currently conducive to process view
+               pass
 
             time.sleep(0.5)
             for c in controllers:
