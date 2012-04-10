@@ -25,6 +25,9 @@ from src.canvas.canvas2D.markup.markup_items import PointIndicator
 import collections
 class MarkupContainer(collections.MutableMapping):
     layers = None
+    def clear(self):
+        self.layers = [dict(), dict()]
+
     def __init__(self, *args, **kw):
         '''
             default layer is 1 
@@ -64,7 +67,6 @@ class MarkupContainer(collections.MutableMapping):
         except IndexError:
             self.layers.append(dict())
             l = self.layers[-1]
-
 
         if len(l) > 100:
             k = l.keys()

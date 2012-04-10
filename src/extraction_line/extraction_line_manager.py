@@ -397,10 +397,13 @@ class ExtractionLineManager(Manager):
         v = View(
                  HGroup(
                         Item('explanation', style='custom', show_label=False,
-                             width=340
+                             width=0.35,
+                             springy=False
                              ),
 
-                        Item('canvas', style='custom', show_label=False)
+                        Item('canvas', style='custom', show_label=False,
+                             width=0.65
+                             )
                         ),
 
                handler=self.handler_klass,
