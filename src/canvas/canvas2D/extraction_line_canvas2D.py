@@ -27,7 +27,7 @@ H = 2
 class ExtractionLineCanvas2D(MarkupCanvas):
     '''
     '''
-    items = None
+    valves = None
     active_item = Any
     selected_id = Str
     show_axes = False
@@ -43,7 +43,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         '''
         '''
         super(ExtractionLineCanvas2D, self).__init__(*args, **kw)
-        self.items = dict()
+        self.valves = dict()
 
     def toggle_item_identify(self, name):
         v = self._get_valve_by_name(name)
@@ -58,40 +58,42 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         valve = self._get_valve_by_name(name)
         if valve is not None:
             valve.state = nstate
+
         self.invalidate_and_redraw()
 
     def _get_valve_by_name(self, name):
         '''
         
         '''
-        return next((i for i in self.items.itervalues() if i.__class__.__name__ == 'Valve' and i.name == name), None)
-#        for i in self.items:
+        return next((i for i in self.valves.itervalues()
+                    if isinstance(i, Valve) and i.name == name), None)
+#        for i in self.valves:
 #            if i.__class__.__name__ == 'Valve':
 #                if i.name == name:
 #                    return i
     def _get_object_by_name(self, name):
-        return next((i for i in self.items.itervalues() if i.name == name), None)
+        return next((i for i in self.valves.itervalues() if i.name == name), None)
 
 #    def _bootstrap(self, path):
 #        ''' 
 #        '''
-#        self.items = []
-#        items = None
+#        self.valves = []
+#        valves = None
 #        try:
 #            f = open(path, 'r')
-#            items = pickle.load(f)
+#            valves = pickle.load(f)
 #            f.close()
 #        except:
 #            pass
-#        return items
+#        return valves
 #
 #    def bootstrap(self, path):
 #        '''
 #
 #        '''
-#        items = self._bootstrap(path)
-#        if items:
-#            self.items = items
+#        valves = self._bootstrap(path)
+#        if valves:
+#            self.valves = valves
     def load_canvas_file(self, p):
         from src.helpers.canvas_parser import CanvasParser
         cp = CanvasParser(p)
@@ -108,9 +110,16 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         for v in cp.get_valves():
             key = v.text.strip()
 #            print key, map(float, v.find('translation').text.split(','))
-            self.items[key] = v = Valve(*get_floats(v, 'translation'),
+            v = Valve(*get_floats(v, 'translation'),
                                     name=key,
                                     canvas=self)
+            #sync the states
+            if key in self.valves:
+                vv = self.valves[key]
+                v.state = vv.state
+                v.soft_lock = vv.soft_lock
+
+            self.valves[key] = v
             self.markupcontainer[key] = v
 
         def new_rectangle(elem, c):
@@ -179,9 +188,10 @@ class ExtractionLineCanvas2D(MarkupCanvas):
     def _over_item(self, event):
         x = event.x
         y = event.y
-#        for k, item in enumerate(self.items):
-        for k, item in self.items.iteritems():
-            if item.__class__.__name__ == 'Valve':
+#        for k, item in enumerate(self.valves):
+        for k, item in self.valves.iteritems():
+#            if item.__class__.__name__ == 'Valve':
+            if isinstance(item, Valve):
 
 #                mx, my = self.map_screen([item.])[0]
                 mx, my = item.get_xy()
@@ -222,7 +232,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
     def select_right_down(self, event):
         item = self.active_item
-#        item = self.items[self.active_item]
+#        item = self.valves[self.active_item]
         item.soft_lock = lock = not item.soft_lock
         self.manager.set_software_lock(item.name, lock)
         event.handled = True
@@ -232,7 +242,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         '''
     
         '''
-#        item = self.items[self.active_item]
+#        item = self.valves[self.active_item]
         item = self.active_item
         if item is None:
             return
@@ -272,8 +282,8 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 #        '''
 #        '''
 #        gc.save_state()
-##        for item in self.items:
-#        for item in self.items.itervalues():
+##        for item in self.valves:
+#        for item in self.valves.itervalues():
 #            if isinstance(item, Valve):
 ##            if item.__class__.__name__ == 'Valve':
 #                if item.pos:

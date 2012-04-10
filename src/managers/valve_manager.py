@@ -191,10 +191,13 @@ class ValveManager(Manager):
         times_up_event = Event()
         t = Timer(1, lambda: times_up_event.set())
         t.start()
+        try:
 
-        _gs_thread = Thread(target=self._get_states, args=(times_up_event, states_queue))
-        _gs_thread.start()
-        _gs_thread.join(timeout=1.01)
+            _gs_thread = Thread(target=self._get_states, args=(times_up_event, states_queue))
+            _gs_thread.start()
+            _gs_thread.join(timeout=1.01)
+        except (Exception,), e:
+            pass
 
         #ensure word has even number of elements
         s = ''
@@ -554,7 +557,6 @@ class ValveManager(Manager):
 
     def _load_explanation_valve(self, v):
         s = v.get_hardware_state()
-
         #update the extraction line managers canvas
 #            self.parent.canvas.update_valve_state(v.name[-1], s)
         name = v.name.split('-')[1]
