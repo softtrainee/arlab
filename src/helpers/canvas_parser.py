@@ -50,6 +50,12 @@ class CanvasParser(XMLParser):
     def get_turbos(self, group=None, element=True):
         return self._get_elements(group, element, 'turbo')
 
+    def get_labels(self, group=None, element=True):
+        return self._get_elements(group, element, 'label')
+
+    def get_getters(self, group=None, element=True):
+        return self._get_elements(group, element, 'getter')
+
     def _get_elements(self, group, element, name):
         if group is None:
             group = self._tree

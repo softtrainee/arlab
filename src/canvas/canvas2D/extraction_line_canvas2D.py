@@ -21,7 +21,8 @@ import apptools.sweet_pickle as pickle
 #============= local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 #from src.canvas.designer.valve import Valve
-from src.canvas.canvas2D.markup.markup_items import Rectangle, Valve, Line
+from src.canvas.canvas2D.markup.markup_items import Rectangle, Valve, Line, \
+    Label
 W = 2
 H = 2
 class ExtractionLineCanvas2D(MarkupCanvas):
@@ -107,39 +108,63 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         def get_floats(elem, name):
             return map(float, elem.find(name).text.split(','))
 
+        self.markupcontainer.clear()
+        ndict = dict()
         for v in cp.get_valves():
             key = v.text.strip()
 #            print key, map(float, v.find('translation').text.split(','))
             v = Valve(*get_floats(v, 'translation'),
                                     name=key,
+
                                     canvas=self)
             #sync the states
             if key in self.valves:
                 vv = self.valves[key]
                 v.state = vv.state
                 v.soft_lock = vv.soft_lock
-
-            self.valves[key] = v
             self.markupcontainer[key] = v
+            ndict[key] = v
 
-        def new_rectangle(elem, c):
+        self.valves = ndict
+
+        def new_rectangle(elem, c, lw=1):
             key = elem.text.strip()
             x, y = get_floats(elem, 'translation')
             w, h = get_floats(elem, 'dimension')
             self.markupcontainer[key] = Rectangle(x, y, width=w, height=h,
                                                 canvas=self,
                                                 name=key,
+                                                line_width=lw,
                                                 default_color=c)
 
         for b in cp.get_stages():
-            new_rectangle(b, (0.8, 0.8, 0.8))
+            new_rectangle(b, (0.8, 0.8, 0.8), lw=5)
 
         for s in cp.get_spectrometers():
             new_rectangle(s, (0, 0.8, 0.8))
 
         for t in cp.get_turbos():
-            new_rectangle(t, (0, 0, 0.8))
-            key = t.text.strip()
+            new_rectangle(t, (0, 0.5, 0.8))
+#            key = t.text.strip()
+
+        for i, l in enumerate(cp.get_labels()):
+            x, y = map(float, l.find('translation').text.split(','))
+            l = Label(x, y,
+                      text=l.text.strip(),
+                      canvas=self,
+
+                      )
+            self.markupcontainer['{:03}'.format(i)] = l
+
+        for g in cp.get_getters():
+            v = self.markupcontainer[g.get('valve')]
+            w, h = 5, 2
+            key = g.text.strip()
+            self.markupcontainer[key] = Rectangle(v.x, v.y + 2.5, width=w, height=h,
+                                                canvas=self,
+                                                name=key,
+                                                line_width=2,
+                                                default_color=(0, 0.5, 0))
 
         for i, c in enumerate(cp.get_connections()):
             start = c.find('start')
@@ -180,7 +205,8 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             elif orient == 'horizontal':
                 y1 = y
 
-            l = Line((x, y), (x1, y1), canvas=self, width=5)
+            l = Line((x, y), (x1, y1), default_color=(0, 0, 0),
+                     canvas=self, width=10)
             self.markupcontainer[('con{:03}'.format(i), 0)] = l
 
         self.invalidate_and_redraw()

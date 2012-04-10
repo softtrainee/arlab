@@ -46,6 +46,7 @@ class MarkupItem(HasTraits):
     default_color = (1, 0, 0)
     active_color = (0, 1, 0)
     canvas = Any(transient=True)
+    line_width = 1
 
     def __init__(self, x, y, *args, **kw):
         self.x = x
@@ -56,6 +57,8 @@ class MarkupItem(HasTraits):
         gc.begin_path()
         self.set_stroke_color(gc)
         self.set_fill_color(gc)
+        gc.set_line_width(self.line_width)
+
         self._render_(gc)
         gc.stroke_path()
 
@@ -107,50 +110,62 @@ class Rectangle(MarkupItem):
     height = 0
     x = 0
     y = 0
-
+    use_border = True
     def _render_(self, gc):
         x, y = self.get_xy()
         w, h = self.get_wh()
+#        gc.set_line_width(self.line_width)
         gc.rect(x, y, w, h)
         gc.draw_path()
 
+        if self.use_border:
+            self._render_border(gc, x, y, w, h)
         gc.set_fill_color((0, 0, 0))
         gc.set_text_position(x + w / 4.0, y + h / 4.0)
         gc.show_text(str(self.name))
         gc.draw_path()
+
+    def _render_border(self, gc, x, y, w, h):
+        gc.set_stroke_color((0, 0, 0))
+        gc.rect(x - self.line_width, y - self.line_width,
+                w + self.line_width, h + self.line_width
+                )
+        gc.stroke_path()
 
 
 class Valve(Rectangle):
     soft_lock = False
     width = 2
     height = 2
-    def _render_(self, gc):
-#        if self.state:
-#                        gc.set_fill_color((0, 1, 0))
-#                    else:
-#                        if item.selected:
-#                            gc.set_fill_color((1, 1, 0))
-#                        else:
-#                            gc.set_fill_color((1, 0, 0))
-
-        x, y = self.get_xy()
-        w, h = self.get_wh()
-        gc.rect(x, y, w, h)
-        gc.draw_path()
-
-        #print item.name, item.soft_lock
-        if self.soft_lock:
-            gc.save_state()
-            gc.set_fill_color((0, 0, 0, 0))
-            gc.set_stroke_color((0, 0.75, 1))
-            gc.set_line_width(3)
-            gc.rect(x - 2, y - 2, w + 4, h + 4)
-            gc.draw_path()
-#            gc.restore_state()
-        gc.set_fill_color((0, 0, 0))
-        gc.set_text_position(x + w / 4.0, y + h / 4.0)
-        gc.show_text(self.name)
-        gc.draw_path()
+#    def _render_(self, gc):
+##        if self.state:
+##                        gc.set_fill_color((0, 1, 0))
+##                    else:
+##                        if item.selected:
+##                            gc.set_fill_color((1, 1, 0))
+##                        else:
+##                            gc.set_fill_color((1, 0, 0))
+#
+#        x, y = self.get_xy()
+#        w, h = self.get_wh()
+#        gc.rect(x, y, w, h)
+#        gc.draw_path()
+#        if self.use_border:
+#            self._render_border(gc, w, y, w, h)
+#
+#        #print item.name, item.soft_lock
+#        if self.soft_lock:
+#            gc.save_state()
+#            gc.set_fill_color((0, 0, 0, 0))
+#            gc.set_stroke_color((0, 0.75, 1))
+#            gc.set_line_width(3)
+#            gc.rect(x - 2, y - 2, w + 4, h + 4)
+#            gc.draw_path()
+##            gc.restore_state()
+#        gc.set_fill_color((0, 0, 0))
+#        gc.set_text_position(x + w / 4.0, y + h / 4.0)
+#        gc.show_text(self.name)
+#        gc.draw_path()
 
 class Line(MarkupItem):
     start_point = None
@@ -346,10 +361,18 @@ class CalibrationItem(MarkupItem, CalibrationObject):
             return True
 class Label(MarkupItem):
     text = ''
+    use_border = True
     def _render_(self, gc):
         x, y = self.get_xy()
 
-        gc.set_text_position(x + 10, y + 10)
+        if self.use_border:
+            w = gc.get_full_text_extent(self.text)[0] + 2
+            gc.set_stroke_color((0, 0, 0))
+            gc.rect(x - 2, y - 2, w + 2, 14)
+            gc.stroke_path()
+
+        gc.set_fill_color((0, 0, 0))
+        gc.set_text_position(x, y)
         gc.show_text(self.text)
 
 class Indicator(MarkupItem):

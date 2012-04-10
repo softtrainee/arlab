@@ -30,7 +30,7 @@ class BaseDataCanvas(DataView):
 #    bgcolor = (0, 1.0, 0)
 #    border_visible = True
 #    use_backbuffer = True
-    bgcolor = 'green'
+    bgcolor = 'lightblue'
     x_range = Tuple
     y_range = Tuple
     view_x_range = Tuple
