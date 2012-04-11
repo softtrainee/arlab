@@ -42,6 +42,8 @@ class FocusParameters(HasTraits):
     _crop_width = Int(300)
     _crop_height = Int(300)
 
+    zoom = Float(50)
+
     def _get_crop_width(self):
         return self._crop_width
 

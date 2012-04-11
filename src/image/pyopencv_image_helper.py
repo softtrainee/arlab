@@ -514,6 +514,10 @@ def draw_rectangle(src, x, y, w, h, color=(255, 0, 0), thickness=1):
 
 
 def draw_circle(src, center, radius, color=(255.0, 0, 0), thickness=1):
+
+    if isinstance(center, tuple):
+        center = new_point(*center)
+
     cv.circle(src, center, radius,
               convert_color(color),
 #              cv.CV_RGB(255, 0, 0),

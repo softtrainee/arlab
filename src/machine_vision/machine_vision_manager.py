@@ -31,6 +31,8 @@ from src.helpers.paths import setup_dir, hidden_dir
 #from detectors.tray_mapper import TrayMapper
 from src.machine_vision.detectors.co2_detector import CO2HoleDetector
 from src.machine_vision.detectors.tray_mapper import TrayMapper
+import copy
+import math
 #from src.machine_vision.detectors.zoom_calibration_detector import ZoomCalibrationDetector
 
 
@@ -75,11 +77,13 @@ class MachineVisionManager(Manager):
     hole_detector = Instance(CO2HoleDetector)
 
 #    style = DelegatesTo('hole_detector')
-#    use_dilation = DelegatesTo('hole_detector')
-#    use_erosion = DelegatesTo('hole_detector')
+    use_dilation = DelegatesTo('hole_detector')
+    use_erosion = DelegatesTo('hole_detector')
     save_positioning_error = DelegatesTo('hole_detector')
     use_histogram = DelegatesTo('hole_detector')
     use_smoothing = DelegatesTo('hole_detector')
+    use_contrast_equalization = DelegatesTo('hole_detector')
+
     segmentation_style = DelegatesTo('hole_detector')
 
     start_threshold_search_value = DelegatesTo('hole_detector')
@@ -92,6 +96,7 @@ class MachineVisionManager(Manager):
     calibration_detector = Any
 
     testing = False
+    _debug = True
 
 #    def _zoom_calibration(self):
 #        d = ZoomCalibrationDetector(parent=self,
@@ -109,11 +114,11 @@ class MachineVisionManager(Manager):
         if not self.testing:
             self.testing = True
 #            self.show_image()
-#            self._spawn_thread(self.map_holes)
+            self._spawn_thread(self.map_holes)
 #            self._zoom_calibration()
-            self._spawn_thread(self.hole_detector.locate_sample_well,
-                               0, 0
-                               )
+#            self._spawn_thread(self.hole_detector.locate_sample_well,
+#                               0, 0
+#                               )
 
         else:
             self.testing = False
@@ -148,36 +153,127 @@ class MachineVisionManager(Manager):
 
         return hd
 
+    def cancel_calibration(self):
+        self._cancel_calibration = True
+
+    def do_auto_calibration(self, calibration_item):
+        self._cancel_calibration = False
+        cx, cy, rx, ry = self._calculate_calibration()
+
+        if cx and cy and rx and ry:
+            calibration_item.set_center(cx, cy)
+            calibration_item.set_right(rx, ry)
+
+        #now move thru all the holes mapping each one
+        sm = self.parent._stage_map
+        for h in  sm.sample_holes:
+            if self._cancel_calibration:
+                break
+            self.parent._move_to_hole(h.id)
+
+        #interpolate correct positions for holes that could not be 
+        #identified
+        sm.interpolate_noncorrected()
+
+    def _calculate_calibration(self):
+        cx = None
+        cy = None
+        rx = None
+        ry = None
+        sm = self.parent._stage_map
+#        for ch in ['3', '119', '219', '103', '111']:
+        #move to a set of calibration holes
+        #n,e,s,w,c
+        if sm.calibration_holes is None:
+            self.warning('no calibration holes')
+            return
+
+        for ch in sm.calibration_holes:
+            if self._cancel_calibration:
+                self.info('moving to calibration hole {}'.format(ch))
+                self.parent._move_to_hole(ch)
+                return
+
+        print sm.calibration_holes
+        #calculate the center pos
+        npos = [[], []]
+        for a, b, i in [(0, 2, 1), (1, 3, 0)]:
+            a = sm.calibration_holes[a]
+            b = sm.calibration_holes[b]
+            cpos1 = sm.get_corrected_hole_pos(a)
+            cpos2 = sm.get_corrected_hole_pos(b)
+            if cpos1 and cpos2:
+                d = abs(cpos1[i] - cpos2[i]) / 2.0
+                npos[i].append(min(cpos1[i], cpos2[i]) + d)
+
+        ccpos = sm.get_corrected_hole_pos(sm.calibration_holes[4])
+        if ccpos:
+            npos[0].append(ccpos[0])
+            npos[1].append(ccpos[1])
+
+        if npos[0] and npos[1]:
+            print 'npos', npos
+            cx = sum(npos[0]) / len(npos[0])
+            cy = sum(npos[1]) / len(npos[1])
+
+            rots = []
+            #calculate the rotations between c and n,s, c and e,w
+            for i, offset in [(0, -90), (2, -90), (1, 0), (3, 0)]:
+                npos = sm.get_corrected_hole_pos(sm.calibration_holes[i])
+                if npos is not None:
+                    rot = math.atan2((cx - npos[0]), (cy - npos[1]))\
+                            + math.radians(offset)
+                    rots.append(rot)
+
+            rightx, righty = sm.get_hole_pos(sm.calibration_holes[1])
+            centerx, centery = sm.get_hole_pos(sm.calibration_holes[4])
+
+            L = ((centerx - rightx) ** 2 + (centery - righty) ** 2) ** 0.5
+
+            print 'calculated rotations', rots
+            if rots:
+                rot = sum(rots) / len(rots)
+                rx = cx + L * math.cos(rot)
+                ry = cy + L * math.sin(rot)
+
+        return cx, cy, rx, ry
+
+#        #use map holes to move to multiple regions and 
+#        #determine corrected position
+#        self.map_holes()
+#
+#        sm = self.parent._stage_map
+#        #now stage map has corrected positions
+#
+#        #use stage map to get corrected center and corrected right
+#        cx, cy = sm.get_corrected_center()
+#        rx, ry = sm.get_corrected_right()
+
+#        return cx, cy, rx, ry
+
     def map_holes(self):
         self.load_source()
 #        self.image.panel_size = 450
+        if self.parent is None:
+            from src.managers.stage_managers.stage_map import StageMap
+            p = os.path.join(setup_dir, 'tray_maps', '221-hole.txt')
+            sm = StageMap(file_path=p)
+            center_mx, center_my = 3.596, -13.321
+            cpos = -2.066, -0.695
+            rot = 358.099
 
-        from src.managers.stage_managers.stage_map import StageMap
-        p = os.path.join(setup_dir, 'tray_maps', '221-hole.txt')
-        sm = StageMap(file_path=p)
-
-        center_mx, center_my = 0, 0
-        rot = 0
-        cpos = 3.596, -13.321
-        if self.parent is not None:
-            center_mx = self.parent.stage_controller.x
-            center_my = self.parent.stage_controller.y
-
+        else:
+            sm = self.parent._stage_map
             ca = self.parent.canvas.calibration_item
             if ca is not None:
                 rot = ca.get_rotation()
                 cpos = ca.get_center_position()
 
-#        center_mx = 3.596
-#        center_my = -13.321
-#        cpos = -2.066, -0.695
-#        rot = 358.099
-
         tm = TrayMapper(image=self.image,
                         working_image=self.working_image,
                         stage_map=sm,
-                        center_mx=center_mx,
-                        center_my=center_my,
+#                        center_mx=center_mx,
+#                        center_my=center_my,
                         calibrated_center=cpos,
                         calibrated_rotation=rot,
                         pxpermm=self.pxpermm,
@@ -185,23 +281,60 @@ class MachineVisionManager(Manager):
                         parent=self
                         )
 
-        tm.map_holes()
+        self.hole_detector = tm
+        if self.parent is not None:
+            center_mx = self.parent.stage_controller.x
+            center_my = self.parent.stage_controller.y
 
+        regions = [(0, 0)]
+        for r in regions:
+            #move to a new region
+            if self.parent is not None:
+                self.parent.stage_controller.linear_move(*r, block=True)
+
+            tm.center_my = center_my
+            tm.center_mx = center_mx
+            tm.map_holes()
+
+        sm.interpolate_noncorrected()
+
+        for s in sm.sample_holes:
+            if s.interpolated:
+                cx, cy = s.x_cor, s.y_cor
+    #            if abs(cx) > 1e-6 or abs(cy) > 1e-6:
+
+                cx, cy = sm.map_to_uncalibration((cx, cy), cpos, rot)
+                cx, cy = tm.map_screen(cx, cy)
+
+    #                print 'draw ind for {} {},{}'.format(s.id, cx, cy)
+    #                cy = 250
+                tm._draw_indicator(self.image.frames[0], (cx, cy), color=(255, 0, 0))
+
+#        center_mx = 3.596
+#        center_my = -13.321
+#        cpos = -2.066, -0.695
+#        rot = 358.099
     def close_image(self):
         if self.ui is not None:
             do_later(self.ui.dispose)
         self.ui = None
 
-    def show_image(self):
-        if self.ui is not None:
-            self.close_image()
-
+    def show_image(self, reopen_image=False):
         self.info('show image')
+        if reopen_image:
+            if self.ui is not None:
+                self.close_image()
+            do_after(50, self.edit_traits, view='image_view')
+        elif self.ui is None:
+            do_after(50, self.edit_traits, view='image_view')
+#        else:
+#            self.ui.control.Raise()
 
-        if self._debug:
-            do_after(50, self.edit_traits, view='working_image_view')
 
-        do_after(50, self.edit_traits, view='image_view')
+
+#        if self._debug:
+#            do_after(50, self.edit_traits, view='working_image_view')
+
 
     def traits_view(self):
         v = View('test')
@@ -215,16 +348,19 @@ class MachineVisionManager(Manager):
                             Item('crop_tries'),
                             Item('crop_expansion_scalar'),
                             show_border=True,
-                           label='Search')
+                           label='Search',
+                           )
 
         process_grp = Group(
                             Item('use_smoothing'),
                             Item('use_dilation'),
                             Item('use_erosion'),
                             Item('use_histogram'),
+                            Item('use_contrast_equalization'),
                             show_border=True,
                            label='Process')
-        v = View(
+        v = View(Item('segmentation_style'),
+
                  search_grp,
                  process_grp,
                  Item('save_positioning_error'),
@@ -280,8 +416,8 @@ class MachineVisionManager(Manager):
             if path is None:
                 src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
                 src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
-                src = '/Users/ross/Desktop/tray_screen_shot3.596--13.321.tiff'
-                src = '/Users/ross/Sandbox/snapshot001.jpg'
+                src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321.tiff'
+#                src = '/Users/ross/Sandbox/snapshot001.jpg'
 #                src = '/Users/ross/Desktop/watershed_test.tif'
 #                src = '/Users/ross/Desktop/snapshot006.jpg'
 #                src = '/Users/ross/Desktop/snapshot007-10mm.jpg'

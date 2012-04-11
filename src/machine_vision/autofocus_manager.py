@@ -105,11 +105,12 @@ class AutofocusManager(Manager):
             kw = dict(operator=oper.split('-')[1])
         else:
             target = self._passive_focus_1step
-            kw = dict(operator=oper)
-
-#        self.load_source()
-#        self.image.frames.append(self.image.source_frame)
-#        self.edit_traits(view='image_view')
+            kw = dict(operator=oper,
+                      )
+            try:
+                kw['zoom'] = self.parameters.zoom
+            except AttributeError:
+                pass
 
         self._passive_focus_thread = Thread(target=target, kwargs=kw)
         self._passive_focus_thread.start()
@@ -143,56 +144,7 @@ class AutofocusManager(Manager):
         self.graph = g
         self.autofocusing = False
 
-    def _passive_focus_2step(self, operator='laplace'):
-        '''
-            see
-            IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
-            FOR DIGITAL STILL CAMERA
-            DOI 10.1109/30.468047
-            and
-            http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
-        '''
-        args = self._passive_focus(operator=operator, set_z=False,
-                             velocity_scalar=self.parameters.velocity_scalar1
-                            )
 
-        if args:
-            nominal_focus1, fs1, gs1, sgs1 = args
-
-        fstart = nominal_focus1 - self.parameters.negative_window
-        fend = nominal_focus1 + self.parameters.positive_window
-
-        args = self._passive_focus(operator=operator,
-                             fstart=fstart,
-                             fend=fend,
-                             velocity_scalar=self.parameters.velocity_scalar2
-                             )
-
-        if args:
-            nominal_focus2, fs2, gs2, sgs2 = args
-            g = Graph()
-            g.new_plot(padding_top=30)
-            g.new_series(fs1, gs1)
-            g.new_series(fs1, sgs1)
-            g.new_plot(padding_top=30)
-            g.new_series(fs2, gs2, plotid=1)
-            g.new_series(fs2, sgs2, plotid=1)
-
-            g.set_x_title('Z', plotid=1)
-            g.set_x_title('Z', plotid=0)
-            g.set_y_title('FMsob', plotid=0)
-            g.set_y_title('FMsob', plotid=1)
-
-            g.add_vertical_rule(nominal_focus1)
-            g.add_vertical_rule(nominal_focus2, plotid=1)
-            g.add_vertical_rule(fstart, color=(0, 0, 1))
-            g.add_vertical_rule(fend, color=(0, 0, 1))
-            g.window_title = 'Autofocus'
-
-            #g.set_plot_title('Sobel', plotid=1)
-            #g.set_plot_title('Sobel')
-            do_later(g.edit_traits)
-        self.autofocusing = False
 
     def _passive_focus(self, operator='sobel', fstart=None, fend=None,
                        step_scalar=None, set_z=True, zoom=0, **kw):
@@ -440,6 +392,59 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _parameters_default(self):
         return self.load()
 
+#===============================================================================
+# Deprecated
+#===============================================================================
+    def _passive_focus_2step(self, operator='laplace'):
+        '''
+            see
+            IMPLEMENTATION OF A PASSIVE AUTOMATIC FOCUSING ALGORITHM
+            FOR DIGITAL STILL CAMERA
+            DOI 10.1109/30.468047
+            and
+            http://cybertron.cg.tu-berlin.de/pdci10/frankencam/#autofocus
+        '''
+        args = self._passive_focus(operator=operator, set_z=False,
+                             velocity_scalar=self.parameters.velocity_scalar1
+                            )
+
+        if args:
+            nominal_focus1, fs1, gs1, sgs1 = args
+
+        fstart = nominal_focus1 - self.parameters.negative_window
+        fend = nominal_focus1 + self.parameters.positive_window
+
+        args = self._passive_focus(operator=operator,
+                             fstart=fstart,
+                             fend=fend,
+                             velocity_scalar=self.parameters.velocity_scalar2
+                             )
+
+        if args:
+            nominal_focus2, fs2, gs2, sgs2 = args
+            g = Graph()
+            g.new_plot(padding_top=30)
+            g.new_series(fs1, gs1)
+            g.new_series(fs1, sgs1)
+            g.new_plot(padding_top=30)
+            g.new_series(fs2, gs2, plotid=1)
+            g.new_series(fs2, sgs2, plotid=1)
+
+            g.set_x_title('Z', plotid=1)
+            g.set_x_title('Z', plotid=0)
+            g.set_y_title('FMsob', plotid=0)
+            g.set_y_title('FMsob', plotid=1)
+
+            g.add_vertical_rule(nominal_focus1)
+            g.add_vertical_rule(nominal_focus2, plotid=1)
+            g.add_vertical_rule(fstart, color=(0, 0, 1))
+            g.add_vertical_rule(fend, color=(0, 0, 1))
+            g.window_title = 'Autofocus'
+
+            #g.set_plot_title('Sobel', plotid=1)
+            #g.set_plot_title('Sobel')
+            do_later(g.edit_traits)
+        self.autofocusing = False
 #============= EOF =====================================
 
 #        else:

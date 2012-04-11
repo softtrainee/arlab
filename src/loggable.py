@@ -35,6 +35,9 @@ class Loggable(HasTraits):
     name = String
     logger_name = String
     # logger_display = None
+    def __init__(self, *args, **kw):
+        super(Loggable, self).__init__(*args, **kw)
+        self._add_logger()
 
     @on_trait_change('name, logger_name')
     def _add_logger(self):

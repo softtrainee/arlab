@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import on_trait_change, Float, Button, Enum, String, Property, Str
+from traits.api import Any, on_trait_change, Float, Button, Enum, String, Property, Str
 from traitsui.api import View, Item, HGroup, VGroup, spring
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -25,6 +25,7 @@ from src.helpers.paths import hidden_dir
 from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem, \
     CalibrationObject
+from threading import Thread
 
 PICKLE_PATH = p = os.path.join(hidden_dir, '.stage_calibration')
 PYCHRON_HELP = '''1. Drag red circle to desired center position
@@ -34,6 +35,10 @@ Hit Accept to finish, Cancel to cancel
 MASSSPEC_HELP = '''1. Locate center hole
 2. Locate right hole
 '''
+PYCHRON_AUTO_HELP = '''1. Hit calibrate.
+2. Sit back and relax
+'''
+
 class TrayCalibrationManager(Manager):
     '''
         calibration points need to be saved in data space        
@@ -52,19 +57,41 @@ class TrayCalibrationManager(Manager):
 #    _rotation = Float(enter_set = True, auto_set = False)
     rotation = Float
     canvas = LaserTrayCanvas
-    calibration_style = Enum('MassSpec', 'pychron', 'MassSpec')
+    calibration_style = Enum('pychron-auto', 'MassSpec', 'pychron', 'MassSpec')
     calibration_help = Property(depends_on='_calibration_help')
 #    _calibration_help = Str(PYCHRON_HELP)
-    _calibration_help = Str(MASSSPEC_HELP)
+    _calibration_help = Str(PYCHRON_AUTO_HELP)
     _calibrating = False
 #    def _get_rotation(self):
 #        return self._rotation
+
+    def pychron_auto_calibration(self):
+        canvas = self.canvas
+        canvas.new_calibration_item(self.x,
+                        self.y, 0, kind=self.calibration_style)
+
+        #use our machine vision manager to do calibration
+        if self.parent is not None:
+            mv = self.parent.machine_vision_manager
+            if mv is not None:
+                self._calibrating = True
+                calibration_item = canvas.calibration_item
+                mv.do_auto_calibration(calibration_item)
+                if canvas.calibration_item:
+                    self.rotation = canvas.calibration_item.get_rotation()
+                    self.save_calibration()
+                self._calibrating = False
 
     def isCalibrating(self):
         return self._calibrating
 
     def _cancel_fired(self):
         canvas = self.canvas
+        #try to cancel the machine vision manager 
+        mv = self.parent.machine_vision_manager
+        if mv is not None:
+            mv.cancel_calibration()
+
         canvas.calibration_item = self._prev_calibration
         self._accept_fired()
 
@@ -111,6 +138,12 @@ class TrayCalibrationManager(Manager):
                 self.save_calibration()
                 self.calibration_step = 'Calibrate'
                 self._calibrating = False
+        elif self.calibration_style == 'pychron-auto':
+            if not self._calibrating:
+                canvas.calibrate = True
+                t = Thread(target=self.pychron_auto_calibration)
+                t.start()
+            #make a new calibration item
 
         else:
 
@@ -134,15 +167,23 @@ class TrayCalibrationManager(Manager):
             with open(PICKLE_PATH, 'rb') as f:
                 try:
                     calibration = pickle.load(f)
-                    if isinstance(calibration, CalibrationItem):
+                    if calibration.style == 'MassSpec':
                         self._calibration_help = MASSSPEC_HELP
-                        if isinstance(calibration, CalibrationObject):
-                            self._calibration_help = PYCHRON_HELP
-                        calibration.set_canvas(self.canvas)
-                        calibration.on_trait_change(self.update_xy,
-                                                     'center.[x,y]')
-                        calibration.on_trait_change(self.update_rotation,
-                                                     'line.data_rotation')
+                    elif calibration.style == 'pychron-auto':
+                        self._calibration_help = PYCHRON_AUTO_HELP
+                    else:
+                        self._calibration_help = PYCHRON_HELP
+
+                    calibration.set_canvas(self.canvas)
+                    calibration.on_trait_change(self.update_xy,
+                                                 'center.[x,y]')
+                    calibration.on_trait_change(self.update_rotation,
+                                                 'line.data_rotation')
+
+#                    if isinstance(calibration, CalibrationItem):
+#                        self._calibration_help = MASSSPEC_HELP
+#                        if isinstance(calibration, CalibrationObject):
+#                            self._calibration_help = PYCHRON_HELP
 
                     self.canvas.calibration_item = calibration
 
@@ -161,6 +202,7 @@ class TrayCalibrationManager(Manager):
 
         ca = self.canvas.calibration_item
         if  ca is not None:
+            ca.style = self.calibration_style
             self.info('saving calibration')
             with open(PICKLE_PATH, 'wb') as f:
                 pickle.dump(ca, f)
@@ -186,11 +228,15 @@ class TrayCalibrationManager(Manager):
 
             self._calibration_help = MASSSPEC_HELP
         else:
-            self._calibration_help = PYCHRON_HELP
+            if self.calibration_style == 'pychron-auto':
+                self._calibration_help = PYCHRON_AUTO_HELP
+            else:
+                self._calibration_help = PYCHRON_HELP
+
             if self.canvas.calibration_item is not None:
                 x = self.canvas.calibration_item.cx
                 y = self.canvas.calibration_item.cy
-                rotation = self.canvas.calibration_item.get_rotation()
+                rotation = self.canvsas.calibration_item.get_rotation()
                 self.canvas.new_calibration_item(x, y, rotation)
 
     def _get_calibration_help(self):
@@ -216,7 +262,7 @@ class TrayCalibrationManager(Manager):
                               visible_when='calibration_style=="pychron"'),
                         Item('cancel', show_label=False,
                               enabled_when='object.canvas.calibrate',
-                              visible_when='calibration_style=="pychron"'),
+                              visible_when='calibration_style in ["pychron","pychron-auto"]'),
                               )
                         ),
 
