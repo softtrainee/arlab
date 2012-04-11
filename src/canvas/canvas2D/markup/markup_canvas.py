@@ -86,7 +86,10 @@ class MarkupContainer(collections.MutableMapping):
             li = 1
             key = k
         l = self.layers[li]
-        del l[key]
+        try:
+            del l[key]
+        except KeyError:
+            pass
 
 
 class MarkupCanvas(BaseDataCanvas):

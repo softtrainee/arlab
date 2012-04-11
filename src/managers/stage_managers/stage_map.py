@@ -37,6 +37,7 @@ class SampleHole(HasTraits):
     render = Str
     shape = Str
     dimension = Float
+    interpolated = False
 
 
 class SampleHoleAdapter(TabularAdapter):
@@ -60,6 +61,99 @@ class StageMap(Loggable):
     g_shape = Enum('circle', 'square')
 
     clear_corrections = Button
+
+    #should always be N,E,S,W,center
+    calibration_holes = None
+
+    def interpolate_noncorrected(self):
+        self.info('iteratively fill in non corrected holes')
+        n = len(self.sample_holes)
+        for i in range(2):
+            self._interpolate_noncorrected()
+
+            g = len([h for h in self.sample_holes
+                    if abs(h.x_cor) > 1e-6 and abs(h.x_cor) > 1e-6])
+
+            if g == n:
+                break
+            self.info('iteration {}, total={}'.format(i + 1, g))
+        if g < n:
+            self.info('{} holes remain noncorrected'.format(n - g))
+        else:
+            self.info('all holes now corrected')
+
+    def _interpolate_noncorrected(self):
+
+        def _midpoint(a, b):
+            mx = None
+            my = None
+#                    print a, b
+            if a and b:
+                dx = abs(a[0] - b[0])
+                dy = abs(a[1] - b[1])
+                mx = min(a[0], b[0]) + dx / 2.0
+                my = min(a[1], b[1]) + dy / 2.0
+            return mx, my
+
+        dimension = self.g_dimension
+        #now fill in any missing hole values
+        for h in self.sample_holes:
+            cx, cy = h.x_cor, h.y_cor
+            if not ((abs(cx) > 1e-6 and abs(cy) > 1e-6)):
+#                print 'no hole for ', h.id
+                #this hole does not have a correction value
+                found = []
+                #get the cardinal holes
+                for rx, ry in [(0, 1),
+                               (-1, 0), (1, 0),
+                                    (0, -1)
+                              ]:
+
+                    x = h.x + rx * 1 * self.g_dimension
+                    y = h.y + ry * 1 * self.g_dimension
+
+                    hole = self._get_hole_by_position(x, y)
+                    fo = None
+                    if hole is not None:
+                        six, siy = hole.x_cor, hole.y_cor
+                        if abs(six) > 1e-6 and abs(siy) > 1e-6:
+                            fo = (six, siy)
+                    found.append(fo)
+
+                nxs = []
+                nys = []
+                for i, j in [(0, 3), (1, 2)]:
+                    mx, my = _midpoint(found[i], found[j])
+                    if mx is not None and my is not None:
+                        #make sure the corrected value makes sense
+                        #ie less than 1 radius from nominal hole
+                        if (abs(mx - h.x) < dimension
+                                and abs(my - h.y) < dimension):
+                            nxs.append(mx)
+                            nys.append(my)
+
+                if not nxs:
+                    #try iding using "triangulation"
+                    for i, j in [(0, 1), (0, 2), (2, 3), (3, 1)]:
+                        x = found[i]
+                        if x is not None:
+                            x = x[0]
+                        y = found[j]
+                        if y is not None:
+                            y = y[1]
+
+                        if x and y:
+                            if (abs(x - h.x) < dimension
+                                    and abs(y - h.y) < dimension):
+                                nxs.append(x)
+                                nys.append(y)
+                        if nxs:
+                            break
+
+                if nxs and nys:
+                    h.interpolated = True
+                    h.x_cor = sum(nxs) / len(nxs)
+                    h.y_cor = sum(nys) / len(nys)
 
     def map_to_uncalibration(self, pos, cpos, rot):
         a = AffineTransform()
@@ -106,7 +200,6 @@ class StageMap(Loggable):
                     print e
 
             if cors:
-
                 self.info('loaded correction file {}'.format(p))
                 for i, x, y in cors:
                     h = self._get_hole(i)
@@ -141,15 +234,21 @@ class StageMap(Loggable):
             hole.y_cor = y_cor
 
     def _get_hole_by_position(self, x, y, tol=None):
+        return self._get_hole_by_pos(x, y, 'x', 'y', tol)
+
+    def _get_hole_by_corrected_position(self, x, y, tol=None):
+        return self._get_hole_by_pos(x, y, 'x_cor', 'y_cor', tol)
+
+    def _get_hole_by_pos(self, x, y, xkey, ykey, tol):
         if tol is None:
             tol = self.g_dimension
 
         pythag = lambda hi:((hi.x - x) ** 2 + (hi.y - y) ** 2) ** 0.5
         holes = [(hole, pythag(hole)) for hole in self.sample_holes
-                 if abs(hole.x - x) < tol and abs(hole.y - y) < tol]
+                 if abs(getattr(hole, xkey) - x) < tol and abs(getattr(hole, ykey) - y) < tol]
         if holes:
-            #sort holes by deviation 
-            sorted(holes, lambda a, b: cmp(a[1], b[1]))
+#            #sort holes by deviation 
+            holes = sorted(holes, lambda a, b: cmp(a[1], b[1]))
             return holes[0][0]
 
     def _get_bitmap_path(self):
@@ -192,12 +291,20 @@ class StageMap(Loggable):
         lines = parse_file(self.file_path)
         if not lines:
             return
+
+        #line 0 shape, dimension
         shape, dimension = lines[0].split(',')
         self.g_shape = shape
         self.g_dimension = float(dimension)
 
+        #line 1 list of holes to default draw
         valid_holes = lines[1].split(',')
-        for hi, line in enumerate(lines[2:]):
+
+        #line 2 list of calibration holes
+        #should always be N,E,S,W,center
+        self.calibration_holes = lines[2].split(',')
+
+        for hi, line in enumerate(lines[3:]):
             if not line.startswith('#'):
                 try:
                     hole, x, y = line.split(',')

@@ -21,13 +21,36 @@ from hole_detector import HoleDetector
 
 
 class CO2HoleDetector(HoleDetector):
+
     def _segmentation_style_changed(self):
+        self._segmentation_style_hook()
+
+    def _segmentation_style_hook(self):
         self.locate_sample_well(0, 0)
 
     def _reset_image(self):
         self.image.frames = [None]
 #        if self._debug:
         self.working_image.frames = [None]
+
+    def smooth(self, src):
+        if self.use_smoothing:
+            self.info('smoothing image')
+            src = smooth(src)
+        return src
+
+    def contrast_equalization(self, src):
+        if self.use_contrast_equalization:
+            from skimage.exposure import rescale_intensity
+            self.info('maximizing image contrast')
+            src = src.ndarray
+            # Contrast stretching
+            p2 = percentile(src, 2)
+            p98 = percentile(src, 98)
+            img_rescale = rescale_intensity(src, in_range=(p2, p98))
+
+            src = asMat(img_rescale)
+        return src
 
     def locate_sample_well(self, cx, cy, holenum=None, **kw):
         self._reset_image()
@@ -40,7 +63,6 @@ class CO2HoleDetector(HoleDetector):
 
 #        for ci in range(self.crop_tries):
 #        self.parent.close_image()
-
 
         src = self.parent.load_source().clone()
         src = grayspace(src)
@@ -59,21 +81,9 @@ class CO2HoleDetector(HoleDetector):
             self.info('cropping image to {}mm x {}mm'.format(cw, ch))
             src = self._crop_image(src, cw, ch)
 
-        if self.use_contrast_equalization:
-            from skimage.exposure import rescale_intensity
-            self.info('maximizing image contrast')
-            src = src.ndarray
-            # Contrast stretching
-            p2 = percentile(src, 2)
-            p98 = percentile(src, 98)
-            img_rescale = rescale_intensity(src, in_range=(p2, p98))
 
-            src = asMat(img_rescale)
-
-        if self.use_smoothing:
-            self.info('smoothing image')
-            src = smooth(src)
-
+        src = self.contrast_equalization(src)
+        src = self.smooth(src)
         self.image.frames[0] = colorspace(src)
         self.working_image.frames[0] = colorspace(src)
         self.parent.show_image()

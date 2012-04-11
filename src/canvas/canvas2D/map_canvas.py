@@ -140,7 +140,7 @@ class MapCanvas(MarkupCanvas):
         self.request_redraw()
 
     def new_calibration_item(self, x, y, rotation, kind='pychron'):
-        if kind == 'MassSpec':
+        if kind in ['MassSpec', 'pychron-auto']:
             ci = CalibrationObject()
         else:
             ci = CalibrationItem(x, y, rotation, canvas=self)

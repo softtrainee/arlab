@@ -148,7 +148,6 @@ class BakeoutManager(Manager):
         db = BakeoutAdapter(dbname='bakeoutdb',
                             password='Argon')
         db.connect()
-
         return db
 
     def _add_bakeout_to_db(self, controllers, path):
@@ -330,8 +329,11 @@ class BakeoutManager(Manager):
 
     def _alive_changed(self, name, old, new):
         if old and not new and not self._suppress_commit:
-            self.info('Bakeout finished - commit session to db')
+            self.info('commit session to db')
             self.database.commit()
+
+            #completed successfully so we should restart a general scan
+            self.reset_general_scan()
 
     def kill(self, close=True, **kw):
         '''
@@ -1236,7 +1238,6 @@ if __name__ == '__main__':
     b = BakeoutManager()
     b.load()
     b._add_bakeout_to_db()
-    print 'asdf'
 #    b._convert_to_h5(path)
 #    n = 10
 #    from timeit import Timer

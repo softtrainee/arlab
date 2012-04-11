@@ -172,10 +172,10 @@ class PyScript(Loggable):
             self._wait_dialog.close()
 
         self._cancel_hook()
-    
+
     def _cancel_hook(self):
         pass
-    
+
     def bootstrap(self, load=True):
         self._interval_flag = Event()
         self._interval_stack = Queue()
@@ -354,7 +354,8 @@ class PyScript(Loggable):
                 del self.parent.scripts[self.hash_key]
 
     def _post_execute_hook(self):
-        pass
+        if self.controller is not None:
+            self.controller.end()
 
     def _manager_action(self, func, *args, **kw):
         man = self._get_manager()

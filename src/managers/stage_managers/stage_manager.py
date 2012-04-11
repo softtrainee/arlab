@@ -735,7 +735,10 @@ class StageManager(Manager):
                 correct = False
             #map the position to calibrated space
             self.stage_controller.linear_move(block=True, *pos)
-            if not self.tray_calibration_manager.isCalibrating():
+            if self.tray_calibration_manager.calibration_style == 'MassSpec':
+                if not self.tray_calibration_manager.isCalibrating():
+                    self._move_to_hole_hook(key, correct)
+            else:
                 self._move_to_hole_hook(key, correct)
 
             self.info('Move complete')

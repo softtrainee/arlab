@@ -97,6 +97,8 @@ class VideoStageManager(StageManager, Videoable):
     record_label = Property(depends_on='is_recording')
     is_recording = Bool
 
+
+
     video_directory = Directory
 
     recording_zoom = Float
@@ -393,7 +395,8 @@ class VideoStageManager(StageManager, Videoable):
         return MachineVisionManager(video=self.video,
                                     stage_controller=self.stage_controller,
                                     laser_manager=self.parent,
-                                    autofocus_manager=self.autofocus_manager
+                                    autofocus_manager=self.autofocus_manager,
+                                    parent=self
                                     )
 
     def _autofocus_manager_default(self):
@@ -513,6 +516,9 @@ class VideoStageManager(StageManager, Videoable):
 
     def _get_record_label(self):
         return 'Record' if not self.is_recording else 'Stop'
+
+    #this is nor oo programming
+    #tray cal man default defined in stage man
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
