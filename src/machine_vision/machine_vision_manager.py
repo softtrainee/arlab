@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
-    DelegatesTo
+    DelegatesTo, on_trait_change
 from traitsui.api import View, Item, Handler, HGroup, Group, spring
 from pyface.timer.do_later import do_later, do_after
 import apptools.sweet_pickle as pickle
@@ -31,7 +31,6 @@ from src.helpers.paths import setup_dir, hidden_dir
 #from detectors.tray_mapper import TrayMapper
 from src.machine_vision.detectors.co2_detector import CO2HoleDetector
 from src.machine_vision.detectors.tray_mapper import TrayMapper
-import copy
 import math
 #from src.machine_vision.detectors.zoom_calibration_detector import ZoomCalibrationDetector
 
@@ -147,11 +146,26 @@ class MachineVisionManager(Manager):
         hd.parent = self
         hd.image = self.image
         hd.working_image = self.working_image
-        hd.pxpermm = self.pxpermm
+#        hd.pxpermm = self.pxpermm
+#        hd.pxpermm_coeffs = self.parent.camera_xcofficients
+        if self.laser_manager is not None:
+            z = self.laser_manager.zoom
+            hd.pxpermm = self._set_pxpermm_by_zoom(z)
+
         hd.name = 'hole_detector'
         hd._debug = self._debug
 
         return hd
+
+    @on_trait_change('laser_manager:zoom')
+    def update_zoom(self, new):
+        self._set_pxpermm_by_zoom(new)
+
+    def _set_pxpermm_by_zoom(self, z):
+        from numpy import polyval
+        c = map(float, self.parent._camera_xcoefficients.split(','))
+        pxpercm = polyval(c, z)
+        self.hole_detector.pxpermm = pxpercm / 10.0
 
     def cancel_calibration(self):
         self._cancel_calibration = True

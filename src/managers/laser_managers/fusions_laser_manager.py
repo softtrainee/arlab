@@ -75,13 +75,13 @@ class FusionsLaserManager(LaserManager):
     def _record_power(self):
         p = self.get_laser_watts()
         if p is not None:
-            self._prev_power=p
+            self._prev_power = p
         else:
-            p=self._prev_power
-        
+            p = self._prev_power
+
         if p is not None:
             self.data_manager.add_time_stamped_value(p, rawtime=True)
-    
+
             try:
                 self.power_graph.record(p)
             except Exception, e:
@@ -98,7 +98,7 @@ class FusionsLaserManager(LaserManager):
         g.new_plot(data_limit=60,
                    scan_delay=1,
                    xtitle='time (s)',
-                   ytitle='8bit power',
+                   ytitle='power (%)',
 
                    )
         g.new_series()
@@ -123,18 +123,18 @@ class FusionsLaserManager(LaserManager):
     def start_power_recording(self, rid):
         if self.power_graph is not None:
             self.power_graph.close()
-            
+
         #self.power_graph=None    
-        
+
         self.open_power_graph(rid)
 
         self.data_manager = CSVDataManager()
         self.data_manager.new_frame(directory='co2power',
                                     base_frame_name=rid)
-        
+
         if self.power_timer is not None:
             self.power_timer.Stop()
-            
+
         self.power_timer = Timer(1000, self._record_power)
 
     def stop_power_recording(self):

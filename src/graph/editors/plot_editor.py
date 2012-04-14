@@ -117,6 +117,8 @@ class PlotEditor(HasTraits):
                              )
         if sid is not None:
             n = self.graph.get_series_label(plotid=self.id, series=sid)
+            if n is None:
+                n = sid
             kwargs['name'] = n
 
         return kwargs

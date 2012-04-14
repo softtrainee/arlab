@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from pyface.message_dialog import warning
 '''
 Fusions Control board
 a combination of the logic board and the kerr microcontroller
@@ -66,7 +67,13 @@ class FusionsLogicBoard(CoreDevice):
         #disable laser
         if progress is not None:
             progress.change_message('Disabling Laser')
-        self._disable_laser_()
+
+        #test communciations with board issue warning if 
+        #no handle or response is none
+        resp = self._disable_laser_()
+        if self._communicator is None or resp is not True:
+            warning(None, 'Laser not connected. Power cycle USB hub.')
+            return
 
         #turn off pointer
         if progress is not None:
@@ -130,8 +137,6 @@ class FusionsLogicBoard(CoreDevice):
 #==============================================================================
 #laser methods
 #==============================================================================
-
-
     def check_interlocks(self):
         '''
         '''
@@ -193,7 +198,7 @@ class FusionsLogicBoard(CoreDevice):
                 break
         else:
             return 'laser was not disabled'
-        
+
         return True
 
     def _set_laser_power_(self, *args, **kw):

@@ -13,17 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from traits.api import Any, Float
-from src.loggable import Loggable
+from src.hardware.core.core_device import CoreDevice
 
 
-class Detector(Loggable):
-    parent = Any(transient=True)
-    image = Any(transient=True)
-    working_image = Any(transient=True)
-    pxpermm = Float(23.1)
+class QtegraDevice(CoreDevice):
+    scan_func = 'read_temperature'
+
+    def _build_command(self, cmd, *args, **kw):
+        return cmd
+
+    def _parse_response(self, resp):
+        if resp is not None:
+            resp = resp.strip()
+        return resp
+
+    def read_temperature(self, **kw):
+        cmd = 'Get {}'.format('Temp1')
+        x = self.repeat_command(cmd, **kw)
+        return x
 
 
 
-
-#======== EOF ================================

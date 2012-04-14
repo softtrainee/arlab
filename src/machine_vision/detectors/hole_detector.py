@@ -131,7 +131,7 @@ class HoleDetector(Detector):
 #        from pylab import show, hist
 #        hist(ndsrc.ravel(), bins=range(0, 256))
 #        do_later(show)
-        self.info('{},{}'.format(tlow, thigh))
+#        self.info('region segmentation limits {},{}'.format(tlow, thigh))
         markers = zeros_like(ndsrc)
         markers[ndsrc < tlow] = 1
         markers[ndsrc > thigh] = 255
@@ -222,7 +222,7 @@ class HoleDetector(Detector):
 
             targets.append(tr)
 
-        self.info('found {} targets'.format(len(targets)))
+#        self.info('found {} targets'.format(len(targets)))
         return targets
 
     def _get_positioning_error(self, targets, cx, cy, holenum):
@@ -243,8 +243,6 @@ class HoleDetector(Detector):
 
 
         src = grayspace(self.image.source_frame)
-#        if self.use_smoothing:
-#            src = smooth(src)
 
         self.image.frames[0] = colorspace(crop(src, *self.croprect))
         self._draw_markup(targets, dev=(dx, dy))

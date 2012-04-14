@@ -38,7 +38,10 @@ class SampleHole(HasTraits):
     shape = Str
     dimension = Float
     interpolated = False
-
+    def has_correction(self):
+#        print self.id, self.x_cor, self.y_cor
+        return True if (abs(self.x_cor) > 1e-6
+                and abs(self.y_cor) > 1e-6) else False
 
 class SampleHoleAdapter(TabularAdapter):
     columns = [('ID', 'id'),
@@ -68,11 +71,11 @@ class StageMap(Loggable):
     def interpolate_noncorrected(self):
         self.info('iteratively fill in non corrected holes')
         n = len(self.sample_holes)
-        for i in range(2):
+        for i in range(1):
             self._interpolate_noncorrected()
 
             g = len([h for h in self.sample_holes
-                    if abs(h.x_cor) > 1e-6 and abs(h.x_cor) > 1e-6])
+                     if h.has_correction()])
 
             if g == n:
                 break
@@ -95,31 +98,71 @@ class StageMap(Loggable):
                 my = min(a[1], b[1]) + dy / 2.0
             return mx, my
 
-        dimension = self.g_dimension
+        spacing = abs(self.sample_holes[0].x - self.sample_holes[1].x)
+        cspacing = spacing
+        for i, e in enumerate(self.sample_holes[1:]):
+            s = self.sample_holes[i - 1]
+            if s.has_correction() and e.has_correction():
+                dx = abs(s.x_cor - e.x_cor)
+                dy = abs(s.y_cor - e.y_cor)
+                cspacing = (dx + dy) / 2.0
+                break
+
+#        print spacing, cspacing
+        scalar = 0.85
+        spacing *= scalar
+#        dimension = self.g_dimension * 1.2
         #now fill in any missing hole values
+        self.sample_holes.reverse()
         for h in self.sample_holes:
             cx, cy = h.x_cor, h.y_cor
-            if not ((abs(cx) > 1e-6 and abs(cy) > 1e-6)):
-#                print 'no hole for ', h.id
+#            print h.id, cx, cy
+            if not h.has_correction():
+#                print 'no hole for ', h.id, cx, cy
                 #this hole does not have a correction value
                 found = []
                 #get the cardinal holes
+                debug_hole = '183'
                 for rx, ry in [(0, 1),
                                (-1, 0), (1, 0),
                                     (0, -1)
                               ]:
 
-                    x = h.x + rx * 1 * self.g_dimension
-                    y = h.y + ry * 1 * self.g_dimension
+                    x = h.x + rx * spacing#1.2 * self.g_dimension
+                    y = h.y + ry * spacing#1.2 * self.g_dimension
 
-                    hole = self._get_hole_by_position(x, y)
+                    hole = self._get_hole_by_corrected_position(x, y)
+                    if hole == h:
+                        hole = None
+#                    hole2 = None
+#                    if hole is None:
+#                        hole2 = self._get_hole_by_position(x, y)
+
+                    if h.id == debug_hole:
+                        print hole.id if hole is not None else 'COR', rx, ry
+#                            if hole2 is not None else 'NONCOR', rx, ry
+#                    if hole2 is not None:
+#                        hole = hole2
+#                    print 'no correction', h.id, hole.id if hole is not None else 'N0', hole1.id \
+#                            if hole1 is not None else 'N1', rx, ry
+#                    print 'no correction for', h.id, h.x_cor, h.y_cor
+#                    if hole1:
+#                        print 'hole1', hole1.id, rx, ry
+#                    if hole:
+#                        print 'hole', hole.id, rx, ry
+
                     fo = None
                     if hole is not None:
                         six, siy = hole.x_cor, hole.y_cor
-                        if abs(six) > 1e-6 and abs(siy) > 1e-6:
+                        if hole.has_correction():
+#                        if abs(six) > 1e-6 and abs(siy) > 1e-6:
                             fo = (six, siy)
+#                        else:
+#                            fo = (hole.x, hole.y)
                     found.append(fo)
 
+                if h.id == debug_hole:
+                    print found
                 nxs = []
                 nys = []
                 for i, j in [(0, 3), (1, 2)]:
@@ -127,14 +170,39 @@ class StageMap(Loggable):
                     if mx is not None and my is not None:
                         #make sure the corrected value makes sense
                         #ie less than 1 radius from nominal hole
-                        if (abs(mx - h.x) < dimension
-                                and abs(my - h.y) < dimension):
+                        if (abs(mx - h.x) < spacing
+                                and abs(my - h.y) < spacing):
                             nxs.append(mx)
                             nys.append(my)
 
+                if h.id == debug_hole:
+                    print nxs
+
+                #if the number of adjacent holes found is only 1
+                #do a simple offset using 
+#                nfound = [f for f in found if f is not None]
+#                if len(nfound) == 1:
+#                    f = nfound[0]
+#                    ind = found.index(f)
+#                    x = f[0]
+#                    y = f[1]
+#                    l = cspacing#spacing / scalar
+#                    if ind == 0:
+#                        nxs.append(x)
+#                        nys.append(y - l)
+#                    elif ind == 1:
+#                        nxs.append(x + l)
+#                        nys.append(y)
+#                    elif ind == 2:
+#                        nxs.append(x - l)
+#                        nys.append(y)
+#                    else:
+#                        nxs.append(x)
+#                        nys.append(y + l)
+
                 if not nxs:
                     #try iding using "triangulation"
-                    for i, j in [(0, 1), (0, 2), (2, 3), (3, 1)]:
+                    for i, j in [(0, 1), (0, 2), (3, 2), (3, 1)]:
                         x = found[i]
                         if x is not None:
                             x = x[0]
@@ -142,13 +210,20 @@ class StageMap(Loggable):
                         if y is not None:
                             y = y[1]
 
+                        if h.id == debug_hole:
+                            print i, j, x, y, h.x, h.y
                         if x and y:
-                            if (abs(x - h.x) < dimension
-                                    and abs(y - h.y) < dimension):
+                            if h.id == debug_hole:
+                                print abs(x - h.x), abs(y - h.y), spacing
+                            if (abs(x - h.x) < spacing
+                                    and abs(y - h.y) < spacing):
                                 nxs.append(x)
                                 nys.append(y)
-                        if nxs:
-                            break
+#                        if nxs:
+#                            break
+
+                if h.id == debug_hole:
+                    print 'afsd', nxs, nys, h.x, h.y
 
                 if nxs and nys:
                     h.interpolated = True
@@ -241,10 +316,10 @@ class StageMap(Loggable):
 
     def _get_hole_by_pos(self, x, y, xkey, ykey, tol):
         if tol is None:
-            tol = self.g_dimension
+            tol = self.g_dimension * 0.8
 
-        pythag = lambda hi:((hi.x - x) ** 2 + (hi.y - y) ** 2) ** 0.5
-        holes = [(hole, pythag(hole)) for hole in self.sample_holes
+        pythag = lambda hi, xi, yi:((hi.x - xi) ** 2 + (hi.y - yi) ** 2) ** 0.5
+        holes = [(hole, pythag(hole, x, y)) for hole in self.sample_holes
                  if abs(getattr(hole, xkey) - x) < tol and abs(getattr(hole, ykey) - y) < tol]
         if holes:
 #            #sort holes by deviation 

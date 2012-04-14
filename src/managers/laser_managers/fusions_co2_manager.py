@@ -47,13 +47,19 @@ class FusionsCO2Manager(FusionsLaserManager):
         '''
         '''
         super(FusionsCO2Manager, self).set_laser_power(rp)
-        self.info('request power %0.3f' % rp)
+        self.info('request power {0.3f}'.format(rp))
         self.logic_board._set_laser_power_(rp)
 
     def get_laser_watts(self):
         w = self.logic_board.read_power_meter()
 
         #convert to watts
+        #no calibration of logic board currently available
+        #will have to simple normalize to 100
+
+        if w is not None:
+            w = w / 255. * 100
+
         return w
 
 #    def _monitor_factory(self):
@@ -76,7 +82,6 @@ class FusionsCO2Manager(FusionsLaserManager):
         b = FusionsCO2LogicBoard(name='co2logicboard',
                                  configuration_dir_name='co2')
         return b
-
 
     def _stage_manager_default(self):
         '''

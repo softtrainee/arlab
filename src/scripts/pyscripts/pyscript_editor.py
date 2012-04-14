@@ -125,7 +125,7 @@ class PyScriptManager(Manager):
             self.execute_script()
 
     def _check_save(self):
-        return True
+        return self.test_script()
 
 #        if self.script_validator.errors:
 #            n = len(self.script_validator.errors)
@@ -214,10 +214,11 @@ class PyScriptManager(Manager):
             pass
 
         if err:
-            warning(None, str(err))
+            warning(None, 'This is not a valid PY script\n{}'.format(err))
         else:
             self.info('syntax is ok')
             self.execute_enabled = True
+            return True
 
     def stop_script(self):
         self.script.cancel()

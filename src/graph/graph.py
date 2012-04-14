@@ -38,7 +38,6 @@ import math
 #=============local library imports  ==========================
 from src.helpers.color_generators import colorname_generator as color_generator
 from src.graph.minor_tick_overlay import MinorTicksOverlay
-from editors.graph_editor import GraphEditor
 from editors.plot_editor import PlotEditor
 from guide_overlay import GuideOverlay
 
@@ -665,6 +664,8 @@ class Graph(HasTraits):
     def show_graph_editor(self):
         '''
         '''
+        from editors.graph_editor import GraphEditor
+
         g = self.graph_editor
         if g is None:
             g = GraphEditor(graph=self)
@@ -818,6 +819,7 @@ class Graph(HasTraits):
 
     def redraw(self, force=True):
         if force:
+            self.plotcontainer._layout_needed = True
             self.plotcontainer.invalidate_and_redraw()
         else:
             self.plotcontainer.request_redraw()
