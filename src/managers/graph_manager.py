@@ -55,7 +55,8 @@ class GraphManager(Manager):
 
     def _test_fired(self):
 #        self.open_graph('degas', path='/Users/Ross/Pychrondata_beta/data/degas/scan001.txt')
-        self.open_graph('tempmonitor', path='/Users/ross/Desktop/argus_temp_monitor046.txt')
+        self.open_graph('degas', path='/Users/ross/Sandbox/scan001-hole1.txt')
+#        self.open_graph('tempmonitor', path='/Users/ross/Desktop/argus_temp_monitor046.txt')
 #        self.open_graph('inverse_isochron', path='/Users/Ross/Desktop/data.csv')
         #self.open_graph('age_spectrum', path='/Users/Ross/Desktop/test.csv')
 

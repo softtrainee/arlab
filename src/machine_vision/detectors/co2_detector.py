@@ -81,7 +81,6 @@ class CO2HoleDetector(HoleDetector):
             self.info('cropping image to {}mm x {}mm'.format(cw, ch))
             src = self._crop_image(src, cw, ch)
 
-
         src = self.contrast_equalization(src)
         src = self.smooth(src)
         self.image.frames[0] = colorspace(src)
@@ -96,8 +95,6 @@ class CO2HoleDetector(HoleDetector):
                     npos = self._segment_source(src, s, cx, cy, holenum)
                     if npos:
                         break
-
-
         return npos
 
 #                return self._get_corrected_position(args, cx, cy, holenum)
@@ -118,8 +115,8 @@ class CO2HoleDetector(HoleDetector):
             if self.use_dilation:
                 ndilation = 2
                 for i in range(ndilation):
-                    self.info('target not found. increasing dilation')
-                    self.info('dilating image (increase white areas). value={}'.format(i + 1))
+                    #self.info('target not found. increasing dilation')
+                    #self.info('dilating image (increase white areas). value={}'.format(i + 1))
         #            src = dilate(src, self._dilation_value)
                     osrc = dilate(src, i)
                     self.image.frames[0] = colorspace(osrc)
@@ -149,7 +146,7 @@ class CO2HoleDetector(HoleDetector):
                    if self._near_center(*t.centroid_value)]
         if targets:
             nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
-            self.info('found a target at {},{}'.format(nx, ny))
+            #self.info('found a target at {},{}'.format(nx, ny))
             return nx, ny
 
 

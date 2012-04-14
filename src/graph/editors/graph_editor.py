@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from src.graph.stacked_graph import StackedGraph
 '''
 @author: Jake Ross
 @copyright: 2009
@@ -20,7 +21,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, \
-     Font, HasTraits, Any, Color, Property
+     Font, HasTraits, Any, Color, Property, Int, Str
 from traitsui.api import View, Item, \
     TextEditor, ColorEditor, Handler
 #=============standard library imports ========================
@@ -47,21 +48,47 @@ class GraphEditor(HasTraits):
 
     title = DelegatesTo('graph', prefix='_title')
     font = Font
+    global_tick_font = Font
+    global_axis_title_font = Font
 
+    xspacing = Int
+    yspacing = Int
+    padding = Str
     def sync(self):
         '''
         '''
         g = self.graph
-        f = 'Helvetica 18'
+        f = 'Helvetica 12'
         if g and g._title_font and g._title_size:
             f = '%s %s' % (g._title_font,
                                g._title_size
                                )
         self.font = f
 
+        if g and g.plots[0]:
+            f = g.plots[0].x_axis.tick_label_font
+            n = f.face_name
+            if not n:
+                n = 'Helvetica'
+            self.global_tick_font = '{} {}'.format(n, f.size)
+
+        if g and g.plots[0]:
+            f = g.plots[0].x_axis.title_font
+            n = f.face_name
+            if not n:
+                n = 'Helvetica'
+            self.global_axis_title_font = '{} {}'.format(n, f.size)
+
+        p = self.graph.plots[0].padding
+        if isinstance(p, list):
+            self.padding = ','.join(map(str, p))
+        else:
+            self.padding = p
+
     def _get_container(self):
         '''
         '''
+
         return self.graph.plotcontainer
 
     def _get_bgcolor(self):
@@ -104,12 +131,72 @@ class GraphEditor(HasTraits):
     def _update_(self):
         '''
         '''
+        font, size = self._get_font_args(self.font)
+        self.graph.set_title(self.title, font=font, size=size)
 
-        args = str(self.font).split(' ')
+    def _get_font_args(self, f):
+
+        args = str(f).split(' ')
         size = args[0]
 
         font = ' '.join(args[2:])
-        self.graph.set_title(self.title, font=font, size=size)
+        return font, size
+
+    def _global_tick_font_changed(self):
+        self._change_global_font(self.global_tick_font, 'tick_label_font')
+
+    def _global_axis_title_font_changed(self):
+        self._change_global_font(self.global_axis_title_font, 'title_font')
+
+    def _change_global_font(self, f, key):
+        g = self.graph
+        font = str(f)
+        for po in g.plots:
+            setattr(po.x_axis, key, font)
+            setattr(po.y_axis, key, font)
+
+        self.graph.redraw()
+
+    def _xspacing_changed(self):
+        try:
+            self.graph.plotcontainer.spacing = (self.xspacing,
+                                                self.yspacing)
+        except:
+            self.graph.plotcontainer.spacing = self.xspacing
+        self.graph.redraw()
+
+    def _yspacing_changed(self):
+        try:
+            self.graph.plotcontainer.spacing = (self.xspacing,
+                                                self.yspacing)
+        except:
+            self.graph.plotcontainer.spacing = self.yspacing
+
+        self.graph.redraw()
+
+    def _padding_changed(self):
+        try:
+            p = map(int, self.padding.split(','))
+            if len(p) == 1:
+                p = p[0]
+
+            if isinstance(self.graph, StackedGraph):
+                pa = self.graph.plots[0].padding
+                #dont change the top padding of the first plot
+                p[2] = pa[2]
+                self.graph.plots[0].padding = [p[0], p[1], pa[2], p[3]]
+                for ps in self.graph.plots[1:-1]:
+                    ps.padding = [p[0], p[1], 0, 0]
+                self.graph.plots[-1].padding = [p[0], p[1], p[2], 0]
+            else:
+                for pi in self.graph.plots:
+                    pi.padding = p
+
+            self.graph.redraw()
+
+        except Exception, e:
+#            print e
+            pass
 
     def traits_view(self):
         '''
@@ -120,6 +207,12 @@ class GraphEditor(HasTraits):
                Item('font',
                     style='custom',
                     ),
+
+               Item('global_tick_font', style='custom'),
+               Item('global_axis_title_font', style='custom'),
+               Item('xspacing'),
+               Item('yspacing'),
+               Item('padding'),
                title='Graph Editor',
                resizable=True,
                handler=GraphEditorHandler,

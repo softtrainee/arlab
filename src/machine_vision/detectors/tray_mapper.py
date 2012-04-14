@@ -48,6 +48,7 @@ class TrayMapper(CO2HoleDetector):
         '''
             returns true if this is the first correction for this hole
         '''
+
         try:
             self.correction_dict[key].append(val)
         except KeyError:

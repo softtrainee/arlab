@@ -356,7 +356,7 @@ class StageManager(Manager):
 ##            time.sleep(0.1)
 #            self.stage_controller._block_(axis='z')
 
-        if self.home_option == 'XY':
+        if self.home_option in ['XY', 'Home All']:
             time.sleep(0.25)
 
             #the stage controller should  think x and y are at -25,-25
@@ -645,11 +645,13 @@ class StageManager(Manager):
 
         return pos
 
-
     def _map_calibrated_space(self, pos, key=None):
         smap = self._stage_map
 
         #use a affine transform object to map
+
+#        #load the calibration from file every time
+        self.tray_calibration_manager.load_calibration()
 
         canvas = self.canvas
         ca = canvas.calibration_item
