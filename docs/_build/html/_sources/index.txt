@@ -10,8 +10,11 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
+   	
+   scripting
+   procedures
+   remote_hardware
    
-   bakeout_scripting
 
 
 Indices and tables

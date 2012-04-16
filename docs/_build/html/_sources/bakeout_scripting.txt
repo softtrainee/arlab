@@ -1,6 +1,6 @@
-==============
-Bakeout Script
-==============
+=======================
+Writing Bakeout Scripts
+=======================
 
 Here's how to write a bakeoutscript
 
@@ -14,21 +14,23 @@ Here's how to write a bakeoutscript
 
 #. you may check the syntax of your script at any point by hitting ``Test``. A dialog will pop up saying if there was a problem and what it was or if the script passed with no errors. The scripts syntax is also automatically checked before saving.
 
-#. Use save and save as in the normal manner. script files should end with **.py** .  if the file ending is omitted a **.py** is appended automatically
+#. Use ``Save`` and ``Save As`` in the normal manner. script files should end with **.py** .  if the file ending is omitted a **.py** is appended automatically
 
 #. close the script editor
 
-here is an example script::
+here is an example script
+
+.. code-block:: python
 
 	#===========================================================================
 	#this is a comment in the script. use it at your leisure 
 	#the following line def main(): is required and the entry point for the script 
 	def main(): 
-		#this is the body of the main function 
-		#it should be one tab in 
-		ramp(150,100,start=45)  # comments can go on the same line as functions
-		setpoint(150,4) 
-		ramp(0,-150) 
+	    #this is the body of the main function 
+	    #it should be one tab in 
+	    ramp(150,100,start=45)  # comments can go on the same line as functions
+	    setpoint(150,4) 
+	    ramp(0,-150) 
 	#end of script
 	#===========================================================================
 
@@ -55,9 +57,9 @@ To execute the bakeout hit ``Execute``. ``Stop`` to Stop.
 	
 .. image:: /images/bakeout_editor.*
 
-===================
-API
-===================
+--------------------------
+bakeout functions
+--------------------------
 
 .. py:function:: ramp(setpoint,rate[, start=None, period=60])
 	

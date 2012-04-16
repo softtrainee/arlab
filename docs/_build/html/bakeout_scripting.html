@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Bakeout Script &mdash; Pychron 1.4 documentation</title>
+    <title>Writing Bakeout Scripts &mdash; Pychron 1.4 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -26,7 +26,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="Pychron 1.4 documentation" href="index.html" />
-    <link rel="prev" title="Welcome to Pychron’s documentation!" href="index.html" /> 
+    <link rel="up" title="Scripting" href="scripting.html" />
+    <link rel="next" title="Writing Extraction Line Scripts" href="extraction_line_scripting.html" />
+    <link rel="prev" title="General" href="general_scripting.html" /> 
   </head>
   <body>
     <div class="related">
@@ -36,9 +38,13 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="index.html" title="Welcome to Pychron’s documentation!"
+          <a href="extraction_line_scripting.html" title="Writing Extraction Line Scripts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="general_scripting.html" title="General"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">Pychron 1.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Pychron 1.4 documentation</a> &raquo;</li>
+          <li><a href="scripting.html" accesskey="U">Scripting</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -47,8 +53,8 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="bakeout-script">
-<h1>Bakeout Script<a class="headerlink" href="#bakeout-script" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="writing-bakeout-scripts">
+<h1>Writing Bakeout Scripts<a class="headerlink" href="#writing-bakeout-scripts" title="Permalink to this headline">¶</a></h1>
 <p>Here&#8217;s how to write a bakeoutscript</p>
 <ol class="arabic simple">
 <li>launch BakeoutManager (Bo on the dock)</li>
@@ -56,19 +62,19 @@
 <li>use <tt class="docutils literal"><span class="pre">Open</span></tt> to open an existing script or just start writing one from scratch</li>
 <li>write your script. see below</li>
 <li>you may check the syntax of your script at any point by hitting <tt class="docutils literal"><span class="pre">Test</span></tt>. A dialog will pop up saying if there was a problem and what it was or if the script passed with no errors. The scripts syntax is also automatically checked before saving.</li>
-<li>Use save and save as in the normal manner. script files should end with <strong>.py</strong> .  if the file ending is omitted a <strong>.py</strong> is appended automatically</li>
+<li>Use <tt class="docutils literal"><span class="pre">Save</span></tt> and <tt class="docutils literal"><span class="pre">Save</span> <span class="pre">As</span></tt> in the normal manner. script files should end with <strong>.py</strong> .  if the file ending is omitted a <strong>.py</strong> is appended automatically</li>
 <li>close the script editor</li>
 </ol>
-<p>here is an example script:</p>
+<p>here is an example script</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c">#===========================================================================</span>
 <span class="c">#this is a comment in the script. use it at your leisure</span>
 <span class="c">#the following line def main(): is required and the entry point for the script</span>
 <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
-        <span class="c">#this is the body of the main function</span>
-        <span class="c">#it should be one tab in</span>
-        <span class="n">ramp</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="n">start</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>  <span class="c"># comments can go on the same line as functions</span>
-        <span class="n">setpoint</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
-        <span class="n">ramp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">150</span><span class="p">)</span>
+    <span class="c">#this is the body of the main function</span>
+    <span class="c">#it should be one tab in</span>
+    <span class="n">ramp</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="n">start</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>  <span class="c"># comments can go on the same line as functions</span>
+    <span class="n">setpoint</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">ramp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">150</span><span class="p">)</span>
 <span class="c">#end of script</span>
 <span class="c">#===========================================================================</span>
 </pre></div>
@@ -86,9 +92,8 @@
 <p>To execute the bakeout hit <tt class="docutils literal"><span class="pre">Execute</span></tt>. <tt class="docutils literal"><span class="pre">Stop</span></tt> to Stop.</p>
 <a class="reference internal image-reference" href="_images/bakeout_manager.png"><img alt="_images/bakeout_manager.png" src="_images/bakeout_manager.png" style="width: 585.0px; height: 415.0px;" /></a>
 <img alt="_images/bakeout_editor.png" src="_images/bakeout_editor.png" />
-</div>
-<div class="section" id="api">
-<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="bakeout-functions">
+<h2>bakeout functions<a class="headerlink" href="#bakeout-functions" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="ramp">
 <tt class="descname">ramp</tt><big>(</big><em>setpoint</em>, <em>rate</em><span class="optional">[</span>, <em>start=None</em>, <em>period=60</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#ramp" title="Permalink to this definition">¶</a></dt>
@@ -104,6 +109,7 @@ seconds between setpoint updates. e.g. <tt class="docutils literal"><span class=
 </dd></dl>
 
 </div>
+</div>
 
 
           </div>
@@ -113,13 +119,18 @@ seconds between setpoint updates. e.g. <tt class="docutils literal"><span class=
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Bakeout Script</a></li>
-<li><a class="reference internal" href="#api">API</a></li>
+<li><a class="reference internal" href="#">Writing Bakeout Scripts</a><ul>
+<li><a class="reference internal" href="#bakeout-functions">bakeout functions</a></li>
+</ul>
+</li>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">Welcome to Pychron&#8217;s documentation!</a></p>
+  <p class="topless"><a href="general_scripting.html"
+                        title="previous chapter">General</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="extraction_line_scripting.html"
+                        title="next chapter">Writing Extraction Line Scripts</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/bakeout_scripting.txt"
@@ -149,9 +160,13 @@ seconds between setpoint updates. e.g. <tt class="docutils literal"><span class=
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="index.html" title="Welcome to Pychron’s documentation!"
+          <a href="extraction_line_scripting.html" title="Writing Extraction Line Scripts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="general_scripting.html" title="General"
              >previous</a> |</li>
-        <li><a href="index.html">Pychron 1.4 documentation</a> &raquo;</li> 
+        <li><a href="index.html">Pychron 1.4 documentation</a> &raquo;</li>
+          <li><a href="scripting.html" >Scripting</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

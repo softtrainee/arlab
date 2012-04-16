@@ -1,0 +1,147 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CO2 Stage Calibration &mdash; Pychron 1.4 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.4',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Pychron 1.4 documentation" href="index.html" />
+    <link rel="up" title="Procedures" href="procedures.html" />
+    <link rel="next" title="Loading CO2 Samples" href="co2_loading.html" />
+    <link rel="prev" title="Procedures" href="procedures.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="co2_loading.html" title="Loading CO2 Samples"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="procedures.html" title="Procedures"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Pychron 1.4 documentation</a> &raquo;</li>
+          <li><a href="procedures.html" accesskey="U">Procedures</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="co2-stage-calibration">
+<h1>CO<sub>2</sub> Stage Calibration<a class="headerlink" href="#co2-stage-calibration" title="Permalink to this headline">¶</a></h1>
+<ol class="arabic simple">
+<li>Move the laser to the center hole.</li>
+<li>Select the correct stage map e.g <tt class="docutils literal"><span class="pre">221-hole</span></tt></li>
+<li>Select <tt class="docutils literal"><span class="pre">pychron-auto</span></tt> as the calibration style</li>
+<li>Hit <tt class="docutils literal"><span class="pre">Calibrate</span></tt></li>
+</ol>
+<p>Pychron will now automatically find up to five calibration holes. The calibration holes are
+specified on the third line of the stage map file e.g <tt class="docutils literal"><span class="pre">221-hole.txt</span></tt>. The calibration holes
+should be the N,E,S,W, and center holes.</p>
+<p>Using the calibration holes Pychron calculates the center position and rotation of the tray.
+With an accurate calibration, Pychron will then move to each hole and determine a corrected position.
+This will take a few minutes.</p>
+<div class="section" id="autofocus">
+<h2>Autofocus<a class="headerlink" href="#autofocus" title="Permalink to this headline">¶</a></h2>
+<p>Pychron has an auto focus feature that can produce a very sharp image.
+Configuration allows you to use various alogrithms to calculate the <em>focus measure</em>
+of an image. I find the Laplace filter with ~50% zoom produces a nice result.
+Autofocus is actual a misnomer in this case. What is really happenig is called passive focus.
+The <em>focus measure</em> is calculated by applying a mathematical filter the the image. These filters
+are used for example to calculate the gradient between adjacent pixels. Theoretically maximizing
+the gradient yields the most focused image. For more information see
+<a class="reference external" href="http://en.wikipedia.org/wiki/Autofocus">Autofocus</a></p>
+<p>Hit <tt class="docutils literal"><span class="pre">Autofocus</span></tt> to perform an autofocus routine</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">CO<sub>2</sub> Stage Calibration</a><ul>
+<li><a class="reference internal" href="#autofocus">Autofocus</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="procedures.html"
+                        title="previous chapter">Procedures</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="co2_loading.html"
+                        title="next chapter">Loading CO<sub>2</sub> Samples</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/calibration.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="co2_loading.html" title="Loading CO2 Samples"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="procedures.html" title="Procedures"
+             >previous</a> |</li>
+        <li><a href="index.html">Pychron 1.4 documentation</a> &raquo;</li>
+          <li><a href="procedures.html" >Procedures</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Jake Ross.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
