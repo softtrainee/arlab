@@ -1,5 +1,0 @@
-====================
-Laser Error Codes
-====================
-
-InvalidValve
