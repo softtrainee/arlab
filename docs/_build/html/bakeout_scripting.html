@@ -86,7 +86,7 @@
 <li>the function <tt class="docutils literal"><span class="pre">ramp(150,100,start=45)</span></tt>   sets the controller to 45 C, then increases the temperature setting to 150 C at a rate of 100 C/hr</li>
 <li>the function <tt class="docutils literal"><span class="pre">setpoint(150,4)</span></tt> sets the controller to a temperature of 150 C and holds it for 4 hours</li>
 <li><tt class="docutils literal"><span class="pre">ramp(0,-100)</span></tt> decreases the temperature setting from the current temperature to 0 C at a rate of -100 C/hr.</li>
-<li>Notice that the <tt class="docutils literal"><span class="pre">start</span></tt> parameter of the <a class="reference internal" href="#ramp" title="ramp"><tt class="xref py py-func docutils literal"><span class="pre">ramp()</span></tt></a> function is optional. If omitted the controller&#8217;s current temperature is used as the starting point</li>
+<li>Notice that the <tt class="xref py py-attr docutils literal"><span class="pre">start</span></tt> parameter of the <a class="reference internal" href="#ramp" title="ramp"><tt class="xref py py-func docutils literal"><span class="pre">ramp()</span></tt></a> function is optional. If omitted the controller&#8217;s current temperature is used as the starting point</li>
 </ul>
 <p>To activate a script for a given controller use the drop down menu located above the <em>Duration</em> box</p>
 <p>To execute the bakeout hit <tt class="docutils literal"><span class="pre">Execute</span></tt>. <tt class="docutils literal"><span class="pre">Stop</span></tt> to Stop.</p>
@@ -96,16 +96,16 @@
 <h2>bakeout functions<a class="headerlink" href="#bakeout-functions" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="ramp">
-<tt class="descname">ramp</tt><big>(</big><em>setpoint</em>, <em>rate</em><span class="optional">[</span>, <em>start=None</em>, <em>period=60</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#ramp" title="Permalink to this definition">¶</a></dt>
-<dd><p>ramp controller&#8217;s setpoint from <tt class="docutils literal"><span class="pre">start</span></tt> to setpoint at a rate of <tt class="docutils literal"><span class="pre">rate</span></tt> C\hr.
-if <tt class="docutils literal"><span class="pre">start=None</span></tt> then the controller&#8217;s current <tt class="docutils literal"><span class="pre">temperature</span></tt> is used. <tt class="docutils literal"><span class="pre">period</span></tt> defines
+<tt class="descname">ramp</tt><big>(</big><em>setpt</em>, <em>rate</em><span class="optional">[</span>, <em>start=None</em>, <em>period=60</em><span class="optional">]</span><big>)</big><a class="headerlink" href="#ramp" title="Permalink to this definition">¶</a></dt>
+<dd><p>ramp controller&#8217;s setpoint from <tt class="xref py py-attr docutils literal"><span class="pre">start</span></tt> to <tt class="xref py py-attr docutils literal"><span class="pre">setpt</span></tt> at a rate of <tt class="xref py py-attr docutils literal"><span class="pre">rate</span></tt> C\hr.
+if <tt class="docutils literal"><span class="pre">start=None</span></tt> then the controller&#8217;s current <tt class="xref py py-attr docutils literal"><span class="pre">temperature</span></tt> is used. <tt class="xref py py-attr docutils literal"><span class="pre">period</span></tt> defines
 seconds between setpoint updates. e.g. <tt class="docutils literal"><span class="pre">period=30</span></tt> sets the controllers setpoint every 30 seconds</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="setpoint">
 <tt class="descname">setpoint</tt><big>(</big><em>temperature</em>, <em>duration</em><big>)</big><a class="headerlink" href="#setpoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>set controller&#8217;s setpoint to <tt class="docutils literal"><span class="pre">temperature</span></tt> for <tt class="docutils literal"><span class="pre">duration</span></tt> hours</p>
+<dd><p>set controller&#8217;s setpoint to <tt class="xref py py-attr docutils literal"><span class="pre">temperature</span></tt> for <tt class="xref py py-attr docutils literal"><span class="pre">duration</span></tt> hours</p>
 </dd></dl>
 
 </div>

@@ -55,15 +55,18 @@
             
   <div class="section" id="general">
 <h1>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-python"><pre>def main():
-    info('this is an info message')
-    acquire('pipette')
-    info('aquired resourece - pipette')
-    sleep(15)
-    release('pipette')
-        begin_interval(120)
-        #do some stuff ...
-        complete_interval() #wait until 120 seconds have passed</pre>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#==========================================================</span>
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">info</span><span class="p">(</span><span class="s">&#39;this is an info message&#39;</span><span class="p">)</span>
+    <span class="n">acquire</span><span class="p">(</span><span class="s">&#39;pipette&#39;</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="s">&#39;aquired resourece - pipette&#39;</span><span class="p">)</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>
+    <span class="n">release</span><span class="p">(</span><span class="s">&#39;pipette&#39;</span><span class="p">)</span>
+    <span class="n">begin_interval</span><span class="p">(</span><span class="mi">120</span><span class="p">)</span>
+    <span class="c">#do some stuff ...</span>
+    <span class="n">complete_interval</span><span class="p">()</span> <span class="c">#wait until 120 seconds have passed</span>
+<span class="c">#===============================================================</span>
+</pre></div>
 </div>
 <div class="section" id="functions">
 <h2>functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>

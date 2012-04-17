@@ -1,0 +1,11 @@
+\indexentry{info() (built-in function)|hyperpage}{3}
+\indexentry{acquire() (built-in function)|hyperpage}{3}
+\indexentry{release() (built-in function)|hyperpage}{3}
+\indexentry{sleep() (built-in function)|hyperpage}{3}
+\indexentry{gosub() (built-in function)|hyperpage}{3}
+\indexentry{begin\_interval() (built-in function)|hyperpage}{3}
+\indexentry{complete\_interval() (built-in function)|hyperpage}{3}
+\indexentry{ramp() (built-in function)|hyperpage}{5}
+\indexentry{setpoint() (built-in function)|hyperpage}{5}
+\indexentry{open() (built-in function)|hyperpage}{6}
+\indexentry{close() (built-in function)|hyperpage}{6}

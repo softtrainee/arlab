@@ -1,0 +1,38 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item acquire() (built-in function), \hyperpage{3}
+
+  \indexspace
+  \bigletter B
+  \item begin\_interval() (built-in function), \hyperpage{3}
+
+  \indexspace
+  \bigletter C
+  \item close() (built-in function), \hyperpage{6}
+  \item complete\_interval() (built-in function), \hyperpage{3}
+
+  \indexspace
+  \bigletter G
+  \item gosub() (built-in function), \hyperpage{3}
+
+  \indexspace
+  \bigletter I
+  \item info() (built-in function), \hyperpage{3}
+
+  \indexspace
+  \bigletter O
+  \item open() (built-in function), \hyperpage{6}
+
+  \indexspace
+  \bigletter R
+  \item ramp() (built-in function), \hyperpage{5}
+  \item release() (built-in function), \hyperpage{3}
+
+  \indexspace
+  \bigletter S
+  \item setpoint() (built-in function), \hyperpage{5}
+  \item sleep() (built-in function), \hyperpage{3}
+
+\end{theindex}
