@@ -46,7 +46,7 @@ Lets break it down line by line.
 
 * ``ramp(0,-100)`` decreases the temperature setting from the current temperature to 0 C at a rate of -100 C/hr.
 
-* Notice that the ``start`` parameter of the :py:func:`ramp` function is optional. If omitted the controller's current temperature is used as the starting point 
+* Notice that the :py:attr:`start` parameter of the :py:func:`ramp` function is optional. If omitted the controller's current temperature is used as the starting point 
 
 To activate a script for a given controller use the drop down menu located above the *Duration* box
 
@@ -61,12 +61,12 @@ To execute the bakeout hit ``Execute``. ``Stop`` to Stop.
 bakeout functions
 --------------------------
 
-.. py:function:: ramp(setpoint,rate[, start=None, period=60])
+.. py:function:: ramp(setpt,rate[, start=None, period=60])
 	
-	ramp controller's setpoint from ``start`` to setpoint at a rate of ``rate`` C\\hr.
-	if ``start=None`` then the controller's current ``temperature`` is used. ``period`` defines
+	ramp controller's setpoint from :py:attr:`start` to :py:attr:`setpt` at a rate of :py:attr:`rate` C\\hr.
+	if ``start=None`` then the controller's current :py:attr:`temperature` is used. :py:attr:`period` defines
 	seconds between setpoint updates. e.g. ``period=30`` sets the controllers setpoint every 30 seconds
 	
 .. py:function:: setpoint(temperature,duration)
 	
-	set controller's setpoint to ``temperature`` for ``duration`` hours
+	set controller's setpoint to :py:attr:`temperature` for :py:attr:`duration` hours

@@ -24,10 +24,10 @@ extraction line functions
 
 .. py:function:: open(alias)
 	
-	open the valve named ``alias`` e.g ``open('A')``
+	open the valve named :py:attr:`alias` e.g ``open('A')``
 	
 .. py:function:: close(alias)
 
-	open the valve named ``alias`` e.g ``close('A')``
+	open the valve named :py:attr:`alias` e.g ``close('A')``
 
 
