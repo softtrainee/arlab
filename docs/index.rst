@@ -14,6 +14,7 @@ Contents:
    scripting
    procedures
    remote_hardware
+   meta_documentation
 
 
 Indices and tables
