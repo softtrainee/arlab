@@ -14,9 +14,6 @@ Contents:
    scripting
    procedures
    remote_hardware
-   
-   
-removed cahnges
 
 Indices and tables
 ==================
