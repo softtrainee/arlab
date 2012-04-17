@@ -2,18 +2,19 @@
 General
 =======================
 
-::
+.. code-block:: python
 
+	#==========================================================
 	def main():
 	    info('this is an info message')
 	    acquire('pipette')
 	    info('aquired resourece - pipette')
 	    sleep(15)
 	    release('pipette')
-		begin_interval(120)
-		#do some stuff ...
-		complete_interval() #wait until 120 seconds have passed
-		
+	    begin_interval(120)
+	    #do some stuff ...
+	    complete_interval() #wait until 120 seconds have passed
+	#===============================================================		
 	    
 --------------------------
 functions
