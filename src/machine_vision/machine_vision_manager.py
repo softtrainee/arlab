@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
-    DelegatesTo, on_trait_change
+    DelegatesTo, on_trait_change, Bool
 from traitsui.api import View, Item, Handler, HGroup, Group, spring
 from pyface.timer.do_later import do_later, do_after
 import apptools.sweet_pickle as pickle
@@ -62,8 +62,6 @@ class MachineVisionManager(Manager):
     image_width = Int(int(640))
     image_height = Int(480)
 
-    _debug = False
-
     title = Property
     current_hole = None
 
@@ -95,7 +93,7 @@ class MachineVisionManager(Manager):
     calibration_detector = Any
 
     testing = False
-    _debug = False
+    _debug = Bool(False)
 
 #    def _zoom_calibration(self):
 #        d = ZoomCalibrationDetector(parent=self,
@@ -111,6 +109,7 @@ class MachineVisionManager(Manager):
 
     def _test_fired(self):
         if not self.testing:
+            self.hole_detector._debug = self._debug
             self.testing = True
             self.show_image()
             self.hole_detector.collect_baseline_intensity()
@@ -165,9 +164,6 @@ class MachineVisionManager(Manager):
 
     def collect_baseline_intensity(self):
         self.video.open()
-        print 'asd', self.video.cap
-        import time
-        time.sleep(1)
         det = self.hole_detector
         return det.collect_baseline_intensity()
 
@@ -357,9 +353,6 @@ class MachineVisionManager(Manager):
             do_after(50, self.edit_traits, view='image_view')
 #        else:
 #            self.ui.control.Raise()
-
-
-
         if self._debug:
             do_after(50, self.edit_traits, view='working_image_view')
 
@@ -509,7 +502,7 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('machine_vision')
     m = MachineVisionManager(_debug=True)
-
+    m._debug = True
     m.configure_traits()
 
 #    time_comp()

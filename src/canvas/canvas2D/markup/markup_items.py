@@ -308,6 +308,8 @@ class CalibrationObject(HasTraits):
         self.cx = x
         self.cy = y
 
+    def set_canvas(self, canvas):
+        self.canvas = canvas
 
 class CalibrationItem(MarkupItem, CalibrationObject):
     center = None

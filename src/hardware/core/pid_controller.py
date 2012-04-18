@@ -13,6 +13,7 @@ SETPOINT = 10
 DELAY = 250
 
 
+
 class PIDController(HasTraits):
     graph = Instance(Graph)
     setpoint = Float(SETPOINT)
@@ -32,7 +33,7 @@ class PIDController(HasTraits):
 
     def get_output(self, inp):
         v = 0
-        dt = time.clock() - self._prev_time
+        dt = time.time() - self._prev_time
         err = self.setpoint - v
         self._input = v
         return self._iteration(err, self.Kp, self.Ki, self.Kd, dt)
