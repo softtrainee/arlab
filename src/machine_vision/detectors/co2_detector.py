@@ -57,9 +57,9 @@ class CO2HoleDetector(HoleDetector):
         self._reset_image()
 
         s = self.parent.load_source().clone()
-#        if self._debug:
-#            p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
-#            s = self.parent.load_source(path=p).clone()
+        if self._debug:
+            p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
+            s = self.parent.load_source(path=p).clone()
 
         s = self._crop_image(grayspace(s), self.intensity_cropwidth,
                              self.intensity_cropheight)
@@ -87,11 +87,15 @@ class CO2HoleDetector(HoleDetector):
 #        import numpy as np
         ss = None
 #        p5 = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
-#        p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321.tiff'
+        p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321.tiff'
+        print self._debug
         self._reset_image()
         for i in range(ncounts):
             self.info('collecting baseline image {} of {}'.format(i + 1, ncounts))
-            ps = self.parent.load_source().clone()
+            if self._debug:
+                ps = self.parent.load_source(path=p).clone()
+            else:
+                ps = self.parent.load_source().clone()
             gs = grayspace(ps)
             cs = self._crop_image(gs, self.intensity_cropwidth,
                                   self.intensity_cropheight)

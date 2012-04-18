@@ -189,6 +189,7 @@ class StageManager(Manager):
         self._stage_map = sm
 
         #load the calibration file
+        #should have calibration files for each stage map
         self.tray_calibration_manager.load_calibration()
 
         #load the points file
@@ -653,8 +654,8 @@ class StageManager(Manager):
 
         #use a affine transform object to map
 
-#        #load the calibration from file every time
-        self.tray_calibration_manager.load_calibration()
+##        #load the calibration from file every time
+#        self.tray_calibration_manager.load_calibration()
 
         canvas = self.canvas
         ca = canvas.calibration_item

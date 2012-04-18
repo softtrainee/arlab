@@ -76,7 +76,6 @@ class LaserHandler(BaseRemoteHardwareHandler):
             t = Thread(target=record)
             t.start()
 
-        print 'eer', err
         return self.error_response(err)
 
     def Disable(self, manager, *args):
