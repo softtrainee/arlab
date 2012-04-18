@@ -202,7 +202,7 @@ class VideoStageManager(StageManager, Videoable):
         if self.video_directory:
             self.info('Cleaning video directory')
             if os.path.isdir(self.video_directory):
-                ar = Archiver(archive_days=3,
+                ar = Archiver(archive_days=14,
                               root=self.video_directory)
                 ar.clean()
 
