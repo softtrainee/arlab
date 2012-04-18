@@ -435,7 +435,8 @@ class MachineVisionManager(Manager):
                  y=35,
                  width=680,
                  height=self.image_height + 100,
-                 resizable=True
+                 resizable=True,
+                 id='pychron.machine_vision.image_view'
                  )
         return v
 

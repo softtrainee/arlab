@@ -149,6 +149,8 @@ class Graph(HasTraits):
 
     current_pos = None
 
+
+    view_identifier = None
     def __init__(self, *args, **kw):
         '''
         '''
@@ -1232,5 +1234,8 @@ class Graph(HasTraits):
                  handler=GraphHandler,
 #                 statusbar = 'status_text',
                  )
+
+        if self.view_identifier:
+            v.id = self.view_identifier
         return v
 #============= EOF ====================================
