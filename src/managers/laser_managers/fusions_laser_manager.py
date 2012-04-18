@@ -100,7 +100,8 @@ class FusionsLaserManager(LaserManager):
         g = StreamGraph(window_title='Power Readback - {}'.format(rid),
                         window_x=0.01,
                         window_y=0.4,
-                        container_dict=dict(padding=5)
+                        container_dict=dict(padding=5),
+                        view_identifier='pychron.fusions.power_graph'
                         )
         g.new_plot(data_limit=60,
                    scan_delay=1,
