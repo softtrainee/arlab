@@ -19,9 +19,11 @@ limitations under the License.
 #============= local library imports  ==========================
 
 from src.managers.displays.rich_text_display import RichTextDisplay, ErrorDisplay
-import wx
-
-sw, sh = wx.DisplaySize()
+try:
+    import wx
+    sw, sh = wx.DisplaySize()
+except:
+    sw, sh = 1200, 900
 gWarningDisplay = RichTextDisplay(
                                   title='Warnings',
                                   width=450,

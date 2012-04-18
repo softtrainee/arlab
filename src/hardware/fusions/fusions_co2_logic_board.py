@@ -58,7 +58,8 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
     def _disable_laser_(self):
         '''
         '''
-        cmd = self._build_command('PDC', '0.00')
+#        cmd = self._build_command('PDC', '0.00')
+        cmd = ('PDC', '0.00')
         self._request_power = 0.0
 
 #        callback = lambda :self._parse_response(self.ask(cmd))

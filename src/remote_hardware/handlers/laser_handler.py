@@ -22,7 +22,7 @@ from base_remote_hardware_handler import BaseRemoteHardwareHandler
 #from dummies import DummyLM
 from threading import Thread
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
-    EnableErrorCode, DisableErrorCode
+    EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode
 
 
 class LaserHandler(BaseRemoteHardwareHandler):
@@ -61,18 +61,22 @@ class LaserHandler(BaseRemoteHardwareHandler):
             def record():
                 elm = self.get_elm()
                 #get the extraction line manager's current rid
-                mrm = elm.multruns_report_manager
+                mrm = None
+                if elm is not None:
+                    mrm = elm.multruns_report_manager
 
                 rid = mrm.get_current_rid() if mrm else 'testrid_001'
 
-    #            if rid is None:
-    #                rid = 'testrid_001'
+        #            if rid is None:
+        #                rid = 'testrid_001'
 
                 manager.start_power_recording(rid)
                 manager.stage_manager.start_recording(basename=rid)
 
             t = Thread(target=record)
             t.start()
+
+        print 'eer', err
         return self.error_response(err)
 
     def Disable(self, manager, *args):
@@ -227,7 +231,13 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
     def SetSampleHolder(self, manager, name, *args):
         err = manager.stage_manager._set_stage_map(name)
-        return self.error_response(err)
+
+        if err is True:
+            r = 'OK'
+        else:
+            r = InvalidSampleHolderErrorCode(name)
+
+        return r
 
     def GetSampleHolder(self, manager, *args):
         return manager.stage_manager.stage_map

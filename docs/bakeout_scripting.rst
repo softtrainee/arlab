@@ -4,21 +4,21 @@ Writing Bakeout Scripts
 
 Here's how to write a bakeoutscript
 
-#. launch BakeoutManager (Bo on the dock) 
+#. Launch BakeoutManager (Bo on the dock) 
 
-#. open the script editor (``Edit scripts`` button). An empty script is opened as a default
+#. Open the script editor (``Edit scripts`` button). An empty script is opened as a default
 
-#. use ``Open`` to open an existing script or just start writing one from scratch
+#. Use ``Open`` to open an existing script or just start writing one from scratch
 
-#. write your script. see below
+#. Write your script. see below
 
-#. you may check the syntax of your script at any point by hitting ``Test``. A dialog will pop up saying if there was a problem and what it was or if the script passed with no errors. The scripts syntax is also automatically checked before saving.
+#. You may check the syntax of your script at any point by hitting ``Test``. A dialog will pop up saying if there was a problem and what it was or if the script passed with no errors. The scripts syntax is also automatically checked before saving.
 
 #. Use ``Save`` and ``Save As`` in the normal manner. script files should end with **.py** .  if the file ending is omitted a **.py** is appended automatically
 
-#. close the script editor
+#. Close the script editor
 
-here is an example script
+Here is an example script
 
 .. code-block:: python
 
@@ -40,15 +40,15 @@ Lets break it down line by line.
 
 * ``def main():`` defines a required function called "main" that will be executed when the script is run. **The main  function is necessary** and is added to an empty script by default.
 
-* the function ``ramp(150,100,start=45)``   sets the controller to 45 C, then increases the temperature setting to 150 C at a rate of 100 C/hr
+* The function ``ramp(150,100,start=45)``   sets the controller to 45 C, then increases the temperature setting to 150 C at a rate of 100 C/hr
 
-* the function ``setpoint(150,4)`` sets the controller to a temperature of 150 C and holds it for 4 hours
+* The function ``setpoint(150,4)`` sets the controller to a temperature of 150 C and holds it for 4 hours
 
 * ``ramp(0,-100)`` decreases the temperature setting from the current temperature to 0 C at a rate of -100 C/hr.
 
 * Notice that the :py:attr:`start` parameter of the :py:func:`ramp` function is optional. If omitted the controller's current temperature is used as the starting point 
 
-To activate a script for a given controller use the drop down menu located above the *Duration* box
+To activate a script for a given controller use the drop down menu located above the ``Duration`` box
 
 To execute the bakeout hit ``Execute``. ``Stop`` to Stop. 
 

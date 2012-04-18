@@ -51,6 +51,7 @@ class StackedGraph(Graph):
     def new_plot(self, **kw):
         '''
         '''
+
         if self.equi_stack:
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
@@ -94,6 +95,9 @@ class StackedGraph(Graph):
         '''
 
         pt = self.plotcontainer.padding_top
-        for p in self.plots:
-            p.bounds[1] = (bounds[1] - pt) / len(self.plots)
+        if self.equi_stack:
+            for p in self.plots:
+                p.bounds[1] = (bounds[1] - pt) / len(self.plots)
+        else:
+            self.plots[0].bounds[1] = (bounds[1] - pt) / max(1, (len(self.plots) - 1))
 #============= EOF ====================================

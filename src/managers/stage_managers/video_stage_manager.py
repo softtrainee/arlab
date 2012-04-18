@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
- Float, Bool, Event, Str, Directory
+ Float, Bool, Event, Str, Directory, Enum
 from traitsui.api import Group, Item, HGroup
 from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
@@ -97,13 +97,12 @@ class VideoStageManager(StageManager, Videoable):
     record_label = Property(depends_on='is_recording')
     is_recording = Bool
 
-
-
     video_directory = Directory
 
     recording_zoom = Float
 
     _previous_zoom = 0
+    video_identifier = Enum(1, 2)
 
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
@@ -122,6 +121,9 @@ class VideoStageManager(StageManager, Videoable):
                         )
         bind_preference(self, 'recording_zoom',
                         '{}.recording_zoom'.format(pref_id)
+                        )
+        bind_preference(self, 'video_identifier',
+                        '{}.video_identifier'.format(pref_id)
                         )
 
     def start_recording(self, path=None, basename='vm_recording',
@@ -179,7 +181,8 @@ class VideoStageManager(StageManager, Videoable):
     def initialize_stage(self):
         super(VideoStageManager, self).initialize_stage()
 
-        self.video.open(user='underlay')
+        self.video.open(identifier=self.video_identifier - 1,
+                        user='underlay')
 
         xa = self.stage_controller.axes['x'].drive_ratio
         ya = self.stage_controller.axes['y'].drive_ratio

@@ -36,10 +36,10 @@ class MinorTicksOverlay(AbstractOverlay):
         try:
             gc.save_state()
             c = self.component
-            print c, component
+#            print c, component
             if self.aux_component is not None:
                 component = self.aux_component
-                print 'axu', component
+#                print 'axu', component
 
             if self.orientation == 'v':
                 r = c.index_range

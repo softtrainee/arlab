@@ -53,26 +53,28 @@ class Video(Image):
     _recording = Bool(False)
     _lock = None
 
-    def open(self, user=None):
+    def open(self, user=None, identifier=0):
         '''
 
         '''
         self._lock = Lock()
+        self.width = 640
+        self.height = 480
         if self.cap is None:
+
+            #ideally an identifier is passed in 
             try:
                 if DEBUG:
                     self.cap = 1
                 else:
 #                    self.cap = cvCreateCameraCapture(0)
-                    self.cap = get_capture_device(0)
-                self.width = 640
-                self.height = 480
-
+                    self.cap = get_capture_device(identifier)
             except:
                 self.cap = None
 
         if not user in self.users:
             self.users.append(user)
+
 
     def shutdown(self):
         self.users = []

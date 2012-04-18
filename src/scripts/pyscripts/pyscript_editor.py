@@ -33,6 +33,7 @@ from src.scripts.pyscripts.api import *
 from src.scripts.pyscripts.pyscript_runner import PyScriptRunner
 from src.envisage.core.action_helper import open_manager
 import time
+from pyface.message_dialog import information
 #from traitsui.wx.code_editor import SourceEditor
 #from traitsui.wx.basic_editor_factory import BasicEditorFactory
 #from traitsui.editors.code_editor import ToolkitEditorFactory
@@ -111,7 +112,15 @@ class PyScriptManager(Manager):
     scripts = Dict
 
     def _help_button_fired(self):
-        self.edit_traits(view='help_view')
+
+        import webbrowser
+#        self.s
+        print self.help_path
+
+        #to open in browser needs file:// prepended
+        webbrowser.open('file://{}'.format(self.help_path))
+
+#        self.edit_traits(view='help_view')
 
     def _get_execute_label(self):
         return 'Stop' if self._executing else 'Execute'
@@ -189,11 +198,12 @@ class PyScriptManager(Manager):
     def load_help(self):
         ps = self._pyscript_factory(self.kind)
         m = ps.get_help()
+        self.help_path = ps.get_help_path()
         self.help_message = m
 
     def open_script(self):
         p = self.open_file_dialog(default_directory=self._get_default_directory())
-#        p = os.path.join(self._get_default_directory(), 'test.py')
+#        p = os.path.join(self._get_default_directory(), 'btest.py')
         if p is not None:
             self._load_script(p)
             self.save_path = p
@@ -216,7 +226,10 @@ class PyScriptManager(Manager):
         if err:
             warning(None, 'This is not a valid PY script\n{}'.format(err))
         else:
-            self.info('syntax is ok')
+            n = 'new script' if not self.save_path else os.path.basename(self.save_path)
+            msg = 'No syntax errors found in {}'.format(n)
+            information(None, msg)
+            self.info(msg)
             self.execute_enabled = True
             return True
 
@@ -334,9 +347,9 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('scripts')
-    s = PyScriptManager(kind='ExtractionLine',
-                        default_directory_name='pyscripts')
-#    s = PyScriptManager(kind='Bakeout')
-    s.open_script()
+#    s = PyScriptManager(kind='ExtractionLine',
+#                        default_directory_name='pyscripts')
+    s = PyScriptManager(kind='Bakeout')
+#    s.open_script()
     s.configure_traits()
 #============= EOF =============================================

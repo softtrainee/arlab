@@ -99,15 +99,16 @@ class Initializer(Loggable):
         '''
 
         ilist = self.init_list
-        add = True
-        for (i, il) in enumerate(ilist):
-            if il['name'] == a['name']:
-                ilist[i] = a
-                add = False
-                break
-
-        if add:
-            ilist.append(a)
+        ilist.append(a)
+#        add = True
+#        for (i, il) in enumerate(ilist):
+#            if il['name'] == a['name']:
+#                ilist[i] = a
+#                add = False
+#                break
+#
+#        if add:
+#            ilist.append(a)
 
     def run(self, application=None):
         '''
@@ -239,21 +240,20 @@ class Initializer(Loggable):
                 man = manager.create_manager(mi)
 
             if man is None:
+                self.debug('trouble creating manager {}'.format(mi))
                 break
 
             if self.application is not None:
 
                 # register this manager as a service
-
                 man.application = self.application
-                self.application.register_service(type(man), man)
+                i = self.application.register_service(type(man), man)
 
 #
 #            #HACK
 #            MAP = dict(diode = 'FusionsDiode',
 #                     co2 = 'FusionsCO2'
 #                     )
-
             d = dict(name=mi, device_dir=device_dir, manager=man,
                      plugin_name=manager.name)
             self.add_initialization(d)

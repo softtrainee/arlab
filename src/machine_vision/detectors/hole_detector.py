@@ -424,8 +424,8 @@ class HoleDetector(Detector):
         self.croprect = (x, y, cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
 
-        self.image.frames[0] = colorspace(src)
-        self.working_image.frames[0] = colorspace(src)
+        self.image.frames[0] = colorspace(src.clone())
+        self.working_image.frames[0] = colorspace(src.clone())
 
         return src
 

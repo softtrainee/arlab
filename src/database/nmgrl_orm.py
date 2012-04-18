@@ -19,7 +19,7 @@ limitations under the License.
 from sqlalchemy import Column, Integer, Float, String, \
      ForeignKey, DateTime, Date, BLOB
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relation
+from sqlalchemy.orm import relation, relationship
 
 #=============local library imports  ==========================
 Base = declarative_base()
@@ -113,7 +113,8 @@ class AnalysesTable(Base):
     SpecRunType = Column(Integer)
 
     isotopes = relation('IsotopeTable', backref='AnalysesTable')
-    araranalyses = relation('ArArAnalysisTable', backref='AnalysesTable')
+    araranalyses = relation('ArArAnalysisTable')
+#    araranalyses = relation('ArArAnalysisTable', backref='AnalysesTable')
     changeable = relation('AnalysesChangeableItemsTable', uselist=False)
 
 
@@ -123,7 +124,8 @@ class ArArAnalysisTable(Base):
     the totals are not raw values and have been blank, discrimination and decay corrected already
     '''
     __tablename__ = 'ArArAnalysisTable'
-    AnalysisID = Column(Integer, ForeignKey('AnalysesTable.AnalysisID'), primary_key=True)
+#    AnalysisID = Column(Integer, primary_key=True)
+    AnalysisID = Column(Integer, ForeignKey('AnalysesTable.AnalysisID'))
     DataReductionSessionID = Column(Integer)
     JVal = Column(Float, default=0)
     JEr = Column(Float, default=0)
@@ -138,6 +140,9 @@ class ArArAnalysisTable(Base):
     Tot38Er = Column(Float, default=0)
     Tot37Er = Column(Float, default=0)
     Tot36Er = Column(Float, default=0)
+
+    Age = Column(Float, default=0, primary_key=True)
+    ErrAge = Column(Float, default=0)
 
 
 class BaselinesTable(Base):

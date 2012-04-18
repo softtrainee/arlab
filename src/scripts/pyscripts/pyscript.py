@@ -224,7 +224,7 @@ class PyScript(Loggable):
 
     def exit(self):
         self.info('doing EXIT')
-        self._cancel = True
+        self.cancel()
 
     def complete_interval(self):
         try:
@@ -308,7 +308,10 @@ class PyScript(Loggable):
 
         if r is not None:
             self.info('invalid syntax')
-            self.info(r)
+
+#            report the traceback
+#            self.info(r)
+
         elif not self._interval_stack.empty():
             raise IntervalError()
 

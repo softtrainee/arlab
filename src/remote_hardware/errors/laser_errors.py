@@ -37,3 +37,12 @@ class DisableErrorCode(ErrorCode):
     def __init__(self, reason, *args, **kw):
         self.msg = self.msg.format(reason)
         super(EnableErrorCode, self).__init__(*args, **kw)
+
+
+class InvalidSampleHolderErrorCode(ErrorCode):
+    msg = 'Invalid sample holder. {}'
+    code = 104
+    def __init__(self, sh, *args, **kw):
+        self.msg = self.msg.format(sh)
+        super(InvalidSampleHolderErrorCode, self).__init__(*args, **kw)
+

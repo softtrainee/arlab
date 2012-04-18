@@ -15,7 +15,6 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from traits.api import List
-from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -46,10 +45,7 @@ class LaserPlugin(CorePlugin):
         '''
         factory = __import__(self.klass[0], fromlist=[self.klass[1]])
         m = getattr(factory, self.klass[1])()
-        bind_preference(m, 'use_video', '{}.use_video'.format(self.id))
-        bind_preference(m, 'close_after_minutes', '{}.close_after'.format(self.id))
-        bind_preference(m, 'record_lasing', '{}.record_lasing'.format(self.id))
-
+        m.bind_preferences(self.id)
         m.stage_manager.bind_preferences(self.id)
 
         return m
@@ -59,6 +55,10 @@ class LaserPlugin(CorePlugin):
         '''
         '''
         app = self.application
-        return [dict(name=self.name,
+        d = []
+        if self.klass is not None:
+            d = [dict(name=self.name,
                      manager=app.get_service('.'.join(self.klass)))]
+
+        return d
 #============= EOF ====================================

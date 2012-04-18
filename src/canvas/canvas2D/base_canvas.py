@@ -21,7 +21,6 @@ from enable.api import Component, Pointer
 #=============local library imports  ==========================
 class BaseCanvas(Component):
     '''
-        G{classtree}
     '''
     #directory = None
     select_pointer = Pointer('hand')

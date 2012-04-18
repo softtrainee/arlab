@@ -40,12 +40,12 @@ functions
 .. py:function:: gosub(path_to_script)
 	
 	execute a pyscript located at :py:attr:`path_to_script`. :py:attr:`path_to_script` is relative to the current 
-	script. e.g ``gosub(commonscripts/fuse.py)``. commonscripts must be a directory in the same 
+	script. e.g ``gosub(commonscripts/fuse.py)``. ``commonscripts`` must be a directory in the same 
 	directory this script is saved in.
 	
 .. py:function:: begin_interval(timeout)
 	
-	start an interval. if `timeout>5` a timer will appear. 
+	start an interval. if ``timeout>5`` a timer will appear. 
 	
 .. py:function:: complete_interval()
 

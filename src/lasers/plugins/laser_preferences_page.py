@@ -16,7 +16,7 @@ limitations under the License.
 #from __future__ import with_statement
 #============= enthought library imports =======================
 from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Float
-from traitsui.api import  Item, Group, HGroup
+from traitsui.api import  Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
 
@@ -27,6 +27,8 @@ from src.managers.plugins.manager_preferences_page import ManagerPreferencesPage
 class LaserPreferencesPage(ManagerPreferencesPage):
 
     use_video = Bool(False)
+    video_identifier = Enum(1, 2)
+
     record_lasing = Bool(False)
     show_grids = Bool(True)
     show_laser_position = Bool(True)
@@ -49,15 +51,20 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     recording_zoom = Float(0)
 
     def get_additional_groups(self):
+
         grp = Group(
                Group(Item('use_video'),
-                     Item('auto_center', enabled_when='use_video'),
-                     Item('record_lasing', label='Record Lasing',
-                           enabled_when='use_video'),
-                     Item('video_directory', label='Save to',
-                          enabled_when='record_lasing'),
-                     Item('recording_zoom', label='Zoom',
-                          enabled_when='record_lasing'),
+                     VGroup(
+                         Item('video_identifier', label='ID',
+                               enabled_when='use_video'),
+                         Item('auto_center', enabled_when='use_video'),
+                         Item('record_lasing', label='Record Lasing',
+                               enabled_when='use_video'),
+                         Item('video_directory', label='Save to',
+                              enabled_when='record_lasing'),
+                         Item('recording_zoom', label='Zoom', enabled_when='record_lasing'),
+                         enabled_when='use_video'
+                         ),
                       show_border=True, label='Video'),
                Item('show_map'),
                Item('show_grids'),

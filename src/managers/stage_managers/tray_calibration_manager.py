@@ -165,11 +165,17 @@ class TrayCalibrationManager(Manager):
         if os.path.isfile(PICKLE_PATH):
             self.info('loading saved calibration {}'.format(PICKLE_PATH))
             with open(PICKLE_PATH, 'rb') as f:
+
                 try:
                     calibration = pickle.load(f)
-                    if calibration.style == 'MassSpec':
+                    try:
+                        style = calibration.style
+                    except AttributeError:
+                        style = 'MassSpec'
+
+                    if style == 'MassSpec':
                         self._calibration_help = MASSSPEC_HELP
-                    elif calibration.style == 'pychron-auto':
+                    elif style == 'pychron-auto':
                         self._calibration_help = PYCHRON_AUTO_HELP
                     else:
                         self._calibration_help = PYCHRON_HELP

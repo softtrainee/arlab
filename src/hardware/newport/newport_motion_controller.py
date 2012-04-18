@@ -86,6 +86,7 @@ class NewportMotionController(MotionController):
 
         config_path = self.configuration_dir_path
         for i, a in enumerate(mapping):
+            self.info('loading axis {},{}'.format(i, a))
             limits = [float(v) for v in config.get('Axes Limits', a).split(',')]
             na = self._axis_factory(config_path,
                                   name=a,

@@ -157,7 +157,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
 
             if run and run.kind == 'co2':
                 lm = self.get_laser_manager(name='co2')
-                open_manager(lm)
+                if lm is not None:
+                    open_manager(lm)
 
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
@@ -180,7 +181,8 @@ class SystemHandler(BaseRemoteHardwareHandler):
             # close power recording, close autocenter
             if run and run.kind == 'co2':
                 lm = self.get_laser_manager(name='co2')
-                lm.dispose_optional_windows()
+                if lm is not None:
+                    lm.dispose_optional_windows()
 
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)
