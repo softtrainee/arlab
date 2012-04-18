@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Bool, List, on_trait_change, Range
+from traits.api import HasTraits, Str, Bool, Float, List, on_trait_change, Range
 from traitsui.api import View, Item, VGroup, TableEditor, Group, HGroup
 from apptools.preferences.ui.api import PreferencesPage
 from traitsui.table_column import ObjectColumn
@@ -43,6 +43,11 @@ class ManagerPreferencesPage(PreferencesPage):
     open_on_startup = Bool
     enable_close_after = Bool
     close_after = Range(0, 60, 60)
+
+    width = Float(-1)
+    height = Float(0.85)
+    x = Float(10)
+    y = Float(20)
 
     def __init__(self, *args, **kw):
         super(ManagerPreferencesPage, self).__init__(*args, **kw)
@@ -94,11 +99,16 @@ class ManagerPreferencesPage(PreferencesPage):
         return []
 
     def get_general_group(self):
+        window_grp = Group('width',
+                          'height',
+                          'x', 'y')
         return Group(Item('open_on_startup'),
                      HGroup(
                             Item('close_after', enabled_when='enable_close_after'),
                             Item('enable_close_after', show_label=False)
-                            )
+                            ),
+                     window_grp
+
                     )
 
 #============= views ===================================

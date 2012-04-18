@@ -360,54 +360,15 @@ class BakeoutController(WatlowEZZone):
 #            print e
 
     def get_temp_and_power(self, **kw):
-        pr = WatlowEZZone.get_temp_and_power(self, **kw)
-        #if self.isAlive():
+        pr = super(BakeoutController, self).get_temp_and_power(**kw)
         self.process_value_flag = True
 
         return pr
 
     def get_temperature(self, **kw):
-        t = WatlowEZZone.get_temperature(self, **kw)
+        t = super(BakeoutController, self).get_temperature(**kw)
         self.process_value_flag = True
         return t
-#    def complex_query(self, **kw):
-#        if 'verbose' in kw and kw['verbose']:
-#            self.info('Do complex query')
-#
-#        t = self.read_process_value(1, **kw)
-#        hp = self.read_heat_power(**kw)
-#        
-#        #data = self.read(self.memory_block_address, nregisters=self.memory_block_len, response_type='float', verbose=True)
-#        data = None
-#        if data is not None:
-#            t = data[0]
-#            hp = data[1]
-#            
-#        if self.simulation:
-##            t = 4 + self.closed_loop_setpoint
-#            t = self.get_random_value() + self.closed_loop_setpoint
-#            hp = self.get_random_value()
-#            time.sleep(0.25)
-#        try:
-#            self.heat_power_value = hp
-#            self.process_value = t
-#            self.process_value_flag = True
-#        except (ValueError, TypeError), e:
-#            print e
-
-#        if t is not None and hp is not None:
-#            try:
-#                hp = float(hp)
-#                self.heat_power = hp
-#                
-#                t = float(t)
-#                self.process_value = t
-#                self.process_value_flag = True
-#                
-#                
-#                return t, hp
-#            except ValueError, TypeError:
-#                pass
 
     def _update_(self):
         '''
@@ -423,8 +384,6 @@ class BakeoutController(WatlowEZZone):
         #self.complex_query(verbose=False)
 #        self.get_temp_and_power(verbose=True)
         self.get_temp_and_power(verbose=False)
-#        if self.run_func:
-#            self.run_func(verbose=True)
 
         if self._duration_timeout:
             if time.time() - self.start_time > self._oduration * 3600.:

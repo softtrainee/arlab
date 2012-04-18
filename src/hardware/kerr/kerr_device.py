@@ -108,8 +108,9 @@ class KerrDevice(ConfigLoadable):
         '''
         '''
         rbits = []
-        for i in range(16):
-            if (bits >> i) & 1 == 1:
-                rbits.append(i)
+        if isinstance(bits, int):
+            for i in range(16):
+                if (bits >> i) & 1 == 1:
+                    rbits.append(i)
         return rbits
 #=========================EOF======================================

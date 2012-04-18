@@ -24,6 +24,7 @@ from src.experiments.experiments_manager import EEditor
 from src.canvas.designer.canvas_manager import CEditor
 from src.data_processing.modeling.modeler_manager import MEditor
 from src.helpers.gdisplays import gLoggerDisplay
+from src.helpers.paths import doc_html_dir
 
 def get_manager(window, editor=None):
     if editor is None:
@@ -50,7 +51,6 @@ def get_manager(window, editor=None):
 
 class SaveAction(Action):
     '''
-        G{classtree}
     '''
     accelerator = 'Ctrl+S'
     enabled = False
@@ -90,20 +90,17 @@ class SaveAction(Action):
 
     def perform(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         manager = get_manager(self.window)
         func = 'save'
         if manager:
             getattr(manager, func)()
 
+
 class SaveAsAction(Action):
     accelerator = 'Ctrl+Shift+S'
     def perform(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         editor = event.window.active_editor
         func = None
@@ -123,15 +120,25 @@ class SaveAsAction(Action):
             manager = event.window.application.get_service(service_id)
             getattr(manager, func)()
 
+
 class LoggerAction(Action):
     def perform(self, event):
 
         gLoggerDisplay.edit_traits(parent=self.window.control)
 
+
 class GotoHelpPageAction(Action):
     def perform(self, event):
         import webbrowser
         webbrowser.open_new('http://code.google.com/p/arlab/wiki/CheatSheet')
+
+
+class DocumentationPageAction(Action):
+    def perform(self, event):
+        import webbrowser
+        p = 'file://{}/index.html'.format(doc_html_dir)
+        webbrowser.open_new(p)
+
 
 class GotoAPIPageAction(Action):
     def perform(self, event):

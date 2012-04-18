@@ -36,7 +36,6 @@ class InitializationParser(XMLParser):
 
     def get_plugins(self, category=None, all=False, element=False):
         tree = self._tree.find('plugins')
-        print tree, category, all, element
         if category:
             cat = tree.find(category)
             if cat is not None:

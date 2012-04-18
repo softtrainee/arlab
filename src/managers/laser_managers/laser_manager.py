@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Event, Property, Instance, Bool, Str, on_trait_change
+from traits.api import Event, Property, Instance, Bool, Str, on_trait_change, Enum
 from traitsui.api import View, Item, VGroup
 
 #============= standard library imports ========================
@@ -56,6 +56,17 @@ class LaserManager(Manager):
     pulse = Instance(Pulse)
 
     _requested_power = None
+
+    def bind_preferences(self, pref_id):
+        from apptools.preferences.preference_binding import bind_preference
+
+        bind_preference(self, 'use_video', '{}.use_video'.format(pref_id))
+        bind_preference(self, 'close_after_minutes', '{}.close_after'.format(pref_id))
+        bind_preference(self, 'record_lasing', '{}.record_lasing'.format(pref_id))
+
+        bind_preference(self, 'window_height', '{}.height'.format(pref_id))
+        bind_preference(self, 'window_x', '{}.x'.format(pref_id))
+        bind_preference(self, 'window_y', '{}.y'.format(pref_id))
 
     def dispose_optional_windows(self):
         if self.use_video:
@@ -274,6 +285,7 @@ class LaserManager(Manager):
 
         sm.stage_controller = self.stage_manager.stage_controller
         sm.stage_controller.parent = sm
+        print 'asdf', self.id
         sm.bind_preferences(self.id)
 
 #        sm.canvas.crosshairs_offset = self.stage_manager.canvas.crosshairs_offset
@@ -298,6 +310,9 @@ class LaserManager(Manager):
     def __stage__group__(self):
         return Item('stage_manager', height=0.70, style='custom', show_label=False)
 
+    def get_unique_view_id(self):
+        return 'pychron.{}'.format(self.__class__.__name__.lower())
+
     def traits_view(self):
         '''
         '''
@@ -307,13 +322,15 @@ class LaserManager(Manager):
         for h in hooks:
             vg.content.append(getattr(self, h)())
 
-        return View(vg,
+        return View(
+                    vg,
+                    id=self.get_unique_view_id(),
                     resizable=True,
                     title=self.__class__.__name__ if self.title == '' else self.title,
                     handler=self.handler_klass,
-                    height=0.67,
-                    x=300,
-                    y=25,
+                    height=self.window_height,
+                    x=self.window_x,
+                    y=self.window_y,
                     statusbar='status_text'
                     )
 #============= EOF ====================================

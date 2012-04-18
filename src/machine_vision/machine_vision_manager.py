@@ -95,7 +95,7 @@ class MachineVisionManager(Manager):
     calibration_detector = Any
 
     testing = False
-    _debug = True
+    _debug = False
 
 #    def _zoom_calibration(self):
 #        d = ZoomCalibrationDetector(parent=self,
@@ -112,8 +112,10 @@ class MachineVisionManager(Manager):
     def _test_fired(self):
         if not self.testing:
             self.testing = True
-#            self.show_image()
-            self._spawn_thread(self.map_holes)
+            self.show_image()
+            self.hole_detector.collect_baseline_intensity()
+            self.get_intensity()
+#            self._spawn_thread(self.map_holes)
 #            self._zoom_calibration()
 #            self._spawn_thread(self.hole_detector.locate_sample_well,
 #                               0, 0
@@ -156,6 +158,18 @@ class MachineVisionManager(Manager):
         hd._debug = self._debug
 
         return hd
+
+    def get_intensity(self):
+        det = self.hole_detector
+        return det.get_intensity()
+
+    def collect_baseline_intensity(self):
+        self.video.open()
+        print 'asd', self.video.cap
+        import time
+        time.sleep(1)
+        det = self.hole_detector
+        return det.collect_baseline_intensity()
 
     @on_trait_change('laser_manager:zoom')
     def update_zoom(self, new):
@@ -346,8 +360,8 @@ class MachineVisionManager(Manager):
 
 
 
-#        if self._debug:
-#            do_after(50, self.edit_traits, view='working_image_view')
+        if self._debug:
+            do_after(50, self.edit_traits, view='working_image_view')
 
 
     def traits_view(self):
@@ -430,7 +444,7 @@ class MachineVisionManager(Manager):
             if path is None:
                 src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
                 src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
-                src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321.tiff'
+                src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
 #                src = '/Users/ross/Sandbox/snapshot001.jpg'
 #                src = '/Users/ross/Desktop/watershed_test.tif'
 #                src = '/Users/ross/Desktop/snapshot006.jpg'

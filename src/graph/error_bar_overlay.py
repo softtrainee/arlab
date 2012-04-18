@@ -28,24 +28,30 @@ class ErrorBarOverlay(AbstractOverlay):
         '''
         gc.clip_to_rect(component.x, component.y, component.width, component.height)
 
+        gc.save_state()
         x = component.index.get_data()
         y = component.value.get_data()
         xer = component.xerror.get_data()
 #        yer = component.yerror.get_data()
 #        nx, ny = component.map_screen([(x, y)])[0][0]
-        nx1, _nye = component.map_screen([(x - xer, y)])[0][0]
-        nx2, nye = component.map_screen([(x + xer, y)])[0][0]
-#        print nx, nxe
-        gc.move_to(nx1, nye - 10)
-        gc.line_to(nx1, nye + 10)
-        gc.stroke_path()
-        gc.move_to(nx2, nye - 10)
-        gc.line_to(nx2, nye + 10)
-        gc.stroke_path()
+#        nx1, _nye = component.map_screen([(x - xer, y)])
+#        nx2, nye = component.map_screen([(x + xer, y)])
 
-        gc.save_state()
-        gc.move_to(nx1, nye)
-        gc.line_to(nx2, nye)
-        gc.stroke_path()
+        args1 = component.map_screen(zip(x - xer, y))
+        args2 = component.map_screen(zip(x + xer, y))
+        for (x1, y1), (x2, y2) in zip(args1, args2):
+#            print xi, yi
+#        print nx1
+#        print nx, nxe
+#        gc.move_to(nx1, nye - 10)
+#        gc.line_to(nx1, nye + 10)
+#        gc.stroke_path()
+#        gc.move_to(nx2, nye - 10)
+#        gc.line_to(nx2, nye + 10)
+#        gc.stroke_path()
+#        for nx1,nx2 in nx1,
+            gc.move_to(x1, y1)
+            gc.line_to(x2, y2)
+            gc.stroke_path()
         gc.restore_state()
         #============= EOF =====================================

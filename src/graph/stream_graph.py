@@ -179,7 +179,6 @@ class StreamGraph(Graph):
             nx = x
 
         ny = float(y)
-
         #update raw data
         rx = self.raw_x[plotid][series]
         ry = self.raw_y[plotid][series]

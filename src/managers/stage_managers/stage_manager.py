@@ -203,10 +203,11 @@ class StageManager(Manager):
         axes = self.stage_controller.axes
         self.home_options = ['Home All', 'XY'] + sorted([axes[a].name.upper() for a in axes])
 
-
-
     def finish_loading(self):
         self.update_axes()
+
+    def set_stage_map(self, v):
+        return self._set_stage_map(v)
 
     def add_output(self, msg, color=None):
         '''
@@ -429,8 +430,8 @@ class StageManager(Manager):
         return View(HSplit(vg, canvas_group),
                     resizable=True,
                     #title = self.title,
-                    x=10,
-                    y=20,
+                    #width=self.window_width,
+                    #height=self.window_height
 #                    handler=self.handler_klass
                     )
 #===============================groups=====================
@@ -598,8 +599,10 @@ class StageManager(Manager):
         if s is not None:
             self.canvas.set_map(s)
             self._stage_map = s
+            self.info('setting stage map to {}'.format(v))
+            return True
         else:
-            return 'Invalid map {}'.format(v)
+            return False
 
     def __stage_map_changed(self):
         self.canvas.set_map(self._stage_map)

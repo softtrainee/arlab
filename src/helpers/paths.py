@@ -40,6 +40,7 @@ root = os.path.join(HOME, home)
 
 src_repo_name = 'pychron_beta'
 pychron_src_dir = os.path.join(HOME, 'Programming', 'mercurial', src_repo_name)
+doc_html_dir = os.path.join(pychron_src_dir, 'docs', '_build', 'html')
 
 #_dir suffix ensures the path is checked for existence
 root_dir = root

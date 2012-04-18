@@ -21,7 +21,6 @@ from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
 
 from src.helpers.logger_setup import add_console
-from src.helpers.gdisplays import gWarningDisplay
 #from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
 from globals import show_warnings
 
@@ -58,6 +57,7 @@ class Loggable(HasTraits):
     def warning(self, msg, decorate=True):
         '''
         '''
+        from src.helpers.gdisplays import gWarningDisplay
 
         if self.logger is not None:
             opened = gWarningDisplay.opened

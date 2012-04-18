@@ -162,7 +162,7 @@ class VueDiodeControlModule(CoreDevice):
         '''
         '''
         r = None
-        if res is not None and res is not 'simulation':
+        if res is not None:# and res is not 'simulation':
             res = res.strip()
             if type == 'bool':
                 if res == 'OK':
@@ -173,7 +173,8 @@ class VueDiodeControlModule(CoreDevice):
                 except ValueError, e:
                     self.warning(e)
         else:
-            r = self.get_random_value(0, 100)
+            if type == 'float':
+                r = self.get_random_value(0, 100)
 
         return r
 

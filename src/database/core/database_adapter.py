@@ -167,3 +167,23 @@ class DatabaseAdapter(Loggable):
                'dbname'
                )
         return v
+
+    def _get_tables(self):
+        pass
+
+    def get_results(self, tablename, **kw):
+        tables = self._get_tables()
+        table = tables[tablename]
+        sess = self.get_session()
+        q = sess.query(table)
+        if kw:
+
+            for k, (cp, val) in kw.iteritems():
+
+                d = getattr(table, k)
+                func = getattr(d, cp)
+                q = q.filter(func(val))
+
+        return q.all()
+
+

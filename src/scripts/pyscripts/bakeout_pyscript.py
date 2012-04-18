@@ -20,6 +20,8 @@ from numpy import linspace
 #============= local library imports  ==========================
 from src.scripts.pyscripts.pyscript import PyScript
 import time
+from src.helpers.paths import doc_html_dir
+import os
 HTML_HELP = '''
 <tr>
     <td>setpoint</td>
@@ -33,7 +35,9 @@ HTML_HELP = '''
     <td>ramp to setpoint at rate C/hr</td>
     <td>ramp(100,60,start=50)</td>
 </tr>
+
 '''
+
 
 TIMEDICT = dict(s=1, m=60.0, h=60.0 * 60.0)
 
@@ -42,7 +46,12 @@ class BakeoutPyScript(PyScript):
     controller = Any
 
     def _get_help_hook(self):
+#        return HTML_HELP_PATH
         return HTML_HELP
+
+    def get_help_path(self):
+        p = os.path.join(doc_html_dir, 'bakeout_scripting.html')
+        return p
 
     def _get_commands(self):
         cmds = super(BakeoutPyScript, self)._get_commands()
@@ -58,9 +67,13 @@ class BakeoutPyScript(PyScript):
 
         c = self.controller
         if start is None:
-            start = 30
+            start = 25
             if c is not None:
-                start = max(30, c.closed_loop_setpoint)
+                #possible to just read the process_value 
+                #for now force a query to the device
+                #TODO: is this necessary
+                ctemp = int(c.get_temperature())
+                start = max(start, ctemp)
 
         self.info('ramping from {} to {} rate= {} C/h, period= {} s'.format(start,
                                                                     setpoint,

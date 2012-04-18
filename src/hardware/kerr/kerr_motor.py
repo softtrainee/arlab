@@ -222,7 +222,11 @@ class KerrMotor(KerrDevice):
         else:
             status_byte = status_byte[:2]
 
-        status_register = self._check_bits(int(status_byte, 16))
+        try:
+            status_register = self._check_bits(int(status_byte, 16))
+        except Exception, e:
+            self.warning('kerr_motor:228 {}'.format(str(e)))
+            status_register = []
 
         '''
         if X bits is set to one its index will be in the status register

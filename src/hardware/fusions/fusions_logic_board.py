@@ -71,9 +71,10 @@ class FusionsLogicBoard(CoreDevice):
         #test communciations with board issue warning if 
         #no handle or response is none
         resp = self._disable_laser_()
-        if self._communicator is None or resp is not True:
+        print resp
+        if self._communicator.handle is None or resp is not True:
             warning(None, 'Laser not connected. Power cycle USB hub.')
-            return
+            return True
 
         #turn off pointer
         if progress is not None:
@@ -141,7 +142,7 @@ class FusionsLogicBoard(CoreDevice):
         '''
         '''
         lock_bits = []
-
+        self.info('checking interlocks')
         if not self.simulation:
             resp = self.repeat_command('INTLK', check_type=int)
 

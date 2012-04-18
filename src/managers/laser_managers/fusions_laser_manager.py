@@ -71,6 +71,13 @@ class FusionsLaserManager(LaserManager):
 
     power_timer = None
     power_graph = None
+    _prev_power = 0
+    def _record_cpower(self):
+        cp = self.get_laser_intensity()
+        if cp is None:
+            cp = 0
+
+        self.power_graph.record(cp, series=1)
 
     def _record_power(self):
         p = self.get_laser_watts()
@@ -81,9 +88,9 @@ class FusionsLaserManager(LaserManager):
 
         if p is not None:
             self.data_manager.add_time_stamped_value(p, rawtime=True)
-
             try:
                 self.power_graph.record(p)
+#                self.power_graph.record_multiple((p, cp))
             except Exception, e:
                 self.info(e)
                 print 'record power ', e
@@ -102,18 +109,9 @@ class FusionsLaserManager(LaserManager):
 
                    )
         g.new_series()
+        g.new_series()
         self.power_graph = g
-#        else:
-#            g = self.power_graph
-#            g.close()
-#            g.clear()
-#            g.new_plot(data_limit=60,
-#                       scan_delay=1,
-#                       xtitle='time (s)',
-#                       ytitle='8bit power')
-#            g.new_series()
 
-#        self.power_graph.edit_traits()
         do_later(self.power_graph.edit_traits)
 
     def _dispose_optional_windows_hook(self):
@@ -124,8 +122,6 @@ class FusionsLaserManager(LaserManager):
         if self.power_graph is not None:
             self.power_graph.close()
 
-        #self.power_graph=None    
-
         self.open_power_graph(rid)
 
         self.data_manager = CSVDataManager()
@@ -134,15 +130,23 @@ class FusionsLaserManager(LaserManager):
 
         if self.power_timer is not None:
             self.power_timer.Stop()
+            self.cpower_timer.Stop()
+
+        #before starting the timer collect quick baseline
+        #default is 5 counts @ 25 ms per count
+        self.collect_baseline_intensity()
 
         self.power_timer = Timer(1000, self._record_power)
+        self.cpower_timer = Timer(75, self._record_cpower)
 
     def stop_power_recording(self):
 
         def _stop():
             self.power_timer.Stop()
+            self.cpower_timer.Stop()
             self.info('Power recording stopped')
             self.power_timer = None
+            self.cpower_timer = None
             '''
                 analyze the power graph
                 if requested power greater than 1.5 
@@ -228,6 +232,20 @@ class FusionsLaserManager(LaserManager):
         self.pointer_state = not self.pointer_state
 
         self.logic_board.set_pointer_onoff(self.pointer_state)
+
+    def collect_baseline_intensity(self, **kw):
+        sm = self.stage_manager
+        m = 'machine_vision_manager'
+        if hasattr(sm, m):
+            mv = getattr(sm, m)
+            return mv.collect_baseline_intensity(**kw)
+
+    def get_laser_intensity(self):
+        sm = self.stage_manager
+        m = 'machine_vision_manager'
+        if hasattr(sm, m):
+            mv = getattr(sm, m)
+            return mv.get_intensity()
 
     def get_laser_watts(self):
         pass

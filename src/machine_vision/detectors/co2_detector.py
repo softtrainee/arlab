@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from numpy import percentile
+from numpy import percentile, sum, asarray
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, grayspace, colorspace, smooth, \
     dilate
@@ -21,7 +21,8 @@ from hole_detector import HoleDetector
 
 
 class CO2HoleDetector(HoleDetector):
-
+    intensity_cropwidth = 4
+    intensity_cropheight = 4
     def _segmentation_style_changed(self):
         self._segmentation_style_hook()
 
@@ -51,6 +52,58 @@ class CO2HoleDetector(HoleDetector):
 
             src = asMat(img_rescale)
         return src
+
+    def get_intensity(self):
+        self._reset_image()
+
+        s = self.parent.load_source().clone()
+#        if self._debug:
+#            p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
+#            s = self.parent.load_source(path=p).clone()
+
+        s = self._crop_image(grayspace(s), self.intensity_cropwidth,
+                             self.intensity_cropheight)
+
+        iar = s.ndarray[:]
+        niar = iar - self.baseline
+        thres = 0
+
+        niar[niar < thres] = 0
+        src = asMat(asarray(niar, dtype='uint8'))
+
+        self.working_image.frames[0] = colorspace(src)
+
+        spx = sum(src.ndarray)
+
+        #normalize to area
+#        print spx, iar.shape[0] * iar.shape[1]
+        spx /= float(iar.shape[0] * iar.shape[1])
+
+        return spx
+
+    def collect_baseline_intensity(self, ncounts=5, period=25):
+#        self.parent.show_image()
+        import time
+#        import numpy as np
+        ss = None
+#        p5 = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
+#        p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321.tiff'
+        self._reset_image()
+        for i in range(ncounts):
+            self.info('collecting baseline image {} of {}'.format(i + 1, ncounts))
+            ps = self.parent.load_source().clone()
+            gs = grayspace(ps)
+            cs = self._crop_image(gs, self.intensity_cropwidth,
+                                  self.intensity_cropheight)
+            if ss is None:
+                #convert to array to we can sum >255
+                ss = asarray(cs.ndarray, dtype='uint32')
+            else:
+                ss += cs.ndarray
+
+            time.sleep(period / 1000.0)
+
+        self.baseline = ss / float(ncounts)
 
     def locate_sample_well(self, cx, cy, holenum=None, **kw):
         self._reset_image()
