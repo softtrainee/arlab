@@ -277,10 +277,12 @@ class StageMap(Loggable):
             if cors:
                 self.info('loaded correction file {}'.format(p))
                 for i, x, y in cors:
+                
                     h = self._get_hole(i)
-                    if x is not None and y is not None:
-                        h.x_cor = x
-                        h.y_cor = y
+                    if h is not None:
+                        if x is not None and y is not None:
+                            h.x_cor = x
+                            h.y_cor = y
 
     @on_trait_change('clear_corrections')
     def clear_correction_file(self):

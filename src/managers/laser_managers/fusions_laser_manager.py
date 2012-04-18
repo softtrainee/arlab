@@ -138,7 +138,7 @@ class FusionsLaserManager(LaserManager):
         self.collect_baseline_intensity()
 
         self.power_timer = Timer(1000, self._record_power)
-        self.cpower_timer = Timer(75, self._record_cpower)
+        self.cpower_timer = Timer(200, self._record_cpower)
 
     def stop_power_recording(self):
 
