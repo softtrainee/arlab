@@ -221,14 +221,14 @@ class TrayCalibrationManager(Manager):
             with open(p, 'wb') as f:
                 pickle.dump(ca, f)
 
-    @on_trait_change('parent:stage_controller:[x,y]')
-    def update_stage_pos(self, obj, name, old, new):
-        setattr(self, name, new)
+#    @on_trait_change('parent:stage_controller:[x,y]')
+#    def update_stage_pos(self, obj, name, old, new):
+#        setattr(self, name, new)
 
-    @on_trait_change('canvas:calibration_item:center:[x,y]')
-    def update_xy(self, obj, name, old, new):
-        if isinstance(new, float):
-            setattr(self, name, new)
+#    @on_trait_change('canvas:calibration_item:center:[x,y]')
+#    def update_xy(self, obj, name, old, new):
+#        if isinstance(new, float):
+#            setattr(self, name, new)
 
     @on_trait_change('canvas:calibration_item:line:data_rotation')
     def update_rotation(self, obj, name, old, new):
