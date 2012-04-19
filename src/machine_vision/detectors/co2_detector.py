@@ -86,7 +86,8 @@ class CO2HoleDetector(HoleDetector):
         src = asMat(asarray(niar, dtype='uint8'))
         self.brightness_image.set_frame(0, colorspace(src))
         tarea = float(iar.shape[0] * iar.shape[1])
-        targets = self._edge_segmentation(src)
+#        targets = self._edge_segmentation(src)
+        targets = self._region_segmentation(src)
         if targets:
             targets = [t for t in targets
                        if self._near_center(*t.centroid_value)]
@@ -94,11 +95,12 @@ class CO2HoleDetector(HoleDetector):
             if targets:
                 tt = targets[0]
                 ta = tt.area
-                tarea = ta if ta > 200 else tarea
-                src = colorspace(src)
-                self._draw_result(src, tt)
-                self.brightness_image.set_frame(0, src)
-
+                tarea = ta if ta > 1000 else tarea
+                if ta>1000:
+                    si = colorspace(src)
+                    self._draw_result(si, tt)
+                    self.brightness_image.set_frame(0, si)
+                    
         spx = sum(src.ndarray)
 
         #normalize to area
