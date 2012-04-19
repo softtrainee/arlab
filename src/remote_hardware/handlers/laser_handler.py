@@ -57,6 +57,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
         elif isinstance(err, str):
             err = EnableErrorCode(err)
 
+
         if manager.record_lasing:
             def record():
                 elm = self.get_elm()

@@ -55,7 +55,9 @@ class GraphManager(Manager):
 
     def _test_fired(self):
 #        self.open_graph('degas', path='/Users/Ross/Pychrondata_beta/data/degas/scan001.txt')
-        self.open_graph('degas', path='/Users/ross/Sandbox/scan001-hole1.txt')
+#        self.open_graph('degas', path='/Users/ross/Sandbox/scan001-hole1.txt')
+        p = '/Users/ross/Pychrondata1.4/data/co2power/2012/APR/testrid_001002.h5'
+        self.open_graph('powerrecord', path=p)
 #        self.open_graph('tempmonitor', path='/Users/ross/Desktop/argus_temp_monitor046.txt')
 #        self.open_graph('inverse_isochron', path='/Users/Ross/Desktop/data.csv')
         #self.open_graph('age_spectrum', path='/Users/Ross/Desktop/test.csv')
@@ -128,6 +130,24 @@ class GraphManager(Manager):
         return x, y, path
 
     def powerrecord_parser(self, path):
+        if path.endswith('.h5'):
+            from src.managers.data_managers.h5_data_manager import H5DataManager
+            dm = H5DataManager()
+            print path
+            if not dm.open_data(path):
+                return
+
+            grp = dm.get_group('Power')
+            itable = grp.internal
+            btable = grp.brightness
+
+            ixs = [x['time'] for x in itable]
+            iys = [x['value'] for x in itable]
+            bxs = [x['time'] for x in btable]
+            bys = [x['value'] for x in btable]
+
+            return ixs, iys, bxs, bys, path
+
         return self._scan_parser(path)
 
     def tempmonitor_parser(self, path):
@@ -343,16 +363,35 @@ class GraphManager(Manager):
         g.set_y_limits(min(y) - lpad, max(y) + upad)
         return g
 
-    def powerrecord_factory(self, xs, ys, path):
+    def powerrecord_factory(self, *args):
+        xs2 = None
+        ys2 = None
+        if len(args) == 5:
+            xs, ys, xs2, ys2, path = args
+        else:
+            xs, ys, path = args
+
         name = os.path.splitext(os.path.basename(path))[0]
-        return self.graph_factory(data=(xs, ys), graph_kwargs={'window_title':path},
+        use_aux_axis = False
+        if use_aux_axis:
+            g = Graph(container_dict={'type':'o'})
+            g.new_plot(title='Time vs Power ({})'.format(name))
+            g.new_series(xs, ys)
+            plot1, po = g.new_series(xs2, ys2, aux_plot=True)
+            g.add_aux_axis(po, plot1)
+        else:
+            g = self.graph_factory(data=(xs, ys), graph_kwargs={'window_title':path},
                                   series_kwargs={},
                                   plot_kwargs=dict(xtitle='time (s)',
-                                               ytitle='8bit power',
+                                               ytitle='Power (%)',
                                                title='Time vs Power ({})'.format(name) ,
                                                )
                                   )
 
+        if xs2 is not None and ys2 is not None:
+            g.new_series(xs2, ys2)
+
+        return g
 
     def powerscan_factory(self, xs, ys, title):
         g = Graph()
@@ -611,6 +650,9 @@ class GraphManager(Manager):
                  )
         return v
 if __name__ == '__main__':
-    g = GraphManager(kind='tempmonitor')
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('graph_man')
+#    g = GraphManager(kind='tempmonitor')
+    g = GraphManager(kind='powerrecord')
     g.configure_traits()
 #============= EOF =============================================
