@@ -112,13 +112,13 @@ class MachineVisionManager(Manager):
             self.hole_detector._debug = self._debug
 #            self.show_image()
             self.testing = True
-#            self.hole_detector.collect_baseline_intensity()
-#            self.get_intensity()
+            self.hole_detector.collect_baseline_intensity()
+            self.get_intensity()
 #            self._spawn_thread(self.map_holes)
 #            self._zoom_calibration()
-            self._spawn_thread(self.hole_detector.locate_sample_well,
-                               0, 0
-                               )
+#            self._spawn_thread(self.hole_detector.locate_sample_well,
+#                               0, 0
+#                               )
 
         else:
             self.testing = False

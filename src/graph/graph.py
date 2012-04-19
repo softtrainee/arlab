@@ -44,6 +44,7 @@ from guide_overlay import GuideOverlay
 from tools.contextual_menu_tool import ContextualMenuTool
 from tools.pan_tool import MyPanTool as PanTool
 from chaco.data_label import DataLabel
+from src.loggable import Loggable
 
 
 def name_generator(base):
@@ -71,7 +72,7 @@ class GraphHandler(Handler):
         info.object.ui = info.ui
 
 
-class Graph(HasTraits):
+class Graph(Loggable):
     '''
         A Graph represents a collection of Plots
         A Plot represents a collection of series
