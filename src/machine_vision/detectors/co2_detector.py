@@ -92,9 +92,12 @@ class CO2HoleDetector(HoleDetector):
                        if self._near_center(*t.centroid_value)]
     #        print targets
             if targets:
-                tt = targets[0].area
-                tarea = tt if tt > 50 else tarea
-
+                tt = targets[0]
+                ta = tt.area
+                tarea = ta if ta > 200 else tarea
+                src = colorspace(src)
+                self._draw_result(src, tt)
+                self.brightness_image.set_frame(0, src)
 
         spx = sum(src.ndarray)
 
