@@ -42,6 +42,7 @@ from cvwrapper import swapRB, grayspace, cvFlip, \
 #        return self._lines
 #from numpy.core.numeric import zeros
 import Image as PILImage
+from pyface.timer.do_later import do_later, do_after
 
 
 class Image(HasTraits):
@@ -225,7 +226,7 @@ class Image(HasTraits):
         except IndexError:
             resize(src[0], w, h, dst=display)
             return display
-        except TypeError:
+        except (TypeError, AttributeError):
             return
 
         try:
@@ -274,6 +275,77 @@ class Image(HasTraits):
                [(w / 2 + r, h / 2), (w, h / 2)],
                ]
         draw_lines(src, pts, color=(0, 255, 255), thickness=1)
+
+from traits.api import Instance
+from traitsui.api import View, Item, Handler
+from src.image.image_editor import ImageEditor
+
+class StandAloneImage(HasTraits):
+    _image = Instance(Image, ())
+    width = Int(640)
+    height = Int(480)
+    view_identifier = None
+    title = None
+    def __image_default(self):
+        return Image(width=self.width, height=self.height)
+
+#    def __getattr__(self, attr):
+#        if hasattr(self._image, attr):
+#            return getattr(self._image, attr)
+#        else:
+#            pass
+    def show(self):
+        do_after(50, self.edit_traits)
+
+    def close(self):
+        if self.ui is not None:
+            do_later(self.ui.dispose)
+        self.ui = None
+
+    def load(self, src):
+        self._image.load(src)
+
+    @property
+    def source_frame(self):
+        return self._image.source_frame
+
+    def set_frames(self, fs):
+        self._image.frames = fs
+
+    def set_frame(self, i, src):
+        self._image.frames[i] = src
+        return self._image.source_frame
+
+    def get_frame(self, i):
+        return self._image.frames[i]
+
+    def save(self, path):
+        self._image.save(path)
+
+    def traits_view(self):
+
+        imgrp = Item('_image', show_label=False, editor=ImageEditor(),
+                      width=self.width,
+                      height=self.height,
+                      style='custom'
+                      )
+        v = View(imgrp,
+                 handler=ImageHandler,
+                 x=0.55,
+                 y=35,
+                 width=self.width - 38,
+                 height=self.height + 24,
+                 )
+
+        if self.title is not None:
+            v.title = self.title
+        if self.view_identifier is not None:
+            v.id = self.view_identifier
+        return v
+
+class ImageHandler(Handler):
+    def init(self, info):
+        info.object.ui = info.ui
 #======== EOF ================================
 #    def render_images1(self, src):
 #        nsrc = len(src)

@@ -111,6 +111,9 @@ class H5DataManager(DataManager):
         except AttributeError:
             pass
 
+    def get_group(self, name):
+        return next((g for g in self.get_groups() if g._v_name == name), None)
+
     def get_groups(self):
         return [g for g in self._frame.walkGroups() if g != self._frame.root]
 

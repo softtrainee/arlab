@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 from src.graph.stream_graph import StreamGraph
+from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.database.data_warehouse import DataWarehouse
 '''
 '''
 #=============enthought library imports=======================
@@ -72,30 +74,46 @@ class FusionsLaserManager(LaserManager):
     power_timer = None
     power_graph = None
     _prev_power = 0
+    def _write_h5(self, table, v, x):
+        dm = self.data_manager
+        table = dm.get_table(table, 'Power')
+        if table is not None:
+            row = table.row
+            row['time'] = x
+            row['value'] = v
+            row.append()
+            table.flush()
+
     def _record_cpower(self):
         cp = self.get_laser_intensity()
         if cp is None:
             cp = 0
 
-        self.power_graph.record(cp, series=1)
+        xi = self.power_graph.record(cp, series=1)
+        self._write_h5('brightness', cp, xi)
 
     def _record_power(self):
         p = self.get_laser_watts()
+
         if p is not None:
             self._prev_power = p
         else:
             p = self._prev_power
 
+        import random
+        p = random.randint(0, 5)
         if p is not None:
-            self.data_manager.add_time_stamped_value(p, rawtime=True)
+#            self.data_manager.add_time_stamped_value(p, rawtime=True)
+#            self.
             try:
-                self.power_graph.record(p)
+                x = self.power_graph.record(p)
+                self._write_h5('internal', p, x)
 #                self.power_graph.record_multiple((p, cp))
             except Exception, e:
                 self.info(e)
                 print 'record power ', e
 
-    def open_power_graph(self, rid):
+    def open_power_graph(self, rid, path=None):
         #if self.power_graph is None:
         g = StreamGraph(window_title='Power Readback - {}'.format(rid),
                         window_x=0.01,
@@ -125,9 +143,25 @@ class FusionsLaserManager(LaserManager):
 
         self.open_power_graph(rid)
 
-        self.data_manager = CSVDataManager()
-        self.data_manager.new_frame(directory='co2power',
+#        self.data_manager = CSVDataManager()
+#        self.data_manager.new_frame(directory='co2power',
+#                                    base_frame_name=rid)
+
+        self.data_manager = dm = H5DataManager()
+#        root = '/usr/local/pychron/co2power'
+
+        from src.helpers.paths import data_dir
+        import os
+        root = os.path.join(data_dir, 'co2power')
+        dw = DataWarehouse(root=root)
+#                           os.path.join(data_dir, base_dir))
+        dw.build_warehouse()
+
+        dm.new_frame(directory=dw.get_current_dir(),
                                     base_frame_name=rid)
+        pg = dm.new_group('Power')
+        dm.new_table(pg, 'internal')
+        dm.new_table(pg, 'brightness')
 
         if self.power_timer is not None:
             self.power_timer.Stop()
@@ -239,7 +273,7 @@ class FusionsLaserManager(LaserManager):
         m = 'machine_vision_manager'
         if hasattr(sm, m):
             mv = getattr(sm, m)
-            return mv.collect_baseline_intensity(**kw)
+            mv.collect_baseline_intensity(**kw)
 
     def get_laser_intensity(self):
         sm = self.stage_manager

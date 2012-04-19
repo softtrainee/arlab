@@ -158,7 +158,8 @@ class StreamGraph(Graph):
         return x
 
     def record(self, y, x=None, series=0, plotid=0,
-               track_x=True, track_y=True, do_after=None, track_y_pad=5, ** kw):
+               track_x=True, track_y=True, do_after=None, track_y_pad=5,
+               aux=False, ** kw):
 
         xn, yn = self.series[plotid][series]
 
@@ -251,8 +252,12 @@ class StreamGraph(Graph):
                               pad=track_y_pad,
                               force=False
                               )
-            plot.data.set_data(xn, new_xd)
-            plot.data.set_data(yn, new_yd)
+
+            if aux:
+                self.add_datum_to_aux_plot((nx, ny), plotid, series)
+            else:
+                plot.data.set_data(xn, new_xd)
+                plot.data.set_data(yn, new_yd)
 #            self.redraw()
 
         if do_after:

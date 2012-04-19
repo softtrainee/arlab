@@ -636,15 +636,20 @@ class Graph(HasTraits):
 
         plotobj.use_downsample = True
         if aux_plot:
+            if x is None:
+                x = np.array([])
+            if y is None:
+                y = np.array([])
             renderer = create_line_plot((x, y))
-            l, b = add_default_axes(renderer)
-
-            l.orientation = 'right'
-            b.orientation = 'top'
+#            l, b = add_default_axes(renderer)
+#
+#            l.orientation = 'right'
+#            b.orientation = 'top'
 
             plotobj.add(renderer)
-            plotobj.plots['plotobj%s' % names[0][-1:][0]
-                       ] = [renderer]
+#            print 'plotobj%s' % names[0][-1:][0]
+            n = 'aux{:03n}'.format(int(names[0][-1:][0]))
+            plotobj.plots[n] = [renderer]
 
             return renderer, plotobj
 
@@ -697,13 +702,22 @@ class Graph(HasTraits):
         '''
         '''
         pass
+    def add_aux_axis(self, po, p):
+        from chaco.axis import PlotAxis
+        axis = PlotAxis(p, orientation='right',
+                        axis_line_visible=False,
+                        tick_color='red',
+                        tick_label_color='red')
+        p.underlays.append(axis)
+        po.add(p)
+        po.plots['aux'] = [p]
 
     def add_datum_to_aux_plot(self, datum, plotid=0, series=1):
         '''
         '''
         plot = self.plots[plotid]
 
-        series = plot.plots['plot%i' % series][0]
+        series = plot.plots['aux{:03n}'.format(series)][0]
 
         oi = series.index.get_data()
         ov = series.value.get_data()
@@ -992,10 +1006,13 @@ class Graph(HasTraits):
                 names += (yername,)
             self.series[plotid].append(names)
         else:
-            xname = self.series[plotid][0][0]
-            yname = self.series[plotid][0][1]
-            if yer is not None:
-                yername = self.series[plotid][0][2]
+            try:
+                xname = self.series[plotid][0][0]
+                yname = self.series[plotid][0][1]
+                if yer is not None:
+                    yername = self.series[plotid][0][2]
+            except IndexError:
+                pass
 
         plot.data.set_data(xname, x)
         plot.data.set_data(yname, y)
