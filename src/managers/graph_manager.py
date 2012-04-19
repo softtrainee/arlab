@@ -650,6 +650,8 @@ class GraphManager(Manager):
                  )
         return v
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('graph_man')
 #    g = GraphManager(kind='tempmonitor')
     g = GraphManager(kind='powerrecord')
     g.configure_traits()
