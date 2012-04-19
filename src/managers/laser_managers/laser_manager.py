@@ -70,7 +70,7 @@ class LaserManager(Manager):
 
     def dispose_optional_windows(self):
         if self.use_video:
-            self.stage_manager.machine_vision_manager.close_image()
+            self.stage_manager.machine_vision_manager.close_images()
 
         self._dispose_optional_windows_hook()
 

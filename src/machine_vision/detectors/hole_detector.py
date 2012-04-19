@@ -104,7 +104,8 @@ class HoleDetector(Detector):
     crop_tries = Range(0, 102, 1)  # > 101 makes it a spinner
     threshold_tries = Range(0, 102, 2)
     threshold_expansion_scalar = Int(5)
-
+    def close_image(self):
+        pass
     def _edge_segmentation(self, src, **kw):
         from scipy import ndimage
         from skimage.filter import canny
@@ -114,7 +115,7 @@ class HoleDetector(Detector):
         ndsrc = ndimage.binary_fill_holes(ndsrc)
 
         p = asMat(asarray(ndsrc, 'uint8') * 255)
-        self.working_image.frames[0] = colorspace(p)
+#        self.working_image.frames[0] = colorspace(p)
         return self._locate_targets(p, hole=False)
 
     def _region_segmentation(self, src, tlow=100, thigh=150, **kw):
@@ -161,7 +162,7 @@ class HoleDetector(Detector):
         src = invert(src)
         src = asMat(asarray(src, 'uint8'))
 
-        self.working_image.frames[0] = colorspace(src)
+#        self.working_image.frames[0] = colorspace(src)
         targets = self._locate_targets(src, hole=False, **kw)
         return targets
 
@@ -185,9 +186,9 @@ class HoleDetector(Detector):
             return targets
 
     def _locate_targets(self, src, **kw):
-        dsrc = self.working_image.frames[0]
+#        dsrc = self.working_image.frames[0]
         contours, hieararchy = contour(src)
-        draw_contour_list(dsrc, contours, hieararchy)
+#        draw_contour_list(dsrc, contours, hieararchy)
 #        do polygon approximation
         polygons, brs, areas = get_polygons(contours, hieararchy,
 #                                            convextest=False,
@@ -200,9 +201,11 @@ class HoleDetector(Detector):
 
         targets = []
         for pi, br, ai in zip(polygons, brs, areas):
-            src = self.working_image.frames[0]
-            draw_polygons(src, [pi], thickness=2, color=(255, 255, 0))
-
+#            try:
+#                src = self.working_image.frames[0]
+#                draw_polygons(src, [pi], thickness=2, color=(255, 255, 0))
+#            except IndexError:
+#                pass
             if len(pi) < 4:
                 continue
 
@@ -242,9 +245,10 @@ class HoleDetector(Detector):
             dy = avg(devys)
 
 
-        src = grayspace(self.image.source_frame)
+        src = grayspace(self.target_image.source_frame)
 
-        self.image.frames[0] = colorspace(crop(src, *self.croprect))
+        self.target_image.set_frame(0, colorspace(crop(src, *self.croprect)))
+#        self.image.frames[0] = colorspace(crop(src, *self.croprect))
         self._draw_markup(targets, dev=(dx, dy))
 
         #calculate the data position to move to nx,ny
@@ -270,7 +274,7 @@ class HoleDetector(Detector):
     def _save_(self, holenum, cx, cy, nx, ny, dxmm, dymm):
         path, _ = unique_path(positioning_error_dir,
                               'positioning_error{:03n}_'.format(int(holenum)), filetype='jpg')
-        self.image.save(path)
+        self.target_image.save(path)
         #save an associated text file with some metadata
         head, _ = os.path.splitext(path)
         with open(head + '.txt', 'w') as f:
@@ -308,25 +312,26 @@ class HoleDetector(Detector):
         indicators = []
         for pi in results:
 
-            f0 = self.image.frames[0]
+            f0 = self.target_image.get_frame(0)
+
             draw_polygons(f0, [pi.poly_points], color=(255, 255, 0), thickness=1)
 
-            f1 = self.working_image.frames[0]
+#            f1 = self.working_image.frames[0]
 #            draw_contour_list(f1, pi.contours, hierarchy=pi.hierarchy)
 
 
             #draw the centroid in blue
             centroid_center = new_point(*pi.centroid_value)
-            indicators.append((f1, centroid_center , (0, 255, 0), 'rect', 2))
+#            indicators.append((f1, centroid_center , (0, 255, 0), 'rect', 2))
 
             #calculate bounding rect and bounding square for polygon
             r = pi.bounding_rect
-            draw_rectangle(f1, r.x, r.y, r.width, r.height)
+#            draw_rectangle(f1, r.x, r.y, r.width, r.height)
 
             br_center = new_point(r.x + r.width / 2, r.y + r.height / 2)
-            indicators.append((f1,
-                               br_center,
-                               (255, 0, 0), 'rect', 2))
+#            indicators.append((f1,
+#                               br_center,
+#                               (255, 0, 0), 'rect', 2))
 
 #                #if % diff in w and h greater than 20% than use the centroid as the calculated center
 #                #otherwise use the bounding rect center            
@@ -350,7 +355,7 @@ class HoleDetector(Detector):
         #self._draw_indicator(f0, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
         #self._draw_indicator(f1, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
         self._draw_center_indicator(f0)
-        self._draw_center_indicator(f1)
+#        self._draw_center_indicator(f1)
 
         for i in indicators:
             self._draw_indicator(*i)
@@ -410,10 +415,9 @@ class HoleDetector(Detector):
 
         return x, y
 
-    def _crop_image(self, src, cw, ch):
+    def _crop_image(self, src, cw, ch, image=None):
         xo = 0
         yo = 0
-
         cw_px = int(cw * self.pxpermm)
         ch_px = int(ch * self.pxpermm)
         w, h = get_size(src)
@@ -424,8 +428,13 @@ class HoleDetector(Detector):
         self.croprect = (x, y, cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
 
-        self.image.frames[0] = colorspace(src.clone())
-        self.working_image.frames[0] = colorspace(src.clone())
+        if image:
+#            im = getattr(self.parent, update)
+#            image.frames[0] = colorspace(src.clone())
+
+            image.set_frame(0, colorspace(src.clone()))
+#            self.image.frames[0] = colorspace(src.clone())
+#            self.working_image.frames[0] = colorspace(src.clone())
 
         return src
 

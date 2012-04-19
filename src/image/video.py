@@ -36,6 +36,7 @@ from cvwrapper import get_capture_device, query_frame, write_frame, \
     load_image, new_video_writer, grayspace
 
 DEBUG = False
+#DEBUG = True
 
 
 class Video(Image):
@@ -94,7 +95,8 @@ class Video(Image):
         if self.cap is not None:
             with self._lock:
                 if DEBUG:
-                    src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
+#                    src = '/Users/ross/Sandbox/tray_screen_shot3.tiff'
+                    src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
                     return load_image(src)
 
                 self._frame = query_frame(self.cap)

@@ -13,26 +13,36 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from traits.api import Instance
+from traitsui.api import View, Item
 from numpy import percentile, sum, asarray
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, grayspace, colorspace, smooth, \
     dilate
 from hole_detector import HoleDetector
+from pyface.timer.do_later import do_after, do_later
+from src.image.image import Image, StandAloneImage
+from src.image.image_editor import ImageEditor
 
 
 class CO2HoleDetector(HoleDetector):
     intensity_cropwidth = 4
     intensity_cropheight = 4
+    brightness_image = None
+    target_image = None
+
+    def close_images(self):
+        if self.brightness_image is not None:
+            self.brightness_image.close()
+
+        if self.target_image is not None:
+            self.target_image.close()
+
     def _segmentation_style_changed(self):
         self._segmentation_style_hook()
 
     def _segmentation_style_hook(self):
         self.locate_sample_well(0, 0)
-
-    def _reset_image(self):
-        self.image.frames = [None]
-#        if self._debug:
-        self.working_image.frames = [None]
 
     def smooth(self, src):
         if self.use_smoothing:
@@ -54,15 +64,19 @@ class CO2HoleDetector(HoleDetector):
         return src
 
     def get_intensity(self):
-        self._reset_image()
-
-        s = self.parent.load_source().clone()
+#        self.brightness_image.frames = [None]
+        p = None
         if self._debug:
             p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
-            s = self.parent.load_source(path=p).clone()
+
+        s = self.parent.get_new_frame(path=p)
+        self.brightness_image.load(s)
+        self.brightness_image.set_frames([None])
+        s = self.brightness_image.source_frame.clone()
 
         s = self._crop_image(grayspace(s), self.intensity_cropwidth,
-                             self.intensity_cropheight)
+                             self.intensity_cropheight
+                             )
 
         iar = s.ndarray[:]
         niar = iar - self.baseline
@@ -70,35 +84,55 @@ class CO2HoleDetector(HoleDetector):
 
         niar[niar < thres] = 0
         src = asMat(asarray(niar, dtype='uint8'))
+        self.brightness_image.set_frame(0, colorspace(src))
+        tarea = float(iar.shape[0] * iar.shape[1])
+        targets = self._edge_segmentation(src)
+        if targets:
+            targets = [t for t in targets
+                       if self._near_center(*t.centroid_value)]
+    #        print targets
+            if targets:
+                tt = targets[0].area
+                tarea = tt if tt > 50 else tarea
 
-        self.working_image.frames[0] = colorspace(src)
 
         spx = sum(src.ndarray)
 
         #normalize to area
-#        print spx, iar.shape[0] * iar.shape[1]
-        spx /= float(iar.shape[0] * iar.shape[1])
-
+        spx /= tarea
         return spx
 
     def collect_baseline_intensity(self, ncounts=5, period=25):
-#        self.parent.show_image()
+
+        if self.brightness_image is not None:
+            self.brightness_image.close()
+
+        im = StandAloneImage(title='Brightness',
+                             view_identifier='pychron.fusions.co2.brightness')
+        self.brightness_image = im
+
+#        ps = self.parent.get_new_frame()
+#        im.load(ps)
+        im.show()
+
         import time
-#        import numpy as np
         ss = None
-#        p5 = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
-        p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321.tiff'
-        print self._debug
-        self._reset_image()
         for i in range(ncounts):
             self.info('collecting baseline image {} of {}'.format(i + 1, ncounts))
+            p = None
             if self._debug:
-                ps = self.parent.load_source(path=p).clone()
-            else:
-                ps = self.parent.load_source().clone()
+                p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321.tiff'
+
+            ps = self.parent.get_new_frame(path=p)
+            im.load(ps)
+
+            ps = im.source_frame.clone()
             gs = grayspace(ps)
-            cs = self._crop_image(gs, self.intensity_cropwidth,
-                                  self.intensity_cropheight)
+            cs = self._crop_image(gs,
+                                  self.intensity_cropwidth,
+                                  self.intensity_cropheight,
+                                  image=im
+                                  )
             if ss is None:
                 #convert to array to we can sum >255
                 ss = asarray(cs.ndarray, dtype='uint32')
@@ -110,7 +144,14 @@ class CO2HoleDetector(HoleDetector):
         self.baseline = ss / float(ncounts)
 
     def locate_sample_well(self, cx, cy, holenum=None, **kw):
-        self._reset_image()
+        if self.target_image is not None:
+            self.target_image.close()
+
+#        self._reset_image()
+        im = StandAloneImage(title='Positioning Error',
+                             view_identifier='pychron.fusions.co2.target')
+        self.target_image = im
+        im.show()
 
 #        self.cropwidth = 4
 #        self.cropheight = 4
@@ -121,12 +162,13 @@ class CO2HoleDetector(HoleDetector):
 #        for ci in range(self.crop_tries):
 #        self.parent.close_image()
 
-        src = self.parent.load_source().clone()
-        src = grayspace(src)
+#        src = self.parent.load_source().clone()
+        src = self.parent.get_new_frame()
+        im.load(src)
 
-        self.image.frames[0] = colorspace(src)
-#        print self.working_image.
-        self.working_image.frames[0] = colorspace(src)
+        src = grayspace(im.source_frame)
+
+        im.set_frame(0, colorspace(src))
 
         cw = None
         ch = None
@@ -136,13 +178,11 @@ class CO2HoleDetector(HoleDetector):
             ch = (1 + ci * self.crop_expansion_scalar) * self.cropheight
 
             self.info('cropping image to {}mm x {}mm'.format(cw, ch))
-            src = self._crop_image(src, cw, ch)
+            src = self._crop_image(src, cw, ch, image=im)
 
         src = self.contrast_equalization(src)
         src = self.smooth(src)
-        self.image.frames[0] = colorspace(src)
-        self.working_image.frames[0] = colorspace(src)
-        self.parent.show_image()
+        im.set_frame(0, colorspace(src))
 
         npos = self._segment_source(src, self.segmentation_style, cx, cy, holenum)
         if not npos:
@@ -176,15 +216,16 @@ class CO2HoleDetector(HoleDetector):
                     #self.info('dilating image (increase white areas). value={}'.format(i + 1))
         #            src = dilate(src, self._dilation_value)
                     osrc = dilate(src, i)
-                    self.image.frames[0] = colorspace(osrc)
-                    self.working_image.frames[0] = colorspace(osrc)
+                    self.target_image.set_frame(0, colorspace(osrc))
+#                    self.image.frames[0] = colorspace(osrc)
+#                    self.working_image.frames[0] = colorspace(osrc)
             else:
                 osrc = src
 
             if self.segmentation_style == 'region':
                 params['tlow'] = 125 - s * j
                 params['thigh'] = 125 + s * j
-            import time
+#            import time
 #            time.sleep(2)
             npos = segment(osrc, **params)
             if npos:

@@ -15,7 +15,7 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
-    DelegatesTo, on_trait_change, Bool
+    DelegatesTo, on_trait_change, Bool, List
 from traitsui.api import View, Item, Handler, HGroup, Group, spring
 from pyface.timer.do_later import do_later, do_after
 import apptools.sweet_pickle as pickle
@@ -41,13 +41,12 @@ class ImageHandler(Handler):
 
 
 class MachineVisionManager(Manager):
-
     video = Any
     stage_controller = Any
     laser_manager = Any
     autofocus_manager = Any
-    image = Instance(Image, ())
-    working_image = Instance(Image, ())
+#    image = Instance(Image, ())
+#    working_image = Instance(Image, ())
     pxpermm = 23
 
     croppixels = None
@@ -59,8 +58,8 @@ class MachineVisionManager(Manager):
     _threshold = Int
     test = Button
 
-    image_width = Int(int(640))
-    image_height = Int(480)
+#    image_width = Int(int(640))
+#    image_height = Int(480)
 
     title = Property
     current_hole = None
@@ -94,6 +93,7 @@ class MachineVisionManager(Manager):
 
     testing = False
     _debug = Bool(False)
+#    _debug = Bool(True)
 
 #    def _zoom_calibration(self):
 #        d = ZoomCalibrationDetector(parent=self,
@@ -110,8 +110,8 @@ class MachineVisionManager(Manager):
     def _test_fired(self):
         if not self.testing:
             self.hole_detector._debug = self._debug
+#            self.show_image()
             self.testing = True
-            self.show_image()
             self.hole_detector.collect_baseline_intensity()
             self.get_intensity()
 #            self._spawn_thread(self.map_holes)
@@ -125,7 +125,9 @@ class MachineVisionManager(Manager):
 
     def search(self, *args, **kw):
         if self.hole_detector is not None:
-            return self.hole_detector.locate_sample_well(*args, **kw)
+            r = self.hole_detector.locate_sample_well(*args, **kw)
+            self.parent._stage_map.dump_correction_file()
+            return r
 
     def dump_hole_detector(self):
 
@@ -145,10 +147,6 @@ class MachineVisionManager(Manager):
                     print e
 
         hd.parent = self
-        hd.image = self.image
-        hd.working_image = self.working_image
-#        hd.pxpermm = self.pxpermm
-#        hd.pxpermm_coeffs = self.parent.camera_xcofficients
         if self.laser_manager is not None:
             z = self.laser_manager.zoom
             hd.pxpermm = self._set_pxpermm_by_zoom(z)
@@ -205,7 +203,6 @@ class MachineVisionManager(Manager):
         rx = None
         ry = None
         sm = self.parent._stage_map
-#        for ch in ['3', '119', '219', '103', '111']:
         #move to a set of calibration holes
         #n,e,s,w,c
         if sm.calibration_holes is None:
@@ -261,19 +258,6 @@ class MachineVisionManager(Manager):
                 ry = cy + L * math.sin(rot)
 
         return cx, cy, rx, ry
-
-#        #use map holes to move to multiple regions and 
-#        #determine corrected position
-#        self.map_holes()
-#
-#        sm = self.parent._stage_map
-#        #now stage map has corrected positions
-#
-#        #use stage map to get corrected center and corrected right
-#        cx, cy = sm.get_corrected_center()
-#        rx, ry = sm.get_corrected_right()
-
-#        return cx, cy, rx, ry
 
     def map_holes(self):
         self.load_source()
@@ -338,24 +322,8 @@ class MachineVisionManager(Manager):
 #        center_my = -13.321
 #        cpos = -2.066, -0.695
 #        rot = 358.099
-    def close_image(self):
-        if self.ui is not None:
-            do_later(self.ui.dispose)
-        self.ui = None
-
-    def show_image(self, reopen_image=False):
-        self.info('show image')
-        if reopen_image:
-            if self.ui is not None:
-                self.close_image()
-            do_after(50, self.edit_traits, view='image_view')
-        elif self.ui is None:
-            do_after(50, self.edit_traits, view='image_view')
-#        else:
-#            self.ui.control.Raise()
-        if self._debug:
-            do_after(50, self.edit_traits, view='working_image_view')
-
+    def close_images(self):
+        self.hole_detector.close_images()
 
     def traits_view(self):
         v = View('test')
@@ -391,82 +359,18 @@ class MachineVisionManager(Manager):
 
         return v
 
-    def working_image_view(self):
-        imgrp = Item('working_image', show_label=False, editor=ImageEditor(),
-                      width=self.image_width,
-                      height=self.image_height
-                      )
-        v = View(imgrp,
-                 handler=ImageHandler,
-                 x=0.6,
-                 y=35,
-                 width=680,
-                 height=self.image_height + 100,)
-        return v
-
-    def image_view(self):
-        v = View(
-                 HGroup(
-                        Item('segmentation_style', show_label=False),
-#                        Item('threshold', format_str='%03i',
-                             #style='readonly'
-#                             ),
-                        #spring,
-                        Item('nominal_position', label='Nom. Pos.',
-                             style='readonly'),
-
-                        Item('corrected_position', label='Cor. Pos.',
-                             style='readonly')
-                        ),
-                 Item('image', show_label=False, editor=ImageEditor(),
-                      width=self.image_width,
-                      height=self.image_height
-                      ),
-                 title=self.title,
-                 handler=ImageHandler,
-                 x=35,
-                 y=35,
-                 width=680,
-                 height=self.image_height + 100,
-                 resizable=True,
-                 id='pychron.machine_vision.image_view'
-                 )
-        return v
-
-    def load_source(self, path=None):
+    def get_new_frame(self, path=None):
         if self._debug:
             if path is None:
                 src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
                 src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
                 src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
-#                src = '/Users/ross/Sandbox/snapshot001.jpg'
-#                src = '/Users/ross/Desktop/watershed_test.tif'
-#                src = '/Users/ross/Desktop/snapshot006.jpg'
-#                src = '/Users/ross/Desktop/snapshot007-10mm.jpg'
-    #            src = '/Users/ross/Desktop/snapshot007--4.jpg'
-#                src = '/Users/ross/Desktop/snapshot008-14.jpg'
-#                src = '/Users/ross/Desktop/testimage.png'
-    #            src = '/Users/ross/Documents/testimage1.tiff'
-    #            src = '/Users/ross/Desktop/foo1 copy.tiff'
-#                src = '/Users/ross/Pychrondata_beta1.2/data/snapshots/snapshot010.jpg'
-
             else:
                 src = path
 
         else:
             src = self.video.get_frame()
-
-        self.image.load(src)
-
-        return self.image.source_frame
-
-    def _image_default(self):
-        return Image(width=self.image_width,
-                     height=self.image_height)
-
-    def _working_image_default(self):
-        return Image(width=self.image_width,
-                     height=self.image_height)
+        return src
 
     def _hole_detector_default(self):
         return self.load_hole_detector()
@@ -507,3 +411,89 @@ if __name__ == '__main__':
 
 #    time_comp()
 #============= EOF =====================================
+#    def close_image(self):
+#        if self.ui is not None:
+#            do_later(self.ui.dispose)
+#        self.ui = None
+#
+#    def show_image(self, reopen_image=False):
+#        self.info('show image')
+#        if reopen_image:
+#            if self.ui is not None:
+#                self.close_image()
+#            do_after(50, self.edit_traits, view='image_view')
+#        elif self.ui is None:
+#            do_after(50, self.edit_traits, view='image_view')
+##        else:
+##            self.ui.control.Raise()
+#        if self._debug:
+#            do_after(50, self.edit_traits, view='working_image_view')
+
+
+#    def working_image_view(self):
+#
+#        imgrp = Item('working_image', show_label=False, editor=ImageEditor(),
+#                      width=self.image_width,
+#                      height=self.image_height
+#                      )
+#        v = View(imgrp,
+#                 handler=ImageHandler,
+#                 x=0.6,
+#                 y=35,
+#                 width=680,
+#                 height=self.image_height + 100,)
+#        return v
+#
+#    def image_view(self):
+#        v = View(
+#                 HGroup(
+#                        Item('segmentation_style', show_label=False),
+##                        Item('threshold', format_str='%03i',
+#                             #style='readonly'
+##                             ),
+#                        #spring,
+#                        Item('nominal_position', label='Nom. Pos.',
+#                             style='readonly'),
+#
+#                        Item('corrected_position', label='Cor. Pos.',
+#                             style='readonly')
+#                        ),
+#                 Item('image', show_label=False, editor=ImageEditor(),
+#                      width=self.image_width,
+#                      height=self.image_height
+#                      ),
+#                 title=self.title,
+#                 handler=ImageHandler,
+#                 x=35,
+#                 y=35,
+#                 width=680,
+#                 height=self.image_height + 100,
+#                 resizable=True,
+#                 id='pychron.machine_vision.image_view'
+#                 )
+#        return v
+
+#    def load_source(self, path=None):
+#        im = self.image
+#        src = self.get_new_frame(path=path)
+#        im.load(src)
+#        return im.source_frame
+#    def _image_default(self):
+#        return Image(width=self.image_width,
+#                     height=self.image_height)
+#
+#    def _working_image_default(self):
+#        return Image(width=self.image_width,
+#                     height=self.image_height)
+#        #use map holes to move to multiple regions and 
+#        #determine corrected position
+#        self.map_holes()
+#
+#        sm = self.parent._stage_map
+#        #now stage map has corrected positions
+#
+#        #use stage map to get corrected center and corrected right
+#        cx, cy = sm.get_corrected_center()
+#        rx, ry = sm.get_corrected_right()
+
+#        return cx, cy, rx, ry

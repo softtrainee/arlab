@@ -49,6 +49,15 @@ class SampleHoleAdapter(TabularAdapter):
                ('XCor', 'x_cor'), ('YCor', 'y_cor'),
                 ('Render', 'render')]
 
+    def set_text(self, obj, trait, row, column, txt):
+        if column in [3, 4]:
+            try:
+                txt = float(txt)
+            except:
+                txt = '0'
+
+        setattr(getattr(obj, trait)[row], self.columns[column][1], txt)
+
 
 class StageMap(Loggable):
     file_path = Str
@@ -277,7 +286,7 @@ class StageMap(Loggable):
             if cors:
                 self.info('loaded correction file {}'.format(p))
                 for i, x, y in cors:
-                
+
                     h = self._get_hole(i)
                     if h is not None:
                         if x is not None and y is not None:
