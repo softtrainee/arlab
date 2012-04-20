@@ -156,14 +156,14 @@ class MachineVisionManager(Manager):
 
         return hd
 
-    def get_intensity(self):
+    def get_intensity(self, **kw):
         det = self.hole_detector
-        return det.get_intensity()
+        return det.get_intensity(**kw)
 
-    def collect_baseline_intensity(self):
+    def collect_baseline_intensity(self, **kw):
         self.video.open()
         det = self.hole_detector
-        return det.collect_baseline_intensity()
+        return det.collect_baseline_intensity(**kw)
 
     @on_trait_change('laser_manager:zoom')
     def update_zoom(self, new):

@@ -99,9 +99,7 @@ class VideoStageManager(StageManager, Videoable):
 
     video_directory = Directory
 
-    recording_zoom = Float
 
-    _previous_zoom = 0
     video_identifier = Enum(1, 2)
 
     def bind_preferences(self, pref_id):
@@ -119,9 +117,7 @@ class VideoStageManager(StageManager, Videoable):
         bind_preference(self, 'video_directory',
                         '{}.video_directory'.format(pref_id)
                         )
-        bind_preference(self, 'recording_zoom',
-                        '{}.recording_zoom'.format(pref_id)
-                        )
+
         bind_preference(self, 'video_identifier',
                         '{}.video_identifier'.format(pref_id)
                         )
@@ -145,11 +141,6 @@ class VideoStageManager(StageManager, Videoable):
             path, _ = unique_path(video_dir, basename, filetype='avi')
 
         self.info('saving recording to path {}'.format(path))
-
-        #zoom in for recording
-        self._previous_zoom = self.parent.zoom
-        self.parent.set_zoom(self.recording_zoom, block=True)
-
         self.video.start_recording(path, user=user)
 
     def stop_recording(self, user='remote', delay=0.1):
@@ -159,7 +150,6 @@ class VideoStageManager(StageManager, Videoable):
             self.info('stop video recording')
     #        self.stop()
             self.video.stop_recording()
-            self.parent.set_zoom(self._previous_zoom)
             time.sleep(4)
             self.video.close(user=user)
             #delay briefly before deleting the capture object
