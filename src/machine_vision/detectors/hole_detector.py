@@ -116,7 +116,9 @@ class HoleDetector(Detector):
 
         p = asMat(asarray(ndsrc, 'uint8') * 255)
 #        self.working_image.frames[0] = colorspace(p)
-        return self._locate_targets(p, hole=False)
+        if not 'hole' in kw:
+            kw['hole'] = False
+        return self._locate_targets(p, **kw)
 
     def _region_segmentation(self, src, tlow=100, thigh=150, **kw):
         from skimage.filter import sobel
@@ -163,7 +165,9 @@ class HoleDetector(Detector):
         src = asMat(asarray(src, 'uint8'))
 
 #        self.working_image.frames[0] = colorspace(src)
-        targets = self._locate_targets(src, hole=False, **kw)
+        if not 'hole' in kw:
+            kw['hole'] = False
+        targets = self._locate_targets(src, **kw)
         return targets
 
     def _threshold_segmentation(self, src, **kw):

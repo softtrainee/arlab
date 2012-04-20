@@ -139,12 +139,16 @@ class GraphManager(Manager):
 
             grp = dm.get_group('Power')
             itable = grp.internal
-            btable = grp.brightness
+            try:
+                btable = grp.brightness
+                bxs = [x['time'] for x in btable]
+                bys = [x['value'] for x in btable]
+            except:
+                bxs = []
+                bys = []
 
             ixs = [x['time'] for x in itable]
             iys = [x['value'] for x in itable]
-            bxs = [x['time'] for x in btable]
-            bys = [x['value'] for x in btable]
 
             return ixs, iys, bxs, bys, path
 

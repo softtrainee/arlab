@@ -16,11 +16,12 @@ limitations under the License.
 from src.graph.stream_graph import StreamGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.data_warehouse import DataWarehouse
+from apptools.preferences.preference_binding import bind_preference
 '''
 '''
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
-    on_trait_change, Event, Bool
+    on_trait_change, Event, Bool, Float
 from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor
 from pyface.timer.do_later import do_later
 #=============standard library imports ========================
@@ -29,7 +30,7 @@ import time
 #=============local library imports  ==========================
 
 from src.helpers.timer import Timer
-from src.managers.data_managers.csv_data_manager import CSVDataManager
+#from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
 from src.led.led_editor import LEDEditor
@@ -72,8 +73,22 @@ class FusionsLaserManager(LaserManager):
     lens_configuration_names = List
 
     power_timer = None
+    cpower_timer = None
+
     power_graph = None
     _prev_power = 0
+    record_brightness = Bool
+    recording_zoom = Float
+
+    def bind_preferences(self, pref_id):
+        super(FusionsLaserManager, self).bind_preferences(pref_id)
+        bind_preference(self, 'recording_zoom',
+                        '{}.recording_zoom'.format(pref_id)
+                        )
+        bind_preference(self, 'record_brightness',
+                        '{}.record_brightness'.format(pref_id)
+                        )
+
     def _write_h5(self, table, v, x):
         dm = self.data_manager
         table = dm.get_table(table, 'Power')
@@ -85,7 +100,7 @@ class FusionsLaserManager(LaserManager):
             table.flush()
 
     def _record_cpower(self):
-        cp = self.get_laser_intensity()
+        cp = self.get_laser_intensity(verbose=False)
         if cp is None:
             cp = 0
 
@@ -100,8 +115,6 @@ class FusionsLaserManager(LaserManager):
         else:
             p = self._prev_power
 
-        import random
-        p = random.randint(0, 5)
         if p is not None:
 #            self.data_manager.add_time_stamped_value(p, rawtime=True)
 #            self.
@@ -128,7 +141,10 @@ class FusionsLaserManager(LaserManager):
 
                    )
         g.new_series()
-        g.new_series()
+
+        if self.record_brightness:
+            g.new_series()
+
         self.power_graph = g
 
         do_later(self.power_graph.edit_traits)
@@ -138,6 +154,11 @@ class FusionsLaserManager(LaserManager):
             self.power_graph.close()
 
     def start_power_recording(self, rid):
+        self.info('start power recording')
+        #zoom in for recording
+        self._previous_zoom = self.zoom
+        self.set_zoom(self.recording_zoom, block=True)
+
         if self.power_graph is not None:
             self.power_graph.close()
 
@@ -161,27 +182,37 @@ class FusionsLaserManager(LaserManager):
                                     base_frame_name=rid)
         pg = dm.new_group('Power')
         dm.new_table(pg, 'internal')
-        dm.new_table(pg, 'brightness')
+        if self.record_brightness:
+            dm.new_table(pg, 'brightness')
 
         if self.power_timer is not None:
             self.power_timer.Stop()
+
+        if self.cpower_timer is not None:
             self.cpower_timer.Stop()
 
         #before starting the timer collect quick baseline
         #default is 5 counts @ 25 ms per count
-        self.collect_baseline_intensity()
+        if self.record_brightness:
+            self.collect_baseline_intensity()
 
         self.power_timer = Timer(1000, self._record_power)
-        self.cpower_timer = Timer(200, self._record_cpower)
+
+        if self.record_brightness:
+            self.cpower_timer = Timer(175, self._record_cpower)
 
     def stop_power_recording(self):
 
         def _stop():
-            self.power_timer.Stop()
-            self.cpower_timer.Stop()
+            if self.power_timer is not None:
+                self.power_timer.Stop()
+            if self.cpower_timer is not None:
+                self.cpower_timer.Stop()
             self.info('Power recording stopped')
             self.power_timer = None
             self.cpower_timer = None
+
+            self.set_zoom(self._previous_zoom)
             '''
                 analyze the power graph
                 if requested power greater than 1.5 
@@ -275,12 +306,12 @@ class FusionsLaserManager(LaserManager):
             mv = getattr(sm, m)
             mv.collect_baseline_intensity(**kw)
 
-    def get_laser_intensity(self):
+    def get_laser_intensity(self, **kw):
         sm = self.stage_manager
         m = 'machine_vision_manager'
         if hasattr(sm, m):
             mv = getattr(sm, m)
-            return mv.get_intensity()
+            return mv.get_intensity(**kw)
 
     def get_laser_watts(self):
         pass

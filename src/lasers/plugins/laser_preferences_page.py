@@ -49,6 +49,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     show_patterning = Bool(True)
     video_directory = Directory
     recording_zoom = Float(0)
+    record_brightness = Bool(True)
 
     def get_additional_groups(self):
 
@@ -57,12 +58,13 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                      VGroup(
                          Item('video_identifier', label='ID',
                                enabled_when='use_video'),
-                         Item('auto_center', enabled_when='use_video'),
+                         Item('auto_center'),
                          Item('record_lasing', label='Record Lasing',
                                enabled_when='use_video'),
                          Item('video_directory', label='Save to',
                               enabled_when='record_lasing'),
                          Item('recording_zoom', label='Zoom', enabled_when='record_lasing'),
+                         Item('record_brightness', label='Record Brightness Measure'),
                          enabled_when='use_video'
                          ),
                       show_border=True, label='Video'),

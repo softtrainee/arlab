@@ -30,7 +30,8 @@ class CO2HoleDetector(HoleDetector):
     intensity_cropheight = 4
     brightness_image = None
     target_image = None
-
+    target_area = None
+    running_avg = None
     def close_images(self):
         if self.brightness_image is not None:
             self.brightness_image.close()
@@ -44,16 +45,18 @@ class CO2HoleDetector(HoleDetector):
     def _segmentation_style_hook(self):
         self.locate_sample_well(0, 0)
 
-    def smooth(self, src):
+    def smooth(self, src, verbose=True):
         if self.use_smoothing:
-            self.info('smoothing image')
+            if verbose:
+                self.info('smoothing image')
             src = smooth(src)
         return src
 
-    def contrast_equalization(self, src):
+    def contrast_equalization(self, src, verbose=True):
         if self.use_contrast_equalization:
             from skimage.exposure import rescale_intensity
-            self.info('maximizing image contrast')
+            if verbose:
+                self.info('maximizing image contrast')
             src = src.ndarray
             # Contrast stretching
             p2 = percentile(src, 2)
@@ -63,11 +66,11 @@ class CO2HoleDetector(HoleDetector):
             src = asMat(img_rescale)
         return src
 
-    def get_intensity(self):
+    def get_intensity(self, verbose=True):
 #        self.brightness_image.frames = [None]
         p = None
         if self._debug:
-            p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
+            p = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an6.tiff'
 
         s = self.parent.get_new_frame(path=p)
         self.brightness_image.load(s)
@@ -84,31 +87,56 @@ class CO2HoleDetector(HoleDetector):
 
         niar[niar < thres] = 0
         src = asMat(asarray(niar, dtype='uint8'))
-        self.brightness_image.set_frame(0, colorspace(src))
-        tarea = float(iar.shape[0] * iar.shape[1])
-#        targets = self._edge_segmentation(src)
-        targets = self._region_segmentation(src)
+
+#        tarea = self.target_area if self.target_area else float(iar.shape[0] * iar.shape[1])
+
+        src = self.contrast_equalization(src, verbose=verbose)
+        src = self.smooth(src, verbose=verbose)
+
+        targets = self._region_segmentation(src, convextest=False)
+
+        ma = 6000
+        mi = 200
+        tarea = None
         if targets:
+
             targets = [t for t in targets
-                       if self._near_center(*t.centroid_value)]
-    #        print targets
+                       if self._near_center(*t.centroid_value) and ma > t.area > mi]
+
             if targets:
                 tt = targets[0]
-                ta = tt.area
-                tarea = ta if ta > 1000 else tarea
-                if ta>1000:
-                    si = colorspace(src)
-                    self._draw_result(si, tt)
-                    self.brightness_image.set_frame(0, si)
-                    
-        spx = sum(src.ndarray)
+                src = colorspace(src)
+                self._draw_result(src, tt)
+#                self.brightness_image.set_frame(0, src)
+                tarea = tt.area
+                if self.running_avg is None:
+                    self.running_avg = [tarea]
+                else:
+                    self.running_avg.append(tarea)
 
+                n = len(self.running_avg)
+                if n > 5:
+                    tarea = sum(self.running_avg) / float(n)
+                    self.running_avg.pop(0)
+
+        self.brightness_image.set_frame(0, colorspace(src))
+        spx = sum(grayspace(src).ndarray)
+
+        if tarea is None:
+            tarea = self.target_area
+        if tarea is None:
+            if self.running_avg:
+                tarea = sum(self.running_avg) / float(len(self.running_avg))
+        if tarea is None:
+            tarea = float(iar.shape[0] * iar.shape[1])
+
+        bm = spx / tarea
+        if verbose:
+            self.info('bm params bm={} spx={} tarea={}'.format(bm, spx, tarea))
         #normalize to area
-        spx /= tarea
-        return spx
+        return bm
 
     def collect_baseline_intensity(self, ncounts=5, period=25):
-
         if self.brightness_image is not None:
             self.brightness_image.close()
 
@@ -122,6 +150,7 @@ class CO2HoleDetector(HoleDetector):
 
         import time
         ss = None
+        pas = []
         for i in range(ncounts):
             self.info('collecting baseline image {} of {}'.format(i + 1, ncounts))
             p = None
@@ -138,6 +167,15 @@ class CO2HoleDetector(HoleDetector):
                                   self.intensity_cropheight,
                                   image=im
                                   )
+
+            mi = 1500
+            targets = self._region_segmentation(cs)
+            if targets:
+                targets = [t for t in targets
+                       if self._near_center(*t.centroid_value) and t.area > mi]
+                if targets:
+                    pas.append(targets[0].area)
+
             if ss is None:
                 #convert to array to we can sum >255
                 ss = asarray(cs.ndarray, dtype='uint32')
@@ -146,28 +184,26 @@ class CO2HoleDetector(HoleDetector):
 
             time.sleep(period / 1000.0)
 
+        self.target_area = None
+        if len(pas):
+            self.target_area = sum(pas) / len(pas)
+
         self.baseline = ss / float(ncounts)
 
     def locate_sample_well(self, cx, cy, holenum=None, **kw):
         if self.target_image is not None:
             self.target_image.close()
 
-#        self._reset_image()
         im = StandAloneImage(title='Positioning Error',
                              view_identifier='pychron.fusions.co2.target')
         self.target_image = im
         im.show()
 
-#        self.cropwidth = 4
-#        self.cropheight = 4
         self._nominal_position = (cx, cy)
         self.current_hole = holenum
         self.info('locating CO2 sample hole {}'.format(holenum if holenum else ''))
 
-#        for ci in range(self.crop_tries):
-#        self.parent.close_image()
 
-#        src = self.parent.load_source().clone()
         src = self.parent.get_new_frame()
         im.load(src)
 

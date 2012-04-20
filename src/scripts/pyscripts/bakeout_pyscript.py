@@ -86,16 +86,22 @@ class BakeoutPyScript(PyScript):
         if c is not None:
             c.duration = dur
 
-        steps = linspace(start, setpoint, dur * 3600 / float(period))
+        #convert period to hours
+#        hperiod = period / 3600.
+#        steps = linspace(start, setpoint, dur * 3600 / float(period))
+
+        check_period = 0.5
+        samples_per_hr = 3600 / float(period)
+        steps = linspace(start, setpoint, dur * samples_per_hr)
         for si in steps:
             if self._cancel:
                 break
             self._set_setpoint(si)
             if period > 5:
-                for _ in xrange(int(period)):
+                for _ in xrange(int(period / check_period)):
                     if self._cancel:
                         break
-                    time.sleep(0.5)
+                    time.sleep(check_period)
                 else:
                     continue
                 break
