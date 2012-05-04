@@ -419,21 +419,21 @@ class BakeoutManager(Manager):
                                     self.data_manager.get_current_path())
 
             self._nactivated_controllers = len(controllers)
-            try:
-                pv = ProcessView()
-                for c in controllers:
-                    c.run()
+            pv = ProcessView()
+            for c in controllers:
+                c.run()
+                try:
                     a = c._active_script
                     if a is not None:
                         pv.add_script(c.name, a)
+                except Exception, _e:
+                    #this isnt a .bo script not currently conducive to process view
+                    pass
 
-                if pv.scripts:
-                    do_later(pv.edit_traits)
-            except Exception, _e:
-                #this isnt a .bo script not currently conducive to process view
-                pass
+            if pv.scripts:
+                do_later(pv.edit_traits)
 
-            time.sleep(0.5)
+#            time.sleep(0.5)
             for c in controllers:
                 c.start_timer()
 
