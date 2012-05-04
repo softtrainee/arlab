@@ -256,7 +256,7 @@ class BakeoutController(WatlowEZZone):
 #        self.led.state='green'
         if self._timer is not None:
             self._timer.Stop()
-
+        self.info('starting update timer')
         self._timer = Timer(self.update_interval * 1000., self._update_)
 
     def ramp_to_setpoint(self, ramp, setpoint, scale):
