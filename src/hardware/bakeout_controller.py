@@ -415,7 +415,7 @@ class BakeoutController(WatlowEZZone):
                                   style='readonly', format_str='%0.1f'),
                                    spring,
                                    Item('record_process', show_label=False),
-                                   springy=False
+#                                   springy=False
                                    )
         else:
             header_grp = HGroup(
@@ -432,14 +432,17 @@ class BakeoutController(WatlowEZZone):
                                   style='readonly', format_str='%0.1f'),
                                    spring,
                                    Item('record_process', show_label=False),
-                                   springy=False
+                                   #springy=False
                                    )
         v = View(
                  VGroup(
                     header_grp,
                     VGroup(
                             Item('script', show_label=False,
-                                 editor=EnumEditor(name='scripts')),
+                                 editor=EnumEditor(name='scripts'),
+                                                         width=-100
+
+                                 ),
                             Item('duration', label='Duration (hrs)',
                                  show_label=show_label,
                                  enabled_when='script=="---"',
@@ -453,7 +456,7 @@ class BakeoutController(WatlowEZZone):
                                  show_label=show_label,
                                  enabled_when='not object.alive'),
                             process_grp
-                            )
+                            ),
                         )
                )
         return v
