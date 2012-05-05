@@ -10,12 +10,13 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-   	
+   
+   mdd
    scripting
    procedures
    remote_hardware
    meta_documentation
-
+   computer_names
 
 Indices and tables
 ==================
