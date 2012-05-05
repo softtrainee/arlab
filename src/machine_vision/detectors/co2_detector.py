@@ -13,16 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from traits.api import Instance
-from traitsui.api import View, Item
+#from traits.api import Instance
+#from traitsui.api import View, Item
 from numpy import percentile, sum, asarray
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, grayspace, colorspace, smooth, \
     dilate
 from hole_detector import HoleDetector
-from pyface.timer.do_later import do_after, do_later
-from src.image.image import Image, StandAloneImage
-from src.image.image_editor import ImageEditor
+#from pyface.timer.do_later import do_after, do_later
+from src.image.image import StandAloneImage
+#from src.image.image_editor import ImageEditor
 
 
 class CO2HoleDetector(HoleDetector):
@@ -74,6 +74,7 @@ class CO2HoleDetector(HoleDetector):
 
         s = self.parent.get_new_frame(path=p)
         self.brightness_image.load(s)
+
         self.brightness_image.set_frames([None])
         s = self.brightness_image.source_frame.clone()
 
@@ -130,10 +131,10 @@ class CO2HoleDetector(HoleDetector):
         if tarea is None:
             tarea = float(iar.shape[0] * iar.shape[1])
 
+        #normalize to area
         bm = spx / tarea
         if verbose:
             self.info('bm params bm={} spx={} tarea={}'.format(bm, spx, tarea))
-        #normalize to area
         return bm
 
     def collect_baseline_intensity(self, ncounts=5, period=25):

@@ -25,7 +25,8 @@ from traitsui.api import Item, VGroup, RangeEditor
 #=============standard library imports ========================
 import os
 #=============local library imports  ==========================
-from globals import initialize_zoom, initialize_beam
+from globals import initialize_zoom, initialize_beam, \
+    ignore_initialization_warnings
 from fusions_motor_configurer import FusionsMotorConfigurer
 from src.hardware.core.core_device import CoreDevice
 
@@ -71,9 +72,9 @@ class FusionsLogicBoard(CoreDevice):
         #test communciations with board issue warning if 
         #no handle or response is none
         resp = self._disable_laser_()
-        print resp
         if self._communicator.handle is None or resp is not True:
-            warning(None, 'Laser not connected. Power cycle USB hub.')
+            if not ignore_initialization_warnings:
+                warning(None, 'Laser not connected. Power cycle USB hub.')
             return True
 
         #turn off pointer

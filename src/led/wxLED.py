@@ -32,30 +32,44 @@ def change_intensity(color, fac):
     return wx.Color(*rgb)
 
 class wxLED(wx.Control):
-    def __init__(self, parent, state):
+    _state = False
+    def __init__(self, parent, obj, state):
         '''
 
         '''
 
         wx.Control.__init__(self, parent, -1, (0, 0), (20, 20), style=wx.NO_BORDER)
 
-        self.set_state(state)
         self._blink = 0
         self.blink = False
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.OnTimer, self.timer)
-        self.timer.Start(200)
 
         self.Bind(wx.EVT_PAINT, self.OnPaint, self)
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnLeft, self)
 
-#    def set_blinking(self, blink):
-#        self.blink = blink
-#        self._blink = 0
+        self._obj = obj
+        self.set_state(state)
+
+    def OnMotion(self, event):
+        print event
+
+    def OnLeft(self, event):
+        if self._state:
+            self.set_state(0)
+        else:
+            self.set_state(2)
+
+        if self._obj is not None:
+            self._obj.on_action()
+
     def GetValue(self):
         return self._state
+
     def SetValue(self, v):
-        self._state = v
+        if isinstance(v, int):
+            self._state = v
 
     def OnTimer(self, event):
         '''
@@ -79,8 +93,12 @@ class wxLED(wx.Control):
         #use negative values for blinking
         if s < 0:
             self.blink = True
+            self.timer.Start(200)
+        else:
+            self.timer.Stop()
 
         s = abs(s)
+
         self._state = s
         self._set_led_color(s)
 

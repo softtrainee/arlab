@@ -157,33 +157,35 @@ class BakeoutDBSelector(DBSelector):
         s = self.selected
 
         if s is not None:
-            if s._id in self.opened_windows:
-                c = self.opened_windows[s._id].control
-                if c is None:
-                    self.opened_windows.pop(s._id)
+            for si in s:
+                sid = si._id
+                if sid in self.opened_windows:
+                    c = self.opened_windows[sid].control
+                    if c is None:
+                        self.opened_windows.pop(sid)
+                    else:
+                        try:
+                            c.Raise()
+                        except:
+                            self.opened_windows.pop(sid)
+
                 else:
                     try:
-                        c.Raise()
-                    except:
-                        self.opened_windows.pop(s._id)
+                        si.load_graph()
+                        si.window_x = self.wx
+                        si.window_y = self.wy
 
-            else:
-                try:
-                    s.load_graph()
-                    s.window_x = self.wx
-                    s.window_y = self.wy
+                        info = si.edit_traits()
+                        self.opened_windows[sid] = info
 
-                    info = s.edit_traits()
-                    self.opened_windows[s._id] = info
+                        self.wx += 0.005
+                        self.wy += 0.03
 
-                    self.wx += 0.005
-                    self.wy += 0.03
-
-                    if self.wy > 0.65:
-                        self.wx = 0.4
-                        self.wy = 0.1
-                except Exception, e:
-                    self.warning(e)
+                        if self.wy > 0.65:
+                            self.wx = 0.4
+                            self.wy = 0.1
+                    except Exception, e:
+                        self.warning(e)
 
 #    def _parameter_changed(self):
 #

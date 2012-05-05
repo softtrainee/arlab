@@ -267,38 +267,38 @@ if __name__ == '__main__':
     c = Client()
 
 #    c.host = 'localhost'
-    c.port = 1061
-    c.ask('StartMultRuns A')
-    c.ask('StartRun Aa')
-
+#    c.port = 1061
+#    c.ask('StartMultRuns A')
+#    c.ask('StartRun Aa')
+#
     c.port = 1067
-    c.ask('SetXY 14.774,0.839')
-    time.sleep(5)
-    c.ask('Enable')
-    time.sleep(10)
-    c.ask('Disable')
+#    c.ask('SetXY 14.774,0.839')
+#    time.sleep(5)
+#    c.ask('Enable')
+#    time.sleep(10)
+#    c.ask('Disable')
+#
+#    c.port = 1061
+#    time.sleep(10)
+#    c.ask('CompleteRun')
+#    time.sleep(5)
+#    c.ask('StartRun Aa')
+#
+#    c.port = 1067
+#    c.ask('SetXY 14.874,0.839')
+#    c.ask('Enable')
+#    time.sleep(5)
+#    c.ask('Disable')
+#
+#    c.port = 1061
+#
+#
+#
+#    time.sleep(10)
+#
+#    c.ask('CompleteRun')
 
-    c.port = 1061
-    time.sleep(10)
-    c.ask('CompleteRun')
-    time.sleep(5)
-    c.ask('StartRun Aa')
-
-    c.port = 1067
-    c.ask('SetXY 14.874,0.839')
-    c.ask('Enable')
-    time.sleep(5)
-    c.ask('Disable')
-
-    c.port = 1061
-
-
-
-    time.sleep(10)
-
-    c.ask('CompleteRun')
-
-#    c.configure_traits()
+    c.configure_traits()
 
     #===========================================================================
     #Check Remote launch snippet 

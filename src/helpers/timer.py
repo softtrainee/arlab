@@ -30,13 +30,13 @@ class Timer(Thread):
         self.start()
 
     def run(self):
-        t = time.time()
+        t = None
+        ww = self._period
         while not self._flag.isSet():
-            self._func(*self._args, **self._kwargs)
-
-            ww = self._period - (time.time() - t) - 0.0125
+            if t is not None:
+                ww = self._period - (time.time() - t) - 0.005
             w = max(0, ww)
-
+            self._func(*self._args, **self._kwargs)
             self._flag.wait(w)
             t = time.time()
 

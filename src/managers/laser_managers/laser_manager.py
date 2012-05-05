@@ -16,9 +16,9 @@ limitations under the License.
 #============= enthought library imports =======================
 from traits.api import Event, Property, Instance, Bool, Str, on_trait_change, Enum
 from traitsui.api import View, Item, VGroup
-
+import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-
+import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.led.led import LED
@@ -28,8 +28,7 @@ from src.monitors.laser_monitor import LaserMonitor
 from src.helpers import paths
 from src.managers.step_heat_manager import StepHeatManager
 from src.managers.graph_manager import GraphManager
-from src.managers.laser_managers.laser_pulse_manager import Pulse
-
+from src.managers.laser_managers.pulse import Pulse
 
 class LaserManager(Manager):
     '''
@@ -106,7 +105,18 @@ class LaserManager(Manager):
         return self.pulse
 
     def _pulse_default(self):
-        return Pulse(manager=self)
+        p = os.path.join(paths.hidden_dir, 'pulse')
+        if os.path.isfile(p):
+            with open(p, 'rb') as f:
+                try:
+                    pul = pickle.load(f)
+                    pul.manager = self
+                except pickle.PickleError:
+                    pul = Pulse(manager=self)
+        else:
+            pul = Pulse(manager=self)
+
+        return pul
 
     def get_power_map_manager(self):
         from power_map_manager import PowerMapManager
@@ -116,7 +126,6 @@ class LaserManager(Manager):
 #                                                                      'power_maps'
 #                                                                      )
 #                                     )
-
         path = '/Users/Ross/Pychrondata_beta/scripts/laserscripts/power_maps/s.rs'
         if path:
             pm = PowerMapManager()
@@ -230,6 +239,9 @@ class LaserManager(Manager):
     def _kill_hook(self):
         self.disable_laser()
 
+    def close(self, ok):
+        self.pulse.dump_pulse()
+        return super(LaserManager, self).close(self)
 
     def set_laser_monitor_duration(self, d):
         '''
@@ -275,7 +287,7 @@ class LaserManager(Manager):
     def _get_enable_label(self):
         '''
         '''
-        return 'STOP' if self.enabled else 'ENABLE'
+        return 'DISABLE' if self.enabled else 'ENABLE'
 
     def _use_video_changed(self):
         if not self.use_video:

@@ -31,7 +31,7 @@ class _LEDEditor(Editor):
             self.control = self._create_control(parent)
             self.value.on_trait_change(self.update_object, 'state')
 
-    def update_object(self, object, name, new):
+    def update_object(self, obj, name, new):
         '''
 
         '''
@@ -49,7 +49,7 @@ class _LEDEditor(Editor):
         '''
 
         '''
-        panel = wxLED(parent, self.value.state)
+        panel = wxLED(parent, self.value, self.value.state)
         return panel
 
 class LEDEditor(BasicEditorFactory):

@@ -27,6 +27,7 @@ from pyface.timer.do_later import do_later
 #=============standard library imports ========================
 from threading import Thread, Timer as DoLaterTimer
 import time
+import os
 #=============local library imports  ==========================
 
 from src.helpers.timer import Timer
@@ -34,9 +35,9 @@ from src.helpers.timer import Timer
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
 from src.led.led_editor import LEDEditor
+from src.helpers.paths import data_dir
 
 from laser_manager import LaserManager
-
 
 class FusionsLaserManager(LaserManager):
     '''
@@ -73,12 +74,25 @@ class FusionsLaserManager(LaserManager):
     lens_configuration_names = List
 
     power_timer = None
-    cpower_timer = None
+    brightness_timer = None
 
     power_graph = None
     _prev_power = 0
     record_brightness = Bool
     recording_zoom = Float
+
+    record = Event
+    record_label = Property(depends_on='_recording_power_state')
+    _recording_power_state = Bool(False)
+
+    def _record_fired(self):
+        if self._recording_power_state:
+            self.stop_power_recording(delay=0)
+        else:
+            t = Thread(target=self.start_power_recording, args=('- Manual',))
+            t.start()
+
+        self._recording_power_state = not self._recording_power_state
 
     def bind_preferences(self, pref_id):
         super(FusionsLaserManager, self).bind_preferences(pref_id)
@@ -99,7 +113,7 @@ class FusionsLaserManager(LaserManager):
             row.append()
             table.flush()
 
-    def _record_cpower(self):
+    def _record_brightness(self):
         cp = self.get_laser_intensity(verbose=False)
         if cp is None:
             cp = 0
@@ -127,13 +141,20 @@ class FusionsLaserManager(LaserManager):
                 print 'record power ', e
 
     def open_power_graph(self, rid, path=None):
-        #if self.power_graph is None:
-        g = StreamGraph(window_title='Power Readback - {}'.format(rid),
+        if self.power_graph is None:
+            g = StreamGraph(window_title='Power Readback - {}'.format(rid),
                         window_x=0.01,
                         window_y=0.4,
                         container_dict=dict(padding=5),
                         view_identifier='pychron.fusions.power_graph'
                         )
+            self.power_graph = g
+
+        else:
+            g = self.power_graph
+            g.close()
+            g.clear()
+
         g.new_plot(data_limit=60,
                    scan_delay=1,
                    xtitle='time (s)',
@@ -145,16 +166,19 @@ class FusionsLaserManager(LaserManager):
         if self.record_brightness:
             g.new_series()
 
-        self.power_graph = g
-
-        do_later(self.power_graph.edit_traits)
+        do_later(g.edit_traits)
 
     def _dispose_optional_windows_hook(self):
         if self.power_graph is not None:
             self.power_graph.close()
 
+    def _get_record_brightness(self):
+        return self.record_brightness and self._get_machine_vision() is not None
+
     def start_power_recording(self, rid):
-        self.info('start power recording')
+        m = 'power and brightness' if self.record_brightness else 'power'
+        self.info('start {} recording'.format(m))
+
         #zoom in for recording
         self._previous_zoom = self.zoom
         self.set_zoom(self.recording_zoom, block=True)
@@ -171,8 +195,7 @@ class FusionsLaserManager(LaserManager):
         self.data_manager = dm = H5DataManager()
 #        root = '/usr/local/pychron/co2power'
 
-        from src.helpers.paths import data_dir
-        import os
+
         root = os.path.join(data_dir, 'co2power')
         dw = DataWarehouse(root=root)
 #                           os.path.join(data_dir, base_dir))
@@ -182,35 +205,37 @@ class FusionsLaserManager(LaserManager):
                                     base_frame_name=rid)
         pg = dm.new_group('Power')
         dm.new_table(pg, 'internal')
-        if self.record_brightness:
+
+        if self._get_record_brightness():
             dm.new_table(pg, 'brightness')
 
         if self.power_timer is not None:
             self.power_timer.Stop()
 
-        if self.cpower_timer is not None:
-            self.cpower_timer.Stop()
+        if self.brightness_timer is not None:
+            self.brightness_timer.Stop()
 
         #before starting the timer collect quick baseline
         #default is 5 counts @ 25 ms per count
-        if self.record_brightness:
+        if self._get_record_brightness():
             self.collect_baseline_intensity()
 
         self.power_timer = Timer(1000, self._record_power)
 
-        if self.record_brightness:
-            self.cpower_timer = Timer(175, self._record_cpower)
+        if self._get_record_brightness():
+            self.brightness_timer = Timer(175, self._record_brightness)
 
-    def stop_power_recording(self):
+    def stop_power_recording(self, delay=5):
 
         def _stop():
             if self.power_timer is not None:
                 self.power_timer.Stop()
-            if self.cpower_timer is not None:
-                self.cpower_timer.Stop()
+            if self.brightness_timer is not None:
+                self.brightness_timer.Stop()
+
             self.info('Power recording stopped')
             self.power_timer = None
-            self.cpower_timer = None
+            self.brightness_timer = None
 
             self.set_zoom(self._previous_zoom)
             '''
@@ -225,11 +250,12 @@ class FusionsLaserManager(LaserManager):
                     self.warning('Does not appear laser fired. Average power reading ={}'.format(a))
 
         if self.power_timer is not None:
-            n = 5
-            self.info('Stopping power recording in {} seconds'.format(n))
-            t = DoLaterTimer(n, _stop)
-            t.start()
-#            self.power_timer.Stop()
+            if delay == 0:
+                _stop()
+            else:
+                self.info('Stopping power recording in {} seconds'.format(delay))
+                t = DoLaterTimer(delay, _stop)
+                t.start()
 
     def _lens_configuration_changed(self):
 
@@ -300,11 +326,17 @@ class FusionsLaserManager(LaserManager):
         self.logic_board.set_pointer_onoff(self.pointer_state)
 
     def collect_baseline_intensity(self, **kw):
+        mv = self._get_machine_vision()
+        if mv:
+            mv.collect_baseline_intensity(**kw)
+
+    def _get_machine_vision(self):
         sm = self.stage_manager
         m = 'machine_vision_manager'
+        mv = None
         if hasattr(sm, m):
             mv = getattr(sm, m)
-            mv.collect_baseline_intensity(**kw)
+        return mv
 
     def get_laser_intensity(self, **kw):
         sm = self.stage_manager
@@ -418,6 +450,7 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         return [('enable', 'enable_label', None),
+                ('record', 'record_label', None)
                 #('pointer', 'pointer_label', None),
                 #('light', 'light_label', None)
                 ]
@@ -505,8 +538,9 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         return 'Pointer ON' if not self.pointer_state else 'Pointer OFF'
-    def _get_lock_stage_label(self):
-        return 'Lock' if not self.lock_stage_state else 'Unlock'
+
+    def _get_record_label(self):
+        return 'Record' if not self._recording_power_state else 'Stop'
 #========================= defaults =======================
 #    def _subsystem_default(self):
 #        '''
@@ -520,7 +554,7 @@ class FusionsLaserManager(LaserManager):
 if __name__ == '__main__':
 
     d = FusionsLaserManager()
-    d.open_power_graph('1')
+#    d.open_power_graph('1')
 #    d.configure_traits()
 #========================== EOF ====================================
 #    def show_video_controls(self):
