@@ -94,7 +94,7 @@ class StreamGraph(Graph):
     def update_y_limits(self, plotid=0, **kw):
         ma = -1
         mi = 1e10
-        for k, v in self.plots[plotid].plots.iteritems():
+        for _k, v in self.plots[plotid].plots.iteritems():
             ds = v[0].value.get_data()
             try:
                 ma = max(ma, max(ds))

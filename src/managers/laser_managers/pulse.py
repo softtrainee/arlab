@@ -14,23 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Float, Event, Property, Bool, on_trait_change
+from traits.api import HasTraits, Any, Instance, Float, Event, \
+     Property, Bool, on_trait_change
 from traitsui.api import View, Item, Handler, HGroup, ButtonEditor, spring
-
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
+from threading import Thread, Condition
 #============= local library imports  ==========================
-
 from src.managers.manager import Manager
 from src.helpers.paths import hidden_dir
 from src.scripts.wait_dialog import WaitDialog
-from threading import Thread, Condition
+
+
+class PulseHandler(Handler):
+    def close(self, info, ok):
+        info.object.dump_pulse()
+
+        return ok
+
+
 class Pulse(HasTraits):
-    power = Float(1.1)
     duration = Float(1)
     wait_control = Instance(WaitDialog, transient=True)
     manager = Any(transient=True)
+    power = Float(1.1, auto_set=False, enter_set=True)
 
     pulse_button = Event
     pulse_label = Property(depends_on='pulsing')
@@ -38,10 +46,18 @@ class Pulse(HasTraits):
     enabled = Bool(False)
 
     disable_at_end = Bool(False)
+    def dump_pulse(self):
+        p = os.path.join(hidden_dir, 'pulse')
+        with open(p, 'wb') as f:
+            pickle.dump(self, f)
 
     @on_trait_change('manager:enabled')
     def upad(self, obj, name, old, new):
         self.enabled = new
+
+    def _power_changed(self):
+        if self.pulsing and self.manager:
+            self.manager.set_laser_power(self.power)
 
     def _duration_changed(self):
         self.wait_control.wtime = self.duration
@@ -52,7 +68,6 @@ class Pulse(HasTraits):
                           auto_start=False,
                           wtime=self.duration,
                           title=None
-
                           )
     def start(self):
         self._duration_changed()
@@ -77,8 +92,6 @@ class Pulse(HasTraits):
             else:
                 man.set_laser_power(0)
 
-
-
     def _get_pulse_label(self):
         return 'Fire' if not self.pulsing else 'Stop'
 
@@ -101,58 +114,49 @@ class Pulse(HasTraits):
 
                  Item('duration'),
                Item('wait_control', show_label=False, style='custom'),
-               kind='live'
+               kind='live',
+               handler=PulseHandler()
                )
         return v
 
-class PulseHandler(Handler):
-    def close(self, info, ok):
-        info.object.dump_pulse()
-        return ok
 
-class LaserPulseManager(Manager):
-#    pulse_button = Event
-#    pulse_label = Property
-#    pulsing = Bool(False)
-    pulse = Instance(Pulse)
-
-    def dump_pulse(self):
-        p = os.path.join(hidden_dir, 'pulse')
-        with open(p, 'w') as f:
-            pickle.dump(self.pulse, f)
-
-    def _pulse_default(self):
+#class LaserPulseManager(Manager):
+##    pulse_button = Event
+##    pulse_label = Property
+##    pulsing = Bool(False)
+#    pulse = Instance(Pulse)
+#
+#    def dump_pulse(self):
+#        p = os.path.join(hidden_dir, 'pulse')
+#        with open(p, 'w') as f:
+#            pickle.dump(self.pulse, f)
+#
+#    def _pulse_default(self):
 #        p = os.path.join(hidden_dir, 'pulse')
 #        if os.path.isfile(p):
 #            with open(p, 'r') as f:
-#
-#                pul = pickle.load(f)
-#                pul.manager = self.parent
+#                try:
+#                    pul = pickle.load(f)
+#                    pul.manager = self.parent
+#                except pickle.PickleError:
+#                    pul = Pulse(manager=self.parent)
 #        else:
 #            pul = Pulse(manager=self.parent)
-        pul = Pulse(manager=self.parent)
-
-        return pul
-
-
-
-    def standalone_view(self):
-        v = View(#self._button_factory('pulse_button', 'pulse_label', align='right'),
-                 Item('pulse', show_label=False, style='custom'),
-                 title='Pulse',
-                 resizable=True,
-                 handler=PulseHandler
-                 )
-        return v
-#    def traits_view(self):
-#        v = View(
-#                 #self._button_factory('pulse_button', 'pulse_label', align='right'),
-#                 
+##        pul = Pulse(manager=self.parent)
+#
+#        return pul
+#
+#    def standalone_view(self):
+#        v = View(#self._button_factory('pulse_button', 'pulse_label', align='right'),
 #                 Item('pulse', show_label=False, style='custom'),
+#                 title='Pulse',
+#                 resizable=True,
+#                 handler=PulseHandler
 #                 )
 #        return v
-
-if __name__ == '__main__':
-    lp = LaserPulseManager()
-    lp.configure_traits()
+#
+#
+#if __name__ == '__main__':
+#    lp = LaserPulseManager()
+#    lp.configure_traits()
 #============= EOF ====================================

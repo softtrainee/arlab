@@ -33,6 +33,7 @@ from src.loggable import Loggable
 import random
 from Queue import Queue
 from src.hardware.actuators.argus_gp_actuator import ArgusGPActuator
+from globals import ignore_initialization_warnings
 
 
 class ValveGroup(object):
@@ -540,7 +541,8 @@ class ValveManager(Manager):
         actname = act_elem.text.strip() if act_elem is not None else 'valve_controller'
         actuator = self.get_actuator_by_name(actname)
         if actuator is None:
-            self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.xml'.format(name))
+            if not ignore_initialization_warnings:
+                self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.xml'.format(name))
 
         qs = True
         vqs = v_elem.get('query_state')

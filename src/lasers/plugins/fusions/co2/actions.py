@@ -159,3 +159,10 @@ class OpenPowerRecordGraphAction(Action):
         manager = get_manager(event)
         if manager is not None:
             manager.graph_manager.open_graph('powerrecord')
+
+class ConfigureBrightnessMeterAction(Action):
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            open_manager(manager.brightness_meter)
+

@@ -15,13 +15,14 @@ limitations under the License.
 '''
 
 #=============enthought library imports=======================
-from traits.api import Button, DelegatesTo
+from traits.api import Button, DelegatesTo, Instance
 #=============standard library imports ========================
 #=============local library imports  ==========================
 
 from fusions_laser_manager import FusionsLaserManager
 from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
 from src.monitors.co2_laser_monitor import CO2LaserMonitor
+from src.managers.laser_managers.brightness_pid_manager import BrightnessPIDManager
 #from hardware.analog_digital_converter import AgilentADC
 #from hardware.newport_esp301_motioncontroller import ESPMotionController
 #from src.helpers import paths
@@ -42,6 +43,16 @@ class FusionsCO2Manager(FusionsLaserManager):
 
     monitor_name = 'co2_laser_monitor'
     monitor_klass = CO2LaserMonitor
+
+    brightness_meter = Instance(BrightnessPIDManager, ())
+
+    def _brightness_meter_default(self):
+        mv = None
+        if hasattr(self.stage_manager, 'machine_vision_manager'):
+            mv = self.stage_manager.machine_vision_manager
+
+        return BrightnessPIDManager(parent=self,
+                                    machine_vision=mv)
 
     def set_laser_power(self, rp):
         '''

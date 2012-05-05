@@ -13,15 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+from traits.api import HasTraits, Float
+from traitsui.api import View
 import time
 
-class PIDObject(object):
-    Kp = 0.25
-    Ki = 0
-    Kd = 0
-    _prev_time = 0
-    _integral_err = 0
-    _prev_err = 0
+class PIDObject(HasTraits):
+    Kp = Float(0.25)
+    Ki = Float(0)
+    Kd = Float(0)
+    max_output = Float(100)
+
+    _prev_time = Float(0, transient=True)
+    _integral_err = Float(0, transiet=True)
+    _prev_err = Float(0, transiet=True)
+
+    def traits_view(self):
+        return View('Kp', 'Ki', 'Kd', 'max_output')
 
     def iterate(self, error, dt):
 
@@ -29,7 +36,8 @@ class PIDObject(object):
         derivative = (error - self._prev_err) / dt
         output = (self.Kp * error) + (self.Ki * self._integral_err) + (self.Kd * derivative)
         self._prev_err = error
-
+        #limit the output to 
+        output = max(0, min(self.max_output, output))
         return output
 
     def get_value(self, err):

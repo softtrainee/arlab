@@ -23,7 +23,7 @@ import os
 #============= local library imports  ==========================
 from src.helpers.timer import Timer
 from src.scripts.bakeout_script import BakeoutScript
-from src.led.led import LED
+from src.led.led import LED, ButtonLED
 from src.led.led_editor import LEDEditor
 from src.helpers import paths
 from watlow_ezzone import WatlowEZZone
@@ -32,7 +32,7 @@ from watlow_ezzone import WatlowEZZone
 class BakeoutMonitor():
     pass
 
-
+BLANK_SCRIPT = '---'
 class BakeoutController(WatlowEZZone):
     '''
         
@@ -58,8 +58,10 @@ class BakeoutController(WatlowEZZone):
     setpoint = Float(enter_set=True, auto_set=False)
 
     scripts = List()
-    script = Str('---')
-    led = Instance(LED, ())
+    script = Str(BLANK_SCRIPT)
+#    led = Instance(LED, ())
+    led = Instance(ButtonLED, ())
+
     alive = Bool(False)
     active = Bool(False)
     cnt = 0
@@ -79,6 +81,10 @@ class BakeoutController(WatlowEZZone):
     _duration_timeout = False
 
     _timer = None
+
+    def _script_changed(self):
+        self._duration = 0
+        self.setpoint = 0
 
     def _record_process_changed(self):
         if self.record_process:
@@ -108,43 +114,7 @@ class BakeoutController(WatlowEZZone):
         #read the current max output setting
         self._max_output = self.read_high_power_scale()
 
-#    def _program_memory_block(self):
-#        '''
-#            see watlow ez zone pm communications rev b nov 07
-#            page 5
-#            User programmable memory blocks
-#        ''' 
-#        self.memory_block_len = 4 
-#        self.info('programming memory block. start address:{}, len: {}'.format(self.memory_block_address, self.memory_block_len))
-#
-#        r=self.read(self.memory_block_address-160, nregisters=1, response_type='int')
-#        self.info('{} pointing to {}'.format(self.memory_block_address-160, r))
-#
-#        r=self.read(self.memory_block_address+2-160, nregisters=1, response_type='int')
-#        self.info('{} pointing to {}'.format(self.memory_block_address+2-160, r))
-#
-#        #set address block 200-203 to hold the process value and the heat power
-#        #self.set_assembly_definition_address(self.memory_block_address, 360) #process value
-#        #self.set_assembly_definition_address(self.memory_block_address + 1, 360) #process value
-#        self.set_assembly_definition_address(160 + 40, 360) #process value
-#        #self.set_assembly_definition_address(160 + 61, 361) #process value
-#        
-#        self.info('finish program memory block')
-#        #self.set_assembly_definition_address(self.memory_block_address + 2, 1904) #heat power
-#        #self.set_assembly_definition_address(self.memory_block_address + 3, 1904) #heat power
-# 
-#        #print self.read(82, nregisters=1, response_type='int')
-#        #print self.read(80, nregisters=1, response_type='int')
-#        #
-#        #print self.read(85, nregisters=1, response_type='int')
-#        #print self.read(83, nregisters=1, response_type='int')
-#        #print self.read(81, nregisters=1, response_type='int')
-#        
-#        #now process value and heat power can be read with a single command
-#        #self.read(200, nregisters=4, response_type='float')
-
     def _setpoint_changed(self):
-#        print 'setpoint change', self.isAlive()
         if self.isAlive():
             self.set_closed_loop_setpoint(self.setpoint)
 
@@ -208,6 +178,16 @@ class BakeoutController(WatlowEZZone):
             ok = not self.duration == 0
 
         return ok
+
+    def on_led_action(self):
+#        print self.isAlive(), 'asdfsdf'
+        if self.isAlive():
+            self.end()
+        else:
+            self.led.state = 'red'
+#            if self.ok_to_run():
+#                self.run()
+#            else:
 
     def run(self):
         '''
@@ -389,6 +369,9 @@ class BakeoutController(WatlowEZZone):
             if time.time() - self.start_time > self._oduration * 3600.:
                 self.end()
 
+    def _led_default(self):
+        return ButtonLED(callable=self.on_led_action)
+
 #============= views ===================================
     def traits_view(self):
         '''
@@ -440,8 +423,8 @@ class BakeoutController(WatlowEZZone):
                     VGroup(
                             Item('script', show_label=False,
                                  editor=EnumEditor(name='scripts'),
-                                                         width=-100
-
+                                                         width= -200,
+                                enabled_when='not alive'
                                  ),
                             Item('duration', label='Duration (hrs)',
                                  show_label=show_label,

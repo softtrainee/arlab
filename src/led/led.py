@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Property
+from traits.api import HasTraits, Int, Property, Callable
 
 #============= standard library imports ========================
 
@@ -30,14 +30,19 @@ class LED(HasTraits):
     def _set_state(self, v):
         if isinstance(v, str):
             self._state = COLORS.index(v)
-        else:
+        elif isinstance(v, int):
             self._state = v
-            
+
         self.trait_property_changed('state', 0)
 
     def _get_state(self):
         return self._state
 
+class ButtonLED(LED):
+
+    callable = Callable
+    def on_action(self):
+        self.callable()
 
 
 #============= EOF ====================================
