@@ -44,13 +44,13 @@ from src.hardware.gauges.granville_phillips.micro_ion_controller import MicroIon
 from src.managers.script_manager import ScriptManager
 from src.managers.data_managers.data_manager import DataManager
 from src.helpers.archiver import Archiver
-from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
-from src.database.bakeout_adapter import BakeoutAdapter
+#from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
+from src.database.adapters.bakeout_adapter import BakeoutAdapter
 from src.database.data_warehouse import DataWarehouse
 from src.scripts.core.process_view import ProcessView
 from pyface.timer.do_later import do_later
 from pyface.wx.dialog import confirmation
-from pyface.constant import NO, YES
+#from pyface.constant import NO, YES
 from src.scripts.pyscripts.pyscript_editor import PyScriptManager
 
 BATCH_SET_BAUDRATE = False

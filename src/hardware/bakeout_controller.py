@@ -180,14 +180,10 @@ class BakeoutController(WatlowEZZone):
         return ok
 
     def on_led_action(self):
-#        print self.isAlive(), 'asdfsdf'
         if self.isAlive():
             self.end()
         else:
             self.led.state = 'red'
-#            if self.ok_to_run():
-#                self.run()
-#            else:
 
     def run(self):
         '''
@@ -233,7 +229,6 @@ class BakeoutController(WatlowEZZone):
             self._timer.Stop()
 
     def start_timer(self):
-#        self.led.state='green'
         if self._timer is not None:
             self._timer.Stop()
         self.info('starting update timer')

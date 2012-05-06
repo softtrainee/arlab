@@ -47,6 +47,8 @@ class DatabaseAdapter(Loggable):
     password = Password('Argon')
     use_db = Bool
 
+    selector_klass = Any
+
 #    window = Any
 
 #    @on_trait_change('[user,host,password,dbname, use_db]')
@@ -186,4 +188,28 @@ class DatabaseAdapter(Loggable):
 
         return q.all()
 
+    def _get_query(self, klass, join_table=None, filter_str=None, **clause):
+        sess = self.get_session()
+        q = sess.query(klass)
+
+        if join_table is not None:
+            q = q.join(join_table)
+
+        if filter_str:
+            q = q.filter(filter_str)
+        else:
+            q = q.filter_by(**clause)
+        return q
+
+    def _add_item(self, obj, commit):
+        sess = self.get_session()
+        sess.add(obj)
+        if commit:
+            sess.commit()
+
+    def open_selector(self):
+        if self.selector_klass:
+            s = self.selector_klass(_db=self)
+            s._execute_()
+            s.edit_traits()
 

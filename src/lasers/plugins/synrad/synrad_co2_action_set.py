@@ -16,14 +16,15 @@ limitations under the License.
 #============= enthought library imports =======================
 #from envisage.ui.action.api import Action#, Group, Menu, ToolBar
 #from envisage.ui.workbench.api import WorkbenchActionSet
+from envisage.ui.workbench.workbench_action_set import WorkbenchActionSet
 
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.lasers.plugins.laser_action_set import LaserActionSet
+#from src.lasers.plugins.laser_action_set import LaserActionSet
 
-class SynradCO2ActionSet(LaserActionSet):
+class SynradCO2ActionSet(WorkbenchActionSet):
     '''
     '''
     id = 'pychron.synrad_co2.action_set'

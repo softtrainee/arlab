@@ -148,8 +148,15 @@ class OpenPowerMapAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
+            from src.database.adapters.power_map_adapter import PowerMapAdapter
+            db = PowerMapAdapter(dbname='powermapdb',
+                                password='Argon')
+            db.connect()
+            db.open_selector()
+
+
 #            manager.graph_manager.open_power_map()
-            manager.graph_manager.open_graph('powermap')
+#            manager.graph_manager.open_graph('powermap')
 
 
 class OpenPowerRecordGraphAction(Action):
