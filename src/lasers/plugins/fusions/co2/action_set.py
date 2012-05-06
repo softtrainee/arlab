@@ -21,7 +21,6 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#from src.lasers.plugins.laser_action_set import LaserActionSet
 
 class FusionsCo2ActionSet(WorkbenchActionSet):
     '''
@@ -53,6 +52,12 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
                        path='MenuBar/Lasers/{}'.format(self.name),
                        class_name='{}ConfigureBrightnessMeterAction'.format(self.action_path)
                        ),
+
+                Action(name='Power Map',
+                       path='MenuBar/Lasers/{}'.format(self.name),
+                       class_name='{}PowerMapAction'.format(self.action_path)
+                       ),
+
 ##                Action(name='Configure Motion Controller',
 ##                       path='MenuBar/Lasers/{}'.format(self.name),
 ##                       class_name='src.lasers.plugins.laser_actions:OpenMotionControllerManagerAction'
@@ -91,10 +96,10 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
 #                       path='MenuBar/Lasers/{}/Results'.format(self.name),
 #                       class_name='src.lasers.plugins.laser_actions:OpenPowerScanGraphAction'
 #                       ),
-#                Action(name='Open Power Map',
-#                       path='MenuBar/Lasers/{}/Results'.format(self.name),
-#                       class_name='src.lasers.plugins.laser_actions:OpenPowerMapAction'
-#                       ),
+                Action(name='Open Power Map',
+                       path='MenuBar/Lasers/Results'.format(self.name),
+                       class_name='{}OpenPowerMapAction'.format(self.action_path)
+                       ),
 
 
 

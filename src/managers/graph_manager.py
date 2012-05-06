@@ -32,6 +32,7 @@ from src.graph.time_series_graph import TimeSeriesGraph
 import dateutil
 import time
 from datetime import datetime
+from src.managers.data_managers.h5_data_manager import H5DataManager
 KIND_VALUES = dict(
                    tempmonitor='Temp Monitor',
                    bakeout='Bakeout',
@@ -56,13 +57,15 @@ class GraphManager(Manager):
     def _test_fired(self):
 #        self.open_graph('degas', path='/Users/Ross/Pychrondata_beta/data/degas/scan001.txt')
 #        self.open_graph('degas', path='/Users/ross/Sandbox/scan001-hole1.txt')
-        p = '/Users/ross/Pychrondata1.4/data/co2power/2012/APR/testrid_001002.h5'
-        self.open_graph('powerrecord', path=p)
+#        p = '/Users/ross/Pychrondata1.4/data/co2power/2012/APR/testrid_001002.h5'
+        p = '/Users/ross/Pychrondata1.4/data/scans/scan063.h5'
+        self.open_graph('powermap', path=p)
 #        self.open_graph('tempmonitor', path='/Users/ross/Desktop/argus_temp_monitor046.txt')
 #        self.open_graph('inverse_isochron', path='/Users/Ross/Desktop/data.csv')
         #self.open_graph('age_spectrum', path='/Users/Ross/Desktop/test.csv')
 
     def open_graph(self, kind, path=None):
+#        path = '/Users/ross/Pychrondata1.4/data/scans/scan044.h5'
         get_pfunc = lambda c, k:getattr(c, '{}_parser'.format(k))
         get_gfunc = lambda c, k:getattr(c, '{}_factory'.format(k))
         pfunc = None
@@ -518,12 +521,18 @@ class GraphManager(Manager):
         '''
         from src.data_processing.power_mapping.power_map_processor import PowerMapProcessor
 
-        with open(data, 'r') as f:
-            pmp = PowerMapProcessor()
-            reader = csv.reader(f)
-            #trim off header
-            reader.next()
-            return pmp.load_graph(reader)
+        pmp = PowerMapProcessor()
+        if data.endswith('.h5'):
+            dm = H5DataManager()
+            dm.open_data(data)
+            print data
+            reader = dm
+        else:
+            with open(data, 'r') as f:
+                reader = csv.reader(f)
+                #trim off header
+                reader.next()
+        return pmp.load_graph(reader)
 
     def stream_stacked_factory(self, *args, **kw):
         from src.graph.stream_graph import StreamStackedGraph

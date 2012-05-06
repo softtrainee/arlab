@@ -21,6 +21,7 @@ from traits.api import Bool
 from numpy import transpose, array, shape, max, linspace, rot90
 #============= local library imports  ==========================
 from src.graph.contour_graph import ContourGraph
+from src.managers.data_managers.h5_data_manager import H5DataManager
 #from src.managers.data_managers.h5_data_manager import H5DataManager
 
 class PowerMapProcessor:
@@ -42,8 +43,9 @@ class PowerMapProcessor:
         z, metadata = self._extract_power_map_data(reader)
         x, y, z = self._prep_2D_data(z)
 
-        bounds = (-float(metadata[1][1]), float(metadata[1][1]))
-        cplot = cg.new_plot(add=False,
+        bounds = metadata['bounds']
+        cplot = cg.new_plot(
+                            #add=False,
                             padding_top=15,
                             padding_left=20,
                             padding_right=5,
@@ -123,6 +125,55 @@ class PowerMapProcessor:
         '''
         '''
 
+        if isinstance(reader, H5DataManager):
+            d, metadata = self._extract_h5(reader)
+        else:
+            d, metadata = self._extract_csv(reader)
+#            x, y, z = self._prep_2D_csv(z)
+
+        return d, metadata
+
+    def _extract_h5(self, dm):
+        cells = []
+        tab = dm.get_table('power_map', '/')
+        metadata = dict()
+        try:
+            b = tab._v_attrs['bounds']
+        except Exception, e:
+            print e
+            b = 1
+
+        metadata['bounds'] = -float(b), float(b)
+
+        for row in tab.iterrows():
+            x = int(row['col'])
+
+            try:
+                nr = cells[x]
+            except IndexError:
+
+                cells.append([])
+                nr = cells[x]
+#            print x, len(nr)
+            #baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
+            baseline = 0
+            pwr = row['power']
+
+            nr.append(max(pwr - baseline, 0))
+
+#        for i, c in enumerate(cells):
+#            print len(c), i
+#
+        d = len(cells[-2]) - len(cells[-1])
+
+        if d:
+            cells[-1] += [0, ] * d
+#
+#        a = array(cells)
+#        print a.shape
+        return rot90(array(cells), k=2), metadata
+
+    def _extract_csv(self, reader):
         cells = []
         metadata = []
         reader_meta = False
@@ -137,8 +188,6 @@ class PowerMapProcessor:
             if '</metadata>' in row[0]:
                 reader_meta = False
                 continue
-
-
 
             x = int(row[0])
 
@@ -158,10 +207,11 @@ class PowerMapProcessor:
 
 
 
+        #metadata now is supposed to be a dict
+        md = dict(bounds=(-float(metadata[1][1]), float(metadata[1][1])))
+
         #rotate the array
-        return rot90(array(cells), k=2), metadata
-
-
+        return rot90(array(cells), k=2), md
 
     def _calc_baseline(self, table, index):
         '''
@@ -187,6 +237,7 @@ class PowerMapProcessor:
      
         '''
         z = transpose(z)
+#        print z
         mx = float(max(z))
 
         z = array([100 * x / mx for x in [y for y in z]])

@@ -17,7 +17,7 @@ limitations under the License.
 from chaco.api import ColorBar, LinearMapper
 from chaco.default_colormaps import color_map_name_dict
 #=============standard library imports ========================
-
+from numpy import linspace
 #=============local library imports  ==========================
 from graph import Graph
 from graph import name_generator
@@ -72,13 +72,16 @@ class ContourGraph(Graph):
             rd['ybounds'] = (0, 1) if 'ybounds' not in kw else kw.get('ybounds')
             cmap = 'hot' if 'cmap' not in kw else kw.get('cmap')
 
-            #rd['poly_cmap'] = color_map_name_dict.get(cmap)
+            rd['poly_cmap'] = color_map_name_dict.get(cmap)
             rd['colormap'] = color_map_name_dict.get(cmap)
             zname = self.zdataname_generators[plotid].next()
             plot.data.set_data(zname, z)
 
             contour = plot.img_plot(zname, **rd)[0]
-            plot.contour_plot(zname, **rd)
+            plot.contour_plot(zname, type='poly', **rd)
+#            plot.contour_plot(zname, type='line',
+#                              widths=list(linspace(4.0, 0.1, 15)),
+#                               **rd)[0]
             if 'levels' in kw:
                 contour.levels = kw.get('levels')
 

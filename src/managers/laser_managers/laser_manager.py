@@ -121,18 +121,22 @@ class LaserManager(Manager):
     def get_power_map_manager(self):
         from power_map_manager import PowerMapManager
 
+        pm = PowerMapManager(laser_manager=self)
+        return pm
+
+
 #        path = self.open_file_dialog(default_directory = os.path.join(scripts_dir,
 #                                                                      'laserscripts',
 #                                                                      'power_maps'
 #                                                                      )
 #                                     )
-        path = '/Users/Ross/Pychrondata_beta/scripts/laserscripts/power_maps/s.rs'
-        if path:
-            pm = PowerMapManager()
-            pm.parent = self
-            pm.file_name = path
-            pm.new_script()
-            return pm
+#        path = '/Users/Ross/Pychrondata_beta/scripts/laserscripts/power_maps/s.rs'
+#        if path:
+#            pm = PowerMapManager()
+#            pm.parent = self
+#            pm.file_name = path
+#            pm.new_script()
+#            return pm
 
 
     def get_control_buttons(self):

@@ -24,7 +24,7 @@ from wx import GetDisplaySize
 #import os
 
 from src.database.core.database_adapter import DatabaseAdapter
-from src.database.bakeout_orm import BakeoutTable, ControllerTable, PathTable
+from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable, PathTable
 from src.database.selectors.bakeout_selector import BakeoutDBSelector
 #from src.helpers.datetime_tools import  get_date
 #from src.loggable import Loggable
@@ -35,6 +35,8 @@ DISPLAYSIZE = GetDisplaySize()
 
 class BakeoutAdapter(DatabaseAdapter):
     test_func = None
+    selector_klass = BakeoutDBSelector
+
 #==============================================================================
 #    getters
 #==============================================================================
@@ -50,23 +52,23 @@ class BakeoutAdapter(DatabaseAdapter):
         except Exception, e:
             print e
 
-    def _get_query(self, klass, join_table=None, filter_str=None, **clause):
-        sess = self.get_session()
-        q = sess.query(klass)
+#    def _get_query(self, klass, join_table=None, filter_str=None, **clause):
+#        sess = self.get_session()
+#        q = sess.query(klass)
+#
+#        if join_table is not None:
+#            q = q.join(join_table)
+#
+#        if filter_str:
+#            q = q.filter(filter_str)
+#        else:
+#            q = q.filter_by(**clause)
+#        return q
 
-        if join_table is not None:
-            q = q.join(join_table)
-
-        if filter_str:
-            q = q.filter(filter_str)
-        else:
-            q = q.filter_by(**clause)
-        return q
-
-    def open_selector(self):
-        s = BakeoutDBSelector(_db=self)
-        s._execute_()
-        s.edit_traits()
+#    def open_selector(self):
+#        s = BakeoutDBSelector(_db=self)
+#        s._execute_()
+#        s.edit_traits()
 
 #=============================================================================
 #   adder
@@ -92,11 +94,11 @@ class BakeoutAdapter(DatabaseAdapter):
 #        self._add_item(c, commit)
         return p
 
-    def _add_item(self, obj, commit):
-        sess = self.get_session()
-        sess.add(obj)
-        if commit:
-            sess.commit()
+#    def _add_item(self, obj, commit):
+#        sess = self.get_session()
+#        sess.add(obj)
+#        if commit:
+#            sess.commit()
 
 #    def get_bakeouts2(self):
 #        sess = self.get_session()

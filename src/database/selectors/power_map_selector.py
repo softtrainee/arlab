@@ -14,24 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Str, String, Date, Time, Instance, DelegatesTo
-from traitsui.api import View, Item, \
-    HGroup, VGroup, Group, spring
+from traits.api import Str, String, Date, Time, Instance
+from traitsui.api import View, Item, Group, VGroup, HGroup, spring
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
+import csv
 #============= local library imports  ==========================
-from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
-from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable
 from src.database.core.db_selector import DBSelector, DBResult
+from src.database.orms.power_map_orm import PowerMapTable
+from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.graph.graph import Graph
 
-class BakeoutDBResultsAdapter(TabularAdapter):
+
+class PowerMapResultsAdapter(TabularAdapter):
     columns = [('ID', '_id'),
                ('Date', 'rundate'),
                ('Time', 'runtime')
                ]
 
-class BakeoutDBResult(DBResult):
+
+class PowerMapResult(DBResult):
     rundate = Date
     runtime = Time
 
@@ -40,18 +43,24 @@ class BakeoutDBResult(DBResult):
     window_x = 0.1
     window_y = 0.1
     title = Str
-
-    viewer = Instance(BakeoutGraphViewer)
-    graph = DelegatesTo('viewer')
-    summary = DelegatesTo('viewer')
-    export_button = DelegatesTo('viewer')
+    summary = Str
+    graph = Instance(Graph)
 
     def load_graph(self):
-        self.viewer = BakeoutGraphViewer(title=self.title)
-        p = os.path.join(self.directory,
-                                      self.filename
-                                      )
-        self.viewer.load(p)
+        data = os.path.join(self.directory, self.filename)
+        from src.data_processing.power_mapping.power_map_processor import PowerMapProcessor
+        pmp = PowerMapProcessor()
+        if data.endswith('.h5'):
+            dm = H5DataManager()
+            dm.open_data(data)
+            reader = dm
+        else:
+            with open(data, 'r') as f:
+                reader = csv.reader(f)
+                #trim off header
+                reader.next()
+        self.graph = pmp.load_graph(reader)
+
 
     def load(self):
         dbr = self._db_result
@@ -64,7 +73,7 @@ class BakeoutDBResult(DBResult):
                 self.directory = p.root
                 self.filename = p.filename
 
-            self.title = 'Bakeout {}'.format(self._id)
+            self.title = 'PowerMap {}'.format(self._id)
 
     def traits_view(self):
         interface_grp = VGroup(
@@ -75,9 +84,7 @@ class BakeoutDBResult(DBResult):
                     Item('filename', style='readonly')),
                 VGroup(Item('summary',
                             show_label=False,
-                            style='custom')),
-                       HGroup(spring, Item('export_button',
-                                            show_label=False),),
+                            style='readonly')),
                     label='Info',
                     )
 
@@ -98,20 +105,18 @@ class BakeoutDBResult(DBResult):
                     )
 
 
-class BakeoutDBSelector(DBSelector):
-    parameter = String('BakeoutTable.rundate')
+class PowerMapSelector(DBSelector):
+    parameter = String('PowerMapTable.rundate')
     date_str = 'rundate'
+    tabular_adapter = PowerMapResultsAdapter
 
-    tabular_adapter = BakeoutDBResultsAdapter
     def _get__parameters(self):
 
-        b = BakeoutTable
+        b = PowerMapTable
 
         f = lambda x:[str(col)
                            for col in x.__table__.columns]
         params = f(b)
-        c = ControllerTable
-        params += f(c)
         return list(params)
 
     def _dclicked_fired(self):
@@ -158,19 +163,18 @@ class BakeoutDBSelector(DBSelector):
 
             table, _col = self.parameter.split('.')
             kw = dict(filter_str=s)
-            if not table == 'BakeoutTable':
+            if not table == 'PowerMapTable':
                 kw['join_table'] = table
 
-            dbs = db.get_bakeouts(**kw)
+            dbs = db.get_powermaps(**kw)
 
             self.info('query {} returned {} results'.format(s,
                                     len(dbs) if dbs else 0))
             if dbs:
                 self.results = []
                 for di in dbs:
-                    d = BakeoutDBResult(_db_result=di)
+                    d = PowerMapResult(_db_result=di)
                     d.load()
                     self.results.append(d)
 
 #============= EOF =============================================
-
