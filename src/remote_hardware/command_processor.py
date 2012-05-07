@@ -21,7 +21,6 @@ from threading import Thread
 import os
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
-from src.helpers import paths
 
 #from globals import use_shared_memory
 from src.remote_hardware.errors.error import ErrorCode
@@ -104,7 +103,8 @@ class CommandProcessor(ConfigLoadable):
         self.info('listening to {} using {}'.format(self.path,
                         'DATAGRAM' if ipc_dgram else 'STREAM'))
 
-        t = Thread(target=self._listener)
+        t = Thread(name='processor.listener',
+                   target=self._listener)
         t.start()
 
         return True
@@ -119,20 +119,23 @@ class CommandProcessor(ConfigLoadable):
                 return self.system_lock_address != addr
 
     def _stream_listener(self, _input):
-        ins, _, _ = select.select(_input, [], [], 5)
+        try:
+            ins, _, _ = select.select(_input, [], [], 5)
 
-        for s in ins:
-            if s == self._sock:
-                client, _addr = self._sock.accept()
-                _input.append(client)
-            else:
-                data = s.recv(BUFSIZE)
-                if data:
-#                            sender_addr, ptype, payload = data.split('|')
-                    self._process_data(s, data)
+            for s in ins:
+                if s == self._sock:
+                    client, _addr = self._sock.accept()
+                    _input.append(client)
                 else:
-                    s.close()
-                    _input.remove(s)
+                    data = s.recv(BUFSIZE)
+                    if data:
+    #                            sender_addr, ptype, payload = data.split('|')
+                        self._process_data(s, data)
+                    else:
+                        s.close()
+                        _input.remove(s)
+        except Exception:
+            pass
 
     def _process_data(self, sock, data):
         args = [sock] + data.split('|')

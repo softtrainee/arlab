@@ -48,10 +48,6 @@ class FusionsLaserManager(LaserManager):
     #subsystem = Instance(ArduinoSubsystem)
     fiber_light = Instance(FiberLight)
 
-#    light = DelegatesTo('fiber_light', prefix='power')
-#    light_label = DelegatesTo('fiber_light', prefix='power_label')
-#    light_intensity = DelegatesTo('fiber_light', prefix='intensity')
-
     beam = DelegatesTo('logic_board')
     beammin = DelegatesTo('logic_board')
     beammax = DelegatesTo('logic_board')
@@ -89,7 +85,8 @@ class FusionsLaserManager(LaserManager):
         if self._recording_power_state:
             self.stop_power_recording(delay=0)
         else:
-            t = Thread(target=self.start_power_recording, args=('- Manual',))
+            t = Thread(name='fusions.power_record',
+                       target=self.start_power_recording, args=('- Manual',))
             t.start()
 
         self._recording_power_state = not self._recording_power_state
@@ -212,6 +209,8 @@ class FusionsLaserManager(LaserManager):
         if self.power_timer is not None:
             self.power_timer.Stop()
 
+        self.power_timer = Timer(1000, self._record_power)
+
         if self.brightness_timer is not None:
             self.brightness_timer.Stop()
 
@@ -219,8 +218,6 @@ class FusionsLaserManager(LaserManager):
         #default is 5 counts @ 25 ms per count
         if self._get_record_brightness():
             self.collect_baseline_intensity()
-
-        self.power_timer = Timer(1000, self._record_power)
 
         if self._get_record_brightness():
             self.brightness_timer = Timer(175, self._record_brightness)

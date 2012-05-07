@@ -288,7 +288,7 @@ class BakeoutManager(Manager):
 
         else:
             self.alive = True
-            t = Thread(target=self._execute_)
+            t = Thread(name='bakeout.execute', target=self._execute_)
             t.start()
 
     def opened(self):

@@ -47,10 +47,11 @@ class FusionsCO2Manager(FusionsLaserManager):
     brightness_meter = Instance(BrightnessPIDManager, ())
 
     def _brightness_meter_default(self):
-        mv = None
-        if hasattr(self.stage_manager, 'machine_vision_manager'):
-            mv = self.stage_manager.machine_vision_manager
-
+#        mv = None
+#        if hasattr(self.stage_manager, 'machine_vision_manager'):
+#            mv = self.stage_manager.machine_vision_manager
+        mv = self._get_machine_vision()
+        print 'mac', mv
         return BrightnessPIDManager(parent=self,
                                     machine_vision=mv)
 

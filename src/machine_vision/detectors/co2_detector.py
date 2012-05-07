@@ -55,6 +55,7 @@ class CO2HoleDetector(HoleDetector):
     def contrast_equalization(self, src, verbose=True):
         if self.use_contrast_equalization:
             from skimage.exposure import rescale_intensity
+
             if verbose:
                 self.info('maximizing image contrast')
             src = src.ndarray

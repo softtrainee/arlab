@@ -99,6 +99,10 @@ class HardwarePlugin(CorePlugin):
         rhm.bootstrap()
 
     def stop(self):
+
+        rhm = self.application.get_service(RemoteHardwareManager)
+        rhm.stop()
+
         if self.managers:
             for m in self.managers:
                 man = m['manager']

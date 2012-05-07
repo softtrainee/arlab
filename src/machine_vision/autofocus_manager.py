@@ -112,7 +112,7 @@ class AutofocusManager(Manager):
             except AttributeError:
                 pass
 
-        self._passive_focus_thread = Thread(target=target, kwargs=kw)
+        self._passive_focus_thread = Thread(name='autofocus', target=target, kwargs=kw)
         self._passive_focus_thread.start()
 
     def stop_focus(self):
