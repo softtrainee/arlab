@@ -63,6 +63,27 @@ class SerialCommunicator(Communicator):
 
     read_delay = None
     read_terminator = None
+    def reset(self):
+        handle = self.handle
+        try:
+            isopen = handle.isOpen()
+            orate = handle.getBaudrate()
+            if isopen:
+                handle.close()
+
+            handle.setBaudrate(0)
+            handle.open()
+            time.sleep(0.1)
+            handle.close()
+
+            handle.setBaudrate(orate)
+            if isopen:
+                handle.open()
+
+        except Exception:
+            self.warning('failed to reset connection')
+
+
     def load(self, config, path):
         '''
            
@@ -160,7 +181,7 @@ class SerialCommunicator(Communicator):
 #            time.sleep(0.005)
 #            self.info('release lock {}'.format(self._lock))
             return re
-    
+
     def open(self, **kw):
         '''
             Use pyserial to create a handle connected to port wth baudrate 

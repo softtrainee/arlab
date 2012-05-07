@@ -208,7 +208,7 @@ class Modeler(Loggable):
         self._fortran_process = t = FortranProcess(name, clovera_root, q)
         t.start()
 
-        t = Thread(target=self._handle_stdout, args=(name, t, q))
+        t = Thread(name='mdd.fortran', target=self._handle_stdout, args=(name, t, q))
         t.start()
 
     def _handle_stdout(self, name, t, q):

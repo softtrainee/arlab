@@ -73,9 +73,12 @@ class FusionsLogicBoard(CoreDevice):
         #no handle or response is none
         resp = self._disable_laser_()
         if self._communicator.handle is None or resp is not True:
-            if not ignore_initialization_warnings:
-                warning(None, 'Laser not connected. Power cycle USB hub.')
-            return True
+            self._communicator.reset()
+            resp - self._disable_laser_()
+            if resp is not True:
+                if not ignore_initialization_warnings:
+                    warning(None, 'Laser not connected. Power cycle USB hub.')
+                return True
 
         #turn off pointer
         if progress is not None:

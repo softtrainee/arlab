@@ -133,7 +133,8 @@ class PowerMapManager(Manager):
         return self._load_power_maps()
 
     def execute(self):
-        t = Thread(target=self._execute_)
+        t = Thread(name='power_map.execute',
+                   target=self._execute_)
         t.start()
 
     def _execute_(self):

@@ -137,7 +137,8 @@ class PatternManager(Manager):
             if self.show_patterning:
                 do_later(self.edit_traits)
 
-            t = Thread(target=self._execute_)
+            t = Thread(name='pattern.execute',
+                       target=self._execute_)
             t.start()
         else:
             err = 'invalid pattern name {}'.format(pattern_name)

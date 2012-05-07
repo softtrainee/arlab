@@ -54,8 +54,13 @@ class BrightnessPIDManager(Manager):
     def _setpoint_changed(self):
         if self._collect_baseline:
             self._collect_baseline = False
+            print self.machine_vision
             if self.machine_vision:
                 self.machine_vision.collect_baseline_intensity()
+
+        if abs(self.setpoint) < 0.001:
+            self._collect_baseline = True
+
         self.set_brightness_setpoint(self.setpoint)
 
     def set_brightness_setpoint(self, b):
@@ -117,6 +122,12 @@ class BrightnessPIDManager(Manager):
 
     def close(self, is_ok):
         self.dump_pid_object()
+        if self.brightness_timer:
+            self.brightness_timer.Stop()
+
+        if self.machine_vision:
+            self.machine_vision.close_images()
+
         return True
 
     def traits_view(self):

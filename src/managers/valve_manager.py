@@ -194,7 +194,8 @@ class ValveManager(Manager):
         t.start()
         try:
 
-            _gs_thread = Thread(target=self._get_states, args=(times_up_event, states_queue))
+            _gs_thread = Thread(name='valves.get_states',
+                                target=self._get_states, args=(times_up_event, states_queue))
             _gs_thread.start()
             _gs_thread.join(timeout=1.01)
         except (Exception,), e:

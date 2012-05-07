@@ -301,7 +301,6 @@ class LaserManager(Manager):
 
         sm.stage_controller = self.stage_manager.stage_controller
         sm.stage_controller.parent = sm
-        print 'asdf', self.id
         sm.bind_preferences(self.id)
 
 #        sm.canvas.crosshairs_offset = self.stage_manager.canvas.crosshairs_offset

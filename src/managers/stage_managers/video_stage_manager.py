@@ -286,7 +286,7 @@ class VideoStageManager(StageManager, Videoable):
     #@on_trait_change('autocenter_button')
     def _autocenter_button_fired(self):
 
-        t = Thread(target=self._autocenter)
+        t = Thread(name='stage.autocenter', target=self._autocenter)
         t.start()
 
     def _autocenter(self, holenum=None, ntries=1):

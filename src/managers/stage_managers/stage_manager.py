@@ -388,7 +388,8 @@ class StageManager(Manager):
     def _home_fired(self):
         '''
         '''
-        t = Thread(target=self._home_)
+        t = Thread(name='stage.home',
+                   target=self._home_)
         t.start()
 
 #===============================views=====================
@@ -684,7 +685,8 @@ class StageManager(Manager):
             pos = self._stage_map.get_hole_pos(str(v))
             if pos is not None:
                 self._hole = v
-                self.hole_thread = Thread(target=self._move_to_hole, args=(str(v),))
+                self.hole_thread = Thread(name='stage.move_to_hole',
+                                          target=self._move_to_hole, args=(str(v),))
                 self.hole_thread.start()
             else:
                 err = 'Invalid hole {}'.format(v)
