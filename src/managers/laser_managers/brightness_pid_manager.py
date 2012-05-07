@@ -13,16 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from traits.api import Instance, Float, Bool, Any
-from traitsui.api import View, Item, HGroup, Spring
+#============= enthought library imports =======================
+from traits.api import Instance, Float, Bool, Any, DelegatesTo
+from traitsui.api import View, Item, HGroup, Spring, RangeEditor
+import apptools.sweet_pickle as pickle
+#============= standard library imports ========================
+import os
+import random
+#============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.hardware.core.pid_object import PIDObject
-import os
 from src.helpers.paths import hidden_dir
-import apptools.sweet_pickle as pickle
 from src.helpers.timer import Timer
 from src.graph.stream_graph import StreamGraph
-import random
 
 class BrightnessPIDManager(Manager):
     pid_object = Instance(PIDObject)
@@ -34,6 +37,11 @@ class BrightnessPIDManager(Manager):
     graph = Instance(StreamGraph, transient=True)
     machine_vision = Any(transient=True)
     _collect_baseline = Bool(True)
+
+    request_power = DelegatesTo('parent')
+    enabled = DelegatesTo('parent')
+    enable = DelegatesTo('parent')
+    enable_label = DelegatesTo('parent')
 
     def _graph_default(self):
         g = StreamGraph(container_dict=dict(padding=5),)
@@ -107,13 +115,22 @@ class BrightnessPIDManager(Manager):
         except pickle.PickleError:
             pass
 
-
     def close(self, is_ok):
         self.dump_pid_object()
         return True
 
     def traits_view(self):
-        v = View(Item('pid_object', style='custom', show_label=False),
+        v = View(
+                 HGroup(
+                        self._button_factory('enable', 'enable_label'),
+                        Item('request_power', editor=RangeEditor(low=0,
+                                                          high=100),
+                             enabled_when='object.enabled',
+                             show_label=False,
+                             width=0.8
+                             ),
+                        ),
+                 Item('pid_object', style='custom', show_label=False),
                  Item('setpoint'),
                  HGroup(Item('output', style='readonly', format_str='%0.3f'),
                         Spring(width=60, springy=False),
@@ -132,3 +149,5 @@ if __name__ == '__main__':
     logging_setup('bm')
     b = BrightnessPIDManager()
     b.configure_traits()
+
+#============= EOF =============================================

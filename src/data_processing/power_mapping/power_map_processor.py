@@ -22,6 +22,8 @@ from numpy import transpose, array, shape, max, linspace, rot90
 #============= local library imports  ==========================
 from src.graph.contour_graph import ContourGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
+
+from scipy import ndimage
 #from src.managers.data_managers.h5_data_manager import H5DataManager
 
 class PowerMapProcessor:
@@ -29,7 +31,8 @@ class PowerMapProcessor:
     '''
     correct_baseline = Bool(False)
     color_map = 'hot'
-    levels = 10
+    levels = 15
+    interpolation_factor = 5
 
 #    def load_graph(self, table, window_title = ''):
     def load_graph(self, reader, window_title=''):
@@ -124,14 +127,12 @@ class PowerMapProcessor:
     def _extract_power_map_data(self, reader):
         '''
         '''
-
         if isinstance(reader, H5DataManager):
-            d, metadata = self._extract_h5(reader)
+            d = self._extract_h5(reader)
         else:
-            d, metadata = self._extract_csv(reader)
-#            x, y, z = self._prep_2D_csv(z)
+            d = self._extract_csv(reader)
 
-        return d, metadata
+        return d
 
     def _extract_h5(self, dm):
         cells = []
@@ -147,31 +148,28 @@ class PowerMapProcessor:
 
         for row in tab.iterrows():
             x = int(row['col'])
-
             try:
                 nr = cells[x]
             except IndexError:
-
                 cells.append([])
                 nr = cells[x]
-#            print x, len(nr)
+
             #baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
             baseline = 0
             pwr = row['power']
 
             nr.append(max(pwr - baseline, 0))
 
-#        for i, c in enumerate(cells):
-#            print len(c), i
-#
         d = len(cells[-2]) - len(cells[-1])
 
         if d:
             cells[-1] += [0, ] * d
-#
-#        a = array(cells)
-#        print a.shape
-        return rot90(array(cells), k=2), metadata
+
+        cells = array(cells)
+        #use interpolation to provide smoother interaction
+        cells = ndimage.interpolation.zoom(cells, self.interpolation_factor)
+
+        return rot90(cells, k=2), metadata
 
     def _extract_csv(self, reader):
         cells = []

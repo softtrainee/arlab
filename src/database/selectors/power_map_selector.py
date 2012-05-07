@@ -50,6 +50,7 @@ class PowerMapResult(DBResult):
         data = os.path.join(self.directory, self.filename)
         from src.data_processing.power_mapping.power_map_processor import PowerMapProcessor
         pmp = PowerMapProcessor()
+#        print os.path.isfile(data), data
         if data.endswith('.h5'):
             dm = H5DataManager()
             dm.open_data(data)
