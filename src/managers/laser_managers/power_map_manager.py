@@ -246,16 +246,31 @@ class PowerMapManager(Manager):
         return v
 
 #============= views ===================================
-class StageManager(object):
+class DummyStageController(object):
+    def get_xy(self):
+        return 0, 0
+
+    def at_velocity(self, k, ev):
+        import time
+        time.sleep(3)
+        ev.set()
+    def _set_single_axis_motion_parameters(self, *args, **kw):
+        pass
+
+class DummyStageManager(object):
     x = 0
     y = 0
+    simulation = True
+    def __init__(self):
+        self.stage_controller = DummyStageController()
+
     def linear_move(self, *args, **kw):
         pass
 
 class DummyLaserMan(object):
     simulation = True
     def __init__(self):
-        self.stage_manager = StageManager()
+        self.stage_manager = DummyStageManager()
 
     def enable_laser(self):
         pass

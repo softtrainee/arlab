@@ -666,6 +666,17 @@ class Graph(Loggable):
                 elif rd['type'] == 'scatter':
                     rd['outline_color'] = rd['color']
 
+                if rd['type'] == 'cmap_scatter':
+                    from chaco.default_colormaps import color_map_name_dict
+                    rd['color_mapper'] = color_map_name_dict['hot']
+                    rd['line_width'] = 0
+
+                    c = 'c0'
+#                    self.series[plotid][1] += (c,)
+
+                    self.plots[plotid].data.set_data(c, [])
+                    names += (c,)
+
             renderer = plotobj.plot(names, **rd)
             return renderer[0], plotobj
 
