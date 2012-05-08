@@ -371,7 +371,7 @@ def find_lines(src, t1, minlen=100):
     return dst, lines
 
 def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
-                 convextest=True, hole=True, nsizes=5):
+                 convextest=True, hole=True, nsizes=5, **kw):
     '''
     '''
 

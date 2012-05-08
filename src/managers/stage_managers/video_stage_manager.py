@@ -291,7 +291,7 @@ class VideoStageManager(StageManager, Videoable):
 
     def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
-
+        rpos=None
         if self.auto_center:
             newpos = None
             for _t in range(max(1, ntries)):
@@ -301,6 +301,7 @@ class VideoStageManager(StageManager, Videoable):
                         holenum=None if isinstance(holenum, str) else holenum)
 
                 if newpos:
+                    rpos=newpos
                     #nx = self.stage_controller._x_position + newpos[0]
                     #ny = self.stage_controller._y_position + newpos[1]
     #                self._point = 0
@@ -312,7 +313,8 @@ class VideoStageManager(StageManager, Videoable):
                                      update_hole=False
                                  )
                 time.sleep(0.25)
-            return newpos
+        
+        return rpos
 
 #==============================================================================
 # handlers
