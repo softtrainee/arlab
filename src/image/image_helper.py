@@ -203,7 +203,7 @@ def colorspace1D(src, channel='r'):
     return dst
 
 
-def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True):
+def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True, **kw):
     '''
     '''
 

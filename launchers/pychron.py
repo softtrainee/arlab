@@ -170,7 +170,7 @@ def main():
     logging_setup('pychron', level='DEBUG')
 
     launch(beta=True)
-#    os._exit(0)
+    os._exit(0)
 
 
 def profile_code():
@@ -191,4 +191,4 @@ def profile_code():
     os._exit(0)
 #    sys.exit()
 if __name__ == '__main__':
-    profile_code()
+    main()
