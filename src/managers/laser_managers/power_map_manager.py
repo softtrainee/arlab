@@ -33,7 +33,7 @@ from threading import Thread
 from src.managers.laser_managers.power_mapping import PowerMapping
 from src.helpers.paths import hidden_dir
 from pyface.timer.do_later import do_later
-from src.helpers.datetime_tools import get_datetime
+#from src.helpers.datetime_tools import get_datetime
 from src.database.adapters.power_map_adapter import PowerMapAdapter
 
 #from enable.component_editor import ComponentEditor
@@ -125,6 +125,10 @@ class PowerMapManager(Manager):
             self._alive = True
             self.execute()
 
+    def kill(self):
+        #suppress killing
+        pass
+
     def end(self, user_cancel=False):
         lm = self.laser_manager
         lm.disable_laser()
@@ -156,7 +160,7 @@ class PowerMapManager(Manager):
 
             pi._execute_()
 
-
+        self.end()
         self._alive = False
 
 ##        
@@ -182,22 +186,15 @@ class PowerMapManager(Manager):
 #    def _canvas_default(self):
 #        return RasterCanvas()
     def _database_default(self):
-        db = PowerMapAdapter(dbname='powermapdb',
+        db = PowerMapAdapter(dbname='co2laserdb',
                             password='Argon')
         db.connect()
         return db
 
     def _save_to_db(self, path):
         db = self.database
-        d = get_datetime()
-
-        args = dict(rundate=str(d.date()),
-        runtime=str(d.time()))
-        p = db.add_powermap(**args)
-
-        n = os.path.basename(path)
-        r = os.path.dirname(path)
-        db.add_path(p, root=r, filename=n)
+        p = db.add_powermap()
+        db.add_path(p, path)
         db.commit()
 
     def row_factory(self):

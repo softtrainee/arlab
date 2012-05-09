@@ -23,9 +23,10 @@ limitations under the License.
 from wx import GetDisplaySize
 #import os
 
-from src.database.core.database_adapter import DatabaseAdapter
+from .database_adapter import DatabaseAdapter
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable, PathTable
 from src.database.selectors.bakeout_selector import BakeoutDBSelector
+import os
 #from src.helpers.datetime_tools import  get_date
 #from src.loggable import Loggable
 #from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
@@ -74,8 +75,9 @@ class BakeoutAdapter(DatabaseAdapter):
 #   adder
 #=============================================================================
     def add_bakeout(self, commit=False, **kw):
-        b = BakeoutTable(**kw)
-        self._add_item(b, commit)
+#        b = BakeoutTable(**kw)
+        b = self._add_timestamped_item(BakeoutTable, commit)
+#        self._add_item(b, commit)
         return b
 
     def add_controller(self, bakeout, commit=False, **kw):
@@ -86,7 +88,8 @@ class BakeoutAdapter(DatabaseAdapter):
 #        self._add_item(c, commit)
         return c
 
-    def add_path(self, bakeout, commit=False, **kw):
+    def add_path(self, bakeout, path, commit=False, **kw):
+        kw = self._get_path_keywords(path, kw)
         p = PathTable(**kw)
         bakeout.path = p
         if commit:

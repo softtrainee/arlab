@@ -38,7 +38,7 @@ home = 'Pychrondata{}'.format(version)
 #project_home = os.path.join(host_url, project_root)
 root = os.path.join(HOME, home)
 
-src_repo_name = 'pychron_beta'
+src_repo_name = 'pychron'
 pychron_src_dir = os.path.join(HOME, 'Programming', 'mercurial', src_repo_name)
 doc_html_dir = os.path.join(pychron_src_dir, 'docs', '_build', 'html')
 

@@ -13,19 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-
 #=============enthought library imports=======================
 from traits.api import Button, DelegatesTo, Instance
 #=============standard library imports ========================
 #=============local library imports  ==========================
-
-from fusions_laser_manager import FusionsLaserManager
 from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
 from src.monitors.co2_laser_monitor import CO2LaserMonitor
 from src.managers.laser_managers.brightness_pid_manager import BrightnessPIDManager
-#from hardware.analog_digital_converter import AgilentADC
-#from hardware.newport_esp301_motioncontroller import ESPMotionController
-#from src.helpers import paths
+from fusions_laser_manager import FusionsLaserManager
 
 
 class FusionsCO2Manager(FusionsLaserManager):
@@ -47,11 +42,7 @@ class FusionsCO2Manager(FusionsLaserManager):
     brightness_meter = Instance(BrightnessPIDManager, ())
 
     def _brightness_meter_default(self):
-#        mv = None
-#        if hasattr(self.stage_manager, 'machine_vision_manager'):
-#            mv = self.stage_manager.machine_vision_manager
         mv = self._get_machine_vision()
-        print 'mac', mv
         return BrightnessPIDManager(parent=self,
                                     machine_vision=mv)
 
@@ -61,6 +52,12 @@ class FusionsCO2Manager(FusionsLaserManager):
         super(FusionsCO2Manager, self).set_laser_power(rp)
         self.info('request power {:0.3f}'.format(rp))
         self.logic_board._set_laser_power_(rp)
+
+        if self.data_manager:
+            with self._data_manager_lock:
+                tab = self.data_manager.get_table('internal', 'Power')
+                if tab:
+                    tab.attrs.request_power = rp
 
     def get_laser_watts(self):
         w = self.logic_board.read_power_meter()
@@ -74,20 +71,6 @@ class FusionsCO2Manager(FusionsLaserManager):
 
         return w
 
-#    def _monitor_factory(self):
-#        '''
-#        '''
-#        return CO2LaserMonitor
-
-#    def monitor_factory(self):
-#        lm = self.monitor
-#        if lm is None:
-#            lm = self._monitor_factory()(manager = self,
-#                            configuration_dir_name = paths.monitors_dir,
-#                            name = 'co2_laser_monitor')
-#            #lm.bootstrap()
-#        return lm
-
     def _logic_board_default(self):
         '''
         '''
@@ -98,13 +81,28 @@ class FusionsCO2Manager(FusionsLaserManager):
     def _stage_manager_default(self):
         '''
         '''
-#        print 'afasdf'
         args = dict(name='co2stage',
                             configuration_dir_name='co2',
                              parent=self)
 
         return self._stage_manager_factory(args)
 
+if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    from src.initializer import Initializer
+
+
+    logging_setup('fusions co2')
+    f = FusionsCO2Manager()
+    f.use_video = True
+    f.record_brightness = True
+    ini = Initializer()
+
+    a = dict(manager=f, name='FusionsCO2')
+    ini.add_initialization(a)
+    ini.run()
+#    f.bootstrap()
+    f.configure_traits()
 
 #    def show_streams(self):
 #        '''

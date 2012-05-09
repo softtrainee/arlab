@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Int, Any, Instance, Enum
+from traits.api import Float, Int, Any, Instance, Enum
 from traitsui.api import View, Item, VGroup, HGroup
 from pyface.timer.do_later import do_after
 #============= standard library imports ========================
@@ -74,7 +74,7 @@ def xygenerator():
 xygen = xygenerator()
 
 class PowerMapping(Loggable):
-    kind = Enum('continuous', 'discrete')
+#    kind = Enum('discrete', 'continuous')
     beam_diameter = Float(1)
     request_power = Float(1)
     padding = Float(1.0)
@@ -99,7 +99,7 @@ class PowerMapping(Loggable):
 
     def _load_data_manager(self):
         dm = H5DataManager()
-        root = '/usr/local/pychron/powermapsdb'
+        root = '/usr/local/pychron/powermaps'
         dw = DataWarehouse(root=root)
 #                           os.path.join(data_dir, base_dir))
         dw.build_warehouse()
@@ -125,105 +125,215 @@ class PowerMapping(Loggable):
 
         lm.set_laser_power(self.request_power)
 
-        if self.kind == 'discrete':
-            self._discrete_scan()
-        else:
-            self._continuous_scan()
+        self._discrete_scan()
 
-    def _continuous_scan(self):
-
-        g = Graph()
-        g.new_plot()
-        g.new_series(type='cmap_scatter')
-        do_after(1, g.edit_traits)
-
+    def _discrete_scan(self):
         lm = self.parent.laser_manager
-        padding = self.padding
-
         sm = lm.stage_manager
-#        analog_power_meter = lm.analog_power_meter
-        stage_controller = sm.stage_controller
+        canvas = self.canvas
 
-#        graph = Graph3D()
-#        s = graph.scene
+        padding = self.padding
+        step_len = self.step_length
 
-#        do_after(1, graph.edit_traits)
+        nsteps = int(padding / step_len)
 
-        offset = 1
+        steps = xrange(-nsteps, nsteps + 1)
+        canvas.set_parameters(steps, steps)
+        canvas.request_redraw()
 
-        #nrows should be calculates so  result is a square
-        nrows = int(padding * 2 / offset) + 1
+        xsteps = steps
+        ysteps = steps
 
         cx = self.center_x
         cy = self.center_y
-        xx = []
-        yy = []
-        zz = []
 
-        gaussian_power_generator = power_generator(nrows)
+        gaussian_power_generator = power_generator(len(xsteps))
+        dm = self._load_data_manager()
+        tab = dm.get_table('power_map', '/')
 
-        # turn off velocity calculation
-        if not lm.simulation:
-            for a in stage_controller.axes.itervalues():
-                a.calculate_parameters = False
+        for j, yi in enumerate(ysteps):
 
-            stage_controller._set_single_axis_motion_parameters(pdict=dict(key='x', acceleration=2,
-                                                                              deceleration=2,
-                                                                              velocity=1.25
-                                                                              ))
-            stage_controller._set_single_axis_motion_parameters(pdict=dict(key='y', acceleration=2,
-                                                                              deceleration=2,
-                                                                              velocity=1.25
-                                                                          ))
-        data = g.plots[0].data
-        for i in range(nrows):
-            y = cy - padding + i * offset
-            if i % 2 == 0:
-                p1 = cx - padding, y
-                p2 = cx + padding, y
-            else:
-                p2 = cx - padding, y
-                p1 = cx + padding, y
+            if not self.isAlive():
+                break
 
+            ny = (yi * step_len) + cy
+            for i, xi in enumerate(xsteps):
+                if not self.isAlive():
+                    break
 
-            self.info('scanning row {} {} {}'.format(i + 1, p1, p2))
-            sm.linear_move(p1[0], p1[1], block=True, grouped_move=False)
+                nx = (xi * step_len) + cx
+                if not lm.simulation:
+                    sm.linear_move(nx, ny, verbose=False, block=True, grouped_move=False)
+                    if i == 0:
+                        #sleep for 1.5 nsecs to let the detector cool off.
+                        #usually gets blasted as the laser moves into position
+                        time.sleep(1.5)
+                    mag = 0
+                    for _ in range(self.integration):
+#                        mag += analog_power_meter.read_power_meter(verbose=False)
+                        time.sleep(0.01)
 
-            #wait at the start for a bit to let the detector settle
-            #time.sleep(0.5)
-
-            sm.linear_move(p2[0], p2[1], block=False, grouped_move=False)
-
-            #sleep time required to reach cvt zone
-
-#            max_len = 50
-            event = Event()
-            axkey = 'x'
-            t = Thread(target=stage_controller.at_velocity, args=(axkey, event))
-            t.start()
-            j = 0
-            while not event.isSet():
-#                print i
-                if sm.simulation:
-                    x = p1[0] + j
-                    y = i
+                    mag /= self.integration
                 else:
-                    x, y = stage_controller.get_xy()
-                j += 1
+                    mag = gaussian_power_generator.next()
 
-                mag = random.random()
 
-                xs = np.hstack((data.get_data('x0'), [x]))
-                ys = np.hstack((data.get_data('y0'), [y]))
-                cs = np.hstack((data.get_data('c0'), [mag]))
+                datum = (i, j, mag)
+                do_after(10, canvas.set_cell_value, *datum)
+#                self.data_manager.write_to_frame(datum)
+#
+                #write to the table
+#                print tab
+                nr = tab.row
+                nr['row'] = i
+                nr['col'] = j
+                nr['x'] = nx
+                nr['y'] = ny
+                nr['power'] = mag
+                nr.append()
+                tab.flush()
 
-                data.set_data('x0', xs)
-                data.set_data('y0', ys)
-                data.set_data('c0', cs)
+                if lm.simulation:
+                    time.sleep(0.01)
 
-#                print xs
-                do_after(1, g.redraw)
-                time.sleep(0.1)
+        if self.isAlive():
+            self.parent._save_to_db(dm.get_current_path())
+            dm.close()
+
+        self._alive = False
+        canvas.request_redraw()
+
+    def _get_configure_group(self):
+        cfg_grp = VGroup(Item('beam_diameter'),
+                    Item('request_power'),
+                    Item('padding'),
+                    Item('step_length'),
+                    Item('center_x'),
+                    Item('center_y'),
+
+                    )
+        return cfg_grp
+
+    def configure_view(self):
+        cgrp = self._get_configure_group()
+        return View(cgrp,
+                    buttons=['OK', 'Cancel'],
+                    title='Configure Power Mapping'
+                    )
+
+    def traits_view(self):
+        canvas_grp = VGroup(Item('canvas', show_label=False,
+                                     editor=ComponentEditor()))
+        cfg_grp = self._get_configure_group()
+        cfg_grp.style = 'readonly'
+
+        return View(
+                    HGroup(
+                           cfg_grp,
+                           canvas_grp
+                           ),
+                    x=self.window_x,
+                    y=self.window_y,
+                    width=700,
+                    height=600,
+                    title='Power Mapping - {}'.format(self.display_name)
+                    )
+
+#============= EOF =============================================
+# def _continuous_scan(self):
+#
+#        g = Graph()
+#        g.new_plot()
+#        g.new_series(type='cmap_scatter')
+#        do_after(1, g.edit_traits)
+#
+#        lm = self.parent.laser_manager
+#        padding = self.padding
+#
+#        sm = lm.stage_manager
+##        analog_power_meter = lm.analog_power_meter
+#        stage_controller = sm.stage_controller
+#
+##        graph = Graph3D()
+##        s = graph.scene
+#
+##        do_after(1, graph.edit_traits)
+#
+#        offset = 1
+#
+#        #nrows should be calculates so  result is a square
+#        nrows = int(padding * 2 / offset) + 1
+#
+#        cx = self.center_x
+#        cy = self.center_y
+#        xx = []
+#        yy = []
+#        zz = []
+#
+#        gaussian_power_generator = power_generator(nrows)
+#
+#        # turn off velocity calculation
+#        if not lm.simulation:
+#            for a in stage_controller.axes.itervalues():
+#                a.calculate_parameters = False
+#
+#            stage_controller._set_single_axis_motion_parameters(pdict=dict(key='x', acceleration=2,
+#                                                                              deceleration=2,
+#                                                                              velocity=1.25
+#                                                                              ))
+#            stage_controller._set_single_axis_motion_parameters(pdict=dict(key='y', acceleration=2,
+#                                                                              deceleration=2,
+#                                                                              velocity=1.25
+#                                                                          ))
+#        data = g.plots[0].data
+#        for i in range(nrows):
+#            y = cy - padding + i * offset
+#            if i % 2 == 0:
+#                p1 = cx - padding, y
+#                p2 = cx + padding, y
+#            else:
+#                p2 = cx - padding, y
+#                p1 = cx + padding, y
+#
+#
+#            self.info('scanning row {} {} {}'.format(i + 1, p1, p2))
+#            sm.linear_move(p1[0], p1[1], block=True, grouped_move=False)
+#
+#            #wait at the start for a bit to let the detector settle
+#            #time.sleep(0.5)
+#
+#            sm.linear_move(p2[0], p2[1], block=False, grouped_move=False)
+#
+#            #sleep time required to reach cvt zone
+#
+##            max_len = 50
+#            event = Event()
+#            axkey = 'x'
+#            t = Thread(target=stage_controller.at_velocity, args=(axkey, event))
+#            t.start()
+#            j = 0
+#            while not event.isSet():
+##                print i
+#                if sm.simulation:
+#                    x = p1[0] + j
+#                    y = i
+#                else:
+#                    x, y = stage_controller.get_xy()
+#                j += 1
+#
+#                mag = random.random()
+#
+#                xs = np.hstack((data.get_data('x0'), [x]))
+#                ys = np.hstack((data.get_data('y0'), [y]))
+#                cs = np.hstack((data.get_data('c0'), [mag]))
+#
+#                data.set_data('x0', xs)
+#                data.set_data('y0', ys)
+#                data.set_data('c0', cs)
+#
+##                print xs
+#                do_after(1, g.redraw)
+#                time.sleep(0.1)
 
 ##            nvalues = random.randint(0, 0) + max_len
 ##            j = 0
@@ -272,124 +382,3 @@ class PowerMapping(Loggable):
 #            s.mlab.plot3d(np.asarray(xs), np.asarray(ys), np.asarray(zs), np.asarray(zs))#, asarray(zz)[0])
 
 #            do_after(1, s.mlab.mesh, np.asarray(xx), np.asarray(yy), np.asarray(zz))
-
-    def _discrete_scan(self):
-        lm = self.parent.laser_manager
-        sm = lm.stage_manager
-        canvas = self.canvas
-
-        padding = self.padding
-        step_len = self.step_length
-
-        nsteps = int(padding / step_len)
-
-        steps = xrange(-nsteps, nsteps + 1)
-        canvas.set_parameters(steps, steps)
-        canvas.request_redraw()
-
-        xsteps = steps
-        ysteps = steps
-
-        cx = self.center_x
-        cy = self.center_y
-
-        gaussian_power_generator = power_generator(len(xsteps))
-        dm = self._load_data_manager()
-        tab = dm.get_table('power_map', '/')
-
-        for j, yi in enumerate(ysteps):
-
-            if not self.isAlive():
-                break
-
-            ny = (yi * step_len) + cy
-            for i, xi in enumerate(xsteps):
-                if not self.isAlive():
-                    break
-                nx = (xi * step_len) + cx
-
-                if not lm.simulation:
-                    sm.linear_move(nx, ny, verbose=False, block=True, grouped_move=False)
-
-                if not self.isAlive():
-                    break
-
-                if lm.simulation:
-                    mag = gaussian_power_generator.next()
-                else:
-
-                    if i == 0:
-                        #sleep for 1.5 nsecs to let the detector cool off.
-                        #usually gets blasted as the laser moves into position
-                        time.sleep(1.5)
-                    mag = 0
-                    for c in range(self.integration):
-#                        mag += analog_power_meter.read_power_meter(verbose=False)
-                        time.sleep(0.01)
-
-                    mag /= self.integration
-
-                datum = (i, j, mag)
-                do_after(10, canvas.set_cell_value, *datum)
-#                self.data_manager.write_to_frame(datum)
-#
-                #write to the table
-#                print tab
-                nr = tab.row
-                nr['row'] = i
-                nr['col'] = j
-                nr['x'] = nx
-                nr['y'] = ny
-                nr['power'] = mag
-                nr.append()
-                tab.flush()
-
-                if lm.simulation:
-                    time.sleep(0.01)
-
-        if self.isAlive():
-            self.parent._save_to_db(dm.get_current_path())
-            dm.close()
-
-        self._alive = False
-        canvas.request_redraw()
-
-
-
-    def _get_configure_group(self):
-        cfg_grp = VGroup(Item('beam_diameter'),
-                    Item('request_power'),
-                    Item('padding'),
-                    Item('step_length'),
-                    Item('center_x'),
-                    Item('center_y'),
-
-                    )
-        return cfg_grp
-
-    def configure_view(self):
-        cgrp = self._get_configure_group()
-        return View(cgrp,
-                    buttons=['OK', 'Cancel'],
-                    title='Configure Power Mapping'
-                    )
-
-    def traits_view(self):
-        canvas_grp = VGroup(Item('canvas', show_label=False,
-                                     editor=ComponentEditor()))
-        cfg_grp = self._get_configure_group()
-        cfg_grp.style = 'readonly'
-
-        return View(
-                    HGroup(
-                           cfg_grp,
-                           canvas_grp
-                           ),
-                    x=self.window_x,
-                    y=self.window_y,
-                    width=700,
-                    height=600,
-                    title='Power Mapping - {}'.format(self.display_name)
-                    )
-
-#============= EOF =============================================

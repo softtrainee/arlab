@@ -25,17 +25,17 @@ from sqlalchemy.orm import relationship
 Base = declarative_base()
 
 
-class PowerMapTable(Base):
-    __tablename__ = 'PowerMapTable'
+class BrightnessTable(Base):
+    __tablename__ = 'BrightnessTable'
     id = Column(Integer, primary_key=True)
     runtime = Column(Time)
     rundate = Column(Date)
 
-    path = relationship('PowerMapPathTable', uselist=False)
+    path = relationship('BrightnessPathTable', uselist=False)
 
 
-class PowerMapPathTable(Base):
-    __tablename__ = 'PowerMapPathTable'
+class PathTable(Base):
+    __tablename__ = 'BrightnessPathTable'
     id = Column(Integer, primary_key=True)
     powermap_id = Column(Integer, ForeignKey('PowerMapTable.id'))
 

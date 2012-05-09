@@ -23,23 +23,16 @@ import os
 #============= local library imports  ==========================
 from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable
-from src.database.core.db_selector import DBSelector, DBResult
+from .db_selector import DBSelector, DBResult
 
-class BakeoutDBResultsAdapter(TabularAdapter):
-    columns = [('ID', '_id'),
-               ('Date', 'rundate'),
-               ('Time', 'runtime')
-               ]
+#class BakeoutDBResultsAdapter(TabularAdapter):
+#    columns = [('ID', '_id'),
+#               ('Date', 'rundate'),
+#               ('Time', 'runtime')
+#               ]
 
 class BakeoutDBResult(DBResult):
-    rundate = Date
-    runtime = Time
-
-    directory = Str
-    filename = Str
-    window_x = 0.1
-    window_y = 0.1
-    title = Str
+    title_str = 'Bakeout'
 
     viewer = Instance(BakeoutGraphViewer)
     graph = DelegatesTo('viewer')
@@ -102,7 +95,7 @@ class BakeoutDBSelector(DBSelector):
     parameter = String('BakeoutTable.rundate')
     date_str = 'rundate'
 
-    tabular_adapter = BakeoutDBResultsAdapter
+#    tabular_adapter = BakeoutDBResultsAdapter
     def _get__parameters(self):
 
         b = BakeoutTable

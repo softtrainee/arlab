@@ -218,7 +218,7 @@ class Image(HasTraits):
 #        w = sum([s.size()[0] for s in src])
 #        h = sum([s.size()[1] for s in src])
         w = 600
-        h = 590
+        h = 600
         display = new_dst(w, h, 3)
         try:
             s1 = src[0].ndarray
@@ -282,8 +282,8 @@ from src.image.image_editor import ImageEditor
 
 class StandAloneImage(HasTraits):
     _image = Instance(Image, ())
-    width = Int(640)
-    height = Int(480)
+    width = Int(600)
+    height = Int(600)
     view_identifier = None
     title = None
     def __image_default(self):
@@ -333,8 +333,8 @@ class StandAloneImage(HasTraits):
                  handler=ImageHandler,
                  x=0.55,
                  y=35,
-                 width=self.width - 38,
-                 height=self.height + 24,
+                 width=self.width,
+                 height=self.height,
                  )
 
         if self.title is not None:

@@ -13,24 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-#from traits.api import Instance
-#from traitsui.api import View, Item
-from numpy import percentile, sum, asarray
+#============= enthought library imports =======================
+#============= standard library imports ========================
+from numpy import percentile, sum, asarray, ogrid, pi, invert
+
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, grayspace, colorspace, smooth, \
     dilate
-from hole_detector import HoleDetector
-#from pyface.timer.do_later import do_after, do_later
 from src.image.image import StandAloneImage
-#from src.image.image_editor import ImageEditor
+from hole_detector import HoleDetector
 
 
 class CO2HoleDetector(HoleDetector):
-    intensity_cropwidth = 4
-    intensity_cropheight = 4
+    brightness_cropwidth = 4
+    brightness_cropheight = 4
+    brightness_threshold = 10
     brightness_image = None
     target_image = None
-    target_area = None
+#    target_area = None
     running_avg = None
     def close_images(self):
         if self.brightness_image is not None:
@@ -58,7 +58,9 @@ class CO2HoleDetector(HoleDetector):
 
             if verbose:
                 self.info('maximizing image contrast')
-            src = src.ndarray
+
+            if hasattr(src, 'ndarray'):
+                src = src.ndarray
             # Contrast stretching
             p2 = percentile(src, 2)
             p98 = percentile(src, 98)
@@ -66,6 +68,56 @@ class CO2HoleDetector(HoleDetector):
 
             src = asMat(img_rescale)
         return src
+
+    def get_intensity_area(self, src, verbose):
+
+        seg_src = self.contrast_equalization(src, verbose=verbose)
+#        seg_src = self.smooth(seg_src, verbose=verbose)
+        targets = self._region_segmentation(seg_src, hole=True,
+                                            convextest=False)
+
+        ma = 6000
+        mi = 200
+        target = None
+        ta = None
+        if targets:
+
+            #no need to filter out targets not near the center using the circle mask does the inherently
+            targets = [t for t in targets
+                       if ma > t.area > mi]
+            if targets:
+                tt = targets[0]
+                target = tt
+#                src = colorspace(src)
+#                self._draw_result(src, tt)
+#                self.brightness_image.set_frame(0, src)
+                ta = tt.area
+
+        if ta is None:
+            r = self.pxpermm * self.radius_mm
+            ta = pi * r * r
+
+        if self.running_avg is None:
+            self.running_avg = [ta]
+        else:
+            self.running_avg.append(ta)
+
+        n = len(self.running_avg)
+        if n > 5:
+            self.running_avg.pop(0)
+
+        tarea = sum(self.running_avg) / max(1, float(n - 1))
+
+
+#        if tarea is None:
+#            tarea = self.target_area
+#        if tarea is None:
+#            if self.running_avg:
+#                tarea = sum(self.running_avg) / float(len(self.running_avg))
+#        if tarea is None:
+#            tarea = float(src.ndarray.shape[0] * src.ndarray.shape[1])
+
+        return tarea, target
 
     def get_intensity(self, verbose=True):
 #        self.brightness_image.frames = [None]
@@ -79,59 +131,37 @@ class CO2HoleDetector(HoleDetector):
         self.brightness_image.set_frames([None])
         s = self.brightness_image.source_frame.clone()
 
-        s = self._crop_image(grayspace(s), self.intensity_cropwidth,
-                             self.intensity_cropheight
+        s = self._crop_image(grayspace(s), self.brightness_cropwidth,
+                             self.brightness_cropheight
                              )
 
         iar = s.ndarray[:]
         niar = iar - self.baseline
-        thres = 0
 
+        thres = self.brightness_threshold
         niar[niar < thres] = 0
+
         src = asMat(asarray(niar, dtype='uint8'))
 
-#        tarea = self.target_area if self.target_area else float(iar.shape[0] * iar.shape[1])
+        #mask the image with a circle
+        x, y = niar.shape
+        X, Y = ogrid[0:x, 0:y]
+        r = self.pxpermm * self.radius_mm
+        mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > r * r
+        src.ndarray[mask] = 100
 
-        src = self.contrast_equalization(src, verbose=verbose)
-        src = self.smooth(src, verbose=verbose)
+        tarea, target = self.get_intensity_area(src, verbose)
 
-        targets = self._region_segmentation(src, convextest=False)
+        csrc = colorspace(src)
+        if target:
+            self._draw_result(csrc, target)
+        self.brightness_image.set_frame(0, csrc)
 
-        ma = 6000
-        mi = 200
-        tarea = None
-        if targets:
+        gndarray = grayspace(src).ndarray
+        gg = gndarray[invert(mask)]
+        spx = sum(gg)
 
-            targets = [t for t in targets
-                       if self._near_center(*t.centroid_value) and ma > t.area > mi]
-
-            if targets:
-                tt = targets[0]
-                src = colorspace(src)
-                self._draw_result(src, tt)
-#                self.brightness_image.set_frame(0, src)
-                tarea = tt.area
-                if self.running_avg is None:
-                    self.running_avg = [tarea]
-                else:
-                    self.running_avg.append(tarea)
-
-                n = len(self.running_avg)
-                if n > 5:
-                    tarea = sum(self.running_avg) / float(n)
-                    self.running_avg.pop(0)
-
-        self.brightness_image.set_frame(0, colorspace(src))
-        spx = sum(grayspace(src).ndarray)
-
-        if tarea is None:
-            tarea = self.target_area
-        if tarea is None:
-            if self.running_avg:
-                tarea = sum(self.running_avg) / float(len(self.running_avg))
-        if tarea is None:
-            tarea = float(iar.shape[0] * iar.shape[1])
-
+        verbose = True
         #normalize to area
         bm = spx / tarea
         if verbose:
@@ -146,13 +176,10 @@ class CO2HoleDetector(HoleDetector):
                              view_identifier='pychron.fusions.co2.brightness')
         self.brightness_image = im
 
-#        ps = self.parent.get_new_frame()
-#        im.load(ps)
         im.show()
 
         import time
         ss = None
-        pas = []
         for i in range(ncounts):
             self.info('collecting baseline image {} of {}'.format(i + 1, ncounts))
             p = None
@@ -165,30 +192,18 @@ class CO2HoleDetector(HoleDetector):
             ps = im.source_frame.clone()
             gs = grayspace(ps)
             cs = self._crop_image(gs,
-                                  self.intensity_cropwidth,
-                                  self.intensity_cropheight,
+                                  self.brightness_cropwidth,
+                                  self.brightness_cropheight,
                                   image=im
                                   )
 
-            mi = 1500
-            targets = self._region_segmentation(cs)
-            if targets:
-                targets = [t for t in targets
-                       if self._near_center(*t.centroid_value) and t.area > mi]
-                if targets:
-                    pas.append(targets[0].area)
-
+            #convert to array to we can sum >255
+            ncs = asarray(cs.ndarray, dtype='uint32')
             if ss is None:
-                #convert to array to we can sum >255
-                ss = asarray(cs.ndarray, dtype='uint32')
+                ss = ncs
             else:
-                ss += cs.ndarray
-
+                ss += ncs
             time.sleep(period / 1000.0)
-
-        self.target_area = None
-        if len(pas):
-            self.target_area = sum(pas) / len(pas)
 
         self.baseline = ss / float(ncounts)
 
@@ -204,7 +219,6 @@ class CO2HoleDetector(HoleDetector):
         self._nominal_position = (cx, cy)
         self.current_hole = holenum
         self.info('locating CO2 sample hole {}'.format(holenum if holenum else ''))
-
 
         src = self.parent.get_new_frame()
         im.load(src)
