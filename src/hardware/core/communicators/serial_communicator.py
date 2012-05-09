@@ -26,6 +26,7 @@ import select
 #=============local library imports  ==========================
 from communicator import Communicator
 from threading import currentThread
+from globals import ignore_connection_warnings
 
 
 def get_ports():
@@ -297,16 +298,26 @@ class SerialCommunicator(Communicator):
         if port in valid:
             return True
         else:
-            self.warning('{} is not a valid port address'.format(port))
+            msg = '{} is not a valid port address'.format(port)
+            self.warning(msg)
             if not valid:
-                self.warning('No valid ports')
+                wmsg = 'No valid ports'
+                self.warning(wmsg)
             else:
                 for v in valid:
                     self.warning(v)
 
+                wmsg = '\n'.join(valid)
+
+            if not ignore_connection_warnings:
+#            self.warning_dialog('{}\n{}'.format(msg, wmsg))
+                if self.confirmation_dialog('{}\n\n{}'.format(msg, wmsg), title='Quit Pychron'):
+                    os._exit(0)
+
 #            valid = '\n'.join(['%s' % v for v in valid])
 #            self.warning('''%s is not a valid port address
 #==== valid port addresses ==== \n%s''' % (port, valid))
+
 
     def _write(self, cmd, is_hex=False):
         '''
