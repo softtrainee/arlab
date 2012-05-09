@@ -16,6 +16,7 @@ limitations under the License.
 #============= enthought library imports =======================
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
+from src.database.adapters.power_adapter import PowerAdapter
 #from traits.api import on_trait_change
 
 #============= standard library imports ========================
@@ -149,7 +150,7 @@ class OpenPowerMapAction(Action):
         manager = get_manager(event)
         if manager is not None:
             from src.database.adapters.power_map_adapter import PowerMapAdapter
-            db = PowerMapAdapter(dbname='powermapdb',
+            db = PowerMapAdapter(dbname='co2laserdb',
                                 password='Argon')
             db.connect()
             db.open_selector()
@@ -165,7 +166,11 @@ class OpenPowerRecordGraphAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
-            manager.graph_manager.open_graph('powerrecord')
+            db = PowerAdapter(dbname='co2laserdb',
+                                password='Argon')
+            db.connect()
+            db.open_selector()
+#            manager.graph_manager.open_graph('powerrecord')
 
 class ConfigureBrightnessMeterAction(Action):
     def perform(self, event):

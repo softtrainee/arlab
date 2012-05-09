@@ -152,19 +152,12 @@ class BakeoutManager(Manager):
 
     def _add_bakeout_to_db(self, controllers, path):
         db = self.database
-        d = get_datetime()
-
-        args = dict(rundate=str(d.date()),
-                    runtime=str(d.time()))
 
         #add to BakeoutTable
-        b = db.add_bakeout(**args)
-
-        n = os.path.basename(path)
-        r = os.path.dirname(path)
+        b = db.add_bakeout()
 
         #add to PathTable
-        db.add_path(b, root=r, filename=n)
+        db.add_path(b, path)
 
         args = dict()
 

@@ -13,39 +13,32 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from src.graph.stream_graph import StreamGraph
-from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.database.data_warehouse import DataWarehouse
-from apptools.preferences.preference_binding import bind_preference
-'''
-'''
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
     on_trait_change, Event, Bool, Float
 from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor
 from pyface.timer.do_later import do_later
+from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
-from threading import Thread, Timer as DoLaterTimer
+from threading import Thread, Timer as DoLaterTimer, Lock
 import time
-import os
 #=============local library imports  ==========================
-
+from src.graph.stream_graph import StreamGraph
+from src.database.adapters.power_adapter import PowerAdapter
+from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.database.data_warehouse import DataWarehouse
 from src.helpers.timer import Timer
-#from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
 from src.led.led_editor import LEDEditor
-from src.helpers.paths import data_dir
-
 from laser_manager import LaserManager
+
 
 class FusionsLaserManager(LaserManager):
     '''
     '''
 
     logic_board = Instance(FusionsLogicBoard)
-
-    #subsystem = Instance(ArduinoSubsystem)
     fiber_light = Instance(FiberLight)
 
     beam = DelegatesTo('logic_board')
@@ -80,6 +73,12 @@ class FusionsLaserManager(LaserManager):
     record = Event
     record_label = Property(depends_on='_recording_power_state')
     _recording_power_state = Bool(False)
+
+    simulation = DelegatesTo('logic_board')
+
+    data_manager = None
+    _data_manager_lock = None
+
 
     def _record_fired(self):
         if self._recording_power_state:
@@ -127,12 +126,9 @@ class FusionsLaserManager(LaserManager):
             p = self._prev_power
 
         if p is not None:
-#            self.data_manager.add_time_stamped_value(p, rawtime=True)
-#            self.
             try:
                 x = self.power_graph.record(p)
                 self._write_h5('internal', p, x)
-#                self.power_graph.record_multiple((p, cp))
             except Exception, e:
                 self.info(e)
                 print 'record power ', e
@@ -185,17 +181,10 @@ class FusionsLaserManager(LaserManager):
 
         self.open_power_graph(rid)
 
-#        self.data_manager = CSVDataManager()
-#        self.data_manager.new_frame(directory='co2power',
-#                                    base_frame_name=rid)
-
         self.data_manager = dm = H5DataManager()
-#        root = '/usr/local/pychron/co2power'
-
-
-        root = os.path.join(data_dir, 'co2power')
+        self._data_manager_lock = Lock()
+        root = '/usr/local/pychron/co2power'
         dw = DataWarehouse(root=root)
-#                           os.path.join(data_dir, base_dir))
         dw.build_warehouse()
 
         dm.new_frame(directory=dw.get_current_dir(),
@@ -233,6 +222,14 @@ class FusionsLaserManager(LaserManager):
             self.info('Power recording stopped')
             self.power_timer = None
             self.brightness_timer = None
+            self.db = PowerAdapter(dbname='co2laserdb',
+                               password='Argon')
+            if self.db.connect(test=True):
+                dbp = self.db.add_power_record()
+                self.db.add_power_path(dbp, self.data_manager.get_current_path())
+                self.db.commit()
+
+            self.data_manager.close()
 
             self.set_zoom(self._previous_zoom)
             '''
@@ -447,7 +444,7 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         return [('enable', 'enable_label', None),
-                ('record', 'record_label', None)
+                ('record', 'record_label', None),
                 #('pointer', 'pointer_label', None),
                 #('light', 'light_label', None)
                 ]

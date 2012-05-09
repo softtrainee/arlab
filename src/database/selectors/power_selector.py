@@ -14,76 +14,54 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Str, String, Date, Time, Instance
-from traitsui.api import View, Item, Group, VGroup, HGroup, spring
-#from traitsui.tabular_adapter import TabularAdapter
+from traits.api import String, Float
 #============= standard library imports ========================
 import os
-import csv
 #============= local library imports  ==========================
-from .db_selector import DBSelector, DBResult
-from src.database.orms.power_map_orm import PowerMapTable
-from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.database.selectors.db_selector import DBSelector, DBResult
+from src.database.orms.power_orm import PowerTable
 from src.graph.graph import Graph
+from src.managers.data_managers.h5_data_manager import H5DataManager
 
+class PowerResult(DBResult):
+    title_str = 'PowerRecord'
+    request_power = Float
 
-class PowerMapResult(DBResult):
-    title_str = 'PowerMap'
     def load_graph(self):
+
+        g = Graph()
+        dm = self.data_manager
+        internal = dm.get_table('internal', 'Power')
+        brightness = dm.get_table('brightness', 'Power')
+        g.new_plot()
+
+        xi, yi = zip(*[(r['time'], r['value']) for r in internal.iterrows()])
+        g.new_series(xi, yi)
+        xb, yb = zip(*[(r['time'], r['value']) for r in brightness.iterrows()])
+        g.new_series(xb, yb)
+
+        self.graph = g
+
+    def _load_hook(self, dbr):
         data = os.path.join(self.directory, self.filename)
-        from src.data_processing.power_mapping.power_map_processor import PowerMapProcessor
-        pmp = PowerMapProcessor()
-#        print os.path.isfile(data), data
-        if data.endswith('.h5'):
-            dm = H5DataManager()
+        dm = H5DataManager()
+        if os.path.isfile(data):
             dm.open_data(data)
-            reader = dm
-        else:
-            with open(data, 'r') as f:
-                reader = csv.reader(f)
-                #trim off header
-                reader.next()
-        self.graph = pmp.load_graph(reader)
 
+            tab = dm.get_table('internal', 'Power')
+            if tab is not None:
+                if hasattr(tab.attrs, 'request_power'):
+                    self.summary = 'request power ={}'.format(tab.attrs.request_power)
 
-    def traits_view(self):
-        interface_grp = VGroup(
-                          VGroup(Item('_id', style='readonly', label='ID'),
-                    Item('rundate', style='readonly', label='Run Date'),
-                    Item('runtime', style='readonly', label='Run Time'),
-                    Item('directory', style='readonly'),
-                    Item('filename', style='readonly')),
-                VGroup(Item('summary',
-                            show_label=False,
-                            style='readonly')),
-                    label='Info',
-                    )
+        self.data_manager = dm
 
-        return View(
-                    Group(
-                    interface_grp,
-                    Item('graph', width=0.75, show_label=False,
-                         style='custom'),
-                    layout='tabbed'
-                    ),
-
-                    width=800,
-                    height=0.85,
-                    resizable=True,
-                    x=self.window_x,
-                    y=self.window_y,
-                    title=self.title
-                    )
-
-
-class PowerMapSelector(DBSelector):
-    parameter = String('PowerMapTable.rundate')
+class PowerSelector(DBSelector):
+    parameter = String('PowerTable.rundate')
     date_str = 'rundate'
-#    tabular_adapter = PowerMapResultsAdapter
 
     def _get__parameters(self):
 
-        b = PowerMapTable
+        b = PowerTable
 
         f = lambda x:[str(col)
                            for col in x.__table__.columns]
@@ -134,17 +112,17 @@ class PowerMapSelector(DBSelector):
 
             table, _col = self.parameter.split('.')
             kw = dict(filter_str=s)
-            if not table == 'PowerMapTable':
+            if not table == 'PowerTable':
                 kw['join_table'] = table
 
-            dbs = db.get_powermaps(**kw)
+            dbs = db.get_power_records(**kw)
 
             self.info('query {} returned {} results'.format(s,
                                     len(dbs) if dbs else 0))
             if dbs:
                 self.results = []
                 for di in dbs:
-                    d = PowerMapResult(_db_result=di)
+                    d = PowerResult(_db_result=di)
                     d.load()
                     self.results.append(d)
 

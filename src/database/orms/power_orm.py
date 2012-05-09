@@ -24,20 +24,36 @@ from sqlalchemy.orm import relationship
 #=============local library imports  ==========================
 Base = declarative_base()
 
-
-class PowerMapTable(Base):
-    __tablename__ = 'PowerMapTable'
+class PowerTable(Base):
+    __tablename__ = 'PowerTable'
     id = Column(Integer, primary_key=True)
     runtime = Column(Time)
     rundate = Column(Date)
 
-    path = relationship('PowerMapPathTable', uselist=False)
+    path = relationship('PowerPathTable', uselist=False)
 
 
-class PowerMapPathTable(Base):
-    __tablename__ = 'PowerMapPathTable'
+class BrightnessTable(Base):
+    __tablename__ = 'BrightnessTable'
     id = Column(Integer, primary_key=True)
-    powermap_id = Column(Integer, ForeignKey('PowerMapTable.id'))
+    runtime = Column(Time)
+    rundate = Column(Date)
+
+    path = relationship('BrightnessPathTable', uselist=False)
+
+
+class BrightnessPathTable(Base):
+    __tablename__ = 'BrightnessPathTable'
+    id = Column(Integer, primary_key=True)
+    brightness_id = Column(Integer, ForeignKey('BrightnessTable.id'))
+
+    root = Column(String(200))
+    filename = Column(String(80))
+
+class PowerPathTable(Base):
+    __tablename__ = 'PowerPathTable'
+    id = Column(Integer, primary_key=True)
+    power_id = Column(Integer, ForeignKey('PowerTable.id'))
 
     root = Column(String(200))
     filename = Column(String(80))

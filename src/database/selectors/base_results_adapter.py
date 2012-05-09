@@ -1,5 +1,5 @@
 '''
-Copyright 2011 Jake Ross
+Copyright 2012 Jake Ross
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,6 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-#!/usr/bin/env python
-from migrate.versioning.shell import main
-main(debug='False')
+#============= enthought library imports =======================
+from traitsui.tabular_adapter import TabularAdapter
+
+#============= standard library imports ========================
+#============= local library imports  ==========================
+class BaseResultsAdapter(TabularAdapter):
+    columns = [('ID', '_id'),
+               ('Date', 'rundate'),
+               ('Time', 'runtime')
+               ]
+#============= EOF =============================================
