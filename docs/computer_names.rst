@@ -5,7 +5,12 @@ Computer Names
 ------------
 Mac
 ------------
-To connect from a Mac use *Go To Server* (Cmd-k). Enter the address of the computer you 
+To connect from a Mac use the Finder, *Go > Connect To Server...* 
+
+    unicode:: U+2318 
+
+-K. 
+Enter the address of the computer you 
 would like to connect to. 
 
 To file share prepend the address with ``afp://`` ::

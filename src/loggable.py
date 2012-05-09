@@ -16,12 +16,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
+'''
+Copyright 2012 Jake Ross
 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+'''
+#============= enthought library imports =======================
 from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
-
+from pyface.message_dialog import warning
+from pyface.wx.dialog import confirmation
+#============= standard library imports ========================
+#============= local library imports  ==========================
 from src.helpers.logger_setup import add_console
-#from src.helpers.gdisplays import gLoggerDisplay, gWarningDisplay
 from globals import show_warnings
 
 
@@ -53,6 +70,14 @@ class Loggable(HasTraits):
         #self.logger = add_console(name=name, display=gLoggerDisplay)
         #disable the gLoggerDisplay
         self.logger = add_console(name=name)
+
+    def warning_dialog(self, msg):
+        warning(None, msg)
+
+    def confirmation_dialog(self, msg, title=None):
+        result = confirmation(None, msg, title=title)
+        #NO==5104, YES==5103
+        return result == 5103
 
     def warning(self, msg, decorate=True):
         '''
@@ -114,4 +139,4 @@ class Loggable(HasTraits):
 #            do_later(func, msg)
 #        else:
 #            func(msg)
-# ============= EOF ====================================
+#============= EOF =============================================
