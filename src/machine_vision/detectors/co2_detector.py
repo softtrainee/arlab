@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
+from traits.api import on_trait_change, Any
 #============= standard library imports ========================
 from numpy import percentile, sum, asarray, ogrid, pi, invert
-
+import time
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, grayspace, colorspace, smooth, \
     dilate
@@ -28,10 +29,16 @@ class CO2HoleDetector(HoleDetector):
     brightness_cropwidth = 4
     brightness_cropheight = 4
     brightness_threshold = 10
-    brightness_image = None
-    target_image = None
+    brightness_image = Any
+    target_image = Any
 #    target_area = None
     running_avg = None
+
+    @on_trait_change('brightness_image:ui, target_image:ui')
+    def _add_window(self, new):
+        #added windows will be closed by the application on exit
+        self.parent.add_window(new)
+
     def close_images(self):
         if self.brightness_image is not None:
             self.brightness_image.close()
@@ -161,7 +168,6 @@ class CO2HoleDetector(HoleDetector):
         gg = gndarray[invert(mask)]
         spx = sum(gg)
 
-        verbose = True
         #normalize to area
         bm = spx / tarea
         if verbose:
@@ -178,7 +184,6 @@ class CO2HoleDetector(HoleDetector):
 
         im.show()
 
-        import time
         ss = None
         for i in range(ncounts):
             self.info('collecting baseline image {} of {}'.format(i + 1, ncounts))

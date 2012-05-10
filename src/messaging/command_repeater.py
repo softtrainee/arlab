@@ -68,6 +68,7 @@ class CommandRepeater(ConfigLoadable):
 
         #create a sync lock
         self._lock = Lock()
+
         return True
 
     def get_response(self, rid, data, sender_address):
@@ -92,7 +93,9 @@ class CommandRepeater(ConfigLoadable):
                 #_sock is already connected
                 pass
 
+            result_str = ''
             s = '{}|{}|{}'.format(sender_address, rid, data)
+
             send_success, rd = self._send_(s)
             if send_success:
                 read_success, rd = self._read_()
@@ -102,10 +105,26 @@ class CommandRepeater(ConfigLoadable):
             if send_success and read_success:
                 if ready_flag and ready_data == rd:
                     rd = 'OK'
-                result = rd
+
+                result_str = rd
+                result = rd.split('|')[1] if '|' in rd else rd
+
             else:
                 self.led.state = 'red'
                 result = repr(PychronCommErrorCode(self.path, rd))
+
+            self.debug('command={} result_command={}'.format(data, result_str))
+
+            cmd = data.split(' ')[0].strip()
+            try:
+                float(cmd)
+            except ValueError:
+                rcmd = result_str.split('|')[0].strip()
+                if cmd != rcmd:
+                    self.warning('&&&&&& Mismatch command and response &&&&&&')
+
+            import time
+            time.sleep(random.random() / 10.)
 
             return result
 #            try:

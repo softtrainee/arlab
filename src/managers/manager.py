@@ -103,6 +103,12 @@ class Manager(ConfigLoadable, Viewable):
         for _k, man in self.get_managers():
             man._killed = False
 
+        self.add_window(self.ui)
+
+    def add_window(self, ui):
+        if self.application is not None:
+            self.application.uis.append(ui)
+
 
 #    def close_ui(self):
 #        if self.ui is not None:

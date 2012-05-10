@@ -32,6 +32,7 @@ import time
 #import os
 #from datetime import timedelta
 from threading import Thread
+import random
 #import struct
 
 
@@ -62,6 +63,9 @@ class Client(HasTraits):
     ask_id = 'A'
     sent_commands = List
     pcommand = Str
+
+    test_command = ''
+    test_response = ''
     def _get_calculated_duration(self):
         return self.period / 1000. * self.n_periods / 3600.
 
@@ -137,17 +141,32 @@ class Client(HasTraits):
     def ask(self, command, port=None):
         conn = self.get_connection(port=port)
         conn.send(command)
+        r = None
         try:
             r = conn.recv(4096)
+            r = r.strip()
             print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)
         except socket.error, e:
             print e
 
-    def test(self):
-        self.ask('StartMultRuns Foo')
-        time.sleep(2)
+        return r
 
-        self.ask('CompleteMultRuns Foo')
+    def test(self):
+        ecount = 0
+        for _ in range(2000):
+            response = self.ask(self.test_command)
+            if self.test_response:
+                if response != self.test_response:
+                    ecount += 1
+                    print '&&&&&&&&&&&&&&&&& ERROR &&&&&&&&&&&&'
+            time.sleep(random.randint(0, 100) / 10000.)
+        print '=====test {} complete======'.format(self.ask_id)
+        print '{} error count= {}'.format(self.ask_id, ecount)
+
+#        self.ask('StartMultRuns Foo')
+#        time.sleep(2)
+#
+#        self.ask('CompleteMultRuns Foo')
 
 #        for i in range(500):
 #            for v in 'ABCEDFG':
@@ -239,21 +258,26 @@ def main2():
 
 def multiplex_test():
     #cmd = 'GetValveState C'
-    c = Client(host='192.168.0.79',
-               port=1063,
+    c = Client(
+               port=1067,
                ask_id='D'
                )
+
+    c.test_command = 'GetPosition'
+    c.test_response = '0.00,0.00,0.00'
     t = Thread(target=c.test)
 
 
     #cmd = 'GetValveState C'
-#    c = Client(host='192.168.0.65',
-#               port=1063,
-#               ask_id='E')
-#    t2 = Thread(target=c.test)
+    c = Client(
+               port=1067,
+               ask_id='E')
+    c.test_command = 'SetLaserPower 10'
+    c.test_response = 'OK'
+    t2 = Thread(target=c.test)
 
     t.start()
-#    t2.start()
+    t2.start()
 
 
 
@@ -263,42 +287,10 @@ if __name__ == '__main__':
 #              'benchmark_unix_tcp_no_log.npz'
 #              )
 
-    #multiplex_test()
-    c = Client()
+    multiplex_test()
 
-#    c.host = 'localhost'
-#    c.port = 1061
-#    c.ask('StartMultRuns A')
-#    c.ask('StartRun Aa')
-#
-    c.port = 1067
-#    c.ask('SetXY 14.774,0.839')
-#    time.sleep(5)
-#    c.ask('Enable')
-#    time.sleep(10)
-#    c.ask('Disable')
-#
-#    c.port = 1061
-#    time.sleep(10)
-#    c.ask('CompleteRun')
-#    time.sleep(5)
-#    c.ask('StartRun Aa')
-#
-#    c.port = 1067
-#    c.ask('SetXY 14.874,0.839')
-#    c.ask('Enable')
-#    time.sleep(5)
-#    c.ask('Disable')
-#
-#    c.port = 1061
-#
-#
-#
-#    time.sleep(10)
-#
-#    c.ask('CompleteRun')
 
-    c.configure_traits()
+
 
     #===========================================================================
     #Check Remote launch snippet 

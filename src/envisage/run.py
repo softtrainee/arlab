@@ -175,6 +175,7 @@ def launch(beta=False):
         lab.exit()
 
 
+
     logger.info('Quiting Pychron')
     lab.exit()
     return

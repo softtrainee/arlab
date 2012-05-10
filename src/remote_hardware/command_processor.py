@@ -17,7 +17,7 @@ limitations under the License.
 from traits.api import Bool, Str
 #============= standard library imports ========================
 import socket
-from threading import Thread
+from threading import Thread, Lock
 import os
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
@@ -81,6 +81,9 @@ class CommandProcessor(ConfigLoadable):
         '''
 
         '''
+
+        self._manager_lock = Lock()
+
         kind = socket.SOCK_STREAM
         if ipc_dgram:
             kind = socket.SOCK_DGRAM
@@ -240,7 +243,7 @@ class CommandProcessor(ConfigLoadable):
                         handler = self._handlers[klass]
                     if handler is not None:
 #                    result = self.context_filter.get_response(handler, data)
-                        result = handler.handle(data, sender_addr)
+                        result = handler.handle(data, sender_addr, self._manager_lock)
 
                 if isinstance(result, ErrorCode):
                     result = repr(result)

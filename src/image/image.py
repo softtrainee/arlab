@@ -286,6 +286,7 @@ class StandAloneImage(HasTraits):
     height = Int(600)
     view_identifier = None
     title = None
+    ui = Any
     def __image_default(self):
         return Image(width=self.width, height=self.height)
 
@@ -295,7 +296,7 @@ class StandAloneImage(HasTraits):
 #        else:
 #            pass
     def show(self):
-        do_after(50, self.edit_traits)
+        do_after(1, self.edit_traits)
 
     def close(self):
         if self.ui is not None:
@@ -329,23 +330,37 @@ class StandAloneImage(HasTraits):
                       height=self.height,
                       style='custom'
                       )
+        print self.width, self.height
+
         v = View(imgrp,
                  handler=ImageHandler,
                  x=0.55,
                  y=35,
                  width=self.width,
-                 height=self.height,
+                 height=self.height + 22,
+#                 resizable=True
                  )
 
         if self.title is not None:
             v.title = self.title
+
         if self.view_identifier is not None:
             v.id = self.view_identifier
+
         return v
 
 class ImageHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
+
+
+
+if __name__ == '__main__':
+    src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
+    im = StandAloneImage()
+    im.load(src)
+    im.configure_traits()
+
 #======== EOF ================================
 #    def render_images1(self, src):
 #        nsrc = len(src)

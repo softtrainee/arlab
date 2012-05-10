@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
+from traits.api import List
 from envisage.ui.workbench.api import WorkbenchApplication
 from pyface.api import AboutDialog, SplashScreen
 from pyface.image_resource import ImageResource
@@ -30,6 +31,8 @@ class Pychron(WorkbenchApplication):
     id = 'pychron'
     name = 'Pychron'
     beta = False
+
+    uis = List
     def _about_dialog_default(self):
         '''
         '''
@@ -49,6 +52,11 @@ class Pychron(WorkbenchApplication):
                           )
         return sp
 
+    def exit(self):
+        for ui in self.uis:
+            ui.dispose()
+
+        super(Pychron, self).exit()
 #    def _started_fired(self):
 #        elm = self.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
 #        elm.window_x = 25
