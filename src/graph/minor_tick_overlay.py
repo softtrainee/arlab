@@ -33,6 +33,9 @@ class MinorTicksOverlay(AbstractOverlay):
     aux_component = Any
 
     def overlay(self, component, gc, *args, **kw):
+        '''
+        :param: component
+        '''
         try:
             gc.save_state()
             c = self.component

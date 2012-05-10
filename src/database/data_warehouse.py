@@ -22,11 +22,22 @@ MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', \
 
 
 class DataWarehouse(Loggable):
-
+    '''
+        Class to construct data warehouses. A data warehouse is simple
+        file directory with the following structure
+        
+        YEAR
+            MONTH
+                file.ext
+                
+                
+    '''
     root = None
     _current_dir = None
 
     def get_current_dir(self):
+        ''' 
+        '''
         return self._current_dir
 
     def build_warehouse(self):

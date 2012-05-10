@@ -15,7 +15,7 @@ limitations under the License.
 '''
 import pyopencv as cv
 from numpy import array, ones, zeros
-from src.data_processing.centroid.centroid import centroid as _centroid
+from src.data_processing.centroid.calculate_centroid import calculate_centroid
 
 #
 #def clone(src):
@@ -204,7 +204,7 @@ def _get_morphology_element(v):
 def centroid(polypts):
 
     pts = array([(pt.x, pt.y) for pt in polypts], dtype=float)
-    return _centroid(pts)
+    return calculate_centroid(pts)
 
 
 def contour(src):
