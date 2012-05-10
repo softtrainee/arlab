@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
+from globals import use_ipc
 
 #============= standard library imports ========================
 
@@ -23,6 +24,15 @@ class MessagingServer(object):
     '''
     parent = None
     allow_reuse_address = True
+
+    def get_response(self, *args, **kw):
+        if use_ipc:
+            func = self.parent.repeater
+
+        else:
+            func = self.parent.processor
+
+        return func.get_response(*args, **kw)
 
     def increment_packets_received(self):
         '''

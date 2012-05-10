@@ -30,7 +30,7 @@ class MessagingHandler(BaseRequestHandler):
         if data is not None:
 
             self.server.info('Received: %s' % data.strip())
-            response = self.server.repeater.get_response(self.server.processor_type, data, self.client_address[0])
+            response = self.server.get_response(self.server.processor_type, data, self.client_address[0])
             self.send_packet(response)
 
             if 'ERROR 6' in response:

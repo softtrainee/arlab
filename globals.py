@@ -37,3 +37,5 @@ initialize_zoom = True
 
 ignore_initialization_warnings = True
 ignore_connection_warnings = True
+
+use_ipc = False

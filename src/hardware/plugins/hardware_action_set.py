@@ -27,6 +27,9 @@ class HardwareActionSet(WorkbenchActionSet):
                Action(name='Hardware Manager',
                       path='MenuBar/File',
                       class_name='src.hardware.plugins.hardware_actions:OpenHardwareManagerAction'),
+               Action(name='Remote Hardware Server',
+                      path='MenuBar/File',
+                      class_name='src.hardware.plugins.hardware_actions:OpenRemoteHardwareServerAction'),
 
               ]
 #============= EOF ====================================

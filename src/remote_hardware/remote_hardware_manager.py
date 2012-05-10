@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 '''
 #============= enthought library imports =======================
-from traits.api import Instance, Bool, on_trait_change, List
+from traits.api import Dict, Instance, Bool, on_trait_change, List
 from apptools.preferences.preference_binding import bind_preference
 from traitsui.api import View, Item, Group, HGroup, VGroup, \
     ListEditor, TableEditor
@@ -28,6 +28,7 @@ from src.messaging.remote_command_server import RemoteCommandServer
 import ConfigParser
 import os
 from src.helpers.paths import setup_dir
+from globals import use_ipc
 
 '''
 #===================================
@@ -42,7 +43,7 @@ from src.helpers.paths import setup_dir
 class RemoteHardwareManager(Manager):
 
 #    command_processor = Instance(CommandProcessor)
-#    processors = List
+    processors = Dict
     servers = List(RemoteCommandServer)
 
     enable_hardware_server = Bool
@@ -51,24 +52,35 @@ class RemoteHardwareManager(Manager):
 #        super(RemoteHardwareManager, self).__init__(*args, **kw)
     system_lock = Bool(False)
 
-#    def _processors_default(self):
-
-    def _get_processors(self):
-        ps = []
+    def _processors_default(self):
+        ps = dict()
+#    def _get_processors(self):
+#        ps = []
 #        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
         ip = InitializationParser()
 
         for pi in ip.get_processors():
-            ps.append(self._command_processor_factory(pi))
+            cp = self._command_processor_factory(pi)
+            ps[cp.name] = cp
+#            ps.append()
         return ps
 
     def bootstrap(self):
         if self.enable_hardware_server:
-            self.load_servers()
+            if use_ipc:
+                for p in self.processors:
+                    p.manager = self
+                    p.bootstrap()
+            else:
+                for p in self.processors.itervalues():
+                    p.manager = self
+#                    p.load()
+                    p.bootstrap()
 
-#            for p in self.processors:
-#                p.manager = self
-#                p.bootstrap()
+                self.load_servers()
+
+
+
 #            self.command_processor.manager = self
 #            self.command_processor.bootstrap()
 
@@ -83,7 +95,7 @@ class RemoteHardwareManager(Manager):
 #            self.command_processor.close()
 
     def stop(self):
-        for p in self.processors:
+        for p in self.processors.itervalues():
             p.close()
 #        self.command_processor.close()
 
@@ -171,12 +183,15 @@ class RemoteHardwareManager(Manager):
         names = self.read_configuration()
         if names:
             for s in names:
-                e = RemoteCommandServer(name=s,
+                for k in self.processors.keys():
+                    if k in s:
+                        e = RemoteCommandServer(name=s,
                                configuration_dir_name='servers',
+                               processor=self.processors[k]
                                )
-
-                e.bootstrap()
-                self.servers.append(e)
+                        e.bootstrap()
+                        self.servers.append(e)
+                        break
 
     def read_configuration(self):
         '''
@@ -213,13 +228,13 @@ class RemoteHardwareManager(Manager):
                        editor=ListEditor(use_notebook=True,
                                            page_name='.name',
                                            selected='selected'), show_label=False)
-        repeater = Group(Item('repeater', style='custom',
-                              show_label=False),
-                            show_border=True,
-
-                         label='Repeater')
+#        repeater = Group(Item('repeater', style='custom',
+#                              show_label=False),
+#                            show_border=True,
+#
+#                         label='Repeater')
         v = View(HGroup(
-                 VGroup(tservers, repeater),
+                 VGroup(tservers),
                  servers
                  ),
                  title='Remote Hardware Server',
