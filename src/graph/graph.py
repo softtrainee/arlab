@@ -73,44 +73,7 @@ class GraphHandler(Handler):
 
 
 class Graph(Loggable):
-    '''
-        A Graph represents a collection of Plots
-        A Plot represents a collection of series
-        A series can be a line plot, scatter plot etc
-        
-        to graph data the generic protocol is 
-        
-        g=Graph()
-        #add a plot to the Graph
-        #this plot will have plotid =0
-        g.new_plot()
-        
-        #plot attributes can be set with keywords
-        #keywords are passed to Plot class
-        #g.new_plot(title='time v. Temp')
-        
-        #add line plot
-        #xdata,ydata two data arrays of same dimension
-        g.new_series(x=xdata,y=ydata)
-        
-        #series attributes can be set with keywords
-        #keywords are passed to the rendering class
-        #g.new_series(x=x,y=y,color='green')
-        
-        #add a scatter plot
-        g.new_series(x=xdata,y=ydata,type='scatter')
-        
-        #add a new plot
-        #plotid=1
-        g.new_plot()
-        
-        #add a series to second plot ie plotid=1 
-        g.new_series(x=xdata,y=ydata,plotid=1)
-       
-       If you would like to create a standard template
-       subclass Graph and implement the new_graph method
-       
-        
+    ''' 
     '''
     name = Str
     plotcontainer = Instance(BasePlotContainer)
@@ -255,12 +218,16 @@ class Graph(Loggable):
         self._save_(path=path)
 
     def export_raw_data(self, path=None, header=None, plotid=0):
+        '''
+        '''
         if path is None:
             path = self._path_factory()
         if path is not None:
             self._export_raw_data(path, header, plotid)
 
     def export_data(self, path=None):
+        '''
+        '''
         if path is None:
             path = self._path_factory()
         if path is not None:
@@ -276,6 +243,8 @@ class Graph(Loggable):
         return name_generator(name)
 
     def read_xy(self, p, header=False, series=0, plotid=0):
+        '''
+        '''
         x = []
         y = []
         with open(p, 'r') as f:
@@ -293,6 +262,9 @@ class Graph(Loggable):
         self.set_data(y, plotid, series, axis=1)
 
     def close(self):
+        '''
+            close the window
+        '''
         if self.ui is not None:
             do_later(self.ui.dispose)
         self.ui = None
@@ -375,7 +347,6 @@ class Graph(Loggable):
     def set_series_traits(self, d, plotid=0, series=0):
         '''
         '''
-
         plot = self.plots[plotid].plots['plot%i' % series][0]
         plot.trait_set(**d)
         self.plotcontainer.request_redraw()
@@ -398,6 +369,8 @@ class Graph(Loggable):
 #        return series
 #        #self.refresh_editor()
     def get_series_label(self, plotid=0, series=0):
+        '''
+        '''
         r = ''
         legend = self.plots[plotid].legend
         if isinstance(series, str):
@@ -442,6 +415,8 @@ class Graph(Loggable):
 #        legend._cached_label_names = legend.labels
 
     def clear_legend(self, keys, plotid=0):
+        '''
+        '''
         legend = self.plots[plotid].legend
         for key in keys:
             legend.plots.pop(key)
@@ -478,6 +453,8 @@ class Graph(Loggable):
         self._set_limits(min, max, 'index', plotid, pad, **kw)
 
     def set_x_tracking(self, track, plotid=0):
+        '''
+        '''
         plot = self.plots[plotid]
         if track:
             plot.index_range.tracking_amount = track
@@ -539,6 +516,8 @@ class Graph(Loggable):
         self.plots[plotid].overlays.append(PlotLabel(txt, x=x, y=y))
 
     def add_data_label(self, x, y, plotid=0):
+        '''
+        '''
         #print self.plots, plotid
         plot = self.plots[plotid]
         label = DataLabel(component=plot, data_point=(x, y),
@@ -549,7 +528,6 @@ class Graph(Loggable):
     def add_guide(self, value, orientation='h', plotid=0, color=(0, 0, 0)):
         '''
         '''
-
         plot = self.plots[plotid]
 
         guide_overlay = GuideOverlay(component=plot,
@@ -714,8 +692,11 @@ class Graph(Loggable):
         '''
         '''
         pass
+
     def add_aux_axis(self, po, p):
-        from chaco.axis import PlotAxis
+        '''
+        '''
+#        from chaco.axis import PlotAxis
         axis = PlotAxis(p, orientation='right',
                         axis_line_visible=False,
                         tick_color='red',
@@ -738,6 +719,8 @@ class Graph(Loggable):
         series.value.set_data(np.hstack((ov, [datum[1]])))
 
     def add_data(self, data, plotlist=None, **kw):
+        '''
+        '''
         if plotlist is None:
             plotlist = xrange(len(data))
         for pi, d in zip(plotlist, data):
@@ -787,12 +770,16 @@ class Graph(Loggable):
         self.plotcontainer.request_redraw()
 
     def add_vertical_rule(self, v, plotid=0, **kw):
+        '''
+        '''
         plot = self.plots[plotid]
         l = GuideOverlay(plot, value=v, orientation='v', **kw)
 
         plot.overlays.append(l)
 
     def add_horizontal_rule(self, v, plotid=0, **kw):
+        '''
+        '''
         plot = self.plots[0]
 
         l = GuideOverlay(plot, value=v, **kw)
@@ -800,6 +787,8 @@ class Graph(Loggable):
         plot.overlays.append(l)
 
     def add_opposite_ticks(self, plotid=0, key=None):
+        '''
+        '''
         p = self.plots[plotid]
         if key is None:
             for key in ['x', 'y']:
@@ -835,17 +824,23 @@ class Graph(Loggable):
         return ax
 
     def add_minor_xticks(self, plotid=0, **kw):
+        '''
+        '''
         p = self.plots[plotid]
         m = MinorTicksOverlay(component=p, orientation='v', **kw)
         p.underlays.append(m)
 
     def add_minor_yticks(self, plotid=0, **kw):
+        '''
+        '''
         p = self.plots[plotid]
 
         m = MinorTicksOverlay(component=p, orientation='h', **kw)
         p.underlays.append(m)
 
     def redraw(self, force=True):
+        '''
+        '''
         if force:
             self.plotcontainer._layout_needed = True
             self.plotcontainer.invalidate_and_redraw()
@@ -1241,9 +1236,6 @@ class Graph(Loggable):
         return r
 
     def traits_view(self):
-        '''
-        '''
-
         plot = Item('plotcontainer',
                     style='custom',
                     show_label=False,

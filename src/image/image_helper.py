@@ -49,7 +49,7 @@ from ctypes_opencv.cv import cvCreateStructuringElementEx, CV_SHAPE_RECT, \
     CV_GAUSSIAN
 from ctypes_opencv.cxcore import cvRound, cvFillPoly, cvSize, CV_SEQ_FLAG_HOLE
 
-from src.data_processing.centroid.centroid import centroid as _centroid
+from src.data_processing.centroid.calcualte_centroid import calculate_centroid as _centroid
 from threading import Thread
 from Image import fromarray
 

@@ -20,7 +20,7 @@ from traits.api import List
 
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
-from src.managers.bakeout_manager import BakeoutManager
+from src.bakeout.bakeout_manager import BakeoutManager
 
 class BakeoutPlugin(CorePlugin):
     '''

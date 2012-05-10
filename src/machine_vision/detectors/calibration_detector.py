@@ -13,14 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 '''
-from traits.api import Any, Int
-from src.loggable import Loggable
-from src.managers.stage_managers.machine_vision.detector import Detector
-from src.image.cvwrapper import draw_circle, new_point, find_circles, draw_lines, \
+#============= enthought library imports =======================
+from traits.api import Int
+#============= standard library imports ========================
+from numpy import polyfit, histogram
+#============= local library imports  ==========================
+
+from src.image.cvwrapper import  draw_lines, \
     threshold, crop, colorspace, grayspace, find_lines, isolate_color, contour, \
     get_polygons, draw_contour_list, draw_polygons
-import time
-from numpy import array, polyfit, histogram
+from src.machine_vision.detectors.detector import Detector
 
 class CalibrationDetector(Detector):
 
@@ -193,4 +195,4 @@ class CalibrationDetector(Detector):
 #        src = self.image.frames[0]
 #        self.image.frames[1] = threshold(src, v)
 
-#======== EOF ================================
+#============= EOF =============================================
