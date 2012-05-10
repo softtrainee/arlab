@@ -30,3 +30,7 @@ def open_manager(man, **kw):
 #        man.edit_traits()
 
         MANAGERS.append(man)
+
+def open_protocol(window, protocol):
+    m = window.application.get_service(protocol)
+    open_manager(m)
