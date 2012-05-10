@@ -30,5 +30,18 @@ class OpenHardwareManagerAction(Action):
         '''
         '''
         m = self.window.application.get_service('src.managers.hardware_manager.HardwareManager')
-        m.edit_traits()
+#        m.edit_traits()
+        open_manager(m)
+
+class OpenRemoteHardwareServerAction(Action):
+    '''
+    '''
+    description = 'Open the remote hardware server'
+    name = 'Remote Hardware Server'
+    def perform(self, event):
+        '''
+        '''
+        p = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
+        m = self.window.application.get_service(p)
+        open_manager(m)
 #============= EOF ====================================

@@ -279,7 +279,11 @@ def multiplex_test():
     t.start()
     t2.start()
 
-
+def laser_client():
+    c = Client(
+               port=1067,
+               ask_id='E')
+    c.configure_traits()
 
 if __name__ == '__main__':
     #plothist('benchmark_unix_only.npz')
@@ -287,8 +291,8 @@ if __name__ == '__main__':
 #              'benchmark_unix_tcp_no_log.npz'
 #              )
 
-    multiplex_test()
-
+#    multiplex_test()
+    laser_client()
 
 
 

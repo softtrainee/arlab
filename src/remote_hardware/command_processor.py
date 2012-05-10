@@ -27,7 +27,7 @@ from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors.system_errors import SystemLockErrorCode
 import select
-from globals import ipc_dgram
+from globals import ipc_dgram, use_ipc
 BUFSIZE = 2048
 
 
@@ -72,6 +72,9 @@ class CommandProcessor(ConfigLoadable):
     def close(self):
         '''
         '''
+        if not use_ipc:
+            return
+
         self.info('Stop listening to {}'.format(self.path))
         self._listen = False
         if self._sock:
@@ -81,8 +84,10 @@ class CommandProcessor(ConfigLoadable):
         '''
 
         '''
-
         self._manager_lock = Lock()
+        if not use_ipc:
+            return True
+
 
         kind = socket.SOCK_STREAM
         if ipc_dgram:
@@ -189,15 +194,22 @@ class CommandProcessor(ConfigLoadable):
                 self.debug(tb)
 
     def _end_request(self, sock, data):
-        #self.debug('Result: {}'.format(data))
-        try:
-            if ipc_dgram:
-                sock.sendto(data, self.path)
-            else:
-                sock.send(data)
-            #sock.close()
-        except Exception, err:
-            self.debug('End Request Exception: {}'.format(err))
+        if use_ipc:
+            #self.debug('Result: {}'.format(data))
+            try:
+                if ipc_dgram:
+                    sock.sendto(data, self.path)
+                else:
+                    sock.send(data)
+                #sock.close()
+            except Exception, err:
+                self.debug('End Request Exception: {}'.format(err))
+        else:
+            cmd, data = data.split('|')
+            return cmd, data
+
+    def get_response(self, cmd_type, data, addr):
+        return self._process_request(None, addr, cmd_type, data)
 
     def _process_request(self, sock, sender_addr, request_type, data):
 
@@ -248,7 +260,10 @@ class CommandProcessor(ConfigLoadable):
                 if isinstance(result, ErrorCode):
                     result = repr(result)
 
-            self._end_request(sock, result)
+            r_args = self._end_request(sock, result)
+
+            if not use_ipc:
+                return r_args[1]
 
         except Exception, err:
             import traceback

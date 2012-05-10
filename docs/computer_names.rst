@@ -5,11 +5,10 @@ Computer Names
 ------------
 Mac
 ------------
-To connect from a Mac use the Finder, *Go > Connect To Server...* 
+To connect from a Mac use the Finder, *Go > Connect To Server...* (|cmd|-K)
 
-    unicode:: U+2318 
+.. |cmd| unicode:: U+2318 
 
--K. 
 Enter the address of the computer you 
 would like to connect to. 
 

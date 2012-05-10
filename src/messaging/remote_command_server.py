@@ -33,6 +33,8 @@ from src.led.led_editor import LEDEditor
 from src.led.led import LED
 from src.messaging.command_repeater import CommandRepeater
 from src.helpers.datetime_tools import diff_timestamp
+from globals import use_ipc
+from src.remote_hardware.command_processor import CommandProcessor
 class RCSHandler(Handler):
     def init(self, info):
         '''
@@ -57,6 +59,7 @@ class RemoteCommandServer(ConfigLoadable):
     simulation = False
     _server = None
     repeater = Instance(CommandRepeater)
+    processor = Instance(CommandProcessor)
 
     host = Str(enter_set=True, auto_set=False)
     port = Int(enter_set=True, auto_set=False)
@@ -86,12 +89,12 @@ class RemoteCommandServer(ConfigLoadable):
     def _repeater_default(self):
         '''
         '''
-
         c = CommandRepeater(
-                            logger_name='{}_repeater'.format(self.name),
-                            name=self.name,
-                               configuration_dir_name='servers')
-        c.bootstrap()
+                        logger_name='{}_repeater'.format(self.name),
+                        name=self.name,
+                           configuration_dir_name='servers')
+        if use_ipc:
+            c.bootstrap()
         return c
 
     def _repeater_fails_changed(self, old, new):
