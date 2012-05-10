@@ -15,16 +15,16 @@ limitations under the License.
 '''
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
-    DelegatesTo, on_trait_change, Bool, List
-from traitsui.api import View, Item, Handler, HGroup, Group, spring
-from pyface.timer.do_later import do_later, do_after
+    DelegatesTo, on_trait_change, Bool
+from traitsui.api import View, Item, Handler, Group
+#from pyface.timer.do_later import do_later, do_after
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.image.image import Image
-from src.image.image_editor import ImageEditor
+#from src.image.image import Image
+#from src.image.image_editor import ImageEditor
 
 from src.helpers.paths import setup_dir, hidden_dir
 
@@ -93,6 +93,8 @@ class MachineVisionManager(Manager):
 
     testing = False
     _debug = Bool(False)
+
+    application = DelegatesTo('parent')
 #    _debug = Bool(True)
 
 #    def _zoom_calibration(self):

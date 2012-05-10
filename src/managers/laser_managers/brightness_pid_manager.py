@@ -26,6 +26,7 @@ from src.hardware.core.pid_object import PIDObject
 from src.helpers.paths import hidden_dir
 from src.helpers.timer import Timer
 from src.graph.stream_graph import StreamGraph
+#from pyface.timer.api import do_later
 
 class BrightnessPIDManager(Manager):
     pid_object = Instance(PIDObject)
@@ -43,25 +44,7 @@ class BrightnessPIDManager(Manager):
     enable = DelegatesTo('parent')
     enable_label = DelegatesTo('parent')
 
-    def _graph_default(self):
-        g = StreamGraph(container_dict=dict(padding=5),)
-        g.new_plot(data_limit=60)
-        g.new_series()
-        g.new_series()
-
-        return g
-
-    def _setpoint_changed(self):
-        if self._collect_baseline:
-            self._collect_baseline = False
-            print self.machine_vision
-            if self.machine_vision:
-                self.machine_vision.collect_baseline_intensity()
-
-        if abs(self.setpoint) < 0.001:
-            self._collect_baseline = True
-
-        self.set_brightness_setpoint(self.setpoint)
+    application = DelegatesTo('parent')
 
     def set_brightness_setpoint(self, b):
         #start a timer for the pid loop
@@ -80,8 +63,6 @@ class BrightnessPIDManager(Manager):
             err = sp - intensity
         else:
             err = sp + random.random()
-#        val = sp + random.random()
-#        err = val - sp
 
         out = self.pid_object.iterate(err, self.pid_loop_period)
 
@@ -92,36 +73,8 @@ class BrightnessPIDManager(Manager):
         self.error = err
         self.graph.record_multiple((err, out), do_after=10)
 
-    def _pid_object_default(self):
-        return self.load_pid_object()
-
-    def load_pid_object(self):
-        p = os.path.join(hidden_dir, 'brightness_pid_object')
-        if os.path.isfile(p):
-            self.info('loading pid object from {}'.format(p))
-            try:
-                with open(p, 'rb') as f:
-                    po = pickle.load(f)
-            except pickle.PickleError, e:
-                self.info('error loading pid object from {}, {}'.format(p, e))
-                po = PIDObject()
-        else:
-            po = PIDObject()
-
-        return po
-
-    def dump_pid_object(self):
-
-        try:
-            p = os.path.join(hidden_dir, 'brightness_pid_object')
-            self.info('dumping pid object to {}'.format(p))
-            with open(p, 'wb') as f:
-                pickle.dump(self.pid_object, f)
-        except pickle.PickleError:
-            pass
-
     def close(self, is_ok):
-        self.dump_pid_object()
+        self._dump_pid_object()
         if self.brightness_timer:
             self.brightness_timer.Stop()
 
@@ -155,6 +108,53 @@ class BrightnessPIDManager(Manager):
 
         return v
 
+    def _setpoint_changed(self):
+        if self._collect_baseline:
+            self._collect_baseline = False
+            if self.machine_vision:
+                self.machine_vision.collect_baseline_intensity()
+#                do_later(self._set_window)
+
+        if abs(self.setpoint) < 0.001:
+            self._collect_baseline = True
+
+        self.set_brightness_setpoint(self.setpoint)
+
+    def _pid_object_default(self):
+        return self._load_pid_object()
+
+    def _graph_default(self):
+        g = StreamGraph(container_dict=dict(padding=5),)
+        g.new_plot(data_limit=60)
+        g.new_series()
+        g.new_series()
+
+        return g
+
+    def _load_pid_object(self):
+        p = os.path.join(hidden_dir, 'brightness_pid_object')
+        if os.path.isfile(p):
+            self.info('loading pid object from {}'.format(p))
+            try:
+                with open(p, 'rb') as f:
+                    po = pickle.load(f)
+            except pickle.PickleError, e:
+                self.info('error loading pid object from {}, {}'.format(p, e))
+                po = PIDObject()
+        else:
+            po = PIDObject()
+
+        return po
+
+    def _dump_pid_object(self):
+
+        try:
+            p = os.path.join(hidden_dir, 'brightness_pid_object')
+            self.info('dumping pid object to {}'.format(p))
+            with open(p, 'wb') as f:
+                pickle.dump(self.pid_object, f)
+        except pickle.PickleError:
+            pass
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('bm')

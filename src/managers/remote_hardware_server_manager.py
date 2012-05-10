@@ -27,6 +27,7 @@ from src.messaging.command_repeater import CommandRepeater
 from src.messaging.remote_command_server import RemoteCommandServer
 from src.managers.manager import Manager
 from src.helpers.paths import setup_dir
+from threading import Lock
 
 class RemoteHardwareServerManager(Manager):
     '''
@@ -42,7 +43,6 @@ class RemoteHardwareServerManager(Manager):
     def load(self):
         '''
         '''
-
         names = self.read_configuration()
         if names:
             for s in names:

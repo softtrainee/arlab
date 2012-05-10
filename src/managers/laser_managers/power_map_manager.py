@@ -67,6 +67,7 @@ class PowerMapManager(Manager):
     mappings = List
     database = Any
 
+    application = DelegatesTo('laser_manager')
 #    power_mapping = Instance(PowerMapping)
 #    beam_diameter = Float(1)
 #    request_power = Float(1)
@@ -141,6 +142,10 @@ class PowerMapManager(Manager):
                    target=self._execute_)
         t.start()
 
+    def _open_power_map(self, pi):
+        ui = pi.edit_traits()
+        self.add_window(ui)
+
     def _execute_(self):
         x = 50
         y = 20
@@ -151,7 +156,10 @@ class PowerMapManager(Manager):
             pi.display_name = '{}'.format(i + 1)
             pi.window_x = x + i * 10
             pi.window_y = y + i * 20
-            do_later(pi.edit_traits)
+
+            do_later(self._open_power_map, pi)
+#            do_later(pi.edit_traits)
+
             try:
                 pi.center_x = self.laser_manager.stage_manager.x
                 pi.center_y = self.laser_manager.stage_manager.y
@@ -235,7 +243,7 @@ class PowerMapManager(Manager):
 #                                     editor=ComponentEditor())
                                 )
                         ),
-                title=self.title,
+                title='Power Map Manager',
                 handler=self.handler_klass,
                 resizable=True,
 #                width=890,

@@ -82,7 +82,8 @@ class FusionsLaserManager(LaserManager):
 
     def _record_fired(self):
         if self._recording_power_state:
-            self.stop_power_recording(delay=0)
+            save = self.confirmation_dialog('Save to Database')
+            self.stop_power_recording(delay=0, save=save)
         else:
             t = Thread(name='fusions.power_record',
                        target=self.start_power_recording, args=('- Manual',))
@@ -159,7 +160,11 @@ class FusionsLaserManager(LaserManager):
         if self.record_brightness:
             g.new_series()
 
-        do_later(g.edit_traits)
+        do_later(self._open_power_graph, g)
+
+    def _open_power_graph(self, graph):
+        ui = graph.edit_traits()
+        self.add_window(ui)
 
     def _dispose_optional_windows_hook(self):
         if self.power_graph is not None:
@@ -211,7 +216,7 @@ class FusionsLaserManager(LaserManager):
         if self._get_record_brightness():
             self.brightness_timer = Timer(175, self._record_brightness)
 
-    def stop_power_recording(self, delay=5):
+    def stop_power_recording(self, delay=5, save=True):
 
         def _stop():
             if self.power_timer is not None:
@@ -222,12 +227,17 @@ class FusionsLaserManager(LaserManager):
             self.info('Power recording stopped')
             self.power_timer = None
             self.brightness_timer = None
-            self.db = PowerAdapter(dbname='co2laserdb',
-                               password='Argon')
-            if self.db.connect(test=True):
-                dbp = self.db.add_power_record()
-                self.db.add_power_path(dbp, self.data_manager.get_current_path())
-                self.db.commit()
+
+            if save:
+                self.db = PowerAdapter(dbname='co2laserdb',
+                                   password='Argon')
+                if self.db.connect(test=True):
+                    dbp = self.db.add_power_record()
+                    self.db.add_power_path(dbp, self.data_manager.get_current_path())
+                    self.db.commit()
+
+            else:
+                self.data_manager.delete_frame()
 
             self.data_manager.close()
 

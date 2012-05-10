@@ -33,10 +33,9 @@ class BaseRemoteHardwareHandler(Loggable):
     application = Any
     error_handler = Instance(ErrorHandler, ())
     manager_name = 'Manager'
-
-    def __init__(self, *args, **kw):
-        super(BaseRemoteHardwareHandler, self).__init__(*args, **kw)
-        self._manager_lock = Lock()
+#    def __init__(self, *args, **kw):
+#        super(BaseRemoteHardwareHandler, self).__init__(*args, **kw)
+#        self._manager_lock = Lock()
 
     def _error_handler_default(self):
         eh = ErrorHandler()
@@ -51,8 +50,8 @@ class BaseRemoteHardwareHandler(Loggable):
         args = data.split(' ')
         return args[0], ' '.join(args[1:])
 
-    def handle(self, data, sender_addr):
-        with self._manager_lock:
+    def handle(self, data, sender_addr, lock):
+        with lock:
             eh = self.error_handler
             manager = self.get_manager()
             err = eh.check_manager(manager, self.manager_name)
