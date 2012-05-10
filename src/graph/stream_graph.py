@@ -24,8 +24,8 @@ from src.helpers.datetime_tools import current_time_generator as time_generator
 from stacked_graph import StackedGraph
 from graph import Graph
 
-#assuming a average scan rate of 1s collect at most 10 days of data
-MAX_LIMIT = int(-1 * 60 * 60 * 24 * 10)
+#assuming a average scan rate of 1s collect at most 5 days of data
+MAX_LIMIT = int(-1 * 60 * 60 * 24 * 5)
 
 
 class StreamGraph(Graph):
@@ -181,11 +181,11 @@ class StreamGraph(Graph):
 
         ny = float(y)
         #update raw data
-        rx = self.raw_x[plotid][series]
-        ry = self.raw_y[plotid][series]
-
-        self.raw_x[plotid][series] = hstack((rx[MAX_LIMIT:], [nx]))
-        self.raw_y[plotid][series] = hstack((ry[MAX_LIMIT:], [ny]))
+#        rx = self.raw_x[plotid][series]
+#        ry = self.raw_y[plotid][series]
+#
+#        self.raw_x[plotid][series] = hstack((rx[MAX_LIMIT:], [nx]))
+#        self.raw_y[plotid][series] = hstack((ry[MAX_LIMIT:], [ny]))
 
         dl = self.data_limits[plotid]
         sd = self.scan_delays[plotid]

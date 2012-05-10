@@ -136,11 +136,11 @@ class FusionsLaserManager(LaserManager):
 
     def open_power_graph(self, rid, path=None):
         if self.power_graph is None:
-            g = StreamGraph(window_title='Power Readback - {}'.format(rid),
+            g = StreamGraph(
                         window_x=0.01,
                         window_y=0.4,
                         container_dict=dict(padding=5),
-                        view_identifier='pychron.fusions.power_graph'
+#                        view_identifier='pychron.fusions.power_graph'
                         )
             self.power_graph = g
 
@@ -149,6 +149,7 @@ class FusionsLaserManager(LaserManager):
             g.close()
             g.clear()
 
+        g.window_title = 'Power Readback - {}'.format(rid)
         g.new_plot(data_limit=60,
                    scan_delay=1,
                    xtitle='time (s)',
@@ -180,9 +181,6 @@ class FusionsLaserManager(LaserManager):
         #zoom in for recording
         self._previous_zoom = self.zoom
         self.set_zoom(self.recording_zoom, block=True)
-
-        if self.power_graph is not None:
-            self.power_graph.close()
 
         self.open_power_graph(rid)
 
