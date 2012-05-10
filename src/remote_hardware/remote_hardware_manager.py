@@ -60,7 +60,7 @@ class RemoteHardwareManager(Manager):
         ip = InitializationParser()
 
         for pi in ip.get_processors():
-            cp = self._command_processor_factory(pi)
+            cp = self._command_processor_factory(path=pi)
             ps[cp.name] = cp
 #            ps.append()
         return ps
@@ -72,10 +72,10 @@ class RemoteHardwareManager(Manager):
                     p.manager = self
                     p.bootstrap()
             else:
-                for p in self.processors.itervalues():
-                    p.manager = self
-#                    p.load()
-                    p.bootstrap()
+#                for p in self.processors.itervalues():
+#                    p.manager = self
+##                    p.load()
+#                    p.bootstrap()
 
                 self.load_servers()
 
@@ -99,15 +99,18 @@ class RemoteHardwareManager(Manager):
             p.close()
 #        self.command_processor.close()
 
-    def _command_processor_factory(self, path):
+    def _command_processor_factory(self, path=None, name=None):
+        if name is None:
+            if path is not None:
+                name = path.split('-')[-1]
 
-        name = path.split('-')[-1]
 #    def _command_processor_default(self):
         cp = CommandProcessor(application=self.application,
                               path=path,
                               name=name)
 
         self.bind_preferences(cp)
+
         return cp
 
     def bind_preferences(self, cp):
@@ -180,30 +183,39 @@ class RemoteHardwareManager(Manager):
     def load_servers(self):
         '''
         '''
-        names = self.read_configuration()
+        #get server names
+        ip = InitializationParser()
+        names = ip.get_servers()
+#        names = self.read_configuration()
         if names:
             for s in names:
-                for k in self.processors.keys():
-                    if k in s:
-                        e = RemoteCommandServer(name=s,
-                               configuration_dir_name='servers',
-                               processor=self.processors[k]
-                               )
-                        e.bootstrap()
-                        self.servers.append(e)
-                        break
+#                for k in self.processors.keys():
+#                    if k in s:
+                pn = '{}-processor'.format(s)
+                cp = self._command_processor_factory(name=pn)
+                cp.manager = self
+                cp.bootstrap()
 
-    def read_configuration(self):
-        '''
-        '''
+                self.processors[pn] = cp
+                e = RemoteCommandServer(name=s,
+                       configuration_dir_name='servers',
+                       processor=cp
+                       )
+                e.bootstrap()
+                self.servers.append(e)
+#                        break
 
-        config = ConfigParser.ConfigParser()
-
-        path = os.path.join(setup_dir, 'rhs.cfg')
-        config.read(path)
-
-        servernames = [s.strip() for s in self.config_get(config, 'General', 'servers').split(',')]
-        return servernames
+#    def read_configuration(self):
+#        '''
+#        '''
+#
+#        config = ConfigParser.ConfigParser()
+#
+#        path = os.path.join(setup_dir, 'rhs.cfg')
+#        config.read(path)
+#
+#        servernames = [s.strip() for s in self.config_get(config, 'General', 'servers').split(',')]
+#        return servernames
 
 
     def traits_view(self):

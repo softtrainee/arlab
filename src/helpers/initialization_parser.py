@@ -129,6 +129,17 @@ class InitializationParser(XMLParser):
         return [pi for pi in [self.get_processor(p)
                     for p in self.get_plugins('hardware', element=True)] if pi]
 
+    def get_server(self, manager, **kw):
+        p = self._get_paramater(manager, 'server', **kw)
+        if p:
+            return p[0]
+
+    def get_servers(self):
+        return [pi for pi in [self.get_server(p)
+                    for p in self.get_plugins('hardware', element=True)] if pi]
+
+
+
     def _get_paramater(self, subtree, tag, all=False, element=False):
         return [d if element else d.text.strip()
                 for d in subtree.findall(tag)
