@@ -15,11 +15,12 @@ limitations under the License.
 '''
 #============= enthought library imports =======================
 from pyface.action.api import Action
-from src.envisage.core.action_helper import open_manager
+from src.envisage.core.action_helper import open_protocol
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+
 
 class OpenHardwareManagerAction(Action):
     '''
@@ -29,19 +30,23 @@ class OpenHardwareManagerAction(Action):
     def perform(self, event):
         '''
         '''
-        m = self.window.application.get_service('src.managers.hardware_manager.HardwareManager')
-#        m.edit_traits()
-        open_manager(m)
+        p = 'src.managers.hardware_manager.HardwareManager'
+        open_protocol(self.window, p)
 
 class OpenRemoteHardwareServerAction(Action):
     '''
     '''
     description = 'Open the remote hardware server'
     name = 'Remote Hardware Server'
+
+    def __init__(self, *args, **kw):
+        from globals import use_ipc
+        self.enabled = not use_ipc
+        super(OpenRemoteHardwareServerAction, self).__init__(*args, **kw)
+
     def perform(self, event):
         '''
         '''
         p = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
-        m = self.window.application.get_service(p)
-        open_manager(m)
+        open_protocol(self.window, p)
 #============= EOF ====================================

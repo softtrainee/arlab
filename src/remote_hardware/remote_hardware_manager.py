@@ -68,7 +68,7 @@ class RemoteHardwareManager(Manager):
     def bootstrap(self):
         if self.enable_hardware_server:
             if use_ipc:
-                for p in self.processors:
+                for p in self.processors.itervalues():
                     p.manager = self
                     p.bootstrap()
             else:
@@ -142,9 +142,10 @@ class RemoteHardwareManager(Manager):
                 pref.set('pychron.hardware.system_lock_address',
                           hosts[names[0].lower()])
         except Exception, err:
-            import traceback
-            traceback.print_exc()
-            print 'system lock exception', err
+            pass
+#            import traceback
+#            traceback.print_exc()
+#            print 'system lock exception', err
 
         pref.save()
 
@@ -186,11 +187,8 @@ class RemoteHardwareManager(Manager):
         #get server names
         ip = InitializationParser()
         names = ip.get_servers()
-#        names = self.read_configuration()
         if names:
             for s in names:
-#                for k in self.processors.keys():
-#                    if k in s:
                 pn = '{}-processor'.format(s)
                 cp = self._command_processor_factory(name=pn)
                 cp.manager = self
@@ -203,20 +201,6 @@ class RemoteHardwareManager(Manager):
                        )
                 e.bootstrap()
                 self.servers.append(e)
-#                        break
-
-#    def read_configuration(self):
-#        '''
-#        '''
-#
-#        config = ConfigParser.ConfigParser()
-#
-#        path = os.path.join(setup_dir, 'rhs.cfg')
-#        config.read(path)
-#
-#        servernames = [s.strip() for s in self.config_get(config, 'General', 'servers').split(',')]
-#        return servernames
-
 
     def traits_view(self):
         '''
