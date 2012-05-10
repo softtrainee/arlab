@@ -19,10 +19,10 @@ limitations under the License.
 import os
 import sys
 # add src to the path
-version = '1.4'
+version = ''
 SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                      'mercurial',
-                     'pychron_beta{}'.format(version))
+                     'pychron{}'.format(version))
 sys.path.insert(0, SRC_DIR)
 
 from src.bakeout.bakeout_manager import launch_bakeout

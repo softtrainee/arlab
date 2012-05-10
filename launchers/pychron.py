@@ -1,7 +1,5 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 '''
+
 Copyright 2011 Jake Ross
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +18,10 @@ limitations under the License.
 import os
 import sys
 # add src to the path
-version = '1.4'
+version = ''
 SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                      'mercurial',
-                     'pychron_beta{}'.format(version))
+                     'pychron'.format(version))
 sys.path.insert(0, SRC_DIR)
 
 from src.envisage.run import launch
@@ -37,7 +35,8 @@ import apptools.sweet_pickle as pickle
 
 
 class VersionInfo(HasTraits):
-
+    '''
+    '''
     major = Str
     minor = Str
     version = Property(transient=True)
@@ -48,14 +47,16 @@ class VersionInfo(HasTraits):
 
 
 class VersionInfoHandler(Handler):
-
+    '''
+    '''
     def closed(self, info, is_ok):
         if info.object.dismiss_notification:
             info.object.dump()
 
 
 class VersionInfoDisplay(HasTraits):
-
+    '''
+    '''
     message = Property
     local_version = Str
     local_path = Str
@@ -90,11 +91,14 @@ class VersionInfoDisplay(HasTraits):
         return v
 
     def dump(self):
-
+        '''
+        '''
         with open(self.local_path, 'wb') as f:
             pickle.dump(self.version_info, f)
 
     def check(self):
+        '''
+        '''
         local_info = None
         major = None
         minor = None
@@ -155,6 +159,9 @@ class VersionInfoDisplay(HasTraits):
 
 
 def main():
+    '''
+        entry point
+    '''
 
     # build directories
 
