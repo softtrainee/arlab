@@ -23,7 +23,7 @@ import os
 
 HOME = os.path.expanduser('~')
 
-version = '1.4'
+version = ''
 home = 'Pychrondata{}'.format(version)
 
 #from globals import beta

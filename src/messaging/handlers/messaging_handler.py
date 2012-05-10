@@ -22,21 +22,22 @@ from SocketServer import BaseRequestHandler
 
 
 class MessagingHandler(BaseRequestHandler):
+    _verbose=False
     def handle(self):
         '''
         '''
         data = self.get_packet()
 
         if data is not None:
-
-            self.server.info('Received: %s' % data.strip())
+            if self._verbose:
+                self.server.info('Received: %s' % data.strip())
             response = self.server.get_response(self.server.processor_type, data, self.client_address[0])
             self.send_packet(response)
 
             if 'ERROR 6' in response:
                 self.server.increment_repeater_fails()
-
-            self.server.info('Sent: %s' % response.strip())
+            if self._verbose:
+                self.server.info('Sent: %s' % response.strip())
             self.server.parent.cur_rpacket = data
             self.server.parent.cur_spacket = response
 

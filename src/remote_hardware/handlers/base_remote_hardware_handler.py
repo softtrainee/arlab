@@ -50,6 +50,12 @@ class BaseRemoteHardwareHandler(Loggable):
         args = data.split(' ')
         return args[0], ' '.join(args[1:])
 
+    def PychronReady(self,*args,**kw):
+        return True
+    def RemoteLaunch(self,*args,**kw):
+        return True
+    
+    
     def handle(self, data, sender_addr, lock):
         with lock:
             eh = self.error_handler

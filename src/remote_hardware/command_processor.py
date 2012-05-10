@@ -205,8 +205,8 @@ class CommandProcessor(ConfigLoadable):
             except Exception, err:
                 self.debug('End Request Exception: {}'.format(err))
         else:
-            cmd, data = data.split('|')
-            return cmd, data
+            args = data.split('|')
+            return args
 
     def get_response(self, cmd_type, data, addr):
         return self._process_request(None, addr, cmd_type, data)
@@ -231,6 +231,7 @@ class CommandProcessor(ConfigLoadable):
                 elif request_type == 'test':
                     result = data
                 else:
+                
                     handler = None
                     klass = '{}Handler'.format(request_type.capitalize())
                     if klass not in self._handlers:
@@ -263,7 +264,7 @@ class CommandProcessor(ConfigLoadable):
             r_args = self._end_request(sock, result)
 
             if not use_ipc:
-                return r_args[1]
+                return r_args[-1]
 
         except Exception, err:
             import traceback
