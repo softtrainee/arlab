@@ -35,7 +35,7 @@ ipc_dgram = False
 initialize_beam = True
 initialize_zoom = True
 
-ignore_initialization_warnings = True
-ignore_connection_warnings = True
+ignore_initialization_warnings = False
+ignore_connection_warnings = False
 
 use_ipc = False

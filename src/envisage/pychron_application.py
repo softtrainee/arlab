@@ -54,7 +54,8 @@ class Pychron(WorkbenchApplication):
 
     def exit(self):
         for ui in self.uis:
-            ui.dispose()
+            if ui is not None:
+                ui.dispose()
 
         super(Pychron, self).exit()
 #    def _started_fired(self):
