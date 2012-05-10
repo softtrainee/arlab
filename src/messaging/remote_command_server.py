@@ -236,7 +236,7 @@ class RemoteCommandServer(ConfigLoadable):
                         )
         stats = Group(
                       Item('packets_received', style='readonly'),
-                      Item('cur_rpacket', label='Recieved', style='readonly'),
+                      Item('cur_rpacket', label='Received', style='readonly'),
                       Item('packets_sent', style='readonly'),
                       Item('cur_spacket', label='Sent', style='readonly'),
 
