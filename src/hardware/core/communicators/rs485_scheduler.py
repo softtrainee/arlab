@@ -1,18 +1,21 @@
-'''
-Copyright 2011 Jake Ross
+#===============================================================================
+# Copyright 2011 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-'''
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float
 
@@ -25,7 +28,7 @@ from src.loggable import Loggable
 
 #============= local library imports  ==========================
 
-SINGLE_ITEM_BUF=True
+SINGLE_ITEM_BUF = True
 #SINGLE_ITEM_BUF=False
 class RS485Scheduler(Loggable):
     '''
@@ -70,13 +73,13 @@ class RS485Scheduler(Loggable):
 #            r = self._buffer.get(timeout=0.5)
 #        except Empty:
 #            r = None
-            
+
         with self._lock:
-            return func(*args,**kwargs)
+            return func(*args, **kwargs)
 
 
 class Consumer(Thread):
-    
+
     def __init__(self, q, b, cd):
         Thread.__init__(self)
         self._q = q
@@ -93,7 +96,7 @@ class Consumer(Thread):
 #                self.cond.wait(timeout=0.05)
 #            st = time.time()
             func, args, kwargs = self._q.get()
-            
+
             while SINGLE_ITEM_BUF and not self._buf.empty():
                 time.sleep(0.0001)
 

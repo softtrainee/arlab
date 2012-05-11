@@ -1,18 +1,21 @@
-'''
-Copyright 2011 Jake Ross
+#===============================================================================
+# Copyright 2011 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-'''
 
 """
 ArcBall.py -- Math utilities, vector, matrix types and ArcBall quaternion rotation class
@@ -50,11 +53,7 @@ Epsilon = 1.0e-5
 class ArcBallT:
     def __init__ (self, NewWidth, NewHeight):
         '''
-            @type NewWidth: C{str}
-            @param NewWidth:
-
-            @type NewHeight: C{str}
-            @param NewHeight:
+            
         '''
         self.m_StVec = Vector3fT ()
         self.m_EnVec = Vector3fT ()
@@ -73,11 +72,7 @@ class ArcBallT:
 
     def setBounds (self, NewWidth, NewHeight):
         '''
-            @type NewWidth: C{str}
-            @param NewWidth:
 
-            @type NewHeight: C{str}
-            @param NewHeight:
         '''
         # //Set new bounds
         assert (NewWidth > 1.0 and NewHeight > 1.0), "Invalid width or height for bounds."
@@ -87,8 +82,7 @@ class ArcBallT:
 
     def _mapToSphere (self, NewPt):
         '''
-            @type NewPt: C{str}
-            @param NewPt:
+
         '''
         # Given a new window coordinate, will modify NewVec in place
         X = 0
@@ -123,8 +117,7 @@ class ArcBallT:
 
     def click (self, NewPt):
         '''
-            @type NewPt: C{str}
-            @param NewPt:
+
         '''
         # //Mouse down (Point2fT
         self.m_StVec = self._mapToSphere (NewPt)
@@ -132,8 +125,7 @@ class ArcBallT:
 
     def drag (self, NewPt):
         '''
-            @type NewPt: C{str}
-            @param NewPt:
+
         '''
         # //Mouse drag, calculate rotation (Point2fT Quat4fT)
         """ drag (Point2fT mouse_coord) -> new_quaternion_rotation_vec
@@ -190,8 +182,7 @@ def Vector3fT ():
 
 def Point2fT (x=0.0, y=0.0):
     '''
-        @type y: C{str}
-        @param y:
+
     '''
     pt = zeros (2, 'f')
     pt [0] = x
@@ -200,9 +191,6 @@ def Point2fT (x=0.0, y=0.0):
 
 def Vector3fDot(u, v):
     '''
-        @type v: C{str}
-        
-        @param v:
     '''
     # Dot product of two 3f vectors
     dotprod = dot (u, v)
@@ -210,8 +198,7 @@ def Vector3fDot(u, v):
 
 def Vector3fCross(u, v):
     '''
-        @type v: C{str}
-        @param v:
+
     '''
     # Cross product of two 3f vectors
     X = 0
@@ -237,8 +224,7 @@ def Matrix3fSetIdentity ():
 
 def Matrix3fMulMatrix3f (matrix_a, matrix_b):
     '''
-        @type matrix_b: C{str}
-        @param matrix_b:
+
     '''
     return dot (matrix_a, matrix_b)
 
@@ -259,8 +245,7 @@ def Matrix4fSVD (NewObj):
 
 def Matrix4fSetRotationScaleFromMatrix3f(NewObj, three_by_three_matrix):
     '''
-        @type three_by_three_matrix: C{str}
-        @param three_by_three_matrix:
+
     '''
     # Modifies NewObj in-place by replacing its upper 3x3 portion from the 
     # passed in 3x3 matrix.
