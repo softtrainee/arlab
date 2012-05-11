@@ -17,7 +17,8 @@ Contents:
    remote_hardware
    meta_documentation
    computer_names
-
+   api/modules
+   
 Indices and tables
 ==================
 

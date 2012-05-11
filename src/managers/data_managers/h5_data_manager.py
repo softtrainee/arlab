@@ -109,7 +109,10 @@ class H5DataManager(DataManager):
             grp = getattr(f.root, group)
             return getattr(grp, name)
         except AttributeError:
-            return getattr(f.root, name)
+            try:
+                return getattr(f.root, name)
+            except AttributeError:
+                pass
 
     def get_group(self, name):
         return next((g for g in self.get_groups() if g._v_name == name), None)

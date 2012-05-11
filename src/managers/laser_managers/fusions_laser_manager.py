@@ -225,7 +225,7 @@ class FusionsLaserManager(LaserManager):
             self.info('Power recording stopped')
             self.power_timer = None
             self.brightness_timer = None
-
+            save = False
             if save:
                 self.db = PowerAdapter(dbname='co2laserdb',
                                    password='Argon')
@@ -251,6 +251,7 @@ class FusionsLaserManager(LaserManager):
                 if a < 2:
                     self.warning('Does not appear laser fired. Average power reading ={}'.format(a))
 
+        delay = 0
         if self.power_timer is not None:
             if delay == 0:
                 _stop()

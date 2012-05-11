@@ -25,26 +25,29 @@ import argparse
 def make_pyc_archive(top, dst, clean=True):
     if clean:
         #remove the dst directory
-        shutil.rmtree(dst)
+        if top != dst:
+            if os.path.isfile(dst):
+                shutil.rmtree(dst)
 
     copy_pyc_files(top, dst)
     make_archive(dst)
 
 def copy_pyc_files(top, dst):
     for r, _, f in os.walk(top):
+        rr = r.split('pychron')[1]
+        if rr:
+            np = dst + rr
+#                np = os.path.join(dst, rr)
+        else:
+            np = dst
+
+        if not os.path.isdir(np):
+            print 'creating directory ', np
+            os.mkdir(np)
+
         for fi in f:
             if fi.endswith('.pyc'):
-                rr = r.split('pychron_beta')[1]
-                if rr:
-                    np = dst + rr
-    #                np = os.path.join(dst, rr)
-                else:
-                    np = dst
-
-                if not os.path.isdir(np):
-                    print 'creating directory ', np
-                    os.mkdir(np)
-
+                print r
                 si = os.path.join(r, fi)
                 di = os.path.join(np, fi)
                 print 'copying', si, 'to ', di
@@ -90,11 +93,12 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    top = args.top[0]
+    top = args.src[0]
     dst = args.dst[0]
+    if top == '.':
+        top = os.getcwd()
+
     if top != dst:
-#    if top == '.':
-#        top = os.getcwd()
 
         make_pyc_archive(top, dst)
 
