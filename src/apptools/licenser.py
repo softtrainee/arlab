@@ -1,18 +1,4 @@
 '''
-Copyright 2011 Jake Ross
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
 
 this module is used to add licensing. 
 
@@ -56,6 +42,55 @@ APACHE = '''
 #===============================================================================
 '''
 
+plicense1 = '''
+Copyright 2011 Jake Ross
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+'''
+plicense2 = '''
+Copyright 2012 Jake Ross
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+'''
+plicense3 = '''
+#===============================================================================
+# Copyright 2011 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+'''
+
+
 def render_red(msg):
     print render('%(RED)s{}%(NORMAL)s'.format(msg))
 def render_blue(msg):
@@ -65,7 +100,7 @@ def get_license(year, author):
     return "'''{}'''\n".format(APACHE.format(year, author))
 
 def run(p, year, author, remove=False):
-
+    render_blue('runnning licenser {}'.format(p))
     if not os.path.exists(p) or (not os.path.isfile(p) and not os.path.isdir(p)):
         render_red('Invalid path {}'.format(p))
         return
@@ -73,37 +108,49 @@ def run(p, year, author, remove=False):
     license = get_license(year, author)
 
     if os.path.isdir(p):
+        render_blue('walking tree')
+
+
         for root, dirnames, files in os.walk(p):
             dirnames[:] = [d for d in dirnames if not d.startswith('.')]
             for f in files:
                 if f.startswith('.') or not f.endswith('.py'):
                     continue
+                if f == 'licenser.py':
+                    continue
 
                 p = os.path.join(root, f)
                 if remove:
                     func = remove_license
+                    remove_license(p, [plicense1, plicense2, plicense3])
                 else:
-                    func = add_license
-
-                func(p, license)
+                    add_license(p, license)
+#                    func = add_license
+#
+#                func(p, license)
 
     elif os.path.isfile(p):
             add_license(p, license)
 
-def remove_license(p, license):
+def remove_license(p, licenses):
     with open(p, 'r') as f:
         lines = ''.join([l for l in f])
 
-    if license in lines:
-        print 'remove license from {}'.format(p)
-        lines = lines.replace(license, '')
+    for li in licenses:
+        if li in lines:
+            print 'remove license from {}'.format(p)
+            lines = lines.replace(li, '')
+            break
 
     with open(p, 'w') as f:
         f.write(lines)
 
 def add_license(p, license):
     with open(p, 'r') as f:
-        lines = [l for l in f]
+        lines = [l for l in f if not l.startswith("''''''")]
+
+    for li in license.split('\n'):
+        print li
 
     with open(p, 'w') as f:
 
@@ -124,7 +171,9 @@ def add_license(p, license):
                 render_blue('{} in {}'.format(ci, p))
             else:
                 print 'adding license to {}'.format(p)
-                f.write(license)
+                for li in license.split('\n'):
+                    if li != "'''":
+                        f.write(li + '\n')
 
         f.write(txt)
 
@@ -139,5 +188,5 @@ if __name__ == '__main__':
 
 
 
-    run(args.path, args.year, args.author, remove=args.remove)
+    run(args.path[0], args.year, args.author, remove=args.remove)
 #============= EOF =====================================

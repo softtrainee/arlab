@@ -1,18 +1,21 @@
-'''
-Copyright 2011 Jake Ross
+#===============================================================================
+# Copyright 2011 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-'''
 #============= enthought library imports =======================
 #from traits.api import HasTraits, on_trait_change, Str, Int, Float, Button
 #from traitsui.api import View, Item, Group, HGroup, VGroup
@@ -32,7 +35,7 @@ PACKAGES = dict(AgilentGPActuator='src.hardware.actuators.agilent_gp_actuator',
 #              ObamaArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
 #              JanArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
               ArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
-              
+
               )
 
 
@@ -52,12 +55,12 @@ class Actuator(AbstractDevice):
 #            #if a subsystem is specified dont want to create our on instance of a GPActuator
 #            pass
 
-        klass =name= self.config_get(config, 'General', 'type')
-        
+        klass = name = self.config_get(config, 'General', 'type')
+
         if 'Argus' in klass:
-            klass='ArgusGPActuator'
-            
-        self._type=klass
+            klass = 'ArgusGPActuator'
+
+        self._type = klass
         if klass is not None:
             if 'subsystem' in klass:
                 pass
@@ -68,7 +71,7 @@ class Actuator(AbstractDevice):
                 except ImportError, e:
                     self.warning(e)
                     return False
-                  
+
                 factory = getattr(module, klass)
 
                 self._cdevice = factory(name=name,

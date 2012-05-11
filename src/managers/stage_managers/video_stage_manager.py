@@ -1,18 +1,21 @@
-'''
-Copyright 2011 Jake Ross
+#===============================================================================
+# Copyright 2011 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-'''
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
  Float, Bool, Event, Str, Directory, Enum
@@ -291,7 +294,7 @@ class VideoStageManager(StageManager, Videoable):
 
     def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
-        rpos=None
+        rpos = None
         if self.auto_center:
             newpos = None
             for _t in range(max(1, ntries)):
@@ -301,7 +304,7 @@ class VideoStageManager(StageManager, Videoable):
                         holenum=None if isinstance(holenum, str) else holenum)
 
                 if newpos:
-                    rpos=newpos
+                    rpos = newpos
                     #nx = self.stage_controller._x_position + newpos[0]
                     #ny = self.stage_controller._y_position + newpos[1]
     #                self._point = 0
@@ -313,7 +316,7 @@ class VideoStageManager(StageManager, Videoable):
                                      update_hole=False
                                  )
                 time.sleep(0.25)
-        
+
         return rpos
 
 #==============================================================================
