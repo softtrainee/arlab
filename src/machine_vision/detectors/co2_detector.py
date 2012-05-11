@@ -33,6 +33,7 @@ class CO2HoleDetector(HoleDetector):
     target_image = Any
 #    target_area = None
     running_avg = None
+    _hole_radius = None
 
     @on_trait_change('brightness_image:ui, target_image:ui')
     def _add_window(self, new):
@@ -76,6 +77,12 @@ class CO2HoleDetector(HoleDetector):
             src = asMat(img_rescale)
         return src
 
+    def _get_mask_radius(self):
+        r = self._hole_radius
+        if not r:
+            r = self.pxpermm * self.radius_mm * 0.85
+        return r
+
     def get_intensity_area(self, src, verbose):
 
         seg_src = self.contrast_equalization(src, verbose=verbose)
@@ -92,16 +99,19 @@ class CO2HoleDetector(HoleDetector):
             #no need to filter out targets not near the center using the circle mask does the inherently
             targets = [t for t in targets
                        if ma > t.area > mi]
+
+            #sort targets by distance from center
+            cx, cy = self._get_center()
+            cmpfunc = lambda t:((t.centroid_value[0] - cx) ** 2 + (t.centroid_value[1] - cy) ** 2) ** 0.5
+            targets = sorted(targets, key=cmpfunc)
+
             if targets:
                 tt = targets[0]
                 target = tt
-#                src = colorspace(src)
-#                self._draw_result(src, tt)
-#                self.brightness_image.set_frame(0, src)
                 ta = tt.area
 
         if ta is None:
-            r = self.pxpermm * self.radius_mm
+            r = self._get_mask_radius()
             ta = pi * r * r
 
         if self.running_avg is None:
@@ -153,7 +163,7 @@ class CO2HoleDetector(HoleDetector):
         #mask the image with a circle
         x, y = niar.shape
         X, Y = ogrid[0:x, 0:y]
-        r = self.pxpermm * self.radius_mm
+        r = self._get_mask_radius()
         mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > r * r
         src.ndarray[mask] = 100
 
@@ -178,13 +188,16 @@ class CO2HoleDetector(HoleDetector):
         if self.brightness_image is not None:
             self.brightness_image.close()
 
+        self.running_avg = None
         im = StandAloneImage(title='Brightness',
                              view_identifier='pychron.fusions.co2.brightness')
         self.brightness_image = im
 
         im.show()
 
+        sr = 0
         ss = None
+        n = 0
         for i in range(ncounts):
             self.info('collecting baseline image {} of {}'.format(i + 1, ncounts))
             p = None
@@ -201,7 +214,14 @@ class CO2HoleDetector(HoleDetector):
                                   self.brightness_cropheight,
                                   image=im
                                   )
-
+            mi = 1500
+            targets = self._region_segmentation(cs)
+            if targets:
+                targets = [t for t in targets
+                       if self._near_center(*t.centroid_value) and t.area > mi]
+                for t in targets:
+                    sr += max(*t.bounding_rect) / 2.0
+                n += len(targets)
             #convert to array to we can sum >255
             ncs = asarray(cs.ndarray, dtype='uint32')
             if ss is None:
@@ -210,6 +230,7 @@ class CO2HoleDetector(HoleDetector):
                 ss += ncs
             time.sleep(period / 1000.0)
 
+        self._hole_radius = sr / max(1, n)
         self.baseline = ss / float(ncounts)
 
     def locate_sample_well(self, cx, cy, holenum=None, **kw):

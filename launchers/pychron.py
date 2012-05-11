@@ -19,10 +19,14 @@ import os
 import sys
 # add src to the path
 version = ''
-SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
-                     'mercurial',
-                     'pychron'.format(version))
+merc = os.path.join(os.path.expanduser('~'),
+                    'Programming',
+                    'mercurial')
+SRC_DIR = os.path.join(merc, 'pychron'.format(version))
 sys.path.insert(0, SRC_DIR)
+
+PYC = os.path.join(merc, 'pychron_source.zip')
+sys.path.insert(0, PYC)
 
 from src.envisage.run import launch
 from src.helpers.logger_setup import logging_setup

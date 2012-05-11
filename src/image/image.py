@@ -330,7 +330,6 @@ class StandAloneImage(HasTraits):
                       height=self.height,
                       style='custom'
                       )
-        print self.width, self.height
 
         v = View(imgrp,
                  handler=ImageHandler,

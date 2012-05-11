@@ -398,10 +398,13 @@ class HoleDetector(Detector):
             pii = pi
         # 3. recalc centroid
         return centroid(pii)
-
-    def _near_center(self, x, y, tol=0.9):
+    def _get_center(self):
         cx = self.croppixels[0] / 2.0
         cy = self.croppixels[1] / 2.0
+        return cx, cy
+
+    def _near_center(self, x, y, tol=0.9):
+        cx, cy = self._get_center()
 
         tol *= self.pxpermm
 #        print x, y, cx, cy, abs(x - cx) < tol and abs(y - cy) < tol

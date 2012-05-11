@@ -285,6 +285,19 @@ def laser_client():
                ask_id='E')
     c.configure_traits()
 
+def power_test():
+    c = Client(
+               port=1067,
+               ask_id='E')
+
+    for i in range(500):
+        print i
+        c.ask('Enable')
+        time.sleep(3)
+        c.ask('Disable')
+        time.sleep(1)
+
+
 if __name__ == '__main__':
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
@@ -292,8 +305,8 @@ if __name__ == '__main__':
 #              )
 
 #    multiplex_test()
-    laser_client()
-
+#    laser_client()
+    power_test()
 
 
     #===========================================================================
