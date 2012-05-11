@@ -47,8 +47,12 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
 #                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
                        ),
                 Action(name='Open Power Recording',
-                       path='MenuBar/Lasers/Results',
+                       path='MenuBar/Results',
                        class_name='{}OpenPowerRecordGraphAction'.format(self.action_path)
+                       ),
+                Action(name='Open Power Map',
+                       path='MenuBar/Results'.format(self.name),
+                       class_name='{}OpenPowerMapAction'.format(self.action_path)
                        ),
 
                 Action(name='Configure Brightness Meter',
@@ -99,10 +103,7 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
 #                       path='MenuBar/Lasers/{}/Results'.format(self.name),
 #                       class_name='src.lasers.plugins.laser_actions:OpenPowerScanGraphAction'
 #                       ),
-                Action(name='Open Power Map',
-                       path='MenuBar/Lasers/Results'.format(self.name),
-                       class_name='{}OpenPowerMapAction'.format(self.action_path)
-                       ),
+
 
 
 

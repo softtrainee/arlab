@@ -75,6 +75,9 @@ class CSVDataManager(DataManager):
 
                 writer.writerow(datum)
 
+    def get_current_path(self):
+        return self.frames[self._current_frame]
+
 if __name__ == '__main__':
     d = CSVDataManager()
     d.new_frame()

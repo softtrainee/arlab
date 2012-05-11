@@ -37,6 +37,11 @@ def get_manager(event, app=None):
 
     return manager
 
+def open_selector(db, app):
+    db.application = app
+    db.connect()
+    s = db._selector_factory()
+    open_manager(app, s)
 
 class ExecutePatternAction(Action):
 
@@ -51,7 +56,9 @@ class OpenPatternManagerAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
-            open_manager(manager.stage_manager.pattern_manager, view='pattern_maker_view')
+            app = self.window.application
+            open_manager(app,
+                         manager.stage_manager.pattern_manager, view='pattern_maker_view')
 
 #class OpenCalibrationManagerAction(Action):
 #    def perform(self, event):
@@ -66,8 +73,8 @@ class OpenMotionControllerManagerAction(Action):
         man = get_manager(event)
         if man is not None:
             m = man.stage_manager.motion_configure_factory(view_style='full_view')
-
-            open_manager(m)
+            app = self.window.application
+            open_manager(app, m)
 
 
 class OpenLaserManagerAction(Action):
@@ -77,7 +84,8 @@ class OpenLaserManagerAction(Action):
         manager = get_manager(event)
         if manager is not None:
             man = manager
-            open_manager(man)
+            app = self.window.application
+            open_manager(app, man)
 
 
 class MoveLoadPositionAction(Action):
@@ -124,7 +132,8 @@ class PulseAction(Action):
         manager = get_manager(event)
         if manager is not None:
             man = manager.get_pulse_manager()
-            open_manager(man, view='standalone_view')
+            open_manager(self.window.application,
+                         man, view='standalone_view')
 
 
 class PowerMapAction(Action):
@@ -134,7 +143,8 @@ class PowerMapAction(Action):
         manager = get_manager(event)
         if manager is not None:
             man = manager.get_power_map_manager()
-            open_manager(man)#, view = 'canvas_view')
+            app = self.window.application
+            open_manager(app, man)#, view = 'canvas_view')
 
 
 class OpenPowerScanGraphAction(Action):
@@ -155,9 +165,8 @@ class OpenPowerMapAction(Action):
             from src.database.adapters.power_map_adapter import PowerMapAdapter
             db = PowerMapAdapter(dbname='co2laserdb',
                                 password='Argon')
-            db.connect()
-            db.open_selector()
 
+            open_selector(db, self.window.application)
 
 #            manager.graph_manager.open_power_map()
 #            manager.graph_manager.open_graph('powermap')
@@ -171,13 +180,13 @@ class OpenPowerRecordGraphAction(Action):
         if manager is not None:
             db = PowerAdapter(dbname='co2laserdb',
                                 password='Argon')
-            db.connect()
-            db.open_selector()
+            open_selector(db, self.window.application)
 #            manager.graph_manager.open_graph('powerrecord')
 
 class ConfigureBrightnessMeterAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
-            open_manager(manager.brightness_meter)
+            app = self.window.application
+            open_manager(app, manager.brightness_meter)
 

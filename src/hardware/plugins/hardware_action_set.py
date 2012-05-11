@@ -26,13 +26,20 @@ class HardwareActionSet(WorkbenchActionSet):
     '''
     '''
     id = 'pychron.hardware.action_set'
+
+    p = 'src.hardware.plugins.hardware_actions'
     actions = [
                Action(name='Hardware Manager',
                       path='MenuBar/File',
-                      class_name='src.hardware.plugins.hardware_actions:OpenHardwareManagerAction'),
+                      class_name='{}:OpenHardwareManagerAction'.format(p)),
                Action(name='Remote Hardware Server',
                       path='MenuBar/File',
-                      class_name='src.hardware.plugins.hardware_actions:OpenRemoteHardwareServerAction'),
+                      class_name='{}:OpenRemoteHardwareServerAction'.format(p)),
+               Action(name='Open Device Scans',
+                      path='MenuBar/Results',
+                      class_name='{}:OpenDeviceScansAction'.format(p)),
+
+
 
               ]
 #============= EOF ====================================

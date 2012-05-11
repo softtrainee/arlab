@@ -262,8 +262,7 @@ class BakeoutManager(Manager):
                       )
             self._suppress_commit = False
 
-            result = confirmation(None, 'Save to DB')
-            if result == 5104:
+            if not self.db_save_dialog():
                 self.info('rolling back')
                 self.database.rollback()
                 self.database.close()

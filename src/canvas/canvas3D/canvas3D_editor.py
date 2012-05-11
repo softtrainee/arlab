@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Any #, Float, Bool, List
 from traitsui.wx.editor import Editor
@@ -24,6 +22,7 @@ from traitsui.basic_editor_factory import BasicEditorFactory
 #============= standard library imports ========================
 #from wx import Panel
 #============= local library imports  ==========================
+
 
 class _Canvas3DEditor(Editor):
     '''

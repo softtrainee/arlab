@@ -15,22 +15,15 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-# -*- coding: utf-8 -*-
-
-
+#============= enthought library imports =======================
 from traits.api import Any
 from pyface.api import ProgressDialog
-
+#============= standard library imports ========================
 import time
-
 from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
     CLIP_CHILDREN, VERTICAL, Frame, BoxSizer, NullColor, Size, \
     DisplaySize
-
-# =============local library imports  ==========================
-
+#============= local library imports  ==========================
 from src.helpers import paths
 from src.hardware.core.i_core_device import ICoreDevice
 from src.helpers.initialization_parser import InitializationParser
@@ -47,9 +40,6 @@ class MProgressDialog(ProgressDialog):
             | CLIP_CHILDREN
 
         dialog = Frame(parent, -1, self.title, style=style)
-
-                          # size = self.size,
-                          # pos = self.position
 
         sizer = BoxSizer(VERTICAL)
         dialog.SetSizer(sizer)
@@ -349,9 +339,7 @@ class Initializer(Loggable):
         pd.open()
         (w, h) = DisplaySize()
         (ww, _hh) = pd.control.GetSize()
-
         pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
-
         self.pd = pd
 
 

@@ -50,6 +50,10 @@ root_dir = root
 
 src_root = os.getcwd()
 
+
+device_scan_db = '/Users/ross/Sandbox/device_scans.sqlite'
+
+
 #directories directly under root
 setup_dir = os.path.join(root, 'setupfiles')
 device_dir = os.path.join(setup_dir, 'devices')

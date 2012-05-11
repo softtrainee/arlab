@@ -85,7 +85,7 @@ class FusionsLaserManager(LaserManager):
 
     def _record_fired(self):
         if self._recording_power_state:
-            save = self.confirmation_dialog('Save to Database')
+            save = self.db_save_dialog()
             self.stop_power_recording(delay=0, save=save)
         else:
             t = Thread(name='fusions.power_record',

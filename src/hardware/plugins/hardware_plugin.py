@@ -25,6 +25,7 @@ from src.envisage.core.core_plugin import CorePlugin
 from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
 from apptools.preferences.preference_binding import bind_preference
 from src.managers.hardware_manager import HardwareManager
+from src.hardware.core.i_core_device import ICoreDevice
 #from src.managers.system_lock_manager import SystemLockManager
 
 class Preference(HasTraits):
@@ -111,5 +112,11 @@ class HardwarePlugin(CorePlugin):
                 man = m['manager']
                 man.kill()
                 man.close_ui()
+
+        for s in self.application.get_services(ICoreDevice):
+            if s.is_scanable:
+                if s._scanning and not s._auto_started:
+                    s.stop_scan()
+#                s.save_to_db()
 
 #============= EOF =============================================

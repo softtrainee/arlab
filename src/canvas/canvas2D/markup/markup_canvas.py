@@ -508,7 +508,6 @@ class MarkupCanvas(BaseDataCanvas):
 #        self.invalidate_and_redraw()
         self.request_redraw()
 
-#    def draw(self, gc, view_bounds = None, mode = 'default'):
     def _draw_hook(self, gc, *args, **kw):
         '''
 
@@ -518,12 +517,9 @@ class MarkupCanvas(BaseDataCanvas):
         self._draw_current_markup(gc)
         self._draw_markup_dict(gc)
 
-
-
     def _draw_current_markup(self, gc):
         '''
-            @type gc: C{str}
-            @param gc:
+
         '''
         gc.save_state()
 
@@ -561,42 +557,6 @@ class MarkupCanvas(BaseDataCanvas):
                 if hasattr(obj, 'render'):
                     obj.render(gc)
 
-#        for obj in self.markupcontainer.itervalues():
-#            if hasattr(obj, 'render'):
-#                '''
-#                    uses the new markupitem object instead of a dumb list
-#                '''
-#                obj.render(gc)
-
-#            else:
-#                
-#                try:
-#                    #SET THE LINE COLOR DEPENDING ON THE STATE
-#                    if obj[2]:
-#                        gc.set_stroke_color((1, 0, 0, 1))
-#                    else:
-#    
-#                        c = (0, 1, 0, 1)
-#                        if len(obj) >= 4:
-#                            c = obj[3]
-#                        gc.set_stroke_color(c)
-#    
-#                    if len(obj) == 5:
-#                        gc.set_line_width(obj[4])
-#                        self.m
-#    
-#                    gc.begin_path()
-#                    points = []
-#                    if isinstance(obj[0], list):
-#                        points = obj[0]
-#                    else:
-#                        points.append(obj[0])
-#                        points.append(obj[1])
-#    
-#                    gc.lines(points)
-#                    gc.stroke_path()
-#                except TypeError:
-#                    pass
         gc.restore_state()
 
 
@@ -613,20 +573,6 @@ class MarkupCanvas(BaseDataCanvas):
             if hasattr(item, 'is_in'):
                 if item.is_in(event):
                     return item
-
-
-#            if item.__class__.__name__ == 'Valve':
-#                w = 2
-#                h = 2
-#
-#                mx, my = self.map_screen([item.pos])[0]
-#
-#                w, h = self._get_wh(w, h)
-#                mx += w / 2.0
-#                my += h / 2.0
-#                if abs(mx - x) < w and abs(my - y) < h:
-#                    return k, item
-
 
     def _over_mark_up_line(self, event, tolerance=7):
         '''
@@ -742,8 +688,6 @@ class MarkupCanvas(BaseDataCanvas):
 
     def _calc_adjustment(self, event):
         '''
-            @type event: C{str}
-            @param event:
         '''
         xs = self.temp_start_pos[0]
         ys = self.temp_start_pos[1]

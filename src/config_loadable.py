@@ -15,17 +15,13 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-# -*- coding: utf-8 -*-
-
-
-import os
-import ConfigParser
-
+#============= enthought library imports =======================
 from src.helpers import paths
 from loggable import Loggable
-
+#============= standard library imports ========================
+import os
+import ConfigParser
+#============= local library imports  ==========================
 
 class ConfigLoadable(Loggable):
 
@@ -196,5 +192,5 @@ class ConfigLoadable(Loggable):
             nname = name
         return nname
 
+#============= EOF =============================================
 
-# ============= EOF ====================================

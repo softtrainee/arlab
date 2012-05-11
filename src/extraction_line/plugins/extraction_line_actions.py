@@ -33,7 +33,8 @@ class OpenExtractionLineManager(Action):
     def perform(self, event):
 
         man = get_manager(event.window)
-        open_manager(man)
+        app = self.window.application
+        open_manager(app, man)
 
 class LoadCanvasAction(Action):
     '''
@@ -80,7 +81,8 @@ class OpenViewControllerAction(Action):
         '''
         '''
         manager = get_manager(event.window)
-        open_manager(manager.view_controller, kind='livemodal',
+        app = self.window.application
+        open_manager(app, manager.view_controller, kind='livemodal',
                      parent=manager.ui.control
                      )
 

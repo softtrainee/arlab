@@ -116,6 +116,9 @@ class DBSelector(Loggable):
 
     tabular_adapter = BaseResultsAdapter
 
+    query_table = None
+    result_klass = None
+
     def _search_fired(self):
         self._search_()
 
@@ -216,3 +219,67 @@ class DBSelector(Loggable):
                  title=self.title
                  )
         return v
+    def _get_selector_records(self):
+        pass
+
+    def _execute_(self):
+        db = self._db
+        if db is not None:
+#            self.info(s)
+            s = self._get_filter_str()
+            if s is None:
+                return
+
+            table, _col = self.parameter.split('.')
+            kw = dict(filter_str=s)
+
+            if not table == self.query_table:
+                kw['join_table'] = table
+
+
+#            dbs = db.get_power_records(**kw)
+            dbs = self._get_selector_records(**kw)
+
+            self.info('query {} returned {} results'.format(s,
+                                    len(dbs) if dbs else 0))
+            if dbs:
+                self.results = []
+                for di in dbs:
+                    d = self.result_klass(_db_result=di)
+                    d.load()
+                    self.results.append(d)
+
+    def _dclicked_fired(self):
+        s = self.selected
+
+        if s is not None:
+            for si in s:
+                sid = si._id
+                if sid in self.opened_windows:
+                    c = self.opened_windows[sid].control
+                    if c is None:
+                        self.opened_windows.pop(sid)
+                    else:
+                        try:
+                            c.Raise()
+                        except:
+                            self.opened_windows.pop(sid)
+
+                else:
+                    try:
+                        si.load_graph()
+                        si.window_x = self.wx
+                        si.window_y = self.wy
+
+                        info = si.edit_traits()
+                        self.opened_windows[sid] = info
+                        self._db.application.uis.append(info)
+
+                        self.wx += 0.005
+                        self.wy += 0.03
+
+                        if self.wy > 0.65:
+                            self.wx = 0.4
+                            self.wy = 0.1
+                    except Exception, e:
+                        self.warning(e)
