@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import on_trait_change, Bool
 from apptools.preferences.preference_binding import bind_preference
@@ -64,12 +62,12 @@ class ExtractionLineUIPlugin(CoreUIPlugin):
 
         bind_preference(self, 'open_on_startup', 'pychron.extraction_line.open_on_startup')
         if self.open_on_startup:
-            open_manager(elm)
+            open_manager(self.application, elm)
 
         #start device streams
         for dev in elm.devices:
             if dev.is_scanable and dev.auto_start:
-                dev.start_scan()
+                dev.start_scan(auto=True)
 
         if elm.gauge_manager:
             elm.gauge_manager.start_scans()

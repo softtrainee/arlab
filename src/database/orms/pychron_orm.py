@@ -1,86 +1,88 @@
-#'''
-#Copyright 2011 Jake Ross
-#
-#Licensed under the Apache License, Version 2.0 (the "License");
-#you may not use this file except in compliance with the License.
-#You may obtain a copy of the License at
-#
+#===============================================================================
+# Copyright 2011 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
 #   http://www.apache.org/licenses/LICENSE-2.0
-#
-#Unless required by applicable law or agreed to in writing, software
-#distributed under the License is distributed on an "AS IS" BASIS,
-#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#See the License for the specific language governing permissions and
-#limitations under the License.
-#'''
-##=============enthought library imports=======================
-#
-##=============standard library imports ========================
-#from sqlalchemy import Column, Integer, Float, String, \
-#     ForeignKey, BLOB, DateTime, Time, Date
-#from sqlalchemy.ext.declarative import declarative_base
-#from sqlalchemy.orm import relationship
-#
-##=============local library imports  ==========================
-#Base = declarative_base()
-#
-#class Analyses(Base):
-#    __tablename__ = 'analyses'
-#    id = Column(Integer, primary_key=True)
-#    runtime = Column(Time)
-#    rundate = Column(Date)
-#
-#    spectrometer_id = Column(Integer, ForeignKey('spectrometers.id'))
-#    type_id = Column(Integer, ForeignKey('analysistypes.id'))
-#
-#
-#class AnalysisTypes(Base):
-#    __tablename__ = 'analysistypes'
-#    id = Column(Integer, primary_key=True)
-#    name = Column(String(40))
-#
-#
-#class Spectrometers(Base):
-#    __tablename__ = 'spectrometers'
-#    id = Column(Integer, primary_key=True)
-#    name = Column(String(40))
-#
-#
-#class Paths(Base):
-#    __tablename__ = 'paths'
-#    id = Column(Integer, primary_key=True)
-#    name = Column(String(40))
-#    path = Column(String(128))
-#
-#
-#class Intercepts(Base):
-#    __tablename__ = 'intercepts'
-#    id = Column(Integer, primary_key=True)
-#    analysis_id = Column(Integer, ForeignKey('analyses.id'))
-#    m40 = Column(Float)
-#    m39 = Column(Float)
-#    m38 = Column(Float)
-#    m37 = Column(Float)
-#    m36 = Column(Float)
-#
-#    m40er = Column(Float)
-#    m39er = Column(Float)
-#    m38er = Column(Float)
-#    m37er = Column(Float)
-#    m36er = Column(Float)
-#
-#    fit40 = Column(Integer, ForeignKey('fittypes.id'))
-#    fit39 = Column(Integer, ForeignKey('fittypes.id'))
-#    fit38 = Column(Integer, ForeignKey('fittypes.id'))
-#    fit37 = Column(Integer, ForeignKey('fittypes.id'))
-#    fit36 = Column(Integer, ForeignKey('fittypes.id'))
-#
-#class Fittypes(Base):
-#    __tablename__ = 'fittypes'
-#    id = Column(Integer, primary_key=True)
-#    name = Column(String(40))
-#    abbreviation = Column(String(40))
-#
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+
+#=============enthought library imports=======================
+
+#=============standard library imports ========================
+from sqlalchemy import Column, Integer, Float, String, \
+     ForeignKey, BLOB, DateTime, Time, Date
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+
+#=============local library imports  ==========================
+Base = declarative_base()
+
+class Analyses(Base):
+    __tablename__ = 'analyses'
+    id = Column(Integer, primary_key=True)
+    runtime = Column(Time)
+    rundate = Column(Date)
+
+    spectrometer_id = Column(Integer, ForeignKey('spectrometers.id'))
+    type_id = Column(Integer, ForeignKey('analysistypes.id'))
+
+
+class AnalysisTypes(Base):
+    __tablename__ = 'analysistypes'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(40))
+
+
+class Spectrometers(Base):
+    __tablename__ = 'spectrometers'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(40))
+
+
+class Paths(Base):
+    __tablename__ = 'paths'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(40))
+    path = Column(String(128))
+
+
+class Intercepts(Base):
+    __tablename__ = 'intercepts'
+    id = Column(Integer, primary_key=True)
+    analysis_id = Column(Integer, ForeignKey('analyses.id'))
+    m40 = Column(Float)
+    m39 = Column(Float)
+    m38 = Column(Float)
+    m37 = Column(Float)
+    m36 = Column(Float)
+
+    m40er = Column(Float)
+    m39er = Column(Float)
+    m38er = Column(Float)
+    m37er = Column(Float)
+    m36er = Column(Float)
+
+    fit40 = Column(Integer, ForeignKey('fittypes.id'))
+    fit39 = Column(Integer, ForeignKey('fittypes.id'))
+    fit38 = Column(Integer, ForeignKey('fittypes.id'))
+    fit37 = Column(Integer, ForeignKey('fittypes.id'))
+    fit36 = Column(Integer, ForeignKey('fittypes.id'))
+
+
+class Fittypes(Base):
+    __tablename__ = 'fittypes'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(40))
+    abbreviation = Column(String(40))
+
 ##class Detectors(Base):
 ##    __tablename__ = 'Detectors'
 ##    id = Column(Integer, primary_key=True)

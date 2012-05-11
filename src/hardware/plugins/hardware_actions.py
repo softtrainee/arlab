@@ -18,7 +18,9 @@
 
 #============= enthought library imports =======================
 from pyface.action.api import Action
-from src.envisage.core.action_helper import open_protocol
+from src.envisage.core.action_helper import open_protocol, open_manager
+from src.database.adapters.device_scan_adapter import DeviceScanAdapter
+from src.helpers.paths import device_scan_db
 
 #============= standard library imports ========================
 
@@ -52,4 +54,27 @@ class OpenRemoteHardwareServerAction(Action):
         '''
         p = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
         open_protocol(self.window, p)
+
+
+class OpenDeviceScansAction(Action):
+    '''
+    '''
+    description = 'Open device scans selector'
+    name = 'Open Device Scans'
+
+    def perform(self, event):
+        '''
+        '''
+#        p = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
+#        open_protocol(self.window, p)
+        db = DeviceScanAdapter(dbname=device_scan_db,
+                               kind='sqlite',
+                               application=self.window.application)
+
+        db.connect()
+        s = db._selector_factory()
+
+        if s:
+            open_manager(self.window.application, s)
+
 #============= EOF ====================================

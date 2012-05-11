@@ -161,7 +161,7 @@ class SystemHandler(BaseRemoteHardwareHandler):
             if run and run.kind == 'co2':
                 lm = self.get_laser_manager(name='co2')
                 if lm is not None:
-                    open_manager(lm)
+                    open_manager(self.application, lm)
 
         if self.application is not None:
             tm = self.application.get_service(TM_PROTOCOL)

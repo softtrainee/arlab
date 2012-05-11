@@ -32,10 +32,14 @@ def create_url(kind, user, hostname, db, password=None):
     '''
 
     '''
-    if password is not None:
-        url = '%s://%s:%s@%s/%s' % (kind, user, password, hostname, db)
+    if kind == 'mysql':
+        if password is not None:
+            url = 'mysql://{}:{}@{}/{}'.format(user, password, hostname, db)
+        else:
+            url = 'mysql://{}@{}/{}'.format(user, hostname, db)
     else:
-        url = '%s://%s@%s/%s' % (kind, user, hostname, db)
+        url = 'sqlite:///{}'.format(db)
+
     return url
 
 
@@ -54,6 +58,9 @@ class DatabaseAdapter(Loggable):
 
     selector_klass = Any
 
+    session_factory = None
+
+    application = Any
 #    window = Any
 
 #    @on_trait_change('[user,host,password,dbname, use_db]')
@@ -143,7 +150,10 @@ class DatabaseAdapter(Loggable):
         '''
         '''
         if self.sess is None:
-            self.sess = self.session_factory()
+            if self.session_factory is not None:
+                self.sess = self.session_factory()
+            else:
+                self.warning_dialog('Not connect to the database {}'.format(self.dbname))
 
         return self.sess
 
@@ -218,6 +228,8 @@ class DatabaseAdapter(Loggable):
 
         args = dict(rundate=str(d.date()),
                     runtime=str(d.time()))
+        args = dict(rundate=d.date(),
+                    runtime=d.time())
         obj = klass(**args)
         self._add_item(obj, commit)
         return obj
@@ -229,9 +241,24 @@ class DatabaseAdapter(Loggable):
         args['filename'] = n
         return args
 
+    def _get_items(self, table, gtables, join_table=None, filter_str=None):
+        try:
+            if isinstance(join_table, str):
+                join_table = gtables[join_table]
+
+            q = self._get_query(table, join_table=join_table,
+                                 filter_str=filter_str)
+            return q.all()
+        except Exception, e:
+            print e
+
     def open_selector(self):
+        s = self._selector_factory()
+        if s:
+            s.edit_traits()
+
+    def _selector_factory(self):
         if self.selector_klass:
             s = self.selector_klass(_db=self)
             s._execute_()
-            s.edit_traits()
-
+            return s

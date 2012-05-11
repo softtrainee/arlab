@@ -17,22 +17,24 @@
 
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Str, implements, Any, List, Event, Property, Bool, Float
+from traits.api import HasTraits, Str, implements, Any, List, \
+Event, Property, Bool, Float, Enum
 #from pyface.timer.api import Timer
-from src.helpers.timer import Timer
 #=============standard library imports ========================
 import random
 from threading import Lock
 from datetime import datetime
 #=============local library imports  ==========================
-
-#from streamable import Streamable
 from viewable_device import ViewableDevice
 from i_core_device import ICoreDevice
+from src.helpers.timer import Timer
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.helpers.datetime_tools import generate_datetimestamp
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 from src.graph.plot_record import PlotRecord
+from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.database.adapters.device_scan_adapter import DeviceScanAdapter
+from src.helpers.paths import device_scan_db
 
 
 class Alarm(HasTraits):
@@ -106,6 +108,9 @@ class CoreDevice(ViewableDevice):
     alarms = List(Alarm)
 
     data_manager = None
+    dm_kind = Enum('h5', 'csv')
+    use_db = Bool(False)
+    _auto_started = False
 
     def get(self):
         return self.current_scan_value
@@ -280,6 +285,8 @@ class CoreDevice(ViewableDevice):
                 self.set_attribute(config, 'scan_units', 'Scan', 'units')
                 self.set_attribute(config, 'record_scan_data', 'Scan', 'record', cast='boolean')
                 self.set_attribute(config, 'graph_scan_data', 'Scan', 'graph', cast='boolean')
+                self.set_attribute(config, 'use_db', 'DataManager', 'use_db', cast='boolean', default=False)
+                self.set_attribute(config, 'dm_kind', 'DataManager', 'kind', default='csv')
 
     def setup_alarms(self):
         config = self.get_configuration()
@@ -321,8 +328,17 @@ class CoreDevice(ViewableDevice):
                         v = (v,)
 
                 if self.record_scan_data:
-                    ts = generate_datetimestamp()
-                    self.data_manager.write_to_frame((ts, x) + v)
+                    if self.dm_kind == 'csv':
+                        ts = generate_datetimestamp()
+                        self.data_manager.write_to_frame((ts, x) + v)
+                    else:
+                        tab = self.data_manager.get_table('scan1', '/scans')
+                        if tab is not None:
+                            r = tab.row
+                            r['time'] = x
+                            r['value'] = v[0]
+                            r.append()
+                            tab.flush()
 
                 for a in self.alarms:
                     if a.test_condition(v):
@@ -360,25 +376,65 @@ class CoreDevice(ViewableDevice):
         with self.scan_lock:
             self._scan_(*args, **kw)
 
-    def start_scan(self):
+    def start_scan(self, auto=False):
+
+        self._auto_started = auto
+
         if self.timer is not None:
             self.timer.Stop()
 
         self._scanning = True
         self.info('Starting scan')
         if self.record_scan_data:
-            if self.data_manager is None:
-                self.data_manager = CSVDataManager()
+            if self.dm_kind == 'h5':
+                klass = H5DataManager
+            else:
+                klass = CSVDataManager
 
-            self.frame_name = self.data_manager.new_frame(base_frame_name=self.name)
-            self.scan_path = self.data_manager.frames[self.frame_name]
+            dm = self.data_manager
+            if dm is None:
+                self.data_manager = dm = klass()
+
+            self.frame_name = dm.new_frame(base_frame_name=self.name)
+            self.scan_path = dm.get_current_path()
+
+            if self.dm_kind == 'h5':
+                g = dm.new_group('scans')
+                t = dm.new_table(g, 'scan1')
+
+
+            if self.auto_start and auto:
+                self.save_scan_to_db()
+
         sp = self.scan_period * self.time_dict[self.scan_units]
         self.timer = Timer(sp, self.scan)
+
+    def save_scan_to_db(self):
+#        p = '/Users/ross/Sandbox/device_scans.sqlite'
+        p = device_scan_db
+        db = DeviceScanAdapter(dbname=p,
+                               kind='sqlite')
+        db.connect(test=True)
+        dev = db.add_device(self.name, klass=self.__class__.__name__)
+        s = db.add_scan(dev)
+
+        path = self.scan_path
+        db.add_path(s, path)
+        self.info('saving scan {} to database {}'.format(path, p))
+
+        db.commit()
 
     def stop_scan(self):
         self._scanning = False
         if self.timer is not None:
             self.timer.Stop()
+
+        if self.record_scan_data and not self._auto_started:
+            if self.use_db:
+                if self.db_save_dialog():
+                    self.save_scan_to_db()
+
+        self.data_manager.close()
 
     def _get_scan_label(self):
         return 'Start' if not self._scanning else 'Stop'

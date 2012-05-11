@@ -17,15 +17,17 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Bool, Any, Instance, List, Float, Tuple, Int
 from traitsui.api import View, Item#, TableEditor
+import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import numpy as np
 #============= local library imports  ==========================
 
-import apptools.sweet_pickle as pickle
 #from traitsui.table_column import ObjectColumn
 
 from src.graph.regression_graph import RegressionGraph
 from src.config_loadable import ConfigLoadable
+
+
 class CalibrationPoint(HasTraits):
     zoom = Float(enter_set=True, auto_set=False)
     pxpercm = Float(enter_set=True, auto_set=False)

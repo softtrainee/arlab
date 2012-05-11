@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import String, Float
 #============= standard library imports ========================
@@ -61,6 +59,8 @@ class PowerResult(DBResult):
 class PowerSelector(DBSelector):
     parameter = String('PowerTable.rundate')
     date_str = 'rundate'
+    query_table = 'PowerTable'
+    result_klass = PowerResult
 
     def _get__parameters(self):
 
@@ -71,62 +71,65 @@ class PowerSelector(DBSelector):
         params = f(b)
         return list(params)
 
-    def _dclicked_fired(self):
-        s = self.selected
+    def _get_selector_records(self, **kw):
+        return self._db.get_power_records(**kw)
 
-        if s is not None:
-            for si in s:
-                sid = si._id
-                if sid in self.opened_windows:
-                    c = self.opened_windows[sid].control
-                    if c is None:
-                        self.opened_windows.pop(sid)
-                    else:
-                        try:
-                            c.Raise()
-                        except:
-                            self.opened_windows.pop(sid)
+#    def _dclicked_fired(self):
+#        s = self.selected
+#
+#        if s is not None:
+#            for si in s:
+#                sid = si._id
+#                if sid in self.opened_windows:
+#                    c = self.opened_windows[sid].control
+#                    if c is None:
+#                        self.opened_windows.pop(sid)
+#                    else:
+#                        try:
+#                            c.Raise()
+#                        except:
+#                            self.opened_windows.pop(sid)
+#
+#                else:
+#                    try:
+#                        si.load_graph()
+#                        si.window_x = self.wx
+#                        si.window_y = self.wy
+#
+#                        info = si.edit_traits()
+#                        self.opened_windows[sid] = info
+#
+#                        self.wx += 0.005
+#                        self.wy += 0.03
+#
+#                        if self.wy > 0.65:
+#                            self.wx = 0.4
+#                            self.wy = 0.1
+#                    except Exception, e:
+#                        self.warning(e)
 
-                else:
-                    try:
-                        si.load_graph()
-                        si.window_x = self.wx
-                        si.window_y = self.wy
-
-                        info = si.edit_traits()
-                        self.opened_windows[sid] = info
-
-                        self.wx += 0.005
-                        self.wy += 0.03
-
-                        if self.wy > 0.65:
-                            self.wx = 0.4
-                            self.wy = 0.1
-                    except Exception, e:
-                        self.warning(e)
-
-    def _execute_(self):
-        db = self._db
-        if db is not None:
-#            self.info(s)
-            s = self._get_filter_str()
-            if s is None:
-                return
-
-            table, _col = self.parameter.split('.')
-            kw = dict(filter_str=s)
-            if not table == 'PowerTable':
-                kw['join_table'] = table
-
-            dbs = db.get_power_records(**kw)
-
-            self.info('query {} returned {} results'.format(s,
-                                    len(dbs) if dbs else 0))
-            if dbs:
-                self.results = []
-                for di in dbs:
-                    d = PowerResult(_db_result=di)
-                    d.load()
-                    self.results.append(d)
+#    def _execute_(self):
+#        db = self._db
+#        if db is not None:
+##            self.info(s)
+#            s = self._get_filter_str()
+#            if s is None:
+#                return
+#
+#            table, _col = self.parameter.split('.')
+#            kw = dict(filter_str=s)
+#            if not table == 'PowerTable':
+#                kw['join_table'] = table
+#
+#            dbs = db.get_power_records(**kw)
+#
+#            self.info('query {} returned {} results'.format(s,
+#                                    len(dbs) if dbs else 0))
+#            if dbs:
+#                self.results = []
+#                for di in dbs:
+#                    d = PowerResult(_db_result=di)
+#                    d.load()
+#                    self.results.append(d)
 
 #============= EOF =============================================

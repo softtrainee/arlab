@@ -17,7 +17,7 @@
 
 
 MANAGERS = []
-def open_manager(man, **kw):
+def open_manager(app, man, **kw):
 #    if view is None:
 #        view = 'edit_traits'
 
@@ -26,14 +26,17 @@ def open_manager(man, **kw):
             man.ui.control.Raise()
         except AttributeError:
 #            getattr(man, view)()
-            man.edit_traits(**kw)
+            ui = man.edit_traits(**kw)
     else:
-        man.edit_traits(**kw)
+        ui = man.edit_traits(**kw)
+
 #        getattr(man, view)()
 #        man.edit_traits()
 
         MANAGERS.append(man)
 
-def open_protocol(window, protocol):
-    m = window.application.get_service(protocol)
-    open_manager(m)
+    app.uis.append(ui)
+
+def open_protocol(app, protocol):
+    m = app.get_service(protocol)
+    open_manager(app, m)

@@ -145,6 +145,7 @@ class Valve(Rectangle):
     width = 2
     height = 2
     def _render_(self, gc):
+
         super(Valve, self)._render_(gc)
 ##        if self.state:
 ##                        gc.set_fill_color((0, 1, 0))
@@ -169,7 +170,7 @@ class Valve(Rectangle):
             gc.set_line_width(5)
             gc.rect(x - 2, y - 2, w + 4, h + 4)
             gc.draw_path()
-#            gc.restore_state()
+            gc.restore_state()
 #        gc.set_fill_color((0, 0, 0))
 #        gc.set_text_position(x + w / 4.0, y + h / 4.0)
 #        gc.show_text(self.name)
@@ -284,8 +285,6 @@ class Circle(MarkupItem):
             return True
 
 
-
-
 class CalibrationObject(HasTraits):
     tweak_dict = Dict
     cx = Float
@@ -320,7 +319,7 @@ class CalibrationItem(MarkupItem, CalibrationObject):
     line = None
     tool_state = 'move'
 
-    tweak_dict = Dict
+#    tweak_dict = Dict
     def __init__(self, x, y, rotation, *args, **kw):
         super(CalibrationItem, self).__init__(x, y, *args, **kw)
 

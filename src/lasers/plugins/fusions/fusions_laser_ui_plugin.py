@@ -64,11 +64,12 @@ class FusionsLaserUIPlugin(CoreUIPlugin):
 
         pref = 'pychron.fusions.{}.open_on_startup'.format(self.name)
         if self.application.preferences.get(pref) == 'True':
-            open_manager(lm)
+
+            open_manager(self.application, lm)
 
         for dev in lm.devices:
             if dev.is_scanable and dev.auto_start:
-                dev.start_scan()
+                dev.start_scan(auto=True)
 #    def create_power_map_view(self, **kw):
 #        obj = PowerMapViewer(application = self.application)
 #        root = os.path.join(paths.data_dir, 'powermap')

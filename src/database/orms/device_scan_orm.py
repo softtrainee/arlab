@@ -14,6 +14,8 @@
 # limitations under the License.
 #===============================================================================
 
+
+
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
@@ -25,36 +27,27 @@ from sqlalchemy.orm import relationship
 #=============local library imports  ==========================
 Base = declarative_base()
 
-class PowerTable(Base):
-    __tablename__ = 'PowerTable'
+class ScanTable(Base):
+    __tablename__ = 'ScanTable'
     id = Column(Integer, primary_key=True)
     runtime = Column(Time)
     rundate = Column(Date)
+    device_id = Column(Integer, ForeignKey('DeviceTable.id'))
 
-    path = relationship('PowerPathTable', uselist=False)
+    path = relationship('PathTable', uselist=False)
 
-
-class BrightnessTable(Base):
-    __tablename__ = 'BrightnessTable'
+class DeviceTable(Base):
+    __tablename__ = 'DeviceTable'
     id = Column(Integer, primary_key=True)
-    runtime = Column(Time)
-    rundate = Column(Date)
+    name = Column(String(80))
+    klass = Column(String(80))
 
-    path = relationship('BrightnessPathTable', uselist=False)
+    scans = relationship('ScanTable', backref='device')
 
-
-class BrightnessPathTable(Base):
-    __tablename__ = 'BrightnessPathTable'
+class PathTable(Base):
+    __tablename__ = 'PathTable'
     id = Column(Integer, primary_key=True)
-    brightness_id = Column(Integer, ForeignKey('BrightnessTable.id'))
-
-    root = Column(String(200))
-    filename = Column(String(80))
-
-class PowerPathTable(Base):
-    __tablename__ = 'PowerPathTable'
-    id = Column(Integer, primary_key=True)
-    power_id = Column(Integer, ForeignKey('PowerTable.id'))
+    scan_id = Column(Integer, ForeignKey('ScanTable.id'))
 
     root = Column(String(200))
     filename = Column(String(80))

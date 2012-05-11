@@ -40,8 +40,9 @@ def get_manager(event):
 class ConfigStageControllerAction(Action):
     def perform(self, event):
         manager = get_manager(event)
-
-        open_manager(manager.stage_manager.motion_controller_manager)
+        app = self.window.application
+        open_manager(app,
+                     manager.stage_manager.motion_controller_manager)
 #class OpenStageManagerAction(Action):
 #    name = 'Open Stage Manager'
 #

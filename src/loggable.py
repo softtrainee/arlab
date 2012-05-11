@@ -66,6 +66,9 @@ class Loggable(HasTraits):
         #NO==5104, YES==5103
         return result == 5103
 
+    def db_save_dialog(self):
+        return self.confirmation_dialog('Save to Database')
+
     def warning(self, msg, decorate=True):
         '''
         '''

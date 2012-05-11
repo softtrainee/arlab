@@ -201,7 +201,7 @@ class PyScriptManager(Manager):
     def load_help(self):
         ps = self._pyscript_factory(self.kind)
         m = ps.get_help()
-        self.help_path = ps.get_help_path()
+#        self.help_path = ps.get_help_path()
         self.help_message = m
 
     def open_script(self):
@@ -240,7 +240,8 @@ class PyScriptManager(Manager):
         self.script.cancel()
 
     def execute_script(self, path=None):
-        open_manager(self.runner)
+        open_manager(self.application,
+                     self.runner)
         ps = self._pyscript_factory(self.kind, runner=self.runner)
         load = False
         if path is None:

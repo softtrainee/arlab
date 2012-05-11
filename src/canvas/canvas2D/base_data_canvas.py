@@ -240,4 +240,6 @@ class BaseDataCanvas(DataView):
 #        DataView._draw(self, gc, *args, **kw)
         gc.clip_to_rect(self.x, self.y, self.width, self.height)
         self._draw_hook(gc, *args, **kw)
+
+
 #====================EOF==================

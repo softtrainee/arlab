@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Str, String, Date, Time, Instance, DelegatesTo
 from traitsui.api import View, Item, \
@@ -28,11 +26,6 @@ from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable
 from .db_selector import DBSelector, DBResult
 
-#class BakeoutDBResultsAdapter(TabularAdapter):
-#    columns = [('ID', '_id'),
-#               ('Date', 'rundate'),
-#               ('Time', 'runtime')
-#               ]
 
 class BakeoutDBResult(DBResult):
     title_str = 'Bakeout'
@@ -97,8 +90,9 @@ class BakeoutDBResult(DBResult):
 class BakeoutDBSelector(DBSelector):
     parameter = String('BakeoutTable.rundate')
     date_str = 'rundate'
+    query_table = 'BakeoutTable'
+    result_klass = BakeoutDBResult
 
-#    tabular_adapter = BakeoutDBResultsAdapter
     def _get__parameters(self):
 
         b = BakeoutTable
@@ -110,63 +104,65 @@ class BakeoutDBSelector(DBSelector):
         params += f(c)
         return list(params)
 
-    def _dclicked_fired(self):
-        s = self.selected
+    def _get_selector_records(self, **kw):
+        return self._db.get_bakeouts(**kw)
+#    def _dclicked_fired(self):
+#        s = self.selected
+#
+#        if s is not None:
+#            for si in s:
+#                sid = si._id
+#                if sid in self.opened_windows:
+#                    c = self.opened_windows[sid].control
+#                    if c is None:
+#                        self.opened_windows.pop(sid)
+#                    else:
+#                        try:
+#                            c.Raise()
+#                        except:
+#                            self.opened_windows.pop(sid)
+#
+#                else:
+#                    try:
+#                        si.load_graph()
+#                        si.window_x = self.wx
+#                        si.window_y = self.wy
+#
+#                        info = si.edit_traits()
+#                        self.opened_windows[sid] = info
+#
+#                        self.wx += 0.005
+#                        self.wy += 0.03
+#
+#                        if self.wy > 0.65:
+#                            self.wx = 0.4
+#                            self.wy = 0.1
+#                    except Exception, e:
+#                        self.warning(e)
 
-        if s is not None:
-            for si in s:
-                sid = si._id
-                if sid in self.opened_windows:
-                    c = self.opened_windows[sid].control
-                    if c is None:
-                        self.opened_windows.pop(sid)
-                    else:
-                        try:
-                            c.Raise()
-                        except:
-                            self.opened_windows.pop(sid)
-
-                else:
-                    try:
-                        si.load_graph()
-                        si.window_x = self.wx
-                        si.window_y = self.wy
-
-                        info = si.edit_traits()
-                        self.opened_windows[sid] = info
-
-                        self.wx += 0.005
-                        self.wy += 0.03
-
-                        if self.wy > 0.65:
-                            self.wx = 0.4
-                            self.wy = 0.1
-                    except Exception, e:
-                        self.warning(e)
-
-    def _execute_(self):
-        db = self._db
-        if db is not None:
-#            self.info(s)
-            s = self._get_filter_str()
-            if s is None:
-                return
-
-            table, _col = self.parameter.split('.')
-            kw = dict(filter_str=s)
-            if not table == 'BakeoutTable':
-                kw['join_table'] = table
-
-            dbs = db.get_bakeouts(**kw)
-
-            self.info('query {} returned {} results'.format(s,
-                                    len(dbs) if dbs else 0))
-            if dbs:
-                self.results = []
-                for di in dbs:
-                    d = BakeoutDBResult(_db_result=di)
-                    d.load()
-                    self.results.append(d)
+#    def _execute_(self):
+#        db = self._db
+#        if db is not None:
+##            self.info(s)
+#            s = self._get_filter_str()
+#            if s is None:
+#                return
+#
+#            table, _col = self.parameter.split('.')
+#            kw = dict(filter_str=s)
+#            if not table == 'BakeoutTable':
+#                kw['join_table'] = table
+#
+#            dbs = db.get_bakeouts(**kw)
+#
+#            self.info('query {} returned {} results'.format(s,
+#                                    len(dbs) if dbs else 0))
+#            if dbs:
+#                self.results = []
+#                for di in dbs:
+#                    d = BakeoutDBResult(_db_result=di)
+#                    d.load()
+#                    self.results.append(d)
 
 #============= EOF =============================================
 

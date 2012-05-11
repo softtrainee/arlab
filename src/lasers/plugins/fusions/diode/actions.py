@@ -44,7 +44,9 @@ class OpenPatternManagerAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
-            open_manager(manager.stage_manager.pattern_manager, view='pattern_maker_view')
+            app = self.window.application
+            open_manager(app,
+                         manager.stage_manager.pattern_manager, view='pattern_maker_view')
 
 #class OpenCalibrationManagerAction(Action):
 #    def perform(self, event):
@@ -57,8 +59,8 @@ class OpenMotionControllerManagerAction(Action):
         man = get_manager(event)
         if man is not None:
             m = man.stage_manager.motion_configure_factory(view_style='full_view')
-
-            open_manager(m)
+            app = self.window.application
+            open_manager(app, m)
 
 class OpenLaserManagerAction(Action):
     name = 'Open Laser Manager'
@@ -66,8 +68,8 @@ class OpenLaserManagerAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
-            man = manager
-            open_manager(man)
+            app = self.window.application
+            open_manager(app, manager)
 
 class MoveLoadPositionAction(Action):
     name = 'Loading Position'
@@ -106,7 +108,8 @@ class PulseAction(Action):
         manager = get_manager(event)
         if manager is not None:
             man = manager.get_pulse_manager()
-            open_manager(man, view='standalone_view')
+            app = self.window.application
+            open_manager(app, man, view='standalone_view')
 
 class PowerMapAction(Action):
     name = 'Power Map'
@@ -114,7 +117,8 @@ class PowerMapAction(Action):
         manager = get_manager(event)
         if manager is not None:
             man = manager.get_power_map_manager()
-            open_manager(man)#, view = 'canvas_view')
+            app = self.window.application
+            open_manager(app, man)#, view = 'canvas_view')
 
 class OpenPowerScanGraphAction(Action):
     name = 'Open Power Scan Result'
@@ -136,14 +140,16 @@ class OpenCalibrationManagerAction(Action):
         manager = get_manager(event)
         if manager is not None:
             man = manager.stage_manager.calibration_manager
-            open_manager(man)
+            app = self.window.application
+            open_manager(app, man)
 
 class DegasAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
             man = manager.get_degas_manager()
-            open_manager(man)
+            app = self.window.application
+            open_manager(app, man)
 
 class ConfigureWatlowAction(Action):
     def perform(self, event):
@@ -151,4 +157,6 @@ class ConfigureWatlowAction(Action):
         if manager is not None:
             t = manager.temperature_controller
             t.initialization_hook()
-            open_manager(t, view='configure_view')
+            app = self.window.application
+            open_manager(app,
+                         t, view='configure_view')
