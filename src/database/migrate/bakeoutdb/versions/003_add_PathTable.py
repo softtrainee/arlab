@@ -18,7 +18,7 @@ from sqlalchemy import *
 from migrate import *
 meta = MetaData()
 
-t = Table('PathTable', meta,
+t = Table('BakeoutPathTable', meta,
               Column('id', Integer, primary_key=True),
               Column('root', String(200)),
               Column('filename', String(80)),

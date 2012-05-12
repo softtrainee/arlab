@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
@@ -25,24 +23,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 #=============local library imports  ==========================
+from base_orm import ResultsMixin, PathMixin
 Base = declarative_base()
 
 
-class PowerMapTable(Base):
-    __tablename__ = 'PowerMapTable'
-    id = Column(Integer, primary_key=True)
-    runtime = Column(Time)
-    rundate = Column(Date)
+class PowerMapTable(Base, ResultsMixin):
+    pass
 
-    path = relationship('PowerMapPathTable', uselist=False)
-
-
-class PowerMapPathTable(Base):
-    __tablename__ = 'PowerMapPathTable'
-    id = Column(Integer, primary_key=True)
+class PowerMapPathTable(Base, PathMixin):
     powermap_id = Column(Integer, ForeignKey('PowerMapTable.id'))
 
-    root = Column(String(200))
-    filename = Column(String(80))
 
 

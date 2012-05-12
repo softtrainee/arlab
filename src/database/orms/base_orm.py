@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,30 +14,32 @@
 # limitations under the License.
 #===============================================================================
 
-#=============enthought library imports=======================
+#============= enthought library imports =======================
 
-#=============standard library imports ========================
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, \
-     ForeignKey
+#============= standard library imports ========================
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Time, Date
+#============= local library imports  ==========================
 
-#=============local library imports  ==========================
-from base_orm import BaseMixin, ResultsMixin, PathMixin
+class BaseMixin(object):
+    @declared_attr
+    def __tablename__(self):
+        return self.__name__
 
-Base = declarative_base()
+    id = Column(Integer, primary_key=True)
 
-class DeviceTable(Base, BaseMixin):
-    name = Column(String(80))
-    klass = Column(String(80))
-    scans = relationship('ScanTable', backref='device')
+class ResultsMixin(BaseMixin):
+    runtime = Column(Time)
+    rundate = Column(Date)
 
-class ScanPathTable(Base, PathMixin):
-    scan_id = Column(Integer, ForeignKey('ScanTable.id'))
+    @declared_attr
+    def path(self):
+        name = self.__name__.replace('Table', 'PathTable')
+        return relationship(name, uselist=False)
 
-class ScanTable(Base, ResultsMixin):
-    device_id = Column(Integer, ForeignKey('DeviceTable.id'))
-
+class PathMixin(BaseMixin):
+    root = Column(String(200))
+    filename = Column(String(80))
 
 #============= EOF =============================================
-

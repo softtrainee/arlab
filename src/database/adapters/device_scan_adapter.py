@@ -20,7 +20,7 @@
 #============= local library imports  ==========================
 from src.database.adapters.database_adapter import DatabaseAdapter
 from src.database.selectors.device_scan_selector import DeviceScanSelector
-from src.database.orms.device_scan_orm import ScanTable, DeviceTable, PathTable
+from src.database.orms.device_scan_orm import ScanTable, DeviceTable, ScanPathTable
 from src.helpers.paths import device_scan_db
 
 class DeviceScanAdapter(DatabaseAdapter):
@@ -66,7 +66,7 @@ class DeviceScanAdapter(DatabaseAdapter):
 #
     def add_path(self, scan, path, commit=False, **kw):
         kw = self._get_path_keywords(path, kw)
-        p = PathTable(**kw)
+        p = ScanPathTable(**kw)
         scan.path = p
         if commit:
             self.commit()
