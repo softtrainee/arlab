@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 from sqlalchemy import *
 from migrate import *
 meta = MetaData()
@@ -23,7 +21,10 @@ meta = MetaData()
 t = Table('ControllerTable', meta,
               Column('id', Integer, primary_key=True),
               Column('name', String(40)),
-              Column('bakeout_id', Integer)
+              Column('bakeout_id', Integer),
+              Column('script', String(40)),
+              Column('setpoint', Float),
+              Column('duration', Float),
               )
 
 def upgrade(migrate_engine):

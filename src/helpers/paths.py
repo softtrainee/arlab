@@ -57,6 +57,7 @@ device_scan_root = os.path.join(db_path, 'device_scans')
 device_scan_db = os.path.join(device_scan_root, 'scans.sqlite')
 
 bakeout_db_root = os.path.join(db_path, 'bakeoutdb')
+bakeout_db = os.path.join(bakeout_db_root, 'bakeouts.sqlite')
 co2laser_db_root = os.path.join(db_path, 'co2laserdb')
 
 #directories directly under root

@@ -32,7 +32,7 @@ from src.managers.manager import Manager, ManagerHandler
 from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
 from src.helpers.paths import bakeout_config_dir, data_dir, scripts_dir, \
-    bakeout_db_root
+    bakeout_db_root, bakeout_db
 from src.graph.time_series_graph import TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
 from src.helpers.datetime_tools import generate_datestamp, get_datetime
@@ -145,8 +145,10 @@ class BakeoutManager(Manager):
 # database 
 #==============================================================================
     def _database_default(self):
-        db = BakeoutAdapter(dbname='bakeoutdb',
-                            password='Argon')
+        db = BakeoutAdapter(dbname=bakeout_db,
+#                            password='Argon',
+                            kind='sqlite'
+                            )
         db.connect()
         return db
 
@@ -185,8 +187,9 @@ class BakeoutManager(Manager):
     def _open_button_fired(self):
         use_db = True
         if use_db:
-            db = BakeoutAdapter(dbname='bakeoutdb',
-                                password='Argon')
+            db = self.database
+#            db = BakeoutAdapter(dbname='bakeoutdb',
+#                                password='Argon')
             db.connect()
             db.open_selector()
 
