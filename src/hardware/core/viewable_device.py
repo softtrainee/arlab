@@ -13,23 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
-
-
 #=============enthought library imports=======================
 from traits.api import Instance, Str, Property, Bool, CStr
 from traitsui.api import View, Item, Group, VGroup, HGroup, spring, ButtonEditor
 #=============standard library imports ========================
+
 #=============local library imports  ==========================
-from src.config_loadable import ConfigLoadable
 from src.graph.graph import Graph
+from src.config_loadable import ConfigLoadable
 
 
 class ViewableDevice(ConfigLoadable):
     '''
     '''
 
-    graph = Instance(Graph)
     simulation = Property
 
     connected = Property(depends_on='simulation')
@@ -45,8 +42,6 @@ class ViewableDevice(ConfigLoadable):
     last_response = Str
 
     current_scan_value = CStr
-
-    graph_klass = Graph
 
     def _get_config_short_path(self):
         '''
@@ -75,25 +70,6 @@ class ViewableDevice(ConfigLoadable):
         else:
             return True
 
-    def _graph_default(self):
-
-        g = self.graph_klass(
-                  container_dict=dict(padding=[10, 10, 10, 10])
-                  )
-
-        self.graph_builder(g)
-
-        return g
-
-    def graph_builder(self, g, **kw):
-
-        g.new_plot(padding=[40, 5, 5, 20],
-                   zoom=True,
-                  pan=True,
-                  **kw
-                   )
-        g.new_series()
-
     def get_control_group(self):
         pass
 
@@ -101,33 +77,16 @@ class ViewableDevice(ConfigLoadable):
         pass
 
     def current_state_view(self):
-        v = View(Group(
+        gen_grp = Group(
                      #Item('name'),
                      Item('last_command', style='readonly'),
                      Item('last_response', style='readonly'),
                      Item('current_scan_value', style='readonly'),
                      label='General'
-                     ),
-                 VGroup(Item('graph', show_label=False, style='custom'),
+                     )
 
-                        VGroup(Item('scan_func', label='Function', style='readonly'),
 
-                               HGroup(Item('scan_period', label='Period ({})'.format(self.scan_units),
-                                            #style='readonly'
-                                            ), spring),
-                                 Item('current_scan_value', style='readonly'),
-                               ),
-                        HGroup(Item('scan_button', editor=ButtonEditor(label_value='scan_label'),
-                                     show_label=False),
-                               spring,
-                               Item('scan_path', show_label=False,
-                                    style='readonly',
-                                    visible_when='object.record_scan_data'),
-                               visible_when='object.is_scanable'),
-
-                        label='Scan'
-                        )
-                 )
+        v = View(gen_grp)
 
         return v
 
@@ -164,4 +123,6 @@ class ViewableDevice(ConfigLoadable):
         if cg:
             v.content.content.append(cg)
         return v
+
+
 #============= EOF =====================================

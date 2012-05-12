@@ -25,7 +25,7 @@
 from src.lasers.plugins.fusions.fusions_laser_ui_plugin import FusionsLaserUIPlugin
 
 
-DIODE_PROTOCOL = 'src.managers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
+DIODE_PROTOCOL = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
 
 class FusionsDiodeUIPlugin(FusionsLaserUIPlugin):
     name = 'diode'

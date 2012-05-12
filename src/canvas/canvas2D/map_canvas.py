@@ -21,10 +21,12 @@ import math
 #=============local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem, \
     CalibrationObject
-from src.managers.stage_managers.stage_map import StageMap
+from src.lasers.stage_managers.stage_map import StageMap
 from src.canvas.canvas2D.bitmap_underlay import BitmapUnderlay
-from src.managers.stage_managers.affine import AffineTransform
+from src.lasers.stage_managers.affine import AffineTransform
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
+
+
 class MapCanvas(MarkupCanvas):
     map = Instance(StageMap)
     calibration_item = Instance(CalibrationObject)

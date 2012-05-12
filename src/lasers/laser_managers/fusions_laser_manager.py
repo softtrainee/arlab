@@ -35,6 +35,7 @@ from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
 from src.led.led_editor import LEDEditor
 from laser_manager import LaserManager
+from src.helpers.paths import co2laser_db_root
 
 
 class FusionsLaserManager(LaserManager):
@@ -189,8 +190,8 @@ class FusionsLaserManager(LaserManager):
 
         self.data_manager = dm = H5DataManager()
         self._data_manager_lock = Lock()
-        root = '/usr/local/pychron/co2power'
-        dw = DataWarehouse(root=root)
+
+        dw = DataWarehouse(root=co2laser_db_root)
         dw.build_warehouse()
 
         dm.new_frame(directory=dw.get_current_dir(),

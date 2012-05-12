@@ -21,7 +21,7 @@
 #============= local library imports  ==========================
 from src.lasers.plugins.fusions.fusions_laser_ui_plugin import FusionsLaserUIPlugin
 
-CO2_PROTOCOL = 'src.managers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
+CO2_PROTOCOL = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
 
 class FusionsCO2UIPlugin(FusionsLaserUIPlugin):
     _protocol = CO2_PROTOCOL

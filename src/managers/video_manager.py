@@ -36,7 +36,7 @@ from src.image.image_editor import ImageEditor
 
 from manager import Manager
 from src.canvas.canvas2D.video_canvas import VideoCanvas
-from src.managers.stage_managers.video_component_editor import VideoComponentEditor
+from src.lasers.stage_managers.video_component_editor import VideoComponentEditor
 from src.helpers.filetools import unique_path
 from src.helpers.paths import snapshot_dir, data_dir, video_dir
 import os

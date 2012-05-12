@@ -50,9 +50,14 @@ root_dir = root
 
 src_root = os.getcwd()
 
+#device_scan_db = '/Users/ross/Sandbox/device_scans.sqlite'
 
-device_scan_db = '/Users/ross/Sandbox/device_scans.sqlite'
+db_path = '/usr/local/pychron'
+device_scan_root = os.path.join(db_path, 'device_scans')
+device_scan_db = os.path.join(device_scan_root, 'scans.sqlite')
 
+bakeout_db_root = os.path.join(db_path, 'bakeoutdb')
+co2laser_db_root = os.path.join(db_path, 'co2laserdb')
 
 #directories directly under root
 setup_dir = os.path.join(root, 'setupfiles')

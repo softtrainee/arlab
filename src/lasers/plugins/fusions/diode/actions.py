@@ -28,7 +28,7 @@ from src.envisage.core.action_helper import open_manager
 def get_manager(event, app=None):
     if app is None:
         app = event.window.application
-    base = 'src.managers.laser_managers.{}'
+    base = 'src.lasers.laser_managers.{}'
 
     manager = app.get_service(base.format('fusions_diode_manager.FusionsDiodeManager'))
 

@@ -25,7 +25,7 @@ from traitsui.api import View, Item, Group, HGroup, VGroup, Label, \
 from fusions_laser_manager import FusionsLaserManager
 from src.hardware.fusions.fusions_uv_logic_board import FusionsUVLogicBoard
 from src.hardware.fusions.atl_laser_control_unit import ATLLaserControlUnit
-from src.managers.laser_managers.laser_shot_history import LaserShotHistory
+from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
 
 #============= local library imports  ==========================
 
@@ -305,11 +305,11 @@ class FusionsUVManager(FusionsLaserManager):
                              )
 
         if self.video_manager.__class__.__name__ == 'VideoManager' and self._video_stage:
-            from src.managers.stage_managers.video_stage_manager import VideoStageManager
+            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
             factory = VideoStageManager
             args['video_manager'] = self.video_manager
         else:
-            from src.managers.stage_managers.stage_manager import StageManager
+            from src.lasers.stage_managers.stage_manager import StageManager
             factory = StageManager
 
         return factory(**args)

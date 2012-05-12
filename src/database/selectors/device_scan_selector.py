@@ -20,8 +20,8 @@ from traits.api import String, Float
 import os
 #============= local library imports  ==========================
 from src.database.selectors.db_selector import DBSelector, DBResult
-from src.database.orms.power_orm import PowerTable
-from src.graph.graph import Graph
+from src.database.orms.device_scan_orm import ScanTable
+
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.graph.time_series_graph import TimeSeriesGraph
 
@@ -63,7 +63,7 @@ class DeviceScanSelector(DBSelector):
 
     def _get__parameters(self):
 
-        b = PowerTable
+        b = ScanTable
 
         f = lambda x:[str(col)
                            for col in x.__table__.columns]

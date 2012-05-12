@@ -14,22 +14,21 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import  Instance, File, Float, Button
 from traitsui.api import View, Item, HGroup, VGroup
-from src.canvas.canvas2D.map_canvas import MapCanvas
 from enable.component_editor import ComponentEditor
-from src.managers.stage_managers.stage_map import StageMap
-
 #============= standard library imports ========================
 import wx
-from src.managers.manager import Manager
 #============= local library imports  ==========================
+from src.canvas.canvas2D.map_canvas import MapCanvas
+from src.lasers.stage_managers.stage_map import StageMap
+from src.managers.manager import Manager
 WIDTH = 1050
 PX_PER_CM = 23.2
 PADDING = 0
+
+
 class StageMapDesigner(Manager):
     canvas = Instance(MapCanvas)
     export = Button
