@@ -131,6 +131,7 @@ class DBSelector(Loggable):
 
     dclicked = Event
     selected = Any
+    column_clicked = Any
 
     wx = 0.4
     wy = 0.1
@@ -143,6 +144,28 @@ class DBSelector(Loggable):
     result_klass = None
 
     omit_bogus = Bool(False)
+
+    reverse_sort = False
+    _sort_field = None
+
+    def _column_clicked_changed(self, event):
+        values = event.editor.value
+
+        fields = [name for _, name in event.editor.adapter.columns]
+        field = fields[event.column]
+        self.reverse_sort = not self.reverse_sort
+        self._sort_columns(values, field)
+
+    def _sort_columns(self, values, field=None):
+        #get the field to sort on
+        if field is None:
+            field = self._sort_field
+            if field is None:
+                return
+
+        values.sort(key=lambda x: getattr(x, field),
+                    reverse=self.reverse_sort)
+        self._sort_field = field
 
     def _search_fired(self):
         self._execute_query()
@@ -222,6 +245,7 @@ class DBSelector(Loggable):
         editor = TabularEditor(adapter=self.tabular_adapter(),
                                dclicked='object.dclicked',
                                selected='object.selected',
+                               column_clicked='object.column_clicked',
                                editable=False,
                                multi_select=True
                                )
@@ -262,8 +286,6 @@ class DBSelector(Loggable):
             if not table == self.query_table:
                 kw['join_table'] = table
 
-
-#            dbs = db.get_power_records(**kw)
             dbs = self._get_selector_records(**kw)
 
             self.info('query {} returned {} results'.format(s,
@@ -275,6 +297,8 @@ class DBSelector(Loggable):
                     d.load()
                     if d.isloadable() or not self.omit_bogus:
                         self.results.append(d)
+
+            self._sort_columns(self.results)
 
     def _dclicked_fired(self):
         s = self.selected
