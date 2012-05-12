@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, String, Button, List, Any, Long, Event, \
-    Date, Time, Instance, Dict, Property
+    Date, Time, Instance, Dict, Property, Bool, on_trait_change
 
 from traitsui.api import View, Item, TabularEditor, EnumEditor, \
     HGroup, VGroup, Group, spring
@@ -28,6 +28,8 @@ from src.loggable import Loggable
 from src.database.adapters.database_adapter import DatabaseAdapter
 from src.database.selectors.base_results_adapter import BaseResultsAdapter
 from src.graph.graph import Graph
+import os
+from src.managers.data_managers.h5_data_manager import H5DataManager
 
 
 class BaseDBResult(HasTraits):
@@ -48,6 +50,9 @@ class DBResult(BaseDBResult):
     window_y = 0.1
 
     title_str = Str('Base')
+    data_manager = None
+
+    _none_loadable = Bool
 
     def load(self):
         dbr = self._db_result
@@ -65,6 +70,21 @@ class DBResult(BaseDBResult):
 
     def _load_hook(self, dbr):
         pass
+
+    def isloadable(self):
+        return self._loadable
+
+    def _data_manager_factory(self):
+        dm = self.data_manager
+        if dm is None:
+            data = os.path.join(self.directory, self.filename)
+            dm = H5DataManager()
+
+            self._loadable = False
+            if os.path.isfile(data):
+                self._loadable = dm.open_data(data)
+
+        return dm
 
     def traits_view(self):
         interface_grp = VGroup(
@@ -121,6 +141,8 @@ class DBSelector(Loggable):
 
     query_table = None
     result_klass = None
+
+    omit_bogus = Bool(False)
 
     def _search_fired(self):
         self._execute_query()
@@ -180,7 +202,6 @@ class DBSelector(Loggable):
         else:
             c = self.criteria
 
-
         c = '{}'.format(c)
         s = ''.join((self.parameter,
                    self.comparator,
@@ -211,7 +232,8 @@ class DBSelector(Loggable):
                       show_label=False
                       ),
                  qgrp,
-                 HGroup(spring, Item('search', show_label=False)),
+                 HGroup(Item('omit_bogus'),
+                        spring, Item('search', show_label=False)),
 
 
                  resizable=True,
@@ -225,6 +247,7 @@ class DBSelector(Loggable):
     def _get_selector_records(self):
         pass
 
+    @on_trait_change('omit_bogus')
     def _execute_query(self):
         db = self._db
         if db is not None:
@@ -250,7 +273,8 @@ class DBSelector(Loggable):
                 for di in dbs:
                     d = self.result_klass(_db_result=di)
                     d.load()
-                    self.results.append(d)
+                    if d.isloadable() or not self.omit_bogus:
+                        self.results.append(d)
 
     def _dclicked_fired(self):
         s = self.selected

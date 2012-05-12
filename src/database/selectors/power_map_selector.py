@@ -24,7 +24,7 @@ import csv
 #============= local library imports  ==========================
 from .db_selector import DBSelector, DBResult
 from src.database.orms.power_map_orm import PowerMapTable
-from src.managers.data_managers.h5_data_manager import H5DataManager
+#from src.managers.data_managers.h5_data_manager import H5DataManager
 
 
 class PowerMapResult(DBResult):
@@ -35,9 +35,10 @@ class PowerMapResult(DBResult):
         pmp = PowerMapProcessor()
 #        print os.path.isfile(data), data
         if data.endswith('.h5'):
-            dm = H5DataManager()
-            dm.open_data(data)
-            reader = dm
+#            dm = H5DataManager()
+#            dm.open_data(data)
+            reader = self._data_manager_factory()
+#            reader = dm
         else:
             with open(data, 'r') as f:
                 reader = csv.reader(f)

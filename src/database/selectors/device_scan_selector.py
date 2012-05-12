@@ -32,7 +32,8 @@ class ScanResult(DBResult):
     def load_graph(self):
 
         g = TimeSeriesGraph()
-        dm = self.data_manager
+        dm = self._data_manager_factory()
+#        dm = self.data_manager
 #        internal = dm.get_table('internal', 'Power')
 #        brightness = dm.get_table('brightness', 'Power')
         g.new_plot()
@@ -44,16 +45,8 @@ class ScanResult(DBResult):
         self.graph = g
 
     def _load_hook(self, dbr):
-        data = os.path.join(self.directory, self.filename)
-        dm = H5DataManager()
-
-        if os.path.isfile(data):
-            try:
-                dm.open_data(data)
-            except Exception:
-                pass
-
-        self.data_manager = dm
+        #load the datamanager to set _none_loadable flag
+        self._data_manager_factory()
 
 class DeviceScanSelector(DBSelector):
     parameter = String('ScanTable.rundate')

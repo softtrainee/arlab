@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traitsui.tabular_adapter import TabularAdapter
 
@@ -26,4 +24,11 @@ class BaseResultsAdapter(TabularAdapter):
                ('Date', 'rundate'),
                ('Time', 'runtime')
                ]
+
+    def get_bg_color(self, obj, trait, row):
+        if obj.results[row].isloadable():
+            return 'white'
+        else:
+            return '#FF4D4D'
+
 #============= EOF =============================================
