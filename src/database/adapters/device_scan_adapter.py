@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
+#from traits.etsconfig.api import ETSConfig
+#ETSConfig.toolkit = "qt4"
 #============= enthought library imports =======================
 #============= standard library imports ========================
 

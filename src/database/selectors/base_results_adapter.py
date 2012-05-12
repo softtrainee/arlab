@@ -25,7 +25,7 @@ class BaseResultsAdapter(TabularAdapter):
                ('Time', 'runtime')
                ]
 
-    def get_bg_color(self, obj, trait, row):
+    def get_bg_color(self, obj, trait, row, *args):
         if obj.results[row].isloadable():
             return 'white'
         else:
