@@ -18,6 +18,7 @@
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
 from src.database.adapters.power_adapter import PowerAdapter
+from src.helpers.paths import co2laser_db
 #from traits.api import on_trait_change
 
 #============= standard library imports ========================
@@ -160,10 +161,12 @@ class OpenPowerMapAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
-            from src.database.adapters.power_map_adapter import PowerMapAdapter
-            db = PowerMapAdapter(dbname='co2laserdb',
-                                password='Argon')
-
+#            from src.database.adapters.power_map_adapter import PowerMapAdapter
+#            db = PowerMapAdapter(dbname=co2laser_db,
+#                                 kind='sqlite'
+##                                password='Argon',
+#                                )
+            db = manager.get_power_map_manager().database
             open_selector(db, self.window.application)
 
 #            manager.graph_manager.open_power_map()
@@ -176,8 +179,9 @@ class OpenPowerRecordGraphAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
-            db = PowerAdapter(dbname='co2laserdb',
-                                password='Argon')
+#            db = PowerAdapter(dbname='co2laserdb',
+#                                password='Argon')
+            db = manager.get_database()
             open_selector(db, self.window.application)
 #            manager.graph_manager.open_graph('powerrecord')
 

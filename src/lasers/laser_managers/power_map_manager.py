@@ -33,8 +33,8 @@ from src.managers.manager import Manager
 #from src.canvas.canvas2D.raster_canvas import RasterCanvas
 from threading import Thread
 
-from src.managers.laser_managers.power_mapping import PowerMapping
-from src.helpers.paths import hidden_dir
+from src.lasers.laser_managers.power_mapping import PowerMapping
+from src.helpers.paths import hidden_dir, co2laser_db
 from pyface.timer.do_later import do_later
 #from src.helpers.datetime_tools import get_datetime
 from src.database.adapters.power_map_adapter import PowerMapAdapter
@@ -197,8 +197,14 @@ class PowerMapManager(Manager):
 #    def _canvas_default(self):
 #        return RasterCanvas()
     def _database_default(self):
-        db = PowerMapAdapter(dbname='co2laserdb',
-                            password='Argon')
+#        db = PowerMapAdapter(
+#                             dbname='co2laserdb',
+#                            password='Argon'
+#                            )
+        db = PowerMapAdapter(
+                             dbname=co2laser_db,
+                            kind='sqlite'
+                            )
         db.connect()
         return db
 

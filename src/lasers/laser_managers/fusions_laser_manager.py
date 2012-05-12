@@ -35,7 +35,7 @@ from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
 from src.led.led_editor import LEDEditor
 from laser_manager import LaserManager
-from src.helpers.paths import co2laser_db_root
+from src.helpers.paths import co2laser_db_root, co2laser_db
 
 
 class FusionsLaserManager(LaserManager):
@@ -90,7 +90,7 @@ class FusionsLaserManager(LaserManager):
             self.stop_power_recording(delay=0, save=save)
         else:
             t = Thread(name='fusions.power_record',
-                       target=self.start_power_recording, args=('- Manual',))
+                       target=self.start_power_recording, args=('Manual',))
             t.start()
 
         self._recording_power_state = not self._recording_power_state
@@ -218,6 +218,14 @@ class FusionsLaserManager(LaserManager):
         if self._get_record_brightness():
             self.brightness_timer = Timer(175, self._record_brightness)
 
+    def get_database(self):
+#        db = PowerAdapter(dbname='co2laserdb',
+#                                   password='Argon')
+        db = PowerAdapter(dbname=co2laser_db,
+                          kind='sqlite')
+
+        return db
+
     def stop_power_recording(self, delay=5, save=True):
 
         def _stop():
@@ -229,14 +237,12 @@ class FusionsLaserManager(LaserManager):
             self.info('Power recording stopped')
             self.power_timer = None
             self.brightness_timer = None
-            save = False
             if save:
-                self.db = PowerAdapter(dbname='co2laserdb',
-                                   password='Argon')
-                if self.db.connect(test=True):
-                    dbp = self.db.add_power_record()
-                    self.db.add_power_path(dbp, self.data_manager.get_current_path())
-                    self.db.commit()
+                db = self.get_database()
+                if db.connect(test=True):
+                    dbp = db.add_power_record()
+                    db.add_power_path(dbp, self.data_manager.get_current_path())
+                    db.commit()
 
             else:
                 self.data_manager.delete_frame()

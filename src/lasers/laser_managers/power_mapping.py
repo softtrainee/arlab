@@ -115,7 +115,7 @@ class PowerMapping(Loggable):
         return dm
 
     def _execute_(self):
-        self.info('executing {} scan'.format(self.kind))
+        self.info('executing discrete scan')
         self.info('beam diameter={} request_power={}'.format(self.beam_diameter,
                                                              self.request_power))
         lm = self.parent.laser_manager
