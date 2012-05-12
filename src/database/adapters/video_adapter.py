@@ -18,23 +18,24 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.adapters.database_adapter import DatabaseAdapter
-from src.database.orms.power_orm import PowerTable, PowerPathTable
-from src.database.selectors.power_selector import PowerSelector
+from src.database.orms.video_orm import VideoTable, VideoPathTable
+from src.database.selectors.video_selector import VideoSelector
+from src.helpers.paths import co2laser_db
 
 
-class PowerAdapter(DatabaseAdapter):
+class VideoAdapter(DatabaseAdapter):
     test_func = None
-    selector_klass = PowerSelector
+    selector_klass = VideoSelector
 #==============================================================================
 #    getters
 #==============================================================================
 
-    def get_power_records(self, join_table=None, filter_str=None):
+    def get_video_records(self, join_table=None, filter_str=None):
         try:
             if isinstance(join_table, str):
                 join_table = globals()[join_table]
 
-            q = self._get_query(PowerTable, join_table=join_table,
+            q = self._get_query(VideoTable, join_table=join_table,
                                  filter_str=filter_str)
             return q.all()
         except Exception, e:
@@ -43,28 +44,24 @@ class PowerAdapter(DatabaseAdapter):
 #=============================================================================
 #   adder
 #=============================================================================
-    def add_power_record(self, commit=False, **kw):
-        b = self._add_timestamped_item(PowerTable, commit)
+    def add_video_record(self, commit=False, **kw):
+        b = self._add_timestamped_item(VideoTable, commit)
         return b
 
-    def add_power_path(self, power, path, commit=False, **kw):
+    def add_video_path(self, video, path, commit=False, **kw):
         kw = self._get_path_keywords(path, kw)
-        p = PowerPathTable(**kw)
-        power.path = p
+        p = VideoPathTable(**kw)
+        video.path = p
         if commit:
             self.commit()
         return p
 
 
 if __name__ == '__main__':
-#    db = PowerAdapter(dbname='co2laserdb',
-#                            password='Argon')
-    from src.helpers.paths import co2laser_db
-    db = PowerAdapter(dbname=co2laser_db,
-                            kind='sqlite')
+    db = VideoAdapter(dbname=co2laser_db, kind='sqlite')
     db.connect()
 
-    dbs = PowerSelector(_db=db)
+    dbs = VideoSelector(_db=db)
     dbs._execute_query()
     dbs.configure_traits()
 #    print db.get_bakeouts(join_table='ControllerTable',

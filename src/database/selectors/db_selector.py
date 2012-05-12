@@ -52,7 +52,7 @@ class DBResult(BaseDBResult):
     title_str = Str('Base')
     data_manager = None
 
-    _none_loadable = Bool
+    _loadable = True
 
     def load(self):
         dbr = self._db_result
@@ -86,6 +86,12 @@ class DBResult(BaseDBResult):
 
         return dm
 
+    def load_graph(self):
+        pass
+
+    def _get_additional_tabs(self):
+        return []
+
     def traits_view(self):
         interface_grp = VGroup(
                           VGroup(Item('_id', style='readonly', label='ID'),
@@ -99,13 +105,19 @@ class DBResult(BaseDBResult):
                     label='Info',
                     )
 
-        return View(
-                    Group(
-                    interface_grp,
-                    Item('graph', width=0.75, show_label=False,
-                         style='custom'),
-                    layout='tabbed'
-                    ),
+
+        grps = Group(interface_grp, layout='tabbed')
+
+        agrps = self._get_additional_tabs()
+        if self.graph is not None:
+            g = Item('graph', width=0.75, show_label=False,
+                         style='custom')
+            agrps.append(g)
+
+        for ai in agrps:
+            grps.content.append(ai)
+
+        return View(grps,
 
                     width=800,
                     height=0.85,
@@ -154,6 +166,7 @@ class DBSelector(Loggable):
         fields = [name for _, name in event.editor.adapter.columns]
         field = fields[event.column]
         self.reverse_sort = not self.reverse_sort
+
         self._sort_columns(values, field)
 
     def _sort_columns(self, values, field=None):
@@ -247,6 +260,7 @@ class DBSelector(Loggable):
                                selected='object.selected',
                                column_clicked='object.column_clicked',
                                editable=False,
+                               operations=['move', ],
                                multi_select=True
                                )
         v = View(

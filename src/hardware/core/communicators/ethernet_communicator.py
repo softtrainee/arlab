@@ -142,7 +142,7 @@ class EthernetCommunicator(Communicator):
     def _reset_connection(self):
         self.handler = None
 
-    def ask(self, cmd, verbose=True, info=None, *args, **kw):
+    def ask(self, cmd, retries=3, verbose=True, info=None, *args, **kw):
         '''
 
         '''
@@ -153,30 +153,25 @@ class EthernetCommunicator(Communicator):
 
         if self.simulation:
             if verbose:
-                self.info('no handle    {}'.format(cmd))
+                self.info('no handle    {}'.format(cmd.strip()))
             return
 
-        self._lock.acquire()
-        re = 'ERROR: Connection refused {}:{}'.format(self.host, self.port)
-        handler = self.get_handler()
-        if self.simulation:
-            self._lock.release()
-            return 'simulation'
+        r = None
+        with self._lock:
+#            self._lock.acquire()
+            re = 'ERROR: Connection refused {}:{}'.format(self.host, self.port)
+            handler = self.get_handler()
+            if self.simulation:
+#                self._lock.release()
+                return 'simulation'
 
-#        if handler.send_packet(cmd):
-#            r = handler.get_packet()
-
-        r = _ask()
-        if r is not None:
-            self._lock.release()
-#            if r is not None:
-#                re = r
-#            else:
-#                self._reset_connection()
-        else:
-            self._reset_connection()
-            r = _ask()
-            self._lock.release()
+            for _ in range(retries):
+                r = _ask()
+                if r is not None:
+                    break
+                else:
+                    self._reset_connection()
+#            self._lock.release()
 
         if r is not None:
             re = self.process_response(r)

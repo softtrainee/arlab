@@ -17,12 +17,10 @@
 #============= enthought library imports =======================
 from traits.api import String, Float
 #============= standard library imports ========================
-import os
 #============= local library imports  ==========================
 from src.database.selectors.db_selector import DBSelector, DBResult
 from src.database.orms.device_scan_orm import ScanTable
 
-from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.graph.time_series_graph import TimeSeriesGraph
 
 class ScanResult(DBResult):
@@ -33,9 +31,7 @@ class ScanResult(DBResult):
 
         g = TimeSeriesGraph()
         dm = self._data_manager_factory()
-#        dm = self.data_manager
-#        internal = dm.get_table('internal', 'Power')
-#        brightness = dm.get_table('brightness', 'Power')
+
         g.new_plot()
 
         s1 = dm.get_table('scan1', 'scans')
