@@ -19,7 +19,7 @@
 #============= enthought library imports =======================
 from wx import EVT_IDLE
 #============= standard library imports ========================
-from src.managers.stage_managers.stage_component_editor import LaserComponentEditor, \
+from src.lasers.stage_managers.stage_component_editor import LaserComponentEditor, \
     _LaserComponentEditor
 #============= local library imports  ==========================
 

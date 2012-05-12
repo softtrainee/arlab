@@ -14,15 +14,13 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import Button, DelegatesTo, Instance
 #=============standard library imports ========================
 #=============local library imports  ==========================
 from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
 from src.monitors.co2_laser_monitor import CO2LaserMonitor
-from src.managers.laser_managers.brightness_pid_manager import BrightnessPIDManager
+from brightness_pid_manager import BrightnessPIDManager
 from fusions_laser_manager import FusionsLaserManager
 
 

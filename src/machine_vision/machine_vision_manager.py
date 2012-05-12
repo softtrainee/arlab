@@ -268,7 +268,7 @@ class MachineVisionManager(Manager):
         self.load_source()
 #        self.image.panel_size = 450
         if self.parent is None:
-            from src.managers.stage_managers.stage_map import StageMap
+            from src.lasers.stage_managers.stage_map import StageMap
             p = os.path.join(setup_dir, 'tray_maps', '221-hole.txt')
             sm = StageMap(file_path=p)
             center_mx, center_my = 3.596, -13.321

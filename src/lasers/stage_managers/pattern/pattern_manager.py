@@ -29,8 +29,8 @@ from src.managers.manager import Manager
 from src.helpers.paths import pattern_dir
 #from src.helpers.filetools import unique_path
 #from src.helpers.logger_setup import logging_setup
-from src.graph.graph import Graph
-from src.managers.stage_managers.pattern.patterns import Pattern, \
+#from src.graph.graph import Graph
+from src.lasers.stage_managers.pattern.patterns import Pattern, \
      LineSpiralPattern, SquareSpiralPattern, \
      RandomPattern, PolygonPattern, ArcPattern
 import time

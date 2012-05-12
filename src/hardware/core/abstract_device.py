@@ -50,12 +50,7 @@ class AbstractDevice(ViewableDevice):
 #    simulation = DelegatesTo('_cdevice')
     com_class = DelegatesTo('_cdevice')
     is_scanable = DelegatesTo('_cdevice')
-#    def start(self):
-#        '''
-#        '''
-#        self.load()
-#        self.open()
-#        self.initialize()
+
 
     def ask(self, cmd, **kw):
         '''

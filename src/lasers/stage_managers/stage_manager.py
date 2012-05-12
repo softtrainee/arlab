@@ -41,8 +41,7 @@ from tray_calibration_manager import TrayCalibrationManager
 from stage_component_editor import LaserComponentEditor
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem
 from pattern.pattern_manager import PatternManager
-#from stage_map import StageMap
-from src.managers.stage_managers.stage_map import StageMap
+from stage_map import StageMap
 from affine import AffineTransform
 
 

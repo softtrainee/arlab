@@ -35,7 +35,7 @@ src = os.path.join(os.path.expanduser('~'),
 sys.path.append(src)
 
 
-from src.managers.stage_managers.video_component_editor import VideoComponentEditor
+from src.lasers.stage_managers.video_component_editor import VideoComponentEditor
 from src.managers.videoable import Videoable
 from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
 

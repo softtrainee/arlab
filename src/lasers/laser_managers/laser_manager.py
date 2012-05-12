@@ -25,13 +25,13 @@ import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.led.led import LED
-from src.managers.stage_managers.stage_manager import StageManager
-from src.managers.stage_managers.video_stage_manager import VideoStageManager
+from src.lasers.stage_managers.stage_manager import StageManager
+from src.lasers.stage_managers.video_stage_manager import VideoStageManager
 from src.monitors.laser_monitor import LaserMonitor
 from src.helpers import paths
 from src.managers.step_heat_manager import StepHeatManager
 from src.managers.graph_manager import GraphManager
-from src.managers.laser_managers.pulse import Pulse
+from pulse import Pulse
 
 class LaserManager(Manager):
     '''

@@ -73,12 +73,14 @@ class DeviceScanAdapter(DatabaseAdapter):
         return p
 
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('dvs')
     db = DeviceScanAdapter(dbname=device_scan_db,
                             kind='sqlite')
     db.connect()
 
     dbs = DeviceScanSelector(_db=db)
-    dbs._execute_()
+    dbs._execute_query()
     dbs.configure_traits()
 #    print db.get_bakeouts(join_table='ControllerTable',
 #                    filter_str='ControllerTable.script="---"'

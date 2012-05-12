@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
@@ -28,5 +26,5 @@ class FusionsDiodePlugin(FusionsLaserPlugin):
     '''
     id = 'pychron.fusions.diode'
     name = 'fusions_diode_manager'
-    klass = ('src.managers.laser_managers.fusions_diode_manager', 'FusionsDiodeManager')
+    klass = ('src.lasers.laser_managers.fusions_diode_manager', 'FusionsDiodeManager')
 #============= EOF ====================================

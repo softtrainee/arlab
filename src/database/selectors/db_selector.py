@@ -14,17 +14,16 @@
 # limitations under the License.
 #===============================================================================
 
-
-
+#============= enthought library imports =======================
 from traits.api import HasTraits, Str, String, Button, List, Any, Long, Event, \
     Date, Time, Instance, Dict, Property
 
 from traitsui.api import View, Item, TabularEditor, EnumEditor, \
     HGroup, VGroup, Group, spring
+#============= standard library imports ========================
 from datetime import datetime, timedelta
-
+#============= local library imports  ==========================
 from src.helpers.datetime_tools import  get_date
-
 from src.loggable import Loggable
 from src.database.adapters.database_adapter import DatabaseAdapter
 from src.database.selectors.base_results_adapter import BaseResultsAdapter
@@ -34,6 +33,7 @@ from src.graph.graph import Graph
 class BaseDBResult(HasTraits):
     _id = Long
     _db_result = Any
+
 
 class DBResult(BaseDBResult):
     title = Str
@@ -62,8 +62,10 @@ class DBResult(BaseDBResult):
 
             self.title = '{} {}'.format(self.title_str, self._id)
             self._load_hook(dbr)
+
     def _load_hook(self, dbr):
         pass
+
     def traits_view(self):
         interface_grp = VGroup(
                           VGroup(Item('_id', style='readonly', label='ID'),
@@ -93,6 +95,7 @@ class DBResult(BaseDBResult):
                     title=self.title
                     )
 
+
 class DBSelector(Loggable):
     parameter = String
     _parameters = Property
@@ -120,10 +123,8 @@ class DBSelector(Loggable):
     result_klass = None
 
     def _search_fired(self):
-        self._search_()
+        self._execute_query()
 
-    def _search_(self):
-        pass
     def _get_comparator_types(self):
         return ['=', '<', '>', '<=', '>=', '!=', 'like']
 
@@ -184,7 +185,9 @@ class DBSelector(Loggable):
         s = ''.join((self.parameter,
                    self.comparator,
                    c))
+
         return s
+
     def traits_view(self):
 
         qgrp = HGroup(
@@ -222,7 +225,7 @@ class DBSelector(Loggable):
     def _get_selector_records(self):
         pass
 
-    def _execute_(self):
+    def _execute_query(self):
         db = self._db
         if db is not None:
 #            self.info(s)
@@ -273,7 +276,9 @@ class DBSelector(Loggable):
 
                         info = si.edit_traits()
                         self.opened_windows[sid] = info
-                        self._db.application.uis.append(info)
+
+                        if self._db.application is not None:
+                            self._db.application.uis.append(info)
 
                         self.wx += 0.005
                         self.wy += 0.03
@@ -283,3 +288,4 @@ class DBSelector(Loggable):
                             self.wy = 0.1
                     except Exception, e:
                         self.warning(e)
+#============= EOF =============================================

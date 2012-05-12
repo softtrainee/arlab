@@ -31,7 +31,8 @@ from ConfigParser import NoSectionError
 from src.managers.manager import Manager, ManagerHandler
 from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
-from src.helpers.paths import bakeout_config_dir, data_dir, scripts_dir
+from src.helpers.paths import bakeout_config_dir, data_dir, scripts_dir, \
+    bakeout_db_root
 from src.graph.time_series_graph import TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
 from src.helpers.datetime_tools import generate_datestamp, get_datetime
@@ -758,10 +759,7 @@ class BakeoutManager(Manager):
 
         ni = 'bakeout-{}'.format(generate_datestamp())
 
-#        base_dir = '.bakeouts'
-#        base_dir = 'bakeouts'
-        root = '/usr/local/pychron/bakeoutdb'
-        dw = DataWarehouse(root=root)
+        dw = DataWarehouse(root=bakeout_db_root)
 #                           os.path.join(data_dir, base_dir))
         dw.build_warehouse()
 
