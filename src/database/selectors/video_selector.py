@@ -49,7 +49,6 @@ class VideoResult(DBResult):
     fstep = Button('>>>')
 
     play_flag = None
-    pause_flag = None
     step_flag = None
 
     def _fstep_fired(self):
@@ -76,7 +75,6 @@ class VideoResult(DBResult):
 
     def _pause_fired(self):
         self.play_flag.set()
-        self.pause_flag.set()
         self._playing = False
         self._stepping = True
 
@@ -89,19 +87,18 @@ class VideoResult(DBResult):
 
     def _flag_factory(self):
         self.play_flag = Event()
-        self.pause_flag = Event()
         self.step_flag = Event()
 
     def _play_video(self, rewind=False):
         func = self._play
 
         t = Thread(name='video', target=func, args=(self.play_flag,
-                                                          self.pause_flag,
                                                           self.step_flag, rewind))
         t.start()
 
-    def _play(self, play_flag, pause_flag, step_flag, rewind):
+    def _play(self, play_flag, step_flag, rewind):
         vid = self.video
+        fps = vid.get_fps()
         try:
             self.nframes = nframes = int(self.video.get_nframes())
             step = 1
@@ -120,7 +117,7 @@ class VideoResult(DBResult):
 
                 f = vid.get_frame()
                 do_after(1, self.video_image.load, f)
-                time.sleep(1 / 8.)
+                time.sleep(1 / fps)
                 if step_flag.isSet():
                     if i >= self.step_len:
                         break

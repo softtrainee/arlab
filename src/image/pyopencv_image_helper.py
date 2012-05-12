@@ -537,6 +537,9 @@ def cvFlip(src, mode):
 def get_nframes(cap):
     return cap.get(cv.CV_CAP_PROP_FRAME_COUNT)
 
+def get_fps(cap):
+    return cap.get(cv.CV_CAP_PROP_FPS)
+
 def set_frame_index(cap, ind):
     cap.set(cv.CV_CAP_PROP_POS_FRAMES, ind)
 
