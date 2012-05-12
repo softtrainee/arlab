@@ -36,7 +36,7 @@ from src.image.image import Image
 #from src.image.image_helper import load_image
 #from multiprocessing.process import Process
 from cvwrapper import get_capture_device, query_frame, write_frame, \
-    load_image, new_video_writer, grayspace, get_nframes
+    load_image, new_video_writer, grayspace, get_nframes, set_frame_index
 
 DEBUG = False
 #DEBUG = True
@@ -97,6 +97,11 @@ class Video(Image):
             self.users.pop(i)
             if not self.users:
                 del(self.cap)
+
+    def set_frame_index(self, ind):
+        cap = self.cap
+        if cap:
+            set_frame_index(cap, ind)
 
     def _get_frame(self, **kw):
         if self.cap is not None:
