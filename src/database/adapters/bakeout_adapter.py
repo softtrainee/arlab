@@ -14,27 +14,12 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-#from traits.api import HasTraits, Str, String, Button, List, Any, Long, Event, \
-#    Date, Time, Instance, Dict, DelegatesTo, Property
-#from traitsui.api import View, Item, TabularEditor, EnumEditor, \
-#    HGroup, VGroup, Group, spring
-#from traitsui.tabular_adapter import TabularAdapter
-#
-#from datetime import datetime, timedelta
-from wx import GetDisplaySize
-#import os
-
-from .database_adapter import DatabaseAdapter
-from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable, PathTable
+#============= enthought library imports =======================
+#============= standard library imports ========================
+#============= local library imports  ==========================
+from src.database.adapters.database_adapter import DatabaseAdapter
+from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable, BakeoutPathTable
 from src.database.selectors.bakeout_selector import BakeoutDBSelector
-import os
-#from src.helpers.datetime_tools import  get_date
-#from src.loggable import Loggable
-#from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
-
-DISPLAYSIZE = GetDisplaySize()
 
 
 class BakeoutAdapter(DatabaseAdapter):
@@ -56,31 +41,11 @@ class BakeoutAdapter(DatabaseAdapter):
         except Exception, e:
             print e
 
-#    def _get_query(self, klass, join_table=None, filter_str=None, **clause):
-#        sess = self.get_session()
-#        q = sess.query(klass)
-#
-#        if join_table is not None:
-#            q = q.join(join_table)
-#
-#        if filter_str:
-#            q = q.filter(filter_str)
-#        else:
-#            q = q.filter_by(**clause)
-#        return q
-
-#    def open_selector(self):
-#        s = BakeoutDBSelector(_db=self)
-#        s._execute_()
-#        s.edit_traits()
-
 #=============================================================================
 #   adder
 #=============================================================================
     def add_bakeout(self, commit=False, **kw):
-#        b = BakeoutTable(**kw)
         b = self._add_timestamped_item(BakeoutTable, commit)
-#        self._add_item(b, commit)
         return b
 
     def add_controller(self, bakeout, commit=False, **kw):
@@ -88,32 +53,16 @@ class BakeoutAdapter(DatabaseAdapter):
         bakeout.controllers.append(c)
         if commit:
             self.commit()
-#        self._add_item(c, commit)
         return c
 
     def add_path(self, bakeout, path, commit=False, **kw):
         kw = self._get_path_keywords(path, kw)
-        p = PathTable(**kw)
+        p = BakeoutPathTable(**kw)
         bakeout.path = p
         if commit:
             self.commit()
-#        self._add_item(c, commit)
         return p
 
-#    def _add_item(self, obj, commit):
-#        sess = self.get_session()
-#        sess.add(obj)
-#        if commit:
-#            sess.commit()
-
-#    def get_bakeouts2(self):
-#        sess = self.get_session()
-##        clause = dict(ControllerTable.script='---')
-#        qcol = 'setpoint'
-#        col = getattr(ControllerTable, qcol)
-#        cond = 100
-#        q = sess.query(BakeoutTable).join(ControllerTable).filter(col < cond)
-#        print q.all()
 
 if __name__ == '__main__':
     db = BakeoutAdapter(dbname='bakeoutdb',
@@ -128,7 +77,7 @@ if __name__ == '__main__':
 #                    )
 
 
-#======== EOF ================================
+#============= EOF =============================================
 #    def get_analyses_path(self):
 ##        sess = self.get_session()
 ##        q = sess.query(Paths)

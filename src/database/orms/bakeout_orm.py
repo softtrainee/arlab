@@ -14,46 +14,31 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
-from sqlalchemy import Column, Integer, Float, String, \
-     ForeignKey, BLOB, DateTime, Time, Date
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, Float, String, \
+     ForeignKey
 from sqlalchemy.orm import relationship
 
 #=============local library imports  ==========================
+from base_orm import ResultsMixin, BaseMixin, PathMixin
+
 Base = declarative_base()
 
 
-class BakeoutTable(Base):
-    __tablename__ = 'BakeoutTable'
-    id = Column(Integer, primary_key=True)
-    runtime = Column(Time)
-    rundate = Column(Date)
-
+class BakeoutTable(Base, ResultsMixin):
     controllers = relationship('ControllerTable')
-    path = relationship('PathTable', uselist=False)
 
-
-class PathTable(Base):
-    __tablename__ = 'PathTable'
-    id = Column(Integer, primary_key=True)
-    bakeout_id = Column(Integer, ForeignKey('BakeoutTable.id'))
-
-    root = Column(String(200))
-    filename = Column(String(80))
-
-
-class ControllerTable(Base):
-    __tablename__ = 'ControllerTable'
-    id = Column(Integer, primary_key=True)
+class ControllerTable(Base, BaseMixin):
     bakeout_id = Column(Integer, ForeignKey('BakeoutTable.id'))
 
     name = Column(String(40))
     setpoint = Column(Float)
     duration = Column(Float)
     script = Column(String(40))
+
+class BakeoutPathTable(Base, PathMixin):
+    bakeout_id = Column(Integer, ForeignKey('BakeoutTable.id'))
 
