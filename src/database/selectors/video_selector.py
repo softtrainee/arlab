@@ -15,20 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Float, Instance, Button, Int
+from traits.api import String, Float, Instance, Button, Int, Bool
 from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.database.selectors.db_selector import DBSelector, DBResult
 from src.database.orms.video_orm import VideoTable
-from src.graph.graph import Graph
-from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.image.image_editor import ImageEditor
 from src.image.image import Image
 from src.image.video import Video
-from pyface.timer.do_later import do_later
-from threading import Thread
+from pyface.timer.do_later import do_after
+from threading import Thread, Event
 import time
 
 class VideoResult(DBResult):
@@ -39,74 +37,105 @@ class VideoResult(DBResult):
     play = Button
     stop = Button
     pause = Button
-    _playing = False
     _current_frame_id = 0
-    _pause = False
+    _playing = Bool(False)
+    _stepping = Bool(False)
 
-    frame = Int
+    frame = Int(1)
     nframes = Int(100)
+    step_len = Int(3)
 
-    step = Button
-    _step = False
+    bstep = Button('<<<')
+    fstep = Button('>>>')
 
-    def _step_fired(self):
-        self._step = True
-        self._playing = True
-        self._pause = False
+    play_flag = None
+    pause_flag = None
+    step_flag = None
+
+    def _fstep_fired(self):
+        self._flag_factory()
+        self.step_flag.set()
         self._play_video()
 
-    def _stop_fired(self):
+    def _bstep_fired(self):
 
+        self._flag_factory()
+        self.step_flag.set()
+        self._play_video(rewind=True)
+
+    def _stop_fired(self):
         self._playing = False
+
+        self.play_flag.set()
+        self.step_flag.set()
+
+        time.sleep(0.1)
         self._current_frame_id = 0
-        self.frame = 0
-        self._step = False
+        self.frame = 1
         self._load_hook(self._db_result)
 
     def _pause_fired(self):
-        self._pause = True
+        self.play_flag.set()
+        self.pause_flag.set()
         self._playing = False
+        self._stepping = True
 
     def _play_fired(self):
         if not self._playing:
+            self._stepping = False
             self._playing = True
-            self._pause = False
-            self._step = False
-
+            self._flag_factory()
             self._play_video()
 
-    def _play_video(self):
-        t = Thread(name='video', target=self._play)
+    def _flag_factory(self):
+        self.play_flag = Event()
+        self.pause_flag = Event()
+        self.step_flag = Event()
+
+    def _play_video(self, rewind=False):
+        func = self._play
+
+        t = Thread(name='video', target=func, args=(self.play_flag,
+                                                          self.pause_flag,
+                                                          self.step_flag, rewind))
         t.start()
 
-    def _play(self):
+    def _play(self, play_flag, pause_flag, step_flag, rewind):
         vid = self.video
         try:
             self.nframes = nframes = int(self.video.get_nframes())
-            for fi in range(self._current_frame_id, nframes, 1):
+            step = 1
+            end = nframes
+            if rewind:
+                step = -1
+                end = 0
+
+            for i, fi in enumerate(range(self._current_frame_id, end, step)):
                 self._current_frame_id = fi
-                if not self._playing:
+                if play_flag.isSet():
                     break
-                if self._pause:
-                    break
+
+                if rewind:
+                    vid.set_frame_index(fi)
 
                 f = vid.get_frame()
-                do_later(self.video_image.load, f)
+                do_after(1, self.video_image.load, f)
                 time.sleep(1 / 8.)
-                if self._step:
-                    self.frame += 1
-                    self._step = False
-                    self._current_frame_id = self.frame
-
-                    break
+                if step_flag.isSet():
+                    if i >= self.step_len:
+                        break
+                    self.frame += step
                 else:
                     self.frame = fi + 1
+                self._current_frame_id = self.frame
+            else:
+                self._playing = False
+                play_flag.clear()
+                self._current_frame_id = 0
+                self.frame = 1
 
         except Exception, e:
             print e
-        finally:
-            self._playing = False
-
 
     def _load_hook(self, dbr):
 
@@ -118,13 +147,18 @@ class VideoResult(DBResult):
     def _get_additional_tabs(self):
         controls = VGroup(HGroup(
                           Item('play', show_label=False),
-                          Item('stop', show_label=False),
-                          Item('pause', show_label=False),
-                          Item('step', show_label=False)
+                          Item('stop', show_label=False, enabled_when='_playing'),
+                          Item('pause', show_label=False, enabled_when='_playing'),
+                          Item('bstep',
+                               show_label=False,
+                               enabled_when='_stepping or not _playing and frame>=1+step_len'),
+                          Item('fstep',
+                               show_label=False, enabled_when='_stepping or not _playing'),
+                          Item('step_len', show_label=False),
                           ),
                     Item('frame',
                          enabled_when='0',
-                         editor=RangeEditor(low=0, high_name='nframes',
+                         editor=RangeEditor(low=1, high_name='nframes',
                                                      mode='slider'
                                                      ))
                     )
