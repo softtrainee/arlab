@@ -14,15 +14,11 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-
 #========== standard library imports ==========
 
+import time
 #========== local library imports =============
 from src.hardware.actuators.gp_actuator import GPActuator
-import time
-from pyface.message_dialog import warning
 
 '''
 Arduino Firmware syntax

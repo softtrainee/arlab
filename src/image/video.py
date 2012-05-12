@@ -36,7 +36,7 @@ from src.image.image import Image
 #from src.image.image_helper import load_image
 #from multiprocessing.process import Process
 from cvwrapper import get_capture_device, query_frame, write_frame, \
-    load_image, new_video_writer, grayspace
+    load_image, new_video_writer, grayspace, get_nframes
 
 DEBUG = False
 #DEBUG = True
@@ -57,14 +57,14 @@ class Video(Image):
     _recording = Bool(False)
     _lock = None
 
-    def open(self, user=None, identifier=0):
+    def open(self, user=None, identifier=0, force=False):
         '''
 
         '''
         self._lock = Lock()
         self.width = 640
         self.height = 480
-        if self.cap is None:
+        if self.cap is None or force:
 
             #ideally an identifier is passed in 
             try:
@@ -83,6 +83,10 @@ class Video(Image):
     def shutdown(self):
         self.users = []
         del(self.cap)
+
+    def get_nframes(self):
+        if self.cap is not None:
+            return get_nframes(self.cap)
 
     def close(self, user=None, force=False):
         '''

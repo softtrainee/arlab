@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 import pyopencv as cv
 from numpy import array, ones, zeros
 from src.data_processing.centroid.calculate_centroid import calculate_centroid
@@ -536,8 +534,16 @@ def cvFlip(src, mode):
 #===============================================================================
 # video 
 #===============================================================================
+def get_nframes(cap):
+    return cap.get(cv.CV_CAP_PROP_FRAME_COUNT)
+
 def get_capture_device(deviceid):
-    return cv.VideoCapture(deviceid)
+
+    if not isinstance(deviceid, int):
+        deviceid = str(deviceid)
+
+    cap = cv.VideoCapture(deviceid)
+    return cap
 
 
 def query_frame(device):

@@ -73,7 +73,7 @@ class Image(HasTraits):
 #        self.frames[0] = self.source_frame
 
     def load(self, img, swap_rb=False, nchannels=3):
-        if isinstance(img, str):
+        if isinstance(img, (str, unicode)):
             img = load_image(img, swap_rb)
 
         elif isinstance(img, ndarray):

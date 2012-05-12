@@ -144,6 +144,18 @@ class VideoStageManager(StageManager, Videoable):
             path, _ = unique_path(video_dir, basename, filetype='avi')
 
         self.info('saving recording to path {}'.format(path))
+
+        self.use_db = True
+        if self.use_db:
+            from src.helpers.paths import co2laser_db
+            from src.database.adapters.video_adapter import VideoAdapter
+            db = VideoAdapter(dbname=co2laser_db, kind='sqlite')
+            db.connect()
+
+            v = db.add_video_record()
+            db.add_video_path(v, path, commit=True)
+            self.info('saving {} to database'.format(basename))
+
         self.video.start_recording(path, user=user)
 
     def stop_recording(self, user='remote', delay=0.1):
