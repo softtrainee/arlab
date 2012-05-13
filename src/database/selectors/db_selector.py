@@ -133,7 +133,10 @@ class DBSelector(Loggable):
     _parameters = Property
     comparator = Str('=')
 #    _comparisons = List(COMPARISONS['num'])
-    _comparisons = List(['=', '<', '>', '<=', '>=', '!=', 'like', 'contains'])
+    _comparisons = List(['=', '<', '>', '<=', '>=', '!=', 'like',
+                         'contains'
+#                         'match'
+                         ])
     criteria = Str('this month')
     comparator_types = Property
     search = Button
@@ -183,8 +186,8 @@ class DBSelector(Loggable):
     def _search_fired(self):
         self._execute_query()
 
-    def _get_comparator_types(self):
-        return ['=', '<', '>', '<=', '>=', '!=', 'like']
+#    def _get_comparator_types(self):
+#        return ['=', '<', '>', '<=', '>=', '!=', 'like']
 
     def _convert_comparator(self, c):
         if c == '=':
@@ -238,10 +241,17 @@ class DBSelector(Loggable):
         else:
             c = self.criteria
 
-        c = '{}'.format(c)
-        s = ''.join((self.parameter,
-                   self.comparator,
-                   c))
+        comp = self.comparator
+        if comp == 'like':
+            c += '%'
+        elif comp == 'contains':
+            comp = 'like'
+            c = '%' + c + '%'
+
+        c = '"{}"'.format(c)
+        ps = self.parameter
+
+        s = ' '.join((ps, comp, c))
 
         return s
 
@@ -290,6 +300,17 @@ class DBSelector(Loggable):
         db = self._db
         if db is not None:
 #            self.info(s)
+
+#            if self.comparator == 'like':
+#                sess = self._db.get_session()
+#
+#                from src.database.orms.video_orm import VideoTable
+#                c = '{}%'.format(self.criteria)
+#                q = sess.query(VideoTable).filter(VideoTable.rid.like(c))
+#                s = 'VideoTable.rid.like({})'.format(c)
+#                dbs = q.all()
+#            else:
+
             s = self._get_filter_str()
             if s is None:
                 return
@@ -304,8 +325,8 @@ class DBSelector(Loggable):
 
             self.info('query {} returned {} results'.format(s,
                                     len(dbs) if dbs else 0))
+            self.results = []
             if dbs:
-                self.results = []
                 for di in dbs:
                     d = self.result_klass(_db_result=di)
                     d.load()

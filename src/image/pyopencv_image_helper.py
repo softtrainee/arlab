@@ -543,6 +543,9 @@ def get_fps(cap):
 def set_frame_index(cap, ind):
     cap.set(cv.CV_CAP_PROP_POS_FRAMES, ind)
 
+def set_video_pos(cap, pos):
+    cap.set(cv.CV_CAP_PROP_POS_AVI_RATIO, pos)
+
 def get_capture_device(deviceid):
 
     if not isinstance(deviceid, int):

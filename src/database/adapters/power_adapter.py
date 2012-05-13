@@ -44,7 +44,7 @@ class PowerAdapter(DatabaseAdapter):
 #   adder
 #=============================================================================
     def add_power_record(self, commit=False, **kw):
-        b = self._add_timestamped_item(PowerTable, commit)
+        b = self._add_timestamped_item(PowerTable, commit, **kw)
         return b
 
     def add_power_path(self, power, path, commit=False, **kw):

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Float, Instance, Button, Int, Bool
+from traits.api import String, Float, Instance, Button, Int, Bool, Property
 from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor
 #============= standard library imports ========================
 import os
@@ -41,7 +41,10 @@ class VideoResult(DBResult):
     _playing = Bool(False)
     _stepping = Bool(False)
 
+#    frame = Property(depends_on='frame')
+#    frame = Int(1)
     frame = Int(1)
+
     nframes = Int(100)
     step_len = Int(3)
 
@@ -50,6 +53,21 @@ class VideoResult(DBResult):
 
     play_flag = None
     step_flag = None
+
+#    _paused = False
+
+#    def _get_frame(self):
+#        return self.frame
+#
+#    def _set_frame(self, v):
+##        print v / float(self.nframes)
+#        def _sf():
+#            self.video.set_video_pos(v / float(self.nframes))
+#            f = self.video.get_frame()
+#            do_after(1, self.video_image.load, f)
+#        t = Thread(target=_sf)
+#        t.start()
+##        self.video_image.load()
 
     def _fstep_fired(self):
         self._flag_factory()
@@ -77,9 +95,14 @@ class VideoResult(DBResult):
         self.play_flag.set()
         self._playing = False
         self._stepping = True
+#        self._paused = True
 
     def _play_fired(self):
         if not self._playing:
+#            if not self._paused:
+#                self.video.set_video_pos(0)
+
+#            self._paused = False
             self._stepping = False
             self._playing = True
             self._flag_factory()
@@ -100,9 +123,9 @@ class VideoResult(DBResult):
         vid = self.video
         fps = vid.get_fps()
         try:
-            self.nframes = nframes = int(self.video.get_nframes())
+#            self.nframes = nframes = int(self.video.get_nframes())
             step = 1
-            end = nframes
+            end = self.nframes
             if rewind:
                 step = -1
                 end = 0
@@ -140,6 +163,7 @@ class VideoResult(DBResult):
         vid = self.video
         vid.open(identifier=src, force=True)
         self.video_image.load(vid.get_frame())
+        self.nframes = int(self.video.get_nframes())
 
     def _get_additional_tabs(self):
         controls = VGroup(HGroup(
@@ -181,8 +205,8 @@ class VideoSelector(DBSelector):
         params = f(b)
         return list(params)
 
-    def _get_selector_records(self, **kw):
-        return self._db.get_video_records(**kw)
+    def _get_selector_records(self, *args, **kw):
+        return self._db.get_video_records(*args, **kw)
 
 
 

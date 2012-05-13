@@ -23,6 +23,7 @@ t1 = Table('VideoTable', meta,
             Column('id', Integer, primary_key=True),
               Column('rundate', Date),
               Column('runtime', Time),
+
 )
 t2 = Table('VideoPathTable', meta,
               Column('id', Integer, primary_key=True),

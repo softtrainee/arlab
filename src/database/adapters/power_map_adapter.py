@@ -76,7 +76,7 @@ class PowerMapAdapter(DatabaseAdapter):
 #=============================================================================
     def add_powermap(self, commit=False, **kw):
 #        b = PowerMapTable(**kw)
-        b = self._add_timestamped_item(PowerMapTable, commit)
+        b = self._add_timestamped_item(PowerMapTable, commit, **kw)
         return b
 #
 #    def add_controller(self, bakeout, commit=False, **kw):
