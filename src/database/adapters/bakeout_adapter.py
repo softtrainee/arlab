@@ -45,7 +45,7 @@ class BakeoutAdapter(DatabaseAdapter):
 #   adder
 #=============================================================================
     def add_bakeout(self, commit=False, **kw):
-        b = self._add_timestamped_item(BakeoutTable, commit)
+        b = self._add_timestamped_item(BakeoutTable, commit, **kw)
         return b
 
     def add_controller(self, bakeout, commit=False, **kw):

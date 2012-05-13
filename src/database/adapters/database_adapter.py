@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import Password, Bool, Str, on_trait_change, Any
 from traitsui.api import View
@@ -101,6 +99,7 @@ class DatabaseAdapter(Loggable):
                 self.connected = False
 
         return self.connected
+
     def _test_db_connection(self):
         self.connected = True
         sess = self.session_factory()
@@ -204,10 +203,11 @@ class DatabaseAdapter(Loggable):
 
         return q.all()
 
-    def _get_query(self, klass, join_table=None, filter_str=None, **clause):
+    def _get_query(self, klass, join_table=None, filter_str=None, *args, **clause):
         sess = self.get_session()
         q = sess.query(klass)
 
+#        print args
         if join_table is not None:
             q = q.join(join_table)
 
@@ -215,6 +215,7 @@ class DatabaseAdapter(Loggable):
             q = q.filter(filter_str)
         else:
             q = q.filter_by(**clause)
+#            q = q.filter(*args)
         return q
 
     def _add_item(self, obj, commit):
@@ -223,14 +224,16 @@ class DatabaseAdapter(Loggable):
         if commit:
             sess.commit()
 
-    def _add_timestamped_item(self, klass, commit):
+    def _add_timestamped_item(self, klass, commit, **kw):
         d = get_datetime()
 
-        args = dict(rundate=str(d.date()),
-                    runtime=str(d.time()))
-        args = dict(rundate=d.date(),
-                    runtime=d.time())
-        obj = klass(**args)
+#        args = dict(rundate=str(d.date()),
+#                    runtime=str(d.time()))
+#        args = dict(rundate=d.date(),
+#                    runtime=d.time())
+        kw['rundate'] = d.date()
+        kw['runtime'] = d.time()
+        obj = klass(**kw)
         self._add_item(obj, commit)
         return obj
 

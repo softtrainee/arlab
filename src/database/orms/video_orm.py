@@ -44,7 +44,7 @@ from base_orm import ResultsMixin, PathMixin
 Base = declarative_base()
 
 class VideoTable(Base, ResultsMixin):
-    pass
+    rid = Column(String(40))
 
 class VideoPathTable(Base, PathMixin):
     video_id = Column(Integer, ForeignKey('VideoTable.id'))

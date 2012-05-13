@@ -26,6 +26,7 @@ from src.helpers.paths import co2laser_db
 class VideoAdapter(DatabaseAdapter):
     test_func = None
     selector_klass = VideoSelector
+
 #==============================================================================
 #    getters
 #==============================================================================
@@ -45,7 +46,7 @@ class VideoAdapter(DatabaseAdapter):
 #   adder
 #=============================================================================
     def add_video_record(self, commit=False, **kw):
-        b = self._add_timestamped_item(VideoTable, commit)
+        b = self._add_timestamped_item(VideoTable, commit, **kw)
         return b
 
     def add_video_path(self, video, path, commit=False, **kw):
@@ -58,53 +59,24 @@ class VideoAdapter(DatabaseAdapter):
 
 
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('vid')
     db = VideoAdapter(dbname=co2laser_db, kind='sqlite')
     db.connect()
 
     dbs = VideoSelector(_db=db)
+
+    dbs.criteria = 'vm_recordingii'
+    dbs.parameter = 'VideoTable.rid'
+    dbs.comparator = 'like'
     dbs._execute_query()
-    si = dbs.results[0]
-    from pyface.timer.do_later import do_later
-    from pyface.timer.do_later import do_after
-    do_after(10, si.edit_traits)
+#    si = dbs.results[0]
+#    from pyface.timer.do_later import do_later
+#    from pyface.timer.do_later import do_after
+#    do_after(10, si.edit_traits)
     dbs.configure_traits()
 #    print db.get_bakeouts(join_table='ControllerTable',
 #                    filter_str='ControllerTable.script="---"'
 #                    )
 #============= EOF =============================================
-#    def get_analyses_path(self):
-##        sess = self.get_session()
-##        q = sess.query(Paths)
-##        s = q.filter_by(name='analyses')
-#        q = self._get_query(Paths, name='analyses')
-#        p = q.one()
-#        p = p.path
-#        return p
-#
-#    def get_intercepts(self, analysis_id):
-#        q = self._get_query(Intercepts, analysis_id=analysis_id)
-#        return q.all()
-#
-#    def get_analysis_type(self, **kw):
-#        q = self._get_query(AnalysisTypes, **kw)
-#        return q.one()
-#
-#    def get_spectrometer(self, **kw):
-#        q = self._get_query(Spectrometers, **kw)
-#        return q.one()
-#    def add_intercepts(self, **kw):
-#        o = Intercepts(**kw)
-#        self._add_item(o)
-#
-#    def add_analysis(self, atype=None, spectype=None, **kw):
-#        if atype is not None:
-#            a = self.get_analysis_type(name=atype)
-#            kw['type_id'] = a._id
-#
-#        if spectype is not None:
-#            s = self.get_spectrometer(name=spectype)
-#            kw['spectrometer_id'] = s._id
-#
-#        o = Analyses(**kw)
-#        self._add_item(o)
-#        return o._id
+

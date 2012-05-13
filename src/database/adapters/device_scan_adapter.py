@@ -39,7 +39,7 @@ class DeviceScanAdapter(DatabaseAdapter):
 #=============================================================================
     def add_scan(self, device, commit=False, **kw):
 #        b = PowerMapTable(**kw)
-        b = self._add_timestamped_item(ScanTable, commit)
+        b = self._add_timestamped_item(ScanTable, commit, **kw)
 
         if isinstance(device, str):
             device = self.get_device()

@@ -152,7 +152,7 @@ class VideoStageManager(StageManager, Videoable):
             db = VideoAdapter(dbname=co2laser_db, kind='sqlite')
             db.connect()
 
-            v = db.add_video_record()
+            v = db.add_video_record(rid=basename)
             db.add_video_path(v, path, commit=True)
             self.info('saving {} to database'.format(basename))
 
