@@ -16,13 +16,11 @@
 
 
 
-from traits.api import Str, List, Button
-from traitsui.api import View, Item, TabularEditor, EnumEditor, \
-    HGroup, VGroup, Group, spring
+from traits.api import Str
 
-from src.database.core.db_selector import DBSelector, DBResult
-from src.database.nmgrl_orm import AnalysesTable
-from src.database.nmgrl_database_adapter import NMGRLDatabaseAdapter
+from src.database.selectors.db_selector import DBSelector, DBResult
+from src.database.orms.massspec_orm import AnalysesTable
+from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 from traitsui.tabular_adapter import TabularAdapter
 
 class MassSpecDBResult(DBResult):
@@ -80,13 +78,11 @@ class MassSpecSelector(DBSelector):
                 self.results.append(r)
 
 
-
-
 if __name__ == '__main__':
     m = MassSpecSelector(parameter='AnalysesTable.RID',
                          criteria='21351-01')
 
-    m._db = db = NMGRLDatabaseAdapter(dbname='massspecdata_local')
+    m._db = db = MassSpecDatabaseAdapter(dbname='massspecdata_local')
     db.connect()
     m.configure_traits()
 #======== EOF ================================

@@ -14,29 +14,20 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
 
-# make a global session
-from sqlalchemy.orm import sessionmaker
-from src.database.nmgrl_orm import IsotopeResultsTable, \
-    AnalysesChangeableItemsTable, BaselinesTable
-
-Session = sessionmaker()
-
 #=============local library imports  ==========================
-from src.database.core.database_adapter import DatabaseAdapter
-from nmgrl_orm import  DetectorTable, \
+from src.database.orms.massspec_orm import IsotopeResultsTable, \
+    AnalysesChangeableItemsTable, BaselinesTable, DetectorTable, \
      IsotopeTable, AnalysesTable, ArArAnalysisTable, \
     IrradiationPositionTable, MaterialTable, SampleTable, ProjectTable, \
     PeakTimeTable
+from src.database.adapters.database_adapter import DatabaseAdapter
 
 
-class NMGRLDatabaseAdapter(DatabaseAdapter):
+class MassSpecDatabaseAdapter(DatabaseAdapter):
     def _get_tables(self):
         return globals()
 
