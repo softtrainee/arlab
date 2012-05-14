@@ -26,14 +26,14 @@ from traitsui.api import View, Item, VGroup, HGroup, TabularEditor, TableEditor,
 import numpy as np
 import math
 
-from src.database.nmgrl_database_adapter import NMGRLDatabaseAdapter
-from src.database.selectors.mass_spec_selector import MassSpecSelector, \
-    MassSpecDBResult
+
 from src.graph.stacked_graph import StackedGraph
 from chaco.array_data_source import ArrayDataSource
 from src.graph.error_bar_overlay import ErrorBarOverlay
 from traitsui.table_column import ObjectColumn
 from traitsui.list_str_adapter import ListStrAdapter
+from src.database.selectors.massspec_selector import MassSpecSelector
+from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 
 
 class LAdapter(ListStrAdapter):
@@ -66,7 +66,7 @@ class MassSpecRecaller(HasTraits):
 
 
     def _selector_default(self):
-        db = NMGRLDatabaseAdapter(dbname='massspecdata_local',
+        db = MassSpecDatabaseAdapter(dbname='massspecdata_local',
                                   #host='129.138.12.131',
 #                                  user='massspec',
 #                                  password='DBArgon'

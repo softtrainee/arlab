@@ -23,7 +23,6 @@ import os
 from src.hardware.core.viewable_device import ViewableDevice
 from src.graph.plot_record import PlotRecord
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.database.adapters.device_scan_adapter import DeviceScanAdapter
 from src.helpers.paths import device_scan_db, device_scan_root
 from src.database.data_warehouse import DataWarehouse
 from src.helpers.timer import Timer
@@ -200,17 +199,16 @@ class ScanableDevice(ViewableDevice):
         self.timer = Timer(sp, self.scan)
 
     def save_scan_to_db(self):
-#        p = '/Users/ross/Sandbox/device_scans.sqlite'
-        p = device_scan_db
-        db = DeviceScanAdapter(dbname=p,
+        from src.database.adapters.device_scan_adapter import DeviceScanAdapter
+        db = DeviceScanAdapter(dbname=device_scan_db,
                                kind='sqlite')
-        db.connect(test=True)
+        db.connect()
         dev = db.add_device(self.name, klass=self.__class__.__name__)
         s = db.add_scan(dev)
 
         path = self.scan_path
         db.add_path(s, path)
-        self.info('saving scan {} to database {}'.format(path, p))
+        self.info('saving scan {} to database {}'.format(path, device_scan_db))
 
         db.commit()
 
