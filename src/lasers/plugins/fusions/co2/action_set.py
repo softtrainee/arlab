@@ -41,14 +41,6 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
                        path='MenuBar/Lasers/{}'.format(self.name),
                        class_name='{}OpenLaserManagerAction'.format(self.action_path)
                        ),
-                Action(name='Power Recording',
-                       path='MenuBar/Results',
-                       class_name='{}OpenPowerRecordGraphAction'.format(self.action_path)
-                       ),
-                Action(name='Power Map',
-                       path='MenuBar/Results'.format(self.name),
-                       class_name='{}OpenPowerMapAction'.format(self.action_path)
-                       ),
 
                 Action(name='Configure Brightness Meter',
                        path='MenuBar/Lasers/{}'.format(self.name),
@@ -60,6 +52,18 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
                        class_name='{}PowerMapAction'.format(self.action_path)
                        ),
 
+                Action(name='Power Recording',
+                       path='MenuBar/Results',
+                       class_name='{}OpenPowerRecordGraphAction'.format(self.action_path)
+                       ),
+                Action(name='Power Map',
+                       path='MenuBar/Results'.format(self.name),
+                       class_name='{}OpenPowerMapAction'.format(self.action_path)
+                       ),
+                Action(name='Video',
+                       path='MenuBar/Results'.format(self.name),
+                       class_name='{}OpenVideoAction'.format(self.action_path)
+                       ),
 ##                Action(name='Configure Motion Controller',
 ##                       path='MenuBar/Lasers/{}'.format(self.name),
 ##                       class_name='src.lasers.plugins.laser_actions:OpenMotionControllerManagerAction'

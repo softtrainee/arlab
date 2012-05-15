@@ -17,8 +17,8 @@
 #============= enthought library imports =======================
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
-from src.database.adapters.power_adapter import PowerAdapter
-from src.helpers.paths import co2laser_db
+#from src.database.adapters.power_adapter import PowerAdapter
+#from src.helpers.paths import co2laser_db
 #from traits.api import on_trait_change
 
 #============= standard library imports ========================
@@ -181,7 +181,19 @@ class OpenPowerRecordGraphAction(Action):
         if manager is not None:
 #            db = PowerAdapter(dbname='co2laserdb',
 #                                password='Argon')
-            db = manager.get_database()
+            db = manager.get_power_database()
+            open_selector(db, self.window.application)
+#            manager.graph_manager.open_graph('powerrecord')
+
+class OpenVideoAction(Action):
+    name = 'Open Video Result'
+
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+#            db = PowerAdapter(dbname='co2laserdb',
+#                                password='Argon')
+            db = manager.stage_manager.get_video_database()
             open_selector(db, self.window.application)
 #            manager.graph_manager.open_graph('powerrecord')
 
