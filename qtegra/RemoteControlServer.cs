@@ -207,9 +207,7 @@ class RemoteControl
 			{
 				result=SetParameter("Y-Symmetry Set",yval);
 			}
-			
-			
-			
+		
 			break;
 			
 //============================================================================================
@@ -814,13 +812,20 @@ class RemoteControl
 		
 		while(true)
 		{
-			recv=udp_sock.ReceiveFrom(data, ref remote);
-			string rdata = Encoding.ASCII.GetString(data,0, recv);
+			try
+			{
+				recv=udp_sock.ReceiveFrom(data, ref remote);
+				string rdata = Encoding.ASCII.GetString(data,0, recv);
+				
+				string result = ParseAndExecuteCommand(rdata.Trim());
+				
+				//Logger.Log(LogLevel.Debug, String.Format("Sending back {0}", result));
+				udp_sock.SendTo(Encoding.ASCII.GetBytes(result), remote);
+			} catch (Exception e) {
+			string error = string.Format ("Could not read from UDP sock. {0}", e.ToString ());
+			Logger.Log(LogLevel.Warning, error);
+			}
 			
-			string result = ParseAndExecuteCommand(rdata.Trim());
-			
-			//Logger.Log(LogLevel.Debug, String.Format("Sending back {0}", result));
-			udp_sock.SendTo(Encoding.ASCII.GetBytes(result), remote);
 		}
 	}
 	private static void TCPListen ()
