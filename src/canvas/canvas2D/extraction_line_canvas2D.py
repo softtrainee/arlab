@@ -22,7 +22,7 @@ from traits.api import Any, Str
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 #from src.canvas.designer.valve import Valve
 from src.canvas.canvas2D.markup.markup_items import Rectangle, Valve, Line, \
-    Label
+    Label, RoughValve
 
 W = 2
 H = 2
@@ -110,7 +110,15 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
         def get_floats(elem, name):
             return map(float, elem.find(name).text.split(','))
-
+        def new_rectangle(elem, c, lw=1):
+            key = elem.text.strip()
+            x, y = get_floats(elem, 'translation')
+            w, h = get_floats(elem, 'dimension')
+            self.markupcontainer[key] = Rectangle(x + ox, y + oy, width=w, height=h,
+                                                canvas=self,
+                                                name=key,
+                                                line_width=lw,
+                                                default_color=c)
         color_dict = dict()
         #get default colors
         for c in cp._tree.findall('color'):
@@ -123,7 +131,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             else:
                 color_dict[k] = co
 
-        #get any origin offset
+        #get an origin offset
         ox = 0
         oy = 0
 
@@ -135,7 +143,6 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         ndict = dict()
         for v in cp.get_elements('valve'):
             key = v.text.strip()
-#            print key, map(float, v.find('translation').text.split(','))
             x, y = get_floats(v, 'translation')
             v = Valve(x + ox, y + oy, name=key,
                                     canvas=self)
@@ -148,17 +155,17 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             self.markupcontainer[key] = v
             ndict[key] = v
 
+        for rv in cp.get_elements('rough_valve'):
+            key = rv.text.strip()
+            x, y = get_floats(rv, 'translation')
+            v = RoughValve(x + ox, y + oy, name=key,
+                                    canvas=self)
+            self.markupcontainer[key] = v
+            ndict[key] = v
+
         self.valves = ndict
 
-        def new_rectangle(elem, c, lw=1):
-            key = elem.text.strip()
-            x, y = get_floats(elem, 'translation')
-            w, h = get_floats(elem, 'dimension')
-            self.markupcontainer[key] = Rectangle(x + ox, y + oy, width=w, height=h,
-                                                canvas=self,
-                                                name=key,
-                                                line_width=lw,
-                                                default_color=c)
+
 
         for b in cp.get_elements('stage'):
             if 'stage' in color_dict:

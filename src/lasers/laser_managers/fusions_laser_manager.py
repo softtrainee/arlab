@@ -218,7 +218,7 @@ class FusionsLaserManager(LaserManager):
         if self._get_record_brightness():
             self.brightness_timer = Timer(175, self._record_brightness)
 
-    def get_database(self):
+    def get_power_database(self):
 #        db = PowerAdapter(dbname='co2laserdb',
 #                                   password='Argon')
         db = PowerAdapter(dbname=co2laser_db,
@@ -238,7 +238,7 @@ class FusionsLaserManager(LaserManager):
             self.power_timer = None
             self.brightness_timer = None
             if save:
-                db = self.get_database()
+                db = self.get_power_database()
                 if db.connect(test=True):
                     dbp = db.add_power_record()
                     db.add_power_path(dbp, self.data_manager.get_current_path())

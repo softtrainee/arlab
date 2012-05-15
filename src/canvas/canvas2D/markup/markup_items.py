@@ -139,6 +139,29 @@ class Rectangle(MarkupItem):
                 )
         gc.stroke_path()
 
+class RoughValve(MarkupItem):
+    width = 2
+    height = 2
+    def _render_(self, gc):
+        cx, cy = self.get_xy()
+        w, h = self.get_wh()
+
+        w2 = w / 2
+        h2 = h / 2
+        x1 = cx - w2
+        x2 = cx + w2
+        x3 = cx
+
+        y1 = cy - h2
+        y2 = y1
+        y3 = cy + h2
+
+        gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
+        gc.fill_path()
+        gc.set_stroke_color((0, 0, 0))
+        gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
+        gc.stroke_path()
+
 
 class Valve(Rectangle):
     soft_lock = False
