@@ -296,8 +296,9 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
     def OnLock(self, event):
         item = self.active_item
-        item.soft_lock = lock = not item.soft_lock
-        self.manager.set_software_lock(item.name, lock)
+        if item:
+            item.soft_lock = lock = not item.soft_lock
+            self.manager.set_software_lock(item.name, lock)
 
     def OnSample(self, event):
         pass

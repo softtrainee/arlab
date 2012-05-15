@@ -28,9 +28,9 @@ from threading import Lock
 
 from dummies import DummyDevice, DummyLM
 
-DIODE_PROTOCOL = 'src.managers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
-CO2_PROTOCOL = 'src.managers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
-SYNRAD_PROTOCOL = 'src.managers.laser_managers.synrad_co2_manager.SynradCO2Manager'
+DIODE_PROTOCOL = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
+CO2_PROTOCOL = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
+SYNRAD_PROTOCOL = 'src.lasers.laser_managers.synrad_co2_manager.SynradCO2Manager'
 
 class BaseRemoteHardwareHandler(Loggable):
     application = Any
