@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 from traits.api import Str, Any, Bool, Enum
 import time
 from threading import Thread, Event, Timer, currentThread, Condition

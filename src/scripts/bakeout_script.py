@@ -167,7 +167,7 @@ class BakeoutScript(CoreScript):
 
     def kill_script(self):
         if self.controller is not None:
-            self.controller.end(script_kill=True)
+            self.controller.end()
         super(BakeoutScript, self).kill_script()
 
     def maintain_statement(self, mt):

@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import List, Event, Float, Str, Instance, Bool, Property
 from traitsui.api import View, Item, EnumEditor, spring, HGroup, Label, VGroup, Spring
@@ -289,8 +287,8 @@ class BakeoutController(WatlowEZZone):
                 self._timer.Stop()
 
             if self._active_script is not None:
-                if not script_kill:
-                    self._active_script.cancel()
+#                if not script_kill:
+#                    self._active_script.cancel()
                     self._active_script = None
 
             if msg is None:

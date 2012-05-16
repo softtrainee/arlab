@@ -40,7 +40,7 @@ class BakeoutDBResult(DBResult):
         p = os.path.join(self.directory,
                                       self.filename
                                       )
-        self.viewer.load(p)
+        self.viewer.load(p, dm=self.data_manager)
 
     def load(self):
         dbr = self._db_result
@@ -54,6 +54,8 @@ class BakeoutDBResult(DBResult):
                 self.filename = p.filename
 
             self.title = 'Bakeout {}'.format(self._id)
+
+            self.data_manager = self._data_manager_factory()
 
     def traits_view(self):
         interface_grp = VGroup(
