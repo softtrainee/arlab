@@ -23,7 +23,6 @@ from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 #from src.canvas.designer.valve import Valve
 from src.canvas.canvas2D.markup.markup_items import Rectangle, Valve, Line, \
     Label, RoughValve, BaseValve
-from pyface.message_dialog import warning
 from pyface.wx.dialog import confirmation
 
 W = 2
@@ -384,11 +383,13 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         item = self.active_item
         if item is None:
             return
+        
+        if item.soft_lock:
+            return
 
         state = item.state
         if isinstance(item, RoughValve) and not state:
             result = confirmation(None, 'Are you sure you wait to open {}'.format(item.name))
-            print result
             if result == 5104:
                 return
 
@@ -407,7 +408,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         else:
             ok = True
 
-        ok = True
+#        ok = True
         if ok and not item.soft_lock:
             item.state = state
 

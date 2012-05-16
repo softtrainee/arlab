@@ -102,7 +102,19 @@ class MarkupItem(HasTraits):
 
     def set_state(self, state):
         self.state = state
+        
+    def _render_name(self, gc, x,y, w,h):
+#        print self.name
+        if self.name:
+            gc.set_fill_color((0, 0, 0))
 
+            t = str(self.name)
+            tw = gc.get_full_text_extent(t)[0]
+            x = x + w / 2.0 - tw / 2.0
+            gc.set_text_position(x, y + h / 2 - 6)
+            gc.show_text(str(self.name))
+            gc.draw_path()
+            
 class Point(MarkupItem):
     pass
 
@@ -122,15 +134,15 @@ class Rectangle(MarkupItem):
 
         if self.use_border:
             self._render_border(gc, x, y, w, h)
-        gc.set_fill_color((0, 0, 0))
 
-        if self.name:
-            t = str(self.name)
-            tw = gc.get_full_text_extent(t)[0]
-            x = x + w / 2.0 - tw / 2.0
-            gc.set_text_position(x, y + h / 2 - 6)
-            gc.show_text(str(self.name))
-            gc.draw_path()
+        self._render_name(gc, x, y, w, h)
+#        if self.name:
+#            t = str(self.name)
+#            tw = gc.get_full_text_extent(t)[0]
+#            x = x + w / 2.0 - tw / 2.0
+#            gc.set_text_position(x, y + h / 2 - 6)
+#            gc.show_text(str(self.name))
+#            gc.draw_path()
 
     def _render_border(self, gc, x, y, w, h):
         gc.set_stroke_color((0, 0, 0))
@@ -186,6 +198,8 @@ class RoughValve(BaseValve):
 #        args = (x - 2, y - 2, w + 4, h + 4)
 
         self._draw_soft_lock(gc, func, args)
+        
+        self._render_name(gc, cx, cy, w, h)
 
 class Valve(Rectangle, BaseValve):
     width = 2
