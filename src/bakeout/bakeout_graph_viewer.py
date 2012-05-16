@@ -145,9 +145,10 @@ class BakeoutGraphViewer(Loggable):
         s = '\n'.join([str(bi) for bi in self.bakeouts])
         return s
 
-    def _bakeout_h5_parser(self, path):
-        from src.managers.data_managers.h5_data_manager import H5DataManager
-        dm = H5DataManager()
+    def _bakeout_h5_parser(self, path, dm):
+        if dm is None:
+            from src.managers.data_managers.h5_data_manager import H5DataManager
+            dm = H5DataManager()
         if not dm.open_data(path):
             return
 
@@ -185,7 +186,7 @@ class BakeoutGraphViewer(Loggable):
         nseries = len(controllers) * sum(ib)
         return names, nseries, ib, np.array(datagrps), path, attrs
 
-    def _bakeout_csv_parser(self, path):
+    def _bakeout_csv_parser(self, path, dm):
         import csv
         attrs = None
         with open(path, 'r') as f:
@@ -213,23 +214,23 @@ class BakeoutGraphViewer(Loggable):
             data = np.array_split(data, nseries, axis=1)
         return (names, nseries, ib, data, path, attrs)
 
-    def load(self, path):
+    def load(self, path, dm=None):
         self.path = path
-        args = self._load_graph(path)
+        args = self._load_graph(path, dm=dm)
         if args:
             attrs = args[-1]
             for ai in attrs:
                 bp = BakeoutParameters(**ai)
                 self.bakeouts.append(bp)
 
-    def _load_graph(self, path):
+    def _load_graph(self, path, dm=None):
 
         ish5 = True if path.endswith('.h5') else False
 
         if ish5:
-            args = self._bakeout_h5_parser(path)
+            args = self._bakeout_h5_parser(path, dm)
         else:
-            args = self._bakeout_csv_parser(path)
+            args = self._bakeout_csv_parser(path, dm)
 
         if args is None:
             return

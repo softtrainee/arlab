@@ -324,9 +324,11 @@ class BakeoutManager(Manager):
 
     def _alive_changed(self, name, old, new):
         if old and not new and not self._suppress_commit:
-            self.info('commit session to db')
-            self.database.commit()
-
+            if self.database is not None:
+                self.info('commit session to db')
+                do_later(self.database.commit)
+            if self.data_manager is not None:
+                self.data_manager.close()
             #completed successfully so we should restart a general scan
             self.reset_general_scan()
 
