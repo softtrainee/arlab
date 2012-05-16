@@ -22,7 +22,9 @@ from traits.api import Any, Str
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 #from src.canvas.designer.valve import Valve
 from src.canvas.canvas2D.markup.markup_items import Rectangle, Valve, Line, \
-    Label, RoughValve
+    Label, RoughValve, BaseValve
+from pyface.message_dialog import warning
+from pyface.wx.dialog import confirmation
 
 W = 2
 H = 2
@@ -258,14 +260,19 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         y = event.y
 #        for k, item in enumerate(self.valves):
         for k, item in self.valves.iteritems():
-#            if item.__class__.__name__ == 'Valve':
-            if isinstance(item, Valve):
-
-#                mx, my = self.map_screen([item.])[0]
-                mx, my = item.get_xy()
-                w, h = item.get_wh()
-                if mx <= x <= (mx + w) and my <= y <= (my + h):
+#            print k
+            if hasattr(item, 'is_in'):
+                if item.is_in(x, y):
                     return k, item
+#            if item.__class__.__name__ == 'Valve':
+#            if isinstance(item, Valve):
+#                if item.is_in(x, y):
+#                    return k, item
+#                mx, my = self.map_screen([item.])[0]
+#                mx, my = item.get_xy()
+#                w, h = item.get_wh()
+#                if mx <= x <= (mx + w) and my <= y <= (my + h):
+#                    return k, item
 #                mx += w / 2.0
 #                my += h / 2.0
 #                print mx, my, w, h
@@ -360,7 +367,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
     def select_right_down(self, event):
         item = self.active_item
 
-        if item is not None and isinstance(item, Valve):
+        if item is not None and isinstance(item, BaseValve):
             self._show_menu(event, item)
 
 #        item = self.valves[self.active_item]
@@ -379,6 +386,12 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             return
 
         state = item.state
+        if isinstance(item, RoughValve) and not state:
+            result = confirmation(None, 'Are you sure you wait to open {}'.format(item.name))
+            print result
+            if result == 5104:
+                return
+
         state = not state
 
         ok = False

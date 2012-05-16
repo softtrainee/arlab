@@ -139,7 +139,27 @@ class Rectangle(MarkupItem):
                 )
         gc.stroke_path()
 
-class RoughValve(MarkupItem):
+class BaseValve(MarkupItem):
+    soft_lock = False
+
+    def is_in(self, x, y):
+        mx, my = self.get_xy()
+        w, h = self.get_wh()
+        if mx <= x <= (mx + w) and my <= y <= (my + h):
+            return True
+
+    def _draw_soft_lock(self, gc, func, args):
+        if self.soft_lock:
+            gc.save_state()
+            gc.set_fill_color((0, 0, 0, 0))
+            gc.set_stroke_color((0, 0, 1))
+            gc.set_line_width(5)
+            func(*args)
+#            gc.rect(x - 2, y - 2, w + 4, h + 4)
+            gc.draw_path()
+            gc.restore_state()
+
+class RoughValve(BaseValve):
     width = 2
     height = 2
     def _render_(self, gc):
@@ -147,14 +167,13 @@ class RoughValve(MarkupItem):
         w, h = self.get_wh()
 
         w2 = w / 2
-        h2 = h / 2
-        x1 = cx - w2
-        x2 = cx + w2
-        x3 = cx
+        x1 = cx
+        x2 = cx + w
+        x3 = cx + w2
 
-        y1 = cy - h2
+        y1 = cy
         y2 = y1
-        y3 = cy + h2
+        y3 = cy + h
 
         gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
         gc.fill_path()
@@ -162,9 +181,13 @@ class RoughValve(MarkupItem):
         gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
         gc.stroke_path()
 
+        func = gc.lines
+        args = (([(x1, y1), (x2, y2), (x3, y3), (x1, y1), (x2, y2)]),)
+#        args = (x - 2, y - 2, w + 4, h + 4)
 
-class Valve(Rectangle):
-    soft_lock = False
+        self._draw_soft_lock(gc, func, args)
+
+class Valve(Rectangle, BaseValve):
     width = 2
     height = 2
     def _render_(self, gc):
@@ -186,14 +209,15 @@ class Valve(Rectangle):
 #            self._render_border(gc, w, y, w, h)
 #
 #        #print item.name, item.soft_lock
-        if self.soft_lock:
-            gc.save_state()
-            gc.set_fill_color((0, 0, 0, 0))
-            gc.set_stroke_color((0, 0, 1))
-            gc.set_line_width(5)
-            gc.rect(x - 2, y - 2, w + 4, h + 4)
-            gc.draw_path()
-            gc.restore_state()
+
+        func = gc.rect
+        args = (x - 2, y - 2, w + 4, h + 4)
+
+        self._draw_soft_lock(gc, func, args)
+
+
+
+
 #        gc.set_fill_color((0, 0, 0))
 #        gc.set_text_position(x + w / 4.0, y + h / 4.0)
 #        gc.show_text(self.name)
