@@ -25,6 +25,7 @@ from numpy import loadtxt
 from pylab import datestr2num
 import time
 from matplotlib.dates import num2date
+import os
 #============= local library imports  ==========================
 class CSVDataManager(DataManager):
     '''
@@ -77,7 +78,21 @@ class CSVDataManager(DataManager):
 
     def get_current_path(self):
         return self.frames[self._current_frame]
-
+    
+    def read_data(self, path=None):
+        if path is None:
+            path=self.get_current_path()
+        
+        if not os.path.isfile(path):
+            return
+        
+        with open(path,'r') as f:
+            reader=csv.reader(f)
+            
+            data=[row for row in reader]
+            return zip(*data)
+            
+            
 if __name__ == '__main__':
     d = CSVDataManager()
     d.new_frame()

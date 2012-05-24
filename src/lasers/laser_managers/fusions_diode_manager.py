@@ -34,7 +34,7 @@ from src.hardware.pyrometer_temperature_monitor import PyrometerTemperatureMonit
 from src.monitors.diode_laser_monitor import DiodeLaserMonitor
 
 from fusions_laser_manager import FusionsLaserManager
-from src.managers.laser_managers.vue_metrix_manager import VueMetrixManager
+from src.lasers.laser_managers.vue_metrix_manager import VueMetrixManager
 import time
 #from src.managers.step_heat_manager import StepHeatManager
 

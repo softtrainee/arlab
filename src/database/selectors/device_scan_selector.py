@@ -22,21 +22,28 @@ from src.database.selectors.db_selector import DBSelector, DBResult
 from src.database.orms.device_scan_orm import ScanTable
 
 from src.graph.time_series_graph import TimeSeriesGraph
+from src.managers.data_managers.h5_data_manager import H5DataManager
 
 class ScanResult(DBResult):
     title_str = 'Device Scan Record'
     request_power = Float
 
     def load_graph(self):
-
+        xi=None
         g = TimeSeriesGraph()
         dm = self._data_manager_factory()
 
         g.new_plot()
-
-        s1 = dm.get_table('scan1', 'scans')
-        xi, yi = zip(*[(r['time'], r['value']) for r in s1.iterrows()])
-        g.new_series(xi, yi)
+        if isinstance(dm,H5DataManager):
+            s1 = dm.get_table('scan1', 'scans')
+            xi, yi = zip(*[(r['time'], r['value']) for r in s1.iterrows()])
+        else:
+            da=dm.read_data()
+            if da is not None:
+                xi,yi=da
+                
+        if xi is not None:
+            g.new_series(xi, yi)
 
         self.graph = g
 
