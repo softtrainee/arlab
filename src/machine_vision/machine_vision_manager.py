@@ -15,7 +15,6 @@
 #===============================================================================
 
 
-
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
     DelegatesTo, on_trait_change, Bool
@@ -35,6 +34,7 @@ from src.helpers.paths import setup_dir, hidden_dir
 from src.machine_vision.detectors.co2_detector import CO2HoleDetector
 from src.machine_vision.detectors.tray_mapper import TrayMapper
 import math
+from src.machine_vision.detectors.brightness_detector import BrightnessDetector
 #from src.machine_vision.detectors.zoom_calibration_detector import ZoomCalibrationDetector
 
 
@@ -74,6 +74,7 @@ class MachineVisionManager(Manager):
     _nominal_position = Tuple(0, 0)
 
     hole_detector = Instance(CO2HoleDetector)
+    brightness_detector = Instance(BrightnessDetector)
 
 #    style = DelegatesTo('hole_detector')
     use_dilation = DelegatesTo('hole_detector')
@@ -98,6 +99,8 @@ class MachineVisionManager(Manager):
     _debug = Bool(False)
 
     application = DelegatesTo('parent')
+
+
 #    _debug = Bool(True)
 
 #    def _zoom_calibration(self):
@@ -117,7 +120,7 @@ class MachineVisionManager(Manager):
             self.hole_detector._debug = self._debug
 #            self.show_image()
             self.testing = True
-            self.hole_detector.collect_baseline_intensity()
+            self.brightness_detector.collect_baseline_intensity()
             self.get_intensity()
 #            self._spawn_thread(self.map_holes)
 #            self._zoom_calibration()
@@ -141,9 +144,15 @@ class MachineVisionManager(Manager):
             pickle.dump(self.hole_detector, f)
 
     def load_hole_detector(self):
-        hd = CO2HoleDetector()
+        return self._load_detector('hole_detecotor', CO2HoleDetector)
 
-        p = os.path.join(hidden_dir, 'hole_detector')
+    def load_brightness_detector(self):
+        return self._load_detector('brightness_detector', BrightnessDetector)
+
+    def _load_detector(self, name, klass):
+#        hd = CO2HoleDetector()
+        hd = klass()
+        p = os.path.join(hidden_dir, name)
         if os.path.isfile(p):
             with open(p, 'rb') as f:
                 try:
@@ -154,31 +163,31 @@ class MachineVisionManager(Manager):
         hd.parent = self
         if self.laser_manager is not None:
             z = self.laser_manager.zoom
-            hd.pxpermm = self._set_pxpermm_by_zoom(z)
+            self._set_pxpermm_by_zoom(z, hd)
 
-        hd.name = 'hole_detector'
+        hd.name = name
         hd._debug = self._debug
 
         return hd
 
     def get_intensity(self, **kw):
-        det = self.hole_detector
+        det = self.brightness_detector
         return det.get_intensity(**kw)
 
     def collect_baseline_intensity(self, **kw):
         self.video.open()
-        det = self.hole_detector
+        det = self.brightness_detector
         return det.collect_baseline_intensity(**kw)
 
     @on_trait_change('laser_manager:zoom')
     def update_zoom(self, new):
         self._set_pxpermm_by_zoom(new)
 
-    def _set_pxpermm_by_zoom(self, z):
+    def _set_pxpermm_by_zoom(self, z, det):
         from numpy import polyval
         c = map(float, self.parent._camera_xcoefficients.split(','))
         pxpercm = polyval(c, z)
-        self.hole_detector.pxpermm = pxpercm / 10.0
+        det.pxpermm = pxpercm / 10.0
 
     def cancel_calibration(self):
         self._cancel_calibration = True
@@ -380,6 +389,8 @@ class MachineVisionManager(Manager):
     def _hole_detector_default(self):
         return self.load_hole_detector()
 
+    def _brightness_detector_default(self):
+        return self.load_brightness_detector()
 #==============================================================================
 # getter/setters
 #==============================================================================
