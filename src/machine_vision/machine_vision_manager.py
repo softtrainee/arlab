@@ -181,7 +181,7 @@ class MachineVisionManager(Manager):
 
     @on_trait_change('laser_manager:zoom')
     def update_zoom(self, new):
-        self._set_pxpermm_by_zoom(new)
+        self._set_pxpermm_by_zoom(new, self.hole_detector)
 
     def _set_pxpermm_by_zoom(self, z, det):
         from numpy import polyval

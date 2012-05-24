@@ -31,6 +31,7 @@ from src.graph.graph import Graph
 import os
 from src.managers.data_managers.h5_data_manager import H5DataManager
 import csv
+from src.managers.data_managers.csv_data_manager import CSVDataManager
 
 
 class BaseDBResult(HasTraits):
@@ -89,11 +90,14 @@ class DBResult(BaseDBResult):
         dm = self.data_manager
         if dm is None:
             data = os.path.join(self.directory, self.filename)
-            dm = H5DataManager()
-
-            self._loadable = False
-            if os.path.isfile(data):
-                self._loadable = dm.open_data(data)
+            _, ext=os.path.splitext(self.filename)
+            if ext=='.h5':
+                dm = H5DataManager()
+                if os.path.isfile(data):
+                    self._loadable = dm.open_data(data)
+            else:
+                self._loadable=False
+                dm=CSVDataManager()
 
         return dm
 

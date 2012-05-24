@@ -28,7 +28,7 @@ from hole_detector import HoleDetector
 
 class CO2HoleDetector(HoleDetector):
 
-    target_image = Any
+    target_image = Any(transient=True)
 #    target_area = None
 
     @on_trait_change('target_image:ui')
