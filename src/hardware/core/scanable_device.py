@@ -214,6 +214,7 @@ class ScanableDevice(ViewableDevice):
 
     def stop_scan(self):
         self._scanning = False
+        self._auto_started=False
         if self.timer is not None:
             self.timer.Stop()
 
@@ -223,7 +224,7 @@ class ScanableDevice(ViewableDevice):
                     self.save_scan_to_db()
                 else:
                     self.data_manager.delete_frame()
-
+                    
         self.data_manager.close()
 
     def _get_scan_label(self):

@@ -15,13 +15,13 @@ if __name__ == '__main__':
 
 		]
 
-	root = '/Users/ross/Sandbox/sqlite'
-	dbs = [
-		('{}/co2.sqlite', 'co2laserdb'),
-		('{}/bakeouts.sqlite', 'bakeoutdb'),
-		('{}/device_scans.sqlite', 'device_scans'),
-
-		]
+#	root = '/Users/ross/Sandbox/sqlite'
+#	dbs = [
+#		('{}/co2.sqlite', 'co2laserdb'),
+#		('{}/bakeouts.sqlite', 'bakeoutdb'),
+#		('{}/device_scans.sqlite', 'device_scans'),
+#
+#		]
 
 	for url, repo in dbs:
 		url = url.format(root)
