@@ -455,12 +455,11 @@ def draw_polygons(img, polygons, thickness=1, color=(0, 255, 0)):
 #    cv.polylines(img, polygons)
     p = cv.vector_vector_Point2i()
     p.create(polygons)
-    cv.polylines(img, p, 1, color, thickness=thickness)
-#    for pa in polygons:
-#        if thickness == -1:
-#            cv.fillPoly(img, [pa], color)
-#        else:
-#            cv.polylines(img, cv.vector_vector_Point2d.create([pa]), 1, color, thickness=thickness)
+
+    if thickness == -1:
+        cv.fillPoly(img, p, color)
+    else:
+        cv.polylines(img, p, 1, color, thickness=thickness)
 
 
 def draw_contour_list(src, clist, hierarchy=None,
@@ -531,6 +530,9 @@ def cvFlip(src, mode):
     cv.flip(src, src, mode)
 
 
+def calculate_sum(src):
+    return cv.sum(src).ndarray
+
 #===============================================================================
 # video 
 #===============================================================================
@@ -572,11 +574,6 @@ def write_frame(writer, src):
 def new_video_writer(path, fps, size):
     return cv.VideoWriter(path, cv.CV_FOURCC('D', 'I', 'V', 'X'),
                           fps, cv.Size(*size), True)
-
-
-def get_fps(cap):
-    return cap.get(cv.CV_CAP_PROP_FPS)
-
 
 def save_image(src, path):
     cv.imwrite(path, src)

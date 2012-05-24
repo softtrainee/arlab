@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Instance, Float, Bool, Any, DelegatesTo
 from traitsui.api import View, Item, HGroup, Spring, RangeEditor

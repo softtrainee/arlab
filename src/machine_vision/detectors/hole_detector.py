@@ -300,8 +300,6 @@ class HoleDetector(Detector):
                              color=(0, 0, 255),
                              size=10)
 
-
-
     def _draw_result(self, src, result, with_br=False, thickness=1, color=(255, 0, 0)):
         self._draw_indicator(src, new_point(*result.centroid_value), shape='crosshairs')
         draw_polygons(src, [result.poly_points])
@@ -388,6 +386,7 @@ class HoleDetector(Detector):
                    )
         else:
             draw_circle(src, center, r, color=color, thickness=thickness)
+
     def _radius_filter(self, pi, cx, cy):
         tol = 1.3 * self.pxpermm * self.radius_mm
         disp = lambda p:((p.x - cx) ** 2 + (p.y - cy) ** 2) ** 0.5
