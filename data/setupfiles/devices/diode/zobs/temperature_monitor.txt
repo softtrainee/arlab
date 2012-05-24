@@ -1,0 +1,3 @@
+#setup file
+#serial port location,baudrate
+/dev/tty.USA19H1a2P1.1,9600
