@@ -30,6 +30,7 @@ from src.database.selectors.base_results_adapter import BaseResultsAdapter
 from src.graph.graph import Graph
 import os
 from src.managers.data_managers.h5_data_manager import H5DataManager
+import csv
 
 
 class BaseDBResult(HasTraits):
@@ -53,6 +54,16 @@ class DBResult(BaseDBResult):
     data_manager = None
 
     _loadable = True
+
+    export_button = Button('Export CSV')
+
+    def _export_button_fired(self):
+        self._export_csv()
+
+    def _export_csv(self):
+        p = os.path.join(self.directory, self.filename)
+        if os.path.isfile(p) and self.graph is not None:
+            self.graph.export_data(plotid=0)
 
     def load(self):
         dbr = self._db_result
@@ -101,7 +112,12 @@ class DBResult(BaseDBResult):
                     Item('filename', style='readonly')),
                 VGroup(Item('summary',
                             show_label=False,
-                            style='readonly')),
+                            style='readonly',
+                            )
+                       ),
+                HGroup(spring,
+                              Item('export_button', height=0.15,
+                                            show_label=False)),
                     label='Info',
                     )
 
@@ -110,8 +126,10 @@ class DBResult(BaseDBResult):
 
         agrps = self._get_additional_tabs()
         if self.graph is not None:
-            g = Item('graph', width=0.75, show_label=False,
-                         style='custom')
+            g = Item('graph',
+                    show_label=False,
+                    style='custom')
+
             agrps.append(g)
 
         for ai in agrps:

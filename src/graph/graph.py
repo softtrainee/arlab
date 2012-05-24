@@ -84,7 +84,7 @@ class Graph(Loggable):
     plots = List(Plot)
 
     selected_plotid = Property
-    selected_plot = Plot
+    selected_plot = Instance(Plot)
     window_title = ''
     window_width = 600
     window_height = 500
@@ -228,13 +228,14 @@ class Graph(Loggable):
         if path is not None:
             self._export_raw_data(path, header, plotid)
 
-    def export_data(self, path=None):
+    def export_data(self, path=None, plotid=None):
         '''
         '''
         if path is None:
             path = self._path_factory()
+
         if path is not None:
-            self._export_data(path)
+            self._export_data(path, plotid)
 
     def _path_factory(self):
 
@@ -963,9 +964,17 @@ class Graph(Loggable):
         rows = zip(*cols)
         writer.writerows(rows)
 
-    def _export_data(self, path):
+    def _export_data(self, path, plotid):
         writer = csv.writer(open(path, 'w'))
-        plot = self.selected_plot
+
+        if plotid is not None:
+            plot = self.plots[plotid]
+        else:
+            plot = self.selected_plot
+
+        if plot is None:
+            return
+
         data = plot.data
         names = data.list_data()
         xs = names[len(names) / 2:]
