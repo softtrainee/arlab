@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import HasTraits, Any, Event, List, Bool, Property
 from traitsui.api import View, Item, HGroup, VGroup, TableEditor, ButtonEditor, \
@@ -114,13 +112,16 @@ class ExtractionLineExplanation(HasTraits):
                       Item('explanable_items',
                            editor=self.legend_editor,
                            show_label=False,
+#                           width= -50
+#                           springy=False
                            #width=0.45
                            ),
 
 
                       ),
-                 handler=ELEHandler
-                #resizable = True,
+                 handler=ELEHandler,
+#                 id='pychron.explanation'
+                resizable=False,
                 #scrollable = True,
                 )
         return v

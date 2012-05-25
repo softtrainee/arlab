@@ -17,8 +17,8 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Any, Property, Float, Enum
-from traitsui.api import View, Item
+from traits.api import HasTraits, Bool, Instance, Any, Property, Float, Enum
+from traitsui.api import View, Item, HGroup, spring
 #from enable.component_editor import ComponentEditor
 #============= standard library imports ========================
 import os
@@ -163,6 +163,8 @@ class ExtractionLineCanvas(HasTraits):
     width = Float(700)
     height = Float(700)
 
+    show_explanation = Bool(False)
+
     def __init__(self, *args, **kw):
         '''
         '''
@@ -291,6 +293,7 @@ class ExtractionLineCanvas(HasTraits):
             c = self._canvas2D_group()
         else:
             c = self._canvas3D_group()
-        v = View(c)
+        v = View(HGroup(spring, Item('show_explanation')),
+                 c)
         return v
 #============= EOF ====================================

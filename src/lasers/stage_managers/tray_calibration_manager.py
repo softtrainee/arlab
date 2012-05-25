@@ -172,6 +172,7 @@ class TrayCalibrationManager(Manager):
     def load_calibration(self, stage_map=None):
         if stage_map is None:
             stage_map = self.parent.stage_map
+
         p = PICKLE_PATH.format(stage_map)
         if os.path.isfile(p):
             self.info('loading saved calibration {}'.format(p))

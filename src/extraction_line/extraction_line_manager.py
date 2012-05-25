@@ -17,8 +17,8 @@
 
 
 #=============enthought library imports=======================
-from traits.api import  Instance, Str
-from traitsui.api import View, Item, HGroup
+from traits.api import  Instance, Str, Bool, DelegatesTo
+from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring
 #=============standard library imports ========================
 import os
 import time
@@ -28,12 +28,13 @@ from threading import Thread
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
 #from src.monitors.pumping_monitor import PumpingMonitor
-from src.helpers.paths import canvas2D_dir, scripts_dir
+from src.helpers.paths import canvas2D_dir, scripts_dir, hidden_dir
 from src.scripts.extraction_line_script import ExtractionLineScript
 
 from view_controller import ViewController
 from src.managers.manager import Manager
 from src.scripts.pyscripts.pyscript_editor import PyScriptManager
+import pickle
 
 #from src.managers.multruns_report_manager import MultrunsReportManager
 
@@ -52,6 +53,8 @@ class ExtractionLineManager(Manager):
     '''
     canvas = Instance(ExtractionLineCanvas)
     explanation = Instance(ExtractionLineExplanation)
+
+    show_explanation = DelegatesTo('canvas')
 
     valve_manager = Instance(Manager)
     gauge_manager = Instance(Manager)
@@ -127,6 +130,14 @@ class ExtractionLineManager(Manager):
     def opened(self):
         super(ExtractionLineManager, self).opened()
         self.reload_scene_graph()
+
+        p = os.path.join(hidden_dir, 'show_explanantion')
+        if os.path.isfile(p):
+            with open(p, 'rb') as f:
+                try:
+                    self.show_explanation = pickle.load(f)
+                except pickle.PickleError:
+                    pass
 
 #    def _view_controller(self):
 #        print self.ui.control
@@ -393,6 +404,14 @@ class ExtractionLineManager(Manager):
         if selected:
             self.explanation.selected = selected
 
+    def kill(self):
+        r = Manager.kill(self)
+        p = os.path.join(hidden_dir, 'show_explanantion')
+        with open(p, 'wb') as f:
+            pickle.dump(self.show_explanation, f)
+
+        return r
+
     def traits_view(self):
         '''
         '''
@@ -400,24 +419,33 @@ class ExtractionLineManager(Manager):
         v = View(
                  HGroup(
                         Item('explanation', style='custom', show_label=False,
-                             width=0.35,
-                             springy=False
+                             width=0.3,
+                            visible_when='object.show_explanation',
+#                            id='pychron.ex.explanation',
+                            springy=False
                              ),
-
-                        Item('canvas', style='custom', show_label=False,
-                             width=0.65
-                             )
+#                        VGroup(HGroup(Item('show_explanation')),
+                               Item('canvas', style='custom', show_label=False,
+                                    width=0.7)
+#                               )
                         ),
 
                handler=self.handler_klass,
                title='Extraction Line Manager',
                resizable=True,
-               x=self.window_x,
-               y=self.window_y
+#               x=self.window_x,
+#               y=self.window_y,
+               id='pychron.extraction_line_window'
                )
         return v
 
-
+    def _show_explanation_changed(self):
+        if self.ui is not None:
+            adj = 250
+            w, h = self.ui.control.GetSize()
+            sign = 1 if self.show_explanation else -1
+            w = w + sign * adj
+            self.ui.control.SetSize((w, h))
 #=================== factories ==========================
 
     def _view_controller_factory(self):
