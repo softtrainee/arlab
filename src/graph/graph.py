@@ -32,7 +32,7 @@ from chaco.axis import PlotAxis
 from traitsui.menu import Menu, Action
 from pyface.api import FileDialog, OK
 
-from pyface.timer.api import do_after as do_after_timer, do_later
+from pyface.timer.api import do_after as do_after_timer
 #=============standard library imports ========================
 import numpy as np
 from numpy.core.numeric import Inf
@@ -270,7 +270,7 @@ class Graph(Loggable):
             close the window
         '''
         if self.ui is not None:
-            do_later(self.ui.dispose)
+            do_after_timer(1, self.ui.dispose)
         self.ui = None
 
     def clear(self):
@@ -1246,6 +1246,9 @@ class Graph(Loggable):
             except ValueError:
                 pass
         return r
+
+    def show(self):
+        do_after_timer(1, self.edit_traits)
 
     def traits_view(self):
         plot = Item('plotcontainer',
