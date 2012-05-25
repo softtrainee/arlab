@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Int, Float
 
@@ -29,7 +27,6 @@ NFAILURES = 3
 NTRIES = 3
 class FusionsLaserMonitor(LaserMonitor):
     '''
-        G{classtree}
     '''
     manager = None
     sample_delay = Int(10)
@@ -54,8 +51,6 @@ class FusionsLaserMonitor(LaserMonitor):
         if LaserMonitor.load_additional_args(self, config):
             self.set_attribute(config, 'max_coolant_temp',
                            'General', 'max_coolant_temp', cast='float', optional=True)
-
-
 
         return True
 
@@ -92,7 +87,9 @@ class FusionsLaserMonitor(LaserMonitor):
 
         self.info('Check laser coolant temperature')
         ct = manager.get_coolant_temperature(verbose=False)
+        print 'acs', ct
         if ct is None:
+            self._invalid_checks.append('_FusionsLaserMonitor__check_coolant_temp')
             pass
             #manager.emergency_shutoff(reason = 'Laser chiller not available')
         elif ct > self.max_coolant_temp:

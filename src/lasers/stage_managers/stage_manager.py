@@ -33,7 +33,8 @@ from src.managers.displays.rich_text_display import RichTextDisplay
 from src.helpers.color_generators import colors8i as colors
 
 from src.hardware.motion_controller import MotionController
-from src.helpers.paths import map_dir, setup_dir, user_points_dir
+from src.helpers.paths import map_dir, setup_dir, user_points_dir, hidden_dir
+import pickle
 
 from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
@@ -156,6 +157,15 @@ class StageManager(Manager):
         self.add_output('Welcome')
         self.stage_controller = self._stage_controller_factory()
 
+    def kill(self):
+        r = super(StageManager, self).kill()
+
+        p = os.path.join(hidden_dir, 'stage_map')
+        self.info('saving stage_map {} to {}'.format(self.stage_map, p))
+        with open(p, 'wb') as f:
+            pickle.dump(self.stage_map, f)
+        return r
+
     def bind_preferences(self, pref_id):
         bind_preference(self.canvas, 'show_grids', '{}.show_grids'.format(pref_id))
 
@@ -175,6 +185,17 @@ class StageManager(Manager):
 
         self.canvas.change_indicator_visibility()
 
+    def _load_previous_stage_map(self):
+        p = os.path.join(hidden_dir, 'stage_map')
+
+        if os.path.isfile(p):
+            self.info('loading previous stage map')
+            with open(p, 'rb') as f:
+                try:
+                    return pickle.load(f)
+                except pickle.PickleError:
+                    pass
+
     def load(self):
         self._stage_maps = []
         config = self.get_configuration()
@@ -187,6 +208,11 @@ class StageManager(Manager):
                         )
             sm.load_correction_file()
             self._stage_maps.append(sm)
+
+        #load the saved stage map
+        sp = self._get_stage_map_by_name(self._load_previous_stage_map())
+        if sp is not None:
+            sm = sp
 
         self._stage_map = sm
 
@@ -598,8 +624,11 @@ class StageManager(Manager):
         if self._stage_map:
             return self._stage_map.name
 
+    def _get_stage_map_by_name(self, name):
+        return next((sm for sm in self._stage_maps if sm.name == name), None)
+
     def _set_stage_map(self, v):
-        s = next((sm for sm in self._stage_maps if sm.name == v), None)
+        s = self._get_stage_map_by_name(v)
         if s is not None:
             self.canvas.set_map(s)
             self.tray_calibration_manager.load_calibration(stage_map=s.name)

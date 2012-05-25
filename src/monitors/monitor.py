@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Int
 #============= standard library imports ========================
@@ -33,12 +31,13 @@ class Monitor(ConfigLoadable):
     manager = None
     #parent = None
     kill = False
+    _invalid_checks = None
     def load(self):
         config = self.get_configuration()
         self.set_attribute(config, 'sample_delay',
                            'General', 'sample_delay', cast='int', optional=True)
         self._load_hook(config)
-
+        self._invalid_checks = []
     def _load_hook(self, *args):
         pass
 
@@ -71,10 +70,10 @@ class Monitor(ConfigLoadable):
         #are incorpoated
         self.load()
 
-        manager = self.manager
-        if manager is not None:
+        if self.manager is not None:
             self.gntries = 0
             self.reset_start_time()
+
             while not self.kill:
                 #execute check hooks
                 '''
@@ -86,8 +85,9 @@ class Monitor(ConfigLoadable):
                         methods are prefaced with the class name
                         _LaserMonitor__check_duration
                     '''
-
-                    if '__check' in h:
+                    print self._invalid_checks
+                    if '__check' in h and h not in self._invalid_checks:
+                        print h
                         func = getattr(self, h)
                         func()
                         if self.kill:
