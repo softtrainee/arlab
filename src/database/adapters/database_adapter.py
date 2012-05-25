@@ -208,6 +208,8 @@ class DatabaseAdapter(Loggable):
         q = sess.query(klass)
 
 #        print args
+        print 'asdfs', join_table
+
         if join_table is not None:
             q = q.join(join_table)
 

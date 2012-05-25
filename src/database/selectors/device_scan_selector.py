@@ -19,7 +19,7 @@ from traits.api import String, Float
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.selectors.db_selector import DBSelector, DBResult
-from src.database.orms.device_scan_orm import ScanTable
+from src.database.orms.device_scan_orm import ScanTable, DeviceTable
 
 from src.graph.time_series_graph import TimeSeriesGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
@@ -29,19 +29,19 @@ class ScanResult(DBResult):
     request_power = Float
 
     def load_graph(self):
-        xi=None
+        xi = None
         g = TimeSeriesGraph()
         dm = self._data_manager_factory()
 
         g.new_plot()
-        if isinstance(dm,H5DataManager):
+        if isinstance(dm, H5DataManager):
             s1 = dm.get_table('scan1', 'scans')
             xi, yi = zip(*[(r['time'], r['value']) for r in s1.iterrows()])
         else:
-            da=dm.read_data()
+            da = dm.read_data()
             if da is not None:
-                xi,yi=da
-                
+                xi, yi = da
+
         if xi is not None:
             g.new_series(xi, yi)
 
@@ -56,6 +56,12 @@ class DeviceScanSelector(DBSelector):
     date_str = 'rundate'
     query_table = 'ScanTable'
     result_klass = ScanResult
+    join_table_col = String('name')
+    join_table = String('DeviceTable')
+    def _load_hook(self):
+        jt = self._join_table_parameters
+        if jt:
+            self.join_table_parameter = str(jt[0])
 
     def _get__parameters(self):
 
@@ -69,5 +75,15 @@ class DeviceScanSelector(DBSelector):
     def _get_selector_records(self, **kw):
         return self._db.get_scans(**kw)
 
+    def _get__join_table_parameters(self):
+        dv = self._db.get_devices()
+        return list(set([di.name for di in dv if di.name is not None]))
+
+
+#        f = lambda x:[str(col)
+#                           for col in x.__table__.columns]
+#        params = f(b)
+#        return list(params)
+#        return
 
 #============= EOF =============================================
