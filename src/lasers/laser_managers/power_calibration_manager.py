@@ -23,16 +23,19 @@ from numpy import polyfit
 
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.paths import hidden_dir
+from src.helpers.paths import hidden_dir, co2laser_db_root, co2laser_db
 import os
 import time
 from src.graph.graph import Graph
 from threading import Thread
+from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.database.data_warehouse import DataWarehouse
+from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 
 class DummyPowerMeter:
-    def get_value(self, pi):
+    def read_power_meter(self, setpoint):
         import random
-        return pi + random.randint(0, 5)
+        return setpoint + random.randint(0, 5)
 
 class Parameters(HasTraits):
     pstart = Float(0)
@@ -42,6 +45,7 @@ class Parameters(HasTraits):
     sample_delay = Float(1)
     integration_period = Float(1)
     nintegrations = Int(5)
+    use_db = Bool(True)
 
     view = View(
               Item('pstart', label='Start'),
@@ -49,18 +53,17 @@ class Parameters(HasTraits):
               Item('pstep', label='Step'),
               Item('sample_delay'),
               Item('integration_period'),
-              Item('nintegrations')
+              Item('nintegrations'),
+              Item('use_db')
 
               )
 
 class PowerCalibrationManager(Manager):
     parameters = Instance(Parameters)
 
-
     execute = Event
     execute_label = Property(depends_on='_alive')
     _alive = Bool(False)
-
     def _get_execute_label(self):
         return 'Stop' if self._alive else 'Start'
 
@@ -77,6 +80,7 @@ class PowerCalibrationManager(Manager):
                 except pickle.PickleError:
                     pass
 
+        print pa
         if pa is None:
             pa = Parameters()
 
@@ -85,6 +89,9 @@ class PowerCalibrationManager(Manager):
     def _execute_fired(self):
         if self._alive:
             self._alive = False
+
+            self._end(True)
+
         else:
             self._alive = True
     #        self.graph.edit_traits()
@@ -93,7 +100,7 @@ class PowerCalibrationManager(Manager):
     #        self._execute_power_calibration()
 
     def _execute_power_calibration(self):
-        self.graph = g = Graph()
+        self.graph = g = Graph(window_title='CO2 Power Calibration')
         g.new_plot()
         g.new_series()
         g.show()
@@ -104,6 +111,17 @@ class PowerCalibrationManager(Manager):
         sample_delay = self.parameters.sample_delay
         integration_period = self.parameters.integration_period
         nintegrations = self.parameters.nintegrations
+
+        self.data_manager = dm = H5DataManager()
+
+        dw = DataWarehouse(root=os.path.join(co2laser_db_root, 'power_calibration'))
+#                           os.path.join(data_dir, base_dir))
+        dw.build_warehouse()
+
+        _dn = dm.new_frame(directory=dw.get_current_dir(),
+                base_frame_name='power_calibration')
+
+        table = dm.new_table('/', 'calibration', table_style='PowerCalibration')
 
         dev = abs(pstop - pstart)
         sign = 1 if pstart < pstop else -1
@@ -132,16 +150,48 @@ class PowerCalibrationManager(Manager):
             for _ in range(nintegrations):
                 if not self._alive:
                     break
-                rp += apm.get_value(pi)
+                rp += apm.read_power_meter(pi)
                 time.sleep(integration_period)
 
             if not self._alive:
                 break
 
-            self.graph.add_datum((pi, rp / float(nintegrations)), do_after=1)
-
+            self._write_data(pi, rp / float(nintegrations), table)
 
         self._calculate_calibration()
+
+        self._end(False)
+
+    def _end(self, user_kill):
+        if self.parameters.use_db:
+            save_to_db = True
+            if user_kill:
+                save_to_db = self.confirmation_dialog('Save to Database')
+
+            if save_to_db:
+                db = PowerCalibrationAdapter(dbname=co2laser_db,
+                                             kind='sqlite')
+                db.connect()
+                r = db.add_calibration_record()
+                p = self.data_manager.get_current_path()
+                db.add_calibration_path(r, p)
+                db.commit()
+                db.close()
+
+            else:
+                self.data_manager.delete_frame()
+
+        self.data_manager.close()
+        self._alive = False
+
+    def _write_data(self, pi, rp, table):
+        self.graph.add_datum((pi, rp), do_after=1)
+
+        row = table.row
+        row['setpoint'] = pi
+        row['value'] = rp
+        row.append()
+        table.flush()
 
     def _calculate_calibration(self):
         xs = self.graph.get_data()

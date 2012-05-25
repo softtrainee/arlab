@@ -14,32 +14,24 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
+from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
 
 #=============local library imports  ==========================
-from adc.adc_device import ADCDevice
+from base_orm import ResultsMixin, PathMixin
+Base = declarative_base()
 
 
-class AnalogPowerMeter(ADCDevice):
-    '''
-    '''
-    _range = 1.0
-    voltage_range = 5.0
+class PowerCalibrationTable(Base, ResultsMixin):
+    pass
 
-    def _scan_(self, *args):
-        '''
-        '''
 
-        r = self._cdevice._scan_()
+class PowerCalibrationPathTable(Base, PathMixin):
+    power_calibration_id = Column(Integer, ForeignKey('PowerCalibrationTable.id'))
 
-        self.stream_manager.record(r, self.name)
 
-    def read_power_meter(self, *args, **kw):
-        '''
-        '''
-        return self.read_voltage(**kw) * self._range / self.voltage_range
-#============= EOF ==============================================
+#============= EOF =============================================
+

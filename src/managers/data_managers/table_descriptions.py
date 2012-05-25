@@ -74,6 +74,11 @@ class AnalysesTableDescription(IsDescription):
     time = Float32Col()
     y = Float32Col()
 
+class PowerCalibrationTableDescription(IsDescription):
+    setpoint = Float32Col()
+    value = Float32Col()
+
+
 def table_description_factory(table_name):
     '''
     '''

@@ -54,6 +54,7 @@ class VideoResult(DBResult):
     play_flag = None
     step_flag = None
 
+    exportable = False
 #    _paused = False
 
 #    def _get_frame(self):
@@ -68,6 +69,12 @@ class VideoResult(DBResult):
 #        t = Thread(target=_sf)
 #        t.start()
 ##        self.video_image.load()
+    def initialize(self):
+        src = os.path.join(self.directory, self.filename)
+        vid = self.video
+        vid.open(identifier=src, force=True)
+        self.video_image.load(vid.get_frame())
+        self.nframes = int(vid.get_nframes())
 
     def _fstep_fired(self):
         self._flag_factory()
@@ -158,12 +165,7 @@ class VideoResult(DBResult):
             print e
 
     def _load_hook(self, dbr):
-
-        src = os.path.join(self.directory, self.filename)
-        vid = self.video
-        vid.open(identifier=src, force=True)
-        self.video_image.load(vid.get_frame())
-        self.nframes = int(self.video.get_nframes())
+        pass
 
     def _get_additional_tabs(self):
         controls = VGroup(HGroup(
