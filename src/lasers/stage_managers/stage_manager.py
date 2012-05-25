@@ -602,6 +602,7 @@ class StageManager(Manager):
         s = next((sm for sm in self._stage_maps if sm.name == v), None)
         if s is not None:
             self.canvas.set_map(s)
+            self.tray_calibration_manager.load_calibration(stage_map=s.name)
             self._stage_map = s
             self.info('setting stage map to {}'.format(v))
             return True
@@ -610,6 +611,7 @@ class StageManager(Manager):
 
     def __stage_map_changed(self):
         self.canvas.set_map(self._stage_map)
+        self.tray_calibration_manager.load_calibration(stage_map=self._stage_map)
         self.canvas.request_redraw()
 
     def _get_calibrate_stage_label(self):

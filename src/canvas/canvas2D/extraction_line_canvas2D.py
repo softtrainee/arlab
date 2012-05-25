@@ -71,7 +71,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         
         '''
         return next((i for i in self.valves.itervalues()
-                    if isinstance(i, Valve) and i.name == name), None)
+                    if isinstance(i, BaseValve) and i.name == name), None)
 #        for i in self.valves:
 #            if i.__class__.__name__ == 'Valve':
 #                if i.name == name:
@@ -383,7 +383,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         item = self.active_item
         if item is None:
             return
-        
+
         if item.soft_lock:
             return
 

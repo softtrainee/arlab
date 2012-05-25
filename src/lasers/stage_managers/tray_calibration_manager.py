@@ -169,8 +169,10 @@ class TrayCalibrationManager(Manager):
 #            canvas.calibrate = True
         canvas.request_redraw()
 
-    def load_calibration(self):
-        p = PICKLE_PATH.format(self.parent.stage_map)
+    def load_calibration(self, stage_map=None):
+        if stage_map is None:
+            stage_map = self.parent.stage_map
+        p = PICKLE_PATH.format(stage_map)
         if os.path.isfile(p):
             self.info('loading saved calibration {}'.format(p))
             with open(p, 'rb') as f:

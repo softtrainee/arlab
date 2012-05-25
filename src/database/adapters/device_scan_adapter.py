@@ -55,7 +55,7 @@ class DeviceScanAdapter(DatabaseAdapter):
         c = DeviceTable(**kw)
         if unique:
             sess = self.get_session()
-            q = sess.query(DeviceTable.name).filter(DeviceTable.name == name)
+            q = sess.query(DeviceTable).filter(DeviceTable.name == name)
             add_item = not bool(q.count())
             if not add_item:
                 c = q.one()
