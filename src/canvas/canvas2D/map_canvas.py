@@ -150,11 +150,12 @@ class MapCanvas(MarkupCanvas):
         self.calibration_item = ci
         return ci
 
-    def set_map(self, map):
-        self.map = map
-        self.bitmap_underlay.path = map.bitmap_path
+    def set_map(self, mp):
+        self.map = mp
+        self.bitmap_underlay.path = mp.bitmap_path
         self.map.on_trait_change(self.request_redraw, 'g_shape')
         self.map.on_trait_change(self.request_redraw, 'g_dimension')
+
 
     def _draw_hook(self, gc, *args, **kw):
         self._draw_map(gc)
