@@ -34,6 +34,8 @@ class DeviceScanAdapter(DatabaseAdapter):
     def get_scans(self, **kw):
         return self._get_items(ScanTable, globals(), **kw)
 
+    def get_devices(self, **kw):
+        return self._get_items(DeviceTable, globals(), **kw)
 #=============================================================================
 #   adder
 #=============================================================================
@@ -49,15 +51,15 @@ class DeviceScanAdapter(DatabaseAdapter):
 #
     def add_device(self, name, unique=True, commit=False, **kw):
 
+        kw['name'] = name
         c = DeviceTable(**kw)
         if unique:
             sess = self.get_session()
-            q = sess.query(DeviceTable.name).filter(DeviceTable.name==name)
+            q = sess.query(DeviceTable.name).filter(DeviceTable.name == name)
             add_item = not bool(q.count())
             if not add_item:
                 c = q.one()
         else:
-            kw['name'] = name
             add_item = True
 
         if add_item:
@@ -82,6 +84,7 @@ if __name__ == '__main__':
 
     dbs = DeviceScanSelector(_db=db)
     dbs._execute_query()
+
     dbs.configure_traits()
 #    print db.get_bakeouts(join_table='ControllerTable',
 #                    filter_str='ControllerTable.script="---"'

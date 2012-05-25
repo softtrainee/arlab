@@ -90,14 +90,14 @@ class DBResult(BaseDBResult):
         dm = self.data_manager
         if dm is None:
             data = os.path.join(self.directory, self.filename)
-            _, ext=os.path.splitext(self.filename)
-            if ext=='.h5':
+            _, ext = os.path.splitext(self.filename)
+            if ext == '.h5':
                 dm = H5DataManager()
                 if os.path.isfile(data):
                     self._loadable = dm.open_data(data)
             else:
-                self._loadable=False
-                dm=CSVDataManager()
+                self._loadable = False
+                dm = CSVDataManager()
 
         return dm
 
@@ -153,6 +153,12 @@ class DBResult(BaseDBResult):
 class DBSelector(Loggable):
     parameter = String
     _parameters = Property
+
+    join_table_parameter = String
+    _join_table_parameters = Property
+    join_table_col = String
+    join_table = String
+
     comparator = Str('=')
 #    _comparisons = List(COMPARISONS['num'])
     _comparisons = List(['=', '<', '>', '<=', '>=', '!=', 'like',
@@ -184,6 +190,9 @@ class DBSelector(Loggable):
 
     reverse_sort = False
     _sort_field = None
+    def __init__(self, *args, **kw):
+        super(DBSelector, self).__init__(*args, **kw)
+        self._load_hook()
 
     def _column_clicked_changed(self, event):
         values = event.editor.value
@@ -210,6 +219,8 @@ class DBSelector(Loggable):
 
 #    def _get_comparator_types(self):
 #        return ['=', '<', '>', '<=', '>=', '!=', 'like']
+    def _get__join_table_parameters(self):
+        return None
 
     def _convert_comparator(self, c):
         if c == '=':
@@ -277,6 +288,9 @@ class DBSelector(Loggable):
 
         return s
 
+#    def _get_join_table(self):
+#        return
+
     def traits_view(self):
 
         qgrp = HGroup(
@@ -286,6 +300,16 @@ class DBSelector(Loggable):
                 show_labels=False
                 )
 
+        jt = self._get__join_table_parameters()
+#        print jt
+        if jt is not None:
+            qgrp = VGroup(
+                      Item('join_table_parameter',
+                           label='Device',
+                            editor=EnumEditor(name='_join_table_parameters'),
+                           ),
+                      qgrp
+                      )
 
         editor = TabularEditor(adapter=self.tabular_adapter(),
                                dclicked='object.dclicked',
@@ -301,6 +325,7 @@ class DBSelector(Loggable):
                       editor=editor,
                       show_label=False
                       ),
+
                  qgrp,
                  HGroup(Item('omit_bogus'),
                         spring, Item('search', show_label=False)),
@@ -342,6 +367,13 @@ class DBSelector(Loggable):
 
             if not table == self.query_table:
                 kw['join_table'] = table
+
+            elif self.join_table:
+                kw['join_table'] = self.join_table
+                kw['filter_str'] = s + ' and {}.{}=="{}"'.format(self.join_table,
+                                                               self.join_table_col,
+                                                                        self.join_table_parameter
+                                                                        )
 
             dbs = self._get_selector_records(**kw)
 
