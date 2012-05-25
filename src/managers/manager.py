@@ -416,11 +416,16 @@ class Manager(ConfigLoadable, Viewable):
             vg.content.append(self._slider_factory(si, prefix, **options))
         return vg
 
-    def _button_factory(self, name, label, enabled=None, align=None, **kw):
+    def _button_factory(self, name, label=None, enabled=None, align=None, **kw):
         '''
             
         '''
         b = Item(name, show_label=False, **kw)
+
+        if label is None:
+            label = '{}_label'.format(name)
+
+
         if label is not None:
             b.editor = ButtonEditor(label_value=label)
 

@@ -19,10 +19,11 @@ from traits.api import Button, DelegatesTo, Instance
 #=============standard library imports ========================
 #=============local library imports  ==========================
 from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
-from src.monitors.co2_laser_monitor import CO2LaserMonitor
+#from src.monitors.co2_laser_monitor import CO2LaserMonitor
 from brightness_pid_manager import BrightnessPIDManager
 from fusions_laser_manager import FusionsLaserManager
 from src.monitors.fusions_laser_monitor import FusionsLaserMonitor
+from src.lasers.laser_managers.power_calibration_manager import PowerCalibrationManager
 
 
 class FusionsCO2Manager(FusionsLaserManager):
@@ -47,6 +48,11 @@ class FusionsCO2Manager(FusionsLaserManager):
         mv = self._get_machine_vision()
         return BrightnessPIDManager(parent=self,
                                     machine_vision=mv)
+
+    def _power_calibration_manager(self):
+        mv = self._get_machine_vision()
+        return PowerCalibrationManager(parent=self,
+                                       machine_vision=mv)
 
     def set_laser_power(self, rp):
         '''
