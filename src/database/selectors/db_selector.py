@@ -57,6 +57,7 @@ class DBResult(BaseDBResult):
     _loadable = True
 
     export_button = Button('Export CSV')
+    exportable = True
 
     def _export_button_fired(self):
         self._export_csv()
@@ -65,6 +66,9 @@ class DBResult(BaseDBResult):
         p = os.path.join(self.directory, self.filename)
         if os.path.isfile(p) and self.graph is not None:
             self.graph.export_data(plotid=0)
+
+    def initialize(self):
+        pass
 
     def load(self):
         dbr = self._db_result
@@ -121,7 +125,9 @@ class DBResult(BaseDBResult):
                        ),
                 HGroup(spring,
                               Item('export_button', height=0.15,
-                                            show_label=False)),
+                                            show_label=False),
+                       visible_when='object.exportable'
+                       ),
                     label='Info',
                     )
 
@@ -193,6 +199,9 @@ class DBSelector(Loggable):
     def __init__(self, *args, **kw):
         super(DBSelector, self).__init__(*args, **kw)
         self._load_hook()
+
+    def _load_hook(self):
+        pass
 
     def _column_clicked_changed(self, event):
         values = event.editor.value
@@ -407,6 +416,7 @@ class DBSelector(Loggable):
 
                 else:
                     try:
+                        si.initialize()
                         si.load_graph()
                         si.window_x = self.wx
                         si.window_y = self.wy

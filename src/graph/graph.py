@@ -516,8 +516,15 @@ class Graph(Loggable):
     def add_plot_label(self, txt, x, y, plotid=0):
         '''
         '''
-#         
-        self.plots[plotid].overlays.append(PlotLabel(txt, x=x, y=y))
+
+#        print x, y
+##        x, y = .map_screen([(x, y)])[0]
+#        x, y = self.plots[plotid].map_screen([(x, y)])[0]
+#        print x, y
+        c = self.plots[plotid].plots['plot1'][0]
+        self.plots[plotid].overlays.append(PlotLabel(txt,
+                                                     component=c,
+                                                     x=x, y=y))
 
     def add_data_label(self, x, y, plotid=0):
         '''
@@ -529,6 +536,7 @@ class Graph(Loggable):
                           bgcolor="lightgray",
                           border_visible=False)
         plot.overlays.append(label)
+
     def add_guide(self, value, orientation='h', plotid=0, color=(0, 0, 0)):
         '''
         '''

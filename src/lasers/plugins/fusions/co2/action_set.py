@@ -14,16 +14,14 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from envisage.ui.action.api import Action#, Group, Menu, ToolBar
 from envisage.ui.workbench.api import WorkbenchActionSet
 
-
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+
 
 class FusionsCo2ActionSet(WorkbenchActionSet):
     '''
@@ -64,6 +62,11 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
                        path='MenuBar/Results'.format(self.name),
                        class_name='{}OpenVideoAction'.format(self.action_path)
                        ),
+                Action(name='Power Calibration',
+                       path='MenuBar/Lasers/{}'.format(self.name),
+                       class_name='{}PowerCalibrationAction'.format(self.action_path)
+                       ),
+
 ##                Action(name='Configure Motion Controller',
 ##                       path='MenuBar/Lasers/{}'.format(self.name),
 ##                       class_name='src.lasers.plugins.laser_actions:OpenMotionControllerManagerAction'

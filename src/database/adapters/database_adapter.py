@@ -207,9 +207,6 @@ class DatabaseAdapter(Loggable):
         sess = self.get_session()
         q = sess.query(klass)
 
-#        print args
-        print 'asdfs', join_table
-
         if join_table is not None:
             q = q.join(join_table)
 
@@ -217,7 +214,6 @@ class DatabaseAdapter(Loggable):
             q = q.filter(filter_str)
         else:
             q = q.filter_by(**clause)
-#            q = q.filter(*args)
         return q
 
     def _add_item(self, obj, commit):

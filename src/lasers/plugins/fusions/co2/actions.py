@@ -204,3 +204,10 @@ class ConfigureBrightnessMeterAction(Action):
             app = self.window.application
             open_manager(app, manager.brightness_meter)
 
+class PowerCalibrationAction(Action):
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            app = self.window.application
+            open_manager(app, manager.power_calibration_manager)
+

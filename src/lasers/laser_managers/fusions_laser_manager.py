@@ -36,6 +36,7 @@ from src.hardware.fiber_light import FiberLight
 from src.led.led_editor import LEDEditor
 from laser_manager import LaserManager
 from src.helpers.paths import co2laser_db_root, co2laser_db
+import os
 
 
 class FusionsLaserManager(LaserManager):
@@ -191,7 +192,7 @@ class FusionsLaserManager(LaserManager):
         self.data_manager = dm = H5DataManager()
         self._data_manager_lock = Lock()
 
-        dw = DataWarehouse(root=co2laser_db_root)
+        dw = DataWarehouse(root=os.path.join(co2laser_db_root, 'power'))
         dw.build_warehouse()
 
         dm.new_frame(directory=dw.get_current_dir(),

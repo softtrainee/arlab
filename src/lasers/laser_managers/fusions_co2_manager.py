@@ -43,13 +43,14 @@ class FusionsCO2Manager(FusionsLaserManager):
     monitor_klass = FusionsLaserMonitor
 
     brightness_meter = Instance(BrightnessPIDManager, ())
+    power_calibration_manager = Instance(PowerCalibrationManager)
 
     def _brightness_meter_default(self):
         mv = self._get_machine_vision()
         return BrightnessPIDManager(parent=self,
                                     machine_vision=mv)
 
-    def _power_calibration_manager(self):
+    def _power_calibration_manager_default(self):
         mv = self._get_machine_vision()
         return PowerCalibrationManager(parent=self,
                                        machine_vision=mv)
