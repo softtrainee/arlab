@@ -36,6 +36,10 @@ class ManagerHandler(ViewableHandler):
     '''
         
     '''
+    def init(self, info):
+        if info.initialized:
+            info.object.initialized = True
+
     def closed(self, info, is_ok):
         '''
         '''
@@ -70,6 +74,8 @@ class Manager(ConfigLoadable, Viewable):
 
     devices = List
     flags = List
+
+    initialized = False
 
     def __init__(self, *args, **kw):
         '''
