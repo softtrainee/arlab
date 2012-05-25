@@ -80,7 +80,6 @@ class PowerCalibrationManager(Manager):
                 except pickle.PickleError:
                     pass
 
-        print pa
         if pa is None:
             pa = Parameters()
 
@@ -200,10 +199,12 @@ class PowerCalibrationManager(Manager):
         print polyfit(xs, ys, 1)
 
     def kill(self):
+        if self.initialized:
+            p = os.path.join(hidden_dir, 'power_calibration')
+            with open(p, 'wb') as f:
+                pickle.dump(self.parameters, f)
+
         super(PowerCalibrationManager, self).kill()
-        p = os.path.join(hidden_dir, 'power_calibration')
-        with open(p, 'wb') as f:
-            pickle.dump(self.parameters, f)
 
 
     def traits_view(self):

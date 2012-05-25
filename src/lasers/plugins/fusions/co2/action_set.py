@@ -34,37 +34,42 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
     action_path = 'src.lasers.plugins.fusions.co2.actions:'
 
     def _actions_default(self):
+        laser_path = 'MenuBar/Lasers/{}'.format(self.name)
+        results_path = 'MenuBar/Results/{}'.format(self.name)
         return [
                 Action(name='Laser Manager',
-                       path='MenuBar/Lasers/{}'.format(self.name),
+                       path=laser_path,
                        class_name='{}OpenLaserManagerAction'.format(self.action_path)
                        ),
-
                 Action(name='Configure Brightness Meter',
-                       path='MenuBar/Lasers/{}'.format(self.name),
+                       path=laser_path,
                        class_name='{}ConfigureBrightnessMeterAction'.format(self.action_path)
                        ),
-
                 Action(name='Power Map',
-                       path='MenuBar/Lasers/{}'.format(self.name),
+                       path=laser_path,
                        class_name='{}PowerMapAction'.format(self.action_path)
                        ),
+                Action(name='Power Calibration',
+                       path=laser_path,
+                       class_name='{}PowerCalibrationAction'.format(self.action_path)
+                       ),
+
 
                 Action(name='Power Recording',
-                       path='MenuBar/Results',
+                       path=results_path,
                        class_name='{}OpenPowerRecordGraphAction'.format(self.action_path)
                        ),
                 Action(name='Power Map',
-                       path='MenuBar/Results'.format(self.name),
+                       path=results_path,
                        class_name='{}OpenPowerMapAction'.format(self.action_path)
                        ),
                 Action(name='Video',
-                       path='MenuBar/Results'.format(self.name),
+                       path=results_path,
                        class_name='{}OpenVideoAction'.format(self.action_path)
                        ),
                 Action(name='Power Calibration',
-                       path='MenuBar/Lasers/{}'.format(self.name),
-                       class_name='{}PowerCalibrationAction'.format(self.action_path)
+                       path=results_path,
+                       class_name='{}OpenPowerCalibrationAction'.format(self.action_path)
                        ),
 
 ##                Action(name='Configure Motion Controller',

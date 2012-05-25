@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Float, Instance, Button, Int, Bool, Property
+from traits.api import String, Float, Instance, Button, Int, Bool, Property, Str
 from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor
 #============= standard library imports ========================
 import os
@@ -28,6 +28,12 @@ from src.image.video import Video
 from pyface.timer.do_later import do_after
 from threading import Thread, Event
 import time
+from traitsui.tabular_adapter import TabularAdapter
+
+class VideoResultsAdapter(TabularAdapter):
+    columns = [('RunID', 'runid'),
+               ('Date', 'rundate'),
+               ('Time', 'runtime')]
 
 class VideoResult(DBResult):
     title_str = 'VideoRecord'
@@ -55,6 +61,7 @@ class VideoResult(DBResult):
     step_flag = None
 
     exportable = False
+    runid = Str
 #    _paused = False
 
 #    def _get_frame(self):
@@ -165,7 +172,10 @@ class VideoResult(DBResult):
             print e
 
     def _load_hook(self, dbr):
-        pass
+        try:
+            self.runid = dbr.rid
+        except (AttributeError, TypeError):
+            pass
 
     def _get_additional_tabs(self):
         controls = VGroup(HGroup(
@@ -197,6 +207,7 @@ class VideoSelector(DBSelector):
     date_str = 'rundate'
     query_table = 'VideoTable'
     result_klass = VideoResult
+    tabular_adapter = VideoResultsAdapter
 
     def _get__parameters(self):
 
