@@ -17,17 +17,17 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.adapters.database_adapter import DatabaseAdapter
-from src.database.orms.power_orm import PowerTable, PowerPathTable
-from src.database.selectors.power_selector import PowerSelector
+from src.database.adapters.database_adapter import DatabaseAdapter, \
+    PathDatabaseAdapter
 from src.database.orms.power_calibration_orm import PowerCalibrationTable, \
     PowerCalibrationPathTable
 from src.database.selectors.power_calibration_selector import PowerCalibrationSelector
 
 
-class PowerCalibrationAdapter(DatabaseAdapter):
+class PowerCalibrationAdapter(PathDatabaseAdapter):
     test_func = None
     selector_klass = PowerCalibrationSelector
+    path_table = PowerCalibrationPathTable
 #==============================================================================
 #    getters
 #==============================================================================
@@ -50,13 +50,13 @@ class PowerCalibrationAdapter(DatabaseAdapter):
         b = self._add_timestamped_item(PowerCalibrationTable, commit, **kw)
         return b
 
-    def add_calibration_path(self, calibration, path, commit=False, **kw):
-        kw = self._get_path_keywords(path, kw)
-        p = PowerCalibrationPathTable(**kw)
-        calibration.path = p
-        if commit:
-            self.commit()
-        return p
+#    def add_calibration_path(self, calibration, path, commit=False, **kw):
+#        kw = self._get_path_keywords(path, kw)
+#        p = PowerCalibrationPathTable(**kw)
+#        calibration.path = p
+#        if commit:
+#            self.commit()
+#        return p
 
 
 if __name__ == '__main__':

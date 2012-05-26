@@ -161,7 +161,7 @@ class VideoStageManager(StageManager, Videoable):
             db.connect()
 
             v = db.add_video_record(rid=basename)
-            db.add_video_path(v, path, commit=True)
+            db.add_path(v, path, commit=True)
             self.info('saving {} to database'.format(basename))
 
         self.video.start_recording(path, user=user)

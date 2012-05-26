@@ -263,3 +263,16 @@ class DatabaseAdapter(Loggable):
             s = self.selector_klass(_db=self)
             s.load_recent()
             return s
+
+class PathDatabaseAdapter(DatabaseAdapter):
+    path_table = None
+    def add_path(self, rec, path, commit=False, **kw):
+        kw = self._get_path_keywords(path, kw)
+        if self.path_table:
+            p = self.path_table(**kw)
+            rec.path = p
+            if commit:
+                self.commit()
+            return p
+#============= EOF =============================================
+

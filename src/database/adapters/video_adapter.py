@@ -26,7 +26,7 @@ from src.helpers.paths import co2laser_db
 class VideoAdapter(DatabaseAdapter):
     test_func = None
     selector_klass = VideoSelector
-
+    path_table = VideoPathTable
 #==============================================================================
 #    getters
 #==============================================================================
@@ -49,13 +49,13 @@ class VideoAdapter(DatabaseAdapter):
         b = self._add_timestamped_item(VideoTable, commit, **kw)
         return b
 
-    def add_video_path(self, video, path, commit=False, **kw):
-        kw = self._get_path_keywords(path, kw)
-        p = VideoPathTable(**kw)
-        video.path = p
-        if commit:
-            self.commit()
-        return p
+#    def add_video_path(self, video, path, commit=False, **kw):
+#        kw = self._get_path_keywords(path, kw)
+#        p = VideoPathTable(**kw)
+#        video.path = p
+#        if commit:
+#            self.commit()
+#        return p
 
 
 if __name__ == '__main__':
