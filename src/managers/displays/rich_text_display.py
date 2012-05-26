@@ -58,6 +58,7 @@ class RichTextDisplay(HasTraits):
     opened = False
 
     default_color = Str('red')
+    bg_color = Str('white')
 
     x = Float(10)
     y = Float(20)
@@ -65,24 +66,6 @@ class RichTextDisplay(HasTraits):
     #height of the text panel == height-_hspacer
     _hspacer = 25
 
-
-#    def _do_later(self, func, args=None, obj=None):
-#
-#        if obj is None:
-#            obj = self._display
-#
-#        func = getattr(obj, func)
-#        if args is not None:
-#            if isinstance(args, tuple):
-#                a = (func,) + args
-#                a = args
-#            else:
-#                a = (func, args)
-#                a = (args,)
-#        else:
-#            a = (func,)
-#            a = ()
-#        func(*a)
 
     def close(self):
 
@@ -93,16 +76,18 @@ class RichTextDisplay(HasTraits):
         '''
         '''
         return View(
-                    VGroup(
-                           Item('_display', show_label=False,
-                         editor=CustomEditor(factory=self.factory),
-                         )
-                           ),
+#                    VGroup(
+                        Item('_display', show_label=False,
+                         editor=CustomEditor(factory=self.factory,
+                                             ),
+                             height=1.0),
+#                         )
+#                           ),
                      handler=DisplayHandler,
                      title=self.title,
-                     #resizable = False,
-                     width=self.width,
-                     height=self.height,
+                     resizable=True,
+#                     width=self.width,
+#                     height=self.height,
                      x=self.x,
                      y=self.y,
                      )
@@ -111,28 +96,28 @@ class RichTextDisplay(HasTraits):
         '''
 
         '''
+
         panel = wx.Panel(window,
                        - 1,
-                       style=wx.DEFAULT_FRAME_STYLE
+                       wx.DefaultPosition,
                        )
 
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-
         rtc = rt.RichTextCtrl(panel,
-                            size=(self.width, self.height - self._hspacer),
+                              - 1,
+                            size=wx.Size(self.width, self.height - self._hspacer),
                             style=wx.VSCROLL | wx.HSCROLL | wx.TE_READONLY
                             )
 
-        rtc.SetEditable(self.editable)
+        rtc.SetBackgroundColour(self.bg_color)
 
-        sizer.Add(rtc,
-                  1, wx.GROW | wx.ALL
-                  )
-        #panel.SetAutoLayout(True)
+        rtc.SetEditable(self.editable)
+        self._display = rtc
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(rtc, 1, wx.EXPAND | wx.ALL, 5)
         panel.SetSizer(sizer)
         #panel.Layout()
 
-        self._display = rtc
 
         if self.delegated_text:
             for msg, kw in self.delegated_text:
@@ -156,30 +141,24 @@ class RichTextDisplay(HasTraits):
         else:
             color = wx.Colour(*color)
 
-#        self._do_later('BeginFontSize', args=10)
-#        self._do_later('BeginTextColour', args=color)
-#        self._do_later('WriteText', args=msg)
-#        self._do_later('EndTextColour')
-#        self._do_later('EndFontSize')
-#
-#        if new_line:
-#            self._do_later('Newline')
-#
-#        lp = d.GetLastPosition()
-#        self._do_later('ShowPosition', args=lp + 600)
-        d.BeginFontSize(10)
+        size = 9
+        family = wx.FONTFAMILY_MODERN
+        style = wx.FONTSTYLE_NORMAL
+        weight = wx.FONTWEIGHT_NORMAL
+        font = wx.Font(size, family, style, weight)
+        d.BeginFont(font)
+#        d.BeginFontSize(10)
         d.BeginTextColour(color)
         d.WriteText(msg)
         d.EndTextColour()
-        d.EndFontSize()
+#        d.EndFontSize()
+        d.EndFont()
 
         if new_line:
             self._display.Newline()
-#            self._do_later('Newline')
 
         lp = d.GetLastPosition()
         d.ShowPosition(lp + 600)
-#        self._do_later('ShowPosition', args=lp + 600)
 
     def add_text(self, msg, **kw):
         '''
@@ -201,8 +180,7 @@ class RichTextDisplay(HasTraits):
                 a = self.text.pop(0)[0]
                 self._display.Remove(0, len(a) + 1)
                 self._display.SetInsertionPointEnd()
-#                self._do_later('Remove', args=(0, len(a) + 1))
-#                self._do_later('SetInsertionPointEnd')
+
         else:
             if isinstance(msg, (list, tuple)):
                 for mi in msg:

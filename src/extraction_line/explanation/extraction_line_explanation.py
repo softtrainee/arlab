@@ -16,19 +16,17 @@
 
 #=============enthought library imports=======================
 from traits.api import HasTraits, Any, Event, List, Bool, Property
-from traitsui.api import View, Item, HGroup, VGroup, TableEditor, ButtonEditor, \
+from traitsui.api import View, Item, VGroup, TableEditor, \
     Handler
 from traitsui.table_column import ObjectColumn
-from traitsui.extras.checkbox_column import CheckboxColumn
-
+#from traitsui.extras.checkbox_column import CheckboxColumn
 
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
 #from filetools import parse_setupfile
 
-from explanable_item import ExplanableTurbo
-
+#from explanable_item import ExplanableTurbo
 
 class ELEHandler(Handler):
     def init(self, info):

@@ -46,8 +46,10 @@ class DBSelector(Loggable):
                          ])
     criteria = String('this month')
     comparator_types = Property
-    search = Button
     results = List
+
+    search = Button
+    open_button = Button('Open')
 
     _db = DatabaseAdapter
 
@@ -81,52 +83,55 @@ class DBSelector(Loggable):
                             criteria='this month'
                             )
 
-    def _load_hook(self):
-        pass
+    def traits_view(self):
 
-    def _column_clicked_changed(self, event):
-        values = event.editor.value
+        qgrp = HGroup(
+                Item('parameter', editor=EnumEditor(name='_parameters')),
+                Item('comparator', editor=EnumEditor(name='_comparisons')),
+                Item('criteria'),
+                show_labels=False
+                )
 
-        fields = [name for _, name in event.editor.adapter.columns]
-        field = fields[event.column]
-        self.reverse_sort = not self.reverse_sort
+        jt = self._get__join_table_parameters()
+#        print jt
+        if jt is not None:
+            qgrp = VGroup(
+                      Item('join_table_parameter',
+                           label='Device',
+                            editor=EnumEditor(name='_join_table_parameters'),
+                           ),
+                      qgrp
+                      )
 
-        self._sort_columns(values, field)
+        editor = TabularEditor(adapter=self.tabular_adapter(),
+                               dclicked='object.dclicked',
+                               selected='object.selected',
+                               column_clicked='object.column_clicked',
+                               editable=False,
+                               operations=['move', ],
+                               multi_select=True
+                               )
+        v = View(
 
-    def _sort_columns(self, values, field=None):
-        #get the field to sort on
-        if field is None:
-            field = self._sort_field
-            if field is None:
-                return
+                 Item('results', style='custom',
+                      editor=editor,
+                      show_label=False
+                      ),
 
-        values.sort(key=lambda x: getattr(x, field),
-                    reverse=self.reverse_sort)
-        self._sort_field = field
+                 qgrp,
+                 HGroup(Item('omit_bogus'),
+                        Item('open_button', show_label=False),
+                        spring, Item('search', show_label=False)),
 
-    def _search_fired(self):
-        self._execute_query()
 
-#    def _get_comparator_types(self):
-#        return ['=', '<', '>', '<=', '>=', '!=', 'like']
-    def _get__join_table_parameters(self):
-        return None
-
-    def _convert_comparator(self, c):
-        if c == '=':
-            c = '__eq__'
-        elif c == '<':
-            c = '__lt__'
-        elif c == '>':
-            c = '__gt__'
-        elif c == '<=':
-            c = '__le__'
-        elif c == '>=':
-            c = '__ge__'
-        return c
-
-    def _between(self, p, l, g):
-        return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)
+                 resizable=True,
+                 width=500,
+                 height=500,
+                 x=0.1,
+                 y=0.1,
+                 title=self.title
+                 )
+        return v
 
     def _get_filter_str(self, param, comp, criteria):
 
@@ -172,62 +177,6 @@ class DBSelector(Loggable):
 
         c = '"{}"'.format(c)
         return ' '.join((param, comp, c))
-
-
-    def traits_view(self):
-
-        qgrp = HGroup(
-                Item('parameter', editor=EnumEditor(name='_parameters')),
-                Item('comparator', editor=EnumEditor(name='_comparisons')),
-                Item('criteria'),
-                show_labels=False
-                )
-
-        jt = self._get__join_table_parameters()
-#        print jt
-        if jt is not None:
-            qgrp = VGroup(
-                      Item('join_table_parameter',
-                           label='Device',
-                            editor=EnumEditor(name='_join_table_parameters'),
-                           ),
-                      qgrp
-                      )
-
-        editor = TabularEditor(adapter=self.tabular_adapter(),
-                               dclicked='object.dclicked',
-                               selected='object.selected',
-                               column_clicked='object.column_clicked',
-                               editable=False,
-                               operations=['move', ],
-                               multi_select=True
-                               )
-        v = View(
-
-                 Item('results', style='custom',
-                      editor=editor,
-                      show_label=False
-                      ),
-
-                 qgrp,
-                 HGroup(Item('omit_bogus'),
-                        spring, Item('search', show_label=False)),
-
-
-                 resizable=True,
-                 width=500,
-                 height=500,
-                 x=0.1,
-                 y=0.1,
-                 title=self.title
-                 )
-        return v
-    def _get_selector_records(self):
-        pass
-
-#    @on_trait_change('omit_bogus')
-    def _omit_bogus_changed(self):
-        self._execute_query()
 
     def _execute_query(self, param=None, comp=None, criteria=None):
         if param is None:
@@ -284,7 +233,7 @@ class DBSelector(Loggable):
 
             self._sort_columns(self.results)
 
-    def _dclicked_fired(self):
+    def _open_selected(self):
         s = self.selected
 
         if s is not None:
@@ -321,4 +270,61 @@ class DBSelector(Loggable):
                             self.wy = 0.1
                     except Exception, e:
                         self.warning(e)
+
+    def _sort_columns(self, values, field=None):
+        #get the field to sort on
+        if field is None:
+            field = self._sort_field
+            if field is None:
+                return
+
+        values.sort(key=lambda x: getattr(x, field),
+                    reverse=self.reverse_sort)
+        self._sort_field = field
+
+    def _dclicked_fired(self):
+        self._open_selected()
+
+    def _open_button_fired(self):
+        self._open_selected()
+
+    def _search_fired(self):
+        self._execute_query()
+
+    def _omit_bogus_changed(self):
+        self._execute_query()
+
+    def _column_clicked_changed(self, event):
+        values = event.editor.value
+
+        fields = [name for _, name in event.editor.adapter.columns]
+        field = fields[event.column]
+        self.reverse_sort = not self.reverse_sort
+
+        self._sort_columns(values, field)
+
+    def _convert_comparator(self, c):
+        if c == '=':
+            c = '__eq__'
+        elif c == '<':
+            c = '__lt__'
+        elif c == '>':
+            c = '__gt__'
+        elif c == '<=':
+            c = '__le__'
+        elif c == '>=':
+            c = '__ge__'
+        return c
+
+    def _between(self, p, l, g):
+        return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)
+
+    def _get_selector_records(self):
+        pass
+
+    def _get__join_table_parameters(self):
+        pass
+
+    def _load_hook(self):
+        pass
 #============= EOF =============================================

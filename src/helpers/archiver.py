@@ -40,6 +40,8 @@ class Archiver(Loggable):
     archive_months = Range(0, 12, 3)
     clean_archives = Bool(True)
     root = Str
+    use_logger_display = False
+    use_warning_display = False
 
     def clean(self, spawn_process=True):
         if spawn_process:

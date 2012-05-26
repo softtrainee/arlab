@@ -68,7 +68,7 @@ if __name__ == '__main__':
     db.connect()
 
     dbs = PowerCalibrationSelector(_db=db)
-    dbs._execute_query()
+    dbs.load_recent()
     dbs.configure_traits()
 #    print db.get_bakeouts(join_table='ControllerTable',
 #                    filter_str='ControllerTable.script="---"'

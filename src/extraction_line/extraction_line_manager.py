@@ -402,12 +402,10 @@ class ExtractionLineManager(Manager):
             self.explanation.selected = selected
 
     def kill(self):
-        r = Manager.kill(self)
+        super(ExtractionLineManager, self).kill()
         p = os.path.join(hidden_dir, 'show_explanantion')
         with open(p, 'wb') as f:
             pickle.dump(self.show_explanation, f)
-
-        return r
 
     def traits_view(self):
         '''
