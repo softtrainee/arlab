@@ -113,7 +113,8 @@ if __name__ == '__main__':
     db.connect()
 
     dbs = PowerMapSelector(_db=db)
-    dbs._execute_()
+    dbs.load_recent()
+#    dbs._execute_()
     dbs.configure_traits()
 #    print db.get_bakeouts(join_table='ControllerTable',
 #                    filter_str='ControllerTable.script="---"'

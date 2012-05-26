@@ -44,7 +44,7 @@ class DBSelector(Loggable):
                          'contains'
 #                         'match'
                          ])
-    criteria = Str('this month')
+    criteria = String('this month')
     comparator_types = Property
     search = Button
     results = List
@@ -72,6 +72,14 @@ class DBSelector(Loggable):
     def __init__(self, *args, **kw):
         super(DBSelector, self).__init__(*args, **kw)
         self._load_hook()
+
+    def load_recent(self):
+        self._execute_query(
+                            param='{}.{}'.format(self.query_table,
+                                           'rundate'),
+                            comp='=',
+                            criteria='this month'
+                            )
 
     def _load_hook(self):
         pass
@@ -120,25 +128,25 @@ class DBSelector(Loggable):
     def _between(self, p, l, g):
         return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)
 
-    def _get_filter_str(self):
+    def _get_filter_str(self, param, comp, criteria):
 
-        if self.date_str in self.parameter:
-            c = self.criteria.replace('/', '-')
-            if self.criteria == 'today':
+        if self.date_str in param:
+            c = criteria.replace('/', '-')
+            if criteria == 'today':
                 c = get_date()
-            elif self.criteria == 'this month':
+            elif criteria == 'this month':
                 d = datetime.today().date()
                 today = get_date()
-                if '=' in self.comparator:
+                if '=' in comp:
                     d = d - timedelta(days=d.day)
-                    c = self._between(self.parameter, today, d)
+                    c = self._between(param, today, d)
                     return c
                 else:
                     c = d - timedelta(days=d.day - 1)
             c = '{}'.format(c)
-        elif 'runtime' in self.parameter:
-            args = self.criteria.split(':')
-            if len(args) in [1, 2] and self.comparator == '=':
+        elif 'runtime' in param:
+            args = criteria.split(':')
+            if len(args) in [1, 2] and comp == '=':
                 base = ['00', ] * (3 - len(args))
                 g = ':'.join(args + base)
                 try:
@@ -149,14 +157,13 @@ class DBSelector(Loggable):
 
                 f = ':'.join(['{:n}', ] * (len(args)) + base)
                 l = f.format(*a)
-                c = self._between(self.parameter, l, g)
+                c = self._between(param , l, g)
                 return c
             else:
                 c = ':'.join(args + ['00', ] * (3 - len(args)))
         else:
-            c = self.criteria
+            c = criteria
 
-        comp = self.comparator
         if comp == 'like':
             c += '%'
         elif comp == 'contains':
@@ -164,14 +171,8 @@ class DBSelector(Loggable):
             c = '%' + c + '%'
 
         c = '"{}"'.format(c)
-        ps = self.parameter
+        return ' '.join((param, comp, c))
 
-        s = ' '.join((ps, comp, c))
-
-        return s
-
-#    def _get_join_table(self):
-#        return
 
     def traits_view(self):
 
@@ -224,8 +225,20 @@ class DBSelector(Loggable):
     def _get_selector_records(self):
         pass
 
-    @on_trait_change('omit_bogus')
-    def _execute_query(self):
+#    @on_trait_change('omit_bogus')
+    def _omit_bogus_changed(self):
+        self._execute_query()
+
+    def _execute_query(self, param=None, comp=None, criteria=None):
+        if param is None:
+            param = self.parameter
+
+        if comp is None:
+            comp = self.comparator
+
+        if criteria is None:
+            criteria = self.criteria
+
         db = self._db
         if db is not None:
 #            self.info(s)
@@ -240,11 +253,11 @@ class DBSelector(Loggable):
 #                dbs = q.all()
 #            else:
 
-            s = self._get_filter_str()
+            s = self._get_filter_str(param, comp, criteria)
             if s is None:
                 return
 
-            table, _col = self.parameter.split('.')
+            table, _col = param.split('.')
             kw = dict(filter_str=s)
 
             if not table == self.query_table:

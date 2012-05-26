@@ -261,5 +261,5 @@ class DatabaseAdapter(Loggable):
     def _selector_factory(self):
         if self.selector_klass:
             s = self.selector_klass(_db=self)
-            s._execute_query()
+            s.load_recent()
             return s
