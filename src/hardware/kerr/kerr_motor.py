@@ -86,6 +86,7 @@ class KerrMotor(KerrDevice):
             self.use_hysteresis = True
         else:
             self.use_hysteresis = False
+
     def _start_initialize(self, *args, **kw):
         '''
         '''
@@ -94,6 +95,8 @@ class KerrMotor(KerrDevice):
         if progress is not None:
             progress.change_message('Initialize {}'.format(self.name))
             self.progress = progress
+            progress.increment()
+
 
     def _finish_initialize(self):
         '''
@@ -134,7 +137,8 @@ class KerrMotor(KerrDevice):
         if 'progress' in kw:
             progress = kw['progress']
             progress.change_message('Homing {}'.format(self.name))
-            time.sleep(0.5)
+            progress.increment()
+            time.sleep(0.25)
 
         addr = self.address
 

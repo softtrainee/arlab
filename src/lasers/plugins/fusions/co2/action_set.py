@@ -53,6 +53,14 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
                        path=laser_path,
                        class_name='{}PowerCalibrationAction'.format(self.action_path)
                        ),
+                Action(name='Beam',
+                       path='{}/Initialize'.format(laser_path),
+                       class_name='{}InitializeBeamAction'.format(self.action_path)
+                       ),
+                Action(name='Zoom',
+                       path='{}/Initialize'.format(laser_path),
+                       class_name='{}InitializeZoomAction'.format(self.action_path)
+                       ),
 
 
                 Action(name='Power Recording',
@@ -71,6 +79,8 @@ class FusionsCo2ActionSet(WorkbenchActionSet):
                        path=results_path,
                        class_name='{}OpenPowerCalibrationAction'.format(self.action_path)
                        ),
+
+
 
 ##                Action(name='Configure Motion Controller',
 ##                       path='MenuBar/Lasers/{}'.format(self.name),

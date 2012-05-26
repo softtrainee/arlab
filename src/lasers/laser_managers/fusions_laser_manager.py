@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
     on_trait_change, Event, Bool, Float
@@ -37,6 +35,7 @@ from src.led.led_editor import LEDEditor
 from laser_manager import LaserManager
 from src.helpers.paths import co2laser_db_root, co2laser_db
 import os
+from src.initializer import MProgressDialog
 
 
 class FusionsLaserManager(LaserManager):
@@ -378,6 +377,16 @@ class FusionsLaserManager(LaserManager):
         chiller = self.get_device('thermo_rack')
         if chiller is not None:
             return chiller.get_faults(**kw)
+
+    def do_motor_initialization(self, name):
+        if self.logic_board:
+            motor = getattr(self.logic_board, '{}_motor'.format(name))
+            if motor is not None:
+                n = 4
+                pd = MProgressDialog(max=n, size=(550, 15))
+                pd.open()
+                motor.initialize(progress=pd)
+                pd.close()
 
     def set_beam_diameter(self, bd, force=False, **kw):
         '''
