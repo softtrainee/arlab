@@ -142,10 +142,12 @@ class FusionsLaserManager(LaserManager):
     def open_power_graph(self, rid, path=None):
         if self.power_graph is None:
             g = StreamGraph(
-                        window_x=0.01,
-                        window_y=0.4,
+#                        window_x=0.01,
+#                        window_y=0.4,
+                        window_width=325,
+                        window_height=325,
                         container_dict=dict(padding=5),
-#                        view_identifier='pychron.fusions.power_graph'
+                        view_identifier='pychron.fusions.power_graph'
                         )
             self.power_graph = g
 

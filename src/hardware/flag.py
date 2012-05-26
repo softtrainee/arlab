@@ -15,9 +15,6 @@
 #===============================================================================
 from threading import Timer
 
-
-
-
 def convert_to_bool(v):
     return True if v.lower().strip() in ['t', 'true'] else False
 

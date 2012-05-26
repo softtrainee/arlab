@@ -26,7 +26,7 @@ import os
 
 HOME = os.path.expanduser('~')
 
-version = ''
+version = '_beta'
 home = 'Pychrondata{}'.format(version)
 
 #from globals import beta
@@ -40,8 +40,9 @@ home = 'Pychrondata{}'.format(version)
 #
 #project_home = os.path.join(host_url, project_root)
 root = os.path.join(HOME, home)
+stable_root = os.path.join(HOME, 'Pychrondata')
 
-src_repo_name = 'pychron'
+src_repo_name = 'pychron{}'.format(version)
 pychron_src_dir = os.path.join(HOME, 'Programming', 'mercurial', src_repo_name)
 doc_html_dir = os.path.join(pychron_src_dir, 'docs', '_build', 'html')
 
@@ -66,7 +67,9 @@ setup_dir = os.path.join(root, 'setupfiles')
 device_dir = os.path.join(setup_dir, 'devices')
 canvas2D_dir = os.path.join(setup_dir, 'canvas2D')
 canvas3D_dir = os.path.join(setup_dir, 'canvas3D')
-data_dir = os.path.join(root, 'data')
+
+data_dir = os.path.join(stable_root, 'data')
+
 extraction_line_dir = os.path.join(setup_dir, 'extractionline')
 #initialization_dir = os.path.join(setup_dir, 'initializations')
 scripts_dir = os.path.join(root, 'scripts')
