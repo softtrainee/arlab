@@ -23,7 +23,8 @@ from numpy import polyfit
 
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.paths import hidden_dir, co2laser_db_root, co2laser_db
+from src.helpers.paths import hidden_dir, co2laser_db_root, co2laser_db, \
+    data_dir
 import os
 import time
 from src.graph.graph import Graph
@@ -65,6 +66,8 @@ class PowerCalibrationManager(Manager):
     execute = Event
     execute_label = Property(depends_on='_alive')
     _alive = Bool(False)
+    data_manager = None
+    graph = None
     def _get_execute_label(self):
         return 'Stop' if self._alive else 'Start'
 
@@ -107,8 +110,12 @@ class PowerCalibrationManager(Manager):
         self.parent.add_window(ui)
 
     def _execute_power_calibration(self):
-        self.graph = g = Graph(window_title='CO2 Power Calibration')
-        g.new_plot()
+        self.graph = g = Graph(window_title='CO2 Power Calibration',
+                               container_dict=dict(padding=5)
+                               )
+        g.new_plot(
+                   xtitle='Setpoint (%)',
+                   ytitle='Measured Power (W)')
         g.new_series()
 
         if self.parent is not None:
@@ -123,12 +130,14 @@ class PowerCalibrationManager(Manager):
         nintegrations = self.parameters.nintegrations
 
         self.data_manager = dm = H5DataManager()
+        if self.parameters.use_db:
+            dw = DataWarehouse(root=os.path.join(co2laser_db_root, 'power_calibration'))
+            dw.build_warehouse()
+            directory = dw.get_current_dir()
+        else:
+            directory = os.path.join(data_dir, 'power_calibration')
 
-        dw = DataWarehouse(root=os.path.join(co2laser_db_root, 'power_calibration'))
-#                           os.path.join(data_dir, base_dir))
-        dw.build_warehouse()
-
-        _dn = dm.new_frame(directory=dw.get_current_dir(),
+        _dn = dm.new_frame(directory=directory,
                 base_frame_name='power_calibration')
 
         table = dm.new_table('/', 'calibration', table_style='PowerCalibration')
@@ -175,14 +184,18 @@ class PowerCalibrationManager(Manager):
 
         self._alive = False
 
+    def __alive_changed(self):
+        if not self._alive:
+            if self.parent is not None:
+                self.parent.disable_laser()
+
     def _save_to_db(self):
         if self.parameters.use_db:
             db = PowerCalibrationAdapter(dbname=co2laser_db,
                                          kind='sqlite')
             db.connect()
             r = db.add_calibration_record()
-            p = self.data_manager.get_current_path()
-            db.add_path(r, p)
+            db.add_path(r, self.data_manager.get_current_path())
             db.commit()
             db.close()
         self.data_manager.close()
@@ -205,8 +218,8 @@ class PowerCalibrationManager(Manager):
     def kill(self):
         super(PowerCalibrationManager, self).kill()
         if self.initialized:
-            p = os.path.join(hidden_dir, 'power_calibration')
-            with open(p, 'wb') as f:
+            with open(os.path.join(hidden_dir, 'power_calibration'),
+                      'wb') as f:
                 pickle.dump(self.parameters, f)
 
     def traits_view(self):
@@ -221,6 +234,6 @@ class PowerCalibrationManager(Manager):
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('pcm')
-    p = PowerCalibrationManager()
-    p.configure_traits()
+    pac = PowerCalibrationManager()
+    pac.configure_traits()
 #============= EOF =============================================

@@ -103,35 +103,40 @@ class DBResult(BaseDBResult):
     def _get_additional_tabs(self):
         return []
 
+    def _get_graph_item(self):
+        g = Item('graph',
+                    show_label=False,
+                    style='custom',
+                    height=1.0)
+        return g
+
     def traits_view(self):
         interface_grp = VGroup(
                           VGroup(Item('_id', style='readonly', label='ID'),
-                    Item('rundate', style='readonly', label='Run Date'),
-                    Item('runtime', style='readonly', label='Run Time'),
-                    Item('directory', style='readonly'),
-                    Item('filename', style='readonly')),
-                VGroup(Item('summary',
-                            show_label=False,
-                            style='readonly',
-                            )
-                       ),
-                HGroup(spring,
-                              Item('export_button', height=0.15,
+                                    Item('rundate', style='readonly', label='Run Date'),
+                                    Item('runtime', style='readonly', label='Run Time'),
+                                    Item('directory', style='readonly'),
+                                    Item('filename', style='readonly')),
+                            VGroup(Item('summary',
+                                    show_label=False,
+                                    style='readonly',
+                                    visible_when='object.summary'
+                                    )),
+                            HGroup(spring,
+                              Item('export_button',
                                             show_label=False),
                        visible_when='object.exportable'
                        ),
-                    label='Info',
+#                    label='Info',
                     )
 
 
-        grps = Group(interface_grp, layout='tabbed')
+        grps = Group(interface_grp)
+#        grps = Group()
 
         agrps = self._get_additional_tabs()
         if self.graph is not None:
-            g = Item('graph',
-                    show_label=False,
-                    style='custom')
-
+            g = self._get_graph_item()
             agrps.append(g)
 
         for i, ai in enumerate(agrps):
@@ -139,8 +144,8 @@ class DBResult(BaseDBResult):
 
         return View(grps,
 
-                    width=800,
-                    height=0.85,
+#                    width=800,
+#                    height=0.85,
                     resizable=True,
                     x=self.window_x,
                     y=self.window_y,

@@ -33,11 +33,14 @@ class PowerResult(RIDDBResult):
 
     def load_graph(self):
 
-        g = Graph()
+        g = Graph(container_dict=dict(padding=10))
+
         dm = self.data_manager
         internal = dm.get_table('internal', 'Power')
         brightness = dm.get_table('brightness', 'Power')
-        g.new_plot()
+        g.new_plot(xtitle='Time (s)',
+                   ytitle='Internal/Brightness Power Meter',
+                   padding=[50, 10, 10, 40])
         if internal is not None:
             xi, yi = zip(*[(r['time'], r['value']) for r in internal.iterrows()])
             g.new_series(xi, yi)
