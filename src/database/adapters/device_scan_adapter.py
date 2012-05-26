@@ -19,12 +19,13 @@
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.database.adapters.database_adapter import DatabaseAdapter
+from src.database.adapters.database_adapter import DatabaseAdapter, \
+    PathDatabaseAdapter
 from src.database.selectors.device_scan_selector import DeviceScanSelector
 from src.database.orms.device_scan_orm import ScanTable, DeviceTable, ScanPathTable
 from src.helpers.paths import device_scan_db
 
-class DeviceScanAdapter(DatabaseAdapter):
+class DeviceScanAdapter(PathDatabaseAdapter):
     test_func = None
     selector_klass = DeviceScanSelector
 #==============================================================================
@@ -67,13 +68,13 @@ class DeviceScanAdapter(DatabaseAdapter):
 
         return c
 #
-    def add_path(self, scan, path, commit=False, **kw):
-        kw = self._get_path_keywords(path, kw)
-        p = ScanPathTable(**kw)
-        scan.path = p
-        if commit:
-            self.commit()
-        return p
+#    def add_path(self, scan, path, commit=False, **kw):
+#        kw = self._get_path_keywords(path, kw)
+#        p = ScanPathTable(**kw)
+#        scan.path = p
+#        if commit:
+#            self.commit()
+#        return p
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

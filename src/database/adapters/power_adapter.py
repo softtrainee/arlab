@@ -17,14 +17,16 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.adapters.database_adapter import DatabaseAdapter
+from src.database.adapters.database_adapter import DatabaseAdapter, \
+    PathDatabaseAdapter
 from src.database.orms.power_orm import PowerTable, PowerPathTable
 from src.database.selectors.power_selector import PowerSelector
 
 
-class PowerAdapter(DatabaseAdapter):
+class PowerAdapter(PathDatabaseAdapter):
     test_func = None
     selector_klass = PowerSelector
+    path_table = PowerPathTable
 #==============================================================================
 #    getters
 #==============================================================================
@@ -47,13 +49,13 @@ class PowerAdapter(DatabaseAdapter):
         b = self._add_timestamped_item(PowerTable, commit, **kw)
         return b
 
-    def add_power_path(self, power, path, commit=False, **kw):
-        kw = self._get_path_keywords(path, kw)
-        p = PowerPathTable(**kw)
-        power.path = p
-        if commit:
-            self.commit()
-        return p
+#    def add_power_path(self, power, path, commit=False, **kw):
+#        kw = self._get_path_keywords(path, kw)
+#        p = PowerPathTable(**kw)
+#        power.path = p
+#        if commit:
+#            self.commit()
+#        return p
 
 
 if __name__ == '__main__':

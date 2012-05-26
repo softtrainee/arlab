@@ -38,6 +38,7 @@ from src.database.orms.power_map_orm import PowerMapTable, PowerMapPathTable
 class PowerMapAdapter(DatabaseAdapter):
     test_func = None
     selector_klass = PowerMapSelector
+    path_table = PowerMapPathTable
 #==============================================================================
 #    getters
 #==============================================================================
@@ -53,24 +54,6 @@ class PowerMapAdapter(DatabaseAdapter):
         except Exception, e:
             print e
 
-#    def _get_query(self, klass, join_table=None, filter_str=None, **clause):
-#        sess = self.get_session()
-#        q = sess.query(klass)
-#
-#        if join_table is not None:
-#            q = q.join(join_table)
-#
-#        if filter_str:
-#            q = q.filter(filter_str)
-#        else:
-#            q = q.filter_by(**clause)
-#        return q
-
-#    def open_selector(self):
-#        s = BakeoutDBSelector(_db=self)
-#        s._execute_()
-#        s.edit_traits()
-
 #=============================================================================
 #   adder
 #=============================================================================
@@ -78,34 +61,6 @@ class PowerMapAdapter(DatabaseAdapter):
 #        b = PowerMapTable(**kw)
         b = self._add_timestamped_item(PowerMapTable, commit, **kw)
         return b
-#
-#    def add_controller(self, bakeout, commit=False, **kw):
-#        c = ControllerTable(**kw)
-#        bakeout.controllers.append(c)
-#        if commit:
-#            self.commit()
-##        self._add_item(c, commit)
-#        return c
-#
-    def add_path(self, power_map, path, commit=False, **kw):
-        kw = self._get_path_keywords(path, kw)
-        p = PowerMapPathTable(**kw)
-        power_map.path = p
-        if commit:
-            self.commit()
-#        self._add_item(c, commit)
-        return p
-
-
-
-#    def get_bakeouts2(self):
-#        sess = self.get_session()
-##        clause = dict(ControllerTable.script='---')
-#        qcol = 'setpoint'
-#        col = getattr(ControllerTable, qcol)
-#        cond = 100
-#        q = sess.query(BakeoutTable).join(ControllerTable).filter(col < cond)
-#        print q.all()
 
 if __name__ == '__main__':
     db = PowerMapAdapter(dbname='co2laserdb',
@@ -122,39 +77,4 @@ if __name__ == '__main__':
 
 
 #======== EOF ================================
-#    def get_analyses_path(self):
-##        sess = self.get_session()
-##        q = sess.query(Paths)
-##        s = q.filter_by(name='analyses')
-#        q = self._get_query(Paths, name='analyses')
-#        p = q.one()
-#        p = p.path
-#        return p
-#
-#    def get_intercepts(self, analysis_id):
-#        q = self._get_query(Intercepts, analysis_id=analysis_id)
-#        return q.all()
-#
-#    def get_analysis_type(self, **kw):
-#        q = self._get_query(AnalysisTypes, **kw)
-#        return q.one()
-#
-#    def get_spectrometer(self, **kw):
-#        q = self._get_query(Spectrometers, **kw)
-#        return q.one()
-#    def add_intercepts(self, **kw):
-#        o = Intercepts(**kw)
-#        self._add_item(o)
-#
-#    def add_analysis(self, atype=None, spectype=None, **kw):
-#        if atype is not None:
-#            a = self.get_analysis_type(name=atype)
-#            kw['type_id'] = a._id
-#
-#        if spectype is not None:
-#            s = self.get_spectrometer(name=spectype)
-#            kw['spectrometer_id'] = s._id
-#
-#        o = Analyses(**kw)
-#        self._add_item(o)
-#        return o._id
+

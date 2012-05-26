@@ -182,7 +182,7 @@ class PowerCalibrationManager(Manager):
             db.connect()
             r = db.add_calibration_record()
             p = self.data_manager.get_current_path()
-            db.add_calibration_path(r, p)
+            db.add_path(r, p)
             db.commit()
             db.close()
         self.data_manager.close()

@@ -244,7 +244,7 @@ class FusionsLaserManager(LaserManager):
                 if db.connect():
                     dbp = db.add_power_record(rid=str(self._current_rid))
                     self._current_rid = None
-                    db.add_power_path(dbp, self.data_manager.get_current_path())
+                    db.add_path(dbp, self.data_manager.get_current_path())
                     db.commit()
 
             else:
