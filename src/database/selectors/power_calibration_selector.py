@@ -20,10 +20,11 @@ from traits.api import String, Float
 import os
 from numpy import linspace, polyval, polyfit
 #============= local library imports  ==========================
-from src.database.selectors.db_selector import DBSelector, DBResult
+from src.database.selectors.db_selector import DBSelector
 from src.graph.graph import Graph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.orms.power_calibration_orm import PowerCalibrationTable
+from src.database.selectors.base_db_result import DBResult
 
 class PowerCalibrationResult(DBResult):
     title_str = 'PowerCalibrationRecord'

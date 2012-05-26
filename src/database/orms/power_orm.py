@@ -28,7 +28,7 @@ Base = declarative_base()
 
 
 class PowerTable(Base, ResultsMixin):
-    pass
+    rid = Column(String(80))
 #    __tablename__ = 'PowerTable'
 #    id = Column(Integer, primary_key=True)
 #    runtime = Column(Time)

@@ -31,4 +31,10 @@ class BaseResultsAdapter(TabularAdapter):
         else:
             return '#FF4D4D'
 
+class RIDResultsAdapter(BaseResultsAdapter):
+    columns = [('RunID', 'runid'),
+               ('Date', 'rundate'),
+               ('Time', 'runtime')
+               ]
+
 #============= EOF =============================================
