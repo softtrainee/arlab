@@ -1,0 +1,18 @@
+#actuator setup file
+#serial port location
+#/dev/tty.USA19H1d1P1.1
+#/dev/tty.USA49Wfd1P1.1
+#/dev/tty.USA49Wfa25P3.3,19200
+/dev/tty.USA49Wfa22P3.3,19200
+#number axes
+3
+#xmin,xmax
+0,50
+#ymin,ymax
+0,50
+#zmin,zmax
+0,50
+#group setup file located in newport_parameters
+group_parameters.txt
+#joystick setup file
+joystick_parameters.txt
