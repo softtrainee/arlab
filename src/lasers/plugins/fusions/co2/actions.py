@@ -220,3 +220,16 @@ class OpenPowerCalibrationAction(Action):
             db = manager.get_power_calibration_database()
             open_selector(db, self.window.application)
 
+
+class InitializeBeamAction(Action):
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            manager.do_motor_initialization('beam')
+
+
+class InitializeZoomAction(Action):
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            manager.do_motor_initialization('zoom')

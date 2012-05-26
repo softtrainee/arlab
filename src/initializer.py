@@ -31,6 +31,9 @@ from loggable import Loggable
 
 
 class MProgressDialog(ProgressDialog):
+    def increment(self, step=1):
+        v = self.progress_bar.control.Value
+        self.update(v + step)
 
     def _create_control(self, parent):
         '''
