@@ -312,6 +312,15 @@ def timed_flag_test():
                 break
             time.sleep(1)
         time.sleep(1)
+
+def mass_spec_param_test():
+    c = Client(
+              port=1061,
+              ask_id='E')
+    c.ask('Read test_param')
+    c.ask('Read test_param1')
+    c.ask('Read test_paramfoo')
+
 if __name__ == '__main__':
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
@@ -321,8 +330,8 @@ if __name__ == '__main__':
 #    multiplex_test()
 #    laser_client()
 #    power_test()
-    timed_flag_test()
-
+#    timed_flag_test()
+    mass_spec_param_test()
     #===========================================================================
     #Check Remote launch snippet 
     #===========================================================================

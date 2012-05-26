@@ -15,9 +15,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-# -*- coding: utf-8 -*-
-
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
@@ -61,7 +58,7 @@ class Loggable(HasTraits):
 
         self.logger = add_console(name=name)
         c = color_name_gen.next()
-        if c in [ 'gray', 'silver']:
+        if c in [ 'gray', 'silver', 'greenyellow']:
             c = color_name_gen.next()
         self.color = c
 

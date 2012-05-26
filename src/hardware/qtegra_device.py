@@ -21,6 +21,18 @@ from src.hardware.core.core_device import CoreDevice
 
 class QtegraDevice(CoreDevice):
     scan_func = 'read_temperature'
+    get_func = 'check_cdd'
+
+    def get(self):
+        try:
+            func = getattr(self, self.get_func)
+            return func()
+        except AttributeError:
+            pass
+
+    def load_additional_args(self, config):
+        self.set_attribute(config, 'get_func', 'General', 'get_func')
+        return True
 
     def _build_command(self, cmd, *args, **kw):
         return cmd
@@ -34,6 +46,13 @@ class QtegraDevice(CoreDevice):
         cmd = 'Get {}'.format('Temp1')
         x = self.repeat_command(cmd, **kw)
         return x
+
+    def check_cdd(self, **kw):
+        x = self.repeat_command('GetData', **kw)
+        tags = [xi.split(':')[0].strip() for xi in x.split(',')]
+        return 'CDD' in tags
+
+
 
 
 

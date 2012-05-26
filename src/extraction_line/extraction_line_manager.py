@@ -96,6 +96,8 @@ class ExtractionLineManager(Manager):
             if 'fusions' in manager:
                 package = 'src.managers.laser_managers.{}'.format(manager)
                 self.laser_manager_id = manager
+            elif 'rpc' in manager:
+                package = 'src.rpc.manager'
             else:
                 package = 'src.managers.{}'.format(manager)
 
@@ -107,7 +109,7 @@ class ExtractionLineManager(Manager):
 
             if manager in ['gauge_manager', 'valve_manager',
                            'environmental_manager', 'device_stream_manager',
-                           'multruns_report_manager'
+                           'multruns_report_manager',
                            ]:
                 self.trait_set(**{manager:m})
             else:
