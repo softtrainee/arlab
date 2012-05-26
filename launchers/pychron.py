@@ -17,15 +17,15 @@
 import os
 import sys
 # add src to the path
-version = ''
+version = '_beta'
 merc = os.path.join(os.path.expanduser('~'),
                     'Programming',
                     'mercurial')
-SRC_DIR = os.path.join(merc, 'pychron'.format(version))
+SRC_DIR = os.path.join(merc, 'pychron{}'.format(version))
 sys.path.insert(0, SRC_DIR)
 
-PYC = os.path.join(merc, 'pychron_source.zip')
-sys.path.insert(0, PYC)
+#PYC = os.path.join(merc, 'pychron_source.zip')
+#sys.path.insert(0, PYC)
 
 from src.envisage.run import launch
 from src.helpers.logger_setup import logging_setup
@@ -170,13 +170,12 @@ def main():
 
     build_directories()
 
-    from src.helpers.paths import hidden_dir
-    path = os.path.join(hidden_dir, 'version_info')
-    a = VersionInfoDisplay(local_path=path,
-                           src_path=os.path.join(SRC_DIR,
-                           'version_info.txt'))
-    a.check()
-
+#    from src.helpers.paths import hidden_dir
+#    path = os.path.join(hidden_dir, 'version_info')
+#    a = VersionInfoDisplay(local_path=path,
+#                           src_path=os.path.join(SRC_DIR,
+#                           'version_info.txt'))
+#    a.check()
     logging_setup('pychron', level='DEBUG')
 
     launch(beta=True)

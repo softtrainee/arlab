@@ -38,6 +38,7 @@ class ManagerHandler(ViewableHandler):
     '''
     def init(self, info):
         info.object.initialized = True
+        super(ManagerHandler, self).init(info)
 
     def closed(self, info, is_ok):
         '''
