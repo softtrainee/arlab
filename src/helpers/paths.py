@@ -41,14 +41,15 @@ home = 'Pychrondata{}'.format(version)
 #project_home = os.path.join(host_url, project_root)
 root = os.path.join(HOME, home)
 
-src_repo_name = 'pychron'
+src_repo_name = 'pychron{}'.format(version)
 pychron_src_dir = os.path.join(HOME, 'Programming', 'mercurial', src_repo_name)
 doc_html_dir = os.path.join(pychron_src_dir, 'docs', '_build', 'html')
 
 #_dir suffix ensures the path is checked for existence
 root_dir = root
+stable_root = os.path.join(HOME, 'Pychrondata')
 
-src_root = os.getcwd()
+#src_root = os.getcwd()
 
 #device_scan_db = '/Users/ross/Sandbox/device_scans.sqlite'
 
@@ -62,11 +63,12 @@ co2laser_db_root = os.path.join(db_path, 'co2laserdb')
 co2laser_db = os.path.join(db_path, 'co2.sqlite')
 
 #directories directly under root
+data_dir = os.path.join(stable_root, 'data')
+
 setup_dir = os.path.join(root, 'setupfiles')
 device_dir = os.path.join(setup_dir, 'devices')
 canvas2D_dir = os.path.join(setup_dir, 'canvas2D')
 canvas3D_dir = os.path.join(setup_dir, 'canvas3D')
-data_dir = os.path.join(root, 'data')
 extraction_line_dir = os.path.join(setup_dir, 'extractionline')
 #initialization_dir = os.path.join(setup_dir, 'initializations')
 scripts_dir = os.path.join(root, 'scripts')
@@ -80,7 +82,7 @@ pattern_dir = os.path.join(setup_dir, 'patterns')
 bakeout = os.path.join(device_dir, 'bakeout')
 bakeout_config_dir = os.path.join(setup_dir, 'bakeout_configurations')
 
-clovera_root = os.path.join(src_root, 'src', 'data_processing', 'modeling', 'lovera')
+#clovera_root = os.path.join(src_root, 'src', 'data_processing', 'modeling', 'lovera')
 #clovera_root = '/usr/local/clovera'
 
 argus_data_dir = os.path.join(data_dir, 'argusVI')
