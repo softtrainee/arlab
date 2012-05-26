@@ -13,9 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
-
-
 #=============enthought library imports=======================
 from traits.api import  Instance, Str, Bool, DelegatesTo
 from traitsui.api import View, Item, HGroup, HSplit, VGroup, spring
@@ -415,7 +412,6 @@ class ExtractionLineManager(Manager):
     def traits_view(self):
         '''
         '''
-
         v = View(
                  HGroup(
                         Item('explanation', style='custom', show_label=False,
@@ -441,7 +437,7 @@ class ExtractionLineManager(Manager):
 
     def _show_explanation_changed(self):
         if self.ui is not None:
-            adj = 250
+            adj = 260
             w, h = self.ui.control.GetSize()
             sign = 1 if self.show_explanation else -1
             w = w + sign * adj
