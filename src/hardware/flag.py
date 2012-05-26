@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from threading import Timer
 
 
 
@@ -38,5 +39,21 @@ class Flag(object):
 
     def clear(self):
         self._set = False
+
+class TimedFlag(Flag):
+    duration = 1
+    def __init__(self, name, t):
+        super(TimedFlag, self).__init__(name)
+        self.duration = float(t)
+
+    def set(self, value):
+        super(TimedFlag, self).set(value)
+
+        if self._set:
+            t = Timer(self.duration, self.clear)
+            t.start()
+
+        return True
+
 
 #======== EOF ================================

@@ -116,8 +116,9 @@ class Graph(Loggable):
 
     current_pos = None
 
-
     view_identifier = None
+
+    ui = Any
     def __init__(self, *args, **kw):
         '''
         '''

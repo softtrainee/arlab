@@ -102,6 +102,9 @@ class InitializationParser(XMLParser):
     def get_flags(self, manager, **kw):
         return self._get_paramater(manager, 'flag', **kw)
 
+    def get_timed_flags(self, manager, **kw):
+        return self._get_paramater(manager, 'timed_flag', **kw)
+
     def get_device(self, manager, devname, plugin, element=False):
 
         if plugin is None:

@@ -31,6 +31,7 @@ from threading import Thread
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.data_warehouse import DataWarehouse
 from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
+from pyface.timer.do_later import do_later
 
 class DummyPowerMeter:
     def read_power_meter(self, setpoint):
@@ -87,22 +88,32 @@ class PowerCalibrationManager(Manager):
 
     def _execute_fired(self):
         if self._alive:
-            self._alive = False
 
-            self._end(True)
+            self._alive = False
+            if self.parameters.use_db:
+                if self.confirmation_dialog('Save to Database'):
+                    self._save_to_db()
+                else:
+                    self.data_manager.delete_frame()
+                    self.data_manager.close()
 
         else:
             self._alive = True
-    #        self.graph.edit_traits()
             t = Thread(target=self._execute_power_calibration)
             t.start()
-    #        self._execute_power_calibration()
+
+    def _open_graph(self):
+        ui = self.graph.edit_traits()
+        self.parent.add_window(ui)
 
     def _execute_power_calibration(self):
         self.graph = g = Graph(window_title='CO2 Power Calibration')
         g.new_plot()
         g.new_series()
-        g.show()
+
+        if self.parent is not None:
+            do_later(self._open_graph)
+
 
         pstop = self.parameters.pstop
         pstep = self.parameters.pstep
@@ -159,29 +170,22 @@ class PowerCalibrationManager(Manager):
 
         self._calculate_calibration()
 
-        self._end(False)
+        if self._alive:
+            self._save_to_db()
 
-    def _end(self, user_kill):
-        if self.parameters.use_db:
-            save_to_db = True
-            if user_kill:
-                save_to_db = self.confirmation_dialog('Save to Database')
-
-            if save_to_db:
-                db = PowerCalibrationAdapter(dbname=co2laser_db,
-                                             kind='sqlite')
-                db.connect()
-                r = db.add_calibration_record()
-                p = self.data_manager.get_current_path()
-                db.add_calibration_path(r, p)
-                db.commit()
-                db.close()
-
-            else:
-                self.data_manager.delete_frame()
-
-        self.data_manager.close()
         self._alive = False
+
+    def _save_to_db(self):
+        if self.parameters.use_db:
+            db = PowerCalibrationAdapter(dbname=co2laser_db,
+                                         kind='sqlite')
+            db.connect()
+            r = db.add_calibration_record()
+            p = self.data_manager.get_current_path()
+            db.add_calibration_path(r, p)
+            db.commit()
+            db.close()
+        self.data_manager.close()
 
     def _write_data(self, pi, rp, table):
         self.graph.add_datum((pi, rp), do_after=1)
@@ -199,6 +203,7 @@ class PowerCalibrationManager(Manager):
         print polyfit(xs, ys, 1)
 
     def kill(self):
+
         if self.initialized:
             p = os.path.join(hidden_dir, 'power_calibration')
             with open(p, 'wb') as f:
@@ -210,8 +215,9 @@ class PowerCalibrationManager(Manager):
     def traits_view(self):
         v = View(self._button_factory('execute'),
                  Item('parameters', show_label=False, style='custom'),
-                 handler=self.handler_klass
-
+                 handler=self.handler_klass,
+                 title='Power Calibration',
+                 id='pychron.power_calibration_manager'
                  )
         return v
 
