@@ -49,14 +49,6 @@ class VideoAdapter(DatabaseAdapter):
         b = self._add_timestamped_item(VideoTable, commit, **kw)
         return b
 
-#    def add_video_path(self, video, path, commit=False, **kw):
-#        kw = self._get_path_keywords(path, kw)
-#        p = VideoPathTable(**kw)
-#        video.path = p
-#        if commit:
-#            self.commit()
-#        return p
-
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

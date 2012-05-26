@@ -34,17 +34,16 @@
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
-from sqlalchemy import Column, Integer, Float, String, \
-     ForeignKey, BLOB, DateTime, Time, Date
+from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
 
 #=============local library imports  ==========================
-from base_orm import ResultsMixin, PathMixin
+from base_orm import PathMixin
+from src.database.orms.base_orm import RIDMixin
 Base = declarative_base()
 
-class VideoTable(Base, ResultsMixin):
-    rid = Column(String(40))
+class VideoTable(Base, RIDMixin):
+    pass
 
 class VideoPathTable(Base, PathMixin):
     video_id = Column(Integer, ForeignKey('VideoTable.id'))

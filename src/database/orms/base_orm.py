@@ -38,6 +38,11 @@ class ResultsMixin(BaseMixin):
         name = self.__name__.replace('Table', 'PathTable')
         return relationship(name, uselist=False)
 
+
+class RIDMixin(ResultsMixin):
+    rid = Column(String(80))
+
+
 class PathMixin(BaseMixin):
     root = Column(String(200))
     filename = Column(String(80))
