@@ -67,14 +67,7 @@ class DeviceScanAdapter(PathDatabaseAdapter):
             self._add_item(c, commit)
 
         return c
-#
-#    def add_path(self, scan, path, commit=False, **kw):
-#        kw = self._get_path_keywords(path, kw)
-#        p = ScanPathTable(**kw)
-#        scan.path = p
-#        if commit:
-#            self.commit()
-#        return p
+
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

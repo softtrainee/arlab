@@ -264,15 +264,18 @@ class DatabaseAdapter(Loggable):
             s.load_recent()
             return s
 
+
 class PathDatabaseAdapter(DatabaseAdapter):
     path_table = None
     def add_path(self, rec, path, commit=False, **kw):
+        if self.path_table is None:
+            raise NotImplementedError
         kw = self._get_path_keywords(path, kw)
-        if self.path_table:
-            p = self.path_table(**kw)
-            rec.path = p
-            if commit:
-                self.commit()
-            return p
+        p = self.path_table(**kw)
+        rec.path = p
+        if commit:
+            self.commit()
+        return p
+
 #============= EOF =============================================
 

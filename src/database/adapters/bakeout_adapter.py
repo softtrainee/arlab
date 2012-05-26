@@ -17,8 +17,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.adapters.database_adapter import DatabaseAdapter, \
-    PathDatabaseAdapter
+from src.database.adapters.database_adapter import PathDatabaseAdapter
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable, BakeoutPathTable
 from src.database.selectors.bakeout_selector import BakeoutDBSelector
 
@@ -55,14 +54,6 @@ class BakeoutAdapter(PathDatabaseAdapter):
         if commit:
             self.commit()
         return c
-
-#    def add_path(self, bakeout, path, commit=False, **kw):
-#        kw = self._get_path_keywords(path, kw)
-#        p = BakeoutPathTable(**kw)
-#        bakeout.path = p
-#        if commit:
-#            self.commit()
-#        return p
 
 
 if __name__ == '__main__':

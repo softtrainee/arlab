@@ -23,49 +23,26 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 #=============local library imports  ==========================
-from base_orm import ResultsMixin, PathMixin
+from base_orm import RIDMixin, PathMixin
 Base = declarative_base()
 
 
-class PowerTable(Base, ResultsMixin):
-    rid = Column(String(80))
-#    __tablename__ = 'PowerTable'
-#    id = Column(Integer, primary_key=True)
-#    runtime = Column(Time)
-#    rundate = Column(Date)
-
-#    path = relationship('PowerPathTable', uselist=False)
+class PowerTable(Base, RIDMixin):
+    pass
 
 class PowerPathTable(Base, PathMixin):
-#    __tablename__ = 'PowerPathTable'
-#    id = Column(Integer, primary_key=True)
     power_id = Column(Integer, ForeignKey('PowerTable.id'))
-
-#    root = Column(String(200))
-#    filename = Column(String(80))
-
-
 
 #===============================================================================
 # brightness
 #===============================================================================
-class BrightnessTable(Base, ResultsMixin):
-    pass
-#    __tablename__ = 'BrightnessTable'
-#    id = Column(Integer, primary_key=True)
-#    runtime = Column(Time)
-#    rundate = Column(Date)
-
-#    path = relationship('BrightnessPathTable', uselist=False)
+#class BrightnessTable(Base, ResultsMixin):
+#    pass
 
 
-class BrightnessPathTable(Base, PathMixin):
-#    __tablename__ = 'BrightnessPathTable'
-#    id = Column(Integer, primary_key=True)
-    brightness_id = Column(Integer, ForeignKey('BrightnessTable.id'))
+#class BrightnessPathTable(Base, PathMixin):
+#    brightness_id = Column(Integer, ForeignKey('BrightnessTable.id'))
 
-#    root = Column(String(200))
-#    filename = Column(String(80))
 
 #============= EOF =============================================
 

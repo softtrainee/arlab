@@ -17,8 +17,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.adapters.database_adapter import DatabaseAdapter, \
-    PathDatabaseAdapter
+from src.database.adapters.database_adapter import PathDatabaseAdapter
 from src.database.orms.power_orm import PowerTable, PowerPathTable
 from src.database.selectors.power_selector import PowerSelector
 

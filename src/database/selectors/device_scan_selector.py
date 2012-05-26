@@ -20,10 +20,10 @@ from traits.api import String, Float
 #============= local library imports  ==========================
 from src.database.selectors.db_selector import DBSelector
 from src.database.orms.device_scan_orm import ScanTable
-
 from src.graph.time_series_graph import TimeSeriesGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.selectors.base_db_result import DBResult
+
 
 class ScanResult(DBResult):
     title_str = 'Device Scan Record'
@@ -59,6 +59,7 @@ class DeviceScanSelector(DBSelector):
     result_klass = ScanResult
     join_table_col = String('name')
     join_table = String('DeviceTable')
+
     def _load_hook(self):
         jt = self._join_table_parameters
         if jt:
