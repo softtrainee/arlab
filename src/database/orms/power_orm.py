@@ -17,10 +17,8 @@
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
-from sqlalchemy import Column, Integer, Float, String, \
-     ForeignKey, BLOB, DateTime, Time, Date
+from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
 
 #=============local library imports  ==========================
 from base_orm import RIDMixin, PathMixin
