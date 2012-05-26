@@ -14,23 +14,29 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import Str, Float, Any, Button, Int, List, Bool
 from traitsui.api import  Item, HGroup, VGroup, Handler, \
     RangeEditor, ButtonEditor, ScrubberEditor, Label, spring
 from traitsui.menu import Action, Menu, MenuBar
 from pyface.api import FileDialog, OK, warning
-from pyface.timer.do_later import do_after
 #=============standard library imports ========================
 import os
+from threading import Thread
+import time
 #=============local library imports  ==========================
 from src.config_loadable import ConfigLoadable
 from src.hardware import HW_PACKAGE_MAP
-from threading import Thread
-import time
 from src.viewable import Viewable, ViewableHandler
+from src.helpers.paths import setup_dir
+
+class MassSpecParam(object):
+    _value = None
+    def __init__(self, value):
+        self._value = value
+
+    def get(self):
+        return self._value
 
 class ManagerHandler(ViewableHandler):
     '''
@@ -218,6 +224,20 @@ class Manager(ConfigLoadable, Viewable):
     def add_timed_flag(self, f, t):
         from src.hardware.flag import TimedFlag
         self.flags.append(TimedFlag(f, t))
+
+    def get_mass_spec_param(self, name):
+
+        #open the mass spec parameters file
+        cp = self.configparser_factory()
+        cp.read(os.path.join(setup_dir, 'mass_spec_params.cfg'))
+        try:
+            v = cp.get('General', name)
+            return MassSpecParam(v)
+        except Exception:
+            pass
+#        return 
+
+#        return next((f for f in self.flags if f.name == name), None)
 
     def get_flag(self, name):
         return next((f for f in self.flags if f.name == name), None)

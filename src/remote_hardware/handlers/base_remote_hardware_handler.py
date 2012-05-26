@@ -107,6 +107,8 @@ class BaseRemoteHardwareHandler(Loggable):
                 m = self.get_manager()
                 if m:
                     dev = m.get_flag(name)
+                    if dev is None:
+                        dev = m.get_mass_spec_param(name)
                 else:
                     dev = DummyDevice()
         else:
