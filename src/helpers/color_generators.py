@@ -20,19 +20,7 @@
 Color generator methods
 utility functions for creating a series of colors
 '''
-#colors8i = dict(black = (0, 0, 0),
-#                green = (0, 255, 0),
-#                blue = (0, 0, 255),
-#                yellow = (255, 255, 0),
-#                red = (255, 0, 0),
-#                purple = (0, 255, 255),
-#                deepskyblue = (0, 191, 255),
-#                gray = (125, 125, 125),
-#                orange = (255, 140, 0),
-#                lightgreen = (50, 205, 50),
-#                pink = (255, 20, 147),
-#                silver = (84, 84, 84)
-#                )
+
 
 colors8i = dict(
                 black=(0, 0, 0),
@@ -49,16 +37,23 @@ colors8i = dict(
                 silver=(191, 191, 191),
                 navy=(0, 0, 127),
                 fuchsia=(255, 0, 255),
-                purple=(127, 0, 127)
+                purple=(127, 0, 127),
+                blueviolet=(159, 95, 159),
+                brown=(165, 42, 42),
+                firebrick=(142, 35, 35),
+                greenyellow=(147, 219, 112)
 
               )
 colors1f = dict()
 for color in colors8i:
     c = colors8i[color]
     colors1f[color] = c[0] / 255., c[1] / 255., c[2] / 255.
-colornames = [ 'black', 'red', 'maroon', 'yellow', 'olive',
+colornames = [ 'black', 'red', 'violet', 'maroon', 'yellow', 'olive',
                'lime', 'gray', 'green', 'aqua', 'teal',
-               'blue', 'silver', 'navy', 'fuchsia', 'purple']
+               'blue', 'silver', 'navy', 'fuchsia', 'purple',
+
+               'blueviolet', 'brown', 'firebrick', 'greenyellow'
+               ]
 def colorname_generator():
     '''
     '''
@@ -89,3 +84,5 @@ def color1f_generator():
             i = 0
         yield colors1f[colornames[i]]
         i += 1
+
+

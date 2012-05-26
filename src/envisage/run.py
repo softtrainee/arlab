@@ -37,11 +37,10 @@ from src.helpers.initialization_parser import InitializationParser
 from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay
 from globals import open_logger_on_launch
-from pyface.message_dialog import warning
-
-logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
 if open_logger_on_launch:
     do_later(gLoggerDisplay.edit_traits)
+
+logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
 
 PACKAGE_DICT = dict(
                    DatabasePlugin='src.database.plugins.database_plugin',

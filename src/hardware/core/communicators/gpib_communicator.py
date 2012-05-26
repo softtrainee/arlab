@@ -58,7 +58,7 @@ class GPIBCommunicator(Communicator):
 #        self.handle.ibask(self.dev_handle)
         if self.handle is None:
             if verbose:
-                self.info('no handle    {}'.format(cmd))
+                self.info('no handle    {}'.format(cmd.strip()))
             return
 
         self._lock.acquire()

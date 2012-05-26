@@ -125,8 +125,11 @@ from src.helpers.paths import doc_html_dir
 
 class LoggerAction(Action):
     def perform(self, event):
-
-        gLoggerDisplay.edit_traits(parent=self.window.control)
+        if not gLoggerDisplay.opened:
+            gLoggerDisplay.edit_traits()
+        else:
+            gLoggerDisplay.ui.control.Raise()
+        #parent=self.window.control)
 
 
 class GotoHelpPageAction(Action):

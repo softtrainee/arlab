@@ -19,15 +19,16 @@
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.database.adapters.database_adapter import DatabaseAdapter, \
-    PathDatabaseAdapter
+from src.database.adapters.database_adapter import PathDatabaseAdapter
 from src.database.selectors.device_scan_selector import DeviceScanSelector
-from src.database.orms.device_scan_orm import ScanTable, DeviceTable, ScanPathTable
+from src.database.orms.device_scan_orm import ScanTable, DeviceTable, \
+    ScanPathTable
 from src.helpers.paths import device_scan_db
 
 class DeviceScanAdapter(PathDatabaseAdapter):
     test_func = None
     selector_klass = DeviceScanSelector
+    path_table = ScanPathTable
 #==============================================================================
 #    getters
 #==============================================================================

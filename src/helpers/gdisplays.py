@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 #============= standard library imports ========================
 
@@ -27,6 +25,7 @@ try:
     sw, sh = wx.DisplaySize()
 except:
     sw, sh = 1200, 900
+
 gWarningDisplay = RichTextDisplay(
                                   title='Warnings',
                                   width=450,
@@ -34,8 +33,10 @@ gWarningDisplay = RichTextDisplay(
                                   )
 gLoggerDisplay = RichTextDisplay(title='Logger',
                                  width=450,
-                                 x=sw - 450,
-                                 y=20
+                                 x=sw - 500,
+                                 y=20,
+                                 default_color='black',
+                                 bg_color='light grey'
                                  )
 gTraceDisplay = ErrorDisplay(title='Error Stack',
                                  width=825,

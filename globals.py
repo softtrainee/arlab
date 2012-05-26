@@ -14,22 +14,16 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-
-
-import os
-
-
-beta = False if os.path.basename(os.path.dirname(__file__)) == 'pychron' else True
-use_shared_memory = False
+#use_shared_memory = False
 
 use_debug_logger = False
 #use_debug_logger = True
 
-open_logger_on_launch = False
+open_logger_on_launch = True
 
-show_warnings = False
+#force display flags
+show_warnings = True
+show_infos = True
 
 #using ipc_dgram is currently not working
 ipc_dgram = False
@@ -41,4 +35,6 @@ initialize_zoom = True
 ignore_initialization_warnings = True
 ignore_connection_warnings = True
 
+#use_ipc = False == embed the remote hardware servers into pychron
+#= True == an instance of RemoteHardwareServer must be launched
 use_ipc = False
