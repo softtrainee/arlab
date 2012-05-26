@@ -66,10 +66,11 @@ if __name__ == '__main__':
 
     dbs = VideoSelector(_db=db)
 
-    dbs.criteria = 'vm_recordingii'
-    dbs.parameter = 'VideoTable.rid'
-    dbs.comparator = 'like'
-    dbs._execute_query()
+#    dbs.criteria = 'vm_recordingii'
+#    dbs.parameter = 'VideoTable.rid'
+#    dbs.comparator = 'like'
+#    dbs._execute_query()
+    dbs.load_recent()
 #    si = dbs.results[0]
 #    from pyface.timer.do_later import do_later
 #    from pyface.timer.do_later import do_after
