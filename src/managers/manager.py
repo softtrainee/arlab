@@ -37,8 +37,7 @@ class ManagerHandler(ViewableHandler):
         
     '''
     def init(self, info):
-        if info.initialized:
-            info.object.initialized = True
+        info.object.initialized = True
 
     def closed(self, info, is_ok):
         '''
@@ -215,8 +214,11 @@ class Manager(ConfigLoadable, Viewable):
 
         self.flags.append(Flag(f))
 
-    def get_flag(self, name):
+    def add_timed_flag(self, f, t):
+        from src.hardware.flag import TimedFlag
+        self.flags.append(TimedFlag(f, t))
 
+    def get_flag(self, name):
         return next((f for f in self.flags if f.name == name), None)
 
     def set_flag(self, name):

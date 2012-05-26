@@ -300,7 +300,18 @@ def power_test():
         c.ask('Disable')
         time.sleep(1)
 
+def timed_flag_test():
+    c = Client(
+              port=1061,
+              ask_id='E')
+    for _ in range(3):
+        c.ask('Open ChamberPumpTimeFlag')
 
+        while 1:
+            if not int(c.ask('Read ChamberPumpTimeFlag')):
+                break
+            time.sleep(1)
+        time.sleep(1)
 if __name__ == '__main__':
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
@@ -309,8 +320,8 @@ if __name__ == '__main__':
 
 #    multiplex_test()
 #    laser_client()
-    power_test()
-
+#    power_test()
+    timed_flag_test()
 
     #===========================================================================
     #Check Remote launch snippet 

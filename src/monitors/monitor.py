@@ -85,9 +85,7 @@ class Monitor(ConfigLoadable):
                         methods are prefaced with the class name
                         _LaserMonitor__check_duration
                     '''
-                    print self._invalid_checks
                     if '__check' in h and h not in self._invalid_checks:
-                        print h
                         func = getattr(self, h)
                         func()
                         if self.kill:

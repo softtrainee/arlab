@@ -181,6 +181,7 @@ class Initializer(Loggable):
             managers = parser.get_managers(mp)
             devices = parser.get_devices(mp)
             flags = parser.get_flags(mp)
+            timed_flags = parser.get_timed_flags(mp, element=True)
 
         pdmax = 35
         if self.pd is None or self.pd.progress_bar is None:
@@ -198,6 +199,11 @@ class Initializer(Loggable):
             self.info('loading flags - {}'.format(', '.join(flags)))
             self.load_flags(manager, flags)
 
+        if timed_flags:
+            s = ', '.join([f.text.strip() for f in timed_flags])
+            self.info('loading timed flags - {}'.format(s))
+            self.load_timed_flags(manager, timed_flags)
+
         if manager is not None:
             self.info('finish {} loading'.format(name))
             manager.finish_loading()
@@ -207,6 +213,10 @@ class Initializer(Loggable):
     def load_flags(self, manager, flags):
         for f in flags:
             manager.add_flag(f)
+
+    def load_timed_flags(self, manager, flags):
+        for f in flags:
+            manager.add_timed_flag(f.text.strip(), f.get('duration'))
 
     def load_managers(
         self,
