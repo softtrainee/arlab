@@ -22,8 +22,9 @@ from traitsui.api import View, Item, Group, VGroup
 import os
 import csv
 #============= local library imports  ==========================
-from .db_selector import DBSelector, DBResult
+from .db_selector import DBSelector
 from src.database.orms.power_map_orm import PowerMapTable
+from src.database.selectors.base_db_result import DBResult
 #from src.managers.data_managers.h5_data_manager import H5DataManager
 
 

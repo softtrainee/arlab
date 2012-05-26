@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +14,18 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-from traits.api import Str
-
-from src.database.selectors.db_selector import DBSelector, DBResult
-from src.database.orms.massspec_orm import AnalysesTable
-from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
+#============= enthought library imports =======================
 from traitsui.tabular_adapter import TabularAdapter
+#============= standard library imports ========================
+#============= local library imports  ==========================
 
-class MassSpecDBResult(DBResult):
-    rid = Str
+from src.database.selectors.db_selector import DBSelector
+
+from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
+from src.database.selectors.base_db_result import RIDDBResult
+
+class MassSpecDBResult(RIDDBResult):
+    pass
 
 class MassSpecDBResultsAdapter(TabularAdapter):
     columns = [('RunID', 'rid')
@@ -63,7 +64,6 @@ class MassSpecSelector(DBSelector):
     def _search_(self):
         db = self._db
         if db is not None:
-            print self.parameter
             tablename, param = self.parameter.split('.')
 
             c = self._convert_comparator(self.comparator)
@@ -73,7 +73,7 @@ class MassSpecSelector(DBSelector):
             for i, r in enumerate(results):
                 r = MassSpecDBResult(_db_result=r,
                                      rid=r.RID,
-                                     ridt=i
+#                                     ridt=i
                                      )
                 self.results.append(r)
 
@@ -85,4 +85,4 @@ if __name__ == '__main__':
     m._db = db = MassSpecDatabaseAdapter(dbname='massspecdata_local')
     db.connect()
     m.configure_traits()
-#======== EOF ================================
+#============= EOF =============================================

@@ -83,6 +83,7 @@ class FusionsLaserManager(LaserManager):
     data_manager = None
     _data_manager_lock = None
 
+    _current_rid = None
 
     def _record_fired(self):
         if self._recording_power_state:
@@ -180,7 +181,8 @@ class FusionsLaserManager(LaserManager):
 
     def start_power_recording(self, rid):
         m = 'power and brightness' if self.record_brightness else 'power'
-        self.info('start {} recording'.format(m))
+        self.info('start {} recording for {}'.format(m, rid))
+        self._current_rid = rid
 
         #zoom in for recording
         self._previous_zoom = self.zoom
@@ -239,8 +241,9 @@ class FusionsLaserManager(LaserManager):
             self.brightness_timer = None
             if save:
                 db = self.get_power_database()
-                if db.connect(test=True):
-                    dbp = db.add_power_record()
+                if db.connect():
+                    dbp = db.add_power_record(rid=str(self._current_rid))
+                    self._current_rid = None
                     db.add_power_path(dbp, self.data_manager.get_current_path())
                     db.commit()
 

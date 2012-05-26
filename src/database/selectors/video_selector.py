@@ -15,27 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Float, Instance, Button, Int, Bool, Property, Str
-from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor
+from traits.api import String, Instance, Button, Int, Bool
+from traitsui.api import Item, VGroup, HGroup, RangeEditor
+from pyface.timer.do_later import do_after
 #============= standard library imports ========================
 import os
+import time
+from threading import Thread, Event
 #============= local library imports  ==========================
-from src.database.selectors.db_selector import DBSelector, DBResult
+from src.database.selectors.db_selector import DBSelector
 from src.database.orms.video_orm import VideoTable
 from src.image.image_editor import ImageEditor
 from src.image.image import Image
 from src.image.video import Video
-from pyface.timer.do_later import do_after
-from threading import Thread, Event
-import time
-from traitsui.tabular_adapter import TabularAdapter
+from src.database.selectors.base_db_result import RIDDBResult
+from src.database.selectors.base_results_adapter import RIDResultsAdapter
 
-class VideoResultsAdapter(TabularAdapter):
-    columns = [('RunID', 'runid'),
-               ('Date', 'rundate'),
-               ('Time', 'runtime')]
 
-class VideoResult(DBResult):
+class VideoResult(RIDDBResult):
     title_str = 'VideoRecord'
     video_image = Instance(Image, ())
     video = Instance(Video, ())
@@ -47,8 +44,6 @@ class VideoResult(DBResult):
     _playing = Bool(False)
     _stepping = Bool(False)
 
-#    frame = Property(depends_on='frame')
-#    frame = Int(1)
     frame = Int(1)
 
     nframes = Int(100)
@@ -61,21 +56,7 @@ class VideoResult(DBResult):
     step_flag = None
 
     exportable = False
-    runid = Str
-#    _paused = False
 
-#    def _get_frame(self):
-#        return self.frame
-#
-#    def _set_frame(self, v):
-##        print v / float(self.nframes)
-#        def _sf():
-#            self.video.set_video_pos(v / float(self.nframes))
-#            f = self.video.get_frame()
-#            do_after(1, self.video_image.load, f)
-#        t = Thread(target=_sf)
-#        t.start()
-##        self.video_image.load()
     def initialize(self):
         src = os.path.join(self.directory, self.filename)
         vid = self.video
@@ -113,10 +94,7 @@ class VideoResult(DBResult):
 
     def _play_fired(self):
         if not self._playing:
-#            if not self._paused:
-#                self.video.set_video_pos(0)
 
-#            self._paused = False
             self._stepping = False
             self._playing = True
             self._flag_factory()
@@ -137,7 +115,6 @@ class VideoResult(DBResult):
         vid = self.video
         fps = vid.get_fps()
         try:
-#            self.nframes = nframes = int(self.video.get_nframes())
             step = 1
             end = self.nframes
             if rewind:
@@ -207,7 +184,7 @@ class VideoSelector(DBSelector):
     date_str = 'rundate'
     query_table = 'VideoTable'
     result_klass = VideoResult
-    tabular_adapter = VideoResultsAdapter
+    tabular_adapter = RIDResultsAdapter
 
     def _get__parameters(self):
 

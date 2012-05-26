@@ -18,11 +18,12 @@
 from traits.api import String, Float
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.selectors.db_selector import DBSelector, DBResult
-from src.database.orms.device_scan_orm import ScanTable, DeviceTable
+from src.database.selectors.db_selector import DBSelector
+from src.database.orms.device_scan_orm import ScanTable
 
 from src.graph.time_series_graph import TimeSeriesGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.database.selectors.base_db_result import DBResult
 
 class ScanResult(DBResult):
     title_str = 'Device Scan Record'

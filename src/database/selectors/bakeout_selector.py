@@ -15,16 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, String, Date, Time, Instance, DelegatesTo
-from traitsui.api import View, Item, \
-    HGroup, VGroup, Group, spring
-from traitsui.tabular_adapter import TabularAdapter
+from traits.api import String, Instance, DelegatesTo
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable
-from .db_selector import DBSelector, DBResult
+from .db_selector import DBSelector
+from src.database.selectors.base_db_result import DBResult
 
 
 class BakeoutDBResult(DBResult):
