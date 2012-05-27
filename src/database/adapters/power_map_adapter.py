@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,25 +14,14 @@
 # limitations under the License.
 #===============================================================================
 
+#============= enthought library imports =======================
 
+#============= standard library imports ========================
+#============= local library imports  ==========================
 
-#from traits.api import HasTraits, Str, String, Button, List, Any, Long, Event, \
-#    Date, Time, Instance, Dict, DelegatesTo, Property
-#from traitsui.api import View, Item, TabularEditor, EnumEditor, \
-#    HGroup, VGroup, Group, spring
-#from traitsui.tabular_adapter import TabularAdapter
-#
-#from datetime import datetime, timedelta
-#import os
-
-from .database_adapter import DatabaseAdapter
 from src.database.selectors.power_map_selector import PowerMapSelector
 from src.database.orms.power_map_orm import PowerMapTable, PowerMapPathTable
-#from src.database.selectors.bakeout_selector import BakeoutDBSelector
-#from src.helpers.datetime_tools import  get_date
-#from src.loggable import Loggable
-#from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
-
+from src.database.adapters.database_adapter import DatabaseAdapter
 
 
 class PowerMapAdapter(DatabaseAdapter):
@@ -76,5 +65,4 @@ if __name__ == '__main__':
 #                    )
 
 
-#======== EOF ================================
-
+#============= EOF =============================================

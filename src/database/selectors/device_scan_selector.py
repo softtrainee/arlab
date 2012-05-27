@@ -31,13 +31,22 @@ class ScanResult(DBResult):
 
     def load_graph(self):
         xi = None
-        g = TimeSeriesGraph()
+        g = TimeSeriesGraph(container_dict=dict(padding=10))
         dm = self._data_manager_factory()
+        dm.open_data(self._get_path())
 
-        g.new_plot()
+        g.new_plot(xtitle='Time',
+                   ytitle='Value',
+                   padding=[40, 10, 10, 40]
+                   )
+        xi = None
+        yi = None
         if isinstance(dm, H5DataManager):
             s1 = dm.get_table('scan1', 'scans')
-            xi, yi = zip(*[(r['time'], r['value']) for r in s1.iterrows()])
+            if s1 is not None:
+                xi, yi = zip(*[(r['time'], r['value']) for r in s1.iterrows()])
+            else:
+                self._loadable = False
         else:
             da = dm.read_data()
             if da is not None:
@@ -48,9 +57,9 @@ class ScanResult(DBResult):
 
         self.graph = g
 
-    def _load_hook(self, dbr):
-        #load the datamanager to set _none_loadable flag
-        self._data_manager_factory()
+#    def _load_hook(self, dbr):
+#        #load the datamanager to set _none_loadable flag
+#        self._data_manager_factory()
 
 class DeviceScanSelector(DBSelector):
     parameter = String('ScanTable.rundate')

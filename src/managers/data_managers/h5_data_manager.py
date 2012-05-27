@@ -135,15 +135,14 @@ class H5DataManager(DataManager):
         try:
             self._frame = openFile(path, 'r')
             return True
-        except ValueError:
+        except Exception:
             return False
 
     def close(self):
         try:
-#            self.info('saving data to file')
             self._frame.close()
-        except Exception, e:
-            print e
+        except Exception:
+            pass
 
     def kill(self):
         self.close()

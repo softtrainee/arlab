@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traitsui.tabular_adapter import TabularAdapter
-
+from traits.api import Property
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class BaseResultsAdapter(TabularAdapter):
@@ -25,8 +25,13 @@ class BaseResultsAdapter(TabularAdapter):
                ('Time', 'runtime')
                ]
 
+    runtime_text = Property
+
+    def _get_runtime_text(self):
+        return self.item.runtime.strftime('%H:%M:%S')
+
     def get_bg_color(self, obj, trait, row, *args):
-        if obj.results[row].isloadable():
+        if obj.results[row]._loadable:
             return 'white'
         else:
             return '#FF4D4D'

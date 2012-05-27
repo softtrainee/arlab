@@ -37,18 +37,16 @@ class PowerMapProcessor:
     levels = 15
     interpolation_factor = 5
 
-#    def load_graph(self, table, window_title = ''):
     def load_graph(self, reader, window_title=''):
         '''
         '''
 
-        cg = ContourGraph(window_width=725,
-                          window_height=635)
-    #    cg.plotcontainer = cg._container_factory(type = 'h')
+        cg = ContourGraph()
 
         z, metadata = self._extract_power_map_data(reader)
         x, y, z = self._prep_2D_data(z)
-
+        w = 300
+        h = 300
         bounds = metadata['bounds']
         cplot = cg.new_plot(
                             #add=False,
@@ -56,7 +54,7 @@ class PowerMapProcessor:
                             padding_left=20,
                             padding_right=5,
                             resizable='',
-                            bounds=[400, 400],
+                            bounds=[w, h],
                           )
         cplot.index_axis.title = 'mm'
         cplot.value_axis.title = 'mm'
@@ -67,6 +65,14 @@ class PowerMapProcessor:
                       cmap=self.color_map,
                       colorbar=True,
                       levels=self.levels)
+
+        #plot max location
+        from scipy.ndimage import maximum_position
+        xm, ym = maximum_position(z)
+        f = lambda a, i: [a[i] * abs(bounds[0] - bounds[1]) + bounds[0]]
+        cg.new_series(x=f(x, xm), y=f(y, ym), type='scatter',
+                      marker='plus',
+                      color='black')
 
         cpolyplot = cplot.plots['plot0'][0]
         options = dict(style='cmap_scatter',
@@ -81,7 +87,7 @@ class PowerMapProcessor:
                             padding_right=5,
                             padding_top=30,
                             resizable='',
-                            bounds=[400, 100],
+                            bounds=[w, 100],
                             title='Power Map'
                             )
 
@@ -95,7 +101,7 @@ class PowerMapProcessor:
                               padding_left=0,
                               padding_bottom=60,
                               resizable='',
-                              bounds=[120, 400]
+                              bounds=[120, h]
                              )
 
         p_yaxis.index_axis.visible = False
@@ -116,7 +122,7 @@ class PowerMapProcessor:
                                            'metadata_changed')
 
         container = cg._container_factory(type='v',
-                                          bounds=[400, 600],
+                                          bounds=[w, h + 200],
                                           resizable=''
                                           )
         container.add(cplot)
