@@ -28,48 +28,52 @@ from src.database.selectors.base_db_result import DBResult
 
 class PowerMapResult(DBResult):
     title_str = 'PowerMap'
+    resizable = False
     def load_graph(self):
         data = os.path.join(self.directory, self.filename)
         from src.data_processing.power_mapping.power_map_processor import PowerMapProcessor
         pmp = PowerMapProcessor()
         if data.endswith('.h5'):
             reader = self._data_manager_factory()
+            reader.open_data(data)
         else:
             with open(data, 'r') as f:
                 reader = csv.reader(f)
                 #trim off header
                 reader.next()
         self.graph = pmp.load_graph(reader)
+        self.graph.width = 625
+        self.graph.height = 500
 
 
-    def traits_view(self):
-        interface_grp = VGroup(
-                          VGroup(Item('_id', style='readonly', label='ID'),
-                    Item('rundate', style='readonly', label='Run Date'),
-                    Item('runtime', style='readonly', label='Run Time'),
-                    Item('directory', style='readonly'),
-                    Item('filename', style='readonly')),
-                VGroup(Item('summary',
-                            show_label=False,
-                            style='readonly')),
-                    label='Info',
-                    )
-
-        return View(
-                    Group(
-                    interface_grp,
-                    Item('graph', width=0.75, show_label=False,
-                         style='custom'),
-                    layout='tabbed'
-                    ),
-
-                    width=800,
-                    height=0.85,
-                    resizable=True,
-                    x=self.window_x,
-                    y=self.window_y,
-                    title=self.title
-                    )
+#    def traits_view(self):
+#        interface_grp = VGroup(
+#                          VGroup(Item('_id', style='readonly', label='ID'),
+#                    Item('rundate', style='readonly', label='Run Date'),
+#                    Item('runtime', style='readonly', label='Run Time'),
+#                    Item('directory', style='readonly'),
+#                    Item('filename', style='readonly')),
+#                VGroup(Item('summary',
+#                            show_label=False,
+#                            style='readonly')),
+#                    label='Info',
+#                    )
+#
+#        return View(
+#                    Group(
+#                    interface_grp,
+#                    Item('graph', width=0.75, show_label=False,
+#                         style='custom'),
+#                    layout='tabbed'
+#                    ),
+#
+#                    width=800,
+#                    height=0.85,
+#                    resizable=True,
+#                    x=self.window_x,
+#                    y=self.window_y,
+#                    title=self.title
+#                    )
 
 
 class PowerMapSelector(DBSelector):

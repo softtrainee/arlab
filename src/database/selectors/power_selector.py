@@ -21,7 +21,6 @@ import os
 #============= local library imports  ==========================
 from src.database.selectors.db_selector import DBSelector
 from src.database.orms.power_orm import PowerTable
-from src.graph.graph import Graph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.selectors.base_db_result import RIDDBResult
 from src.database.selectors.base_results_adapter import RIDResultsAdapter
@@ -32,8 +31,7 @@ class PowerResult(RIDDBResult):
     request_power = Float
 
     def load_graph(self):
-
-        g = Graph(container_dict=dict(padding=10))
+        g = self._graph_factory()
 
         dm = self.data_manager
         internal = dm.get_table('internal', 'Power')

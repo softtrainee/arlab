@@ -50,7 +50,7 @@ class DBResult(BaseDBResult):
 
     export_button = Button('Export CSV')
     exportable = True
-
+    resizable = True
     def _export_button_fired(self):
         self._export_csv()
 
@@ -80,25 +80,49 @@ class DBResult(BaseDBResult):
         pass
 
     def isloadable(self):
+        dm = self._data_manager_factory()
+        try:
+            self._loadable = dm.open_data(self._get_path())
+        except Exception:
+            self._loadable = False
+        finally:
+            dm.close()
         return self._loadable
 
+    def _get_path(self):
+        return os.path.join(self.directory, self.filename)
+
     def _data_manager_factory(self):
-        dm = self.data_manager
-        if dm is None:
-            data = os.path.join(self.directory, self.filename)
-            _, ext = os.path.splitext(self.filename)
-            if ext == '.h5':
-                dm = H5DataManager()
-                if os.path.isfile(data):
-                    self._loadable = dm.open_data(data)
-            else:
-                self._loadable = False
-                dm = CSVDataManager()
+#        dm = self.data_manager
+#        if dm is None:
+        data = self._get_path()
+        _, ext = os.path.splitext(self.filename)
+
+        if ext == '.h5':
+            dm = H5DataManager()
+            if os.path.isfile(data):
+                #is it wise to actually open the file now?
+#                    self._loadable = dm.open_data(data)
+                self._loadable = True
+
+        else:
+            self._loadable = False
+            dm = CSVDataManager()
 
         return dm
 
     def load_graph(self):
         pass
+
+    def _graph_factory(self, klass=None):
+
+        if klass is None:
+            klass = Graph
+        g = klass(container_dict=dict(padding=10),
+                  width=500,
+                  height=300
+                  )
+        return g
 
     def _get_additional_tabs(self):
         return []
@@ -146,7 +170,7 @@ class DBResult(BaseDBResult):
 
 #                    width=800,
 #                    height=0.85,
-                    resizable=True,
+                    resizable=self.resizable,
                     x=self.window_x,
                     y=self.window_y,
                     title=self.title

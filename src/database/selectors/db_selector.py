@@ -67,7 +67,7 @@ class DBSelector(Loggable):
     query_table = None
     result_klass = None
 
-    omit_bogus = Bool(False)
+    omit_bogus = Bool(True)
 
     reverse_sort = False
     _sort_field = None
@@ -190,17 +190,6 @@ class DBSelector(Loggable):
 
         db = self._db
         if db is not None:
-#            self.info(s)
-
-#            if self.comparator == 'like':
-#                sess = self._db.get_session()
-#
-#                from src.database.orms.video_orm import VideoTable
-#                c = '{}%'.format(self.criteria)
-#                q = sess.query(VideoTable).filter(VideoTable.rid.like(c))
-#                s = 'VideoTable.rid.like({})'.format(c)
-#                dbs = q.all()
-#            else:
 
             s = self._get_filter_str(param, comp, criteria)
             if s is None:
@@ -228,6 +217,7 @@ class DBSelector(Loggable):
                 for di in dbs:
                     d = self.result_klass(_db_result=di)
                     d.load()
+
                     if d.isloadable() or not self.omit_bogus:
                         self.results.append(d)
 
@@ -238,6 +228,9 @@ class DBSelector(Loggable):
 
         if s is not None:
             for si in s:
+                if not si._loadable:
+                    continue
+
                 sid = si._id
                 if sid in self.opened_windows:
                     c = self.opened_windows[sid].control

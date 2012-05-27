@@ -71,6 +71,4 @@ if __name__ == '__main__':
     s = RPCServer(manager=lm)
     s.bootstrap()
 
-    c = RPCClient()
-    c.connect()
 #============= EOF =============================================

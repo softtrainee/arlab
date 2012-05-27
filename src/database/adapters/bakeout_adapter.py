@@ -20,6 +20,7 @@
 from src.database.adapters.database_adapter import PathDatabaseAdapter
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable, BakeoutPathTable
 from src.database.selectors.bakeout_selector import BakeoutDBSelector
+from src.helpers.paths import bakeout_db
 
 
 class BakeoutAdapter(PathDatabaseAdapter):
@@ -57,12 +58,12 @@ class BakeoutAdapter(PathDatabaseAdapter):
 
 
 if __name__ == '__main__':
-    db = BakeoutAdapter(dbname='bakeoutdb',
-                            password='Argon')
+    db = BakeoutAdapter(dbname=bakeout_db,
+                            kind='sqlite')
     db.connect()
 
     dbs = BakeoutDBSelector(_db=db)
-    dbs._execute_()
+    dbs.load_recent()
     dbs.configure_traits()
 #    print db.get_bakeouts(join_table='ControllerTable',
 #                    filter_str='ControllerTable.script="---"'

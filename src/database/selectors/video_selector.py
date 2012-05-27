@@ -56,11 +56,14 @@ class VideoResult(RIDDBResult):
     step_flag = None
 
     exportable = False
+    resizable = False
+
+    def isloadable(self):
+        return os.path.isfile(self._get_path())
 
     def initialize(self):
-        src = os.path.join(self.directory, self.filename)
         vid = self.video
-        vid.open(identifier=src, force=True)
+        vid.open(identifier=self._get_path(), force=True)
         self.video_image.load(vid.get_frame())
         self.nframes = int(vid.get_nframes())
 
