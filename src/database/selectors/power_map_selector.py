@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from traits.api import String
-from traitsui.api import View, Item, Group, VGroup
 #============= standard library imports ========================
 import os
 import csv
@@ -46,51 +45,12 @@ class PowerMapResult(DBResult):
         self.graph.height = 500
 
 
-#    def traits_view(self):
-#        interface_grp = VGroup(
-#                          VGroup(Item('_id', style='readonly', label='ID'),
-#                    Item('rundate', style='readonly', label='Run Date'),
-#                    Item('runtime', style='readonly', label='Run Time'),
-#                    Item('directory', style='readonly'),
-#                    Item('filename', style='readonly')),
-#                VGroup(Item('summary',
-#                            show_label=False,
-#                            style='readonly')),
-#                    label='Info',
-#                    )
-#
-#        return View(
-#                    Group(
-#                    interface_grp,
-#                    Item('graph', width=0.75, show_label=False,
-#                         style='custom'),
-#                    layout='tabbed'
-#                    ),
-#
-#                    width=800,
-#                    height=0.85,
-#                    resizable=True,
-#                    x=self.window_x,
-#                    y=self.window_y,
-#                    title=self.title
-#                    )
-
-
 class PowerMapSelector(DBSelector):
     parameter = String('PowerMapTable.rundate')
-    date_str = 'rundate'
-#    tabular_adapter = PowerMapResultsAdapter
+
     result_klass = PowerMapResult
-    query_table = 'PowerMapTable'
+    query_table = PowerMapTable
 
-    def _get__parameters(self):
-
-        b = PowerMapTable
-
-        f = lambda x:[str(col)
-                           for col in x.__table__.columns]
-        params = f(b)
-        return list(params)
 
     def _get_selector_records(self, **kw):
         return self._db.get_powermaps(**kw)

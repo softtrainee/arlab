@@ -30,17 +30,8 @@ class PowerAdapter(PathDatabaseAdapter):
 #    getters
 #==============================================================================
 
-    def get_power_records(self, join_table=None, filter_str=None):
-        try:
-            if isinstance(join_table, str):
-                join_table = globals()[join_table]
-
-            q = self._get_query(PowerTable, join_table=join_table,
-                                 filter_str=filter_str)
-            return q.all()
-        except Exception, e:
-            print e
-
+    def get_power_records(self, **kw):
+        return self._get_items(PowerTable, globals(), **kw)
 #=============================================================================
 #   adder
 #=============================================================================

@@ -31,17 +31,8 @@ class VideoAdapter(DatabaseAdapter):
 #    getters
 #==============================================================================
 
-    def get_video_records(self, join_table=None, filter_str=None):
-        try:
-            if isinstance(join_table, str):
-                join_table = globals()[join_table]
-
-            q = self._get_query(VideoTable, join_table=join_table,
-                                 filter_str=filter_str)
-            return q.all()
-        except Exception, e:
-            print e
-
+    def get_video_records(self, **kw):
+        return self._get_items(VideoTable, globals(), **kw)
 #=============================================================================
 #   adder
 #=============================================================================

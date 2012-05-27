@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Str, String, Button, List, Any, Event, \
-    Dict, Property, Bool, on_trait_change
+    Dict, Property, Bool, Int
 
 from traitsui.api import View, Item, TabularEditor, EnumEditor, \
     HGroup, VGroup, spring
@@ -71,13 +71,17 @@ class DBSelector(Loggable):
 
     reverse_sort = False
     _sort_field = None
+
+    limit = Int(100)
+    date_str = 'rundate'
+
     def __init__(self, *args, **kw):
         super(DBSelector, self).__init__(*args, **kw)
         self._load_hook()
 
     def load_recent(self):
         self._execute_query(
-                            param='{}.{}'.format(self.query_table,
+                            param='{}.{}'.format(self.query_table.__tablename__,
                                            'rundate'),
                             comp='=',
                             criteria='this month'
@@ -112,7 +116,7 @@ class DBSelector(Loggable):
                                multi_select=True
                                )
         v = View(
-
+                 HGroup(spring, Item('limit')),
                  Item('results', style='custom',
                       editor=editor,
                       show_label=False
@@ -178,6 +182,10 @@ class DBSelector(Loggable):
         c = '"{}"'.format(c)
         return ' '.join((param, comp, c))
 
+    def _get_order(self):
+        from sqlalchemy.sql.expression import desc
+        return [desc(getattr(self.query_table, attr)) for attr in ['rundate', 'runtime']]
+
     def _execute_query(self, param=None, comp=None, criteria=None):
         if param is None:
             param = self.parameter
@@ -196,9 +204,12 @@ class DBSelector(Loggable):
                 return
 
             table, _col = param.split('.')
-            kw = dict(filter_str=s)
+            kw = dict(filter_str=s,
+                      limit=self.limit,
+                      order=self._get_order()
+                      )
 
-            if not table == self.query_table:
+            if not table == self.query_table.__tablename__:
                 kw['join_table'] = table
 
             elif self.join_table:
@@ -207,6 +218,7 @@ class DBSelector(Loggable):
                                                                self.join_table_col,
                                                                         self.join_table_parameter
                                                                         )
+
 
             dbs = self._get_selector_records(**kw)
 
@@ -287,6 +299,9 @@ class DBSelector(Loggable):
     def _omit_bogus_changed(self):
         self._execute_query()
 
+    def _limit_changed(self):
+        self._execute_query()
+
     def _column_clicked_changed(self, event):
         values = event.editor.value
 
@@ -308,6 +323,15 @@ class DBSelector(Loggable):
         elif c == '>=':
             c = '__ge__'
         return c
+
+    def _get__parameters(self):
+
+        b = self.query_table
+
+        f = lambda x:[str(col)
+                           for col in x.__table__.columns]
+        params = f(b)
+        return list(params)
 
     def _between(self, p, l, g):
         return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)

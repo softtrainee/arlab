@@ -25,6 +25,7 @@ from sqlalchemy.orm import sessionmaker
 from src.loggable import Loggable
 from src.helpers.datetime_tools import get_datetime
 import os
+from sqlalchemy.sql.expression import asc, desc
 ATTR_KEYS = ['kind', 'user', 'host', 'dbname', 'password']
 def create_url(kind, user, hostname, db, password=None):
     '''
@@ -242,16 +243,35 @@ class DatabaseAdapter(Loggable):
         args['filename'] = n
         return args
 
-    def _get_items(self, table, gtables, join_table=None, filter_str=None):
+    def _get_items(self, table, gtables,
+                   join_table=None, filter_str=None,
+                   limit=None,
+                   order=None):
         try:
             if isinstance(join_table, str):
                 join_table = gtables[join_table]
 
             q = self._get_query(table, join_table=join_table,
                                  filter_str=filter_str)
-            return q.all()
+            if order:
+                for o in order \
+                        if isinstance(order, list) else [order]:
+                    q = q.order_by(o)
+
+            if limit:
+                q = q.limit(limit)
+
+            #reorder based on id
+            if order:
+                q = q.from_self()
+                q = q.order_by(table.id)
+
+            res = q.all()
+            return res
+
         except Exception, e:
             print e
+
 
     def open_selector(self):
         s = self._selector_factory()

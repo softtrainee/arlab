@@ -32,16 +32,8 @@ class PowerMapAdapter(DatabaseAdapter):
 #    getters
 #==============================================================================
 
-    def get_powermaps(self, join_table=None, filter_str=None):
-        try:
-            if isinstance(join_table, str):
-                join_table = globals()[join_table]
-
-            q = self._get_query(PowerMapTable, join_table=join_table,
-                                 filter_str=filter_str)
-            return q.all()
-        except Exception, e:
-            print e
+    def get_powermaps(self, **kw):
+        return self._get_items(PowerMapTable, globals(), **kw)
 
 #=============================================================================
 #   adder

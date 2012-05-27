@@ -90,7 +90,7 @@ class BakeoutDBResult(DBResult):
 class BakeoutDBSelector(DBSelector):
     parameter = String('BakeoutTable.rundate')
     date_str = 'rundate'
-    query_table = 'BakeoutTable'
+    query_table = BakeoutTable
     result_klass = BakeoutDBResult
 
     def _get__parameters(self):
