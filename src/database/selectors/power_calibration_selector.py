@@ -73,7 +73,7 @@ class PowerCalibrationResult(DBResult):
 
     def load_graph(self):
 
-        g = Graph(container_dict=dict(padding=10))
+        g = self._graph_factory()
         dm = self.data_manager
         calibration = dm.get_table('calibration', '/')
         g.new_plot(xtitle='Setpoint (%)',
@@ -106,18 +106,9 @@ class PowerCalibrationResult(DBResult):
 
 class PowerCalibrationSelector(DBSelector):
     parameter = String('PowerCalibrationTable.rundate')
-    date_str = 'rundate'
-    query_table = 'PowerCalibrationTable'
+    query_table = PowerCalibrationTable
     result_klass = PowerCalibrationResult
 
-    def _get__parameters(self):
-
-        b = PowerCalibrationTable
-
-        f = lambda x:[str(col)
-                           for col in x.__table__.columns]
-        params = f(b)
-        return list(params)
 
     def _get_selector_records(self, **kw):
         return self._db.get_calibration_records(**kw)

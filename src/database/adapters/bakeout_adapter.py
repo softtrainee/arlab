@@ -31,17 +31,8 @@ class BakeoutAdapter(PathDatabaseAdapter):
 #    getters
 #==============================================================================
 
-    def get_bakeouts(self, join_table=None, filter_str=None):
-        try:
-            if isinstance(join_table, str):
-                join_table = globals()[join_table]
-
-            q = self._get_query(BakeoutTable, join_table=join_table,
-                                 filter_str=filter_str)
-            return q.all()
-        except Exception, e:
-            print e
-
+    def get_bakeouts(self, **kw):
+        return self._get_items(BakeoutTable, globals(), **kw)
 #=============================================================================
 #   adder
 #=============================================================================

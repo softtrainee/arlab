@@ -64,18 +64,9 @@ class PowerResult(RIDDBResult):
 
 class PowerSelector(DBSelector):
     parameter = String('PowerTable.rundate')
-    date_str = 'rundate'
-    query_table = 'PowerTable'
+    query_table = PowerTable
     result_klass = PowerResult
     tabular_adapter = RIDResultsAdapter
-    def _get__parameters(self):
-
-        b = PowerTable
-
-        f = lambda x:[str(col)
-                           for col in x.__table__.columns]
-        params = f(b)
-        return list(params)
 
     def _get_selector_records(self, **kw):
         return self._db.get_power_records(**kw)

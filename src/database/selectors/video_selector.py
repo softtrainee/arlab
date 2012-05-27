@@ -184,19 +184,10 @@ class VideoResult(RIDDBResult):
 
 class VideoSelector(DBSelector):
     parameter = String('VideoTable.rundate')
-    date_str = 'rundate'
-    query_table = 'VideoTable'
+    query_table = VideoTable
     result_klass = VideoResult
     tabular_adapter = RIDResultsAdapter
 
-    def _get__parameters(self):
-
-        b = VideoTable
-
-        f = lambda x:[str(col)
-                           for col in x.__table__.columns]
-        params = f(b)
-        return list(params)
 
     def _get_selector_records(self, *args, **kw):
         return self._db.get_video_records(*args, **kw)

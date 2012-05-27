@@ -30,8 +30,7 @@ class ScanResult(DBResult):
     request_power = Float
 
     def load_graph(self):
-        xi = None
-        g = TimeSeriesGraph(container_dict=dict(padding=10))
+        g = self._graph_factory(klass=TimeSeriesGraph)
         dm = self._data_manager_factory()
         dm.open_data(self._get_path())
 
@@ -63,8 +62,7 @@ class ScanResult(DBResult):
 
 class DeviceScanSelector(DBSelector):
     parameter = String('ScanTable.rundate')
-    date_str = 'rundate'
-    query_table = 'ScanTable'
+    query_table = ScanTable
     result_klass = ScanResult
     join_table_col = String('name')
     join_table = String('DeviceTable')
@@ -73,15 +71,6 @@ class DeviceScanSelector(DBSelector):
         jt = self._join_table_parameters
         if jt:
             self.join_table_parameter = str(jt[0])
-
-    def _get__parameters(self):
-
-        b = ScanTable
-
-        f = lambda x:[str(col)
-                           for col in x.__table__.columns]
-        params = f(b)
-        return list(params)
 
     def _get_selector_records(self, **kw):
         return self._db.get_scans(**kw)
