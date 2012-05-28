@@ -39,15 +39,6 @@ class PowerAdapter(PathDatabaseAdapter):
         b = self._add_timestamped_item(PowerTable, commit, **kw)
         return b
 
-#    def add_power_path(self, power, path, commit=False, **kw):
-#        kw = self._get_path_keywords(path, kw)
-#        p = PowerPathTable(**kw)
-#        power.path = p
-#        if commit:
-#            self.commit()
-#        return p
-
-
 if __name__ == '__main__':
 #    db = PowerAdapter(dbname='co2laserdb',
 #                            password='Argon')

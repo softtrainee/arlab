@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Any, Dict, Bool
+from traits.api import HasTraits, Float, Any, Dict, Bool, Str
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
 #============= standard library imports ========================
@@ -49,6 +49,7 @@ class MarkupItem(HasTraits):
     active_color = (0, 1, 0)
     canvas = Any(transient=True)
     line_width = 1
+    name = Str
 
     def __init__(self, x, y, *args, **kw):
         self.x = x
@@ -88,14 +89,21 @@ class MarkupItem(HasTraits):
         self.y += dy
 
     def get_xy(self):
-        x, y = self.canvas.map_screen([(self.x, self.y)])[0]
+        x, y = self.x, self.y
+        offset = -0.5
+        if self.space == 'data':
+            x, y = self.canvas.map_screen([(self.x, self.y)])[0]
 #        offset = self.canvas.offset
-        offset = 1
+            offset = 1
         return x + offset, y + offset
 
     def get_wh(self):
-        (w, h), (ox, oy) = self.canvas.map_screen([(self.width, self.height), (0, 0)])
-        return w - ox, h - oy
+        w, h = self.width, self.height
+        if self.space == 'data':
+            (w, h), (ox, oy) = self.canvas.map_screen([(self.width, self.height), (0, 0)])
+            w, h = w - ox, h - oy
+
+        return w, h
 
     def set_canvas(self, canvas):
         self.canvas = canvas
@@ -125,15 +133,19 @@ class Rectangle(MarkupItem):
     x = 0
     y = 0
     use_border = True
+    fill = True
     def _render_(self, gc):
         x, y = self.get_xy()
         w, h = self.get_wh()
 #        gc.set_line_width(self.line_width)
         gc.rect(x, y, w, h)
-        gc.draw_path()
+        if self.fill:
+            gc.draw_path()
+            if self.use_border:
+                self._render_border(gc, x, y, w, h)
+        else:
+            gc.stroke_path()
 
-        if self.use_border:
-            self._render_border(gc, x, y, w, h)
 
         self._render_name(gc, x, y, w, h)
 #        if self.name:

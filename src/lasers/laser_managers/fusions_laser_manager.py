@@ -140,19 +140,17 @@ class FusionsLaserManager(LaserManager):
                 print 'record power ', e
 
     def open_power_graph(self, rid, path=None):
-        if self.power_graph is None:
-            g = StreamGraph(
-                        window_x=0.01,
-                        window_y=0.4,
-                        container_dict=dict(padding=5),
-#                        view_identifier='pychron.fusions.power_graph'
-                        )
-            self.power_graph = g
+        if self.power_graph is not None:
+            self.power_graph.close()
 
-        else:
-            g = self.power_graph
-            g.close()
-            g.clear()
+        del(self.power_graph)
+        g = StreamGraph(
+                    window_x=0.01,
+                    window_y=0.4,
+                    container_dict=dict(padding=5),
+#                        view_identifier='pychron.fusions.power_graph'
+                    )
+        self.power_graph = g
 
         g.window_title = 'Power Readback - {}'.format(rid)
         g.new_plot(data_limit=60,

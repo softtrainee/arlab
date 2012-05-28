@@ -81,9 +81,7 @@ if __name__ == '__main__':
     dbs._execute_query()
 
     dbs.configure_traits()
-#    print db.get_bakeouts(join_table='ControllerTable',
-#                    filter_str='ControllerTable.script="---"'
-#                    )
+
 
 
 #============= EOF =============================================
