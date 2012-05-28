@@ -205,6 +205,7 @@ class Image(HasTraits):
 #        kw = dict()
 #        if swap_rb:
 #            kw['flag'] = CV_CVTIMG_SWAP_RB
+#        print kw
         frame = self.get_frame(**kw)
         try:
             return frame.to_wx_bitmap()

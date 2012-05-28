@@ -39,7 +39,6 @@ class PowerMapAdapter(DatabaseAdapter):
 #   adder
 #=============================================================================
     def add_powermap(self, commit=False, **kw):
-#        b = PowerMapTable(**kw)
         b = self._add_timestamped_item(PowerMapTable, commit, **kw)
         return b
 
@@ -50,11 +49,7 @@ if __name__ == '__main__':
 
     dbs = PowerMapSelector(_db=db)
     dbs.load_recent()
-#    dbs._execute_()
     dbs.configure_traits()
-#    print db.get_bakeouts(join_table='ControllerTable',
-#                    filter_str='ControllerTable.script="---"'
-#                    )
 
 
 #============= EOF =============================================

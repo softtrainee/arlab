@@ -62,39 +62,3 @@ if __name__ == '__main__':
 
 
 #============= EOF =============================================
-#    def get_analyses_path(self):
-##        sess = self.get_session()
-##        q = sess.query(Paths)
-##        s = q.filter_by(name='analyses')
-#        q = self._get_query(Paths, name='analyses')
-#        p = q.one()
-#        p = p.path
-#        return p
-#
-#    def get_intercepts(self, analysis_id):
-#        q = self._get_query(Intercepts, analysis_id=analysis_id)
-#        return q.all()
-#
-#    def get_analysis_type(self, **kw):
-#        q = self._get_query(AnalysisTypes, **kw)
-#        return q.one()
-#
-#    def get_spectrometer(self, **kw):
-#        q = self._get_query(Spectrometers, **kw)
-#        return q.one()
-#    def add_intercepts(self, **kw):
-#        o = Intercepts(**kw)
-#        self._add_item(o)
-#
-#    def add_analysis(self, atype=None, spectype=None, **kw):
-#        if atype is not None:
-#            a = self.get_analysis_type(name=atype)
-#            kw['type_id'] = a._id
-#
-#        if spectype is not None:
-#            s = self.get_spectrometer(name=spectype)
-#            kw['spectrometer_id'] = s._id
-#
-#        o = Analyses(**kw)
-#        self._add_item(o)
-#        return o._id

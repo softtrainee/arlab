@@ -46,6 +46,9 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
             self.camera.current_position = (x, y)
 
     def add_markup_rect(self, x, y, w, h):
-        self.markupcontainer['croprect'] = Rectangle(x=x, y=y, width=w, height=h)
+        self.markupcontainer['croprect'] = Rectangle(x=x, y=y, width=w, height=h,
+                                                     canvas=self, space='screen',
+                                                     fill=False
+                                                     )
 
 #============= EOF ====================================

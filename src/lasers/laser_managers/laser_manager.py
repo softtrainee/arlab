@@ -299,14 +299,14 @@ class LaserManager(Manager):
     def _use_video_changed(self):
         if not self.use_video:
             self.stage_manager.video_manager.shutdown()
+        try:
+            sm = self._stage_manager_factory(self.stage_args)
 
-        sm = self._stage_manager_factory(self.stage_args)
+            sm.stage_controller = self.stage_manager.stage_controller
+            sm.stage_controller.parent = sm
+            sm.bind_preferences(self.id)
 
-        sm.stage_controller = self.stage_manager.stage_controller
-        sm.stage_controller.parent = sm
-        sm.bind_preferences(self.id)
-
-#        sm.canvas.crosshairs_offset = self.stage_manager.canvas.crosshairs_offset
+        #        sm.canvas.crosshairs_offset = self.stage_manager.canvas.crosshairs_offset
 #        bind_preference(sm.canvas, 'show_grids', '{}.show_grids'.format(self.id))
 #
 #        sm .canvas.change_grid_visibility()
@@ -320,9 +320,11 @@ class LaserManager(Manager):
 #
 #        sm.canvas.change_indicator_visibility()
 
-        sm.load()
+            sm.load()
 
-        self.stage_manager = sm
+            self.stage_manager = sm
+        except AttributeError:
+            pass
 
     #========================= views =========================
     def __stage__group__(self):

@@ -29,9 +29,10 @@ class FocusParameters(HasTraits):
     fstart = Float(20)
     fend = Float(10)
     step_scalar = Float(1)
-    style = Enum('laplace', '2step-laplace', '2step-sobel', 'var', 'sobel')
+#    style = Enum('laplace', '2step-laplace', '2step-sobel', 'var', 'sobel')
+    operator = Enum('laplace', 'var', 'sobel')
 
-    discrete = Bool(False)
+#    discrete = Bool(False)
 
     negative_window = Float(3)
     positive_window = Float(1)
@@ -80,8 +81,8 @@ class FocusParameters(HasTraits):
         v = View(
                Item('fstart'),
                Item('fend'),
-               Item('style'),
-               Item('discrete'),
+               Item('operator'),
+#               Item('discrete'),
                Item('step_scalar', visible_when='discrete'),
                Group(
                      Item('velocity_scalar1'),

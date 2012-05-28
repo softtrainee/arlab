@@ -548,6 +548,9 @@ def set_frame_index(cap, ind):
 def set_video_pos(cap, pos):
     cap.set(cv.CV_CAP_PROP_POS_AVI_RATIO, pos)
 
+def get_frame_size(cap):
+    return cap.get(cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv.CV_CAP_PROP_FRAME_HEIGHT)
+
 def get_capture_device(deviceid):
 
     if not isinstance(deviceid, int):

@@ -381,6 +381,23 @@ class FusionsDiodeManager(FusionsLaserManager):
         v = VueMetrixManager()#control = self.control_module)
         return v
 
+if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    from src.initializer import Initializer
+
+
+    logging_setup('fusions diode')
+    f = FusionsDiodeManager()
+    f.use_video = True
+    f.record_brightness = True
+    ini = Initializer()
+
+    a = dict(manager=f, name='FusionsDiode')
+    ini.add_initialization(a)
+    ini.run()
+#    f.bootstrap()
+    f.configure_traits()
+
 #======================= EOF ============================
 #    def show_streams(self):
 #        '''

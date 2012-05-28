@@ -37,7 +37,7 @@ from src.image.image import Image
 #from multiprocessing.process import Process
 from cvwrapper import get_capture_device, query_frame, write_frame, \
     load_image, new_video_writer, grayspace, get_nframes, \
-    set_frame_index, get_fps, set_video_pos
+    set_frame_index, get_fps, set_video_pos, get_frame_size
 
 DEBUG = False
 #DEBUG = True
@@ -119,7 +119,6 @@ class Video(Image):
 #                    src = '/Users/ross/Sandbox/tray_screen_shot3.tiff'
                     src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
                     return load_image(src)
-
                 self._frame = query_frame(self.cap)
             return self._frame
 
