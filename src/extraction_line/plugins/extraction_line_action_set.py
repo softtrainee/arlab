@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from envisage.ui.action.api import Action#, Group, Menu, ToolBar
 from envisage.ui.workbench.api import WorkbenchActionSet
@@ -33,6 +31,10 @@ class ExtractionLineActionSet(WorkbenchActionSet):
                Action(name='Extraction Line Manager',
                       path=MPATH,
                       class_name=BASENAME.format('OpenExtractionLineManager')
+                      ),
+               Action(name='Explanation',
+                      path=MPATH,
+                      class_name=BASENAME.format('OpenExtractionLineExplanation')
                       ),
 
                Action(name='Load Canvas',

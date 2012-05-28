@@ -14,6 +14,7 @@
 # limitations under the License.
 #===============================================================================
 from threading import Timer
+import time
 
 
 
@@ -50,10 +51,14 @@ class TimedFlag(Flag):
         super(TimedFlag, self).set(value)
 
         if self._set:
+            self._start_time = time.time()
             t = Timer(self.duration, self.clear)
             t.start()
 
         return True
 
+    def get(self):
+        t = max(0, self.duration - (time.time() - self._start_time))
+        return t
 
 #======== EOF ================================

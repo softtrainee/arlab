@@ -40,3 +40,9 @@ def open_manager(app, man, **kw):
 def open_protocol(app, protocol):
     m = app.get_service(protocol)
     open_manager(app, m)
+
+def open_selector(db, app):
+    db.application = app
+    db.connect()
+    s = db._selector_factory()
+    open_manager(app, s)

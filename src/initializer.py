@@ -241,8 +241,8 @@ class Initializer(Loggable):
                 man = getattr(manager, mi)
                 if man is None:
                     man = manager.create_manager(mi)
-            except AttributeError, e:
-                self.warning(e)
+            except AttributeError:
+#                self.warning(e)
                 man = manager.create_manager(mi)
 
             if man is None:

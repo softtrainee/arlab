@@ -45,8 +45,6 @@ try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
 except ImportError:
     from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas as VideoLaserTrayCanvas
-from src.helpers.paths import co2laser_db
-from src.database.adapters.video_adapter import VideoAdapter
 
 #from calibration_manager import CalibrationManager
 class VideoStageManager(StageManager, Videoable):
@@ -125,14 +123,6 @@ class VideoStageManager(StageManager, Videoable):
         bind_preference(self, 'video_identifier',
                         '{}.video_identifier'.format(pref_id)
                         )
-
-    def get_video_database(self):
-#        db = PowerAdapter(dbname='co2laserdb',
-#                                   password='Argon')
-        db = VideoAdapter(dbname=co2laser_db,
-                          kind='sqlite')
-
-        return db
 
     def start_recording(self, path=None, basename='vm_recording',
                          use_dialog=False, user='remote'):

@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Int, Property, Instance, \
     Button, List, String, Event, Bool, on_trait_change
@@ -791,6 +789,17 @@ class StageManager(Manager):
 
     def _move_to_point_hook(self):
         pass
+
+    def get_video_database(self):
+        from src.helpers.paths import co2laser_db
+        from src.database.adapters.video_adapter import VideoAdapter
+
+#        db = PowerAdapter(dbname='co2laserdb',
+#                                   password='Argon')
+        db = VideoAdapter(dbname=co2laser_db,
+                          kind='sqlite')
+
+        return db
 #class DummyParent(HasTraits):
 #    zoom = Float
 #    zoommin = Float
