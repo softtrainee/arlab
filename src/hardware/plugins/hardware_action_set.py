@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from envisage.ui.action.api import Action#, Group, Menu, ToolBar
 from envisage.ui.workbench.api import WorkbenchActionSet
@@ -32,14 +30,15 @@ class HardwareActionSet(WorkbenchActionSet):
                Action(name='Hardware Manager',
                       path='MenuBar/File',
                       class_name='{}:OpenHardwareManagerAction'.format(p)),
+               Action(name='Register Device...',
+                      path='MenuBar/File',
+                      class_name='{}:RegisterDeviceAction'.format(p)),
                Action(name='Remote Hardware Server',
                       path='MenuBar/File',
                       class_name='{}:OpenRemoteHardwareServerAction'.format(p)),
-               Action(name='Device Scans',
+               Action(name='Device Scans...',
                       path='MenuBar/Results',
                       class_name='{}:OpenDeviceScansAction'.format(p)),
-
-
 
               ]
 #============= EOF ====================================

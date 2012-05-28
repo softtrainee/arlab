@@ -33,12 +33,15 @@ class HardwareManager(Manager):
     @on_trait_change('application')
     def app_changed(self, obj, name, old, new):
         if name == 'application' and new:
-            self.devices = new.service_registry.get_services('src.hardware.core.i_core_device.ICoreDevice',
-
-                                                             "display==True"
-                                                             )
-            self.devices.sort()
+            self.load_devices()
             self.application = new
+
+    def load_devices(self):
+        self.devices = self.application.service_registry.get_services('src.hardware.core.i_core_device.ICoreDevice',
+
+                                                         "display==True"
+                                                         )
+        self.devices.sort()
 
     def _selected_changed(self):
         if self.selected is not None:

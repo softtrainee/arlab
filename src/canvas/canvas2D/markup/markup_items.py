@@ -217,18 +217,21 @@ class RoughValve(BaseValve):
 
     def _draw_state_indicator(self, gc, x, y, w, h):
         if not self.state:
-            l = 5
+            l = 7
             w2 = w / 2.
+            w3 = w / 3.
+
+            gc.set_line_width(2)
             gc.move_to(x + w2, y + h)
             gc.line_to(x + w2, y + h - l)
             gc.draw_path()
 
             gc.move_to(x, y)
-            gc.line_to(x + w2, y + l)
+            gc.line_to(x + w3, y + l)
             gc.draw_path()
 
             gc.move_to(x + w, y)
-            gc.line_to(x + w2, y + l)
+            gc.line_to(x + w - w3, y + l)
             gc.draw_path()
 
 
@@ -265,7 +268,8 @@ class Valve(Rectangle, BaseValve):
 
     def _draw_state_indicator(self, gc, x, y, w, h):
         if not self.state:
-            l = 5
+            l = 7
+            gc.set_line_width(2)
             gc.move_to(x, y)
             gc.line_to(x + l, y + l)
             gc.draw_path()
@@ -282,10 +286,6 @@ class Valve(Rectangle, BaseValve):
             gc.line_to(x + w - l, y + l)
             gc.draw_path()
 
-#        gc.set_fill_color((0, 0, 0))
-#        gc.set_text_position(x + w / 4.0, y + h / 4.0)
-#        gc.show_text(self.name)
-#        gc.draw_path()
 
 class Line(MarkupItem):
     start_point = None
