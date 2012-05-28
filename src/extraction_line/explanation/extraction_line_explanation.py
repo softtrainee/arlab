@@ -49,22 +49,23 @@ class ExtractionLineExplanation(HasTraits):
     selection_ok = False
 
     def on_selection(self, s):
-        if self.selection_ok and s is not None:
+#        if self.selection_ok and 
+        if s is not None:
             for ei in self.explanable_items:
                 if ei != s:
                     ei.identify = False
 
             s.identify = not s.identify
 
-    def _show_hide_fired(self):
-        '''
-        '''
-
-        self.identify = not self.identify
-        for c in self.explanable_items:
-            c.identify = self.identify
-
-        c.canvas.Refresh()
+#    def _show_hide_fired(self):
+#        '''
+#        '''
+#
+#        self.identify = not self.identify
+#        for c in self.explanable_items:
+#            c.identify = self.identify
+#
+#        c.canvas.Refresh()
 
     def _get_label(self):
         return 'Hide All' if self.identify else 'Show All'
@@ -77,19 +78,14 @@ class ExtractionLineExplanation(HasTraits):
     def load(self, l):
         '''
         '''
-        #temp = None
-        for v in l:
-            self.explanable_items.append(v)
-            #temp = v
-
-#        for name, desc, id in [('An', 'Analytical', 'analytical_turbo'), ('Ro', 'Roughing', 'roughing_turbo')]:
-#            t = ExplanableTurbo(name=name, description=desc, _id=id)
-#            self.explanable_items.append(t)
+        if isinstance(l, list):
+            for v in l:
+                self.explanable_items.append(v)
 
     def traits_view(self):
         '''
         '''
-        self.legend_editor = TableEditor(columns=[ObjectColumn(name='name',
+        ed = TableEditor(columns=[ObjectColumn(name='name',
                                                         editable=False),
            ObjectColumn(name='description', editable=False),
            ObjectColumn(name='state_property', editable=False, label='State'),
@@ -97,29 +93,33 @@ class ExtractionLineExplanation(HasTraits):
            ObjectColumn(name='lock_property', editable=False, label='Lock')
            ],
            selected='selected',
-           on_select=self.on_selection
-                            #editable = False,
+           on_select=self.on_selection,
+                            editable=False,
                             )
         v = View(
-               VGroup(
+#               VGroup(
 #                      HGroup(
 #                       Item('show_hide', editor=ButtonEditor(label_value='label'),
 #                           show_label=False,
 #                           springy=False)),
 
                       Item('explanable_items',
-                           editor=self.legend_editor,
+                           editor=ed,
+                           style='custom',
                            show_label=False,
+#                           height=300,
+#                           width=200
 #                           width= -50
 #                           springy=False
-                           #width=0.45
                            ),
+                           width=300,
+                           height=500,
 
-
-                      ),
-                 handler=ELEHandler,
-#                 id='pychron.explanation'
-                resizable=False,
+#                      ),
+#                 handler=ELEHandler,
+                 id='pychron.explanation',
+                resizable=True,
+                title='Explanation'
                 #scrollable = True,
                 )
         return v

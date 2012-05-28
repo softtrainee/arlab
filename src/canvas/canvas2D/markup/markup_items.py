@@ -50,6 +50,7 @@ class MarkupItem(HasTraits):
     canvas = Any(transient=True)
     line_width = 1
     name = Str
+    space = 'data'
 
     def __init__(self, x, y, *args, **kw):
         self.x = x
@@ -99,6 +100,7 @@ class MarkupItem(HasTraits):
 
     def get_wh(self):
         w, h = self.width, self.height
+#        w, h = 20, 20
         if self.space == 'data':
             (w, h), (ox, oy) = self.canvas.map_screen([(self.width, self.height), (0, 0)])
             w, h = w - ox, h - oy
@@ -210,12 +212,30 @@ class RoughValve(BaseValve):
 #        args = (x - 2, y - 2, w + 4, h + 4)
 
         self._draw_soft_lock(gc, func, args)
-
+        self._draw_state_indicator(gc, cx, cy, w, h)
         self._render_name(gc, cx, cy, w, h)
+
+    def _draw_state_indicator(self, gc, x, y, w, h):
+        if not self.state:
+            l = 5
+            w2 = w / 2.
+            gc.move_to(x + w2, y + h)
+            gc.line_to(x + w2, y + h - l)
+            gc.draw_path()
+
+            gc.move_to(x, y)
+            gc.line_to(x + w2, y + l)
+            gc.draw_path()
+
+            gc.move_to(x + w, y)
+            gc.line_to(x + w2, y + l)
+            gc.draw_path()
+
 
 class Valve(Rectangle, BaseValve):
     width = 2
     height = 2
+
     def _render_(self, gc):
 
         super(Valve, self)._render_(gc)
@@ -241,8 +261,26 @@ class Valve(Rectangle, BaseValve):
 
         self._draw_soft_lock(gc, func, args)
 
+        self._draw_state_indicator(gc, x, y, w, h)
 
+    def _draw_state_indicator(self, gc, x, y, w, h):
+        if not self.state:
+            l = 5
+            gc.move_to(x, y)
+            gc.line_to(x + l, y + l)
+            gc.draw_path()
 
+            gc.move_to(x, y + h)
+            gc.line_to(x + l, y + h - l)
+            gc.draw_path()
+
+            gc.move_to(x + w, y + h)
+            gc.line_to(x + w - l, y + h - l)
+            gc.draw_path()
+
+            gc.move_to(x + w, y)
+            gc.line_to(x + w - l, y + l)
+            gc.draw_path()
 
 #        gc.set_fill_color((0, 0, 0))
 #        gc.set_text_position(x + w / 4.0, y + h / 4.0)

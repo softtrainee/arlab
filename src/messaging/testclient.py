@@ -308,10 +308,12 @@ def timed_flag_test():
         c.ask('Open ChamberPumpTimeFlag')
 
         while 1:
-            if not int(c.ask('Read ChamberPumpTimeFlag')):
+
+            if abs(float(c.ask('Read ChamberPumpTimeFlag'))) < 0.001:
                 break
             time.sleep(1)
         time.sleep(1)
+
 
 def mass_spec_param_test():
     c = Client(
@@ -320,6 +322,7 @@ def mass_spec_param_test():
     c.ask('Read test_param')
     c.ask('Read test_param1')
     c.ask('Read test_paramfoo')
+    c.ask('Read pump_time')
 
 if __name__ == '__main__':
     #plothist('benchmark_unix_only.npz')
@@ -330,8 +333,8 @@ if __name__ == '__main__':
 #    multiplex_test()
 #    laser_client()
 #    power_test()
-#    timed_flag_test()
-    mass_spec_param_test()
+    timed_flag_test()
+#    mass_spec_param_test()
     #===========================================================================
     #Check Remote launch snippet 
     #===========================================================================

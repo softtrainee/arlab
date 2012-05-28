@@ -14,17 +14,15 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from pyface.action.api import Action
+
+#============= standard library imports ========================
+#============= local library imports  ==========================
 from src.envisage.core.action_helper import open_protocol, open_manager
 from src.database.adapters.device_scan_adapter import DeviceScanAdapter
 from src.helpers.paths import device_scan_db
-
-#============= standard library imports ========================
-
-#============= local library imports  ==========================
+from src.lasers.plugins.fusions.co2.actions import open_selector
 
 
 class OpenHardwareManagerAction(Action):
@@ -70,11 +68,16 @@ class OpenDeviceScansAction(Action):
         db = DeviceScanAdapter(dbname=device_scan_db,
                                kind='sqlite',
                                application=self.window.application)
+        open_selector(db, self.window.application)
 
-        db.connect()
-        s = db._selector_factory()
 
-        if s:
-            open_manager(self.window.application, s)
+
+class RegisterDeviceAction(Action):
+    def perform(self, event):
+        rdm = RegisterManager()
+        open_manager(self.window.application,
+                     rdm
+                     )
+
 
 #============= EOF ====================================

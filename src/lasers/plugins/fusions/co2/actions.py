@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from pyface.action.api import Action
-from src.envisage.core.action_helper import open_manager
+from src.envisage.core.action_helper import open_manager, open_selector
 #from src.database.adapters.power_adapter import PowerAdapter
 #from src.helpers.paths import co2laser_db
 #from traits.api import on_trait_change
@@ -35,12 +35,6 @@ def get_manager(event, app=None):
     manager = app.get_service(base.format('fusions_co2_manager.FusionsCO2Manager'))
 
     return manager
-
-def open_selector(db, app):
-    db.application = app
-    db.connect()
-    s = db._selector_factory()
-    open_manager(app, s)
 
 class ExecutePatternAction(Action):
 
@@ -193,6 +187,7 @@ class OpenVideoAction(Action):
         if manager is not None:
 #            db = PowerAdapter(dbname='co2laserdb',
 #                                password='Argon')
+            #fix if stage manager is not a video manager still should be able to open vidoes
             db = manager.stage_manager.get_video_database()
             open_selector(db, self.window.application)
 #            manager.graph_manager.open_graph('powerrecord')

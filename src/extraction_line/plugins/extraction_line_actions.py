@@ -14,15 +14,13 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from pyface.action.api import Action
-from src.envisage.core.action_helper import open_manager
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+from src.envisage.core.action_helper import open_manager
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 def get_manager(window):
     return window.application.get_service(EL_PROTOCOL)
@@ -35,6 +33,14 @@ class OpenExtractionLineManager(Action):
         man = get_manager(event.window)
         app = self.window.application
         open_manager(app, man)
+
+class OpenExtractionLineExplanation(Action):
+    description = 'Open extraction line explanation'
+
+    def perform(self, event):
+        man = get_manager(event.window)
+        app = self.window.application
+        open_manager(app, man.explanation)
 
 class LoadCanvasAction(Action):
     '''

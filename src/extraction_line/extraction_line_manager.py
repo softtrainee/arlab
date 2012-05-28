@@ -49,9 +49,9 @@ class ExtractionLineManager(Manager):
     
     '''
     canvas = Instance(ExtractionLineCanvas)
-    explanation = Instance(ExtractionLineExplanation)
+    explanation = Instance(ExtractionLineExplanation, ())
 
-    show_explanation = DelegatesTo('canvas')
+#    show_explanation = DelegatesTo('canvas')
 
     valve_manager = Instance(Manager)
     gauge_manager = Instance(Manager)
@@ -125,6 +125,9 @@ class ExtractionLineManager(Manager):
         pass
 #        if self.gauge_manager is not None:
 #            self.gauge_manager.on_trait_change(self.pressure_update, 'gauges.pressure')
+#    def close(self, isok):
+#        e = self.explanation
+#        self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
 
     def opened(self):
         super(ExtractionLineManager, self).opened()
@@ -168,9 +171,11 @@ class ExtractionLineManager(Manager):
 
         iddict = dict()
         #remember the explanation settings
-        for ev in self.explanation.explanable_items:
-            i = ev.identify
-            iddict[ev.name] = i
+        exp = self.explanation
+        if exp:
+            for ev in exp.explanable_items:
+                i = ev.identify
+                iddict[ev.name] = i
 
         if self.canvas is not None:
             if self.canvas.style == '2D':
@@ -191,7 +196,10 @@ class ExtractionLineManager(Manager):
                     if vc:
                         vc.soft_lock = v.software_lock
                         v.canvas_valve = vc
-                        vc.identify = iddict[vc.name]
+                        try:
+                            vc.identify = iddict[vc.name]
+                        except:
+                            pass
 
             self.view_controller = self._view_controller_factory()
 
@@ -398,33 +406,38 @@ class ExtractionLineManager(Manager):
         self.pyscript_editor.edit_traits()
 
     def set_selected_explanation_item(self, obj):
+        if self.explanation:
+            selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
+            if selected:
+                self.explanation.selected = selected
 
-        selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
-        if selected:
-            self.explanation.selected = selected
+#    def kill(self):
+#        self.valve_manager.on_trait_change(self.explanation.load_item,
+#                                            'explanable_items[]', remove=True)
+#        super(ExtractionLineManager, self).kill()
 
-    def kill(self):
-        super(ExtractionLineManager, self).kill()
-        p = os.path.join(hidden_dir, 'show_explanantion')
-        with open(p, 'wb') as f:
-            pickle.dump(self.show_explanation, f)
+#        p = os.path.join(hidden_dir, 'show_explanantion')
+#        with open(p, 'wb') as f:
+#            pickle.dump(self.show_explanation, f)
 
     def traits_view(self):
         '''
         '''
         v = View(
-                 HGroup(
-                        Item('explanation', style='custom', show_label=False,
-                             width=0.3,
-                            visible_when='object.show_explanation',
-#                            id='pychron.ex.explanation',
-                            springy=False
-                             ),
+#                 HGroup(
+#                        Item('explanation', style='custom', show_label=False,
+##                             width=0.3,
+#                            visible_when='object.show_explanation',
+##                            id='pychron.ex.explanation',
+##                            springy=False
+#                             ),
 #                        VGroup(HGroup(Item('show_explanation')),
                                Item('canvas', style='custom', show_label=False,
-                                    width=0.7)
+#                                    width=1.0,
+#                                    height=1.0
+                                    ),
 #                               )
-                        ),
+#                        ),
 
                handler=self.handler_klass,
                title='Extraction Line Manager',
@@ -435,13 +448,13 @@ class ExtractionLineManager(Manager):
                )
         return v
 
-    def _show_explanation_changed(self):
-        if self.ui is not None:
-            adj = 260
-            w, h = self.ui.control.GetSize()
-            sign = 1 if self.show_explanation else -1
-            w = w + sign * adj
-            self.ui.control.SetSize((w, h))
+#    def _show_explanation_changed(self):
+#        if self.ui is not None:
+#            adj = 260
+#            w, h = self.ui.control.GetSize()
+#            sign = 1 if self.show_explanation else -1
+#            w = w + sign * adj
+#            self.ui.control.SetSize((w, h))
 #=================== factories ==========================
 
     def _view_controller_factory(self):
@@ -452,7 +465,7 @@ class ExtractionLineManager(Manager):
 
     def _valve_manager_changed(self):
         e = self.explanation
-        if self.valve_manager is not None:
+        if self.valve_manager is not None and e is not None:
             e.load(self.valve_manager.explanable_items)
             self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
 
@@ -462,15 +475,15 @@ class ExtractionLineManager(Manager):
     def _pyscript_editor_default(self):
         return PyScriptManager(parent=self)
 
-    def _explanation_default(self):
-        '''
-        '''
-        e = ExtractionLineExplanation()
-        if self.valve_manager is not None:
-            e.load(self.valve_manager.explanable_items)
-            self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
-
-        return e
+#    def _explanation_default(self):
+##        '''
+##        '''
+#        e = ExtractionLineExplanation()
+##        if self.valve_manager is not None:
+##            e.load(self.valve_manager.explanable_items)
+##            self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
+##
+#        return e
 
     def _canvas_default(self):
         '''

@@ -44,6 +44,10 @@ class ExtractionLineCanvas2D(MarkupCanvas):
     padding_top = 0
     manager = Any
 
+    aspect_ratio = 4 / 3.
+
+    y_range = (-10, 25)
+
     def __init__(self, *args, **kw):
         '''
         '''
@@ -53,7 +57,10 @@ class ExtractionLineCanvas2D(MarkupCanvas):
     def toggle_item_identify(self, name):
         v = self._get_valve_by_name(name)
         if v is not None:
-            v.identify = not v.identify
+            try:
+                v.identify = not v.identify
+            except AttributeError:
+                pass
 
         self.request_redraw()
 
@@ -99,10 +106,30 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 #        valves = self._bootstrap(path)
 #        if valves:
 #            self.valves = valves
-    def load_canvas_file(self, p):
+
+    @staticmethod
+    def _get_canvas_parser(p):
         from src.helpers.canvas_parser import CanvasParser
         cp = CanvasParser(p)
+        return cp
 
+    @staticmethod
+    def get_canvas_view_range(p):
+        xv = (-25, 25)
+        yv = (-25, 25)
+        cp = ExtractionLineCanvas2D._get_canvas_parser(p)
+        elm = cp._tree.find('xview')
+        if elm is not None:
+            xv = map(float, elm.text.split(','))
+
+        elm = cp._tree.find('yview')
+        if elm is not None:
+            yv = map(float, elm.text.split(','))
+
+        return xv, yv
+
+    def load_canvas_file(self, p):
+        cp = self._get_canvas_parser(p)
 #        def get_translation(elem):
 #            return map(float, elem.find('translation').text.split(','))
 #

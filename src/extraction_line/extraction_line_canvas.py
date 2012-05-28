@@ -160,8 +160,8 @@ class ExtractionLineCanvas(HasTraits):
     canvas3D = Any#Instance(ExtractionLineCanvas3DDummy)
     manager = Any
     style = Enum('2D', '3D')
-    width = Float(700)
-    height = Float(700)
+    width = Float(300)
+    height = Float(500)
 
     show_explanation = Bool(False)
 
@@ -170,8 +170,10 @@ class ExtractionLineCanvas(HasTraits):
         '''
         super(ExtractionLineCanvas, self).__init__(*args, **kw)
 
-        for c in self.manager.explanation.explanable_items:
-            c.canvas = self
+        exp = self.manager.explanation
+        if exp:
+            for c in exp.explanable_items:
+                c.canvas = self
 
     def toggle_item_identify(self, name):
         '''
@@ -230,11 +232,14 @@ class ExtractionLineCanvas(HasTraits):
         '''
         '''
         from src.canvas.canvas2D.extraction_line_canvas2D import ExtractionLineCanvas2D
+        p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
+        vx, vy = ExtractionLineCanvas2D.get_canvas_view_range(p)
 
         e = ExtractionLineCanvas2D(
-                                   manager=self.manager
+                                   manager=self.manager,
+                                   view_x_range=vx,
+                                   view_y_range=vy
                                    )
-        p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
         e.load_canvas_file(p)
         return e
 #     
@@ -258,7 +263,6 @@ class ExtractionLineCanvas(HasTraits):
 
         from enable.component_editor import ComponentEditor
         w, h = self._get_canvas_size()
-
         g = Item('canvas2D',
                     style='custom',
                     #visible_when='twod_canvas',
@@ -266,6 +270,8 @@ class ExtractionLineCanvas(HasTraits):
                     editor=ComponentEditor(width=w,
                                            height=h
                                             ),
+                 width=h * self.canvas2D.aspect_ratio,
+                 height=h,
                 label='2D'
                 )
         return g
@@ -293,7 +299,8 @@ class ExtractionLineCanvas(HasTraits):
             c = self._canvas2D_group()
         else:
             c = self._canvas3D_group()
-        v = View(HGroup(spring, Item('show_explanation')),
+        v = View(
+#                 HGroup(spring, Item('show_explanation')),
                  c)
         return v
 #============= EOF ====================================
