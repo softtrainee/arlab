@@ -23,6 +23,7 @@ from src.envisage.core.action_helper import open_protocol, open_manager
 from src.database.adapters.device_scan_adapter import DeviceScanAdapter
 from src.helpers.paths import device_scan_db
 from src.lasers.plugins.fusions.co2.actions import open_selector
+from src.hardware.plugins.register_manager import RegisterManager
 
 
 class OpenHardwareManagerAction(Action):
@@ -74,7 +75,8 @@ class OpenDeviceScansAction(Action):
 
 class RegisterDeviceAction(Action):
     def perform(self, event):
-        rdm = RegisterManager()
+        rdm = RegisterManager(application=self.window.application)
+        rdm.load()
         open_manager(self.window.application,
                      rdm
                      )

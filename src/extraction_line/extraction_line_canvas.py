@@ -14,11 +14,9 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Instance, Any, Property, Float, Enum
-from traitsui.api import View, Item, HGroup, spring
+from traits.api import HasTraits, Bool, Any, Property, Float, Enum
+from traitsui.api import View, Item
 #from enable.component_editor import ComponentEditor
 #============= standard library imports ========================
 import os
@@ -113,34 +111,6 @@ class ExtractionLineCanvas3DDummy(HasTraits):
         if hasattr(self.canvas, 'user_views'):
             self.canvas._set_view(v)
 
-#    def _get_interactor_state(self):
-#        '''
-#        '''
-#        return self.canvas.interactor_state
-#
-#    def _set_interactor_state(self, s):
-#        '''
-#        '''
-#        self.canvas.interactor_state = s
-#
-#    def update_pressure(self, *args, **kw):
-#        '''
-#        '''
-#        if self.canvas is not None:
-#            self.canvas.update_pressure(*args, **kw)
-#
-#    def update_pumping_duration(self, *args, **kw):
-#        '''
-#        '''
-#        if self.canvas is not None:
-#            self.canvas.update_pumping_duration(*args, **kw)
-#
-#    def update_idle_duration(self, *args, **kw):
-#        '''
-#        '''
-#        if self.canvas is not None:
-#            self.canvas.update_idle_duration(*args, **kw)
-
     def Refresh(self):
         '''
         '''
@@ -152,18 +122,17 @@ class ExtractionLineCanvas3DDummy(HasTraits):
         '''
         if self.canvas:
             self.canvas.Update()
-#    
+
+
 class ExtractionLineCanvas(HasTraits):
     '''
     '''
-    canvas2D = Any#Instance(ExtractionLineCanvas2D)
-    canvas3D = Any#Instance(ExtractionLineCanvas3DDummy)
+    canvas2D = Any
+    canvas3D = Any
     manager = Any
     style = Enum('2D', '3D')
     width = Float(300)
     height = Float(500)
-
-    show_explanation = Bool(False)
 
     def __init__(self, *args, **kw):
         '''
@@ -197,14 +166,6 @@ class ExtractionLineCanvas(HasTraits):
         if self.canvas3D:
             self.canvas3D.Update()
 
-#    def set_interactor_state(self, state):
-#        '''
-#        
-#        '''
-#
-#        for c in [self.canvas2D, self.canvas3D]:
-#            if c is not None:
-#                c.interactor_state = state
     def get_object(self, name):
         if self.style == '2D':
             obj = self.canvas2D._get_object_by_name(name)
@@ -299,8 +260,6 @@ class ExtractionLineCanvas(HasTraits):
             c = self._canvas2D_group()
         else:
             c = self._canvas3D_group()
-        v = View(
-#                 HGroup(spring, Item('show_explanation')),
-                 c)
+        v = View(c)
         return v
 #============= EOF ====================================

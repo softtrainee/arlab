@@ -51,8 +51,6 @@ class ExtractionLineManager(Manager):
     canvas = Instance(ExtractionLineCanvas)
     explanation = Instance(ExtractionLineExplanation, ())
 
-#    show_explanation = DelegatesTo('canvas')
-
     valve_manager = Instance(Manager)
     gauge_manager = Instance(Manager)
     environmental_manager = Instance(Manager)
@@ -226,25 +224,6 @@ class ExtractionLineManager(Manager):
         if self.canvas:
             self.canvas.canvas2D.update_valve_state(*args)
 
-#    def update_pumping_duration(self, name, val):
-#        '''
-#
-#        '''
-#        if self.canvas:
-#            self.canvas.canvas3D.update_pumping_duration(name, val)
-
-#    def update_idle_duration(self, name, val):
-#        '''
-# 
-#        '''
-#        if self.canvas:
-#            self.canvas.update_idle_duration(name, val)
-
-#    def set_interactor_state(self, state):
-#        '''
-#        '''
-#        self.canvas.set_interactor_state(state)
-
     def show_valve_properties(self, name):
         if self.valve_manager is not None:
             self.valve_manager.show_valve_properties(name)
@@ -271,7 +250,6 @@ class ExtractionLineManager(Manager):
     def get_valve_states(self):
         if self.valve_manager is not None:
             return self.valve_manager.get_states()
-
 
     def get_valve_by_name(self, name):
         if self.valve_manager is not None:
@@ -396,13 +374,6 @@ class ExtractionLineManager(Manager):
         return self.pyscript_editor.get_script_state(key)
 
     def open_pyscript_editor(self):
-#        from src.scripts.pyscripts.pyscript import PyScript
-#        p = PyScript(root=os.path.join(scripts_dir, 'pyscripts'),
-#                          name='test.py',
-#                          manager=self)
-#        p.execute(new_thread=True)
-#        pe = (parent=self)
-#        pe.edit_traits()
         self.pyscript_editor.edit_traits()
 
     def set_selected_explanation_item(self, obj):
@@ -411,50 +382,19 @@ class ExtractionLineManager(Manager):
             if selected:
                 self.explanation.selected = selected
 
-#    def kill(self):
-#        self.valve_manager.on_trait_change(self.explanation.load_item,
-#                                            'explanable_items[]', remove=True)
-#        super(ExtractionLineManager, self).kill()
-
-#        p = os.path.join(hidden_dir, 'show_explanantion')
-#        with open(p, 'wb') as f:
-#            pickle.dump(self.show_explanation, f)
-
     def traits_view(self):
         '''
         '''
-        v = View(
-#                 HGroup(
-#                        Item('explanation', style='custom', show_label=False,
-##                             width=0.3,
-#                            visible_when='object.show_explanation',
-##                            id='pychron.ex.explanation',
-##                            springy=False
-#                             ),
-#                        VGroup(HGroup(Item('show_explanation')),
-                               Item('canvas', style='custom', show_label=False,
-#                                    width=1.0,
-#                                    height=1.0
-                                    ),
-#                               )
-#                        ),
-
+        v = View(Item('canvas',
+                      style='custom',
+                      show_label=False),
                handler=self.handler_klass,
                title='Extraction Line Manager',
                resizable=True,
-#               x=self.window_x,
-#               y=self.window_y,
                id='pychron.extraction_line_window'
                )
         return v
 
-#    def _show_explanation_changed(self):
-#        if self.ui is not None:
-#            adj = 260
-#            w, h = self.ui.control.GetSize()
-#            sign = 1 if self.show_explanation else -1
-#            w = w + sign * adj
-#            self.ui.control.SetSize((w, h))
 #=================== factories ==========================
 
     def _view_controller_factory(self):
