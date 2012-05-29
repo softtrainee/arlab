@@ -255,21 +255,34 @@ class ExtractionLineManager(Manager):
         if self.valve_manager is not None:
             return self.valve_manager.get_valve_by_name(name)
 
-    def open_valve(self, name, address=None, mode='remote', **kw):
+#    def open_valve(self, name, description=None, address=None, mode='remote', **kw):
+    def open_valve(self, name, ** kw):
         '''
         '''
-        if self.valve_manager is not None:
-            if address:
-                name = self.valve_manager.get_name_by_address(address)
-            return self._change_valve_state(name, mode, 'open', **kw)
+#        if self.valve_manager is not None:
+#            if address:
+#                name = self.valve_manager.get_name_by_address(address)
+#
+#            if description:
+#                name = self.valve_manager.get_name_by_description(description)
+#
+#            return self._change_valve_state(name, mode, 'open', **kw)
+        return self._open_close_valve(name, 'open', **kw)
 
-    def close_valve(self, name, address=None, mode='remote', **kw):
+    def close_valve(self, name, **kw):
         '''
         '''
+        return self._open_close_valve(name, 'close', **kw)
+
+    def _open_close_valve(self, name, action,
+                          description=None, address=None, mode='remote', **kw):
         if self.valve_manager is not None:
             if address:
                 name = self.valve_manager.get_name_by_address(address)
-            return self._change_valve_state(name, mode, 'close', **kw)
+            if description:
+                name = self.valve_manager.get_name_by_description(description)
+
+            return self._change_valve_state(name, mode, action, **kw)
 
     def sample(self, name, **kw):
         def sample():

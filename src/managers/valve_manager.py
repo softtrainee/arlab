@@ -220,7 +220,22 @@ class ValveManager(Manager):
     def get_valve_by_address(self, a):
         '''
         '''
-        return next((valve for valve in self.valves.itervalues() if valve.address == a), None)
+        return self._get_valve_by(a, 'address')
+
+    def get_valve_by_description(self, a):
+        '''
+        '''
+        return self._get_valve_by(a, 'description')
+
+    def _get_valve_by(self, a, attr):
+        return next((valve for valve in self.valves.itervalues() \
+                            if getattr(valve, attr) == a), None)
+
+    def get_valve_by_name(self, n):
+        '''    
+        '''
+        if n in self.valves:
+            return self.valves[n]
 
     def get_name_by_address(self, k):
         '''
@@ -229,11 +244,11 @@ class ValveManager(Manager):
         if v is not None:
             return v.name
 
-    def get_valve_by_name(self, n):
-        '''    
-        '''
-        if n in self.valves:
-            return self.valves[n]
+    def get_name_by_description(self, d):
+        v = self.get_valve_by_description(d)
+        if v is not None:
+            return v.name
+
 
     def get_evalve_by_name(self, n):
         '''  
