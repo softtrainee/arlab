@@ -74,7 +74,11 @@ class FusionsLogicBoard(CoreDevice):
 
         #test communciations with board issue warning if 
         #no handle or response is none
-        resp = self._disable_laser_()
+        
+        resp=True if self.ask(';LB.VER') else False
+        
+        
+#        resp = self._disable_laser_()
         if self._communicator.handle is None or resp is not True:
             if not ignore_initialization_warnings:
 #                    warning(None, 'Laser not connected. Power cycle USB hub.')
