@@ -14,19 +14,15 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from envisage.ui.action.api import Action#, Group, Menu, ToolBar
-from envisage.ui.workbench.api import WorkbenchActionSet
-
-
+#from envisage.ui.workbench.api import WorkbenchActionSet
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#from src.lasers.plugins.laser_action_set import LaserActionSet
+from src.lasers.plugins.fusions.fusions_action_set import FusionsActionSet
 
-class FusionsDiodeActionSet(WorkbenchActionSet):
+class FusionsDiodeActionSet(FusionsActionSet):
     '''
     '''
     id = 'pychron.fusions.diode.action_set'
@@ -34,32 +30,26 @@ class FusionsDiodeActionSet(WorkbenchActionSet):
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
     name = 'Diode'
-    action_path = 'src.lasers.plugins.fusions.diode.actions'
+    action_path = 'src.lasers.plugins.fusions.diode.actions:'
     def _actions_default(self):
         laser_path = 'MenuBar/Lasers/{}'.format(self.name)
-        return [
-#               Action(name = 'Stage Manager',
-#                      path = 'MenuBar/Lasers',
-#                      class_name = 'src.lasers.plugins.fusions_laser_actions:OpenStageManagerAction'),
-#                
-                Action(name='Laser Manager',
-                       path=laser_path,
-                       class_name='{}:OpenLaserManagerAction'.format(self.action_path)
-#                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
-                       ),
+#        results_path = 'MenuBar/Results/{}'.format(self.name)
+
+        actions = [
+
                 Action(name='Degas',
                        path=laser_path,
-                       class_name='{}:DegasAction'.format(self.action_path)
+                       class_name='{}DegasAction'.format(self.action_path)
 #                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
                        ),
                 Action(name='Configure Watlow',
                        path='MenuBar/Lasers/{}'.format(self.name),
-                       class_name='{}:ConfigureWatlowAction'.format(self.action_path)
+                       class_name='{}ConfigureWatlowAction'.format(self.action_path)
                        ),
-                Action(name='Power Calibration',
-                       path=laser_path,
-                       class_name='{}:PowerCalibrationAction'.format(self.action_path)
-                       ),
+
+                ]
+
+        return super(FusionsDiodeActionSet, self)._actions_default() + actions
 ##                Action(name='Configure Motion Controller',
 ##                       path='MenuBar/Lasers/{}'.format(self.name),
 ##                       class_name='src.lasers.plugins.laser_actions:OpenMotionControllerManagerAction'
@@ -108,5 +98,5 @@ class FusionsDiodeActionSet(WorkbenchActionSet):
 #                       class_name='{}.actions:OpenCalibrationManagerAction'.format(self.action_path)
 #                       ),
 
-             ]
+#             ]
 #============= EOF ====================================

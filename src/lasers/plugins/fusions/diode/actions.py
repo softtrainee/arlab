@@ -16,45 +16,26 @@
 
 #============= enthought library imports =======================
 from pyface.action.api import Action
-from src.envisage.core.action_helper import open_manager, open_selector
+from src.envisage.core.action_helper import open_manager
 #from traits.api import on_trait_change
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 
-def get_manager(event, app=None):
+def get_manager(_, event, app=None):
     if app is None:
         app = event.window.application
-    base = 'src.lasers.laser_managers.{}'
 
+    base = 'src.lasers.laser_managers.{}'
     manager = app.get_service(base.format('fusions_diode_manager.FusionsDiodeManager'))
 
     return manager
 
 
-class OpenLaserManagerAction(Action):
-    name = 'Open Laser Manager'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            app = self.window.application
-            open_manager(app, manager)
-
-
-class OpenMotionControllerManagerAction(Action):
-    def perform(self, event):
-        man = get_manager(event)
-        if man is not None:
-            m = man.stage_manager.motion_configure_factory(view_style='full_view')
-            app = self.window.application
-            open_manager(app, m)
-
-
 class DegasAction(Action):
     def perform(self, event):
-        manager = get_manager(event)
+        manager = get_manager(None, event)
         if manager is not None:
             man = manager.get_degas_manager()
             app = self.window.application
@@ -63,7 +44,7 @@ class DegasAction(Action):
 
 class ConfigureWatlowAction(Action):
     def perform(self, event):
-        manager = get_manager(event)
+        manager = get_manager(None, event)
         if manager is not None:
             t = manager.temperature_controller
             t.initialization_hook()
@@ -71,23 +52,59 @@ class ConfigureWatlowAction(Action):
             open_manager(app,
                          t, view='configure_view')
 
+#===============================================================================
+# ##fusions action
+#===============================================================================
 
-class PowerCalibrationAction(Action):
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            app = self.window.application
-            open_manager(app, manager.power_calibration_manager)
+from ..fusions_actions import FOpenLaserManagerAction
+class OpenLaserManagerAction(FOpenLaserManagerAction):
+    get_manager = get_manager
+
+
+from ..fusions_actions import FOpenMotionControllerManagerAction
+class OpenMotionControllerManagerAction(FOpenMotionControllerManagerAction):
+    get_manager = get_manager
+
+
+from ..fusions_actions import FPowerMapAction
+class PowerMapAction(FPowerMapAction):
+    get_manager = get_manager
+
+
+from ..fusions_actions import FPowerCalibrationAction
+class PowerCalibrationAction(FPowerCalibrationAction):
+    get_manager = get_manager
 
 #===============================================================================
 # database selectors
 #===============================================================================
-class OpenPowerCalibrationAction(Action):
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            db = manager.get_power_calibration_database()
-            open_selector(db, self.window.application)
+from ..fusions_actions import FOpenPowerCalibrationAction
+class OpenPowerCalibrationAction(FOpenPowerCalibrationAction):
+    get_manager = get_manager
+
+from ..fusions_actions import FOpenPowerMapAction
+class OpenPowerMapAction(FOpenPowerMapAction):
+    get_manager = get_manager
+
+from ..fusions_actions import FOpenPowerRecordGraphAction
+class OpenPowerRecordGraphAction(FOpenPowerRecordGraphAction):
+    get_manager = get_manager
+
+from ..fusions_actions import FOpenVideoAction
+class OpenVideoAction(FOpenVideoAction):
+    get_manager = get_manager
+
+#===============================================================================
+# initializations
+#===============================================================================
+from ..fusions_actions import FInitializeBeamAction
+class InitializeBeamAction(FInitializeBeamAction):
+    get_manager = get_manager
+
+from ..fusions_actions import FInitializeZoomAction
+class InitializeZoomAction(FInitializeZoomAction):
+    get_manager = get_manager
+
 #===============================================================================
 # unused
 #===============================================================================

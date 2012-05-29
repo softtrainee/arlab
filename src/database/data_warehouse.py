@@ -48,8 +48,21 @@ class DataWarehouse(Loggable):
         if r is None:
             return
 
+        dirs = []
         if not os.path.isdir(r):
-            os.mkdir(r)
+
+            head, tail = os.path.split(r)
+#            print head, tail
+            dirs.append(tail)
+            while not os.path.isdir(head):
+#                print head, tail
+                head, tail = os.path.split(head)
+                dirs.insert(0, tail)
+
+            p = head
+            for d in dirs:
+                p = os.path.join(p, d)
+                os.mkdir(p)
 
         # create subdirectory for this month
         self._current_dir = self._create_subdirectories()
@@ -81,7 +94,7 @@ class DataWarehouse(Loggable):
 #        os.chmod(p, stat.S_IROTH | stat.S_IRGRP | stat.S_IREAD)
 
 if __name__ == '__main__':
-    d = DataWarehouse(root='/usr/local/pychron/bakeoutdb')
+    d = DataWarehouse(root='/Users/ross/Sandbox/foo/moo')
     d.build_warehouse()
 
 

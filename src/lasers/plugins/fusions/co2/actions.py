@@ -26,7 +26,7 @@ from src.envisage.core.action_helper import open_manager, open_selector
 #============= local library imports  ==========================
 
 
-def get_manager(event, app=None):
+def get_manager(_, event, app=None):
 
     if app is None:
         app = event.window.application
@@ -37,107 +37,66 @@ def get_manager(event, app=None):
     return manager
 
 
-class OpenLaserManagerAction(Action):
-    name = 'Open Laser Manager'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            man = manager
-            app = self.window.application
-            open_manager(app, man)
-
-
-class OpenMotionControllerManagerAction(Action):
-
-    def perform(self, event):
-        man = get_manager(event)
-        if man is not None:
-            m = man.stage_manager.motion_configure_factory(view_style='full_view')
-            app = self.window.application
-            open_manager(app, m)
-
-
 class ConfigureBrightnessMeterAction(Action):
     def perform(self, event):
-        manager = get_manager(event)
+        manager = get_manager(None, event)
         if manager is not None:
             app = self.window.application
             open_manager(app, manager.brightness_meter)
 
+#===============================================================================
+# ##fusions action
+#===============================================================================
 
-class PowerMapAction(Action):
-    name = 'Power Map'
+from ..fusions_actions import FOpenLaserManagerAction
+class OpenLaserManagerAction(FOpenLaserManagerAction):
+    name = 'Open Laser Manager'
+    get_manager = get_manager
 
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            man = manager.get_power_map_manager()
-            app = self.window.application
-            open_manager(app, man)#, view = 'canvas_view')
+from ..fusions_actions import FOpenMotionControllerManagerAction
+class OpenMotionControllerManagerAction(FOpenMotionControllerManagerAction):
+    get_manager = get_manager
 
-class PowerCalibrationAction(Action):
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            app = self.window.application
-            open_manager(app, manager.power_calibration_manager)
+from ..fusions_actions import FPowerMapAction
+class PowerMapAction(FPowerMapAction):
+    get_manager = get_manager
+
+
+from ..fusions_actions import FPowerCalibrationAction
+class PowerCalibrationAction(FPowerCalibrationAction):
+    get_manager = get_manager
 
 #===============================================================================
 # database selectors
 #===============================================================================
-class OpenPowerCalibrationAction(Action):
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            db = manager.get_power_calibration_database()
-            open_selector(db, self.window.application)
+from ..fusions_actions import FOpenPowerCalibrationAction
+class OpenPowerCalibrationAction(FOpenPowerCalibrationAction):
+    get_manager = get_manager
 
+from ..fusions_actions import FOpenPowerMapAction
+class OpenPowerMapAction(FOpenPowerMapAction):
+    get_manager = get_manager
 
-class OpenPowerMapAction(Action):
-    name = 'Open Map Result'
+from ..fusions_actions import FOpenPowerRecordGraphAction
+class OpenPowerRecordGraphAction(FOpenPowerRecordGraphAction):
+    get_manager = get_manager
 
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            db = manager.get_power_map_manager().database
-            open_selector(db, self.window.application)
-
-
-class OpenPowerRecordGraphAction(Action):
-    name = 'Open Power Scan Result'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            db = manager.get_power_database()
-            open_selector(db, self.window.application)
-
-
-class OpenVideoAction(Action):
-    name = 'Open Video Result'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            db = manager.stage_manager.get_video_database()
-            open_selector(db, self.window.application)
+from ..fusions_actions import FOpenVideoAction
+class OpenVideoAction(FOpenVideoAction):
+    get_manager = get_manager
 
 #===============================================================================
 # initializations
 #===============================================================================
-class InitializeBeamAction(Action):
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            manager.do_motor_initialization('beam')
+from ..fusions_actions import FInitializeBeamAction
+class InitializeBeamAction(FInitializeBeamAction):
+    get_manager = get_manager
+
+from ..fusions_actions import FInitializeZoomAction
+class InitializeZoomAction(FInitializeZoomAction):
+    get_manager = get_manager
 
 
-class InitializeZoomAction(Action):
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            manager.do_motor_initialization('zoom')
 
 
 #===============================================================================
@@ -208,6 +167,79 @@ class InitializeZoomAction(Action):
 #            open_manager(app,
 #                         manager.stage_manager.pattern_manager, view='pattern_maker_view')
 
+
+#class PowerMapAction(Action):
+#    name = 'Power Map'
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            man = manager.get_power_map_manager()
+#            app = self.window.application
+#            open_manager(app, man)
+#
+#class PowerCalibrationAction(Action):
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            app = self.window.application
+#            open_manager(app, manager.power_calibration_manager)
+#
+##===============================================================================
+## database selectors
+##===============================================================================
+#class OpenPowerCalibrationAction(Action):
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            db = manager.get_power_calibration_database()
+#            open_selector(db, self.window.application)
+#
+#
+#class OpenPowerMapAction(Action):
+#    name = 'Open Map Result'
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            db = manager.get_power_map_manager().database
+#            open_selector(db, self.window.application)
+#
+#
+#class OpenPowerRecordGraphAction(Action):
+#    name = 'Open Power Scan Result'
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            db = manager.get_power_database()
+#            open_selector(db, self.window.application)
+#
+#
+#class OpenVideoAction(Action):
+#    name = 'Open Video Result'
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            db = manager.stage_manager.get_video_database()
+#            open_selector(db, self.window.application)
+#
+##===============================================================================
+## initializations
+##===============================================================================
+#class InitializeBeamAction(Action):
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            manager.do_motor_initialization('beam')
+#
+#
+#class InitializeZoomAction(Action):
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            manager.do_motor_initialization('zoom')
 
 
 
