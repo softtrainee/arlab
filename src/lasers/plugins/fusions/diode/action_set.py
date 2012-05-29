@@ -34,9 +34,9 @@ class FusionsDiodeActionSet(WorkbenchActionSet):
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
     name = 'Diode'
-    action_path = 'src.lasers.plugins.fusions.diode'
+    action_path = 'src.lasers.plugins.fusions.diode.actions'
     def _actions_default(self):
-        laser_path = 'MenuBar/Lasers/{}'.format(self.name),
+        laser_path = 'MenuBar/Lasers/{}'.format(self.name)
         return [
 #               Action(name = 'Stage Manager',
 #                      path = 'MenuBar/Lasers',
@@ -44,21 +44,21 @@ class FusionsDiodeActionSet(WorkbenchActionSet):
 #                
                 Action(name='Laser Manager',
                        path=laser_path,
-                       class_name='{}.actions:OpenLaserManagerAction'.format(self.action_path)
+                       class_name='{}:OpenLaserManagerAction'.format(self.action_path)
 #                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
                        ),
                 Action(name='Degas',
                        path=laser_path,
-                       class_name='{}.actions:DegasAction'.format(self.action_path)
+                       class_name='{}:DegasAction'.format(self.action_path)
 #                       class_name='src.lasers.plugins.laser_actions:OpenLaserManagerAction'
                        ),
                 Action(name='Configure Watlow',
                        path='MenuBar/Lasers/{}'.format(self.name),
-                       class_name='{}.actions:ConfigureWatlowAction'.format(self.action_path)
+                       class_name='{}:ConfigureWatlowAction'.format(self.action_path)
                        ),
                 Action(name='Power Calibration',
                        path=laser_path,
-                       class_name='{}PowerCalibrationAction'.format(self.action_path)
+                       class_name='{}:PowerCalibrationAction'.format(self.action_path)
                        ),
 ##                Action(name='Configure Motion Controller',
 ##                       path='MenuBar/Lasers/{}'.format(self.name),
