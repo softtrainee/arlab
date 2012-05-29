@@ -791,12 +791,13 @@ class StageManager(Manager):
         pass
 
     def get_video_database(self):
-        from src.helpers.paths import co2laser_db
+#        from src.helpers.paths import co2laser_db
+
         from src.database.adapters.video_adapter import VideoAdapter
 
 #        db = PowerAdapter(dbname='co2laserdb',
 #                                   password='Argon')
-        db = VideoAdapter(dbname=co2laser_db,
+        db = VideoAdapter(dbname=self.parent.dbname,
                           kind='sqlite')
 
         return db

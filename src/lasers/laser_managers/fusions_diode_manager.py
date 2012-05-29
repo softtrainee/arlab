@@ -28,11 +28,12 @@ from src.hardware.watlow_ezzone import WatlowEZZone
 from src.hardware.temperature_monitor import DPi32TemperatureMonitor
 from src.hardware.pyrometer_temperature_monitor import PyrometerTemperatureMonitor
 
-from src.monitors.diode_laser_monitor import DiodeLaserMonitor
 
-from fusions_laser_manager import FusionsLaserManager
 from src.lasers.laser_managers.vue_metrix_manager import VueMetrixManager
 from src.helpers.paths import diodelaser_db, diodelaser_db_root
+from src.monitors.fusions_diode_laser_monitor import FusionsDiodeLaserMonitor
+
+from fusions_laser_manager import FusionsLaserManager
 
 
 class FusionsDiodeManager(FusionsLaserManager):
@@ -60,7 +61,7 @@ class FusionsDiodeManager(FusionsLaserManager):
 
 #    update_timers = List
     monitor_name = 'diode_laser_monitor'
-    monitor_klass = DiodeLaserMonitor
+    monitor_klass = FusionsDiodeLaserMonitor
 
     use_power_slider = Bool(True)
 
@@ -137,9 +138,6 @@ class FusionsDiodeManager(FusionsLaserManager):
     def set_laser_power(self, power, mode='open'):
         ''' 
         '''
-
-
-
         tc = self.temperature_controller
         if tc._control_mode != mode:
 

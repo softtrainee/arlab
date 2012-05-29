@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,20 +14,12 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-#from traits.api import HasTraits, on_trait_change, Str, Int, Float, Button
-#from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
-from src.monitors.laser_monitor import LaserMonitor
-class CO2LaserMonitor(LaserMonitor):
-    '''
-    '''
+from src.monitors.co2_laser_monitor import CO2LaserMonitor
+from src.monitors.fusions_laser_monitor import FusionsLaserMonitor
+class FusionsCO2LaserMonitor(FusionsLaserMonitor, CO2LaserMonitor):
     pass
-#============= views ===================================
-
-#============= EOF ====================================
+#============= EOF =============================================
