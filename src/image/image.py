@@ -27,7 +27,7 @@ from numpy import asarray, flipud, ndarray, hstack, array, ones, vstack, zeros, 
 from cvwrapper import swapRB, grayspace, cvFlip, \
     draw_lines, add_scalar, new_dst, \
     resize, asMat, frompil, save_image, load_image, \
-    get_size, smooth, denoise#, setImageROI, resetImageROI
+    get_size, smooth, denoise, colorspace#, setImageROI, resetImageROI
     #cvSetImageROI, cvResetImageROI
 
 #class GraphicsContainer(object):
@@ -77,6 +77,8 @@ class Image(HasTraits):
             img = load_image(img, swap_rb)
 
         elif isinstance(img, ndarray):
+            img = asMat(asarray(img, 'uint8'), True)
+            img = colorspace(img)
 #            img = cvCreateImageFromNumpyArray(img)
 #            print fromarray(img)
 #            if nchannels < 3:
@@ -86,15 +88,15 @@ class Image(HasTraits):
 #                img = pil_to_ipl(fromarray(img))
 #            mat = cvCreateMatNDFromNumpyArray(img)
 #            img = cvGetImage(mat)
-            pass
+#            pass
 #            FromNumpyArray(img)
 #        if swap_rb:
 #            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
 
         self.source_frame = img
 
-#        self.frames = [clone(img)]
         self.frames = [img.clone()]
+#        self.frames = [clone(img)]
 
     def update_bounds(self, obj, name, old, new):
         if new:
@@ -124,6 +126,7 @@ class Image(HasTraits):
     def get_frame(self, flip=None, mirror=False, gray=False, swap_rb=None,
                   clone=False, croprect=None, size=None, **kw):
         frame = self._get_frame(**kw)
+#        frame = None
         if frame is not None:
 #            if raw:
 #                frame = rframe

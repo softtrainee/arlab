@@ -142,8 +142,8 @@ class FusionsLaserManager(LaserManager):
     def open_power_graph(self, rid, path=None):
         if self.power_graph is not None:
             self.power_graph.close()
+            del(self.power_graph)
 
-        del(self.power_graph)
         g = StreamGraph(
                     window_x=0.01,
                     window_y=0.4,
@@ -178,6 +178,7 @@ class FusionsLaserManager(LaserManager):
         return self.record_brightness and self._get_machine_vision() is not None
 
     def start_power_recording(self, rid):
+
         m = 'power and brightness' if self.record_brightness else 'power'
         self.info('start {} recording for {}'.format(m, rid))
         self._current_rid = rid

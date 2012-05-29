@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import on_trait_change
 #============= standard library imports ========================
@@ -36,6 +34,7 @@ class FusionsLaserUIPlugin(CoreUIPlugin):
         module = __import__('src.lasers.plugins.fusions.{}.preferences_page'.format(self.name), fromlist=[klass])
 
         return [getattr(module, klass)]
+
     def _action_sets_default(self):
 #        from fusions_laser_action_set import FusionsLaserActionSet
 

@@ -69,13 +69,11 @@ class RegisterManager(Manager):
                     hm = app.get_service('src.managers.hardware_manager.HardwareManager')
                     hm.load_devices()
 
-
     def _get_klasses(self):
         from src.hardware import HW_PACKAGE_MAP
         return [BLANK_STR] + HW_PACKAGE_MAP.keys()
 
     def load(self):
-
         ip = InitializationParser()
         self._plugins = ip.get_plugins(category='hardware', all=True)
         self.plugin = self._plugins[0]
@@ -86,7 +84,6 @@ class RegisterManager(Manager):
         return [BLANK_STR] + ip.get_managers(p, all=True)
 
     def _plugin_changed(self):
-
         mans = self.get_managers(self.plugin)
         self._managers = mans
         self.manager = self._managers[0] if self._managers else BLANK_STR

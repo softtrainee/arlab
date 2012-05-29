@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,26 +14,22 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-import cPickle as pickle
-
+#============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Button
 from traitsui.api import View, Item
+#============= standard library imports ========================
+import cPickle as pickle
 import select
 import socket
-
 import os
 import sys
 from threading import Thread
-from numpy import array, vstack
-import Queue
 import time
+#============= local library imports  ==========================
 
 # add src to the path
 
 # always change back to pychron_beta before committing
-
 SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                        'mercurial', 'pychron_beta')
 sys.path.insert(0, SRC_DIR)
@@ -43,7 +39,8 @@ from src.image.image import Image
 
 class VideoClient(HasTraits):
     _sock = None
-    host = '127.0.0.1'
+#    host = '129.138.12.141'
+    host = 'localhost'
     port = 1084
 
     frame_width = 640
@@ -76,7 +73,7 @@ class VideoClient(HasTraits):
         t.start()
 
     def _listen(self):
-        print 'lisenting'
+#        print 'lisenting'
 
         fp = 1 / 10.0
         while self._stream_video:
@@ -113,4 +110,4 @@ if __name__ == '__main__':
     c.listen()
     c.configure_traits()
 
-#======== EOF ================================
+#============= EOF =============================================
