@@ -60,7 +60,7 @@ class DBResult(BaseDBResult):
             self.graph.export_data(plotid=0)
 
     def initialize(self):
-        pass
+        return self.isloadable()
 
     def load(self):
         dbr = self._db_result

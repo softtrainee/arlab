@@ -123,7 +123,8 @@ class DBSelector(Loggable):
                       ),
 
                  qgrp,
-                 HGroup(Item('omit_bogus'),
+                 HGroup(
+                        #Item('omit_bogus'),
                         Item('open_button', show_label=False),
                         spring, Item('search', show_label=False)),
 
@@ -229,9 +230,10 @@ class DBSelector(Loggable):
                 for di in dbs:
                     d = self.result_klass(_db_result=di)
                     d.load()
-
-                    if d.isloadable() or not self.omit_bogus:
-                        self.results.append(d)
+                    d._loadable=True
+                    self.results.append(d)
+#                    if d.isloadable() or not self.omit_bogus:
+#                        self.results.append(d)
 
             self._sort_columns(self.results)
 
@@ -256,7 +258,10 @@ class DBSelector(Loggable):
 
                 else:
                     try:
-                        si.initialize()
+                        if not si.initialize():
+                            si._isloadable=False
+                            return
+                        
                         si.load_graph()
                         si.window_x = self.wx
                         si.window_y = self.wy
