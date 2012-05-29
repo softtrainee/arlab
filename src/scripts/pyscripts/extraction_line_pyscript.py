@@ -105,15 +105,15 @@ class ExtractionLinePyScript(PyScript):
             return
 
         self.info('opening {}'.format(vname))
-        result = self._manager_action('open_valve', vname, mode='script')
-        self.report_result(result)
+
+        self._manager_action('open_valve', None, description=vname, mode='script')
 
     def close(self, vname):
         if self._syntax_checking or self._cancel:
             return
 
         self.info('closing {}'.format(vname))
-        self._manager_action('close_valve', vname, mode='script')
+        self._manager_action('close_valve', None, description=vname, mode='script')
 
     def acquire(self, resource):
 

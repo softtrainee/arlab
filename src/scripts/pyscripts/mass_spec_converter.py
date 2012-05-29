@@ -39,51 +39,65 @@ KEYWORDS = dict(
 nindent = 1
 INDENT = '    '
 def as_pyscript_cmd(l, f):
+    global nindent
 
     l = l.strip()
     if l.startswith("'"):
-        return None, '#{}'.format(l)
-    try:
-        args = shlex.split(l)
-    except:
-        l = l.split("'")[0]
-        args = shlex.split(l)
-
-    nk = None
-    if args:
-        k = args[0]
-
-        try:
-            nk = KEYWORDS[k]
-        except KeyError:
-            return None, '#{}'.format(l)
-
-        args = args[1:]
-        nargs = []
-        for a in args:
-            try:
-                a = float(a)
-                fmt = '{}'
-            except ValueError:
-                fmt = '"{}"'
-
-            if nk == 'if':
-                fmt = '{}'
-            nargs.append(fmt.format(a))
-
-        sargs = ','.join(nargs)
-        if nk == 'if':
-            r = '{} {}:'.format(nk, sargs)
-        else:
-            r = '{}({})'.format(nk, sargs)
+        r = '#{}'.format(l)
+        py_cmd = _build_py_cmd_line(r, nindent)
     else:
-        r = ''
+        try:
+            args = shlex.split(l)
+        except:
+            l = l.split("'")[0]
+            args = shlex.split(l)
 
-    return nk, r
+        nk = None
+        if args:
+            k = args[0]
+            try:
+                nk = KEYWORDS[k]
+                args = args[1:]
+                nargs = []
+                for a in args:
+                    try:
+                        a = float(a)
+                        fmt = '{}'
+                    except ValueError:
+                        fmt = '"{}"'
+
+                    if nk == 'if':
+                        fmt = '{}'
+                    nargs.append(fmt.format(a))
+
+                sargs = ','.join(nargs)
+                if nk == 'if':
+                    r = '{} {}:'.format(nk, sargs)
+                else:
+                    r = '{}({})'.format(nk, sargs)
+            except KeyError:
+                r = '#{}'.format(l)
+        else:
+            r = ''
+        if nk == 'end':
+            r = '#end\n'
+            nindent = 1
+
+        py_cmd = _build_py_cmd_line(r, nindent)
+
+        if nk == 'if':
+            nindent = 2
+
+
+    return py_cmd
+#    return nk, r
+
+def _build_py_cmd_line(r, nindent):
+    py_cmd = '{}{}\n'.format(INDENT * nindent, r)
+    return py_cmd
 
 def to_pyscript(base, root, out, name):
 #    print root, out
-    global nindent
     n = root[len(base) + 1:]
     if n:
         out = os.path.join(out, n)
@@ -103,15 +117,15 @@ def main():
 ''')
 
             for _, l in enumerate(in_f.read().split('\r')):
-                k, cmd = as_pyscript_cmd(l, in_f)
-                if k == 'end':
-                    nindent = 1
-                    cmd = '#end\n'
+                cmd = as_pyscript_cmd(l, in_f)
+#                if k == 'end':
+#                    nindent = 1
+#                    cmd = '#end\n'
 
-                py_cmd = '{}{}\n'.format(INDENT * nindent, cmd)
-                out_f.write(py_cmd)
-                if k == 'if':
-                    nindent = 2
+#                py_cmd = '{}{}\n'.format(INDENT * nindent, cmd)
+                out_f.write(cmd)
+#                if k == 'if':
+#                    nindent = 2
 
 
 if __name__ == '__main__':
