@@ -23,7 +23,7 @@ from traits.api import HasTraits, Bool, Float, Int, Str
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from laser_monitor import LaserMonitor
+from src.monitors.fusions_laser_monitor import FusionsLaserMonitor
 
 class MonitorSeries(HasTraits):
     '''
@@ -32,7 +32,7 @@ class MonitorSeries(HasTraits):
     show = Bool
     value = Float
 
-class DiodeLaserMonitor(LaserMonitor):
+class FusionsDiodeLaserMonitor(FusionsLaserMonitor):
     '''
     '''
     max_temp = Float(800)
@@ -111,6 +111,7 @@ class DiodeLaserMonitor(LaserMonitor):
         '''
 
         '''
+        super(FusionsDiodeLaserMonitor, self).load_additional_args(config)
         self.set_attribute(config, 'max_temp',
                        'General', 'max_temp', cast='float', optional=True)
 

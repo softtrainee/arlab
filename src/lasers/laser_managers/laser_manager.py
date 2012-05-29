@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Event, Property, Instance, Bool, Str, on_trait_change, Enum
 from traitsui.api import View, Item, VGroup
@@ -288,6 +286,7 @@ class LaserManager(Manager):
         else:
             klass = StageManager
 
+        args['parent'] = self
         sm = klass(**args)
         return sm
 

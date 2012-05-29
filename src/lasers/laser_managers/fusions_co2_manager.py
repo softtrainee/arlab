@@ -24,6 +24,7 @@ from brightness_pid_manager import BrightnessPIDManager
 from fusions_laser_manager import FusionsLaserManager
 from src.monitors.fusions_laser_monitor import FusionsLaserMonitor
 from src.helpers.paths import co2laser_db, co2laser_db_root
+from src.monitors.fusions_co2_laser_monitor import FusionsCO2LaserMonitor
 
 
 
@@ -41,7 +42,7 @@ class FusionsCO2Manager(FusionsLaserManager):
     request_powermax = DelegatesTo('logic_board')
 
     monitor_name = 'co2_laser_monitor'
-    monitor_klass = FusionsLaserMonitor
+    monitor_klass = FusionsCO2LaserMonitor
 
     brightness_meter = Instance(BrightnessPIDManager, ())
     dbname = co2laser_db

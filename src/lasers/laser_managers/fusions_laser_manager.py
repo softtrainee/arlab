@@ -150,9 +150,6 @@ class FusionsLaserManager(LaserManager):
 
         do_later(self._open_power_graph, g)
 
-
-
-
     def start_power_recording(self, rid):
 
         m = 'power and brightness' if self.record_brightness else 'power'
@@ -194,8 +191,6 @@ class FusionsLaserManager(LaserManager):
 
         if self._get_record_brightness():
             self.brightness_timer = Timer(175, self._record_brightness)
-
-
 
     def stop_power_recording(self, delay=5, save=True):
 
