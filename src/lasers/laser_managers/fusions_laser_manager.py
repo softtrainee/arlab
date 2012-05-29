@@ -23,6 +23,7 @@ from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
 from threading import Thread, Timer as DoLaterTimer, Lock
 import time
+import os
 #=============local library imports  ==========================
 from src.graph.stream_graph import StreamGraph
 from src.database.adapters.power_adapter import PowerAdapter
@@ -32,12 +33,12 @@ from src.helpers.timer import Timer
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 from src.hardware.fiber_light import FiberLight
 from src.led.led_editor import LEDEditor
-from laser_manager import LaserManager
-from src.helpers.paths import co2laser_db_root, co2laser_db
-import os
+from src.helpers.paths import co2laser_db_root, co2laser_db, diodelaser_db
 from src.initializer import MProgressDialog
+from src.lasers.laser_managers.power_calibration_manager import PowerCalibrationManager
+from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 
-
+from laser_manager import LaserManager
 class FusionsLaserManager(LaserManager):
     '''
     '''
@@ -85,6 +86,11 @@ class FusionsLaserManager(LaserManager):
 
     _current_rid = None
 
+    power_calibration_manager = Instance(PowerCalibrationManager)
+
+
+
+
     def _record_fired(self):
         if self._recording_power_state:
             save = self.db_save_dialog()
@@ -115,29 +121,7 @@ class FusionsLaserManager(LaserManager):
             row.append()
             table.flush()
 
-    def _record_brightness(self):
-        cp = self.get_laser_intensity(verbose=False)
-        if cp is None:
-            cp = 0
 
-        xi = self.power_graph.record(cp, series=1)
-        self._write_h5('brightness', cp, xi)
-
-    def _record_power(self):
-        p = self.get_laser_watts()
-
-        if p is not None:
-            self._prev_power = p
-        else:
-            p = self._prev_power
-
-        if p is not None:
-            try:
-                x = self.power_graph.record(p)
-                self._write_h5('internal', p, x)
-            except Exception, e:
-                self.info(e)
-                print 'record power ', e
 
     def open_power_graph(self, rid, path=None):
         if self.power_graph is not None:
@@ -166,16 +150,8 @@ class FusionsLaserManager(LaserManager):
 
         do_later(self._open_power_graph, g)
 
-    def _open_power_graph(self, graph):
-        ui = graph.edit_traits()
-        self.add_window(ui)
 
-    def _dispose_optional_windows_hook(self):
-        if self.power_graph is not None:
-            self.power_graph.close()
 
-    def _get_record_brightness(self):
-        return self.record_brightness and self._get_machine_vision() is not None
 
     def start_power_recording(self, rid):
 
@@ -192,7 +168,7 @@ class FusionsLaserManager(LaserManager):
         self.data_manager = dm = H5DataManager()
         self._data_manager_lock = Lock()
 
-        dw = DataWarehouse(root=os.path.join(co2laser_db_root, 'power'))
+        dw = DataWarehouse(root=os.path.join(self.db_root, 'power'))
         dw.build_warehouse()
 
         dm.new_frame(directory=dw.get_current_dir(),
@@ -219,13 +195,7 @@ class FusionsLaserManager(LaserManager):
         if self._get_record_brightness():
             self.brightness_timer = Timer(175, self._record_brightness)
 
-    def get_power_database(self):
-#        db = PowerAdapter(dbname='co2laserdb',
-#                                   password='Argon')
-        db = PowerAdapter(dbname=co2laser_db,
-                          kind='sqlite')
 
-        return db
 
     def stop_power_recording(self, delay=5, save=True):
 
@@ -272,10 +242,6 @@ class FusionsLaserManager(LaserManager):
                 t = DoLaterTimer(delay, _stop)
                 t.start()
 
-    def _lens_configuration_changed(self):
-
-        t = Thread(target=self.set_lens_configuration)
-        t.start()
 
     def set_light(self, state):
         if state:
@@ -345,13 +311,7 @@ class FusionsLaserManager(LaserManager):
         if mv:
             mv.collect_baseline_intensity(**kw)
 
-    def _get_machine_vision(self):
-        sm = self.stage_manager
-        m = 'machine_vision_manager'
-        mv = None
-        if hasattr(sm, m):
-            mv = getattr(sm, m)
-        return mv
+
 
     def get_laser_intensity(self, **kw):
         sm = self.stage_manager
@@ -559,6 +519,51 @@ class FusionsLaserManager(LaserManager):
 
         return vg
 
+    def _record_brightness(self):
+        cp = self.get_laser_intensity(verbose=False)
+        if cp is None:
+            cp = 0
+
+        xi = self.power_graph.record(cp, series=1)
+        self._write_h5('brightness', cp, xi)
+
+    def _record_power(self):
+        p = self.get_laser_watts()
+
+        if p is not None:
+            self._prev_power = p
+        else:
+            p = self._prev_power
+
+        if p is not None:
+            try:
+                x = self.power_graph.record(p)
+                self._write_h5('internal', p, x)
+            except Exception, e:
+                self.info(e)
+                print 'record power ', e
+
+    def _open_power_graph(self, graph):
+        ui = graph.edit_traits()
+        self.add_window(ui)
+
+    def _dispose_optional_windows_hook(self):
+        if self.power_graph is not None:
+            self.power_graph.close()
+
+    def _get_machine_vision(self):
+        sm = self.stage_manager
+        m = 'machine_vision_manager'
+        mv = None
+        if hasattr(sm, m):
+            mv = getattr(sm, m)
+        return mv
+
+    def _lens_configuration_changed(self):
+
+        t = Thread(target=self.set_lens_configuration)
+        t.start()
+
     def _get_pointer_label(self):
         '''
         '''
@@ -566,11 +571,34 @@ class FusionsLaserManager(LaserManager):
 
     def _get_record_label(self):
         return 'Record' if not self._recording_power_state else 'Stop'
+
+    def _get_record_brightness(self):
+        return self.record_brightness and self._get_machine_vision() is not None
+
 #========================= defaults =======================
+    def get_power_database(self):
+#        db = PowerAdapter(dbname='co2laserdb',
+#                                   password='Argon')
+        db = PowerAdapter(dbname=self.dbname,
+                          kind='sqlite')
+
+        return db
+    def get_power_calibration_database(self):
+
+        db = PowerCalibrationAdapter(dbname=self.dbname,
+                                             kind='sqlite')
+        db.connect()
+        return db
 #    def _subsystem_default(self):
 #        '''
 #        '''
 #        return ArduinoSubsystem(name='arduino_subsystem_2')
+    def _power_calibration_manager_default(self):
+        mv = self._get_machine_vision()
+        return PowerCalibrationManager(parent=self,
+                                       machine_vision=mv,
+                                       db=self.get_power_calibration_database()
+                                       )
 
     def _fiber_light_default(self):
         '''

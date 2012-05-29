@@ -36,39 +36,6 @@ def get_manager(event, app=None):
 
     return manager
 
-class ExecutePatternAction(Action):
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            manager.stage_manager.pattern_manager.execute_pattern()
-
-
-class OpenPatternManagerAction(Action):
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            app = self.window.application
-            open_manager(app,
-                         manager.stage_manager.pattern_manager, view='pattern_maker_view')
-
-#class OpenCalibrationManagerAction(Action):
-#    def perform(self, event):
-#        manager = get_manager(event)
-#        if manager is not None:
-#            man = manager.stage_manager.calibration_manager
-#            open_manager(man)
-
-class OpenMotionControllerManagerAction(Action):
-
-    def perform(self, event):
-        man = get_manager(event)
-        if man is not None:
-            m = man.stage_manager.motion_configure_factory(view_style='full_view')
-            app = self.window.application
-            open_manager(app, m)
-
 
 class OpenLaserManagerAction(Action):
     name = 'Open Laser Manager'
@@ -81,52 +48,22 @@ class OpenLaserManagerAction(Action):
             open_manager(app, man)
 
 
-class MoveLoadPositionAction(Action):
-    name = 'Loading Position'
-    description = 'Move to loading position'
+class OpenMotionControllerManagerAction(Action):
 
+    def perform(self, event):
+        man = get_manager(event)
+        if man is not None:
+            m = man.stage_manager.motion_configure_factory(view_style='full_view')
+            app = self.window.application
+            open_manager(app, m)
+
+
+class ConfigureBrightnessMeterAction(Action):
     def perform(self, event):
         manager = get_manager(event)
         if manager is not None:
-            manager.move_to_load_position()
-
-
-class PowerScanAction(Action):
-    name = 'Open Power Scan'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            manager.show_power_scan()
-
-
-class StepHeatAction(Action):
-    name = 'Open Step Heater'
-    enabled = False
-
-    def __init__(self, *args, **kw):
-        super(StepHeatAction, self).__init__(*args, **kw)
-
-        man = get_manager(None, self.window.application)
-        if 'Diode' in man.__class__.__name__:
-            self.enabled = True
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            manager.show_step_heater()
-#------------------------------------------------------------------------------ 
-
-
-class PulseAction(Action):
-    name = 'Power Map'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            man = manager.get_pulse_manager()
-            open_manager(self.window.application,
-                         man, view='standalone_view')
+            app = self.window.application
+            open_manager(app, manager.brightness_meter)
 
 
 class PowerMapAction(Action):
@@ -139,67 +76,6 @@ class PowerMapAction(Action):
             app = self.window.application
             open_manager(app, man)#, view = 'canvas_view')
 
-
-class OpenPowerScanGraphAction(Action):
-    name = 'Open Power Scan Result'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            manager.graph_manager.open_graph('powerscan')
-
-
-class OpenPowerMapAction(Action):
-    name = 'Open Map Result'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-#            from src.database.adapters.power_map_adapter import PowerMapAdapter
-#            db = PowerMapAdapter(dbname=co2laser_db,
-#                                 kind='sqlite'
-##                                password='Argon',
-#                                )
-            db = manager.get_power_map_manager().database
-            open_selector(db, self.window.application)
-
-#            manager.graph_manager.open_power_map()
-#            manager.graph_manager.open_graph('powermap')
-
-
-class OpenPowerRecordGraphAction(Action):
-    name = 'Open Power Scan Result'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-#            db = PowerAdapter(dbname='co2laserdb',
-#                                password='Argon')
-            db = manager.get_power_database()
-            open_selector(db, self.window.application)
-#            manager.graph_manager.open_graph('powerrecord')
-
-class OpenVideoAction(Action):
-    name = 'Open Video Result'
-
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-#            db = PowerAdapter(dbname='co2laserdb',
-#                                password='Argon')
-            #fix if stage manager is not a video manager still should be able to open vidoes
-            db = manager.stage_manager.get_video_database()
-            open_selector(db, self.window.application)
-#            manager.graph_manager.open_graph('powerrecord')
-
-class ConfigureBrightnessMeterAction(Action):
-    def perform(self, event):
-        manager = get_manager(event)
-        if manager is not None:
-            app = self.window.application
-            open_manager(app, manager.brightness_meter)
-
-
 class PowerCalibrationAction(Action):
     def perform(self, event):
         manager = get_manager(event)
@@ -207,7 +83,9 @@ class PowerCalibrationAction(Action):
             app = self.window.application
             open_manager(app, manager.power_calibration_manager)
 
-
+#===============================================================================
+# database selectors
+#===============================================================================
 class OpenPowerCalibrationAction(Action):
     def perform(self, event):
         manager = get_manager(event)
@@ -216,6 +94,38 @@ class OpenPowerCalibrationAction(Action):
             open_selector(db, self.window.application)
 
 
+class OpenPowerMapAction(Action):
+    name = 'Open Map Result'
+
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            db = manager.get_power_map_manager().database
+            open_selector(db, self.window.application)
+
+
+class OpenPowerRecordGraphAction(Action):
+    name = 'Open Power Scan Result'
+
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            db = manager.get_power_database()
+            open_selector(db, self.window.application)
+
+
+class OpenVideoAction(Action):
+    name = 'Open Video Result'
+
+    def perform(self, event):
+        manager = get_manager(event)
+        if manager is not None:
+            db = manager.stage_manager.get_video_database()
+            open_selector(db, self.window.application)
+
+#===============================================================================
+# initializations
+#===============================================================================
 class InitializeBeamAction(Action):
     def perform(self, event):
         manager = get_manager(event)
@@ -228,3 +138,76 @@ class InitializeZoomAction(Action):
         manager = get_manager(event)
         if manager is not None:
             manager.do_motor_initialization('zoom')
+
+
+#===============================================================================
+# unused
+#===============================================================================
+#class PowerScanAction(Action):
+#    name = 'Open Power Scan'
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            manager.show_power_scan()
+#
+#
+#class StepHeatAction(Action):
+#    name = 'Open Step Heater'
+#    enabled = False
+#
+#    def __init__(self, *args, **kw):
+#        super(StepHeatAction, self).__init__(*args, **kw)
+#
+#        man = get_manager(None, self.window.application)
+#        if 'Diode' in man.__class__.__name__:
+#            self.enabled = True
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            manager.show_step_heater()
+#class PulseAction(Action):
+#    name = 'Power Map'
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            man = manager.get_pulse_manager()
+#            open_manager(self.window.application,
+#                         man, view='standalone_view')
+#class OpenPowerScanGraphAction(Action):
+#    name = 'Open Power Scan Result'
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            manager.graph_manager.open_graph('powerscan')
+#class MoveLoadPositionAction(Action):
+#    name = 'Loading Position'
+#    description = 'Move to loading position'
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            manager.move_to_load_position()
+#class ExecutePatternAction(Action):
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            manager.stage_manager.pattern_manager.execute_pattern()
+#
+#
+#class OpenPatternManagerAction(Action):
+#
+#    def perform(self, event):
+#        manager = get_manager(event)
+#        if manager is not None:
+#            app = self.window.application
+#            open_manager(app,
+#                         manager.stage_manager.pattern_manager, view='pattern_maker_view')
+
+
+
+
