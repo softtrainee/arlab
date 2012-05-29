@@ -14,13 +14,10 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import Instance, Button, Bool, Float
 from traitsui.api import VGroup, Group, Item, InstanceEditor
 #=============standard library imports ========================
-
 
 #=============local library imports  ==========================
 
@@ -35,18 +32,8 @@ from src.monitors.diode_laser_monitor import DiodeLaserMonitor
 
 from fusions_laser_manager import FusionsLaserManager
 from src.lasers.laser_managers.vue_metrix_manager import VueMetrixManager
-import time
-#from src.managers.step_heat_manager import StepHeatManager
+from src.helpers.paths import diodelaser_db, diodelaser_db_root
 
-
-#class UpdateHandler(Handler):
-#    def closed(self, info, isok):
-#        '''
-#        '''
-#        if isok:
-#            for t in info.object.update_timers:
-#                t.Stop()
-#            info.object.outputfile.close()
 
 class FusionsDiodeManager(FusionsLaserManager):
     '''
@@ -82,6 +69,8 @@ class FusionsDiodeManager(FusionsLaserManager):
     request_powermin = Float(0)
     request_powermax = Float(1500)
 
+    dbname = diodelaser_db
+    db_root = diodelaser_db_root
 #    def finish_loading(self):
 #        super(FusionsDiodeManager, self).finish_loading()
 #

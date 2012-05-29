@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Instance, Int, Event, Property, Bool
+from traits.api import HasTraits, Float, Instance, Int, Event, Property, Bool, Any
 from traitsui.api import View, Item
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -68,6 +68,8 @@ class PowerCalibrationManager(Manager):
     _alive = Bool(False)
     data_manager = None
     graph = None
+    db = Any
+
     def _get_execute_label(self):
         return 'Stop' if self._alive else 'Start'
 
@@ -191,8 +193,9 @@ class PowerCalibrationManager(Manager):
 
     def _save_to_db(self):
         if self.parameters.use_db:
-            db = PowerCalibrationAdapter(dbname=co2laser_db,
-                                         kind='sqlite')
+#            db = PowerCalibrationAdapter(dbname=co2laser_db,
+#                                         kind='sqlite')
+            db = self.db
             db.connect()
             r = db.add_calibration_record()
             db.add_path(r, self.data_manager.get_current_path())

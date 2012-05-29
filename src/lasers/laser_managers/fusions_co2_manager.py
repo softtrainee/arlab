@@ -23,9 +23,8 @@ from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
 from brightness_pid_manager import BrightnessPIDManager
 from fusions_laser_manager import FusionsLaserManager
 from src.monitors.fusions_laser_monitor import FusionsLaserMonitor
-from src.lasers.laser_managers.power_calibration_manager import PowerCalibrationManager
-from src.helpers.paths import co2laser_db
-from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
+from src.helpers.paths import co2laser_db, co2laser_db_root
+
 
 
 class FusionsCO2Manager(FusionsLaserManager):
@@ -45,24 +44,14 @@ class FusionsCO2Manager(FusionsLaserManager):
     monitor_klass = FusionsLaserMonitor
 
     brightness_meter = Instance(BrightnessPIDManager, ())
-    power_calibration_manager = Instance(PowerCalibrationManager)
+    dbname = co2laser_db
+    db_root = co2laser_db_root
 
     def _brightness_meter_default(self):
         mv = self._get_machine_vision()
         return BrightnessPIDManager(parent=self,
                                     machine_vision=mv)
 
-    def _power_calibration_manager_default(self):
-        mv = self._get_machine_vision()
-        return PowerCalibrationManager(parent=self,
-                                       machine_vision=mv,
-                                       )
-
-    def get_power_calibration_database(self):
-        db = PowerCalibrationAdapter(dbname=co2laser_db,
-                                             kind='sqlite')
-        db.connect()
-        return db
 
     def set_laser_power(self, rp):
         '''

@@ -62,6 +62,10 @@ bakeout_db = os.path.join(bakeout_db_root, 'bakeouts.sqlite')
 co2laser_db_root = os.path.join(db_path, 'co2laserdb')
 co2laser_db = os.path.join(db_path, 'co2.sqlite')
 
+diodelaser_db_root = os.path.join(db_path, 'diodelaserdb')
+diodelaser_db = os.path.join(db_path, 'dioode.sqlite')
+
+
 #directories directly under root
 data_dir = os.path.join(stable_root, 'data')
 
