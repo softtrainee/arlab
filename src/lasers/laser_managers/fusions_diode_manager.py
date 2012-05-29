@@ -169,6 +169,7 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         self.temperature_controller.disable()
         self.control_module_manager.disable()
+        super(FusionsDiodeManager,self)._disable_hook()
 
 #    def disable_laser(self):
 #        '''

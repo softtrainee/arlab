@@ -160,7 +160,7 @@ class FusionsLogicBoard(CoreDevice):
 
             try:
                 resp = int(resp)
-            except ValueError:
+            except (ValueError, TypeError):
                 resp = None
 
             if resp is None:
