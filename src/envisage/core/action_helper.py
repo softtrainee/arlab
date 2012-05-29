@@ -34,8 +34,8 @@ def open_manager(app, man, **kw):
 #        man.edit_traits()
 
         MANAGERS.append(man)
-
-    app.uis.append(ui)
+    if app:
+        app.uis.append(ui)
 
 def open_protocol(app, protocol):
     m = app.get_service(protocol)

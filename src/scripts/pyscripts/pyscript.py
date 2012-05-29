@@ -28,7 +28,9 @@ from pyface.wx.dialog import confirmation
 
 COMMANDS = ['sleep',
             'begin_interval', 'complete_interval',
-            'gosub', 'exit', ('info', '_m_info')]
+            'gosub', 'exit', ('info', '_m_info'),
+
+            ]
 
 
 class DummyManager(Loggable):
@@ -47,6 +49,13 @@ class GosubError(Exception):
         return 'GosubError: {} does not exist'.format(self.path)
 
 
+class PyscriptError(Exception):
+    def __init__(self, err):
+        self.err = err
+    def __str__(self):
+        return 'Pyscript error: {}'.format(self.err)
+
+
 class IntervalError(Exception):
     def __str__(self):
         return 'Poorly matched BeginInterval-CompleteInterval'
@@ -55,6 +64,7 @@ class IntervalError(Exception):
 class MainError(Exception):
     def __str__(self):
         return 'No "main" function defined'
+
 
 HTML_HELP = '''
 <body>
@@ -102,6 +112,7 @@ HTML_HELP = '''
 class PyScript(Loggable):
     _text = None
     manager = Any
+    laser_manager = Any
     parent = Any
     root = Str
     parent_script = Any
@@ -162,12 +173,15 @@ class PyScript(Loggable):
     def cancel(self):
         self._cancel = True
         if self._gosub_script is not None:
-            self._gosub_script.cancel()
+            if not self._gosub_script._cancel:
+                self._gosub_script.cancel()
+
         if self.parent:
             self.parent._executing = False
 
         if self.parent_script:
-            self.parent_script.cancel()
+            if not self.parent_script._cancel:
+                self.parent_script.cancel()
 
         if self._wait_dialog:
             self._wait_dialog.close()
@@ -186,9 +200,10 @@ class PyScript(Loggable):
                 self._text = f.read()
 
     def report_result(self, r):
-        n = currentThread().name
-        if n == 'MainThread':
-            print r
+#        n = currentThread().name
+#        if n == 'MainThread':
+#            print r
+        pass
 
 #==============================================================================
 # commands
@@ -196,6 +211,16 @@ class PyScript(Loggable):
     def gosub(self, name):
         if not name.endswith('.py'):
             name += '.py'
+
+        if '/' in name:
+            d = '/'
+        elif ':' in name:
+            d = ':'
+
+        dirs = name.split(d)
+        name = dirs[0]
+        for di in dirs[1:]:
+            name = os.path.join(name, di)
 
         p = os.path.join(self.root, name)
         if not os.path.isfile(p):
@@ -208,12 +233,15 @@ class PyScript(Loggable):
                           manager=self.manager,
                           parent_script=self
                           )
-        s.bootstrap()
+#        s.bootstrap()
 
         if self._syntax_checking:
             if not self._syntax_checked:
-                s._test()
                 self._syntax_checked = True
+                s.bootstrap()
+                err = s._test()
+                if err:
+                    raise PyscriptError(err)
         else:
             if not self._cancel:
                 self.info('doing GOSUB')
@@ -289,8 +317,8 @@ class PyScript(Loggable):
             ok = True
             if not self._syntax_checked:
                 r = self._test()
-                if r is not None:
-                    return r
+#                if r is not None:
+#                    return r
 
             if ok:
                 self._execute()
@@ -309,7 +337,7 @@ class PyScript(Loggable):
 
         if r is not None:
             self.info('invalid syntax')
-
+            raise PyscriptError(r)
 #            report the traceback
 #            self.info(r)
 
@@ -320,7 +348,6 @@ class PyScript(Loggable):
             self.info('syntax checking passed')
         self._syntax_checking = False
 
-        return r
 
     def _execute(self):
 
@@ -361,13 +388,25 @@ class PyScript(Loggable):
         if self.controller is not None:
             self.controller.end()
 
-    def _manager_action(self, func, *args, **kw):
-        man = self._get_manager()
-        if man is not None:
-            getattr(man, func)(*args, **kw)
+    def _manager_action(self, func, manager=None, *args, **kw):
+#        man = self._get_manager()
+        man = self.manager
+#        print man, manager, func
+        if manager is not None and man is not None:
+            app = man.application
+            if app is not None:
+                man = app.get_service(manager)
 
-    def _get_manager(self):
-        return self.manager
+        if man is not None:
+
+            if not isinstance(func, list):
+                func = [(func, args, kw)]
+
+            for f, a, k in func:
+                getattr(man, f)(*a, **k)
+
+#    def _get_manager(self):
+#        return self.manager
 
 #==============================================================================
 # Sleep/ Wait
@@ -425,3 +464,4 @@ if __name__ == '__main__':
                       _manager=DummyManager())
 
     p.execute()
+

@@ -69,11 +69,11 @@ class Video(Image):
 
             #ideally an identifier is passed in 
             try:
-                if DEBUG:
-                    self.cap = 1
-                else:
+#                if DEBUG:
+#                    self.cap = 1
+#                else:
 #                    self.cap = cvCreateCameraCapture(0)
-                    self.cap = get_capture_device(identifier)
+                self.cap = get_capture_device(identifier)
             except:
                 self.cap = None
 
@@ -113,12 +113,13 @@ class Video(Image):
             set_frame_index(cap, ind)
 
     def _get_frame(self, **kw):
+#        if DEBUG:
+##                    src = '/Users/ross/Sandbox/tray_screen_shot3.tiff'
+#            src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
+#            return load_image(src)
+
         if self.cap is not None:
             with self._lock:
-                if DEBUG:
-#                    src = '/Users/ross/Sandbox/tray_screen_shot3.tiff'
-                    src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
-                    return load_image(src)
                 self._frame = query_frame(self.cap)
             return self._frame
 

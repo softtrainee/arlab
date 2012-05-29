@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import HasTraits, Bool, Instance, List, Dict
 from envisage.api import ExtensionPoint

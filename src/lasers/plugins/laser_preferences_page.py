@@ -14,11 +14,8 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-#from __future__ import with_statement
 #============= enthought library imports =======================
-from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Float
+from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Float, Int
 from traitsui.api import  Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
@@ -31,6 +28,8 @@ class LaserPreferencesPage(ManagerPreferencesPage):
 
     use_video = Bool(False)
     video_identifier = Enum(1, 2)
+    use_video_server = Bool(False)
+    video_server_port = Int(1084)
 
     record_lasing = Bool(False)
     show_grids = Bool(True)
@@ -68,6 +67,14 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                               enabled_when='record_lasing'),
                          Item('recording_zoom', label='Zoom', enabled_when='record_lasing'),
                          Item('record_brightness', label='Record Brightness Measure'),
+
+#                         Item('use_video_server', label='Use Server'),
+#                         VGroup(Item('video_server_port', label='Port',
+#                                enabled_when='use_video_server'),
+#                                show_border=True,
+#                                label='Server'
+#                                ),
+
                          enabled_when='use_video'
                          ),
                       show_border=True, label='Video'),

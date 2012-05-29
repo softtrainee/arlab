@@ -87,7 +87,7 @@ class PyScriptManager(Manager):
     show_kind = Bool(False)
     kind = Enum('ExtractionLine', 'Bakeout')
     body = String('''def main():
-    pass
+    gosub('subs/gtest')
 
 ''')
     help_message = Str
@@ -186,6 +186,8 @@ class PyScriptManager(Manager):
             r, n = os.path.split(self.save_path)
             kw['root'] = r
             kw['name'] = n
+        else:
+            kw['root'] = os.path.join(scripts_dir, 'pyscripts')
 
         return klass(manager=self.parent,
                      parent=self,
@@ -204,12 +206,13 @@ class PyScriptManager(Manager):
 #        self.help_path = ps.get_help_path()
         self.help_message = m
 
-    def open_script(self):
-        p = self.open_file_dialog(default_directory=self._get_default_directory())
+    def open_script(self, path=None):
+        if path is None:
+            path = self.open_file_dialog(default_directory=self._get_default_directory())
 #        p = os.path.join(self._get_default_directory(), 'btest.py')
-        if p is not None:
-            self._load_script(p)
-            self.save_path = p
+        if path is not None:
+            self._load_script(path)
+            self.save_path = path
 
     def test_script(self):
         self.execute_enabled = False
@@ -240,8 +243,9 @@ class PyScriptManager(Manager):
         self.script.cancel()
 
     def execute_script(self, path=None):
-        open_manager(self.application,
-                     self.runner)
+#        open_manager(self.application,
+#                     self.runner)
+
         ps = self._pyscript_factory(self.kind, runner=self.runner)
         load = False
         if path is None:
@@ -351,9 +355,10 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('scripts')
-#    s = PyScriptManager(kind='ExtractionLine',
-#                        default_directory_name='pyscripts')
-    s = PyScriptManager(kind='Bakeout')
-#    s.open_script()
+    s = PyScriptManager(kind='ExtractionLine',
+                        default_directory_name='pyscripts')
+#    s = PyScriptManager(kind='Bakeout')
+    p = os.path.join(scripts_dir, 'ms_runscripts', 'Quick Air x1.py')
+    s.open_script(path=p)
     s.configure_traits()
 #============= EOF =============================================

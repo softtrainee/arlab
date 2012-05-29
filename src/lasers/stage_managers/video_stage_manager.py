@@ -40,6 +40,7 @@ import os
 #from video_clean_script import VideoDirectoryMaintainceScript
 from multiprocessing.process import Process
 from src.helpers.archiver import Archiver
+from src.image.video_server import VideoServer
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -100,9 +101,9 @@ class VideoStageManager(StageManager, Videoable):
     is_recording = Bool
 
     video_directory = Directory
-
-
     video_identifier = Enum(1, 2)
+#    use_video_server = Bool(False)
+#    video_server = Instance(VideoServer)
 
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
@@ -123,6 +124,10 @@ class VideoStageManager(StageManager, Videoable):
         bind_preference(self, 'video_identifier',
                         '{}.video_identifier'.format(pref_id)
                         )
+
+#        bind_preference(self, 'use_video_server',
+#                        '{}.use_video_server'.format(pref_id)
+#                        )
 
     def start_recording(self, path=None, basename='vm_recording',
                          use_dialog=False, user='remote'):
@@ -181,6 +186,11 @@ class VideoStageManager(StageManager, Videoable):
         elif 'x' in name:
             self._camera_xcoefficients = new
 
+#    def finish_loading(self):
+#        super(VideoStageManager, self).finish_loading()
+#        if self.use_video_server:
+#            self.video_server.start()
+
     def initialize_stage(self):
         super(VideoStageManager, self).initialize_stage()
 
@@ -193,12 +203,17 @@ class VideoStageManager(StageManager, Videoable):
         self._drive_xratio = xa
         self._drive_yratio = ya
 
+
     def kill(self):
         '''
         '''
         super(VideoStageManager, self).kill()
         self.canvas.camera.save_calibration()
         self.video.close(user='underlay')
+
+#        if self.use_video_server:
+#            self.video_server.stop()
+
         for s in self._stage_maps:
             s.dump_correction_file()
 
@@ -393,9 +408,17 @@ class VideoStageManager(StageManager, Videoable):
         self.canvas.camera.focus_z = z
         self.canvas.camera.save_focus()
 
+    def _use_video_server_changed(self):
+        if self.use_video_server:
+            self.video_server.start()
+        else:
+            self.video_server.stop()
 #==============================================================================
 # Defaults
 #==============================================================================
+    def _video_server_default(self):
+        return VideoServer(video=self.video)
+
     def _camera_calibration_manager_default(self):
         return CameraCalibrationManager()
 

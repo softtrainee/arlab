@@ -47,7 +47,8 @@ class ExtractionLinePyScript(PyScript):
 
     def _post_execute_hook(self):
         #remove ourselves from the script runner
-        self.runner.scripts.remove(self)
+        if self.runner:
+            self.runner.scripts.remove(self)
 
     def _cancel_hook(self):
         if self._resource_flag:
@@ -59,9 +60,45 @@ class ExtractionLinePyScript(PyScript):
     def _get_commands(self):
         cmds = super(ExtractionLinePyScript, self)._get_commands()
         cmds += [('open', '_m_open'), 'close',
-                 'acquire', 'release'
+                 'acquire', 'release',
+
+                 'move_to_hole', 'heat_sample'
+
                  ]
         return cmds
+
+    def get_context(self):
+        d = super(ExtractionLinePyScript, self).get_context()
+
+        #=======================================================================
+        #Parameters
+        # this are directly referencable in the script
+        # e.g if OverlapRuns:
+        #    or
+        #    move_to_hole(holeid)
+        #=======================================================================
+
+        d['holeid'] = 123
+        d['OverlapRuns'] = True
+        return d
+
+
+    def move_to_hole(self, holeid):
+        self.info('move to hole {}'.format(holeid))
+
+        man_protocol = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
+        result = self._manager_action('move_to_hole', manager=man_protocol)
+        self.report_result(result)
+
+    def heat_sample(self, pwr, duration):
+        self.info('heat sample to power {}, {}'.format(pwr, duration))
+        man_protocol = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
+        self._manager_action([('enable_laser', (), {}),
+                                       ('set_laser_power', (pwr,), {})
+                                       ], manager=man_protocol)
+        self.sleep(duration)
+        self._manager_action('disable_laser', manager=man_protocol)
+
 
     def _m_open(self, vname):
         if self._syntax_checking or self._cancel:

@@ -36,8 +36,8 @@ def resize(src, w, h, dst=None):
     return dst
 
 
-def asMat(src):
-    return cv.asMat(src)
+def asMat(src, *args, **kw):
+    return cv.asMat(src, *args, **kw)
 
 
 def frompil(src):
