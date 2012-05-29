@@ -133,7 +133,7 @@ class PowerCalibrationManager(Manager):
 
         self.data_manager = dm = H5DataManager()
         if self.parameters.use_db:
-            dw = DataWarehouse(root=os.path.join(co2laser_db_root, 'power_calibration'))
+            dw = DataWarehouse(root=os.path.join(self.parent.db_root, 'power_calibration'))
             dw.build_warehouse()
             directory = dw.get_current_dir()
         else:
@@ -171,7 +171,11 @@ class PowerCalibrationManager(Manager):
             for _ in range(nintegrations):
                 if not self._alive:
                     break
-                rp += apm.read_power_meter(pi)
+                if apm is not None:
+                    rp += apm.read_power_meter(pi)
+                else:
+                    rp += 1
+
                 time.sleep(integration_period)
 
             if not self._alive:

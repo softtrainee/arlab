@@ -63,7 +63,7 @@ co2laser_db_root = os.path.join(db_path, 'co2laserdb')
 co2laser_db = os.path.join(db_path, 'co2.sqlite')
 
 diodelaser_db_root = os.path.join(db_path, 'diodelaserdb')
-diodelaser_db = os.path.join(db_path, 'dioode.sqlite')
+diodelaser_db = os.path.join(db_path, 'diode.sqlite')
 
 
 #directories directly under root
