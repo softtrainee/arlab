@@ -66,7 +66,8 @@ class VideoResult(RIDDBResult):
         vid.open(identifier=self._get_path(), force=True)
         self.video_image.load(vid.get_frame())
         self.nframes = int(vid.get_nframes())
-
+        return True
+    
     def _fstep_fired(self):
         self._flag_factory()
         self.step_flag.set()

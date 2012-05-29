@@ -52,8 +52,9 @@ class ManagerHandler(ViewableHandler):
 
         info.object.kill()
         return True
+    
     def close(self, info, isok):
-        info.object.close()
+        info.object.close(isok)
         return True
 class Manager(ConfigLoadable, Viewable):
     '''
@@ -136,7 +137,7 @@ class Manager(ConfigLoadable, Viewable):
 #    def close(self, is_ok):
 ##        print self.name, 'close', is_ok
 #        return True
-    def close(self):
+    def close(self, *args,**kw):
         pass
 
     def _kill_hook(self):
