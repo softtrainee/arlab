@@ -29,7 +29,7 @@ class FusionsLaserMonitor(LaserMonitor):
     '''
     '''
     manager = None
-    sample_delay = Int(10)
+#    sample_delay = Int(5)
     max_duration = Float(60) # in minutes
 
     max_coolant_temp = Float(25)
@@ -48,11 +48,10 @@ class FusionsLaserMonitor(LaserMonitor):
 #
 #        self.set_attribute(config, 'max_coolant_temp',
 #                           'General', 'max_coolant_temp', cast = 'float', optional = True)
-        if LaserMonitor.load_additional_args(self, config):
-            self.set_attribute(config, 'max_coolant_temp',
-                           'General', 'max_coolant_temp', cast='float', optional=True)
+        super(FusionsLaserMonitor,self).load_additional_args(self)
+        self.set_attribute(config, 'max_coolant_temp',
+                       'General', 'max_coolant_temp', cast='float', optional=True)
 
-        return True
 
 
     def __check_interlocks(self):

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int
+from traits.api import Int, Float
 #============= standard library imports ========================
 from threading import Thread
 import time
@@ -27,7 +27,7 @@ from src.config_loadable import ConfigLoadable
 class Monitor(ConfigLoadable):
     '''
     '''
-    sample_delay = Int(10)
+    sample_delay = Float(5)
     manager = None
     #parent = None
     kill = False
@@ -35,9 +35,11 @@ class Monitor(ConfigLoadable):
     def load(self):
         config = self.get_configuration()
         self.set_attribute(config, 'sample_delay',
-                           'General', 'sample_delay', cast='int', optional=True)
+                           'General', 'sample_delay', cast='float', optional=False)
+        
         self._load_hook(config)
         self._invalid_checks = []
+        
     def _load_hook(self, *args):
         pass
 
