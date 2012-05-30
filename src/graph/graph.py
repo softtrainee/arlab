@@ -536,6 +536,13 @@ class Graph(Loggable):
                           border_visible=False)
         plot.overlays.append(label)
 
+    def delplot(self, plotid=0, series=0):
+        plot = self.plots[plotid]
+
+        if isinstance(series, int):
+            series = 'plot{}'.format(series)
+        plot.delplot(series)
+
     def add_guide(self, value, orientation='h', plotid=0, color=(0, 0, 0)):
         '''
         '''

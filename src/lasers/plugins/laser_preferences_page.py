@@ -53,6 +53,8 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     recording_zoom = Float(0)
     record_brightness = Bool(True)
 
+    use_calibrated_power = Bool(True)
+
     def get_additional_groups(self):
 
         grp = Group(
@@ -78,6 +80,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                          enabled_when='use_video'
                          ),
                       show_border=True, label='Video'),
+                Item('use_calibrated_power'),
                Item('show_map'),
                Item('show_grids'),
                Item('show_laser_position'),

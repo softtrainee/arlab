@@ -20,6 +20,7 @@ from traitsui.api import View, Item, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
+from numpy import polyval
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.led.led import LED
@@ -30,6 +31,8 @@ from src.helpers import paths
 from src.managers.step_heat_manager import StepHeatManager
 from src.managers.graph_manager import GraphManager
 from pulse import Pulse
+from src.helpers.paths import hidden_dir
+
 
 class LaserManager(Manager):
     '''
@@ -56,6 +59,7 @@ class LaserManager(Manager):
     pulse = Instance(Pulse)
 
     _requested_power = None
+    use_calibrated_power = Bool(True)
 
     def bind_preferences(self, pref_id):
         from apptools.preferences.preference_binding import bind_preference
@@ -67,6 +71,7 @@ class LaserManager(Manager):
         bind_preference(self, 'window_height', '{}.height'.format(pref_id))
         bind_preference(self, 'window_x', '{}.x'.format(pref_id))
         bind_preference(self, 'window_y', '{}.y'.format(pref_id))
+        bind_preference(self, 'use_calibrated_power', '{}.use_calibrated_power'.format(pref_id))
 
     def dispose_optional_windows(self):
         if self.use_video:
@@ -179,7 +184,8 @@ class LaserManager(Manager):
 #    def enable_laser(self, is_ok=True):
         self.info('enable laser')
         enabled = self._enable_hook()
-        if isinstance(enabled, bool) and enabled:
+
+        if self.simulation or (isinstance(enabled, bool) and enabled):
             if self.clear_flag('enable_error_flag'):
                 self.debug('clearing enable error flag')
 
@@ -227,10 +233,45 @@ class LaserManager(Manager):
         self.step_heat_manager = shm
         shm.edit_traits()
 
-    def set_laser_power(self, power, *args, **kw):
+    def set_laser_power(self, power, calibration=False, *args, **kw):
         '''
         '''
-        self._requested_power = power
+        p = self._get_calibrated_power(power, calibration)
+
+        self.info('request power {:0.2f}, calibrated power {:0.2f}'.format(power, p))
+        self._requested_power = p
+        self._set_laser_power_hook(p)
+
+    def _set_laser_power_hook(self, p):
+        pass
+
+    def _get_calibrated_power(self, power, calibration):
+        if self.use_calibrated_power and not calibration:
+            pc = self.load_power_calibration()
+            coeffs = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', pc.coefficients)])
+            self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(coeffs))
+            if power < 0.1:
+                power = 0
+            else:
+                power = polyval(pc.coefficients, power)
+
+
+        return power
+
+    def load_power_calibration(self):
+        from src.lasers.laser_managers.power_calibration_manager import PowerCalibrationObject
+        p = os.path.join(hidden_dir, '{}_power_calibration'.format(self.name))
+        if os.path.isfile(p):
+            with open(p, 'rb') as f:
+                try:
+                    pc = pickle.load(f)
+                except pickle.PickleError:
+                    pc = PowerCalibrationObject()
+        else:
+            pc = PowerCalibrationObject()
+            pc.coefficients = [1, 0]
+
+        return pc
 
 #    def kill(self, **kw):
 #        '''

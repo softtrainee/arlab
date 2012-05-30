@@ -370,12 +370,12 @@ class AutomatedRun(Loggable):
         return t
 
     def _validate_duration(self, d):
-        return self._valiate_float(d)
+        return self._validate_float(d)
 
     def _validate_temp_or_power(self, d):
-        return self._valiate_float(d)
+        return self._validate_float(d)
 
-    def _valiate_float(self, d):
+    def _validate_float(self, d):
         try:
             return float(d)
         except ValueError:

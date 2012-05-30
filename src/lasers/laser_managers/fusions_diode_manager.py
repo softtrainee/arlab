@@ -133,11 +133,13 @@ class FusionsDiodeManager(FusionsLaserManager):
         self.temperature_controller.set_open_loop_setpoint(0.0)
 
     def set_laser_temperature(self, temp):
-        self.set_laser_power(temp, mode='closed')
+        self._set_laser_power_hook(temp, mode='closed')
 
-    def set_laser_power(self, power, mode='open'):
+    def _set_laser_power_hook(self, power, mode='open'):
         ''' 
         '''
+#        super(FusionsDiodeManager, self).set_laser_power(power)
+
         tc = self.temperature_controller
         if tc._control_mode != mode:
 
@@ -169,7 +171,7 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         self.temperature_controller.disable()
         self.control_module_manager.disable()
-        super(FusionsDiodeManager,self)._disable_hook()
+        return super(FusionsDiodeManager, self)._disable_hook()
 
 #    def disable_laser(self):
 #        '''
