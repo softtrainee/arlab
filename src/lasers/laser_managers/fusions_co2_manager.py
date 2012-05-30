@@ -54,11 +54,9 @@ class FusionsCO2Manager(FusionsLaserManager):
                                     machine_vision=mv)
 
 
-    def set_laser_power(self, rp):
+    def _set_laser_power_hook(self, rp):
         '''
         '''
-        super(FusionsCO2Manager, self).set_laser_power(rp)
-        self.info('request power {:0.3f}'.format(rp))
         self.logic_board._set_laser_power_(rp)
 
         if self.data_manager:

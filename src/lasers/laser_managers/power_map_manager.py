@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import  Instance, Event, Property, \
     DelegatesTo, Str, Enum, Bool, Any, Float, Int, List

@@ -383,6 +383,7 @@ class FusionsLaserManager(LaserManager):
     def _disable_hook(self):
         return self.logic_board._disable_laser_()
 
+
 #        if self.record_lasing:
 #            self.stage_manager.stop_recording()
 #        return

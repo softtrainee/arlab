@@ -15,11 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Instance, Int, Event, Property, Bool, Any
-from traitsui.api import View, Item
+from traits.api import HasTraits, Float, Button, Instance, Int, \
+     Event, Property, Bool, Any, Enum, on_trait_change, List
+from traitsui.api import View, Item, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-from numpy import polyfit
+from numpy import polyfit, linspace, polyval
 
 #============= local library imports  ==========================
 from src.managers.manager import Manager
@@ -31,8 +32,13 @@ from src.graph.graph import Graph
 from threading import Thread
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.data_warehouse import DataWarehouse
-from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
+#from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 from pyface.timer.do_later import do_later
+
+FITDEGREES = dict(Linear=1, Parabolic=2, Cubic=3)
+
+class PowerCalibrationObject(object):
+    coefficients = None
 
 class DummyPowerMeter:
     def read_power_meter(self, setpoint):
@@ -48,7 +54,7 @@ class Parameters(HasTraits):
     integration_period = Float(1)
     nintegrations = Int(5)
     use_db = Bool(True)
-
+    fit_degree = Enum('Linear', 'Parabolic', 'Cubic')
     view = View(
               Item('pstart', label='Start'),
               Item('pstop', label='Stop'),
@@ -56,6 +62,7 @@ class Parameters(HasTraits):
               Item('sample_delay'),
               Item('integration_period'),
               Item('nintegrations'),
+              Item('fit_degree', label='Fit'),
               Item('use_db')
 
               )
@@ -69,6 +76,35 @@ class PowerCalibrationManager(Manager):
     data_manager = None
     graph = None
     db = Any
+    coefficients = Property(depends_on='_coefficients')
+    _coefficients = List
+    save = Button
+    def __coefficients_default(self):
+        r = []
+        if self.parent:
+            pc = self.parent.load_power_calibration()
+            if pc:
+                r = list(pc.coefficients)
+
+        return r
+
+    def _save_fired(self):
+        pc = PowerCalibrationObject()
+        pc.coefficients = self._coefficients
+        self._dump_calibration(pc)
+
+    def _get_coefficients(self):
+        return ','.join(['{:0.2f}'.format(c) for c in self._coefficients]) if self._coefficients else ''
+
+    def _validate_coefficients(self, v):
+        try:
+            return map(float, [c for c in v.split(',')])
+
+        except (ValueError, AttributeError):
+            pass
+
+    def _set_coefficients(self, v):
+        self._coefficients = v
 
     def _get_execute_label(self):
         return 'Stop' if self._alive else 'Start'
@@ -91,6 +127,24 @@ class PowerCalibrationManager(Manager):
 
         return pa
 
+    def _apply_calibration(self):
+
+        if self.confirmation_dialog('Apply Calibration'):
+            pc = PowerCalibrationObject()
+            pc.coefficients = self._calculate_calibration()
+            self._dump_calibration(pc)
+
+    def _dump_calibration(self, pc):
+        name = self.parent.name if self.parent else 'foo'
+        p = os.path.join(hidden_dir, '{}_power_calibration'.format(name))
+        self.info('saving power calibration to {}'.format(p))
+        try:
+            with open(p, 'wb') as f:
+                pickle.dump(pc, f)
+
+        except pickle.PickleError:
+            pass
+
     def _execute_fired(self):
         if self._alive:
 
@@ -98,9 +152,12 @@ class PowerCalibrationManager(Manager):
             if self.parameters.use_db:
                 if self.confirmation_dialog('Save to Database'):
                     self._save_to_db()
+                    return
                 else:
                     self.data_manager.delete_frame()
                     self.data_manager.close()
+
+                self._apply_calibration()
 
         else:
             self._alive = True
@@ -164,7 +221,7 @@ class PowerCalibrationManager(Manager):
             pi = pstart + sign * i * pstep
             self.info('setting power to {}'.format(pi))
             if self.parent is not None:
-                self.parent.set_laser_power(pi)
+                self.parent.set_laser_power(pi, calibration=True)
 
             time.sleep(sample_delay)
             rp = 0
@@ -184,11 +241,12 @@ class PowerCalibrationManager(Manager):
             self._write_data(pi, rp / float(nintegrations), table)
 
         self._calculate_calibration()
+        self._apply_fit()
 
         if self._alive:
+            self._alive = False
             self._save_to_db()
-
-        self._alive = False
+            self._apply_calibration()
 
     def __alive_changed(self):
         if not self._alive:
@@ -220,7 +278,28 @@ class PowerCalibrationManager(Manager):
         xs = self.graph.get_data()
         ys = self.graph.get_data(axis=1)
 
-        print polyfit(xs, ys, 1)
+        deg = FITDEGREES[self.parameters.fit_degree]
+
+        coeffs = polyfit(xs, ys, deg)
+        self._coefficients = list(coeffs)
+
+    def _apply_fit(self, new=True):
+        xs = self.graph.get_data()
+
+        x = linspace(min(xs), max(xs), 500)
+        y = polyval(self._coefficients, x)
+        g = self.graph
+        if new:
+            g.new_series(x, y)
+        else:
+            g.set_data(x, series=1)
+            g.set_data(y, series=1, axis=1)
+            g.redraw()
+
+    @on_trait_change('parameters:fit_degree')
+    def update_graph(self):
+        self._calculate_calibration()
+        self._apply_fit(new=False)
 
     def kill(self):
         super(PowerCalibrationManager, self).kill()
@@ -232,9 +311,16 @@ class PowerCalibrationManager(Manager):
     def traits_view(self):
         v = View(self._button_factory('execute'),
                  Item('parameters', show_label=False, style='custom'),
+                 VGroup(Item('coefficients'),
+                        Item('save', show_label=False),
+                        show_border=True,
+                        label='Set Calibration'
+                        ),
+
                  handler=self.handler_klass,
                  title='Power Calibration',
-                 id='pychron.power_calibration_manager'
+                 id='pychron.power_calibration_manager',
+                 resizable=True
                  )
         return v
 
