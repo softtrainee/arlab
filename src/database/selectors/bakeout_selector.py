@@ -33,7 +33,7 @@ class BakeoutDBResult(DBResult):
     summary = DelegatesTo('viewer')
     export_button = DelegatesTo('viewer')
 
-    def load_graph(self):
+    def load_graph(self, *args, **kw):
         self.viewer = BakeoutGraphViewer(title=self.title)
         p = os.path.join(self.directory,
                                       self.filename

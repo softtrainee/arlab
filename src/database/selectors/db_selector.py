@@ -27,6 +27,7 @@ from src.helpers.datetime_tools import  get_date
 from src.loggable import Loggable
 from src.database.adapters.database_adapter import DatabaseAdapter
 from src.database.selectors.base_results_adapter import BaseResultsAdapter
+from src.graph.time_series_graph import TimeSeriesGraph
 
 
 class DBSelector(Loggable):
@@ -39,13 +40,11 @@ class DBSelector(Loggable):
     join_table = String
 
     comparator = Str('=')
-#    _comparisons = List(COMPARISONS['num'])
-    _comparisons = List(['=', '<', '>', '<=', '>=', '!=', 'like',
+    _comparisons = List(['=', '<', '>', '<=', '>=', '!=',
+                         'like',
                          'contains'
-#                         'match'
                          ])
     criteria = String('this month')
-    comparator_types = Property
     results = List
 
     search = Button
@@ -74,6 +73,9 @@ class DBSelector(Loggable):
 
     limit = Int(100)
     date_str = 'rundate'
+
+    multi_select_graph = Bool(True)
+    multi_graphable = Bool(False)
 
     def __init__(self, *args, **kw):
         super(DBSelector, self).__init__(*args, **kw)
@@ -116,7 +118,10 @@ class DBSelector(Loggable):
                                multi_select=True
                                )
         v = View(
-                 HGroup(spring, Item('limit')),
+                 HGroup(Item('multi_select_graph',
+                             defined_when='multi_graphable'
+                             ),
+                             spring, Item('limit')),
                  Item('results', style='custom',
                       editor=editor,
                       show_label=False
@@ -124,7 +129,6 @@ class DBSelector(Loggable):
 
                  qgrp,
                  HGroup(
-                        #Item('omit_bogus'),
                         Item('open_button', show_label=False),
                         spring, Item('search', show_label=False)),
 
@@ -230,7 +234,7 @@ class DBSelector(Loggable):
                 for di in dbs:
                     d = self.result_klass(_db_result=di)
                     d.load()
-                    d._loadable=True
+                    d._loadable = True
                     self.results.append(d)
 #                    if d.isloadable() or not self.omit_bogus:
 #                        self.results.append(d)
@@ -241,45 +245,80 @@ class DBSelector(Loggable):
         s = self.selected
 
         if s is not None:
-            for si in s:
-                if not si._loadable:
-                    continue
 
-                sid = si._id
-                if sid in self.opened_windows:
-                    c = self.opened_windows[sid].control
-                    if c is None:
-                        self.opened_windows.pop(sid)
-                    else:
-                        try:
-                            c.Raise()
-                        except:
-                            self.opened_windows.pop(sid)
+            if self.multi_select_graph:
+                self._open_multiple(s)
+            else:
+                self._open_individual(s)
 
+    def _open_multiple(self, s):
+        graph = None
+        xoffset = 0
+        for si in s:
+            if not si._loadable:
+                continue
+
+            if graph is None:
+                graph = si._graph_factory(klass=TimeSeriesGraph)
+                graph.new_plot(xtitle='Time',
+                               ytitle='Signal')
+
+            xoffset += si.load_graph(graph=graph, xoffset=xoffset)
+
+        wid = '.'.join([str(si._id) for si in s])
+        did = ', '.join([str(si._id) for si in s])
+        graph.window_title = '{} {}'.format(si.title_str, did)
+
+        info = graph.edit_traits()
+
+        self._open_window(wid, info)
+
+    def _open_individual(self, s):
+        for si in s:
+            if not si._loadable:
+                continue
+
+            sid = si._id
+            if sid in self.opened_windows:
+                c = self.opened_windows[sid].control
+                if c is None:
+                    self.opened_windows.pop(sid)
                 else:
                     try:
-                        if not si.initialize():
-                            si._isloadable=False
-                            return
-                        
-                        si.load_graph()
-                        si.window_x = self.wx
-                        si.window_y = self.wy
+                        c.Raise()
+                    except:
+                        self.opened_windows.pop(sid)
 
-                        info = si.edit_traits()
-                        self.opened_windows[sid] = info
+            else:
 
-                        if self._db.application is not None:
-                            self._db.application.uis.append(info)
+                try:
+                    if not si.initialize():
+                        si._isloadable = False
+                        return
 
-                        self.wx += 0.005
-                        self.wy += 0.03
+                    si.load_graph()
+                    si.window_x = self.wx
+                    si.window_y = self.wy
 
-                        if self.wy > 0.65:
-                            self.wx = 0.4
-                            self.wy = 0.1
-                    except Exception, e:
-                        self.warning(e)
+                    info = si.edit_traits()
+                    self._open_window(si._id, info)
+                except Exception, e:
+                    self.warning(e)
+
+    def _open_window(self, wid, ui):
+        self.opened_windows[wid] = ui
+        self._update_windowxy()
+
+        if self._db.application is not None:
+            self._db.application.uis.append(ui)
+
+    def _update_windowxy(self):
+        self.wx += 0.005
+        self.wy += 0.03
+
+        if self.wy > 0.65:
+            self.wx = 0.4
+            self.wy = 0.1
 
     def _sort_columns(self, values, field=None):
         #get the field to sort on

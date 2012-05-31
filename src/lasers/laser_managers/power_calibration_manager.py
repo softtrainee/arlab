@@ -79,94 +79,7 @@ class PowerCalibrationManager(Manager):
     coefficients = Property(depends_on='_coefficients')
     _coefficients = List
     save = Button
-    def __coefficients_default(self):
-        r = []
-        if self.parent:
-            pc = self.parent.load_power_calibration()
-            if pc:
-                r = list(pc.coefficients)
 
-        return r
-
-    def _save_fired(self):
-        pc = PowerCalibrationObject()
-        pc.coefficients = self._coefficients
-        self._dump_calibration(pc)
-
-    def _get_coefficients(self):
-        return ','.join(['{:0.2f}'.format(c) for c in self._coefficients]) if self._coefficients else ''
-
-    def _validate_coefficients(self, v):
-        try:
-            return map(float, [c for c in v.split(',')])
-
-        except (ValueError, AttributeError):
-            pass
-
-    def _set_coefficients(self, v):
-        self._coefficients = v
-
-    def _get_execute_label(self):
-        return 'Stop' if self._alive else 'Start'
-
-    def _parameters_default(self):
-        return self._load_parameters()
-
-    def _load_parameters(self):
-        p = os.path.join(hidden_dir, 'power_calibration')
-        pa = None
-        if os.path.isfile(p):
-            with open(p, 'rb') as f:
-                try:
-                    pa = pickle.load(f)
-                except pickle.PickleError:
-                    pass
-
-        if pa is None:
-            pa = Parameters()
-
-        return pa
-
-    def _apply_calibration(self):
-
-        if self.confirmation_dialog('Apply Calibration'):
-            pc = PowerCalibrationObject()
-            pc.coefficients = self._calculate_calibration()
-            self._dump_calibration(pc)
-
-    def _dump_calibration(self, pc):
-        name = self.parent.name if self.parent else 'foo'
-        p = os.path.join(hidden_dir, '{}_power_calibration'.format(name))
-        self.info('saving power calibration to {}'.format(p))
-        try:
-            with open(p, 'wb') as f:
-                pickle.dump(pc, f)
-
-        except pickle.PickleError:
-            pass
-
-    def _execute_fired(self):
-        if self._alive:
-
-            self._alive = False
-            if self.parameters.use_db:
-                if self.confirmation_dialog('Save to Database'):
-                    self._save_to_db()
-                    return
-                else:
-                    self.data_manager.delete_frame()
-                    self.data_manager.close()
-
-                self._apply_calibration()
-
-        else:
-            self._alive = True
-            t = Thread(target=self._execute_power_calibration)
-            t.start()
-
-    def _open_graph(self):
-        ui = self.graph.edit_traits()
-        self.parent.add_window(ui)
 
     def _execute_power_calibration(self):
         self.graph = g = Graph(window_title='CO2 Power Calibration',
@@ -248,10 +161,42 @@ class PowerCalibrationManager(Manager):
             self._save_to_db()
             self._apply_calibration()
 
-    def __alive_changed(self):
-        if not self._alive:
-            if self.parent is not None:
-                self.parent.disable_laser()
+    def _get_parameters_path(self):
+        p = os.path.join(hidden_dir, 'power_calibration_parameters')
+        return p
+
+    def _load_parameters(self):
+        p = self._get_parameters_path()
+        pa = None
+        if os.path.isfile(p):
+            with open(p, 'rb') as f:
+                try:
+                    pa = pickle.load(f)
+                except pickle.PickleError:
+                    pass
+
+        if pa is None:
+            pa = Parameters()
+
+        return pa
+
+    def _apply_calibration(self):
+
+        if self.confirmation_dialog('Apply Calibration'):
+            pc = PowerCalibrationObject()
+            pc.coefficients = self._calculate_calibration()
+            self._dump_calibration(pc)
+
+    def _dump_calibration(self, pc):
+        name = self.parent.name if self.parent else 'foo'
+        p = os.path.join(hidden_dir, '{}_power_calibration'.format(name))
+        self.info('saving power calibration to {}'.format(p))
+        try:
+            with open(p, 'wb') as f:
+                pickle.dump(pc, f)
+
+        except pickle.PickleError:
+            pass
 
     def _save_to_db(self):
         if self.parameters.use_db:
@@ -283,6 +228,10 @@ class PowerCalibrationManager(Manager):
         coeffs = polyfit(xs, ys, deg)
         self._coefficients = list(coeffs)
 
+    def _open_graph(self):
+        ui = self.graph.edit_traits()
+        self.parent.add_window(ui)
+
     def _apply_fit(self, new=True):
         xs = self.graph.get_data()
 
@@ -295,16 +244,47 @@ class PowerCalibrationManager(Manager):
             g.set_data(x, series=1)
             g.set_data(y, series=1, axis=1)
             g.redraw()
-
+#===============================================================================
+# handlers
+#===============================================================================
     @on_trait_change('parameters:fit_degree')
     def update_graph(self):
         self._calculate_calibration()
         self._apply_fit(new=False)
 
+    def __alive_changed(self):
+        if not self._alive:
+            if self.parent is not None:
+                self.parent.disable_laser()
+
+    def _save_fired(self):
+        pc = PowerCalibrationObject()
+        pc.coefficients = self._coefficients
+        self._dump_calibration(pc)
+
+    def _execute_fired(self):
+        if self._alive:
+
+            self._alive = False
+            if self.parameters.use_db:
+                if self.confirmation_dialog('Save to Database'):
+                    self._save_to_db()
+                    return
+                else:
+                    self.data_manager.delete_frame()
+                    self.data_manager.close()
+
+                self._apply_calibration()
+
+        else:
+            self._alive = True
+            t = Thread(target=self._execute_power_calibration)
+            t.start()
+
     def kill(self):
         super(PowerCalibrationManager, self).kill()
         if self.initialized:
-            with open(os.path.join(hidden_dir, 'power_calibration'),
+            with open(self._get_parameters_path(),
                       'wb') as f:
                 pickle.dump(self.parameters, f)
 
@@ -324,6 +304,34 @@ class PowerCalibrationManager(Manager):
                  )
         return v
 
+    def _get_execute_label(self):
+        return 'Stop' if self._alive else 'Start'
+
+    def _get_coefficients(self):
+        return ','.join(['{:0.2f}'.format(c) for c in self._coefficients]) if self._coefficients else ''
+
+    def _validate_coefficients(self, v):
+        try:
+            return map(float, [c for c in v.split(',')])
+
+        except (ValueError, AttributeError):
+            pass
+
+    def _set_coefficients(self, v):
+        self._coefficients = v
+
+
+    def _parameters_default(self):
+        return self._load_parameters()
+
+    def __coefficients_default(self):
+        r = []
+        if self.parent:
+            pc = self.parent.load_power_calibration()
+            if pc:
+                r = list(pc.coefficients)
+
+        return r
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('pcm')

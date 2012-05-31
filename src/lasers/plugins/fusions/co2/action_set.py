@@ -28,9 +28,6 @@ class FusionsCo2ActionSet(FusionsActionSet):
     '''
     '''
     id = 'pychron.fusions.co2.action_set'
-#    menus = [
-#           Menu(name = '&File', path = 'MenuBar')
-#           ]
     name = 'CO2'
     action_path = 'src.lasers.plugins.fusions.co2.actions:'
 
@@ -41,9 +38,6 @@ class FusionsCo2ActionSet(FusionsActionSet):
                        path=laser_path,
                        class_name='{}ConfigureBrightnessMeterAction'.format(self.action_path)
                        ),
-
-
-
              ]
-        return super(FusionsCo2ActionSet, self)._action_default() + r
+        return super(FusionsCo2ActionSet, self)._actions_default() + r
 #============= EOF ====================================

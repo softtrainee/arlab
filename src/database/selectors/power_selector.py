@@ -30,7 +30,7 @@ class PowerResult(RIDDBResult):
     title_str = 'PowerRecord'
     request_power = Float
 
-    def load_graph(self):
+    def load_graph(self, *args, **kw):
         g = self._graph_factory()
 
         dm = self.data_manager

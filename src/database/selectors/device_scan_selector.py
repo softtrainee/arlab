@@ -15,8 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Float
+from traits.api import String, Float, Bool
 #============= standard library imports ========================
+from numpy import array
 #============= local library imports  ==========================
 from src.database.selectors.db_selector import DBSelector
 from src.database.orms.device_scan_orm import ScanTable
@@ -29,15 +30,16 @@ class ScanResult(DBResult):
     title_str = 'Device Scan Record'
     request_power = Float
 
-    def load_graph(self):
-        g = self._graph_factory(klass=TimeSeriesGraph)
+    def load_graph(self, graph=None, xoffset=0):
         dm = self._data_manager_factory()
         dm.open_data(self._get_path())
 
-        g.new_plot(xtitle='Time',
-                   ytitle='Value',
-                   padding=[40, 10, 10, 40]
-                   )
+        if graph is None:
+            graph = self._graph_factory(klass=TimeSeriesGraph)
+            graph.new_plot(xtitle='Time',
+                       ytitle='Value',
+                       padding=[40, 10, 10, 40]
+                       )
         xi = None
         yi = None
         if isinstance(dm, H5DataManager):
@@ -52,10 +54,11 @@ class ScanResult(DBResult):
                 xi, yi = da
 
         if xi is not None:
-            g.new_series(xi, yi)
+            graph.new_series(array(xi) + xoffset, yi)
 
-        self.graph = g
+        self.graph = graph
 
+        return max(xi)
 #    def _load_hook(self, dbr):
 #        #load the datamanager to set _none_loadable flag
 #        self._data_manager_factory()
@@ -66,6 +69,7 @@ class DeviceScanSelector(DBSelector):
     result_klass = ScanResult
     join_table_col = String('name')
     join_table = String('DeviceTable')
+    multi_graphable = Bool(True)
 
     def _load_hook(self):
         jt = self._join_table_parameters
@@ -78,6 +82,7 @@ class DeviceScanSelector(DBSelector):
     def _get__join_table_parameters(self):
         dv = self._db.get_devices()
         return list(set([di.name for di in dv if di.name is not None]))
+
 
 
 #        f = lambda x:[str(col)

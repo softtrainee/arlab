@@ -25,6 +25,7 @@ import os
 import sys
 from threading import Thread
 import time
+from numpy import fromstring
 #============= local library imports  ==========================
 
 # add src to the path
@@ -78,27 +79,79 @@ class VideoClient(HasTraits):
         fp = 1 / 10.0
         while self._stream_video:
             t = time.time()
-            _, _out, _ = select.select([], [self._sock], [], 1)
+            data = self._sock.recv()
+            data = fromstring(data, dtype='uint8')
+            data = data.reshape(720, 1280, 3)
+#            print len(data) if data else 0
+            self.image.load(data)
+#            time.sleep(max(0.001, fp - (time.time() - t)))
 
-            for s in _out:
-                d = None
-                data = s.recv(self.frame_size)
-#                d = self.unpickle(data)
+#            t = time.time()
+#            print t
+#            try:
+#                
+#            except:
+#                pass
 
-                while 1:
-                    d = self.unpickle(data)
-                    if d is not None:
-                        break
-                    else:
-                        data += s.recv(self.frame_size)
+#            self._sock.send('get')
 
-                self.image.load(d, nchannels=1)
+#            d = self._sock.recv(self.frame_size)
+#            print d
+#            try:
+#                d = self._sock.recv(self.frame_size)
+##                print d
+#                if d:
+##                    self._sock.close()
+#            except Exception, e:
+#                pass
+#                self._sock.close()
 
-            time.sleep(max(0.001, fp - (time.time() - t)))
+#            _, _out, _ = select.select([], [self._sock], [], 1)
+#            i = 0
+#            for s in _out:
+#                d = None
+#                img = None
+#                while not d and i < 10:
+#                    try:
+#                        d = s.recv(self.frame_size)
+#                    except:
+#                        i += 1
+##                d = self.unpickle(data)
+#                j = 0
+#                while 1 and d:
+##                    print img
+#                    try:
+#                        img = fromstring(d)
+#                        break
+#                    except ValueError:
+#                        d += s.recv(self.frame_size)
+#                    time.sleep(1e-5)
+#                    j += 1
+#
+#
+##                    d = self.unpickle(data)
+##                    if d is not None:
+##                        break
+##                    else:
+##                        data += s.recv(self.frame_size)
+#                print 'got ', len(d) if d else 0
+#                if img is not None:
+#                    self.image.load(img, nchannels=1)
+
+#                print self.image.source_frame
+#            time.sleep(max(0.001, fp - (time.time() - t)))
 
     def connect(self, udp=False):
-        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._sock.connect((self.host, self.port))
+        import zmq
+
+        context = zmq.Context()
+        self._sock = context.socket(zmq.SUB)
+        self._sock.connect('tcp://localhost:5556')
+        self._sock.setsockopt(zmq.SUBSCRIBE, '')
+
+#        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#        self._sock.connect((self.host, self.port))
+#        self._sock.setblocking(False)
         self._stream_video = True
 
 

@@ -70,12 +70,12 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                          Item('recording_zoom', label='Zoom', enabled_when='record_lasing'),
                          Item('record_brightness', label='Record Brightness Measure'),
 
-#                         Item('use_video_server', label='Use Server'),
-#                         VGroup(Item('video_server_port', label='Port',
-#                                enabled_when='use_video_server'),
-#                                show_border=True,
-#                                label='Server'
-#                                ),
+                         Item('use_video_server', label='Use Server'),
+                         VGroup(Item('video_server_port', label='Port',
+                                enabled_when='use_video_server'),
+                                show_border=True,
+                                label='Server'
+                                ),
 
                          enabled_when='use_video'
                          ),
