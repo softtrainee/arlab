@@ -77,8 +77,8 @@ class Image(HasTraits):
             img = load_image(img, swap_rb)
 
         elif isinstance(img, ndarray):
-            img = asMat(asarray(img, 'uint8'), True)
-            img = colorspace(img)
+            img = asMat(asarray(img, dtype='uint8'))
+#            img = colorspace(img)
 #            img = cvCreateImageFromNumpyArray(img)
 #            print fromarray(img)
 #            if nchannels < 3:
@@ -92,9 +92,10 @@ class Image(HasTraits):
 #            FromNumpyArray(img)
 #        if swap_rb:
 #            cvConvertImage(img, img, CV_CVTIMG_SWAP_RB)
+#        print img
 
+#        print img.reshape(960, 960)
         self.source_frame = img
-
         self.frames = [img.clone()]
 #        self.frames = [clone(img)]
 

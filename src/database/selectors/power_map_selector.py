@@ -28,7 +28,7 @@ from src.database.selectors.base_db_result import DBResult
 class PowerMapResult(DBResult):
     title_str = 'PowerMap'
     resizable = False
-    def load_graph(self):
+    def load_graph(self, *args, **kw):
         data = os.path.join(self.directory, self.filename)
         from src.data_processing.power_mapping.power_map_processor import PowerMapProcessor
         pmp = PowerMapProcessor()

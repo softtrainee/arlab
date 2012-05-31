@@ -16,13 +16,12 @@
 
 #============= enthought library imports =======================
 from traits.api import String, Float, Enum, Str
-from traitsui.api import Item, HGroup, VGroup, spring
+from traitsui.api import Item, HGroup, VGroup
 #============= standard library imports ========================
 import os
 from numpy import linspace, polyval, polyfit
 #============= local library imports  ==========================
 from src.database.selectors.db_selector import DBSelector
-from src.graph.graph import Graph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.orms.power_calibration_orm import PowerCalibrationTable
 from src.database.selectors.base_db_result import DBResult
@@ -71,7 +70,7 @@ class PowerCalibrationResult(DBResult):
 
         return coeffs, rxi, ryi
 
-    def load_graph(self):
+    def load_graph(self, *args, **kw):
 
         g = self._graph_factory()
         dm = self.data_manager
@@ -91,6 +90,7 @@ class PowerCalibrationResult(DBResult):
 #        self.summary = 'coeffs ={}'.format(', '.join(['{:0.3f}'.format(c) for c in coeffs]))
 
         self.graph = g
+
     def _set_coeffs(self, coeffs):
         alpha = 'abcde'
         self.coeffs = ', '.join(['{}={:0.3f}'.format(a, c) for a, c in zip(alpha, coeffs)])
@@ -108,7 +108,6 @@ class PowerCalibrationSelector(DBSelector):
     parameter = String('PowerCalibrationTable.rundate')
     query_table = PowerCalibrationTable
     result_klass = PowerCalibrationResult
-
 
     def _get_selector_records(self, **kw):
         return self._db.get_calibration_records(**kw)

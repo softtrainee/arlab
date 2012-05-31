@@ -102,8 +102,8 @@ class VideoStageManager(StageManager, Videoable):
 
     video_directory = Directory
     video_identifier = Enum(1, 2)
-#    use_video_server = Bool(False)
-#    video_server = Instance(VideoServer)
+    use_video_server = Bool(False)
+    video_server = Instance(VideoServer)
 
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
@@ -125,9 +125,9 @@ class VideoStageManager(StageManager, Videoable):
                         '{}.video_identifier'.format(pref_id)
                         )
 
-#        bind_preference(self, 'use_video_server',
-#                        '{}.use_video_server'.format(pref_id)
-#                        )
+        bind_preference(self, 'use_video_server',
+                        '{}.use_video_server'.format(pref_id)
+                        )
 
     def start_recording(self, path=None, basename='vm_recording',
                          use_dialog=False, user='remote'):

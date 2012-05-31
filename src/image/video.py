@@ -112,15 +112,18 @@ class Video(Image):
         if cap:
             set_frame_index(cap, ind)
 
-    def _get_frame(self, **kw):
+    def _get_frame(self, lock=True, **kw):
 #        if DEBUG:
 ##                    src = '/Users/ross/Sandbox/tray_screen_shot3.tiff'
 #            src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
 #            return load_image(src)
 
         if self.cap is not None:
+#            if lock:
             with self._lock:
                 self._frame = query_frame(self.cap)
+#            else:
+#                self._frame = query_frame(self.cap)
             return self._frame
 
 #                return  cvQueryFrame(self.cap)
