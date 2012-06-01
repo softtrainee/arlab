@@ -24,12 +24,13 @@ import wx
 from numpy import asarray, flipud, ndarray, hstack, array, ones, vstack, zeros, \
     percentile
 #=============local library imports  ==========================
-from cvwrapper import swapRB, grayspace, cvFlip, \
+try:
+    from cvwrapper import swapRB, grayspace, cvFlip, \
     draw_lines, add_scalar, new_dst, \
     resize, asMat, frompil, save_image, load_image, \
-    get_size, smooth, denoise, colorspace#, setImageROI, resetImageROI
-    #cvSetImageROI, cvResetImageROI
-
+    get_size
+except ImportError:
+    pass
 #class GraphicsContainer(object):
 #
 #    _lines = None

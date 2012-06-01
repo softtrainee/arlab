@@ -23,9 +23,13 @@ import select
 import socket
 import os
 import sys
-from threading import Thread
+from threading import Thread, Lock
 import time
 from numpy import fromstring
+from enable.component_editor import ComponentEditor
+from chaco.plot import Plot
+from chaco.array_plot_data import ArrayPlotData
+from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
 
 # add src to the path
@@ -49,24 +53,36 @@ class VideoClient(HasTraits):
     frame_depth = 1
 
     test = Button
-    image = Instance(Image, ())
+    data = None
+#    image = Instance(Image, ())
 
-    def traits_view(self):
-        v = View('test',
-                 Item('image', style='custom', show_label=False, editor=ImageEditor(),
-                                            width=self.frame_width, height=self.frame_height
-                ))
-        return v
+#    def traits_view(self):
+#        v = View('test',
+#                 Item('image', style='custom', show_label=False, editor=ImageEditor(),
+#                                            width=self.frame_width, height=self.frame_height
+#                ))
+#        return v
+#    imgplot = Instance(Plot)
+#    def _imgplot_default(self):
+#        pd = ArrayPlotData()
+#        p = Plot(pd)
+#        return p
+#
+#
+#    def traits_view(self):
+#        v = View(Item('imgplot', show_label=False,
+#                      editor=ComponentEditor()))
+#        return v
 
     @property
     def frame_size(self):
         return self.frame_width * self.frame_height * self.frame_depth
 
-    def unpickle(self, d):
-        try:
-            return pickle.loads(d)
-        except Exception, e:
-            pass
+#    def unpickle(self, d):
+#        try:
+#            return pickle.loads(d)
+#        except Exception, e:
+#            pass
 
     def listen(self):
 
@@ -75,15 +91,40 @@ class VideoClient(HasTraits):
 
     def _listen(self):
 #        print 'lisenting'
+#        plot = self.imgplot
+#
+#        fp = 1 / 10.0
+#        check = True
+        import zmq
+        self._lock = Lock()
+        context = zmq.Context()
+        self._sock = context.socket(zmq.SUB)
+        self._sock.connect('tcp://localhost:5556')
+        self._sock.setsockopt(zmq.SUBSCRIBE, '')
 
-        fp = 1 / 10.0
-        while self._stream_video:
-            t = time.time()
+        while 1:
             data = self._sock.recv()
             data = fromstring(data, dtype='uint8')
-            data = data.reshape(720, 1280, 3)
+            with self._lock:
+                self.data = data.reshape(720, 1280, 3)
+
+    def get_frame(self):
+        with self._lock:
+            return self.data
+#            self.data = data
+#            do_later(self._update_image)
+#            time.sleep(0.1)
+
+#    def _update_image(self, *args, **kw):
+#        plot = self.imgplot
+#        plot.data.set_data('imagedata', self.data)
+#        if not 'imagedata' in plot.plots.keys():
+#            plot.img_plot('imagedata')
+
+#        plot.invalidate_and_redraw()
+
 #            print len(data) if data else 0
-            self.image.load(data)
+#            self.image.load(data)
 #            time.sleep(max(0.001, fp - (time.time() - t)))
 
 #            t = time.time()
@@ -141,25 +182,13 @@ class VideoClient(HasTraits):
 #                print self.image.source_frame
 #            time.sleep(max(0.001, fp - (time.time() - t)))
 
-    def connect(self, udp=False):
-        import zmq
+#    def connect(self, udp=False):
 
-        context = zmq.Context()
-        self._sock = context.socket(zmq.SUB)
-        self._sock.connect('tcp://localhost:5556')
-        self._sock.setsockopt(zmq.SUBSCRIBE, '')
-
-#        self._sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#        self._sock.connect((self.host, self.port))
-#        self._sock.setblocking(False)
-        self._stream_video = True
 
 
 if __name__ == '__main__':
     c = VideoClient()
-    udp = False
 #    self.img_que = Queue.Queue(maxsize=4)
-    c.connect()
     c.listen()
     c.configure_traits()
 
