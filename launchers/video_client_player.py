@@ -15,23 +15,22 @@ from scipy.misc.pilutil import toimage
 # Icons film.png, control_stop.png, and control_play.png were sourced from
 # Mark James' Silk icon set 1.3 at http://www.famfamfam.com/lab/icons/silk/
 
-WIDTH = 1280
-HEIGHT = 720
+#WIDTH = 1280
+#HEIGHT = 720
 class Client(Thread):
     data = None
     queue = None
+    host='129.138.12.141'
+    port=5556
+    use_color=True
+    width=100
+    height=100
     def run(self):
-#        print 'lisenting'
-#        plot = self.imgplot
-#
-#        fp = 1 / 10.0
-#        check = True
         import zmq
-        self._lock = Lock()
-        self.queue = Queue()
         context = zmq.Context()
         self._sock = context.socket(zmq.SUB)
-        self._sock.connect('tcp://localhost:5556')
+        self._sock.connect('tcp://{}:{}'.format(self.host,
+                                                  self.port))
         self._sock.setsockopt(zmq.SUBSCRIBE, '')
 
 #        wxBmap = wx.EmptyBitmap(1, 1)     # Create a bitmap container object. The size values are dummies.
@@ -41,26 +40,32 @@ class Client(Thread):
         fp = 1 / 10.
         while 1:
             t = time.time()
-            data = self._sock.recv()
-            data = fromstring(data, dtype='uint8')
-            data = data.reshape(HEIGHT, WIDTH)
+            resp= self._sock.recv()
+            header=fromstring(resp)
+            w,h,fp,depth=header
+            depth=int(depth)
+            self.width=w
+            self.height=h
 
+            resp = self._sock.recv()
+            data = fromstring(resp, dtype='uint8')
 
-#            with self._lock:
+            if depth==3:
+                shape=(WIDTH, HEIGHT, 3)
+                self.use_color=True
+            else:
+                self.use_color=False
+                shape=(HEIGHT,WIDTH)
+                data = data.reshape(*shape)
+#
             self.data = data
             time.sleep(max(0.001, fp - (time.time() - t)))
 
-
-
     def get_frame(self):
-#        with self._lock:
         return self.data
 
 class VideoClientPlayer(wx.Frame):
     DEFAULT_TOTAL_FRAMES = 300
-
-    DEFAULT_FRAME_WIDTH = 500
-    DEFAULT_FRAME_HEIGHT = 300
 
     ID_OPEN = 1
     ID_SLIDER = 2
@@ -68,11 +73,12 @@ class VideoClientPlayer(wx.Frame):
     ID_PLAY = 4
 
     ID_TIMER_PLAY = 5
-
+    bmp=None
+    
     def __init__(self, parent):
-        dim2 = WIDTH / 2.0, HEIGHT / 2.0
         wx.Frame.__init__(self, parent, -1, title="pyCan Video Player - Version 1.0.0",
-                          size=dim2,
+#                          size=dim2,
+                          size=(500,300),
                           style=wx.RESIZE_BORDER | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN
                           )
 
@@ -81,7 +87,6 @@ class VideoClientPlayer(wx.Frame):
         self.client = Client()
         self.client.start()
 
-        self.bmp = wx.EmptyBitmap(*dim2)
         self.playing = False
 
         self.displayPanel = wx.Panel(self, -1)
@@ -113,7 +118,10 @@ class VideoClientPlayer(wx.Frame):
 
     def _get_best_size(self):
         (window_width, _) = self.GetSizeTuple()
-        new_height = window_width / (WIDTH / float(HEIGHT))
+        
+        w,h=WIDTH,float(HEIGHT)
+        w,h=self.client.width, self.client.height
+        new_height = window_width /(w/h)
         new_size = (window_width, new_height)
         return new_size
 
@@ -129,17 +137,28 @@ class VideoClientPlayer(wx.Frame):
         frame = self.client.get_frame()
 
         if frame is not None:
+            if self.client.use_color:
+                if self.obmp is None:
+                    self.obmp=wx.BitmapFromBuffer(self.client.width, 
+                                                  self.client.height,
+                                                  frame
+                                                  )
+                else:
+                    self.obmp.CopyFromBuffer(frame)
+                wimg=self.obmp.ConvertToImage()
+            else:
 #            print frame.dtype, frame.shape
-            img = toimage(frame)
-            wimg = wx.EmptyImage(img.size[0], img.size[1])
+                img = toimage(frame)
+                wimg = wx.EmptyImage(img.size[0], img.size[1])
 
-            wimg.SetData(img.convert('RGB').tostring())
+                wimg.SetData(img.convert('RGB').tostring())
             self.bmp = self._set_bitmap_size(wimg)
 
         self.Refresh()
 
     def onNextFrame(self, evt):
         self.updateVideo()
+        evt.Skip()
 
     def onStop(self, evt):
         self.playTimer.Stop()
@@ -180,9 +199,11 @@ class VideoClientPlayer(wx.Frame):
 #                self.ToolBar.EnableTool(self.ID_PLAY, False)
 
     def onPaint(self, evt):
-        dc = wx.PaintDC(self)
-        dc.DrawBitmap(self.bmp, 0, 0, True)
-#        evt.Skip()
+        if self.bmp:
+            dc = wx.PaintDC(self)
+            dc.DrawBitmap(self.bmp, 0, 0, True)
+        else:
+            evt.Skip()
 
 if __name__ == "__main__":
     app = wx.App()
