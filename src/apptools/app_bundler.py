@@ -18,6 +18,7 @@
 import argparse
 #============= local library imports  ==========================
 from installer import Installer
+import os
 
 def cli_install():
 
@@ -37,7 +38,12 @@ def cli_install():
     args = parser.parse_args()
 
     i = Installer(args.prefix, args.name, args.icon)
-    i.install()
+
+    root = os.path.join(os.path.expanduser('~'),
+                      'Programming', 'mercurial',
+                      'pychron_beta'
+                      )
+    i.install(root)
 
 if __name__ == '__main__':
 
