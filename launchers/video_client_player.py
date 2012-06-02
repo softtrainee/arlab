@@ -3,6 +3,7 @@ from threading import Thread, Lock
 from numpy import fromstring
 import time
 from Queue import Queue
+from scipy.misc.pilutil import toimage
 # Demonstrates how to use wxPython and OpenCV to create a video player
 #
 # Written by lassytouton
@@ -37,18 +38,23 @@ class Client(Thread):
 #        filename = '/Users/ross/Sandbox/snapshot001.jpg'
 #        wxBmap.LoadFile(filename, wx.BITMAP_TYPE_ANY)
 #        self.data = wxBmap
-##
+        fp = 1 / 10.
         while 1:
+            t = time.time()
             data = self._sock.recv()
             data = fromstring(data, dtype='uint8')
-            with self._lock:
-                self.data = data
-            time.sleep(1e-7)
+            data = data.reshape(HEIGHT, WIDTH)
+
+
+#            with self._lock:
+            self.data = data
+            time.sleep(max(0.001, fp - (time.time() - t)))
+
 
 
     def get_frame(self):
-        with self._lock:
-            return self.data
+#        with self._lock:
+        return self.data
 
 class VideoClientPlayer(wx.Frame):
     DEFAULT_TOTAL_FRAMES = 300
@@ -64,8 +70,10 @@ class VideoClientPlayer(wx.Frame):
     ID_TIMER_PLAY = 5
 
     def __init__(self, parent):
-        wx.Frame.__init__(self, parent, -1, title="wxPython OpenCV Video Player - Version 1.0.0",
-                          size=(WIDTH, HEIGHT)
+        dim2 = WIDTH / 2.0, HEIGHT / 2.0
+        wx.Frame.__init__(self, parent, -1, title="pyCan Video Player - Version 1.0.0",
+                          size=dim2,
+                          style=wx.RESIZE_BORDER | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN
                           )
 
         self.SetDoubleBuffered(True)
@@ -73,37 +81,35 @@ class VideoClientPlayer(wx.Frame):
         self.client = Client()
         self.client.start()
 
-        self.obmp = wx.EmptyBitmap(WIDTH, HEIGHT)
-        self.bmp = wx.EmptyBitmap(WIDTH, HEIGHT)
+        self.bmp = wx.EmptyBitmap(*dim2)
         self.playing = False
 
         self.displayPanel = wx.Panel(self, -1)
 
 #        self.displayPanel.SetBackgroundColour('red')
-        self.ToolBar = self.CreateToolBar(style=wx.TB_BOTTOM | wx.TB_FLAT)
+#        self.ToolBar = self.CreateToolBar(style=wx.TB_BOTTOM | wx.TB_FLAT)
 #        openFile = self.ToolBar.AddLabelTool(self.ID_OPEN, '', wx.Bitmap('film.png'))
 #        self.ToolBar.AddSeparator()
 #        self.slider = wx.Slider(self.ToolBar, self.ID_SLIDER, 0, 0, self.DEFAULT_TOTAL_FRAMES - 1, None, (self.DEFAULT_FRAME_WIDTH - 100, 50), wx.SL_HORIZONTAL)
 #        self.ToolBar.AddControl(self.slider)
-        self.ToolBar.AddSeparator()
+#        self.ToolBar.AddSeparator()
 
-        stop = self.ToolBar.AddLabelTool(self.ID_STOP, '', wx.Bitmap('control_stop.png'))
-        play = self.ToolBar.AddLabelTool(self.ID_PLAY, '', wx.Bitmap('control_play.png'))
+#        stop = self.ToolBar.AddLabelTool(self.ID_STOP, '', wx.Bitmap('control_stop.png'))
+#        play = self.ToolBar.AddLabelTool(self.ID_PLAY, '', wx.Bitmap('control_play.png'))
 
 #        self.Bind(wx.EVT_TOOL, self.onOpenFile, openFile)
 #        self.Bind(wx.EVT_SLIDER, self.onSlider, self.slider)
-        self.Bind(wx.EVT_TOOL, self.onStop, stop)
-        self.Bind(wx.EVT_TOOL, self.onPlay, play)
+#        self.Bind(wx.EVT_TOOL, self.onStop, stop)
+#        self.Bind(wx.EVT_TOOL, self.onPlay, play)
 
         self.playTimer = wx.Timer(self, self.ID_TIMER_PLAY)
-
         self.Bind(wx.EVT_TIMER, self.onNextFrame, self.playTimer)
-
-        self.Bind(wx.EVT_IDLE, self.onIdle)
+#        self.Bind(wx.EVT_IDLE, self.onIdle)
         self.Bind(wx.EVT_PAINT, self.onPaint)
 
-        self.ToolBar.Realize()
+#        self.ToolBar.Realize()
         self.Show(True)
+        self.playTimer.Start(1000 / 15.)
 
     def _get_best_size(self):
         (window_width, _) = self.GetSizeTuple()
@@ -111,19 +117,24 @@ class VideoClientPlayer(wx.Frame):
         new_size = (window_width, new_height)
         return new_size
 
-    def _set_bitmap_size(self, bmp):
-        if bmp:
-            image = wx.ImageFromBitmap(bmp)
+    def _set_bitmap_size(self, img):
+#        if bmp:
+        if img:
+#            img = wx.ImageFromBitmap(bmp)
             w, h = self._get_best_size()
-            image = image.Scale(w, h)
-            return wx.BitmapFromImage(image)
+            img = img.Scale(w, h)
+            return img.ConvertToBitmap()
 
     def updateVideo(self):
         frame = self.client.get_frame()
 
         if frame is not None:
-            self.obmp.CopyFromBuffer(frame)
-            self.bmp = self._set_bitmap_size(self.obmp)
+#            print frame.dtype, frame.shape
+            img = toimage(frame)
+            wimg = wx.EmptyImage(img.size[0], img.size[1])
+
+            wimg.SetData(img.convert('RGB').tostring())
+            self.bmp = self._set_bitmap_size(wimg)
 
         self.Refresh()
 
@@ -134,21 +145,21 @@ class VideoClientPlayer(wx.Frame):
         self.playTimer.Stop()
         self.playing = False
 
-    def onPlay(self, evt):
-#        fps = cv.GetCaptureProperty(self.capture, cv.CV_CAP_PROP_FPS)
-#        if fps != 0:
-#            self.playTimer.Start(1000 / fps)#every X ms
-#        else:
-#        frame = self.capture.get_frame()
+#    def onPlay(self, evt):
+##        fps = cv.GetCaptureProperty(self.capture, cv.CV_CAP_PROP_FPS)
+##        if fps != 0:
+##            self.playTimer.Start(1000 / fps)#every X ms
+##        else:
+##        frame = self.capture.get_frame()
+#
+#
+##        self.bmp = wx.BitmapFromBuffer(w, h, frame)
+##        self.SetSize((w, h))
+#        self.playTimer.Start(1000 / 15)#assuming 15 fps
+#        self.playing = True
 
-
-#        self.bmp = wx.BitmapFromBuffer(w, h, frame)
-#        self.SetSize((w, h))
-        self.playTimer.Start(1000 / 15)#assuming 15 fps
-        self.playing = True
-
-    def onIdle(self, evt):
-        pass
+#    def onIdle(self, evt):
+#        pass
 #        if (self.capture):
 #            if (self.ToolBar.GetToolEnabled(self.ID_OPEN) != (not self.playing)):
 #                self.ToolBar.EnableTool(self.ID_OPEN, not self.playing)

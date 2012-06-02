@@ -74,8 +74,8 @@ class Installer(object):
 
             #set the version in the script
             #of = open(op, 'r')
-            self.change_version(op)
-            self.change_version(os.path.join(root, 'src', 'helpers', 'paths.py'))
+#            self.change_version(op)
+#            self.change_version(os.path.join(root, 'src', 'helpers', 'paths.py'))
 
             buildapplet()
 
@@ -93,6 +93,7 @@ class Installer(object):
             # ===================================================================
 
             icon = os.path.join(root, 'resources', icon_file)
+            print icon
             if os.path.isfile(icon):
                 shutil.copyfile(icon, os.path.join(dist_root,
                                 'Resources', icon_file))
