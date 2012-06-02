@@ -14,12 +14,12 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from xml_parser import XMLParser
 import os
 from src.helpers.paths import setup_dir
+from pyface.message_dialog import warning
+import sys
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -27,7 +27,11 @@ from src.helpers.paths import setup_dir
 class InitializationParser(XMLParser):
     def __init__(self, *args, **kw):
         p = os.path.join(setup_dir, 'initialization.xml')
-        super(InitializationParser, self).__init__(p, *args, **kw)
+        if os.path.isfile(p):
+            super(InitializationParser, self).__init__(p, *args, **kw)
+        else:
+            warning(None, 'No initialization file')
+            sys.exit()
 
     def add_plugin(self, category, name):
 
