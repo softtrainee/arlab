@@ -1,0 +1,19 @@
+#diode zoom motor setup file
+#zoom motor address
+01
+#zoom motor steps
+28620
+#zoom min, zoom max (for 0-100)
+0,100
+#zoom motor home delay (sec)
+4
+#zoom drive sign
+1
+#zoom velocity,acceleration
+#801A0600,2C010000
+400000,300
+#zoom homing velocity,acceleration
+#801A0600,2C010000
+400000,300
+#zoom home position
+0.0

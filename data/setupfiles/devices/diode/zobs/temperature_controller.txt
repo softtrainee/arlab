@@ -1,0 +1,10 @@
+#watlow setup file
+#serial port location, baudrate
+#/dev/tty.USA49Wfd1P2.2,9600
+#/dev/tty.USA49Wfa2P2.2,9600
+/dev/tty.USA49Wfa25P2.2,9600
+#slave address
+01
+#closed loop setpoint min, max
+250,1500
+
