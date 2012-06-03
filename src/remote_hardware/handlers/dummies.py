@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 
 #============= standard library imports ========================
@@ -24,12 +22,12 @@
 
 
 class DummyPM(object):
-
+    patterns = ['PatternA', 'PatternB']
     def get_pattern_names(self):
-        return ['PatternA', 'PatternB']
+        return self.patterns
 
     def execute_pattern(self, name):
-        pass
+        return name in self.patterns
 
     def stop_pattern(self):
         pass
@@ -42,6 +40,9 @@ class DummySM(object):
     z = 3
     stage_map = '221-hole'
     hole = -1
+    _temp_position = None
+    def set_xy(self, *args, **kw):
+        return True
 
     def linear_move_to(self, x, y):
         return 'OK'
@@ -81,9 +82,9 @@ class DummyLM(object):
     stage_manager = DummySM()
     zoom = 30
     beam = 1.5
-
+    record_lasing = False
     def set_beam_diameter(self, d, **kw):
-        pass
+        return True
 
     def set_laser_power(self, *args, **kw):
         pass
@@ -97,6 +98,15 @@ class DummyLM(object):
     def get_laser_watts(self):
         return 14.0
 
+    def start_recording(self, *args, **kw):
+        pass
+    def stop_recording(self, *args, **kw):
+        pass
+
+    def start_power_recording(self):
+        pass
+    def stop_power_recording(self):
+        pass
 
 class DummyDevice(object):
     def get(self):

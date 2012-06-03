@@ -54,6 +54,10 @@ class RemoteHardwareManager(Manager):
 #    def __init__(self, *args, **kw):
 #        super(RemoteHardwareManager, self).__init__(*args, **kw)
     system_lock = Bool(False)
+    def process_server_request(self, rt, data, processor=None):
+        d = self.processors['diode']
+#        print rt, data
+        return d.get_response(rt, data, None)
 
     def _processors_default(self):
         ps = dict()
@@ -117,40 +121,43 @@ class RemoteHardwareManager(Manager):
         return cp
 
     def bind_preferences(self, cp):
-        bind_preference(self, 'system_lock', 'pychron.hardware.enable_system_lock')
-
-        bind_preference(cp, 'system_lock', 'pychron.hardware.enable_system_lock')
-        bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
-        bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
-
-#        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
-        ip = InitializationParser()
-        names = []
-        hosts = dict()
-        for name, host in ip.get_systems():
-            names.append(name)
-            hosts[name] = host
-
-        pref = self.application.preferences
-        pref.set('pychron.hardware.system_lock_names', names)
-        pref.set('pychron.hardware.system_lock_addresses', hosts)
-
-        name = pref.get('pychron.hardware.system_lock_name')
-
         try:
-            if name:
-                pref.set('pychron.hardware.system_lock_address',
-                          hosts[name.strip("'").lower()])
-            else:
-                pref.set('pychron.hardware.system_lock_address',
-                          hosts[names[0].lower()])
-        except Exception, err:
-            pass
-#            import traceback
-#            traceback.print_exc()
-#            print 'system lock exception', err
+            bind_preference(self, 'system_lock', 'pychron.hardware.enable_system_lock')
 
-        pref.save()
+            bind_preference(cp, 'system_lock', 'pychron.hardware.enable_system_lock')
+            bind_preference(cp, 'system_lock_address', 'pychron.hardware.system_lock_address')
+            bind_preference(cp, 'system_lock_name', 'pychron.hardware.system_lock_name')
+
+    #        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+            ip = InitializationParser()
+            names = []
+            hosts = dict()
+            for name, host in ip.get_systems():
+                names.append(name)
+                hosts[name] = host
+
+            pref = self.application.preferences
+            pref.set('pychron.hardware.system_lock_names', names)
+            pref.set('pychron.hardware.system_lock_addresses', hosts)
+
+            name = pref.get('pychron.hardware.system_lock_name')
+
+            try:
+                if name:
+                    pref.set('pychron.hardware.system_lock_address',
+                              hosts[name.strip("'").lower()])
+                else:
+                    pref.set('pychron.hardware.system_lock_address',
+                              hosts[names[0].lower()])
+            except Exception, err:
+                pass
+    #            import traceback
+    #            traceback.print_exc()
+    #            print 'system lock exception', err
+
+            pref.save()
+        except AttributeError:
+            pass
 
     def validate_address(self, addr):
 

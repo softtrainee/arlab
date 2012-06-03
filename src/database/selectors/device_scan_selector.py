@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import String, Float, Bool
+from traits.api import String, Float, Bool, Int
+from traitsui.api import VGroup, HGroup, Item
 #============= standard library imports ========================
 from numpy import array
 #============= local library imports  ==========================
@@ -29,10 +30,28 @@ from src.database.selectors.base_db_result import DBResult
 class ScanResult(DBResult):
     title_str = 'Device Scan Record'
     request_power = Float
+    downsample = Int(0)
+    def _get_graph_item(self):
+        g = super(ScanResult, self)._get_graph_item()
+#        g.height = 1.0
+#        g.springy = True
+        return VGroup(
+                         HGroup(Item('downsample'),
+#                             Item('coeffs', style='readonly'),
+#                             spring
+                             ),
+                      g,
+#                      springy=True,
+#                      label='Graph'
+                      )
+
+    def _downsample_changed(self):
+        g = self.graph
+        x, y = self._get_data()
+        g.downsample(x, y, max(1, self.downsample))
+
 
     def load_graph(self, graph=None, xoffset=0):
-        dm = self._data_manager_factory()
-        dm.open_data(self._get_path())
 
         if graph is None:
             graph = self._graph_factory(klass=TimeSeriesGraph)
@@ -40,6 +59,18 @@ class ScanResult(DBResult):
                        ytitle='Value',
                        padding=[40, 10, 10, 40]
                        )
+
+        xi, yi = self._get_data()
+        if xi is not None:
+            graph.new_series(array(xi) + xoffset, yi)
+
+        self.graph = graph
+
+        return max(xi)
+
+    def _get_data(self):
+        dm = self._data_manager_factory()
+        dm.open_data(self._get_path())
         xi = None
         yi = None
         if isinstance(dm, H5DataManager):
@@ -52,13 +83,7 @@ class ScanResult(DBResult):
             da = dm.read_data()
             if da is not None:
                 xi, yi = da
-
-        if xi is not None:
-            graph.new_series(array(xi) + xoffset, yi)
-
-        self.graph = graph
-
-        return max(xi)
+        return xi, yi
 #    def _load_hook(self, dbr):
 #        #load the datamanager to set _none_loadable flag
 #        self._data_manager_factory()

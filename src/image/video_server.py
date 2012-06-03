@@ -19,6 +19,7 @@ from traits.api import Instance
 #============= standard library imports ========================
 from threading import Thread, Lock, Event
 import time
+from numpy import array
 #============= local library imports  ==========================
 from src.image.video import Video
 from src.loggable import Loggable
@@ -34,7 +35,7 @@ class VideoServer(Loggable):
     _stop_signal = None
 
     _started = False
-
+    use_color = False
     def _video_default(self):
         v = Video()
         return v
@@ -65,11 +66,25 @@ class VideoServer(Loggable):
         context = zmq.Context()
         self._bsocket = context.socket(zmq.PUB)
         self._bsocket.bind('tcp://*:{}'.format(self.port))
-        fp = 1 / 10.
+        fp = 1 / 15.
+
+        if self.use_color:
+            kw = dict(swap_rb=True)
+            depth = 3
+        else:
+            kw = dict(gray=True)
+            depth = 1
+
         while not self._stop_signal.isSet():
             t = time.time()
-            f = self.video.get_frame(gray=True)
+
+            f = self.video.get_frame(**kw)
+
             self._new_frame_ready.clear()
+            w, h = f.size()
+            header = array([w, h, fp, depth])
+#            data = array([header.tostring(), f.ndarray.tostring()], dtype='str')
+            self._bsocket.send(header.tostring())
             self._bsocket.send(f.ndarray.tostring())
             time.sleep(max(0.001, fp - (time.time() - t)))
 

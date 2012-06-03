@@ -52,12 +52,13 @@ class CommandProcessor(ConfigLoadable):
     system_lock_address = Str
 
     _handlers = None
-
+    _manager_lock = None
 
     def __init__(self, *args, **kw):
         super(CommandProcessor, self).__init__(*args, **kw)
         self.context_filter = ContextFilter()
         self._handlers = dict()
+        self._manager_lock = Lock()
 
 #    def load(self, *args, **kw):
 #        '''
@@ -87,7 +88,6 @@ class CommandProcessor(ConfigLoadable):
         '''
 
         '''
-        self._manager_lock = Lock()
         if not use_ipc:
             return True
 
@@ -197,8 +197,11 @@ class CommandProcessor(ConfigLoadable):
                 self.debug(tb)
 
     def _end_request(self, sock, data):
+
         if use_ipc:
             #self.debug('Result: {}'.format(data))
+            if isinstance(data, ErrorCode):
+                data = repr(data)
             try:
                 if ipc_dgram:
                     sock.sendto(data, self.path)
@@ -208,14 +211,17 @@ class CommandProcessor(ConfigLoadable):
             except Exception, err:
                 self.debug('End Request Exception: {}'.format(err))
         else:
-            args = data.split('|')
-            return args
+            if not isinstance(data, ErrorCode):
+
+                data = data.split('|')[-1]
+#            else:
+#                print data
+            return data
 
     def get_response(self, cmd_type, data, addr):
         return self._process_request(None, addr, cmd_type, data)
 
     def _process_request(self, sock, sender_addr, request_type, data):
-
         #self.debug('Request: {}, {}'.format(request_type, data.strip()))
         try:
             if self._check_system_lock(sender_addr):
@@ -261,13 +267,9 @@ class CommandProcessor(ConfigLoadable):
 #                    result = self.context_filter.get_response(handler, data)
                         result = handler.handle(data, sender_addr, self._manager_lock)
 
-                if isinstance(result, ErrorCode):
-                    result = repr(result)
-
             r_args = self._end_request(sock, result)
-
             if not use_ipc:
-                return r_args[-1]
+                return r_args
 
         except Exception, err:
             import traceback
@@ -276,7 +278,7 @@ class CommandProcessor(ConfigLoadable):
             self.debug(tb)
 
             self.debug('Process request Exception {}'.format(err))
-
+            traceback.print_exc()
 
 
 
