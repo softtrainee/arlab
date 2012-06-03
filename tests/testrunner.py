@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,27 +14,30 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-from envisage.ui.action.api import Action#, Group, Menu, ToolBar
-from envisage.ui.workbench.api import WorkbenchActionSet
-
-
 #============= standard library imports ========================
-
+import unittest
 #============= local library imports  ==========================
+from .laser_test import LaserTest
+#from .system_test import SystemTest
 
-class BakeoutActionSet(WorkbenchActionSet):
-    '''
-        G{classtree}
-    '''
-    id = 'pychron.bakeout.action_set'
+#class MainTestCase(unittest.TestCase):
+#    def setUp(self):
+#        pass
+#    def tearDown(self):
+#        pass
+#    def testFoo(self):
+#        assert 1 == 0
+#
+#class FooTestCase(unittest.TestCase):
+#    def testMoo(self):
+#        assert 1 == 1
+#    def testBoo(self):
+#        assert 1 == 0
+#pychronTestSuite=
+#
+#if __name__ == '__main__':
+#    runner = unittest.TextTestRunner()
+#    runner.run(pychronTestSuite)
 
-    actions = [
-               Action(name='Bakeout',
-                      path='MenuBar/Extraction Line',
-                      class_name='src.extraction_line.plugins.bakeout_actions:OpenBakeoutManagerAction'
-                      )
-             ]
-#============= EOF ====================================
+#============= EOF =============================================

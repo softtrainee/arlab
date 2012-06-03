@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from envisage.core_plugin import CorePlugin
 from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
@@ -70,9 +68,6 @@ PACKAGE_DICT = dict(
 
                    GraphPlugin='src.graph.plugins.graph_plugin',
                    GraphUIPlugin='src.graph.plugins.graph_ui_plugin',
-
-                   BakeoutPlugin='src.extraction_line.plugins.bakeout_plugin',
-                   BakeoutUIPlugin='src.extraction_line.plugins.bakeout_ui_plugin',
 
                    TwitterPlugin='src.social.plugins.twitter_plugin',
                    TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',

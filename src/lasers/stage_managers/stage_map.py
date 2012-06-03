@@ -83,7 +83,7 @@ class StageMap(Loggable):
     def interpolate_noncorrected(self):
         self.info('iteratively fill in non corrected holes')
         n = len(self.sample_holes)
-        for i in range(1):
+        for i in range(2):
             self._interpolate_noncorrected()
 
             g = len([h for h in self.sample_holes
@@ -97,8 +97,16 @@ class StageMap(Loggable):
         else:
             self.info('all holes now corrected')
 
-    def _interpolate_noncorrected(self):
+    def get_interpolated_position(self, holenum):
+        h = self._get_hole(holenum)
+        return self._calculated_interpolated_position(h)
 
+    def _interpolate_noncorrected(self):
+        self.sample_holes.reverse()
+        for h in self.sample_holes:
+            self._calculated_interpolated_position(h)
+
+    def _calculated_interpolated_position(self, h):
         def _midpoint(a, b):
             mx = None
             my = None
@@ -111,136 +119,69 @@ class StageMap(Loggable):
             return mx, my
 
         spacing = abs(self.sample_holes[0].x - self.sample_holes[1].x)
-        cspacing = spacing
-        for i, e in enumerate(self.sample_holes[1:]):
-            s = self.sample_holes[i - 1]
-            if s.has_correction() and e.has_correction():
-                dx = abs(s.x_cor - e.x_cor)
-                dy = abs(s.y_cor - e.y_cor)
-                cspacing = (dx + dy) / 2.0
-                break
-
-#        print spacing, cspacing
-        scalar = 0.85
+        scalar = 1
         spacing *= scalar
-#        dimension = self.g_dimension * 1.2
-        #now fill in any missing hole values
-        self.sample_holes.reverse()
-        for h in self.sample_holes:
-            cx, cy = h.x_cor, h.y_cor
-#            print h.id, cx, cy
-            if not h.has_correction():
-#                print 'no hole for ', h.id, cx, cy
-                #this hole does not have a correction value
-                found = []
-                #get the cardinal holes
-                debug_hole = '183'
-                for rx, ry in [(0, 1),
-                               (-1, 0), (1, 0),
-                                    (0, -1)
-                              ]:
+        debug_hole = '216'
+        nxs = []
+        nys = []
+        if not h.has_correction():
+            #this hole does not have a correction value
+            found = []
+            #get the cardinal holes
+            for rx, ry in [(0, 1),
+                           (-1, 0), (1, 0),
+                                (0, -1)
+                          ]:
 
-                    x = h.x + rx * spacing#1.2 * self.g_dimension
-                    y = h.y + ry * spacing#1.2 * self.g_dimension
+                x = h.x + rx * spacing#1.2 * self.g_dimension
+                y = h.y + ry * spacing#1.2 * self.g_dimension
 
-                    hole = self._get_hole_by_corrected_position(x, y)
-                    if hole == h:
-                        hole = None
-#                    hole2 = None
-#                    if hole is None:
-#                        hole2 = self._get_hole_by_position(x, y)
+                hole = self._get_hole_by_corrected_position(x, y)
 
-                    if h.id == debug_hole:
-                        print hole.id if hole is not None else 'COR', rx, ry
-#                            if hole2 is not None else 'NONCOR', rx, ry
-#                    if hole2 is not None:
-#                        hole = hole2
-#                    print 'no correction', h.id, hole.id if hole is not None else 'N0', hole1.id \
-#                            if hole1 is not None else 'N1', rx, ry
-#                    print 'no correction for', h.id, h.x_cor, h.y_cor
-#                    if hole1:
-#                        print 'hole1', hole1.id, rx, ry
-#                    if hole:
-#                        print 'hole', hole.id, rx, ry
+                if hole == h:
+                    hole = None
 
-                    fo = None
-                    if hole is not None:
-                        six, siy = hole.x_cor, hole.y_cor
-                        if hole.has_correction():
-#                        if abs(six) > 1e-6 and abs(siy) > 1e-6:
-                            fo = (six, siy)
-#                        else:
-#                            fo = (hole.x, hole.y)
-                    found.append(fo)
+                fo = None
+                if hole is not None:
+                    six, siy = hole.x_cor, hole.y_cor
+                    if hole.has_correction():
+                        fo = (six, siy)
+                found.append(fo)
 
-                if h.id == debug_hole:
-                    print found
-                nxs = []
-                nys = []
-                for i, j in [(0, 3), (1, 2)]:
-                    mx, my = _midpoint(found[i], found[j])
-                    if mx is not None and my is not None:
-                        #make sure the corrected value makes sense
-                        #ie less than 1 radius from nominal hole
-                        if (abs(mx - h.x) < spacing
-                                and abs(my - h.y) < spacing):
-                            nxs.append(mx)
-                            nys.append(my)
+            rad = h.dimension
+            for i, j in [(0, 3), (1, 2)]:
+                mx, my = _midpoint(found[i], found[j])
+                if mx is not None and my is not None:
+                    #make sure the corrected value makes sense
+                    #ie less than 1 radius from nominal hole
+                    if (abs(mx - h.x) < rad
+                            and abs(my - h.y) < rad):
+                        nxs.append(mx)
+                        nys.append(my)
 
-                if h.id == debug_hole:
-                    print nxs
+            if not nxs:
+#                #try iding using "triangulation"
+                for i, j in [(0, 1), (0, 2), (3, 2), (3, 1)]:
 
-                #if the number of adjacent holes found is only 1
-                #do a simple offset using 
-#                nfound = [f for f in found if f is not None]
-#                if len(nfound) == 1:
-#                    f = nfound[0]
-#                    ind = found.index(f)
-#                    x = f[0]
-#                    y = f[1]
-#                    l = cspacing#spacing / scalar
-#                    if ind == 0:
-#                        nxs.append(x)
-#                        nys.append(y - l)
-#                    elif ind == 1:
-#                        nxs.append(x + l)
-#                        nys.append(y)
-#                    elif ind == 2:
-#                        nxs.append(x - l)
-#                        nys.append(y)
-#                    else:
-#                        nxs.append(x)
-#                        nys.append(y + l)
+                    x = found[i][0] if found[i] else None
+                    y = found[j][1] if found[j] else None
 
-                if not nxs:
-                    #try iding using "triangulation"
-                    for i, j in [(0, 1), (0, 2), (3, 2), (3, 1)]:
-                        x = found[i]
-                        if x is not None:
-                            x = x[0]
-                        y = found[j]
-                        if y is not None:
-                            y = y[1]
+                    if x and y:
+                        if (abs(x - h.x) < rad
+                                and abs(y - h.y) < rad):
+                            nxs.append(x)
+                            nys.append(y)
 
-                        if h.id == debug_hole:
-                            print i, j, x, y, h.x, h.y
-                        if x and y:
-                            if h.id == debug_hole:
-                                print abs(x - h.x), abs(y - h.y), spacing
-                            if (abs(x - h.x) < spacing
-                                    and abs(y - h.y) < spacing):
-                                nxs.append(x)
-                                nys.append(y)
-#                        if nxs:
-#                            break
+        nx, ny = (sum(nxs) / max(1, len(nxs)),
+                    sum(nys) / max(1, len(nys)))
 
-                if h.id == debug_hole:
-                    print 'afsd', nxs, nys, h.x, h.y
+        if nx and ny:
+            h.interpolated = True
+#            print h.id
+            h.x_cor = nx
+            h.y_cor = ny
 
-                if nxs and nys:
-                    h.interpolated = True
-                    h.x_cor = sum(nxs) / len(nxs)
-                    h.y_cor = sum(nys) / len(nys)
+        return nx, ny
 
     def map_to_uncalibration(self, pos, cpos, rot):
         a = AffineTransform()
@@ -266,7 +207,7 @@ class StageMap(Loggable):
         return pos
 
     def _get_hole(self, key):
-        return next((h for h in self.sample_holes if h.id == key), None)
+        return next((h for h in self.sample_holes if h.id == str(key)), None)
 
     def get_hole_pos(self, key):
         return next(((h.x, h.y)
@@ -330,7 +271,7 @@ class StageMap(Loggable):
 
     def _get_hole_by_pos(self, x, y, xkey, ykey, tol):
         if tol is None:
-            tol = self.g_dimension * 0.8
+            tol = self.g_dimension * 0.75
 
         pythag = lambda hi, xi, yi:((hi.x - xi) ** 2 + (hi.y - yi) ** 2) ** 0.5
         holes = [(hole, pythag(hole, x, y)) for hole in self.sample_holes
@@ -435,3 +376,34 @@ class StageMap(Loggable):
                  )
         return v
 #============= EOF =============================================
+#        cspacing = spacing
+#        for i, e in enumerate(self.sample_holes[1:]):
+#            s = self.sample_holes[i - 1]
+#            if s.has_correction() and e.has_correction():
+#                dx = abs(s.x_cor - e.x_cor)
+#                dy = abs(s.y_cor - e.y_cor)
+##                cspacing = (dx + dy) / 2.0
+#                break
+
+            #if the number of adjacent holes found is only 1
+            #do a simple offset using 
+#                nfound = [f for f in found if f is not None]
+#                if len(nfound) == 1:
+#                    f = nfound[0]
+#                    ind = found.index(f)
+#                    x = f[0]
+#                    y = f[1]
+#                    l = cspacing#spacing / scalar
+#                    if ind == 0:
+#                        nxs.append(x)
+#                        nys.append(y - l)
+#                    elif ind == 1:
+#                        nxs.append(x + l)
+#                        nys.append(y)
+#                    elif ind == 2:
+#                        nxs.append(x - l)
+#                        nys.append(y)
+#                    else:
+#                        nxs.append(x)
+#                        nys.append(y + l)
+

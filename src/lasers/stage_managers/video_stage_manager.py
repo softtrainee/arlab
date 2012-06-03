@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
  Float, Bool, Event, Str, Directory, Enum
@@ -203,6 +201,19 @@ class VideoStageManager(StageManager, Videoable):
         self._drive_xratio = xa
         self._drive_yratio = ya
 
+    def snapshot(self, path=None, auto=False):
+        if path is None:
+            if self.auto_save_snapshot or auto:
+                path, _cnt = unique_path(root=snapshot_dir, base='snapshot',
+                                          filetype='jpg')
+            else:
+                path = self.save_file_dialog()
+
+        if path:
+            self.info('saving snapshot {}'.format(path))
+            self.video.record_frame(path, swap_rb=False)
+
+
 
     def kill(self):
         '''
@@ -323,7 +334,7 @@ class VideoStageManager(StageManager, Videoable):
         if self.auto_center:
             newpos = None
             for _t in range(max(1, ntries)):
-                newpos = self.machine_vision_manager.search(
+                newpos = self.machine_vision_manager.locate_target(
                         self.stage_controller._x_position,
                         self.stage_controller._y_position,
                         holenum=None if isinstance(holenum, str) else holenum)
@@ -367,7 +378,7 @@ class VideoStageManager(StageManager, Videoable):
             y = self.stage_controller._y_position
 
             time.sleep(0.25)
-            newpos = mv.search(x, y, hole.id)
+            newpos = mv.locate_target(x, y, hole.id)
             if newpos:
                 self.info('calculated center of hole= {} ({},{}) '.format(hole.id,
                                                                            *newpos))
@@ -375,15 +386,7 @@ class VideoStageManager(StageManager, Videoable):
             time.sleep(0.25)
 
     def _snapshot_button_fired(self):
-
-        if self.auto_save_snapshot:
-            path, _cnt = unique_path(root=snapshot_dir, base='snapshot',
-                                      filetype='jpg')
-        else:
-            path = self.save_file_dialog()
-        if path:
-            self.info('saving snapshot {}'.format(path))
-            self.video.record_frame(path, swap_rb=False)
+        self.snapshot()
 
     def _record_fired(self):
         def _rec_():

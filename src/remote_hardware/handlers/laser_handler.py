@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 #============= standard library imports ========================
 
@@ -97,17 +95,18 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def SetXY(self, manager, data, *args):
         try:
             x, y = data.split(',')
-        except ValueError:
-            return 'Invalid args: {}'.format(data)
+        except (ValueError, AttributeError):
+            return InvalidArgumentsErrorCode('SetXY', '{}'.format(data))
+
         try:
             x = float(x)
         except ValueError:
-            return 'Invalid args: {}  {}'.format(data, x)
+            return InvalidArgumentsErrorCode('SetXY', '{}  {}'.format(data, x))
 
         try:
             y = float(y)
         except ValueError:
-            return 'Invalid args: {}  {}'.format(data, y)
+            return InvalidArgumentsErrorCode('SetXY', '{}  {}'.format(data, y))
 
         #need to remember x,y so we can fool mass spec that we are at position
         manager.stage_manager._temp_position = x, y
@@ -121,7 +120,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def _set_axis(self, manager, axis, value):
         try:
             d = float(value)
-        except ValueError, err:
+        except (ValueError, TypeError), err:
             return InvalidArgumentsErrorCode('Set{}'.format(axis.upper()), err)
 
         err = manager.stage_manager.single_axis_move(axis, d)
@@ -189,7 +188,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
         try:
             data = int(data)
             err = manager.stage_manager._set_hole(data)
-        except ValueError:
+        except (ValueError, TypeError):
             err = InvalidArgumentsErrorCode('GoToHole', data)
 
         return self.error_response(err)
@@ -199,7 +198,10 @@ class LaserHandler(BaseRemoteHardwareHandler):
         return ','.join(jogs)
 
     def DoJog(self, manager, name, *args):
-        err = manager.stage_manager.pattern_manager.execute_pattern(name)
+        if name is None:
+            err = InvalidArgumentsErrorCode('DoJog', name)
+        else:
+            err = manager.stage_manager.pattern_manager.execute_pattern(name)
         return self.error_response(err)
 
     def AbortJog(self, manager, *args):
@@ -223,8 +225,9 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def SetZoom(self, manager, data, *args):
         try:
             zoom = float(data)
-        except ValueError:
+        except (ValueError, TypeError):
             return InvalidArgumentsErrorCode('SetZoom', data, logger=self)
+
         manager.zoom = zoom
         return 'OK'
 
@@ -232,12 +235,14 @@ class LaserHandler(BaseRemoteHardwareHandler):
         return manager.zoom
 
     def SetSampleHolder(self, manager, name, *args):
-        err = manager.stage_manager._set_stage_map(name)
-
-        if err is True:
-            r = 'OK'
+        if name is None:
+            r = InvalidArgumentsErrorCode('SetSampleHolder', name)
         else:
-            r = InvalidSampleHolderErrorCode(name)
+            err = manager.stage_manager._set_stage_map(name)
+            if err is True:
+                r = 'OK'
+            else:
+                r = InvalidSampleHolderErrorCode(name)
 
         return r
 

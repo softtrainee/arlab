@@ -770,8 +770,14 @@ class StageManager(Manager):
                 pos = self._stage_map.get_hole_pos(key)
                 pos = self._map_calibrated_space(pos, key=key)
             else:
-                self.info('using previously calculated corrected position')
-                correct = False
+                #check if this is an interpolated position
+                #if so probably want to do an autocentering routine
+                hole = self._stage_map._get_hole(key)
+                if hole.interpolated:
+                    self.info('using an interpolated value')
+                else:
+                    self.info('using previously calculated corrected position')
+                    correct = False
             #map the position to calibrated space
             self.stage_controller.linear_move(block=True, *pos)
             if self.tray_calibration_manager.calibration_style == 'MassSpec':

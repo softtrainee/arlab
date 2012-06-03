@@ -48,6 +48,14 @@ class TimeSeriesGraph(Graph):
     def autocorrelation(self, y, **kw):
         return autocorrelation(y, **kw)
 
+    def downsample(self, x, y, d, plotid=0, series=0):
+#        x = self.get_data(plotid, series)
+#        y = self.get_data(plotid, series, axis=1)
+
+        self.set_data(downsample_1d(array(x), d), plotid, series)
+        self.set_data(downsample_1d(array(y), d), plotid, series, axis=1)
+        self.redraw()
+
     def set_x_title(self, t, plotid=0):
         '''
         '''

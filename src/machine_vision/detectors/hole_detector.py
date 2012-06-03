@@ -17,34 +17,21 @@
 
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Float, Any, Instance, Range, Button, Int, \
-    Property, Bool, Tuple, Enum
-#from traitsui.api import View, Item, Handler, HGroup, spring, Spring
-#from pyface.timer.do_later import do_later, do_after
+from traits.api import  Float, Range, Int, Bool, Enum
+from traitsui.api import View, Item, VGroup, Group
 #============= standard library imports ========================
-from numpy import histogram, argmax, argmin, array, \
-    linspace, asarray, mean, zeros_like, invert, percentile, ones
-#from numpy.ma import masked_array
-#from scipy.ndimage.filters import sobel, generic_gradient_magnitude
-#from scipy.ndimage import sum as ndsum
-#from scipy.ndimage.measurements import variance
-
-#from ctypes_opencv.cxcore import cvCircle, CV_AA, cvRound
-
-
+from numpy import histogram, argmax, array, asarray, zeros_like, invert
+import random
+import os
 #============= local library imports  ==========================
-from src.image.cvwrapper import draw_polygons, draw_contour_list, \
+from src.image.cvwrapper import draw_polygons, \
     threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
     draw_rectangle, draw_lines, colorspace, draw_circle, get_size, \
-    dilate, erode, denoise, smooth, find_circles, resize, asMat#, add_images
-
-import random
+    asMat#, add_images
 
 from src.helpers.paths import positioning_error_dir
 from src.helpers.filetools import unique_path
-import os
 from detector import Detector
-from pyface.timer.do_later import do_later
 
 DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
@@ -107,6 +94,7 @@ class HoleDetector(Detector):
     crop_tries = Range(0, 102, 1)  # > 101 makes it a spinner
     threshold_tries = Range(0, 102, 2)
     threshold_expansion_scalar = Int(5)
+
     def close_image(self):
         pass
     def _edge_segmentation(self, src, **kw):
@@ -447,7 +435,28 @@ class HoleDetector(Detector):
 
         return src
 
+    def traits_view(self):
+        search_grp = Group(Item('start_threshold_search_value'),
+                            Item('threshold_search_width'),
+                            Item('threshold_expansion_scalar'),
+                            Item('threshold_tries'),
+                            Item('crop_tries'),
+                            Item('crop_expansion_scalar'),
+                            show_border=True,
+                           label='Search',
+                           )
 
+        process_grp = Group(
+                            Item('use_smoothing'),
+                            Item('use_dilation'),
+                            Item('use_histogram'),
+                            Item('use_contrast_equalization'),
+                            show_border=True,
+                           label='Process')
+        return View(Item('segmentation_style'),
+                    VGroup(search_grp, process_grp),
+                           Item('save_positioning_error'),
+                            )
 #============= EOF =====================================
 #    def _watershed(self, ndsrc):
 #        from skimage.filter import sobel

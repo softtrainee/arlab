@@ -24,6 +24,7 @@ from src.remote_hardware.protocols.laser_protocol import LaserProtocol
 from src.remote_hardware.tests.base_test import baseTest
 from src.remote_hardware.errors import InvalidCommandErrorCode, \
     InvalidArgumentsErrorCode
+from src.remote_hardware.errors.laser_errors import InvalidSampleHolderErrorCode
 
 request_types = ['Diode']  # , 'CO2', 'Synrad']
 
@@ -53,7 +54,8 @@ class LaserTest(baseTest):
 
     def testSetSampleHolder(self):
         data = ['SetSampleHolder Ba', ('setsampleHolder', 'SetSampleHolder')]
-        vs = ['OK', (InvalidCommandErrorCode, InvalidArgumentsErrorCode)]
+        vs = [InvalidSampleHolderErrorCode, (InvalidCommandErrorCode, InvalidArgumentsErrorCode)]
+#        vs = ['OK', (InvalidCommandErrorCode, InvalidArgumentsErrorCode)]
         self._test_suite(request_types, data, vs)
 
     def testGetSampleHolder(self):
@@ -128,7 +130,7 @@ class LaserTest(baseTest):
         self._test_suite(request_types, data, vs)
 
     def testDoJog(self):
-        data = ['DoJog A', ('jogName', 'JogName')]
+        data = ['DoJog PatternA', ('jogName', 'DoJog')]
         vs = ['OK', (InvalidCommandErrorCode, InvalidArgumentsErrorCode)]
         self._test_suite(request_types, data, vs)
 

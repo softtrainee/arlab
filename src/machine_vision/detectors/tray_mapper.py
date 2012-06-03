@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import Any
 #============= standard library imports ========================
@@ -27,6 +25,7 @@ from src.image.cvwrapper import colorspace, grayspace, draw_rectangle, \
 import time
 from pyface.timer.do_later import do_later
 from co2_detector import CO2HoleDetector
+from src.image.image import StandAloneImage
 #from src.image.pyopencv_image_helper import asMat
 
 class TrayMapper(CO2HoleDetector):
@@ -83,7 +82,7 @@ class TrayMapper(CO2HoleDetector):
         return sx, sy
 
     def map_holes(self,):
-        self.parent.show_image()
+#        self.parent.show_image()
 
         self.correction_dict = dict()
 #        regions = [(0, 0)]
@@ -116,11 +115,20 @@ class TrayMapper(CO2HoleDetector):
 
 
     def map_holes_in_region(self):
+        src = self.parent.get_new_frame()
+
+        self.image = StandAloneImage(width=600,
+                                     height=600)
+        self.image.load(src)
+
+        self.image.show()
+
         src = self.image.source_frame
         gsrc = grayspace(src)
 
-        self.image.frames[0] = colorspace(gsrc)
-        self.working_image.frames = [colorspace(gsrc)]
+#        self.image.frames[0] = colorspace(gsrc)
+#        self.working_image.frames = [colorspace(gsrc)]
+
         tol = 0.07
         a = 2000
         atol = 500
@@ -171,7 +179,8 @@ class TrayMapper(CO2HoleDetector):
                     hole = self.stage_map._get_hole_by_position(mmx, mmy)
                     if hole is not None:
                         if self._add_correction(hole.id, (mmx, mmy)):
-                            self._draw_result(self.image.frames[0], r,
+
+                            self._draw_result(self.image.get_frame(0), r,
                                                with_br=False, thickness=2)
 
 #                            tx = hole.x

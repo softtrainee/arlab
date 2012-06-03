@@ -35,7 +35,7 @@ class MessagingServer(object):
         else:
             func = self.parent.processor
 
-        return func.get_response(*args, **kw)
+        return repr(func.get_response(*args, **kw))
 
     def increment_packets_received(self):
         '''

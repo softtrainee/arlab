@@ -27,7 +27,7 @@ class ErrorCode(object):
 
     def __init__(self, logger=None):
         if logger is not None:
-            logger.warning(self.msg)
+            logger.debug(self.msg)
 
     def __repr__(self):
         return 'ERROR {} : {}'.format(self.code, self.msg)

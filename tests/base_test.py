@@ -44,10 +44,15 @@ class baseTest(unittest.TestCase):
     def _test_suite(self, request_types, data, v):
         def success(rt, di, vi):
             result = self.manager.process_server_request(rt, di)
-            if isinstance(result, ErrorCode):
-                result = repr(result)
+            if not isinstance(vi, (str, int, float)) and issubclass(vi, ErrorCode):
+                func = self.assertIsInstance
+            else:
+                func = self.assertEqual
+#            if isinstance(result, ErrorCode):
+#                result = repr(result)
+            func(result, vi)
+#            self.assertEqual(result, vi)
 
-            self.assertEqual(result, vi)
 
         def error(rt, di, vi):
             def e(dii, vii):

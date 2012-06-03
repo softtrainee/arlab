@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Any, List, Int, Bool
+from traits.api import HasTraits, Any, List, Int, Bool, on_trait_change
 
 #=============standard library imports ========================
 import wx
@@ -226,8 +226,8 @@ class Image(HasTraits):
 
 #        w = sum([s.size()[0] for s in src])
 #        h = sum([s.size()[1] for s in src])
-        w = 300
-        h = 300
+        w = self.width
+        h = self.height
         display = new_dst(w, h, 3)
         try:
             s1 = src[0].ndarray
@@ -304,6 +304,10 @@ class StandAloneImage(HasTraits):
 #            return getattr(self._image, attr)
 #        else:
 #            pass
+    @on_trait_change('width, height')
+    def wh_update(self, obj, name, old, new):
+        setattr(self._image, name, getattr(self, name))
+
     def show(self):
         do_after(1, self.edit_traits)
 
