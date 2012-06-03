@@ -149,7 +149,10 @@ class Image(HasTraits):
 #                cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
 #                rframe = swapRB(rframe)
                 frame = swapRB(frame)
-
+            
+            if frame is None:
+                return
+            
 #            cvResize(rframe, frame)
 #            rframe = frame
             if clone:

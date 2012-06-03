@@ -134,9 +134,10 @@ def threshold(src, threshold, invert=False):
 
 
 def swapRB(src):
-    dst = src.clone()
-    cv.convertImage(src, dst, cv.CV_CVTIMG_SWAP_RB)
-    return dst
+    if not src.empty():
+        dst = src.clone()
+        cv.convertImage(src, dst, cv.CV_CVTIMG_SWAP_RB)
+        return dst
 
 #def new_dst(src, width=None, height=None, a=None, b=None):
 #    return src.clone()
