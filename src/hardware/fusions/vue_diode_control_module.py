@@ -85,6 +85,9 @@ class VueDiodeControlModule(CoreDevice):
     def enable(self, **kw):
         '''
         '''
+        if self.simulation:
+            return True
+
         self.get_fault_flags()
         if self.clear_fault_flags():
             cmd = 'l1'

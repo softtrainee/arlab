@@ -373,41 +373,18 @@ class FusionsLaserManager(LaserManager):
             self.stage_manager.move_to_hole(holenumber)
 
     def _enable_hook(self):
+        resp = self.logic_board._enable_laser_()
+        if self.logic_board.simulation:
+            resp = True
 
-        return self.logic_board._enable_laser_()
-#        if self.logic_board._enable_laser_():
-#            if self.record_lasing:
-#                self.stage_manager.start_recording()
-#            return True
+        return resp
 
     def _disable_hook(self):
-        return self.logic_board._disable_laser_()
+        resp = self.logic_board._disable_laser_()
+        if self.logic_board.simulation:
+            resp = True
 
-
-#        if self.record_lasing:
-#            self.stage_manager.stop_recording()
-#        return
-#    def enable_laser(self, mode='normal'):
-#        '''
-#        '''
-#
-#        is_ok = self.logic_board._enable_laser_()
-#        super(FusionsLaserManager, self).enable_laser(is_ok=is_ok)
-#        return is_ok
-#
-#    def disable_laser(self):
-#        '''
-#        '''
-#        super(FusionsLaserManager, self).disable_laser()
-#        return self.logic_board._disable_laser_()
-
-#    def show_step_heater(self):
-#
-#        shm = StepHeatManager(laser_manager = self,
-#                              video_manager = self.stage_manager.video_manager
-#                              )
-#        self.step_heat_manager = shm
-#        shm.edit_traits()
+        return resp
 
     def show_motion_controller_manager(self):
         '''
@@ -579,11 +556,12 @@ class FusionsLaserManager(LaserManager):
                           kind='sqlite')
 
         return db
+
     def get_power_calibration_database(self):
 
         db = PowerCalibrationAdapter(dbname=self.dbname,
                                              kind='sqlite')
-        db.connect()
+#        db.connect()
         return db
 #    def _subsystem_default(self):
 #        '''

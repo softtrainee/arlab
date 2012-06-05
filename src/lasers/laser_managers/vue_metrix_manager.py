@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Instance
 from traitsui.api import View, Item
@@ -67,7 +65,6 @@ class VueMetrixManager(Manager):
 #        if self.is_scanable:
 #            self.start_scan()
 
-
     def _control_default(self):
         '''
         '''
@@ -75,6 +72,7 @@ class VueMetrixManager(Manager):
                                       configuration_dir_name='diode'
                                       )
         return b
+
 #============= views ===================================
     def traits_view(self):
         v = View(
