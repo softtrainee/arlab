@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-from src.helpers.xml_parser import XMLParser
+#============= enthought library imports =======================
+#============= standard library imports ========================
+from xml_parser import XMLParser
+#============= local library imports  ==========================
 
 
 class ValveParser(XMLParser):
@@ -31,4 +32,5 @@ class ValveParser(XMLParser):
         return [v if element else v.text.strip()
                 for v in group.findall('valve')]
 
+#============= EOF =============================================
 

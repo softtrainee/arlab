@@ -25,12 +25,9 @@ from traitsui.table_column import ObjectColumn
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.initialization_parser import InitializationParser
+from src.helpers.parsers.initialization_parser import InitializationParser
 from src.remote_hardware.command_processor import CommandProcessor
 from src.messaging.remote_command_server import RemoteCommandServer
-import ConfigParser
-import os
-from src.helpers.paths import setup_dir
 from globals import use_ipc
 
 '''

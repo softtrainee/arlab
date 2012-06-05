@@ -282,6 +282,12 @@ def multiplex_test():
     t.start()
     t2.start()
 
+def diode_client():
+    c = Client(
+               port=1068,
+               ask_id='D')
+    c.configure_traits()
+
 def laser_client():
     c = Client(
                port=1067,
@@ -325,6 +331,7 @@ def mass_spec_param_test():
     c.ask('Read pump_time')
 
 if __name__ == '__main__':
+    diode_client()
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
 #              'benchmark_unix_tcp_no_log.npz'
@@ -333,7 +340,7 @@ if __name__ == '__main__':
 #    multiplex_test()
 #    laser_client()
 #    power_test()
-    timed_flag_test()
+#    timed_flag_test()
 #    mass_spec_param_test()
     #===========================================================================
     #Check Remote launch snippet 

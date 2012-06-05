@@ -66,7 +66,7 @@ class VideoServer(Loggable):
         context = zmq.Context()
         self._bsocket = context.socket(zmq.PUB)
         self._bsocket.bind('tcp://*:{}'.format(self.port))
-        fp = 1 / 15.
+        fp = 1 / 5.
 
         if self.use_color:
             kw = dict(swap_rb=True)

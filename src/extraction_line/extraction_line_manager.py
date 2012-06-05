@@ -256,17 +256,11 @@ class ExtractionLineManager(Manager):
             return self.valve_manager.get_valve_by_name(name)
 
 #    def open_valve(self, name, description=None, address=None, mode='remote', **kw):
+
+
     def open_valve(self, name, ** kw):
         '''
         '''
-#        if self.valve_manager is not None:
-#            if address:
-#                name = self.valve_manager.get_name_by_address(address)
-#
-#            if description:
-#                name = self.valve_manager.get_name_by_description(description)
-#
-#            return self._change_valve_state(name, mode, 'open', **kw)
         return self._open_close_valve(name, 'open', **kw)
 
     def close_valve(self, name, **kw):
@@ -282,7 +276,11 @@ class ExtractionLineManager(Manager):
             if description:
                 name = self.valve_manager.get_name_by_description(description)
 
-            return self._change_valve_state(name, mode, action, **kw)
+            result = self._change_valve_state(name, mode, action, **kw)
+            if self.snooper:
+                self.snooper.open_close_valve(name, action, result)
+
+            return result
 
     def sample(self, name, **kw):
         def sample():
