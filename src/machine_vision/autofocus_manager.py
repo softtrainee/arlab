@@ -125,7 +125,9 @@ class AutofocusManager(Manager):
         do_later(self._open_graph)
 
         target = self._passive_focus
-        self._passive_focus_thread = Thread(name='autofocus', target=target)
+        self._passive_focus_thread = Thread(name='autofocus', target=target,
+                                            args=(self._evt_autofocusing)
+                                            )
         self._passive_focus_thread.start()
 
     def _open_graph(self):
@@ -139,7 +141,7 @@ class AutofocusManager(Manager):
 
         self.info('autofocusing stopped by user')
 
-    def _passive_focus(self, set_z=True):
+    def _passive_focus(self, stop_signal):
         '''
             sweep z looking for max focus measure
             FMgrad= roberts or sobel (sobel removes noise)
@@ -179,13 +181,13 @@ ImageGradmin={} (z={})
 ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             self.info('calculated focus z= {}'.format(fma))
 
-            if set_z:
-                controller = self.stage_controller
-                if controller is not None:
-                    if not self._evt_autofocusing.isSet():
-                        controller.single_axis_move('z', fma, block=True)
-                        controller._z_position = fma
-                        controller.z_progress = fma
+#            if set_z:
+            controller = self.stage_controller
+            if controller is not None:
+                if not stop_signal.isSet():
+                    controller.single_axis_move('z', fma, block=True)
+                    controller._z_position = fma
+                    controller.z_progress = fma
 
         self.autofocusing = False
 

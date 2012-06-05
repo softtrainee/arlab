@@ -30,7 +30,6 @@ class VideoServer(Loggable):
 
     _frame = None
 
-    _lock = None
     _new_frame_ready = None
     _stop_signal = None
 
@@ -49,23 +48,27 @@ class VideoServer(Loggable):
     def start(self):
         if not self._started:
             self.info('starting video server')
-            self._lock = Lock()
             self._new_frame_ready = Event()
             self._stop_signal = Event()
 
             self.video.open(user='server')
-            bt = Thread(name='broadcast', target=self._broadcast)
+            bt = Thread(name='broadcast', target=self._broadcast, args=(
+                                                                        self.video,
+                                                                        self.use_color,
+                                                                        self._stop_signal,
+                                                                        self._new_frame_ready
+                                                                        ))
             bt.start()
 
             self._started = True
             self.info('video server started')
 
-    def _broadcast(self):
+    def _broadcast(self, video, use_color, stop, new_frame):
         self.info('video broadcast thread started')
         import zmq
         context = zmq.Context()
-        self._bsocket = context.socket(zmq.PUB)
-        self._bsocket.bind('tcp://*:{}'.format(self.port))
+        sock = context.socket(zmq.PUB)
+        sock.bind('tcp://*:{}'.format(self.port))
         fp = 1 / 5.
 
         if self.use_color:
@@ -75,17 +78,17 @@ class VideoServer(Loggable):
             kw = dict(gray=True)
             depth = 1
 
-        while not self._stop_signal.isSet():
+        while not stop.isSet():
             t = time.time()
 
-            f = self.video.get_frame(**kw)
+            f = video.get_frame(**kw)
 
-            self._new_frame_ready.clear()
+            new_frame.clear()
             w, h = f.size()
             header = array([w, h, fp, depth])
 #            data = array([header.tostring(), f.ndarray.tostring()], dtype='str')
-            self._bsocket.send(header.tostring())
-            self._bsocket.send(f.ndarray.tostring())
+            sock.send(header.tostring())
+            sock.send(f.ndarray.tostring())
             time.sleep(max(0.001, fp - (time.time() - t)))
 
 
