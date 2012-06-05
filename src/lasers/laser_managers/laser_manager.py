@@ -201,6 +201,7 @@ class LaserManager(Manager):
                 self.debug('setting enable_error_flag')
 
             self.disable_laser()
+
         return enabled
 
     def disable_laser(self):
