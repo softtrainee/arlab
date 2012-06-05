@@ -52,7 +52,7 @@ class ManagerHandler(ViewableHandler):
 
         info.object.kill()
         return True
-    
+
     def close(self, info, isok):
         info.object.close(isok)
         return True
@@ -137,7 +137,7 @@ class Manager(ConfigLoadable, Viewable):
 #    def close(self, is_ok):
 ##        print self.name, 'close', is_ok
 #        return True
-    def close(self, *args,**kw):
+    def close(self, *args, **kw):
         pass
 
     def _kill_hook(self):
@@ -212,9 +212,11 @@ class Manager(ConfigLoadable, Viewable):
             m = __import__(package, globals(), locals(), [klass], -1)
             class_factory = getattr(m, klass)
         except ImportError:
-            self.warning(' Invalid manager class {}'.format(klass))
+            self.warning(' Invalid manager class {} {}'.format(package, klass))
+
         except:
             self.warning('Problem with manager class {} source'.format(klass))
+
         return class_factory
 
 #===============================================================================

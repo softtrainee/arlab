@@ -25,19 +25,16 @@ from pyface.timer.api import Timer
 import threading
 import datetime
 import select
-import time
+import socket
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
-#from handlers.api import TCPHandler, UDPHandler
-
-
-#from src.managers.displays.messaging_display import MessagingDisplay
 from src.led.led_editor import LEDEditor
 from src.led.led import LED
 from src.messaging.command_repeater import CommandRepeater
 from src.helpers.datetime_tools import diff_timestamp
-from globals import use_ipc
 from src.remote_hardware.command_processor import CommandProcessor
+from globals import use_ipc
+
 class RCSHandler(Handler):
     def init(self, info):
         '''
@@ -111,11 +108,12 @@ class RemoteCommandServer(ConfigLoadable):
         config = self.get_configuration()
         if config:
 
-            host = self.config_get(config, 'General', 'host')
+#            host = self.config_get(config, 'General', 'host')
+            host = socket.gethostbyname(socket.gethostname())
 
             port = self.config_get(config, 'General', 'port', cast='int')
             if host is None or port is None:
-                self.warning('Host and Port not set')
+                self.warning('Host or Port not set {}:{}'.format(host, port))
                 return
 
             if port < 1024:

@@ -30,7 +30,7 @@ from src.hardware.plugins.hardware_plugin import HardwarePlugin
 from src.hardware.plugins.hardware_ui_plugin import HardwareUIPlugin
 
 from src.helpers.paths import plugins_dir
-from src.helpers.initialization_parser import InitializationParser
+from src.helpers.parsers.initialization_parser import InitializationParser
 
 from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay

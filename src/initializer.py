@@ -26,7 +26,7 @@ from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
 #============= local library imports  ==========================
 from src.helpers import paths
 from src.hardware.core.i_core_device import ICoreDevice
-from src.helpers.initialization_parser import InitializationParser
+from src.helpers.parsers.initialization_parser import InitializationParser
 from loggable import Loggable
 
 

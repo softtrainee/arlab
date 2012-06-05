@@ -20,7 +20,7 @@ from traitsui.api import View, Item, EnumEditor, HGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.initialization_parser import InitializationParser
+from src.helpers.parsers.initialization_parser import InitializationParser
 from src.hardware.core.i_core_device import ICoreDevice
 
 BLANK_STR = '------'

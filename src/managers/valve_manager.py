@@ -27,7 +27,7 @@ from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve
 from src.extraction_line.section import Section
 from src.helpers.paths import hidden_dir
-from src.helpers.valve_parser import ValveParser
+from src.helpers.parsers.valve_parser import ValveParser
 from threading import Timer, Thread, Condition, Event
 import time
 from src.loggable import Loggable
@@ -488,7 +488,7 @@ class ValveManager(Manager):
     def _load_system_dict(self):
 #        config = self.configparser_factory()
 
-        from src.helpers.initialization_parser import InitializationParser
+        from src.helpers.parsers.initialization_parser import InitializationParser
 #        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
         ip = InitializationParser()
 

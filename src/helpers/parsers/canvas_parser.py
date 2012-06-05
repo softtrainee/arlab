@@ -14,13 +14,10 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-from src.helpers.xml_parser import XMLParser
+from xml_parser import XMLParser
 #============= local library imports  ==========================
 
 

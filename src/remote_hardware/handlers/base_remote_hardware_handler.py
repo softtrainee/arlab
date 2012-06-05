@@ -53,6 +53,7 @@ class BaseRemoteHardwareHandler(Loggable):
 
     def PychronReady(self, *args, **kw):
         return True
+
     def RemoteLaunch(self, *args, **kw):
         return True
 
