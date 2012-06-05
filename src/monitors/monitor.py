@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Int, Float
 #============= standard library imports ========================
-from threading import Thread
+from threading import Thread, Event
 import time
 #============= local library imports  ==========================
 #from src.config_loadable import ConfigLoadable
@@ -30,32 +30,39 @@ class Monitor(ConfigLoadable):
     sample_delay = Float(5)
     manager = None
     #parent = None
-    kill = False
+#    kill = False
+    _monitoring = False
     _invalid_checks = None
+
     def load(self):
         config = self.get_configuration()
         self.set_attribute(config, 'sample_delay',
                            'General', 'sample_delay', cast='float', optional=False)
-        
+
         self._load_hook(config)
         self._invalid_checks = []
-        
+
     def _load_hook(self, *args):
         pass
 
     def stop(self):
         '''
         '''
-        self.kill = True
+        self._stop_signal.set()
+#        self.kill = True
         self.info('Stop monitor')
+        self._monitoring = False
 
     def monitor(self):
         '''
         '''
-        self.info('Starting monitor')
-        t = Thread(target=self._monitor_)
-        self.kill = False
-        t.start()
+        if not self._monitoring:
+            self._monitoring = True
+            self.info('Starting monitor')
+            self._stop_signal = Event()
+            t = Thread(target=self._monitor_, args=(self._stop_signal,))
+    #        self.kill = False
+            t.start()
 
     def reset_start_time(self):
         '''
@@ -65,7 +72,7 @@ class Monitor(ConfigLoadable):
 #        '''
 #        '''
 #        raise NotImplementedError
-    def _monitor_(self):
+    def _monitor_(self, stop_signal):
         '''
         '''
         #load before every monitor call so that changes to the config file
@@ -76,7 +83,7 @@ class Monitor(ConfigLoadable):
             self.gntries = 0
             self.reset_start_time()
 
-            while not self.kill:
+            while not stop_signal.isSet():
                 #execute check hooks
                 '''
                     does the order in which the check hooks are executed matter?
@@ -90,7 +97,7 @@ class Monitor(ConfigLoadable):
                     if '__check' in h and h not in self._invalid_checks:
                         func = getattr(self, h)
                         func()
-                        if self.kill:
+                        if stop_signal.isSet():
                             break
                 #sleep before running monitor again
                 time.sleep(self.sample_delay)
