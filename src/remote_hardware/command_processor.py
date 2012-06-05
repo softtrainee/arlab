@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Bool, Str
 #============= standard library imports ========================
@@ -55,7 +53,7 @@ class CommandProcessor(ConfigLoadable):
     _handlers = None
     _manager_lock = None
 
-    use_security = None
+    use_security = False
     _hosts = None
 
     def __init__(self, *args, **kw):
@@ -232,7 +230,14 @@ class CommandProcessor(ConfigLoadable):
             if self.use_security:
                 if self._hosts:
                     if not sender_addr in self._hosts:
-                        return repr(SecurityErrorCode(sender_addr))
+                        for h in self._hosts:
+                            #match to any computer on the subnet
+                            hargs = h.split('.')
+                            if hargs[-1] == '*':
+                                if sender_addr.split('.')[:-1] == hargs[:-1]:
+                                    break
+                        else:
+                            return repr(SecurityErrorCode(sender_addr))
                 else:
                     self.warning('hosts not configured, security not enabled')
 
