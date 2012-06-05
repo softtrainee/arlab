@@ -28,7 +28,8 @@ from src.config_loadable import ConfigLoadable
 #from globals import use_shared_memory
 from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
-from src.remote_hardware.errors.system_errors import SystemLockErrorCode
+from src.remote_hardware.errors.system_errors import SystemLockErrorCode, \
+    SecurityErrorCode
 import select
 from globals import ipc_dgram, use_ipc
 BUFSIZE = 2048
@@ -54,11 +55,15 @@ class CommandProcessor(ConfigLoadable):
     _handlers = None
     _manager_lock = None
 
+    use_security = None
+    _hosts = None
+
     def __init__(self, *args, **kw):
         super(CommandProcessor, self).__init__(*args, **kw)
         self.context_filter = ContextFilter()
         self._handlers = dict()
         self._manager_lock = Lock()
+        self._hosts = []
 
 #    def load(self, *args, **kw):
 #        '''
@@ -224,6 +229,13 @@ class CommandProcessor(ConfigLoadable):
     def _process_request(self, sock, sender_addr, request_type, data):
         #self.debug('Request: {}, {}'.format(request_type, data.strip()))
         try:
+            if self.use_security:
+                if self._hosts:
+                    if not sender_addr in self._hosts:
+                        return repr(SecurityErrorCode(sender_addr))
+                else:
+                    self.warning('hosts not configured, security not enabled')
+
             if self._check_system_lock(sender_addr):
                 result = repr(SystemLockErrorCode(self.system_lock_name,
                                              self.system_lock_address,

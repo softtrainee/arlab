@@ -25,7 +25,7 @@ from traitsui.extras.checkbox_column import CheckboxColumn
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.helpers.initialization_parser import InitializationParser
+from src.helpers.parsers.initialization_parser import InitializationParser
 
 
 class CItem(HasTraits):

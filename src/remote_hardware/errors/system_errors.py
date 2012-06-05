@@ -117,6 +117,12 @@ class SystemLockErrorCode(ErrorCode):
         self.msg = self.msg.format(name, locker, sender)
         super(SystemLockErrorCode, self).__init__(*args, **kw)
 
+class SecurityErrorCode(ErrorCode):
+    msg = 'Not an approved ip address {}'
+    code = 14
+    def __init__(self, addr, *args, **kw):
+        self.msg = self.msg.format(addr)
+        super(SecurityErrorCode, self).__init__(*args, **kw)
 
 #======= runtime errors ------
 class ValveSoftwareLockErrorCode(ErrorCode):

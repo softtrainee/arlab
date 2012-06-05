@@ -67,7 +67,7 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
 
     def _owners_default(self):
         o = ['']
-        from src.helpers.initialization_parser import InitializationParser
+        from src.helpers.parsers.initialization_parser import InitializationParser
 
         ip = InitializationParser()
 

@@ -14,15 +14,13 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
 from SocketServer import BaseRequestHandler
-
+from src.remote_hardware.errors.error import ErrorCode
 
 class MessagingHandler(BaseRequestHandler):
     _verbose = False
@@ -35,7 +33,11 @@ class MessagingHandler(BaseRequestHandler):
             if self._verbose:
                 self.server.info('Received: %s' % data.strip())
             response = self.server.get_response(self.server.processor_type, data, self.client_address[0])
-            self.send_packet(response)
+            if response is not None:
+                if isinstance(response, ErrorCode):
+                    response = repr(response)
+
+                self.send_packet(response)
 
             if 'ERROR 6' in response:
                 self.server.increment_repeater_fails()
