@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Dict, Instance, Bool, on_trait_change, List
 from apptools.preferences.preference_binding import bind_preference
@@ -29,6 +27,8 @@ from src.helpers.parsers.initialization_parser import InitializationParser
 from src.remote_hardware.command_processor import CommandProcessor
 from src.messaging.remote_command_server import RemoteCommandServer
 from globals import use_ipc
+from src.helpers.paths import setup_dir
+import os
 
 '''
 #===================================
@@ -51,10 +51,10 @@ class RemoteHardwareManager(Manager):
 #    def __init__(self, *args, **kw):
 #        super(RemoteHardwareManager, self).__init__(*args, **kw)
     system_lock = Bool(False)
-    def process_server_request(self, rt, data, processor=None):
-        d = self.processors['diode']
-#        print rt, data
-        return d.get_response(rt, data, None)
+#    def process_server_request(self, rt, data, processor=None):
+#        d = self.processors['diode']
+##        print rt, data
+#        return d.get_response(rt, data, None)
 
     def _processors_default(self):
         ps = dict()
@@ -63,10 +63,19 @@ class RemoteHardwareManager(Manager):
 #        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
         ip = InitializationParser()
 
+        host = []
+        #load the hosts file
+        p = os.path.join(setup_dir, 'hosts')
+        if os.path.isfile(p):
+            with open(p, 'r') as f:
+                hosts = [l.strip() for l in f if l.strip()]
+
         for pi in ip.get_processors():
             cp = self._command_processor_factory(path=pi)
+            cp._hosts = hosts
+
             ps[cp.name] = cp
-#            ps.append()
+
         return ps
 
     def bootstrap(self):
