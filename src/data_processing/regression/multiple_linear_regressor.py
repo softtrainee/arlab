@@ -24,8 +24,8 @@ see http://statsmodels.sourceforge.net/trunk/ for documentation
 
 #============= standard library imports ========================
 from numpy import ndarray, array
-import scikits.statsmodels as sm
-from scikits.statsmodels.sandbox.regression import wls_prediction_std
+import statsmodels as sm
+from statsmodels.sandbox.regression import wls_prediction_std
 
 #============= local library imports  ==========================
 class MultipleLinearRegressor():

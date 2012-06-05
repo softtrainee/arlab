@@ -109,7 +109,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
     @staticmethod
     def _get_canvas_parser(p):
-        from src.helpers.canvas_parser import CanvasParser
+        from src.helpers.parsers.canvas_parser import CanvasParser
         cp = CanvasParser(p)
         return cp
 
