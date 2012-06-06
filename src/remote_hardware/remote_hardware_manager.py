@@ -63,7 +63,7 @@ class RemoteHardwareManager(Manager):
 #        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
         ip = InitializationParser()
 
-        host = []
+        hosts = []
         #load the hosts file
         p = os.path.join(setup_dir, 'hosts')
         if os.path.isfile(p):
@@ -85,17 +85,7 @@ class RemoteHardwareManager(Manager):
                     p.manager = self
                     p.bootstrap()
             else:
-#                for p in self.processors.itervalues():
-#                    p.manager = self
-##                    p.load()
-#                    p.bootstrap()
-
                 self.load_servers()
-
-
-
-#            self.command_processor.manager = self
-#            self.command_processor.bootstrap()
 
     @on_trait_change('enable_hardware_server')
     def enabled_changed(self):
@@ -103,21 +93,16 @@ class RemoteHardwareManager(Manager):
             self.bootstrap()
         else:
             self.stop()
-#            for p in self.processors:
-#                p.close()
-#            self.command_processor.close()
 
     def stop(self):
         for p in self.processors.itervalues():
             p.close()
-#        self.command_processor.close()
 
     def _command_processor_factory(self, path=None, name=None):
         if name is None:
             if path is not None:
                 name = path.split('-')[-1]
 
-#    def _command_processor_default(self):
         cp = CommandProcessor(application=self.application,
                               path=path,
                               name=name)
@@ -180,7 +165,6 @@ class RemoteHardwareManager(Manager):
             self.warning('You are not using an approved ip address {}'.format(addr))
         else:
             return addr
-
 
     def lock_by_address(self, addr, lock=True):
         if lock:

@@ -29,6 +29,6 @@ class ErrorCode(object):
         if logger is not None:
             logger.debug(self.msg)
 
-    def __repr__(self):
+    def __str__(self):
         return 'ERROR {} : {}'.format(self.code, self.msg)
 #============= EOF =====================================
