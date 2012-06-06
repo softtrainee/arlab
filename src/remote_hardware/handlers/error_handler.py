@@ -62,7 +62,7 @@ class ErrorHandler:
         except TypeError, e:
             err = InvalidArgumentsErrorCode(args, e, logger=self.logger)
 
-        return err, '{}|{}'.format(func.__name__, str(result))
+        return err, '{}'.format(str(result))
 
 if __name__ == '__main__':
     ec = ErrorHandler()

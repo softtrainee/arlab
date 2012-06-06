@@ -203,8 +203,8 @@ class CommandProcessor(ConfigLoadable):
 
         if use_ipc:
             #self.debug('Result: {}'.format(data))
-            if isinstance(data, ErrorCode):
-                data = repr(data)
+#            if isinstance(data, ErrorCode):
+#                data = str(data)
             try:
                 if ipc_dgram:
                     sock.sendto(data, self.path)
@@ -215,7 +215,7 @@ class CommandProcessor(ConfigLoadable):
                 self.debug('End Request Exception: {}'.format(err))
         else:
             if not isinstance(data, ErrorCode):
-
+#
                 data = data.split('|')[-1]
 #            else:
 #                print data
@@ -237,14 +237,14 @@ class CommandProcessor(ConfigLoadable):
                                 if sender_addr.split('.')[:-1] == hargs[:-1]:
                                     break
                         else:
-                            return repr(SecurityErrorCode(sender_addr))
+                            return str(SecurityErrorCode(sender_addr))
                 else:
                     self.warning('hosts not configured, security not enabled')
 
             if self._check_system_lock(sender_addr):
-                result = repr(SystemLockErrorCode(self.system_lock_name,
+                result = SystemLockErrorCode(self.system_lock_name,
                                              self.system_lock_address,
-                                             sender_addr, logger=self.logger))
+                                             sender_addr, logger=self.logger)
             else:
 
                 result = 'error handling'
@@ -284,7 +284,7 @@ class CommandProcessor(ConfigLoadable):
 #                    result = self.context_filter.get_response(handler, data)
                         result = handler.handle(data, sender_addr, self._manager_lock)
 
-            r_args = self._end_request(sock, result)
+            r_args = self._end_request(sock, str(result))
             if not use_ipc:
                 return r_args
 
