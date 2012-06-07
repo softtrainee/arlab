@@ -117,9 +117,9 @@ class MachineVisionManager(Manager):
         '''
         pass
 
-    def locate_target(self,holenum, *args, **kw):
+    def locate_target(self,cx,cy,holenum, *args, **kw):
         if self.hole_detector is not None:
-            r = self.hole_detector.locate_sample_well(holenum, *args, **kw)
+            r = self.hole_detector.locate_sample_well(cx,cy,holenum, **kw)
             sm = self.parent._stage_map
 
             if r is None and holenum is not None:
@@ -129,9 +129,10 @@ class MachineVisionManager(Manager):
             # 2. try to interpolate the holes corrected pos.
             #===================================================================
                 self.parent.snapshot(auto=True,
-                                     name='pos_err_{}'.format())
-
+                                     name='pos_err_{}'.format(holenum))
                 r = sm.get_interpolated_position(holenum=holenum)
+                if r:
+                    self.info('using interpolated position {:03f} {:03f}'.format(*r))
             else:
                 #try to interpolate values so that future moves are more 
                 #accurate

@@ -253,7 +253,7 @@ class LaserManager(Manager):
             if power < 0.1:
                 power = 0
             else:
-                c = pc.coefficients
+                c = list(pc.coefficients)
                 sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', c)])
                 self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
 

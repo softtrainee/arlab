@@ -99,7 +99,8 @@ class StageMap(Loggable):
 
     def get_interpolated_position(self, holenum):
         h = self._get_hole(holenum)
-        return self._calculated_interpolated_position(h)
+        if h is not None:
+            return self._calculated_interpolated_position(h)
 
     def _interpolate_noncorrected(self):
         self.sample_holes.reverse()
@@ -181,7 +182,7 @@ class StageMap(Loggable):
             h.x_cor = nx
             h.y_cor = ny
 
-        return nx, ny
+            return nx, ny
 
     def map_to_uncalibration(self, pos, cpos, rot):
         a = AffineTransform()
