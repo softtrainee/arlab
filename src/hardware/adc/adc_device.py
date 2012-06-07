@@ -14,25 +14,21 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-
 #=============enthought library imports=======================
-
+from traits.api import Float
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
 from src.hardware.core.abstract_device import AbstractDevice
 
-
 class ADCDevice(AbstractDevice):
 #    scan_func = 'read_voltage'
-
     def load_additional_args(self, config):
         '''
 
         '''
         adc = self.config_get(config, 'General', 'adc')
+
         if adc is not None:
             module = __import__('src.hardware.adc.analog_digital_converter', fromlist=[adc])
             factory = getattr(module, adc)

@@ -45,7 +45,8 @@ class BaseConfig(Loggable):
         p = self.get_path()
         self.info('saving configuration to {}'.format(p))
         with open(p, 'w') as f:
-            txt = '\n'.join([str(getattr(self, attr)) for attr in self._dump_attrs])
+            prep = lambda x: (1 if x else 0) if isinstance(x, bool) else x
+            txt = '\n'.join([str(prep(getattr(self, attr))) for attr in self._dump_attrs])
             f.write(txt)
 
     def get_path(self):
@@ -88,13 +89,14 @@ class AutoarrConfig(BaseConfig):
     fixed_Do = Bool
     activation_energy = Float
     ordinate_Do = Float
-
+    max_domain_size = Float
     _dump_attrs = ['automate_arrhenius_parameters',
                'max_domains',
                'min_domains',
                'fixed_Do',
                'activation_energy',
-               'ordinate_Do'
+               'ordinate_Do',
+               'max_domain_size'
                ]
 
     def traits_view(self):
@@ -104,6 +106,7 @@ class AutoarrConfig(BaseConfig):
                Item('fixed_Do', label='Fixed Do.'),
                Item('activation_energy'),
                Item('ordinate_Do', label='Ordinate Do.'),
+               Item('max_domain_size', label='Max. Domain Size'),
                buttons=self._get_buttons(),
                handler=BaseConfigHandler,
                title='Autoarr Configuration',
