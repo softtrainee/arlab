@@ -142,7 +142,9 @@ class PowerCalibrationManager(Manager):
 #            apm = self.parent.get_device('analog_power_meter')
 #        else:
 #            apm = DummyPowerMeter()
-
+        if self.parent is not None:
+            self.parent.enable_laser()
+            
         for i in range(nsteps):
             if not self._alive:
                 break

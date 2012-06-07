@@ -31,7 +31,8 @@ class AnalogPowerMeter(ADCDevice):
     def load_additional_args(self, config):
         super(AnalogPowerMeter, self).load_additional_args(config)
         self.set_attribute(config, 'voltage_range', 'General', 'voltage', cast='float')
-
+        return True
+    
     def traits_view(self):
         v = View(Item('watt_range', label='Watt Range'),
                  Item('voltage_range', label='ADC range'),
