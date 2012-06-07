@@ -73,8 +73,7 @@ class CO2HoleDetector(HoleDetector):
             src = asMat(img_rescale)
         return src
 
-
-    def locate_sample_well(self, cx, cy, holenum=None, **kw):
+    def locate_sample_well(self, cx, cy, holenum, **kw):
         if self.target_image is not None:
             self.target_image.close()
 
