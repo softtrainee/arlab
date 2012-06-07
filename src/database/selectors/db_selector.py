@@ -74,7 +74,7 @@ class DBSelector(Loggable):
     limit = Int(100)
     date_str = 'rundate'
 
-    multi_select_graph = Bool(True)
+    multi_select_graph = Bool(False)
     multi_graphable = Bool(False)
 
     def __init__(self, *args, **kw):

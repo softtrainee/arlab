@@ -77,7 +77,9 @@ class PowerCalibrationResult(DBResult):
         calibration = dm.get_table('calibration', '/')
         g.new_plot(xtitle='Setpoint (%)',
                    ytitle='Measured Power (W)',
-                   padding=[50, 10, 10, 40]
+                   padding=[50, 10, 10, 40],
+                   zoom=True,
+                   pan=True
                    )
 
         xi, yi = zip(*[(r['setpoint'], r['value']) for r in calibration.iterrows()])

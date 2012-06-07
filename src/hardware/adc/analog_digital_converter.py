@@ -148,7 +148,8 @@ class M1000(AnalogDigitalConverter):
 #        super(M1000, self).load_setup_args(p, setupargs)
 #
         self.set_attribute(config, 'address', 'General', 'address')
-        self.set_attribute(config, 'voltage_scalar', 'General', 'voltage_scalar')
+        self.set_attribute(config, 'voltage_scalar', 'General', 
+                           'voltage_scalar', cast='float')
 
         if self.address is not None:
             return True
