@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import Float, Property, Bool, Int, CInt
 from traitsui.api import View, Item, HGroup, VGroup, EnumEditor
@@ -205,7 +203,6 @@ class KerrMotor(KerrDevice):
         if fail_cnt > 5:
             self.warning('Problem Communicating')
 
-
     def _check_status_byte(self, check_bit):
         '''
         return bool 
@@ -234,7 +231,8 @@ class KerrMotor(KerrDevice):
         except Exception, e:
             self.warning('kerr_motor:228 {}'.format(str(e)))
             status_register = []
-
+            if self.timer is not None:
+                self.timer.Stop()
         '''
         if X bits is set to one its index will be in the status register
         '''
@@ -284,6 +282,7 @@ class KerrMotor(KerrDevice):
 
         if not self._check_status_byte(0):
             self.enabled = False
+
         else:
             if self.use_hysteresis and not self.doing_hysteresis_correction:
                     #move to original desired position

@@ -34,16 +34,17 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.data_warehouse import DataWarehouse
 #from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 from pyface.timer.do_later import do_later
+from src.hardware.analog_power_meter import AnalogPowerMeter
 
 FITDEGREES = dict(Linear=1, Parabolic=2, Cubic=3)
 
 class PowerCalibrationObject(object):
     coefficients = None
 
-class DummyPowerMeter:
-    def read_power_meter(self, setpoint):
-        import random
-        return setpoint + random.randint(0, 5)
+#class DummyPowerMeter:
+#    def read_power_meter(self, setpoint):
+#        import random
+#        return setpoint + random.randint(0, 5)
 
 class Parameters(HasTraits):
     pstart = Float(0)
@@ -63,7 +64,8 @@ class Parameters(HasTraits):
               Item('integration_period'),
               Item('nintegrations'),
               Item('fit_degree', label='Fit'),
-              Item('use_db')
+              Item('use_db'),
+
 
               )
 
@@ -80,10 +82,24 @@ class PowerCalibrationManager(Manager):
     _coefficients = List
     save = Button
 
+    power_meter = Instance(AnalogPowerMeter)
+#    def configure_power_meter_fired(self):
+#        if self.parent is not None:
+#            apm = self.parent.get_device('analog_power_meter')
+#            apm.edit_traits(kind='modal')
+    graph_cnt = 0
 
     def _execute_power_calibration(self):
-        self.graph = g = Graph(window_title='CO2 Power Calibration',
-                               container_dict=dict(padding=5)
+        gc = self.graph_cnt
+        cnt = '' if not gc else gc
+        self.graph_cnt += 1
+
+        name = self.parent.name if self.parent else 'Foo'
+
+        self.graph = g = Graph(window_title='{} Power Calibration {}'.format(name, cnt),
+                               container_dict=dict(padding=5),
+                               window_x=500 + gc * 25,
+                               window_y=25 + gc * 25
                                )
         g.new_plot(
                    xtitle='Setpoint (%)',
@@ -92,7 +108,6 @@ class PowerCalibrationManager(Manager):
 
         if self.parent is not None:
             do_later(self._open_graph)
-
 
         pstop = self.parameters.pstop
         pstep = self.parameters.pstep
@@ -122,10 +137,11 @@ class PowerCalibrationManager(Manager):
             self.graph.set_x_limits(pstop, pstart)
 
         nsteps = int((dev + pstep) / pstep)
-        if self.parent is not None:
-            apm = self.parent.get_device('analog_power_meter')
-        else:
-            apm = DummyPowerMeter()
+        apm = self.power_meter
+#        if self.parent is not None:
+#            apm = self.parent.get_device('analog_power_meter')
+#        else:
+#            apm = DummyPowerMeter()
 
         for i in range(nsteps):
             if not self._alive:
@@ -290,13 +306,27 @@ class PowerCalibrationManager(Manager):
                 pickle.dump(self.parameters, f)
 
     def traits_view(self):
-        v = View(self._button_factory('execute'),
-                 Item('parameters', show_label=False, style='custom'),
+
+        self.graph_cnt = 0
+
+        v = View(
+                 VGroup(
+                        self._button_factory('execute', align='right'),
+                        VGroup(
+                             Item('parameters', show_label=False, style='custom'),
+                                show_border=True,
+                                label='Setup'
+                                ),
                  VGroup(Item('coefficients'),
-                        Item('save', show_label=False),
+                        self._button_factory('save', align='right'),
                         show_border=True,
                         label='Set Calibration'
                         ),
+                 VGroup(
+                        Item('power_meter', style='custom', show_label=False),
+                            show_border=True,
+                            label='Power Meter')
+                 ),
 
                  handler=self.handler_klass,
                  title='Power Calibration',
@@ -334,6 +364,14 @@ class PowerCalibrationManager(Manager):
                     r = list(pc.coefficients)
 
         return r
+
+    def _power_meter_default(self):
+        if self.parent is not None:
+            apm = self.parent.get_device('analog_power_meter')
+        else:
+            apm = AnalogPowerMeter()
+        return apm
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('pcm')

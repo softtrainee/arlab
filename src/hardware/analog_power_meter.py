@@ -14,21 +14,26 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
-
+from traits.api import Float, Enum
+from traitsui.api import View, Item
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
 from adc.adc_device import ADCDevice
 
-
 class AnalogPowerMeter(ADCDevice):
     '''
     '''
-    _range = 1.0
-    voltage_range = 5.0
+    watt_range = Enum(0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000)
+    voltage_range = Float(5.0)
+
+    def traits_view(self):
+        v = View(Item('watt_range', label='Watt Range'),
+                 Item('voltage_range', label='ADC range'),
+                 buttons=['OK', 'Cancel']
+                 )
+        return v
 
     def _scan_(self, *args):
         '''
@@ -41,5 +46,5 @@ class AnalogPowerMeter(ADCDevice):
     def read_power_meter(self, *args, **kw):
         '''
         '''
-        return self.read_voltage(**kw) * self._range / self.voltage_range
+        return self.read_voltage(**kw) * self.watt_range / self.voltage_range
 #============= EOF ==============================================
