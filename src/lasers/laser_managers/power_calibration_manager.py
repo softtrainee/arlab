@@ -172,7 +172,7 @@ class PowerCalibrationManager(Manager):
             with open(p, 'rb') as f:
                 try:
                     pa = pickle.load(f)
-                except pickle.PickleError:
+                except (pickle.PickleError, EOFError):
                     pass
 
         if pa is None:
@@ -227,6 +227,7 @@ class PowerCalibrationManager(Manager):
 
         coeffs = polyfit(xs, ys, deg)
         self._coefficients = list(coeffs)
+        return self._coefficients
 
     def _open_graph(self):
         ui = self.graph.edit_traits()
@@ -329,7 +330,8 @@ class PowerCalibrationManager(Manager):
         if self.parent:
             pc = self.parent.load_power_calibration()
             if pc:
-                r = list(pc.coefficients)
+                if pc.coefficients:
+                    r = list(pc.coefficients)
 
         return r
 if __name__ == '__main__':

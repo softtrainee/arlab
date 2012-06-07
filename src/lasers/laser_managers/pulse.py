@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, Float, Event, \
      Property, Bool, on_trait_change
@@ -25,7 +23,6 @@ import apptools.sweet_pickle as pickle
 import os
 from threading import Thread, Condition
 #============= local library imports  ==========================
-from src.managers.manager import Manager
 from src.helpers.paths import hidden_dir
 from src.scripts.wait_dialog import WaitDialog
 
