@@ -201,10 +201,13 @@ class VideoStageManager(StageManager, Videoable):
         self._drive_xratio = xa
         self._drive_yratio = ya
 
-    def snapshot(self, path=None, auto=False):
+    def snapshot(self, path=None,name=None, auto=False):
         if path is None:
             if self.auto_save_snapshot or auto:
-                path, _cnt = unique_path(root=snapshot_dir, base='snapshot',
+                
+                if name is None:
+                    name='snapshot'
+                path, _cnt = unique_path(root=snapshot_dir, base=name,
                                           filetype='jpg')
             else:
                 path = self.save_file_dialog()
@@ -337,7 +340,8 @@ class VideoStageManager(StageManager, Videoable):
                 newpos = self.machine_vision_manager.locate_target(
                         self.stage_controller._x_position,
                         self.stage_controller._y_position,
-                        None if isinstance(holenum, str) else holenum,                                                                  
+                        holenum
+#                        None if isinstance(holenum, str) else holenum,                                                                  
                         )
 
                 if newpos:
