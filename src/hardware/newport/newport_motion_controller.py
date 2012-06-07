@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import Enum, Instance
 import apptools.sweet_pickle as pickle
@@ -66,7 +64,6 @@ class NewportMotionController(MotionController):
 
         #get and clear any error
         self.read_error()
-
 
         return r
 
@@ -357,7 +354,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         errx = self._validate(x, 'x', cur=self._x_position)
         erry = self._validate(y, 'y', cur=self._y_position)
         if errx is None and erry is None:
-            return 'invalidate position {},{}'.format(x, y)
+            return 'invalid position {},{}'.format(x, y)
 
         tol = 0.001 #should be set to the motion controllers resolution 
         if d > tol:

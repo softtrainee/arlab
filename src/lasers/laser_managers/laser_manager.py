@@ -20,7 +20,8 @@ from traitsui.api import View, Item, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
-from numpy import polyval
+from numpy import poly1d
+from scipy import optimize
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.led.led import LED
@@ -249,12 +250,23 @@ class LaserManager(Manager):
     def _get_calibrated_power(self, power, calibration):
         if self.use_calibrated_power and not calibration:
             pc = self.load_power_calibration()
-            coeffs = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', pc.coefficients)])
-            self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(coeffs))
             if power < 0.1:
                 power = 0
             else:
-                power = polyval(pc.coefficients, power)
+                c = pc.coefficients
+                sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', c)])
+                self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
+
+                #say y=ax+b (watts=a*power_percent+b)
+                #calculate x for a given y
+                #solvers solve x for y=0
+                #we want x for y=power, therefore
+                #subtract the requested power from the intercept coeff (b)
+                #find the root of the polynominal
+
+                #construct polynomial
+                c[-1] -= power
+                power = optimize.newton(poly1d(c), 1)
 
 
         return power
@@ -263,6 +275,7 @@ class LaserManager(Manager):
         from src.lasers.laser_managers.power_calibration_manager import PowerCalibrationObject
         p = os.path.join(hidden_dir, '{}_power_calibration'.format(self.name))
         if os.path.isfile(p):
+            self.info('loading power calibration {}'.format(p))
             with open(p, 'rb') as f:
                 try:
                     pc = pickle.load(f)

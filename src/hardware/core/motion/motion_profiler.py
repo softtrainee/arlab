@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Float, Bool, on_trait_change
 from traitsui.api import View, Item, Group, HGroup, spring
@@ -164,13 +162,13 @@ class MotionProfiler(ConfigLoadable):
 
         cvtime = cvd / v
 
-#        self.atime = atime
-#        self.dtime = dtime
-#        self.cvtime = cvtime
-#
-#        self.adisp = acd
-#        self.ddisp = dcd
-#        self.cvdisp = cvd
+        self.atime = atime
+        self.dtime = dtime
+        self.cvtime = cvtime
+
+        self.adisp = acd
+        self.ddisp = dcd
+        self.cvdisp = cvd
 
         return (atime, dtime, cvtime), (acd, dcd, cvd),
 #    def calculate_corrected_parameters2(self, disp, vel, ac, dc):
