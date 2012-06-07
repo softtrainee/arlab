@@ -337,7 +337,8 @@ class VideoStageManager(StageManager, Videoable):
                 newpos = self.machine_vision_manager.locate_target(
                         self.stage_controller._x_position,
                         self.stage_controller._y_position,
-                        holenum=None if isinstance(holenum, str) else holenum)
+                        None if isinstance(holenum, str) else holenum,                                                                  
+                        )
 
                 if newpos:
                     rpos = newpos

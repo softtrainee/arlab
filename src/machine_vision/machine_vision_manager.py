@@ -117,9 +117,9 @@ class MachineVisionManager(Manager):
         '''
         pass
 
-    def locate_target(self, holenum=None, *args, **kw):
+    def locate_target(self,holenum, *args, **kw):
         if self.hole_detector is not None:
-            r = self.hole_detector.locate_sample_well(holenum=holenum, *args, **kw)
+            r = self.hole_detector.locate_sample_well(holenum, *args, **kw)
             sm = self.parent._stage_map
 
             if r is None and holenum is not None:
