@@ -14,13 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
@@ -147,7 +140,7 @@ class M1000(AnalogDigitalConverter):
     '''
     short_form_prompt = '$'
     long_form_prompt = '#'
-
+    voltage_scalar = 1
     def load_additional_args(self, config):
         '''
 
@@ -155,6 +148,7 @@ class M1000(AnalogDigitalConverter):
 #        super(M1000, self).load_setup_args(p, setupargs)
 #
         self.set_attribute(config, 'address', 'General', 'address')
+        self.set_attribute(config, 'voltage_scalar', 'General', 'voltage_scalar')
 
         if self.address is not None:
             return True
@@ -187,6 +181,9 @@ class M1000(AnalogDigitalConverter):
 
             res = self.ask(cmd, **kw)
             res = self._parse_response_(res)
+            if res is not None:
+                res /= self.voltage_scalar
+
         return res
 
     def _parse_response_(self, r, form='$', type=None):
