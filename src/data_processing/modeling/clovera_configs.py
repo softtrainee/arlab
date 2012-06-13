@@ -14,14 +14,13 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
-from traits.api import  Str, Int, Float, Bool
-from traitsui.api import View, Item, ModalButtons, Handler
+from traits.api import  Str, Int, Float, Bool, Enum, Array
+from traitsui.api import View, Item, ModalButtons, Handler, \
+     EnumEditor, HGroup, Label, Spring
 #============= standard library imports ========================
 import os
-
+from numpy import ones, save, load
 #============= local library imports  ==========================
 from src.loggable import Loggable
 class BaseConfigHandler(Handler):
@@ -39,18 +38,24 @@ class BaseConfig(Loggable):
         self.root = root
 
     def dump(self):
-        if not self._dump_attrs:
+        if self._dump_attrs is None:
             raise NotImplementedError('set _dump_attrs')
 
         p = self.get_path()
         self.info('saving configuration to {}'.format(p))
+        self._dump_hook(p)
+
+    def _dump_hook(self, p):
         with open(p, 'w') as f:
             prep = lambda x: (1 if x else 0) if isinstance(x, bool) else x
             txt = '\n'.join([str(prep(getattr(self, attr))) for attr in self._dump_attrs])
             f.write(txt)
 
+    def get_directory(self):
+        return os.path.join(self.root, self.runid)
+
     def get_path(self):
-        p = os.path.join(self.root, self.runid, '{}.cl'.format(self.klass_name))
+        p = os.path.join(self.get_directory(), '{}.cl'.format(self.klass_name))
         return p
 
     def _get_buttons(self):
@@ -139,12 +144,19 @@ class AutoagefreeConfig(BaseConfig):
     #===========================================================================
     # config params
     #===========================================================================
-    nruns = Int(50)
-    max_plateau_age = Float(1000)
-    _dump_attrs = ['nruns', 'max_plateau_age']
+    nruns = Int(200)
+    max_plateau_age = Float
+    use_contour = Bool(True)
+    min_age = Float
+    _dump_attrs = ['nruns', 'max_plateau_age',
+                   'use_contour', 'min_age'
+                   ]
     def traits_view(self):
-        v = View(Item('nruns'),
+        v = View(Item('nruns', label='Number of runs'),
                  Item('max_plateau_age', label='Max. Plateau Age (Ma)'),
+                 Item('use_contour', label='Create Contours'),
+                 Item('min_age', enabled_when='object.use_contour',
+                      label='Minimum contour age (Ma)'),
                  buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
                  title='Autoagefree Configuration',
@@ -152,33 +164,133 @@ class AutoagefreeConfig(BaseConfig):
                )
         return v
 
-class ConfidenceIntervalConfig(BaseConfig):
-    klass_name = 'confint'
+class CorrelationConfig(BaseConfig):
+    klass_name = 'corrfft'
     #===========================================================================
     # config params
     #===========================================================================
-    max_age = Float(500)
-    min_age = Float(0)
-    nsteps = Int(100)
-
-    _dump_attrs = ['max_age', 'min_age', 'nsteps']
+    f_min = Float
+    f_max = Float
+    _dump_attrs = ['f_min', 'f_max']
     def traits_view(self):
-        v = View(Item('max_age', label='Max. age (Ma)'),
-                 Item('min_age', label='Min. age (Ma)'),
-                 Item('nsteps'),
+        v = View(Item('f_min', label='F minimum'),
+                 Item('f_max', label='F maximum'),
                  buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
-                 title='Confidence Interval Configuration',
+                 title='Correlation Configuration',
+                 kind='livemodal'
+               )
+        return v
+class ArrmeConfig(BaseConfig):
+    klass_name = 'arrme'
+
+    geometry = Int(2)
+    _dump_attrs = ['geometry']
+    def traits_view(self):
+        v = View(
+                 Item('geometry', editor=EnumEditor(values={1:'1:Slabs',
+                                                            2:'2:Spheres',
+                                                            3:'3:Cylinders'})),
+                 buttons=self._get_buttons(),
+                 handler=BaseConfigHandler,
+                 title='Arrme Configuration',
+                 kind='livemodal'
+               )
+        return v
+
+class AgesmeConfig(BaseConfig):
+    klass_name = 'agesme'
+    cooling_history = Array(int, (20, 2))
+    geometry = Int(2)
+
+    _dump_attrs = []
+    def __init__(self, *args, **kw):
+        super(AgesmeConfig, self).__init__(*args, **kw)
+
+        p = os.path.join(self.get_directory(), 'cooling_history.npy')
+        if os.path.isfile(p):
+            self.cooling_history = load(p)
+        else:
+            self.cooling_history = ones((20, 2)) * -1
+
+#        #load a default or previous cooling history
+#        for i in range(10):
+#            self.cooling_history[i] = [300 - i * 10, 4]
+
+    def _dump_hook(self, p):
+        new_line = chr(10)
+        line_str = '{}' + new_line
+
+        with open(p, 'w') as f:
+            #write the cooling history
+
+            ch = ['\t'.join(map(str, r)) for r in self.cooling_history if r[0] >= 0 and r[1] >= 0]
+            f.write(line_str.format(len(ch)))
+            f.write(new_line.join(ch))
+
+            f.write(new_line)
+
+            #write contents of arr-me.in
+            pp = os.path.join(os.path.dirname(p), 'arr-me.in')
+            with open(pp, 'r') as ff:
+                f.write(ff.read())
+
+            #write 1 indicating thermal history correct is correct
+            f.write(line_str.format('1'))
+            f.write(str(self.geometry))
+
+            chp = os.path.join(os.path.dirname(p), 'cooling_history.npy')
+            save(chp, self.cooling_history)
+
+    def traits_view(self):
+        v = View(
+                 HGroup(Label('Age'), Spring(width=55, springy=False), Label('Temp')),
+                 Item('cooling_history', show_label=False),
+                 Item('geometry', show_label=False,
+                      editor=EnumEditor(values={1:'1:Slabs',
+                                                2:'2:Spheres',
+                                                3:'3:Cylinders'})),
+
+                 buttons=self._get_buttons(),
+                 handler=BaseConfigHandler,
+                 title='Agesme Configuration',
                  kind='livemodal'
                )
         return v
 
 
+#class ConfidenceIntervalConfig(BaseConfig):
+#    klass_name = 'confint'
+#    #===========================================================================
+#    # config params
+#    #===========================================================================
+#    max_age = Float(500)
+#    min_age = Float(0)
+#    nsteps = Int(100)
+#
+#    _dump_attrs = ['max_age', 'min_age', 'nsteps']
+#    def traits_view(self):
+#        v = View(Item('max_age', label='Max. age (Ma)'),
+#                 Item('min_age', label='Min. age (Ma)'),
+#                 Item('nsteps'),
+#                 buttons=self._get_buttons(),
+#                 handler=BaseConfigHandler,
+#                 title='Confidence Interval Configuration',
+#                 kind='livemodal'
+#               )
+#        return v
+
+
 if __name__ == '__main__':
-    a = ConfidenceIntervalConfig('12345-01', '/Users/Ross/Desktop')
-    info = a.configure_traits()
-    if info:
-        print 'foo'
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('fop')
+    a = AgesmeConfig('Desktop', '/Users/ross')
+    a.configure_traits()
+
+#    a = ConfidenceIntervalConfig('12345-01', '/Users/Ross/Desktop')
+#    info = a.configure_traits()
+#    if info:
+#        print 'foo'
 
 #============= EOF =====================================
 
