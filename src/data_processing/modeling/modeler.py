@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import  Any, Instance, Str, \
     Directory, List, on_trait_change, Property, Enum, Int, Button
@@ -147,62 +145,50 @@ class Modeler(Loggable):
         return None, None
 
     def execute_autoarr(self):
-        self.info('------- Autoarr -------')
-        rid, root = self._get_rid_root()
-        if rid:
-            from clovera_configs import AutoarrConfig
-            a = AutoarrConfig(rid, root)
-            info = a.edit_traits()
-            if info.result:
-                self._execute_fortran('autoarr_py')
-            else:
-                self.info('------- Autoarr aborted-------')
-        else:
-            self.info('------- Autoarr aborted-------')
+        from clovera_configs import AutoarrConfig
+        self._execute_fortran_helper('Autoarr', 'autoarr_py', AutoarrConfig)
 
     def execute_autoagemon(self):
-        self.info('------- Autoagemon -------')
-        rid, root = self._get_rid_root()
-        if rid:
-            from clovera_configs import AutoagemonConfig
-            a = AutoagemonConfig(rid, root)
-            info = a.edit_traits()
-            if info.result:
-                self._execute_fortran('autoagemon_py')
-            else:
-                self.info('------- Autoagemon aborted-------')
-        else:
-            self.info('------- Autoagemon aborted-------')
-
+        from clovera_configs import AutoagemonConfig
+        self._execute_fortran_helper('Autoagemon', 'autoagemon_py', AutoagemonConfig)
 
     def execute_autoagefree(self):
-        self.info('------- Autoagefree -------')
+        from clovera_configs import AutoagefreeConfig
+        self._execute_fortran_helper('Autoagefree',
+                                     'autoagefree_py',
+                                      AutoagefreeConfig)
+
+#    def execute_confidence_interval(self):
+#        from clovera_configs import ConfidenceIntervalConfig
+#        self._execute_fortan_helper('Confidence Interval', 'confint_py',
+#                                    ConfidenceIntervalConfig)
+
+    def execute_correlation(self):
+        from clovera_configs import CorrelationConfig
+        self._execute_fortran_helper('Correlation', 'corrfft_py', CorrelationConfig)
+
+    def execute_arrme(self):
+        from clovera_configs import ArrmeConfig
+        self._execute_fortran_helper('Arrme', 'arrme_py', ArrmeConfig)
+
+    def execute_agesme(self):
+        from clovera_configs import AgesmeConfig
+        self._execute_fortran_helper('Agesme', 'agesme_py', AgesmeConfig)
+
+    def _execute_fortran_helper(self, name, fortan, config_klass):
+        self.info('------- {} -------'.format(name))
         rid, root = self._get_rid_root()
         if rid:
-            from clovera_configs import AutoagefreeConfig
-            a = AutoagefreeConfig(rid, root)
+            a = config_klass(rid, root)
             info = a.edit_traits()
             if info.result:
-                self._execute_fortran('autoagefree_py')
+                self._execute_fortran(fortan)
             else:
-                self.info('------- Autoagefree aborted-------')
-        else:
-            self.info('------- Autoagefree aborted-------')
-
-    def execute_confidence_interval(self):
-        self.info('------- Confidence Interval-------')
-        rid, root = self._get_rid_root()
-        if rid:
-            from clovera_configs import ConfidenceIntervalConfig
-            a = ConfidenceIntervalConfig(rid, root)
-            info = a.edit_traits()
-            if info.result:
-                self._execute_fortran('confint_py')
-            else:
-                self.info('------- Confidence Interval aborted-------')
+                self.info('------- {} aborted-------'.format(name))
 
         else:
-            self.info('------- Confidence Interval aborted-------')
+            self.info('------- {} aborted-------'.format(name))
+
 
     def _execute_fortran(self, name):
         if sys.platform != 'darwin':

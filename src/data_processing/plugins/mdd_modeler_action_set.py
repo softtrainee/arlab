@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from envisage.ui.action.api import Action#, Group, Menu, ToolBar
 from envisage.ui.workbench.api import WorkbenchActionSet
@@ -25,6 +23,7 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 
 #============= local library imports  ==========================
 
+action_path = 'src.data_processing.plugins.mdd_modeler_actions'
 class MDDModelerActionSet(WorkbenchActionSet):
     '''
     '''
@@ -35,29 +34,38 @@ class MDDModelerActionSet(WorkbenchActionSet):
     actions = [
 
                Action(name='Autoarr',
-                      path='MenuBar/MDD',
-                    class_name='src.data_processing.plugins.mdd_modeler_actions:AutoarrAction'
+                      path='MenuBar/MDD/Modeling',
+                    class_name='{}AutoarrAction'.format(action_path)
                     ),
                Action(name='Autoagemon',
-                      path='MenuBar/MDD',
-                    class_name='src.data_processing.plugins.mdd_modeler_actions:AutoagemonAction'
+                      path='MenuBar/MDD/Modeling',
+                    class_name='{}AutoagemonAction'.format(action_path)
                     ),
                Action(name='Autoagefree',
-                      path='MenuBar/MDD',
-                    class_name='src.data_processing.plugins.mdd_modeler_actions:AutoagefreeAction'
+                      path='MenuBar/MDD/Modeling',
+                    class_name='{}AutoagefreeAction'.format(action_path)
                     ),
-               Action(name='Confidence Interval',
-                      path='MenuBar/MDD',
-                    class_name='src.data_processing.plugins.mdd_modeler_actions:ConfidenceIntervalAction'
+               Action(name='Correlation',
+                      path='MenuBar/MDD/Modeling',
+                    class_name='{}CorrelationAction'.format(action_path)
                     ),
-
+               Action(name='Arrme',
+                      path='MenuBar/MDD/Modeling',
+                    class_name='{}ArrmeAction'.format(action_path)
+                    ),
+               Action(name='Agesme',
+                      path='MenuBar/MDD/Modeling',
+                    class_name='{}AgesmeAction'.format(action_path)
+                    ),
                Action(name='Parse Autoupdate',
                       path='MenuBar/MDD',
-                    class_name='src.data_processing.plugins.mdd_modeler_actions:ParseAutoupdateAction'
+                    class_name='{}ParseAutoupdateAction'.format(action_path)
                     ),
                Action(name='New Model',
                       path='MenuBar/MDD',
-                    class_name='src.data_processing.plugins.mdd_modeler_actions:NewModelAction'
+                    class_name='{}NewModelAction'.format(action_path)
                     ),
+
+
              ]
 #============= EOF ====================================
