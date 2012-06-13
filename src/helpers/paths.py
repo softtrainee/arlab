@@ -87,7 +87,7 @@ bakeout = os.path.join(device_dir, 'bakeout')
 bakeout_config_dir = os.path.join(setup_dir, 'bakeout_configurations')
 
 #clovera_root = os.path.join(src_root, 'src', 'data_processing', 'modeling', 'lovera')
-#clovera_root = '/usr/local/clovera'
+clovera_root = '/usr/local/clovera'
 
 argus_data_dir = os.path.join(data_dir, 'argusVI')
 heating_schedule_dir = os.path.join(setup_dir, 'heating_schedules')

@@ -121,8 +121,8 @@ class Modeler(Loggable):
 
             #now ready to run fortran
             name = 'files_py'
-            if sys.platform is not 'darwin':
-                name += '.exe'
+#            if sys.platform != 'darwin':
+#                name += '.exe'
             self._execute_fortran(name)
 
     def _get_rid_root(self):
@@ -205,8 +205,13 @@ class Modeler(Loggable):
             self.info('------- Confidence Interval aborted-------')
 
     def _execute_fortran(self, name):
+        if sys.platform != 'darwin':
+            name += '.exe'
         self.info('excecute fortran program {}'.format(name))
         q = Queue()
+
+        p = os.path.join(clovera_root, name)
+        self.info('path = {}'.format(p))
 
         self._fortran_process = t = FortranProcess(name, clovera_root, q)
         t.start()

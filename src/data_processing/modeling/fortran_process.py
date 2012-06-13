@@ -32,7 +32,7 @@ class FortranProcess(Thread):
         self.name = name
         self.root = root
         delimiter = ':'
-        if sys.platform is not 'darwin':
+        if sys.platform != 'darwin':
             delimiter = ';'
 
         ps = os.environ['PATH'].split(delimiter)
@@ -56,6 +56,8 @@ class FortranProcess(Thread):
         except OSError, e:
             #warning(None, '{} - {}'.format(e, self.name))
             print e
+
+
 
     def get_remaining_stdout(self):
         if self._process:
