@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from pyface.action.api import Action
 
@@ -62,6 +60,41 @@ class ConfidenceIntervalAction(Action):
         app = event.window.application
         manager = app.get_service(MDD_PROTOCOL)
         manager.modeler.execute_confidence_interval()
+
+
+class CorrelationAction(Action):
+    '''
+    '''
+    def perform(self, event):
+        '''
+        '''
+        app = event.window.application
+        manager = app.get_service(MDD_PROTOCOL)
+        manager.modeler.execute_correlation()
+
+
+class ArrmeAction(Action):
+    '''
+    '''
+    def perform(self, event):
+        '''
+        '''
+        app = event.window.application
+        manager = app.get_service(MDD_PROTOCOL)
+        manager.modeler.execute_arrme()
+
+
+class AgesmeAction(Action):
+    '''
+    '''
+    def perform(self, event):
+        '''
+        '''
+        app = event.window.application
+        manager = app.get_service(MDD_PROTOCOL)
+        manager.modeler.execute_agesme()
+
+
 
 class ParseAutoupdateAction(Action):
     '''
