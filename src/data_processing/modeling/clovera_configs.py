@@ -222,8 +222,13 @@ class AgesmeConfig(BaseConfig):
         line_str = '{}' + new_line
 
         with open(p, 'w') as f:
-            #write the cooling history
+            #write 1 indicating thermal history correct is correct
+            f.write(line_str.format('1'))
+            f.write(str(self.geometry))
 
+        ap = os.path.join(os.path.dirname(p), 'agesme.in')
+        with open(ap, 'w') as f:
+            #write the cooling history
             ch = ['\t'.join(map(str, r)) for r in self.cooling_history if r[0] >= 0 and r[1] >= 0]
             f.write(line_str.format(len(ch)))
             f.write(new_line.join(ch))
@@ -235,9 +240,6 @@ class AgesmeConfig(BaseConfig):
             with open(pp, 'r') as ff:
                 f.write(ff.read())
 
-            #write 1 indicating thermal history correct is correct
-            f.write(line_str.format('1'))
-            f.write(str(self.geometry))
 
             chp = os.path.join(os.path.dirname(p), 'cooling_history.npy')
             save(chp, self.cooling_history)

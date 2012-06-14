@@ -24,6 +24,9 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 #============= local library imports  ==========================
 
 action_path = 'src.data_processing.plugins.mdd_modeler_actions:'
+mdd_path = 'MenuBar/MDD'
+modeling_path = '{}/Modeling...'.format(mdd_path)
+
 class MDDModelerActionSet(WorkbenchActionSet):
     '''
     '''
@@ -34,35 +37,35 @@ class MDDModelerActionSet(WorkbenchActionSet):
     actions = [
 
                Action(name='Autoarr',
-                      path='MenuBar/MDD/Modeling',
+                      path=modeling_path,
                     class_name='{}AutoarrAction'.format(action_path)
                     ),
                Action(name='Autoagemon',
-                      path='MenuBar/MDD/Modeling',
+                      path=modeling_path,
                     class_name='{}AutoagemonAction'.format(action_path)
                     ),
                Action(name='Autoagefree',
-                      path='MenuBar/MDD/Modeling',
+                      path=modeling_path,
                     class_name='{}AutoagefreeAction'.format(action_path)
                     ),
                Action(name='Correlation',
-                      path='MenuBar/MDD/Modeling',
+                      path=modeling_path,
                     class_name='{}CorrelationAction'.format(action_path)
                     ),
                Action(name='Arrme',
-                      path='MenuBar/MDD/Modeling',
+                      path=modeling_path,
                     class_name='{}ArrmeAction'.format(action_path)
                     ),
                Action(name='Agesme',
-                      path='MenuBar/MDD/Modeling',
+                      path=modeling_path,
                     class_name='{}AgesmeAction'.format(action_path)
                     ),
                Action(name='Parse Autoupdate',
-                      path='MenuBar/MDD',
+                      path=mdd_path,
                     class_name='{}ParseAutoupdateAction'.format(action_path)
                     ),
                Action(name='New Model',
-                      path='MenuBar/MDD',
+                      path=mdd_path,
                     class_name='{}NewModelAction'.format(action_path)
                     ),
 
