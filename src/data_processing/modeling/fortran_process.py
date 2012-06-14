@@ -22,6 +22,8 @@ import subprocess
 import os
 from pyface.message_dialog import warning
 import sys
+from src.initializer import MProgressDialog
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -42,6 +44,10 @@ class FortranProcess(Thread):
         self.queue = queue
 
     def run(self):
+        n = 5
+        pd = MProgressDialog(max=n, size=(550, 15))
+        do_later(pd.open)
+        do_later(pd.change_message, '{} process started'.format(self.name))
         try:
             p = subprocess.Popen([self.name],
                                   shell=False,
@@ -55,8 +61,10 @@ class FortranProcess(Thread):
 
         except OSError, e:
             #warning(None, '{} - {}'.format(e, self.name))
-            print e
+            print 'foo', e
+            do_later(pd.change_message, '{} process did not finish properly'.format(self.name))
 
+        do_later(pd.change_message, '{} process complete'.format(self.name))
 
 
     def get_remaining_stdout(self):

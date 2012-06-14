@@ -227,7 +227,7 @@ class Modeler(Loggable):
             _handle(m)
 
         dur = time.time() - st
-        self.info('{} run time {:0.1f} s'.format(name, dur))
+        self.info('{} run time {:e} s'.format(name, dur))
         self.info('------ {} finished ------'.format(name.capitalize()))
 
     def _handle_autoarr_py(self, m):
