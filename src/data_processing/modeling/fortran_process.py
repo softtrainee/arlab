@@ -24,6 +24,7 @@ from pyface.message_dialog import warning
 import sys
 from src.initializer import MProgressDialog
 from pyface.timer.do_later import do_later
+import time
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -58,6 +59,7 @@ class FortranProcess(Thread):
             while p.poll() == None:
                 if self.queue:
                     self.queue.put(p.stdout.readline())
+                time.sleep(1e-6)
 
         except OSError, e:
             #warning(None, '{} - {}'.format(e, self.name))
