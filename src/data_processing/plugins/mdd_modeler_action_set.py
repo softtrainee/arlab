@@ -23,7 +23,7 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 
 #============= local library imports  ==========================
 
-action_path = 'src.data_processing.plugins.mdd_modeler_actions'
+action_path = 'src.data_processing.plugins.mdd_modeler_actions:'
 class MDDModelerActionSet(WorkbenchActionSet):
     '''
     '''
