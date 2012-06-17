@@ -149,10 +149,10 @@ class Image(HasTraits):
 #                cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
 #                rframe = swapRB(rframe)
                 frame = swapRB(frame)
-            
+
             if frame is None:
                 return
-            
+
 #            cvResize(rframe, frame)
 #            rframe = frame
             if clone:
@@ -162,10 +162,11 @@ class Image(HasTraits):
             if flip is None:
                 flip = self.flip
 
+            print flip, mirror
             if flip and mirror:
-                cvFlip(frame, flip_mode=2)
+                cvFlip(frame, 2)
             elif mirror:
-                cvFlip(frame, flip_mode=1)
+                cvFlip(frame, 1)
             elif flip:
                 cvFlip(frame, 0)
 

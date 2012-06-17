@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Enum
+from traits.api import Enum, Any
 #=============standard library imports ========================
 from numpy import abs
 import collections
@@ -69,10 +69,10 @@ class MarkupContainer(collections.MutableMapping):
             self.layers.append(dict())
             l = self.layers[-1]
 
-        if len(l) > 100:
-            k = l.keys()
-            k.sort()
-            l.pop(k[0])
+#        if len(l) > 100:
+#            k = l.keys()
+#            k.sort()
+#            l.pop(k[0])
 
         l[key] = v
 
@@ -106,15 +106,109 @@ class MarkupCanvas(BaseDataCanvas):
     selected_point = None
     selected_element = None
 
-    tool_state = Enum('select', 'line', 'mline', 'rect', 'point', 'noteditable')
+    selected = Any
+    invalid_layers = None
     def __init__(self, *args, **kw):
         super(MarkupCanvas, self).__init__(*args, **kw)
-        self.markupcontainer = MarkupContainer()
+        self.clear()
 
     def get_item(self, base, key):
         key = '{}{}'.format(base, key)
         return next((v for k, v in self.markupcontainer.iteritems() if k == key), None)
 
+    def _draw_hook(self, gc, *args, **kw):
+        '''
+
+        '''
+
+        # draw the lines currently held in the markupcontainer
+        self._draw_current_markup(gc)
+        self._draw_markup_dict(gc)
+
+    def _draw_current_markup(self, *args, **kw):
+        pass
+
+
+    def _draw_markup_dict(self, gc):
+        '''
+    
+        '''
+        try:
+            gc.save_state()
+
+            for i, l in enumerate(self.markupcontainer.layers):
+                if self.invalid_layers and i in self.invalid_layers:
+                    continue
+
+                for obj in l.itervalues():
+                    if hasattr(obj, 'render'):
+                        obj.render(gc)
+        except RuntimeError:
+            pass
+        finally:
+            gc.restore_state()
+
+    def clear(self):
+        self.markupcontainer = MarkupContainer()
+        self.invalid_layers = []
+
+    def _over_item(self, event, items=None):
+        '''
+        '''
+        if items is None:
+
+            items = self.markupcontainer.itervalues()
+
+        for item in items:
+
+            if hasattr(item, 'is_in'):
+                if item.is_in(event):
+                    return item
+
+    def select_right_down(self, event):
+        obj = self._over_item(event)
+        self._menu_factory(event)
+
+    def select_left_down(self, event):
+        obj = self._over_item(event)
+        self._selection_hook(obj)
+        self.invalidate_and_redraw()
+
+
+    def _menu_factory(self, event):
+        import wx
+        popup_menu = wx.Menu()
+        panel = event.window.control
+
+        for en, name in [(True, 'Foo')]:
+            item = popup_menu.Append(-1, name)
+            item.Enable(en)
+            panel.Bind(wx.EVT_MENU, getattr(self, 'On{}'.format(name)), item)
+
+        pos = event.x, panel.Size[1] - event.y
+        panel.PopupMenu(popup_menu, pos)
+        popup_menu.Destroy()
+        self.invalidate_and_redraw()
+
+    def OnFoo(self, event):
+        print 'asdfasd', event
+
+    def select_mouse_move(self, event):
+        self.normal_mouse_move(event)
+
+    def normal_mouse_move(self, event):
+        obj = self._over_item(event)
+        if obj:
+            event.window.set_pointer(self.select_pointer)
+            self.event_state = 'select'
+            self.selected = obj
+        else:
+            self.selected = None
+            event.window.set_pointer(self.normal_pointer)
+            self.event_state = 'normal'
+
+class InteractionMarkupCanvas(MarkupCanvas):
+    tool_state = Enum('select', 'line', 'mline', 'rect', 'point', 'noteditable')
     def get_path_points(self, k):
         '''
 
@@ -140,6 +234,9 @@ class MarkupCanvas(BaseDataCanvas):
     def normal_mouse_move(self, event):
         '''
         '''
+        if self.tool_state == 'noteditable':
+            return
+
         a = self._over_mark_up_line(event)
 
         o = self._over_item(event)
@@ -163,6 +260,9 @@ class MarkupCanvas(BaseDataCanvas):
         '''
 
         '''
+        if self.tool_state == 'noteditable':
+            return
+
         try:
             self.selected_element.set_state(False)
         except AttributeError:
@@ -480,8 +580,6 @@ class MarkupCanvas(BaseDataCanvas):
 #        self.invalidate_and_redraw()
         self.request_redraw()
 
-
-
     def key_set_tool_state(self, event):
         '''
         '''
@@ -508,14 +606,6 @@ class MarkupCanvas(BaseDataCanvas):
 #        self.invalidate_and_redraw()
         self.request_redraw()
 
-    def _draw_hook(self, gc, *args, **kw):
-        '''
-
-        '''
-
-        # draw the lines currently held in the markupcontainer
-        self._draw_current_markup(gc)
-        self._draw_markup_dict(gc)
 
     def _draw_current_markup(self, gc):
         '''
@@ -546,33 +636,9 @@ class MarkupCanvas(BaseDataCanvas):
 
         gc.restore_state()
 
-    def _draw_markup_dict(self, gc):
-        '''
-    
-        '''
-        gc.save_state()
-
-        for l in self.markupcontainer.layers:
-            for obj in l.itervalues():
-                if hasattr(obj, 'render'):
-                    obj.render(gc)
-
-        gc.restore_state()
 
 
 
-    def _over_item(self, event, items=None):
-        '''
-        '''
-        if items is None:
-
-            items = self.markupcontainer.itervalues()
-
-        for item in items:
-
-            if hasattr(item, 'is_in'):
-                if item.is_in(event):
-                    return item
 
     def _over_mark_up_line(self, event, tolerance=7):
         '''

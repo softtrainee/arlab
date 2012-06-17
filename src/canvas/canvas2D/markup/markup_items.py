@@ -51,6 +51,7 @@ class MarkupItem(HasTraits):
     line_width = 1
     name = Str
     space = 'data'
+    visible = True
 
     def __init__(self, x, y, *args, **kw):
         self.x = x
@@ -58,13 +59,14 @@ class MarkupItem(HasTraits):
         super(MarkupItem, self).__init__(*args, **kw)
 
     def render(self, gc):
-        gc.begin_path()
-        self.set_stroke_color(gc)
-        self.set_fill_color(gc)
-        gc.set_line_width(self.line_width)
+        if self.visible:
+            gc.begin_path()
+            self.set_stroke_color(gc)
+            self.set_fill_color(gc)
+            gc.set_line_width(self.line_width)
 
-        self._render_(gc)
-        gc.stroke_path()
+            self._render_(gc)
+            gc.stroke_path()
 
     def set_stroke_color(self, gc):
         if self.state:
@@ -106,6 +108,11 @@ class MarkupItem(HasTraits):
             w, h = w - ox, h - oy
 
         return w, h
+
+    def map_dimension(self, d):
+        (w, h), (ox, oy) = self.canvas.map_screen([(d, d), (0, 0)])
+        w, h = w - ox, h - oy
+        return w
 
     def set_canvas(self, canvas):
         self.canvas = canvas
@@ -382,6 +389,7 @@ class Triangle(MarkupItem):
 
 class Circle(MarkupItem):
     radius = 10
+    fill = False
     def __init__(self, x, y, radius=10, *args, **kw):
         super(Circle, self).__init__(x, y, *args, **kw)
         self.radius = radius
@@ -389,6 +397,8 @@ class Circle(MarkupItem):
     def _render_(self, gc):
         x, y = self.get_xy()
         gc.arc(x, y, self.radius, 0, 360)
+        if self.fill:
+            gc.fill_path()
 
     def is_in(self, event):
         x, y = self.get_xy()
@@ -518,13 +528,14 @@ class Indicator(MarkupItem):
 class PointIndicator(Indicator):
     radius = 10
     active = Bool(False)
+    label = None
     def __init__(self, x, y, *args, **kw):
         super(PointIndicator, self).__init__(x, y, *args, **kw)
-        self.circle = Circle(self.x, self.y, self.radius, *args, **kw)
-        print self.identifier
-        self.label = Label(self.x, self.y,
-                           text=str(int(self.identifier[5:]) + 1),
-                            *args, **kw)
+        self.circle = Circle(self.x, self.y, *args, **kw)
+        if self.identifier:
+            self.label = Label(self.x, self.y,
+                               text=str(int(self.identifier[5:]) + 1),
+                                *args, **kw)
     def set_state(self, state):
         self.state = state
         self.hline.state = state
@@ -546,7 +557,8 @@ class PointIndicator(Indicator):
         super(PointIndicator, self)._render_(gc)
 
         self.circle.render(gc)
-        self.label.render(gc)
+        if self.label:
+            self.label.render(gc)
 
         x, y = self.get_xy()
 

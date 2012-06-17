@@ -59,7 +59,7 @@ class DBSelector(Loggable):
     wx = 0.4
     wy = 0.1
     opened_windows = Dict
-    title = 'Recall'
+    title = ''
 
     tabular_adapter = BaseResultsAdapter
 

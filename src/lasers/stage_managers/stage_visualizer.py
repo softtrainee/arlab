@@ -1,0 +1,239 @@
+#===============================================================================
+# Copyright 2012 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+
+#============= enthought library imports =======================
+from traits.api import HasTraits, Instance, Str, on_trait_change, \
+    Bool, Tuple, Float, Int
+from traitsui.api import View, Item, TableEditor
+from enable.component_editor import ComponentEditor
+#============= standard library imports ========================
+#============= local library imports  ==========================
+from src.managers.manager import Manager
+from src.canvas.canvas2D.stage_visualization_canvas import StageVisualizationCanvas, \
+    SampleHole
+from src.lasers.stage_managers.stage_map import StageMap
+from src.helpers.paths import map_dir
+import os
+import random
+import time
+from threading import Thread
+from pyface.timer.do_later import do_later
+
+
+class StageVisualizer(Manager):
+    canvas = Instance(StageVisualizationCanvas)
+    stage_map = Instance(StageMap)
+    status_text = Str
+
+    use_calibration = Bool(True)
+    flag = True
+    center = Tuple(Float, Float)
+    rotation = Float(23)
+    def record_correction(self, h, x, y):
+        self.canvas.record_correction(h, x, y)
+
+    def record_interpolation(self, x, y, hole, color=(1, 1, 0)):
+        self.canvas.record_interpolation(x, y, hole, color)
+
+    @on_trait_change('canvas:selected')
+    def update_status_bar(self, parent, name, obj):
+        if isinstance(obj, SampleHole):
+            correction = ''
+            if obj.hole.corrected:
+                correction = 'corrected= {:0.3f},{:0.3f}'.format(obj.hole.x_cor,
+                                                    obj.hole.y_cor
+                                                    )
+            interpolation = ''
+            if obj.hole.interpolated:
+                h = ', '.join(sorted(set([iph.id for iph in obj.hole.interpolation_holes])))
+                interpolation = 'interpolation holes= {}'.format(h)
+
+            self.status_text = 'hole = {} ({},{}) {}  {}'.format(obj.name,
+                                         obj.x,
+                                         obj.y,
+                                         correction,
+                                         interpolation
+                                         )
+    def _use_calibration_changed(self):
+        ca = self.canvas
+        ca.build_map(self.stage_map,
+                     calibration=[self.center,
+                                  self.rotation] if self.use_calibration else None
+                     )
+
+    def traits_view(self):
+        v = View(Item('test'),
+                 Item('use_calibration'),
+                 Item('center'),
+                 Item('rotation'),
+                 Item('canvas', editor=ComponentEditor(width=700,
+                                                       height=700),
+                      show_label=False),
+
+                 statusbar='status_text'
+                 )
+        return v
+
+    def _stage_map_default(self):
+        p = os.path.join(map_dir, '61-hole.txt')
+        sm = StageMap(file_path=p)
+        sm.load_correction_file()
+        return sm
+
+    def _canvas_default(self):
+        c = StageVisualizationCanvas()
+        c.build_map(self.stage_map)
+
+        return c
+
+
+#===============================================================================
+# testing
+#===============================================================================
+    def _test_fired(self):
+        t = Thread(target=self._execute_)
+        t.start()
+
+    def _apply_calibration(self, hole):
+        cpos = (0, 0)
+        rot = 0
+        if self.use_calibration:
+            cpos = self.center
+            rot = self.rotation
+
+        return self.stage_map.map_to_calibration(hole.nominal_position,
+                              cpos, rot)
+
+    def _execute_(self):
+
+        sm = self.stage_map
+        ca = self.canvas
+
+        sm.clear_correction_file()
+        ca.clear()
+        ca.build_map(sm, calibration=[self.center,
+                                      self.rotation] if self.use_calibration else None
+                      )
+        do_later(ca.invalidate_and_redraw)
+        #set some correction values
+        vs = range(61)
+#        vs.remove(17)
+#        vs.remove(26)
+#        vs.remove(25)
+#        vs.remove(34)
+#        vs.remove(35)
+#        vs.remove(0)
+#        vs.remove(1)
+#        vs.remove(2)
+#
+#        vs.remove(58)
+#        vs.remove(59)
+#        vs.remove(60)
+#        vs.remove(3)
+        vs.remove(6)
+        vs.remove(60)
+#        vs = range(50, 60)
+        for i in vs:
+#        for i in [21, 29, 30]:
+
+            h = sm.get_hole(str(i + 1))
+            x, y = self._apply_calibration(h)
+
+            x = self._add_error(x)
+            y = self._add_error(y)
+
+#            ca.record_correction(h, x, y)
+#            sm.set_hole_correction(h.id, x, y)
+            r = random.randint(0, 10)
+#            r = 7
+            if r > 6:
+                ca.record_correction(h, x, y)
+                sm.set_hole_correction(h.id, x, y)
+
+#        self._test_interpolate_one()
+        self._test_interpolate_all()
+
+    def _add_error(self, a):
+        return a
+        return a + (0.5 - random.random()) / 2.
+
+    def _test_interpolate_one(self):
+        sm = self.stage_map
+        ca = self.canvas
+        h = sm.get_hole('7')
+        args = sm.get_interpolated_position('7')
+#        print args
+        color = (1, 1, 0)
+        if args:
+            nx = args[0]
+            ny = args[1]
+            ca.record_interpolation(nx, ny, h, color)
+        do_later(ca.invalidate_and_redraw)
+
+    def _test_interpolate_all(self):
+        sm = self.stage_map
+        ca = self.canvas
+        colors = [(1, 1, 0), (0, 1, 1), (0, 0.75, 1), (0, 0.5, 1),
+                  (0, 0.75, 0.75), (0, 0.5, 0.75)
+                  ]
+        for j, color in enumerate(colors[:1]):
+            self.info('iteration {}'.format(j + 1))
+            s = 0
+            for i in range(60, -1, -1):
+                h = sm.get_hole(str(i + 1))
+                ca.set_current_hole(h)
+                r = random.randint(0, 10)
+                r = 0
+                if r > 5:
+                    nx, ny = self._apply_calibration(h)
+                    nx = self._add_error(nx)
+                    ny = self._add_error(ny)
+                    ca.record_correction(h, nx, ny)
+                    sm.set_hole_correction(h.id, nx, ny)
+                else:
+                    kw = dict(cpos=self.center,
+                            rotation=self.rotation)
+                    if not self.use_calibration:
+                        kw['cpos'] = (0, 0)
+                        kw['rotation'] = 0
+
+                    args = sm.get_interpolated_position(h.id,
+                                                        **kw
+                                                        )
+                    if args:
+                        s += 1
+                        nx = args[0]
+                        ny = args[1]
+                        ca.record_interpolation(nx, ny, h , color)
+#                time.sleep(0.25)
+#                do_later(ca.invalidate_and_redraw)
+
+            n = 61 - sum([1 for si in sm.sample_holes if si.has_correction()])
+            self.info('interpolated holes {} - noncorrected {}'.format(s, n))
+
+            if not n or not s:
+                break
+
+        do_later(ca.invalidate_and_redraw)
+        self.info('noncorrected holes = {}'.format(n))
+        self.flag = not self.flag
+
+if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('sv')
+    sv = StageVisualizer()
+    sv.configure_traits()
+#============= EOF =============================================

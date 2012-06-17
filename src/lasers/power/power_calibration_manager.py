@@ -17,29 +17,60 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Button, Instance, Int, \
      Event, Property, Bool, Any, Enum, on_trait_change, List
-from traitsui.api import View, Item, VGroup
+from traitsui.api import View, Item, VGroup, Group
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-from numpy import polyfit, linspace, polyval
-
+from numpy import polyfit, linspace, polyval, poly1d
+from scipy import optimize
+from threading import Event as TEvent
+from threading import Thread
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.paths import hidden_dir, co2laser_db_root, co2laser_db, \
-    data_dir
+from src.helpers.paths import hidden_dir, data_dir
 import os
 import time
 from src.graph.graph import Graph
-from threading import Thread
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.data_warehouse import DataWarehouse
 #from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 from pyface.timer.do_later import do_later
 from src.hardware.analog_power_meter import AnalogPowerMeter
+import random
 
 FITDEGREES = dict(Linear=1, Parabolic=2, Cubic=3)
 
 class PowerCalibrationObject(object):
     coefficients = None
+    bounds = None
+
+    def get_calibrated_power(self, rp):
+        if self.bounds:
+            for c, b in zip(self.coefficients, self.bounds):
+                if b[0] < rp <= b[1]:
+                    break
+            else:
+                closest = 0
+                min_d = 1000
+                for i, b in enumerate(self.bounds):
+                    d = min(abs(b[0] - rp), abs(b[1] - rp))
+                    if d < min_d:
+                        closest = i
+                c = self.coefficients[closest]
+        else:
+            c = self.coefficients
+
+        #say y=ax+b (watts=a*power_percent+b)
+        #calculate x for a given y
+        #solvers solve x for y=0
+        #we want x for y=power, therefore
+        #subtract the requested power from the intercept coeff (b)
+        #find the root of the polynominal
+
+        c[-1] -= rp
+        power = optimize.newton(poly1d(c), 1)
+        c[-1] += rp
+        return power, c
+
 
 #class DummyPowerMeter:
 #    def read_power_meter(self, setpoint):
@@ -71,8 +102,13 @@ class Parameters(HasTraits):
 
 class PowerCalibrationManager(Manager):
     parameters = Instance(Parameters)
+    check_parameters = Instance(Parameters)
 
     execute = Event
+    execute_check = Event
+    execute_check_label = Property(depends_on='_check_alive')
+    _check_alive = Bool(False)
+
     execute_label = Property(depends_on='_alive')
     _alive = Bool(False)
     data_manager = None
@@ -88,6 +124,20 @@ class PowerCalibrationManager(Manager):
 #            apm = self.parent.get_device('analog_power_meter')
 #            apm.edit_traits(kind='modal')
     graph_cnt = 0
+    def _execute_power_calibration_check(self):
+        '''
+        
+        '''
+        g = Graph()
+        g.new_plot()
+        g.new_series()
+        g.new_series(x=[0, 100], y=[0, 100], line_style='dash')
+        do_later(self._open_graph, graph=g)
+
+        self._stop_signal = TEvent()
+        callback = lambda pi, r: None
+        self._iterate(self.check_parameters,
+                      g, False, callback)
 
     def _execute_power_calibration(self):
         gc = self.graph_cnt
@@ -109,13 +159,6 @@ class PowerCalibrationManager(Manager):
         if self.parent is not None:
             do_later(self._open_graph)
 
-        pstop = self.parameters.pstop
-        pstep = self.parameters.pstep
-        pstart = self.parameters.pstart
-        sample_delay = self.parameters.sample_delay
-        integration_period = self.parameters.integration_period
-        nintegrations = self.parameters.nintegrations
-
         self.data_manager = dm = H5DataManager()
         if self.parameters.use_db:
             dw = DataWarehouse(root=os.path.join(self.parent.db_root, 'power_calibration'))
@@ -128,48 +171,11 @@ class PowerCalibrationManager(Manager):
                 base_frame_name='power_calibration')
 
         table = dm.new_table('/', 'calibration', table_style='PowerCalibration')
-
-        dev = abs(pstop - pstart)
-        sign = 1 if pstart < pstop else -1
-        if sign == 1:
-            self.graph.set_x_limits(pstart, pstop)
-        else:
-            self.graph.set_x_limits(pstop, pstart)
-
-        nsteps = int((dev + pstep) / pstep)
-        apm = self.power_meter
-#        if self.parent is not None:
-#            apm = self.parent.get_device('analog_power_meter')
-#        else:
-#            apm = DummyPowerMeter()
-        if self.parent is not None:
-            self.parent.enable_laser()
-            
-        for i in range(nsteps):
-            if not self._alive:
-                break
-
-            pi = pstart + sign * i * pstep
-            self.info('setting power to {}'.format(pi))
-            if self.parent is not None:
-                self.parent.set_laser_power(pi, calibration=True)
-
-            time.sleep(sample_delay)
-            rp = 0
-            for _ in range(nintegrations):
-                if not self._alive:
-                    break
-                if apm is not None:
-                    rp += apm.read_power_meter(pi)
-                else:
-                    rp += 1
-
-                time.sleep(integration_period)
-
-            if not self._alive:
-                break
-
-            self._write_data(pi, rp / float(nintegrations), table)
+        callback = lambda p, r, t: self._write_data(p, r, t)
+        self._stop_signal = TEvent()
+        self._iterate(self.parameters,
+                      self.graph,
+                      callback, table)
 
         self._calculate_calibration()
         self._apply_fit()
@@ -179,12 +185,84 @@ class PowerCalibrationManager(Manager):
             self._save_to_db()
             self._apply_calibration()
 
-    def _get_parameters_path(self):
-        p = os.path.join(hidden_dir, 'power_calibration_parameters')
+    def _iterate(self, params, graph,
+                 calibration, callback, *args):
+        pstop = params.pstop
+        pstep = params.pstep
+        pstart = params.pstart
+        sample_delay = params.sample_delay
+        integration_period = params.integration_period
+        nintegrations = params.nintegrations
+
+        dev = abs(pstop - pstart)
+        sign = 1 if pstart < pstop else -1
+        if sign == 1:
+            graph.set_x_limits(pstart, pstop)
+        else:
+            graph.set_x_limits(pstop, pstart)
+
+        apm = self.power_meter
+#        if self.parent is not None:
+#            apm = self.parent.get_device('analog_power_meter')
+#        else:
+#            apm = DummyPowerMeter()
+        if self.parent is not None:
+            self.parent.enable_laser()
+
+        nsteps = int((dev + pstep) / pstep)
+        for i in range(nsteps):
+#            if not self._alive:
+#                break
+            if self._stop_signal.isSet():
+                break
+
+            pi = pstart + sign * i * pstep
+            self.info('setting power to {}'.format(pi))
+            time.sleep(sample_delay)
+            if self.parent is not None:
+                self.parent.set_laser_power(pi, calibration=calibration)
+                if not calibration:
+                    pi = self.parent._calibrated_power
+
+                rp = 0
+                for _ in range(nintegrations):
+    #                if not self._alive:
+    #                    break
+                    if self._stop_signal.isSet():
+                        break
+
+                    if apm is not None:
+                        rp += apm.read_power_meter(pi)
+
+                    time.sleep(integration_period)
+            else:
+                n = 10
+                rp = pi + n * random.random() - n / 2
+
+#            if not self._alive:
+#                break
+            if self._stop_signal.isSet():
+                break
+
+            graph.add_datum((pi, rp), do_after=1)
+            callback(pi, rp / float(nintegrations), *args)
+
+
+            #calculate slope and intercept of data
+
+        x = graph.get_data()
+        y = graph.get_data(axis=1)
+        coeffs = polyfit(x, y, 1)
+
+
+#            self._write_data(pi, , table)
+
+
+    def _get_parameters_path(self, name):
+        p = os.path.join(hidden_dir, 'power_calibration_{}'.format(name))
         return p
 
-    def _load_parameters(self):
-        p = self._get_parameters_path()
+    def _load_parameters(self, p):
         pa = None
         if os.path.isfile(p):
             with open(p, 'rb') as f:
@@ -229,7 +307,6 @@ class PowerCalibrationManager(Manager):
         self.data_manager.close()
 
     def _write_data(self, pi, rp, table):
-        self.graph.add_datum((pi, rp), do_after=1)
 
         row = table.row
         row['setpoint'] = pi
@@ -247,9 +324,13 @@ class PowerCalibrationManager(Manager):
         self._coefficients = list(coeffs)
         return self._coefficients
 
-    def _open_graph(self):
-        ui = self.graph.edit_traits()
-        self.parent.add_window(ui)
+    def _open_graph(self, graph=None):
+        if graph is None:
+            graph = self.graph
+
+        ui = graph.edit_traits()
+        if self.parent:
+            self.parent.add_window(ui)
 
     def _apply_fit(self, new=True):
         xs = self.graph.get_data()
@@ -281,9 +362,18 @@ class PowerCalibrationManager(Manager):
         pc.coefficients = self._coefficients
         self._dump_calibration(pc)
 
+    def _execute_check_fired(self):
+        if self._check_alive:
+            self._stop_signal.set()
+            self._check_alive = False
+        else:
+            self._check_alive = True
+            t = Thread(target=self._execute_power_calibration_check)
+            t.start()
+
     def _execute_fired(self):
         if self._alive:
-
+            self._stop_signal.set()
             self._alive = False
             if self.parameters.use_db:
                 if self.confirmation_dialog('Save to Database'):
@@ -303,9 +393,13 @@ class PowerCalibrationManager(Manager):
     def kill(self):
         super(PowerCalibrationManager, self).kill()
         if self.initialized:
-            with open(self._get_parameters_path(),
-                      'wb') as f:
-                pickle.dump(self.parameters, f)
+            for n in ['parameters', 'check_parameters']:
+                with open(self._get_parameters_path(n),
+                          'wb') as f:
+                    pickle.dump(getattr(self, n), f)
+#            with open(self._get_parameters_path('parameters'),
+#                      'wb') as f:
+#                pickle.dump(self.check_parameters, f)
 
     def traits_view(self):
 
@@ -313,9 +407,19 @@ class PowerCalibrationManager(Manager):
 
         v = View(
                  VGroup(
-                        self._button_factory('execute', align='right'),
-                        VGroup(
-                             Item('parameters', show_label=False, style='custom'),
+
+                        Group(
+                                Group(
+                                      self._button_factory('execute', align='right'),
+                                      Item('parameters', show_label=False, style='custom'),
+                                      label='Calculate'
+                                      ),
+                                Group(
+                                      self._button_factory('execute_check', align='right'),
+                                      Item('check_parameters', show_label=False, style='custom'),
+                                      label='Check'
+                                      ),
+                                layout='tabbed',
                                 show_border=True,
                                 label='Setup'
                                 ),
@@ -340,6 +444,9 @@ class PowerCalibrationManager(Manager):
     def _get_execute_label(self):
         return 'Stop' if self._alive else 'Start'
 
+    def _get_execute_check_label(self):
+        return 'Stop' if self._alive else 'Start'
+
     def _get_coefficients(self):
         return ','.join(['{:0.2f}'.format(c) for c in self._coefficients]) if self._coefficients else ''
 
@@ -355,7 +462,12 @@ class PowerCalibrationManager(Manager):
 
 
     def _parameters_default(self):
-        return self._load_parameters()
+        p = self._get_parameters_path('parameters')
+        return self._load_parameters(p)
+
+    def _check_parameters_default(self):
+        p = self._get_parameters_path('check_parameters')
+        return self._load_parameters(p)
 
     def __coefficients_default(self):
         r = []

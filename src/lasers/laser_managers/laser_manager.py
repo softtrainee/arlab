@@ -60,6 +60,7 @@ class LaserManager(Manager):
     pulse = Instance(Pulse)
 
     _requested_power = None
+    _calibrated_power = None
     use_calibrated_power = Bool(True)
 
     def bind_preferences(self, pref_id):
@@ -126,7 +127,7 @@ class LaserManager(Manager):
         return pul
 
     def get_power_map_manager(self):
-        from power_map_manager import PowerMapManager
+        from src.lasers.power.power_map_manager import PowerMapManager
 
         pm = PowerMapManager(laser_manager=self)
         return pm
@@ -241,7 +242,8 @@ class LaserManager(Manager):
         p = self._get_calibrated_power(power, calibration)
 
         self.info('request power {:0.2f}, calibrated power {:0.2f}'.format(power, p))
-        self._requested_power = p
+        self._requested_power = power
+        self._calibrated_power = p
         self._set_laser_power_hook(p)
 
     def _set_laser_power_hook(self, p):
@@ -253,26 +255,15 @@ class LaserManager(Manager):
             if power < 0.1:
                 power = 0
             else:
-                c = list(pc.coefficients)
-                sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', c)])
+#                c = pc.coefficients
+                power, coeffs = pc.get_calibrated_power(power)
+
+                sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', coeffs)])
                 self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
-
-                #say y=ax+b (watts=a*power_percent+b)
-                #calculate x for a given y
-                #solvers solve x for y=0
-                #we want x for y=power, therefore
-                #subtract the requested power from the intercept coeff (b)
-                #find the root of the polynominal
-
-                #construct polynomial
-                c[-1] -= power
-                power = optimize.newton(poly1d(c), 1)
-
-
         return power
 
     def load_power_calibration(self):
-        from src.lasers.laser_managers.power_calibration_manager import PowerCalibrationObject
+        from src.lasers.power.power_calibration_manager import PowerCalibrationObject
         p = os.path.join(hidden_dir, '{}_power_calibration'.format(self.name))
         if os.path.isfile(p):
             self.info('loading power calibration {}'.format(p))

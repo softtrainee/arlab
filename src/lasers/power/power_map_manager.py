@@ -31,7 +31,7 @@ from src.managers.manager import Manager
 #from src.canvas.canvas2D.raster_canvas import RasterCanvas
 from threading import Thread
 
-from src.lasers.laser_managers.power_mapping import PowerMapping
+from src.lasers.power.power_mapping import PowerMapping
 from src.helpers.paths import hidden_dir, co2laser_db
 from pyface.timer.do_later import do_later
 #from src.helpers.datetime_tools import get_datetime

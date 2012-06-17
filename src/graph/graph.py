@@ -24,9 +24,9 @@ from chaco.api import PlotGraphicsContext, OverlayPlotContainer, \
     VPlotContainer, HPlotContainer, GridPlotContainer, \
     BasePlotContainer, Plot, ArrayPlotData, PlotLabel, \
     add_default_axes, create_line_plot
-from chaco.tools.api import ZoomTool, LineInspector
+from chaco.tools.api import ZoomTool, LineInspector, RangeSelection, \
+    RangeSelectionOverlay
 from chaco.axis import PlotAxis
-
 from traitsui.menu import Menu, Action
 from pyface.api import FileDialog, OK
 
@@ -787,6 +787,13 @@ class Graph(Loggable):
         plot.overlays = [o for o in plot.overlays if not isinstance(o, LineInspector)]
         self.plotcontainer.request_redraw()
 
+    def add_range_selector(self, plotid=0, series=0):
+#        plot = self.series[plotid][series]
+        plot = self.plots[plotid].plots['plot{}'.format(series)][0]
+
+        plot.active_tool = RangeSelection(plot, left_button_selects=True)
+        plot.overlays.append(RangeSelectionOverlay(component=plot))
+
     def add_vertical_rule(self, v, plotid=0, **kw):
         '''
         '''
@@ -864,6 +871,21 @@ class Graph(Loggable):
             self.plotcontainer.invalidate_and_redraw()
         else:
             self.plotcontainer.request_redraw()
+
+    def get_next_color(self, exclude=None, plotid=0):
+        cg = self.color_generators[plotid]
+
+        nc = cg.next()
+        if exclude is not None:
+            if not isinstance(exclude, (list, tuple)):
+                exclude = [exclude]
+
+            while nc in exclude:
+                nc = cg.next()
+
+        return nc
+
+
 
     def container_factory(self):
         '''
