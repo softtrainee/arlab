@@ -39,6 +39,7 @@ import os
 from multiprocessing.process import Process
 from src.helpers.archiver import Archiver
 from src.image.video_server import VideoServer
+from src.lasers.stage_managers.stage_visualizer import StageVisualizer
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -82,6 +83,7 @@ class VideoStageManager(StageManager, Videoable):
     pxpercmy = DelegatesTo('camera_calibration_manager')
 
     auto_center = Bool(True)
+    use_auto_center_interpolation = Bool(True)
 
     autocenter_button = Button('AutoCenter')
     mapcenters_button = Button('Map Centers')
@@ -102,6 +104,9 @@ class VideoStageManager(StageManager, Videoable):
     video_identifier = Enum(1, 2)
     use_video_server = Bool(False)
     video_server = Instance(VideoServer)
+
+    visualizer = Instance(StageVisualizer)
+
 
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
@@ -201,12 +206,12 @@ class VideoStageManager(StageManager, Videoable):
         self._drive_xratio = xa
         self._drive_yratio = ya
 
-    def snapshot(self, path=None,name=None, auto=False):
+    def snapshot(self, path=None, name=None, auto=False):
         if path is None:
             if self.auto_save_snapshot or auto:
-                
+
                 if name is None:
-                    name='snapshot'
+                    name = 'snapshot'
                 path, _cnt = unique_path(root=snapshot_dir, base=name,
                                           filetype='jpg')
             else:
@@ -322,7 +327,10 @@ class VideoStageManager(StageManager, Videoable):
             if args:
                 #add an adjustment value to the stage map
                 self._stage_map.set_hole_correction(holenum, *args)
-#            self._hole = 0
+                self._stage_map.dump_correction_file()
+
+                self.visualizer.record_correction(holenum, *args)
+
             self.video.close(user='autocenter')
 
     #@on_trait_change('autocenter_button')
@@ -341,22 +349,31 @@ class VideoStageManager(StageManager, Videoable):
                         self.stage_controller._x_position,
                         self.stage_controller._y_position,
                         holenum
-#                        None if isinstance(holenum, str) else holenum,                                                                  
                         )
 
                 if newpos:
                     rpos = newpos
-                    #nx = self.stage_controller._x_position + newpos[0]
-                    #ny = self.stage_controller._y_position + newpos[1]
-    #                self._point = 0
-
-                    #newpos=(newpos[0]+0.01, newpos[1]+0.01)
                     self.linear_move(*newpos, block=True,
                                      calibrated_space=False,
-                                     #ratio_correct=False
                                      update_hole=False
-                                 )
+                                     )
+                else:
+                    self.snapshot(auto=True,
+                                  name='pos_err_{}_{}-'.format(holenum, _t))
+
                 time.sleep(0.25)
+
+            if self.use_auto_center_interpolation and rpos is None:
+                self.info('trying to get interpolated position')
+                rpos = self._stage_map.get_interpolated_position(holenum)
+                if rpos:
+                    s = '{:0.3f},{:0.3f}'
+                    self.visualizer.record_interpolation()
+                else:
+                    s = 'None'
+
+                self.info('interpolated position= {}'.format(s))
+
 
         return rpos
 
@@ -421,9 +438,18 @@ class VideoStageManager(StageManager, Videoable):
             self.video_server.start()
         else:
             self.video_server.stop()
+
+    def __stage_map_changed(self):
+        super(VideoStageManager, self).__stage_map_changed()
+        self.visualizer.stage_map = self._stage_map
+
 #==============================================================================
 # Defaults
 #==============================================================================
+    def _visualizer_default(self):
+        v = StageVisualizer(stage_map=self._stage_map)
+        return v
+
     def _video_server_default(self):
         return VideoServer(video=self.video)
 

@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import  Float, Range, Int, Bool, Enum
 from traitsui.api import View, Item, VGroup, Group
@@ -239,19 +237,28 @@ class HoleDetector(Detector):
             dx = avg(devxs)
             dy = avg(devys)
 
-
-        src = grayspace(self.target_image.source_frame)
-
-        self.target_image.set_frame(0, colorspace(crop(src, *self.croprect)))
-#        self.image.frames[0] = colorspace(crop(src, *self.croprect))
-        self._draw_markup(targets, dev=(dx, dy))
-
         #calculate the data position to move to nx,ny
         dxmm = (dx) / float(self.pxpermm)
 
         dymm = (dy + 1) / float(self.pxpermm)
         nx = cx - dxmm
         ny = cy + dymm
+
+        #verify that this target is within 1 radius of the uncorrected by calibrated position
+        lm = self.parent.laser_manager
+        h = lm.stage_manager.get_hole_by_name(holenum)
+        calpos = lm.stage_manager.get_calibrated_position(*(h.x, h.y))
+
+        if h is None:
+            return
+
+        if abs(calpos[0] - nx) > r or abs(calpos[1] - ny) > r:
+            return
+
+        src = grayspace(self.target_image.source_frame)
+        self.target_image.set_frame(0, colorspace(crop(src, *self.croprect)))
+#        self.image.frames[0] = colorspace(crop(src, *self.croprect))
+        self._draw_markup(targets, dev=(dx, dy))
 
         self.parent._nominal_position = cx, cy
         self.parent._corrected_position = nx, ny

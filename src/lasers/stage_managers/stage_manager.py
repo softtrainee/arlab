@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Int, Property, Instance, \
-    Button, List, String, Event, Bool, on_trait_change
+    Button, List, String, Event, Bool, on_trait_change, Str
 from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, spring, \
      EnumEditor, InstanceEditor
 from apptools.preferences.preference_binding import bind_preference
@@ -92,8 +92,8 @@ class StageManager(Manager):
     stop_label = String('Stop')
 
     hole_thread = None
-    hole = Property(Int(enter_set=True, auto_set=False), depends_on='_hole')
-    _hole = Int
+    hole = Property(Str(enter_set=True, auto_set=False), depends_on='_hole')
+    _hole = Str
 
     point_thread = None
     point = Property(Int(enter_set=True, auto_set=False), depends_on='_point')
@@ -250,16 +250,14 @@ class StageManager(Manager):
 
     def linear_move(self, x, y, update_hole=True, calibrated_space=True, **kw):
 
-        #x = self.stage_controller._sign_correct(x, 'x')
-        #y = self.stage_controller._sign_correct(y, 'y')
         if update_hole:
-            hole = self._get_hole_by_position(x, y)
+            hole = self.get_calibrated_hole(x, y)
             if hole is not None:
                 self._hole = int(hole.id)
 
         pos = (x, y)
         if calibrated_space:
-            pos = self._map_calibrated_space(pos)
+            pos = self.get_calibrated_position(pos)
 
         self.stage_controller.linear_move(*pos, **kw)
 
@@ -270,7 +268,7 @@ class StageManager(Manager):
         else:
             self.linear_move(x, y)
 
-    def _get_hole_by_position(self, x, y, tol=0.1):
+    def _get_hole_by_position(self, x, y):
         if self._stage_map:
             return self._stage_map._get_hole_by_position(x, y)
 
@@ -285,7 +283,7 @@ class StageManager(Manager):
         self.stage_controller.update_axes()
         if update_hole:
             #check to see if we are at a hole         
-            hole = self._get_hole_by_position(self.stage_controller._x_position,
+            hole = self.get_calibrated_hole(self.stage_controller._x_position,
                                               self.stage_controller._y_position,
                                               )
             if hole is not None:
@@ -681,7 +679,7 @@ class StageManager(Manager):
 
         return pos
 
-    def _map_calibrated_space(self, pos, key=None):
+    def get_calibrated_position(self, pos, key=None):
         smap = self._stage_map
 
         #use a affine transform object to map
@@ -703,7 +701,40 @@ class StageManager(Manager):
 
         return pos
 
+    def get_calibrated_hole(self, x, y):
+        ca = self.canvas.calibration_item
+        if ca is not None:
+            smap = self._stage_map
+
+            rot = ca.get_rotation()
+            cpos = ca.get_center_position()
+
+            def _filter(hole, x, y, tol=0.1):
+                cx, cy = smap.map_to_calibration((hole.x, hole.y), cpos, rot)
+                return abs(cx, x) < tol and abs(cy, y) < tol
+
+            return next((si for si in smap.sample_holes
+                            if _filter(si, x, y)
+                      ), None)
+
+
+    def _get_hole_by_name(self, key):
+        sm = self._stage_map
+        return sm.get_hole(key)
+
+    def _validate_hole(self, v):
+        try:
+            nv = int(v)
+        except TypeError:
+            self.warning('invalid hole {}'.format(v))
+            nv = None
+
+        return nv
+
     def _set_hole(self, v):
+        if v is None:
+            return
+
         if self.canvas.calibrate:
             self.warning_dialog('Cannot move while calibrating')
             return
@@ -768,17 +799,18 @@ class StageManager(Manager):
             correct = True
             if abs(pos[0]) < 1e-6:
                 pos = self._stage_map.get_hole_pos(key)
-                pos = self._map_calibrated_space(pos, key=key)
+                #map the position to calibrated space
+                pos = self.get_calibrated_position(pos, key=key)
             else:
                 #check if this is an interpolated position
                 #if so probably want to do an autocentering routine
-                hole = self._stage_map._get_hole(key)
+                hole = self._stage_map.get_hole(key)
                 if hole.interpolated:
                     self.info('using an interpolated value')
                 else:
                     self.info('using previously calculated corrected position')
                     correct = False
-            #map the position to calibrated space
+
             self.stage_controller.linear_move(block=True, *pos)
             if self.tray_calibration_manager.calibration_style == 'MassSpec':
                 if not self.tray_calibration_manager.isCalibrating():

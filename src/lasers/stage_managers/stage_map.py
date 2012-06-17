@@ -22,6 +22,7 @@ from traitsui.api import View, Item, TabularEditor, HGroup
 
 #============= standard library imports ========================
 import os
+from numpy import polyfit, array
 #============= local library imports  ==========================
 from src.helpers.filetools import parse_file
 from traitsui.tabular_adapter import TabularAdapter
@@ -29,6 +30,7 @@ from src.helpers.paths import hidden_dir
 import pickle
 from src.loggable import Loggable
 from affine import AffineTransform
+from src.data_processing.statistical_calculations import calculate_weighted_mean
 
 
 class SampleHole(HasTraits):
@@ -41,10 +43,24 @@ class SampleHole(HasTraits):
     shape = Str
     dimension = Float
     interpolated = False
+    corrected = False
+    interpolation_holes = None
+    nominal_position = Property(depends_on='x,y')
+    corrected_position = Property(depends_on='x_cor,y_cor')
+
+    def _get_corrected_position(self):
+        return self.x_cor, self.y_cor
+
+    def _get_nominal_position(self):
+        return self.x, self.y
+
     def has_correction(self):
+        return self.corrected
 #        print self.id, self.x_cor, self.y_cor
-        return True if (abs(self.x_cor) > 1e-6
-                and abs(self.y_cor) > 1e-6) else False
+#        return True if (abs(self.x_cor) > 1e-6
+#                and abs(self.y_cor) > 1e-6) else False
+
+
 
 class SampleHoleAdapter(TabularAdapter):
     columns = [('ID', 'id'),
@@ -79,7 +95,8 @@ class StageMap(Loggable):
 
     #should always be N,E,S,W,center
     calibration_holes = None
-
+    cpos = None
+    rotation = None
     def interpolate_noncorrected(self):
         self.info('iteratively fill in non corrected holes')
         n = len(self.sample_holes)
@@ -97,94 +114,190 @@ class StageMap(Loggable):
         else:
             self.info('all holes now corrected')
 
-    def get_interpolated_position(self, holenum):
-        h = self._get_hole(holenum)
+    def get_interpolated_position(self, holenum, cpos=None, rotation=None):
+        self.cpos = cpos
+        self.rotation = rotation
+
+        h = self.get_hole(holenum)
         if h is not None:
-            return self._calculated_interpolated_position(h)
+            nxs = []
+            nys = []
+            iholes = []
+            n = 2
+            for sd in range(n):
+                xi, yi, hi = self._calculated_interpolated_position(h, sd + 1)
+                #do simple weighting by distance
+                w = (n - sd)
+                nxs += xi * w
+                nys += yi * w
+                iholes += hi
+
+            if nxs and nys:
+                nx, ny = (sum(nxs) / max(1, len(nxs)),
+                        sum(nys) / max(1, len(nys)))
+
+                #verify within tolerance
+                tol = h.dimension * 0.85
+
+                hx, hy = self.map_to_calibration(h.nominal_position,
+                                                 cpos, rotation
+                                                 )
+                if abs(nx - hx) < tol and abs(ny - hy) < tol:
+                    h.interpolated = True
+                    h.corrected = True
+                    h.interpolation_holes = iholes
+
+                    h.x_cor = nx
+                    h.y_cor = ny
+
+                    return nx, ny
 
     def _interpolate_noncorrected(self):
         self.sample_holes.reverse()
         for h in self.sample_holes:
             self._calculated_interpolated_position(h)
 
-    def _calculated_interpolated_position(self, h):
+    def _calculated_interpolated_position(self, h, search_distance):
+        '''
+            search distance is a scalar in hole units. it defines how many 
+            holes away to 
+        '''
+
+
+        spacing = search_distance * abs(self.sample_holes[0].x - self.sample_holes[1].x)
+        debug_hole = '18'
+        nxs = []
+        nys = []
+        iholes = []
+
+        if not h.has_correction():
+            #this hole does not have a correction value
+            found = []
+            #get the cardinal holes and corner holes
+            for rx, ry in [(0, 1),
+                           (-1, 0), (1, 0),
+                                (0, -1),
+
+                          (-1, 1), (1, 1),
+                          (-1, -1), (1, -1)
+                          ]:
+
+                x = h.x + rx * spacing
+                y = h.y + ry * spacing
+
+                ihole = self._get_hole_by_position(x, y)
+
+                if ihole == h:
+                    ihole = None
+
+                fo = None
+                if ihole is not None:
+                    if ihole.has_correction():
+                        fo = ihole
+                found.append(fo)
+
+            self._interpolate_midpoint(h, found, nxs, nys, iholes)
+            self._interpolate_triangulation(h, found, nxs, nys, iholes)
+            self._interpolated_normals(h, found, nxs, nys, iholes, spacing)
+
+        return nxs, nys, iholes
+
+    def _interpolate_midpoint(self, hole, found, nxs, nys, iholes):
+        '''
+            try interpolating using midpoint
+        '''
+
         def _midpoint(a, b):
             mx = None
             my = None
-#                    print a, b
             if a and b:
+                a = a.corrected_position
+                b = b.corrected_position
                 dx = abs(a[0] - b[0])
                 dy = abs(a[1] - b[1])
                 mx = min(a[0], b[0]) + dx / 2.0
                 my = min(a[1], b[1]) + dy / 2.0
             return mx, my
 
-        spacing = abs(self.sample_holes[0].x - self.sample_holes[1].x)
-        scalar = 1
-        spacing *= scalar
-        debug_hole = '216'
-        nxs = []
-        nys = []
-        if not h.has_correction():
-            #this hole does not have a correction value
-            found = []
-            #get the cardinal holes
-            for rx, ry in [(0, 1),
-                           (-1, 0), (1, 0),
-                                (0, -1)
-                          ]:
+        rad = hole.dimension
+        for i, j in [(0, 3), (1, 2)]:
 
-                x = h.x + rx * spacing#1.2 * self.g_dimension
-                y = h.y + ry * spacing#1.2 * self.g_dimension
+            mx, my = _midpoint(found[i], found[j])
+            if mx is not None and my is not None:
+                #make sure the corrected value makes sense
+                #ie less than 1 radius from nominal hole
 
-                hole = self._get_hole_by_corrected_position(x, y)
+                hx, hy = self.map_to_calibration(hole.nominal_position)
+                if (abs(mx - hx) < rad
+                        and abs(my - hy) < rad):
+                    nxs.append(mx)
+                    nys.append(my)
+                    iholes.append(found[i])
+                    iholes.append(found[j])
 
-                if hole == h:
-                    hole = None
+    def _interpolate_triangulation(self, hole, found, nxs, nys, iholes):
+        '''           
+            try interpolating using "triangulation"
+        '''
+        rad = hole.dimension
+        for i, j in [(0, 1), (0, 2), (3, 2), (3, 1)]:
+            if found[i] and found[j]:
+                ux, _ = self.map_to_uncalibration(found[i].corrected_position)
+                _, uy = self.map_to_uncalibration(found[j].corrected_position)
+                if (abs(ux - hole.x) < rad
+                        and abs(uy - hole.y) < rad):
 
-                fo = None
-                if hole is not None:
-                    six, siy = hole.x_cor, hole.y_cor
-                    if hole.has_correction():
-                        fo = (six, siy)
-                found.append(fo)
+                    x, y = self.map_to_calibration((ux, uy))
+                    nxs.append(x)
+                    nys.append(y)
+                    iholes.append(found[i])
+                    iholes.append(found[j])
 
-            rad = h.dimension
-            for i, j in [(0, 3), (1, 2)]:
-                mx, my = _midpoint(found[i], found[j])
-                if mx is not None and my is not None:
-                    #make sure the corrected value makes sense
-                    #ie less than 1 radius from nominal hole
-                    if (abs(mx - h.x) < rad
-                            and abs(my - h.y) < rad):
-                        nxs.append(mx)
-                        nys.append(my)
+    def _interpolated_normals(self, hole, found, nxs, nys, iholes, spacing):
+        #try interpolation using legs of a triangle
+        for i, j, s in [
+                        #vertical
+                        (4, 1, 1), (6, 1, -1),
+                        (5, 2, -1), (7, 2, 1),
 
-            if not nxs:
-#                #try iding using "triangulation"
-                for i, j in [(0, 1), (0, 2), (3, 2), (3, 1)]:
+                        #horizontal
+                        (4, 0, -1), (5, 0, 1),
+                        (7, 3, -1), (6, 3, 1)
+                     ]:
 
-                    x = found[i][0] if found[i] else None
-                    y = found[j][1] if found[j] else None
+            p1 = found[i]
+            p2 = found[j]
 
-                    if x and y:
-                        if (abs(x - h.x) < rad
-                                and abs(y - h.y) < rad):
-                            nxs.append(x)
-                            nys.append(y)
+            if p1 and p2:
+                p1 = p1.corrected_position
+                p2 = p2.corrected_position
 
-        nx, ny = (sum(nxs) / max(1, len(nxs)),
-                    sum(nys) / max(1, len(nys)))
+                p1 = self.map_to_uncalibration(p1)
+                p2 = self.map_to_uncalibration(p2)
+                dx = p2[0] - p1[0]
+                dy = p2[1] - p1[1]
 
-        if nx and ny:
-            h.interpolated = True
-#            print h.id
-            h.x_cor = nx
-            h.y_cor = ny
+                n = (dx ** 2 + dy ** 2) ** 0.5
+                norm = array([-dy, dx]) / n
 
-            return nx, ny
+                npos = array([p2[0], p2[1]]) + (s * spacing * norm)
+                nx, ny = self.map_to_calibration(npos)
+                nxs.append(nx)
+                nys.append(ny)
 
-    def map_to_uncalibration(self, pos, cpos, rot):
+                iholes.append(found[i])
+                iholes.append(found[j])
+
+    def _get_calibration_params(self, cpos, rot):
+        if cpos is None:
+            cpos = self.cpos if self.cpos else (0, 0)
+        if rot is None:
+            rot = self.rotation if self.rotation else 0
+        return cpos, rot
+
+    def map_to_uncalibration(self, pos, cpos=None, rot=None):
+        cpos, rot = self._get_calibration_params(cpos, rot)
+
         a = AffineTransform()
         a.translate(-cpos[0], -cpos[1])
         a.translate(*cpos)
@@ -194,7 +307,9 @@ class StageMap(Loggable):
         pos = a.transformPt(pos)
         return pos
 
-    def map_to_calibration(self, pos, cpos, rot, translate=None):
+    def map_to_calibration(self, pos, cpos=None, rot=None, translate=None):
+        cpos, rot = self._get_calibration_params(cpos, rot)
+
         a = AffineTransform()
         if translate:
             a.translate(*translate)
@@ -207,7 +322,7 @@ class StageMap(Loggable):
         pos = a.transformPt(pos)
         return pos
 
-    def _get_hole(self, key):
+    def get_hole(self, key):
         return next((h for h in self.sample_holes if h.id == str(key)), None)
 
     def get_hole_pos(self, key):
@@ -232,7 +347,7 @@ class StageMap(Loggable):
                 self.info('loaded correction file {}'.format(p))
                 for i, x, y in cors:
 
-                    h = self._get_hole(i)
+                    h = self.get_hole(i)
                     if h is not None:
                         if x is not None and y is not None:
                             h.x_cor = x
@@ -248,6 +363,12 @@ class StageMap(Loggable):
         for h in self.sample_holes:
             h.x_cor = 0
             h.y_cor = 0
+            h.corrected = False
+            h.interpolated = False
+
+    def clear_interpolations(self):
+        for h in self.sample_holes:
+            h.interpolated = False
 
     def dump_correction_file(self):
 
@@ -263,6 +384,7 @@ class StageMap(Loggable):
         if hole is not None:
             hole.x_cor = x_cor
             hole.y_cor = y_cor
+            hole.corrected = True
 
     def _get_hole_by_position(self, x, y, tol=None):
         return self._get_hole_by_pos(x, y, 'x', 'y', tol)
@@ -272,7 +394,7 @@ class StageMap(Loggable):
 
     def _get_hole_by_pos(self, x, y, xkey, ykey, tol):
         if tol is None:
-            tol = self.g_dimension * 0.75
+            tol = self.g_dimension# * 0.75
 
         pythag = lambda hi, xi, yi:((hi.x - xi) ** 2 + (hi.y - yi) ** 2) ** 0.5
         holes = [(hole, pythag(hole, x, y)) for hole in self.sample_holes

@@ -117,28 +117,30 @@ class MachineVisionManager(Manager):
         '''
         pass
 
-    def locate_target(self,cx,cy,holenum, *args, **kw):
+    def locate_target(self, cx, cy, holenum, *args, **kw):
         if self.hole_detector is not None:
-            r = self.hole_detector.locate_sample_well(cx,cy,holenum, **kw)
-            sm = self.parent._stage_map
+            r = self.hole_detector.locate_sample_well(cx, cy, holenum, **kw)
+#            sm = self.parent._stage_map
 
-            if r is None and holenum is not None:
+            #all handled in video stage man
+#            if r is None and holenum is not None:
             #===================================================================
             # if r is None no hole was found.
             # 1. take a snapshot for later analysis.
             # 2. try to interpolate the holes corrected pos.
+            # update 2. let video man handle it
             #===================================================================
-                self.parent.snapshot(auto=True,
-                                     name='pos_err_{}'.format(holenum))
-                r = sm.get_interpolated_position(holenum=holenum)
-                if r:
-                    self.info('using interpolated position {:03f} {:03f}'.format(*r))
-            else:
-                #try to interpolate values so that future moves are more 
-                #accurate
-                sm.interpolate_noncorrected()
+#                self.parent.snapshot(auto=True,
+#                                     name='pos_err_{}'.format(holenum))
+#                r = sm.get_interpolated_position(holenum=holenum)
+#                if r:
+#                    self.info('using interpolated position {:03f} {:03f}'.format(*r))
+#            else:
+#                #try to interpolate values so that future moves are more 
+#                #accurate
+#                sm.interpolate_noncorrected()
 
-            sm.dump_correction_file()
+#            sm.dump_correction_file()
 
             return r
 
@@ -161,9 +163,6 @@ class MachineVisionManager(Manager):
         self.video.open()
         det = self.brightness_detector
         return det.collect_baseline_intensity(**kw)
-
-
-
 
     def cancel_calibration(self):
         self._cancel_calibration = True

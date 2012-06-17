@@ -19,7 +19,7 @@ from traits.api import String, Float, Enum, Str
 from traitsui.api import Item, HGroup, VGroup
 #============= standard library imports ========================
 import os
-from numpy import linspace, polyval, polyfit
+from numpy import linspace, polyval, polyfit, array
 #============= local library imports  ==========================
 from src.database.selectors.db_selector import DBSelector
 from src.managers.data_managers.h5_data_manager import H5DataManager
@@ -33,6 +33,9 @@ class PowerCalibrationResult(DBResult):
     exportable = True
     fit = Enum('Linear', 'Parabolic', 'Cubic')
     coeffs = Str
+    bounds = None
+    calibration_bounds = None
+    coefficients = None
 
     def _fit_changed(self):
         g = self.graph
@@ -60,40 +63,69 @@ class PowerCalibrationResult(DBResult):
 #                      label='Graph'
                       )
 
+    def _apply_bounds(self, x, y):
+        bounds = self.bounds
+        if bounds:
+            ox = array(x)
+            y = array(y)
+            x = ox[(ox > bounds[0]) & (ox < bounds[1])]
+            y = y[(ox > bounds[0]) & (ox < bounds[1])]
+        return x, y
+
     def _calculate_fit(self, x, y, deg=None):
         if deg is None:
             deg = FITDEGREE[self.fit]
 
         rxi = linspace(min(x), max(x), 500)
+        x, y = self._apply_bounds(x, y)
+
         coeffs = polyfit(x, y, deg)
         ryi = polyval(coeffs, rxi)
-
+#        ryi = polyval(coeffs, x)
         return coeffs, rxi, ryi
 
-    def load_graph(self, *args, **kw):
-
-        g = self._graph_factory()
+    def get_data(self):
         dm = self.data_manager
         calibration = dm.get_table('calibration', '/')
-        g.new_plot(xtitle='Setpoint (%)',
-                   ytitle='Measured Power (W)',
-                   padding=[50, 10, 10, 40],
-                   zoom=True,
-                   pan=True
-                   )
+#        x = linspace(0, 100)
+#        y = 0.01 * x ** 2 - 5
+#        return x, y
+        x, y = zip(*[(r['setpoint'], r['value']) for r in calibration.iterrows()])
+#        return self._apply_bounds(x, y)
+        return x, y
 
-        xi, yi = zip(*[(r['setpoint'], r['value']) for r in calibration.iterrows()])
-        g.new_series(xi, yi)
+    def load_graph(self, graph=None, new_plot=True, *args, **kw):
+        if graph is None:
+            graph = self._graph_factory()
+
+#        dm = self.data_manager
+#        calibration = dm.get_table('calibration', '/')
+        if new_plot:
+            graph.new_plot(xtitle='Setpoint (%)',
+                       ytitle='Measured Power (W)',
+                       padding=[50, 10, 10, 40],
+                       zoom=True,
+                       pan=True
+                       )
+        xi, yi = self.get_data()
+#        xi, yi = zip(*[(r['setpoint'], r['value']) for r in calibration.iterrows()])
+        color = graph.get_next_color(exclude='red')
+        graph.new_series(*self._apply_bounds(xi, yi),
+                         color=color
+                         )
 
         coeffs, rxi, ryi = self._calculate_fit(xi, yi)
         self._set_coeffs(coeffs)
-        g.new_series(rxi, ryi)
+        graph.new_series(rxi, ryi, color='red',
+                         line_style='dash'
+                         )
 
 #        self.summary = 'coeffs ={}'.format(', '.join(['{:0.3f}'.format(c) for c in coeffs]))
 
-        self.graph = g
+        self.graph = graph
 
     def _set_coeffs(self, coeffs):
+        self.coefficients = coeffs
         alpha = 'abcde'
         self.coeffs = ', '.join(['{}={:0.3f}'.format(a, c) for a, c in zip(alpha, coeffs)])
 

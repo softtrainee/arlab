@@ -346,6 +346,7 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         pass
     def OnProperties(self, event):
         pass
+
     def _show_menu(self, event, obj):
         enabled = True
         import wx

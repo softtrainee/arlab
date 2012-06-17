@@ -339,7 +339,7 @@ class LaserTrayCanvas(MapCanvas):
 #            self._draw_crosshairs(gc, pos, color = colors1f[self.crosshairs_color])
             self._draw_crosshairs(gc, pos, color=self.crosshairs_color)
 
-        MarkupCanvas._draw_hook(self, gc, *args, **kw)
+        super(LaserTrayCanvas, self)._draw_hook(gc, *args, **kw)
 
     def _draw_crosshairs(self, gc, xy, color=(1, 0, 0), kind=None):
         '''
