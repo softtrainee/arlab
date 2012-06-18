@@ -20,7 +20,7 @@ MANAGERS = []
 def open_manager(app, man, **kw):
 #    if view is None:
 #        view = 'edit_traits'
-
+    ui =None
     if man in MANAGERS:
         try:
             man.ui.control.Raise()
@@ -34,8 +34,10 @@ def open_manager(app, man, **kw):
 #        man.edit_traits()
 
         MANAGERS.append(man)
+        
     if app:
-        app.uis.append(ui)
+        if ui is not None and ui not in app.uis:
+            app.uis.append(ui)
 
 def open_protocol(app, protocol):
     m = app.get_service(protocol)

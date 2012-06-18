@@ -20,8 +20,11 @@
 
 #============= standard library imports ========================
 import numpy as np
-import scikits.statsmodels.api as sm
-
+try:
+    import statsmodels.api as sm
+except ImportError:
+    import scikits.statsmodels.api as sm
+    
 #============= local library imports  ==========================
 
 #============= views ===================================

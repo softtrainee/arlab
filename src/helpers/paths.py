@@ -53,6 +53,9 @@ stable_root = os.path.join(HOME, 'Pychrondata')
 
 #device_scan_db = '/Users/ross/Sandbox/device_scans.sqlite'
 
+#==============================================================================
+# #database
+#==============================================================================
 db_path = '/usr/local/pychron'
 device_scan_root = os.path.join(db_path, 'device_scans')
 device_scan_db = os.path.join(device_scan_root, 'device_scans.sqlite')
@@ -65,42 +68,49 @@ co2laser_db = os.path.join(db_path, 'co2.sqlite')
 diodelaser_db_root = os.path.join(db_path, 'diodelaserdb')
 diodelaser_db = os.path.join(db_path, 'diode.sqlite')
 
-
-#directories directly under root
-data_dir = os.path.join(stable_root, 'data')
-
+#==============================================================================
+# root
+#==============================================================================
+scripts_dir = os.path.join(root, 'scripts')
+experiment_dir = os.path.join(root, 'experiments')
+plugins_dir = os.path.join(root, 'plugins')
+hidden_dir = os.path.join(root, '.hidden')
+#==============================================================================
+# setup
+#==============================================================================
 setup_dir = os.path.join(root, 'setupfiles')
 device_dir = os.path.join(setup_dir, 'devices')
 canvas2D_dir = os.path.join(setup_dir, 'canvas2D')
 canvas3D_dir = os.path.join(setup_dir, 'canvas3D')
 extraction_line_dir = os.path.join(setup_dir, 'extractionline')
-#initialization_dir = os.path.join(setup_dir, 'initializations')
-scripts_dir = os.path.join(root, 'scripts')
-
-#device_creator_dir = os.path.join(device_dir, 'device_creator')
-modeling_data_dir = os.path.join(data_dir, 'modeling')
 monitors_dir = os.path.join(setup_dir, 'monitors')
 jog_dir = os.path.join(setup_dir, 'jogs')
 pattern_dir = os.path.join(setup_dir, 'patterns')
 
-bakeout = os.path.join(device_dir, 'bakeout')
 bakeout_config_dir = os.path.join(setup_dir, 'bakeout_configurations')
+bakeout = os.path.join(device_dir, 'bakeout')
 
-#clovera_root = os.path.join(src_root, 'src', 'data_processing', 'modeling', 'lovera')
-clovera_root = '/usr/local/pychron/clovera'
-
-argus_data_dir = os.path.join(data_dir, 'argusVI')
 heating_schedule_dir = os.path.join(setup_dir, 'heating_schedules')
-experiment_dir = os.path.join(root, 'experiments')
-plugins_dir = os.path.join(root, 'plugins')
 map_dir = os.path.join(setup_dir, 'tray_maps')
 user_points_dir = os.path.join(map_dir, 'user_points')
-
+#==============================================================================
+# data
+#==============================================================================
+data_dir = os.path.join(stable_root, 'data')
+modeling_data_dir = os.path.join(data_dir, 'modeling')
+argus_data_dir = os.path.join(data_dir, 'argusVI')
 positioning_error_dir = os.path.join(data_dir, 'positioning_error')
 snapshot_dir = os.path.join(data_dir, 'snapshots')
 video_dir = os.path.join(data_dir, 'videos')
+stage_visualizer_dir = os.path.join(data_dir,'stage_visualizer')
+#initialization_dir = os.path.join(setup_dir, 'initializations')
+#device_creator_dir = os.path.join(device_dir, 'device_creator')
 
-hidden_dir = os.path.join(root, '.hidden')
+#==============================================================================
+# lovera exectuables
+#==============================================================================
+#clovera_root = os.path.join(src_root, 'src', 'data_processing', 'modeling', 'lovera')
+clovera_root = '/usr/local/pychron/clovera'
 
 
 def rec_make(pi):

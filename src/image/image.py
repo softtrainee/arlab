@@ -226,45 +226,47 @@ class Image(HasTraits):
                                         )
 
     def render_images(self, src):
-
+        
 #        w = sum([s.size()[0] for s in src])
 #        h = sum([s.size()[1] for s in src])
         w = self.width
-        h = self.height
+        h = self.height-15
         display = new_dst(w, h, 3)
-        try:
-            s1 = src[0].ndarray
-            s2 = src[1].ndarray
-        except IndexError:
-            resize(src[0], w, h, dst=display)
-            return display
-        except (TypeError, AttributeError):
-            return
-
-        try:
-            s1 = src[0].ndarray
-            s2 = src[1].ndarray
-
-            npad = 2
-            pad = asMat(zeros((s1.shape[0], npad, s1.shape[2]), 'uint8'))
-            add_scalar(pad, (255, 0, 255))
-
-            s1 = hstack((pad.ndarray, s1))
-            s1 = hstack((s1, pad.ndarray))
-            s1 = hstack((s1, s2))
-            da = hstack((s1, pad.ndarray))
-
-            vpad = asMat(zeros((npad, da.shape[1], da.shape[2]), 'uint8'))
-            add_scalar(vpad, (0, 255, 255))
-            da = vstack((vpad.ndarray, da))
-            da = vstack((da, vpad.ndarray))
-
-            i1 = PILImage.fromarray(da)
-            composite = frompil(i1)
-
-            resize(composite, w, h, dst=display)
-        except TypeError:
-            pass
+#        print w,h, src[0].size()
+        resize(src[0], w,h, dst=display)
+#        try:
+#            s1 = src[0].ndarray
+#            s2 = src[1].ndarray
+#        except IndexError:
+#            resize(src[0], w, h, dst=display)
+#            return display
+#        except (TypeError, AttributeError):
+#            return
+#
+#        try:
+#            s1 = src[0].ndarray
+#            s2 = src[1].ndarray
+#
+#            npad = 2
+#            pad = asMat(zeros((s1.shape[0], npad, s1.shape[2]), 'uint8'))
+#            add_scalar(pad, (255, 0, 255))
+#
+#            s1 = hstack((pad.ndarray, s1))
+#            s1 = hstack((s1, pad.ndarray))
+#            s1 = hstack((s1, s2))
+#            da = hstack((s1, pad.ndarray))
+#
+#            vpad = asMat(zeros((npad, da.shape[1], da.shape[2]), 'uint8'))
+#            add_scalar(vpad, (0, 255, 255))
+#            da = vstack((vpad.ndarray, da))
+#            da = vstack((da, vpad.ndarray))
+#
+#            i1 = PILImage.fromarray(da)
+#            composite = frompil(i1)
+#
+#            resize(composite, w, h, dst=display)
+#        except TypeError:
+#            pass
 
         return display
 
@@ -353,7 +355,7 @@ class StandAloneImage(HasTraits):
                  y=35,
                  width=self.width,
                  height=self.height + 22,
-#                 resizable=True
+                 resizable=True
                  )
 
         if self.title is not None:

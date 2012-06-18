@@ -88,15 +88,19 @@ class StageVisualizationCanvas(MarkupCanvas):
 #        return w
 
     def record_correction(self, h, x, y):
-        name = '{}_cor'.format(h.id)
+        if isinstance(h,(str,int)):
+            hid=h
+        else:
+            hid=h.id
+        
+        name = '{}_cor'.format(hid)
         cont = self.markupcontainer
         cont[(name, 2)] = Indicator(x, y,
-                                                 canvas=self,
-#                                                 radius=h.dimension / 2.0,
-                                                 visible=False
-                                                 )
-        h = cont[h.id]
-        h.default_color = (1, 1, 0)
+                                         canvas=self,
+                                         visible=False
+                                         )
+        ho = cont[hid]
+        ho.default_color = (1, 1, 0)
         self.request_redraw()
 
     def record_path(self, p1, p2, name):
