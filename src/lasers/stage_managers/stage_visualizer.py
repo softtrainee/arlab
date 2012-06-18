@@ -19,18 +19,20 @@ from traits.api import HasTraits, Instance, Str, on_trait_change, \
     Bool, Tuple, Float, Int
 from traitsui.api import View, Item, TableEditor
 from enable.component_editor import ComponentEditor
+import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.canvas.canvas2D.stage_visualization_canvas import StageVisualizationCanvas, \
     SampleHole
 from src.lasers.stage_managers.stage_map import StageMap
-from src.helpers.paths import map_dir
+from src.helpers.paths import map_dir, data_dir
 import os
 import random
 import time
 from threading import Thread
 from pyface.timer.do_later import do_later
+from src.helpers.filetools import unique_path
 
 
 class StageVisualizer(Manager):
@@ -42,11 +44,60 @@ class StageVisualizer(Manager):
     flag = True
     center = Tuple(Float, Float)
     rotation = Float(23)
-    def record_correction(self, h, x, y):
-        self.canvas.record_correction(h, x, y)
+    path = None
 
-    def record_interpolation(self, x, y, hole, color=(1, 1, 0)):
-        self.canvas.record_interpolation(x, y, hole, color)
+    def __init__(self, *args, **kw):
+        super(StageVisualizer, self).__init__(*args, **kw)
+        p = os.path.join(data_dir, 'stage_visualizer')
+        self.path, _ = unique_path(p, 'vis', filetype='')
+
+    def dump(self):
+        with open(self.path, 'wb') as f:
+            d = dict(center=self.center,
+                   rotation=self.rotation,
+                   markup=self.canvas.markupcontainer
+                   )
+
+            pickle.dump(d, f)
+
+    def load_visualization(self):
+#        p = self.open_file_dialog()
+        p = os.path.join(data_dir, 'stage_visualizer',
+                       'vis001'
+                       )
+        if p is not None:
+            with open(p, 'rb') as f:
+#                try:
+                    d = pickle.load(f)
+
+                    self.center = d['center']
+                    self.rotation = d['rotation']
+
+                    for k, v in d['markup'].iteritems():
+                        v.set_canvas(self.canvas)
+
+                    self.canvas.markupcontainer = d['markup']
+#                except Exception, e:
+#                    print e
+
+#        self.canvas.invalidate_and_redraw()
+
+    def set_current_hole(self, h):
+        self.canvas.set_current_hole(h)
+        self.canvas.request_redraw()
+
+    def record_correction(self, h, x, y, dump=True):
+        self.canvas.record_correction(h, x, y)
+        if dump:
+            self.dump()
+
+    def record_interpolation(self, hole, x, y, color=(1, 1, 0), dump=True):
+        if isinstance(hole, (str, int)):
+            hole = self.stage_map.get_hole(str(hole))
+
+        self.canvas.record_interpolation(hole, x, y, color)
+        if dump:
+            self.dump()
 
     @on_trait_change('canvas:selected')
     def update_status_bar(self, parent, name, obj):
@@ -143,8 +194,8 @@ class StageVisualizer(Manager):
 #        vs.remove(59)
 #        vs.remove(60)
 #        vs.remove(3)
-        vs.remove(6)
-        vs.remove(60)
+#        vs.remove(6)
+        vs.remove(30)
 #        vs = range(50, 60)
         for i in vs:
 #        for i in [21, 29, 30]:
@@ -158,9 +209,9 @@ class StageVisualizer(Manager):
 #            ca.record_correction(h, x, y)
 #            sm.set_hole_correction(h.id, x, y)
             r = random.randint(0, 10)
-#            r = 7
+            r = 7
             if r > 6:
-                ca.record_correction(h, x, y)
+                self.record_correction(h, x, y, dump=False)
                 sm.set_hole_correction(h.id, x, y)
 
 #        self._test_interpolate_one()
@@ -180,7 +231,7 @@ class StageVisualizer(Manager):
         if args:
             nx = args[0]
             ny = args[1]
-            ca.record_interpolation(nx, ny, h, color)
+            self.record_interpolation(h, nx, ny, color, dump=False)
         do_later(ca.invalidate_and_redraw)
 
     def _test_interpolate_all(self):
@@ -194,14 +245,14 @@ class StageVisualizer(Manager):
             s = 0
             for i in range(60, -1, -1):
                 h = sm.get_hole(str(i + 1))
-                ca.set_current_hole(h)
+                self.set_current_hole(h)
                 r = random.randint(0, 10)
                 r = 0
                 if r > 5:
                     nx, ny = self._apply_calibration(h)
                     nx = self._add_error(nx)
                     ny = self._add_error(ny)
-                    ca.record_correction(h, nx, ny)
+                    self.record_correction(h, nx, ny, dump=False)
                     sm.set_hole_correction(h.id, nx, ny)
                 else:
                     kw = dict(cpos=self.center,
@@ -217,8 +268,8 @@ class StageVisualizer(Manager):
                         s += 1
                         nx = args[0]
                         ny = args[1]
-                        ca.record_interpolation(nx, ny, h , color)
-#                time.sleep(0.25)
+                        self.record_interpolation(h, nx, ny , color, dump=False)
+#                time.sleep(0.5)
 #                do_later(ca.invalidate_and_redraw)
 
             n = 61 - sum([1 for si in sm.sample_holes if si.has_correction()])
@@ -228,12 +279,14 @@ class StageVisualizer(Manager):
                 break
 
         do_later(ca.invalidate_and_redraw)
+        self.dump()
         self.info('noncorrected holes = {}'.format(n))
-        self.flag = not self.flag
+
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('sv')
     sv = StageVisualizer()
+    sv.load_visualization()
     sv.configure_traits()
 #============= EOF =============================================

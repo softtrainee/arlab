@@ -34,11 +34,13 @@ def unique_path(root, base, filetype='txt'):
     '''
 
     '''
-    p = os.path.join(root, '%s001.%s' % (base, filetype))
+    if filetype and '.' not in filetype:
+        filetype = '.{}'.format(filetype)
+    p = os.path.join(root, '{}001{}'.format(base, filetype))
     cnt = 1
     i = 2
     while os.path.exists(p):
-        p = os.path.join(root, '%s%03i.%s' % (base, i, filetype))
+        p = os.path.join(root, '{}{:03n}{}'.format(base, i, filetype))
         i += 1
         cnt += 1
 

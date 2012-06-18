@@ -20,8 +20,6 @@ from traitsui.api import View, Item, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
-from numpy import poly1d
-from scipy import optimize
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.led.led import LED
@@ -112,19 +110,7 @@ class LaserManager(Manager):
     def get_pulse_manager(self):
         return self.pulse
 
-    def _pulse_default(self):
-        p = os.path.join(paths.hidden_dir, 'pulse')
-        if os.path.isfile(p):
-            with open(p, 'rb') as f:
-                try:
-                    pul = pickle.load(f)
-                    pul.manager = self
-                except pickle.PickleError:
-                    pul = Pulse(manager=self)
-        else:
-            pul = Pulse(manager=self)
 
-        return pul
 
     def get_power_map_manager(self):
         from src.lasers.power.power_map_manager import PowerMapManager
@@ -317,24 +303,7 @@ class LaserManager(Manager):
 
         self.disable_laser()
 
-    def monitor_factory(self):
-        lm = self.monitor
-        if lm is None:
-            lm = self.monitor_klass(manager=self,
-                            configuration_dir_name=paths.monitors_dir,
-                            name=self.monitor_name)
-        return lm
 
-    def _stage_manager_factory(self, args):
-        self.stage_args = args
-        if self.use_video:
-            klass = VideoStageManager
-        else:
-            klass = StageManager
-
-        args['parent'] = self
-        sm = klass(**args)
-        return sm
 
     def _get_enable_label(self):
         '''
@@ -398,4 +367,41 @@ class LaserManager(Manager):
                     y=self.window_y,
                     statusbar='status_text'
                     )
+#===============================================================================
+# factories
+#===============================================================================
+    def monitor_factory(self):
+        lm = self.monitor
+        if lm is None:
+            lm = self.monitor_klass(manager=self,
+                            configuration_dir_name=paths.monitors_dir,
+                            name=self.monitor_name)
+        return lm
+
+    def _stage_manager_factory(self, args):
+        self.stage_args = args
+        if self.use_video:
+            klass = VideoStageManager
+        else:
+            klass = StageManager
+
+        args['parent'] = self
+        sm = klass(**args)
+        return sm
+#===============================================================================
+# defaults
+#===============================================================================
+    def _pulse_default(self):
+        p = os.path.join(paths.hidden_dir, 'pulse')
+        if os.path.isfile(p):
+            with open(p, 'rb') as f:
+                try:
+                    pul = pickle.load(f)
+                    pul.manager = self
+                except pickle.PickleError:
+                    pul = Pulse(manager=self)
+        else:
+            pul = Pulse(manager=self)
+
+        return pul
 #============= EOF ====================================

@@ -95,6 +95,8 @@ class MarkupItem(HasTraits):
         x, y = self.x, self.y
         offset = -0.5
         if self.space == 'data':
+            if self.canvas is None:
+                print self
             x, y = self.canvas.map_screen([(self.x, self.y)])[0]
 #        offset = self.canvas.offset
             offset = 1
@@ -313,6 +315,7 @@ class Line(MarkupItem):
         super(Line, self).__init__(0, 0, *args, **kw)
 
     def set_canvas(self, canvas):
+        super(Line, self).set_canvas(canvas)
         self.start_point.set_canvas(canvas)
         self.end_point.set_canvas(canvas)
 
@@ -525,6 +528,11 @@ class Indicator(MarkupItem):
         self.hline.render(*args, **kw)
         self.vline.render(*args, **kw)
 
+    def set_canvas(self, canvas):
+        super(Indicator, self).set_canvas(canvas)
+        self.hline.set_canvas(canvas)
+        self.vline.set_canvas(canvas)
+
 class PointIndicator(Indicator):
     radius = 10
     active = Bool(False)
@@ -536,6 +544,10 @@ class PointIndicator(Indicator):
             self.label = Label(self.x, self.y,
                                text=str(int(self.identifier[5:]) + 1),
                                 *args, **kw)
+    def set_canvas(self, canvas):
+        super(PointIndicator, self).set_canvas(canvas)
+        self.circle.set_canvas(canvas)
+
     def set_state(self, state):
         self.state = state
         self.hline.state = state

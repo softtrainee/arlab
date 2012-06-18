@@ -84,7 +84,7 @@ class StageVisualizationCanvas(MarkupCanvas):
         self.markupcontainer[(name, 2)] = Line(p1, p2, canvas=self)
         self.request_redraw()
 
-    def record_interpolation(self, x, y, hole, color):
+    def record_interpolation(self, hole, x, y, color):
         for i, ih in enumerate(hole.interpolation_holes):
             n = '{}-interpolation-line-{}'.format(hole.id, i)
             self.markupcontainer[(n, 2)] = Line((x, y), (ih.x_cor, ih.y_cor),
@@ -113,4 +113,8 @@ class StageVisualizationCanvas(MarkupCanvas):
             if k.startswith('{}-interpolation-line'.format(obj.name)):
                 v.visible = not v.visible
 
+        for ih in set(obj.hole.interpolation_holes):
+            s = self.markupcontainer[ih.id]
+            s.active_color = (0, 0.5, 1)
+            s.state = not s.state
 #============= EOF =============================================

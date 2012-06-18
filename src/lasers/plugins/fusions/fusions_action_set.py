@@ -19,8 +19,6 @@
 #============= enthought library imports =======================
 from envisage.ui.action.api import Action#, Group, Menu, ToolBar
 from envisage.ui.workbench.api import WorkbenchActionSet
-
-
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -55,6 +53,14 @@ class FusionsActionSet(WorkbenchActionSet):
                 Action(name='Power Map',
                        path=laser_path,
                        class_name='{}PowerMapAction'.format(self.action_path)
+                       ),
+                Action(name='Open',
+                       path='{}/Visualizer'.format(laser_path),
+                       class_name='{}OpenStageVisualizerAction'.format(self.action_path)
+                       ),
+                Action(name='Load...',
+                       path='{}/Visualizer'.format(laser_path),
+                       class_name='{}LoadStageVisualizerAction'.format(self.action_path)
                        ),
 
                 #===============================================================
