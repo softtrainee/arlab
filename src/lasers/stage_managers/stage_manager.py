@@ -750,12 +750,13 @@ class StageManager(Manager):
             return
 
         if self.hole_thread is None and v is not self._hole:
-            self.visualizer.set_current_hole(str(v))
-            pos = self._stage_map.get_hole_pos(str(v))
+            v = str(v)
+            pos = self._stage_map.get_hole_pos(v)
             if pos is not None:
+                self.visualizer.set_current_hole(v)
                 self._hole = v
                 self.hole_thread = Thread(name='stage.move_to_hole',
-                                          target=self._move_to_hole, args=(str(v),))
+                                          target=self._move_to_hole, args=(v,))
                 self.hole_thread.start()
             else:
                 err = 'Invalid hole {}'.format(v)

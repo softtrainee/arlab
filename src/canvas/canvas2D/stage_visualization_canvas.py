@@ -20,7 +20,8 @@ from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
-from src.canvas.canvas2D.markup.markup_items import Circle, Line, PointIndicator
+from src.canvas.canvas2D.markup.markup_items import Circle, Line, PointIndicator, \
+    Indicator
 
 class InfoObject(object):
     pass
@@ -28,20 +29,22 @@ class InfoObject(object):
 class SampleHole(Circle, InfoObject):
     display_interpolation = False
     hole = None
-    _radius = 1
+    def _render_(self, gc):
 
-    def _get_radius(self):
-        r = self.hole.dimension / 2.0
-        return self.map_dimension(r)
+        super(SampleHole, self)._render_(gc)
+        gc.save_state()
+        x, y = self.get_xy()
+        w, h, _, _ = gc.get_full_text_extent(self.hole.id)
+        gc.set_fill_color((0, 0, 0))
+        gc.set_text_position(x - w / 2.0, y - h / 2.0)
+        gc.show_text(self.hole.id)
 
-    def _set_radius(self, r):
-        pass
-
-    radius = property(fget=_get_radius, fset=_set_radius)
+        gc.restore_state()
 
 class StageVisualizationCanvas(MarkupCanvas):
     _prev_current = None
-
+#    use_zoom = False
+#    show_grids=True
     def build_map(self, sm, calibration=None):
         sm.load_correction_file()
 
@@ -51,33 +54,49 @@ class StageVisualizationCanvas(MarkupCanvas):
             cpos = calibration[0]
             rot = calibration[1]
 
+        xmi = 100
+        xma = -100
+        ymi = 100
+        yma = -100
         for si in sm.sample_holes:
-
             x, y = sm.map_to_calibration(si.nominal_position,
                                       cpos, rot)
+
+            xmi = min(x, xmi)
+            xma = max(x, xma)
+            ymi = min(y, ymi)
+            yma = max(y, yma)
             self.markupcontainer[si.id] = SampleHole(x, y, canvas=self,
                                                  default_color=(0, 0, 0),
-                                                fill=True,
+#                                                fill=True,
                                                 name=si.id,
                                                 hole=si,
+                                                radius=si.dimension / 2.0
                                                 )
 
             if si.has_correction():
                 self.record_correction(si, si.x_cor, si.y_cor)
+
+
+        self.set_mapper_limits('x', (xmi, xma), pad=si.dimension)
+        self.set_mapper_limits('y', (ymi, yma), pad=si.dimension)
         self.invalidate_and_redraw()
 
-    def map_dimension(self, d):
-        (w, h), (ox, oy) = self.map_screen([(d, d), (0, 0)])
-        w, h = w - ox, h - oy
-        return w
+#    def map_dimension(self, d):
+#        (w, h), (ox, oy) = self.map_screen([(d, d), (0, 0)])
+#        w, h = w - ox, h - oy
+#        return w
 
     def record_correction(self, h, x, y):
         name = '{}_cor'.format(h.id)
-        radius = self.map_dimension(h.dimension / 2.0)
-        self.markupcontainer[(name, 2)] = Circle(x, y,
+        cont = self.markupcontainer
+        cont[(name, 2)] = Indicator(x, y,
                                                  canvas=self,
-                                                 radius=radius
+#                                                 radius=h.dimension / 2.0,
+                                                 visible=False
                                                  )
+        h = cont[h.id]
+        h.default_color = (1, 1, 0)
         self.request_redraw()
 
     def record_path(self, p1, p2, name):
@@ -85,36 +104,58 @@ class StageVisualizationCanvas(MarkupCanvas):
         self.request_redraw()
 
     def record_interpolation(self, hole, x, y, color):
+        cont = self.markupcontainer
+
+        h = cont[hole.id]
+        h.default_color = (0, 0.25, 1)
         for i, ih in enumerate(hole.interpolation_holes):
             n = '{}-interpolation-line-{}'.format(hole.id, i)
-            self.markupcontainer[(n, 2)] = Line((x, y), (ih.x_cor, ih.y_cor),
+            cont[(n, 2)] = Line((x, y), (ih.x_cor, ih.y_cor),
                                                 canvas=self,
                                                 visible=False,
-                                                default_color=color
+                                                default_color=(0, 0, 0)
                                                 )
-
-
-        r = self.map_dimension(hole.dimension / 2.0)
-        self.markupcontainer[('{}-interpolation-indicator'.format(hole.id), 3)] = PointIndicator(x, y, canvas=self,
+        indklass = Indicator
+#        indklass = Circle
+        cont[('{}-interpolation-indicator'.format(hole.id), 3)] = indklass(x, y, canvas=self,
                                                                                                 default_color=color,
-                                                                                                radius=r
+#                                                                                                radius=hole.dimension / 2.0,
+                                                                                                visible=False
                                                                                                 )
     def set_current_hole(self, h):
+
+        if isinstance(h, (str, int)):
+            hid = h
+        else:
+            hid = h.id
+
         if self._prev_current:
             p = self.markupcontainer[self._prev_current]
             p.state = False
 
-        self.markupcontainer[h.id].state = True
-        self._prev_current = h.id
+        self.markupcontainer[hid].state = True
+        self._prev_current = hid
 
     def _selection_hook(self, obj):
         #toggle the visiblity of the objects interpolation holes
         for k, v in self.markupcontainer.iteritems():
             if k.startswith('{}-interpolation-line'.format(obj.name)):
                 v.visible = not v.visible
+            elif k == '{}-interpolation-indicator'.format(obj.name):
+                v.visible = not v.visible
 
-        for ih in set(obj.hole.interpolation_holes):
-            s = self.markupcontainer[ih.id]
-            s.active_color = (0, 0.5, 1)
-            s.state = not s.state
+        ihs = obj.hole.interpolation_holes
+        cont = self.markupcontainer
+        if ihs:
+            for ih in set(ihs):
+                ihid = ih.id
+                na = '{}_cor'.format(ihid)
+                nb = '{}-interpolation-indicator'.format(ihid)
+                if na in cont:
+                    c = cont[na]
+                elif nb in cont:
+                    c = cont[nb]
+
+                c.visible = not c.visible
+
 #============= EOF =============================================
