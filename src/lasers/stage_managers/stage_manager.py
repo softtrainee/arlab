@@ -33,6 +33,7 @@ from src.helpers.color_generators import colors8i as colors
 from src.hardware.motion_controller import MotionController
 from src.helpers.paths import map_dir, setup_dir, user_points_dir, hidden_dir
 import pickle
+from src.lasers.stage_managers.stage_visualizer import StageVisualizer
 
 from src.managers.motion_controller_managers.motion_controller_manager \
     import MotionControllerManager
@@ -106,6 +107,8 @@ class StageManager(Manager):
     motion_profiler = DelegatesTo('stage_controller')
 
     _temp_position = None
+
+    visualizer = Instance(StageVisualizer)
 
     def _test_fired(self):
 #        self.do_pattern('testpattern')
@@ -612,6 +615,9 @@ class StageManager(Manager):
                                    canvas=self.canvas)
         return t
 
+    def _visualizer_default(self):
+        v = StageVisualizer(stage_map=self._stage_map)
+        return v
 #======================= Property methods ======================
     def _get_stage_maps(self):
         return [s.name for s in self._stage_maps]
@@ -744,6 +750,7 @@ class StageManager(Manager):
             return
 
         if self.hole_thread is None and v is not self._hole:
+            self.visualizer.set_current_hole(str(v))
             pos = self._stage_map.get_hole_pos(str(v))
             if pos is not None:
                 self._hole = v

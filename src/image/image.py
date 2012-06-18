@@ -162,7 +162,6 @@ class Image(HasTraits):
             if flip is None:
                 flip = self.flip
 
-            print flip, mirror
             if flip and mirror:
                 cvFlip(frame, 2)
             elif mirror:

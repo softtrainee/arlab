@@ -55,6 +55,40 @@ class FPowerCalibrationAction(Action):
         if manager is not None:
             app = self.window.application
             open_manager(app, manager.power_calibration_manager)
+
+
+class FOpenStageVisualizerAction(Action):
+#    def __init__(self, *args, **kw):
+#        print 'sffsadf', args, kw
+#        super(FStageVisualizerAction, self).__init__(*args, **kw)
+#
+#        man = self.get_manager(None, window=kw['window'])
+##        print man.use_video?
+#        self.enabled_when = 'enabled'
+#        self.enabled = man.use_video
+#        man.on_trait_change(self.update_enabled, 'use_video')
+
+#    def update_enabled(self, obj, name, new):
+#        if name == 'use_video':
+#            self.enabled = new
+#        print self.enabled
+
+    def perform(self, event):
+        manager = self.get_manager(event)
+        if manager is not None:
+            app = self.window.application
+            open_manager(app, manager.stage_manager.visualizer)
+
+class FLoadStageVisualizerAction(Action):
+    def perform(self, event):
+        manager = self.get_manager(event)
+        if manager is not None:
+            app = self.window.application
+            visualizer = manager.stage_manager.visualizer
+            visualizer.load_visualization()
+            open_manager(app, visualizer)
+
+
 #===============================================================================
 # database selectors
 #===============================================================================

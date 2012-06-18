@@ -105,9 +105,6 @@ class VideoStageManager(StageManager, Videoable):
     use_video_server = Bool(False)
     video_server = Instance(VideoServer)
 
-    visualizer = Instance(StageVisualizer)
-
-
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
@@ -323,13 +320,15 @@ class VideoStageManager(StageManager, Videoable):
         if correct and self.auto_center:
 #            time.sleep(0.75)
             self.video.open(user='autocenter')
-            args = self._autocenter(holenum=holenum, ntries=2)
-            if args:
+            pos, interp = self._autocenter(holenum=holenum, ntries=2)
+            if pos:
                 #add an adjustment value to the stage map
-                self._stage_map.set_hole_correction(holenum, *args)
+                self._stage_map.set_hole_correction(holenum, *pos)
                 self._stage_map.dump_correction_file()
 
-                self.visualizer.record_correction(holenum, *args)
+                f = 'interpolation' if interp else 'correction'
+                func = getattr(self.visualizer, 'record_{}'.format(f))
+                func(holenum, *pos)
 
             self.video.close(user='autocenter')
 
@@ -368,7 +367,7 @@ class VideoStageManager(StageManager, Videoable):
                 rpos = self._stage_map.get_interpolated_position(holenum)
                 if rpos:
                     s = '{:0.3f},{:0.3f}'
-                    self.visualizer.record_interpolation()
+                    self.visualizer.record_interpolation(holenum, *rpos)
                 else:
                     s = 'None'
 
@@ -440,15 +439,13 @@ class VideoStageManager(StageManager, Videoable):
             self.video_server.stop()
 
     def __stage_map_changed(self):
-        super(VideoStageManager, self).__stage_map_changed()
+#        super(VideoStageManager, self).__stage_map_changed()
         self.visualizer.stage_map = self._stage_map
 
 #==============================================================================
 # Defaults
 #==============================================================================
-    def _visualizer_default(self):
-        v = StageVisualizer(stage_map=self._stage_map)
-        return v
+
 
     def _video_server_default(self):
         return VideoServer(video=self.video)

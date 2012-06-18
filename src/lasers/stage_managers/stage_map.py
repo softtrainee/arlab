@@ -45,6 +45,7 @@ class SampleHole(HasTraits):
     interpolated = False
     corrected = False
     interpolation_holes = None
+
     nominal_position = Property(depends_on='x,y')
     corrected_position = Property(depends_on='x_cor,y_cor')
 
@@ -123,7 +124,7 @@ class StageMap(Loggable):
             nxs = []
             nys = []
             iholes = []
-            n = 2
+            n = 3
             for sd in range(n):
                 xi, yi, hi = self._calculated_interpolated_position(h, sd + 1)
                 #do simple weighting by distance
@@ -139,13 +140,12 @@ class StageMap(Loggable):
                 #verify within tolerance
                 tol = h.dimension * 0.85
 
-                hx, hy = self.map_to_calibration(h.nominal_position,
-                                                 cpos, rotation
-                                                 )
+                hx, hy = self.map_to_calibration(h.nominal_position)
                 if abs(nx - hx) < tol and abs(ny - hy) < tol:
                     h.interpolated = True
                     h.corrected = True
-                    h.interpolation_holes = iholes
+
+                    h.interpolation_holes = set(iholes)
 
                     h.x_cor = nx
                     h.y_cor = ny
