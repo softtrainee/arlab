@@ -399,13 +399,17 @@ class Circle(MarkupItem):
 
     def _render_(self, gc):
         x, y = self.get_xy()
-        gc.arc(x, y, self.radius, 0, 360)
+#        print 'asaaaa', self.radius
+        r = self.map_dimension(self.radius)
+#        print 'ads', r, self.radius
+        gc.arc(x, y, r, 0, 360)
         if self.fill:
             gc.fill_path()
 
     def is_in(self, event):
         x, y = self.get_xy()
-        if ((x - event.x) ** 2 + (y - event.y) ** 2) ** 0.5 < self.radius:
+        r = self.map_dimension(self.radius)
+        if ((x - event.x) ** 2 + (y - event.y) ** 2) ** 0.5 < r:
             return True
 
 
@@ -558,6 +562,7 @@ class PointIndicator(Indicator):
         x, y = self.get_xy()
         if ((x - event.x) ** 2 + (y - event.y) ** 2) ** 0.5 < self.radius:
             return True
+
     def adjust(self, dx, dy):
         super(PointIndicator, self).adjust(dx, dy)
         self.hline.adjust(dx, dy)

@@ -341,6 +341,7 @@ class VideoStageManager(StageManager, Videoable):
     def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
         rpos = None
+        interp = False
         if self.auto_center:
             newpos = None
             for _t in range(max(1, ntries)):
@@ -368,13 +369,14 @@ class VideoStageManager(StageManager, Videoable):
                 if rpos:
                     s = '{:0.3f},{:0.3f}'
                     self.visualizer.record_interpolation(holenum, *rpos)
+                    interp = True
                 else:
                     s = 'None'
 
                 self.info('interpolated position= {}'.format(s))
 
 
-        return rpos
+        return rpos, interp
 
 #==============================================================================
 # handlers

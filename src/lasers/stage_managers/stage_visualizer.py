@@ -16,22 +16,22 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Str, on_trait_change, \
-    Bool, Tuple, Float, Int
-from traitsui.api import View, Item, TableEditor
+    Bool, Tuple, Float
+from traitsui.api import View, Item, HGroup
 from enable.component_editor import ComponentEditor
 import apptools.sweet_pickle as pickle
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
+import os
+import random
+
+from threading import Thread
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.canvas.canvas2D.stage_visualization_canvas import StageVisualizationCanvas, \
     SampleHole
 from src.lasers.stage_managers.stage_map import StageMap
 from src.helpers.paths import map_dir, data_dir
-import os
-import random
-import time
-from threading import Thread
-from pyface.timer.do_later import do_later
 from src.helpers.filetools import unique_path
 
 
@@ -104,37 +104,37 @@ class StageVisualizer(Manager):
         if isinstance(obj, SampleHole):
             correction = ''
             if obj.hole.corrected:
-                correction = 'corrected= {:0.3f},{:0.3f}'.format(obj.hole.x_cor,
+                correction = 'cor.= ({:0.2f},{:0.2f})'.format(obj.hole.x_cor,
                                                     obj.hole.y_cor
                                                     )
-            interpolation = ''
-            if obj.hole.interpolated:
-                h = ', '.join(sorted(set([iph.id for iph in obj.hole.interpolation_holes])))
-                interpolation = 'interpolation holes= {}'.format(h)
+#            interpolation = ''
+#            if obj.hole.interpolated:
+#                h = ', '.join(sorted(set([iph.id for iph in obj.hole.interpolation_holes])))
+#                interpolation = 'interpolation holes= {}'.format(h)
 
-            self.status_text = 'hole = {} ({},{}) {}  {}'.format(obj.name,
+            self.status_text = 'hole = {} nom.= ({:0.2f},{:0.2f}) cal.=({:0.2f},{:0.2f}) {}'.format(obj.name,
+                                         obj.hole.x,
+                                         obj.hole.y,
                                          obj.x,
                                          obj.y,
-                                         correction,
-                                         interpolation
-                                         )
+                                         correction)
     def _use_calibration_changed(self):
         ca = self.canvas
         ca.build_map(self.stage_map,
                      calibration=[self.center,
                                   self.rotation] if self.use_calibration else None
                      )
-
     def traits_view(self):
-        v = View(Item('test'),
-                 Item('use_calibration'),
-                 Item('center'),
-                 Item('rotation'),
-                 Item('canvas', editor=ComponentEditor(width=700,
-                                                       height=700),
+        v = View(
+#                 Item('test'),
+                 HGroup(Item('center', style='readonly'), Item('rotation', style='readonly')),
+                 Item('canvas', editor=ComponentEditor(width=550,
+                                                       height=550),
                       show_label=False),
 
-                 statusbar='status_text'
+                 statusbar='status_text',
+                 title='Stage Visualizer',
+                 resizable=True
                  )
         return v
 
@@ -154,6 +154,19 @@ class StageVisualizer(Manager):
 #===============================================================================
 # testing
 #===============================================================================
+    def test_view(self):
+        v = View(Item('test'),
+                 Item('use_calibration'),
+                 Item('center'),
+                 Item('rotation'),
+                 Item('canvas', editor=ComponentEditor(width=700,
+                                                       height=700),
+                      show_label=False),
+
+                 statusbar='status_text'
+                 )
+        return v
+
     def _test_fired(self):
         t = Thread(target=self._execute_)
         t.start()
@@ -197,8 +210,8 @@ class StageVisualizer(Manager):
 #        vs.remove(6)
         vs.remove(30)
 #        vs = range(50, 60)
-        for i in vs:
-#        for i in [21, 29, 30]:
+#        for i in vs:
+        for i in [21, 29, 30]:
 
             h = sm.get_hole(str(i + 1))
             x, y = self._apply_calibration(h)
@@ -218,7 +231,7 @@ class StageVisualizer(Manager):
         self._test_interpolate_all()
 
     def _add_error(self, a):
-        return a
+#        return a
         return a + (0.5 - random.random()) / 2.
 
     def _test_interpolate_one(self):
@@ -247,7 +260,7 @@ class StageVisualizer(Manager):
                 h = sm.get_hole(str(i + 1))
                 self.set_current_hole(h)
                 r = random.randint(0, 10)
-                r = 0
+#                r = 0
                 if r > 5:
                     nx, ny = self._apply_calibration(h)
                     nx = self._add_error(nx)
@@ -287,6 +300,6 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('sv')
     sv = StageVisualizer()
-    sv.load_visualization()
-    sv.configure_traits()
+#    sv.load_visualization()
+    sv.configure_traits(view='test_view')
 #============= EOF =============================================

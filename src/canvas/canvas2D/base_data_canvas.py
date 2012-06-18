@@ -31,7 +31,7 @@ class BaseDataCanvas(DataView):
 #    bgcolor = (0, 1.0, 0)
 #    border_visible = True
 #    use_backbuffer = True
-    bgcolor = 'lightblue'
+#    bgcolor = 'lightblue'
     x_range = Tuple
     y_range = Tuple
     view_x_range = Tuple
@@ -42,6 +42,7 @@ class BaseDataCanvas(DataView):
     show_axes = Bool(True)
     show_grids = Bool(True)
     use_zoom = Bool(True)
+    use_pan = Bool(True)
 
     plot = None
     def cmap_plot(self, z):
@@ -127,6 +128,9 @@ class BaseDataCanvas(DataView):
         if self.use_zoom:
             self.add_zoom()
 
+        if self.use_pan:
+            self.add_pan()
+
         self.index_mapper.on_trait_change(self.update, 'updated')
         self.value_mapper.on_trait_change(self.update, 'updated')
 
@@ -140,7 +144,6 @@ class BaseDataCanvas(DataView):
 
         self.value_axis.visible = self.show_axes
         self.index_axis.visible = self.show_axes
-
         self.x_grid.visible = self.show_grids
         self.y_grid.visible = self.show_grids
 
@@ -153,12 +156,12 @@ class BaseDataCanvas(DataView):
         except AttributeError:
             pass
 
-    def set_mapper_limits(self, mapper, limits):
+    def set_mapper_limits(self, mapper, limits, pad=0):
         '''
         '''
         mapper = getattr(self, '{}_mapper'.format(mapper))
-        mapper.range.low_setting = limits[0]
-        mapper.range.high_setting = limits[1]
+        mapper.range.low_setting = limits[0] - pad
+        mapper.range.high_setting = limits[1] + pad
         self.request_redraw()
 
     def get_mapper_limits(self, mapper):

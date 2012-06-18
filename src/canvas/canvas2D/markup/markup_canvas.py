@@ -133,16 +133,19 @@ class MarkupCanvas(BaseDataCanvas):
         '''
     
         '''
+        test = lambda x: self.invalid_layers and x in self.invalid_layers
         try:
             gc.save_state()
 
             for i, l in enumerate(self.markupcontainer.layers):
-                if self.invalid_layers and i in self.invalid_layers:
+                if test(i):
                     continue
 
                 for obj in l.itervalues():
-                    if hasattr(obj, 'render'):
+                    try:
                         obj.render(gc)
+                    except AttributeError:
+                        continue
         except RuntimeError:
             pass
         finally:
@@ -159,11 +162,14 @@ class MarkupCanvas(BaseDataCanvas):
 
             items = self.markupcontainer.itervalues()
 
-        for item in items:
-
-            if hasattr(item, 'is_in'):
-                if item.is_in(event):
-                    return item
+        return next((item for item in items if hasattr(item, 'is_in') and item.is_in(event)), None)
+#        for item in items:
+#            try:
+#                if item.is_in(event):
+#                    return item
+#            except AttributeError:
+#                continue
+#            if hasattr(item, 'is_in'):
 
     def select_right_down(self, event):
         obj = self._over_item(event)
