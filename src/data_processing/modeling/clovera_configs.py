@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  Str, Int, Float, Bool, Enum, Array
+from traits.api import  Str, Int, Float, Bool, Array
 from traitsui.api import View, Item, ModalButtons, Handler, \
      EnumEditor, HGroup, Label, Spring
 #============= standard library imports ========================
@@ -70,7 +70,8 @@ class AutoUpdateParseConfig(BaseConfig):
         v = View('tempoffset',
                'timeoffset',
                buttons=self._get_buttons(),
-               kind='livemodal'
+               kind='livemodal',
+               title='Autoupdate Parse Configuration'
                )
         return v
 
@@ -171,10 +172,21 @@ class CorrelationConfig(BaseConfig):
     #===========================================================================
     f_min = Float
     f_max = Float
-    _dump_attrs = ['f_min', 'f_max']
+
+
+    _dump_attrs = ['_f_min', '_f_max']
+
+    def _get_fmin(self):
+        return self.f_min / 100.
+    def _get_fmax(self):
+        return self.f_max / 100.
+
+    _f_min = property(fget=_get_fmin)
+    _f_max = property(fget=_get_fmax)
+
     def traits_view(self):
-        v = View(Item('f_min', label='F minimum'),
-                 Item('f_max', label='F maximum'),
+        v = View(Item('f_min', label='F minimum (%)'),
+                 Item('f_max', label='F maximum (%)'),
                  buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
                  title='Correlation Configuration',
@@ -246,7 +258,7 @@ class AgesmeConfig(BaseConfig):
 
     def traits_view(self):
         v = View(
-                 HGroup(Label('Age'), Spring(width=55, springy=False), Label('Temp')),
+                 HGroup(Label('Age (Ma)'), Spring(width=55, springy=False), Label('Temp (C)')),
                  Item('cooling_history', show_label=False),
                  Item('geometry', show_label=False,
                       editor=EnumEditor(values={1:'1:Slabs',
