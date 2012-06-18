@@ -246,8 +246,8 @@ class HoleDetector(Detector):
 
         #verify that this target is within 1 radius of the uncorrected by calibrated position
         lm = self.parent.laser_manager
-        h = lm.stage_manager.get_hole_by_name(holenum)
-        calpos = lm.stage_manager.get_calibrated_position(*(h.x, h.y))
+        h = lm.stage_manager.get_hole(holenum)
+        calpos = lm.stage_manager.get_calibrated_position((h.x, h.y))
 
         if h is None:
             return

@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Int, Property, Instance, \
-    Button, List, String, Event, Bool, on_trait_change, Str
+    Button, List, String, Event, Bool, on_trait_change, Str, CStr
 from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, spring, \
      EnumEditor, InstanceEditor
 from apptools.preferences.preference_binding import bind_preference
@@ -93,8 +93,8 @@ class StageManager(Manager):
     stop_label = String('Stop')
 
     hole_thread = None
-    hole = Property(Str(enter_set=True, auto_set=False), depends_on='_hole')
-    _hole = Str
+    hole = Property(String(enter_set=True, auto_set=False), depends_on='_hole')
+    _hole = String
 
     point_thread = None
     point = Property(Int(enter_set=True, auto_set=False), depends_on='_point')
@@ -274,7 +274,10 @@ class StageManager(Manager):
     def _get_hole_by_position(self, x, y):
         if self._stage_map:
             return self._stage_map._get_hole_by_position(x, y)
-
+    
+    def get_hole(self,name):
+        if self._stage_map:
+            return self._stage_map.get_hole(name)
 #
 #    def do_pattern(self, patternname):
 #        return self.pattern_manager.execute_pattern(patternname)
@@ -290,7 +293,7 @@ class StageManager(Manager):
                                               self.stage_controller._y_position,
                                               )
             if hole is not None:
-                self._hole = int(hole.id)
+                self._hole = str(hole.id)
 
     def move_to_load_position(self):
         '''
@@ -717,7 +720,7 @@ class StageManager(Manager):
 
             def _filter(hole, x, y, tol=0.1):
                 cx, cy = smap.map_to_calibration((hole.x, hole.y), cpos, rot)
-                return abs(cx, x) < tol and abs(cy, y) < tol
+                return abs(cx-x) < tol and abs(cy- y) < tol
 
             return next((si for si in smap.sample_holes
                             if _filter(si, x, y)
@@ -748,9 +751,10 @@ class StageManager(Manager):
         if self.canvas.markup:
             self.warning_dialog('Cannot move while adding/editing points')
             return
-
-        if self.hole_thread is None and v is not self._hole:
-            v = str(v)
+        
+        v=str(v)
+        if self.hole_thread is None and v != self._hole:
+#            v = str(v)
             pos = self._stage_map.get_hole_pos(v)
             if pos is not None:
                 self.visualizer.set_current_hole(v)
