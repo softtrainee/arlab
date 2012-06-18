@@ -94,7 +94,11 @@ class Modeler(Loggable):
                 auto_files = True
                 if auto_files:
                     for rid in rids:
-                        self.execute_files(rid=rid, root=f.path + '_data')
+                        root = f.path + '_data'
+                        with open(os.path.join(root, rid, 'samples.lst'), 'w') as s:
+                            s.write('{}'.format(rid))
+
+                        self.execute_files(rid=rid, root=root)
 
         #=======================================================================
         # debug

@@ -60,7 +60,7 @@ class MDDModelerActionSet(WorkbenchActionSet):
                       path=modeling_path,
                     class_name='{}AgesmeAction'.format(action_path)
                     ),
-               Action(name='Parse Autoupdate',
+               Action(name='Parse Autoupdate...',
                       path=mdd_path,
                     class_name='{}ParseAutoupdateAction'.format(action_path)
                     ),
