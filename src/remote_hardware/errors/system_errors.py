@@ -30,6 +30,13 @@ class PyScriptErrorCode(ErrorCode):
 
 
 #===== debug errors =====
+class FuncCallErrorCode(ErrorCode):
+    msg='func call problem: err= {} args= {}'
+    def __init__(self, err,data, *args, **kw):
+        self.msg = self.msg.format(err,data)
+        super(FuncCallErrorCode, self).__init__(*args, **kw)
+
+
 class InvalidCommandErrorCode(ErrorCode):
     msg = 'invalid command: {}'
     code = 1

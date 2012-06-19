@@ -42,6 +42,8 @@ class DBResult(BaseDBResult):
     filename = Str
     window_x = 0.1
     window_y = 0.1
+    window_width=None
+    window_height=None
 
     title_str = Str('Base')
     data_manager = None
@@ -165,17 +167,21 @@ class DBResult(BaseDBResult):
 
         for i, ai in enumerate(agrps):
             grps.content.insert(i, ai)
-
-        return View(grps,
-
-#                    width=800,
-#                    height=0.85,
+            
+        v= View(grps,
                     resizable=self.resizable,
                     x=self.window_x,
                     y=self.window_y,
                     title=self.title
                     )
+        if self.window_width:
+            v.width=self.window_width
+        if self.window_height:
+            v.height=self.window_height
+        
+      
 
+        return v
 class RIDDBResult(DBResult):
     runid = Str
 #============= EOF =============================================
