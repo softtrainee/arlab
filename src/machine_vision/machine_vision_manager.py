@@ -118,8 +118,11 @@ class MachineVisionManager(Manager):
         pass
 
     def locate_target(self, cx, cy, holenum, *args, **kw):
+
         if self.hole_detector is not None:
-            r = self.hole_detector.locate_sample_well(cx, cy, holenum, **kw)
+            sm = self.parent._stage_map
+            holedim = sm.g_dimension * self.pxpermm / 2.0
+            r = self.hole_detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
 #            sm = self.parent._stage_map
 
             #all handled in video stage man
@@ -264,8 +267,8 @@ class MachineVisionManager(Manager):
             sm = self.parent._stage_map
             ca = self.parent.canvas.calibration_item
             if ca is not None:
-                rot = ca.get_rotation()
-                cpos = ca.get_center_position()
+                rot = ca.rotation
+                cpos = ca.center
 
         tm = TrayMapper(
                         #image=self.image,

@@ -21,33 +21,32 @@ from chaco.api import AbstractOverlay
 
 #============= local library imports  ==========================
 from src.image.video import Video
+from src.helpers.memo import memoized
 
 
 class VideoUnderlay(AbstractOverlay):
     '''
     '''
     video = Instance(Video)
-    swap_rb = True
-    mirror = False
-    flip = False
+#    swap_rb = True
+#    mirror = False
+#    flip = False
 
+#    @memoized
     def overlay(self, component, gc, *args, **kw):
         '''
 
         '''
         try:
             gc.save_state()
-            dc = component._window.dc
-            bitmap = self.video.get_bitmap(
-                                         flip=not self.flip,
-                                         swap_rb=self.swap_rb,
-                                         mirror=self.mirror,
-                                         size=map(int, (component.width, component.height))
-                                         )
-            if bitmap:
-                x = component.x
-                y = component.y
-                dc.DrawBitmap(bitmap, x, y, False)
+            img = self.video.get_frame(
+#                                       flip=not self.flip,
+                                         #swap_rb=self.swap_rb,
+#                                         mirror=self.mirror,
+                                         size=map(int, (component.width, component.height)))
+            gc.clip_to_rect(component.x, component.y,
+                            component.width, component.height)
+            gc.draw_image(img.ndarray)
 
         except (AttributeError, UnboundLocalError), e:
             print e

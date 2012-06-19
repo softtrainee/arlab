@@ -575,9 +575,12 @@ def write_frame(writer, src):
     writer << src
 
 
-def new_video_writer(path, fps, size):
-    return cv.VideoWriter(path, cv.CV_FOURCC('D', 'I', 'V', 'X'),
-                          fps, cv.Size(*size), True)
+def new_video_writer(path, fps, size, use_color=False):
+    return cv.VideoWriter(path,
+#                          cv.CV_FOURCC('D', 'I', 'V', 'X'),
+                          cv.CV_FOURCC('H', '2', '6', '4'),
+
+                          fps, cv.Size(*size), use_color)
 
 def save_image(src, path):
     cv.imwrite(path, src)

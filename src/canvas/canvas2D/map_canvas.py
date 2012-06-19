@@ -83,8 +83,8 @@ class MapCanvas(MarkupCanvas):
                         if event.item.right is ca.right:
                             return
 
-                rot = ca.get_rotation()
-                cpos = ca.get_center_position()
+                rot = ca.rotation
+                cpos = ca.center
 
                 aff = AffineTransform()
                 aff.translate(*cpos)
@@ -115,8 +115,8 @@ class MapCanvas(MarkupCanvas):
                 hole = obj.id
                 pos = obj.x, obj.y
 
-                rot = ca.get_rotation()
-                cpos = ca.get_center_position()
+                rot = ca.rotation
+                cpos = ca.center
 
                 aff = AffineTransform()
                 aff.translate(*cpos)
@@ -170,10 +170,10 @@ class MapCanvas(MarkupCanvas):
             if ca:
                 ox, oy = self.map_screen([(0, 0)])[0]
 
-                cx, cy = self.map_screen([ca.get_center_position()])[0]
+                cx, cy = self.map_screen([ca.center])[0]
 #                cx += 1
 #                cy += 1
-                rot = ca.get_rotation()
+                rot = ca.rotation
 #                
 #                #sw=self.bounds[0]/float(self.outer_bounds[0])
 #                #sh=self.bounds[1]/float(self.outer_bounds[1])

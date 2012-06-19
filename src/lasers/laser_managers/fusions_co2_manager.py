@@ -26,8 +26,6 @@ from src.monitors.fusions_laser_monitor import FusionsLaserMonitor
 from src.helpers.paths import co2laser_db, co2laser_db_root
 from src.monitors.fusions_co2_laser_monitor import FusionsCO2LaserMonitor
 
-
-
 class FusionsCO2Manager(FusionsLaserManager):
     '''
     '''

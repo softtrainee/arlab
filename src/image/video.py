@@ -19,7 +19,7 @@
 #=============enthought library imports=======================
 from traits.api import  Any, Bool, Float, List
 #=============standard library imports ========================
-from threading import Thread, Lock
+from threading import Thread, Lock, Event
 
 #=============local library imports ===========================
 #from ctypes_opencv import cvCreateCameraCapture, cvQueryFrame, cvWriteFrame
@@ -37,7 +37,8 @@ from src.image.image import Image
 #from multiprocessing.process import Process
 from cvwrapper import get_capture_device, query_frame, write_frame, \
     load_image, new_video_writer, grayspace, get_nframes, \
-    set_frame_index, get_fps, set_video_pos, get_frame_size
+    set_frame_index, get_fps, set_video_pos, get_frame_size, swapRB, \
+    crop
 
 DEBUG = False
 #DEBUG = True
@@ -117,44 +118,52 @@ class Video(Image):
 ##                    src = '/Users/ross/Sandbox/tray_screen_shot3.tiff'
 #            src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
 #            return load_image(src)
-
-        if self.cap is not None:
+        cap = self.cap
+        if cap is not None:
 #            if lock:
             with self._lock:
-                self._frame = query_frame(self.cap)
+                f = query_frame(cap)
 #            else:
 #                self._frame = query_frame(self.cap)
-            return self._frame
+            return f
 
 #                return  cvQueryFrame(self.cap)
 
     def start_recording(self, path, user=None):
-        fps = 1 / 8.
-        size = 640 / 2, 480 / 2
-
+        self._stop_recording_event = Event()
         def __record():
+            fps = 1 / 8.
             if self.cap is None:
                 self.open(user=user)
 
             if self.cap is not None:
                 self._recording = True
+                if self._frame is None:
+                    self.get_frame()
 
+#                size = map(int, self._frame.size())
+                w = 200
+                h = 200
+                size = (w, h)
                 writer = new_video_writer(path, 1 / fps,
                                           size
                                           )
+                sleep = time.sleep
+                ctime = time.time
 
-                while self._recording:
-                    st = time.time()
-                    src = self._frame
+                stop = self._stop_recording_event.isSet
 
-                    if src is None:
-                        src = self.get_frame(clone=True)
-                    self._draw_crosshairs(src)
-                    write_frame(writer, grayspace(src))
+                fsize = self._frame.size()
+                x = (fsize[0] - size[0]) / 2
+                y = (fsize[1] - size[1]) / 2
 
-                    d = fps - (time.time() - st)
-                    if d >= 0:
-                        time.sleep(d)
+                while not stop():
+                    st = ctime()
+
+                    f = crop(self._frame.clone(), x, y, w, h)
+#                    f = self._frame#.clone()
+                    write_frame(writer, grayspace(f))
+                    sleep(max(0.001, fps - (ctime() - st)))
 
         t = Thread(target=__record)
         t.start()
@@ -162,6 +171,7 @@ class Video(Image):
     def stop_recording(self):
         '''
         '''
+        self._stop_recording_event.set()
         self._recording = False
 
     def record_frame(self, path, crop=None, **kw):

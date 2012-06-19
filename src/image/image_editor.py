@@ -155,49 +155,6 @@ class _ImageEditor(Editor):
         '''
         '''
         display = self.value.render_images(src)
-#        if isinstance(src, list):
-#            if len(src) > 1:
-#                display = self.value.render_images(src)
-#                nsrc = len(src)
-#                rows = math.floor(math.sqrt(nsrc))
-#                cols = rows
-#                if rows * rows < nsrc:
-#                    cols = rows + 1
-#                    if cols * rows < nsrc:
-#                        rows += 1
-#
-#                size = 300
-#
-#                #create display image
-#                w = self.value.width
-#                h = self.value.height
-#
-#                display = cvCreateImage(CvSize(w, h), 8, 3)
-#
-#                cvZero(display)
-#                cvAddS(display, CvScalar(200, 200, 200), display)
-#                padding = 12
-#                m = padding
-#                n = padding
-#                for i, s in enumerate(src):
-#                    x = s.width
-#                    y = s.height
-#                    ma = float(max(x, y))
-#                    scale = ma / size
-#                    if i % cols == 0 and m != padding:
-#                        m = padding
-#                        n += size + padding
-#
-#                    cvSetImageROI(display, CvRect(int(m), int(n), int(x / scale), int(y / scale)))
-#                    cvResize(s, display)
-#                    cvResetImageROI(display)
-#                    m += (padding + size)
-#            else:
-#                display = 
-
-#        else:
-#            display = src
-
         self._display_image(dc, display)
 
     def _display_points(self, dc, ptlist, radius=5):

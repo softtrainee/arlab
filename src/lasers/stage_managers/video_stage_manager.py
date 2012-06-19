@@ -39,7 +39,7 @@ import os
 from multiprocessing.process import Process
 from src.helpers.archiver import Archiver
 from src.image.video_server import VideoServer
-from src.lasers.stage_managers.stage_visualizer import StageVisualizer
+from src.image.video import Video
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -47,10 +47,10 @@ except ImportError:
     from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas as VideoLaserTrayCanvas
 
 #from calibration_manager import CalibrationManager
-class VideoStageManager(StageManager, Videoable):
+class VideoStageManager(StageManager):
     '''
     '''
-
+    video = Instance(Video)
     canvas_editor_klass = VideoComponentEditor
 #    calibration_manager = Instance(CalibrationManager)
     camera_xcoefficients = Property(String(enter_set=True, auto_set=False),
@@ -82,7 +82,7 @@ class VideoStageManager(StageManager, Videoable):
     pxpercmx = DelegatesTo('camera_calibration_manager')
     pxpercmy = DelegatesTo('camera_calibration_manager')
 
-    auto_center = Bool(True)
+    use_autocenter = Bool(True)
     use_auto_center_interpolation = Bool(True)
 
     autocenter_button = Button('AutoCenter')
@@ -108,7 +108,7 @@ class VideoStageManager(StageManager, Videoable):
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
-        bind_preference(self, 'auto_center', '{}.auto_center'.format(pref_id))
+        bind_preference(self, 'use_autocenter', '{}.use_autocenter'.format(pref_id))
         bind_preference(self.pattern_manager,
                         'record_patterning',
                          '{}.record_patterning'.format(pref_id))
@@ -129,10 +129,17 @@ class VideoStageManager(StageManager, Videoable):
                         '{}.use_video_server'.format(pref_id)
                         )
 
-    def start_recording(self, path=None, basename='vm_recording',
-                         use_dialog=False, user='remote'):
+    def start_recording(self, new_thread=True, **kw):
         '''
         '''
+        if new_thread:
+            t = Thread(target=self._start_recording, kwargs=kw)
+            t.start()
+        else:
+            self._start_recording(**kw)
+
+    def _start_recording(self, path=None, basename='vm_recording',
+                         use_dialog=False, user='remote',):
         self.info('start video recording ')
         if path is None:
             if use_dialog:
@@ -174,8 +181,11 @@ class VideoStageManager(StageManager, Videoable):
 #            t = Timer(4, self.video.close, kwargs=dict(user=user))
 #            t.start()
         if self.video._recording:
-            t = Timer(delay, close)
-            t.start()
+            if delay:
+                t = Timer(delay, close)
+                t.start()
+            else:
+                close()
 #        self.video.close(user=user)
 
     def update_camera_params(self, obj, name, old, new):
@@ -281,7 +291,7 @@ class VideoStageManager(StageManager, Videoable):
 
     def _sconfig__group__(self):
         g = super(VideoStageManager, self)._sconfig__group__()
-        mv = Group(HGroup(Item('auto_center', label='Enabled'),
+        mv = Group(HGroup(Item('use_autocenter', label='Enabled'),
                           Item('autocenter_button', show_label=False, enabled_when='auto_center')),
                    Item('mapcenters_button', show_label=False),
                    Item('configure_mv_button', show_label=False),
@@ -318,17 +328,22 @@ class VideoStageManager(StageManager, Videoable):
 
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.auto_center:
+            sm = self._stage_map
 #            time.sleep(0.75)
             self.video.open(user='autocenter')
             pos, interp = self._autocenter(holenum=holenum, ntries=2)
             if pos:
                 #add an adjustment value to the stage map
-                self._stage_map.set_hole_correction(holenum, *pos)
-                self._stage_map.dump_correction_file()
+                sm.set_hole_correction(holenum, *pos)
+                sm.dump_correction_file()
 
                 f = 'interpolation' if interp else 'correction'
-                func = getattr(self.visualizer, 'record_{}'.format(f))
-                func(holenum, *pos)
+            else:
+                f = 'uncorrected'
+                pos = sm.get_hole(holenum).nominal_position
+            func = getattr(self.visualizer, 'record_{}'.format(f))
+            func(holenum, *pos)
+
 
             self.video.close(user='autocenter')
 
@@ -368,7 +383,7 @@ class VideoStageManager(StageManager, Videoable):
                 rpos = self._stage_map.get_interpolated_position(holenum)
                 if rpos:
                     s = '{:0.3f},{:0.3f}'
-                    self.visualizer.record_interpolation(holenum, *rpos)
+#                    self.visualizer.record_interpolation(holenum, *rpos)
                     interp = True
                 else:
                     s = 'None'
@@ -447,7 +462,10 @@ class VideoStageManager(StageManager, Videoable):
 #==============================================================================
 # Defaults
 #==============================================================================
+    def _video_default(self):
 
+        v = Video()
+        return v
 
     def _video_server_default(self):
         return VideoServer(video=self.video)

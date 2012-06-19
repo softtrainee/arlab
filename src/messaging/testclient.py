@@ -296,15 +296,23 @@ def laser_client():
 
 def power_test():
     c = Client(
-               port=1067,
+               port=1068,
+               host='129.138.12.141',
+#                host='192.168.0.253',
                ask_id='E')
 
-    for i in range(500):
-        print i
-        c.ask('Enable')
-        time.sleep(3)
-        c.ask('Disable')
-        time.sleep(1)
+    ask = c.ask
+    ask('Enable')
+
+    ask('SetLaserPower 10')
+    time.sleep(4)
+    ask('Disable')
+#    for i in range(500):
+#        print i
+#        c.ask('Enable')
+#        time.sleep(3)
+#        c.ask('Disable')
+#        time.sleep(1)
 
 def timed_flag_test():
     c = Client(
@@ -331,7 +339,8 @@ def mass_spec_param_test():
     c.ask('Read pump_time')
 
 if __name__ == '__main__':
-    diode_client()
+#    diode_client()
+    power_test()
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
 #              'benchmark_unix_tcp_no_log.npz'

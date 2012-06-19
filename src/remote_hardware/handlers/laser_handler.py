@@ -87,7 +87,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
             err = DisableErrorCode(err)
 
         if manager.record_lasing:
-            manager.stop_power_recording()
+            manager.stop_power_recording(delay=5)
             manager.stage_manager.stop_recording(delay=5)
 
         return self.error_response(err)

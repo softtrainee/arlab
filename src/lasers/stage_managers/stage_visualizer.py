@@ -51,6 +51,33 @@ class StageVisualizer(Manager):
 #        p = os.path.join(data_dir, 'stage_visualizer')
         self.path, _ = unique_path(stage_visualizer_dir, 'vis', filetype='')
 
+    def update_calibration(self, obj, name, new):
+        self.clear()
+        if name == 'calibration_item':
+            self.center = new.center
+            self.rotation = new.rotation
+        else:
+            setattr(self, name, new)
+
+        self.canvas.build_map(self.stage_map, calibration=[self.center,
+                                                           self.rotation])
+    def set_calibration(self, ca):
+        pass
+#        self.clear()
+#        self.center = ca.get_center_position()
+#        self.rotation = ca.get_rotation()
+#
+#        self.canvas.build_map(self.stage_map, calibration=[self.center,
+#                                                           self.rotation])
+
+    def clear(self):
+        sm = self.stage_map
+
+        sm.clear_correction_file()
+        sm.clear_interpolations()
+
+        self.canvas.clear()
+
     def dump(self):
         with open(self.path, 'wb') as f:
             d = dict(center=self.center,
@@ -61,10 +88,8 @@ class StageVisualizer(Manager):
             pickle.dump(d, f)
 
     def load_visualization(self):
-#        p = self.open_file_dialog()
-        p = os.path.join(data_dir, 'stage_visualizer',
-                       'vis001'
-                       )
+        p = self.open_file_dialog()
+
         if p is not None:
             with open(p, 'rb') as f:
 #                try:
@@ -85,6 +110,11 @@ class StageVisualizer(Manager):
     def set_current_hole(self, h):
         self.canvas.set_current_hole(h)
         self.canvas.request_redraw()
+
+    def record_uncorrected(self, h, dump=True, *args):
+        self.canvas.record_uncorrected(h)
+        if dump:
+            self.dump()
 
     def record_correction(self, h, x, y, dump=True):
         self.canvas.record_correction(h, x, y)
@@ -127,7 +157,7 @@ class StageVisualizer(Manager):
     def traits_view(self):
         v = View(
 #                 Item('test'),
-                 HGroup(Item('center', style='readonly'), Item('rotation', style='readonly')),
+#                 HGroup(Item('center', style='readonly'), Item('rotation', style='readonly')),
                  Item('canvas', editor=ComponentEditor(width=550,
                                                        height=550),
                       show_label=False),
@@ -146,7 +176,8 @@ class StageVisualizer(Manager):
 
     def _canvas_default(self):
         c = StageVisualizationCanvas()
-        c.build_map(self.stage_map)
+        c.build_map(self.stage_map, calibration=(self.center,
+                                                 self.rotation))
 
         return c
 
@@ -186,8 +217,8 @@ class StageVisualizer(Manager):
         sm = self.stage_map
         ca = self.canvas
 
-        sm.clear_correction_file()
-        ca.clear()
+        self.clear()
+
         ca.build_map(sm, calibration=[self.center,
                                       self.rotation] if self.use_calibration else None
                       )
@@ -210,8 +241,8 @@ class StageVisualizer(Manager):
 #        vs.remove(6)
         vs.remove(30)
 #        vs = range(50, 60)
-#        for i in vs:
-        for i in [21, 29, 30]:
+        for i in vs:
+#        for i in [21, 29, 30]:
 
             h = sm.get_hole(str(i + 1))
             x, y = self._apply_calibration(h)
@@ -222,7 +253,7 @@ class StageVisualizer(Manager):
 #            ca.record_correction(h, x, y)
 #            sm.set_hole_correction(h.id, x, y)
             r = random.randint(0, 10)
-            r = 7
+#            r = 7
             if r > 6:
                 self.record_correction(h, x, y, dump=False)
                 sm.set_hole_correction(h.id, x, y)
@@ -260,7 +291,7 @@ class StageVisualizer(Manager):
                 h = sm.get_hole(str(i + 1))
                 self.set_current_hole(h)
                 r = random.randint(0, 10)
-#                r = 0
+                r = 0
                 if r > 5:
                     nx, ny = self._apply_calibration(h)
                     nx = self._add_error(nx)
@@ -282,6 +313,9 @@ class StageVisualizer(Manager):
                         nx = args[0]
                         ny = args[1]
                         self.record_interpolation(h, nx, ny , color, dump=False)
+                    else:
+                        if not h.has_correction():
+                            self.record_uncorrected(h)
 #                time.sleep(0.5)
 #                do_later(ca.invalidate_and_redraw)
 

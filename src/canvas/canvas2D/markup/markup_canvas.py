@@ -142,6 +142,7 @@ class MarkupCanvas(BaseDataCanvas):
                     continue
 
                 for obj in l.itervalues():
+#                    print obj
                     try:
                         obj.render(gc)
                     except AttributeError:

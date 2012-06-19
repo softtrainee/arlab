@@ -73,7 +73,7 @@ class CO2HoleDetector(HoleDetector):
             src = asMat(img_rescale)
         return src
 
-    def locate_sample_well(self, cx, cy, holenum, **kw):
+    def locate_sample_well(self, cx, cy, holenum, holedim, **kw):
         if self.target_image is not None:
             self.target_image.close()
 
@@ -107,22 +107,22 @@ class CO2HoleDetector(HoleDetector):
         src = self.smooth(src)
         im.set_frame(0, colorspace(src))
 
-        npos = self._segment_source(src, self.segmentation_style, cx, cy, holenum)
+        npos = self._segment_source(src, self.segmentation_style, cx, cy, holenum, holedim)
         if not npos:
             #try another segementation style
             for s in ['threshold', 'edge', 'region']:
                 if s is not self.segmentation_style:
-                    npos = self._segment_source(src, s, cx, cy, holenum)
+                    npos = self._segment_source(src, s, cx, cy, holenum, holedim)
                     if npos:
                         break
         return npos
 
 #                return self._get_corrected_position(args, cx, cy, holenum)
-    def _segment_source(self, src, style, cx, cy, holenum):
+    def _segment_source(self, src, style, cx, cy, holenum, holedim):
         def segment(si, **kw):
             args = func(si, **kw)
             if args:
-                npos = self._get_corrected_position(args, cx, cy, holenum)
+                npos = self._get_corrected_position(args, cx, cy, holenum, holedim)
                 if npos:
                     return npos
 
@@ -154,9 +154,8 @@ class CO2HoleDetector(HoleDetector):
             if npos:
                 return npos
 
-    def _get_corrected_position(self, args, cx, cy, holenum):
-
-        mi = 500
+    def _get_corrected_position(self, args, cx, cy, holenum, holedim):
+        mi = holedim ** 2 * 3.14 * 0.75
         if args is None:
             return
 

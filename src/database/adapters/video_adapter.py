@@ -17,13 +17,14 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.adapters.database_adapter import DatabaseAdapter
+from src.database.adapters.database_adapter import DatabaseAdapter, \
+    PathDatabaseAdapter
 from src.database.orms.video_orm import VideoTable, VideoPathTable
 from src.database.selectors.video_selector import VideoSelector
 from src.helpers.paths import co2laser_db
 
 
-class VideoAdapter(DatabaseAdapter):
+class VideoAdapter(PathDatabaseAdapter):
     test_func = None
     selector_klass = VideoSelector
     path_table = VideoPathTable

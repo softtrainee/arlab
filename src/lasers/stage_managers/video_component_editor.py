@@ -44,9 +44,9 @@ class _VideoComponentEditor(_LaserComponentEditor):
 
             self.control.Refresh()
 
-        if not self.value.pause:
-            #force  the control to refresh perodically rendering a smooth video stream
-            event.RequestMore()
+#        if not self.value.pause:
+#            #force  the control to refresh perodically rendering a smooth video stream
+        event.RequestMore()
 
 
 class VideoComponentEditor(LaserComponentEditor):
