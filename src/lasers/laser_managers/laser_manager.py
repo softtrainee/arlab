@@ -250,14 +250,17 @@ class LaserManager(Manager):
 
     def load_power_calibration(self):
         from src.lasers.power.power_calibration_manager import PowerCalibrationObject
+
         p = os.path.join(hidden_dir, '{}_power_calibration'.format(self.name))
         if os.path.isfile(p):
             self.info('loading power calibration {}'.format(p))
             with open(p, 'rb') as f:
                 try:
                     pc = pickle.load(f)
-                except pickle.PickleError:
+                except pickle.PickleError,e:
+                    self.warning('unpickling error {}'.format(e))
                     pc = PowerCalibrationObject()
+                    pc.coefficients = [1, 0]
         else:
             pc = PowerCalibrationObject()
             pc.coefficients = [1, 0]
@@ -405,4 +408,19 @@ class LaserManager(Manager):
             pul = Pulse(manager=self)
 
         return pul
+    
+if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('calib')
+    lm=LaserManager(name='FusionsDiode')
+    lm.set_laser_power(10)
+#    from src.lasers.power.power_calibration_manager import PowerCalibrationManager, PowerCalibrationObject
+#    
+#    pc=PowerCalibrationObject()
+#    pc.coefficients=[0.84,-13.76]
+#    
+#    pm=PowerCalibrationManager(parent=lm)
+#    pm._dump_calibration(pc)
+    
+#    lm.set_laser_power(10)
 #============= EOF ====================================

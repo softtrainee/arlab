@@ -238,7 +238,7 @@ class MapCanvas(MarkupCanvas):
         if ca:
             #make the crosshairs orthogonal
             gc.translate_ctm(x, y)
-            gc.rotate_ctm(math.radians(-ca.get_rotation()))
+            gc.rotate_ctm(math.radians(-ca.rotation))
             gc.translate_ctm(-x, -y)
 
         if tweak:

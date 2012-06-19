@@ -65,10 +65,13 @@ class PowerCalibrationObject(object):
         #we want x for y=power, therefore
         #subtract the requested power from the intercept coeff (b)
         #find the root of the polynominal
-
-        c[-1] -= rp
-        power = optimize.newton(poly1d(c), 1)
-        c[-1] += rp
+        
+        if c:
+            c[-1] -= rp
+            power = optimize.newton(poly1d(c), 1)
+            c[-1] += rp
+        else:
+            power=rp
         return power, c
 
 
@@ -96,8 +99,6 @@ class Parameters(HasTraits):
               Item('nintegrations'),
               Item('fit_degree', label='Fit'),
               Item('use_db'),
-
-
               )
 
 class PowerCalibrationManager(Manager):

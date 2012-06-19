@@ -56,8 +56,10 @@ class VideoResult(RIDDBResult):
     step_flag = None
 
     exportable = False
-    resizable = False
-
+    resizable = True
+    window_width=500
+    window_height=350
+    
     def isloadable(self):
         return os.path.isfile(self._get_path())
 
@@ -179,7 +181,8 @@ class VideoResult(RIDDBResult):
         vtab = VGroup(controls,
                      Item('video_image', style='custom',
                     show_label=False,
-                    width=640, height=480,
+                    width=150,height=170,
+#                    width=640, height=480,
                     editor=ImageEditor()))
         return [vtab]
 

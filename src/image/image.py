@@ -48,7 +48,7 @@ except ImportError:
 import Image as PILImage
 from pyface.timer.do_later import do_later, do_after
 
-from src.helpers.memo import memoized
+#from src.helpers.memo import memoized
 class Image(HasTraits):
     '''
     '''
@@ -136,7 +136,7 @@ class Image(HasTraits):
                 if param is None:
                     return getattr(self, p)
                 else:
-                    setattr(self, p, param)
+#                    setattr(self, p, param)
                     return param
             swap_rb = _get_param(swap_rb, 'swap_rb')
             vflip = _get_param(vflip, 'vflip')
@@ -208,15 +208,15 @@ class Image(HasTraits):
 
 #        w = sum([s.size()[0] for s in src])
 #        h = sum([s.size()[1] for s in src])
-        w = self.width
-        h = self.height - 15
-        display = new_dst(w, h, 3)
 #        print w,h, src[0].size()
         try:
+            w = self.width
+            h = self.height - 15
+            display = new_dst(w, h, 3)
             resize(src[0], w, h, dst=display)
             return display
         except:
-            pass
+            return src[0]
 #        try:
 #            s1 = src[0].ndarray
 #            s2 = src[1].ndarray

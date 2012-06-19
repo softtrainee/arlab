@@ -21,7 +21,7 @@ from chaco.api import AbstractOverlay
 
 #============= local library imports  ==========================
 from src.image.video import Video
-from src.helpers.memo import memoized
+#from src.helpers.memo import memoized
 
 
 class VideoUnderlay(AbstractOverlay):

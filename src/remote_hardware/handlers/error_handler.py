@@ -21,7 +21,8 @@
 #============= standard library imports =======================
 #============= local library imports  =========================
 from src.remote_hardware.errors.system_errors import ManagerUnavaliableErrorCode, \
-    InvalidCommandErrorCode, NoResponseErrorCode, InvalidArgumentsErrorCode
+    InvalidCommandErrorCode, NoResponseErrorCode, InvalidArgumentsErrorCode,\
+    FuncCallErrorCode
 from src.remote_hardware.errors.error import ErrorCode
 #from src.loggable import Loggable
 
@@ -47,7 +48,6 @@ class ErrorHandler:
     def check_response(self, func, manager, args):
         '''
             performs the requested command and checks for errors
-             
         '''
         result = None
         err = None
@@ -60,7 +60,7 @@ class ErrorHandler:
                 err = result
 
         except TypeError, e:
-            err = InvalidArgumentsErrorCode(args, e, logger=self.logger)
+            err = FuncCallErrorCode(e,args,logger=self.logger)
 
         return err, '{}'.format(str(result))
 

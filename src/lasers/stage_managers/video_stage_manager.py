@@ -292,7 +292,7 @@ class VideoStageManager(StageManager):
     def _sconfig__group__(self):
         g = super(VideoStageManager, self)._sconfig__group__()
         mv = Group(HGroup(Item('use_autocenter', label='Enabled'),
-                          Item('autocenter_button', show_label=False, enabled_when='auto_center')),
+                          Item('autocenter_button', show_label=False, enabled_when='use_autocenter')),
                    Item('mapcenters_button', show_label=False),
                    Item('configure_mv_button', show_label=False),
                    label='Machine Vision', show_border=True)
@@ -327,7 +327,7 @@ class VideoStageManager(StageManager):
 #            self._point = 0
 
     def _move_to_hole_hook(self, holenum, correct):
-        if correct and self.auto_center:
+        if correct and self.use_autocenter:
             sm = self._stage_map
 #            time.sleep(0.75)
             self.video.open(user='autocenter')
@@ -357,7 +357,7 @@ class VideoStageManager(StageManager):
         #use machine vision to calculate positioning error
         rpos = None
         interp = False
-        if self.auto_center:
+        if self.use_autocenter:
             newpos = None
             for _t in range(max(1, ntries)):
                 newpos = self.machine_vision_manager.locate_target(

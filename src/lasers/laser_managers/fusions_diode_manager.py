@@ -34,6 +34,7 @@ from src.helpers.paths import diodelaser_db, diodelaser_db_root
 from src.monitors.fusions_diode_laser_monitor import FusionsDiodeLaserMonitor
 
 from fusions_laser_manager import FusionsLaserManager
+from threading import Timer
 
 
 class FusionsDiodeManager(FusionsLaserManager):
@@ -167,7 +168,14 @@ class FusionsDiodeManager(FusionsLaserManager):
 
     def _disable_hook(self):
         if self.fiber_light.auto_onoff and not self.fiber_light.state:
-            self.fiber_light.power_on()
+            
+            fl_on=lambda:self.fiber_light.power_on()
+            if self._recording_power_state:
+                t=Timer(7, fl_on)
+                t.start()
+            else:
+                fl_on()
+                
 
         self.temperature_controller.disable()
         self.control_module_manager.disable()
