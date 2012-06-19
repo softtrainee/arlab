@@ -48,7 +48,7 @@ except ImportError:
 import Image as PILImage
 from pyface.timer.do_later import do_later, do_after
 
-
+from src.helpers.memo import memoized
 class Image(HasTraits):
     '''
     '''
@@ -62,7 +62,9 @@ class Image(HasTraits):
     graphics_container = None
 
     swap_rb = Bool(False)
-    flip = Bool(False)
+    hflip = Bool(False)
+    vflip = Bool(False)
+#    mirror = Bool(False)
     panel_size = Int(300)
 
 #    def new_graphics_container(self):
@@ -125,69 +127,37 @@ class Image(HasTraits):
 
         return flipud(a)#[lx / 4:-lx / 4, ly / 4:-ly / 4]
 
-    def get_frame(self, flip=None, mirror=False, gray=False, swap_rb=None,
+    def get_frame(self, vflip=None, hflip=None , gray=False, swap_rb=None,
                   clone=False, croprect=None, size=None, **kw):
         frame = self._get_frame(**kw)
-#        frame = None
+
         if frame is not None:
-#            if raw:
-#                frame = rframe
-#            else:
-#                frame = new_dst(rframe, width=self.width,
-#                              height=self.height)
-#            frame = new_dst(rframe, width=self.width,
-#                          height=self.height)
+            def _get_param(param, p):
+                if param is None:
+                    return getattr(self, p)
+                else:
+                    setattr(self, p, param)
+                    return param
+            swap_rb = _get_param(swap_rb, 'swap_rb')
+            vflip = _get_param(vflip, 'vflip')
+            hflip = _get_param(hflip, 'hflip')
 
-            if swap_rb is None:
-                swap_rb = self.swap_rb
-
-            self.swap_rb = swap_rb
-
-            if swap_rb:
-                #cool fractal display
-#                cvConvertImage(frame, rframe, CV_CVTIMG_SWAP_RB)
-#                cvConvertImage(rframe, rframe, CV_CVTIMG_SWAP_RB)
-#                rframe = swapRB(rframe)
-                frame = swapRB(frame)
-
-            if frame is None:
-                return
-
-#            cvResize(rframe, frame)
-#            rframe = frame
             if clone:
-#                frame = cvCloneImage(frame)
                 frame = frame.clone()
 
-            if flip is None:
-                flip = self.flip
-
-            if flip and mirror:
-                cvFlip(frame, 2)
-            elif mirror:
-                cvFlip(frame, 1)
-            elif flip:
-                cvFlip(frame, 0)
+            if swap_rb:
+                frame = swapRB(frame)
 
             if gray:
                 frame = grayspace(frame)
 
-#                frame = threshold(frame, 255)
-
-#            if self.graphics_container:
-#                draw_lines(rframe, self.graphics_container.lines)
-
             if croprect:
-
                 if len(croprect) == 2: # assume w, h
-#                    args = (frame, (frame.width - croprect[0]) / 2, (frame.height - croprect[1]) / 2, croprect[0], croprect[1])
-
                     w, h = get_size(frame)
                     croprect = (w - croprect[0]) / 2, (h - croprect[1]) / 2, croprect[0], croprect[1]
                 else:
                     pass
-#                    args = (frame,) + croprect
-                #d = frame.as_numpy_array()
+
                 d = frame.ndarray
                 rs = croprect[0]
                 re = croprect[0] + croprect[2]
@@ -195,16 +165,25 @@ class Image(HasTraits):
                 ce = croprect[1] + croprect[3]
                 d = d[cs:ce, rs:re]
                 frame = asMat(d)
-#                frame = pil_to_ipl(fromarray(d))
-
-#                crop(*args)
-#                frame = subsample(*args)
-                #pixelcrop(*args)
 
             if size:
                 frame = resize(frame, *size)
 
+            if vflip:
+                if hflip:
+                    cvFlip(frame, -1)
+                else:
+                    cvFlip(frame, 0)
+            elif hflip:
+                cvFlip(frame, 1)
+
+            self._frame = frame
             return frame
+
+    def get_image(self, **kw):
+        frame = self.get_frame(**kw)
+        return frame.to_pil_image()
+
 
     def get_bitmap(self, **kw):#flip = False, swap_rb = False, mirror = True):
         '''
@@ -224,16 +203,20 @@ class Image(HasTraits):
                                        frame.height,
                                        frame.data_as_string()
                                         )
-
+#    @memoized
     def render_images(self, src):
-        
+
 #        w = sum([s.size()[0] for s in src])
 #        h = sum([s.size()[1] for s in src])
         w = self.width
-        h = self.height-15
+        h = self.height - 15
         display = new_dst(w, h, 3)
 #        print w,h, src[0].size()
-        resize(src[0], w,h, dst=display)
+        try:
+            resize(src[0], w, h, dst=display)
+            return display
+        except:
+            pass
 #        try:
 #            s1 = src[0].ndarray
 #            s2 = src[1].ndarray
@@ -268,7 +251,6 @@ class Image(HasTraits):
 #        except TypeError:
 #            pass
 
-        return display
 
     def save(self, path, src=None):
         if src is None:

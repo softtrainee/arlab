@@ -144,7 +144,6 @@ class StageMap(Loggable):
                 if abs(nx - hx) < tol and abs(ny - hy) < tol:
                     h.interpolated = True
                     h.corrected = True
-
                     h.interpolation_holes = set(iholes)
 
                     h.x_cor = nx
@@ -369,6 +368,7 @@ class StageMap(Loggable):
     def clear_interpolations(self):
         for h in self.sample_holes:
             h.interpolated = False
+            h.interpolation_holes = None
 
     def dump_correction_file(self):
 

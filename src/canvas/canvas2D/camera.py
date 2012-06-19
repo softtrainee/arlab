@@ -133,8 +133,8 @@ class Camera(ConfigLoadable):
     pxpercm = Float
 
     swap_rb = Bool(True)
-    mirror = Bool(False)
-    flip = Bool(False)
+    vflip = Bool(False)
+    hflip = Bool(False)
     calibration_data = Instance(CalibrationData, ())
     focus_z = Float
     def save_focus(self):
@@ -159,8 +159,9 @@ class Camera(ConfigLoadable):
         self.config_path = p
         config = self.get_configuration(self.config_path)
         self.set_attribute(config, 'swap_rb', 'General', 'swap_rb', cast='boolean')
-        self.set_attribute(config, 'mirror', 'General', 'mirror', cast='boolean')
-        self.set_attribute(config, 'flip', 'General', 'flip', cast='boolean')
+#        self.set_attribute(config, 'mirror', 'General', 'mirror', cast='boolean')
+        self.set_attribute(config, 'vflip', 'General', 'vflip', cast='boolean')
+        self.set_attribute(config, 'hflip', 'General', 'hflip', cast='boolean')
 
         self.set_attribute(config, 'width', 'General', 'width', cast='int')
         self.set_attribute(config, 'height', 'General', 'height', cast='int')

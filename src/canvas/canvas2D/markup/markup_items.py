@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Any, Dict, Bool, Str
+from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
 #============= standard library imports ========================
@@ -45,8 +45,8 @@ class MarkupItem(HasTraits):
     x = Float
     y = Float
     state = False
-    default_color = (1, 0, 0)
-    active_color = (0, 1, 0)
+    default_color = None
+    active_color = None
     canvas = Any(transient=True)
     line_width = 1
     name = Str
@@ -56,6 +56,8 @@ class MarkupItem(HasTraits):
     def __init__(self, x, y, *args, **kw):
         self.x = x
         self.y = y
+        self.default_color = (1, 0, 0)
+        self.active_color = (0, 1, 0)
         super(MarkupItem, self).__init__(*args, **kw)
 
     def render(self, gc):
@@ -401,7 +403,7 @@ class Circle(MarkupItem):
         x, y = self.get_xy()
 #        print 'asaaaa', self.radius
         r = self.map_dimension(self.radius)
-#        print 'ads', r, self.radius
+
         gc.arc(x, y, r, 0, 360)
         if self.fill:
             gc.fill_path()
@@ -420,13 +422,16 @@ class CalibrationObject(HasTraits):
     rx = Float
     ry = Float
 
-    def get_rotation(self):
+    rotation = Property(depends_on='rx,ry')
+    center = Property(depends_on='cx,cy')
+
+    def _get_rotation(self):
         if not (self.rx and self.rx):
             return 0
 
         return calc_rotation(self.cx, self.cy, self.rx, self.ry)
 
-    def get_center_position(self):
+    def _get_center(self):
         return self.cx, self.cy
 
     def set_right(self, x, y):
@@ -463,10 +468,10 @@ class CalibrationItem(MarkupItem, CalibrationObject):
                           default_color=(1, 1, 1),
                           canvas=self.canvas)
 
-    def get_rotation(self):
+    def _get_rotation(self):
         return self.line.data_rotation
 
-    def get_center_position(self):
+    def _get_center(self):
         return self.center.x, self.center.y
 
     def set_canvas(self, canvas):

@@ -340,6 +340,7 @@ def new_video_writer(path, fps=None, frame_size=None):
         fps = 5
     if frame_size is None:
         frame_size = (640, 480)
+
     w = cvCreateVideoWriter(path,
 
 #                          CV_FOURCC('P', 'I', 'M', '1'),

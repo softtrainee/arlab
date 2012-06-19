@@ -58,13 +58,13 @@ class BitmapUnderlay(AbstractOverlay):
                                 component.width, component.height)
 
 
-                cx, cy = component.map_screen([ca.get_center_position()])[0]
+                cx, cy = component.map_screen([ca.center])[0]
 
                 rx = cx + 1
                 ry = cy + 1
                 #do rotation around center
                 gc.translate_ctm(rx, ry)
-                gc.rotate_ctm(math.radians(ca.get_rotation()))
+                gc.rotate_ctm(math.radians(ca.rotation))
                 gc.translate_ctm(-rx, -ry)
 
                 #correct for padding and delta size

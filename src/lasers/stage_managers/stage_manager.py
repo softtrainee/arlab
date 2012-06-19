@@ -274,8 +274,8 @@ class StageManager(Manager):
     def _get_hole_by_position(self, x, y):
         if self._stage_map:
             return self._stage_map._get_hole_by_position(x, y)
-    
-    def get_hole(self,name):
+
+    def get_hole(self, name):
         if self._stage_map:
             return self._stage_map.get_hole(name)
 #
@@ -619,7 +619,15 @@ class StageManager(Manager):
         return t
 
     def _visualizer_default(self):
-        v = StageVisualizer(stage_map=self._stage_map)
+#        ca = self.canvas.calibration_item
+#        cpos = 0, 0
+#        rot = 0
+#        if ca:
+#            cpos = ca.get_center_position()
+#            rot = rot.calibration_item.get_rotation()
+        v = StageVisualizer(stage_map=self._stage_map,
+                            )
+        self.canvas.on_trait_change(v.update_calibration, 'calibration_item.[rotation, center]')
         return v
 #======================= Property methods ======================
     def _get_stage_maps(self):
@@ -676,15 +684,17 @@ class StageManager(Manager):
         canvas = self.canvas
         ca = canvas.calibration_item
         if ca:
-            rot = ca.get_rotation()
-            cpos = ca.get_center_position()
+#            rot = ca.get_rotation()
+#            cpos = ca.get_center_position()
 #            a.translate(-cpos[0], -cpos[1])
 #            a.translate(*cpos)
 #            a.rotate(-rot)
 #            a.translate(-cpos[0], -cpos[1])
 #
 #            pos = a.transformPt(pos)
-            pos = self._stage_map.map_to_uncalibration(pos, cpos, rot)
+            pos = self._stage_map.map_to_uncalibration(pos,
+                                                       ca.center,
+                                                       ca.rotation)
 
         return pos
 
@@ -700,8 +710,8 @@ class StageManager(Manager):
         ca = canvas.calibration_item
 
         if ca:
-            rot = ca.get_rotation()
-            cpos = ca.get_center_position()
+            rot = ca.rotation
+            cpos = ca.center
             t = None
             if key in ca.tweak_dict and isinstance(ca, CalibrationItem):
                 t = ca.tweak_dict[key]
@@ -715,12 +725,12 @@ class StageManager(Manager):
         if ca is not None:
             smap = self._stage_map
 
-            rot = ca.get_rotation()
-            cpos = ca.get_center_position()
+            rot = ca.rotation
+            cpos = ca.center
 
             def _filter(hole, x, y, tol=0.1):
                 cx, cy = smap.map_to_calibration((hole.x, hole.y), cpos, rot)
-                return abs(cx-x) < tol and abs(cy- y) < tol
+                return abs(cx - x) < tol and abs(cy - y) < tol
 
             return next((si for si in smap.sample_holes
                             if _filter(si, x, y)
@@ -751,8 +761,8 @@ class StageManager(Manager):
         if self.canvas.markup:
             self.warning_dialog('Cannot move while adding/editing points')
             return
-        
-        v=str(v)
+
+        v = str(v)
         if self.hole_thread is None and v != self._hole:
 #            v = str(v)
             pos = self._stage_map.get_hole_pos(v)

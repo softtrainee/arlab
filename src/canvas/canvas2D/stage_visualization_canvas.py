@@ -18,6 +18,7 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
+import weakref
 #============= local library imports  ==========================
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 from src.canvas.canvas2D.markup.markup_items import Circle, Line, PointIndicator, \
@@ -30,14 +31,14 @@ class SampleHole(Circle, InfoObject):
     display_interpolation = False
     hole = None
     def _render_(self, gc):
-
         super(SampleHole, self)._render_(gc)
         gc.save_state()
         x, y = self.get_xy()
-        w, h, _, _ = gc.get_full_text_extent(self.hole.id)
+        hid = self.hole.id
+        w, h, _, _ = gc.get_full_text_extent(hid)
         gc.set_fill_color((0, 0, 0))
         gc.set_text_position(x - w / 2.0, y - h / 2.0)
-        gc.show_text(self.hole.id)
+        gc.show_text(hid)
 
         gc.restore_state()
 
@@ -70,6 +71,7 @@ class StageVisualizationCanvas(MarkupCanvas):
                                                  default_color=(0, 0, 0),
 #                                                fill=True,
                                                 name=si.id,
+#                                                hole=weakref.ref(si),
                                                 hole=si,
                                                 radius=si.dimension / 2.0
                                                 )
@@ -86,13 +88,24 @@ class StageVisualizationCanvas(MarkupCanvas):
 #        (w, h), (ox, oy) = self.map_screen([(d, d), (0, 0)])
 #        w, h = w - ox, h - oy
 #        return w
+    def record_uncorrected(self, h):
+        if isinstance(h, (str, int)):
+            hid = h
+        else:
+            hid = h.id
+
+        cont = self.markupcontainer
+        hole = cont[hid]
+        hole.default_color = (1, 0, 0)
+
+        self.request_redraw()
 
     def record_correction(self, h, x, y):
-        if isinstance(h,(str,int)):
-            hid=h
+        if isinstance(h, (str, int)):
+            hid = h
         else:
-            hid=h.id
-        
+            hid = h.id
+
         name = '{}_cor'.format(hid)
         cont = self.markupcontainer
         cont[(name, 2)] = Indicator(x, y,
@@ -141,15 +154,20 @@ class StageVisualizationCanvas(MarkupCanvas):
         self._prev_current = hid
 
     def _selection_hook(self, obj):
+        cont = self.markupcontainer
+
+        cor = cont['{}_cor'.format(obj.name)]
+        if cor is not None:
+            cor.visible = not cor.visible
+
         #toggle the visiblity of the objects interpolation holes
-        for k, v in self.markupcontainer.iteritems():
+        for k, v in cont.iteritems():
             if k.startswith('{}-interpolation-line'.format(obj.name)):
                 v.visible = not v.visible
             elif k == '{}-interpolation-indicator'.format(obj.name):
                 v.visible = not v.visible
 
         ihs = obj.hole.interpolation_holes
-        cont = self.markupcontainer
         if ihs:
             for ih in set(ihs):
                 ihid = ih.id

@@ -98,7 +98,7 @@ class TrayCalibrationManager(Manager):
         elif self.calibration_step == 'Locate Right':
             canvas.calibration_item.set_right(x, y)
 
-            self.rotation = canvas.calibration_item.get_rotation()
+            self.rotation = canvas.calibration_item.rotation
             self.save_calibration()
             self.calibration_step = 'Calibrate'
             self._calibrating = False
@@ -141,10 +141,10 @@ class TrayCalibrationManager(Manager):
 
                     self.canvas.calibration_item = calibration
 
-                    self.x, self.y = calibration.get_center_position()
+                    self.x, self.y = calibration.center
 #                    self.y = calibration.center.y
 #                    self.rotation = calibration.line.data_rotation
-                    self.rotation = calibration.get_rotation()
+                    self.rotation = calibration.rotation
 #                    print self.x, self.y, self.rotation
                     return True
                 except (AttributeError, pickle.UnpicklingError), e:
@@ -153,10 +153,10 @@ class TrayCalibrationManager(Manager):
     def save_calibration(self):
 
         #delete the corrections file
-        self.parent._stage_map.clear_correction_file()
         stage_map_name = self.parent.stage_map
         ca = self.canvas.calibration_item
         if  ca is not None:
+            self.parent._stage_map.clear_correction_file()
             ca.style = self.calibration_style
             p = PICKLE_PATH.format(stage_map_name)
             self.info('saving calibration {}'.format(p))

@@ -59,25 +59,32 @@ class VideoCanvas(BaseDataCanvas):
             o = getattr(self, key)
             o.trait_set(**d)
 
+        self.set_camera()
+
         if self.video:
             self.on_trait_change(self.video.update_bounds, 'bounds')
 
-        self.set_camera()
 
     def set_camera(self):
 
         if self.use_camera:
-            self.camera.calibration_data.on_trait_change(self.parent.update_camera_params, 'xcoeff_str')
-            self.camera.calibration_data.on_trait_change(self.parent.update_camera_params, 'ycoeff_str')
-            self.camera.on_trait_change(self.parent.update_camera_params, 'focus_z')
-            p = os.path.join(canvas2D_dir, 'camera.cfg')
-            self.camera.load(p)
+            camera = self.camera
+            camera.calibration_data.on_trait_change(self.parent.update_camera_params, 'xcoeff_str')
+            camera.calibration_data.on_trait_change(self.parent.update_camera_params, 'ycoeff_str')
+            camera.on_trait_change(self.parent.update_camera_params, 'focus_z')
 
-            self.camera.current_position = (0, 0)
-            self.camera.set_limits_by_zoom(0)
+            p = os.path.join(canvas2D_dir, 'camera.cfg')
+            camera.load(p)
+
+            camera.current_position = (0, 0)
+            camera.set_limits_by_zoom(0)
+
+            vid = self.video
             #swap red blue channels True or False
-            self.video_underlay.swap_rb = self.camera.swap_rb
-            self.video_underlay.mirror = self.camera.mirror
-            self.video_underlay.flip = self.camera.flip
+            vid.swap_rb = camera.swap_rb
+
+            vid.vflip = camera.vflip
+            vid.hflip = camera.hflip
+
 
 #============= EOF ====================================

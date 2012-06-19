@@ -43,7 +43,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     calibration_style = Enum('pychron', 'MassSpec')
     scaling = Range(1.0, 2.0, 1)
 
-    auto_center = Bool(False)
+    use_autocenter = Bool(True)
     crosshairs_offset = Tuple(0, 0)
     crosshairs_offset_color = Color('blue')
 
@@ -62,7 +62,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                      VGroup(
                          Item('video_identifier', label='ID',
                                enabled_when='use_video'),
-                         Item('auto_center'),
+                         Item('use_autocenter', label='Auto Center'),
                          Item('record_lasing', label='Record Lasing',
                                enabled_when='use_video'),
                          Item('video_directory', label='Save to',

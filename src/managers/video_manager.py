@@ -135,21 +135,22 @@ class VideoManager(Manager):
         self.info('closing video connection')
         self.video.close(user=user)
 
-    def snapshot(self, identifier=None, path=None, root=None, crop=None):
-        if path is None:
-            if root is None:
-                root = snapshot_dir
+#    def snapshot(self, identifier=None, path=None, root=None, crop=None):
+#        if path is None:
+#            if root is None:
+#                root = snapshot_dir
+#
+#            base = 'frame'
+#            if identifier is not None:
+#                base = 'frame_{}_'.format(identifier)
+#
+#
+#            path, _cnt = unique_path(root=root, base=base, filetype='jpg')
+#
+#        self.info('saving snapshot {}'.format(path))
+#        src = self.video.record_frame(path, crop=crop)
+#        return src, os.path.basename(path)
 
-            base = 'frame'
-            if identifier is not None:
-                base = 'frame_{}_'.format(identifier)
-
-
-            path, _cnt = unique_path(root=root, base=base, filetype='jpg')
-
-        self.info('saving snapshot {}'.format(path))
-        src = self.video.record_frame(path, crop=crop)
-        return src, os.path.basename(path)
 #        if kind is not None:
 #            self.image = globals()['{}Image'.format(kind.capitalize())]()
 #            self.image.source_frame = src
@@ -248,41 +249,41 @@ class VideoManager(Manager):
                       editor=VideoComponentEditor(width=self.width,
                                                     height=self.height)))
         return v
-
-    def image_view(self):
-        '''
-        '''
-        control_grp = VGroup(Item('threshold', editor=RangeEditor(mode='slider',
-                                                        low=0,
-                                                        high=255)),
-#                                Item('angle', editor = RangeEditor(mode = 'slider',
-#                                                                    low = 0,
-#                                                                    high = 360)),
-                                Item('erosion', editor=RangeEditor(mode='spinner',
-                                                                    low=0,
-                                                                    high=4)),
-                                Item('dilation', editor=RangeEditor(mode='spinner',
-                                                                    low=0,
-                                                                    high=4)))
-#                                Item('x', editor = RangeEditor(mode = 'spinner',
-#                                                                    low = 0,
-#                                                                    high = 500)),
-#                                Item('y', editor = RangeEditor(mode = 'spinner',
-#                                                                    low = 0,
-#                                                                    high = 500)),)
-        return View(
-                    VGroup(control_grp,
-                           Item('image', show_label=False,
-                             editor=ImageEditor())
-                           ),
-                         x=0.05,
-                         y=0.1,
-                         #386365
-                         width=1000,
-                         height=700,
-                         resizable=True,
-                         title=self.title
-                         )
+#
+#    def image_view(self):
+#        '''
+#        '''
+#        control_grp = VGroup(Item('threshold', editor=RangeEditor(mode='slider',
+#                                                        low=0,
+#                                                        high=255)),
+##                                Item('angle', editor = RangeEditor(mode = 'slider',
+##                                                                    low = 0,
+##                                                                    high = 360)),
+#                                Item('erosion', editor=RangeEditor(mode='spinner',
+#                                                                    low=0,
+#                                                                    high=4)),
+#                                Item('dilation', editor=RangeEditor(mode='spinner',
+#                                                                    low=0,
+#                                                                    high=4)))
+##                                Item('x', editor = RangeEditor(mode = 'spinner',
+##                                                                    low = 0,
+##                                                                    high = 500)),
+##                                Item('y', editor = RangeEditor(mode = 'spinner',
+##                                                                    low = 0,
+##                                                                    high = 500)),)
+#        return View(
+#                    VGroup(control_grp,
+#                           Item('image', show_label=False,
+#                             editor=ImageEditor())
+#                           ),
+#                         x=0.05,
+#                         y=0.1,
+#                         #386365
+#                         width=1000,
+#                         height=700,
+#                         resizable=True,
+#                         title=self.title
+#                         )
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
