@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,32 +14,15 @@
 # limitations under the License.
 #===============================================================================
 
+#============= enthought library imports =======================
 
-
-MANAGERS = []
-def open_manager(app, man, **kw):
-    ui = None
-    if man in MANAGERS:
-        try:
-            man.ui.control.Raise()
-        except AttributeError:
-            ui = man.edit_traits(**kw)
-    else:
-        ui = man.edit_traits(**kw)
-
-        MANAGERS.append(man)
-
-    if app:
-        if ui is not None and ui not in app.uis:
-            app.uis.append(ui)
-
-def open_protocol(app, protocol):
-    m = app.get_service(protocol)
-
-    open_manager(app, m)
-
-def open_selector(db, app):
-    db.application = app
-    db.connect()
-    s = db._selector_factory()
-    open_manager(app, s)
+#============= standard library imports ========================
+#============= local library imports  ==========================
+class RPCable(object):
+    rpc_server = None
+    def load_rpc_server(self, port):
+        from src.rpc.server import RPCServer
+        self.rpc_server = RPCServer(manager=self,
+                                    port=port)
+        self.rpc_server.bootstrap()
+#============= EOF =============================================

@@ -15,45 +15,42 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any
 #============= standard library imports ========================
+#import xmlrpclib
+#import hmac
+#import Pyro4 as pyro
+#pyro.configuration.HMAC_KEY = bytes(hmac.new('pychronjjj.rpc.hmac').digest())
+
 #============= local library imports  ==========================
-from src.loggable import Loggable
+from src.hardware.core.communicators.communicator import Communicator
 
-class RPCServer(Loggable):
-    manager = Any
+#return to xml-rpc ?
 
-    backend_kind = 'xml'
-    port = None
+class RpcCommunicator(Communicator):
+    '''
+    '''
 
-    def bootstrap(self):
+    def load(self, config, path):
+        '''
+        '''
+        self._backend_load_hook(config)
+        return True
 
-        if self.backend_kind == 'pyro':
+    def _backend_load_hook(self, config):
+        backend = self.config_get(config, 'Communications', 'backend')
+        if backend == 'pyro':
             from src.rpc.backends import PyroBackend
-            self._backend = bk = PyroBackend()
+            bk = PyroBackend()
+            bk.name = self.config_get(config, 'Communications', 'name')
         else:
             from src.rpc.backends import XMLBackend
-            self._backend = bk = XMLBackend()
-            bk.port = self.port
+            bk = XMLBackend()
+            bk.port = self.config_get(config, 'Communications', 'port')
 
-        bk.manager = self.manager
-        bk.start_server()
+        self._rpc_backend = bk
 
+    def _get_handle(self):
+        return self._rpc_backend.handle
 
-class DummyManager(object):
-    def foo(self, a):
-        print 'foo', a
-        return True
-
-    def moo(self, m, a):
-        print 'moo', m, a
-        return True
-
-if __name__ == '__main__':
-#    from src.lasers.laser_managers.fusions_laser_manager import FusionsLaserManager
-#    lm = FusionsLaserManager()
-    lm = DummyManager()
-    s = RPCServer(manager=lm)
-    s.bootstrap()
-
+    handle = property(fget=_get_handle)
 #============= EOF =============================================

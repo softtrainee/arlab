@@ -16,12 +16,12 @@
 
 #============= enthought library imports =======================
 from xml_parser import XMLParser
-import os
-from src.helpers.paths import setup_dir
 from pyface.message_dialog import warning
-import sys
 #============= standard library imports ========================
+import os
+import sys
 #============= local library imports  ==========================
+from src.helpers.paths import setup_dir
 
 
 class InitializationParser(XMLParser):
@@ -104,10 +104,17 @@ class InitializationParser(XMLParser):
         self.save()
 
     def get_flags(self, manager, **kw):
-        return self._get_paramater(manager, 'flag', **kw)
+        return self._get_paramaters(manager, 'flag', **kw)
 
     def get_timed_flags(self, manager, **kw):
-        return self._get_paramater(manager, 'timed_flag', **kw)
+        return self._get_paramaters(manager, 'timed_flag', **kw)
+
+    def get_rpc_port(self, manager):
+        try:
+            rpc = manager.find('rpc')
+            return int(rpc.find('port').text.strip())
+        except Exception:
+            pass
 
     def get_device(self, manager, devname, plugin, element=False):
 
@@ -123,10 +130,10 @@ class InitializationParser(XMLParser):
         return dev
 
     def get_devices(self, manager, **kw):
-        return self._get_paramater(manager, 'device', **kw)
+        return self._get_paramaters(manager, 'device', **kw)
 
     def get_processor(self, manager, **kw):
-        p = self._get_paramater(manager, 'processor', **kw)
+        p = self._get_paramaters(manager, 'processor', **kw)
         if p:
             return p[0]
 
@@ -140,7 +147,7 @@ class InitializationParser(XMLParser):
                     for p in self.get_plugins('hardware', element=True)] if pi]
 
     def get_server(self, manager, **kw):
-        p = self._get_paramater(manager, 'server', **kw)
+        p = self._get_paramaters(manager, 'server', **kw)
         if p:
             return p[0]
 
@@ -150,7 +157,7 @@ class InitializationParser(XMLParser):
 
 
 
-    def _get_paramater(self, subtree, tag, all=False, element=False):
+    def _get_paramaters(self, subtree, tag, all=False, element=False):
         return [d if element else d.text.strip()
                 for d in subtree.findall(tag)
                     if all or d.get('enabled').lower() == 'true']
@@ -182,17 +189,25 @@ class InitializationParser(XMLParser):
 
         return man
 
+    def get_categories(self):
+        tree = self._tree.find('plugins')
+        s = lambda x: x.tag
+        return map(s, set(tree.iter()))
+
     def _get_element(self, category, name, tag='plugin'):
         tree = self._tree.find('plugins')
         if category is None:
-            for p in tree.iter(tag=tag):
-                if p.text.strip() == name:
-                    return p
+            iterator = lambda:tree.iter(tag=tag)
+#            return next((p for p in tree.iter(tag=tag) if p.text.strip() == name), None)
+#            for p in tree.iter(tag=tag):
+#                if p.text.strip() == name:
+#                    return p
         else:
-            cat = tree.find(category)
-            for plugin in cat.findall(tag):
-                if plugin.text.strip() == name:
-                    return plugin
+            iterator = lambda: tree.find(category).findall(tag)
+#            for plugin in cat.findall(tag):
+#                if plugin.text.strip() == name:
+#                    return plugin
+        return next((p for p in iterator() if p.text.strip() == name), None)
 
     def get_systems(self):
         p = self.get_plugin('ExtractionLine')

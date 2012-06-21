@@ -55,8 +55,8 @@ class ThermoRack(CoreDevice):
         pass
 
     def get(self):
-#        v = super(ThermoRack, self).get()
-        v = CoreDevice.get(self)
+        v = super(ThermoRack, self).get()
+#        v = CoreDevice.get(self)
         if v is None:
             v = self.get_coolant_out_temperature()
 
@@ -67,7 +67,7 @@ class ThermoRack(CoreDevice):
         '''
         kw['is_hex'] = True
         super(ThermoRack, self).write(*args, **kw)
-        CoreDevice.write(self, *args, **kw)
+
 
     def ask(self, *args, **kw):
         '''
@@ -75,6 +75,16 @@ class ThermoRack(CoreDevice):
         '''
         kw['is_hex'] = True
         return super(ThermoRack, self).ask(*args, **kw)
+
+    def _get_read_command_str(self, b):
+        return self._get_command_str(GET_BITS, b)
+
+    def _get_write_command_str(self, b):
+        return self._get_command_str(SET_BITS, b)
+
+    def _get_command_str(self, bits, bits_):
+        cmd = '{:x}'.format(int(bits + bits_, 2))
+        return cmd
 
     def set_setpoint(self, v):
         '''
@@ -84,13 +94,13 @@ class ThermoRack(CoreDevice):
         '''
         if self.convert_to_C:
             v = 9 / 5. * v + 32
-        cmd = '%x' % int(SET_BITS + SETPOINT_BITS, 2)
 
+        cmd = self._get_write_command_str(SETPOINT_BITS)
         self.write(cmd)
 
         data_bits = make_bitarray(int(v * 10), 16)
-        high_byte = '%02x' % int(data_bits[:8], 2)
-        low_byte = '%02x' % int(data_bits[8:], 2)
+        high_byte = '{:02x}'.format(int(data_bits[:8], 2))
+        low_byte = '{:02x}'.format(int(data_bits[8:], 2))
 
         self.write(low_byte)
         self.write(high_byte)
@@ -100,8 +110,7 @@ class ThermoRack(CoreDevice):
     def get_setpoint(self):
         '''
         '''
-        cmd = '%x' % int(GET_BITS + SETPOINT_BITS, 2)
-
+        cmd = self._get_read_command_str(SETPOINT_BITS)
         resp = self.ask(cmd)
         sp = None
         if not self.simulation and resp is not None:
@@ -111,9 +120,8 @@ class ThermoRack(CoreDevice):
     def get_faults(self, **kw):
         '''
         '''
-
-        cmd = '%x' % int(GET_BITS + FAULT_BITS, 2)
-        resp = self.ask(cmd, **kw)
+        cmd = self._get_read_command_str(FAULT_BITS)
+        resp = self.ask(cmd)
 
         if self.simulation:
             resp = '0'
@@ -130,7 +138,7 @@ class ThermoRack(CoreDevice):
     def get_coolant_out_temperature(self, **kw):
         '''
         '''
-        cmd = '%x' % int(GET_BITS + COOLANT_BITS, 2)
+        cmd = self._get_read_command_str(COOLANT_BITS)
 
         resp = self.ask(cmd)
         if not self.simulation and resp is not None:
@@ -155,21 +163,5 @@ class ThermoRack(CoreDevice):
                 resp = 5.0 * (resp - 32) / 9.0
 
         return resp
-
-#===============================================================================
-# viewabledevice protocol
-#===============================================================================
-    def graph_builder(self, g):
-        import numpy as np
-
-        super(ThermoRack, self).graph_builder(g)
-        x = np.linspace(0, 10, 100)
-        g.new_series(x=x,
-                     y=np.cos(x)
-                     )
-
-    def current_state_view(self):
-        v = View(Item('graph', show_label=False, style='custom'))
-        return v
 
 #============= EOF ====================================

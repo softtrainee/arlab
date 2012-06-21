@@ -315,7 +315,12 @@ class LaserManager(Manager):
 
     def _use_video_changed(self):
         if not self.use_video:
-            self.stage_manager.video_manager.shutdown()
+            try:
+                self.stage_manager.video.shutdown()
+            except AttributeError:
+                pass
+#            self.stage_manager.video_manager.shutdown()
+
         try:
             sm = self._stage_manager_factory(self.stage_args)
 
