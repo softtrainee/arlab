@@ -34,6 +34,7 @@ class FortranProcess(Thread):
         Thread.__init__(self)
         self.name = name
         self.root = root
+        self.success = False
         delimiter = ':'
         if sys.platform != 'darwin':
             delimiter = ';'
@@ -46,6 +47,10 @@ class FortranProcess(Thread):
 
     def run(self):
         n = 5
+        if not os.path.exists(os.path.join(self.root, self.name)):
+            warning(None, 'Invalid Clovera path {}'.format(self.root))
+            return
+
         pd = MProgressDialog(max=n, size=(550, 15))
         do_later(pd.open)
         do_later(pd.change_message, '{} process started'.format(self.name))
@@ -61,12 +66,15 @@ class FortranProcess(Thread):
                     self.queue.put(p.stdout.readline())
                 time.sleep(1e-6)
 
+            self.success = True
+            do_later(pd.change_message, '{} process complete'.format(self.name))
+
+            return True
+
         except OSError, e:
             #warning(None, '{} - {}'.format(e, self.name))
-            print 'foo', e
             do_later(pd.change_message, '{} process did not finish properly'.format(self.name))
 
-        do_later(pd.change_message, '{} process complete'.format(self.name))
 
 
     def get_remaining_stdout(self):

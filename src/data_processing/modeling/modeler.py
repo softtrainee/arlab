@@ -73,6 +73,7 @@ class Modeler(Loggable):
     logr_ro_line_width = Int(1)
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
 
+    clovera_dir = Directory
 #===============================================================================
 # fortran
 #===============================================================================
@@ -200,10 +201,8 @@ class Modeler(Loggable):
         self.info('excecute fortran program {}'.format(name))
         q = Queue()
 
-        p = os.path.join(clovera_root, name)
-        self.info('path = {}'.format(p))
-
-        self._fortran_process = t = FortranProcess(name, clovera_root, q)
+        croot = self.clovera_dir
+        self._fortran_process = t = FortranProcess(name, croot, q)
         t.start()
 
         t = Thread(name='mdd.fortran', target=self._handle_stdout, args=(name, t, q))
@@ -231,8 +230,9 @@ class Modeler(Loggable):
             _handle(m)
 
         dur = time.time() - st
-        self.info('{} run time {:e} s'.format(name, dur))
-        self.info('------ {} finished ------'.format(name.capitalize()))
+        if self._fortran_process.success():
+            self.info('{} run time {:e} s'.format(name, dur))
+            self.info('------ {} finished ------'.format(name.capitalize()))
 
     def _handle_autoarr_py(self, m):
         pass

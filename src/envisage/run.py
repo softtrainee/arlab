@@ -87,6 +87,11 @@ def get_module_name(klass):
 
     return '_'.join(words)
 
+def get_hardware_plugins():
+    ip = InitializationParser()
+    return [HardwarePlugin(), HardwareUIPlugin()] if 'hardware' in ip.get_categories() else []
+
+
 def get_user_plugins():
     '''
     '''
@@ -147,14 +152,14 @@ def launch(beta=False):
                WorkbenchPlugin(),
                PychronWorkbenchPlugin(),
                PychronWorkbenchUIPlugin(),
-               HardwarePlugin(),
-               HardwareUIPlugin()
+#               HardwarePlugin(),
+#               HardwareUIPlugin()
                ]
+
+    plugins += get_hardware_plugins()
     plugins += get_user_plugins()
 
-    lab = Pychron(plugins=plugins,
-                  beta=beta
-                  )
+    lab = Pychron(plugins=plugins)
 
     try:
         lab.run()
