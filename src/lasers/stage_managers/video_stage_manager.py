@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
- Float, Bool, Event, Str, Directory, Enum
+ Float, Bool, Event, Directory, Enum, on_trait_change
 from traitsui.api import Group, Item, HGroup
 from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
@@ -24,22 +24,21 @@ from apptools.preferences.preference_binding import bind_preference
 import time
 from threading import Thread, Condition, Timer
 
+import os
 #============= local library imports  ==========================
 from src.helpers.filetools import unique_path
 from src.helpers.paths import video_dir, snapshot_dir
-from src.managers.videoable import Videoable
 from camera_calibration_manager import CameraCalibrationManager
 from src.machine_vision.machine_vision_manager import MachineVisionManager
 from src.machine_vision.autofocus_manager import AutofocusManager
 
-from stage_manager import StageManager
-from video_component_editor import VideoComponentEditor
-import os
-#from video_clean_script import VideoDirectoryMaintainceScript
-from multiprocessing.process import Process
 from src.helpers.archiver import Archiver
 from src.image.video_server import VideoServer
 from src.image.video import Video
+from src.canvas.canvas2D.camera import Camera
+
+from stage_manager import StageManager
+from video_component_editor import VideoComponentEditor
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -66,16 +65,6 @@ class VideoStageManager(StageManager):
 
     calibrate_focus = Button
     focus_z = Float
-
-#    drive_xratio = Property(Float(enter_set=True,
-#                                   auto_set=False
-#                                   ), depends_on='_drive_xratio')
-#    _drive_xratio = Float
-#
-#    drive_yratio = Property(Float(enter_set=True,
-#                                   auto_set=False
-#                                   ), depends_on='_drive_yratio')
-#    _drive_yratio = Float
 
     calculate_offsets = Bool
 
@@ -105,6 +94,7 @@ class VideoStageManager(StageManager):
     use_video_server = Bool(False)
     video_server = Instance(VideoServer)
 
+    camera = Instance(Camera)
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
@@ -187,7 +177,7 @@ class VideoStageManager(StageManager):
             else:
                 close()
 #        self.video.close(user=user)
-
+#    @on_trait_change('camera:focus_z,camera:calibration_data:[xcoeff_str, ycoeff_str]')
     def update_camera_params(self, obj, name, old, new):
         if name == 'focus_z':
             self.focus_z = new
@@ -234,7 +224,7 @@ class VideoStageManager(StageManager):
         '''
         '''
         super(VideoStageManager, self).kill()
-        self.canvas.camera.save_calibration()
+        self.camera.save_calibration()
         self.video.close(user='underlay')
 
 #        if self.use_video_server:
@@ -275,17 +265,19 @@ class VideoStageManager(StageManager):
         v = VideoLaserTrayCanvas(parent=self,
                                padding=30,
                                video=video,
-                               use_camera=True,
+#                               use_camera=True,
                                map=self._stage_map)
         return v
 
     def _canvas_editor_factory(self):
-        w = self.canvas.camera.width * int(self.canvas.scaling * 10) / 10.
-        h = self.canvas.camera.height * int(self.canvas.scaling * 10) / 10.
-        l = self.canvas.padding_left
-        r = self.canvas.padding_right
-        t = self.canvas.padding_top
-        b = self.canvas.padding_bottom
+        camera = self.camera
+        canvas = self.canvas
+        w = camera.width * int(canvas.scaling * 10) / 10.
+        h = camera.height * int(canvas.scaling * 10) / 10.
+        l = canvas.padding_left
+        r = canvas.padding_right
+        t = canvas.padding_top
+        b = canvas.padding_bottom
         return self.canvas_editor_klass(width=w + l + r,
                                         height=h + t + b)
 
@@ -396,6 +388,11 @@ class VideoStageManager(StageManager):
 #==============================================================================
 # handlers
 #==============================================================================
+    @on_trait_change('parent:zoom')
+    def _update_zoom(self, new):
+        s = self.stage_controller
+        self.camera.set_limits_by_zoom(new, s.x, s.y)
+
     def _configure_mv_button_fired(self):
         info = self.machine_vision_manager.edit_traits(view='configure_view',
                                                 kind='livemodal')
@@ -456,12 +453,34 @@ class VideoStageManager(StageManager):
             self.video_server.stop()
 
     def __stage_map_changed(self):
-#        super(VideoStageManager, self).__stage_map_changed()
         self.visualizer.stage_map = self._stage_map
 
 #==============================================================================
 # Defaults
 #==============================================================================
+    def _camera_default(self):
+        from src.helpers.paths import canvas2D_dir
+        camera = Camera(parent=self.canvas)
+
+        camera.calibration_data.on_trait_change(self.update_camera_params, 'xcoeff_str')
+        camera.calibration_data.on_trait_change(self.update_camera_params, 'ycoeff_str')
+#        camera.on_trait_change(self.parent.update_camera_params, 'focus_z')
+
+        p = os.path.join(canvas2D_dir, 'camera.cfg')
+        camera.load(p)
+
+#        camera.current_position = (0, 0)
+        camera.set_limits_by_zoom(0, 0, 0)
+
+        vid = self.video
+        #swap red blue channels True or False
+        vid.swap_rb = camera.swap_rb
+
+        vid.vflip = camera.vflip
+        vid.hflip = camera.hflip
+
+        return camera
+
     def _video_default(self):
 
         v = Video()
