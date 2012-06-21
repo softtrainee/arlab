@@ -29,6 +29,8 @@ from src.config_loadable import ConfigLoadable
 from src.hardware import HW_PACKAGE_MAP
 from src.viewable import Viewable, ViewableHandler
 from src.helpers.paths import setup_dir
+from pyface.timer.do_later import do_after
+from src.rpc.rpcable import RPCable
 
 class MassSpecParam(object):
     _value = None
@@ -56,7 +58,8 @@ class ManagerHandler(ViewableHandler):
     def close(self, info, isok):
         info.object.close(isok)
         return True
-class Manager(ConfigLoadable, Viewable):
+
+class Manager(ConfigLoadable, Viewable, RPCable):
     '''
     '''
 
@@ -93,7 +96,6 @@ class Manager(ConfigLoadable, Viewable):
             self.name = self.__class__.__name__
         super(Manager, self).__init__(*args, **kw)
 
-
     def finish_loading(self):
         '''
         '''
@@ -125,6 +127,13 @@ class Manager(ConfigLoadable, Viewable):
     def add_window(self, ui):
         if self.application is not None:
             self.application.uis.append(ui)
+
+    def open_view(self, obj):
+        def _open_():
+            ui = obj.edit_traits()
+            self.add_window(ui)
+
+        do_after(1, _open_)
 
 
 #    def close_ui(self):

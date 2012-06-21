@@ -158,17 +158,18 @@ class Initializer(Loggable):
         if device_dir is None:
             device_dir = paths.device_dir
 
+        parser = self.parser
         if manager is not None:
             self.info('loading {}'.format(name))
             manager.application = self.application
             manager.load()
+
         else:
             return False
 
         managers = []
         devices = []
         flags = []
-        parser = self.parser
         if plugin_name is None:
 
             # remove manager from name
@@ -185,6 +186,11 @@ class Initializer(Loggable):
             devices = parser.get_devices(mp)
             flags = parser.get_flags(mp)
             timed_flags = parser.get_timed_flags(mp, element=True)
+
+            #set rpc server
+            rpc_port = parser.get_rpc_port(mp)
+            if rpc_port:
+                manager.load_rpc_server(rpc_port)
 
         pdmax = 35
         if self.pd is None or self.pd.progress_bar is None:

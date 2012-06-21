@@ -30,6 +30,7 @@ from i_core_device import ICoreDevice
 #from src.helpers.datetime_tools import generate_datetimestamp
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 from src.hardware.core.scanable_device import ScanableDevice
+from src.rpc.rpcable import RPCable
 #from src.graph.plot_record import PlotRecord
 #from src.managers.data_managers.h5_data_manager import H5DataManager
 #from src.database.adapters.device_scan_adapter import DeviceScanAdapter
@@ -73,7 +74,8 @@ class Alarm(HasTraits):
         return '<<<<<<ALARM {}>>>>>> {} {} {}'.format(tstamp, value, cond, trigger)
 
 
-class CoreDevice(ScanableDevice):
+
+class CoreDevice(ScanableDevice, RPCable):
     '''
     '''
     graph_klass = TimeSeriesStreamGraph
@@ -154,6 +156,13 @@ class CoreDevice(ScanableDevice):
                     self._communicator = communicator
                 else:
                     return False
+
+
+            if config.has_section('RPC'):
+                rpc_port = self.config_get(config, 'RPC', 'port', cast='int')
+                if rpc_port:
+                    self.load_rpc_server(rpc_port)
+
             #load additional child specific args
             r = self.load_additional_args(config)
             if r:

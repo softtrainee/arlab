@@ -27,9 +27,9 @@ class HardwareActionSet(WorkbenchActionSet):
 
     p = 'src.hardware.plugins.hardware_actions'
     actions = [
-               Action(name='Hardware Manager',
-                      path='MenuBar/File',
-                      class_name='{}:OpenHardwareManagerAction'.format(p)),
+#               Action(name='Hardware Manager',
+#                      path='MenuBar/File',
+#                      class_name='{}:OpenHardwareManagerAction'.format(p)),
                Action(name='Register Device...',
                       path='MenuBar/File',
                       class_name='{}:RegisterDeviceAction'.format(p)),

@@ -3,11 +3,9 @@ Dependencies
 EPD 7.0 +
 http://www.enthought.com/products/epd.php
 
-pexpect
-http://www.noah.org/wiki/pexpect
-used to run command line type programs
-
 
 python-twitter
 http://code.google.com/p/python-twitter/
 
+pyro4
+sudo easy_install -U pyro4

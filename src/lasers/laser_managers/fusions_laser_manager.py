@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
-    on_trait_change, Event, Bool, Float
+    on_trait_change, Event, Bool, Float, Any
 from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor
 from pyface.timer.do_later import do_later
 from apptools.preferences.preference_binding import bind_preference
@@ -88,8 +88,7 @@ class FusionsLaserManager(LaserManager):
 
     power_calibration_manager = Instance(PowerCalibrationManager)
 
-
-
+    chiller = Any
 
     def _record_fired(self):
         if self._recording_power_state:
@@ -308,8 +307,6 @@ class FusionsLaserManager(LaserManager):
         if mv:
             mv.collect_baseline_intensity(**kw)
 
-
-
     def get_laser_intensity(self, **kw):
         sm = self.stage_manager
         m = 'machine_vision_manager'
@@ -328,12 +325,13 @@ class FusionsLaserManager(LaserManager):
     def get_coolant_temperature(self, **kw):
         '''
         '''
-        chiller = self.get_device('thermo_rack')
+        chiller = self.chiller
         if chiller is not None:
             return chiller.get_coolant_out_temperature(**kw)
 
     def get_coolant_status(self, **kw):
-        chiller = self.get_device('thermo_rack')
+
+        chiller = self.chiller
         if chiller is not None:
             return chiller.get_faults(**kw)
 

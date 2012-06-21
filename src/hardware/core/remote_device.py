@@ -15,45 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.loggable import Loggable
 
-class RPCServer(Loggable):
-    manager = Any
+def remote_query(func, **kw):
+    def _query(obj, *args, **kw):
+        handle = obj._communicator.handle
+        try:
+            return getattr(handle, func.__name__)()
+        except Exception, e:
+            print 'remote query', e
 
-    backend_kind = 'xml'
-    port = None
+    return _query
 
-    def bootstrap(self):
-
-        if self.backend_kind == 'pyro':
-            from src.rpc.backends import PyroBackend
-            self._backend = bk = PyroBackend()
-        else:
-            from src.rpc.backends import XMLBackend
-            self._backend = bk = XMLBackend()
-            bk.port = self.port
-
-        bk.manager = self.manager
-        bk.start_server()
-
-
-class DummyManager(object):
-    def foo(self, a):
-        print 'foo', a
-        return True
-
-    def moo(self, m, a):
-        print 'moo', m, a
-        return True
-
-if __name__ == '__main__':
-#    from src.lasers.laser_managers.fusions_laser_manager import FusionsLaserManager
-#    lm = FusionsLaserManager()
-    lm = DummyManager()
-    s = RPCServer(manager=lm)
-    s.bootstrap()
-
+#class RemoteDevice(CoreDevice):
+#
+#    def _query_(self, k):
+#        handle = self._communicator.handle
+#        try:
+#            func = getattr(handle, k)
+#            return func()
+#        except Exception, e:
+#            print 'remote device', e
 #============= EOF =============================================

@@ -35,7 +35,9 @@ class OpenHardwareManagerAction(Action):
         '''
         '''
         p = 'src.managers.hardware_manager.HardwareManager'
-        open_protocol(self.window, p)
+        from src.managers.hardware_manager import HardwareManager
+
+        open_protocol(self.window, HardwareManager)
 
 class OpenRemoteHardwareServerAction(Action):
     '''
