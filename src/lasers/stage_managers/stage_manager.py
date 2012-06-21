@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Int, Property, Instance, \
-    Button, List, String, Event, Bool, on_trait_change, Str, CStr
+    Button, List, String, Event, Bool, on_trait_change
 from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, spring, \
      EnumEditor, InstanceEditor
 from apptools.preferences.preference_binding import bind_preference
@@ -227,8 +227,10 @@ class StageManager(Manager):
         #load defaults
         self._default_z = self.config_get(config, 'Defaults', 'z', default=13, cast='float')
 
+        self.canvas.request_redraw()
+
     def initialize_stage(self):
-        self.canvas.parent = self
+#        self.canvas.parent = self
         self.update_axes()
         axes = self.stage_controller.axes
         self.home_options = ['Home All', 'XY'] + sorted([axes[a].name.upper() for a in axes])
@@ -306,37 +308,6 @@ class StageManager(Manager):
         self.stage_controller._set_z(z)
         self.stage_controller._block_()
 
-#    def single_axis_move(self, *args, **kw):
-#        self.stage_controller.single_axis_move(*args, **kw)
-
-#    def linear_move_to(self, x, y, **kw):
-#        '''
-#    
-#        '''
-#        sc = self.stage_controller
-#
-#        #calc the displacement
-#        dx = sc._x_position - x
-#        dy = sc._y_position - y
-#
-#        d = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
-#
-#        #d = ((self._x_position - x) ** 2 + (self._y_position - y) ** 2) ** 0.5
-#
-#        tol = 0.001 #should be set to the motion controllers resolution 
-#        if d > tol:
-#            kw['displacement'] = d
-#
-#            self.canvas.set_stage_position(x, y)
-#
-#            sc._x_position = x
-#            sc._y_position = y
-#
-#            sc.timer = sc.timer_factory()
-#            sc.linear_move(dict(x = x, y = y), **kw)
-#        else:
-#            self.info('displacement of move too small {} < {}'.format(d, tol))
-
     @on_trait_change('stop_button')
     def stop(self, ax_key=None):
 
@@ -384,10 +355,6 @@ class StageManager(Manager):
             self.stage_controller.single_axis_move('z', self._default_z, block=True)
             self.stage_controller._z_position = self._default_z
 
-#            self.stage_controller._set_z(self._default_z)
-##            time.sleep(0.1)
-#            self.stage_controller._block_(axis='z')
-
         if self.home_option in ['XY', 'Home All']:
             time.sleep(0.25)
 
@@ -425,11 +392,7 @@ class StageManager(Manager):
 #===============================views=====================
 
     def edit_traits(self, *args, **kw):
-#        self.canvas.reset()
-#        self.canvas.parent = self
         self.initialize_stage()
-#        self.load_calibration()
-#        self.update_axes()
         return super(StageManager, self).edit_traits(*args, **kw)
 
 
@@ -573,7 +536,6 @@ class StageManager(Manager):
     def _canvas_factory(self):
         '''
         '''
-
         w = 640 / 2.0 / 23.2
         h = 0.75 * w
         l = LaserTrayCanvas(parent=self,
@@ -610,8 +572,6 @@ class StageManager(Manager):
 
     def _pattern_manager_default(self):
         return PatternManager(parent=self)
-#    def _jog_manager_default(self):
-#        return JogManager(parent = self)
 
     def _tray_calibration_manager_default(self):
         t = TrayCalibrationManager(parent=self,
@@ -619,12 +579,6 @@ class StageManager(Manager):
         return t
 
     def _visualizer_default(self):
-#        ca = self.canvas.calibration_item
-#        cpos = 0, 0
-#        rot = 0
-#        if ca:
-#            cpos = ca.get_center_position()
-#            rot = rot.calibration_item.get_rotation()
         v = StageVisualizer(stage_map=self._stage_map,
                             )
         self.canvas.on_trait_change(v.update_calibration, 'calibration_item.[rotation, center]')
@@ -665,12 +619,6 @@ class StageManager(Manager):
             r = 'Calibrate Stage'
         return r
 
-#    def _get_home_options(self):
-#        '''
-#        '''
-#
-#        axes = self.stage_controller.axes
-#        return ['Home All'] + [axes[a].name.upper() for a in axes]
     def get_z(self):
         return self.stage_controller._z_position
 
@@ -680,18 +628,9 @@ class StageManager(Manager):
         if self.stage_controller.axes['x'].id == 2:
             pos = pos[1], pos[0]
 
-        a = AffineTransform()
         canvas = self.canvas
         ca = canvas.calibration_item
         if ca:
-#            rot = ca.get_rotation()
-#            cpos = ca.get_center_position()
-#            a.translate(-cpos[0], -cpos[1])
-#            a.translate(*cpos)
-#            a.rotate(-rot)
-#            a.translate(-cpos[0], -cpos[1])
-#
-#            pos = a.transformPt(pos)
             pos = self._stage_map.map_to_uncalibration(pos,
                                                        ca.center,
                                                        ca.rotation)
@@ -861,23 +800,7 @@ class StageManager(Manager):
                           kind='sqlite')
 
         return db
-#class DummyParent(HasTraits):
-#    zoom = Float
-#    zoommin = Float
-#    zoommax = Float(10)
-#    update_zoom = Float
-#
-#    beam = Float
-#    beammin = Float
-#    beammax = Float(10)
-#    update_beam = Float
-#    enable = Button
-#    request_power = Float
-#    request_powermin = Float
-#    request_powermax = Float(100)
 
-#    enabled_led = Instance(LED, ())
-#    simulation_led = Instance(LED, ())
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
@@ -904,6 +827,54 @@ if __name__ == '__main__':
     s.stage_controller.bootstrap()
     s.configure_traits()
 #========================EOF============================
+#class DummyParent(HasTraits):
+#    zoom = Float
+#    zoommin = Float
+#    zoommax = Float(10)
+#    update_zoom = Float
+#
+#    beam = Float
+#    beammin = Float
+#    beammax = Float(10)
+#    update_beam = Float
+#    enable = Button
+#    request_power = Float
+#    request_powermin = Float
+#    request_powermax = Float(100)
+
+#    enabled_led = Instance(LED, ())
+#    simulation_led = Instance(LED, ())
+#    def single_axis_move(self, *args, **kw):
+#        self.stage_controller.single_axis_move(*args, **kw)
+
+#    def linear_move_to(self, x, y, **kw):
+#        '''
+#    
+#        '''
+#        sc = self.stage_controller
+#
+#        #calc the displacement
+#        dx = sc._x_position - x
+#        dy = sc._y_position - y
+#
+#        d = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
+#
+#        #d = ((self._x_position - x) ** 2 + (self._y_position - y) ** 2) ** 0.5
+#
+#        tol = 0.001 #should be set to the motion controllers resolution 
+#        if d > tol:
+#            kw['displacement'] = d
+#
+#            self.canvas.set_stage_position(x, y)
+#
+#            sc._x_position = x
+#            sc._y_position = y
+#
+#            sc.timer = sc.timer_factory()
+#            sc.linear_move(dict(x = x, y = y), **kw)
+#        else:
+#            self.info('displacement of move too small {} < {}'.format(d, tol))
+
 #    def arc_move_to(self,cp=None, rot=None):
 #        if cp is None:
 #            cp=self.center_point

@@ -21,9 +21,6 @@ import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import numpy as np
 #============= local library imports  ==========================
-
-#from traitsui.table_column import ObjectColumn
-
 from src.graph.regression_graph import RegressionGraph
 from src.config_loadable import ConfigLoadable
 
@@ -45,16 +42,9 @@ class CalibrationData(HasTraits):
 
     def get_xcoeffs(self):
         return map(float, self.xcoeff_str.split(','))
+
     def get_ycoeffs(self):
         return map(float, self.ycoeff_str.split(','))
-
-#    @on_trait_change('calibration_points.[zoom,pxpercm]')
-#    def update(self, obj, name, old, new):
-#        g = self.graph
-#        xs, ys = self._get_data()
-#        g.set_data(xs, axis = 0)
-#        g.set_data(ys, axis = 1)
-#        g._metadata_changed()
 
     def _coeff_str_changed(self):
         g = self.graph
@@ -166,35 +156,13 @@ class Camera(ConfigLoadable):
         self.set_attribute(config, 'width', 'General', 'width', cast='int')
         self.set_attribute(config, 'height', 'General', 'height', cast='int')
         self.set_attribute(config, 'focus_z', 'General', 'focus', cast='float')
-#        data = parse_setupfile(p)
-#        self.swap_rb = True if data[0][0] in ['True', 'true', 'T'] else False
-        #self.width = float(data[1][0])
-        #self.height = float(data[1][1])
 
-#        self.calibration_data = CalibrationData()
         cxs = self.config_get(config, 'General', 'xcoefficients')
         cys = self.config_get(config, 'General', 'ycoefficients')
 
         self.calibration_data.xcoeff_str = cxs
         self.calibration_data.ycoeff_str = cys
-#        print self.parent.parent
-#        self.parent.parent.camera_coefficients = cs
 
-#        kind = data[2][0]
-#
-#        cdata = np.array(data[3:], dtype = 'float')
-#        if kind == 'poly':
-#            self.fit_degree = 0
-#            self.calibration_data = cdata
-#        else:
-#            self.fit_degree = int(data[2][0])
-#
-#            try:
-#                x, pxpercm = np.transpose(cdata)
-#
-#                self.calibration_data = [x, pxpercm]
-#            except ValueError:
-#                self.reset_calibration_data()
     def add_calibration_point(self, zoom, z, px, py):
         self.calibration_data.calibration_points.append(CalibrationPoint(zoom=zoom,
                                                                          z=z,
@@ -203,7 +171,7 @@ class Camera(ConfigLoadable):
                                                                          pxpercmy=py,
 
                                                                          ))
-    def set_limits_by_zoom(self, zoom, canvas=None):
+    def set_limits_by_zoom(self, zoom, cx, cy, canvas=None):
         '''
         '''
 
@@ -222,28 +190,12 @@ class Camera(ConfigLoadable):
             lim = (-d + cur_pos, d + cur_pos)
             canvas.set_mapper_limits(axis_key, lim)
 
-        xpx_per_cm = np.polyval(self.calibration_data.get_xcoeffs(), [zoom])[0]
-        ypx_per_cm = np.polyval(self.calibration_data.get_ycoeffs(), [zoom])[0]
-#        px_per_cm = 100
-#        if self.fit_degree == 0:
-#            px_per_cm = np.polyval(self.calibration_data.get_coeffs(), [zoom])[0]
-#        else:
-#            xs, pxpercms = self.calibration_data
-#            if len(xs) == 1:
-#                px_per_cm = pxpercms[0]
-#            else:
-#                fd = self.fit_degree
-#                if len(xs) < fd + 1:
-#                    fd = len(xs) - 1
-#
-#                if fd > 0:
-#                    px_per_cm = np.polyval(np.polyfit(xs, pxpercms, fd), [zoom])[0]
+        cdata = self.calibration_data
+        xpx_per_cm = np.polyval(cdata.get_xcoeffs(), [zoom])[0]
+        ypx_per_cm = np.polyval(cdata.get_ycoeffs(), [zoom])[0]
 
-        cur_posx = self.current_position[0]
-        _set_limits('x', xpx_per_cm, cur_posx, canvas)
-
-        cur_posy = self.current_position[1]
-        _set_limits('y', ypx_per_cm, cur_posy, canvas)
+        _set_limits('x', xpx_per_cm, cx, canvas)
+        _set_limits('y', ypx_per_cm, cy, canvas)
 
 if __name__ == '__main__':
 #    c = Camera()

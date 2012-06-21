@@ -20,7 +20,6 @@ from traitsui.api import View, Item
 #=============standard library imports ========================
 import math
 #=============local library imports  ==========================
-from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 from src.canvas.canvas2D.map_canvas import MapCanvas
 from src.canvas.canvas2D.markup.markup_items import PointIndicator
 
