@@ -14,19 +14,16 @@
 # limitations under the License.
 #===============================================================================
 #============= enthought library imports =======================
-from traits.api import on_trait_change, Any, Bool
-#from traitsui.api import View, Item, TableEditor
+from traits.api import Any, Bool
 #============= standard library imports ========================
-from numpy import pi, invert, ogrid, asarray, minimum, maximum, abs, \
-    zeros, ones, ones_like, zeros_like, array, hsplit
+from numpy import pi, invert, ogrid, asarray, ones_like, hsplit
 import time
-import math
 from matplotlib.cm import get_cmap
 #============= local library imports  ==========================
-from co2_detector import CO2HoleDetector
-from src.image.cvwrapper import asMat, colorspace, grayspace, draw_polygons, \
-    calculate_sum
+from src.image.cvwrapper import asMat, colorspace, grayspace, draw_polygons
 from src.image.image import StandAloneImage
+from co2_detector import CO2HoleDetector
+
 
 def colormap(mag, name='hot', cmin=0, cmax=1, scalar=None):
     cm = get_cmap(name)
@@ -48,12 +45,6 @@ class BrightnessDetector(CO2HoleDetector):
         super(BrightnessDetector, self).close_images()
         if self.brightness_image is not None:
             self.brightness_image.close()
-
-#    @on_trait_change('brightness_image:ui')
-#    def _add_brightness_window(self, new):
-#        #added windows will be closed by the application on exit
-#        if self.parent is not None:
-#            self.parent.add_window(new)
 
     def _get_mask_radius(self):
         r = self._hole_radius
@@ -201,7 +192,8 @@ class BrightnessDetector(CO2HoleDetector):
                              view_identifier='pychron.fusions.co2.brightness')
         self.brightness_image = im
 
-        im.show()
+        #use a manager to open so will auto close on quit
+        self.parent.open_view(im)
 
         sr = 0
         ss = None

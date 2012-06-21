@@ -30,8 +30,6 @@ class LaserMonitor(Monitor):
     #manager = None
     max_duration = Float(0.1) # in minutes
 
-    max_coolant_temp = Float(25)
-
     gntries = 0
     def _load_hook(self, config):
         '''

@@ -46,6 +46,7 @@ class LaserPlugin(CorePlugin):
         '''
         factory = __import__(self.klass[0], fromlist=[self.klass[1]])
         m = getattr(factory, self.klass[1])()
+        m.bootstrap()
         m.bind_preferences(self.id)
         m.stage_manager.bind_preferences(self.id)
 

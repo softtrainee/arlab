@@ -80,6 +80,10 @@ class PyroBackend(RPCBackend):
         ns.register(self.manager.name, uri)
         daemon.requestLoop()
 
+class XMLRPCRequestHandler(SimpleXMLRPCRequestHandler):
+    pass
+
+#@todo:  add security to xmlrpc 
 class XMLBackend(RPCBackend):
     port = None
     def _handle_factory(self):
@@ -92,7 +96,7 @@ class XMLBackend(RPCBackend):
         host = socket.gethostbyname(socket.gethostname())
         addr = (host, self.port)
 
-        server = SimpleXMLRPCServer(addr, SimpleXMLRPCRequestHandler,
+        server = SimpleXMLRPCServer(addr, XMLRPCRequestHandler,
                                                    allow_none=True
                                                    )
 

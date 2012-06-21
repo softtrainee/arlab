@@ -20,6 +20,7 @@ from traits.api import Bool, Str
 import socket
 from threading import Thread, Lock
 import os
+import hmac
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
 
@@ -27,10 +28,59 @@ from src.config_loadable import ConfigLoadable
 from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors.system_errors import SystemLockErrorCode, \
-    SecurityErrorCode
+    SecurityErrorCode, HMACSecurityErrorCode
 import select
 from globals import ipc_dgram, use_ipc
 BUFSIZE = 2048
+
+def end_request(fn):
+    def end(obj, rtype, data, sender, sock=None):
+        data = fn(obj, rtype, data, sender)
+        if use_ipc:
+            #self.debug('Result: {}'.format(data))
+#            if isinstance(data, ErrorCode):
+#                data = str(data)
+            try:
+                if ipc_dgram:
+                    sock.sendto(data, obj.path)
+                else:
+                    sock.send(data)
+                #sock.close()
+            except Exception, err:
+                obj.debug('End Request Exception: {}'.format(err))
+        else:
+            if not isinstance(data, ErrorCode) and data:
+                data = data.split('|')[-1]
+#            else:
+#                print data
+            return data
+
+    return end
+
+
+#def memoize_value(func):
+#    stored = []
+#    def memoized():
+#        try:
+#            return stored[0]
+#        except IndexError:
+#            result = func()
+#            stored.append(result)
+#            return result
+#
+#    return memoized
+#
+#@memoize_value
+#def get_authentication_hmac():
+#    '''
+#        only open an read the file on start up
+#        memoize_value stores the result
+#    '''
+#    from src.helpers.paths import setup_dir
+#    p = os.path.join(setup_dir, 'hmac')
+#    #read a config file
+#    with open(p, 'r') as f:
+#        return hmac.new(f.read()).digest()
 
 
 class CommandProcessor(ConfigLoadable):
@@ -62,19 +112,6 @@ class CommandProcessor(ConfigLoadable):
         self._handlers = dict()
         self._manager_lock = Lock()
         self._hosts = []
-
-#    def load(self, *args, **kw):
-#        '''
-#        '''
-#        #grab the port from the repeater config file
-#        config = self.get_configuration(path=os.path.join(paths.device_dir,
-#                                                        'servers',
-#                                                        'repeater.cfg'
-#                                                        ))
-#        if config:
-#            self.path = self.config_get(config, 'General', 'path')
-#
-#            return True
 
     def close(self):
         '''
@@ -199,94 +236,77 @@ class CommandProcessor(ConfigLoadable):
                 tb = traceback.format_exc()
                 self.debug(tb)
 
-    def _end_request(self, sock, data):
+    def get_response(self, *args):
+        return self._process_request(*args)
 
-        if use_ipc:
-            #self.debug('Result: {}'.format(data))
-#            if isinstance(data, ErrorCode):
-#                data = str(data)
-            try:
-                if ipc_dgram:
-                    sock.sendto(data, self.path)
-                else:
-                    sock.send(data)
-                #sock.close()
-            except Exception, err:
-                self.debug('End Request Exception: {}'.format(err))
-        else:
-            if not isinstance(data, ErrorCode):
-#
-                data = data.split('|')[-1]
-#            else:
-#                print data
-            return data
+    def _authenticate(self, data, sender_addr):
+        if self.use_security:
+            #check sender addr is in hosts
+            if self._hosts:
+                if not sender_addr in self._hosts:
+                    for h in self._hosts:
+                        #match to any computer on the subnet
+                        hargs = h.split('.')
+                        if hargs[-1] == '*':
+                            if sender_addr.split('.')[:-1] == hargs[:-1]:
+                                break
+                    else:
+                        return str(SecurityErrorCode(sender_addr))
+            else:
+                self.warning('hosts not configured, security not enabled')
 
-    def get_response(self, cmd_type, data, addr):
-        return self._process_request(None, addr, cmd_type, data)
+        if self._check_system_lock(sender_addr):
+            return str(SystemLockErrorCode(self.system_lock_name,
+                                         self.system_lock_address,
+                                         sender_addr, logger=self.logger))
 
-    def _process_request(self, sock, sender_addr, request_type, data):
+    @end_request
+    def _process_request(self, request_type, data, sender_addr, sock=None):
         #self.debug('Request: {}, {}'.format(request_type, data.strip()))
         try:
-            if self.use_security:
-                if self._hosts:
-                    if not sender_addr in self._hosts:
-                        for h in self._hosts:
-                            #match to any computer on the subnet
-                            hargs = h.split('.')
-                            if hargs[-1] == '*':
-                                if sender_addr.split('.')[:-1] == hargs[:-1]:
-                                    break
-                        else:
-                            return str(SecurityErrorCode(sender_addr))
-                else:
-                    self.warning('hosts not configured, security not enabled')
 
-            if self._check_system_lock(sender_addr):
-                result = SystemLockErrorCode(self.system_lock_name,
-                                             self.system_lock_address,
-                                             sender_addr, logger=self.logger)
+            auth_err = self._authenticate(data, sender_addr)
+            if auth_err:
+                return auth_err
+
+            if not request_type in ['System',
+                                    'Diode',
+                                    'Synrad',
+                                    'CO2',
+                                    'test']:
+                self.warning('Invalid request type ' + request_type)
+                return
+
+            if request_type == 'test':
+#                result = data
+                return data
+
+            handler = None
+            klass = '{}Handler'.format(request_type.capitalize())
+            if klass not in self._handlers:
+                pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
+                try:
+                    module = __import__(pkg, globals(), locals(), [klass])
+                    factory = getattr(module, klass)
+                    handler = factory(application=self.application)
+                    self._handlers[klass] = handler
+                    '''
+                        the context filter uses the handler object to
+                        get the kind and request
+                        if the min period has elapse since last request or the message is triggered
+                        get and return the state from pychron
+
+                        pure frequency filtering could be accomplished earlier in the stream in the 
+                        Remote Hardware Server (CommandRepeater.get_response) 
+                    '''
+                except ImportError, e:
+                    return 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
             else:
+                handler = self._handlers[klass]
 
-                result = 'error handling'
-                if not request_type in ['System',
-                                        'Diode',
-                                        'Synrad',
-                                        'CO2',
-                                        'test']:
-                    self.warning('Invalid request type ' + request_type)
-                elif request_type == 'test':
-                    result = data
-                else:
-
-                    handler = None
-                    klass = '{}Handler'.format(request_type.capitalize())
-                    if klass not in self._handlers:
-                        pkg = 'src.remote_hardware.handlers.{}_handler'.format(request_type.lower())
-                        try:
-                            module = __import__(pkg, globals(), locals(), [klass])
-                            factory = getattr(module, klass)
-                            handler = factory(application=self.application)
-                            self._handlers[klass] = handler
-                            '''
-                                the context filter uses the handler object to
-                                get the kind and request
-                                if the min period has elapse since last request or the message is triggered
-                                get and return the state from pychron
-
-                                pure frequency filtering could be accomplished earlier in the stream in the 
-                                Remote Hardware Server (CommandRepeater.get_response) 
-                            '''
-                        except ImportError, e:
-                            result = 'ImportError klass={} pkg={} error={}'.format(klass, pkg, e)
-                    else:
-                        handler = self._handlers[klass]
-                    if handler is not None:
+            if handler is not None:
 #                    result = self.context_filter.get_response(handler, data)
-                        result = handler.handle(data, sender_addr, self._manager_lock)
-
-            r_args = self._end_request(sock, str(result))
-            if not use_ipc:
-                return r_args
+                return handler.handle(data, sender_addr, self._manager_lock)
 
         except Exception, err:
             import traceback
