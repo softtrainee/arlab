@@ -16,12 +16,11 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-
-#============= local library imports  ==========================
-from src.remote_hardware.errors.system_errors import InvalidArgumentsErrorCode
-from base_remote_hardware_handler import BaseRemoteHardwareHandler
-#from dummies import DummyLM
 from threading import Thread
+#============= local library imports  ==========================
+from base_remote_hardware_handler import BaseRemoteHardwareHandler
+from src.remote_hardware.errors.system_errors import InvalidArgumentsErrorCode
+#from dummies import DummyLM
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
     EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode
 
@@ -68,11 +67,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
                 rid = mrm.get_current_rid() if mrm else 'testrid_001'
 
-        #            if rid is None:
-        #                rid = 'testrid_001'
-
                 manager.start_power_recording(rid)
-                manager.stage_manager.start_recording(basename=rid)
+                try:
+                    manager.stage_manager.start_recording(basename=rid)
+                except AttributeError:
+                    #not a video stage manager
+                    pass
 
             t = Thread(target=record)
             t.start()
@@ -88,7 +88,11 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         if manager.record_lasing:
             manager.stop_power_recording(delay=5)
-            manager.stage_manager.stop_recording(delay=5)
+            try:
+                manager.stage_manager.stop_recording(delay=5)
+            except AttributeError:
+                # not a video stage manager
+                pass
 
         return self.error_response(err)
 
@@ -112,8 +116,6 @@ class LaserHandler(BaseRemoteHardwareHandler):
         manager.stage_manager._temp_position = x, y
 
         err = manager.stage_manager.set_xy(x, y)
-
-        #err = manager.stage_manager.linear_move(x, y)
 
         return self.error_response(err)
 

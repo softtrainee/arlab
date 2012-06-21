@@ -31,9 +31,9 @@ class PyScriptErrorCode(ErrorCode):
 
 #===== debug errors =====
 class FuncCallErrorCode(ErrorCode):
-    msg='func call problem: err= {} args= {}'
-    def __init__(self, err,data, *args, **kw):
-        self.msg = self.msg.format(err,data)
+    msg = 'func call problem: err= {} args= {}'
+    def __init__(self, err, data, *args, **kw):
+        self.msg = self.msg.format(err, data)
         super(FuncCallErrorCode, self).__init__(*args, **kw)
 
 
@@ -115,7 +115,7 @@ class PychronCommErrorCode(ErrorCode):
         self.msg = self.msg.format(path, err)
         super(PychronCommErrorCode, self).__init__(*args, **kw)
 
-
+#===== security =====
 class SystemLockErrorCode(ErrorCode):
     msg = 'Access restricted to {} ({}). You are {}'
     code = 13
@@ -130,6 +130,13 @@ class SecurityErrorCode(ErrorCode):
     def __init__(self, addr, *args, **kw):
         self.msg = self.msg.format(addr)
         super(SecurityErrorCode, self).__init__(*args, **kw)
+
+class HMACSecurityErrorCode(ErrorCode):
+    msg = 'Computer {} was not authenticated. Invalid HMAC certificate'
+    code = 14
+    def __init__(self, addr, *args, **kw):
+        self.msg = self.msg.format(addr)
+        super(HMACSecurityErrorCode, self).__init__(*args, **kw)
 
 #======= runtime errors ------
 class ValveSoftwareLockErrorCode(ErrorCode):

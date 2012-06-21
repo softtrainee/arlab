@@ -18,24 +18,17 @@
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
     DelegatesTo, on_trait_change, Bool
-from traitsui.api import View, Item, Handler, Group
-#from pyface.timer.do_later import do_later, do_after
+from traitsui.api import View, Item, Handler
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
+import math
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-#from src.image.image import Image
-#from src.image.image_editor import ImageEditor
-
 from src.helpers.paths import setup_dir, hidden_dir
-
-#from detectors.tray_mapper import TrayMapper
 from src.machine_vision.detectors.co2_detector import CO2HoleDetector
 from src.machine_vision.detectors.tray_mapper import TrayMapper
-import math
 from src.machine_vision.detectors.brightness_detector import BrightnessDetector
-#from src.machine_vision.detectors.zoom_calibration_detector import ZoomCalibrationDetector
 
 
 class ImageHandler(Handler):
@@ -48,9 +41,6 @@ class MachineVisionManager(Manager):
     stage_controller = Any
     laser_manager = Any
     autofocus_manager = Any
-#    image = Instance(Image, ())
-#    working_image = Instance(Image, ())
-    pxpermm = 23
 
     croppixels = None
 
@@ -60,9 +50,6 @@ class MachineVisionManager(Manager):
     threshold = Property(Range(0, 255, 65), depends_on='_threshold')
     _threshold = Int
     test = Button
-
-#    image_width = Int(int(640))
-#    image_height = Int(480)
 
     title = Property
     current_hole = None
@@ -76,22 +63,7 @@ class MachineVisionManager(Manager):
     hole_detector = Instance(CO2HoleDetector)
     brightness_detector = Instance(BrightnessDetector)
 
-#    style = DelegatesTo('hole_detector')
-#    use_dilation = DelegatesTo('hole_detector')
-#    use_erosion = DelegatesTo('hole_detector')
-#    save_positioning_error = DelegatesTo('hole_detector')
-#    use_histogram = DelegatesTo('hole_detector')
-#    use_smoothing = DelegatesTo('hole_detector')
-#    use_contrast_equalization = DelegatesTo('hole_detector')
-
     segmentation_style = DelegatesTo('hole_detector')
-
-#    start_threshold_search_value = DelegatesTo('hole_detector')
-#    threshold_search_width = DelegatesTo('hole_detector')
-#    crop_tries = DelegatesTo('hole_detector')
-#    crop_expansion_scalar = DelegatesTo('hole_detector')
-#    threshold_tries = DelegatesTo('hole_detector')
-#    threshold_expansion_scalar = DelegatesTo('hole_detector')
 
     calibration_detector = Any
 
@@ -99,9 +71,6 @@ class MachineVisionManager(Manager):
     _debug = Bool(False)
 
     application = DelegatesTo('parent')
-
-
-#    _debug = Bool(True)
 
 #    def _zoom_calibration(self):
 #        d = ZoomCalibrationDetector(parent=self,
@@ -118,34 +87,12 @@ class MachineVisionManager(Manager):
         pass
 
     def locate_target(self, cx, cy, holenum, *args, **kw):
-
-        if self.hole_detector is not None:
+        try:
             sm = self.parent._stage_map
             holedim = sm.g_dimension * self.pxpermm / 2.0
-            r = self.hole_detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
-#            sm = self.parent._stage_map
-
-            #all handled in video stage man
-#            if r is None and holenum is not None:
-            #===================================================================
-            # if r is None no hole was found.
-            # 1. take a snapshot for later analysis.
-            # 2. try to interpolate the holes corrected pos.
-            # update 2. let video man handle it
-            #===================================================================
-#                self.parent.snapshot(auto=True,
-#                                     name='pos_err_{}'.format(holenum))
-#                r = sm.get_interpolated_position(holenum=holenum)
-#                if r:
-#                    self.info('using interpolated position {:03f} {:03f}'.format(*r))
-#            else:
-#                #try to interpolate values so that future moves are more 
-#                #accurate
-#                sm.interpolate_noncorrected()
-
-#            sm.dump_correction_file()
-
-            return r
+            return self.hole_detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
+        except TypeError:
+            pass
 
     def dump_hole_detector(self):
         p = os.path.join(hidden_dir, 'hole_detector')
@@ -351,13 +298,16 @@ class MachineVisionManager(Manager):
 
     @on_trait_change('laser_manager:zoom')
     def update_zoom(self, new):
-        self._set_pxpermm_by_zoom(new, self.hole_detector)
 
-    def _set_pxpermm_by_zoom(self, z, det):
+        v = self._calc_pxpermm_by_zoom(new)
+        self.hole_detector.pxpermm = v
+        self.brightness_detector.pxpermm = v
+
+    def _calc_pxpermm_by_zoom(self, z):
         from numpy import polyval
         c = map(float, self.parent._camera_xcoefficients.split(','))
         pxpercm = polyval(c, z)
-        det.pxpermm = pxpercm / 10.0
+        return pxpercm / 10.0
 
     def _load_detector(self, name, klass):
 #        hd = CO2HoleDetector()
@@ -373,7 +323,7 @@ class MachineVisionManager(Manager):
         hd.parent = self
         if self.laser_manager is not None:
             z = self.laser_manager.zoom
-            self._set_pxpermm_by_zoom(z, hd)
+            hd.pxpermm = self._calc_pxpermm_by_zoom(z)
 
         hd.name = name
         hd._debug = self._debug

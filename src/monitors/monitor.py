@@ -23,6 +23,7 @@ import time
 #from src.config_loadable import ConfigLoadable
 #from src.managers.manager import Manager
 from src.config_loadable import ConfigLoadable
+from pyface.message_dialog import warning
 
 class Monitor(ConfigLoadable):
     '''
@@ -52,6 +53,13 @@ class Monitor(ConfigLoadable):
 #        self.kill = True
         self.info('Stop monitor')
         self._monitoring = False
+
+    def warning(self, msg):
+        '''
+            override loggable warning to issue a warning dialog
+        '''
+        super(Monitor, self).warning(msg)
+        warning(None, msg)
 
     def monitor(self):
         '''

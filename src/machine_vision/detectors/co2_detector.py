@@ -17,8 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import on_trait_change, Any
 #============= standard library imports ========================
-from numpy import percentile, sum, asarray, ogrid, pi, invert
-import time
+from numpy import percentile
+
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, grayspace, colorspace, smooth, \
     dilate
@@ -80,7 +80,10 @@ class CO2HoleDetector(HoleDetector):
         im = StandAloneImage(title='Positioning Error',
                              view_identifier='pychron.fusions.co2.target')
         self.target_image = im
-        im.show()
+
+        #use a manager to open so will auto close on quit
+        self.parent.open_view(im)
+
 
         self._nominal_position = (cx, cy)
         self.current_hole = holenum

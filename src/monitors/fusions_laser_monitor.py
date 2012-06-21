@@ -38,21 +38,9 @@ class FusionsLaserMonitor(LaserMonitor):
     def load_additional_args(self, config):
         '''
         '''
-#        config = self.get_configuration()
-#        self.set_attribute(config, 'sample_delay',
-#                           'General', 'sample_delay', cast = 'int', optional = True)
-#
-#
-#        self.set_attribute(config, 'max_duration',
-#                           'General', 'max_duration', cast = 'float', optional = True)
-#
-#        self.set_attribute(config, 'max_coolant_temp',
-#                           'General', 'max_coolant_temp', cast = 'float', optional = True)
-        super(FusionsLaserMonitor,self).load_additional_args(self)
+        super(FusionsLaserMonitor, self).load_additional_args(self)
         self.set_attribute(config, 'max_coolant_temp',
                        'General', 'max_coolant_temp', cast='float', optional=True)
-
-
 
     def __check_interlocks(self):
         '''
@@ -65,7 +53,7 @@ class FusionsLaserMonitor(LaserMonitor):
 
             if interlocks:
                 inter = ' '.join(interlocks)
-                self.warning('%s' % inter)
+                self.warning(inter)
                 manager.emergency_shutoff(reason=inter)
                 break
             else:
@@ -78,7 +66,6 @@ class FusionsLaserMonitor(LaserMonitor):
             if self.gntries > NFAILURES:
                 manager.emergency_shutoff(reason='failed checking interlocks')
 
-
     def __check_coolant_temp(self):
         '''
         '''
@@ -86,29 +73,33 @@ class FusionsLaserMonitor(LaserMonitor):
 
         self.info('Check laser coolant temperature')
         ct = manager.get_coolant_temperature(verbose=False)
-        print 'acs', ct
         if ct is None:
-            self._invalid_checks.append('_FusionsLaserMonitor__check_coolant_temp')
-            pass
-            #manager.emergency_shutoff(reason = 'Laser chiller not available')
+#            self._invalid_checks.append('_FusionsLaserMonitor__check_coolant_temp')
+#            pass
+            self._chiller_unavailable()
         elif ct > self.max_coolant_temp:
-            self.warning('Laser coolant over temperature %0.2f' % ct)
-            manager.emergency_shutoff(reason='Coolant over temp %f' % ct)
+            self.warning('Laser coolant over temperature {:0.2f}'.format(ct))
+            manager.emergency_shutoff(reason='Coolant over temp {:0.2f}'.format(ct))
+        else:
+            self.info('laser coolant temperature= {:0.2f}'.format(ct))
 
     def __check_coolant_status(self):
         manager = self.manager
         self.info('Check laser coolant status')
 
-        error = manager.get_coolant_status()
-        if error is None:
-            pass
-
+        status = manager.get_coolant_status()
+        if not status:
+            self.info('no coolant errors')
+        elif status is None:
+            self._chiller_unavailable()
         else:
-            if isinstance(error, list):
-                error = ','.join(error)
+            status = ','.join(status) if isinstance(status, list) else status
+            reason = 'Laser coolant error {}'.format(status)
+            self.warning(reason)
+            manager.emergency_shutoff(reason=reason)
 
-            if error:
-                self.warning('Laser coolant error %s' % error)
-                manager.emergency_shutoff(reason=error)
-
+    def _chiller_unavailable(self):
+        reason = 'Laser chiller not available'
+        self.manager.emergency_shutoff(reason=reason)
+        self.warning(reason)
 #============= EOF ====================================
