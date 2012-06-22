@@ -248,6 +248,15 @@ def smooth(src):
     return dst
 
 
+def sharpen(src):
+#    im = src.clone()
+    w, h = src.size()
+    im = new_dst(w, h)
+    cv.GaussianBlur(src, im, cv.Size(0, 0), 3)
+    cv.addWeighted(src, 1.5, im, -0.5, 0, im)
+    return im
+
+
 def get_focus_measure(src, kind):
 #    from numpy import r_
 #    from scipy import fft

@@ -27,7 +27,6 @@ from src.lasers.stage_managers.stage_manager import StageManager
 from src.lasers.stage_managers.video_stage_manager import VideoStageManager
 from src.monitors.laser_monitor import LaserMonitor
 from src.helpers import paths
-from src.managers.step_heat_manager import StepHeatManager
 from src.managers.graph_manager import GraphManager
 from pulse import Pulse
 from src.helpers.paths import hidden_dir
@@ -214,14 +213,6 @@ class LaserManager(Manager):
     def _disable_hook(self):
         pass
 
-    def show_step_heater(self):
-
-        shm = StepHeatManager(laser_manager=self,
-                              video_manager=self.stage_manager.video_manager
-                              )
-        self.step_heat_manager = shm
-        shm.edit_traits()
-
     def set_laser_power(self, power, calibration=False, *args, **kw):
         '''
         '''
@@ -257,7 +248,7 @@ class LaserManager(Manager):
             with open(p, 'rb') as f:
                 try:
                     pc = pickle.load(f)
-                except pickle.PickleError,e:
+                except pickle.PickleError, e:
                     self.warning('unpickling error {}'.format(e))
                     pc = PowerCalibrationObject()
                     pc.coefficients = [1, 0]
@@ -413,11 +404,11 @@ class LaserManager(Manager):
             pul = Pulse(manager=self)
 
         return pul
-    
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('calib')
-    lm=LaserManager(name='FusionsDiode')
+    lm = LaserManager(name='FusionsDiode')
     lm.set_laser_power(10)
 #    from src.lasers.power.power_calibration_manager import PowerCalibrationManager, PowerCalibrationObject
 #    
@@ -426,6 +417,6 @@ if __name__ == '__main__':
 #    
 #    pm=PowerCalibrationManager(parent=lm)
 #    pm._dump_calibration(pc)
-    
+
 #    lm.set_laser_power(10)
 #============= EOF ====================================

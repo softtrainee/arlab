@@ -18,7 +18,8 @@
 from traits.api import  Float, Range, Int, Bool, Enum
 from traitsui.api import View, Item, VGroup, Group
 #============= standard library imports ========================
-from numpy import histogram, argmax, array, asarray, zeros_like, invert
+from numpy import histogram, argmax, array, asarray, zeros_like, invert, \
+    ones, ogrid, bincount
 import random
 import os
 #============= local library imports  ==========================
@@ -70,6 +71,8 @@ class HoleDetector(Detector):
 
     radius_mm = Float(1.5)
 
+    _hole_radius = None
+
     cropwidth = Float(5)
     cropheight = Float(5)
     crop_expansion_scalar = Float(0.5)
@@ -78,11 +81,11 @@ class HoleDetector(Detector):
 
     save_positioning_error = Bool(False)
     use_histogram = Bool(True)
-    use_smoothing = Bool(True)
+#    use_smoothing = Bool(True)
     use_crop = Bool(True)
-    use_dilation = Bool(True)
+#    use_dilation = Bool(False)
     _dilation_value = 1
-    use_contrast_equalization = Bool(True)
+#    use_contrast_equalization = Bool(True)
 
     segmentation_style = Enum('region', 'edge', 'threshold', 'edge', 'region')
 #    segmentation_style = Enum('edge', 'threshold', 'edge', 'region')
@@ -93,71 +96,54 @@ class HoleDetector(Detector):
     threshold_tries = Range(0, 102, 2)
     threshold_expansion_scalar = Int(5)
 
-    def close_image(self):
-        pass
+#    def close_image(self):
+#        pass
+    def _get_mask_radius(self):
+        r = self._hole_radius
+        if not r:
+            r = self.pxpermm * self.radius_mm * 0.85
+        return r
+
+    def _apply_circular_mask(self, src, radius=None):
+        if radius is None:
+            radius = self._get_mask_radius()
+
+        x, y = src.shape
+        X, Y = ogrid[0:x, 0:y]
+        mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > radius * radius
+        src[mask] = 0
+
     def _edge_segmentation(self, src, **kw):
         from scipy import ndimage
         from skimage.filter import canny
 
-        ndsrc = src.ndarray
-        ndsrc = canny(ndsrc, sigma=2)
-        ndsrc = ndimage.binary_fill_holes(ndsrc)
+        ndsrc = src.ndarray / 255.
+        edges = canny(ndsrc, sigma=2)
+        filled = ndimage.binary_fill_holes(edges)
 
-        p = asMat(asarray(ndsrc, 'uint8') * 255)
-#        self.working_image.frames[0] = colorspace(p)
-        if not 'hole' in kw:
-            kw['hole'] = False
-        return self._locate_targets(p, **kw)
+        label_objects, _ = ndimage.label(filled)
+        sizes = bincount(label_objects.ravel())
+
+        mask_sizes = sizes > 20
+        mask_sizes[0] = 0
+        cleaned = mask_sizes[label_objects]
+        kw['convextest'] = False
+        return self._locate_helper(cleaned, **kw)
 
     def _region_segmentation(self, src, tlow=100, thigh=150, **kw):
         from skimage.filter import sobel
-        from skimage.morphology import watershed, is_local_maximum
-        ndsrc = src.ndarray
+        from skimage.morphology import watershed
 
-#        bins, edges = np.histogram(ndsrc.ravel(), bins=np.arange(0, 256))
-#        cen = np.argmax(bins)
+        ndsrc = src.ndarray[:]
 
-#        tlow = edges[max(0, cen - 1)]
-#        thigh = edges[min(len(edges), cen + 1)]
-
-#        from pylab import show, hist
-#        hist(ndsrc.ravel(), bins=range(0, 256))
-#        do_later(show)
-#        self.info('region segmentation limits {},{}'.format(tlow, thigh))
         markers = zeros_like(ndsrc)
         markers[ndsrc < tlow] = 1
         markers[ndsrc > thigh] = 255
 
         el_map = sobel(ndsrc)
-#        el_map = ndimage.binary_opening(el_map)
-#        el_map = ndimage.binary_closing(el_map)
-#        print el_map * 255
-        src = watershed(el_map, markers)
-
-#        ndsrc = ndimage.binary_fill_holes(ndsrc)
-#        print 'ddd', segm
-
-#        import matplotlib.pyplot as plt
-##        plt.imshow(segm, interpolation='nearest')
-##        plt.imshow(markers, cmap=plt.cm.spectral, interpolation='nearest')
-###        plt.show()
-#        image = invert(ndsrc)
-#        from scipy import ndimage
-#        distance = ndimage.distance_transform_edt(image)
-#        local_maxi = is_local_maximum(distance, image, ones((3, 3)))
-#        markers = ndimage.label(local_maxi)[0]
-#        labels = watershed(-distance, markers, mask=image) * 100
-#        plt.imshow(labels, cmap=plt.cm.spectral, interpolation='nearest')
-#        do_later(plt.show)
-##        print labels
-        src = invert(src)
-        src = asMat(asarray(src, 'uint8'))
-
-#        self.working_image.frames[0] = colorspace(src)
-        if not 'hole' in kw:
-            kw['hole'] = False
-        targets = self._locate_targets(src, **kw)
-        return targets
+        wsrc = watershed(el_map, markers)
+        kw['convextest'] = False
+        return self._locate_helper(invert(wsrc))
 
     def _threshold_segmentation(self, src, **kw):
         start = self.start_threshold_search_value
@@ -172,11 +158,20 @@ class HoleDetector(Detector):
             for ti in range(s, e):
                 tsrc = threshold(src, ti)
 
-                ts = self._locate_targets(tsrc)
+                ts = self._locate_targets(tsrc, convextest=False)
                 if ts:
                     targets += ts
 
             return targets
+
+    def _locate_helper(self, src, *args, **kw):
+
+        src = asMat(asarray(src, 'uint8'))
+        if not 'hole' in kw:
+            kw['hole'] = False
+        t = self._locate_targets(src, **kw)
+        return t
+
 
     def _locate_targets(self, src, **kw):
 #        dsrc = self.working_image.frames[0]
@@ -244,17 +239,20 @@ class HoleDetector(Detector):
         nx = cx - dxmm
         ny = cy + dymm
 
-        #verify that this target is within 1 radius of the uncorrected by calibrated position
-        lm = self.parent.laser_manager
-        h = lm.stage_manager.get_hole(holenum)
-        calpos = lm.stage_manager.get_calibrated_position((h.x, h.y))
+        try:
+            #verify that this target is within 1 radius of the uncorrected by calibrated position
+            lm = self.parent.laser_manager
+            h = lm.stage_manager.get_hole(holenum)
+            calpos = lm.stage_manager.get_calibrated_position((h.x, h.y))
 
-        if h is None:
-            return
+            if h is None:
+                return
 
-        if abs(calpos[0] - nx) > r or abs(calpos[1] - ny) > r:
-            return
-
+            if abs(calpos[0] - nx) > r or abs(calpos[1] - ny) > r:
+                return
+        except Exception, e:
+            #debugging 
+            pass
         src = grayspace(self.target_image.source_frame)
         self.target_image.set_frame(0, colorspace(crop(src, *self.croprect)))
 #        self.image.frames[0] = colorspace(crop(src, *self.croprect))
@@ -465,7 +463,98 @@ class HoleDetector(Detector):
                            Item('save_positioning_error'),
                             )
 #============= EOF =====================================
-#    def _watershed(self, ndsrc):
+#    def _watershed_segmentation(self, src, **kw):
+##        from scipy import ndimage
+#        from skimage.morphology import watershed, is_local_maximum
+##        ndsrc = src.ndarray
+##
+##
+##        distance = ndimage.distance_transform_edt(ndsrc)
+##        local_maxi = is_local_maximum(distance, ndsrc,
+##                                    ones((3, 3)))
+##
+##        markers = ndimage.label(local_maxi)[0]
+##
+###        wsrc = watershed(-distance, markers)
+##
+###        src = invert(src)
+##        p = asMat(asarray(markers, 'uint8'))
+##        self.target_image.set_frame(0, colorspace(p))
+#
+#        from scipy import ndimage
+#        import numpy as np
+#        import matplotlib.pyplot as plt
+#        debug = True
+#        if debug:
+#            x, y = np.indices((80, 80))
+#            x1, y1, x2, y2 = 28, 28, 44, 52
+#            r1, r2 = 16, 20
+#            mask_circle1 = (x - x1) ** 2 + (y - y1) ** 2 < r1 ** 2
+#            mask_circle2 = (x - x2) ** 2 + (y - y2) ** 2 < r2 ** 2
+#            image = np.logical_or(mask_circle1, mask_circle2)
+#        else:
+#            image = src.ndarray[:]
+#
+#            im = invert(image)
+#            r = self._get_mask_radius()
+#            self._apply_circular_mask(im, radius=r * 2)
+#
+#        distance = ndimage.distance_transform_edt(image)
+#
+#        local_maxi = is_local_maximum(distance, image, np.ones((3, 3)))
+#        markers = ndimage.label(local_maxi)[0]
+#        labels = watershed(-distance, markers, mask=image)
+#
+#        fig, axes = plt.subplots(ncols=3, figsize=(8, 2.7))
+#        ax0, ax1, ax2 = axes
+#
+#        ax0.imshow(image, cmap=plt.cm.gray, interpolation='nearest')
+#        ax1.imshow(-distance, cmap=plt.cm.jet, interpolation='nearest')
+#        ax2.imshow(labels, cmap=plt.cm.spectral, interpolation='nearest')
+#
+#        from pyface.timer.do_later import do_later
+##        do_later(plt.show)
+#    def _random_walker_segmentation(self, src, **kw):
+#        from skimage.segmentation import random_walker
+#        import numpy as np
+#        ndsrc = src.ndarray[:]
+##        ndsrc += np.random.randn(*ndsrc.shape)
+#        tlow = 100
+#        thigh = 150
+#        markers = zeros_like(ndsrc)
+#        markers[ndsrc < tlow] = 1
+#        markers[ndsrc > thigh] = 2
+#
+#        labels = random_walker(ndsrc, markers,
+##                               beta=10
+##                               , mode='bf'
+#                               )
+##        labels = markers
+#
+#        import matplotlib.pyplot as plt
+#        plt.figure(figsize=(8, 3.2))
+#        plt.subplot(131)
+#        plt.imshow(ndsrc, cmap='gray', interpolation='nearest')
+#        plt.axis('off')
+#        plt.title('Noisy data')
+#
+#        plt.subplot(132)
+#        plt.imshow(markers, cmap='hot', interpolation='nearest')
+#        plt.axis('off')
+#        plt.title('Markers')
+#
+#        plt.subplot(133)
+#        plt.imshow(labels, cmap='gray', interpolation='nearest')
+#        plt.axis('off')
+#        plt.title('Segmentation')
+#
+#        plt.subplots_adjust(hspace=0.01, wspace=0.01, top=1, bottom=0, left=0,
+#                            right=1)
+#        from pyface.timer.do_later import do_later
+#        do_later(plt.show)
+#
+#        return self._locate_helper(labels)#  
+#  def _watershed(self, ndsrc):
 #        from skimage.filter import sobel
 #        from skimage.morphology import watershed, is_local_maximum
 #        import matplotlib.pyplot as plt

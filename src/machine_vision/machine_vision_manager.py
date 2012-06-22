@@ -84,15 +84,23 @@ class MachineVisionManager(Manager):
         
         
         '''
-        pass
+        from src.machine_vision.stage_learner import StageLearner
+        sl = StageLearner(laser_manager=self.laser_manager,
+                          machine_vision=self)
+        sl.teach_learner()
 
     def locate_target(self, cx, cy, holenum, *args, **kw):
         try:
-            sm = self.parent._stage_map
-            holedim = sm.g_dimension * self.pxpermm / 2.0
+            if self.parent:
+                sm = self.parent._stage_map
+                holedim = sm.g_dimension * self.pxpermm / 2.0
+            else:
+                holedim = 25
+
             return self.hole_detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
-        except TypeError:
-            pass
+        except TypeError, e:
+            import traceback
+            traceback.print_exc()
 
     def dump_hole_detector(self):
         p = os.path.join(hidden_dir, 'hole_detector')
@@ -289,6 +297,7 @@ class MachineVisionManager(Manager):
                 src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
                 src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
                 src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
+                src = '/Users/ross/Sandbox/pos_err/pos_err_53001.jpg'
             else:
                 src = path
 
@@ -374,20 +383,24 @@ class MachineVisionManager(Manager):
             self.testing = True
 #            self.brightness_detector.collect_baseline_intensity()
 #            self.get_intensity()
-            self._spawn_thread(self.map_holes)
+#            self._spawn_thread(self.map_holes)
 #            self._zoom_calibration()
-#            self._spawn_thread(self.hole_detector.locate_sample_well,
-#                               0, 0
+#            self._spawn_thread(self.locate_target,
+#                               10, 0, 1
 #                               )
 
+            self._spawn_thread(self.learn)
         else:
             self.testing = False
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('machine_vision')
-    m = MachineVisionManager(_debug=True)
-    m._debug = True
-    m.configure_traits(view='configure_view')
+
+    m = MachineVisionManager(_debug=True,
+                             )
+    m.configure_traits()
+#    m.configure_traits(view='configure_view')
 
 #    time_comp()
 #============= EOF =====================================

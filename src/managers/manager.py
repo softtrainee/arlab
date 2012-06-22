@@ -125,8 +125,11 @@ class Manager(ConfigLoadable, Viewable, RPCable):
         self.add_window(self.ui)
 
     def add_window(self, ui):
-        if self.application is not None:
-            self.application.uis.append(ui)
+        try:
+            if self.application is not None:
+                self.application.uis.append(ui)
+        except AttributeError:
+            pass
 
     def open_view(self, obj):
         def _open_():

@@ -16,7 +16,7 @@
 #============= enthought library imports =======================
 from traits.api import Any, Bool
 #============= standard library imports ========================
-from numpy import pi, invert, ogrid, asarray, ones_like, hsplit
+from numpy import pi, invert, asarray, ones_like, hsplit
 import time
 from matplotlib.cm import get_cmap
 #============= local library imports  ==========================
@@ -37,7 +37,6 @@ class BrightnessDetector(CO2HoleDetector):
     brightness_image = Any
 
     running_avg = None
-    _hole_radius = None
 
     use_colormap = Bool(True)
     colormapper = None
@@ -46,11 +45,7 @@ class BrightnessDetector(CO2HoleDetector):
         if self.brightness_image is not None:
             self.brightness_image.close()
 
-    def _get_mask_radius(self):
-        r = self._hole_radius
-        if not r:
-            r = self.pxpermm * self.radius_mm * 0.85
-        return r
+
 
     def _get_intensity_area(self, src, verbose):
 
@@ -122,11 +117,12 @@ class BrightnessDetector(CO2HoleDetector):
         niar[niar < thres] = 0
 
         #mask the image with a circle
-        x, y = niar.shape
-        X, Y = ogrid[0:x, 0:y]
+#        x, y = niar.shape
+#        X, Y = ogrid[0:x, 0:y]
         mask_radius = self._get_mask_radius()
-        mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > mask_radius * mask_radius
-        niar[mask] = 0
+#        mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > mask_radius * mask_radius
+#        niar[mask] = 0
+        self._apply_circular_mask(niar, radius=mask_radius)
 
         src = asarray(niar, dtype='uint8')
 

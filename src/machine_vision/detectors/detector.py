@@ -41,6 +41,6 @@ class Detector(Loggable):
     parent = Any(transient=True)
     image = Any(transient=True)
     working_image = Any(transient=True)
-    pxpermm = Float(2)
+    pxpermm = Float(23.1)
 
 #============= EOF =============================================
