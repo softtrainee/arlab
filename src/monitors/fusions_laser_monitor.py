@@ -99,7 +99,9 @@ class FusionsLaserMonitor(LaserMonitor):
             manager.emergency_shutoff(reason=reason)
 
     def _chiller_unavailable(self):
-        reason = 'Laser chiller not available'
-        self.manager.emergency_shutoff(reason=reason)
-        self.warning(reason)
+        from globals import ignore_chiller_unavailable
+        if not ignore_chiller_unavailable:
+            reason = 'Laser chiller not available'
+            self.manager.emergency_shutoff(reason=reason)
+            self.warning(reason)
 #============= EOF ====================================

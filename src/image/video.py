@@ -39,6 +39,7 @@ from cvwrapper import get_capture_device, query_frame, write_frame, \
     load_image, new_video_writer, grayspace, get_nframes, \
     set_frame_index, get_fps, set_video_pos, get_frame_size, swapRB, \
     crop
+from timeit import Timer
 
 DEBUG = False
 #DEBUG = True
@@ -58,7 +59,7 @@ class Video(Image):
 
     _recording = Bool(False)
     _lock = None
-
+    _prev_frame = None
     def open(self, user=None, identifier=0, force=False):
         '''
 
@@ -114,20 +115,13 @@ class Video(Image):
             set_frame_index(cap, ind)
 
     def _get_frame(self, lock=True, **kw):
-#        if DEBUG:
-##                    src = '/Users/ross/Sandbox/tray_screen_shot3.tiff'
-#            src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an4.tiff'
-#            return load_image(src)
         cap = self.cap
         if cap is not None:
 #            if lock:
             with self._lock:
                 f = query_frame(cap)
-#            else:
-#                self._frame = query_frame(self.cap)
-            return f
 
-#                return  cvQueryFrame(self.cap)
+            return f
 
     def start_recording(self, path, user=None):
         self._stop_recording_event = Event()
@@ -159,11 +153,10 @@ class Video(Image):
 
                 while not stop():
                     st = ctime()
-
                     f = crop(self._frame.clone(), x, y, w, h)
-#                    f = self._frame#.clone()
                     write_frame(writer, grayspace(f))
-                    sleep(max(0.001, fps - (ctime() - st)))
+                    dur = ctime() - st
+                    sleep(max(0.001, fps - dur))
 
         t = Thread(target=__record)
         t.start()

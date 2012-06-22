@@ -350,20 +350,22 @@ class VideoStageManager(StageManager):
         rpos = None
         interp = False
         if self.use_autocenter:
-            newpos = None
+#            newpos = None
             for _t in range(max(1, ntries)):
-                newpos = self.machine_vision_manager.locate_target(
-                        self.stage_controller._x_position,
-                        self.stage_controller._y_position,
+                result = self.machine_vision_manager.locate_target(
+                        self.stage_controller.x,
+                        self.stage_controller.y,
                         holenum
                         )
 
-                if newpos:
-                    rpos = newpos
-                    self.linear_move(*newpos, block=True,
-                                     calibrated_space=False,
-                                     update_hole=False
-                                     )
+                if result:
+                    rpos, _ = result
+                    if rpos:
+    #                    rpos = newpos
+                        self.linear_move(*rpos, block=True,
+                                         calibrated_space=False,
+                                         update_hole=False
+                                         )
                 else:
                     self.snapshot(auto=True,
                                   name='pos_err_{}_{}-'.format(holenum, _t))
