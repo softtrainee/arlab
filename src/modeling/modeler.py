@@ -15,13 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Any, Instance, Str, \
+from traits.api import  Any, Instance, Str, Event, \
     Directory, List, on_trait_change, Property, Enum, Int, Button
 from traitsui.api import View, Item, VSplit, TableEditor, CheckListEditor
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from pyface.api import FileDialog, OK
-from pyface.message_dialog import information
 from pyface.directory_dialog import DirectoryDialog
 #from enthought.pyface.timer import do_later
 #from traitsui.menu import Action, Menu, MenuBar
@@ -33,15 +32,14 @@ from threading import Thread
 import time
 import sys
 #============= local library imports  ==========================
-from src.helpers.paths import modeling_data_dir as data_dir, clovera_root, \
-    modeling_data_dir
+from src.helpers.paths import modeling_data_dir
 #from src.helpers.paths import LOVERA_PATH
 from src.graph.diffusion_graph import DiffusionGraph, GROUPNAMES
 from src.loggable import Loggable
-from src.data_processing.modeling.data_loader import DataLoader
-from src.data_processing.modeling.model_data_directory import ModelDataDirectory
+from src.modeling.data_loader import DataLoader
+from src.modeling.model_data_directory import ModelDataDirectory
 from src.helpers.color_generators import colorname_generator
-from src.data_processing.modeling.fortran_process import FortranProcess
+from src.modeling.fortran_process import FortranProcess
 
 class DummyDirectoryDialog(object):
     path = os.path.join(modeling_data_dir, '59702-43')
@@ -55,7 +53,7 @@ class Modeler(Loggable):
     graph = Instance(DiffusionGraph)
     name = Str(enter_set=True, auto_set=False)
 
-    datum = Directory(value=data_dir)
+    datum = Directory(value=modeling_data_dir)
     data = List(ModelDataDirectory)
 
     selected = Any
@@ -74,6 +72,10 @@ class Modeler(Loggable):
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
 
     clovera_dir = Directory
+
+    active_process = Any
+    process_state = Any
+
 #===============================================================================
 # fortran
 #===============================================================================
@@ -81,7 +83,7 @@ class Modeler(Loggable):
         '''
         '''
 
-        f = FileDialog(action='open', default_directory=data_dir)
+        f = FileDialog(action='open', default_directory=modeling_data_dir)
         if f.open() == OK:
             self.info('loading autoupdate file {}'.format(f.path))
 
@@ -99,7 +101,9 @@ class Modeler(Loggable):
                         with open(os.path.join(root, rid, 'samples.lst'), 'w') as s:
                             s.write('{}'.format(rid))
 
-                        self.execute_files(rid=rid, root=root)
+                        self.execute_files(rid=rid, root=root,
+                                           block=True)
+
 
         #=======================================================================
         # debug
@@ -107,7 +111,7 @@ class Modeler(Loggable):
         #path='/Users/Ross/Pychrondata_beta/data/modeling/ShapFurnace.txt' 
         #self.data_loader.load_autoupdate(path)
 
-    def execute_files(self, rid=None, root=None):
+    def execute_files(self, rid=None, root=None, **kw):
         if rid is None:
             rid, root = self._get_rid_root()
 
@@ -126,7 +130,7 @@ class Modeler(Loggable):
             name = 'files_py'
 #            if sys.platform != 'darwin':
 #                name += '.exe'
-            self._execute_fortran(name)
+            self._execute_fortran(name, **kw)
 
     def _get_rid_root(self):
 
@@ -195,23 +199,39 @@ class Modeler(Loggable):
             self.info('------- {} aborted-------'.format(name))
 
 
-    def _execute_fortran(self, name):
+    def _execute_fortran(self, name, block=False):
         if sys.platform != 'darwin':
             name += '.exe'
         self.info('excecute fortran program {}'.format(name))
         q = Queue()
 
         croot = self.clovera_dir
-        self._fortran_process = t = FortranProcess(name, croot, q)
+
+        if not croot:
+            from src.helpers.paths import clovera_dir
+            croot = clovera_dir
+
+        from traits.api import HasTraits
+        class AProcess(HasTraits):
+            name = Str
+
+        rid = os.path.basename(os.getcwd())
+        self.active_process = AProcess(name=name,
+                                       rid=rid)
+
+        self._fortran_process = p = FortranProcess(name, croot, q)
+        p.start()
+
+        t = Thread(target=self._handle_stdout, args=(name, p, q))
         t.start()
 
-        t = Thread(name='mdd.fortran', target=self._handle_stdout, args=(name, t, q))
-        t.start()
+        if block:
+            t.join()
 
     def _handle_stdout(self, name, t, q):
         def _handle(msg):
             if msg:
-                self.logger.info(msg)
+                self.info(msg)
                 #func(msg)
                 #information(None, msg)
 
@@ -224,15 +244,25 @@ class Modeler(Loggable):
         while t.isAlive() or not q.empty():
             l = q.get().rstrip()
             _handle(l)
+            time.sleep(0.001)
 
         #handle addition msgs
         for m in self._fortran_process.get_remaining_stdout():
             _handle(m)
 
         dur = time.time() - st
-        if self._fortran_process.success():
-            self.info('{} run time {:e} s'.format(name, dur))
-            self.info('------ {} finished ------'.format(name.capitalize()))
+        self.info('{} run time {:e} s'.format(name, dur))
+
+        if self._fortran_process.success:
+            pstate = 'finished'
+        else:
+            pstate = 'failed'
+        self.info('------ {} {} ------'.format(name.capitalize(), pstate))
+
+        from traits.api import HasTraits
+        class ProcessState(HasTraits):
+            state = Str
+        self.process_state = ProcessState(state=pstate)
 
     def _handle_autoarr_py(self, m):
         pass
@@ -616,6 +646,8 @@ class Modeler(Loggable):
         '''
         '''
         self.graph.set_title(self.graph_title, size=18)
+
+
 def runfortran():
     q = Queue()
     t = FortranProcess('hello_world', '/Users/Ross/Desktop', q)

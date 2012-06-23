@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import  on_trait_change
 #============= standard library imports ========================
@@ -51,7 +49,7 @@ class MDDModelerUIPlugin(CoreUIPlugin):
         return p
 
     def _get_manager(self):
-        modeler_manager = self.application.get_service('src.data_processing.modeling.modeler_manager.ModelerManager')
+        modeler_manager = self.application.get_service('src.modeling.modeler_manager.ModelerManager')
         return modeler_manager
 
 #============= views ===================================
@@ -61,8 +59,24 @@ class MDDModelerUIPlugin(CoreUIPlugin):
         rv = [self._create_data_directory_view,
               self._create_notes_view,
               self._create_summary_view,
+              self._create_process_view,
               ]
         return rv
+
+    def _create_process_view(self, **kw):
+        from process_view import ProcessView
+        obj = ProcessView()
+        manager = self._get_manager()
+        if manager is not None:
+            manager.on_trait_change(obj.update_process, 'active_process')
+            manager.on_trait_change(obj.update_state, 'process_state')
+
+        args = dict(id='pychron.modeler.process_view',
+                  name='Process',
+                  obj=obj
+                  )
+
+        return self.traitsuiview_factory(args, kw)
 
     def _create_summary_view(self, **kw):
         from summary_view import SummaryView
@@ -108,22 +122,12 @@ class MDDModelerUIPlugin(CoreUIPlugin):
     @on_trait_change('application.gui:started')
     def _started(self, obj, name, old, new):
         '''
-            @type obj: C{str}
-            @param obj:
 
-            @type name: C{str}
-            @param name:
-
-            @type old: C{str}
-            @param old:
-
-            @type new: C{str}
-            @param new:
         '''
         if new  is True:
             app = self.application
             window = app.workbench.active_window
-            manager = app.get_service('src.data_processing.modeling.modeler_manager.ModelerManager')
+            manager = app.get_service('src.modeling.modeler_manager.ModelerManager')
             manager.window = window
             manager.open_default()
 

@@ -20,7 +20,7 @@ from pyface.action.api import Action
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-MDD_PROTOCOL = 'src.data_processing.modeling.modeler_manager.ModelerManager'
+MDD_PROTOCOL = 'src.modeling.modeler_manager.ModelerManager'
 class AutoarrAction(Action):
     '''
     '''

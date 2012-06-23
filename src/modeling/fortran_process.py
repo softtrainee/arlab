@@ -47,15 +47,16 @@ class FortranProcess(Thread):
 
     def run(self):
         n = 5
-        if not os.path.exists(os.path.join(self.root, self.name)):
+        p = os.path.join(self.root, self.name)
+        if not os.path.exists(p):
             warning(None, 'Invalid Clovera path {}'.format(self.root))
             return
 
-        pd = MProgressDialog(max=n, size=(550, 15))
-        do_later(pd.open)
-        do_later(pd.change_message, '{} process started'.format(self.name))
+#        pd = MProgressDialog(max=n, size=(550, 15))
+#        do_later(pd.open)
+#        do_later(pd.change_message, '{} process started'.format(self.name))
         try:
-            p = subprocess.Popen([self.name],
+            p = subprocess.Popen([p],
                                   shell=False,
                                   bufsize=1024,
                                   stdout=subprocess.PIPE
@@ -67,13 +68,15 @@ class FortranProcess(Thread):
                 time.sleep(1e-6)
 
             self.success = True
-            do_later(pd.change_message, '{} process complete'.format(self.name))
+#            do_later(pd.change_message, '{} process complete'.format(self.name))
 
             return True
 
         except OSError, e:
+            import traceback
+            traceback.print_exc()
             #warning(None, '{} - {}'.format(e, self.name))
-            do_later(pd.change_message, '{} process did not finish properly'.format(self.name))
+#            do_later(pd.change_message, '{} process did not finish properly'.format(self.name))
 
 
 

@@ -24,7 +24,6 @@ from traitsui.api import View, Item, VGroup, HGroup, Group, Label
 #============= local library imports  ==========================
 #from src.managers.plugins.manager_preferences_page import ManagerPreferencesPage
 from apptools.preferences.ui.preferences_page import PreferencesPage
-from src.helpers.paths import clovera_root
 
 class MDDPreferencesPage(PreferencesPage):
     '''
@@ -35,9 +34,6 @@ class MDDPreferencesPage(PreferencesPage):
     logr_ro_line_width = Int(1)
     plot_type = Enum('scatter', 'line', 'line_scatter')
     clovera_dir = Directory
-
-    def _clovera_dir_default(self):
-        return clovera_root
 
     def traits_view(self):
         v = View(
