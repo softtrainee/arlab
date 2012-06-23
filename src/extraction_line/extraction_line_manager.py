@@ -76,14 +76,8 @@ class ExtractionLineManager(Manager):
         except AttributeError:
             self.warning('{} not initialized'.format(subsystem))
 
-    def create_manager(self, manager):
-        '''
-        '''
-        klass = self.convert_config_name(manager)
-        kw = dict(name=manager)
 
-        kw['parent'] = self
-
+    def _create_manager(self, klass, manager, params, **kw):
         gdict = globals()
         if klass in gdict:
 
@@ -102,8 +96,8 @@ class ExtractionLineManager(Manager):
             class_factory = self.get_manager_factory(package, klass)
 
         if class_factory:
-            kw['application'] = self.application
-            m = class_factory(**kw)
+#            params['application'] = self.application
+            m = class_factory(**params)
 
             if manager in ['gauge_manager', 'valve_manager',
                            'environmental_manager', 'device_stream_manager',
