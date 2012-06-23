@@ -15,10 +15,11 @@
 #===============================================================================
 
 
+manager_package = 'src.managers'
+remote_package = '{}.remote'.format(manager_package)
+manager_package_dict = {
 
-'''
-Managers Package contains
+                       'RemoteMultrunsReportManager':'{}.multruns_report_manager'.format(remote_package)
 
-G{packagetree }
+                       }
 
-'''

@@ -36,8 +36,15 @@ class RpcCommunicator(Communicator):
         self._backend_load_hook(config)
         return True
 
+    def config_get(self, config, section, option, **kw):
+        if isinstance(config, dict):
+            return config[option]
+        else:
+            return super(RpcCommunicator, self).config_get(config, section, option, **kw)
+
     def _backend_load_hook(self, config):
-        backend = self.config_get(config, 'Communications', 'backend')
+        backend = self.config_get(config, 'Communications', 'backend', optional=True)
+
         if backend == 'pyro':
             from src.rpc.backends import PyroBackend
             bk = PyroBackend()

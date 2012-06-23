@@ -16,14 +16,13 @@
 
 #=============enthought library imports=======================
 from traits.api import HasTraits, Str, implements, Any, List, \
-Event, Property, Bool, Float, Enum
+    Bool, Enum
 #from pyface.timer.api import Timer
 #=============standard library imports ========================
 import random
 #from threading import Lock
 from datetime import datetime
 #=============local library imports  ==========================
-from viewable_device import ViewableDevice
 from i_core_device import ICoreDevice
 #from src.helpers.timer import Timer
 #from src.managers.data_managers.csv_data_manager import CSVDataManager
@@ -31,11 +30,7 @@ from i_core_device import ICoreDevice
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 from src.hardware.core.scanable_device import ScanableDevice
 from src.rpc.rpcable import RPCable
-#from src.graph.plot_record import PlotRecord
-#from src.managers.data_managers.h5_data_manager import H5DataManager
-#from src.database.adapters.device_scan_adapter import DeviceScanAdapter
-#from src.helpers.paths import device_scan_db, device_scan_root
-#from src.database.data_warehouse import DataWarehouse
+from src.has_communicator import HasCommunicator
 
 
 class Alarm(HasTraits):
@@ -74,17 +69,15 @@ class Alarm(HasTraits):
         return '<<<<<<ALARM {}>>>>>> {} {} {}'.format(tstamp, value, cond, trigger)
 
 
-
-class CoreDevice(ScanableDevice, RPCable):
+class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
     '''
     '''
     graph_klass = TimeSeriesStreamGraph
 
     implements(ICoreDevice)
-    _communicator = None
     name = Str
-    id_query = ''
-    id_response = ''
+#    id_query = ''
+#    id_response = ''
 
     current_scan_value = 0
 
@@ -99,42 +92,9 @@ class CoreDevice(ScanableDevice, RPCable):
     use_db = Bool(False)
     _auto_started = False
 
-    def get(self):
-        return self.current_scan_value
-#        if self.simulation:
-#            return 'simulation'
-
-    def set(self, v):
-        pass
-
-    def create_communicator(self, comm_type, port, baudrate):
-
-        c = self._communicator_factory(comm_type)
-        c.open(port=port, baudrate=baudrate)
-        self._communicator = c
-
-    def _communicator_factory(self, communicator_type):
-        if communicator_type is not None:
-
-            class_key = '{}Communicator'.format(communicator_type.capitalize())
-            module_path = 'src.hardware.core.communicators.{}_communicator'.format(communicator_type.lower())
-            classlist = [class_key]
-
-            class_factory = __import__(module_path, fromlist=classlist)
-            return getattr(class_factory, class_key)(name='_'.join((self.name, communicator_type.lower())),
-                          id_query=self.id_query,
-                          id_response=self.id_response
-                         )
-
-#            gdict = globals()
-#            if communicator_type in gdict:
-#                return gdict[communicator_type](name='_'.join((self.name, communicator_type)),
-#                                   id_query=self.id_query,
-#                                   id_response=self.id_response
-#                                )
-    def post_initialize(self, *args, **kw):
-        self.setup_scan()
-        self.setup_alarms()
+    def _communicate_hook(self, cmd, r):
+        self.last_command = cmd
+        self.last_response = r if r else ''
 
     def load(self, *args, **kw):
         '''
@@ -144,24 +104,11 @@ class CoreDevice(ScanableDevice, RPCable):
         config = self.get_configuration()
         if config:
             if config.has_section('Communications'):
-                type = self.config_get(config, 'Communications', 'type')
-
-                communicator = self._communicator_factory(type)
-                if communicator is not None:
-                    #give the _communicator the config object so it can load its args
-                    communicator.load(config, self.config_path)
-
-                    if hasattr(self, 'id_query'):
-                        communicator.id_query = getattr(self, 'id_query')
-                    self._communicator = communicator
-                else:
+                comtype = self.config_get(config, 'Communications', 'type')
+                if not self._load_communicator(config, comtype):
                     return False
 
-
-            if config.has_section('RPC'):
-                rpc_port = self.config_get(config, 'RPC', 'port', cast='int')
-                if rpc_port:
-                    self.load_rpc_server(rpc_port)
+            self._load_hook(config)
 
             #load additional child specific args
             r = self.load_additional_args(config)
@@ -174,19 +121,12 @@ class CoreDevice(ScanableDevice, RPCable):
         '''
         return True
 
-    def open(self, **kw):
-        '''
-        '''
-        if self._communicator is not None:
-            return self._communicator.open(**kw)
-
     def ask(self, cmd, **kw):
         '''
         '''
         if self._communicator is not None:
             r = self._communicator.ask(cmd, **kw)
-            self.last_command = cmd.strip()
-            self.last_response = str(r)
+            self._communicate_hook(cmd, r)
             return r
         else:
             self.info('no communicator for this device {}'.format(self.name))
@@ -200,8 +140,8 @@ class CoreDevice(ScanableDevice, RPCable):
         '''
         '''
         if self._communicator is not None:
-            self.last_command = ' '.join(map(str, args) + map(str, kw.iteritems()))
-            self.last_response = '-'
+            cmd = ' '.join(map(str, args) + map(str, kw.iteritems()))
+            self._communicate_hook(cmd, '-')
             return self._communicator.tell(*args, **kw)
 
     def read(self, *args, **kw):
@@ -209,6 +149,26 @@ class CoreDevice(ScanableDevice, RPCable):
         '''
         if self._communicator is not None:
             return self._communicator.read(*args, **kw)
+
+    def get(self):
+        return self.current_scan_value
+#        if self.simulation:
+#            return 'simulation'
+
+    def set(self, v):
+        pass
+
+
+
+#            gdict = globals()
+#            if communicator_type in gdict:
+#                return gdict[communicator_type](name='_'.join((self.name, communicator_type)),
+#                                   id_query=self.id_query,
+#                                   id_response=self.id_response
+#                                )
+    def post_initialize(self, *args, **kw):
+        self.setup_scan()
+        self.setup_alarms()
 
     def get_random_value(self, mi=0, ma=10):
         '''

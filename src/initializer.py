@@ -188,9 +188,9 @@ class Initializer(Loggable):
             timed_flags = parser.get_timed_flags(mp, element=True)
 
             #set rpc server
-            rpc_port = parser.get_rpc_port(mp)
-            if rpc_port:
-                manager.load_rpc_server(rpc_port)
+            mode, port = parser.get_rpc_mode_port(mp)
+            if port and mode != 'client':
+                manager.load_rpc_server(port)
 
         pdmax = 35
         if self.pd is None or self.pd.progress_bar is None:
@@ -243,13 +243,19 @@ class Initializer(Loggable):
                 continue
 
             self.info('load {}'.format(mi))
+            mode, port = self.parser.get_rpc_mode_port((mi, manager.name))
+            remote = mode == 'client'
             try:
                 man = getattr(manager, mi)
                 if man is None:
-                    man = manager.create_manager(mi)
+                    man = manager.create_manager(mi, port=port, remote=remote)
             except AttributeError:
 #                self.warning(e)
-                man = manager.create_manager(mi)
+                try:
+                    man = manager.create_manager(mi, port=port, remote=remote)
+                except Exception:
+                    import traceback
+                    traceback.print_exc()
 
             if man is None:
                 self.debug('trouble creating manager {}'.format(mi))

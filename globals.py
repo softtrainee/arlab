@@ -32,8 +32,8 @@ ipc_dgram = False
 initialize_beam = True
 initialize_zoom = True
 
-ignore_initialization_warnings = False
-ignore_connection_warnings = False
+ignore_initialization_warnings = True
+ignore_connection_warnings = True
 ignore_chiller_unavailable = True
 
 #use_ipc = False == embed the remote hardware servers into pychron
