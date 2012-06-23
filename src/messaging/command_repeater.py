@@ -26,7 +26,7 @@ from src.config_loadable import ConfigLoadable
 from src.led.led import LED
 from src.led.led_editor import LEDEditor
 import random
-from src.helpers.paths import pychron_src_dir
+from src.helpers.paths import pychron_src_root
 from src.remote_hardware.errors.system_errors import PychronCommErrorCode
 from threading import Lock
 
@@ -171,7 +171,7 @@ class CommandRepeater(ConfigLoadable):
         import subprocess
         import os
         #launch pychron
-        p = os.path.join(pychron_src_dir, '{}.app'.format(name))
+        p = os.path.join(pychron_src_root, '{}.app'.format(name))
         result = 'OK'
         try:
             subprocess.Popen(['open', p])
