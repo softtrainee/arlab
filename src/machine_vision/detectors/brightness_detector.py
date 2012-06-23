@@ -122,7 +122,7 @@ class BrightnessDetector(CO2HoleDetector):
         mask_radius = self._get_mask_radius()
 #        mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > mask_radius * mask_radius
 #        niar[mask] = 0
-        self._apply_circular_mask(niar, radius=mask_radius)
+        mask = self._apply_circular_mask(niar, radius=mask_radius)
 
         src = asarray(niar, dtype='uint8')
 

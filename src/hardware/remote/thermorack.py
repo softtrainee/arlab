@@ -18,20 +18,20 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.hardware.thermorack import ThermoRack
-from src.hardware.core.remote_device import remote_query
+from src.rpc.query import rpc_query
 
 
 class RemoteThermoRack(ThermoRack):
 
-    @remote_query
+    @rpc_query
     def get_coolant_out_temperature(self, **kw):
         pass
 
-    @remote_query
+    @rpc_query
     def get_faults(self):
         pass
 
-    @remote_query
+    @rpc_query
     def get_setpoint(self):
         pass
 

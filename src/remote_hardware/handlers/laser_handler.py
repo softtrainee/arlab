@@ -26,18 +26,40 @@ from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
 
 
 class LaserHandler(BaseRemoteHardwareHandler):
-
+    _elm = None
+    _mrm = None
+    _lm = None
     def error_response(self, err):
         return 'OK' if (err is None or err is True) else err
 
     def get_manager(self):
-        return self.get_laser_manager()
+        if self._lm is None:
+            self._lm = self.get_laser_manager()
+        return self._lm
 
     def get_elm(self):
-        if self.application:
-            protocol = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-            elm = self.application.get_service(protocol)
-            return elm
+        if self._elm is None:
+            if self.application:
+                protocol = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+                self._elm = self.application.get_service(protocol)
+
+        return self._elm
+
+    def get_mrm(self):
+        mrm = None
+        elm = self.get_elm()
+        if elm is None:
+            man = self.get_manager()
+            try:
+                mrm = man.multruns_report_manager
+            except AttributeError:
+                pass
+        else:
+            mrm = elm.multruns_report_manager
+
+        if mrm is None:
+            self.info('multrun report manager unavailable')
+        return mrm
 
     def ReadLaserPower(self, manager, *args):
         '''
@@ -59,12 +81,20 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         if manager.record_lasing:
             def record():
-                elm = self.get_elm()
-                #get the extraction line manager's current rid
-                mrm = None
-                if elm is not None:
-                    mrm = elm.multruns_report_manager
 
+
+                '''
+                    getting the rid needs to be fixed
+                    
+                    the problem is that instances of pychron can be configured
+                    with a laser but no extraction line manager
+                    
+                    so laser manager needs to be configured with an 
+                    rpc-multruns report manager
+                    
+                '''
+
+                mrm = self.get_mrm()
                 rid = mrm.get_current_rid() if mrm else 'testrid_001'
 
                 manager.start_power_recording(rid)

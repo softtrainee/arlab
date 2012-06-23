@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Button, Int, Str, Enum, \
     Float, Bool, Event, Property, List
@@ -297,8 +295,8 @@ def laser_client():
 def power_test():
     c = Client(
                port=1068,
-               host='129.138.12.141',
-#                host='192.168.0.253',
+#               host='129.138.12.141',
+                host='192.168.0.253',
                ask_id='E')
 
     ask = c.ask
