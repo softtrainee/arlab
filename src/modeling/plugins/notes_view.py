@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import HasTraits, Button, String
 from traitsui.api import View, Item, HGroup, spring
@@ -23,7 +21,7 @@ from traitsui.api import View, Item, HGroup, spring
 
 #============= standard library imports ========================
 import os
-from src.data_processing.modeling.model_data_directory import ModelDataDirectory
+from src.modeling.model_data_directory import ModelDataDirectory
 #============= local library imports  ==========================
 
 #============= views ===================================
@@ -57,8 +55,10 @@ class NotesView(HasTraits):
                 f.write(self.notes)
 
     def traits_view(self):
-        v = View(HGroup(spring, Item('save', show_label=False)),
+        v = View(
                Item('notes',
                      style='custom',
-                     show_label=False))
+                     show_label=False),
+                 HGroup(spring, Item('save', show_label=False))
+                 )
         return v

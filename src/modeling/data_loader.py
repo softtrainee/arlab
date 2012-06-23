@@ -27,7 +27,7 @@ from numpy import array, loadtxt
 from src.loggable import Loggable
 
 TAB = chr(9)
-LABTABLE = {"temp":67, "time":73, "39Armol":80, "er39Ar":81, "Age":19, "erAge":20, "terAge":21, "SenseMol":26} # autoupdate column numbers for each header of interest
+#labtable = {"temp":21, "time":27, "39Armol":34, "er39Ar":35, "Age":109, "erAge":110, "terAge":21, "SenseMol":26} # autoupdate column numbers for each header of interest
 #REQUIRED_FILES = ['logr.samp', 'logr.dat', 'arr.samp', 'arr.dat']
 REQUIRED_FILES = ['age.in']
 
@@ -110,6 +110,10 @@ class DataLoader(Loggable):
         f, reader = self._open_reader(p, root=root)
         if reader is None:
             return
+            
+        keys = reader.next()
+        values = range(len(keys))
+        labtable = dict(zip(keys,values))
 
         path, _ext = os.path.splitext(path)
         path += '_data'
@@ -126,12 +130,13 @@ class DataLoader(Loggable):
         TopRowIgnore = TopRow + IgnoreLines
         for i, row in enumerate(reader):
             try:
-                a = row[LABTABLE["Age"]]
+                a = row[labtable["Age"]]
                 age = float(a)
                 if age < 0:
                     self.info('Skipping negative age {}'.format(age))
                     continue
-            except ValueError:
+            except ValueError,e:
+                print e
                 self.info('Invalid age {}'.format(a))
                 continue
             except IndexError:
@@ -139,43 +144,47 @@ class DataLoader(Loggable):
                 continue
 
             if TopRowIgnore <= i < BottomRow:
-                total_39 = total_39 + float(row[LABTABLE["39Armol"]])
+                total_39 = total_39 + float(row[labtable["Ar39_"]])
 
         f.close()
 
         f, reader = self._open_reader(p, root=root)
         op = os.path.join(cur_dir, '{}.in'.format(name))
         wf, writer = self._open_writer(op)
+        
+
+        
         CumAr39 = 0
         sensitivity = 0
         for i, row in enumerate(reader):
             if len(row) <= 4:
                 continue
             if TopRowIgnore <= i < BottomRow:
+                a = row[labtable["Age"]]
                 try:
-                    age = float(row[LABTABLE["Age"]])
+                	age = float(a)
                 except ValueError:
                     self.info('Invalid age {}'.format(a))
                     continue
 
                 if age > 0:
                     if sensitivity == 0:
-                        sensitivity = float(row[LABTABLE["SenseMol"]]) / float(row[LABTABLE["39Armol"]])
+                        sensitivity = float(row[labtable["Ar39_Moles"]]) / float(row[labtable["Ar39_"]])
 
-                    CumAr39 += float(row[LABTABLE["39Armol"]])
+                    CumAr39 += float(row[labtable["Ar39_"]])
                     nrow = []
                     nrow.append(int(i - TopRowIgnore + 1))
-                    nrow.append(int(row[LABTABLE["temp"]]) - tempoffset)
-                    nrow.append(float(row[LABTABLE["time"]]) / 60 - timeoffset)
-                    nrow.append(float(row[LABTABLE["39Armol"]]) * sensitivity)
-                    nrow.append(float(row[LABTABLE["er39Ar"]]) * sensitivity)
+                    nrow.append(int(row[labtable["Pwr_Requested"]]) - tempoffset)
+                    nrow.append(float(row[labtable["Dur_Heating_At_Req_Pwr"]]) / 60 - timeoffset)
+                    nrow.append(float(row[labtable["Ar39_"]]) * sensitivity)
+                    nrow.append(float(row[labtable["Ar39_Er"]]) * sensitivity)
                     nrow.append(CumAr39 / total_39 * 100)
 
                     nrow.append(age)
-                    nrow.append(float(row[LABTABLE["erAge"]]))
-                    nrow.append(float(row[LABTABLE["terAge"]]))
+                    nrow.append(float(row[labtable["Age_Er"]]))
+                    nrow.append(float(row[labtable["Age_Er_with_J_er"]]))
                     nrow.append(age)
-                    nrow.append(float(row[LABTABLE["erAge"]]))
+                    nrow.append(float(row[labtable["Age_Er"]]))
 
                     writer.writerow(nrow)
                 else:

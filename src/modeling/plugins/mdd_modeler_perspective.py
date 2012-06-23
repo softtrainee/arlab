@@ -41,6 +41,11 @@ class MDDModelerPerspective(Perspective):
                               relative_to='pychron.modeler.summary_view',
                               #width = 0.65
                               position='bottom'
+                              ),
+                PerspectiveItem(id='pychron.modeler.process_view',
+                              relative_to='pychron.modeler.notes_view',
+                              #width = 0.65
+                              position='with'
                               )
 
               ]

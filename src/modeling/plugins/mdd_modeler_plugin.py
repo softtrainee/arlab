@@ -21,7 +21,7 @@
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.data_processing.modeling.modeler_manager import ModelerManager
+from src.modeling.modeler_manager import ModelerManager
 from src.envisage.core.core_plugin import CorePlugin
 from apptools.preferences.preference_binding import bind_preference
 
@@ -37,6 +37,7 @@ class MDDModelerPlugin(CorePlugin):
                           factory=self._factory
                           )
         return [so]
+    
     def _factory(self):
         '''
         '''
@@ -44,6 +45,7 @@ class MDDModelerPlugin(CorePlugin):
         bind_preference(m.modeler, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
         bind_preference(m.modeler, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
         bind_preference(m.modeler, 'clovera_dir', 'pychron.mdd.clovera_dir')
+        
         return m
 
 

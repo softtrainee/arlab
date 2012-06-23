@@ -82,7 +82,8 @@ class FilesConfig(BaseConfig):
     #===========================================================================
 
     STOP = 'stop'
-    _dump_attrs = ['runid', 'STOP']
+    n = 'n'
+    _dump_attrs = ['n','runid', 'STOP']
 
 class AutoarrConfig(BaseConfig):
     klass_name = 'autoarr'

@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Instance, DelegatesTo, List, Property, Str, Int
 from traitsui.api import View, Item
@@ -43,6 +41,8 @@ class ModelerManager(EnvisageManager):
 
     _include_panels = None
 
+    active_process = DelegatesTo('modeler')
+    process_state = DelegatesTo('modeler')
 #    line_width = Int(1)
 #    arrhenius_plot_type = Str('scatter')
 
@@ -56,7 +56,8 @@ class ModelerManager(EnvisageManager):
         m = self._modeler_factory()
         bind_preference(m, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
         bind_preference(m, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
-#        if self.modeler:
+        bind_preference(m, 'clovera_dir', 'pychron.mdd.clovera_dir')
+    #        if self.modeler:
 #            m.logr_ro_line_width = self.modeler.logr_ro_line_width
 #            m.arrhenius_plot_type = self.modeler.arrhenius_plot_type
 

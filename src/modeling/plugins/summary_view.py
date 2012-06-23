@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import HasTraits, String
 from traitsui.api import View, Item
@@ -23,7 +21,7 @@ from traitsui.api import View, Item
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.data_processing.modeling.model_data_directory import ModelDataDirectory
+from src.modeling.model_data_directory import ModelDataDirectory
 
 #============= views ===================================
 class SummaryView(HasTraits):
