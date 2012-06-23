@@ -59,7 +59,7 @@ class ManagerHandler(ViewableHandler):
         info.object.close(isok)
         return True
 
-class Manager(ConfigLoadable, Viewable, RPCable):
+class Manager(Viewable, RPCable):
     '''
     '''
 
@@ -289,6 +289,35 @@ class Manager(ConfigLoadable, Viewable, RPCable):
 #===============================================================================
 # 
 #===============================================================================
+    def create_manager(self, manager, **kw):
+
+        '''
+        '''
+        klass = self.convert_config_name(manager)
+        params = dict(name=manager)
+        params['parent'] = self
+        params['application'] = self.application
+
+        return self._create_manager(klass, manager, params, **kw)
+
+    def _create_manager(self, klass, manager, params,
+                        port=None, remote=False):
+        from src.managers import manager_package_dict
+
+        if remote:
+            klass = 'Remote{}'.format(klass)
+            params['rpc_port'] = port
+        try:
+            package = manager_package_dict[klass]
+            class_factory = self.get_manager_factory(package, klass)
+            if class_factory:
+                m = class_factory(**params)
+
+                self.add_trait(manager, m)
+                return m
+        except KeyError, e:
+            print e
+            pass
 
     def create_device(self, device_name, gdict=None, dev_class=None, prefix=None):
         '''

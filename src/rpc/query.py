@@ -18,7 +18,7 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-def remote_query(func, **kw):
+def rpc_query(func, **kw):
     def _query(obj, *args, **kw):
         handle = obj._communicator.handle
         try:

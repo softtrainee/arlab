@@ -18,11 +18,20 @@
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class RPCable(object):
+from src.config_loadable import ConfigLoadable
+class RPCable(ConfigLoadable):
     rpc_server = None
     def load_rpc_server(self, port):
+        self.info('starting rpc server port={}'.format(port))
         from src.rpc.server import RPCServer
         self.rpc_server = RPCServer(manager=self,
                                     port=port)
         self.rpc_server.bootstrap()
+
+    def _load_hook(self, config):
+        if config.has_section('RPC'):
+            rpc_port = self.config_get(config, 'RPC', 'port', cast='int')
+            if rpc_port:
+                self.load_rpc_server(rpc_port)
+
 #============= EOF =============================================

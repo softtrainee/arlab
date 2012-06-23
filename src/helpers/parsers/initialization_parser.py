@@ -109,12 +109,19 @@ class InitializationParser(XMLParser):
     def get_timed_flags(self, manager, **kw):
         return self._get_paramaters(manager, 'timed_flag', **kw)
 
-    def get_rpc_port(self, manager):
+    def get_rpc_mode_port(self, manager):
+
+        if isinstance(manager, tuple):
+            manager = self.get_manager(*manager)
+
         try:
             rpc = manager.find('rpc')
-            return int(rpc.find('port').text.strip())
-        except Exception:
+            mode = rpc.get('mode')
+            return mode, int(rpc.find('port').text.strip())
+        except Exception, e:
             pass
+
+        return None, None
 
     def get_device(self, manager, devname, plugin, element=False):
 

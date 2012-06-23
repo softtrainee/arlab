@@ -112,6 +112,7 @@ class HoleDetector(Detector):
         X, Y = ogrid[0:x, 0:y]
         mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > radius * radius
         src[mask] = 0
+        return mask
 
     def _edge_segmentation(self, src, **kw):
         from scipy import ndimage

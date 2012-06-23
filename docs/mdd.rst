@@ -218,7 +218,11 @@ may be redistributed.
 
 Pychron Documentation
 --------------------------------------------
+To use Pychron you need to install both the pychron source files and the the
+Enthought Python Distribution. See :doc:`pychron_install` for installation
+instructions.
 
+:doc:`mdd_fortran`
 
 Finding Software
 --------------------------------------------
