@@ -14,27 +14,34 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
+from traits.api import HasTraits, Str
+#from pyface.timer.do_later import do_later
+from pyface.message_dialog import warning
+#============= standard library imports ========================
 from threading import Thread
 import subprocess
 import os
-from pyface.message_dialog import warning
 import sys
-from src.initializer import MProgressDialog
-from pyface.timer.do_later import do_later
 import time
-#============= standard library imports ========================
 
 #============= local library imports  ==========================
-class FortranProcess(Thread):
+#from src.initializer import MProgressDialog
+
+class FortranProcess(HasTraits):
+    _thread = None
     _process = None
-    def __init__(self, name, root, queue=None):
-        Thread.__init__(self)
+    name = Str
+    root = Str
+    rid = Str
+    state = Str
+    def __init__(self, name, root, rid, queue=None, *args, **kw):
+        super(FortranProcess, self).__init__(*args, **kw)
+#        Thread.__init__(self)
         self.name = name
         self.root = root
         self.success = False
+        self.rid = rid
         delimiter = ':'
         if sys.platform != 'darwin':
             delimiter = ';'
@@ -45,13 +52,20 @@ class FortranProcess(Thread):
 
         self.queue = queue
 
-    def run(self):
-        n = 5
+    def start(self):
+        self._thread = Thread(target=self._run)
+        self._thread.start()
+    def isAlive(self):
+        if self._thread:
+            return self._thread.isAlive()
+
+    def _run(self):
         p = os.path.join(self.root, self.name)
         if not os.path.exists(p):
             warning(None, 'Invalid Clovera path {}'.format(self.root))
             return
 
+#        n = 5
 #        pd = MProgressDialog(max=n, size=(550, 15))
 #        do_later(pd.open)
 #        do_later(pd.change_message, '{} process started'.format(self.name))
@@ -78,8 +92,6 @@ class FortranProcess(Thread):
             #warning(None, '{} - {}'.format(e, self.name))
 #            do_later(pd.change_message, '{} process did not finish properly'.format(self.name))
 
-
-
     def get_remaining_stdout(self):
         if self._process:
             try:
@@ -90,6 +102,8 @@ class FortranProcess(Thread):
                 pass
                 #print 'get remaining stdout',e
         return []
+
+
 
 if __name__ == '__main__':
     import Queue

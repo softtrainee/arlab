@@ -71,10 +71,9 @@ class Modeler(Loggable):
     logr_ro_line_width = Int(1)
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
 
-    clovera_dir = Directory
+    clovera_directory = Directory
 
-    active_process = Any
-    process_state = Any
+    fortran_processes = List
 
 #===============================================================================
 # fortran
@@ -205,21 +204,16 @@ class Modeler(Loggable):
         self.info('excecute fortran program {}'.format(name))
         q = Queue()
 
-        croot = self.clovera_dir
+        croot = self.clovera_directory
 
         if not croot:
-            from src.helpers.paths import clovera_dir
-            croot = clovera_dir
-
-        from traits.api import HasTraits
-        class AProcess(HasTraits):
-            name = Str
+            from src.helpers.paths import clovera_root as croot
 
         rid = os.path.basename(os.getcwd())
-        self.active_process = AProcess(name=name,
-                                       rid=rid)
-
-        self._fortran_process = p = FortranProcess(name, croot, q)
+        p = FortranProcess(name, croot, rid, q)
+        self.fortran_processes.append(p)
+        if len(self.fortran_processes) > 50:
+            self.fortran_processes.pop(0)
         p.start()
 
         t = Thread(target=self._handle_stdout, args=(name, p, q))
@@ -247,33 +241,19 @@ class Modeler(Loggable):
             time.sleep(0.001)
 
         #handle addition msgs
-        for m in self._fortran_process.get_remaining_stdout():
+        for m in t.get_remaining_stdout():
             _handle(m)
 
         dur = time.time() - st
         self.info('{} run time {:e} s'.format(name, dur))
 
-        if self._fortran_process.success:
+        if t.success:
             pstate = 'finished'
         else:
             pstate = 'failed'
         self.info('------ {} {} ------'.format(name.capitalize(), pstate))
 
-        from traits.api import HasTraits
-        class ProcessState(HasTraits):
-            state = Str
-        self.process_state = ProcessState(state=pstate)
-
-    def _handle_autoarr_py(self, m):
-        pass
-    def _handle_autoagemon_py(self, m):
-        pass
-    def _handle_autoagefree_py(self, m):
-        pass
-    def _handle_confint_py(self, m):
-        pass
-    def _handle_files_py(self, m):
-        pass
+        t.state = pstate
 
     #===========================================================================
     # graph

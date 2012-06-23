@@ -37,15 +37,15 @@ class MDDModelerPlugin(CorePlugin):
                           factory=self._factory
                           )
         return [so]
-    
+
     def _factory(self):
         '''
         '''
         m = ModelerManager()
         bind_preference(m.modeler, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
         bind_preference(m.modeler, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
-        bind_preference(m.modeler, 'clovera_dir', 'pychron.mdd.clovera_dir')
-        
+        bind_preference(m.modeler, 'clovera_directroy', 'pychron.mdd.clovera_directory')
+
         return m
 
 

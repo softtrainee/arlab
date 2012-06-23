@@ -41,8 +41,7 @@ class ModelerManager(EnvisageManager):
 
     _include_panels = None
 
-    active_process = DelegatesTo('modeler')
-    process_state = DelegatesTo('modeler')
+    fortran_processes = DelegatesTo('modeler')
 #    line_width = Int(1)
 #    arrhenius_plot_type = Str('scatter')
 
@@ -51,12 +50,10 @@ class ModelerManager(EnvisageManager):
 
     def new_modeler(self):
 
-
-
         m = self._modeler_factory()
         bind_preference(m, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
         bind_preference(m, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
-        bind_preference(m, 'clovera_dir', 'pychron.mdd.clovera_dir')
+        bind_preference(m, 'clovera_directory', 'pychron.mdd.clovera_directory')
     #        if self.modeler:
 #            m.logr_ro_line_width = self.modeler.logr_ro_line_width
 #            m.arrhenius_plot_type = self.modeler.arrhenius_plot_type
