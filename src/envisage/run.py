@@ -51,8 +51,8 @@ PACKAGE_DICT = dict(
                    ExtractionLineUIPlugin='src.extraction_line.plugins.extraction_line_ui_plugin',
                    CanvasDesignerPlugin='src.canvas.plugins.canvas_designer_plugin',
                    CanvasDesignerUIPlugin='src.canvas.plugins.canvas_designer_ui_plugin',
-                   MDDModelerPlugin='src.data_processing.plugins.mdd_modeler_plugin',
-                   MDDModelerUIPlugin='src.data_processing.plugins.mdd_modeler_ui_plugin',
+                   MDDModelerPlugin='src.modeling.plugins.mdd_modeler_plugin',
+                   MDDModelerUIPlugin='src.modeling.plugins.mdd_modeler_ui_plugin',
                    SVNPlugin='src.svn.plugins.svn_plugin',
                    SVNUIPlugin='src.svn.plugins.svn_ui_plugin',
 
