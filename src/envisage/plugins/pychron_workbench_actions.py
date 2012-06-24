@@ -27,7 +27,7 @@ from pyface.action.api import Action
 #from src.canvas.designer.canvas_manager import CEditor
 #from src.data_processing.modeling.modeler_manager import MEditor
 from src.helpers.gdisplays import gLoggerDisplay
-from src.helpers.paths import doc_html_dir
+from src.helpers.paths import doc_html_root
 
 #def get_manager(window, editor=None):
 #    if editor is None:
@@ -141,7 +141,7 @@ class GotoHelpPageAction(Action):
 class DocumentationPageAction(Action):
     def perform(self, event):
         import webbrowser
-        p = 'file://{}/index.html'.format(doc_html_dir)
+        p = 'file://{}/index.html'.format(doc_html_root)
         webbrowser.open_new(p)
 
 

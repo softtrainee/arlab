@@ -68,8 +68,10 @@ class MDDModelerUIPlugin(CoreUIPlugin):
         obj = ProcessView()
         manager = self._get_manager()
         if manager is not None:
-            manager.on_trait_change(obj.update_process, 'active_process')
-            manager.on_trait_change(obj.update_state, 'process_state')
+#            manager.on_trait_change(obj.update_process, 'active_process')
+#            manager.on_trait_change(obj.update_state, 'process_state')
+            manager.on_trait_change(obj.update_plist, 'fortran_processes[]')
+#            manager.on_trait_change(obj.update_state, 'active_processes.state')
 
         args = dict(id='pychron.modeler.process_view',
                   name='Process',
