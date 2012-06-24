@@ -42,8 +42,8 @@ home = 'Pychrondata{}'.format(version)
 root = os.path.join(HOME, home)
 
 src_repo_name = 'pychron{}'.format(version)
-pychron_src_dir = os.path.join(HOME, 'Programming', 'mercurial', src_repo_name)
-doc_html_dir = os.path.join(pychron_src_dir, 'docs', '_build', 'html')
+pychron_src_root = os.path.join(HOME, 'Programming', 'mercurial', src_repo_name)
+doc_html_root = os.path.join(pychron_src_root, 'docs', '_build', 'html')
 
 #_dir suffix ensures the path is checked for existence
 root_dir = root
@@ -102,15 +102,15 @@ argus_data_dir = os.path.join(data_dir, 'argusVI')
 positioning_error_dir = os.path.join(data_dir, 'positioning_error')
 snapshot_dir = os.path.join(data_dir, 'snapshots')
 video_dir = os.path.join(data_dir, 'videos')
-stage_visualizer_dir = os.path.join(data_dir,'stage_visualizer')
+stage_visualizer_dir = os.path.join(data_dir, 'stage_visualizer')
 #initialization_dir = os.path.join(setup_dir, 'initializations')
 #device_creator_dir = os.path.join(device_dir, 'device_creator')
 
 #==============================================================================
 # lovera exectuables
 #==============================================================================
-#clovera_root = os.path.join(src_root, 'src', 'data_processing', 'modeling', 'lovera')
-clovera_root = '/usr/local/pychron/clovera'
+clovera_root = os.path.join(pychron_src_root, 'src', 'modeling', 'lovera', 'bin')
+
 
 
 def rec_make(pi):

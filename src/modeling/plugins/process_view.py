@@ -20,11 +20,7 @@ from traitsui.api import View, Item, TabularEditor, HGroup, spring
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class Process(HasTraits):
-    name = Str
-    state = Str
-    rid = Str
-    duration = Str
+
 class ProcessAdapter(TabularAdapter):
     columns = [('Name', 'name'), ('RunID', 'rid'),
                ('State', 'state'),
@@ -50,16 +46,10 @@ class ProcessView(HasTraits):
                  )
         return v
 
-    def update_process(self, obj, name, old, new):
+    def update_plist(self, obj, name, old, new):
         if new:
-            c = Process(name=new.name,
-                        rid=new.rid,
-                        state='running')
-            self.processes.append(c)
-
-    def update_state(self, obj, name, old, new):
-#        print 'upd', name, old, new
-        p = self.processes[-1]
-        p.state = new.state
+            self.processes.append(new[0])
+        else:
+            self.processes.remove(old[0])
 
 #============= EOF =============================================
