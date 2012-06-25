@@ -11,15 +11,20 @@ This documentation uses Oscar Lovera’s most recent (Summer 2012) MDD fortran c
 
 .. toctree::
 	:maxdepth: 1
+
 	Overview
-    Outstanding Issues
-    MDD Code Compilation
-    Data Export from NMGRL Database
-    Parsing Autoupdate Files into MDD Files
-    Producing Models
-    Viewing Data with Pychron
-    Pychron Documentation
-    Finding Software
+	Outstanding Issues
+	MDD Code Compilation
+	Data Export from NMGRL Database
+	Parsing Autoupdate Files into MDD Files
+	Producing Models
+	Viewing Data with Pychron
+	Pychron Documentation
+	Finding Software
+	mdd_fortran
+	modeling
+	pychron_install
+	
     
     
 Overview
@@ -138,9 +143,11 @@ Tested on Windows 7, PPC Mac (10.5), and Intel Mac (10.6/10.7)
     #. Compile each individually
         On Mac, type “Ifort PROGRAM.f EXECUTABLE –save”
             Example “Ifort autoage-mon.f autoagemon –save”
+        
         On windows, replace “-save” with “/qsave”
         PROGRAM.f is the name of the file you want to compile
         EXECUTABLE is the name of the executable file, ie what you type into the console to run that program.
+    
     #. Repeat for each program
     #. Add the location of the folder containing your compiled codes to your command line PATH.
     #. Now you’re ready to model some spectra
@@ -223,6 +230,7 @@ Enthought Python Distribution. See :doc:`pychron_install` for installation
 instructions.
 
 :doc:`mdd_fortran`
+:doc:`modeling`
 
 Finding Software
 --------------------------------------------
