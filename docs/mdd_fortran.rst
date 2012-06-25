@@ -33,24 +33,34 @@ Compile for Mac OSX
 			
 			$ ./build.py 	
 			
+			
+		   if you receive the following error. ::
+			
+			-bash: ./build.py: Permission denied
+			
+		   the build.py script is not executable on your computer. Use ``chmod`` to make executable ::
+		
+			$ chmod +x ./build.py
+			
+			
 		b. **Or**, compile manually use ``Ifort PROGRAM.f EXECUTABLE –save`` ::
 			
 			$ Ifort autoage-mon.f autoagemon –save
 
-		PROGRAM.f is the name of the file you want to compile
+
+		   PROGRAM.f is the name of the file you want to compile
 			
-		EXECUTABLE is the name of the executable file, ie what you type into the console to run that program.
+		   EXECUTABLE is the name of the executable file, ie what you type into the console to run that program.
 			
-		On windows, replace “-save” with “/qsave”
-			
-	#. Add the location of the folder containing your compiled codes to your command line ``PATH``.
-	
+		   On windows, replace “-save” with “/qsave”
+				
 	#. Add the compile codes to the ``PATH`` environment variable::
 		
 		$ open ~/.profile
 		
-	This will open the .profile file in a text editor. Add ``export
-	PATH=~/Programming/mercurial/pychron/modeling/lovera/bin:$PATH`` to the file. Save and close::
+	   This will open the .profile file in a text editor. Add ``export
+	   PATH=~/Programming/mercurial/pychron/modeling/lovera/bin:$PATH`` to the
+	   file. Save and close::
 		
 		$ source ~/.profile
 		
