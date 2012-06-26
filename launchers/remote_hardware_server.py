@@ -24,11 +24,21 @@ SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                      'pychron{}'.format(version))
 sys.path.insert(0, SRC_DIR)
 
+def build_globals():
+    from src.helpers.parsers.initialization_parser import InitializationParser
+    ip = InitializationParser()
 
+    from globals import globalv
+    use_ipc = ip.get_global('use_ipc')
+    if use_ipc:
+        globalv.use_ipc = True if use_ipc in ['True', 'true', 'T', 't'] else False
+        
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
-
+    
+    from helpers import build_globals
+    build_globals()
     logging_setup('server')
     s = RemoteHardwareServerManager()
     s.load()

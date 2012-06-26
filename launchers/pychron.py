@@ -165,14 +165,6 @@ class VersionInfoDisplay(HasTraits):
             elif local_info is None:
                 do_later(self.edit_traits, kind='modal')
 
-def build_globals():
-    from src.helpers.parsers.initialization_parser import InitializationParser
-    ip = InitializationParser()
-
-    from globals import globalv
-    use_ipc = ip.get_global('use_ipc')
-    if use_ipc:
-        globalv.use_ipc = True if use_ipc in ['True', 'true', 'T', 't'] else False
 #    import globals
 #    print globalv.ipc_dgram
 #    for d in dir(globals):
@@ -187,6 +179,7 @@ def main():
     '''
 
     #build globals
+    from helpers import build_globals
     build_globals()
 
     # build directories

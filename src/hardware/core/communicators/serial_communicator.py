@@ -351,9 +351,6 @@ class SerialCommunicator(Communicator):
 #            time.sleep(50e-9)
             write(cmd)
 
-
-
-
     def _read(self, is_hex=False, time_out=1, delay=None):
         '''
             use the serial handle to read available bytes from the serial buffer
@@ -387,68 +384,55 @@ class SerialCommunicator(Communicator):
 #                self.warning(e)
 #            return c
 
-        if delay is None:
-            delay = self.read_delay
+        def get_line(terminator=None):
 
-        time.sleep(max(1e-9, delay / 1000.))
-        buf = eread(get_chars())
-        if is_hex and buf:
-            buf = ''.join(['{:02X}'.format(ri) for ri in map(ord, buf)])
-        return buf
+            inw = get_chars()
+            r = eread(inw)
+            if terminator is None:
+                t1 = '\n'
+                t2 = '\r'
+                isline = r.endswith(t1) or r.endswith(t2) if r is not None else False
+            else:
+                isline = r.strip().endswith(terminator) if r is not None else False
+#            print isline, r, inw
+            return isline, r, inw
 
-#        def get_line(terminator=None):
-#
-#            inw = get_chars()
-#            r = eread(inw)
-#            if terminator is None:
-#                t1 = '\n'
-#                t2 = '\r'
-#                isline = r.endswith(t1) or r.endswith(t2) if r is not None else False
-#            else:
-#                isline = r.strip().endswith(terminator) if r is not None else False
-##            print isline, r, inw
-#            return isline, r, inw
-#        if self.simulation:
-#            r = 'simulation'
-#        else:
-#            inw = 0
-#            if delay is not None:
-#                time.sleep(delay / 1000.)
-#            else:
-#            if delay is None:
-#                delay = self.read_delay
-#
-#            time.sleep(max(1e-9, delay / 1000.))
-#            r = eread(get_chars())
+        r = None
+        if self.simulation:
+            r = 'simulation'
+        else:
+            inw = 0
+            if delay is not None:
+                time.sleep(delay / 1000.)
+                inw = get_chars()
+                r = eread(inw)
+            else:
+                time.sleep(self.read_delay)
+                ready_to_read, _, _ = select.select([self.handle], [], [], 0.5)
+                if ready_to_read:
+#                    print ready_to_read
+                    isline, r, c = get_line(terminator=self.read_terminator)
+                    if not is_hex and not isline:
+                        pcnt = 0
+                        cnt = 0
+                        for _ in xrange(200000):
+                            isline, r, c = get_line(terminator=self.read_terminator)
+                            if isline:
+                                break
+                            if pcnt == c:
+                                cnt += 1
+                            else:
+                                cnt = 0
 
-#            _, r, c = get_line()
+                            pcnt = c
+                            if cnt > 50000:
+                                break
 
-#                ready_to_read, _, _ = select.select([self.handle], [], [], 0.5)
-#                if ready_to_read:
-#                    terminator = self.read_terminator
-#                    isline, r, c = get_line(terminator=terminator)
-#                    if not is_hex and not isline:
-#                        pass
-#                        pcnt = 0
-#                        cnt = 0
-#                        for _ in xrange(200000):
-#                            isline, r, c = get_line(terminator=self.read_terminator)
-#                            if isline:
-#                                break
-#                            if pcnt == c:
-#                                cnt += 1
-#                            else:
-#                                cnt = 0
-#
-#                            pcnt = c
-#                            if cnt > 50000:
-#                                break
+            if is_hex:
+                if r:
+                    r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
 
-#            if is_hex:
-#                if r:
-#                    r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
-
-#        return r
+        return r
 #            if inw > 0:
 #                try:
 #                    r = self.handle.read(inw)
