@@ -45,10 +45,9 @@ class RPCBackend():
 
     handle = property(fget=_get_handle)
 
-
     def start_server(self):
         t = Thread(target=self._serve)
-#        t.SetDaemon(True)
+        t.setDaemon(True)
         t.start()
 
     def _serve(self):
@@ -74,7 +73,6 @@ class PyroBackend(RPCBackend):
                 except:
                     pass
 
-
         daemon = pyro.Daemon()
         uri = daemon.register(self.manager)
         ns.register(self.manager.name, uri)
@@ -86,18 +84,24 @@ class XMLRPCRequestHandler(SimpleXMLRPCRequestHandler):
 #@todo:  add security to xmlrpc 
 class XMLBackend(RPCBackend):
     port = None
+    host = None
+    log_requests=False
+    
     def _handle_factory(self):
-
-        host = socket.gethostbyname(socket.gethostname())
-        return xmlrpclib.ServerProxy('http://{}:{}'.format(host, self.port),
+        
+        obj=xmlrpclib.ServerProxy('http://{}:{}'.format(self.host, 
+                                                           self.port),
                               allow_none=True)
-
+        socket.setdefaulttimeout(2)
+        return obj
+    
     def _serve(self):
         host = socket.gethostbyname(socket.gethostname())
         addr = (host, self.port)
 
         server = SimpleXMLRPCServer(addr, XMLRPCRequestHandler,
-                                                   allow_none=True
+                                                   allow_none=True,
+                                                   logRequests=self.log_requests
                                                    )
 
         server.register_introspection_functions()

@@ -33,7 +33,8 @@ class RemoteMultrunsReportManager(MultrunsReportManager, HasCommunicator):
 
     def load(self):
         config = dict(port=self.rpc_port,
-                      backend='xml'
+                      backend='xml',
+                      host=self.rpc_host,
                       )
         self._load_communicator(config, 'RPC')
         return True
