@@ -32,7 +32,7 @@ from src.managers.manager import Manager
 from threading import Thread
 
 from src.lasers.power.power_mapping import PowerMapping
-from src.helpers.paths import hidden_dir, co2laser_db
+from src.paths import paths
 from pyface.timer.do_later import do_later
 #from src.helpers.datetime_tools import get_datetime
 from src.database.adapters.power_map_adapter import PowerMapAdapter
@@ -94,12 +94,12 @@ class PowerMapManager(Manager):
         return is_ok
 
     def _dump_power_maps(self):
-        p = os.path.join(hidden_dir, 'power_maps')
+        p = os.path.join(paths.hidden_dir, 'power_maps')
         with open(p, 'wb') as f:
             pickle.dump(self.mappings, f)
 
     def _load_power_maps(self):
-        p = os.path.join(hidden_dir, 'power_maps')
+        p = os.path.join(paths.hidden_dir, 'power_maps')
         if os.path.isfile(p):
             with open(p, 'rb') as f:
                 try:
@@ -200,7 +200,7 @@ class PowerMapManager(Manager):
 #                            password='Argon'
 #                            )
         db = PowerMapAdapter(
-                             dbname=co2laser_db,
+                             dbname=paths.co2laser_db,
                             kind='sqlite'
                             )
         db.connect()

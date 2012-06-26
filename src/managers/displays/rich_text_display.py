@@ -26,7 +26,7 @@ import wx.richtext as rt
 from src.helpers.color_generators import colors8i
 from pyface.timer.do_later import do_later
 from email.mime.base import MIMEBase
-from src.helpers.paths import root_dir
+from src.paths import paths
 #=============local library imports  ==========================
 class DisplayHandler(Handler):
     def closed(self, info, is_ok):
@@ -209,7 +209,7 @@ class ErrorDisplay(RichTextDisplay):
                 msg.attach(MIMEText('\n'.join([t[0] for t in self.text])))
 
                 #attach the most recent log file
-                logdir = os.path.join(root_dir, 'logs')
+                logdir = os.path.join(paths.root_dir, 'logs')
                 logs = os.listdir(logdir)
                 logs.reverse()
                 for pi in logs:

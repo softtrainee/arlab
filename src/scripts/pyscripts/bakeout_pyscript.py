@@ -23,7 +23,7 @@ from numpy import linspace
 #============= local library imports  ==========================
 from src.scripts.pyscripts.pyscript import PyScript
 import time
-from src.helpers.paths import doc_html_dir
+from src.paths import paths
 import os
 HTML_HELP = '''
 <tr>
@@ -53,7 +53,7 @@ class BakeoutPyScript(PyScript):
         return HTML_HELP
 
     def get_help_path(self):
-        p = os.path.join(doc_html_dir, 'bakeout_scripting.html')
+        p = os.path.join(paths.doc_html_root, 'bakeout_scripting.html')
         return p
 
     def _get_commands(self):

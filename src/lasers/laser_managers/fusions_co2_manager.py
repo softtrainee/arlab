@@ -23,7 +23,7 @@ from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
 from brightness_pid_manager import BrightnessPIDManager
 from fusions_laser_manager import FusionsLaserManager
 from src.monitors.fusions_laser_monitor import FusionsLaserMonitor
-from src.helpers.paths import co2laser_db, co2laser_db_root
+from src.paths import paths
 from src.monitors.fusions_co2_laser_monitor import FusionsCO2LaserMonitor
 
 class FusionsCO2Manager(FusionsLaserManager):
@@ -43,8 +43,8 @@ class FusionsCO2Manager(FusionsLaserManager):
     monitor_klass = FusionsCO2LaserMonitor
 
     brightness_meter = Instance(BrightnessPIDManager, ())
-    dbname = co2laser_db
-    db_root = co2laser_db_root
+    dbname = paths.co2laser_db
+    db_root = paths.co2laser_db_root
 
     def _brightness_meter_default(self):
         mv = self._get_machine_vision()

@@ -14,28 +14,52 @@
 # limitations under the License.
 #===============================================================================
 
-#use_shared_memory = False
 
-use_debug_logger = False
-#use_debug_logger = True
+class Globals(object):
+    #use_shared_memory = False
 
-open_logger_on_launch = True
+    use_debug_logger = False
+    #use_debug_logger = True
 
-#force display flags
-show_warnings = True
-show_infos = True
+    open_logger_on_launch = True
 
-#using ipc_dgram is currently not working
-ipc_dgram = False
+    #force display flags
+    show_warnings = True
+    show_infos = True
 
-#fusions logic board flags
-initialize_beam = True
-initialize_zoom = True
+    #using ipc_dgram is currently not working
+    ipc_dgram = False
 
-ignore_initialization_warnings = True
-ignore_connection_warnings = True
-ignore_chiller_unavailable = True
+    #fusions logic board flags
+    initialize_beam = True
+    initialize_zoom = True
 
-#use_ipc = False == embed the remote hardware servers into pychron
-#= True == an instance of RemoteHardwareServer must be launched
-use_ipc = False
+    ignore_initialization_warnings = True
+    ignore_connection_warnings = True
+    ignore_chiller_unavailable = True
+
+    #use_ipc = False == embed the remote hardware servers into pychron
+    #= True == an instance of RemoteHardwareServer must be launched
+    use_ipc = False
+    def build(self):
+        pass
+
+globalv = Globals()
+
+#class Globals():
+#    _use_ipc = True
+#    def get_use_ipc(self):
+#        return self._use_ipc
+#
+#    def set_use_ipc(self, v):
+#        self._use_ipc = v
+#
+#    use_ipc = property(fget=get_use_ipc,
+#                     fset=set_use_ipc
+#                     )
+#
+#
+#
+#global_obj = Globals()
+#use_ipc = global_obj.use_ipc
+

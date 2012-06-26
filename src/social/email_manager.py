@@ -29,7 +29,7 @@ from email.mime.text import MIMEText
 
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.paths import setup_dir
+from src.paths import paths
 from smtplib import SMTPServerDisconnected
 class User(HasTraits):
     name = Str
@@ -140,7 +140,7 @@ class EmailManager(Manager):
 #        return config
 
     def load_users_file(self, *args, **kw):
-        path = os.path.join(setup_dir, 'users.cfg')
+        path = os.path.join(paths.setup_dir, 'users.cfg')
         config = self.configparser_factory()
         config.read(path)
 
@@ -156,7 +156,7 @@ class EmailManager(Manager):
             self.users.append(User(**kw))
 
     def save_users(self):
-        path = os.path.join(setup_dir, 'users.cfg')
+        path = os.path.join(paths.setup_dir, 'users.cfg')
         self.info('saving users to {}'.format(path))
         config = self.configparser_factory()
 

@@ -23,7 +23,7 @@ from traits.api import on_trait_change
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
 from src.experiments.process_view import ProcessView
-from src.helpers.gdisplays import gWarningDisplay, gLoggerDisplay
+
 
 
 class PychronWorkbenchPlugin(CorePlugin):
@@ -37,6 +37,7 @@ class PychronWorkbenchPlugin(CorePlugin):
         return ProcessView()
 
     def stop(self):
+        from src.helpers.gdisplays import gWarningDisplay, gLoggerDisplay
         gWarningDisplay.close()
         gLoggerDisplay.close()
 

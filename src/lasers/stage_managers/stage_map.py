@@ -26,7 +26,7 @@ from numpy import polyfit, array
 #============= local library imports  ==========================
 from src.helpers.filetools import parse_file
 from traitsui.tabular_adapter import TabularAdapter
-from src.helpers.paths import hidden_dir
+from src.paths import paths
 import pickle
 from src.loggable import Loggable
 from affine import AffineTransform
@@ -333,7 +333,7 @@ class StageMap(Loggable):
                      for h in self.sample_holes if h.id == key), None)
 
     def load_correction_file(self):
-        p = os.path.join(hidden_dir, '{}_correction_file'.format(self.name))
+        p = os.path.join(paths.hidden_dir, '{}_correction_file'.format(self.name))
         if os.path.isfile(p):
             cors = None
             with open(p, 'rb') as f:
@@ -354,7 +354,7 @@ class StageMap(Loggable):
 
     @on_trait_change('clear_corrections')
     def clear_correction_file(self):
-        p = os.path.join(hidden_dir, '{}_correction_file'.format(self.name))
+        p = os.path.join(paths.hidden_dir, '{}_correction_file'.format(self.name))
         if os.path.isfile(p):
             os.remove(p)
             self.info('removed correction file {}'.format(p))
@@ -372,7 +372,7 @@ class StageMap(Loggable):
 
     def dump_correction_file(self):
 
-        p = os.path.join(hidden_dir, '{}_correction_file'.format(self.name))
+        p = os.path.join(paths.hidden_dir, '{}_correction_file'.format(self.name))
         with open(p, 'wb') as f:
             pickle.dump([(h.id, h.x_cor, h.y_cor)
                          for h in self.sample_holes], f)

@@ -23,7 +23,7 @@ from pyface.wx.dialog import confirmation
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.helpers.logger_setup import add_console
-from globals import show_warnings, show_infos
+from globals import globalv
 from src.helpers.color_generators import colorname_generator
 
 color_name_gen = colorname_generator()
@@ -80,7 +80,7 @@ class Loggable(HasTraits):
         if self.logger is not None:
             if self.use_warning_display:
                 from src.helpers.gdisplays import gWarningDisplay
-                if show_warnings:
+                if globalv.show_warnings:
                     if not gWarningDisplay.opened:
                         do_later(gWarningDisplay.edit_traits)
 
@@ -100,7 +100,7 @@ class Loggable(HasTraits):
         if self.logger is not None:
             if self.use_logger_display:
                 from src.helpers.gdisplays import gLoggerDisplay
-                if show_infos:
+                if globalv.show_infos:
                     if not gLoggerDisplay.opened:
                         do_later(gLoggerDisplay.edit_traits)
 

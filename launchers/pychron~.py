@@ -37,7 +37,7 @@ sys.path.append(SRC_DIR)
 
 from src.envisage.run import launch
 from src.helpers.logger_setup import setup
-from src.helpers.paths import build_directories
+from src.paths import build_directories
 
 from traits.api import HasTraits, Str, Bool, Property
 from traitsui.api import View, Item, HGroup, spring, Handler, HTMLEditor

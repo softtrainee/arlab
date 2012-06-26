@@ -28,8 +28,7 @@ import select
 
 #=============local library imports  ==========================
 from communicator import Communicator
-from threading import currentThread
-from globals import ignore_connection_warnings
+from globals import globalv
 
 
 def get_ports():
@@ -312,7 +311,7 @@ class SerialCommunicator(Communicator):
 
                 wmsg = '\n'.join(valid)
 
-            if not ignore_connection_warnings:
+            if not globalv.ignore_connection_warnings:
 #            self.warning_dialog('{}\n{}'.format(msg, wmsg))
                 if self.confirmation_dialog('{}\n\n{}'.format(msg, wmsg), title='Quit Pychron'):
                     os._exit(0)

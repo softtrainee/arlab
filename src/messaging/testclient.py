@@ -286,9 +286,16 @@ def diode_client():
                ask_id='D')
     c.configure_traits()
 
-def laser_client():
+def co2_client():
     c = Client(
+
                port=1067,
+               ask_id='E')
+    c.configure_traits()
+def system_client():
+    c = Client(
+               host='129.138.12.141',
+               port=1061,
                ask_id='E')
     c.configure_traits()
 
@@ -338,7 +345,8 @@ def mass_spec_param_test():
 
 if __name__ == '__main__':
 #    diode_client()
-    power_test()
+	system_client()
+    #power_test()
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
 #              'benchmark_unix_tcp_no_log.npz'

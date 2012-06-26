@@ -514,7 +514,7 @@ class SceneLoader(object):
 
 #    def load_sections(self,sg,vm):
 #        
-#        path=os.path.join(globals.extraction_line_dir,'section_definitions.cfg')
+#        path=os.path.join(globalv.extraction_line_dir,'section_definitions.cfg')
 #        config=get_config(path)
 #
 #        for section in config.sections():

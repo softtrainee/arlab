@@ -26,7 +26,7 @@ import os
 
 #============= local library imports  ==========================
 from src.canvas.canvas2D.designer_canvas import DesignerCanvas
-from src.helpers.paths import canvas2D_dir
+from src.paths import paths
 from src.envisage.core.envisage_editable import EnvisageEditable
 class CanvasDesigner(EnvisageEditable):
     '''
@@ -60,7 +60,7 @@ class CanvasDesigner(EnvisageEditable):
         '''
         '''
         #valves = []
-        p = os.path.join(canvas2D_dir, 'canvas.cad')
+        p = os.path.join(paths.canvas2D_dir, 'canvas.cad')
         f = open(p, 'r')
         lines = f.read().split('\n')
         lines = [l.split(',') for l in lines if l]

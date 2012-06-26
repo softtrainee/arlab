@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import on_trait_change, Any
 #============= standard library imports ========================
-from numpy import percentile
+from numpy import percentile, histogram, argmax
 
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, grayspace, colorspace, \
@@ -25,7 +25,7 @@ from src.image.cvwrapper import asMat, grayspace, colorspace, \
 from src.image.cvwrapper import smooth as smooth_image
 from src.image.image import StandAloneImage
 from hole_detector import HoleDetector
-import time
+from time import time
 from timeit import Timer
 
 
@@ -85,11 +85,15 @@ class CO2HoleDetector(HoleDetector):
         src = asMat(img_rescale)
         return src
 
-    def locate_sample_well(self, cx, cy, holenum, holedim, do_all=False, **kw):
+    def locate_sample_well(self, cx, cy, holenum, holedim, **kw):
         '''
             if do_all== true
 
         '''
+
+        #convert hole dim to pxpermm
+        holedim *= self.pxpermm
+
         if self.target_image is not None:
             self.target_image.close()
 
@@ -100,7 +104,6 @@ class CO2HoleDetector(HoleDetector):
         #use a manager to open so will auto close on quit
         self.parent.open_view(im)
 
-
         self._nominal_position = (cx, cy)
         self.current_hole = holenum
         self.info('locating CO2 sample hole {}'.format(holenum if holenum else ''))
@@ -108,7 +111,7 @@ class CO2HoleDetector(HoleDetector):
         im.load(self.parent.get_new_frame())
 
         src = grayspace(im.source_frame)
-        im.set_frame(0, colorspace(src))
+        im.set_frame(0, colorspace(src.clone()))
 
         cw = None
         ch = None
@@ -120,41 +123,85 @@ class CO2HoleDetector(HoleDetector):
             self.info('cropping image to {}mm x {}mm'.format(cw, ch))
             src = self._crop_image(src, cw, ch, image=im)
 
-        test = [
-                (False, False, False),
-                (False, False, True),
+        '''
+            come up with way to generate tests 
+            binary representation of 0 to 2**nfeatures
+            
+            000000
+            000001
+            000010
+            000011
+            ...
+            
+        '''
 
-                (False, True, False),
-                (False, True, True),
+        '''
+        
+            remove do_all as a keyword.
+            make it a attribute 
+            its more for debugging anyways
+        '''
 
-                (True, False, False),
-                (True, False, True),
-#
-                (True, True, False),
-                (True, True, True),
-                ]
+        width = 4
+        ba = lambda v: [bool((v >> i) & 1) for i in xrange(width - 1, -1, -1)]
+        test = [ba(i) for i in range(2 ** 4)]
 
         pos_argss = []
-        for smooth, contrast, sharpen in test:
+        ntests = 1
+        for convextest, sharpen, smooth, contrast in test:
             params = self._process_image(src, im, cx, cy, holenum, holedim,
                                  smooth=smooth,
                                  contrast=contrast,
                                  sharpen=sharpen,
-                                 do_all=do_all
+                                 convextest=convextest
                                  )
-            if do_all:
-                pos_argss.append(((smooth, contrast, sharpen), params))
+            if self.use_all_permutations:
+                pos_argss.append(((smooth, contrast, sharpen, convextest), params))
             else:
-                npos = params
-                if npos is not None:
-                    return npos
+                if params is not None:
+                    pos_argss.append(params)
+                    if len(pos_argss) > ntests:
+                        nxs, nys = zip(*pos_argss)
+                        nx = sum(nxs) / len(nxs)
+                        ny = sum(nys) / len(nys)
+#                        print nxs
+#                        print nys
+#                        print nx
+#                        print ny
+#                        bx, vx = histogram(nx, 3)
+#                        by, vy = histogram(ny, 3)
+#
+#
+#                        avg = lambda v, b: (v[argmax(b)] + v[argmax(b) + 1]) / 2.
+#                        cen = avg(vx, bx), avg(vy, by)
+#                        print cen
+                        src = self.target_image.get_frame(0)
+
+
+                        cx, cy = self._get_true_xy(src)
+                        nomx, nomy = self._nominal_position
+
+                        dx = (nomx - nx) * self.pxpermm
+                        dy = (nomy - ny) * self.pxpermm
+
+                        self._draw_indicator(src, (cx - dx, cy + dy), shape='crosshairs',
+                                             size=10)
+                        return nx, ny
+
+#                        return avg(vx, bx), avg(vy, by)
 
         return pos_argss
 
     def _process_image(self, src, im, cx, cy, holenum, holedim,
                        smooth=False, contrast=False, sharpen=False,
-                       do_all=False,
+                       convextest=False,
                        *args):
+
+#        print self.use_all_permutations
+#        seg1 = self.segmentation_style
+        seg1 = 'threshold'
+        self.info('using {} segmentation smooth={} contrast={} sharpen={} \
+convextest={}'.format(seg1, smooth, contrast, sharpen, convextest))
 
         if sharpen:
             src = self.sharpen(src)
@@ -163,60 +210,78 @@ class CO2HoleDetector(HoleDetector):
         if smooth:
             src = self.smooth(src)
 
-        if not do_all:
-            im.set_frame(0, colorspace(src))
-
-        seg = self.segmentation_style
         params = []
-        if do_all:
+        if self.use_all_permutations:
 #            osrc = src.clone()
             for seg in ['region', 'edge', 'threshold']:
                 def add():
-                    npos, tlow, thigh = self._segment_source(src, seg, cx, cy, holenum, holedim)
-                    params.append((npos, seg, tlow, thigh))
+                    st = time()
+                    npos, tlow, thigh = self._segment_source(src, seg,
+                                                            cx, cy,
+                                                            holenum, holedim,
+                                                            convextest=convextest
+                                                            )
 
-                t = Timer(add)
-                ext = t.timeit(1)
-                params[-1] = (params[-1] + (ext,))
+                    params.append((npos, seg, tlow, thigh, time() - st))
+
+                self.info('using {} segmentation smooth={} contrast={} sharpen={} \
+convextest={}'.format(seg, smooth, contrast, sharpen, convextest))
+                add()
 
         else:
-
-            params, _, _ = self._segment_source(src, seg, cx, cy, holenum, holedim)
+#            im.set_frame(0, colorspace(src))
+#            seg1 = self.segmentation_style
+            params, _, _ = self._segment_source(src, seg1,
+                                                cx, cy,
+                                                holenum, holedim,
+                                                convextest=convextest
+                                                )
             if params is None:
-                self.info('Failed segmentation={}'.format(seg))
-                for seg in ['region', 'edge', 'threshold']:
-                    params, _, _ = self._segment_source(src, seg, cx, cy, holenum, holedim)
-                    if params is not None:
-                        break
-                    self.info('Failed segmentation={}'.format(seg))
+                self.info('Failed segmentation={}. Trying alternates'.format(seg1))
+                test_alternates = True
+                if test_alternates:
+                    for seg in ['region', 'edge', 'threshold']:
+                        if seg == seg1:
+                            continue
+                        self.info('using {} segmentation smooth={} contrast={} sharpen={} \
+convextest={}'.format(seg, smooth, contrast, sharpen, convextest))
+                        params, _, _ = self._segment_source(src, seg,
+                                                        cx, cy,
+                                                        holenum, holedim,
+                                                        convextest=False
+                                                        )
+                        if params is not None:
+                            break
+                        self.info('Failed segmentation={}'.format(seg))
 
         return params
 
-    def _segment_source(self, src, style, cx, cy, holenum, holedim):
-        def segment(si, **kw):
-            args = func(si, **kw)
-            if args:
-                npos = self._get_corrected_position(args, cx, cy, holenum, holedim)
+    def _segment_source(self, src, style, cx, cy, holenum, holedim, **kw):
+        def segment(si, **kwargs):
+            targets = func(si, **kwargs)
+            if targets:
+                npos = self._get_corrected_position(targets, cx, cy, holenum, holedim)
                 if npos:
                     return npos
-
-        self.info('using {} segmentation'.format(style))
         func = getattr(self, '_{}_segmentation'.format(style))
 
         if style == 'region':
-            retries = 10
-            s = 2
+            retries = 4
+            s = 5
             for j in range(1, retries):
                 tl = 125 - s * j
                 th = 125 + s * j
                 npos = segment(src, tlow=tl,
-                               thigh=th
+                               thigh=th,
+                               **kw
                                )
                 if npos:
                     break
             return npos, tl, th
         else:
-            return segment(src), None, None
+            self._threshold_start = None
+            self._threshold_end = None
+            return segment(src, **kw), self._threshold_start, self._threshold_end
 #        retries = 25
 #        s = 2
 #        for j in range(1, retries):

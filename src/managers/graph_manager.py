@@ -27,9 +27,8 @@ import os
 #============= local library imports  ==========================
 from src.graph.graph import Graph
 #from src.graph.stacked_graph import StackedGraph
-from src.helpers.paths import data_dir
+from src.paths import paths
 from manager import Manager
-from matplotlib.dates import datestr2num
 from src.data_processing.time_series.time_series import downsample_1d, smooth
 from src.graph.time_series_graph import TimeSeriesGraph
 import dateutil
@@ -88,7 +87,7 @@ class GraphManager(Manager):
 
 #        print pfunc, gfunc
         if path is None:
-            path = self.open_file_dialog(default_directory=data_dir)
+            path = self.open_file_dialog(default_directory=paths.data_dir)
 
 #        print path
         if path is not None and os.path.exists(path):
@@ -584,7 +583,7 @@ class GraphManager(Manager):
         rheader = None
         data = None
         if path is None:
-            path = self.open_file_dialog(default_directory=data_dir)
+            path = self.open_file_dialog(default_directory=paths.data_dir)
 
         if path is not None:
             with open(path, 'U') as f:

@@ -24,7 +24,7 @@ import os
 from numpy import linspace, polyfit
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.helpers.paths import setup_dir
+from src.paths import paths
 from src.helpers.parsers.learner_parser import LearnerParser
 
 class LearnerValve(HasTraits):
@@ -101,7 +101,7 @@ class ExtractionLineLearner(Loggable):
     def load_configuration(self):
         self.getters = dict()
         self.valves = dict()
-        p = os.path.join(setup_dir, 'learner.xml')
+        p = os.path.join(paths.setup_dir, 'learner.xml')
         if os.path.isfile(p):
             cp = LearnerParser(p)
             for gi in cp.get_getters():

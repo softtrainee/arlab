@@ -18,7 +18,7 @@
 import os
 import sys
 # add src to the path
-version = ''
+version = '_beta'
 SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                      'mercurial',
                      'pychron{}'.format(version))

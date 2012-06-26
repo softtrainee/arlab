@@ -20,7 +20,7 @@
 from src.database.adapters.database_adapter import PathDatabaseAdapter
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable, BakeoutPathTable
 from src.database.selectors.bakeout_selector import BakeoutDBSelector
-from src.helpers.paths import bakeout_db
+from src.paths import paths
 
 
 class BakeoutAdapter(PathDatabaseAdapter):
@@ -49,7 +49,7 @@ class BakeoutAdapter(PathDatabaseAdapter):
 
 
 if __name__ == '__main__':
-    db = BakeoutAdapter(dbname=bakeout_db,
+    db = BakeoutAdapter(dbname=paths.bakeout_db,
                             kind='sqlite')
     db.connect()
 

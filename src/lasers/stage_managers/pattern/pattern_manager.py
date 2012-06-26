@@ -26,7 +26,7 @@ from threading import Thread
 
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.paths import pattern_dir
+from src.paths import paths
 #from src.helpers.filetools import unique_path
 #from src.helpers.logger_setup import logging_setup
 #from src.graph.graph import Graph
@@ -93,7 +93,7 @@ class PatternManager(Manager):
         self.edit_traits(view='pattern_maker_view', kind='livemodal')
 
     def get_pattern_names(self):
-        return self.get_file_list(pattern_dir, extension='.lp')
+        return self.get_file_list(paths.pattern_dir, extension='.lp')
 
     def stop_pattern(self):
         self.info('User requested stop')
@@ -106,7 +106,7 @@ class PatternManager(Manager):
     def execute_pattern(self, pattern_name=None):
         if pattern_name is not None:
             #open pattern from file
-            self.load_pattern(path=os.path.join(pattern_dir,
+            self.load_pattern(path=os.path.join(paths.pattern_dir,
                                                             '{}.lp'.format(pattern_name)
                                                             ))
             #===================================================================
@@ -234,7 +234,7 @@ class PatternManager(Manager):
 
     def load_pattern(self, path=None):
         if path is None:
-            path = self.open_file_dialog(default_directory=pattern_dir)
+            path = self.open_file_dialog(default_directory=paths.pattern_dir)
 
         if path is not None and os.path.isfile(path):
             self.pattern = None
@@ -252,7 +252,7 @@ class PatternManager(Manager):
 #        else:
 #            path = os.path.join(pattern_dir, '{}.lp'.format(self.pattern_name))
 
-        path = self.save_file_dialog(default_directory=pattern_dir)
+        path = self.save_file_dialog(default_directory=paths.pattern_dir)
 
         if path:
             if not path.endswith('.lp'):

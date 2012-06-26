@@ -32,7 +32,7 @@ from threading import Thread
 import time
 import sys
 #============= local library imports  ==========================
-from src.helpers.paths import modeling_data_dir
+from src.paths import paths
 #from src.helpers.paths import LOVERA_PATH
 from src.graph.diffusion_graph import DiffusionGraph, GROUPNAMES
 from src.loggable import Loggable
@@ -42,7 +42,7 @@ from src.helpers.color_generators import colorname_generator
 from src.modeling.fortran_process import FortranProcess
 
 class DummyDirectoryDialog(object):
-    path = os.path.join(modeling_data_dir, '59702-43')
+    path = os.path.join(paths.modeling_data_dir, '59702-43')
     def open(self):
         return OK
 
@@ -53,7 +53,7 @@ class Modeler(Loggable):
     graph = Instance(DiffusionGraph)
     name = Str(enter_set=True, auto_set=False)
 
-    datum = Directory(value=modeling_data_dir)
+    datum = Directory(value=paths.modeling_data_dir)
     data = List(ModelDataDirectory)
 
     selected = Any
@@ -82,7 +82,7 @@ class Modeler(Loggable):
         '''
         '''
 
-        f = FileDialog(action='open', default_directory=modeling_data_dir)
+        f = FileDialog(action='open', default_directory=paths.modeling_data_dir)
         if f.open() == OK:
             self.info('loading autoupdate file {}'.format(f.path))
 
@@ -139,7 +139,7 @@ class Modeler(Loggable):
 #        d = DummyDirectoryDialog()
 #        =======================================================================
 
-        d = DirectoryDialog(action='open', default_path=modeling_data_dir)
+        d = DirectoryDialog(action='open', default_path=paths.modeling_data_dir)
 
         if d.open() == OK:
             rid = os.path.basename(d.path)
@@ -207,7 +207,8 @@ class Modeler(Loggable):
         croot = self.clovera_directory
 
         if not croot:
-            from src.helpers.paths import clovera_root as croot
+            from src.paths import paths
+            croot = paths.clovera_root
 
         rid = os.path.basename(os.getcwd())
         p = FortranProcess(name, croot, rid, q)

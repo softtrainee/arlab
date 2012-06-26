@@ -14,23 +14,20 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Button, Instance, String
 from traitsui.api import View, HGroup, Item, Handler
 #============= standard library imports ========================
 import socket
+from random import random
+from threading import Lock
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
 from src.led.led import LED
 from src.led.led_editor import LEDEditor
-import random
-from src.helpers.paths import pychron_src_root
 from src.remote_hardware.errors.system_errors import PychronCommErrorCode
-from threading import Lock
+from globals import globalv
 
-from globals import ipc_dgram
 
 class CRHandler(Handler):
     def init(self, info):
@@ -61,7 +58,7 @@ class CommandRepeater(ConfigLoadable):
     def open(self, *args, **kw):
 
         kind = socket.SOCK_STREAM
-        if ipc_dgram:
+        if globalv.ipc_dgram:
             kind = socket.SOCK_DGRAM
 
         sock = socket.socket(socket.AF_UNIX, kind)
@@ -84,7 +81,7 @@ class CommandRepeater(ConfigLoadable):
             ready_data = ''
             if data == 'PychronReady':
                 ready_flag = True
-                ready_data = '{:0.3f}'.format(random.random())
+                ready_data = '{:0.3f}'.format(random())
                 rid = 'test'
 
             elif data == 'RemoteLaunch':
@@ -96,8 +93,7 @@ class CommandRepeater(ConfigLoadable):
                 #_sock is already connected
                 pass
 
-            result_str = ''
-            s = '{}|{}|{}'.format(sender_address, rid, data)
+            s = '{}|{}|{}'.format(rid, data, sender_address)
 
             send_success, rd = self._send_(s)
             if send_success:
@@ -109,26 +105,25 @@ class CommandRepeater(ConfigLoadable):
                 if ready_flag and ready_data == rd:
                     rd = 'OK'
 
-                result_str = rd
+#                result_str = rd
                 result = rd.split('|')[1] if '|' in rd else rd
 
             else:
                 self.led.state = 'red'
-                result = repr(PychronCommErrorCode(self.path, rd))
+                result = str(PychronCommErrorCode(self.path, rd))
 
-            self.debug('command={} result_command={}'.format(data, result_str))
+#            self.debug('command={} result_command={}'.format(data, result_str))
 
-            cmd = data.split(' ')[0].strip()
-            try:
-                float(cmd)
-            except ValueError:
-                rcmd = result_str.split('|')[0].strip()
-                if cmd != rcmd:
-                    self.warning('&&&&&& Mismatch command and response &&&&&&')
-
-            import time
-            time.sleep(random.random() / 10.)
-
+#            cmd = data.split(' ')[0].strip()
+#            try:
+#                float(cmd)
+#            except ValueError:
+#                rcmd = result_str.split('|')[0].strip()
+#                if cmd != rcmd:
+#                    self.warning('&&&&&& Mismatch command and response &&&&&&')
+#
+#            import time
+#            time.sleep(random.random() / 10.)
             return result
 #            try:
 #
@@ -169,9 +164,11 @@ class CommandRepeater(ConfigLoadable):
 
     def remote_launch(self, name):
         import subprocess
-        import os
+        from os import path
+        from src.paths import paths
+
         #launch pychron
-        p = os.path.join(pychron_src_root, '{}.app'.format(name))
+        p = path.join(paths.pychron_src_root, '{}.app'.format(name))
         result = 'OK'
         try:
             subprocess.Popen(['open', p])

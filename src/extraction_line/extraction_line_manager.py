@@ -25,7 +25,8 @@ from threading import Thread
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
 #from src.monitors.pumping_monitor import PumpingMonitor
-from src.helpers.paths import canvas2D_dir, scripts_dir, hidden_dir
+#from src.helpers.paths import canvas2D_dir, scripts_dir, hidden_dir
+from src.paths import paths
 from src.scripts.extraction_line_script import ExtractionLineScript
 
 from view_controller import ViewController
@@ -66,6 +67,8 @@ class ExtractionLineManager(Manager):
     runscript = None
 
     pyscript_editor = Instance(PyScriptManager)
+
+    learner = None
 
     def get_subsystem_module(self, subsystem, module):
         '''
@@ -125,7 +128,7 @@ class ExtractionLineManager(Manager):
         super(ExtractionLineManager, self).opened()
         self.reload_scene_graph()
 
-        p = os.path.join(hidden_dir, 'show_explanantion')
+        p = os.path.join(paths.hidden_dir, 'show_explanantion')
         if os.path.isfile(p):
             with open(p, 'rb') as f:
                 try:
@@ -171,7 +174,7 @@ class ExtractionLineManager(Manager):
 
         if self.canvas is not None:
             if self.canvas.style == '2D':
-                p = os.path.join(canvas2D_dir, 'canvas.xml')
+                p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
                 self.canvas.load_canvas_file(p)
             else:
                 self.canvas.canvas3D.setup()#canvas3D_dir, 'extractionline3D.txt')
@@ -198,7 +201,7 @@ class ExtractionLineManager(Manager):
     def load_canvas(self):
         '''
         '''
-        p = self._file_dialog_('open', **dict(default_dir=canvas2D_dir))
+        p = self._file_dialog_('open', **dict(default_dir=paths.canvas2D_dir))
 
         if p is not None:
             self.canvas.load_canvas(p)
@@ -271,8 +274,9 @@ class ExtractionLineManager(Manager):
                 name = self.valve_manager.get_name_by_description(description)
 
             result = self._change_valve_state(name, mode, action, **kw)
-            if self.snooper:
-                self.snooper.open_close_valve(name, action, result)
+
+            if self.learner:
+                self.learner.open_close_valve(name, action, result)
 
             return result
 
@@ -350,7 +354,7 @@ class ExtractionLineManager(Manager):
         return result, change
 
     def execute_run_script(self, runscript_name):
-        runscript_dir = os.path.join(scripts_dir, 'runscripts')
+        runscript_dir = os.path.join(paths.scripts_dir, 'runscripts')
         if self.runscript is None:
             e = ExtractionLineScript(source_dir=runscript_dir ,
                                      file_name=runscript_name,
@@ -368,7 +372,7 @@ class ExtractionLineManager(Manager):
         if not name.endswith('.py'):
             name += '.py'
 
-        p = os.path.join(scripts_dir, 'pyscripts', name)
+        p = os.path.join(paths.scripts_dir, 'pyscripts', name)
         if not os.path.isfile(p):
             return p
 

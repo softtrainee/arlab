@@ -23,7 +23,7 @@ import apptools.sweet_pickle as pickle
 import os
 from threading import Thread, Condition
 #============= local library imports  ==========================
-from src.helpers.paths import hidden_dir
+from src.paths import paths
 from src.scripts.wait_dialog import WaitDialog
 
 
@@ -47,7 +47,7 @@ class Pulse(HasTraits):
 
     disable_at_end = Bool(False)
     def dump_pulse(self):
-        p = os.path.join(hidden_dir, 'pulse')
+        p = os.path.join(paths.hidden_dir, 'pulse')
         with open(p, 'wb') as f:
             pickle.dump(self, f)
 

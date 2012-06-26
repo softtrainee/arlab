@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from globals import use_ipc
+from globals import globalv
 
 #============= standard library imports ========================
 
@@ -27,7 +27,7 @@ class MessagingServer(object):
     allow_reuse_address = True
 
     def get_response(self, *args, **kw):
-        if use_ipc:
+        if globalv.use_ipc:
             func = self.parent.repeater
 
         else:

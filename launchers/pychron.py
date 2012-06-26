@@ -17,19 +17,24 @@
 import os
 import sys
 # add src to the path
-version = '_beta'
+version_id = '_beta'
 merc = os.path.join(os.path.expanduser('~'),
                     'Programming',
                     'mercurial')
-SRC_DIR = os.path.join(merc, 'pychron{}'.format(version))
+SRC_DIR = os.path.join(merc, 'pychron{}'.format(version_id))
 sys.path.insert(0, SRC_DIR)
+
+from src.paths import paths
+paths.build(version_id)
+#ver.set_version(version_id)
+
 
 #PYC = os.path.join(merc, 'pychron_source.zip')
 #sys.path.insert(0, PYC)
 
 from src.envisage.run import launch
 from src.helpers.logger_setup import logging_setup
-from src.helpers.paths import build_directories
+from src.paths import build_directories
 
 from traits.api import HasTraits, Str, Bool, Property
 from traitsui.api import View, Item, HGroup, spring, Handler, HTMLEditor
@@ -160,11 +165,30 @@ class VersionInfoDisplay(HasTraits):
             elif local_info is None:
                 do_later(self.edit_traits, kind='modal')
 
+def build_globals():
+    from src.helpers.parsers.initialization_parser import InitializationParser
+    ip = InitializationParser()
+
+    from globals import globalv
+    use_ipc = ip.get_global('use_ipc')
+    print use_ipc, 'sdfsd'
+    if use_ipc:
+        globalv.use_ipc = True if use_ipc in ['True', 'true', 'T', 't'] else False
+#    import globals
+#    print globalv.ipc_dgram
+#    for d in dir(globals):
+#        print d
+#        globalv.ipc_dgram = 98
+#    from globals import ipc_dgram
+#    print globalv.ipc_dgram
 
 def main():
     '''
         entry point
     '''
+
+    #build globals
+    build_globals()
 
     # build directories
 
