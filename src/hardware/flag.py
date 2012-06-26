@@ -14,8 +14,7 @@
 # limitations under the License.
 #===============================================================================
 from threading import Timer
-import time
-
+from time import time
 
 
 
@@ -43,6 +42,7 @@ class Flag(object):
 
 class TimedFlag(Flag):
     duration = 1
+    _start_time=None
     def __init__(self, name, t):
         super(TimedFlag, self).__init__(name)
         self.duration = float(t)
@@ -51,14 +51,16 @@ class TimedFlag(Flag):
         super(TimedFlag, self).set(value)
 
         if self._set:
-            self._start_time = time.time()
+            self._start_time = time()
             t = Timer(self.duration, self.clear)
             t.start()
 
         return True
 
     def get(self):
-        t = max(0, self.duration - (time.time() - self._start_time))
+        t=0
+        if self._start_time is not None:
+            t = max(0, self.duration - (time() - self._start_time))
         return t
 
 #======== EOF ================================
