@@ -171,7 +171,6 @@ def build_globals():
 
     from globals import globalv
     use_ipc = ip.get_global('use_ipc')
-    print use_ipc, 'sdfsd'
     if use_ipc:
         globalv.use_ipc = True if use_ipc in ['True', 'true', 'T', 't'] else False
 #    import globals

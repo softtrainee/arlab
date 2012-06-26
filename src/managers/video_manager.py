@@ -32,7 +32,7 @@ from src.image.image_editor import ImageEditor
 #from src.data_processing.image.image_helper import load_image#, save_image, subsample
 #from src.data_processing.image.image_helper import crop as icrop
 
-#from src.helpers import paths
+#from src.paths import paths
 
 from manager import Manager
 from src.canvas.canvas2D.video_canvas import VideoCanvas

@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,21 +14,12 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-
+from traits.api import HasTraits
+from traitsui.api import View, Item, TableEditor
+from src.remote_hardware.handlers.base_remote_hardware_handler import BaseRemoteHardwareHandler
 #============= standard library imports ========================
-import os
-
 #============= local library imports  ==========================
-from src.data_processing.power_mapping.power_map_viewer import PowerMapViewer
-from src.paths import paths
-
-if __name__ == '__main__':
-    p = PowerMapViewer()
-
-    root = os.path.join(paths.data_dir, 'powermap')
-    p.set_data_files(root)
-    p.configure_traits()
-#============= EOF ====================================
+class HardwareHandler(BaseRemoteHardwareHandler):
+    pass
+#============= EOF =============================================

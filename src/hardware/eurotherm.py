@@ -31,7 +31,7 @@ from traitsui.api import View, Item
 import os
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
-from src.helpers import paths
+from src.paths import paths
 
 EOT = chr(4)
 ENQ = chr(5)

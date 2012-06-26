@@ -1,7 +1,0 @@
-#watlow setup file
-#serial port location, baudrate
-#/dev/tty.USA19Hfd15P1.1,19200
-#/dev/tty.USA19H1a2P1.1,9600
-#/dev/tty.USA49Wfd1P1.1,9600
-#/dev/tty.USA49Wfa2P1.1,9600
-/dev/tty.USA49Wfa25P1.1,9600

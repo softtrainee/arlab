@@ -30,13 +30,13 @@ class ADCDevice(AbstractDevice):
         adc = self.config_get(config, 'General', 'adc')
 
         if adc is not None:
-            module = __import__('src.hardware.adc.analog_digital_converter', fromlist=[adc])
-            factory = getattr(module, adc)
+            package = 'src.hardware.adc.analog_digital_converter'
+            factory = self.get_factory(package, adc)
 
             self._cdevice = factory(name=adc,
                                           configuration_dir_name=self.configuration_dir_name
                         )
-            self._cdevice.load()
+
             return True
 
     def read_voltage(self, **kw):

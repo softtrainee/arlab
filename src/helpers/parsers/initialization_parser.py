@@ -23,6 +23,7 @@ import sys
 #============= local library imports  ==========================
 from src.paths import paths
 
+lower = lambda x: x.lower() if x else None
 
 class InitializationParser(XMLParser):
     def __init__(self, *args, **kw):
@@ -69,9 +70,15 @@ class InitializationParser(XMLParser):
             if g is not None:
                 return g.text.strip()
 
-    def get_plugin_groups(self):
-        elem = self._tree.find('plugins')
-        return [t.tag for t in list(elem)]
+    def get_plugin_groups(self, elem=False):
+        plugin = self._tree.find('plugins')
+        return [t if elem else t.tag for t in list(plugin)]
+
+    def get_plugin_group(self, name):
+        return next((p for p in self.get_plugin_groups(elem=True)
+                     if p.tag == name
+                     ), None)
+
 
     def get_groups(self):
         tree = self._tree
@@ -130,11 +137,13 @@ class InitializationParser(XMLParser):
         return None, None
 
     def get_device(self, manager, devname, plugin, element=False):
-
         if plugin is None:
             man = self.get_plugin(manager)
         else:
             man = self.get_manager(manager, plugin)
+
+        if man is None:
+            man = self.get_plugin_group(manager)
 
         dev = next((d for d in man.findall('device')
                     if d.text.strip() == devname), None)
@@ -156,8 +165,13 @@ class InitializationParser(XMLParser):
 #            pp = self.get_processor(p)
 #            if pp:
 #                ps.append(pp)
-        return [pi for pi in [self.get_processor(p)
+        pl = self.get_plugin_group('hardware')
+        ps = [pi for pi in [self.get_processor(p)
                     for p in self.get_plugins('hardware', element=True)] if pi]
+        nps = self._get_paramaters(pl, 'processor')
+        if nps:
+            ps += nps
+        return ps
 
     def get_server(self, manager, **kw):
         p = self._get_paramaters(manager, 'server', **kw)
@@ -165,20 +179,24 @@ class InitializationParser(XMLParser):
             return p[0]
 
     def get_servers(self):
-        return [pi for pi in [self.get_server(p)
+        servers = [pi for pi in [self.get_server(p)
                     for p in self.get_plugins('hardware', element=True)] if pi]
-
-
+        hs = self._get_paramaters('hardware', 'server')
+        if hs:
+            servers += hs
+        return servers
 
     def _get_paramaters(self, subtree, tag, all=False, element=False):
+
         return [d if element else d.text.strip()
                 for d in subtree.findall(tag)
-                    if all or d.get('enabled').lower() == 'true']
+                    if all or lower(d.get('enabled')) == 'true']
 
     def get_managers(self, elem, all=False, element=False):
+        lower = lambda x: x.lower() if x else None
         return [m if element else m.text.strip()
                 for m in elem.findall('manager')
-                               if all or m.get('enabled').lower() == 'true']
+                               if all or lower(m.get('enabled')) == 'true']
 
     def get_plugin(self, name, category=None):
         if '_' in name:

@@ -24,7 +24,7 @@ from traitsui.api import View, Item, HGroup
 #============= local library imports  ==========================
 
 import os
-from src.helpers import paths
+from src.paths import paths
 from src.graph.time_series_graph import TimeSeriesGraph
 from src.graph.graph import Graph
 from numpy import loadtxt

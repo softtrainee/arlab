@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import List, Any, on_trait_change, Instance
 from traitsui.api import View, Item, TableEditor, VSplit, InstanceEditor
@@ -46,6 +44,7 @@ class HardwareManager(Manager):
     def _selected_changed(self):
         if self.selected is not None:
             self.current_device = self.selected
+
     def current_device_view(self):
         return View(Item('current_device',
                          editor=InstanceEditor(view='current_state_view'),

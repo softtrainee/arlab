@@ -21,19 +21,16 @@ import socket
 from threading import Thread, Lock
 import os
 import hmac
+import select
 #============= local library imports  ==========================
 from src.config_loadable import ConfigLoadable
-
-#from globals import use_shared_memory
 from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors.system_errors import SystemLockErrorCode, \
     SecurityErrorCode, HMACSecurityErrorCode
-import select
 from globals import globalv
 BUFSIZE = 2048
 
-print globalv.use_ipc, 'use ipc'
 def end_request(fn):
     def end(obj, rtype, data, sender, sock=None):
         data = fn(obj, rtype, data, sender)
@@ -270,10 +267,11 @@ class CommandProcessor(ConfigLoadable):
             if auth_err:
                 return auth_err
 
-            if not request_type in ['System',
+            if not request_type in ['Extractionline',
                                     'Diode',
                                     'Synrad',
                                     'CO2',
+                                    'Hardware',
                                     'test']:
                 self.warning('Invalid request type ' + request_type)
                 return

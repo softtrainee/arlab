@@ -19,9 +19,7 @@
 #============= standard library imports ========================
 from threading import Thread
 #============= local library imports  ==========================
-from src.remote_hardware.errors.system_errors import \
-    DeviceConnectionErrorCode, \
-    InvalidArgumentsErrorCode, InvalidValveErrorCode, \
+from src.remote_hardware.errors.system_errors import  InvalidArgumentsErrorCode, InvalidValveErrorCode, \
     InvalidIPAddressErrorCode, InvalidValveGroupErrorCode, \
     ValveSoftwareLockErrorCode, ValveActuationErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
@@ -33,7 +31,7 @@ TM_PROTOCOL = 'src.social.twitter_manager.TwitterManager'
 RHM_PROTOCOL = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
 
 
-class SystemHandler(BaseRemoteHardwareHandler):
+class ExtractionlineHandler(BaseRemoteHardwareHandler):
     extraction_line_manager = None
     manager_name = 'extraction_line_manager'
 
@@ -63,23 +61,6 @@ class SystemHandler(BaseRemoteHardwareHandler):
 #        else:
 #            dev = DummyDevice()
 #        return dev
-
-    def Set(self, manager, dname, value, sender_address, *args):
-        d = self.get_device(dname)
-        if d is not None:
-            result = d.set(value)
-        else:
-            result = DeviceConnectionErrorCode(dname, logger=self)
-
-        return result
-
-    def Read(self, manager, dname, sender_address, *args):
-        d = self.get_device(dname)
-        if d is not None:
-            result = d.get()
-        else:
-            result = DeviceConnectionErrorCode(dname, logger=self)
-        return result
 
     def Open(self, manager, vname, sender_address, *args):
         #intercept flags
