@@ -30,13 +30,14 @@ def build_globals():
 
     from globals import globalv
     use_ipc = ip.get_global('use_ipc')
+
     if use_ipc:
         globalv.use_ipc = True if use_ipc in ['True', 'true', 'T', 't'] else False
-        
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
-    
+
     from helpers import build_globals
     build_globals()
     logging_setup('server')

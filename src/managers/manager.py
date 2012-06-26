@@ -86,6 +86,8 @@ class Manager(Viewable, RPCable):
 
     initialized = False
 
+    _mass_spec_params = None
+
     def __init__(self, *args, **kw):
         '''
 
@@ -243,9 +245,11 @@ class Manager(Viewable, RPCable):
 
     def get_mass_spec_param(self, name):
         from src.paths import paths
-        #open the mass spec parameters file
-        cp = self.configparser_factory()
-        cp.read(os.path.join(paths.setup_dir, 'mass_spec_params.cfg'))
+        cp = self._mass_spec_params
+        if cp is None:
+            #open the mass spec parameters file
+            cp = self.configparser_factory()
+            cp.read(os.path.join(paths.setup_dir, 'mass_spec_params.cfg'))
         try:
             v = cp.get('General', name)
             return MassSpecParam(v)
@@ -299,7 +303,7 @@ class Manager(Viewable, RPCable):
         return self._create_manager(klass, manager, params, **kw)
 
     def _create_manager(self, klass, manager, params,
-                        port=None, host=None,remote=False):
+                        port=None, host=None, remote=False):
         from src.managers import manager_package_dict
 
         if remote:

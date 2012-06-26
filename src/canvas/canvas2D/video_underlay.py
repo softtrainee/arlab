@@ -37,8 +37,8 @@ class VideoUnderlay(AbstractOverlay):
         '''
 
         '''
+        gc.save_state()
         try:
-            gc.save_state()
             img = self.video.get_frame(
 #                                       flip=not self.flip,
                                          #swap_rb=self.swap_rb,
