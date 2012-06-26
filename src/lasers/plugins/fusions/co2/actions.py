@@ -16,7 +16,12 @@
 
 #============= enthought library imports =======================
 from pyface.action.api import Action
-from src.envisage.core.action_helper import open_manager, open_selector
+from src.envisage.core.action_helper import open_manager
+from src.lasers.plugins.fusions.fusions_actions import FInitializeZoomAction,\
+    FInitializeBeamAction, FOpenVideoAction, FOpenPowerRecordGraphAction,\
+    FOpenPowerMapAction, FOpenPowerCalibrationAction, FLoadStageVisualizerAction,\
+    FOpenStageVisualizerAction, FPowerCalibrationAction, FPowerMapAction,\
+    FOpenMotionControllerManagerAction, FOpenLaserManagerAction
 #from src.database.adapters.power_adapter import PowerAdapter
 #from src.helpers.paths import co2laser_db
 #from traits.api import on_trait_change
@@ -24,7 +29,6 @@ from src.envisage.core.action_helper import open_manager, open_selector
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-
 
 def get_manager(_, event, app=None):
 
@@ -47,56 +51,48 @@ class ConfigureBrightnessMeterAction(Action):
 #===============================================================================
 # ##fusions action
 #===============================================================================
-
-from ..fusions_actions import FOpenLaserManagerAction
 class OpenLaserManagerAction(FOpenLaserManagerAction):
     name = 'Open Laser Manager'
     get_manager = get_manager
 
-from ..fusions_actions import FOpenMotionControllerManagerAction
 class OpenMotionControllerManagerAction(FOpenMotionControllerManagerAction):
     get_manager = get_manager
 
-from ..fusions_actions import FPowerMapAction
 class PowerMapAction(FPowerMapAction):
     get_manager = get_manager
 
 
-from ..fusions_actions import FPowerCalibrationAction
 class PowerCalibrationAction(FPowerCalibrationAction):
     get_manager = get_manager
+    
+class OpenStageVisualizerAction(FOpenStageVisualizerAction):
+    get_manager = get_manager
 
+class LoadStageVisualizerAction(FLoadStageVisualizerAction):
+    get_manager = get_manager
 #===============================================================================
 # database selectors
 #===============================================================================
-from ..fusions_actions import FOpenPowerCalibrationAction
 class OpenPowerCalibrationAction(FOpenPowerCalibrationAction):
     get_manager = get_manager
 
-from ..fusions_actions import FOpenPowerMapAction
 class OpenPowerMapAction(FOpenPowerMapAction):
     get_manager = get_manager
 
-from ..fusions_actions import FOpenPowerRecordGraphAction
 class OpenPowerRecordGraphAction(FOpenPowerRecordGraphAction):
     get_manager = get_manager
 
-from ..fusions_actions import FOpenVideoAction
 class OpenVideoAction(FOpenVideoAction):
     get_manager = get_manager
 
 #===============================================================================
 # initializations
 #===============================================================================
-from ..fusions_actions import FInitializeBeamAction
 class InitializeBeamAction(FInitializeBeamAction):
     get_manager = get_manager
 
-from ..fusions_actions import FInitializeZoomAction
 class InitializeZoomAction(FInitializeZoomAction):
     get_manager = get_manager
-
-
 
 
 #===============================================================================

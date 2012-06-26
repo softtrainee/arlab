@@ -149,7 +149,7 @@ class CommandRepeater(ConfigLoadable):
     def test_connection(self):
         '''
         '''
-        ra = '{:0.3f}'.format(random.random())
+        ra = '{:0.3f}'.format(random())
 
         r = self.get_response('test', ra, None)
         connected = False

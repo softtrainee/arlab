@@ -19,9 +19,9 @@ from pyface.action.api import Action
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.core.action_helper import open_protocol, open_manager
+from src.envisage.core.action_helper import open_protocol, open_manager,\
+    open_selector
 from src.database.adapters.device_scan_adapter import DeviceScanAdapter
-from src.lasers.plugins.fusions.co2.actions import open_selector
 from src.hardware.plugins.register_manager import RegisterManager
 
 

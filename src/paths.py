@@ -174,7 +174,7 @@ class Paths():
 
 
 paths = Paths()
-
+paths.build('_beta')
 
 def rec_make(pi):
     if pi and not path.exists(pi):

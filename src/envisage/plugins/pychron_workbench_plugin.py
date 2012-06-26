@@ -22,20 +22,20 @@ from traits.api import on_trait_change
 
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
-from src.experiments.process_view import ProcessView
+#from src.experiments.process_view import ProcessView
 
 
 
 class PychronWorkbenchPlugin(CorePlugin):
     id = 'pychron.workbench'
-    def _service_offers_default(self):
-        so = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
-                                        factory=self._factory
-                                        )
-        return [so]
-    def _factory(self):
-        return ProcessView()
-
+#    def _service_offers_default(self):
+#        so = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
+#                                        factory=self._factory
+#                                        )
+#        return [so]
+#    def _factory(self):
+#        return ProcessView()
+#
     def stop(self):
         from src.helpers.gdisplays import gWarningDisplay, gLoggerDisplay
         gWarningDisplay.close()
