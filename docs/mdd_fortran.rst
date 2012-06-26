@@ -7,28 +7,28 @@ Building MDD Fortran
  
  
 Before trying to compile your own binaries, try using the ones packages with the pychron source. 
-They are located in ~/Programming/mercurial/pychron/src/modeling/lovera/bin
+They are located in ``~/Programming/mercurial/pychron/src/modeling/lovera/bin``
 
 Compile for Mac OSX
 ---------------------
 	#. Install Xcode.
 		a. Download from `Apple Developer Center <https://developer.apple.com/xcode/>`_
 		
-		b. Although Xcode is free, you must have an Apple account which requires a credit card number.
+		#. Although Xcode is free, you must have an Apple account which requires a credit card number.
 
 	#. Install Ifort (Intel Fortran Composer). You can get a trial from their website, but it only lasts a month so don’t waste it, or you can buy the academic license for ~$280.
 		a. Download Ifort (`link <http://google.com>`_)
 		
-		b. Register with Intel (`link <https://registrationcenter.intel.com/RegCenter/AutoGen.aspx?ProductID=1524&AccountID=&EmailID=&ProgramID=&RequestDt=&rm=EVAL&lang= .>`_)
+		#. Register with Intel (`link <https://registrationcenter.intel.com/RegCenter/AutoGen.aspx?ProductID=1524&AccountID=&EmailID=&ProgramID=&RequestDt=&rm=EVAL&lang= .>`_)
 		
-		c. During installation, it will ask if you want to perform a Command line install, or xcode integration environment, or both – select both.
+		#. During installation, it will ask if you want to perform a Command line install, or xcode integration environment, or both – select both.
 	
 	#. Open Terminal and navigate to Pychron's Lovera directory::
 	
 		$ cd ~/Programming/mercurial/pychron/src/modeling/lovera
 		
 	#. Compile source code.
-		a. Pychron provides a bash script to automate the building of the mdd
+		a. Pychron provides a python script to automate the building of the mdd
 		   codes. It is located in the Pychron Lovera directory. ::
 			
 			$ ./build.py 	
@@ -43,7 +43,7 @@ Compile for Mac OSX
 			$ chmod +x ./build.py
 			
 			
-		b. **Or**, compile manually use ``Ifort PROGRAM.f EXECUTABLE –save`` ::
+		#. **Or**, to compile manually use ``Ifort PROGRAM.f EXECUTABLE –save`` ::
 			
 			$ Ifort autoage-mon.f autoagemon –save
 

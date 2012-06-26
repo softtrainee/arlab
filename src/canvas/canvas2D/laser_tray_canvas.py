@@ -343,6 +343,7 @@ class LaserTrayCanvas(MapCanvas):
     def _draw_crosshairs(self, gc, xy, color=(1, 0, 0), kind=None):
         '''
         '''
+        gc.save_state()
         mx = xy[0]
         my = xy[1]
 
@@ -376,7 +377,7 @@ class LaserTrayCanvas(MapCanvas):
             radius = self._get_wh(self.crosshairs_radius, 0)[0]
         else:
             return
-        gc.save_state()
+
         gc.set_stroke_color(color)
 
         if kind is not 5:

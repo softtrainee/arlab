@@ -32,6 +32,7 @@ class SampleHole(Circle, InfoObject):
     hole = None
     def _render_(self, gc):
         super(SampleHole, self)._render_(gc)
+
         gc.save_state()
         x, y = self.get_xy()
         hid = self.hole.id

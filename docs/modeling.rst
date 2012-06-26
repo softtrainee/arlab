@@ -78,47 +78,35 @@ be run either through Pychron or the command line. To run these through the
 command line, you must first navigate to the folder of interest.
 
 	#. Mddfiles_lst.f – ``files``
-	
 		a.	Breaks SAMPLE.in into several smaller files used by the different.programs. Calculates a preliminary set of kinetic parameters.
-		
-		b.	Always the first program you need to run before any other MDD codes.
-		
-		c.	This program is run on every sample when an autoupdate is parsed via pychron. You will not need to run it explicitly ever.
+		#.	Always the first program you need to run before any other MDD codes.
+		#.	This program is run on every sample when an autoupdate is parsed via pychron. You will not need to run it explicitly ever.
 	
 	#. Autoarr.f – ``autoarr``
-		
 		a. Allows you to calculate or dictate kinetic parameters for the sample.
-	
-		b. Parameter entry box:
-			i. Check the first box if you want to automate parameter selection.
-			Any values placed into the following boxes are ignored. Uncheck if
-			you want to dictate your own parameters. Entering 0 will use the
-			default value.
-			ii. Number of max domains
-			1. 8 is default, max 10
-			iii. Number of min domains
-			1. 3 is default, min 2
-			iv. Keep Do fixed?
-			1. “Yes” should be your default answer, but is not the program’s default setting
-			v. Activation energy in Kcal/mol
-			vi. Ordinate of Arrhenius plot
-			vii. Max plateau of Log(R/Ro)
+		#. Parameter entry box:
+			i. Check the first box if you want to automate parameter selection. Any values placed into the following boxes are ignored. Uncheck if you want to dictate your own parameters. Entering 0 will use the default value.
+			#. Number of max domains
+				 8 is default, max 10
+			#. Number of min domains
+				 3 is default, min 2
+			#. Keep Do fixed?
+				“Yes” should be your default answer, but is not the program’s default setting
+			#. Activation energy in Kcal/mol
+			#. Ordinate of Arrhenius plot
+			#. Max plateau of Log(R/Ro)
 
 	#. Autoage-mon.f – ``autoagemon``
-		
 		a. Calculates cooling histories. Assumes monotonic cooling.
-	
-		b. Prints the current run number so you’re aware of progress. ::
+		#. Prints the current run number so you’re aware of progress. ::
 		
 			$ Insert number of runs
 			$ 50 is typical, more is better. Max 299.
 			$ Insert max plateau age
 
 	#. Autoage-free.f – ``autoagefree``
-		
 		a. Calculates cooling histories. Allows reheating events.
-	
-		b. If you’re running this on the new macs, it’s pretty fast so do as many as you want. ::
+		#. If you’re running this on the new macs, it’s pretty fast so do as many as you want. ::
 		
 			$ Insert number of runs
 			               100 is typical, more is better. Max 399.
@@ -130,17 +118,14 @@ command line, you must first navigate to the folder of interest.
 			$ Insert minimum age
 
 	#. Arrme.f – ``arrme``
-		
 		a. Asks for model geometry
 	
 	#. Corrfft.f – ``corrfft``
-	
 		a. Calculates correlation between LogR/Ro and Arrhenius plots.
-		b. Fmin and Fmax are the ends of the range of %39Ar you want to check for correlation. Setting this range explicitly allows you to avoid steps. which have excess Ar or are post-melting.
-		c. Correlation output into file ``cross.dat``.
+		#. Fmin and Fmax are the ends of the range of %39Ar you want to check for correlation. Setting this range explicitly allows you to avoid steps. which have excess Ar or are post-melting.
+		#. Correlation output into file ``cross.dat``.
 	
 	#. Agesme.f – ``agesme``
-		
 		a. Calculates a model spectrum from known kinetics, DD dimensions, and thermal history.
 						
 Data Viewing with Pychron
@@ -166,7 +151,7 @@ may be redistributed.
 		toggles the model Arrhenius and Log(r/ro) plots. Sometimes the Refresh button
 		must be used to display those changes. All samples on this list will be shown in
 		the Modeler window.
-
+		
 		Five small buttons are on the upper right corner of this window which (left to
 		right) (a) disable column sorting, (b and c) move samples up or down the list,
 		which changes their stacking order in the Modeler window, (d) removes a sample
@@ -175,11 +160,11 @@ may be redistributed.
 		Below the list of displayed samples is a navigation window. Simply clicking on a
 		sample folder will add it to the list above.
 
-	B. The Summary Window (Top Center)
+	#. The Summary Window (Top Center)
 		The Summary window displays the kinetic parameters and domain distribution for
 		the sample highlighted in the Data Window.
 	
-	C. The Notes Window (Bottom Center)
+	#. The Notes Window (Bottom Center)
 		The Notes window is basically just a data entry window for a text file. Each
 		sample folder has a Notes.txt file which is editable in this window. Any
 		information regarding that sample can be saved to that text file and recalled
@@ -187,7 +172,8 @@ may be redistributed.
 		track of why you chose certain kinetic parameters, why the sample is important,
 		or any other information you would like to be able to recall later.
 	
-	D. The Modeler Window (Far Right)	
+	#. The Modeler Window (Far Right)	
 		The Modeler window displays the samples selected in the Data window.
 
- 
+	#. Process Window
+		Displays Fortran Process history

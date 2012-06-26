@@ -29,9 +29,9 @@ class ErrorBarOverlay(AbstractOverlay):
         '''
             
         '''
+        gc.save_state()
         gc.clip_to_rect(component.x, component.y, component.width, component.height)
 
-        gc.save_state()
         x = component.index.get_data()
         y = component.value.get_data()
         xer = component.xerror.get_data()

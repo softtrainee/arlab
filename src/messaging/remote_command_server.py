@@ -91,13 +91,13 @@ class RemoteCommandServer(ConfigLoadable):
     def _repeater_default(self):
         '''
         '''
-        c = CommandRepeater(
+        if globalv.use_ipc:
+            c = CommandRepeater(
                         logger_name='{}_repeater'.format(self.name),
                         name=self.name,
                            configuration_dir_name='servers')
-        if globalv.use_ipc:
-            c.bootstrap()
-        return c
+            if c.bootstrap():
+                return c
 
     def _repeater_fails_changed(self, old, new):
         if new != 0:
