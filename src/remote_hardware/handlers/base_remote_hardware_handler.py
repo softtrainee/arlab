@@ -25,6 +25,7 @@ from error_handler import ErrorHandler
 from threading import Lock
 
 from dummies import DummyDevice, DummyLM
+from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode
 
 DIODE_PROTOCOL = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
 CO2_PROTOCOL = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
@@ -130,4 +131,20 @@ class BaseRemoteHardwareHandler(Loggable):
 
         return lm
 
+    def Set(self, manager, dname, value, sender_address, *args):
+        d = self.get_device(dname)
+        if d is not None:
+            result = d.set(value)
+        else:
+            result = DeviceConnectionErrorCode(dname, logger=self)
+
+        return result
+
+    def Read(self, manager, dname, sender_address, *args):
+        d = self.get_device(dname)
+        if d is not None:
+            result = d.get()
+        else:
+            result = DeviceConnectionErrorCode(dname, logger=self)
+        return result
 #============= EOF ====================================

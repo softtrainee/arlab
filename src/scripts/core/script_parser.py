@@ -22,7 +22,7 @@
 import shlex
 import os
 #============= local library imports  ==========================
-from src.helpers import paths
+from src.paths import paths
 from src.helpers.filetools import str_to_bool
 
 RUNSCRIPT_DIR = os.path.join(paths.scripts_dir, 'runscripts')

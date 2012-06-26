@@ -120,6 +120,9 @@ class ConfigLoadable(Loggable):
 
         return True
 
+    def load_additional_args(self, *args, **kw):
+        return True
+
     def _load_hook(self, config):
         pass
 

@@ -170,6 +170,7 @@ class Initializer(Loggable):
         managers = []
         devices = []
         flags = []
+
         if plugin_name is None:
 
             # remove manager from name
@@ -180,6 +181,9 @@ class Initializer(Loggable):
             mp = parser.get_plugin(name)
         else:
             mp = parser.get_manager(name, plugin_name)
+
+        if mp is None:
+            mp = parser._tree.find('plugins/{}'.format(name))
 
         if mp is not None:
             managers = parser.get_managers(mp)
@@ -297,6 +301,7 @@ class Initializer(Loggable):
                 continue
 
             dev = None
+            st = time.time()
             pdev = self.parser.get_device(name, device, plugin_name,
                     element=True)
             dev_class = pdev.get('klass')
@@ -307,7 +312,6 @@ class Initializer(Loggable):
                     dev = manager.create_device(device,
                             dev_class=dev_class)
             except AttributeError:
-
                 dev = manager.create_device(device, dev_class=dev_class)
 
             if dev is None:
@@ -344,6 +348,7 @@ class Initializer(Loggable):
             if result is not True:
                 self.warning('Failed setting up communications to {}'.format(od.name))
                 od._communicator.simulation = True
+
             elif result is None:
                 raise NotImplementedError
 

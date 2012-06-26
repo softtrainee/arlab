@@ -30,7 +30,7 @@ from src.canvas.canvas3D.elements.components import Bone, Origin, PipetteValve, 
     TextPanel, Valve, Bellows, SixWayCross, Turbo, Elbow, Flex, Sector, Quadrupole, Grid
 from src.canvas.canvas3D.elements.node import Node
 from src.canvas.canvas3D.elements.object3D import Transform
-from src.helpers import paths
+from src.paths import paths
 from src.helpers.filetools import parse_file
 from src.canvas.canvas3D.canvases.tools.view_cube import ViewCube
 
