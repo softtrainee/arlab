@@ -19,10 +19,10 @@
 #============= local library imports  ==========================
 
 def rpc_query(func, **kw):
-    def _query(obj, *args, **kw):
+    def _query(obj, *args, **kaw):
         handle = obj._communicator.handle
         try:
-            return getattr(handle, func.__name__)()
+            return getattr(handle, func.__name__)(**kw)
         except Exception, e:
             print 'remote query', e
 

@@ -123,18 +123,21 @@ class InitializationParser(XMLParser):
     def get_timed_flags(self, manager, **kw):
         return self._get_paramaters(manager, 'timed_flag', **kw)
 
-    def get_rpc_mode_port(self, manager):
+    def get_rpc_params(self, manager):
         if isinstance(manager, tuple):
             manager = self.get_manager(*manager)
-
+            
+        text=lambda x : x.text.strip() if x is not None else None
         try:
             rpc = manager.find('rpc')
             mode = rpc.get('mode')
-            return mode, int(rpc.find('port').text.strip())
+            port=text(rpc.find('port'))
+            host=text(rpc.find('host'))
+            return mode, host,int(port), 
         except Exception, e:
             pass
 
-        return None, None
+        return None, None, None
 
     def get_device(self, manager, devname, plugin, element=False):
         if plugin is None:
