@@ -23,7 +23,7 @@ from traits.api import Dict
 import os
 
 #============= local library imports  ==========================
-from src.helpers import paths
+from src.paths import paths
 from src.helpers.filetools import unique_path
 from src.managers.manager import Manager
 from src.helpers.datetime_tools import generate_datetimestamp, time_generator

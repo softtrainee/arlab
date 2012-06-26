@@ -28,7 +28,7 @@ import apptools.sweet_pickle as pickle
 import os
 import shutil
 #============= local library imports  ==========================
-from src.helpers.paths import root
+from src.paths import paths
 from src.helpers.filetools import unique_path
 from src.helpers.datetime_tools import generate_datetimestamp
 
@@ -63,7 +63,7 @@ class LaserShotHistory(HasTraits):
         '''
         super(LaserShotHistory, self).__init__(*args, **kw)
         if not self.pickle_path:
-            self.pickle_path = os.path.join(root, '.laser_shot_history')
+            self.pickle_path = os.path.join(paths.root, '.laser_shot_history')
         self.load()
 
     def _get_count(self):
@@ -96,7 +96,7 @@ class LaserShotHistory(HasTraits):
         '''
         '''
         #make a backup copy
-        p, _cnt = unique_path(root, 'laser_shot_history', 'bak')
+        p, _cnt = unique_path(paths.root, 'laser_shot_history', 'bak')
         shutil.copy(self.pickle_path, p)
 
         os.remove(self.pickle_path)

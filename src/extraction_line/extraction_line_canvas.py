@@ -24,7 +24,7 @@ import os
 #from canvas.canvas3D.extraction_line_canvas3D import ExtractionLineCanvas3D
 from src.canvas.canvas3D.canvas3D_editor import Canvas3DEditor
 
-from src.helpers import paths
+from src.paths import paths
 class ExtractionLineCanvas3DDummy(HasTraits):
     '''
     '''

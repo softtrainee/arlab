@@ -16,7 +16,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from src.helpers import paths
+from src.paths import paths
 from loggable import Loggable
 #============= standard library imports ========================
 import os

@@ -20,14 +20,14 @@
 from traits.api import HasTraits, Button
 from traitsui.api import View, Item
 from src.graph.graph import Graph
-from src.helpers.paths import data_dir
+from src.paths import paths
 import os
 from src.graph.time_series_graph import TimeSeriesStackedGraph
 from src.managers.manager import Manager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-DEGAS = os.path.join(data_dir, 'degas')
+DEGAS = os.path.join(paths.data_dir, 'degas')
 
 class DegasViewer(Manager):
     open = Button

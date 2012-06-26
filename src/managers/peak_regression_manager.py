@@ -33,7 +33,7 @@ from threading import Thread
 #=============local library imports  ==========================
 from manager import Manager
 from src.data_processing.import_filters.qtegra_filter import QtegraFilter
-from src.helpers.paths import data_dir
+from src.paths import paths
 from src.graph.regression_graph import RegressionGraph
 from src.data_processing.regression.regressor import Regressor
 from src.helpers.filetools import unique_path
@@ -83,7 +83,7 @@ class PeakRegressionManager(Manager):
     path = File
 
     results = List
-    directory = Directory(os.path.join(data_dir, 'sandbox'))
+    directory = Directory(os.path.join(paths.data_dir, 'sandbox'))
     ndetectors = Int(2)
     selected = Any
 

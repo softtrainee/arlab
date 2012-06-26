@@ -71,17 +71,17 @@ class OpenViewControllerAction(Action):
     name = 'Open User Views'
     enabled = True
 
-    def __init__(self, *args, **kw):
-        super(OpenViewControllerAction, self).__init__(*args, **kw)
-
-        man = get_manager(self.window)
-        man.on_trait_change(self.update, 'ui')
-
-    def update(self, obj, name, old, new):
-        if new:
-            self.enabled = True
-        else:
-            self.enabled = False
+#    def __init__(self, *args, **kw):
+#        super(OpenViewControllerAction, self).__init__(*args, **kw)
+#
+#        man = get_manager(self.window)
+#        man.on_trait_change(self.update, 'ui')
+#
+#    def update(self, obj, name, old, new):
+#        if new:
+#            self.enabled = True
+#        else:
+#            self.enabled = False
 
     def perform(self, event):
         '''

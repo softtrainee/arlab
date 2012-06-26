@@ -23,7 +23,7 @@ import os
 from src.hardware.core.viewable_device import ViewableDevice
 from src.graph.plot_record import PlotRecord
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.helpers.paths import device_scan_db, device_scan_root
+from src.paths import paths
 from src.database.data_warehouse import DataWarehouse
 from src.helpers.timer import Timer
 from src.managers.data_managers.csv_data_manager import CSVDataManager
@@ -181,7 +181,7 @@ class ScanableDevice(ViewableDevice):
             if dm is None:
                 self.data_manager = dm = klass()
 
-            dw = DataWarehouse(root=device_scan_root)
+            dw = DataWarehouse(root=paths.device_scan_root)
             dw.build_warehouse()
 
             self.frame_name = dm.new_frame(base_frame_name=self.name,
@@ -200,7 +200,7 @@ class ScanableDevice(ViewableDevice):
 
     def save_scan_to_db(self):
         from src.database.adapters.device_scan_adapter import DeviceScanAdapter
-        db = DeviceScanAdapter(dbname=device_scan_db,
+        db = DeviceScanAdapter(dbname=paths.device_scan_db,
                                kind='sqlite')
         db.connect()
         dev = db.add_device(self.name, klass=self.__class__.__name__)
@@ -208,7 +208,7 @@ class ScanableDevice(ViewableDevice):
 
         path = self.scan_path
         db.add_path(s, path)
-        self.info('saving scan {} to database {}'.format(path, device_scan_db))
+        self.info('saving scan {} to database {}'.format(path, paths.device_scan_db))
 
         db.commit()
 

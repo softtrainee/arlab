@@ -29,7 +29,7 @@ import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from traitsui.menu import Action
-from src.helpers.paths import scripts_dir
+from src.paths import paths
 from pyface.api import warning
 #from src.scripts.pyscripts.pyscript import PyScript, HTML_HELP
 from src.scripts.pyscripts.api import *
@@ -153,9 +153,9 @@ class PyScriptManager(Manager):
 
     def _get_default_directory(self):
         if self.default_directory_name:
-            return os.path.join(scripts_dir, self.default_directory_name)
+            return os.path.join(paths.scripts_dir, self.default_directory_name)
         else:
-            return scripts_dir
+            return paths.scripts_dir
 
     def save_as(self):
         if not self._check_save():
@@ -187,7 +187,7 @@ class PyScriptManager(Manager):
             kw['root'] = r
             kw['name'] = n
         else:
-            kw['root'] = os.path.join(scripts_dir, 'pyscripts')
+            kw['root'] = os.path.join(paths.scripts_dir, 'pyscripts')
 
         return klass(manager=self.parent,
                      parent=self,
@@ -358,7 +358,7 @@ if __name__ == '__main__':
     s = PyScriptManager(kind='ExtractionLine',
                         default_directory_name='pyscripts')
 #    s = PyScriptManager(kind='Bakeout')
-    p = os.path.join(scripts_dir, 'ms_runscripts', 'Quick Air x1.py')
+    p = os.path.join(paths.scripts_dir, 'ms_runscripts', 'Quick Air x1.py')
     s.open_script(path=p)
     s.configure_traits()
 #============= EOF =============================================

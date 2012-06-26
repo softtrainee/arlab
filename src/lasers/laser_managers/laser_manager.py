@@ -26,10 +26,9 @@ from src.led.led import LED
 from src.lasers.stage_managers.stage_manager import StageManager
 from src.lasers.stage_managers.video_stage_manager import VideoStageManager
 from src.monitors.laser_monitor import LaserMonitor
-from src.helpers import paths
 from src.managers.graph_manager import GraphManager
 from pulse import Pulse
-from src.helpers.paths import hidden_dir
+from src.paths import paths
 
 
 class LaserManager(Manager):
@@ -242,7 +241,7 @@ class LaserManager(Manager):
     def load_power_calibration(self):
         from src.lasers.power.power_calibration_manager import PowerCalibrationObject
 
-        p = os.path.join(hidden_dir, '{}_power_calibration'.format(self.name))
+        p = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(self.name))
         if os.path.isfile(p):
             self.info('loading power calibration {}'.format(p))
             with open(p, 'rb') as f:

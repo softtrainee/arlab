@@ -30,7 +30,7 @@ from wx import stc
 from src.managers.manager import Manager
 from traitsui.menu import Action
 from src.scripts.core.script_validator import ScriptValidator
-from src.helpers.paths import scripts_dir
+from src.paths import paths
 #from traitsui.wx.code_editor import SourceEditor
 #from traitsui.wx.basic_editor_factory import BasicEditorFactory
 #from traitsui.editors.code_editor import ToolkitEditorFactory
@@ -105,9 +105,9 @@ Are you sure you want to save ?'''.format(is_are, n, e_es))
 
     def _get_default_directory(self):
         if self.default_directory_name:
-            return os.path.join(scripts_dir, self.default_directory_name)
+            return os.path.join(paths.scripts_dir, self.default_directory_name)
         else:
-            return scripts_dir
+            return paths.scripts_dir
 
     def save_as(self):
         if not self._check_save():

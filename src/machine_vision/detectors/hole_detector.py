@@ -28,7 +28,7 @@ from src.image.cvwrapper import draw_polygons, \
     draw_rectangle, draw_lines, colorspace, draw_circle, get_size, \
     asMat#, add_images
 
-from src.helpers.paths import positioning_error_dir
+from src.paths import paths
 from src.helpers.filetools import unique_path
 from detector import Detector
 
@@ -67,8 +67,6 @@ class Target(object):
 
 class HoleDetector(Detector):
 
-    _debug = False
-
     radius_mm = Float(1.5)
 
     _hole_radius = None
@@ -84,18 +82,20 @@ class HoleDetector(Detector):
 #    use_smoothing = Bool(True)
     use_crop = Bool(True)
 #    use_dilation = Bool(False)
-    _dilation_value = 1
+#    _dilation_value = 1
 #    use_contrast_equalization = Bool(True)
 
     segmentation_style = Enum('region', 'edge', 'threshold', 'edge', 'region')
 #    segmentation_style = Enum('edge', 'threshold', 'edge', 'region')
 
     start_threshold_search_value = Int(80)
-    threshold_search_width = Int(20)
+    threshold_search_width = Int(40)
     crop_tries = Range(0, 102, 1)  # > 101 makes it a spinner
     threshold_tries = Range(0, 102, 2)
     threshold_expansion_scalar = Int(5)
 
+    _threshold_start = None
+    _threshold_end = None
 #    def close_image(self):
 #        pass
     def _get_mask_radius(self):
@@ -128,8 +128,7 @@ class HoleDetector(Detector):
         mask_sizes = sizes > 20
         mask_sizes[0] = 0
         cleaned = mask_sizes[label_objects]
-        kw['convextest'] = False
-        return self._locate_helper(cleaned, **kw)
+        self._locate_helper(cleaned, **kw)
 
     def _region_segmentation(self, src, tlow=100, thigh=150, **kw):
         from skimage.filter import sobel
@@ -143,26 +142,30 @@ class HoleDetector(Detector):
 
         el_map = sobel(ndsrc)
         wsrc = watershed(el_map, markers)
-        kw['convextest'] = False
-        return self._locate_helper(invert(wsrc))
+        return self._locate_helper(invert(wsrc), **kw)
 
     def _threshold_segmentation(self, src, **kw):
         start = self.start_threshold_search_value
         end = start + self.threshold_search_width
         expand_value = self.threshold_expansion_scalar
+
+
         for i in range(self.threshold_tries):
             s = start - i * expand_value
             e = end + i * expand_value
-            self.info('searching... thresholding image {} - {}'.format(s,
-                                                                       e))
+#            self.info('searching... thresholding image {} - {}'.format(s,
+#                                                                       e))
             targets = []
             for ti in range(s, e):
                 tsrc = threshold(src, ti)
 
-                ts = self._locate_targets(tsrc, convextest=False)
-                if ts:
-                    targets += ts
+                targets = self._locate_targets(tsrc, **kw)
+#                self.permutations.append((ts, test))
 
+#                if ts:
+#                    targets += ts
+            self._threshold_start = s
+            self._threshold_end = e
             return targets
 
     def _locate_helper(self, src, *args, **kw):
@@ -170,7 +173,25 @@ class HoleDetector(Detector):
         src = asMat(asarray(src, 'uint8'))
         if not 'hole' in kw:
             kw['hole'] = False
+
         t = self._locate_targets(src, **kw)
+#        self.permutations.append((t, kw))
+#        t2 = None
+#        if self.use_all_permutations:
+#            if kw.has_key('convextest'):
+#                kw['convextest'] = not kw['convextest']
+#            else:
+#                kw['convextest'] = True
+#
+#            t2 = self._locate_targets(src, **kw)
+##            self.permutations.append((t2, kw))
+#            if t2:
+#                if t:
+#                    t += t2
+#                else:
+#                    t = t2
+
+#            print 'k2', kw, len(ta) if ta else 0
         return t
 
 
@@ -190,18 +211,14 @@ class HoleDetector(Detector):
 
         targets = []
         for pi, br, ai in zip(polygons, brs, areas):
-#            try:
-#                src = self.working_image.frames[0]
-#                draw_polygons(src, [pi], thickness=2, color=(255, 255, 0))
-#            except IndexError:
-#                pass
             if len(pi) < 4:
                 continue
 
             cx, cy = centroid(pi)
-            use_radius_filter = False
-            if use_radius_filter:
-                cx, cy = self._radius_filter(pi, cx, cy)
+#            use_radius_filter = False
+#            use_radius_filter = True
+#            if use_radius_filter:
+#                (cx, cy), pi = self._radius_filter(pi, cx, cy)
 
             tr = Target()
             tr.origin = self._get_true_xy(src)
@@ -236,7 +253,7 @@ class HoleDetector(Detector):
         #calculate the data position to move to nx,ny
         dxmm = (dx) / float(self.pxpermm)
 
-        dymm = (dy + 1) / float(self.pxpermm)
+        dymm = (dy) / float(self.pxpermm)
         nx = cx - dxmm
         ny = cy + dymm
 
@@ -255,10 +272,11 @@ class HoleDetector(Detector):
             #debugging 
             pass
         src = grayspace(self.target_image.source_frame)
-        self.target_image.set_frame(0, colorspace(crop(src, *self.croprect)))
-#        self.image.frames[0] = colorspace(crop(src, *self.croprect))
-        self._draw_markup(targets, dev=(dx, dy))
 
+        csrc = colorspace(crop(src.clone(), *self.croprect))
+        self.target_image.set_frame(0, csrc)
+#        self.image.frames[0] = colorspace(crop(src, *self.croprect))
+        self._draw_markup(csrc, targets, dev=(dx, dy))
         self.parent._nominal_position = cx, cy
         self.parent._corrected_position = nx, ny
 
@@ -273,7 +291,7 @@ class HoleDetector(Detector):
 
 
     def _save_(self, holenum, cx, cy, nx, ny, dxmm, dymm):
-        path, _ = unique_path(positioning_error_dir,
+        path, _ = unique_path(paths.positioning_error_dir,
                               'positioning_error{:03n}_'.format(int(holenum)), filetype='jpg')
         self.target_image.save(path)
         #save an associated text file with some metadata
@@ -306,64 +324,29 @@ class HoleDetector(Detector):
                                 color=color
                                 )
 
-    def _draw_markup(self, results, dev=None):
+    def _draw_markup(self, src, results, dev=None):
         #add to indicators to ensure the indicator is drawn on top
-        indicators = []
         for pi in results:
 
-            f0 = self.target_image.get_frame(0)
+#            f0 = self.target_image.get_frame(0)
 
-            draw_polygons(f0, [pi.poly_points], color=(255, 255, 0), thickness=1)
-
-#            f1 = self.working_image.frames[0]
-#            draw_contour_list(f1, pi.contours, hierarchy=pi.hierarchy)
-
+            draw_polygons(src, [pi.poly_points], color=(255, 255, 0), thickness=1)
 
             #draw the centroid in blue
-            centroid_center = new_point(*pi.centroid_value)
-#            indicators.append((f1, centroid_center , (0, 255, 0), 'rect', 2))
-
-            #calculate bounding rect and bounding square for polygon
-            r = pi.bounding_rect
-#            draw_rectangle(f1, r.x, r.y, r.width, r.height)
-
-            br_center = new_point(r.x + r.width / 2, r.y + r.height / 2)
-#            indicators.append((f1,
-#                               br_center,
-#                               (255, 0, 0), 'rect', 2))
-
-#                #if % diff in w and h greater than 20% than use the centroid as the calculated center
-#                #otherwise use the bounding rect center            
-#                dwh = abs(r.width - r.height) / float(max(r.width, r.height))
-#                if dwh > 0.2:
-#                    calc_center = centroid_center
-#                else:
-#                    calc_center = br_center
-
-            calc_center = centroid_center
-            #indicate which center is chosen                
-            #indicators.append((f0, calc_center, (0, 255, 255), 'crosshairs', 4))
-#            indicators.append((f1, calc_center, (0, 255, 255), 'crosshairs', 1))
-
-            pi.center = calc_center
+            pi.center = new_point(*pi.centroid_value)
 
         #draw the center of the image
-        true_cx, true_cy = self._get_true_xy(f0)
-
-#        l = 1.5 * self.pxpermm / 2.0
-        #self._draw_indicator(f0, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
-        #self._draw_indicator(f1, new_point(true_cx, true_cy), (0, 0, 255), 'crosshairs', l)
-        self._draw_center_indicator(f0)
-#        self._draw_center_indicator(f1)
-
-        for i in indicators:
-            self._draw_indicator(*i)
+        true_cx, true_cy = self._get_true_xy(src)
+        self._draw_center_indicator(src)
 
 #        #draw the calculated center
         if dev:
-            self._draw_indicator(f0, new_point(true_cx - dev[0],
-                                               true_cy - dev[1]), (255, 255, 0), 'crosshairs')
+            self._draw_indicator(src, new_point(true_cx - dev[0],
+                                               true_cy - dev[1]), (255, 255, 0), 'circle', size=2)
+
     def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
+        if isinstance(center, tuple):
+            center = new_point(*center)
         r = size
         if shape == 'rect':
             draw_rectangle(src, center.x - r / 2., center.y - r / 2., r, r,
@@ -382,7 +365,7 @@ class HoleDetector(Detector):
             draw_circle(src, center, r, color=color, thickness=thickness)
 
     def _radius_filter(self, pi, cx, cy):
-        tol = 1.3 * self.pxpermm * self.radius_mm
+        tol = 1.4 * self.pxpermm * self.radius_mm
         disp = lambda p:((p.x - cx) ** 2 + (p.y - cy) ** 2) ** 0.5
         disps = map(disp, pi)
 
@@ -393,7 +376,7 @@ class HoleDetector(Detector):
         else:
             pii = pi
         # 3. recalc centroid
-        return centroid(pii)
+        return centroid(pii), pii
     def _get_center(self):
         cx = self.croppixels[0] / 2.0
         cy = self.croppixels[1] / 2.0

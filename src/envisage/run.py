@@ -20,22 +20,19 @@ from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
 from envisage.api import Plugin
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
-import sys
 #============= local library imports  ==========================
 from pychron_application import Pychron
 
 from plugins.pychron_workbench_plugin import PychronWorkbenchPlugin
 from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
-from src.hardware.plugins.hardware_plugin import HardwarePlugin
-from src.hardware.plugins.hardware_ui_plugin import HardwareUIPlugin
 
-from src.helpers.paths import plugins_dir
-from src.helpers.parsers.initialization_parser import InitializationParser
+#from src.helpers.paths import plugins_dir
+
 
 from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay
-from globals import open_logger_on_launch
-if open_logger_on_launch:
+from globals import globalv
+if globalv.open_logger_on_launch:
     do_later(gLoggerDisplay.edit_traits)
 
 logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
@@ -88,7 +85,11 @@ def get_module_name(klass):
     return '_'.join(words)
 
 def get_hardware_plugins():
+    from src.helpers.parsers.initialization_parser import InitializationParser
     ip = InitializationParser()
+    from src.hardware.plugins.hardware_plugin import HardwarePlugin
+    from src.hardware.plugins.hardware_ui_plugin import HardwareUIPlugin
+
     return [HardwarePlugin(), HardwareUIPlugin()] if 'hardware' in ip.get_categories() else []
 
 
@@ -101,13 +102,15 @@ def get_user_plugins():
             klass = getattr(m, name)
 
         except ImportError, e:
+            import traceback
+            traceback.print_exc()
             klass = None
             logger.warning('****** {} could not be imported {} ******'.format(name, e))
         return klass
 
     #append plugins dir to the sys path
-    sys.path.append(plugins_dir)
-
+#    sys.path.append(plugins_dir)
+    from src.helpers.parsers.initialization_parser import InitializationParser
     plugins = []
     ps = InitializationParser().get_plugins()
     for p in ps:

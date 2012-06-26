@@ -21,11 +21,11 @@ from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
 from traitsui.api import View, Item, Handler
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-import os
+from os import path
 import math
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.paths import setup_dir, hidden_dir
+from src.paths import paths
 from src.machine_vision.detectors.co2_detector import CO2HoleDetector
 from src.machine_vision.detectors.tray_mapper import TrayMapper
 from src.machine_vision.detectors.brightness_detector import BrightnessDetector
@@ -87,15 +87,18 @@ class MachineVisionManager(Manager):
         from src.machine_vision.stage_learner import StageLearner
         sl = StageLearner(laser_manager=self.laser_manager,
                           machine_vision=self)
-        sl.teach_learner()
+
+        sl.edit_traits()
+#        sl.teach_learner()
+
 
     def locate_target(self, cx, cy, holenum, *args, **kw):
         try:
             if self.parent:
                 sm = self.parent._stage_map
-                holedim = sm.g_dimension * self.pxpermm / 2.0
+                holedim = sm.g_dimension / 2.
             else:
-                holedim = 25
+                holedim = 1.5
 
             return self.hole_detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
         except TypeError, e:
@@ -103,7 +106,7 @@ class MachineVisionManager(Manager):
             traceback.print_exc()
 
     def dump_hole_detector(self):
-        p = os.path.join(hidden_dir, 'hole_detector')
+        p = path.join(paths.hidden_dir, 'hole_detector')
         with open(p, 'wb') as f:
             pickle.dump(self.hole_detector, f)
 
@@ -212,7 +215,7 @@ class MachineVisionManager(Manager):
 #        self.image.panel_size = 450
         if self.parent is None:
             from src.lasers.stage_managers.stage_map import StageMap
-            p = os.path.join(setup_dir, 'tray_maps', '221-hole.txt')
+            p = path.join(paths.setup_dir, 'tray_maps', '221-hole.txt')
             sm = StageMap(file_path=p)
             center_mx, center_my = 3.596, -13.321
             cpos = -2.066, -0.695
@@ -297,6 +300,8 @@ class MachineVisionManager(Manager):
                 src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
                 src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
                 src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
+
+#                src = self._debug_path
                 src = '/Users/ross/Sandbox/pos_err/pos_err_53001.jpg'
             else:
                 src = path
@@ -321,8 +326,8 @@ class MachineVisionManager(Manager):
     def _load_detector(self, name, klass):
 #        hd = CO2HoleDetector()
         hd = klass()
-        p = os.path.join(hidden_dir, name)
-        if os.path.isfile(p):
+        p = path.join(paths.hidden_dir, name)
+        if path.isfile(p):
             with open(p, 'rb') as f:
                 try:
                     hd = pickle.load(f)
@@ -389,7 +394,8 @@ class MachineVisionManager(Manager):
 #                               10, 0, 1
 #                               )
 
-            self._spawn_thread(self.learn)
+#            self._spawn_thread(self.learn)
+            self.learn()
         else:
             self.testing = False
 

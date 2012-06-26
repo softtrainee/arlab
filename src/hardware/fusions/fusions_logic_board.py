@@ -28,8 +28,7 @@ from traitsui.api import Item, VGroup, RangeEditor
 #=============standard library imports ========================
 import os
 #=============local library imports  ==========================
-from globals import initialize_zoom, initialize_beam, \
-    ignore_initialization_warnings
+from globals import globalv
 from fusions_motor_configurer import FusionsMotorConfigurer
 from src.hardware.core.core_device import CoreDevice
 
@@ -74,13 +73,13 @@ class FusionsLogicBoard(CoreDevice):
 
         #test communciations with board issue warning if 
         #no handle or response is none
-        
-        resp=True if self.ask(';LB.VER') else False
-        
-        
+
+        resp = True if self.ask(';LB.VER') else False
+
+
 #        resp = self._disable_laser_()
         if self._communicator.handle is None or resp is not True:
-            if not ignore_initialization_warnings:
+            if not globalv.ignore_initialization_warnings:
 #                    warning(None, 'Laser not connected. Power cycle USB hub.')
                 result = self.confirmation_dialog('Laser not connected. Power cycle USB hub.', title='Quit Pychron')
                 if result:
@@ -96,12 +95,12 @@ class FusionsLogicBoard(CoreDevice):
         #initialize Kerr devices
         self.motor_microcontroller.initialize(*args, **kw)
 
-        if initialize_zoom:
+        if globalv.initialize_zoom:
             zm = self.zoom_motor
             zm.initialize(*args, **kw)
             self.set_zoom(zm.nominal_position)
 
-        if initialize_beam:
+        if globalv.initialize_beam:
             bm = self.beam_motor
             bm.initialize(*args, **kw)
             self.set_beam_diameter(bm.nominal_position)

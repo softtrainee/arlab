@@ -27,7 +27,7 @@ from threading import Thread, Condition, Timer
 import os
 #============= local library imports  ==========================
 from src.helpers.filetools import unique_path
-from src.helpers.paths import video_dir, snapshot_dir
+from src.paths import paths
 from camera_calibration_manager import CameraCalibrationManager
 from src.machine_vision.machine_vision_manager import MachineVisionManager
 from src.machine_vision.autofocus_manager import AutofocusManager
@@ -135,14 +135,14 @@ class VideoStageManager(StageManager):
             if use_dialog:
                 path = self.save_file_dialog()
             else:
-                vd = self.video_directory if self.video_directory else video_dir
+                vd = self.video_directory if self.video_directory else paths.video_dir
                 path, _ = unique_path(vd, basename, filetype='avi')
 
         d = os.path.dirname(path)
         if not os.path.isdir(d):
             self.warning('invalid directory {}'.format(d))
             self.warning('using default directory')
-            path, _ = unique_path(video_dir, basename, filetype='avi')
+            path, _ = unique_path(paths.video_dir, basename, filetype='avi')
 
         self.info('saving recording to path {}'.format(path))
 
@@ -209,7 +209,7 @@ class VideoStageManager(StageManager):
 
                 if name is None:
                     name = 'snapshot'
-                path, _cnt = unique_path(root=snapshot_dir, base=name,
+                path, _cnt = unique_path(root=paths.snapshot_dir, base=name,
                                           filetype='jpg')
             else:
                 path = self.save_file_dialog()
@@ -352,25 +352,24 @@ class VideoStageManager(StageManager):
         if self.use_autocenter:
 #            newpos = None
             for _t in range(max(1, ntries)):
-                result = self.machine_vision_manager.locate_target(
+                rpos = self.machine_vision_manager.locate_target(
                         self.stage_controller.x,
                         self.stage_controller.y,
                         holenum
                         )
 
-                if result:
-                    rpos, _ = result
+                if rpos:
                     if rpos:
     #                    rpos = newpos
                         self.linear_move(*rpos, block=True,
                                          calibrated_space=False,
                                          update_hole=False
                                          )
+                    time.sleep(0.25)
                 else:
                     self.snapshot(auto=True,
                                   name='pos_err_{}_{}-'.format(holenum, _t))
-
-                time.sleep(0.25)
+                    break
 
             if self.use_auto_center_interpolation and rpos is None:
                 self.info('trying to get interpolated position')
@@ -461,14 +460,13 @@ class VideoStageManager(StageManager):
 # Defaults
 #==============================================================================
     def _camera_default(self):
-        from src.helpers.paths import canvas2D_dir
         camera = Camera(parent=self.canvas)
 
         camera.calibration_data.on_trait_change(self.update_camera_params, 'xcoeff_str')
         camera.calibration_data.on_trait_change(self.update_camera_params, 'ycoeff_str')
 #        camera.on_trait_change(self.parent.update_camera_params, 'focus_z')
 
-        p = os.path.join(canvas2D_dir, 'camera.cfg')
+        p = os.path.join(paths.canvas2D_dir, 'camera.cfg')
         camera.load(p)
 
 #        camera.current_position = (0, 0)

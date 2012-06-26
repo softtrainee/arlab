@@ -27,7 +27,7 @@ from numpy import polyval
 from src.managers.manager import Manager
 from src.database.selectors.power_calibration_selector import PowerCalibrationSelector
 from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
-from src.helpers.paths import diodelaser_db, hidden_dir
+from src.paths import paths
 from src.graph.graph import Graph
 from src.lasers.power.power_calibration_manager import PowerCalibrationObject
 
@@ -131,7 +131,7 @@ class CompositeCalibrationManager(Manager):
             pickle.dump(pc, f)
 
     def _get_calibration_path(self):
-        p = os.path.join(hidden_dir, '{}_power_calibration'.format(self.parent_name))
+        p = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(self.parent_name))
         return p
 
     def _load_graph_fired(self):
@@ -218,8 +218,9 @@ class CompositeCalibrationManager(Manager):
     def _db_default(self):
 
         if self.parent_name == 'FusionsDiode':
-            dbname = diodelaser_db
-
+            dbname = paths.diodelaser_db
+        else:
+            dbname = paths.co2laser_db
         db = PowerCalibrationAdapter(dbname=dbname, kind='sqlite')
         db.connect()
         return db

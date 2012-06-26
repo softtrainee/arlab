@@ -31,7 +31,7 @@ from src.managers.displays.rich_text_display import RichTextDisplay
 from src.helpers.color_generators import colors8i as colors
 
 from src.hardware.motion_controller import MotionController
-from src.helpers.paths import map_dir, setup_dir, user_points_dir, hidden_dir
+from src.paths import paths
 import pickle
 from src.lasers.stage_managers.stage_visualizer import StageVisualizer
 
@@ -137,7 +137,7 @@ class StageManager(Manager):
             self.info('added point {}:{:0.5f},{:0.5f}'.format(npt.identifier, npt.x, npt.y))
 
     def _load_points_fired(self):
-        p = self.open_file_dialog(default_directory=os.path.join(setup_dir,
+        p = self.open_file_dialog(default_directory=os.path.join(paths.setup_dir,
                                                                  'tray_maps',
                                                                  'user_points')
                                   )
@@ -145,7 +145,7 @@ class StageManager(Manager):
             self.canvas.load_points_file(p)
 
     def _save_points_fired(self):
-        p = self.save_file_dialog(default_directory=user_points_dir)
+        p = self.save_file_dialog(default_directory=paths.user_points_dir)
 
         if p:
             self.canvas.save_points(p)
@@ -161,7 +161,7 @@ class StageManager(Manager):
     def kill(self):
         r = super(StageManager, self).kill()
 
-        p = os.path.join(hidden_dir, 'stage_map')
+        p = os.path.join(paths.hidden_dir, 'stage_map')
         self.info('saving stage_map {} to {}'.format(self.stage_map, p))
         with open(p, 'wb') as f:
             pickle.dump(self.stage_map, f)
@@ -187,7 +187,7 @@ class StageManager(Manager):
         self.canvas.change_indicator_visibility()
 
     def _load_previous_stage_map(self):
-        p = os.path.join(hidden_dir, 'stage_map')
+        p = os.path.join(paths.hidden_dir, 'stage_map')
 
         if os.path.isfile(p):
             self.info('loading previous stage map')
@@ -203,7 +203,7 @@ class StageManager(Manager):
         #load the stage maps
         mapfiles = self.config_get(config, 'General', 'mapfiles')
         for mapfile in mapfiles.split(','):
-            path = os.path.join(map_dir, mapfile.strip())
+            path = os.path.join(paths.map_dir, mapfile.strip())
             sm = StageMap(file_path=path,
 
                         )
@@ -770,7 +770,7 @@ class StageManager(Manager):
                     self.info('using an interpolated value')
                 else:
                     self.info('using previously calculated corrected position')
-                    correct = False
+#                    correct = False
 
             self.stage_controller.linear_move(block=True, *pos)
             if self.tray_calibration_manager.calibration_style == 'MassSpec':

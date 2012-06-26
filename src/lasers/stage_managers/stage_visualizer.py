@@ -31,7 +31,7 @@ from src.managers.manager import Manager
 from src.canvas.canvas2D.stage_visualization_canvas import StageVisualizationCanvas, \
     SampleHole
 from src.lasers.stage_managers.stage_map import StageMap
-from src.helpers.paths import map_dir, stage_visualizer_dir
+from src.paths import paths
 from src.helpers.filetools import unique_path
 
 
@@ -49,7 +49,7 @@ class StageVisualizer(Manager):
     def __init__(self, *args, **kw):
         super(StageVisualizer, self).__init__(*args, **kw)
 #        p = os.path.join(data_dir, 'stage_visualizer')
-        self.path, _ = unique_path(stage_visualizer_dir, 'vis', filetype='')
+        self.path, _ = unique_path(paths.stage_visualizer_dir, 'vis', filetype='')
 
     def update_calibration(self, obj, name, new):
         self.clear()
@@ -169,7 +169,7 @@ class StageVisualizer(Manager):
         return v
 
     def _stage_map_default(self):
-        p = os.path.join(map_dir, '61-hole.txt')
+        p = os.path.join(paths.map_dir, '61-hole.txt')
         sm = StageMap(file_path=p)
         sm.load_correction_file()
         return sm

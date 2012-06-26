@@ -24,7 +24,7 @@ from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
     CLIP_CHILDREN, VERTICAL, Frame, BoxSizer, NullColor, Size, \
     DisplaySize
 #============= local library imports  ==========================
-from src.helpers import paths
+from src.paths import paths
 from src.hardware.core.i_core_device import ICoreDevice
 from src.helpers.parsers.initialization_parser import InitializationParser
 from loggable import Loggable
@@ -198,6 +198,7 @@ class Initializer(Loggable):
 
         if managers:
             self.info('loading managers - {}'.format(', '.join(managers)))
+            manager.name = name
             self.load_managers(manager, managers, device_dir)
 
         if devices:
@@ -241,7 +242,6 @@ class Initializer(Loggable):
             man = None
             if mi == '':
                 continue
-
             self.info('load {}'.format(mi))
             mode, port = self.parser.get_rpc_mode_port((mi, manager.name))
             remote = mode == 'client'

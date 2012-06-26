@@ -25,7 +25,7 @@ import os
 #============= local library imports  ==========================
 from src.scripts.core.core_script_parser import CoreScriptParser
 from src.helpers.filetools import str_to_bool
-from src.helpers import paths
+from src.paths import paths
 VALID_ACTIONS = ['OPEN', 'CLOSE', 'Open', 'Close', 'open', 'close']
 
 RUNSCRIPT_DIR = os.path.join(paths.scripts_dir, 'runscripts')

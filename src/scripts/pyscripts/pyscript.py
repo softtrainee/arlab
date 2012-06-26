@@ -18,8 +18,6 @@ from traits.api import Str, Any, Bool, Enum
 import time
 from threading import Thread, Event, Timer, currentThread, Condition
 from src.loggable import Loggable
-from src.helpers.logger_setup import logging_setup
-from src.helpers.paths import scripts_dir
 import os
 from pyface.timer.do_later import do_later
 from Queue import Queue, Empty
@@ -456,10 +454,13 @@ class PyScript(Loggable):
                 self._sleep(0.5)
 
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+
     logging_setup('pscript')
 #    execute_script(t)
+    from src.paths import paths
 
-    p = PyScript(root=os.path.join(scripts_dir, 'pyscripts'),
+    p = PyScript(root=os.path.join(paths.scripts_dir, 'pyscripts'),
                       path='test.py',
                       _manager=DummyManager())
 

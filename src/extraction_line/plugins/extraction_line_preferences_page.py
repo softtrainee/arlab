@@ -24,11 +24,11 @@ import os
 
 #============= local library imports  ==========================
 from src.managers.plugins.manager_preferences_page import ManagerPreferencesPage
-from src.helpers.paths import extraction_line_dir
+from src.paths import paths
 
 def get_valve_group_names():
     g = []
-    p = os.path.join(extraction_line_dir, 'valve_groups.txt')
+    p = os.path.join(paths.extraction_line_dir, 'valve_groups.txt')
     with open(p, 'r') as f:
         for l in f:
             if l.startswith('#'):

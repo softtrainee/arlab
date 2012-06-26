@@ -26,7 +26,7 @@ from threading import Event as TEvent
 from threading import Thread
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.paths import hidden_dir, data_dir
+from src.paths import paths
 import os
 import time
 from src.graph.graph import Graph
@@ -166,7 +166,7 @@ class PowerCalibrationManager(Manager):
             dw.build_warehouse()
             directory = dw.get_current_dir()
         else:
-            directory = os.path.join(data_dir, 'power_calibration')
+            directory = os.path.join(paths.data_dir, 'power_calibration')
 
         _dn = dm.new_frame(directory=directory,
                 base_frame_name='power_calibration')
@@ -260,7 +260,7 @@ class PowerCalibrationManager(Manager):
 
 
     def _get_parameters_path(self, name):
-        p = os.path.join(hidden_dir, 'power_calibration_{}'.format(name))
+        p = os.path.join(paths.hidden_dir, 'power_calibration_{}'.format(name))
         return p
 
     def _load_parameters(self, p):
@@ -286,7 +286,7 @@ class PowerCalibrationManager(Manager):
 
     def _dump_calibration(self, pc):
         name = self.parent.name if self.parent else 'foo'
-        p = os.path.join(hidden_dir, '{}_power_calibration'.format(name))
+        p = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(name))
         self.info('saving power calibration to {}'.format(p))
         try:
             with open(p, 'wb') as f:

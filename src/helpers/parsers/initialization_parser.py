@@ -21,12 +21,12 @@ from pyface.message_dialog import warning
 import os
 import sys
 #============= local library imports  ==========================
-from src.helpers.paths import setup_dir
+from src.paths import paths
 
 
 class InitializationParser(XMLParser):
     def __init__(self, *args, **kw):
-        p = os.path.join(setup_dir, 'initialization.xml')
+        p = os.path.join(paths.setup_dir, 'initialization.xml')
         if os.path.isfile(p):
             super(InitializationParser, self).__init__(p, *args, **kw)
         else:
@@ -61,6 +61,13 @@ class InitializationParser(XMLParser):
 #        cat = tree.find(category)
 #        if cat is not None:
 #            return cat.findall('plugin')
+    def get_global(self, tag):
+
+        elem = self._tree.find('globals')
+        if elem is not None:
+            g = elem.find(tag)
+            if g is not None:
+                return g.text.strip()
 
     def get_plugin_groups(self):
         elem = self._tree.find('plugins')
@@ -110,7 +117,6 @@ class InitializationParser(XMLParser):
         return self._get_paramaters(manager, 'timed_flag', **kw)
 
     def get_rpc_mode_port(self, manager):
-
         if isinstance(manager, tuple):
             manager = self.get_manager(*manager)
 

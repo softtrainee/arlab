@@ -21,7 +21,6 @@ from pyface.action.api import Action
 #============= local library imports  ==========================
 from src.envisage.core.action_helper import open_protocol, open_manager
 from src.database.adapters.device_scan_adapter import DeviceScanAdapter
-from src.helpers.paths import device_scan_db
 from src.lasers.plugins.fusions.co2.actions import open_selector
 from src.hardware.plugins.register_manager import RegisterManager
 
@@ -46,8 +45,8 @@ class OpenRemoteHardwareServerAction(Action):
     name = 'Remote Hardware Server'
 
     def __init__(self, *args, **kw):
-        from globals import use_ipc
-        self.enabled = not use_ipc
+        from globals import globalv
+        self.enabled = not globalv.use_ipc
         super(OpenRemoteHardwareServerAction, self).__init__(*args, **kw)
 
     def perform(self, event):
@@ -66,9 +65,11 @@ class OpenDeviceScansAction(Action):
     def perform(self, event):
         '''
         '''
+        from src.paths import paths
+
 #        p = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
 #        open_protocol(self.window, p)
-        db = DeviceScanAdapter(dbname=device_scan_db,
+        db = DeviceScanAdapter(dbname=paths.device_scan_db,
                                kind='sqlite',
                                application=self.window.application)
         open_selector(db, self.window.application)

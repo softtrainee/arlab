@@ -34,7 +34,7 @@ from src.managers.remote_manager import RemoteExtractionLineManager
 from src.managers.data_managers.pychron_db_data_manager import PychronDBDataManager
 from src.experiment.experiment import Experiment
 from src.managers.data_managers.csv_data_manager import CSVDataManager
-from src.helpers.paths import scripts_dir, data_dir
+from src.paths import paths
 from src.scripts.extraction_line_script import ExtractionLineScript
 from src.data_processing.regression.ols import OLS
 from uncertainties import ufloat
@@ -201,7 +201,7 @@ class ExperimentManager(Manager):
         for rid in runlist:
             self.info('loading run {} signal file'.format(rid))
             #open signal file
-            p = os.path.join(data_dir,
+            p = os.path.join(paths.data_dir,
                             'automated_runs',
                             'mswd_counting_experiment',
                             '{}-intensity001.txt'.format(rid))
@@ -210,7 +210,7 @@ class ExperimentManager(Manager):
 
             self.info('loading run {} baseline file'.format(rid))
             #open baseline file
-            p = os.path.join(data_dir,
+            p = os.path.join(paths.data_dir,
                              'automated_runs',
                              'mswd_counting_experiment',
                              '{}-baseline001.txt'.format(rid))
@@ -394,7 +394,7 @@ class ExperimentManager(Manager):
                 self.extraction_line_manager = man
 
             arun.extraction_line_manager = self.extraction_line_manager
-            arun.configuration = dict(extraction_line_script=os.path.join(scripts_dir,
+            arun.configuration = dict(extraction_line_script=os.path.join(paths.scripts_dir,
                                                         'runscripts',
                                                         'air_tank1.rs'))
             arun.data_manager = self.csv_data_manager
@@ -491,7 +491,7 @@ class ExperimentManager(Manager):
 
 #        name = 'valves_to_idle_measure.rs'
         els = ExtractionLineScript(
-                            source_dir=os.path.join(scripts_dir, 'runscripts'),
+                            source_dir=os.path.join(paths.scripts_dir, 'runscripts'),
                             file_name=name,
 
                             #hole=self.position,

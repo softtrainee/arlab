@@ -37,17 +37,17 @@ class MessagingHandler(BaseRequestHandler):
             if response is not None:
                 self.send_packet(response)
 
-#            if 'ERROR 6' in response:
-#                self.server.increment_repeater_fails()
+            if 'ERROR 6' in response:
+                self.server.increment_repeater_fails()
 #            
             if self._verbose:
                 self.server.info('Sent: %s' % response.strip())
 
-#            self.server.parent.cur_rpacket = data
-#            self.server.parent.cur_spacket = response
+            self.server.parent.cur_rpacket = data
+            self.server.parent.cur_spacket = response
 
-#            self.server.increment_packets_received()
-#            self.server.increment_packets_sent()
+            self.server.increment_packets_received()
+            self.server.increment_packets_sent()
 
     def get_packet(self):
         '''

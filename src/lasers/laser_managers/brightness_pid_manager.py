@@ -24,7 +24,7 @@ import random
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.hardware.core.pid_object import PIDObject
-from src.helpers.paths import hidden_dir
+from src.paths import paths
 from src.helpers.timer import Timer
 from src.graph.stream_graph import StreamGraph
 #from pyface.timer.api import do_later
@@ -133,7 +133,7 @@ class BrightnessPIDManager(Manager):
         return g
 
     def _load_pid_object(self):
-        p = os.path.join(hidden_dir, 'brightness_pid_object')
+        p = os.path.join(paths.hidden_dir, 'brightness_pid_object')
         if os.path.isfile(p):
             self.info('loading pid object from {}'.format(p))
             try:
@@ -150,7 +150,7 @@ class BrightnessPIDManager(Manager):
     def _dump_pid_object(self):
 
         try:
-            p = os.path.join(hidden_dir, 'brightness_pid_object')
+            p = os.path.join(paths.hidden_dir, 'brightness_pid_object')
             self.info('dumping pid object to {}'.format(p))
             with open(p, 'wb') as f:
                 pickle.dump(self.pid_object, f)

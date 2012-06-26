@@ -31,8 +31,10 @@ from ConfigParser import NoSectionError
 from src.managers.manager import Manager, ManagerHandler
 from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
-from src.helpers.paths import bakeout_config_dir, data_dir, scripts_dir, \
-    bakeout_db_root, bakeout_db
+from src.paths import paths
+#bakeout_config_dir, data_dir, scripts_dir, \
+#    bakeout_db_root, bakeout_db
+
 from src.graph.time_series_graph import TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
 from src.helpers.datetime_tools import generate_datestamp, get_datetime
@@ -145,7 +147,7 @@ class BakeoutManager(Manager):
 # database 
 #==============================================================================
     def _database_default(self):
-        db = BakeoutAdapter(dbname=bakeout_db,
+        db = BakeoutAdapter(dbname=paths.bakeout_db,
 #                            password='Argon',
                             kind='sqlite'
                             )
@@ -195,7 +197,7 @@ class BakeoutManager(Manager):
 
         else:
             path = self._file_dialog_('open',
-                                      default_directory=os.path.join(data_dir,
+                                      default_directory=os.path.join(paths.data_dir,
                                       '.bakeouts'),
                                       wildcard='Data files (*.h5,*.csv, *.txt)|*.h5;*.csv;*.txt'
                                       )
@@ -210,7 +212,7 @@ class BakeoutManager(Manager):
     def _save_fired(self):
 
         path = self._file_dialog_('save as',
-                                  default_directory=bakeout_config_dir)
+                                  default_directory=paths.bakeout_config_dir)
 
         if not path.endswith('.cfg'):
             path += '.cfg'
@@ -586,9 +588,9 @@ class BakeoutManager(Manager):
         '''
 
         self._configurations = ['---']
-        for p in os.listdir(bakeout_config_dir):
+        for p in os.listdir(paths.bakeout_config_dir):
             if os.path.splitext(p)[1] == '.cfg':
-                self._configurations.append(os.path.join(bakeout_config_dir,
+                self._configurations.append(os.path.join(paths.bakeout_config_dir,
                         p))
 
     def _parse_config_file(self, p):
@@ -743,7 +745,7 @@ class BakeoutManager(Manager):
         self.reset_general_scan()
 
     def _clean_archive(self):
-        root = os.path.join(data_dir, 'bakeouts')
+        root = os.path.join(paths.data_dir, 'bakeouts')
         self.info('cleaning bakeout data directory {}'.format(root))
         a = Archiver(root=root, archive_days=14)
         a.clean()
@@ -764,7 +766,7 @@ class BakeoutManager(Manager):
 
         ni = 'bakeout-{}'.format(generate_datestamp())
 
-        dw = DataWarehouse(root=bakeout_db_root)
+        dw = DataWarehouse(root=paths.bakeout_db_root)
 #                           os.path.join(data_dir, base_dir))
         dw.build_warehouse()
 
@@ -794,7 +796,7 @@ class BakeoutManager(Manager):
                     dm.set_group_attribute(cgrp, attr, getattr(ci, attr))
 
                 if ci.script != '---':
-                    p = os.path.join(scripts_dir, 'bakeoutscripts', ci.script)
+                    p = os.path.join(paths.scripts_dir, 'bakeoutscripts', ci.script)
                     with open(p, 'r') as f:
                         txt = f.read()
                 else:
@@ -1103,7 +1105,7 @@ class BakeoutManager(Manager):
         return os.path.splitext(os.path.basename(self._configuration))[0]
 
     def _set_configuration(self, c):
-        self._configuration = os.path.join(bakeout_config_dir, c)
+        self._configuration = os.path.join(paths.bakeout_config_dir, c)
 
     def _get_execute_label(self):
         return 'Stop' if self.alive else 'Execute'
@@ -1228,7 +1230,7 @@ def launch_bakeout():
 #    bm._bakeout_csv_parser(path + '.txt')
 #
 if __name__ == '__main__':
-    path = os.path.join(data_dir, 'bakeouts', 'bakeout-2012-03-31007.txt')
+    path = os.path.join(paths.data_dir, 'bakeouts', 'bakeout-2012-03-31007.txt')
     b = BakeoutManager()
     b.load()
     b._add_bakeout_to_db()

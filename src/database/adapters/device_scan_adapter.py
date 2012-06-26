@@ -23,7 +23,6 @@ from src.database.adapters.database_adapter import PathDatabaseAdapter
 from src.database.selectors.device_scan_selector import DeviceScanSelector
 from src.database.orms.device_scan_orm import ScanTable, DeviceTable, \
     ScanPathTable
-from src.helpers.paths import device_scan_db
 
 class DeviceScanAdapter(PathDatabaseAdapter):
     test_func = None
@@ -71,9 +70,12 @@ class DeviceScanAdapter(PathDatabaseAdapter):
 
 
 if __name__ == '__main__':
+
     from src.helpers.logger_setup import logging_setup
     logging_setup('dvs')
-    db = DeviceScanAdapter(dbname=device_scan_db,
+
+    from src.paths import paths
+    db = DeviceScanAdapter(dbname=paths.device_scan_db,
                             kind='sqlite')
     db.connect()
 

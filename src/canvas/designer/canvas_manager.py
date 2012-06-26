@@ -25,7 +25,7 @@ import os
 from canvas_designer import CanvasDesigner
 from src.envisage.core.envisage_editor import EnvisageEditor
 from src.envisage.core.envisage_manager import EnvisageManager
-from src.helpers.paths import canvas2D_dir
+from src.paths import paths
 class CEditor(EnvisageEditor):
     '''
        
@@ -45,7 +45,7 @@ class CanvasManager(EnvisageManager):
 
     editor_klass = CEditor
     wildcard = '*.elc'
-    default_directory = canvas2D_dir
+    default_directory = paths.canvas2D_dir
 
 
     def _show_hide_fired(self):
@@ -84,7 +84,7 @@ class CanvasManager(EnvisageManager):
         '''
         '''
 
-        path = os.path.join(canvas2D_dir, 'canvas.elc')
+        path = os.path.join(paths.canvas2D_dir, 'canvas.elc')
         if os.path.isfile(path):
             self.canvas_designer.bootstrap(path)
 

@@ -30,7 +30,7 @@ from src.hardware.pyrometer_temperature_monitor import PyrometerTemperatureMonit
 
 
 from src.lasers.laser_managers.vue_metrix_manager import VueMetrixManager
-from src.helpers.paths import diodelaser_db, diodelaser_db_root
+from src.paths import paths
 from src.monitors.fusions_diode_laser_monitor import FusionsDiodeLaserMonitor
 
 from fusions_laser_manager import FusionsLaserManager
@@ -71,8 +71,8 @@ class FusionsDiodeManager(FusionsLaserManager):
     request_powermin = Float(0)
     request_powermax = Float(1500)
 
-    dbname = diodelaser_db
-    db_root = diodelaser_db_root
+    dbname = paths.diodelaser_db
+    db_root = paths.diodelaser_db_root
 #    def finish_loading(self):
 #        super(FusionsDiodeManager, self).finish_loading()
 #
@@ -168,14 +168,14 @@ class FusionsDiodeManager(FusionsLaserManager):
 
     def _disable_hook(self):
         if self.fiber_light.auto_onoff and not self.fiber_light.state:
-            
-            fl_on=lambda:self.fiber_light.power_on()
+
+            fl_on = lambda:self.fiber_light.power_on()
             if self._recording_power_state:
-                t=Timer(7, fl_on)
+                t = Timer(7, fl_on)
                 t.start()
             else:
                 fl_on()
-                
+
 
         self.temperature_controller.disable()
         self.control_module_manager.disable()

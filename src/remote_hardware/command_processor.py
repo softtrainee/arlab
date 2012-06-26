@@ -30,21 +30,22 @@ from src.remote_hardware.context import ContextFilter
 from src.remote_hardware.errors.system_errors import SystemLockErrorCode, \
     SecurityErrorCode, HMACSecurityErrorCode
 import select
-from globals import ipc_dgram, use_ipc
+from globals import globalv
 BUFSIZE = 2048
 
+print globalv.use_ipc, 'use ipc'
 def end_request(fn):
     def end(obj, rtype, data, sender, sock=None):
         data = fn(obj, rtype, data, sender)
-        if use_ipc:
+        if globalv.use_ipc:
             #self.debug('Result: {}'.format(data))
 #            if isinstance(data, ErrorCode):
 #                data = str(data)
             try:
-                if ipc_dgram:
+                if globalv.ipc_dgram:
                     sock.sendto(data, obj.path)
                 else:
-                    sock.send(data)
+                    sock.send(str(data))
                 #sock.close()
             except Exception, err:
                 obj.debug('End Request Exception: {}'.format(err))
@@ -116,7 +117,7 @@ class CommandProcessor(ConfigLoadable):
     def close(self):
         '''
         '''
-        if not use_ipc:
+        if not globalv.use_ipc:
             return
 
         self.info('Stop listening to {}'.format(self.path))
@@ -128,17 +129,17 @@ class CommandProcessor(ConfigLoadable):
         '''
 
         '''
-        if not use_ipc:
+        if not globalv.use_ipc:
             return True
 
 
         kind = socket.SOCK_STREAM
-        if ipc_dgram:
+        if globalv.ipc_dgram:
             kind = socket.SOCK_DGRAM
 
         self._sock = socket.socket(socket.AF_UNIX, kind)
         #self._sock.settimeout(1)
-        if not ipc_dgram:
+        if not globalv.ipc_dgram:
             self._sock.setblocking(False)
 
         try:
@@ -148,11 +149,11 @@ class CommandProcessor(ConfigLoadable):
 
         self._sock.bind(self.path)
 
-        if not ipc_dgram:
+        if not globalv.ipc_dgram:
             self._sock.listen(10)
 
         self.info('listening to {} using {}'.format(self.path,
-                        'DATAGRAM' if ipc_dgram else 'STREAM'))
+                        'DATAGRAM' if globalv.ipc_dgram else 'STREAM'))
 
         t = Thread(name='processor.listener',
                    target=self._listener)
@@ -189,7 +190,7 @@ class CommandProcessor(ConfigLoadable):
             pass
 
     def _process_data(self, sock, data):
-        args = [sock] + data.split('|')
+        args = data.split('|') + [sock]
 #                            args = client, sender_addr, ptype, payload
         if len(args) == 4:
 #                        process request should be blocking
@@ -225,7 +226,7 @@ class CommandProcessor(ConfigLoadable):
         _input = [self._sock]
         while self._listen:
             try:
-                if ipc_dgram:
+                if globalv.ipc_dgram:
                     self._dgram_listener()
                 else:
                     self._stream_listener(_input)

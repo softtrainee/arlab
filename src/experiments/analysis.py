@@ -26,8 +26,8 @@ import apptools.sweet_pickle as pickle
 import os
 import time
 #============= local library imports  ==========================
-from src.database.core.database_adapter import DatabaseAdapter
-from src.helpers.paths import heating_schedule_dir, scripts_dir
+#from src.database.core.database_adapter import DatabaseAdapter
+from src.paths import paths
 from heating_schedule import HeatingSchedule, HeatingScheduleEditor
 from src.graph.graph import Graph
 from src.scripts.extraction_line_script import ExtractionLineScript
@@ -36,7 +36,8 @@ from time_series_helper import parse_time_series_blob, \
     build_time_series_blob
 from src.extraction_line.extraction_line_manager import ExtractionLineManager
 from threading import Condition
-prep_script_dir = os.path.join(scripts_dir, 'prep_scripts')
+from src.database.adapters.database_adapter import DatabaseAdapter
+prep_script_dir = os.path.join(paths.scripts_dir, 'prep_scripts')
 
 class AutomatedRun(Loggable):
     '''
@@ -172,8 +173,8 @@ class AutomatedRun(Loggable):
 
     def load_heating_schedules(self):
         #load the heating schedules
-        for p in os.listdir(heating_schedule_dir):
-            with open(os.path.join(heating_schedule_dir, p), 'r') as f:
+        for p in os.listdir(paths.heating_schedule_dir):
+            with open(os.path.join(paths.heating_schedule_dir, p), 'r') as f:
                 s = pickle.load(f)
                 self._heating_schedules.append(s)
 

@@ -145,13 +145,49 @@ command line, you must first navigate to the folder of interest.
 						
 Data Viewing with Pychron
 -----------------------------
-​Evaluation of data and production of graphs is best performed in Pychron. It is
+Evaluation of data and production of graphs is best performed in Pychron. It is
 capable of displaying the major MDD plots, including spectra, Arrhenius plots,
-Log(r/ro), unconstrained and constrained thermal history models. Make sure the
-MDD Perspective is enabled. If your window isn’t similar to FIGURE, you may be
-in the Hardware Perspective. Several windows are available here to aid in data
-reduction (FIGURE). These windows can be reorganized simply by dragging them
-around the window. Therefore, your MDD perspective may not look exactly like
-this but it should have all of the same components, although they may be
-redistributed.
+Log(r/ro), unconstrained and constrained thermal history models.
+
+Make sure the MDD Perspective is enabled. If your window isn’t similar to
+FIGURE, you may be in the Hardware Perspective. Several windows are available
+here to aid in data reduction (FIGURE). These windows can be reorganized simply
+by dragging them around the window. Therefore, your MDD perspective may not look
+exactly like this but it should have all of the same components, although they
+may be redistributed.
+
+	A. The Data Window (Far Left)
+		The Data window contains a refresh button, which refreshes the graphs. Below
+		that is a list of samples. Each sample has a series of check boxes and color
+		indicators. “Show” toggles all of the data for that sample on the graphs. “Bind”
+		forces the primary and secondary colors to be the same in all plot windows for
+		that particular sample. “Ms” toggles the model spectrum produced by Agesme.
+		“IMs” toggles the model spectra produced by thermal history modeling. “Ma”
+		toggles the model Arrhenius and Log(r/ro) plots. Sometimes the Refresh button
+		must be used to display those changes. All samples on this list will be shown in
+		the Modeler window.
+
+		Five small buttons are on the upper right corner of this window which (left to
+		right) (a) disable column sorting, (b and c) move samples up or down the list,
+		which changes their stacking order in the Modeler window, (d) removes a sample
+		from the list and (e) opens a preferences window.
+		
+		Below the list of displayed samples is a navigation window. Simply clicking on a
+		sample folder will add it to the list above.
+
+	B. The Summary Window (Top Center)
+		The Summary window displays the kinetic parameters and domain distribution for
+		the sample highlighted in the Data Window.
+	
+	C. The Notes Window (Bottom Center)
+		The Notes window is basically just a data entry window for a text file. Each
+		sample folder has a Notes.txt file which is editable in this window. Any
+		information regarding that sample can be saved to that text file and recalled
+		simply by click the name of the sample in the Data window. Useful for keeping
+		track of why you chose certain kinetic parameters, why the sample is important,
+		or any other information you would like to be able to recall later.
+	
+	D. The Modeler Window (Far Right)	
+		The Modeler window displays the samples selected in the Data window.
+
  
