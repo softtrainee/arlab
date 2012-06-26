@@ -119,10 +119,7 @@ class Video(Image):
         if cap is not None:
 #            if lock:
             with self._lock:
-#                f = query_frame(cap)
-                f = '/Users/ross/Sandbox/pos_err/pos_err_52001.jpg'
-                self.load(f)
-                f = self.source_frame
+                f = query_frame(cap)
             return f
 
     def start_recording(self, path, user=None):

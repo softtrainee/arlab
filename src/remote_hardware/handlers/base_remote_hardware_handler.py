@@ -134,6 +134,8 @@ class BaseRemoteHardwareHandler(Loggable):
     def Set(self, manager, dname, value, sender_address, *args):
         d = self.get_device(dname)
         if d is not None:
+            self.info('Set {} to {}'.format(d.name, 
+                                            value))
             result = d.set(value)
         else:
             result = DeviceConnectionErrorCode(dname, logger=self)
@@ -144,6 +146,7 @@ class BaseRemoteHardwareHandler(Loggable):
         d = self.get_device(dname)
         if d is not None:
             result = d.get()
+            self.info('Get {} = {}'.format(d.name, result))
         else:
             result = DeviceConnectionErrorCode(dname, logger=self)
         return result
