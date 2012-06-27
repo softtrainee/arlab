@@ -179,7 +179,7 @@ def main():
     '''
 
     #build globals
-    from helpers import build_globals
+    from launchers.helpers import build_globals
     build_globals()
 
     # build directories
