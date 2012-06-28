@@ -299,6 +299,13 @@ def system_client():
                ask_id='E')
     c.configure_traits()
 
+def local_client():
+    c = Client(
+               host=socket.gethostbyname(socket.gethostname()),
+               port=8900,
+               ask_id='E')
+    c.configure_traits()
+
 def power_test():
     c = Client(
                port=1068,
@@ -344,8 +351,9 @@ def mass_spec_param_test():
     c.ask('Read pump_time')
 
 if __name__ == '__main__':
+    local_client()
 #    diode_client()
-	system_client()
+#	system_client()
     #power_test()
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',

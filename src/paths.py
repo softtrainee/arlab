@@ -57,6 +57,8 @@ class Paths():
     diodelaser_db_root = None
     diodelaser_db = None
 
+    isotope_db_root = None
+    isotope_db = None
     #==============================================================================
     # root
     #==============================================================================
@@ -128,7 +130,8 @@ class Paths():
 
         self.diodelaser_db_root = path.join(db_path, 'diodelaserdb')
         self.diodelaser_db = path.join(db_path, 'diode.sqlite')
-
+        self.isotope_db_root = path.join(db_path, 'isotopedb')
+        self.isotope_db = path.join(db_path, 'isotope.sqlite')
         #==============================================================================
         # root
         #==============================================================================

@@ -60,6 +60,8 @@ class DatabaseAdapter(Loggable):
     session_factory = None
 
     application = Any
+
+    test_func = None
 #    window = Any
 
 #    @on_trait_change('[user,host,password,dbname, use_db]')
@@ -103,17 +105,23 @@ class DatabaseAdapter(Loggable):
 
     def _test_db_connection(self):
         self.connected = True
-        sess = self.session_factory()
-        self.info('testing database connection')
+        sess = None
         try:
             connected = True
             if self.test_func is not None:
+                sess = self.session_factory()
+                self.info('testing database connection')
                 getattr(self, self.test_func)
 #                _users, sess = getattr(self, self.test_func)(sess=sess)
 
-        except:
-            self.warning('connection failed %s@%s/%s' % (self.user, self.host,
-                                                        self.dbname))
+        except Exception, e:
+            print e
+            if self.kind == 'mysql':
+                url = '{}@{}/{}' .format(self.user, self.host,
+                                                        self.dbname)
+            else:
+                url = self.dbname
+            self.warning('connection failed to {}'.format(url))
             connected = False
 
         finally:
@@ -132,19 +140,19 @@ class DatabaseAdapter(Loggable):
         self.info('url = %s' % url)
         self.engine = create_engine(url)
 
-    def _get_record(self, record, func, sess):
-        '''
-        '''
-        if record is not None:
-            result = None
-            if isinstance(record, int) or isinstance(record, long):
-                record = dict(id=record)
-
-            if isinstance(record, dict):
-                result, sess = getattr(self, func)(filter=record, sess=sess)
-            else:
-                result = record
-            return result
+#    def _get_record(self, record, func, sess):
+#        '''
+#        '''
+#        if record is not None:
+#            result = None
+#            if isinstance(record, int) or isinstance(record, long):
+#                record = dict(id=record)
+#
+#            if isinstance(record, dict):
+#                result, sess = getattr(self, func)(filter=record, sess=sess)
+#            else:
+#                result = record
+#            return result
 
     def get_session(self):
         '''

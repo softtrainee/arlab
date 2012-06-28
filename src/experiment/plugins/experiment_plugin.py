@@ -22,7 +22,7 @@
 #============= local library imports  ==========================
 from src.experiment.experiment_manager import ExperimentManager
 from src.envisage.core.core_plugin import CorePlugin
-from src.helpers.initialization_parser import InitializationParser
+from src.helpers.parsers.initialization_parser import InitializationParser
 
 
 class ExperimentPlugin(CorePlugin):

@@ -91,7 +91,7 @@ class Experiment(HasTraits):
                         heat_schedule_table,
                         analysis_table
                         ),
-
+                 title='Experiment Editor'
                  )
 
         return v
