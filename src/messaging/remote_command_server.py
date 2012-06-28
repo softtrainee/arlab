@@ -35,6 +35,7 @@ from src.helpers.datetime_tools import diff_timestamp
 from src.remote_hardware.command_processor import CommandProcessor
 from globals import globalv
 
+LOCAL = True
 class RCSHandler(Handler):
     def init(self, info):
         '''
@@ -110,8 +111,12 @@ class RemoteCommandServer(ConfigLoadable):
         config = self.get_configuration()
         if config:
 
-#            host = self.config_get(config, 'General', 'host')
-            host = socket.gethostbyname(socket.gethostname())
+            if LOCAL:
+                host = 'localhost'
+            else:
+                host = self.config_get(config, 'General', 'host', optional=True)
+                if host is None:
+                    host = socket.gethostbyname(socket.gethostname())
 
             port = self.config_get(config, 'General', 'port', cast='int')
             if host is None or port is None:

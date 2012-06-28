@@ -31,7 +31,7 @@ from src.managers.spectrometer_manager import SpectrometerManager
 from src.managers.manager import Manager
 from src.managers.remote_manager import RemoteExtractionLineManager
 #from src.helpers.paths import scripts_dir
-from src.managers.data_managers.pychron_db_data_manager import PychronDBDataManager
+#from src.managers.data_managers.pychron_db_data_manager import PychronDBDataManager
 from src.experiment.experiment import Experiment
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.paths import paths
@@ -80,17 +80,17 @@ class ExperimentManager(Manager):
 
     test2 = Button
 
-    def _data_manager_default(self):
-        '''
-            normally the dbmanager connection parameters are set ie host, name etc
-            for now just use default root, localhost
-        '''
-        dbman = PychronDBDataManager()
-
-        db = dbman.database
-        db.connect()
-
-        return dbman
+#    def _data_manager_default(self):
+#        '''
+#            normally the dbmanager connection parameters are set ie host, name etc
+#            for now just use default root, localhost
+#        '''
+#        dbman = PychronDBDataManager()
+#
+#        db = dbman.database
+#        db.connect()
+#
+#        return dbman
 
 #    def load_experiment_configuration(self, p):
 #        anals = []
@@ -106,266 +106,8 @@ class ExperimentManager(Manager):
 #        a.runscript_name = args[1]
 #
 #        return a
-
-    def analyze_data(self):
-        '''
-            provide a list of run numbers
-            get intercept and error for ni points
-            correct the data for baseline and blank
-            calculate blank intercept using nj points
-            calculate intercept
-            calculate mswd 
-        '''
-#===============================================================================
-# gather data
-#===============================================================================
-        runlist = ['B-01', 'A-01', 'A-02', 'A-03', 'A-04', 'B-02',
-                   'A-05', 'A-06', 'A-07', 'B-03'
-                   ]
-
-        blanks, airs, unknowns, b_bs, a_bs, u_bs = self.gather_data(runlist)
-#        self.permuate_data(blanks, airs, a_bs, b_bs)
-
-        self.plot_air_series(blanks, airs, b_bs, a_bs)
-
-    def plot_air_series(self, blanks, airs,
-                        blank_baselines,
-                        air_baselines):
-        g = StackedGraph()
-#        g.new_plot(xtitle='npts',
-#                   ytitle='40/36')
-#        g.new_plot(ytitle='40/36 err')
-        g.new_plot(ytitle='Population SD',
-                   show_legend=True
-                   )
-
-#        xs = [100, 200, 500, 1000, 2000]
-        for si, fit in enumerate([
-                                  ('linear', 1), ('parabolic', 2),
-                                  ('cubic', 3),
-                                  ('exponential', 'quick_exponential')
-                                  ]):
-            self._plot_air_series(g, fit, si, blanks, airs, blank_baselines, air_baselines)
-
-        g.set_y_limits(0, 1)
-        g.edit_traits()
-
-    def _plot_air_series(self, g, fit, si, blanks, airs, blank_baselines, air_baselines):
-        xs = range(100, 2000, 100)
-        name, fit = fit
-        cor_ratioss = [self.calculate_ratios(ni, fit, blanks, airs,
-                                             blank_baselines,
-                                   air_baselines,
-                                  )
-                     for ni in xs
-                     ]
-
-        n = len(airs['h1'])
-#        scatter_args = dict(type='scatter', marker='circle',
-#                         marker_size=1.75)
-        scatter_args = dict()
-#        for i in range(n):
-##            g.new_series(plotid=0, **scatter_args)
-##            g.new_series(plotid=1, **scatter_args)
-#            g.new_series(plotid=0)
-#            g.new_series(plotid=1)
-
-        g.new_series(plotid=0, **scatter_args)
-
-        g.set_series_label(name, series=si)
-        for ci, xi in zip(cor_ratioss, xs):
-#            print ci
-            ms, sds = zip(*[(i.nominal_value, i.std_dev()) for i in ci])
-            ms = array(ms)
-            sds = array(sds)
-#            print SD
-#            for si in range(n):
-#                g.add_datum((xi, ms[si]), plotid=0, series=si)
-#                g.add_datum((xi, sds[si]), plotid=1, series=si)
-
-            g.add_datum((xi, ms.std()), plotid=0, series=si)
-
-#            g.new_series(xs, ms, type='scatter', plotid=0)
-#            g.new_series(xs, sds, type='scatter', plotid=1)
-
-        g.set_x_limits(0, xs[-1] + 100)
-
-    def gather_data(self, runlist):
-        blanks = dict()
-        airs = dict()
-        unknowns = dict()
-        air_baselines = dict()
-        blank_baselines = dict()
-        unknown_baselines = dict()
-
-        for rid in runlist:
-            self.info('loading run {} signal file'.format(rid))
-            #open signal file
-            p = os.path.join(paths.data_dir,
-                            'automated_runs',
-                            'mswd_counting_experiment',
-                            '{}-intensity001.txt'.format(rid))
-            xs, h1s, cdds = loadtxt(p, unpack=True, delimiter=',',
-                        skiprows=int(2 / 3. * self.equilibration_time))
-
-            self.info('loading run {} baseline file'.format(rid))
-            #open baseline file
-            p = os.path.join(paths.data_dir,
-                             'automated_runs',
-                             'mswd_counting_experiment',
-                             '{}-baseline001.txt'.format(rid))
-            _xs_baseline, h1s_baseline, cdds_baseline = loadtxt(p,
-                                            unpack=True, delimiter=',')
-
-            #calculate baseline
-            h1_baseline = ufloat((h1s_baseline.mean(), h1s_baseline.std()))
-            cdd_baseline = ufloat((cdds_baseline.mean(), cdds_baseline.std()))
-
-#===============================================================================
-# 
-#===============================================================================
-#            h1_baseline = 0
-#            cdd_baseline = 0
-
-            #if the sample is a blank add to blank list
-            if rid.startswith('B'):
-                int_dict = blanks
-                baselines = blank_baselines
-            elif rid.startswith('A'):
-                int_dict = airs
-                baselines = air_baselines
-            else:
-                int_dict = unknowns
-                baselines = unknown_baselines
-
-            for k, v, b in [('h1', (xs, h1s), h1_baseline),
-                            ('cdd', (xs, cdds), cdd_baseline)]:
-                try:
-                    int_dict[k].append(v)
-                except KeyError:
-                    int_dict[k] = [v]
-                try:
-                    baselines[k].append(b)
-                except KeyError:
-                    baselines[k] = [b]
-
-        return (blanks, airs, unknowns,
-                blank_baselines, air_baselines, unknown_baselines)
-
-    def permuate_data(self, blanks, airs, blank_baselines, air_baselines):
-
-        g = Graph()
-        g.new_plot(xtitle='npoints',
-                   ytitle='mswd',
-                   title='MSWD {}-Airs vs Counting Time'.format(len(airs['h1']))
-                   )
-        g.edit_traits()
-
-        s = 10
-        e = 2000
-        step = 10
-        nxs = arange(s, e, step)
-
-        mswds = [self._calculate_mswd(ni,
-                blanks, airs, blank_baselines, air_baselines) for ni in nxs]
-
-        g.new_series(nxs, mswds)
-        snxs = smooth(nxs)
-        smswds = smooth(mswds)
-        g.new_series(snxs, smswds)
-        g.add_horizontal_rule(1)
-
-        g.redraw()
-
-    def _calculate_mswd(self, ni, fit, blanks, airs,
-                         blank_baselines, air_baselines):
-
-        cor_ratios = self.calculate_ratios(ni, fit, blanks, airs,
-                                           blank_baselines, air_baselines)
-        verbose = False
-        if verbose:
-            self.info('40Ar/36Ar for npts {}'.format(ni))
-            self.info('average={} n={}'.format(cor_ratios.mean(),
-                                           cor_ratios.shape[0]
-                                           ))
-
-        x, errs = zip(*[(cr.nominal_value,
-                         cr.std_dev()) for cr in cor_ratios])
-#
-        return calculate_mswd(x, errs)
-
-    def calculate_ratios(self, ni, fit, blanks, airs,
-                            blank_baselines,
-                            air_baselines):
-        permutate_blanks = False
-        if permutate_blanks:
-            ti = ni
-        else:
-            ti = -1
-
-        h1bs, cddbs = self._calculate_correct_intercept(fit, blanks, blank_baselines,
-                                                        dict(h1=0, cdd=0),
-                                                        truncate=ti)
-
-        h1bs, cddbs = h1bs.mean(), cddbs.mean()
-#        h1bs, cddbs = 0, 0
-#        print 'asdfas', len(airs['h1']), len(airs['cdd'])
-#        print 'asdfas', len(air_baselines['h1']), len(air_baselines['cdd'])
-        cor_h1, cor_cdd = self._calculate_correct_intercept(fit,
-                                                            airs,
-                                                            air_baselines,
-                                                                dict(h1=h1bs,
-                                                                     cdd=cddbs
-                                                                     ),
-                                                            truncate=ni
-                                                            )
-
-        cor_ratios = cor_h1 / cor_cdd
-
-        return cor_ratios
-
-    def _calculate_correct_intercept(self, fit, signals, baselines,
-                                      blanks, truncate= -1):
-        cor_h1 = []
-        cor_cdd = []
-
-        from src.data_processing.regression.regressor import Regressor
-        r = Regressor()
-
-        for (xs, h1s), h1b, (xs2, cdds), cddb in zip(signals['h1'],
-                                               baselines['h1'],
-                                               signals['cdd'],
-                                               baselines['cdd']
-                                               ):
-            if fit == 'quick_exponential':
-                c, ce = r.quick_exponential(xs[:truncate], h1s[:truncate])
-                h1_int = ufloat((c[0],
-                                 ce[0]))
-
-                c, ce = r.quick_exponential(xs2[:truncate], cdds[:truncate])
-
-                cdd_int = ufloat((c[0],
-                               ce[0]))
-            else:
-                o = OLS(xs[:truncate], h1s[:truncate], fitdegree=fit)
-                h1_int = ufloat((o.get_coefficients()[fit],
-                                o.get_coefficient_standard_errors()[fit]))
-                o = OLS(xs2[:truncate], cdds[:truncate], fitdegree=fit)
-                cdd_int = ufloat((o.get_coefficients()[fit],
-                                o.get_coefficient_standard_errors()[fit]))
-
-            #apply baseline correction
-            h1_cor_int = h1_int - h1b
-            cdd_cor_int = cdd_int - cddb
-
-            #apply blank correction
-            h1_cor_int -= blanks['h1']
-            cdd_cor_int -= blanks['cdd']
-
-            cor_h1.append(h1_cor_int)
-            cor_cdd.append(cdd_cor_int)
-
-        return array(cor_h1), array(cor_cdd)
+    def recall_analysis(self):
+        pass
 
     def get_spectrometer_manager(self):
         sm = self.spectrometer_manager
@@ -602,15 +344,17 @@ class ExperimentManager(Manager):
         self.analyze_data()
 
     def _test_fired(self):
+        self.execute()
+
+    def execute(self):
         if self.isAlive():
             self._alive = False
         else:
             self._alive = True
 #        target = self.do_experiment
         #target = self.spectrometer_manager.deflection_calibration
-            target = self.do_automated_runs
-            t = Thread(target=target)
-#            t.start()
+            t = Thread(target=self.do_automated_runs)
+            t.start()
 
 #    def _add_fired(self):
 #        self.experiment.analyses.append(self.experiment.analysis)
@@ -671,6 +415,269 @@ if __name__ == '__main__':
     e = ExperimentManager()
 #    e.analyze_data()
     e.configure_traits()
+
+#===============================================================================
+# ##analysis code 
+#===============================================================================
+#    def analyze_data(self):
+#        '''
+#            provide a list of run numbers
+#            get intercept and error for ni points
+#            correct the data for baseline and blank
+#            calculate blank intercept using nj points
+#            calculate intercept
+#            calculate mswd 
+#        '''
+##===============================================================================
+## gather data
+##===============================================================================
+#        runlist = ['B-01', 'A-01', 'A-02', 'A-03', 'A-04', 'B-02',
+#                   'A-05', 'A-06', 'A-07', 'B-03'
+#                   ]
+#
+#        blanks, airs, unknowns, b_bs, a_bs, u_bs = self.gather_data(runlist)
+##        self.permuate_data(blanks, airs, a_bs, b_bs)
+#
+#        self.plot_air_series(blanks, airs, b_bs, a_bs)
+#
+#    def plot_air_series(self, blanks, airs,
+#                        blank_baselines,
+#                        air_baselines):
+#        g = StackedGraph()
+##        g.new_plot(xtitle='npts',
+##                   ytitle='40/36')
+##        g.new_plot(ytitle='40/36 err')
+#        g.new_plot(ytitle='Population SD',
+#                   show_legend=True
+#                   )
+#
+##        xs = [100, 200, 500, 1000, 2000]
+#        for si, fit in enumerate([
+#                                  ('linear', 1), ('parabolic', 2),
+#                                  ('cubic', 3),
+#                                  ('exponential', 'quick_exponential')
+#                                  ]):
+#            self._plot_air_series(g, fit, si, blanks, airs, blank_baselines, air_baselines)
+#
+#        g.set_y_limits(0, 1)
+#        g.edit_traits()
+#
+#    def _plot_air_series(self, g, fit, si, blanks, airs, blank_baselines, air_baselines):
+#        xs = range(100, 2000, 100)
+#        name, fit = fit
+#        cor_ratioss = [self.calculate_ratios(ni, fit, blanks, airs,
+#                                             blank_baselines,
+#                                   air_baselines,
+#                                  )
+#                     for ni in xs
+#                     ]
+#
+#        n = len(airs['h1'])
+##        scatter_args = dict(type='scatter', marker='circle',
+##                         marker_size=1.75)
+#        scatter_args = dict()
+##        for i in range(n):
+###            g.new_series(plotid=0, **scatter_args)
+###            g.new_series(plotid=1, **scatter_args)
+##            g.new_series(plotid=0)
+##            g.new_series(plotid=1)
+#
+#        g.new_series(plotid=0, **scatter_args)
+#
+#        g.set_series_label(name, series=si)
+#        for ci, xi in zip(cor_ratioss, xs):
+##            print ci
+#            ms, sds = zip(*[(i.nominal_value, i.std_dev()) for i in ci])
+#            ms = array(ms)
+#            sds = array(sds)
+##            print SD
+##            for si in range(n):
+##                g.add_datum((xi, ms[si]), plotid=0, series=si)
+##                g.add_datum((xi, sds[si]), plotid=1, series=si)
+#
+#            g.add_datum((xi, ms.std()), plotid=0, series=si)
+#
+##            g.new_series(xs, ms, type='scatter', plotid=0)
+##            g.new_series(xs, sds, type='scatter', plotid=1)
+#
+#        g.set_x_limits(0, xs[-1] + 100)
+#
+#    def gather_data(self, runlist):
+#        blanks = dict()
+#        airs = dict()
+#        unknowns = dict()
+#        air_baselines = dict()
+#        blank_baselines = dict()
+#        unknown_baselines = dict()
+#
+#        for rid in runlist:
+#            self.info('loading run {} signal file'.format(rid))
+#            #open signal file
+#            p = os.path.join(paths.data_dir,
+#                            'automated_runs',
+#                            'mswd_counting_experiment',
+#                            '{}-intensity001.txt'.format(rid))
+#            xs, h1s, cdds = loadtxt(p, unpack=True, delimiter=',',
+#                        skiprows=int(2 / 3. * self.equilibration_time))
+#
+#            self.info('loading run {} baseline file'.format(rid))
+#            #open baseline file
+#            p = os.path.join(paths.data_dir,
+#                             'automated_runs',
+#                             'mswd_counting_experiment',
+#                             '{}-baseline001.txt'.format(rid))
+#            _xs_baseline, h1s_baseline, cdds_baseline = loadtxt(p,
+#                                            unpack=True, delimiter=',')
+#
+#            #calculate baseline
+#            h1_baseline = ufloat((h1s_baseline.mean(), h1s_baseline.std()))
+#            cdd_baseline = ufloat((cdds_baseline.mean(), cdds_baseline.std()))
+#
+##===============================================================================
+## 
+##===============================================================================
+##            h1_baseline = 0
+##            cdd_baseline = 0
+#
+#            #if the sample is a blank add to blank list
+#            if rid.startswith('B'):
+#                int_dict = blanks
+#                baselines = blank_baselines
+#            elif rid.startswith('A'):
+#                int_dict = airs
+#                baselines = air_baselines
+#            else:
+#                int_dict = unknowns
+#                baselines = unknown_baselines
+#
+#            for k, v, b in [('h1', (xs, h1s), h1_baseline),
+#                            ('cdd', (xs, cdds), cdd_baseline)]:
+#                try:
+#                    int_dict[k].append(v)
+#                except KeyError:
+#                    int_dict[k] = [v]
+#                try:
+#                    baselines[k].append(b)
+#                except KeyError:
+#                    baselines[k] = [b]
+#
+#        return (blanks, airs, unknowns,
+#                blank_baselines, air_baselines, unknown_baselines)
+#
+#    def permuate_data(self, blanks, airs, blank_baselines, air_baselines):
+#
+#        g = Graph()
+#        g.new_plot(xtitle='npoints',
+#                   ytitle='mswd',
+#                   title='MSWD {}-Airs vs Counting Time'.format(len(airs['h1']))
+#                   )
+#        g.edit_traits()
+#
+#        s = 10
+#        e = 2000
+#        step = 10
+#        nxs = arange(s, e, step)
+#
+#        mswds = [self._calculate_mswd(ni,
+#                blanks, airs, blank_baselines, air_baselines) for ni in nxs]
+#
+#        g.new_series(nxs, mswds)
+#        snxs = smooth(nxs)
+#        smswds = smooth(mswds)
+#        g.new_series(snxs, smswds)
+#        g.add_horizontal_rule(1)
+#
+#        g.redraw()
+#
+#    def _calculate_mswd(self, ni, fit, blanks, airs,
+#                         blank_baselines, air_baselines):
+#
+#        cor_ratios = self.calculate_ratios(ni, fit, blanks, airs,
+#                                           blank_baselines, air_baselines)
+#        verbose = False
+#        if verbose:
+#            self.info('40Ar/36Ar for npts {}'.format(ni))
+#            self.info('average={} n={}'.format(cor_ratios.mean(),
+#                                           cor_ratios.shape[0]
+#                                           ))
+#
+#        x, errs = zip(*[(cr.nominal_value,
+#                         cr.std_dev()) for cr in cor_ratios])
+##
+#        return calculate_mswd(x, errs)
+#
+#    def calculate_ratios(self, ni, fit, blanks, airs,
+#                            blank_baselines,
+#                            air_baselines):
+#        permutate_blanks = False
+#        if permutate_blanks:
+#            ti = ni
+#        else:
+#            ti = -1
+#
+#        h1bs, cddbs = self._calculate_correct_intercept(fit, blanks, blank_baselines,
+#                                                        dict(h1=0, cdd=0),
+#                                                        truncate=ti)
+#
+#        h1bs, cddbs = h1bs.mean(), cddbs.mean()
+##        h1bs, cddbs = 0, 0
+##        print 'asdfas', len(airs['h1']), len(airs['cdd'])
+##        print 'asdfas', len(air_baselines['h1']), len(air_baselines['cdd'])
+#        cor_h1, cor_cdd = self._calculate_correct_intercept(fit,
+#                                                            airs,
+#                                                            air_baselines,
+#                                                                dict(h1=h1bs,
+#                                                                     cdd=cddbs
+#                                                                     ),
+#                                                            truncate=ni
+#                                                            )
+#
+#        cor_ratios = cor_h1 / cor_cdd
+#
+#        return cor_ratios
+#
+#    def _calculate_correct_intercept(self, fit, signals, baselines,
+#                                      blanks, truncate= -1):
+#        cor_h1 = []
+#        cor_cdd = []
+#
+#        from src.data_processing.regression.regressor import Regressor
+#        r = Regressor()
+#
+#        for (xs, h1s), h1b, (xs2, cdds), cddb in zip(signals['h1'],
+#                                               baselines['h1'],
+#                                               signals['cdd'],
+#                                               baselines['cdd']
+#                                               ):
+#            if fit == 'quick_exponential':
+#                c, ce = r.quick_exponential(xs[:truncate], h1s[:truncate])
+#                h1_int = ufloat((c[0],
+#                                 ce[0]))
+#
+#                c, ce = r.quick_exponential(xs2[:truncate], cdds[:truncate])
+#
+#                cdd_int = ufloat((c[0],
+#                               ce[0]))
+#            else:
+#                o = OLS(xs[:truncate], h1s[:truncate], fitdegree=fit)
+#                h1_int = ufloat((o.get_coefficients()[fit],
+#                                o.get_coefficient_standard_errors()[fit]))
+#                o = OLS(xs2[:truncate], cdds[:truncate], fitdegree=fit)
+#                cdd_int = ufloat((o.get_coefficients()[fit],
+#                                o.get_coefficient_standard_errors()[fit]))
+#
+#            #apply baseline correction
+#            h1_cor_int = h1_int - h1b
+#            cdd_cor_int = cdd_int - cddb
+#
+#            #apply blank correction
+#            h1_cor_int -= blanks['h1']
+#            cdd_cor_int -= blanks['cdd']
+#
+#            cor_h1.append(h1_cor_int)
+#            cor_cdd.append(cdd_cor_int)
+#
+#        return array(cor_h1), array(cor_cdd)
 
 
 #============= EOF ====================================

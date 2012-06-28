@@ -44,7 +44,7 @@ class NewExperimentAction(Action):
     def perform(self, event):
         '''
         '''
-        manager = get_manager()
+        manager = get_manager(event)
         manager.new_experiment()
 
 
@@ -71,7 +71,47 @@ class RecallAnalysisAction(Action):
     def perform(self, event):
         '''
         '''
-        manager = get_manager()
+        manager = get_manager(event)
         manager.recall_analysis()
+
+
+#===============================================================================
+# database actions
+#===============================================================================
+class AddProjectAction(Action):
+    def perform(self, event):
+        '''
+        '''
+        manager = get_manager(event)
+
+
+class AddSampleProjectAction(Action):
+    def perform(self, event):
+        '''
+        '''
+        manager = get_manager(event)
+
+
+class AddMaterialAction(Action):
+    def perform(self, event):
+        '''
+        '''
+        manager = get_manager(event)
+
+
+class IrradiationChronologyAction(Action):
+    def perform(self, event):
+        '''
+        '''
+        manager = get_manager(event)
+
+
+class IrradiationProductAction(Action):
+    def perform(self, event):
+        '''
+        '''
+        manager = get_manager(event)
+
+
 
 #============= EOF ====================================
