@@ -16,10 +16,15 @@
 
 import sys
 import os
+version_id='_test'
 p = os.path.join(os.path.expanduser('~'),
-                 'Programming', 'mercurial', 'pychron_beta')
+                 'Programming', 'mercurial','pychron{}'.format(version_id))
 
-sys.path.append(p)
+sys.path.insert(0,p)
+
+from src.paths import paths
+paths.build(version_id)
+
 #============= enthought library imports =======================
 from traits.api import Int, Bool, Event, Property
 from traitsui.api import View, Item, ButtonEditor
@@ -52,17 +57,21 @@ class Server(Loggable):
     def _state_button_fired(self):
         if self._alive:
             self.server.shutdown()
-            self.server.close()
-        else:
-            host = self.host
-            if host is None:
-                host = socket.gethostbyname(socket.gethostname())
 
-            port = self.port
-            self.info('Starting server {} {}'.format(host, port))
-            t = Thread(name='serve', target=self._serve, args=(host, port))
-            t.start()
+        else:
+            self.start_server()
+            
         self._alive = not self._alive
+            
+    def start_server(self):
+        host = self.host
+        if host is None:
+            host = socket.gethostbyname(socket.gethostname())
+
+        port = self.port
+        self.info('Starting server {} {}'.format(host, port))
+        t = Thread(name='serve', target=self._serve, args=(host, port))
+        t.start()
 
     def _serve(self, host, port):
 #        self.server = server = SocketServer.UDPServer((host, port), EmulatorHandler)
@@ -147,7 +156,10 @@ class QtegraEmulator(Loggable):
     def SetTuning(self, name):
         return 'OK'
 
-
+    @verbose
+    def GetHighVoltage(self,*args):
+        return '4500'
+    
 class EmulatorHandler(SocketServer.BaseRequestHandler, QtegraEmulator):
 
     #===========================================================================
@@ -187,12 +199,12 @@ if __name__ == '__main__':
 
     logging_setup('emulator')
 
-    s = Server(host='localhost')
+    s = Server(port=1099)
 
+    s.start_server()
     s.configure_traits()
 #    portn = 8000
 #    s = Server()
-#    s.start_server(portn)
 
 #    ls = LinkServer()    
 #    ls.start_server('129.138.12.138', 1070)

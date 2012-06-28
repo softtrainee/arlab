@@ -17,7 +17,7 @@
 import os
 import sys
 # add src to the path
-version_id = '_beta'
+version_id = '_test'
 merc = os.path.join(os.path.expanduser('~'),
                     'Programming',
                     'mercurial')

@@ -18,11 +18,14 @@
 import os
 import sys
 # add src to the path
-version = '_beta'
+version = '_test'
 SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
                      'mercurial',
                      'pychron{}'.format(version))
 sys.path.insert(0, SRC_DIR)
+
+from src.paths import paths
+paths.build(version_id)
 
 def build_globals():
     from src.helpers.parsers.initialization_parser import InitializationParser
