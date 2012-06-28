@@ -35,7 +35,7 @@ from src.helpers.datetime_tools import diff_timestamp
 from src.remote_hardware.command_processor import CommandProcessor
 from globals import globalv
 
-LOCAL = True
+LOCAL = False
 class RCSHandler(Handler):
     def init(self, info):
         '''
