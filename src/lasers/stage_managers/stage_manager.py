@@ -253,7 +253,7 @@ class StageManager(Manager):
     def single_axis_move(self, *args, **kw):
         return self.stage_controller.single_axis_move(*args, **kw)
 
-    def linear_move(self, x, y, update_hole=True, calibrated_space=True, **kw):
+    def linear_move(self, x, y, update_hole=True, use_calibration=True, **kw):
 
         if update_hole:
             hole = self.get_calibrated_hole(x, y)
@@ -261,7 +261,7 @@ class StageManager(Manager):
                 self._hole = int(hole.id)
 
         pos = (x, y)
-        if calibrated_space:
+        if use_calibration:
             pos = self.get_calibrated_position(pos)
 
         self.stage_controller.linear_move(*pos, **kw)

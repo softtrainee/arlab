@@ -66,6 +66,7 @@ class Paths():
     experiment_dir = None
     plugins_dir = None
     hidden_dir = hidden_dir = None
+    test_dir = None
     #==============================================================================
     # setup
     #==============================================================================
@@ -139,6 +140,7 @@ class Paths():
         experiment_dir = path.join(root, 'experiments')
         plugins_dir = path.join(root, 'plugins')
         self.hidden_dir = path.join(root, '.hidden')
+        self.test_dir = path.join(root, 'testing')
         #==============================================================================
         # setup
         #==============================================================================

@@ -362,7 +362,7 @@ class VideoStageManager(StageManager):
                     if rpos:
     #                    rpos = newpos
                         self.linear_move(*rpos, block=True,
-                                         calibrated_space=False,
+                                         use_calibration=False,
                                          update_hole=False
                                          )
                     time.sleep(0.25)

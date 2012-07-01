@@ -29,6 +29,7 @@ from src.monitors.laser_monitor import LaserMonitor
 from src.managers.graph_manager import GraphManager
 from pulse import Pulse
 from src.paths import paths
+from src.lasers.power.power_calibration_manager import PowerCalibrationObject
 
 
 class LaserManager(Manager):
@@ -212,10 +213,10 @@ class LaserManager(Manager):
     def _disable_hook(self):
         pass
 
-    def set_laser_power(self, power, calibration=False, *args, **kw):
+    def set_laser_power(self, power, use_calibration=True, *args, **kw):
         '''
         '''
-        p = self._get_calibrated_power(power, calibration)
+        p = self._get_calibrated_power(power, use_calibration)
 
         self.info('request power {:0.2f}, calibrated power {:0.2f}'.format(power, p))
         self._requested_power = power
@@ -226,8 +227,15 @@ class LaserManager(Manager):
         pass
 
     def _get_calibrated_power(self, power, calibration):
-        if self.use_calibrated_power and not calibration:
-            pc = self.load_power_calibration()
+
+        if self.use_calibrated_power and calibration:
+            path = None
+            if isinstance(calibration, str):
+                path = calibration
+            elif isinstance(calibration, tuple):
+                pass
+
+            pc = self.load_power_calibration(calibration_path=path)
             if power < 0.1:
                 power = 0
             else:
@@ -238,22 +246,48 @@ class LaserManager(Manager):
                 self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
         return power
 
-    def load_power_calibration(self):
-        from src.lasers.power.power_calibration_manager import PowerCalibrationObject
+    def _get_calibration_path(self, cp):
+        if cp is None:
+            cp = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(self.name))
+        return cp
 
-        p = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(self.name))
-        if os.path.isfile(p):
-            self.info('loading power calibration {}'.format(p))
-            with open(p, 'rb') as f:
+    def dump_power_calibration(self, coefficients, bounds=None, calibration_path=None):
+
+        calibration_path = self._get_calibration_path(calibration_path)
+        self.info('dumping power calibration {}'.format(calibration_path))
+
+        coeffstr = lambda c:'calibration coefficients= {}'.format(', '.join(map('{:0.3f}'.format, c)))
+        if bounds:
+            for coeffs, bi in zip(coefficients, bounds):
+                self.info('calibration coefficient')
+            self.info('{} min={:0.2f}, max={:0.2f}'.format(coeffstr(coeffs, *bi)))
+        else:
+            self.info(coeffstr(coefficients))
+
+        pc = PowerCalibrationObject()
+        pc.coefficients = coefficients
+        pc.bounds = bounds
+        try:
+            with open(calibration_path, 'wb') as f:
+                pickle.dump(pc, f)
+        except  (pickle.PickleError, EOFError, OSError), e:
+            self.warning('pickling error {}'.format(e))
+
+    def load_power_calibration(self, calibration_path=None):
+        ospath = os.path
+        calibration_path = self._get_calibration_path(calibration_path)
+        if ospath.isfile(calibration_path):
+            self.info('loading power calibration {}'.format(calibration_path))
+            with open(calibration_path, 'rb') as f:
                 try:
                     pc = pickle.load(f)
-                except pickle.PickleError, e:
+                except (pickle.PickleError, EOFError, OSError), e:
                     self.warning('unpickling error {}'.format(e))
                     pc = PowerCalibrationObject()
-                    pc.coefficients = [1, 0]
+                    pc.coefficients = [1, 1]
         else:
             pc = PowerCalibrationObject()
-            pc.coefficients = [1, 0]
+            pc.coefficients = [1, -1]
 
         return pc
 

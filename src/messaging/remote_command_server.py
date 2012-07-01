@@ -34,6 +34,7 @@ from src.messaging.command_repeater import CommandRepeater
 from src.helpers.datetime_tools import diff_timestamp
 from src.remote_hardware.command_processor import CommandProcessor
 from globals import globalv
+import os
 
 LOCAL = False
 class RCSHandler(Handler):
@@ -111,27 +112,44 @@ class RemoteCommandServer(ConfigLoadable):
         config = self.get_configuration()
         if config:
 
-            if LOCAL:
-                host = 'localhost'
-            else:
-                host = self.config_get(config, 'General', 'host', optional=True)
-                if host is None:
-                    host = socket.gethostbyname(socket.gethostname())
 
-            port = self.config_get(config, 'General', 'port', cast='int')
-            if host is None or port is None:
-                self.warning('Host or Port not set {}:{}'.format(host, port))
-                return
-
-            if port < 1024:
-                self.warning('Port Numbers < 1024 not allowed')
-                return
 
             server_class = self.config_get(config, 'General', 'class')
             if server_class is None:
                 return
 
-            self.klass = server_class[:3]
+            if server_class == 'IPCServer':
+                path = self.config_get(config, 'General', 'path')
+                if path is None:
+                    self.warning('Path not set. use path config value')
+                    return
+                addr = path
+                self.host = path
+                if os.path.exists(path):
+                    os.remove(path)
+            else:
+                if LOCAL:
+                    host = 'localhost'
+                else:
+                    host = self.config_get(config, 'General', 'host', optional=True)
+                port = self.config_get(config, 'General', 'port', cast='int')
+
+                if host is None:
+                    host = socket.gethostbyname(socket.gethostname())
+                if port is None:
+                    self.warning('Host or Port not set {}:{}'.format(host, port))
+                    return
+                elif port < 1024:
+                    self.warning('Port Numbers < 1024 not allowed')
+                    return
+                addr = (host, port)
+
+                self.host = host
+                self.port = port if port else 0
+
+                self.loaded_host = host
+                self.loaded_port = port
+#            self.klass = server_class[:3]
 
             ds = None
             if config.has_option('Requests', 'datasize'):
@@ -144,12 +162,7 @@ class RemoteCommandServer(ConfigLoadable):
             self.datasize = ds
             self.processor_type = ptype
 
-            addr = (host, port)
-            self.host = host
-            self.port = port
 
-            self.loaded_host = host
-            self.loaded_port = port
 
             self._server = self.server_factory(server_class, addr, ptype, ds)
 
@@ -160,14 +173,16 @@ class RemoteCommandServer(ConfigLoadable):
                                        self.config_get(config, 'Links', link))
 
             if self._server is not None and self._server.connected:
-                saddr = '(%s,%s)' % self._server.server_address
+                addr = self._server.server_address
+#                saddr = '({})'.format(','.join(addr if isinstance(addr, tuple) else (addr,)))
+                saddr = '({})'.format(addr)
                 msg = '%s - %s' % (server_class, saddr)
                 self.info(msg)
                 self._connected = True
                 return True
             else:
                 self._connected = False
-                self.warning('Cannot connect to %s: %s' % addr)
+                self.warning('Cannot connect to {}'.format(addr))
 
 
     def server_factory(self, klass, addr, ptype, ds):

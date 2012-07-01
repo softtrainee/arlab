@@ -854,7 +854,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         r = 1
         if ratio:
             r = axis.drive_ratio
-
+            self.info('using drive ratio {}={}'.format(key, r))
         return val * axis.sign * r
 
     def _block_(self, axis=None, event=None):

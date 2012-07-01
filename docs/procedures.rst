@@ -7,4 +7,5 @@ Procedures
    
    calibration
    co2_loading
+   co2_diagnostics
    

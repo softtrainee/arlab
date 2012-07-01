@@ -17,7 +17,7 @@
 import os
 import sys
 # add src to the path
-version_id = '_test'
+version_id = '_beta'
 merc = os.path.join(os.path.expanduser('~'),
                     'Programming',
                     'mercurial')
@@ -25,7 +25,8 @@ SRC_DIR = os.path.join(merc, 'pychron{}'.format(version_id))
 sys.path.insert(0, SRC_DIR)
 
 from src.paths import paths
-paths.build(version_id)
+paths.build('_test')
+#paths.build(version_id)
 #ver.set_version(version_id)
 
 
@@ -173,7 +174,7 @@ class VersionInfoDisplay(HasTraits):
 #    from globals import ipc_dgram
 #    print globalv.ipc_dgram
 
-def main():
+def main(test):
     '''
         entry point
     '''
@@ -194,7 +195,12 @@ def main():
 #    a.check()
     logging_setup('pychron', level='DEBUG')
 
-    launch(beta=True)
+
+
+    if test is None:
+        from globals import globalv
+        test = globalv.mode == 'test'
+    launch(test)
     os._exit(0)
 
 
@@ -216,4 +222,9 @@ def profile_code():
     os._exit(0)
 #    sys.exit()
 if __name__ == '__main__':
-    main()
+
+    test = None
+    if sys.argv[1:]:
+        test = sys.argv[1] == '--test'
+
+    main(test)

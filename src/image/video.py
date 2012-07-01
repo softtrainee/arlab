@@ -14,36 +14,19 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import  Any, Bool, Float, List
 #=============standard library imports ========================
 from threading import Thread, Lock, Event
-
-#=============local library imports ===========================
-#from ctypes_opencv import cvCreateCameraCapture, cvQueryFrame, cvWriteFrame
-#    cvIplImageAsBitmap, \
-#    cvConvertImage, cvCloneImage, \
-#    cvResize, cvWriteFrame, \
-#    CV_CVTIMG_SWAP_RB
-
-#from image_helper import clone, save_image, new_video_writer
-#from image_helper import crop as icrop
-
+from os import path
 import time
+#=============local library imports ===========================
 from src.image.image import Image
-#from src.image.image_helper import load_image
-#from multiprocessing.process import Process
+from src.paths import paths
 from cvwrapper import get_capture_device, query_frame, write_frame, \
-    load_image, new_video_writer, grayspace, get_nframes, \
-    set_frame_index, get_fps, set_video_pos, get_frame_size, swapRB, \
-    crop
-from timeit import Timer
-
-DEBUG = False
-#DEBUG = True
-
+    new_video_writer, grayspace, get_nframes, \
+    set_frame_index, get_fps, set_video_pos, crop
+from globals import globalv
 
 class Video(Image):
     '''
@@ -69,15 +52,15 @@ class Video(Image):
         self.height = 480
         if self.cap is None or force:
 
-            #ideally an identifier is passed in 
-            try:
-#                if DEBUG:
-#                    self.cap = 1
-#                else:
-#                    self.cap = cvCreateCameraCapture(0)
-                self.cap = get_capture_device(identifier)
-            except:
-                self.cap = None
+            if globalv.mode == 'test':
+                self.cap = 1
+            else:
+                #ideally an identifier is passed in 
+                try:
+                    self.cap = get_capture_device(identifier)
+                except Exception, e:
+                    print 'video.open', e
+                    self.cap = None
 
         if not user in self.users:
             self.users.append(user)
@@ -119,7 +102,13 @@ class Video(Image):
         if cap is not None:
 #            if lock:
             with self._lock:
-                f = query_frame(cap)
+                if globalv.mode == 'test':
+                    if self.source_frame is None:
+                        p = path.join(paths.test_dir, 'pos_err_test.jpg')
+                        self.load(p)
+                    f = self.source_frame
+                else:
+                    f = query_frame(cap)
             return f
 
     def start_recording(self, path, user=None):

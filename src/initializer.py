@@ -192,7 +192,7 @@ class Initializer(Loggable):
             timed_flags = parser.get_timed_flags(mp, element=True)
 
             #set rpc server
-            mode,_, port = parser.get_rpc_params(mp)
+            mode, _, port = parser.get_rpc_params(mp)
             if port and mode != 'client':
                 manager.load_rpc_server(port)
 
@@ -257,7 +257,7 @@ class Initializer(Loggable):
             except AttributeError:
 #                self.warning(e)
                 try:
-                    man = manager.create_manager(mi, 
+                    man = manager.create_manager(mi,
                                                  host=host,
                                                  port=port, remote=remote)
                 except Exception:
@@ -360,8 +360,8 @@ class Initializer(Loggable):
             manager.devices.append(od)
             od.application = self.application
 
-            if od.simulation:
-                time.sleep(0.25)
+#            if od.simulation:
+#                time.sleep(0.25)
 
     def load_progress(self, n):
         '''

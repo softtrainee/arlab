@@ -32,6 +32,7 @@ from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay
 from globals import globalv
+
 if globalv.open_logger_on_launch:
     do_later(gLoggerDisplay.edit_traits)
 
@@ -146,26 +147,38 @@ def get_user_plugins():
 
     return plugins
 
-def launch(beta=False):
-    '''
-    '''
-    logger.info('Launching Pychron')
+def app_factory():
     plugins = [
                CorePlugin(),
                WorkbenchPlugin(),
                PychronWorkbenchPlugin(),
                PychronWorkbenchUIPlugin(),
-#               HardwarePlugin(),
-#               HardwareUIPlugin()
                ]
 
     plugins += get_hardware_plugins()
     plugins += get_user_plugins()
 
-    lab = Pychron(plugins=plugins)
+    return Pychron(plugins=plugins)
+
+
+app = None
+def launch(test):
+    '''
+    '''
+
+    global app
+    app = app_factory()
+    if test:
+
+        def start_test():
+            #run the test suite
+            from src.testing.testrunner import run_tests
+            run_tests(logger)
+
+        app.on_trait_change(start_test, 'started')
 
     try:
-        lab.run()
+        app.run()
     except Exception, err:
         logger.exception('Launching error')
 
@@ -176,13 +189,37 @@ def launch(beta=False):
         gTraceDisplay.edit_traits(kind='livemodal')
 
 #        logger.warning(err)
-#        warning(lab.workbench.active_window, tb)
-        lab.exit()
-
-
+#        warning(app.workbench.active_window, tb)
+        app.exit()
 
     logger.info('Quiting Pychron')
-    lab.exit()
+    app.exit()
     return
+
+
+#import unittest
+#class tempTest(unittest.TestCase):
+#    def testTemp(self):
+#        global app
+#
+#        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+#        self.assertNotEqual(man, 'ne')
+#        self.assertNotEqual(man, None)
+#        self.assertEqual(man, None)
+#
+#def run_tests():
+#    def _run():
+#        import time
+#        time.sleep(3)
+#        loader = unittest.TestLoader()
+#        suite = loader.loadTestsFromTestCase(tempTest)
+#        runner = unittest.TextTestRunner()
+#        runner.run(suite)
+#
+#    from threading import Thread
+#    t = Thread(target=_run)
+#    t.start()
+
+
 
 #============= EOF ====================================

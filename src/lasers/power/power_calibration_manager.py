@@ -175,7 +175,7 @@ class PowerCalibrationManager(Manager):
         callback = lambda p, r, t: self._write_data(p, r, t)
         self._stop_signal = TEvent()
         self._iterate(self.parameters,
-                      self.graph,
+                      self.graph, True,
                       callback, table)
 
         self._calculate_calibration()
@@ -187,7 +187,7 @@ class PowerCalibrationManager(Manager):
             self._apply_calibration()
 
     def _iterate(self, params, graph,
-                 calibration, callback, *args):
+                 is_calibrating, callback, *args):
         pstop = params.pstop
         pstep = params.pstep
         pstart = params.pstart
@@ -221,8 +221,8 @@ class PowerCalibrationManager(Manager):
             self.info('setting power to {}'.format(pi))
             time.sleep(sample_delay)
             if self.parent is not None:
-                self.parent.set_laser_power(pi, calibration=calibration)
-                if not calibration:
+                self.parent.set_laser_power(pi, use_calibration=not is_calibrating)
+                if not is_calibrating:
                     pi = self.parent._calibrated_power
 
                 rp = 0

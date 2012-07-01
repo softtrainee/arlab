@@ -48,7 +48,7 @@ class StageVisualizationCanvas(MarkupCanvas):
 #    use_zoom = False
 #    show_grids=True
     def build_map(self, sm, calibration=None):
-        sm.load_correction_file()
+#        sm.load_correction_file()
 
         cpos = 0, 0
         rot = 0

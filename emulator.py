@@ -14,12 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-'''
-Pychron_beta Package contains
-
-'''
 import SocketServer
 import shlex
 import sys

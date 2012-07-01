@@ -49,7 +49,8 @@ class Client(HasTraits):
     #host = Str('192.168.0.65')
 #    host = Str('129.138.12.145')
     host = 'localhost'
-    kind = Enum('UDP', 'TCP')
+    path = None
+    kind = Enum('IPC', 'UDP', 'TCP')
 
     period = Float(100)
     periodic = Event
@@ -67,6 +68,8 @@ class Client(HasTraits):
 
     test_command = ''
     test_response = ''
+
+    _sock = None
     def _get_calculated_duration(self):
         return self.period / 1000. * self.n_periods / 3600.
 
@@ -114,8 +117,12 @@ class Client(HasTraits):
 
     def _send(self, sock=None):
         if sock is None:
-            #open connection
-            sock = self.get_connection()
+            sock = self._sock
+            if sock is None:
+                #open connection
+                sock = self.get_connection()
+
+
         #send command
         sock.send(self.command)
         self.response = sock.recv(1024)
@@ -133,6 +140,11 @@ class Client(HasTraits):
 #        print 'connection address', addr
         if self.kind == 'UDP':
             packet_kind = socket.SOCK_DGRAM
+
+        elif self.kind == 'IPC':
+            packet_kind = socket.SOCK_STREAM
+            family = socket.AF_UNIX
+            addr = self.path
 
         sock = socket.socket(family, packet_kind)
         sock.settimeout(5)
@@ -301,8 +313,9 @@ def system_client():
 
 def local_client():
     c = Client(
-               host=socket.gethostbyname(socket.gethostname()),
-               port=8900,
+               path='/tmp/hardware-argus',
+#               host=socket.gethostbyname(socket.gethostname()),
+#               port=8900,
                ask_id='E')
     c.configure_traits()
 

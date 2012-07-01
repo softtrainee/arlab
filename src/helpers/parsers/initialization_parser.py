@@ -126,14 +126,14 @@ class InitializationParser(XMLParser):
     def get_rpc_params(self, manager):
         if isinstance(manager, tuple):
             manager = self.get_manager(*manager)
-            
-        text=lambda x : x.text.strip() if x is not None else None
+
+        text = lambda x : x.text.strip() if x is not None else None
         try:
             rpc = manager.find('rpc')
             mode = rpc.get('mode')
-            port=text(rpc.find('port'))
-            host=text(rpc.find('host'))
-            return mode, host,int(port), 
+            port = text(rpc.find('port'))
+            host = text(rpc.find('host'))
+            return mode, host, int(port),
         except Exception, e:
             pass
 
@@ -184,9 +184,11 @@ class InitializationParser(XMLParser):
     def get_servers(self):
         servers = [pi for pi in [self.get_server(p)
                     for p in self.get_plugins('hardware', element=True)] if pi]
-        hs = self._get_paramaters('hardware', 'server')
-        if hs:
-            servers += hs
+        h = self.get_plugin_group('hardware')
+        if h is not None:
+            hs = self._get_paramaters(h, 'server')
+            if hs:
+                servers += hs
         return servers
 
     def _get_paramaters(self, subtree, tag, all=False, element=False):
