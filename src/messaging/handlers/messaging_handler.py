@@ -32,7 +32,13 @@ class MessagingHandler(BaseRequestHandler):
         if data is not None:
             if self._verbose:
                 self.server.info('Received: %s' % data.strip())
-            response = self.server.get_response(self.server.processor_type, data, self.client_address[0])
+
+            try:
+                addr = self.client_address[0]
+            except IndexError:
+                addr = self.client_address
+
+            response = self.server.get_response(self.server.processor_type, data, addr)
 
             if response is not None:
                 self.send_packet(response)

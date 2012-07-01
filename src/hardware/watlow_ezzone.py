@@ -862,12 +862,10 @@ class WatlowEZZone(CoreDevice):
 
     def read_autotune_setpoint(self, **kw):
         r = self.read(1998, nregisters=2, **kw)
-        print 'autotune sep', r
         return r
 
     def read_autotune_aggressiveness(self, **kw):
         rid = str(self.read(1884, response_type='int', **kw))
-        print 'atutaggre', rid
         return heat_alogrithm_map[rid] if rid in heat_alogrithm_map else None
 
     def read_tru_tune_enabled(self, **kw):

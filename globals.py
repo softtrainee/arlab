@@ -41,6 +41,9 @@ class Globals(object):
     #use_ipc = False == embed the remote hardware servers into pychron
     #= True == an instance of RemoteHardwareServer must be launched
     use_ipc = False
+
+#    mode = None #set mode to 'test' when running tests
+    mode = 'test'
     def build(self):
         pass
 

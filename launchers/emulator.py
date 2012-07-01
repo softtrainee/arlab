@@ -16,11 +16,11 @@
 
 import sys
 import os
-version_id='_test'
+version_id = '_beta'
 p = os.path.join(os.path.expanduser('~'),
-                 'Programming', 'mercurial','pychron{}'.format(version_id))
+                 'Programming', 'mercurial', 'pychron{}'.format(version_id))
 
-sys.path.insert(0,p)
+sys.path.insert(0, p)
 
 from src.paths import paths
 paths.build(version_id)
@@ -32,18 +32,60 @@ from traitsui.api import View, Item, ButtonEditor
 import SocketServer
 import shlex
 import socket
+import select
 from threading import Thread
 #============= local library imports  ==========================
 
 
 from src.loggable import Loggable
 
-class VerboseServer(SocketServer.UDPServer):
+class UDPVerboseServer(SocketServer.UDPServer):
+    logger = None
+
+class IPCVerboseServer(SocketServer.UnixStreamServer):
     logger = None
 
 #    def info(self, *args, **kw):
 #        if self.logger:
 #            self.logger.info(*args, **kw)
+class LinkServer(object):
+    def start_server(self, path):
+        print 'Link Starting server {}'.format(path)
+        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        server.bind(path)
+        server.listen(5)
+        input = [server, sys.stdin]
+        running = 1
+        c = LinkHandler()
+        while running:
+            inputready, _outputready, _exceptready = select.select(input, [], [])
+            for s in inputready:
+
+                if s == server:
+                    # handle the server socket
+                    client, _address = server.accept()
+                    input.append(client)
+
+                elif s == sys.stdin:
+                    # handle standard input
+                    _junk = sys.stdin.readline()
+                    running = 0
+
+                else:
+                    # handle all other sockets
+
+                    c.request = s
+                    data = c.handle()
+                    if data:
+                        try:
+                            s.send(data)
+                        except socket.error:
+                            pass
+                    else:
+                        s.close()
+                        input.remove(s)
+        server.close()
+
 
 class Server(Loggable):
     port = Int(8000)
@@ -60,9 +102,9 @@ class Server(Loggable):
 
         else:
             self.start_server()
-            
+
         self._alive = not self._alive
-            
+
     def start_server(self):
         host = self.host
         if host is None:
@@ -75,10 +117,14 @@ class Server(Loggable):
 
     def _serve(self, host, port):
 #        self.server = server = SocketServer.UDPServer((host, port), EmulatorHandler)
-        server = VerboseServer((host, port), EmulatorHandler)
+#        server = UDPVerboseServer((host, port), EmulatorHandler)
+#        server = IPCVerboseServer(host, EmulatorHandler)
+        server = IPCVerboseServer(host, EmulatorHandler)
+#        server = LinkServer()
         server.info = self.info
-        server.allow_reuse_address = True
+        #server.allow_reuse_address = True
         self.server = server
+#        server.start_server(host)
         server.serve_forever()
 
     def traits_view(self):
@@ -157,9 +203,21 @@ class QtegraEmulator(Loggable):
         return 'OK'
 
     @verbose
-    def GetHighVoltage(self,*args):
+    def GetHighVoltage(self, *args):
         return '4500'
-    
+
+class LinkHandler(QtegraEmulator):
+    request = None
+    def handle(self):
+        new_line = lambda x: '{}\n\r'.format(x)
+        #udp
+#        data = self.request[0].strip()
+
+        #ipc
+        print 'handle'
+        print self.request.recv(1024)
+        self.request.sendall(new_line('OK'))
+
 class EmulatorHandler(SocketServer.BaseRequestHandler, QtegraEmulator):
 
     #===========================================================================
@@ -171,35 +229,51 @@ class EmulatorHandler(SocketServer.BaseRequestHandler, QtegraEmulator):
 
 
     def handle(self):
-        data = self.request[0].strip()
-        if ':' in data:
-            datargs = data.split(':')
-        else:
-            datargs = shlex.split(data)
+        new_line = lambda x: '{}\n\r'.format(x)
+        #udp
+#        data = self.request[0].strip()
 
-        try:
-            cmd = datargs[0]
-            args = tuple(datargs[1:])
-            try:
-                func = getattr(self, cmd)
-                try:
-                    result = str(func(*args))
-                except TypeError:
-                    result = 'Error: Invalid parameters %s passed to %s' % (args, cmd)
-            except AttributeError:
-                result = 'Error: Command %s not available' % cmd
-        except IndexError:
-            result = 'Error: poorly formatted command %s' % data
+        #ipc
+        print 'handle'
+        print self.request.recv(1024)
+        self.request.sendall(new_line('OK'))
+#        data = self.request.recv(2 ** 8)
+#        print data
+#        data = data.strip()
+#        if ':' in data:
+#            datargs = data.split(':')
+#        else:
+#            datargs = shlex.split(data)
+#
+#        try:
+#            cmd = datargs[0]
+#            args = tuple(datargs[1:])
+#            try:
+#                func = getattr(self, cmd)
+#                try:
+#                    result = str(func(*args))
+#                except TypeError:
+#                    result = 'Error: Invalid parameters %s passed to %s' % (args, cmd)
+#            except AttributeError:
+#                result = 'Error: Command %s not available' % cmd
+#        except IndexError:
+#            result = 'Error: poorly formatted command %s' % data
 
-        self.server.info('received ({}) - {}, {}'.format(len(data), data, result))
-        self.request[1].sendto(result + '\n', self.client_address)
+#        self.server.info('received ({}) - {}, {}'.format(len(data), data, result))
+#        self.request.send('OK' + '\n\r')
+#        self.request[1].sendto(result + '\n', self.client_address)
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('emulator')
 
-    s = Server(port=1099)
+    p = '/tmp/hardware-argus'
+    if os.path.exists(p):
+        os.remove(p)
+
+    s = Server(host=p)
+#    s = Server(host='192.168.0.253')
 
     s.start_server()
     s.configure_traits()

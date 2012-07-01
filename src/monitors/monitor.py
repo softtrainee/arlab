@@ -34,6 +34,8 @@ class Monitor(ConfigLoadable):
 #    kill = False
     _monitoring = False
     _invalid_checks = None
+    def is_monitoring(self):
+        return self._monitoring
 
     def load(self):
         config = self.get_configuration()

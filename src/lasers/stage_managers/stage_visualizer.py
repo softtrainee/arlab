@@ -71,10 +71,11 @@ class StageVisualizer(Manager):
 #                                                           self.rotation])
 
     def clear(self):
-        sm = self.stage_map
-
-        sm.clear_correction_file()
-        sm.clear_interpolations()
+        self.info('clearing visualizer')
+#        sm = self.stage_map
+#
+#        sm.clear_correction_file()
+#        sm.clear_interpolations()
 
         self.canvas.clear()
 
@@ -214,10 +215,12 @@ class StageVisualizer(Manager):
 
     def _execute_(self):
 
-        sm = self.stage_map
         ca = self.canvas
 
         self.clear()
+        sm = self.stage_map
+        sm.clear_correction_file()
+        sm.clear_interpolations()
 
         ca.build_map(sm, calibration=[self.center,
                                       self.rotation] if self.use_calibration else None

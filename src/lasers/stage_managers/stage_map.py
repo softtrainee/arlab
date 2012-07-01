@@ -365,6 +365,8 @@ class StageMap(Loggable):
             h.corrected = False
             h.interpolated = False
 
+        return p
+
     def clear_interpolations(self):
         for h in self.sample_holes:
             h.interpolated = False

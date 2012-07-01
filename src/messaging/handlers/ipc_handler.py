@@ -14,30 +14,24 @@
 # limitations under the License.
 #===============================================================================
 
+#============= enthought library imports =======================
 
+#============= standard library imports ========================
+#============= local library imports  ==========================
+from messaging_handler import MessagingHandler
 
-'''
-Pychron_beta Package contains
+class IPCHandler(MessagingHandler):
+    def get_packet(self):
+        '''
+        '''
+        data = self.request.recv(1024).strip()
+        return data
 
-G{packagetree }
+    def send_packet(self, response):
+        '''
 
-'''
+        '''
+        sock = self.request
+        sock.sendall(response + '\n')
 
-import sys
-from src.emulation.emulation_server import LinkServer, Server
-from src.emulation.emulator import LinkHandler, BaseHandler
-def start_emulation():
-    args = sys.argv[1:]
-
-    portn = 1059
-    if len(args) == 1:
-        portn = int(args[0])
-
-    s = Server()
-    s.start_server('localhost', portn, BaseHandler)
-
-#    ls = LinkServer()
-#    ls.start_server('localhost', 1070, LinkHandler())
-
-if __name__ == '__main__':
-    start_emulation()
+#============= EOF ====================================
