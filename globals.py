@@ -42,10 +42,15 @@ class Globals(object):
     #= True == an instance of RemoteHardwareServer must be launched
     use_ipc = False
 
-#    mode = None #set mode to 'test' when running tests
-    mode = 'test'
+    _test = None #set mode to 'test' when running tests
     def build(self):
         pass
+
+    def _get_test(self):
+        return self._test
+
+    #mode is readonly. set once in the launchers/pychron.py module
+    test = property(fget=_get_test)
 
 globalv = Globals()
 

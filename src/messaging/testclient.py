@@ -151,14 +151,15 @@ class Client(HasTraits):
         sock.connect(addr)
         return sock
 
-    def ask(self, command, port=None):
+    def ask(self, command, port=None, verbose=True):
         conn = self.get_connection(port=port)
         conn.send(command)
         r = None
         try:
             r = conn.recv(4096)
             r = r.strip()
-            print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)
+            if verbose:
+                print '{} -----ask----- {} ==> {}'.format(self.ask_id, command, r)
         except socket.error, e:
             print e
 

@@ -15,34 +15,35 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+import time
 #============= standard library imports ========================
-from unittest import TestCase
+#import os
+from src.testing.remote_base_tests import RemoteBaseTests
+
 #============= local library imports  ==========================
 
 
-class ExtractionLineTests(TestCase):
-    def setUp(self):
-        from src.envisage.run import app
-        self.app = app
-        ep = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-        self._elm = app.get_service(ep)
+class RemoteLaserTests(RemoteBaseTests):
+    '''
+    
+    '''
 
-#===============================================================================
-# A Group
-#===============================================================================
-    def testAA_GetExtractionLineManager(self):
-        self.assertNotEqual(self._elm, None)
+class RemoteCO2Tests(RemoteLaserTests):
+    port = 1067
 
-#===============================================================================
-# B Group
-#===============================================================================
-    def testBA_OpenValve(self):
-        r = self._elm.open_valve('B', mode='test')
-        self.assertTrue(r)
+class RemoteDiodeTests(RemoteLaserTests):
+    port = 1068
 
-    def testBB_CloseValve(self):
-        r = self._elm.close_valve('B', mode='test')
-        self.assertTrue(r)
+    def testAA_EnableLaser(self):
+        self._testOK('Enable')
+        time.sleep(0.5)
+
+    def testSetLaserPower(self):
+        self._testOK('SetLaserPower 10')
+
+    def testAC_DisableLaser(self):
+        time.sleep(1)
+        self._testOK('Disable')
 
 
 #============= EOF =============================================

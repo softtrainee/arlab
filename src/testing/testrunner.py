@@ -20,61 +20,123 @@
 import unittest
 from threading import Thread
 import time
-#============= local library imports  ==========================
-from src.testing.diode_tests import DiodeTests
-from src.testing.extraction_line_tests import ExtractionLineTests
-from src.testing.co2_tests import CO2Tests
-import os
-from src.paths import paths
 from datetime import datetime
+import os
+#============= local library imports  ==========================
+from laser_tests import DiodeTests, CO2Tests
+from extraction_line_tests import ExtractionLineTests
+from remote_extraction_line_tests import RemoteExtractionLineTests
+from remote_laser_tests import RemoteDiodeTests, RemoteCO2Tests
 
-def write_results(results):
+from src.paths import paths
+def new_line(x):
+    return '{}\n'.format(x)
+
+def fwriter(f):
+    return lambda x:f.write(new_line(x))
+
+def marker_line(x):
+    return '#' + '=' * 39 + x + '=' * (40 - len(x))
+
+def write_results(results, title, names):
     p = os.path.join(paths.test_dir, 'output.txt')
-    new_line = lambda x: '{}\n'.format(x)
-    marker_line = lambda x: '#' + '=' * 39 + x + '=' * (40 - len(x))
     with open(p, 'w') as f:
-        fwrite = lambda x: f.write(new_line(x))
+        fwrite = fwriter(f)
         fwrite('#' + '=' * 79)
         fwrite('Automated Pychron Testing Results')
         fwrite('{}'.format(datetime.fromtimestamp(time.time())))
         fwrite('#' + '=' * 79)
+        _write_results(f, results, title, names)
 
-        fwrite(marker_line('Errors'))
-        for ei in results.errors:
-            fwrite('------{}'.format(ei[0]))
-            f.write(ei[1])
-            fwrite('')
-
-        fwrite(marker_line('Failures'))
-        for ei in results.failures:
-            fwrite('------{}'.format(ei[0]))
-            f.write(ei[1])
-            fwrite('')
+def finish_write_results():
+    p = os.path.join(paths.test_dir, 'output.txt')
+    with open(p, 'a') as f:
+        fwrite = fwriter(f)
         fwrite(marker_line('EOF'))
+
+def append_results(r, title, names):
+    p = os.path.join(paths.test_dir, 'output.txt')
+    with open(p, 'a') as f:
+        _write_results(f, r, title, names)
+
+def _write_results(f, results, title, names):
+    fwrite = fwriter(f)
+    fwrite('')
+    fwrite(marker_line(title))
+    fwrite('Number Tests={}'.format(results.testsRun))
+    fwrite('Errors= {}'.format(len(results.errors)))
+    fwrite('Failures= {}'.format(len(results.failures)))
+    fwrite('Executed Tests')
+    errornames = [ei._testMethodName for ei, _tb in results.errors]
+    failnames = [ei._testMethodName for ei, _tb in results.failures]
+
+    for ni in names:
+        state = 'Error' if ni in errornames else 'Fail' if ni in failnames else 'Pass'
+        fwrite('\t{:<40s} ={}'.format(ni, state))
+
+    fwrite(marker_line('Errors'))
+    for ei, tb in results.errors:
+        fwrite('------ {}'.format(ei))
+        f.write(tb)
+        fwrite('')
+
+    fwrite(marker_line('Failures'))
+    for fi, tb in results.failures:
+        fwrite('------ {}'.format(fi))
+        fwrite(tb)
+        fwrite('')
+
+    fwrite('')
 
 def run_tests(logger):
     def _run():
-        time.sleep(0.1)
+        time.sleep(3)
+        logger.info('=====================TESTS================================')
         logger.info('==========================================================')
-        logger.info('=====================START TESTS=========================')
-        logger.info('==========================================================')
+        logger.info('=====================Unit Tests===========================')
+
         loader = unittest.TestLoader()
+        runner = unittest.TextTestRunner()
 
         #test cases executed in this order
         #tests executed in alphabetically order
-        suites = [loader.loadTestsFromTestCase(t) for t in [
-                                                            ExtractionLineTests,
-                                                            DiodeTests,
-                                                            CO2Tests
-                                                            ]]
+        utests = [
+                ExtractionLineTests,
+#               DiodeTests,
+#                CO2Tests
+                ]
+        _execute_tests(logger,
+                       loader, runner, utests, write_results, 'Unit')
 
-        suite = unittest.TestSuite(suites)
-        runner = unittest.TextTestRunner()
-        results = runner.run(suite)
-        write_results(results)
+        rtests = [
+                  RemoteExtractionLineTests,
+                  RemoteDiodeTests,
+#                  RemoteCO2Tests
+                  ]
+
+        _execute_tests(logger,
+                       loader, runner, rtests, append_results, 'Remote')
+
+#        mrtests = []
+#        _execute_tests(logger,
+#                       loader, runner, mrtests, append_results, 'Mult Runs')
+
+        finish_write_results()
 
     p = Thread(target=_run)
     p.start()
+
+def _execute_tests(logger, loader, runner, tests, writefunc, title):
+    logger.info('====== {} Tests ======'.format(title))
+
+    suites = [loader.loadTestsFromTestCase(t) for t in tests]
+
+    suite = unittest.TestSuite(suites)
+    results = runner.run(suite)
+
+    testnames = []
+    map(testnames.extend, [loader.getTestCaseNames(t) for t in tests])
+    writefunc(results, title, testnames)
 
 #============= EOF =============================================
 
