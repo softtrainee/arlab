@@ -43,8 +43,8 @@ C	 print *,'Enter sample name (stop to exit)'
 	open(unit=23,file='fj.in')
       open(unit=24,file='sig.in')
       open(unit=25,file='age.in')
-      open(unit=26,file=sname(1:kn)//'_a39.in')
-      open(unit=30,file=sname(1:kn)//'_ener.dat')
+      open(unit=26,file=sname('a39.in')
+      open(unit=30,file=sname('ener.dat')
 
   120	format(1x,I3)
 
