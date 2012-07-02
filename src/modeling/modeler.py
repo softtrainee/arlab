@@ -321,13 +321,20 @@ class Modeler(Loggable):
             plotidcounter += 1
 
         if 'logr_ro' in self.include_panels:
-            data = dl.load_logr_ro('logr.samp')
+            data = dl.load_logr_ro('logr.samp') #Produced by Autoarr with dictated/automated arrhenius parameters
+            data2 = dl.load_logr_ro('log.smp') #Produced by running'files' during parsing of autoupdate
             if data is not None:
+                p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
+                s = 2 if data_directory.model_arrhenius_enabled else 1
+                g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=gid * s)
+                p.on_trait_change(data_directory.update_pcolor, 'color')
+            elif data2 is not None:
                 try:
-                    p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
+                    p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data2)
                     s = 2 if data_directory.model_arrhenius_enabled else 1
                     g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=gid * s)
                     p.on_trait_change(data_directory.update_pcolor, 'color')
+                
                 except Exception, err:
                     self.info(err)
 
@@ -345,7 +352,7 @@ class Modeler(Loggable):
             plotidcounter += 1
 
         if 'arrhenius' in self.include_panels:
-            data = dl.load_arrhenius('arr.samp')
+            data = dl.load_arrhenius('arr.smp')
             if data is not None:
                 try:
                     g.build_arrhenius(pid=plotidcounter, type=self.arrhenius_plot_type, *data)
