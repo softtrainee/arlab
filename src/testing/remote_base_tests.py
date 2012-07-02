@@ -18,31 +18,20 @@
 #============= standard library imports ========================
 from unittest import TestCase
 #============= local library imports  ==========================
+from src.messaging.testclient import Client
 
 
-class ExtractionLineTests(TestCase):
+class RemoteBaseTests(TestCase):
+    host = 'localhost'
+    port = 8080
+    kind = 'UDP'
     def setUp(self):
-        from src.envisage.run import app
-        self.app = app
-        ep = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-        self._elm = app.get_service(ep)
+        self.client = Client(host=self.host,
+                             port=self.port,
+                             kind=self.kind)
+    def ask(self, cmd, verbose=False):
+        return self.client.ask(cmd, verbose=verbose)
 
-#===============================================================================
-# A Group
-#===============================================================================
-    def testAA_GetExtractionLineManager(self):
-        self.assertNotEqual(self._elm, None)
-
-#===============================================================================
-# B Group
-#===============================================================================
-    def testBA_OpenValve(self):
-        r = self._elm.open_valve('B', mode='test')
-        self.assertTrue(r)
-
-    def testBB_CloseValve(self):
-        r = self._elm.close_valve('B', mode='test')
-        self.assertTrue(r)
-
-
+    def _testOK(self, cmd, **kw):
+        self.assertTrue(self.ask(cmd) in ['OK', 'ok'])
 #============= EOF =============================================

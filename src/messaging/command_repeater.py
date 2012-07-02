@@ -124,6 +124,8 @@ class CommandRepeater(ConfigLoadable):
 #
 #            import time
 #            time.sleep(random.random() / 10.)
+            if ready_flag and data == result:
+                result = 'OK'
             return result
 #            try:
 #

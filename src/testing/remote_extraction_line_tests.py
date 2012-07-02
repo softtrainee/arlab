@@ -16,26 +16,32 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-import os
 
 #============= local library imports  ==========================
-from src.paths import paths
-from src.testing.base_laser_tests import BaseLaserTests
+from src.testing.remote_base_tests import RemoteBaseTests
 
 
-class DiodeTests(BaseLaserTests):
-    def setUp(self):
-        from src.envisage.run import app
-        self.app = app
+class RemoteExtractionLineTests(RemoteBaseTests):
+    port = 1061
 
-        dp = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
-        self._laser = app.get_service(dp)
-        self._stage = self._laser.stage_manager
-        self._stage_controller = self._stage.stage_controller
+#===============================================================================
+# A Group
+#===============================================================================
+    def testA_PychronReady(self):
+        c = self.client
+        r = c.ask('PychronReady', verbose=False)
+        self.assertEqual(r, 'OK')
 
-        self._power_calibration_path = os.path.join(paths.test_dir, 'diode_test_power_calibration')
-        self._power_calibration_coeffs = [2, 5]
-        self._calibrated_power = 2.5
+#===============================================================================
+# B Group
+#===============================================================================
+    def testBA_OpenValve(self):
+        self._testOK('Open B')
+        self._testOK('Open B')
+
+    def testBB_CloseValve(self):
+        self._testOK('Close B')
+        self._testOK('Close B')
 
 
 #============= EOF =============================================

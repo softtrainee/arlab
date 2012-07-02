@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,177 +14,31 @@
 # limitations under the License.
 #===============================================================================
 
+#============= enthought library imports =======================
+
+#============= standard library imports ========================
 import os
-import sys
+#============= local library imports  ==========================
+#import sys
 # add src to the path
 version_id = '_beta'
-merc = os.path.join(os.path.expanduser('~'),
-                    'Programming',
-                    'mercurial')
-SRC_DIR = os.path.join(merc, 'pychron{}'.format(version_id))
-sys.path.insert(0, SRC_DIR)
-
-from src.paths import paths
-paths.build('_test')
-#paths.build(version_id)
-#ver.set_version(version_id)
-
+from helpers import build_version
+build_version(version_id)
 
 #PYC = os.path.join(merc, 'pychron_source.zip')
 #sys.path.insert(0, PYC)
 
-from src.envisage.run import launch
-from src.helpers.logger_setup import logging_setup
-from src.paths import build_directories
-
-from traits.api import HasTraits, Str, Bool, Property
-from traitsui.api import View, Item, HGroup, spring, Handler, HTMLEditor
-from pyface.timer.do_later import do_later
-import apptools.sweet_pickle as pickle
 
 
-class VersionInfo(HasTraits):
-    '''
-    '''
-    major = Str
-    minor = Str
-    version = Property(transient=True)
-    text = Str
-
-    def _get_version(self):
-        return '.'.join((self.major, self.minor))
-
-
-class VersionInfoHandler(Handler):
-    '''
-    '''
-    def closed(self, info, is_ok):
-        if info.object.dismiss_notification:
-            info.object.dump()
-
-
-class VersionInfoDisplay(HasTraits):
-    '''
-    '''
-    message = Property
-    local_version = Str
-    local_path = Str
-    src_path = Str
-    dismiss_notification = Bool(False)
-    version_info = VersionInfo
-
-    def _get_message(self):
-        args = ()
-        vi = self.version_info
-        msg = \
-            '''<h2>Version {major}.{minor}</h2>
-                <h3>Previous Version {previous_version}
-<p><font color="red">file or directory change required</font></p>
-<p>{text}</p>'''
-        return msg.format(major=vi.major, minor=vi.minor, text=vi.text,
-                          previous_version=self.local_version, *args)
-
-    def traits_view(self):
-        v = View(
-            Item('message', style='custom', editor=HTMLEditor(),
-                 show_label=False),
-            HGroup(spring, Item('dismiss_notification')),
-            kind='modal',
-            handler=VersionInfoHandler,
-            buttons=['OK'],
-            width=300,
-            height=300,
-            title='Version Info',
-            )
-
-        return v
-
-    def dump(self):
-        '''
-        '''
-        with open(self.local_path, 'wb') as f:
-            pickle.dump(self.version_info, f)
-
-    def check(self):
-        '''
-        '''
-        local_info = None
-        major = None
-        minor = None
-
-        # get the local version info
-
-        if os.path.isfile(self.local_path):
-            with open(self.local_path, 'rb') as f:
-                local_info = pickle.load(f)
-
-        if os.path.isfile(self.src_path):
-
-        # get the version_info associated with the src code
-
-            with open(self.src_path, 'rb') as f:
-                f.readline()
-                line = f.readline()
-                major = line.split('=')[1].strip()
-
-                line = f.readline()
-                minor = line.split('=')[1].strip()
-
-                self.version_info = VersionInfo(major=major,
-                        minor=minor)
-                f.readline()
-                p = []
-                ps = []
-                new_para = False
-                for line in f:
-                    line = line.strip()
-                    if new_para:
-                        ps.append(p)
-                        p = []
-                        new_para = False
-
-                    if len(line) > 0:
-                        if len(p) == 0 and line[0] == '#':
-                            line = '<h5><u>{}</u></h5>'.format(line[1:])
-                        p.append(line)
-                    else:
-                        new_para = True
-
-                self.version_info.text = \
-                    ''.join(['<p>{}</p>'.format(pj) for pj in
-                            [' '.join(pi) for pi in ps if len(pi) > 0]])
-
-        if minor is not None and major is not None:
-            mismatch = True
-            if local_info is not None:
-                mismatch = local_info.version != '.'.join((major,
-                        minor))
-
-            if mismatch:
-                if local_info is not None:
-                    self.local_version = local_info.version
-            elif local_info is None:
-                do_later(self.edit_traits, kind='modal')
-
-#    import globals
-#    print globalv.ipc_dgram
-#    for d in dir(globals):
-#        print d
-#        globalv.ipc_dgram = 98
-#    from globals import ipc_dgram
-#    print globalv.ipc_dgram
-
-def main(test):
+def main():
     '''
         entry point
     '''
-
-    #build globals
-    from launchers.helpers import build_globals
-    build_globals()
+    from src.envisage.run import launch
+    from src.helpers.logger_setup import logging_setup
+    from src.paths import build_directories
 
     # build directories
-
     build_directories()
 
 #    from src.helpers.paths import hidden_dir
@@ -195,12 +49,15 @@ def main(test):
 #    a.check()
     logging_setup('pychron', level='DEBUG')
 
+#===============================================================================
+# test flag
+# set if you want to execute tests after startup    
+# explicitly set the flag here once. mode is a readonly property
+#===============================================================================
+    from globals import globalv
+    globalv._test = True
 
-
-    if test is None:
-        from globals import globalv
-        test = globalv.mode == 'test'
-    launch(test)
+    launch()
     os._exit(0)
 
 
@@ -223,8 +80,5 @@ def profile_code():
 #    sys.exit()
 if __name__ == '__main__':
 
-    test = None
-    if sys.argv[1:]:
-        test = sys.argv[1] == '--test'
-
-    main(test)
+    main()
+#============= EOF =============================================
