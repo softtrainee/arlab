@@ -66,8 +66,8 @@ class Modeler(Loggable):
     status_text = Str
     sync_groups = None
 
-    include_panels = List(GROUPNAMES[:-1])
-
+#    include_panels = List(GROUPNAMES[:-1])
+    include_panels = List(['spectrum','arrhenius','logr_ro','cooling_history'])
     logr_ro_line_width = Int(1)
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
 
