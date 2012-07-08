@@ -13,7 +13,11 @@ or `TCP <http://en.wikipedia.org/wiki/Transmission_Control_Protocol>`_ internet 
 
 A response to a call is ``OK``, a value, or an ErrorCode
 
+To generate the current error code table execute ::
 
+	$ cd /path/to/pychron    #cd ~/Programming/mercurial/pychron
+	$ python -m src.remote_hardware.errors.__init__
+ 
 .. toctree::
 	system_errors
 	laser_errors
@@ -25,11 +29,11 @@ System Calls
 
 .. describe:: Open alias
 	
-	Open the valve called ``alias``. :ref:`InvalidValveErrorCode <invalid_valve_error>` return if ``alias`` not available
+	Open the valve called ``alias``. :ref:`InvalidValveErrorCode <invalid_valve_err>` return if ``alias`` not available
 
 .. describe:: Close alias
 	
-	Close the valve called ``alias``. :ref:`InvalidValveErrorCode <invalid_valve_error>` return if ``alias`` not available
+	Close the valve called ``alias``. :ref:`InvalidValveErrorCode <invalid_valve_err>` return if ``alias`` not available
 
 .. describe:: GetValveState alias
 
