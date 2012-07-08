@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 3
    
    mdd
+   runscripts
    scripting
    procedures
    remote_hardware
