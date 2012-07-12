@@ -97,7 +97,7 @@ class _ImageEditor(Editor):
 
         '''
         self._draw_(event)
-
+        event.RequestMore()
 #    def onIdle(self, event):
 #        '''
 #
@@ -155,11 +155,11 @@ class _ImageEditor(Editor):
         dc.SetPen(pen)
         dc.CrossHair(x, y)
 
-    def _display_images(self, dc, src):
+    def _display_images(self, src):
         '''
         '''
         display = self.value.render_images(src)
-        self._display_image(dc, display)
+        self._display_image(display)
 
     def _display_points(self, dc, ptlist, radius=5):
         '''
