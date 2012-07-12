@@ -30,7 +30,8 @@ import os
 class H5DataManager(DataManager):
     '''
     '''
-    _extension = 'h5'
+#    _extension = 'h5'
+    _extension = 'hdf5'
 
     def set_group_attribute(self, group, key, value):
         f = self._frame
