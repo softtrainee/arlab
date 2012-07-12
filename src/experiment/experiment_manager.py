@@ -161,15 +161,23 @@ class ExperimentManager(Manager):
 
             self.info('Start automated run {}'.format(arun.identifier))
 
+            #bootstrap the extraction script and measurement script
+            if not arun.load_extraction_script():
+                err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
+                self.warning(err_message)
+                continue # or should we continue
+
+            if not arun.load_measurement_script():
+                err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
+                self.warning(err_message)
+                continue
+
             arun._debug = DEBUG
             if arun.identifier.startswith('B'):
                 arun.isblank = True
 
             arun.state = 'extraction'
-            if not arun.do_extraction():
-                self._alive = False
-                err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
-                break
+            arun.do_extraction()
 
             if not self._continue_check():
                 break
@@ -181,7 +189,13 @@ class ExperimentManager(Manager):
             #use an Event object so that we dont finish before eq is done
             event = Event()
             event.clear()
-            self.do_equilibration(event)
+
+            eqtime = arun.get_measurement_parameter('equilibration_time', default=15)
+            inlet_valve = arun.get_measurement_parameter('inlet_valve', default='H')
+            outlet_valve = arun.get_measurement_parameter('outlet_valve', default='V')
+
+            self.do_equilibration(event, eqtime,
+                                  inlet_valve, outlet_valve)
 
             if not self._continue_check():
                 break
@@ -190,15 +204,11 @@ class ExperimentManager(Manager):
             event.wait()
             self.debug('inlet opened')
 
-            if DEBUG:
-                st = 0
-            else:
-                st = time.time()
-
             arun.state = 'measurement'
-            if not arun.do_measurement(st):
-                err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
-                break
+            arun.do_measurement()
+#            if not arun.do_measurement(st):
+#                err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
+#                break
 
             if not self._continue_check():
                 break
@@ -241,21 +251,18 @@ class ExperimentManager(Manager):
     def isAlive(self):
         return self._alive
 
-    def do_equilibration(self, event):
+    def do_equilibration(self, event, eqtime, inlet, outlet):
 
         def eq(ev):
-            ion_pump_id = 'V'
-            inlet_id = 'H'
 
-            eqtime = self.equilibration_time
             elm = self.extraction_line_manager
             if elm:
                 #close mass spec ion pump
-                elm.close_valve(ion_pump_id)
+                elm.close_valve(outlet)
                 time.sleep(1)
 
                 #open inlet
-                elm.open_valve(inlet_id)
+                elm.open_valve(inlet)
                 time.sleep(1)
             ev.set()
 
@@ -265,7 +272,7 @@ class ExperimentManager(Manager):
 
             self.info('finish equilibration')
             if elm:
-                elm.close_valve(inlet_id)
+                elm.close_valve(inlet)
 
         self.info('starting equilibration')
         t = Thread(target=eq, args=(event,))

@@ -53,7 +53,7 @@ class MaterialTable(Base, NameMixin):
 
 class AnalysisTable(Base, ResultsMixin):
     project_id = foreignkey('ProjectTable')
-
+    lab_id = foreignkey('LabTable')
 
 class AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('AnalysisTable')
@@ -62,5 +62,6 @@ class AnalysisPathTable(Base, PathMixin):
 class LabTable(Base, BaseMixin):
     labnumber = Column(Integer)
     sample_id = foreignkey('SampleTable')
+    analyses = relationship('AnalysisTable', backref='labnumber')
 #    irradiation_id = foreignkey('IrradiationTable')
 #============= EOF =============================================

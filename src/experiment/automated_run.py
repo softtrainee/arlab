@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Any, Str, String, Int, List, Enum, Property, Event, Float, Instance
 from traitsui.api import View, Item, VGroup, EnumEditor
@@ -36,6 +34,8 @@ import random
 from src.data_processing.regression.regressor import Regressor
 from src.scripts.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.scripts.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
+from src.database.adapters.isotope_adapter import IsotopeAdapter
+from src.paths import paths
 
 
 class AutomatedRunAdapter(TabularAdapter):
@@ -111,6 +111,29 @@ class AutomatedRun(Loggable):
 
     _active_detectors = None
 
+    def get_measurement_parameter(self, key, default=None):
+        ms = self._measurement_script
+        import ast
+        import yaml
+        m = ast.parse(ms._text)
+        docstr = ast.get_docstring(m)
+        if docstr is not None:
+            params = yaml.load(ast.get_docstring(m))
+            try:
+                return params[key]
+            except KeyError:
+                pass
+
+        return default
+
+    def measurement_script_factory(self, ec):
+        ec = self.configuration
+        ms = MeasurementPyScript(root=os.path.dirname(ec['measurement_script']),
+                name=os.path.basename(ec['measurement_script']),
+                arun=self
+                )
+        return ms
+
     def extraction_line_script_factory(self, ec):
         #get the klass
 
@@ -140,6 +163,14 @@ class AutomatedRun(Loggable):
                     **params
 
                     )
+    def load_extraction_script(self):
+        return self._load_script('extraction_line')
+
+    def load_measurement_script(self):
+        return self._load_script('measurement')
+
+
+
 #===============================================================================
 # doers
 #===============================================================================
@@ -147,67 +178,18 @@ class AutomatedRun(Loggable):
         self.info('extraction')
         self.state = 'extraction'
 
-        ec = self.configuration
+        self._extraction_line_script.execute()
+        self.info('extraction finished')
 
-        els = self.extraction_line_script_factory(ec)
-
-        if els.bootstrap(new_thread=False):
-            els.execute()
-#        '''
-#            could calculate the approximate run time then
-#            set the join timeout to rtime +padding
-#            this could prevent permanent lock ups?
-#            use machine learning to improve this time estimate?
-#        '''
-#            els.join()
-
-            self.info('extraction finished')
-            return True
-        else:
-            return False
-
-    def do_measurement(self, starttime):
+    def do_measurement(self):
         #use a measurement_script to explicitly define 
         #measurement sequence
-        ec = self.configuration
-        ms = MeasurementPyScript(root=os.path.dirname(ec['measurement_script']),
-                name=os.path.basename(ec['measurement_script']),
-                starttime=starttime,
-                arun=self
-                )
 
-        if ms.bootstrap(new_thread=False):
-            self._pre_analysis_save()
+        self._pre_analysis_save()
+        self._measurement_script.execute()
+        self._post_analysis_save()
 
-            ms.execute()
-#        '''
-#            could calculate the approximate run time then
-#            set the join timeout to rtime +padding
-#            this could prevent permanent lock ups?
-#            use machine learning to improve this time estimate?
-#        '''
-#            els.join()
-            self._post_analysis_save()
-            self.info('measurement finished')
-            return True
-        else:
-            return False
-#        ncounts = self.ncounts
-#        if self.isblank:
-#            ncounts = 400
-#
-#        self.info('measuring signal intensities. collecting {} counts'.format(ncounts))
-#        if self.spectrometer_manager:
-#            self.spectrometer_manager.spectrometer.set_magnet_position(self.reference_mass)
-#        time.sleep(self.magnet_settling_time)
-#        self._measure(ncounts,
-#                      starttime,
-#                      series=0,
-#                      update_x=True
-#                      )
-
-#        g.set_x_limits(0,
-#                       self.ncounts + self.nbaseline_counts + self.delay_before_baseline)
+        self.info('measurement finished')
 
 
     def do_data_collection(self, ncounts, starttime, series=0):
@@ -343,9 +325,16 @@ class AutomatedRun(Loggable):
         self.info('post analysis save')
 
         #save to a database
-#        db = self.database
-#        db.add_analysis()
-#        db.add_analysis_path()
+        db = IsotopeAdapter(kind='sqlite',
+#                            dbname=paths.isotope_db,
+                            dbname='/Users/ross/Pychrondata_test/testing/isotope_test.sqlite'
+                            )
+        if db.connect():
+            self.labnumber = 1
+            a = db.add_analysis(self.labnumber)
+            p = self.data_manager.get_current_path()
+            db.add_analysis_path(p, analysis=a)
+            db.commit()
 
     def traits_view(self):
 
@@ -480,6 +469,19 @@ class AutomatedRun(Loggable):
             else:
                 self.graph.add_datum((x, h1), plotid=0, ** kw)
                 self.graph.add_datum((x, cdd), plotid=1, **kw)
+
+    def _load_script(self, name):
+
+        func = getattr(self, '{}_script_factory'.format(name))
+        s = func(self.configuration)
+        if s.bootstrap():
+            try:
+                s._test()
+                setattr(self, '_{}_script'.format(name), s)
+                return True
+            except Exception, e:
+                self.warning(e)
+
 #===============================================================================
 # property get/set
 #===============================================================================
