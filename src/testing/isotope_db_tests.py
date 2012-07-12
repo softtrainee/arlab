@@ -21,6 +21,7 @@ from os import path
 from database_tests import BaseDatabaseTests
 from src.paths import paths
 from src.database.adapters.isotope_adapter import IsotopeAdapter
+from src.database.orms.isotope_orm import AnalysisTable, AnalysisPathTable
 
 
 class IsotopeDBTests(BaseDatabaseTests):
@@ -79,20 +80,36 @@ class IsotopeDBTests(BaseDatabaseTests):
         m = self._add_labnumber()
         self.assertIsNone(m)
 
-    def testDA_DeleteUser(self):
+    def testCA_AddAnalysis(self):
+        a = self._add_analysis()
+        self.assertIsInstance(a, AnalysisTable)
+        self.assertEqual(a.labnumber.labnumber, 10001)
+
+    def testCB_AddAnalysisPath(self):
+        a = self._add_analysis_path()
+        self.assertIsInstance(a, AnalysisPathTable)
+
+
+    def testZA_DeleteUser(self):
         self._delete('delete_user', 'ROOT', 'get_users')
 
-    def testDB_DeleteProject(self):
+    def testZB_DeleteProject(self):
         self._delete('delete_project', 'TestProject', 'get_projects')
 
-    def testDC_DeleteMaterial(self):
+    def testZC_DeleteMaterial(self):
         self._delete('delete_material', 'mineralite', 'get_materials')
 
-    def testDD_DeleteSample(self):
+    def testZD_DeleteSample(self):
         self._delete('delete_sample', 'JR-1', 'get_samples')
 
-    def testDE_DeleteLabnumber(self):
+    def testZE_DeleteLabnumber(self):
         self._delete('delete_labnumber', 10001, 'get_labnumbers')
+
+    def testZF_DeleteAnalysis(self):
+        pass
+
+    def testZF_DeleteAnalysisPath(self):
+        pass
 
     def _add_user(self):
         db = self._db
@@ -112,7 +129,15 @@ class IsotopeDBTests(BaseDatabaseTests):
     def _add_labnumber(self):
         db = self._db
         m = db.add_labnumber(10001, sample='JR-1', commit=True)
-        print 'asdfasd', m
         return m
 
+    def _add_analysis(self):
+        db = self._db
+        m = db.add_analysis(10001, commit=True)
+        return m
+
+    def _add_analysis_path(self):
+        db = self._db
+        m = db.add_analysis_path('/root/name', analysis=1, commit=True)
+        return m
 #============= EOF =============================================

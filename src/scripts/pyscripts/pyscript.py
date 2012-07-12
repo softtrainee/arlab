@@ -363,6 +363,8 @@ class PyScript(Loggable):
             self.info('syntax checking passed')
         self._syntax_checking = False
 
+
+
     def _execute(self):
 
         if not self._text:

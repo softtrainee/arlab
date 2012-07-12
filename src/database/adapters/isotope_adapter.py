@@ -44,12 +44,12 @@ class IsotopeAdapter(DatabaseAdapter):
     @add
     def add_project(self, name, **kw):
         proj = ProjectTable(name=name, **kw)
-        return self._simple_add(proj, 'project', name)
+        return self._add_unique(proj, 'project', name)
 
     @add
     def add_material(self, name, **kw):
         mat = MaterialTable(name=name, **kw)
-        return self._simple_add(mat, 'material', name)
+        return self._add_unique(mat, 'material', name)
 
     @add
     def add_user(self, name, project=None, **kw):
@@ -111,32 +111,35 @@ class IsotopeAdapter(DatabaseAdapter):
         if isinstance(sample, str):
             sample = self.get_sample(sample)
 
-        ln = self._simple_add(ln, 'labnumber', labnumber)
+        ln = self._add_unique(ln, 'labnumber', labnumber)
         if sample is not None and ln is not None:
             sample.labnumbers.append(ln)
 
         return ln
 
+    @add
+    def add_analysis(self, labnumber, **kw):
+        if isinstance(labnumber, (str, int)):
+            labnumber = self.get_labnumber(labnumber)
 
-#    @add
-#    def add_analysis(self, rundate, runtime, **kw):
-#        anal = AnalysisTable(rundate=rundate, runtime=runtime, **kw)
-#        return anal
+        kw = self._get_datetime_keywords(kw)
+        anal = AnalysisTable(**kw)
+        if labnumber is not None:
+            labnumber.analyses.append(anal)
+
+        return anal
+
+    @add
+    def add_analysis_path(self, path, analysis=None, **kw):
+        kw = self._get_path_keywords(path, kw)
+        anal_path = AnalysisPathTable(**kw)
+        if isinstance(analysis, (str, int, long)):
+            analysis = self.get_analysis(analysis)
 #
-#    @add
-#    def add_analysis_path(self, path, analysis=None, **kw):
-#        kw = self._get_path_keywords(path, kw)
-#        anal_path = AnalysisPathTable(**kw)
-#        if isinstance(analysis, (str, int, long)):
-#            analysis = self.get_analysis(analysis)
-#
-#        if analysis is not None:
-#            analysis.path = anal_path
-#
-#            return anal_path
-#        else:
-#            self.warning('invalid analysis id {}. could not add analysis path'.format(analysis.id))
-#
+        if analysis is not None:
+            analysis.path = anal_path
+            return anal_path
+
 #    @add
 #    def add_irradiation_chronology(self, irradiations, **kw):
 #        '''
@@ -148,14 +151,14 @@ class IsotopeAdapter(DatabaseAdapter):
 #        '''
 #    def add_irradiation_production(self, name, **kw):
 #        item = None
-#        self._simple_add(item, 'irradiation_production', name)
+#        self._add_unique(item, 'irradiation_production', name)
 
 #===========================================================================
 # getters single
 #===========================================================================
     @get_one
     def get_analysis(self, rid):
-        return AnalysisTable
+        return AnalysisTable, 'lab_id'
 
     @get_one
     def get_project(self, name):
@@ -242,18 +245,8 @@ class IsotopeAdapter(DatabaseAdapter):
 
         return q
 
-    def _simple_add(self, item, attr, name):
-        #test if already exists 
 
-        if getattr(self, 'get_{}'.format(attr))(name) is None:
-            self.info('adding {}= {}'.format(attr, name))
-            return item
-        else:
-            self.info('{}= {} already exists'.format(attr, name))
 
-    def info(self, msg, *args, **kw):
-        print msg
-        super(IsotopeAdapter, self).info(msg, *args, **kw)
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
