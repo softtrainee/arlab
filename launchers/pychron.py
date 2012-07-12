@@ -19,16 +19,13 @@
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-#import sys
-# add src to the path
-version_id = '_beta'
+
+version_id = '_test'
 from helpers import build_version
 build_version(version_id)
 
 #PYC = os.path.join(merc, 'pychron_source.zip')
 #sys.path.insert(0, PYC)
-
-
 
 def main():
     '''
