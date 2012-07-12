@@ -23,24 +23,12 @@
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#from src.remote_hardware.errors.system_errors import InvalidArgumentsErrorCode
 from laser_handler import LaserHandler
 
 
 class DiodeHandler(LaserHandler):
     manager_name = 'Diode'
 
-#    def SetLaserPower(self, manager, data, *args):
-#        result = 'OK'
-#        try:
-#            p = float(data)
-#        except:
-#            return InvalidArgumentsErrorCode('SetLaserPower',
-#                                             data,
-#                                             logger=self)
-#
-#        manager.set_laser_temperature(p)
-#        return result
 
 
 #============= views ===================================
