@@ -24,12 +24,21 @@ from Queue import Queue, Empty
 from src.scripts.wait_dialog import WaitDialog
 from pyface.wx.dialog import confirmation
 
-COMMANDS = ['sleep',
-            'begin_interval', 'complete_interval',
-            'gosub', 'exit', ('info', '_m_info'),
 
-            ]
+def verbose_skip(func):
+    def decorator(obj, *args, **kw):
+        if obj._syntax_checking or obj._cancel:
+            return
+        obj.debug('{} {} {}'.format(func.__name__, args, kw))
+        return func(obj, *args, **kw)
+    return decorator
 
+def skip(func):
+    def decorator(obj, *args, **kw):
+        if obj._syntax_checking or obj._cancel:
+            return
+        return func(obj, *args, **kw)
+    return decorator
 
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
@@ -145,11 +154,17 @@ class PyScript(Loggable):
 
     def get_context(self):
         ks = [((k[0], k[1]) if isinstance(k, tuple) else (k, k))
-               for k in self._get_commands()]
+               for k in self.get_commands()]
+
         return dict([(k, getattr(self, fname)) for k, fname in ks])
 
-    def _get_commands(self):
-        return COMMANDS
+    def get_commands(self):
+        cmds = ['sleep',
+            'begin_interval', 'complete_interval',
+            'gosub', 'exit', ('info', '_m_info'),
+
+            ]
+        return cmds
 
     def set_text(self, t):
         self._text = t
@@ -189,13 +204,14 @@ class PyScript(Loggable):
     def _cancel_hook(self):
         pass
 
-    def bootstrap(self, load=True):
+    def bootstrap(self, load=True, **kw):
         self._interval_flag = Event()
         self._interval_stack = Queue()
         if self.root and self.name and load:
             p = os.path.join(self.root, self.name)
             with open(p, 'r') as f:
                 self._text = f.read()
+            return True
 
     def report_result(self, r):
 #        n = currentThread().name
@@ -277,6 +293,7 @@ class PyScript(Loggable):
         if not self._cancel:
             self._interval_flag.clear()
 
+    @verbose_skip
     def begin_interval(self, timeout):
         def wait(t):
             self._sleep(t)
@@ -286,23 +303,23 @@ class PyScript(Loggable):
                     self._interval_flag.set()
 
         timeout = float(timeout)
+#        if self._syntax_checking or self._cancel:
+#            return
         self._interval_stack.put('b')
-        if self._syntax_checking or self._cancel:
-            return
 
         self.info('BEGIN INTERVAL waiting for {}'.format(timeout))
         t = Thread(target=wait, args=(timeout,))
         t.start()
 
+    @skip
     def _m_info(self, msg):
-        if self._syntax_checking or self._cancel:
-            return
 
         self.info(msg)
 
+    @verbose_skip
     def sleep(self, v):
-        if self._syntax_checking or self._cancel:
-            return
+#        if self._syntax_checking or self._cancel:
+#            return
 
         self.info('SLEEP {}'.format(v))
         self._sleep(v)
@@ -346,7 +363,6 @@ class PyScript(Loggable):
             self.info('syntax checking passed')
         self._syntax_checking = False
 
-
     def _execute(self):
 
         if not self._text:
@@ -366,6 +382,7 @@ class PyScript(Loggable):
 
         except Exception, _e:
             import traceback
+            traceback.print_exc()
             return traceback.format_exc()
 
         if self._syntax_checking:
@@ -383,8 +400,9 @@ class PyScript(Loggable):
                 del self.parent.scripts[self.hash_key]
 
     def _post_execute_hook(self):
-        if self.controller is not None:
-            self.controller.end()
+        pass
+#        if self.controller is not None:
+#            self.controller.end()
 
     def _manager_action(self, func, manager=None, *args, **kw):
 #        man = self._get_manager()
@@ -411,8 +429,8 @@ class PyScript(Loggable):
 #==============================================================================
     def _sleep(self, v):
         v = float(v)
-        if self._syntax_checking or self._cancel:
-            return
+#        if self._syntax_checking or self._cancel:
+#            return
 
         if v > 1:
             if v >= 5:

@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Instance, Button, Float, Int, on_trait_change
 from traitsui.api import View, Item
@@ -34,7 +32,11 @@ from src.managers.remote_manager import RemoteExtractionLineManager
 #from src.managers.data_managers.pychron_db_data_manager import PychronDBDataManager
 from src.experiment.experiment import Experiment
 from src.managers.data_managers.csv_data_manager import CSVDataManager
+
 from src.paths import paths
+from src.managers.data_managers.h5_data_manager import H5DataManager
+paths.build('_test')
+
 from src.scripts.extraction_line_script import ExtractionLineScript
 from src.data_processing.regression.ols import OLS
 from uncertainties import ufloat
@@ -43,7 +45,7 @@ from src.graph.graph import Graph
 from src.data_processing.time_series.time_series import smooth
 from src.graph.stacked_graph import StackedGraph
 
-DEBUG = False
+DEBUG = True
 
 #class AutomatedAnalysisParameters(HasTraits):
 #    runscript_name = Str
@@ -119,27 +121,40 @@ class ExperimentManager(Manager):
         return sm
 
     def do_automated_runs(self):
+        if self.mode == 'client':
+            man = RemoteExtractionLineManager(host='129.138.12.153',
+                                              port=1061)
+            self.extraction_line_manager = man
+
         self._alive = True
         self.info('start automated runs')
-        self.csv_data_manager = CSVDataManager()
+#        self.csv_data_manager = CSVDataManager()
 
-        sm = self.get_spectrometer_manager()
-
+#        sm = self.get_spectrometer_manager()
         n = len(self.experiment.automated_runs)
-        for i, arun in enumerate(self.experiment.automated_runs):
-            self.experiment.current_run = arun
-            arun.spectrometer_manager = self.spectrometer_manager
-            arun.experiment_manager = self
-            if self.mode == 'client':
-                man = RemoteExtractionLineManager(host='129.138.12.153',
-                                                  port=1061)
-                self.extraction_line_manager = man
 
+        err_message = ''
+
+        dm = H5DataManager()
+        for i, arun in enumerate(self.experiment.automated_runs):
+            arun._index = i
+
+            self.experiment.current_run = arun
+
+            arun.experiment_manager = self
+            arun.spectrometer_manager = self.spectrometer_manager
             arun.extraction_line_manager = self.extraction_line_manager
+            arun.data_manager = dm
+
             arun.configuration = dict(extraction_line_script=os.path.join(paths.scripts_dir,
-                                                        'runscripts',
-                                                        'air_tank1.rs'))
-            arun.data_manager = self.csv_data_manager
+                                                        'extraction',
+                                                        'Quick_Air_x1.py'),
+
+                                      measurement_script=os.path.join(paths.scripts_dir,
+                                                                      'measurement',
+                                                                      'measureTest.py')
+                                      )
+
 
             if not self._continue_check():
                 break
@@ -153,6 +168,7 @@ class ExperimentManager(Manager):
             arun.state = 'extraction'
             if not arun.do_extraction():
                 self._alive = False
+                err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
                 break
 
             if not self._continue_check():
@@ -169,6 +185,7 @@ class ExperimentManager(Manager):
 
             if not self._continue_check():
                 break
+
             self.debug('waiting for the inlet to open')
             event.wait()
             self.debug('inlet opened')
@@ -179,31 +196,24 @@ class ExperimentManager(Manager):
                 st = time.time()
 
             arun.state = 'measurement'
-            arun.do_measurement(st, i)
+            if not arun.do_measurement(st):
+                err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
+                break
 
             if not self._continue_check():
-                    break
+                break
 
-            if DEBUG:
-                st = arun.ncounts
-
-            arun.do_baseline(self._dac_baseline, st)
-
-            if not self._continue_check():
-                    break
-
-            arun.regress()
-
-            arun.do_peak_center(update_mftable=True, center_pos='Ar40')
-            self.extraction_line_manager.open_valve('V')
             self.info('Automated run {} finished'.format(arun.identifier))
+            break
+
             if not self._continue_check():
-                    break
+                break
 
             if i + 1 == n:
                 break
 
             arun.state = 'success'
+
             self.info('Delay between runs {}'.format(self.delay_between_runs))
             #delay between runs
             st = time.time()
@@ -212,8 +222,14 @@ class ExperimentManager(Manager):
                     break
                 time.sleep(0.5)
 
-        self.valves_to_idle()
-        self.info('automated runs complete')
+        else:
+            self.info('automated runs complete')
+            return
+
+        arun.state = 'fail'
+        self.warning('automated runs did not complete successfully')
+        self.warning('error: {}'.format(err_message))
+
 
     def _continue_check(self):
         c = self.isAlive()
@@ -224,29 +240,6 @@ class ExperimentManager(Manager):
 
     def isAlive(self):
         return self._alive
-
-    def valves_to_idle(self, name=None):
-        if name is not None:
-            name = 'valves_to_idle_{}.rs'.format(name)
-        else:
-            name = 'valves_to_idle.rs'
-
-#        name = 'valves_to_idle_measure.rs'
-        els = ExtractionLineScript(
-                            source_dir=os.path.join(paths.scripts_dir, 'runscripts'),
-                            file_name=name,
-
-                            #hole=self.position,
-                            #heat_duration=self.duration,
-                            #temp_or_power=self.temp_or_power,
-
-                            manager=self.extraction_line_manager
-                            )
-
-        a = els.bootstrap(new_thread=False)
-        if not a:
-#            els.join()
-            self.warning('Problem with Extraction Line script {}'.format(name))
 
     def do_equilibration(self, event):
 
@@ -264,7 +257,7 @@ class ExperimentManager(Manager):
                 #open inlet
                 elm.open_valve(inlet_id)
                 time.sleep(1)
-                ev.set()
+            ev.set()
 
             #delay for eq time
             self.info('equilibrating for {}sec'.format(eqtime))
@@ -273,7 +266,6 @@ class ExperimentManager(Manager):
             self.info('finish equilibration')
             if elm:
                 elm.close_valve(inlet_id)
-                self.valves_to_idle(name='measure')
 
         self.info('starting equilibration')
         t = Thread(target=eq, args=(event,))
@@ -341,7 +333,15 @@ class ExperimentManager(Manager):
     def _test2_fired(self):
 #        sm = self.get_spectrometer_manager()
 #        print sm.spectrometer_microcontroller
-        self.analyze_data()
+#        self.analyze_data()
+        dm = H5DataManager()
+
+        path = '/Users/ross/Pychrondata/data/automated_runs/B-01-intensity015.hdf5'
+        dm.open_data(path)
+        t = dm.get_table('H1', 'signals')
+        print t
+        for r in t.iterrows():
+            print r['time'], r['value']
 
     def _test_fired(self):
         self.execute()
