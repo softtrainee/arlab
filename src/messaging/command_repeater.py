@@ -25,7 +25,7 @@ from threading import Lock
 from src.config_loadable import ConfigLoadable
 from src.led.led import LED
 from src.led.led_editor import LEDEditor
-from src.remote_hardware.errors.system_errors import PychronCommErrorCode
+from src.remote_hardware.errors import PychronCommErrorCode
 from globals import globalv
 
 
@@ -112,6 +112,8 @@ class CommandRepeater(ConfigLoadable):
                 self.led.state = 'red'
                 result = str(PychronCommErrorCode(self.path, rd))
 
+#                print 'result', result, rd, self.path
+
 #            self.debug('command={} result_command={}'.format(data, result_str))
 
 #            cmd = data.split(' ')[0].strip()
@@ -126,6 +128,7 @@ class CommandRepeater(ConfigLoadable):
 #            time.sleep(random.random() / 10.)
             if ready_flag and data == result:
                 result = 'OK'
+
             return result
 #            try:
 #
