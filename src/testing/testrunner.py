@@ -29,6 +29,7 @@ from remote_extraction_line_tests import RemoteExtractionLineTests
 from remote_laser_tests import RemoteDiodeTests, RemoteCO2Tests
 
 from src.paths import paths
+from src.testing.device_scan_db_tests import DeviceScanDBTests
 def new_line(x):
     return '{}\n'.format(x)
 
@@ -90,7 +91,7 @@ def _write_results(f, results, title, names):
 
 def run_tests(logger):
     def _run():
-        time.sleep(3)
+        time.sleep(0.1)
         logger.info('=====================TESTS================================')
         logger.info('==========================================================')
         logger.info('=====================Unit Tests===========================')
@@ -102,24 +103,26 @@ def run_tests(logger):
         #tests executed in alphabetically order
         utests = [
                 ExtractionLineTests,
-#               DiodeTests,
-#                CO2Tests
+               DiodeTests,
+                CO2Tests
                 ]
-        _execute_tests(logger,
-                       loader, runner, utests, write_results, 'Unit')
+#        _execute_tests(logger,
+#                       loader, runner, utests, write_results, 'Unit')
 
         rtests = [
                   RemoteExtractionLineTests,
                   RemoteDiodeTests,
-#                  RemoteCO2Tests
+                  RemoteCO2Tests
                   ]
 
-        _execute_tests(logger,
-                       loader, runner, rtests, append_results, 'Remote')
-
-#        mrtests = []
 #        _execute_tests(logger,
-#                       loader, runner, mrtests, append_results, 'Mult Runs')
+#                       loader, runner, rtests, append_results, 'Remote')
+
+        dbtests = [
+                   DeviceScanDBTests,
+                   ]
+        _execute_tests(logger,
+                       loader, runner, dbtests, append_results, 'Database Tests')
 
         finish_write_results()
 
