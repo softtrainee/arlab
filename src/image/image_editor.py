@@ -22,12 +22,13 @@ from traitsui.wx.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 
 #=============standard library imports ========================
-from wx import Panel, ClientDC, \
+from wx import Panel, PaintDC, \
     CLIP_CHILDREN, EVT_MOTION, EVT_LEFT_DOWN, EVT_IDLE, \
-    RED_PEN
+    RED_PEN, EVT_PAINT, BitmapFromBuffer
 
 #import math
-import wx
+#import wx
+#from wx._core import EVT_PAINT
 #=============local library imports  ==========================
 #from ctypes_opencv import  cvCreateImage, CvSize, cvAddS, CvScalar, \
 # CvRect, cvSetImageROI, cvResize, cvResetImageROI
@@ -67,13 +68,16 @@ class _ImageEditor(Editor):
         '''
         panel = Panel(parent, -1, style=CLIP_CHILDREN)
 
-        panel.Bind(EVT_IDLE, self.onIdle)
-        if track_mouse:
-            panel.Bind(EVT_MOTION, self.onMotion)
+#        panel.Bind(EVT_IDLE, self.onIdle)
+        self._set_bindings(panel)
+        return panel
+
+    def _set_bindings(self, panel):
+        panel.Bind(EVT_PAINT, self.onPaint)
+#        if track_mouse:
+#            panel.Bind(EVT_MOTION, self.onMotion)
 
         panel.Bind(EVT_LEFT_DOWN, self.onLeftDown)
-
-        return panel
 
     def onLeftDown(self, event):
         '''
@@ -92,16 +96,16 @@ class _ImageEditor(Editor):
         '''
 
         '''
-        self._draw_()
+        self._draw_(event)
 
-    def onIdle(self, event):
-        '''
+#    def onIdle(self, event):
+#        '''
+#
+#        '''
+#        self._draw_()
+#        event.RequestMore()
 
-        '''
-        self._draw_()
-        event.RequestMore()
-
-    def _draw_(self):
+    def _draw_(self, event):
         '''
         '''
         src = self.get_frames()
@@ -119,14 +123,13 @@ class _ImageEditor(Editor):
     def _draw(self, src):
         '''
         '''
-        dc = ClientDC(self.control)
         if src:
-            self._display_images(dc, src)
+            self._display_images(src)
 
 #        if self.points:
 #            self._display_points(dc,self.points)
 
-    def _display_image(self, dc, src):
+    def _display_image(self, src):
         '''
         '''
 
@@ -138,9 +141,10 @@ class _ImageEditor(Editor):
             except AttributeError, e:
                 print e
 
-                bitmap = wx.BitmapFromBuffer(src.width, src.height,
+                bitmap = BitmapFromBuffer(src.width, src.height,
                                                src.data
                                                 )
+            dc = PaintDC(self.control)
             dc.DrawBitmap(bitmap, 0, 0, False)
 
     def _display_crosshair(self, dc, x, y, pen=None):
