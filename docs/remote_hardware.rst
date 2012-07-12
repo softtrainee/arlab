@@ -6,7 +6,7 @@ Remote hardware is used to allow other software clients access to pychron hardwa
 A simple messaging system is used to pass information between pychron and a client. Currently the most
 active client is Mass Spec which uses the remote hardware protocol to do all of its hardware tasks. 
 
-The protocol is broken in two sections :ref:`system_calls_label` and :ref:`laser_calls_label`.
+The protocol is broken in two sections :ref:`extraction_line_calls_label` and :ref:`laser_calls_label`.
 Calls are simple ASCII text messages sent over the ethernet using either the `UDP <http://en.wikipedia.org/wiki/User_Datagram_Protocol>`_
 or `TCP <http://en.wikipedia.org/wiki/Transmission_Control_Protocol>`_ internet protocols
 
@@ -19,12 +19,12 @@ To generate the current error code table execute ::
 	$ python -m src.remote_hardware.errors.__init__
  
 .. toctree::
-	system_errors
+	el_errors
 	laser_errors
 	
-.. _system_calls_label:
+.. _extraction_line_calls_label:
 
-System Calls
+Extraction Line Calls
 -------------------------
 
 .. describe:: Open alias
