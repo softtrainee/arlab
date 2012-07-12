@@ -30,6 +30,7 @@ from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.helpers.datetime_tools import generate_datetimestamp
 from src.hardware.core.alarm import Alarm
 from src.graph.graph import Graph
+from src.graph.time_series_graph import TimeSeriesStreamGraph
 
 class ScanableDevice(ViewableDevice):
     scan_button = Event
@@ -49,8 +50,11 @@ class ScanableDevice(ViewableDevice):
     scan_root = Str
     scan_name = Str
 
-    graph_klass = Graph
+    graph_klass = TimeSeriesStreamGraph
     graph = Instance(Graph)
+
+    data_manager = None
+    time_dict = dict(ms=1, s=1000, m=60.0 * 1000, h=60.0 * 60.0 * 1000)
 
     def _scan_path_changed(self):
         self.scan_root = os.path.split(self.scan_path)[0]
@@ -82,6 +86,9 @@ class ScanableDevice(ViewableDevice):
                                          name=opt,
                                          alarm_str=config.get('Alarms', opt)
                                          ))
+
+    def _scan_hook(self, *args, **kw):
+        pass
 
     def _scan_(self, *args):
         '''
@@ -126,16 +133,7 @@ class ScanableDevice(ViewableDevice):
                             r.append()
                             tab.flush()
 
-                for a in self.alarms:
-                    if a.test_condition(v):
-
-                        alarm_msg = a.get_message(v)
-                        self.warning(alarm_msg)
-                        manager = self.application.get_service('src.social.twitter_manager.TwitterManager')
-                        if manager is not None:
-                            manager.post(alarm_msg)
-
-                        break
+                self._scan_hook(v)
 
             else:
                 '''
