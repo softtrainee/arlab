@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import Any, Property, implements, DelegatesTo
+from traits.api import Any, Property, implements, DelegatesTo, Instance
 from traitsui.api import View, Item
 
 #=============standard library imports ========================
@@ -28,32 +28,46 @@ from src.hardware.core.i_core_device import ICoreDevice
 from src.has_communicator import HasCommunicator
 from src.rpc.rpcable import RPCable
 from src.hardware.core.scanable_device import ScanableDevice
+from src.hardware.core.core_device import CoreDevice
 
 
-class AbstractDevice(ScanableDevice, RPCable, HasCommunicator):
+class AbstractDevice(RPCable, HasCommunicator):
     '''
     '''
     implements(ICoreDevice)
 
-    _cdevice = Any
+    _cdevice = Instance(CoreDevice)
     _communicator = DelegatesTo('_cdevice')
 
+    dev_klass = Property(depends_on='_cdevice')
     simulation = Property(depends_on='_cdevice')
 #    com_class = Property(depends_on='_cdevice')
 
 #    last_command = Property(depends_on='_cdevice.last_command')
 #    last_response = Property(depends_on='_cdevice.last_response')
 #    
-    scan_units = DelegatesTo('_cdevice')
-    scan_func = DelegatesTo('_cdevice')
-    scan_period = DelegatesTo('_cdevice')
+#    scan_units = DelegatesTo('_cdevice')
+#    scan_func = DelegatesTo('_cdevice')
+#    scan_period = DelegatesTo('_cdevice')
     scan_button = DelegatesTo('_cdevice')
-    scan_path = DelegatesTo('_cdevice')
-    last_command = DelegatesTo('_cdevice')
-    last_response = DelegatesTo('_cdevice')
-#    simulation = DelegatesTo('_cdevice')
-    com_class = DelegatesTo('_cdevice')
-    is_scanable = DelegatesTo('_cdevice')
+    scan_label = DelegatesTo('_cdevice')
+#    scan_path = DelegatesTo('_cdevice')
+#    last_command = DelegatesTo('_cdevice')
+#    last_response = DelegatesTo('_cdevice')
+##    simulation = DelegatesTo('_cdevice')
+#    com_class = DelegatesTo('_cdevice')
+#    is_scanable = DelegatesTo('_cdevice')
+#    dm_kind = DelegatesTo('_cdevice')
+    graph = DelegatesTo('_cdevice')
+
+    def __getattr__(self, attr):
+        try:
+            return getattr(self._cdevice, attr)
+        except AttributeError:
+            pass
+
+    def _get_dev_klass(self):
+        return self._cdevice.__class__.__name__
 
     def get_factory(self, package, klass):
         try:
@@ -122,7 +136,7 @@ class AbstractDevice(ScanableDevice, RPCable, HasCommunicator):
     def traits_view(self):
         v = View(Item('name', style='readonly'),
                  Item('klass', style='readonly', label='Class'),
-                 Item('_type', style='readonly', label='Type'),
+                 Item('dev_klass', style='readonly', label='Dev. Class'),
                  Item('connected', style='readonly'),
                  Item('com_class', style='readonly', label='Com. Class'),
                  Item('config_short_path', style='readonly'),

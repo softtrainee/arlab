@@ -17,31 +17,31 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
-from src.hardware.core.abstract_device import AbstractDevice
+import os
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
-class PidController(AbstractDevice):
-    def load_additional_args(self, config, **kw):
-        from src.hardware.eurotherm import Eurotherm
-        self._cdevice = Eurotherm(name='Eurotherm')
-        self._cdevice.load()
-
-        return True
+paths.build('_test')
+def launch_device(name, path):
+    print 'Launching: {}'.format(name)
+    print 'Config File: {}'.format(path)
 
 
-#from traits.api import Instance
-from traitsui.api import ButtonEditor
-class DevelopmentPidController(PidController):
+    from src.hardware.pid_controller import DevelopmentPidController
+    klass = DevelopmentPidController
 
-    def get_process_value(self, **kw):
-        return self._cdevice.get_random_value()
+    dev = klass(name=name, config_path=path)
+    dev.bootstrap()
+    dev.setup_scan()
+    dev.start_scan()
+    print dev
+    dev.configure_traits()
 
-    def traits_view(self):
-        v = View(
-                 Item('_cdevice', style='custom', show_label=False),
-                 Item('scan_button', show_label=False, editor=ButtonEditor(label_value='scan_label')),
-                 Item('graph', show_label=False, style='custom'))
 
-        return v
+if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('device_launcher')
+    name = 'PIDController'
+    path = os.path.join(paths.device_dir, 'pid_controller.cfg')
+    launch_device(name, path)
 #============= EOF =============================================
