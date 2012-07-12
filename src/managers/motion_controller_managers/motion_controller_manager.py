@@ -26,7 +26,7 @@ from traitsui.api import View, Item, HGroup, spring, \
 from src.managers.manager import Manager
 #from src.hardware.newport.newport_motion_controller import NewportMotionController
 from src.hardware.motion_controller import MotionController
-from src.helpers.paths import root_dir, device_dir
+from src.paths import paths
 from src.helpers.filetools import parse_file
 import os
 
@@ -59,7 +59,7 @@ class MotionControllerManager(Manager):
         self.motion_controller.save_axes_parameters()
 
     def _load_button_fired(self):
-        path = self.open_file_dialog(default_directory=device_dir)
+        path = self.open_file_dialog(default_directory=paths.device_dir)
         #path = os.path.join(root_dir, 'zobs', 'NewStage-Axis-1.txt')
         if path is not None:
 

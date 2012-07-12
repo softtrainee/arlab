@@ -30,10 +30,10 @@ import apptools.sweet_pickle as pickle
 import copy
 #=============local library imports  ==========================
 
-from src.helpers.paths import hidden_dir
+from src.paths import paths
 
 def get_user_views():
-    return glob.glob(os.path.join(hidden_dir, 'userview*'))
+    return glob.glob(os.path.join(paths.hidden_dir, 'userview*'))
 
 class ViewControllerHandler(Handler):
     def closed(self, info, is_ok):
@@ -51,7 +51,7 @@ class ViewControllerHandler(Handler):
         for i, v in enumerate(obj):
 
             name = 'userview{}'.format(i)
-            with open(os.path.join(hidden_dir, name), 'w') as f:
+            with open(os.path.join(paths.hidden_dir, name), 'w') as f:
                 pickle.dump(v, f)
 
         super(ViewControllerHandler, self).closed(info, is_ok)

@@ -1,8 +1,0 @@
-#newport grouping setup file
-#x,y
-1HN1,2
-1HA300
-1HD300
-1HE300
-1HJ150
-1HV3.81

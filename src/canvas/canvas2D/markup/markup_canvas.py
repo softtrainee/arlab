@@ -133,9 +133,9 @@ class MarkupCanvas(BaseDataCanvas):
         '''
     
         '''
+        gc.save_state()
         test = lambda x: self.invalid_layers and x in self.invalid_layers
         try:
-            gc.save_state()
 
             for i, l in enumerate(self.markupcontainer.layers):
                 if test(i):
@@ -642,9 +642,6 @@ class InteractionMarkupCanvas(MarkupCanvas):
             gc.stroke_path()
 
         gc.restore_state()
-
-
-
 
 
     def _over_mark_up_line(self, event, tolerance=7):

@@ -24,9 +24,9 @@ import os
 import sys
 import logging
 #=============local library imports  =========================
-from paths import root
+from src.paths import paths
 from filetools import unique_path
-from globals import use_debug_logger
+from globals import globalv
 from pyface.timer.do_later import do_later
 import shutil
 
@@ -97,7 +97,7 @@ def logging_setup(name, level=None):
     '''
 
     #make sure we have a log directory
-    bdir = os.path.join(root, 'logs')
+    bdir = os.path.join(paths.root, 'logs')
     if not os.path.isdir(bdir):
         os.mkdir(bdir)
 
@@ -124,7 +124,7 @@ def logging_setup(name, level=None):
                         filemode='w'
                       )
 
-    if use_debug_logger:
+    if globalv.use_debug_logger:
 
         #main_logger = logging.getLogger()
         #main_logger.setLevel(logging.NOTSET)
@@ -154,7 +154,7 @@ def add_console(logger=None, name=None,
         LOGGER_LIST.append(logger)
         #print use_debug_logger, name
 
-        if name == 'main' or not use_debug_logger:
+        if name == 'main' or not globalv.use_debug_logger:
             console = logging.StreamHandler()
 
             console.setLevel(level)

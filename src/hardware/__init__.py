@@ -30,6 +30,8 @@ HW_PACKAGE_MAP = {'CommandProcessor': 'src.messaging.command_processor',
              'ArgusController': 'src.hardware.argus_controller',
              'FerrupsUPS': 'src.hardware.FerrupsUPS',
              'QtegraDevice':'src.hardware.qtegra_device',
-             'RemoteThermoRack':'src.hardware.remote.thermorack'
+
+             'RemoteThermoRack':'src.hardware.remote.thermorack',
+             'PidController':'src.hardware.pid_controller'
              #'ControlModule': 'src.hardware.fusions.vue_diode_control_module'
              }

@@ -24,7 +24,7 @@ from wx import DEFAULT_FRAME_STYLE, FRAME_NO_WINDOW_MENU, \
     CLIP_CHILDREN, VERTICAL, Frame, BoxSizer, NullColor, Size, \
     DisplaySize
 #============= local library imports  ==========================
-from src.helpers import paths
+from src.paths import paths
 from src.hardware.core.i_core_device import ICoreDevice
 from src.helpers.parsers.initialization_parser import InitializationParser
 from loggable import Loggable
@@ -170,6 +170,7 @@ class Initializer(Loggable):
         managers = []
         devices = []
         flags = []
+
         if plugin_name is None:
 
             # remove manager from name
@@ -181,6 +182,9 @@ class Initializer(Loggable):
         else:
             mp = parser.get_manager(name, plugin_name)
 
+        if mp is None:
+            mp = parser._tree.find('plugins/{}'.format(name))
+
         if mp is not None:
             managers = parser.get_managers(mp)
             devices = parser.get_devices(mp)
@@ -188,7 +192,7 @@ class Initializer(Loggable):
             timed_flags = parser.get_timed_flags(mp, element=True)
 
             #set rpc server
-            mode, port = parser.get_rpc_mode_port(mp)
+            mode, _, port = parser.get_rpc_params(mp)
             if port and mode != 'client':
                 manager.load_rpc_server(port)
 
@@ -198,6 +202,7 @@ class Initializer(Loggable):
 
         if managers:
             self.info('loading managers - {}'.format(', '.join(managers)))
+            manager.name = name
             self.load_managers(manager, managers, device_dir)
 
         if devices:
@@ -241,18 +246,20 @@ class Initializer(Loggable):
             man = None
             if mi == '':
                 continue
-
             self.info('load {}'.format(mi))
-            mode, port = self.parser.get_rpc_mode_port((mi, manager.name))
+            mode, host, port = self.parser.get_rpc_params((mi, manager.name))
             remote = mode == 'client'
             try:
                 man = getattr(manager, mi)
                 if man is None:
-                    man = manager.create_manager(mi, port=port, remote=remote)
+                    man = manager.create_manager(mi, host=host,
+                                                 port=port, remote=remote)
             except AttributeError:
 #                self.warning(e)
                 try:
-                    man = manager.create_manager(mi, port=port, remote=remote)
+                    man = manager.create_manager(mi,
+                                                 host=host,
+                                                 port=port, remote=remote)
                 except Exception:
                     import traceback
                     traceback.print_exc()
@@ -297,6 +304,7 @@ class Initializer(Loggable):
                 continue
 
             dev = None
+            st = time.time()
             pdev = self.parser.get_device(name, device, plugin_name,
                     element=True)
             dev_class = pdev.get('klass')
@@ -307,7 +315,6 @@ class Initializer(Loggable):
                     dev = manager.create_device(device,
                             dev_class=dev_class)
             except AttributeError:
-
                 dev = manager.create_device(device, dev_class=dev_class)
 
             if dev is None:
@@ -344,6 +351,7 @@ class Initializer(Loggable):
             if result is not True:
                 self.warning('Failed setting up communications to {}'.format(od.name))
                 od._communicator.simulation = True
+
             elif result is None:
                 raise NotImplementedError
 
@@ -352,8 +360,8 @@ class Initializer(Loggable):
             manager.devices.append(od)
             od.application = self.application
 
-            if od.simulation:
-                time.sleep(0.25)
+#            if od.simulation:
+#                time.sleep(0.25)
 
     def load_progress(self, n):
         '''

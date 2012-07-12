@@ -29,7 +29,7 @@ from src.graph.graph import Graph
 from src.graph.time_series_graph import TimeSeriesStackedGraph
 import os
 import csv
-from src.helpers.paths import data_dir
+from src.paths import paths
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from src.loggable import Loggable
@@ -82,7 +82,7 @@ class BakeoutGraphViewer(Loggable):
 
     def _get_export_path(self):
         dlg = FileDialog(action='save as',
-                         default_directory=data_dir,
+                         default_directory=paths.data_dir,
                          wildcard='CSV (*.csv, *.txt)|*.csv;*.txt'
                          )
 

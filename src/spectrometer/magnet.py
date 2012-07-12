@@ -27,7 +27,7 @@ import csv
 import time
 #============= local library imports  ==========================
 from src.data_processing.regression.regressor import Regressor
-from src.helpers.paths import setup_dir
+from src.paths import paths
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 import math
 from src.graph.graph import Graph
@@ -178,7 +178,7 @@ class Magnet(SpectrometerDevice):
 
 
     def load(self):
-        p = os.path.join(setup_dir, 'spectrometer', 'mftable.csv')
+        p = os.path.join(paths.setup_dir, 'spectrometer', 'mftable.csv')
         with open(p, 'U') as f:
             reader = csv.reader(f)
             xs = []
@@ -190,7 +190,7 @@ class Magnet(SpectrometerDevice):
         self.mftable = [xs, ys]
 
     def dump(self):
-        p = os.path.join(setup_dir, 'spectrometer', 'mftable.csv')
+        p = os.path.join(paths.setup_dir, 'spectrometer', 'mftable.csv')
         with open(p, 'w') as f:
             writer = csv.writer(f)
             for x, y in zip(self.mftable[0], self.mftable[1]):

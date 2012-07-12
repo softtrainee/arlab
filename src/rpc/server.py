@@ -35,7 +35,7 @@ class RPCServer(Loggable):
             from src.rpc.backends import XMLBackend
             self._backend = bk = XMLBackend()
             bk.port = self.port
-
+        self.info('bootstrap rpc server backend={}'.format(self.backend_kind))
         bk.manager = self.manager
         bk.start_server()
 

@@ -21,14 +21,14 @@ from traitsui.api import View, Item, Group, HGroup, VGroup, \
     ListEditor, TableEditor
 from traitsui.table_column import ObjectColumn
 #============= standard library imports ========================
+import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.helpers.parsers.initialization_parser import InitializationParser
 from src.remote_hardware.command_processor import CommandProcessor
 from src.messaging.remote_command_server import RemoteCommandServer
-from globals import use_ipc
-from src.helpers.paths import setup_dir
-import os
+from globals import globalv
+from src.paths import paths
 
 '''
 #===================================
@@ -65,7 +65,7 @@ class RemoteHardwareManager(Manager):
 
         hosts = []
         #load the hosts file
-        p = os.path.join(setup_dir, 'hosts')
+        p = os.path.join(paths.setup_dir, 'hosts')
         if os.path.isfile(p):
             with open(p, 'r') as f:
                 hosts = [l.strip() for l in f if l.strip()]
@@ -80,7 +80,7 @@ class RemoteHardwareManager(Manager):
 
     def bootstrap(self):
         if self.enable_hardware_server:
-            if use_ipc:
+            if globalv.use_ipc:
                 for p in self.processors.itervalues():
                     p.manager = self
                     p.bootstrap()

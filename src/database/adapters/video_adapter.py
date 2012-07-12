@@ -21,7 +21,7 @@ from src.database.adapters.database_adapter import DatabaseAdapter, \
     PathDatabaseAdapter
 from src.database.orms.video_orm import VideoTable, VideoPathTable
 from src.database.selectors.video_selector import VideoSelector
-from src.helpers.paths import co2laser_db
+from src.paths import paths
 
 
 class VideoAdapter(PathDatabaseAdapter):
@@ -45,7 +45,7 @@ class VideoAdapter(PathDatabaseAdapter):
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('vid')
-    db = VideoAdapter(dbname=co2laser_db, kind='sqlite')
+    db = VideoAdapter(dbname=paths.co2laser_db, kind='sqlite')
     db.connect()
 
     dbs = VideoSelector(_db=db)

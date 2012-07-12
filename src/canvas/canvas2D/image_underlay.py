@@ -32,8 +32,8 @@ class ImageUnderlay(AbstractOverlay):
         '''
 
         '''
+        gc.save_state()
         try:
-            gc.save_state()
 
             data = self.image.get_array()
             #data should be a numpy ndarray

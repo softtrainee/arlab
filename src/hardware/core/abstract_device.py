@@ -24,15 +24,19 @@ from traitsui.api import View, Item
 #=============local library imports  ==========================
 #from src.config_loadable import ConfigLoadable
 from src.hardware.core.i_core_device import ICoreDevice
-from viewable_device import ViewableDevice
+#from viewable_device import ViewableDevice
+from src.has_communicator import HasCommunicator
+from src.rpc.rpcable import RPCable
+from src.hardware.core.scanable_device import ScanableDevice
 
 
-class AbstractDevice(ViewableDevice):
+class AbstractDevice(ScanableDevice, RPCable, HasCommunicator):
     '''
     '''
     implements(ICoreDevice)
 
     _cdevice = Any
+    _communicator = DelegatesTo('_cdevice')
 
     simulation = Property(depends_on='_cdevice')
 #    com_class = Property(depends_on='_cdevice')
@@ -51,6 +55,13 @@ class AbstractDevice(ViewableDevice):
     com_class = DelegatesTo('_cdevice')
     is_scanable = DelegatesTo('_cdevice')
 
+    def get_factory(self, package, klass):
+        try:
+            module = __import__(package, fromlist=[klass])
+            factory = getattr(module, klass)
+            return factory
+        except ImportError, e:
+            self.warning(e)
 
     def ask(self, cmd, **kw):
         '''
@@ -85,6 +96,7 @@ class AbstractDevice(ViewableDevice):
 
             if self.load_additional_args(config):
                 self._loaded = True
+                self._cdevice.load()
                 return True
 
 #===============================================================================

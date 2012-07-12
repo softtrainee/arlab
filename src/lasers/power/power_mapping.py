@@ -34,7 +34,7 @@ from src.database.data_warehouse import DataWarehouse
 from src.helpers.datetime_tools import generate_datestamp
 import random
 from src.graph.graph import Graph
-from src.helpers.paths import co2laser_db_root
+from src.paths import paths
 import os
 #from src.graph.graph3D import Graph3D
 
@@ -105,7 +105,7 @@ class PowerMapping(Loggable):
     def _load_data_manager(self):
         dm = H5DataManager()
 #        root = '/usr/local/pychron/powermaps'
-        dw = DataWarehouse(root=os.path.join(co2laser_db_root, 'power_map'))
+        dw = DataWarehouse(root=os.path.join(paths.co2laser_db_root, 'power_map'))
 #                           os.path.join(data_dir, base_dir))
         dw.build_warehouse()
         dm.new_frame(base_frame_name='powermap-{}'.format(generate_datestamp()),

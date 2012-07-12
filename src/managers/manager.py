@@ -25,10 +25,8 @@ import os
 from threading import Thread
 import time
 #=============local library imports  ==========================
-from src.config_loadable import ConfigLoadable
 from src.hardware import HW_PACKAGE_MAP
 from src.viewable import Viewable, ViewableHandler
-from src.helpers.paths import setup_dir
 from pyface.timer.do_later import do_after
 from src.rpc.rpcable import RPCable
 
@@ -87,6 +85,8 @@ class Manager(Viewable, RPCable):
     flags = List
 
     initialized = False
+
+    _mass_spec_params = None
 
     def __init__(self, *args, **kw):
         '''
@@ -244,10 +244,12 @@ class Manager(Viewable, RPCable):
         self.flags.append(TimedFlag(f, t))
 
     def get_mass_spec_param(self, name):
-
-        #open the mass spec parameters file
-        cp = self.configparser_factory()
-        cp.read(os.path.join(setup_dir, 'mass_spec_params.cfg'))
+        from src.paths import paths
+        cp = self._mass_spec_params
+        if cp is None:
+            #open the mass spec parameters file
+            cp = self.configparser_factory()
+            cp.read(os.path.join(paths.setup_dir, 'mass_spec_params.cfg'))
         try:
             v = cp.get('General', name)
             return MassSpecParam(v)
@@ -301,12 +303,13 @@ class Manager(Viewable, RPCable):
         return self._create_manager(klass, manager, params, **kw)
 
     def _create_manager(self, klass, manager, params,
-                        port=None, remote=False):
+                        port=None, host=None, remote=False):
         from src.managers import manager_package_dict
 
         if remote:
             klass = 'Remote{}'.format(klass)
             params['rpc_port'] = port
+            params['rpc_host'] = host
         try:
             package = manager_package_dict[klass]
             class_factory = self.get_manager_factory(package, klass)

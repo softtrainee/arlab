@@ -31,7 +31,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Float
+from traits.api import Any, Float, List
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.loggable import Loggable
@@ -42,5 +42,11 @@ class Detector(Loggable):
     image = Any(transient=True)
     working_image = Any(transient=True)
     pxpermm = Float(23.1)
+
+    _debug = False
+
+    use_all_permutations = False
+    permutations = List
+
 
 #============= EOF =============================================

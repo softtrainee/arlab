@@ -29,9 +29,7 @@ import ConfigParser
 from src.messaging.command_repeater import CommandRepeater
 from src.messaging.remote_command_server import RemoteCommandServer
 from src.managers.manager import Manager
-from src.helpers.paths import setup_dir
-from threading import Lock
-from src.helpers.parsers.initialization_parser import InitializationParser
+from src.paths import paths
 
 class RemoteHardwareServerManager(Manager):
     '''
@@ -67,7 +65,7 @@ class RemoteHardwareServerManager(Manager):
 
         config = ConfigParser.ConfigParser()
 
-        path = os.path.join(setup_dir, 'rhs.cfg')
+        path = os.path.join(paths.setup_dir, 'rhs.cfg')
         config.read(path)
 
         servernames = [s.strip() for s in self.config_get(config, 'General', 'servers').split(',')]

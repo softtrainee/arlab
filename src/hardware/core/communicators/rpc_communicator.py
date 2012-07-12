@@ -53,6 +53,7 @@ class RpcCommunicator(Communicator):
             from src.rpc.backends import XMLBackend
             bk = XMLBackend()
             bk.port = self.config_get(config, 'Communications', 'port')
+            bk.host = self.config_get(config, 'Communications', 'host')
 
         self._rpc_backend = bk
 

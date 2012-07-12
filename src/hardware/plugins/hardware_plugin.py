@@ -46,6 +46,7 @@ class HardwarePlugin(CorePlugin):
     managers = ExtensionPoint(List(Dict),
                               id='pychron.hardware.managers')
 
+    mans = List(contributes_to='pychron.hardware.managers')
     def _service_offers_default(self):
         '''
         '''
@@ -70,13 +71,14 @@ class HardwarePlugin(CorePlugin):
     def _remote_hardware_manager_factory(self):
         return RemoteHardwareManager(application=self.application)
 
+    def _mans_default(self):
+        return [dict(name='hardware', manager=self._hardware_manager_factory())]
 #    def _system_lock_manager_factory(self):
 #        return SystemLockManager(application=self.application)
 
     def start(self):
         '''
         '''
-        #print self.managers
         #if self.managers:
         from src.initializer import Initializer
         dp = DevicePreferences()

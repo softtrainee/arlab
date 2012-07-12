@@ -31,7 +31,6 @@ from src.helpers.datetime_tools import generate_datetimestamp
 from wait_dialog import WaitDialog
 from extraction_line_script_parser import ExtractionLineScriptParser
 #from src.scripts.analysis.analysis_script import AnalysisScript
-from src.helpers.paths import scripts_dir
 from src.scripts.measurement.measurement_script import MeasurementScript
 
 class Sniffer:

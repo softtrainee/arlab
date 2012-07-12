@@ -30,8 +30,8 @@ from envisage_script import EnvisageScript
 from script_validator import ScriptValidator
 from src.envisage.core.envisage_manager import EnvisageManager
 from src.envisage.core.envisage_editor import EnvisageEditor
-from src.helpers.paths import scripts_dir
-RUNSCRIPT_DIR = os.path.join(scripts_dir, 'runscripts')
+from src.paths import paths
+RUNSCRIPT_DIR = os.path.join(paths.scripts_dir, 'runscripts')
 
 class SEditor(EnvisageEditor):
     name = 'Script'

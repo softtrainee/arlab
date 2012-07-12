@@ -21,12 +21,13 @@ from pyface.message_dialog import warning
 import os
 import sys
 #============= local library imports  ==========================
-from src.helpers.paths import setup_dir
+from src.paths import paths
 
+lower = lambda x: x.lower() if x else None
 
 class InitializationParser(XMLParser):
     def __init__(self, *args, **kw):
-        p = os.path.join(setup_dir, 'initialization.xml')
+        p = os.path.join(paths.setup_dir, 'initialization.xml')
         if os.path.isfile(p):
             super(InitializationParser, self).__init__(p, *args, **kw)
         else:
@@ -61,10 +62,23 @@ class InitializationParser(XMLParser):
 #        cat = tree.find(category)
 #        if cat is not None:
 #            return cat.findall('plugin')
+    def get_global(self, tag):
 
-    def get_plugin_groups(self):
-        elem = self._tree.find('plugins')
-        return [t.tag for t in list(elem)]
+        elem = self._tree.find('globals')
+        if elem is not None:
+            g = elem.find(tag)
+            if g is not None:
+                return g.text.strip()
+
+    def get_plugin_groups(self, elem=False):
+        plugin = self._tree.find('plugins')
+        return [t if elem else t.tag for t in list(plugin)]
+
+    def get_plugin_group(self, name):
+        return next((p for p in self.get_plugin_groups(elem=True)
+                     if p.tag == name
+                     ), None)
+
 
     def get_groups(self):
         tree = self._tree
@@ -109,26 +123,30 @@ class InitializationParser(XMLParser):
     def get_timed_flags(self, manager, **kw):
         return self._get_paramaters(manager, 'timed_flag', **kw)
 
-    def get_rpc_mode_port(self, manager):
-
+    def get_rpc_params(self, manager):
         if isinstance(manager, tuple):
             manager = self.get_manager(*manager)
 
+        text = lambda x : x.text.strip() if x is not None else None
         try:
             rpc = manager.find('rpc')
             mode = rpc.get('mode')
-            return mode, int(rpc.find('port').text.strip())
+            port = text(rpc.find('port'))
+            host = text(rpc.find('host'))
+            return mode, host, int(port),
         except Exception, e:
             pass
 
-        return None, None
+        return None, None, None
 
     def get_device(self, manager, devname, plugin, element=False):
-
         if plugin is None:
             man = self.get_plugin(manager)
         else:
             man = self.get_manager(manager, plugin)
+
+        if man is None:
+            man = self.get_plugin_group(manager)
 
         dev = next((d for d in man.findall('device')
                     if d.text.strip() == devname), None)
@@ -150,8 +168,13 @@ class InitializationParser(XMLParser):
 #            pp = self.get_processor(p)
 #            if pp:
 #                ps.append(pp)
-        return [pi for pi in [self.get_processor(p)
+        pl = self.get_plugin_group('hardware')
+        ps = [pi for pi in [self.get_processor(p)
                     for p in self.get_plugins('hardware', element=True)] if pi]
+        nps = self._get_paramaters(pl, 'processor')
+        if nps:
+            ps += nps
+        return ps
 
     def get_server(self, manager, **kw):
         p = self._get_paramaters(manager, 'server', **kw)
@@ -159,20 +182,26 @@ class InitializationParser(XMLParser):
             return p[0]
 
     def get_servers(self):
-        return [pi for pi in [self.get_server(p)
+        servers = [pi for pi in [self.get_server(p)
                     for p in self.get_plugins('hardware', element=True)] if pi]
-
-
+        h = self.get_plugin_group('hardware')
+        if h is not None:
+            hs = self._get_paramaters(h, 'server')
+            if hs:
+                servers += hs
+        return servers
 
     def _get_paramaters(self, subtree, tag, all=False, element=False):
+
         return [d if element else d.text.strip()
                 for d in subtree.findall(tag)
-                    if all or d.get('enabled').lower() == 'true']
+                    if all or lower(d.get('enabled')) == 'true']
 
     def get_managers(self, elem, all=False, element=False):
+        lower = lambda x: x.lower() if x else None
         return [m if element else m.text.strip()
                 for m in elem.findall('manager')
-                               if all or m.get('enabled').lower() == 'true']
+                               if all or lower(m.get('enabled')) == 'true']
 
     def get_plugin(self, name, category=None):
         if '_' in name:

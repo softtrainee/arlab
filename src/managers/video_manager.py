@@ -32,13 +32,13 @@ from src.image.image_editor import ImageEditor
 #from src.data_processing.image.image_helper import load_image#, save_image, subsample
 #from src.data_processing.image.image_helper import crop as icrop
 
-#from src.helpers import paths
+#from src.paths import paths
 
 from manager import Manager
 from src.canvas.canvas2D.video_canvas import VideoCanvas
 from src.lasers.stage_managers.video_component_editor import VideoComponentEditor
 from src.helpers.filetools import unique_path
-from src.helpers.paths import snapshot_dir, data_dir, video_dir
+from src.paths import paths
 import os
 import time
 from threading import Thread
@@ -104,7 +104,7 @@ class VideoManager(Manager):
             if use_dialog:
                 path = self.save_file_dialog()
             else:
-                path, _ = unique_path(video_dir, 'vm_recording', filetype='avi')
+                path, _ = unique_path(paths.video_dir, 'vm_recording', filetype='avi')
 
         self.info('saving recording to path {}'.format(path))
 

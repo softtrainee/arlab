@@ -26,7 +26,7 @@ from pyface.constant import OK
 #============= standard library imports =======================
 
 #============= local library imports  =========================
-from src.helpers.paths import root_dir
+from src.paths import paths
 from src.hardware.axis import Axis
 from src.loggable import Loggable
 
@@ -70,7 +70,7 @@ class ResultsReport(Loggable):
     axis = Axis
 
     def _save_fired(self):
-        dlg = FileDialog(default_directory=root_dir,
+        dlg = FileDialog(default_directory=paths.root_dir,
                          action='save as'
                          )
         if dlg.open() == OK:

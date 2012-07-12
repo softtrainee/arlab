@@ -32,6 +32,7 @@ class SampleHole(Circle, InfoObject):
     hole = None
     def _render_(self, gc):
         super(SampleHole, self)._render_(gc)
+
         gc.save_state()
         x, y = self.get_xy()
         hid = self.hole.id
@@ -47,7 +48,7 @@ class StageVisualizationCanvas(MarkupCanvas):
 #    use_zoom = False
 #    show_grids=True
     def build_map(self, sm, calibration=None):
-        sm.load_correction_file()
+#        sm.load_correction_file()
 
         cpos = 0, 0
         rot = 0

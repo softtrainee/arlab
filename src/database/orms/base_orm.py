@@ -29,6 +29,11 @@ class BaseMixin(object):
 
     id = Column(Integer, primary_key=True)
 
+
+class NameMixin(BaseMixin):
+    name = Column(String(80))
+
+
 class ResultsMixin(BaseMixin):
     runtime = Column(Time)
     rundate = Column(Date)

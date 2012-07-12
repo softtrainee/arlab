@@ -22,13 +22,13 @@ import apptools.sweet_pickle as pickle
 import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.paths import hidden_dir
+from src.paths import paths
 from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem, \
     CalibrationObject
 from threading import Thread
 
-PICKLE_PATH = p = os.path.join(hidden_dir, '{}_stage_calibration')
+PICKLE_PATH = p = os.path.join(paths.hidden_dir, '{}_stage_calibration')
 PYCHRON_HELP = '''1. Drag red circle to desired center position
 2. Drag white circle to define tray rotation
 Hit Accept to finish, Cancel to cancel

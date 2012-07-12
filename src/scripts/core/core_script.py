@@ -236,10 +236,10 @@ class CoreScript(Loggable):
             if self._pre_run_():
                 self._alive = True
 
+                self.info('setting progress to {}'.format('inpr'))
+                self.progress_state = 'inprogress'
                 for i, line in enumerate(self._file_contents_):
-                    self.info('setting progress to {}'.format('inpr'))
                     self.active_line = i
-                    self.progress_state = 'inprogress'
                     if self.isAlive():
                         self._run_command(i, line)
                         self.progress_state = 'finished'

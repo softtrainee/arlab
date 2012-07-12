@@ -24,7 +24,7 @@ from traitsui.editors.tabular_editor import TabularEditor
 from src.helpers.filetools import parse_file
 from pyface.api import FileDialog, OK
 import os
-from src.helpers.paths import scripts_dir
+from src.paths import paths
 
 #============= standard library imports ========================
 
@@ -134,7 +134,7 @@ class HeatSchedule(HasTraits):
 
     def _load_button_fired(self):
 
-        d = os.path.join(scripts_dir, 'laserscripts', 'heat_schedules')
+        d = os.path.join(paths.scripts_dir, 'laserscripts', 'heat_schedules')
         dlg = FileDialog(action='open',
                          default_directory=d)
         if dlg.open() == OK:

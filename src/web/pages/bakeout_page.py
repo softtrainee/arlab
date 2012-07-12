@@ -22,14 +22,14 @@ from twisted.web.resource import Resource
 import os, csv
 from src.helpers.datetime_tools import diff_timestamp
 from src.web.charts.annotated_timeline_chart import annotated_timeline
-from src.helpers.paths import data_dir
+from src.paths import paths
 #============= local library imports  ==========================
 import cgi
 
 class BakeoutPage(Resource):
 #    isLeaf = True
     def get_datafile(self):
-        base = os.path.join(data_dir, 'bakeouts')
+        base = os.path.join(paths.data_dir, 'bakeouts')
         p = os.listdir(base)[-1]
         return os.path.join(base, p), p
 

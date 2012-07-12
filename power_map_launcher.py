@@ -23,7 +23,7 @@ import os
 
 #============= local library imports  ==========================
 from src.data_processing.power_mapping.power_map_viewer import PowerMapViewer
-from src.helpers import paths
+from src.paths import paths
 
 if __name__ == '__main__':
     p = PowerMapViewer()

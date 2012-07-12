@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import List
 from envisage.ui.workbench.api import WorkbenchApplication
@@ -23,8 +21,8 @@ from pyface.api import AboutDialog, SplashScreen
 from pyface.image_resource import ImageResource
 #from traits.api import List, on_trait_change
 #============= standard library imports ========================
-import os
-from src.helpers.paths import pychron_src_root
+from os import path
+
 #from envisage.ui.tasks.tasks_application import TasksApplication
 #============= local library imports  ==========================
 class Pychron(WorkbenchApplication):
@@ -43,9 +41,9 @@ class Pychron(WorkbenchApplication):
         return about_dialog
 
     def _splash_screen_default(self):
-
-        p = os.path.join(
-                         pychron_src_root,
+        from src.paths import paths
+        p = path.join(
+                         paths.pychron_src_root,
                        'resources'
                        )
         sp = SplashScreen(

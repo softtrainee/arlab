@@ -19,7 +19,7 @@ from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 import os
 import shlex
-from src.helpers.paths import setup_dir, scripts_dir
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -131,7 +131,7 @@ def main():
 if __name__ == '__main__':
     rt = '/Users/ross/Sandbox/runscripts'
     out = '/Users/ross/Sandbox/runscripts/out'
-    out = os.path.join(scripts_dir, 'ms_runscripts')
+    out = os.path.join(paths.scripts_dir, 'ms_runscripts')
     name = 'Quick Air x1'
 
     for root, dirs, files in os.walk(rt):

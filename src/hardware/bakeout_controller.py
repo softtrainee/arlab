@@ -26,7 +26,7 @@ from src.helpers.timer import Timer
 from src.scripts.bakeout_script import BakeoutScript
 from src.led.led import LED, ButtonLED
 from src.led.led_editor import LEDEditor
-from src.helpers import paths
+from src.paths import paths
 from watlow_ezzone import WatlowEZZone
 
 

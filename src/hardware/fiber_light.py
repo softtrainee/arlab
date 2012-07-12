@@ -46,12 +46,12 @@ class FiberLight(AbstractDevice):
         self._cdevice = None
         if klass is not None:
             package = 'src.hardware.arduino.arduino_fiber_light_module'
-            module = __import__(package, fromlist=[klass])
-            factory = getattr(module, klass)
+            factory = self.get_factory(package, klass)
             self._cdevice = factory(name=klass,
                                   configuration_dir_name=self.configuration_dir_name
                                   )
-            self._cdevice.load()
+    #        self._cdevice.load()
+
             return True
 
     def initialize(self, *args, **kw):

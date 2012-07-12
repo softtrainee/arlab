@@ -49,7 +49,8 @@ class Client(HasTraits):
     #host = Str('192.168.0.65')
 #    host = Str('129.138.12.145')
     host = 'localhost'
-    kind = Enum('UDP', 'TCP')
+    path = None
+    kind = Enum('IPC', 'UDP', 'TCP')
 
     period = Float(100)
     periodic = Event
@@ -67,6 +68,8 @@ class Client(HasTraits):
 
     test_command = ''
     test_response = ''
+
+    _sock = None
     def _get_calculated_duration(self):
         return self.period / 1000. * self.n_periods / 3600.
 
@@ -114,8 +117,12 @@ class Client(HasTraits):
 
     def _send(self, sock=None):
         if sock is None:
-            #open connection
-            sock = self.get_connection()
+            sock = self._sock
+            if sock is None:
+                #open connection
+                sock = self.get_connection()
+
+
         #send command
         sock.send(self.command)
         self.response = sock.recv(1024)
@@ -133,6 +140,11 @@ class Client(HasTraits):
 #        print 'connection address', addr
         if self.kind == 'UDP':
             packet_kind = socket.SOCK_DGRAM
+
+        elif self.kind == 'IPC':
+            packet_kind = socket.SOCK_STREAM
+            family = socket.AF_UNIX
+            addr = self.path
 
         sock = socket.socket(family, packet_kind)
         sock.settimeout(5)
@@ -286,9 +298,24 @@ def diode_client():
                ask_id='D')
     c.configure_traits()
 
-def laser_client():
+def co2_client():
     c = Client(
+
                port=1067,
+               ask_id='E')
+    c.configure_traits()
+def system_client():
+    c = Client(
+               host='129.138.12.141',
+               port=1061,
+               ask_id='E')
+    c.configure_traits()
+
+def local_client():
+    c = Client(
+               path='/tmp/hardware-argus',
+#               host=socket.gethostbyname(socket.gethostname()),
+#               port=8900,
                ask_id='E')
     c.configure_traits()
 
@@ -337,8 +364,10 @@ def mass_spec_param_test():
     c.ask('Read pump_time')
 
 if __name__ == '__main__':
+    local_client()
 #    diode_client()
-    power_test()
+#	system_client()
+    #power_test()
     #plothist('benchmark_unix_only.npz')
 #    benchmark('main()', 'from __main__ import main',
 #              'benchmark_unix_tcp_no_log.npz'

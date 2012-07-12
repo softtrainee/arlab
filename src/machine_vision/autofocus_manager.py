@@ -30,7 +30,7 @@ from src.image.cvwrapper import grayspace, get_focus_measure, crop, resize
 from scipy.ndimage.measurements import variance
 from scipy.ndimage.filters import generic_gradient_magnitude, sobel
 from scipy.ndimage import sum as ndsum
-from src.helpers.paths import hidden_dir
+from src.paths import paths
 from src.managers.manager import Manager
 from src.image.image import Image
 from src.machine_vision.focus_parameters import FocusParameters
@@ -73,13 +73,13 @@ class AutofocusManager(Manager):
     graph = None
 
     def dump_parameters(self):
-        p = os.path.join(hidden_dir, 'autofocus_configure')
+        p = os.path.join(paths.hidden_dir, 'autofocus_configure')
         self.info('dumping parameters to {}'.format(p))
         with open(p, 'wb') as f:
             pickle.dump(self.parameters, f)
 
     def load_parameter(self):
-        p = os.path.join(hidden_dir, 'autofocus_configure')
+        p = os.path.join(paths.hidden_dir, 'autofocus_configure')
         if os.path.isfile(p):
             with open(p, 'rb') as f:
                 try:

@@ -26,7 +26,7 @@ from threading import Event as TEvent
 from threading import Thread
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.paths import hidden_dir, data_dir
+from src.paths import paths
 import os
 import time
 from src.graph.graph import Graph
@@ -166,7 +166,7 @@ class PowerCalibrationManager(Manager):
             dw.build_warehouse()
             directory = dw.get_current_dir()
         else:
-            directory = os.path.join(data_dir, 'power_calibration')
+            directory = os.path.join(paths.data_dir, 'power_calibration')
 
         _dn = dm.new_frame(directory=directory,
                 base_frame_name='power_calibration')
@@ -175,7 +175,7 @@ class PowerCalibrationManager(Manager):
         callback = lambda p, r, t: self._write_data(p, r, t)
         self._stop_signal = TEvent()
         self._iterate(self.parameters,
-                      self.graph,
+                      self.graph, True,
                       callback, table)
 
         self._calculate_calibration()
@@ -187,7 +187,7 @@ class PowerCalibrationManager(Manager):
             self._apply_calibration()
 
     def _iterate(self, params, graph,
-                 calibration, callback, *args):
+                 is_calibrating, callback, *args):
         pstop = params.pstop
         pstep = params.pstep
         pstart = params.pstart
@@ -221,8 +221,8 @@ class PowerCalibrationManager(Manager):
             self.info('setting power to {}'.format(pi))
             time.sleep(sample_delay)
             if self.parent is not None:
-                self.parent.set_laser_power(pi, calibration=calibration)
-                if not calibration:
+                self.parent.set_laser_power(pi, use_calibration=not is_calibrating)
+                if not is_calibrating:
                     pi = self.parent._calibrated_power
 
                 rp = 0
@@ -260,7 +260,7 @@ class PowerCalibrationManager(Manager):
 
 
     def _get_parameters_path(self, name):
-        p = os.path.join(hidden_dir, 'power_calibration_{}'.format(name))
+        p = os.path.join(paths.hidden_dir, 'power_calibration_{}'.format(name))
         return p
 
     def _load_parameters(self, p):
@@ -286,7 +286,7 @@ class PowerCalibrationManager(Manager):
 
     def _dump_calibration(self, pc):
         name = self.parent.name if self.parent else 'foo'
-        p = os.path.join(hidden_dir, '{}_power_calibration'.format(name))
+        p = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(name))
         self.info('saving power calibration to {}'.format(p))
         try:
             with open(p, 'wb') as f:

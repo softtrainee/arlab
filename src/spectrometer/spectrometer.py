@@ -37,7 +37,7 @@ from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS, MOLECULAR_WEIG
 from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.graph.regression_graph import RegressionGraph
-from src.helpers.paths import data_dir
+from src.paths import paths
 import os
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.helpers.filetools import unique_dir
@@ -147,7 +147,7 @@ class Spectrometer(SpectrometerDevice):
         rgraph.new_plot()
         rgraph.new_series(yer=[])
 
-        root_dir = unique_dir(os.path.join(data_dir, 'magfield'), '{}_def_calibration'.format(self.reference_detector))
+        root_dir = unique_dir(os.path.join(paths.data_dir, 'magfield'), '{}_def_calibration'.format(self.reference_detector))
 #        if not os.path.exists(root_dir):
 #            os.mkdir(root_dir)
 

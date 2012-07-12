@@ -32,22 +32,28 @@ class MessagingHandler(BaseRequestHandler):
         if data is not None:
             if self._verbose:
                 self.server.info('Received: %s' % data.strip())
-            response = self.server.get_response(self.server.processor_type, data, self.client_address[0])
+
+            try:
+                addr = self.client_address[0]
+            except IndexError:
+                addr = self.client_address
+
+            response = self.server.get_response(self.server.processor_type, data, addr)
 
             if response is not None:
                 self.send_packet(response)
 
-#            if 'ERROR 6' in response:
-#                self.server.increment_repeater_fails()
+            if 'ERROR 6' in response:
+                self.server.increment_repeater_fails()
 #            
             if self._verbose:
                 self.server.info('Sent: %s' % response.strip())
 
-#            self.server.parent.cur_rpacket = data
-#            self.server.parent.cur_spacket = response
+            self.server.parent.cur_rpacket = data
+            self.server.parent.cur_spacket = response
 
-#            self.server.increment_packets_received()
-#            self.server.increment_packets_sent()
+            self.server.increment_packets_received()
+            self.server.increment_packets_sent()
 
     def get_packet(self):
         '''

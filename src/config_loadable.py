@@ -16,7 +16,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from src.helpers import paths
+from src.paths import paths
 from loggable import Loggable
 #============= standard library imports ========================
 import os
@@ -118,6 +118,9 @@ class ConfigLoadable(Loggable):
 
         '''
 
+        return True
+
+    def load_additional_args(self, *args, **kw):
         return True
 
     def _load_hook(self, config):
