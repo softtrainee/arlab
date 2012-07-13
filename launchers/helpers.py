@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,31 @@
 # limitations under the License.
 #===============================================================================
 
+#============= enthought library imports =======================
+#============= standard library imports ========================
+import os
+import sys
+#============= local library imports  ==========================
+
+def build_version(ver):
+    #insert pychron src dir into sys.path
+    build_sys_path(ver)
+
+    #can now use src. 
+    #build the global path structure
+    from src.paths import paths
+    paths.build(ver)
+
+    #build globals
+    build_globals()
+
+def build_sys_path(ver):
+    merc = os.path.join(os.path.expanduser('~'),
+                        'Programming',
+                        'mercurial')
+    src = os.path.join(merc, 'pychron{}'.format(ver))
+    sys.path.insert(0, src)
+
 def build_globals():
     from src.helpers.parsers.initialization_parser import InitializationParser
     ip = InitializationParser()
@@ -22,7 +47,8 @@ def build_globals():
 #    use_ipc = ip.get_global('use_ipc')
     boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
     for attr, func in [('use_ipc', boolfunc),
-                        ('mode', str)]:
+                        #('mode', str)
+                        ]:
         a = ip.get_global(attr)
         if a:
             setattr(globalv, attr, func(a))
@@ -33,4 +59,4 @@ def build_globals():
 #    use_ipc = ip.get_global('use_ipc')
 #    if use_ipc:
 #        globalv.use_ipc = True if use_ipc in ['True', 'true', 'T', 't'] else False
-
+#============= EOF =============================================

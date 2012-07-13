@@ -22,10 +22,35 @@ import os
 import sys
 #============= local library imports  ==========================
 from src.paths import paths
+import inspect
 
 lower = lambda x: x.lower() if x else None
 
+def handle_uncaught_exception(func):
+    def _handle(*args, **kw):
+        try:
+            return func(*args, **kw)
+        except Exception, e:
+            warning(None, 'There is a problem in your initialization file {}'.format(e))
+            sys.exit()
+
+    return _handle
+
+def decorate_all(cls):
+    for name, m in inspect.getmembers(cls, inspect.ismethod):
+        setattr(cls, name, handle_uncaught_exception(m))
+    return cls
+
+
+@decorate_all
 class InitializationParser(XMLParser):
+    '''
+    @todo: catch exceptions
+    
+    add a exception_handler decorator
+    '''
+
+
     def __init__(self, *args, **kw):
         p = os.path.join(paths.setup_dir, 'initialization.xml')
         if os.path.isfile(p):
@@ -63,7 +88,6 @@ class InitializationParser(XMLParser):
 #        if cat is not None:
 #            return cat.findall('plugin')
     def get_global(self, tag):
-
         elem = self._tree.find('globals')
         if elem is not None:
             g = elem.find(tag)

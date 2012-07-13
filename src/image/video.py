@@ -52,7 +52,7 @@ class Video(Image):
         self.height = 480
         if self.cap is None or force:
 
-            if globalv.mode == 'test':
+            if globalv.test:
                 self.cap = 1
             else:
                 #ideally an identifier is passed in 
@@ -102,7 +102,7 @@ class Video(Image):
         if cap is not None:
 #            if lock:
             with self._lock:
-                if globalv.mode == 'test':
+                if globalv.test:
                     if self.source_frame is None:
                         p = path.join(paths.test_dir, 'pos_err_test.jpg')
                         self.load(p)

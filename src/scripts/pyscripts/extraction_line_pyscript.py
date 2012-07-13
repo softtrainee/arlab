@@ -21,7 +21,7 @@ from traits.api import Any
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.scripts.pyscripts.pyscript import PyScript
+from src.scripts.pyscripts.pyscript import PyScript, verbose_skip
 HTML_HELP = '''
 <tr>
     <td>open</td>
@@ -36,6 +36,7 @@ HTML_HELP = '''
     <td>close('B')</td>
 </tr>
 '''
+
 
 
 class ExtractionLinePyScript(PyScript):
@@ -57,8 +58,8 @@ class ExtractionLinePyScript(PyScript):
     def _get_help_hook(self):
         return HTML_HELP
 
-    def _get_commands(self):
-        cmds = super(ExtractionLinePyScript, self)._get_commands()
+    def get_commands(self):
+        cmds = super(ExtractionLinePyScript, self).get_commands()
         cmds += [('open', '_m_open'), 'close',
                  'acquire', 'release',
 
@@ -99,26 +100,28 @@ class ExtractionLinePyScript(PyScript):
         self.sleep(duration)
         self._manager_action('disable_laser', manager=man_protocol)
 
-
+    @verbose_skip
     def _m_open(self, vname):
-        if self._syntax_checking or self._cancel:
-            return
+#        if self._syntax_checking or self._cancel:
+#            return
 
         self.info('opening {}'.format(vname))
 
         self._manager_action('open_valve', None, description=vname, mode='script')
 
+    @verbose_skip
     def close(self, vname):
-        if self._syntax_checking or self._cancel:
-            return
+#        if self._syntax_checking or self._cancel:
+#            return
 
         self.info('closing {}'.format(vname))
         self._manager_action('close_valve', None, description=vname, mode='script')
 
+    @verbose_skip
     def acquire(self, resource):
 
-        if self._syntax_checking or self._cancel:
-            return
+#        if self._syntax_checking or self._cancel:
+#            return
 
         if self.runner is None:
             return
@@ -142,9 +145,10 @@ class ExtractionLinePyScript(PyScript):
             r.set()
             self.info('{} acquired'.format(resource))
 
+    @verbose_skip
     def release(self, resource):
-        if self._syntax_checking or self._cancel:
-            return
+#        if self._syntax_checking or self._cancel:
+#            return
 
         self.info('release {}'.format(resource))
         r = self.runner.get_resource(resource)

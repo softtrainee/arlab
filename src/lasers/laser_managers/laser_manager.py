@@ -101,15 +101,13 @@ class LaserManager(Manager):
 #    def _get_optional_window_labels_hook(self):
 #        pass
 
-    @on_trait_change('stage_manager:canvas:current_position')
-    def update_status_bar(self, obj, name, old, new):
-        if isinstance(new, tuple):
-            self.status_text = 'x = {:n} ({:0.4f} mm), y = {:n} ({:0.4f} mm)'.format(*new)
+#    @on_trait_change('stage_manager:canvas:current_position')
+#    def update_status_bar(self, obj, name, old, new):
+#        if isinstance(new, tuple):
+#            self.status_text = 'x = {:n} ({:0.4f} mm), y = {:n} ({:0.4f} mm)'.format(*new)
 
     def get_pulse_manager(self):
         return self.pulse
-
-
 
     def get_power_map_manager(self):
         from src.lasers.power.power_map_manager import PowerMapManager
@@ -398,7 +396,7 @@ class LaserManager(Manager):
                     height=self.window_height,
                     x=self.window_x,
                     y=self.window_y,
-                    statusbar='status_text'
+#                    statusbar='status_text'
                     )
 #===============================================================================
 # factories

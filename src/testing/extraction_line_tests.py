@@ -33,6 +33,16 @@ class ExtractionLineTests(TestCase):
     def testAA_GetExtractionLineManager(self):
         self.assertNotEqual(self._elm, None)
 
+#===============================================================================
+# B Group
+#===============================================================================
+    def testBA_OpenValve(self):
+        r = self._elm.open_valve('B', mode='test')
+        self.assertTrue(r)
+
+    def testBB_CloseValve(self):
+        r = self._elm.close_valve('B', mode='test')
+        self.assertTrue(r)
 
 
 #============= EOF =============================================

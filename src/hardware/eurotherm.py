@@ -54,6 +54,7 @@ class Eurotherm(CoreDevice):
     _setpoint = Float
     setpoint_min = 0
     setpoint_max = 1800
+    use_pid_table = False
 
     def _get_process_setpoint(self):
         '''
@@ -64,15 +65,16 @@ class Eurotherm(CoreDevice):
         '''
            
         '''
-        self.set_process_setpoint(v)
+        if v is not None:
+            self.set_process_setpoint(v)
 
     def _validate_process_setpoint(self, v):
         '''
         '''
         try:
-            v = float(v)
+            float(v)
         except ValueError:
-            return self._setpoint
+            pass
 
         if self.setpoint_min <= v < self.setpoint_max:
             return v
@@ -200,7 +202,7 @@ class Eurotherm(CoreDevice):
         '''
 
         '''
-        if v:
+        if v and self.use_pid_table:
             self.set_pid_parameters(v)
 
         cmd = 'SL'
@@ -220,7 +222,7 @@ class Eurotherm(CoreDevice):
             self._setpoint
             return True
 
-    def get_process_value(self):
+    def get_process_value(self, **kw):
         '''
         '''
         cmd = 'PV'
@@ -228,7 +230,7 @@ class Eurotherm(CoreDevice):
         builder = getattr(self, '{}_build_query'.format(self.protocol))
 
         resp = self.ask(builder(cmd),
-                        verbose=False
+                        **kw
                         )
 
         parser = getattr(self, '{}_parse_response'.format(self.protocol))

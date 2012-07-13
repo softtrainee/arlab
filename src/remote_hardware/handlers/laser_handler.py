@@ -19,7 +19,7 @@
 from threading import Thread
 #============= local library imports  ==========================
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
-from src.remote_hardware.errors.system_errors import InvalidArgumentsErrorCode
+from src.remote_hardware.errors import InvalidArgumentsErrorCode
 #from dummies import DummyLM
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
     EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode

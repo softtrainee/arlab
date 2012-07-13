@@ -21,9 +21,10 @@ from unittest import TestCase
 
 #============= local library imports  ==========================
 from src.lasers.power.power_calibration_manager import PowerCalibrationObject
+from src.paths import paths
 
 
-class BaseLaserTests(TestCase):
+class LaserTests(TestCase):
     '''
          tests are run in alphabetically order 
          
@@ -75,7 +76,7 @@ class BaseLaserTests(TestCase):
         sc = self._stage_controller
         sm._move_to_hole('3')
 
-        p1 = -12.035103242609356, 8.5679304729336643
+        p1 = -2.6038057076590397, 14.773280852875153
         self.assertPositionEqual(p1, map(sc.get_current_position, ('x', 'y')))
 
     def testBE_ClearCorrections(self):
@@ -149,6 +150,32 @@ class BaseLaserTests(TestCase):
         self.assertAlmostEqual(p1[1], p2[1])
 
 
+class CO2Tests(LaserTests):
+    def setUp(self):
+        from src.envisage.run import app
+        self.app = app
 
+        dp = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
+        self._laser = app.get_service(dp)
+        self._stage = self._laser.stage_manager
+        self._stage_controller = self._stage.stage_controller
+
+        self._power_calibration_path = os.path.join(paths.test_dir, 'co2_test_power_calibration')
+        self._power_calibration_coeffs = [2, 5]
+        self._calibrated_power = 2.5
+
+class DiodeTests(LaserTests):
+    def setUp(self):
+        from src.envisage.run import app
+        self.app = app
+
+        dp = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
+        self._laser = app.get_service(dp)
+        self._stage = self._laser.stage_manager
+        self._stage_controller = self._stage.stage_controller
+
+        self._power_calibration_path = os.path.join(paths.test_dir, 'diode_test_power_calibration')
+        self._power_calibration_coeffs = [2, 5]
+        self._calibrated_power = 2.5
 
 #============= EOF =============================================
