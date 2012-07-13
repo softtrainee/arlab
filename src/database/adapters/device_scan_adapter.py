@@ -23,6 +23,7 @@ from src.database.adapters.database_adapter import PathDatabaseAdapter
 from src.database.selectors.device_scan_selector import DeviceScanSelector
 from src.database.orms.device_scan_orm import ScanTable, DeviceTable, \
     ScanPathTable
+from src.database.adapters.functions import get_one, delete_one
 
 class DeviceScanAdapter(PathDatabaseAdapter):
     test_func = None
@@ -32,11 +33,20 @@ class DeviceScanAdapter(PathDatabaseAdapter):
 #    getters
 #==============================================================================
 
-    def get_scans(self, **kw):
-        return self._get_items(ScanTable, globals(), **kw)
+
+    @get_one
+    def get_device(self, name):
+        return DeviceTable
+
+    @get_one
+    def get_scan(self, sid):
+        return (DeviceTable, 'id')
 
     def get_devices(self, **kw):
         return self._get_items(DeviceTable, globals(), **kw)
+
+    def get_scans(self, **kw):
+        return self._get_items(ScanTable, globals(), **kw)
 #=============================================================================
 #   adder
 #=============================================================================
@@ -45,9 +55,12 @@ class DeviceScanAdapter(PathDatabaseAdapter):
         b = self._add_timestamped_item(ScanTable, commit, **kw)
 
         if isinstance(device, str):
-            device = self.get_device()
+            device = self.get_device(device)
 
         device.scans.append(b)
+        if commit:
+            self.commit()
+
         return b
 #
     def add_device(self, name, unique=True, commit=False, **kw):
@@ -67,6 +80,26 @@ class DeviceScanAdapter(PathDatabaseAdapter):
             self._add_item(c, commit)
 
         return c
+
+
+    @delete_one
+    def delete_device(self, name):
+#        sess = self.get_session()
+#        q = sess.query(DeviceTable).filter(DeviceTable.name == name)
+#        try:
+#            dev = q.one()
+#
+#            sess.delete(dev)
+#            if commit:
+#                sess.commit()
+#
+#        except Exception, e:
+#            print e
+        return DeviceTable
+
+    @delete_one
+    def delete_scan(self, sid):
+        return ScanTable, 'id'
 
 
 if __name__ == '__main__':

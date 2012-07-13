@@ -21,15 +21,12 @@ from traits.api import Any, List
 from traitsui.basic_editor_factory import BasicEditorFactory
 
 #=============standard library imports ========================
-from wx import ClientDC, \
-     BLACK_PEN
+from wx import EVT_IDLE
 #=============local library imports  ==========================
-from ctypes_opencv import cvCreateImage, cvGetSize
 from image_editor import _ImageEditor
 
 class _VideoEditor(_ImageEditor):
     '''
-        G{classtree}
     '''
 
     #storage = Any
@@ -53,24 +50,31 @@ class _VideoEditor(_ImageEditor):
 
 
 #            return out
+    def _set_bindings(self, panel):
+        super(VideoEditor, self)._set_bindings(panel)
+        panel.Bind(EVT_IDLE, self.onIdle)
+
+    def onIdle(self, event):
+        self._draw_(event)
+        event.RequestMore()
 
     def _draw(self, src):
         '''
             @type src: C{str}
             @param src:
         '''
-        dc = ClientDC(self.control)
-        self._display_image(dc, src)
+#        dc = ClientDC(self.control)
+        self._display_image(src)
         #if self.mouse_x and self.mouse_y:
         #    self._display_crosshair(dc,self.mouse_x,self.mouse_y)
 
 
-        size = dc.GetSize()
-        w = size.width / 2.0
-        h = size.height / 2.0
+#        size = dc.GetSize()
+#        w = size.width / 2.0
+#        h = size.height / 2.0
 
-        self._display_crosshair(dc, w, h, BLACK_PEN)
-        self._display_points(dc, self.points)
+#        self._display_crosshair(dc, w, h, BLACK_PEN)
+#        self._display_points(dc, self.points)
 
 class VideoEditor(BasicEditorFactory):
     '''

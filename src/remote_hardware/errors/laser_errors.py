@@ -14,37 +14,36 @@
 # limitations under the License.
 #===============================================================================
 
+from error import ErrorCode, code_generator, get_code_decorator
 
+code_gen = code_generator(2, start=1)
+def generate_code(*args):
+    return get_code_decorator(code_gen)
 
-from error import ErrorCode
-
-
+@generate_code
 class LogicBoardCommErrorCode(ErrorCode):
     msg = 'Failed communication with logic board'
-    code = 101
 
-
+@generate_code
 class EnableErrorCode(ErrorCode):
     msg = 'Laser failed to enable {}'
-    code = 102
 
     def __init__(self, reason, *args, **kw):
         self.msg = self.msg.format(reason)
         super(EnableErrorCode, self).__init__(*args, **kw)
 
-
+@generate_code
 class DisableErrorCode(ErrorCode):
     msg = 'Laser failed to disable {}'
-    code = 103
 
     def __init__(self, reason, *args, **kw):
         self.msg = self.msg.format(reason)
         super(EnableErrorCode, self).__init__(*args, **kw)
 
-
+@generate_code
 class InvalidSampleHolderErrorCode(ErrorCode):
     msg = 'Invalid sample holder. {}'
-    code = 104
+
     def __init__(self, sh, *args, **kw):
         self.msg = self.msg.format(sh)
         super(InvalidSampleHolderErrorCode, self).__init__(*args, **kw)

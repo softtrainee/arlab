@@ -72,7 +72,7 @@ class Alarm(HasTraits):
 class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
     '''
     '''
-    graph_klass = TimeSeriesStreamGraph
+#    graph_klass = TimeSeriesStreamGraph
 
     implements(ICoreDevice)
     name = Str
@@ -81,13 +81,11 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
 
     current_scan_value = 0
 
-    time_dict = dict(ms=1, s=1000, m=60.0 * 1000, h=60.0 * 60.0 * 1000)
     application = Any
 
     _no_response_counter = 0
     alarms = List(Alarm)
 
-    data_manager = None
     dm_kind = Enum('h5', 'csv')
     use_db = Bool(False)
     _auto_started = False
@@ -223,6 +221,20 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
                 break
 
         return resp
+
+#===============================================================================
+# scanable interface
+#===============================================================================
+    def _scan_hook(self, v):
+        for a in self.alarms:
+            if a.test_condition(v):
+                alarm_msg = a.get_message(v)
+                self.warning(alarm_msg)
+                manager = self.application.get_service('src.social.twitter_manager.TwitterManager')
+                if manager is not None:
+                    manager.post(alarm_msg)
+                break
+
 
 ##===============================================================================
 ## streamin interface

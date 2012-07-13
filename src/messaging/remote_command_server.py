@@ -149,7 +149,7 @@ class RemoteCommandServer(ConfigLoadable):
 
                 self.loaded_host = host
                 self.loaded_port = port
-#            self.klass = server_class[:3]
+            self.klass = server_class[:3]
 
             ds = None
             if config.has_option('Requests', 'datasize'):

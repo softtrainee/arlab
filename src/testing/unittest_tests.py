@@ -15,25 +15,22 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+
 #============= standard library imports ========================
-import os
-
 #============= local library imports  ==========================
+#need to build the global paths structure
 from src.paths import paths
-from src.testing.base_laser_tests import BaseLaserTests
+paths.build('_test')
+
+#from laser_tests import DiodeTests, CO2Tests
+#from extraction_line_tests import ExtractionLineTests
+#from remote_extraction_line_tests import RemoteExtractionLineTests
+#from remote_laser_tests import RemoteDiodeTests, RemoteCO2Tests
 
 
-class CO2Tests(BaseLaserTests):
-    def setUp(self):
-        from src.envisage.run import app
-        self.app = app
 
-        dp = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
-        self._laser = app.get_service(dp)
-        self._stage = self._laser.stage_manager
-        self._stage_controller = self._stage.stage_controller
 
-        self._power_calibration_path = os.path.join(paths.test_dir, 'co2_test_power_calibration')
-        self._power_calibration_coeffs = [2, 5]
-        self._calibrated_power = 2.5
+#from device_scan_db_tests import DeviceScanDBTests
+from isotope_db_tests import IsotopeDBTests
+
 #============= EOF =============================================

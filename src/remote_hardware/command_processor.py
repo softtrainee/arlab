@@ -26,14 +26,17 @@ import select
 from src.config_loadable import ConfigLoadable
 from src.remote_hardware.errors.error import ErrorCode
 from src.remote_hardware.context import ContextFilter
-from src.remote_hardware.errors.system_errors import SystemLockErrorCode, \
-    SecurityErrorCode, HMACSecurityErrorCode
+from src.remote_hardware.errors import SystemLockErrorCode, \
+    SecurityErrorCode
 from globals import globalv
 BUFSIZE = 2048
 
 def end_request(fn):
     def end(obj, rtype, data, sender, sock=None):
         data = fn(obj, rtype, data, sender)
+        if isinstance(data, ErrorCode):
+            data = str(data)
+
         if globalv.use_ipc:
             #self.debug('Result: {}'.format(data))
 #            if isinstance(data, ErrorCode):
@@ -47,11 +50,12 @@ def end_request(fn):
             except Exception, err:
                 obj.debug('End Request Exception: {}'.format(err))
         else:
-            if not isinstance(data, ErrorCode) and data:
-                data = data.split('|')[-1]
+            return data
+#            if not isinstance(data, ErrorCode) and data:
+#                data = data.split('|')[-1]
 #            else:
 #                print data
-            return data
+#            return str(data)
 
     return end
 
@@ -128,7 +132,6 @@ class CommandProcessor(ConfigLoadable):
         '''
         if not globalv.use_ipc:
             return True
-
 
         kind = socket.SOCK_STREAM
         if globalv.ipc_dgram:
@@ -261,6 +264,7 @@ class CommandProcessor(ConfigLoadable):
     @end_request
     def _process_request(self, request_type, data, sender_addr, sock=None):
         #self.debug('Request: {}, {}'.format(request_type, data.strip()))
+
         try:
 
             auth_err = self._authenticate(data, sender_addr)

@@ -22,14 +22,17 @@ import shlex
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from error_handler import ErrorHandler
-from threading import Lock
+
 
 from dummies import DummyDevice, DummyLM
-from src.remote_hardware.errors.system_errors import DeviceConnectionErrorCode
+from src.remote_hardware.errors import DeviceConnectionErrorCode
 
 DIODE_PROTOCOL = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
 CO2_PROTOCOL = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
 SYNRAD_PROTOCOL = 'src.lasers.laser_managers.synrad_co2_manager.SynradCO2Manager'
+
+cnt = 0
+gErrorSet = False
 
 class BaseRemoteHardwareHandler(Loggable):
     application = Any
@@ -52,12 +55,6 @@ class BaseRemoteHardwareHandler(Loggable):
         args = data.split(' ')
         return args[0], ' '.join(args[1:])
 
-    def PychronReady(self, *args, **kw):
-        return 'OK'
-
-#    def RemoteLaunch(self, *args, **kw):
-#        return False
-
     def handle(self, data, sender_addr, lock):
         with lock:
             eh = self.error_handler
@@ -79,7 +76,7 @@ class BaseRemoteHardwareHandler(Loggable):
                     if err is None:
                         return response
 
-        return err
+        return str(err)
 
     def get_manager(self):
         return
@@ -131,10 +128,13 @@ class BaseRemoteHardwareHandler(Loggable):
 
         return lm
 
-    def Set(self, manager, dname, value, sender_address, *args):
+    def GetError(self, manager, *args):
+        return manager.get_error()
+
+    def Set(self, manager, dname, value, *args):
         d = self.get_device(dname)
         if d is not None:
-            self.info('Set {} to {}'.format(d.name, 
+            self.info('Set {} to {}'.format(d.name,
                                             value))
             result = d.set(value)
         else:
@@ -142,7 +142,7 @@ class BaseRemoteHardwareHandler(Loggable):
 
         return result
 
-    def Read(self, manager, dname, sender_address, *args):
+    def Read(self, manager, dname, *args):
         d = self.get_device(dname)
         if d is not None:
             result = d.get()
@@ -150,4 +150,36 @@ class BaseRemoteHardwareHandler(Loggable):
         else:
             result = DeviceConnectionErrorCode(dname, logger=self)
         return result
+
+    def PychronReady(self, *args, **kw):
+        return 'OK'
+
+#    def RemoteLaunch(self, *args, **kw):
+#        return False
+
+#===============================================================================
+# ##testing interface
+#===============================================================================
+
+    def ReadTest(self, *args, **kw):
+        global cnt
+        global gErrorSet
+        cnt += 1
+        r = cnt
+        if cnt > 11:
+            cnt = 0
+
+        if gErrorSet:
+            cnt = 0
+            gErrorSet = False
+            r = 'Error 501 : Global error set'
+        return r
+
+    def SendTest(self, *args, **kw):
+        return 'OK'
+
+    def Watch(self):
+        global gErrorSet
+        gErrorSet = True
+        return 'OK'
 #============= EOF ====================================

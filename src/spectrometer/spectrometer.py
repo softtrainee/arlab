@@ -105,6 +105,13 @@ class Spectrometer(SpectrometerDevice):
     _alive = False
 
     peak_center_graph = None
+    def set_parameter(self, name, v):
+
+        cmd = '{} {}'.format(name, v)
+
+
+
+        self.microcontroller.ask(cmd)
 
     def deflection_calibration(self):
         self.info('Deflection Calibration')
@@ -236,7 +243,7 @@ class Spectrometer(SpectrometerDevice):
             cur = self.source.read_hv()
         return self.source.nominal_hv / cur
 
-    def set_magnet_position(self, v, dac=None):
+    def set_magnet_position(self, v, dac=None, detector=None):
         #get the detector we are aiming for
 #        _target_det = self._detectors[self.reference_detector]
 #        get position relative to axial

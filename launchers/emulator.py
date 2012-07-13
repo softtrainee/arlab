@@ -14,16 +14,11 @@
 # limitations under the License.
 #===============================================================================
 
-import sys
 import os
-version_id = '_beta'
-p = os.path.join(os.path.expanduser('~'),
-                 'Programming', 'mercurial', 'pychron{}'.format(version_id))
 
-sys.path.insert(0, p)
-
-from src.paths import paths
-paths.build(version_id)
+version_id = '_test'
+from helpers import build_version
+build_version(version_id)
 
 #============= enthought library imports =======================
 from traits.api import Int, Bool, Event, Property
@@ -32,60 +27,22 @@ from traitsui.api import View, Item, ButtonEditor
 import SocketServer
 import shlex
 import socket
-import select
 from threading import Thread
 #============= local library imports  ==========================
 
+cnt = 0
+gErrorSet = False
 
 from src.loggable import Loggable
 
 class UDPVerboseServer(SocketServer.UDPServer):
     logger = None
 
-class IPCVerboseServer(SocketServer.UnixStreamServer):
+class TCPVerboseServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
     logger = None
 
-#    def info(self, *args, **kw):
-#        if self.logger:
-#            self.logger.info(*args, **kw)
-class LinkServer(object):
-    def start_server(self, path):
-        print 'Link Starting server {}'.format(path)
-        server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        server.bind(path)
-        server.listen(5)
-        input = [server, sys.stdin]
-        running = 1
-        c = LinkHandler()
-        while running:
-            inputready, _outputready, _exceptready = select.select(input, [], [])
-            for s in inputready:
-
-                if s == server:
-                    # handle the server socket
-                    client, _address = server.accept()
-                    input.append(client)
-
-                elif s == sys.stdin:
-                    # handle standard input
-                    _junk = sys.stdin.readline()
-                    running = 0
-
-                else:
-                    # handle all other sockets
-
-                    c.request = s
-                    data = c.handle()
-                    if data:
-                        try:
-                            s.send(data)
-                        except socket.error:
-                            pass
-                    else:
-                        s.close()
-                        input.remove(s)
-        server.close()
-
+class IPCVerboseServer(SocketServer.ThreadingMixIn, SocketServer.UnixStreamServer):
+    logger = None
 
 class Server(Loggable):
     port = Int(8000)
@@ -117,9 +74,10 @@ class Server(Loggable):
 
     def _serve(self, host, port):
 #        self.server = server = SocketServer.UDPServer((host, port), EmulatorHandler)
-#        server = UDPVerboseServer((host, port), EmulatorHandler)
+        server = TCPVerboseServer((host, port), EmulatorHandler)
 #        server = IPCVerboseServer(host, EmulatorHandler)
-        server = IPCVerboseServer(host, EmulatorHandler)
+#        server = IPCVerboseServer(host, EmulatorHandler)
+#        server = IPCVerboseServer(host, EmulatorHandler)
 #        server = LinkServer()
         server.info = self.info
         #server.allow_reuse_address = True
@@ -142,25 +100,32 @@ class Server(Loggable):
 def verbose(func):
     def _verbose(obj, *args, **kw):
         result = func(obj, *args, **kw)
-        obj.server.info('Func={} args={}'.format(func.__name__,
+
+        obj.logger.info('Func={} args={}'.format(func.__name__,
                                   ','.join(map(str, args))
                                   ))
         return result
 
     return _verbose
-
+#
+def verbose_all(cls):
+    import inspect
+    for name, m in inspect.getmembers(cls, inspect.ismethod):
+        if name.startswith('handle'):
+            setattr(cls, name, verbose(m))
+    return cls
+#
+@verbose_all
 class QtegraEmulator(Loggable):
     #===========================================================================
     # Qtegra Protocol    
     #===========================================================================
-    @verbose
-    def SetMass(self, mass):
+    def handleSetMass(self, mass):
         mass = float(mass)
 #        print 'setting mass %f' % mass
         return 'OK'
 
-    @verbose
-    def GetData(self, *args):
+    def handleGetData(self, *args):
         d = [
             [36, 0.01, 1.5],
             [37, 0.1, 1.5],
@@ -170,55 +135,142 @@ class QtegraEmulator(Loggable):
             ]
         return '\n'.join([','.join(map('{:0.3f}'.format, r)) for r in d])
 
-#    @verbose
 #    def GetDataNow(self, *args):
 ##        print 'get data now'
 #        return self.GetData(*args)
 
-    @verbose
-    def GetCupConfigurations(self, *args):
+    def handleGetCupConfigurations(self, *args):
 #        print 'get cup configurations'
         return ','.join(['Argon'])
 
-    @verbose
-    def GetSubCupConfigurations(self, cup_name):
+    def handleGetSubCupConfigurations(self, cup_name):
 #        print 'get sub cup configurations for %s' % cup_name
         return ','.join(['A', 'B', 'C', 'X'])
 
-    @verbose
-    def ActivateCupConfiguration(self, names):
+    def handleActivateCupConfiguration(self, names):
         cup_name, sub_cup_name = names.split(',')
         return 'OK'
 
-    @verbose
-    def SetIntegrationTime(self, itime):
+    def handleSetIntegrationTime(self, itime):
         return 'OK'
 
-    @verbose
-    def GetTuneSettings(self, *args):
+    def handleGetTuneSettings(self, *args):
         return ','.join(['TuneA', 'TuneB', 'TuneC', 'TuneD'])
 
-    @verbose
-    def SetTuning(self, name):
+    def handleSetTuning(self, name):
         return 'OK'
 
-    @verbose
-    def GetHighVoltage(self, *args):
+    def handlePychronReady(self):
+        global cnt
+        cnt = 0
+        return 'OK'
+
+    def handleGetHighVoltage(self, *args):
         return '4500'
+    def handleSetHighVoltage(self, *args):
+        return 'OK'
 
-class LinkHandler(QtegraEmulator):
-    request = None
-    def handle(self):
-        new_line = lambda x: '{}\n\r'.format(x)
-        #udp
-#        data = self.request[0].strip()
+    def handleSetTrapVoltage(self, *args):
+        return 'OK'
+    def handleGetTrapVoltage(self, *args):
+        return 10
 
-        #ipc
-        print 'handle'
-        print self.request.recv(1024)
-        self.request.sendall(new_line('OK'))
+    def handleGetIonCounterVoltage(self, *args):
+        return 10
+    def handleSetIonCounterVoltage(self, *args):
+        return 'OK'
 
-class EmulatorHandler(SocketServer.BaseRequestHandler, QtegraEmulator):
+    def handleGetIonRepeller(self, *args):
+        return 10
+    def handleSetIonRepeller(self, *args):
+        return 'OK'
+
+    def handleGetDeflection(self, *args):
+        return 10
+    def handleSetDeflection(self, *args):
+        return 'OK'
+
+    def handleGetZSymmetry(self, *args):
+        return 10
+    def handleSetZSymmetry(self, *args):
+        return 'OK'
+
+    def handleGetYSymmetry(self, *args):
+        return 10
+    def handleSetYSymmetry(self, *args):
+        return 'OK'
+
+    def handleGetExtractionLens(self, *args):
+        return 10
+    def handleSetExtractionLens(self, *args):
+        return 'OK'
+
+    def handleGetZFocus(self, *args):
+        return 10
+    def handleSetZFocus(self, *args):
+        return 'OK'
+
+    def handleGetElectronEnergy(self, *args):
+        return 10
+    def handleSetElectronEnergy(self, *args):
+        return 'OK'
+
+    def handleGetMagnetDAC(self, *args):
+        return 10
+    def handleSetMagnetDAC(self, *args):
+        return 'OK'
+
+    def handleBlankBeam(self, *args):
+        return 'OK'
+
+    def handleReadTest(self, *args):
+        global cnt
+        cnt += 1
+        r = cnt
+        if cnt > 11:
+            cnt = 0
+        return str(r)
+
+    def handleSendTest(self, *args):
+        return "OK"
+
+    def handleWatch(self, *args):
+        global gErrorSet
+        gErrorSet = True
+
+@verbose_all
+class LaserEmulator(Loggable):
+    def handlePychronReady(self):
+        return 'OK'
+    def handleSetLaserPower(self, p):
+        return 'OK'
+    def handleEnableLaser(self):
+        return 'OK'
+    def handleDisableLaser(self):
+        return 'OK'
+
+@verbose_all
+class ExtractionLineEmulator(Loggable):
+    def handleOpen(self, name):
+        return 'OK'
+    def handleClose(self, name):
+        return 'OK'
+
+    def handleGetValveStates(self):
+        keys = 'ABCDEF'
+        states = ('1',) * len(keys)
+        return ''.join(['{}{}'.format(*a) for a in zip(keys, states)])
+
+    def handleGetValveLockStates(self):
+        print 'geting lock staes'
+        keys = 'ABCDEF'
+        states = ('0',) * len(keys)
+        return ''.join(['{}{}'.format(*a) for a in zip(keys, states)])
+
+    def handleGetError(self):
+        return '103 testerror'
+
+class EmulatorHandler(SocketServer.BaseRequestHandler):
 
     #===========================================================================
     # BaseRequestHandler protocol
@@ -226,54 +278,74 @@ class EmulatorHandler(SocketServer.BaseRequestHandler, QtegraEmulator):
 #    def __init__(self, *args, **kw):
 #        super(EmulatorHandler, self).__init__(*args, **kw)
 #        QtegraEmulator.__init__(self, **kw)
-
+    def __init__(self, *args):
+        self._qtegra_em = QtegraEmulator()
+        self._el_em = ExtractionLineEmulator()
+        self._laser_em = LaserEmulator()
+        SocketServer.BaseRequestHandler.__init__(self, *args)
 
     def handle(self):
         new_line = lambda x: '{}\n\r'.format(x)
-        #udp
-#        data = self.request[0].strip()
 
-        #ipc
-        print 'handle'
-        print self.request.recv(1024)
-        self.request.sendall(new_line('OK'))
-#        data = self.request.recv(2 ** 8)
-#        print data
-#        data = data.strip()
-#        if ':' in data:
-#            datargs = data.split(':')
-#        else:
-#            datargs = shlex.split(data)
-#
-#        try:
-#            cmd = datargs[0]
-#            args = tuple(datargs[1:])
-#            try:
-#                func = getattr(self, cmd)
-#                try:
-#                    result = str(func(*args))
-#                except TypeError:
-#                    result = 'Error: Invalid parameters %s passed to %s' % (args, cmd)
-#            except AttributeError:
-#                result = 'Error: Command %s not available' % cmd
-#        except IndexError:
-#            result = 'Error: poorly formatted command %s' % data
+        data = self.request.recv(2 ** 8)
 
-#        self.server.info('received ({}) - {}, {}'.format(len(data), data, result))
+        data = data.strip()
+        if ':' in data:
+            datargs = data.split(':')
+        else:
+            datargs = shlex.split(data)
+        try:
+            cmd = datargs[0]
+
+
+            try:
+                args = tuple(datargs[1:])
+            except IndexError:
+                args = tuple()
+
+            try:
+                func = None
+                for name in ['qtegra', 'el', 'laser']:
+                    obj = getattr(self, '_{}_em'.format(name))
+                    try:
+                        func = getattr(obj, 'handle{}'.format(cmd))
+                        break
+                    except AttributeError, e:
+                        continue
+                else:
+                    result = 'Error: Command {} not available'.format(cmd)
+                if func:
+                    try:
+                        result = str(func(*args))
+                    except TypeError:
+                        result = 'Error: Invalid parameters %s passed to %s' % (args, cmd)
+            except AttributeError:
+                result = 'Error: Command %s not available' % cmd
+        except IndexError:
+            result = 'Error: poorly formatted command {}'.format(data)
+
+        global gErrorSet
 #        self.request.send('OK' + '\n\r')
-#        self.request[1].sendto(result + '\n', self.client_address)
+        if gErrorSet:
+            result = 'error: 101'
+            gErrorSet = False
+
+        self.server.info('received ({}) - {}, {}'.format(len(data), data, result))
+        self.request.sendall(new_line(result))
+        self.server.info('sent {}'.format(result))
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('emulator')
 
-    p = '/tmp/hardware-argus'
-    if os.path.exists(p):
-        os.remove(p)
+#    p = '/tmp/hardware-argus'
+#    if os.path.exists(p):
+#        os.remove(p)
 
-    s = Server(host=p)
+#    s = Server(host=p)
 #    s = Server(host='192.168.0.253')
+    s = Server(host='localhost')
 
     s.start_server()
     s.configure_traits()
@@ -357,3 +429,15 @@ if __name__ == '__main__':
 #            result = 'Error: poorly formatted command %s' % data
 #
 #        return result
+#class LinkHandler(QtegraEmulator):
+#    request = None
+#    def handle(self):
+#        new_line = lambda x: '{}\n\r'.format(x)
+#        #udp
+##        data = self.request[0].strip()
+#
+#        #ipc
+#        print 'handle'
+#        print self.request.recv(1024)
+#        self.request.sendall(new_line('OK'))
+

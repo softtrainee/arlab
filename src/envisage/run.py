@@ -162,13 +162,14 @@ def app_factory():
 
 
 app = None
-def launch(test):
+def launch():
     '''
     '''
 
     global app
     app = app_factory()
-    if test:
+
+    if globalv.test:
 
         def start_test():
             #run the test suite

@@ -150,9 +150,9 @@ class CO2HoleDetector(HoleDetector):
         ntests = 1
         for convextest, sharpen, smooth, contrast in test:
             params = self._process_image(src, im, cx, cy, holenum, holedim,
-                                 smooth=smooth,
+#                                 smooth=smooth,
                                  contrast=contrast,
-                                 sharpen=sharpen,
+#                                 sharpen=sharpen,
                                  convextest=convextest
                                  )
             if self.use_all_permutations:
@@ -311,10 +311,11 @@ convextest={}'.format(seg, smooth, contrast, sharpen, convextest))
 
     def _get_corrected_position(self, args, cx, cy, holenum, holedim):
         mi = holedim ** 2 * 3.14 * 0.75
+        ma = holedim ** 2 * 3.14 * 1.25
         if args is None:
             return
 
-        targets = [t for t in args if t.area > mi]
+        targets = [t for t in args if ma > t.area > mi]
 
         #use only targets that are close to cx,cy
         targets = [t for t in targets

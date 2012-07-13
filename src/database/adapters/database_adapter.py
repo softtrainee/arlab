@@ -231,15 +231,28 @@ class DatabaseAdapter(Loggable):
         if commit:
             sess.commit()
 
-    def _add_timestamped_item(self, klass, commit, **kw):
+    def _add_unique(self, item, attr, name):
+        #test if already exists 
+
+        if getattr(self, 'get_{}'.format(attr))(name) is None:
+            self.info('adding {}= {}'.format(attr, name))
+            return item
+        else:
+            self.info('{}= {} already exists'.format(attr, name))
+
+    def _get_datetime_keywords(self, kw):
         d = get_datetime()
+        kw['rundate'] = d.date()
+        kw['runtime'] = d.time()
+        return kw
+
+    def _add_timestamped_item(self, klass, commit=False, **kw):
 
 #        args = dict(rundate=str(d.date()),
 #                    runtime=str(d.time()))
 #        args = dict(rundate=d.date(),
 #                    runtime=d.time())
-        kw['rundate'] = d.date()
-        kw['runtime'] = d.time()
+        kw = self._get_datetime_keywords(kw)
         obj = klass(**kw)
         self._add_item(obj, commit)
         return obj

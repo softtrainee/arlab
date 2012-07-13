@@ -18,67 +18,17 @@
 from src.database.adapters.database_adapter import DatabaseAdapter
 from src.paths import paths
 from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
-    MaterialTable, AnalysisTable, AnalysisPathTable
+    MaterialTable, AnalysisTable, AnalysisPathTable, LabTable
 import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
+from src.database.adapters.functions import add, sql_retrieve, get_one, \
+    delete_one
 #from src.database.adapters.adapter_decorators import add, get_one, commit
 #from sqlalchemy.sql.expression import or_
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-def add(func):
-    def _add(obj, *args, **kw):
 
-        kwargs = kw.copy()
-        for key in ['unique', 'commit']:
-            try:
-                kwargs.pop(key)
-            except KeyError:
-                pass
-
-        sess = obj.get_session()
-        if sess:
-            dbr = func(obj, *args, **kwargs)
-            if dbr:
-                sess.add(dbr)
-
-                try:
-                    if kw['commit']:
-                        sess.commit()
-                except KeyError:
-                    pass
-
-        return dbr
-
-    return _add
-
-
-def get_one(func):
-    def _get_one(obj, name, *args, **kw):
-
-        params = func(obj, name, *args, **kw)
-        if isinstance(params, tuple):
-            table, attr = params
-        else:
-            table = params
-            attr = 'name'
-
-        sess = obj.get_session()
-        q = sess.query(table)
-        q = q.filter(getattr(table, attr) == name)
-
-        try:
-            return q.one()
-        except sqlalchemy.exc.SQLAlchemyError:
-            pass
-
-    return _get_one
-
-def sql_retrieve(func):
-    try:
-        return func()
-    except sqlalchemy.exc.SQLAlchemyError, e:
-        print e
 
 
 class IsotopeAdapter(DatabaseAdapter):
@@ -94,12 +44,12 @@ class IsotopeAdapter(DatabaseAdapter):
     @add
     def add_project(self, name, **kw):
         proj = ProjectTable(name=name, **kw)
-        return self._simple_add(proj, 'project', name)
+        return self._add_unique(proj, 'project', name)
 
     @add
     def add_material(self, name, **kw):
         mat = MaterialTable(name=name, **kw)
-        self._simple_add(mat, 'material', name)
+        return self._add_unique(mat, 'material', name)
 
     @add
     def add_user(self, name, project=None, **kw):
@@ -121,7 +71,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
             return user
 
-        self.info('user={} project={} already exists'.format(name, project.name))
+        self.info('user={} project={} already exists'.format(name, project.name if project else 'None'))
 
     @add
     def add_sample(self, name, project=None, material=None, **kw):
@@ -149,11 +99,34 @@ class IsotopeAdapter(DatabaseAdapter):
 
             return sample
 
-        self.info('sample={} material={} project={} already exists'.format(name, material.name, project.name))
+
+        self.info('sample={} material={} project={} already exists'.format(name,
+                                                                           material.name if material else 'None',
+                                                                           project.name if project else 'None'
+                                                                           ))
+    @add
+    def add_labnumber(self, labnumber, sample=None, **kw):
+        ln = LabTable(labnumber=labnumber, **kw)
+
+        if isinstance(sample, str):
+            sample = self.get_sample(sample)
+
+        ln = self._add_unique(ln, 'labnumber', labnumber)
+        if sample is not None and ln is not None:
+            sample.labnumbers.append(ln)
+
+        return ln
 
     @add
-    def add_analysis(self, rundate, runtime, **kw):
-        anal = AnalysisTable(rundate=rundate, runtime=runtime, **kw)
+    def add_analysis(self, labnumber, **kw):
+        if isinstance(labnumber, (str, int)):
+            labnumber = self.get_labnumber(labnumber)
+
+        kw = self._get_datetime_keywords(kw)
+        anal = AnalysisTable(**kw)
+        if labnumber is not None:
+            labnumber.analyses.append(anal)
+
         return anal
 
     @add
@@ -162,33 +135,30 @@ class IsotopeAdapter(DatabaseAdapter):
         anal_path = AnalysisPathTable(**kw)
         if isinstance(analysis, (str, int, long)):
             analysis = self.get_analysis(analysis)
-
+#
         if analysis is not None:
             analysis.path = anal_path
-
             return anal_path
-        else:
-            self.warning('invalid analysis id {}. could not add analysis path'.format(analysis.id))
 
-    @add
-    def add_irradiation_chronology(self, irradiations, **kw):
-        '''
-            blob the chronology
-            
-            
-            irradiations = [(start, stop),...]
-             
-        '''
-    def add_irradiation_production(self, name, **kw):
-        item = None
-        self._simple_add(item, 'irradiation_production', name)
+#    @add
+#    def add_irradiation_chronology(self, irradiations, **kw):
+#        '''
+#            blob the chronology
+#            
+#            
+#            irradiations = [(start, stop),...]
+#             
+#        '''
+#    def add_irradiation_production(self, name, **kw):
+#        item = None
+#        self._add_unique(item, 'irradiation_production', name)
 
-    #===========================================================================
-    # getters
-    #===========================================================================
+#===========================================================================
+# getters single
+#===========================================================================
     @get_one
     def get_analysis(self, rid):
-        return AnalysisTable
+        return AnalysisTable, 'lab_id'
 
     @get_one
     def get_project(self, name):
@@ -201,6 +171,51 @@ class IsotopeAdapter(DatabaseAdapter):
     @get_one
     def get_sample(self, name):
         return SampleTable
+
+    @get_one
+    def get_labnumber(self, name):
+        return LabTable, 'labnumber'
+
+#===============================================================================
+# ##getters multiple
+#===============================================================================
+    def get_users(self, **kw):
+        return self._get_items(UserTable, globals(), **kw)
+
+    def get_projects(self, **kw):
+        return self._get_items(ProjectTable, globals(), **kw)
+
+    def get_materials(self, **kw):
+        return self._get_items(MaterialTable, globals(), **kw)
+
+    def get_samples(self, **kw):
+        return self._get_items(SampleTable, globals(), **kw)
+
+    def get_labnumbers(self, **kw):
+        return self._get_items(LabTable, globals(), **kw)
+#===============================================================================
+# deleters
+#===============================================================================
+    @delete_one
+    def delete_user(self, name):
+        return UserTable
+
+    @delete_one
+    def delete_project(self, name):
+        return ProjectTable
+
+    @delete_one
+    def delete_material(self, name):
+        return MaterialTable
+
+    @delete_one
+    def delete_sample(self, name):
+        return SampleTable
+
+    @delete_one
+    def delete_labnumber(self, name):
+        return LabTable, 'labnumber'
+
 
     def _build_query_and(self, table, name, jtable, attr, q=None):
         '''
@@ -222,17 +237,16 @@ class IsotopeAdapter(DatabaseAdapter):
             q = q.join(jtable)
             andclause += (jtable.name == attr.name,)
 
-        q = q.filter(and_(*andclause))
+        if len(andclause) > 1:
+            q = q.filter(and_(*andclause))
+
+        elif len(andclause) == 1:
+            q = q.filter(andclause[0])
+
         return q
 
-    def _simple_add(self, item, attr, name):
-        #test if already exists 
-        #add decorator will no add if return None
-        if getattr(self, 'get_{}'.format(attr))(name) is None:
-            self.info('adding {}= {}'.format(attr, name))
-            return item
-        else:
-            self.info('{}= {} already exists'.format(attr, name))
+
+
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

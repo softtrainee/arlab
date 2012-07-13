@@ -19,10 +19,17 @@
 #=============enthought library imports=======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.remote_hardware.errors.error import ErrorCode
+from error import ErrorCode, code_generator, get_code_decorator
+
+code_gen = code_generator(0, start=1)
+
+def generate_code(*args):
+    return get_code_decorator(code_gen)(*args)
+
+
+@generate_code
 class PyScriptErrorCode(ErrorCode):
     msg = 'invalid pyscript {} does not exist'
-    code = 14
 
     def __init__(self, path, *args, **kw):
         self.msg = self.msg.format(path)
@@ -30,43 +37,43 @@ class PyScriptErrorCode(ErrorCode):
 
 
 #===== debug errors =====
+@generate_code
 class FuncCallErrorCode(ErrorCode):
     msg = 'func call problem: err= {} args= {}'
     def __init__(self, err, data, *args, **kw):
         self.msg = self.msg.format(err, data)
         super(FuncCallErrorCode, self).__init__(*args, **kw)
 
-
+@generate_code
 class InvalidCommandErrorCode(ErrorCode):
     msg = 'invalid command: {}'
-    code = 1
 
     def __init__(self, command, *args, **kw):
         self.msg = self.msg.format(command)
         super(InvalidCommandErrorCode, self).__init__(*args, **kw)
 
 
+@generate_code
 class InvalidArgumentsErrorCode(ErrorCode):
     msg = 'invalid arguments: {} {}'
-    code = 2
 
     def __init__(self, command, err, *args, **kw):
         self.msg = self.msg.format(command, err)
         super(InvalidArgumentsErrorCode, self).__init__(*args, **kw)
 
 
+@generate_code
 class InvalidValveErrorCode(ErrorCode):
     msg = '{} is not a registered valve name'
-    code = 3
 
     def __init__(self, name, *args, **kw):
         self.msg = self.msg.format(name)
         super(InvalidValveErrorCode, self).__init__(*args, **kw)
 
 
+@generate_code
 class InvalidValveGroupErrorCode(ErrorCode):
     msg = 'Invalid valve group - {}'
-    code = 14
 
     def __init__(self, name, *args, **kw):
         self.msg = self.msg.format(name)
@@ -74,27 +81,27 @@ class InvalidValveGroupErrorCode(ErrorCode):
 
 
 #====== initialization problems with pychron    
+@generate_code
 class ManagerUnavaliableErrorCode(ErrorCode):
     msg = 'manager unavaliable: {}'
-    code = 4
 
     def __init__(self, manager, *args, **kw):
         self.msg = self.msg.format(manager)
         super(ManagerUnavaliableErrorCode, self).__init__(*args, **kw)
 
 
+@generate_code
 class DeviceConnectionErrorCode(ErrorCode):
     msg = 'device {} not connected'
-    code = 5
 
     def __init__(self, name, *args, **kw):
         self.msg = self.msg.format(name)
         super(DeviceConnectionErrorCode, self).__init__(*args, **kw)
 
 
+@generate_code
 class InvalidIPAddressErrorCode(ErrorCode):
     msg = '{} is not a registered ip address'
-    code = 6
 
     def __init__(self, ip, *args, **kw):
         self.msg = self.msg.format(ip)
@@ -102,58 +109,58 @@ class InvalidIPAddressErrorCode(ErrorCode):
 
 
 #===== comm errors =====        
+@generate_code
 class NoResponseErrorCode(ErrorCode):
     msg = 'no response from device'
-    code = 11
 
 
+@generate_code
 class PychronCommErrorCode(ErrorCode):
     msg = 'could not communicate with pychron through {}. socket.error = {}'
-    code = 12
 
     def __init__(self, path, err, *args, **kw):
         self.msg = self.msg.format(path, err)
         super(PychronCommErrorCode, self).__init__(*args, **kw)
 
 #===== security =====
+@generate_code
 class SystemLockErrorCode(ErrorCode):
     msg = 'Access restricted to {} ({}). You are {}'
-    code = 13
 
     def __init__(self, name, locker, sender, *args, **kw):
         self.msg = self.msg.format(name, locker, sender)
         super(SystemLockErrorCode, self).__init__(*args, **kw)
 
+@generate_code
 class SecurityErrorCode(ErrorCode):
     msg = 'Not an approved ip address {}'
-    code = 14
+
     def __init__(self, addr, *args, **kw):
         self.msg = self.msg.format(addr)
         super(SecurityErrorCode, self).__init__(*args, **kw)
 
-class HMACSecurityErrorCode(ErrorCode):
-    msg = 'Computer {} was not authenticated. Invalid HMAC certificate'
-    code = 14
-    def __init__(self, addr, *args, **kw):
-        self.msg = self.msg.format(addr)
-        super(HMACSecurityErrorCode, self).__init__(*args, **kw)
-
 #======= runtime errors ------
+@generate_code
 class ValveSoftwareLockErrorCode(ErrorCode):
     msg = 'Valve {} is software locked'
-    code = 14
 
     def __init__(self, name, *args, **kw):
         self.msg = self.msg.format(name)
         super(ValveSoftwareLockErrorCode, self).__init__(*args, **kw)
 
-
+@generate_code
 class ValveActuationErrorCode(ErrorCode):
     msg = 'Valve {} failed to actuate {}'
-    code = 14
 
     def __init__(self, name, action, *args, **kw):
         self.msg = self.msg.format(name, action)
         super(ValveActuationErrorCode, self).__init__(*args, **kw)
 
+#@generate_code
+#class HMACSecurityErrorCode(ErrorCode):
+#    msg = 'Computer {} was not authenticated. Invalid HMAC certificate'
+#    code = 000
+#    def __init__(self, addr, *args, **kw):
+#        self.msg = self.msg.format(addr)
+#        super(HMACSecurityErrorCode, self).__init__(*args, **kw)
 #============= EOF =====================================

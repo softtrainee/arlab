@@ -88,6 +88,9 @@ class Manager(Viewable, RPCable):
 
     _mass_spec_params = None
 
+    _error_code = None
+
+
     def __init__(self, *args, **kw):
         '''
 
@@ -188,6 +191,20 @@ class Manager(Viewable, RPCable):
         '''
         return self._file_dialog_('save as', **kw)
 
+    def get_error(self):
+        e = self._error_code if self._error_code else ' '
+        self._error_code = None
+        return e
+
+    def _set_error_code(self, e):
+        self._error_code = e
+
+    def _get_error_code(self):
+        return self._error_code
+
+    error_code = property(fget=_get_error_code,
+                         fset=_set_error_code
+                        )
     def get_managers(self):
 
         return [(ma, getattr(self, ma)) for ma in self.traits()

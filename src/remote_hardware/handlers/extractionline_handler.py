@@ -19,7 +19,7 @@
 #============= standard library imports ========================
 from threading import Thread
 #============= local library imports  ==========================
-from src.remote_hardware.errors.system_errors import  InvalidArgumentsErrorCode, InvalidValveErrorCode, \
+from src.remote_hardware.errors import  InvalidArgumentsErrorCode, InvalidValveErrorCode, \
     InvalidIPAddressErrorCode, InvalidValveGroupErrorCode, \
     ValveSoftwareLockErrorCode, ValveActuationErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
@@ -270,7 +270,4 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
         return 'OK'
 
 
-if __name__ == '__main__':
-    v = SystemHandler()
-    v.RemoteLaunch()
 #============= EOF ====================================

@@ -20,15 +20,34 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+def code_generator(grp, start=0, step=1):
+    i = start
+    while 1:
+        yield '{}{:02n}'.format(grp, i)
+        i += step
+
+
+def get_code_decorator(code_gen):
+    def decorator(cls):
+        if cls.code is None:
+            cls.code = code_gen.next()
+        return cls
+    return decorator
 
 class ErrorCode(object):
     msg = ''
     code = None
-
-    def __init__(self, logger=None):
+    description = ''
+    def __init__(self, logger=None, *args, **kw):
         if logger is not None:
             logger.debug(self.msg)
 
     def __str__(self):
+        return self.get_str()
+
+    def get_str(self):
+
         return 'ERROR {} : {}'.format(self.code, self.msg)
+
+
 #============= EOF =====================================
