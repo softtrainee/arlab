@@ -17,12 +17,29 @@
 #=============enthought library imports=======================
 from traits.api import  Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, Enum
 from traitsui.api import View, Item
+from chaco.api import AbstractOverlay
+
 #=============standard library imports ========================
 import math
 #=============local library imports  ==========================
 from src.canvas.canvas2D.map_canvas import MapCanvas
 from src.canvas.canvas2D.markup.markup_items import PointIndicator
 
+from kiva import constants
+class BoundsOverlay(AbstractOverlay):
+    def overlay(self, component, gc, *args, **kw):
+        gc.save_state()
+        (x1, y1), (x2, y2) = component.map_screen([(-25, -25), (25, 25)])
+        w = abs(x1 - x2)
+        h = abs(y1 - y2)
+        gc.set_stroke_color((1, 0, 0))
+        gc.set_line_width(3)
+        gc.set_line_dash((5, 5))
+        rect = [getattr(component, attr) for attr in ('x', 'y', 'width', 'height')]
+        gc.clip_to_rect(*rect)
+
+        gc.draw_rect((x1 + 1, y1, w, h), constants.STROKE)
+        gc.restore_state()
 
 class LaserTrayCanvas(MapCanvas):
     '''
@@ -62,6 +79,30 @@ class LaserTrayCanvas(MapCanvas):
     crosshairs_radius = Range(0.0, 4.0, 1.0)
     crosshairs_offset = Tuple(0, 0)
 #    _jog_moving = False
+    show_bounds_rect = Bool(True)
+
+    def __init__(self, *args, **kw):
+        super(LaserTrayCanvas, self).__init__(*args, **kw)
+        self._add_bounds_rect()
+
+    def _add_bounds_rect(self):
+        if self.show_bounds_rect:
+            self.overlays.append(BoundsOverlay(component=self))
+
+    def _show_bounds_rect_changed(self):
+        bo = None
+        for o in self.overlays:
+            if isinstance(o, BoundsOverlay):
+                bo = o
+                break
+
+        if bo is None:
+            self._add_bounds_rect()
+        elif not self.show_bounds_rect:
+            self.overlays.remove(o)
+            del o
+
+        self.request_redraw()
 
     def point_exists(self, x, y, tol=1e-5):
         for p in self.markupcontainer.itervalues():
@@ -116,6 +157,7 @@ class LaserTrayCanvas(MapCanvas):
 
     def config_view(self):
         v = View(
+               Item('show_bounds_rect'),
                Item('render_map'),
                Item('show_bitmap'),
                Item('show_grids'),

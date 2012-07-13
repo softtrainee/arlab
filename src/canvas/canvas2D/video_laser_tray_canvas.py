@@ -21,10 +21,11 @@ from src.canvas.canvas2D.video_canvas import VideoCanvas
 from src.canvas.canvas2D.markup.markup_items import Rectangle
 from laser_tray_canvas import LaserTrayCanvas
 
-
 class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
     '''
     '''
+
+
 
     def set_stage_position(self, x, y):
         '''
