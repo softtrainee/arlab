@@ -110,10 +110,10 @@ class DataLoader(Loggable):
         f, reader = self._open_reader(p, root=root)
         if reader is None:
             return
-            
+
         keys = reader.next()
         values = range(len(keys))
-        labtable = dict(zip(keys,values))
+        labtable = dict(zip(keys, values))
 
         path, _ext = os.path.splitext(path)
         path += '_data'
@@ -135,7 +135,7 @@ class DataLoader(Loggable):
                 if age < 0:
                     self.info('Skipping negative age {}'.format(age))
                     continue
-            except ValueError,e:
+            except ValueError, e:
                 print e
                 self.info('Invalid age {}'.format(a))
                 continue
@@ -151,9 +151,9 @@ class DataLoader(Loggable):
         f, reader = self._open_reader(p, root=root)
         op = os.path.join(cur_dir, '{}.in'.format(name))
         wf, writer = self._open_writer(op)
-        
 
-        
+
+
         CumAr39 = 0
         sensitivity = 0
         for i, row in enumerate(reader):
@@ -250,16 +250,24 @@ class DataLoader(Loggable):
         if reader is None:
             return None
 
-        age = []
-        low_conf = []
-        high_conf = []
+#        age = []
+#        low_conf = []
+#        high_conf = []
+        try:
+            data = zip(*[map(float, row) for row in reader])
+            f.close()
+            return data
+        except Exception, e:
+            print 'load_cooling_history', e
 
-        for row in reader:
-            age.append(float(row[0]))
-            low_conf.append(float(row[1]))
-            high_conf.append(float(row[2]))
-        f.close()
-        return age, low_conf, high_conf
+#        for row in reader:
+#            try:
+#                age.append(float(row[0]))
+#                low_conf.append(float(row[1]))
+#                high_conf.append(float(row[2]))
+#            except ValueError:
+#                return
+#        return age, low_conf, high_conf
 
     def load_logr_ro(self, name):
         '''

@@ -107,6 +107,7 @@ class Graph(Loggable):
     _title = Str
     _title_font = None
     _title_size = None
+
     _control = None
 
     status_text = Str
@@ -173,8 +174,11 @@ class Graph(Loggable):
         export_menu = Menu(name='Export',
                          *export_actions)
         contents = [save_menu, crosshairs_action, export_menu]
+
         if self.editor_enabled:
-            contents += [self.action_factory('Show Plot Editor', 'show_plot_editor')]
+            pa = self.action_factory('Show Plot Editor', 'show_plot_editor')
+            pa.enabled = self.selected_plot is not None
+            contents += [pa]
             contents += [self.action_factory('Show Graph Editor', 'show_graph_editor')]
 
         return contents
@@ -388,7 +392,7 @@ class Graph(Loggable):
 
         return r
 
-    def set_series_label(self, label, plotid=0, series=0):
+    def set_series_label(self, label, plotid=0, series=None):
         '''
         
             A chaco update requires that the legends labels match the keys in the plot dict
@@ -399,16 +403,24 @@ class Graph(Loggable):
         '''
 
         legend = self.plots[plotid].legend
+        if series is None:
+            series = len(self.series[plotid]) - 1
+
+        if isinstance(series, int):
+            series = 'plot{}'.format(series)
 
         try:
             legend.labels[series] = label
         except Exception, e:
             legend.labels.append(label)
 
-        if isinstance(series, int):
-            series = 'plot{}'.format(series)
 
-        plots = self.plots[plotid].plots[series]
+        try:
+            plots = self.plots[plotid].plots[series]
+        except:
+            print series
+            print self.plots[plotid].plots.keys()
+
         self.plots[plotid].plots[label] = plots
         self.plots[plotid].plots.pop(series)
 
@@ -502,15 +514,15 @@ class Graph(Loggable):
         '''
         return self._get_title('x_axis', plotid)
 
-    def set_x_title(self, title, plotid=0):
+    def set_x_title(self, title, plotid=0, **font):
         '''
         '''
-        self._set_title('x_axis', title, plotid)
+        self._set_title('x_axis', title, plotid, **font)
 
-    def set_y_title(self, title, plotid=0):
+    def set_y_title(self, title, plotid=0, **font):
         '''
         '''
-        self._set_title('y_axis', title, plotid)
+        self._set_title('y_axis', title, plotid, **font)
 
     def add_plot_label(self, txt, x, y, plotid=0):
         '''
@@ -613,7 +625,7 @@ class Graph(Loggable):
         for t in ['x', 'y']:
             title = '{}title'.format(t)
             if title in kw:
-                self._set_title('{}_axis'.format(t), kw[title], plotid)
+                self._set_title('{}_axis'.format(t), kw[title], None, 12, plotid)
 
         return p
 
@@ -1201,11 +1213,22 @@ class Graph(Loggable):
         axis = getattr(self.plots[plotid], axis)
         return axis.title
 
-    def _set_title(self, axis, title, plotid):
+    def _set_title(self, axis, title, plotid, font=None, size=None):
         '''
         '''
         axis = getattr(self.plots[plotid], axis)
-        axis.trait_set(title=title)
+        params = dict(title=title)
+        if font is not None and size is not None:
+            if not font in VALID_FONTS:
+                font = 'Helvetica'
+
+            font = '{} {}'.format(font, size)
+            tfont = '{} {}'.format(font, size + 2)
+            params.update(dict(
+                       tick_label_font=font,
+                       title_font=tfont
+                       ))
+        axis.trait_set(**params)
         self.plotcontainer.request_redraw()
 
     def _get_limits(self, axis, plotid):

@@ -243,7 +243,6 @@ class DiffusionGraph(Graph):
 
         self.set_x_title('Cum. 39Ar %', plotid=pid)
         self.set_y_title('Age (Ma)', plotid=pid)
-
         return b
 
     def build_logr_ro(self, ar39, logr, pid=1, ngroup=True, **kw):

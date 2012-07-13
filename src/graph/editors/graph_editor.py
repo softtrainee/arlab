@@ -14,14 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-from src.graph.stacked_graph import StackedGraph
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, \
      Font, HasTraits, Any, Color, Property, Int, Str
@@ -31,6 +23,7 @@ from traitsui.api import View, Item, \
 from wx import Colour
 import sys
 #=============local library imports  ==========================
+from src.graph.stacked_graph import StackedGraph
 
 
 class GraphEditorHandler(Handler):
