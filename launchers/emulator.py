@@ -248,7 +248,16 @@ class LaserEmulator(Loggable):
         return 'OK'
     def handleDisableLaser(self):
         return 'OK'
-
+    def handleGetPosition(self):
+        return self._position
+    def handleSetXY(self, xy):
+        self._position = xy + ',5'
+    def handleGetBeamDiameter(self):
+        return 0
+    def handleSetBeamDiameter(self, v):
+        return 0
+    def handleGetLaserStatus(self):
+        return 'OK'
 @verbose_all
 class ExtractionLineEmulator(Loggable):
     def handleOpen(self, name):
