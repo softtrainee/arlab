@@ -16,27 +16,6 @@
 #===============================================================================
 
 
-#import sys
-# add src to the path
-
-#SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
-#                     'mercurial',
-#                     'pychron{}'.format(version))
-#sys.path.insert(0, SRC_DIR)
-#
-#from src.paths import paths
-#paths.build(version)
-
-#def build_globals():
-#    from src.helpers.parsers.initialization_parser import InitializationParser
-#    ip = InitializationParser()
-#
-#    from globals import globalv
-#    use_ipc = ip.get_global('use_ipc')
-#
-#    if use_ipc:
-#        globalv.use_ipc = True if use_ipc in ['True', 'true', 'T', 't'] else False
-
 if __name__ == '__main__':
 
     import os

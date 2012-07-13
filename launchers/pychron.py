@@ -20,7 +20,7 @@
 import os
 #============= local library imports  ==========================
 
-version_id = '_beta'
+version_id = '_mdd'
 from helpers import build_version
 build_version(version_id)
 
