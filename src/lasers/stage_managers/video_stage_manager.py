@@ -202,7 +202,7 @@ class VideoStageManager(StageManager):
 
         self._drive_xratio = xa
         self._drive_yratio = ya
-        
+
         self._update_zoom(0)
 
     def snapshot(self, path=None, name=None, auto=False):

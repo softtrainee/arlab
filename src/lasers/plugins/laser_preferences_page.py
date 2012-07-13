@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Bool, Range, Enum, Color, Tuple, Directory, Float, Int
-from traitsui.api import  Item, Group, HGroup, VGroup
+from traitsui.api import  Item, Group, HGroup, VGroup, Tabbed
 
 #============= standard library imports ========================
 
@@ -40,7 +40,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     crosshairs_kind = Enum(1, 2, 3, 4)
     crosshairs_color = Color('maroon')
     desired_position_color = Color('green')
-    calibration_style = Enum('pychron', 'MassSpec')
+    calibration_style = Enum('MassSpec', 'pychron-auto')
     scaling = Range(1.0, 2.0, 1)
 
     use_autocenter = Bool(True)
@@ -54,11 +54,10 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     record_brightness = Bool(True)
 
     use_calibrated_power = Bool(True)
+    show_bounds_rect = Bool(True)
 
     def get_additional_groups(self):
-
-        grp = Group(
-               Group(Item('use_video'),
+        videogrp = VGroup(Item('use_video'),
                      VGroup(
                          Item('video_identifier', label='ID',
                                enabled_when='use_video'),
@@ -79,8 +78,9 @@ class LaserPreferencesPage(ManagerPreferencesPage):
 
                          enabled_when='use_video'
                          ),
-                      show_border=True, label='Video'),
-                Item('use_calibrated_power'),
+                      label='Video')
+        canvasgrp = VGroup(
+               Item('show_bounds_rect'),
                Item('show_map'),
                Item('show_grids'),
                Item('show_laser_position'),
@@ -95,10 +95,13 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                     enabled_when='crosshairs_offset!=(0,0)'),
                Item('calibration_style'),
                Item('scaling'),
-               label='Stage',
+               label='Canvas',
                )
+
         patgrp = Group(Item('record_patterning'),
                        Item('show_patterning'), label='Pattern')
-
-        return [grp, patgrp]
+        powergrp = Group(
+                        Item('use_calibrated_power'),
+                         label='Power')
+        return [canvasgrp, videogrp, patgrp, powergrp]
 #============= EOF ====================================
