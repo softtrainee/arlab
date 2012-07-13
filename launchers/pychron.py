@@ -52,7 +52,7 @@ def main():
 # explicitly set the flag here once. mode is a readonly property
 #===============================================================================
     from globals import globalv
-    globalv._test = True
+    globalv._test = False
 
     launch()
     os._exit(0)
