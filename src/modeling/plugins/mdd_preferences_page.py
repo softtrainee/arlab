@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Int, Enum, Directory
 from traitsui.api import View, Item, VGroup, HGroup, Group, Label
@@ -34,17 +32,25 @@ class MDDPreferencesPage(PreferencesPage):
     logr_ro_line_width = Int(1)
     plot_type = Enum('scatter', 'line', 'line_scatter')
     clovera_dir = Directory
+    data_dir = Directory
 
     def traits_view(self):
         v = View(
                  VGroup(
                         Group(
-                              VGroup(Label('Compiled Fortran Directory'),
+                              VGroup(
+                                     Label('Compiled Fortran Directory'),
                                      Item('clovera_dir', show_label=False),
+
+                                     Label('Default Data Directory'),
+                                     Item('data_dir', show_label=False),
+
                                      ),
-                                     label='Clovera',
+
+                                     label='Directories',
                                      show_border=True
                               ),
+
                      VGroup(
                             Item('logr_ro_line_width', label='Line Width'),
                             show_border=True,

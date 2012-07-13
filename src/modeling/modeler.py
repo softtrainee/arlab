@@ -17,7 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import  Any, Instance, Str, Event, \
     Directory, List, on_trait_change, Property, Enum, Int, Button
-from traitsui.api import View, Item, VSplit, TableEditor, CheckListEditor
+from traitsui.api import View, Item, VSplit, TableEditor, \
+    CheckListEditor, EnumEditor, HGroup, VGroup
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from pyface.api import FileDialog, OK
@@ -53,7 +54,9 @@ class Modeler(Loggable):
     graph = Instance(DiffusionGraph)
     name = Str(enter_set=True, auto_set=False)
 
-    datum = Directory(value=paths.modeling_data_dir)
+    datum = Property(Directory,
+                     depends_on='_datum')#(value=paths.modeling_data_dir)
+    _datum = Directory
     data = List(ModelDataDirectory)
 
     selected = Any
@@ -67,13 +70,29 @@ class Modeler(Loggable):
     sync_groups = None
 
 #    include_panels = List(GROUPNAMES[:-1])
-    include_panels = List(['spectrum','arrhenius','logr_ro','cooling_history'])
+#    include_panels = List(['spectrum', 'arrhenius', 'logr_ro', 'cooling_history'])
+
+    panel1 = Str('spectrum')
+    panel2 = Str('arrhenius')
+    panel3 = Str('logr_ro')
+    panel4 = Str('cooling_history')
+
     logr_ro_line_width = Int(1)
     arrhenius_plot_type = Enum('scatter', 'line', 'line_scatter')
 
     clovera_directory = Directory
+    data_directory = Directory
 
     fortran_processes = List
+
+    def _get_datum(self):
+        if not self._datum:
+            return self.data_directory
+        else:
+            return self._datum
+
+    def _set_datum(self, d):
+        self._datum = d
 
 #===============================================================================
 # fortran
@@ -82,7 +101,10 @@ class Modeler(Loggable):
         '''
         '''
 
-        f = FileDialog(action='open', default_directory=paths.modeling_data_dir)
+        f = FileDialog(action='open',
+#                       default_directory=paths.modeling_data_dir
+                       default_directory=self.data_directory
+                       )
         if f.open() == OK:
             self.info('loading autoupdate file {}'.format(f.path))
 
@@ -139,7 +161,10 @@ class Modeler(Loggable):
 #        d = DummyDirectoryDialog()
 #        =======================================================================
 
-        d = DirectoryDialog(action='open', default_path=paths.modeling_data_dir)
+        d = DirectoryDialog(action='open',
+                            default_path=self.data_directory
+#                            default_path=paths.modeling_data_dir
+                            )
 
         if d.open() == OK:
             rid = os.path.basename(d.path)
@@ -259,10 +284,15 @@ class Modeler(Loggable):
     #===========================================================================
     # graph
     #===========================================================================
+    def get_panel_plotids(self, name):
+        return [i for i, p in enumerate(self.get_panels()) \
+                    if p == name]
+
+    def get_panels(self):
+        return [getattr(self, 'panel{}'.format(i + 1)) for i in range(4)]
 
     def load_graph(self, data_directory, gid, color):
-        '''
-        '''
+
         data_directory.id = gid
 
         path = data_directory.path
@@ -272,143 +302,40 @@ class Modeler(Loggable):
         runid = g.add_runid(path, kind='path')
         dl = self.data_loader
         dl.root = data_directory.path
+        for i, pi in enumerate(self.get_panels()):
+            func = getattr(self, '_load_{}'.format(pi))
+            func(data_directory, i, runid, color, gid)
+        self._sync_groups(data_directory)
 
-        plotidcounter = 0
-
-        if 'spectrum' in self.include_panels:
-            data = dl.load_spectrum()
-            if data is not None:
-                try:
-                    g.build_spectrum(color=color,
-                                     pid=plotidcounter,
-                                     *data)
-                    s = 3 if data_directory.model_spectrum_enabled else 2
-                    s += 1 if data_directory.inverse_model_spectrum_enabled else 0
-                    g.set_series_label('{}.meas-err'.format(runid), plotid=plotidcounter, series=s * gid)
-                    g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=s * gid + 1)
-
-                except Exception, err:
-                    self.info(err)
-
-            if data_directory.model_spectrum_enabled:
-                data = dl.load_model_spectrum()
-                if data is not None:
-                    try:
-
-                        p = g.build_spectrum(*data, ngroup=False, pid=plotidcounter)
-                        g.set_series_label('{}.model'.format(runid), plotid=plotidcounter, series=3 * gid + 2)
-                        g.color_generators[-1].next()
-                        p.color = g.color_generators[-1].next()
-
-                    except Exception, err:
-                        self.info(err)
-
-            if data_directory.inverse_model_spectrum_enabled:
-                data = dl.load_inverse_model_spectrum()
-                if data is not None:
-                    try:
-                        s = 3 if data_directory.model_spectrum_enabled else 2
-                        for ar39, age in zip(*data):
-                            p = g.build_spectrum(ar39, age,
-                                                 ngroup='inverse_model_spectrum',
-                                                 pid=plotidcounter)
-#                        g.set_series_label('{}.inverse'.format(runid), plotid=plotidcounter, series=3 * gid + 3)
-#                        g.color_generators[-1].next()
-#                        p.color = g.color_generators[-1].next()
-
-                    except Exception, err:
-                        self.info(err)
-
-            plotidcounter += 1
-
-        if 'logr_ro' in self.include_panels:
-            data = dl.load_logr_ro('logr.samp') #Produced by Autoarr with dictated/automated arrhenius parameters
-            data2 = dl.load_logr_ro('log.smp') #Produced by running'files' during parsing of autoupdate
-            if data is not None:
-                p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
-                s = 2 if data_directory.model_arrhenius_enabled else 1
-                g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=gid * s)
-                p.on_trait_change(data_directory.update_pcolor, 'color')
-            elif data2 is not None:
-                try:
-                    p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data2)
-                    s = 2 if data_directory.model_arrhenius_enabled else 1
-                    g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=gid * s)
-                    p.on_trait_change(data_directory.update_pcolor, 'color')
-                
-                except Exception, err:
-                    self.info(err)
-
-            if data_directory.model_arrhenius_enabled:
-                data = dl.load_logr_ro('logr.dat')
-                if data is not None:
-                    try:
-                        p = g.build_logr_ro(ngroup=False, line_width=self.logr_ro_line_width, pid=plotidcounter, *data)
-                        g.set_series_label('{}.model'.format(runid), plotid=plotidcounter, series=2 * gid + 1)
-                        data_directory.secondary_color = p.color
-                        p.on_trait_change(data_directory.update_scolor, 'color')
-
-                    except Exception, err:
-                        self.info(err)
-            plotidcounter += 1
-
-        if 'arrhenius' in self.include_panels:
-            data = dl.load_arrhenius('arr.samp')
-            if data is not None:
-                try:
-                    g.build_arrhenius(pid=plotidcounter, type=self.arrhenius_plot_type, *data)
-                    g.set_series_label('{}.meas'.format(runid), plotid=plotidcounter, series=2 * gid)
-                except Exception, err:
-                    self.info(err)
-
-            if data_directory.model_arrhenius_enabled:
-                data = dl.load_arrhenius('arr.dat')
-                if data is not None:
-                    try:
-                        g.build_arrhenius(ngroup=False, pid=plotidcounter, type=self.arrhenius_plot_type, *data)
-                        g.set_series_label('{}.model'.format(runid), plotid=plotidcounter, series=2 * gid + 1)
-                    except Exception, err:
-                        self.info(err)
-            plotidcounter += 1
-
-        if 'cooling_history' in self.include_panels:
-            data = dl.load_cooling_history()
-            if data is not None:
-                try:
-                    g.build_cooling_history(pid=plotidcounter, *data)
-                except Exception, err:
-                    self.info(err)
-            plotidcounter += 1
-
-        if 'unconstrained_thermal_history' in self.include_panels:
-            data = dl.load_unconstrained_thermal_history()
-            if data is not None:
-                try:
-                    g.build_unconstrained_thermal_history(data, pid=plotidcounter)
-                except Exception, err:
-                    self.info(err)
-
+    def _sync_groups(self, data_directory):
+        g = self.graph
         #sync the colors
-        if self.sync_groups:
-            for si in self.sync_groups:
+        try:
 
-                tg = g.groups[si]
-                sg = self.sync_groups[si]
+            if self.sync_groups:
+                for si in self.sync_groups:
+                    try:
+                        tg = g.groups[si]
+                        sg = self.sync_groups[si]
+                    except KeyError:
+                        return
 
-                for i, subgroup in enumerate(sg):
-                    for j, series in enumerate(subgroup):
-                        try:
+                    for i, subgroup in enumerate(sg):
+                        for j, series in enumerate(subgroup):
+                            try:
 
-                            tseries = tg[i][j]
-                            if series.__class__.__name__ == 'PolygonPlot':
-                                for a in ['face_color', 'edge_color']:
-                                    color = series.trait_get(a)
-                                    tseries.trait_set(**color)
-                            else:
-                                tseries.trait_set(**{'color':series.color})
+                                tseries = tg[i][j]
+                                if series.__class__.__name__ == 'PolygonPlot':
+                                    for a in ['face_color', 'edge_color']:
+                                        color = series.trait_get(a)
+                                        tseries.trait_set(**color)
+                                else:
+                                    tseries.trait_set(**{'color':series.color})
 
-                        except IndexError:
-                            pass
+                            except IndexError:
+                                pass
+        except Exception, e:
+            print 'sync groups', e
 
         g.set_group_visiblity(data_directory.show, gid=data_directory.id)
 
@@ -421,10 +348,10 @@ class Modeler(Loggable):
         g = self.graph
         if g is None:
 
-            panels = GROUPNAMES#['spectrum','logr_ro','arrenhius','cooling_history']
-            if self.include_panels:
-                panels = self.include_panels
-
+#            panels = GROUPNAMES#['spectrum','logr_ro','arrenhius','cooling_history']
+#            if self.include_panels:
+#                panels = self.include_panels
+            panels = self.get_panels()
             l = len(panels)
             r = int(round(l / 2.0))
             c = 1
@@ -451,6 +378,19 @@ class Modeler(Loggable):
             sync = True
             xlims = []
             ylims = []
+            axis_params = []
+
+            for i, p in enumerate(g.plots):
+                xlims.append(g.get_x_limits(plotid=i))
+                ylims.append(g.get_y_limits(plotid=i))
+
+                pa = (p.x_axis.tick_label_font,
+                     p.y_axis.tick_label_font,
+                     p.x_axis.title_font,
+                     p.y_axis.title_font,
+                     )
+
+                axis_params.append(pa)
 
             title = g._title
             title_font = g._title_font
@@ -462,26 +402,30 @@ class Modeler(Loggable):
             self.sync_groups = g.groups
             bindings = g.bindings
 
-            for i, _p in enumerate(g.plots):
-                xlims.append(g.get_x_limits(plotid=i))
-                ylims.append(g.get_y_limits(plotid=i))
-
-
         #self.graph = g = DiffusionGraph()
         g.clear()
         g.new_graph()
+        self._spec_cnt = 0
 
         if sync:
             g.bindings = bindings
+
             g.set_title(title, font=title_font, size=title_size)
+
             g.plotcontainer.bgcolor = bgcolor
-            for i, lim in enumerate(zip(xlims, ylims)):
-                xlim = lim[0]
-                ylim = lim[1]
+
+            for i, (xlim, ylim, axp) in enumerate(zip(xlims, ylims, axis_params)):
+                plot = g.plots[i]
+                plot.x_axis.tick_label_font = axp[0]
+                plot.y_axis.tick_label_font = axp[1]
+                plot.x_axis.title_font = axp[2]
+                plot.y_axis.title_font = axp[3]
+
                 #check to see limits are not inf or -inf
                 if xlim[0] != float('-inf') and xlim[1] != float('inf'):
                     g.set_x_limits(min=xlim[0], max=xlim[1], plotid=i)
                     g.set_y_limits(min=ylim[0], max=ylim[1], plotid=i)
+
             #sync open editors    
             if graph_editor is not None:
                 graph_editor.graph = g
@@ -536,6 +480,7 @@ class Modeler(Loggable):
                  VSplit(selected,
                         tree))
         return v
+
     def graph_view(self):
         graph = Item('graph', show_label=False,
                     style='custom',
@@ -545,13 +490,38 @@ class Modeler(Loggable):
         return v
 
     def configure_view(self):
-        v = View(Item('include_panels', editor=CheckListEditor(values=GROUPNAMES),
-                    show_label=False,
-                    style='custom'
-                    ),
+        editor = EnumEditor(values=['spectrum', 'arrhenius',
+                                    'logr_ro', 'cooling_history',
+                                    'unconstrained_thermal_history'])
+        a = Item(
+                 'panel1', editor=editor,
+                 show_label=False)
+        b = Item(
+                 'panel2', editor=editor,
+                 show_label=False)
+        c = Item(
+                 'panel3', editor=editor,
+                 show_label=False)
+        d = Item(
+                 'panel4', editor=editor,
+                 show_label=False)
+
+        v = View(VGroup(
+                        HGroup(a, b),
+                        HGroup(c, d)
+                        ),
                kind='modal',
-               buttons=['OK', 'Cancel']
+               buttons=['OK', 'Cancel'],
+               title='Panel Layout'
                )
+
+#        v = View(Item('include_panels', editor=CheckListEditor(values=GROUPNAMES),
+#                    show_label=False,
+#                    style='custom'
+#                    ),
+#               kind='modal',
+#               buttons=['OK', 'Cancel']
+#               )
         return v
 
     def _data_loader_default(self):
@@ -635,6 +605,149 @@ class Modeler(Loggable):
         '''
         self.graph.set_title(self.graph_title, size=18)
 
+#===============================================================================
+# graph loaders
+#===============================================================================
+    def _try(self, func, data):
+        if data is not None:
+            try:
+                func(data)
+            except Exception, e:
+                import traceback
+                traceback.print_exc()
+                self.info(e)
+
+    def _load_arrhenius(self, data_directory, plotidcounter, runid, color, gid):
+        dl = self.data_loader
+        g = self.graph
+
+        def build(data):
+            g.build_arrhenius(pid=plotidcounter, type=self.arrhenius_plot_type, *data)
+            g.set_series_label('{}.arr.meas'.format(runid), plotid=plotidcounter, series=2 * gid)
+
+        data = dl.load_arrhenius('arr.samp')
+        self._try(build, data)
+
+        if data_directory.model_arrhenius_enabled:
+            def build(data):
+                g.build_arrhenius(ngroup=False, pid=plotidcounter, type=self.arrhenius_plot_type, *data)
+                g.set_series_label('{}.arr.model'.format(runid), plotid=plotidcounter, series=2 * gid + 1)
+
+            data = dl.load_arrhenius('arr.dat')
+            self._try(build, data)
+
+    def _load_logr_ro(self, data_directory, plotidcounter, runid, color, gid):
+        dl = self.data_loader
+        g = self.graph
+
+        data = dl.load_logr_ro('logr.samp') #Produced by Autoarr with dictated/automated arrhenius parameters
+        data2 = dl.load_logr_ro('log.smp') #Produced by running'files' during parsing of autoupdate
+        if data is not None:
+            def build(data):
+                p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
+                s = 2 if data_directory.model_arrhenius_enabled else 1
+                g.set_series_label('{}.logr_ro.meas'.format(runid), plotid=plotidcounter, series=gid * s)
+                p.on_trait_change(data_directory.update_pcolor, 'color')
+            self._try(build, data)
+
+        elif data2 is not None:
+            def build(data):
+                p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
+                s = 2 if data_directory.model_arrhenius_enabled else 1
+                g.set_series_label('{}.logr_ro.meas'.format(runid), plotid=plotidcounter, series=gid * s)
+                p.on_trait_change(data_directory.update_pcolor, 'color')
+
+            self._try(build, data2)
+
+        if data_directory.model_arrhenius_enabled:
+
+            def build(data):
+                p = g.build_logr_ro(ngroup=False, line_width=self.logr_ro_line_width, pid=plotidcounter, *data)
+                g.set_series_label('{}.logr_ro.model'.format(runid), plotid=plotidcounter, series=2 * gid + 1)
+                data_directory.secondary_color = p.color
+                p.on_trait_change(data_directory.update_scolor, 'color')
+
+            data = dl.load_logr_ro('logr.dat')
+            self._try(build, data)
+
+    def _load_unconstrained_thermal_history(self, data_directory, plotidcounter, runid, color, gid):
+        dl = self.data_loader
+        g = self.graph
+        def build(data):
+            g.build_unconstrained_thermal_history(data, pid=plotidcounter)
+
+        data = dl.load_unconstrained_thermal_history()
+        self._try(build, data)
+#        if data is not None:
+#            try:
+#                g.build_unconstrained_thermal_history(data, pid=plotidcounter)
+#            except Exception, err:
+#                self.info(err)
+
+    def _load_cooling_history(self, data_directory, plotidcounter, runid, color, gid):
+        dl = self.data_loader
+        g = self.graph
+        def build(data):
+            g.build_cooling_history(pid=plotidcounter, *data)
+
+        data = dl.load_cooling_history()
+        self._try(build, data)
+#        if data is not None:
+#            try:
+#                g.build_cooling_history(pid=plotidcounter, *data)
+#            except Exception, err:
+#                self.info(err)
+
+    def _load_spectrum(self, data_directory, plotidcounter, runid, color, gid):
+        dl = self.data_loader
+        data = dl.load_spectrum()
+        g = self.graph
+
+        def build(data):
+            g.build_spectrum(color=color,
+                             pid=plotidcounter,
+                             *data)
+
+            g.set_series_label('{}.spec.meas-err'.format(runid),
+                               plotid=plotidcounter,
+                               series=self._spec_cnt
+                               )
+            g.set_series_label('{}.spec.meas'.format(runid),
+                               plotid=plotidcounter,
+                                series=self._spec_cnt + 1)
+            self._spec_cnt += 2
+
+        self._try(build, data)
+
+        if data_directory.model_spectrum_enabled:
+            def build(data):
+                p = g.build_spectrum(*data, ngroup=False, pid=plotidcounter)
+                g.set_series_label('{}.model'.format(runid), plotid=plotidcounter
+                                   )
+                g.color_generators[-1].next()
+                p.color = g.color_generators[-1].next()
+                self._spec_cnt += 1
+
+            data = dl.load_model_spectrum()
+            self._try(build, data)
+
+        if data_directory.inverse_model_spectrum_enabled:
+            def build(data):
+                color = g.color_generators[-1].next()
+                for i, (ar39, age) in enumerate(zip(*data)):
+                    g.build_spectrum(ar39, age,
+                                         ngroup='inverse_model_spectrum',
+                                         pid=plotidcounter,
+                                         color=color
+                                         )
+                    g.set_series_label('{}.inverse_spec.{}'.format(runid, i),
+                                       plotid=plotidcounter,
+#                                       series=self._spec_cnt
+                                       )
+                    self._spec_cnt += 1
+
+            data = dl.load_inverse_model_spectrum()
+            self._try(build, data)
 
 def runfortran():
     q = Queue()

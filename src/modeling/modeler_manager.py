@@ -51,20 +51,19 @@ class ModelerManager(EnvisageManager):
     def new_modeler(self):
 
         m = self._modeler_factory()
-        bind_preference(m, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
-        bind_preference(m, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
-        bind_preference(m, 'clovera_directory', 'pychron.mdd.clovera_directory')
+
     #        if self.modeler:
 #            m.logr_ro_line_width = self.modeler.logr_ro_line_width
 #            m.arrhenius_plot_type = self.modeler.arrhenius_plot_type
 
-        if self._include_panels:
-            m.include_panels = self._include_panels
+#        if self._include_panels:
+#            m.include_panels = self._include_panels
+
         info = m.edit_traits(view='configure_view')
 
         if info.result:
             #remember this modelers include panels for the future modelers
-            self._include_panels = m.include_panels
+#            self._include_panels = m.include_panels
 
 
             m.refresh_graph()
@@ -111,6 +110,10 @@ class ModelerManager(EnvisageManager):
 #                    line_width=self.line_width,
 #                    arrhenius_plot_type=self.arrhenius_plot_type
                     )
+        bind_preference(m, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
+        bind_preference(m, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
+        bind_preference(m, 'clovera_directory', 'pychron.mdd.clovera_dir')
+        bind_preference(m, 'data_directory', 'pychron.mdd.data_dir')
 
         return m
 

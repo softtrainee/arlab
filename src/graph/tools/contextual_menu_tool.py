@@ -82,6 +82,7 @@ class ContextualMenuTool(Interactor):
             self.parent.selected_plot = plot
             display_menu(self.parent, event)
         else:
+            self.parent.selected_plot = None
             display_menu(self.parent, event)
             #if hasattr(self.parent, 'explanable_items'):
     #            self.parent.selected_plotid = self.parent.plotcontainer.explanable_items.index(plot)

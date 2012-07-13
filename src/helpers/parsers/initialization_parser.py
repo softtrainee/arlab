@@ -252,7 +252,7 @@ class InitializationParser(XMLParser):
     def get_categories(self):
         tree = self._tree.find('plugins')
         s = lambda x: x.tag
-        return map(s, set(tree.iter()))
+        return map(s, set([c for c in tree.iter() if lower(c.get('enabled')) != 'false']))
 
     def _get_element(self, category, name, tag='plugin'):
         tree = self._tree.find('plugins')

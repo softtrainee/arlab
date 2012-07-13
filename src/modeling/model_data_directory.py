@@ -25,6 +25,7 @@ import os
 #============= local library imports  ==========================
 
 #============= views ===================================
+
 class ModelDataDirectory(HasTraits):
     '''
     '''
@@ -52,43 +53,51 @@ class ModelDataDirectory(HasTraits):
         '''
         if self.modeler:
             self.modeler.graph.set_group_visiblity(self.show, gid=self.id)
-            self.model_arrhenius_enabled = self.show
-            self.model_spectrum_enabled = self.show
+            self.trait_set(
+                           model_arrhenius_enabled=self.show,
+                           model_spectrum_enabled=self.show,
+                           inverse_model_spectrum_enabled=self.show
+                           )
             self.modeler.update_graph_title()
 
     def _model_arrhenius_enabled_changed(self):
-        if self.modeler:
-            try:
-                p = self.modeler.graph.groups['arrhenius'][self.id][1]
-                self.modeler.graph.set_plot_visibility(p, self.model_arrhenius_enabled)
-            except IndexError:
-                #this group does not have a model arrhenius
-                pass
-            try:
-                p = self.modeler.graph.groups['logr_ro'][self.id][1]
-                self.modeler.graph.set_plot_visibility(p, self.model_arrhenius_enabled)
-            except (IndexError, KeyError):
-                #this group does not have a model logr_ro
-                pass
+        def model_spec_func(modeler):
+            plotids = modeler.get_panel_plotids('arrhenius')
+            for plotid in plotids:
+                p = modeler.graph.plots[plotid]
+                plot = p.plots['{}.arr.model'.format(self.name)][0]
+                modeler.graph.set_plot_visibility(plot, self.model_arrhenius_enabled)
+
+        self._try(model_spec_func)
+
+        def logr_ro_func(modeler):
+            plotids = modeler.get_panel_plotids('logr_ro')
+            for plotid in plotids:
+                p = modeler.graph.plots[plotid]
+                plot = p.plots['{}.logr_ro.model'.format(self.name)][0]
+                modeler.graph.set_plot_visibility(plot, self.model_arrhenius_enabled)
+
+        self._try(logr_ro_func)
 
     def _model_spectrum_enabled_changed(self):
-        if self.modeler:
-            try:
-                p = self.modeler.graph.groups['spectrum'][self.id][2]
-                self.modeler.graph.set_plot_visibility(p, self.model_spectrum_enabled)
-            except IndexError:
-                #this group does not have a model spectrum
-                pass
+        def ms_func(modeler):
+            plotids = modeler.get_panel_plotids('spectrum')
+            for plotid in plotids:
+                p = modeler.graph.plots[plotid]
+                plot = p.plots['{}.spec.model'.format(self.name)][0]
+                self.modeler.graph.set_plot_visibility(plot, self.model_spectrum_enabled)
+        self._try(ms_func)
 
     def _inverse_model_spectrum_enabled_changed(self):
-        if self.modeler:
-            try:
-                ps = self.modeler.graph.groups['spectrum'][self.id][3:]
-                for pi in ps:
-                    self.modeler.graph.set_plot_visibility(pi, self.inverse_model_spectrum_enabled)
-            except IndexError:
-                #this group does not have a model spectrum
-                pass
+        def ims_func(modeler):
+            plotids = modeler.get_panel_plotids('spectrum')
+            for plotid in plotids:
+                p = modeler.graph.plots[plotid]
+                for key, plot in p.plots.iteritems():
+                    if key.startswith('{}.inverse_spec'.format(self.name)):
+                        modeler.graph.set_plot_visibility(plot[0], self.inverse_model_spectrum_enabled)
+
+        self._try(ims_func)
 
     def _bind_changed(self):
         '''
@@ -106,6 +115,14 @@ class ModelDataDirectory(HasTraits):
         c = Color(*new)
         self.secondary_color = ColourDatabase().FindName(c).lower()
 
+    def _try(self, func):
+        try:
+            if self.modeler:
+                func(self.modeler)
+        except KeyError, e:
+            print func.__name__, e
+        except Exception, e:
+            print func.__name__, e
 #    @on_trait_change('primary_color, secondary_color')
 #    def _color_changed(self):
 #        
