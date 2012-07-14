@@ -124,13 +124,9 @@ class H5DataManager(DataManager):
     def get_groups(self):
         return [g for g in self._frame.walkGroups() if g != self._frame.root]
 
-    def get_tables(self):
+    def get_tables(self, grp):
         f = self._frame
-
-        for n in f.walkNodes('/', 'Table'):
-            print n
-
-        return
+        return [n for n in f.walkNodes('/{}'.format(grp), 'Table')]
 
     def open_data(self, path):
         try:
