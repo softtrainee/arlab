@@ -96,8 +96,12 @@ class StackedGraph(Graph):
             vertically resizes the stacked graph.
             the plots are sized equally
         '''
+        padding_top = sum([getattr(p, 'padding_top') for p in self.plots])
+        padding_bottom = sum([getattr(p, 'padding_bottom') for p in self.plots])
 
-        pt = self.plotcontainer.padding_top
+        pt = self.plotcontainer.padding_top + \
+                self.plotcontainer.padding_bottom + \
+                    padding_top + padding_bottom
         if self.equi_stack:
             for p in self.plots:
                 p.bounds[1] = (bounds[1] - pt) / len(self.plots)

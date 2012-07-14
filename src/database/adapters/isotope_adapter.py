@@ -16,6 +16,8 @@
 
 #============= enthought library imports =======================
 from src.database.adapters.database_adapter import DatabaseAdapter
+from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
+
 from src.paths import paths
 from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
     MaterialTable, AnalysisTable, AnalysisPathTable, LabTable
@@ -28,9 +30,6 @@ from src.database.adapters.functions import add, sql_retrieve, get_one, \
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-
-
-
 class IsotopeAdapter(DatabaseAdapter):
     '''
         new style adapter 
@@ -38,6 +37,10 @@ class IsotopeAdapter(DatabaseAdapter):
         
         using decorators is the new model
     '''
+
+    selector_klass = IsotopeAnalysisSelector
+    path_table = AnalysisPathTable
+
     #===========================================================================
     # adders
     #===========================================================================
@@ -193,6 +196,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_labnumbers(self, **kw):
         return self._get_items(LabTable, globals(), **kw)
+
+    def get_analyses(self, **kw):
+        return self._get_items(AnalysisTable, globals(), **kw)
 #===============================================================================
 # deleters
 #===============================================================================
@@ -255,23 +261,10 @@ if __name__ == '__main__':
                         kind='sqlite')
     ia.connect()
 
-    #===========================================================================
-    # test adding
-    #===========================================================================
-    p = ia.add_project(
-                   'Bar',
-                   commit=True
-                   )
+    dbs = IsotopeAnalysisSelector(_db=ia)
+    dbs._execute_query()
 
-    m = ia.add_material(name='quartz', commit=True)
-
-    ia.add_sample(name='FC-b',
-              material='quartz',
-              project='Bar',
-              commit=True)
-
-    ia.add_user('Fuser', project='Foo', commit=True)
-
+    dbs.configure_traits()
 #    ia.add_user(project=p, name='mosuer', commit=True)
 #    p = ia.get_project('Foo3')
 #    m = ia.get_material('sanidine')

@@ -625,7 +625,7 @@ class Graph(Loggable):
         for t in ['x', 'y']:
             title = '{}title'.format(t)
             if title in kw:
-                self._set_title('{}_axis'.format(t), kw[title], None, 12, plotid)
+                self._set_title('{}_axis'.format(t), kw[title], plotid)
 
         return p
 

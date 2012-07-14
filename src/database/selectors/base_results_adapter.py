@@ -20,15 +20,15 @@ from traits.api import Property
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class BaseResultsAdapter(TabularAdapter):
-    columns = [('ID', '_id'),
+    columns = [('ID', 'rid'),
                ('Date', 'rundate'),
                ('Time', 'runtime')
                ]
 
-    runtime_text = Property
-
-    def _get_runtime_text(self):
-        return self.item.runtime.strftime('%H:%M:%S')
+#    runtime_text = Property
+#
+#    def _get_runtime_text(self):
+#        return self.item.runtime.strftime('%H:%M:%S')
 
     def get_bg_color(self, obj, trait, row, *args):
         if obj.results[row]._loadable:
