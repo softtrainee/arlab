@@ -16,9 +16,9 @@
 
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, \
-     Font, HasTraits, Any, Color, Property, Int, Str
+     Font, HasTraits, Any, Color, Property, Int, Str, on_trait_change
 from traitsui.api import View, Item, \
-    TextEditor, ColorEditor, Handler
+    TextEditor, ColorEditor, Handler, Group, VGroup
 #=============standard library imports ========================
 from wx import Colour
 import sys
@@ -33,7 +33,7 @@ class GraphEditorHandler(Handler):
         obj = info.object
         obj.graph_editor = None
 
-
+PADDING_KEYS = ['left', 'right', 'top', 'bottom']
 class GraphEditor(HasTraits):
     '''
     '''
@@ -49,7 +49,12 @@ class GraphEditor(HasTraits):
 
     xspacing = Int
     yspacing = Int
-    padding = Str
+
+    padding_left = Int
+    padding_right = Int
+    padding_top = Int
+    padding_bottom = Int
+
     def sync(self):
         '''
         '''
@@ -75,11 +80,10 @@ class GraphEditor(HasTraits):
                 n = 'Helvetica'
             self.global_axis_title_font = '{} {}'.format(n, f.size)
 
-        p = self.graph.plots[0].padding
-        if isinstance(p, list):
-            self.padding = ','.join(map(str, p))
-        else:
-            self.padding = p
+        for attr, v in zip(PADDING_KEYS ,
+                           self.graph.plots[0].padding
+                           ):
+            setattr(self, 'padding_{}'.format(attr), v)
 
     def _get_container(self):
         '''
@@ -170,23 +174,25 @@ class GraphEditor(HasTraits):
 
         self.graph.redraw()
 
+    @on_trait_change('padding_+')
     def _padding_changed(self):
         try:
-            p = map(int, self.padding.split(','))
-            if len(p) == 1:
-                p = p[0]
-
+#            p = map(int, self.padding.split(','))
+#            if len(p) == 1:
+#                p = p[0]
+            padding = [getattr(self, 'padding_{}'.format(a)) for a in PADDING_KEYS]
+            l, r, t, b = padding
             if isinstance(self.graph, StackedGraph):
-                pa = self.graph.plots[0].padding
+                _pl, _pr, pt, _pb = self.graph.plots[0].padding
                 #dont change the top padding of the first plot
-                p[2] = pa[2]
-                self.graph.plots[0].padding = [p[0], p[1], pa[2], p[3]]
+                t = pt
+                self.graph.plots[0].padding = [l, r, pt, b]
                 for ps in self.graph.plots[1:-1]:
-                    ps.padding = [p[0], p[1], 0, 0]
-                self.graph.plots[-1].padding = [p[0], p[1], p[2], 0]
+                    ps.padding = [l, r, 0, 0]
+                self.graph.plots[-1].padding = [l, r, t, 0]
             else:
                 for pi in self.graph.plots:
-                    pi.padding = p
+                    pi.padding = padding
 
             self.graph.redraw()
 
@@ -197,23 +203,43 @@ class GraphEditor(HasTraits):
     def traits_view(self):
         '''
         '''
-        v = View(Item('bgcolor', editor=ColorEditor()),
-               Item('title', editor=TextEditor(enter_set=True,
+        general_grp = Group(
+                            Item('title', editor=TextEditor(enter_set=True,
                                                auto_set=False)),
-               Item('font',
-                    style='custom',
-                    ),
+                            Item('font', style='custom'),
+                            Item('bgcolor', editor=ColorEditor()),
+                            label='General',
+                            show_border=True)
+        tick_grp = Group(
+               Item('global_tick_font', style='custom', label='Tick Font'),
+               Item('global_axis_title_font', style='custom', label='Title Font'),
+               label='Ticks',
+               show_border=True
+               )
+        spacing_grp = Group(
+               Item('xspacing', label='Horizontal'),
+               Item('yspacing', label='Vertical'),
+               show_border=True,
+               label='Spacing'
+               )
+        padding_grp = Group(
+                     Item('padding_left', label='Left'),
+                     Item('padding_right', label='Right'),
+                     Item('padding_top', label='Top'),
+                     Item('padding_bottom', label='Bottom'),
+                     show_border=True,
+                     label='Padding'
+                     )
 
-               Item('global_tick_font', style='custom'),
-               Item('global_axis_title_font', style='custom'),
-               Item('xspacing'),
-               Item('yspacing'),
-               Item('padding'),
-               title='Graph Editor',
-               resizable=True,
-               handler=GraphEditorHandler,
-               x=0.05,
-               y=0.1,
+        v = View(VGroup(general_grp,
+                 tick_grp,
+                 spacing_grp,
+                 padding_grp),
+                 title='Graph Editor',
+                 resizable=True,
+                 handler=GraphEditorHandler,
+                 x=0.05,
+                 y=0.1,
                )
         return v
 #============= EOF =====================================

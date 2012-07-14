@@ -225,7 +225,6 @@ class DiffusionGraph(Graph):
                         type='polygon',
                         color=kw['color'] if 'color' in kw else 'orange'
                         )
-            #plots.append(a)
 
         b, _p = self.new_series(ar39, age, plotid=pid, **kw)
         plots = [b, a] if a is not None else [b]
@@ -241,7 +240,11 @@ class DiffusionGraph(Graph):
         else:
             self.groups['spectrum'][-1] += plots
 
-        self.set_x_title('Cum. 39Ar %', plotid=pid)
+#        s3 = unicode(u'\u2070')
+#        xtitle = 'Cum. {:c}{!r}Ar{!r} %'.format(s3, s3, s3)
+#        xtitle = 'Cum. {:c}'.format(2079)
+        xtitle = 'Cum. 39Ar %'
+        self.set_x_title(xtitle, plotid=pid)
         self.set_y_title('Age (Ma)', plotid=pid)
         return b
 
@@ -249,7 +252,7 @@ class DiffusionGraph(Graph):
         '''
         '''
 
-        a, p = self.new_series(ar39, logr, plotid=pid, **kw)
+        a, _ = self.new_series(ar39, logr, plotid=pid, **kw)
         g = self.groups['logr_ro']
         if ngroup:
             g.append([a])
@@ -258,7 +261,10 @@ class DiffusionGraph(Graph):
             g[-1].append(a)
 
         self.set_x_title('Cum. 39Ar %', plotid=pid)
-        self.set_y_title('Log R/Ro', plotid=pid)
+
+        ytitle = 'log r/r' + u'\u2092'
+
+        self.set_y_title(ytitle, plotid=pid)
 
         return a
 
@@ -282,7 +288,8 @@ class DiffusionGraph(Graph):
             else:
                 g[-1].append(a)
         self.set_x_title('10000/T (K)', plotid=pid)
-        self.set_y_title('Log Dt/a^2', plotid=pid)
+        ytitle = 'log D/a' + u'\u00B2 (' + 's' + u'\u207B\u2071)'
+        self.set_y_title(ytitle, plotid=pid)
 
     def build_cooling_history(self, ts, Tsl, Tsh, pid=3):
         '''
