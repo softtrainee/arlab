@@ -42,7 +42,7 @@ from stage_component_editor import LaserComponentEditor
 from src.canvas.canvas2D.markup.markup_items import CalibrationItem
 from pattern.pattern_manager import PatternManager
 from stage_map import StageMap
-from affine import AffineTransform
+#from affine import AffineTransform
 
 
 class StageManager(Manager):
@@ -183,6 +183,8 @@ class StageManager(Manager):
         bind_preference(self.canvas, 'scaling', '{}.scaling'.format(pref_id))
 
         bind_preference(self.tray_calibration_manager, 'calibration_style', '{}.calibration_style'.format(pref_id))
+        bind_preference(self.canvas, 'show_bounds_rect',
+                        '{}.show_bounds_rect'.format(pref_id))
 
         self.canvas.change_indicator_visibility()
 
