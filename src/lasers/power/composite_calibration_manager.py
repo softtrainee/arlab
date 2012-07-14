@@ -148,7 +148,7 @@ class CompositeCalibrationManager(Manager):
             elif has_bounds:
                 g.clear()
                 self._plot_factory(g)
-                self.warning_dialog('{} does not have its bounds set'.format(s._id))
+                self.warning_dialog('{} does not have its bounds set'.format(s.rid))
                 break
 
             s.load_graph(graph=g,

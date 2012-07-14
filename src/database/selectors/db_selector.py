@@ -265,8 +265,8 @@ class DBSelector(Loggable):
 
             xoffset += si.load_graph(graph=graph, xoffset=xoffset)
 
-        wid = '.'.join([str(si._id) for si in s])
-        did = ', '.join([str(si._id) for si in s])
+        wid = '.'.join([str(si.rid) for si in s])
+        did = ', '.join([str(si.rid) for si in s])
         graph.window_title = '{} {}'.format(si.title_str, did)
 
         info = graph.edit_traits()
@@ -278,7 +278,7 @@ class DBSelector(Loggable):
             if not si._loadable:
                 continue
 
-            sid = si._id
+            sid = si.rid
             if sid in self.opened_windows:
                 c = self.opened_windows[sid].control
                 if c is None:
@@ -295,14 +295,15 @@ class DBSelector(Loggable):
                     if not si.initialize():
                         si._isloadable = False
                         return
-
                     si.load_graph()
                     si.window_x = self.wx
                     si.window_y = self.wy
 
                     info = si.edit_traits()
-                    self._open_window(si._id, info)
+                    self._open_window(si.rid, info)
                 except Exception, e:
+                    import traceback
+                    traceback.print_exc()
                     self.warning(e)
 
     def _open_window(self, wid, ui):

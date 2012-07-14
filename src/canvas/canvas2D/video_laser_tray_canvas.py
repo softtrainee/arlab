@@ -25,8 +25,6 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
     '''
     '''
 
-
-
     def set_stage_position(self, x, y):
         '''
         '''

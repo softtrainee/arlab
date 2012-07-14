@@ -27,7 +27,7 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 
 
 class BaseDBResult(HasTraits):
-    _id = Long
+    rid = Long
     _db_result = Any
 
 
@@ -36,14 +36,14 @@ class DBResult(BaseDBResult):
     summary = Str
     graph = Instance(Graph)
     rundate = Date
-    runtime = Time
+    runtime = Str#('%H:%M:%s')
 
     directory = Str
     filename = Str
     window_x = 0.1
     window_y = 0.1
-    window_width=None
-    window_height=None
+    window_width = None
+    window_height = None
 
     title_str = Str('Base')
     data_manager = None
@@ -67,15 +67,15 @@ class DBResult(BaseDBResult):
     def load(self):
         dbr = self._db_result
         if dbr is not None:
-            self._id = dbr.id
+            self.rid = dbr.id
             self.rundate = dbr.rundate
-            self.runtime = dbr.runtime
+            self.runtime = dbr.runtime.strftime('%H:%M:%S')
             p = dbr.path
             if p is not None:
                 self.directory = p.root if p.root else ''
                 self.filename = p.filename if p.filename else ''
 
-            self.title = '{} {}'.format(self.title_str, self._id)
+            self.title = '{} {}'.format(self.title_str, self.rid)
             self._load_hook(dbr)
 
     def _load_hook(self, dbr):
@@ -85,7 +85,7 @@ class DBResult(BaseDBResult):
         dm = self._data_manager_factory()
         try:
             self._loadable = dm.open_data(self._get_path())
-        except Exception:
+        except Exception, e:
             self._loadable = False
         finally:
             dm.close()
@@ -100,7 +100,7 @@ class DBResult(BaseDBResult):
         data = self._get_path()
         _, ext = os.path.splitext(self.filename)
 
-        if ext == '.h5':
+        if ext in ['.h5', '.hdf5']:
             dm = H5DataManager()
             if os.path.isfile(data):
                 #is it wise to actually open the file now?
@@ -135,10 +135,9 @@ class DBResult(BaseDBResult):
                     style='custom',
                     height=1.0)
         return g
-
-    def traits_view(self):
-        interface_grp = VGroup(
-                          VGroup(Item('_id', style='readonly', label='ID'),
+    def _get_info_grp(self):
+        return VGroup(
+                          VGroup(Item('rid', style='readonly', label='ID'),
                                     Item('rundate', style='readonly', label='Run Date'),
                                     Item('runtime', style='readonly', label='Run Time'),
                                     Item('directory', style='readonly'),
@@ -156,32 +155,34 @@ class DBResult(BaseDBResult):
 #                    label='Info',
                     )
 
+    def traits_view(self):
 
-        grps = Group(interface_grp)
+        grps = Group(self._get_info_grp)
 #        grps = Group()
 
         agrps = self._get_additional_tabs()
-        if self.graph is not None:
-            g = self._get_graph_item()
+        g = self._get_graph_item()
+        if g is not None:
             agrps.append(g)
 
         for i, ai in enumerate(agrps):
             grps.content.insert(i, ai)
-            
-        v= View(grps,
+
+        return self._view_factory(grps)
+
+    def _view_factory(self, grps):
+        v = View(grps,
                     resizable=self.resizable,
                     x=self.window_x,
                     y=self.window_y,
                     title=self.title
                     )
         if self.window_width:
-            v.width=self.window_width
+            v.width = self.window_width
         if self.window_height:
-            v.height=self.window_height
-        
-      
-
+            v.height = self.window_height
         return v
+
 class RIDDBResult(DBResult):
     runid = Str
 #============= EOF =============================================

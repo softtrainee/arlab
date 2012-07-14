@@ -43,7 +43,7 @@ class BakeoutDBResult(DBResult):
     def load(self):
         dbr = self._db_result
         if dbr is not None:
-            self._id = dbr.id
+            self.rid = dbr.id
             self.rundate = dbr.rundate
             self.runtime = dbr.runtime
             p = dbr.path
