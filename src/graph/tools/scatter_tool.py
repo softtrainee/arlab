@@ -25,16 +25,16 @@ from chaco.tools.api import ScatterInspector
 #=============local library imports  ==========================
 
 
-class ScatterTool(ScatterInspector):
-    '''
-    '''
-    parent = Any
-    plotid = Int(0)
-
-    def normal_mouse_move(self, event):
-        '''
-      
-        '''
-        #self.parent.selected_plotid = self.plotid
-        #super(ScatterTool, self).normal_mouse_move(event)
-        ScatterInspector.normal_mouse_move(self, event)
+#class ScatterTool(ScatterInspector):
+#    '''
+#    '''
+#    parent = Any
+#    plotid = Int(0)
+#
+#    def normal_mouse_move(self, event):
+#        '''
+#      
+#        '''
+#        #self.parent.selected_plotid = self.plotid
+#        #super(ScatterTool, self).normal_mouse_move(event)
+#        ScatterInspector.normal_mouse_move(self, event)

@@ -18,6 +18,7 @@
 
 #============= enthought library imports =======================
 from chaco.tools.api import PanTool
+from enable.base_tool import BaseTool
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -32,9 +33,20 @@ class MyPanTool(PanTool):
         '''
 
         '''
+#        print event.character
         #print self.component
         if event.character == 'p':
             self.active = not self.active
+
+            #disable the other tools
+            bc = self.component.tools[0]
+            for t in bc.tools:
+                if t is not self:
+                    t.active = not self.active
+            if self.active:
+                event.window.set_pointer('hand')
+            else:
+                event.window.set_pointer('arrow')
 
         elif event.character == 'Esc':
             c = self.component
@@ -48,6 +60,30 @@ class MyPanTool(PanTool):
     def normal_left_down(self, event):
         '''
         '''
+
         if self.active:
             PanTool.normal_left_down(self, event)
+#            event.handled = True
+
+#    def normal_left_up(self, event):
+#        '''
+#        '''
+#        if self.active:
+#            PanTool.normal_left_up(self, event)
+##            event.handled = False
+#        print event.handled, 'panup'
+
+#    def panning_left_up(self, event):
+#        print 'panup', event
+#        if self._auto_constrain:
+#            self.constrain = False
+#            self.constrain_direction = None
+#        self.event_state = "normal"
+#        event.window.set_pointer("arrow")
+#        if event.window.mouse_owner == self:
+#            event.window.set_mouse_owner(None)
+
+#        PanTool.panning_left_up(self, event)
+#        event.handled = False
+#        self.normal_left_up(event)
 #============= EOF ====================================

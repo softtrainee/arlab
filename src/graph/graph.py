@@ -46,6 +46,7 @@ from tools.contextual_menu_tool import ContextualMenuTool
 from tools.pan_tool import MyPanTool as PanTool
 from chaco.data_label import DataLabel
 from src.loggable import Loggable
+from chaco.tools.broadcaster import BroadcasterTool
 
 
 def name_generator(base):
@@ -406,20 +407,22 @@ class Graph(Loggable):
         if series is None:
             series = len(self.series[plotid]) - 1
 
-        if isinstance(series, int):
-            series = 'plot{}'.format(series)
 
         try:
             legend.labels[series] = label
         except Exception, e:
             legend.labels.append(label)
 
+        if isinstance(series, int):
+            series = 'plot{}'.format(series)
 
-        try:
-            plots = self.plots[plotid].plots[series]
-        except:
-            print series
-            print self.plots[plotid].plots.keys()
+#        try:
+
+        plots = self.plots[plotid].plots[series]
+#        except Exception, e:
+#            print e, 'safd'
+#            print series, 'aadsf'
+#            print self.plots[plotid].plots.keys(), 'asfd'
 
         self.plots[plotid].plots[label] = plots
         self.plots[plotid].plots.pop(series)
@@ -589,7 +592,7 @@ class Graph(Loggable):
         pan = kw['pan'] if 'pan' in kw else False
 
         contextmenu = kw['contextmenu'] if 'contextmenu' in kw.keys() else True
-
+        tools = []
         if zoom:
             nkw = dict(tool_mode='box',
                     always_on=False
@@ -600,6 +603,7 @@ class Graph(Loggable):
                     nkw[k] = zoomargs[k]
             zt = ZoomTool(component=p, **nkw)
             p.overlays.append(zt)
+            tools.append(zt)
 
         if pan:
             kwargs = dict(always_on=False)
@@ -607,8 +611,9 @@ class Graph(Loggable):
                 kwargs['constrain'] = True
                 kwargs['constrain_direction'] = pan
                 kwargs['constrain_key'] = None
-
-            p.tools.append(PanTool(p, **kwargs))
+            pt = PanTool(p, **kwargs)
+#            p.tools.append(pt)
+            tools.append(pt)
 
         for tool in pc.tools:
             if isinstance(tool, ContextualMenuTool):
@@ -626,6 +631,12 @@ class Graph(Loggable):
             title = '{}title'.format(t)
             if title in kw:
                 self._set_title('{}_axis'.format(t), kw[title], plotid)
+
+
+        broadcaster = BroadcasterTool(compnent=p,
+                                      tools=tools
+                                      )
+        p.tools.insert(0, broadcaster)
 
         return p
 

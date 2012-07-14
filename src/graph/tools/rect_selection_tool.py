@@ -39,9 +39,9 @@ class RectSelectionTool(AbstractOverlay):
     hover_metadata_name = Str('hover')
     persistent_hover = False
     selection_metadata_name = Str('selections')
+    active = True
 
     def normal_mouse_move(self, event):
-
         control = event.window.control
         self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
 
@@ -64,7 +64,7 @@ class RectSelectionTool(AbstractOverlay):
    
         '''
 
-        if self.event_state == 'select' and not self.others_active():
+        if self.event_state == 'select': #@and not self.others_active():
             self._overlay_box(gc)
 
     def _overlay_box(self, gc):
@@ -109,18 +109,20 @@ class RectSelectionTool(AbstractOverlay):
         '''
 
         '''
-
-        if not self.others_active():
+        if self.active and not self.parent.filters[self.plotid]:
             self.parent.selected_plotid = self.plotid
 
             token = self._get_selection_token(event)
             if not token:
+    #                self.component.index.metadata[self.selection_metadata_name] = []
                 self._start_select(event)
             else:
                 if self._already_selected(token):
                     self._deselect_token(token)
                 else:
                     self._select_token(token)
+
+            event.handled = True
 
     def _deselect_token(self, token):
         '''
@@ -153,30 +155,34 @@ class RectSelectionTool(AbstractOverlay):
             else:
                 if append:
                     if token not in md[self.selection_metadata_name]:
-                        new = md[self.selection_metadata_name] + [token]
-                        md[self.selection_metadata_name] = new
+                        md[self.selection_metadata_name] += [token]
 
-                        getattr(plot, name).metadata_changed = True
+            getattr(plot, name).metadata_changed = True
 #            print md
 #            plot.request_redraw()
 
-    def others_active(self):
-        '''
-        '''
-        # a bit of a hack to prevent selection when we are in the panning
-        for plot in self.parent.plots:
-            for tool in plot.tools:
-                if hasattr(tool, 'state'):
-                    if tool.state:
-                        return True
-        else:
-            return False
+#    def others_active(self):
+#        '''
+#        '''
+#        # a bit of a hack to prevent selection when we are in the panning
+#        for plot in self.parent.plots:
+#            for tool in plot.tools:
+#                if hasattr(tool, 'state'):
+#                    if tool.state:
+#                        return True
+#        else:
+#            return False
+
+#    def normal_left_up(self, event):
+#        '''
+#
+#        '''
+#        print 'norm up'
 
     def select_left_up(self, event):
         '''
 
         '''
-
         self._update_selection()
 
         self._end_select(event)
@@ -193,28 +199,38 @@ class RectSelectionTool(AbstractOverlay):
     def _update_selection(self):
         '''
         '''
+
+
+        comp = self.component
+        index = comp.index
+        ind = []
         if self._start_pos and self._end_pos:
             x, y = self._start_pos
             x2, y2 = self._end_pos
-            dx, dy = self.component.map_data([x, y])
-            dx2, dy2 = self.component.map_data([x2, y2])
-            ind = []
+            dx, dy = comp.map_data([x, y])
+            dx2, dy2 = comp.map_data([x2, y2])
 
-            datax = self.component.index.get_data()
-            datay = self.component.value.get_data()
+            datax = index.get_data()
+            datay = comp.value.get_data()
 
             data = vstack([datax, datay]).transpose()
-            for i, args in enumerate(data):
-                if dx <= args[0] <= dx2 and dy >= args[1] >= dy2:
-                    ind.append(i)
-            selection = self.component.index.metadata['selections']
-            for i in ind:
-                if i in selection:
-                    selection.pop(selection.index(i))
-                else:
-                    selection.append(i)
-            self.component.index.metadata['selections'] = selection
-            self.component.index.metadata_changed = True
+#            for i, args in enumerate(data):
+#                if dx <= args[0] <= dx2 and dy >= args[1] >= dy2:
+#                    ind.append(i)
+            ind = [i for i, (x, y) in enumerate(data) \
+                    if dx <= x <= dx2 and dy >= y >= dy2
+                   ]
+
+        if not ind and self.parent.filters[self.plotid]:
+            return
+
+        selection = index.metadata[self.selection_metadata_name]
+        index.metadata[self.selection_metadata_name] = list(set(ind) - set(selection))
+#        else:
+#            index.metadata[self.selection_metadata_name] = ind
+
+        index.metadata_changed = True
+
 
     def _end_select(self, event):
         '''
