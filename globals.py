@@ -43,8 +43,18 @@ class Globals(object):
     use_ipc = False
 
     _test = None #set mode to 'test' when running tests
-    def build(self):
-        pass
+
+    def build(self, ip):
+
+        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
+        for attr, func in [('use_ipc', boolfunc),
+                           ('ignore_initialization_warnings'),
+                           ('ignore_connection_warnings'),
+                           ('ignore_chiller_unavailable')
+                            ]:
+            a = ip.get_global(attr)
+            if a:
+                setattr(globalv, attr, func(a))
 
     def _get_test(self):
         return self._test
