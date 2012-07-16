@@ -44,14 +44,16 @@ def build_globals():
     ip = InitializationParser()
 
     from globals import globalv
-#    use_ipc = ip.get_global('use_ipc')
-    boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
-    for attr, func in [('use_ipc', boolfunc),
-                        #('mode', str)
-                        ]:
-        a = ip.get_global(attr)
-        if a:
-            setattr(globalv, attr, func(a))
+    globalv.build(ip)
+##    use_ipc = ip.get_global('use_ipc')
+#    boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
+#    for attr, func in [('use_ipc', boolfunc),
+#                       ('ignore_initialization_')
+#                        #('mode', str)
+#                        ]:
+#        a = ip.get_global(attr)
+#        if a:
+#            setattr(globalv, attr, func(a))
 
 #    if use_ipc:
 #        globalv.use_ipc =
