@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Instance, DelegatesTo, Event, Bool, \
  on_trait_change, Any, List, Property, Button
@@ -244,8 +242,6 @@ class SpectrometerManager(Manager):
     def _active_detectors_changed(self, obj, name, old, new):
         self.scan_graph.set_series_visiblity(new, series=DETECTOR_ORDER.index(obj.name))
 
-    def _get_defscan_label(self):
-        return 'Start' if not self.defscanning else 'Stop'
 
     def traits_view(self):
         control_group = VGroup(
@@ -295,6 +291,14 @@ class SpectrometerManager(Manager):
                     resizable=True,
                     handler=self.handler_klass
                     )
+
+
+#===============================================================================
+# property getter/setters
+#===============================================================================
+    def _get_defscan_label(self):
+        return 'Start' if not self.defscanning else 'Stop'
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('spectrometer')

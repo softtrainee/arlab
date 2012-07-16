@@ -47,7 +47,12 @@ from tools.pan_tool import MyPanTool as PanTool
 from chaco.data_label import DataLabel
 from src.loggable import Loggable
 from chaco.tools.broadcaster import BroadcasterTool
+VALID_FONTS = ['Helvetica', 'Arial',
+               'Lucida Grande',
+#               'Times New Roman',
+               'Geneva',
 
+               ]
 
 def name_generator(base):
     '''
@@ -60,9 +65,6 @@ def name_generator(base):
 
 IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.tiff', '.tif', '.gif']
 DEFAULT_IMAGE_EXT = IMAGE_EXTENSIONS[0]
-VALID_FONTS = ['Helvetica', 'Arial',
-               'Lucida Grande', 'Times New Roman',
-               'Geneva']
 
 
 def fmt(data):
@@ -407,22 +409,20 @@ class Graph(Loggable):
         if series is None:
             series = len(self.series[plotid]) - 1
 
+        if isinstance(series, int):
+            series = 'plot{}'.format(series)
 
         try:
             legend.labels[series] = label
         except Exception, e:
             legend.labels.append(label)
 
-        if isinstance(series, int):
-            series = 'plot{}'.format(series)
 
-#        try:
-
-        plots = self.plots[plotid].plots[series]
-#        except Exception, e:
-#            print e, 'safd'
-#            print series, 'aadsf'
-#            print self.plots[plotid].plots.keys(), 'asfd'
+        try:
+            plots = self.plots[plotid].plots[series]
+        except:
+            print series
+            print self.plots[plotid].plots.keys()
 
         self.plots[plotid].plots[label] = plots
         self.plots[plotid].plots.pop(series)
@@ -490,6 +490,7 @@ class Graph(Loggable):
         pc = self.plotcontainer
         if pc.overlays:
             pc.overlays.pop()
+
         if not font in VALID_FONTS:
             font = 'Helvetica'
 
@@ -497,9 +498,16 @@ class Graph(Loggable):
             size = 12
         self._title_font = font
         self._title_size = size
-        font = '%s %s' % (font, size)
-        pc.overlays.append(PlotLabel(t,
-                                     component=pc,
+        font = '{} {}'.format(font, size)
+#        import wx
+
+#        family = wx.FONTFAMILY_MODERN
+#        style = wx.FONTSTYLE_NORMAL
+#        weight = wx.FONTWEIGHT_NORMAL
+#        font = wx.Font(size, family, style, weight, False,
+#                       font)
+
+        pl = PlotLabel(t, component=pc,
                                  font=font,
                                  vjustify='bottom',
                                  overlay_position='top'

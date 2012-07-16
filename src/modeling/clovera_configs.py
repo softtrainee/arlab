@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  Str, Int, Float, Bool, Array
+from traits.api import  Str, Int, Float, Bool, Array, Property
 from traitsui.api import View, Item, ModalButtons, Handler, \
      EnumEditor, HGroup, Label, Spring
 #============= standard library imports ========================
@@ -83,7 +83,7 @@ class FilesConfig(BaseConfig):
 
     STOP = 'stop'
     n = 'n'
-    _dump_attrs = ['n','runid', 'STOP']
+    _dump_attrs = ['n', 'runid', 'STOP']
 
 class AutoarrConfig(BaseConfig):
     klass_name = 'autoarr'
@@ -123,16 +123,43 @@ class AutoarrConfig(BaseConfig):
 
         return v
 
+
+#def validate_nruns(obj, name, value):
+#    try:
+#        m = float(value)
+#        if m <= 20 or m >= 199:
+#            return value
+#    except:
+#        return value
+
+
 class AutoagemonConfig(BaseConfig):
     klass_name = 'autoagemon'
     #===========================================================================
     # config params
     #===========================================================================
-    nruns = Int(50)
+    nruns = Property()
+    _nruns = Int(21)
     max_plateau_age = Float(1000)
     _dump_attrs = ['nruns', 'max_plateau_age']
+
+    def _validate_nruns(self, value):
+        try:
+            m = int(value)
+            if m <= 20 or m >= 199:
+                return value
+        except:
+            return value
+
+    def _get_nruns(self):
+        return self._nruns
+
+    def _set_nruns(self, v):
+        if v is not None:
+            self._nruns = v
+
     def traits_view(self):
-        v = View(Item('nruns'),
+        v = View(Item('nruns', label='NRuns (min=21, max=199)'),
                  Item('max_plateau_age', label='Max. Plateau Age (Ma)'),
                  buttons=self._get_buttons(),
                  handler=BaseConfigHandler,
