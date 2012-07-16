@@ -43,6 +43,8 @@ class Video(Image):
     _recording = Bool(False)
     _lock = None
     _prev_frame = None
+    _stop_recording_event = None
+
     def open(self, user=None, identifier=0, force=False):
         '''
 
@@ -152,7 +154,8 @@ class Video(Image):
     def stop_recording(self):
         '''
         '''
-        self._stop_recording_event.set()
+        if self._stop_recording_event is not None:
+            self._stop_recording_event.set()
         self._recording = False
 
     def record_frame(self, path, crop=None, **kw):
