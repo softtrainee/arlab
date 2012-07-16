@@ -49,7 +49,8 @@ class StageVisualizer(Manager):
     def __init__(self, *args, **kw):
         super(StageVisualizer, self).__init__(*args, **kw)
 #        p = os.path.join(data_dir, 'stage_visualizer')
-        self.path, _ = unique_path(paths.stage_visualizer_dir, 'vis', filetype='')
+        self.path, _ = unique_path(paths.stage_visualizer_dir, 'vis',
+                                   extension='')
 
     def update_calibration(self, obj, name, new):
         self.clear()

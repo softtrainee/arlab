@@ -33,8 +33,8 @@ def add(func):
         sess = obj.get_session()
         dbr = None
         if sess:
-            dbr = func(obj, *args, **kwargs)
-            if dbr:
+            dbr, add = func(obj, *args, **kwargs)
+            if dbr and add:
                 sess.add(dbr)
 
                 try:
@@ -68,7 +68,12 @@ def _get_one(func, obj, name, *args, **kw):
     try:
         return q.one()
     except sqlalchemy.exc.SQLAlchemyError, e:
-        print e
+        print 'e1', e
+        try:
+            return q.all()[0]
+        except (sqlalchemy.exc.SQLAlchemyError, IndexError), e:
+            print 'e2', e
+
 
 def delete_one(func):
     def _delete_one(obj, name, *args, **kw):

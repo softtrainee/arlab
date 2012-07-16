@@ -138,6 +138,11 @@ class PyScript(Loggable):
     cancel_flag = Bool
     hash_key = None
 
+    _estimated_duration = 0
+
+    def get_estimated_duration(self):
+        return self._estimated_duration
+
     def _cancel_flag_changed(self, v):
         if v:
             result = confirmation(None, 'Are you sure you want to cancel {}'.format(self.logger_name))
@@ -316,10 +321,12 @@ class PyScript(Loggable):
 
         self.info(msg)
 
-    @verbose_skip
     def sleep(self, v):
-#        if self._syntax_checking or self._cancel:
-#            return
+        if self._syntax_checking or self._cancel:
+            self._estimated_duration += v
+            if self.parent_script is not None:
+                self.parent_script._estimated_duration += self._estimated_duration
+            return
 
         self.info('SLEEP {}'.format(v))
         self._sleep(v)
@@ -332,8 +339,6 @@ class PyScript(Loggable):
             ok = True
             if not self._syntax_checked:
                 r = self._test()
-#                if r is not None:
-#                    return r
 
             if ok:
                 self._execute()
@@ -362,8 +367,6 @@ class PyScript(Loggable):
         else:
             self.info('syntax checking passed')
         self._syntax_checking = False
-
-
 
     def _execute(self):
 

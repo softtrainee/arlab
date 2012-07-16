@@ -137,8 +137,7 @@ class Paths():
         # root
         #==============================================================================
         self.scripts_dir = scripts_dir = path.join(root, 'scripts')
-        experiment_dir = path.join(root, 'experiments')
-        plugins_dir = path.join(root, 'plugins')
+        self.experiment_dir = path.join(root, 'experiments')
         self.hidden_dir = path.join(root, '.hidden')
         self.test_dir = path.join(root, 'testing')
         #==============================================================================

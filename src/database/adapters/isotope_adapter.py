@@ -72,9 +72,14 @@ class IsotopeAdapter(DatabaseAdapter):
             if project is not None:
                 project.users.append(user)
 
-            return user
+            #second parameter indicates to the decorator if 
+            #the item should be added
+            return user, True
 
-        self.info('user={} project={} already exists'.format(name, project.name if project else 'None'))
+        else:
+            self.info('user={} project={} already exists'.format(name, project.name if project else 'None'))
+            return user, False
+
 
     @add
     def add_sample(self, name, project=None, material=None, **kw):
@@ -100,13 +105,15 @@ class IsotopeAdapter(DatabaseAdapter):
                 project.samples.append(sample)
                 material.samples.append(sample)
 
-            return sample
-
-
-        self.info('sample={} material={} project={} already exists'.format(name,
+            return sample, True
+        else:
+            self.info('sample={} material={} project={} already exists'.format(name,
                                                                            material.name if material else 'None',
                                                                            project.name if project else 'None'
                                                                            ))
+            return sample, False
+
+
     @add
     def add_labnumber(self, labnumber, sample=None, **kw):
         ln = LabTable(labnumber=labnumber, **kw)
@@ -118,7 +125,7 @@ class IsotopeAdapter(DatabaseAdapter):
         if sample is not None and ln is not None:
             sample.labnumbers.append(ln)
 
-        return ln
+        return ln, True
 
     @add
     def add_analysis(self, labnumber, **kw):
@@ -130,7 +137,7 @@ class IsotopeAdapter(DatabaseAdapter):
         if labnumber is not None:
             labnumber.analyses.append(anal)
 
-        return anal
+        return anal, True
 
     @add
     def add_analysis_path(self, path, analysis=None, **kw):
@@ -141,7 +148,9 @@ class IsotopeAdapter(DatabaseAdapter):
 #
         if analysis is not None:
             analysis.path = anal_path
-            return anal_path
+            return anal_path, True
+
+        return None, False
 
 #    @add
 #    def add_irradiation_chronology(self, irradiations, **kw):

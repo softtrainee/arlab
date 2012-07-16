@@ -15,8 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str, String, Int, List, Enum, Property, Event, Float, Instance
-from traitsui.api import View, Item, VGroup, EnumEditor
+from traits.api import Any, Str, String, Int, List, Enum, Property, \
+     Event, Float, Instance, Bool, cached_property, Dict, on_trait_change
+from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
@@ -81,11 +82,11 @@ class AutomatedRun(Loggable):
     extraction_line_manager = Any
     experiment_manager = Any
 
-    extraction_line_script_name = Str
-    extraction_line_scripts = List(['script1', 'script2', 'script5'])
+#    extraction_line_script_name = Str
+    #extraction_line_scripts = List(['script1', 'script2', 'script5'])
 
-    measurement_script_name = Str
-    measurement_scripts = List(['script1', 'script2', 'script5'])
+#    measurement_script_name = Str
+    #measurement_scripts = List(['script1', 'script2', 'script5'])
 
     sample = Str
 
@@ -97,7 +98,13 @@ class AutomatedRun(Loggable):
     temp_or_power = Property(depends_on='heat_step,_temp_or_power')
     _duration = Float
     _temp_or_power = Float
+
     position = Int
+    endposition = Int
+    multiposition = Bool
+
+    weight = Float
+    comment = Str
 
     update = Event
 
@@ -110,6 +117,36 @@ class AutomatedRun(Loggable):
     _debug = True
 
     _active_detectors = None
+    configuration = None
+
+    _loaded = False
+
+    scripts = Dict
+
+    measurement_script = Property
+    _measurement_script = Any
+
+    extraction_script = Property
+    _extraction_script = Any
+
+#    @on_trait_change('_measurement_script')
+#    def ascd(self, obj, name, new):
+#        print name, new
+
+    def get_estimated_duration(self):
+        '''
+            use the pyscripts to calculate etd
+        '''
+        s = self.duration
+        ms = self.measurement_script
+        if ms is not None:
+            s += ms.get_estimated_duration()
+
+        es = self.extraction_script
+        if es is not None:
+            s += es.get_estimated_duration()
+
+        return s
 
     def get_measurement_parameter(self, key, default=None):
         ms = self._measurement_script
@@ -126,18 +163,34 @@ class AutomatedRun(Loggable):
 
         return default
 
+#    @cached_property
+    def _get_measurement_script(self):
+        if self._measurement_script is None:
+            self._measurement_script = self._load_script('measurement')
+
+        return self._measurement_script
+
+    @cached_property
+    def _get_extraction_script(self):
+        return self._load_script('extraction')
+
     def measurement_script_factory(self, ec):
         ec = self.configuration
-        ms = MeasurementPyScript(root=os.path.dirname(ec['measurement_script']),
-                name=os.path.basename(ec['measurement_script']),
-                arun=self
-                )
-        return ms
+        mname = os.path.basename(ec['measurement_script'])
 
-    def extraction_line_script_factory(self, ec):
+        ms = MeasurementPyScript(root=os.path.dirname(ec['measurement_script']),
+            name=mname,
+            arun=self
+            )
+
+        return ms
+    #        print self.scripts.keys()
+#        print mname
+
+    def extraction_script_factory(self, ec):
         #get the klass
 
-        key = 'extraction_line_script'
+        key = 'extraction_script'
         path = os.path
 
         source_dir = path.dirname(ec[key])
@@ -163,13 +216,6 @@ class AutomatedRun(Loggable):
                     **params
 
                     )
-    def load_extraction_script(self):
-        return self._load_script('extraction_line')
-
-    def load_measurement_script(self):
-        return self._load_script('measurement')
-
-
 
 #===============================================================================
 # doers
@@ -178,7 +224,7 @@ class AutomatedRun(Loggable):
         self.info('extraction')
         self.state = 'extraction'
 
-        self._extraction_line_script.execute()
+        self._extraction_script.execute()
         self.info('extraction finished')
 
     def do_measurement(self):
@@ -340,16 +386,35 @@ class AutomatedRun(Loggable):
 
         scripts = VGroup(
                        Item('extraction_line_script_name',
-                        editor=EnumEditor(name='extraction_line_scripts')),
+                        editor=EnumEditor(name='extraction_line_scripts'),
+                        label='Extraction'
+                        ),
                        Item('measurement_script_name',
-                            editor=EnumEditor(name='measurement_scripts')),
+                            editor=EnumEditor(name='measurement_scripts'),
+                            label='Measurement'
+                            ),
                        label='Scripts',
                        show_border=True
                        )
         v = View(
-                 Item('identifier'),
-                 scripts,
-
+                 VGroup(
+                     Group(
+                     Item('identifier'),
+                     Item('sample', style='readonly'),
+                     Item('weight'),
+                     Item('comment'),
+                     show_border=True,
+                     label='Info'
+                     ),
+                     Group(
+                         Item('position'),
+                         Item('multiposition', label='Multi. position run'),
+                         Item('endposition'),
+                         show_border=True,
+                         label='Position'
+                     ),
+#                     scripts,
+                     )
                  )
         return v
 
@@ -472,15 +537,24 @@ class AutomatedRun(Loggable):
 
     def _load_script(self, name):
 
-        func = getattr(self, '{}_script_factory'.format(name))
-        s = func(self.configuration)
-        if s.bootstrap():
-            try:
-                s._test()
-                setattr(self, '_{}_script'.format(name), s)
-                return True
-            except Exception, e:
-                self.warning(e)
+        ec = self.configuration
+        fname = os.path.basename(ec['{}_script'.format(name)])
+        if fname in self.scripts:
+            self.info('script "{}" already loaded... cloning'.format(fname))
+            s = self.scripts[fname].clone_traits()
+            s.arun = self
+            return s
+        else:
+            self.info('loading script "{}"'.format(fname))
+            func = getattr(self, '{}_script_factory'.format(name))
+            s = func(ec)
+            if s.bootstrap():
+                try:
+                    s._test()
+                    setattr(self, '_{}_script'.format(name), s)
+                    return s
+                except Exception, e:
+                    self.warning(e)
 
 #===============================================================================
 # property get/set

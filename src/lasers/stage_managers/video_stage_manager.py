@@ -136,13 +136,14 @@ class VideoStageManager(StageManager):
                 path = self.save_file_dialog()
             else:
                 vd = self.video_directory if self.video_directory else paths.video_dir
-                path, _ = unique_path(vd, basename, filetype='avi')
+                path, _ = unique_path(vd, basename, extension='avi')
 
         d = os.path.dirname(path)
         if not os.path.isdir(d):
             self.warning('invalid directory {}'.format(d))
             self.warning('using default directory')
-            path, _ = unique_path(paths.video_dir, basename, filetype='avi')
+            path, _ = unique_path(paths.video_dir, basename,
+                                   extension='avi')
 
         self.info('saving recording to path {}'.format(path))
 
@@ -212,7 +213,7 @@ class VideoStageManager(StageManager):
                 if name is None:
                     name = 'snapshot'
                 path, _cnt = unique_path(root=paths.snapshot_dir, base=name,
-                                          filetype='jpg')
+                                          extension='jpg')
             else:
                 path = self.save_file_dialog()
 

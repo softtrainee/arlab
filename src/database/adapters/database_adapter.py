@@ -233,12 +233,13 @@ class DatabaseAdapter(Loggable):
 
     def _add_unique(self, item, attr, name):
         #test if already exists 
-
-        if getattr(self, 'get_{}'.format(attr))(name) is None:
+        nitem = getattr(self, 'get_{}'.format(attr))(name)
+        if nitem is None:
             self.info('adding {}= {}'.format(attr, name))
-            return item
+            return item, True
         else:
             self.info('{}= {} already exists'.format(attr, name))
+            return nitem, False
 
     def _get_datetime_keywords(self, kw):
         d = get_datetime()
@@ -267,7 +268,9 @@ class DatabaseAdapter(Loggable):
     def _get_items(self, table, gtables,
                    join_table=None, filter_str=None,
                    limit=None,
-                   order=None):
+                   order=None,
+                   key=None
+                   ):
         try:
             if isinstance(join_table, str):
                 join_table = gtables[join_table]
@@ -288,6 +291,8 @@ class DatabaseAdapter(Loggable):
                 q = q.order_by(table.id)
 
             res = q.all()
+            if key:
+                return [getattr(ri, key) for ri in res]
             return res
 
         except Exception, e:

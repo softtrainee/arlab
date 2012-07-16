@@ -14,21 +14,21 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-from traits.api import on_trait_change, HasTraits, Instance, List, Enum, Str, Float, Button, Property, Event
-from traitsui.api import View, Item, HGroup, spring
+from traits.api import on_trait_change, HasTraits, Instance, List, \
+     Enum, Str, Float, Button, Property, Event, Any
+import apptools.sweet_pickle as pickle
+from traitsui.api import View, Item, HGroup, Spring, spring, VGroup
 from traitsui.tabular_adapter import TabularAdapter
 from traitsui.editors.tabular_editor import TabularEditor
-from src.helpers.filetools import parse_file
 from pyface.api import FileDialog, OK
+#============= standard library imports ========================
 import os
+#============= local library imports  ==========================
+from src.helpers.filetools import parse_file
 from src.paths import paths
 
-#============= standard library imports ========================
 
-#============= local library imports  ==========================
 class HeatStepAdapter(TabularAdapter):
     can_drop = True
     kind = Str
@@ -105,91 +105,182 @@ class HeatStepAdapter(TabularAdapter):
             return os.path.join(root, '{}_ball.png'.format(im))
 
 class HeatStep(HasTraits):
-    temp_or_power = Float
-    duration = Float
+    temp_or_power = Property
+    _power = Float
+
+    duration = Property
+    _duration = Float
+
     elapsed_time = Float
     state = Enum('not run', 'running', 'success', 'fail')
     step = Str
-    update = Event
+#    update = Event
 
-    @on_trait_change('elapsed_time,state')
-    def _update_table(self):
-        #update the analysis table
-        self.update = True
+    def _get_temp_or_power(self):
+        return self._power
+
+    def _validate_temp_or_power(self, v):
+        return self._validate_float(v, self._power)
+
+    def _set_temp_or_power(self, v):
+        self._power = v
+
+    def _get_duration(self):
+        return self._duration
+
+    def _validate_duration(self, v):
+        return self._validate_float(v, self._duration)
+
+    def _set_duration(self, v):
+        self._duration = v
+
+    @classmethod
+    def _validate_float(cls, v, default):
+        try:
+            return float(v)
+        except (ValueError, TypeError):
+            return default
+
+#    @on_trait_change('elapsed_time,state')
+#    def _update_table(self):
+#        #update the analysis table
+#        self.update = True
 
 class HeatSchedule(HasTraits):
     steps = List(HeatStep)
     kind = Enum('power', 'temp')
+    name = Property(depends_on='path')
     path = Str
 
-    load_button = Button
+    load_button = Button('Load')
+    save_button = Button('Save')
+    save_as_button = Button('Save As')
+    add_button = Button('Add Step')
+
     current_step = Instance(HeatStep)
 
-    elapsed_time = Float
+#    elapsed_time = Float
 
-    @on_trait_change('current_step:elapsed_time')
-    def update_elapsed_time(self, o, n, oo, nn):
-#        print o, n, oo, nn
-        self.elapsed_time = nn
+#    @on_trait_change('current_step:elapsed_time')
+#    def update_elapsed_time(self, o, n, oo, nn):
+##        print o, n, oo, nn
+#        self.elapsed_time = nn
 
-    def _load_button_fired(self):
+#    def reset_steps(self):
+#        for s in self.steps:
+#            s.state = 'not run'
+#            s.elapsed_time = 0
 
-        d = os.path.join(paths.scripts_dir, 'laserscripts', 'heat_schedules')
-        dlg = FileDialog(action='open',
-                         default_directory=d)
-        if dlg.open() == OK:
-            self.load(dlg.path)
+    def traits_view(self):
+        editor = TabularEditor(adapter=HeatStepAdapter(kind=self.kind),
+                                operations=['delete', 'edit'],
+                                multi_select=True,
+                                editable=True,
+                                update='object.current_step.update'
+                                )
+        v = View(
+                 VGroup(
+                     HGroup(Spring(width=5,
+                                   springy=False
+                                   ), Item('name',
+#                          show_label=False, 
+                          style='readonly'),
+                            spring),
+                     Item('steps',
+                          show_label=False, editor=editor),
+                     HGroup(Item('add_button'),
+                            spring,
+                            Item('save_as_button',
+                                 enabled_when='steps',
+                                 ),
+                            Item('save_button',
+                                 enabled_when='path'
+                                ),
+                            Item('load_button'),
+                            show_labels=False
+                        ),
+                    show_border=True,
+                    label='Heat Schedule'
+                    ),
+                 )
+        return v
 
-    def load(self, p=None):
+#===============================================================================
+# persistence
+#===============================================================================
+    def _dump(self, p):
+        with open(p, 'wb') as f:
+            pickle.dump(self.steps, f)
+
+    def _load(self, p=None):
+        '''
+            files ending with .txt loaded as text
+            otherwise unpickled
+        '''
         if p is None:
             p = self.path
         else:
             self.path = p
 
         self.steps = []
-        for args in parse_file(p, delimiter=','):
-            if len(args) == 2:
-                self.steps.append(HeatStep(temp_or_power=float(args[0]),
-                                           duration=float(args[1])
-                                           ))
-            elif len(args) == 4:
-                for i in range(*map(int, args[:3])):
-                    self.steps.append(HeatStep(temp_or_power=float(i),
-                                               duration=float(args[3])
+        if p.endswith('.txt'):
+            #load a text file
+            for args in parse_file(p, delimiter=','):
+                if len(args) == 2:
+                    self.steps.append(HeatStep(temp_or_power=float(args[0]),
+                                               duration=float(args[1])
                                                ))
+                elif len(args) == 4:
+                    for i in range(*map(int, args[:3])):
+                        self.steps.append(HeatStep(temp_or_power=float(i),
+                                                   duration=float(args[3])
+                                                   ))
+        else:
+            with open(p, 'rb') as f:
+                try:
+                    self.steps = pickle.load(f)
+                except Exception:
+                    pass
 
-    def reset_steps(self):
-        for s in self.steps:
-            s.state = 'not run'
-            s.elapsed_time = 0
+#===============================================================================
+# button handlers
+#===============================================================================
 
+    def _add_button_fired(self):
+        ps = self.steps[-1]
+        self.steps.append(ps.clone_traits())
+
+    def _load_button_fired(self):
+        p = self._get_path('open')
+        if p is not None:
+            self._load(p)
+
+    def _save_button_fired(self):
+        self._dump(self.path)
+
+    def _save_as_button_fired(self):
+        p = self._get_path('save as')
+        if p is not None:
+            self.path = p
+            self._dump(p)
+    def _get_path(self, action):
+        d = os.path.join(paths.heating_schedule_dir)
+        dlg = FileDialog(action=action,
+                         default_directory=d)
+        if dlg.open() == OK:
+            return dlg.path
+
+    def _get_name(self):
+        return os.path.basename(self.path)
+#===============================================================================
+# debuggin
+#===============================================================================
     def _steps_default(self):
         return [
-                HeatStep(temp_or_power=0,
-                               duration=5),
-
-                HeatStep(temp_or_power=0,
-                               duration=5),
-
-                ]
-    def traits_view(self):
-        editor = TabularEditor(adapter=HeatStepAdapter(kind=self.kind),
-                                operations=['move', 'delete',
-                                              'append', 'insert',
-                                              'edit'
-                                              ],
-                                multi_select=True,
-                                editable=True,
-                                update='object.current_step.update'
-                                )
-        v = View(
-
-                 HGroup(spring, Item('elapsed_time', format_str='%0.3f', style='readonly')),
-                 Item('steps', show_label=False, editor=editor),
-                 HGroup(spring, Item('load_button', show_label=False)),
-#                 Item('save_button', show_label = False),
-
-                 )
-        return v
-
+                HeatStep()]
+#
+#                HeatStep(temp_or_power=0,
+#                               duration=5),
+#
+#                ]
 #============= EOF ====================================
