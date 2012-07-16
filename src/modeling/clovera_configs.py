@@ -143,7 +143,7 @@ class AutoagemonConfig(BaseConfig):
     max_plateau_age = Float(1000)
     _dump_attrs = ['nruns', 'max_plateau_age']
 
-    def _validate_nruns(self, name, value):
+    def _validate_nruns(self, value):
         try:
             m = int(value)
             if m <= 20 or m >= 199:
