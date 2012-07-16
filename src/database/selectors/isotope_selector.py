@@ -17,9 +17,9 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, List, String, \
     Float, Bool, Int, Instance, Property, Dict, Enum, on_trait_change, \
-    Str
+    Str, Trait
 from traitsui.api import VGroup, HGroup, Item, Group, View, ListStrEditor, \
-    InstanceEditor, ListEditor, EnumEditor, Label
+    InstanceEditor, ListEditor, EnumEditor, Label, Spring
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -29,187 +29,9 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.selectors.base_db_result import DBResult
 from src.database.orms.isotope_orm import AnalysisTable
 
-from traitsui.wx.text_editor import CustomEditor
-import wx
 from src.graph.regression_graph import StackedTimeSeriesRegressionGraph
-
-from traitsui.editors.text_editor \
-    import ToolkitEditorFactory, evaluate_trait
-
-class _TextEditor(CustomEditor):
-    evaluate = evaluate_trait
-    parent = Any
-    def init(self, parent):
-        super(_TextEditor, self).init(parent)
-        self.control.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
-
-        p = 0
-        for i, l in enumerate(self.value.split('\n')):
-            e = len(l)
-            st = next((st for st in self.factory.styles if st == i or
-                                                            (i in st if isinstance(st, tuple) else False)
-
-                       ), None)
-
-            if st:
-                sa = self.factory.styles[st]
-                self.control.SetStyle(p, p + e + 1, sa)
-            p += e + 1
-
-
-    def onKeyDown(self, event):
-        if event.CmdDown():
-            event.Skip()
-
-
-class SelectableReadonlyTextEditor(ToolkitEditorFactory):
-    tabs = List
-    styles = Dict
-    def _get_custom_editor_class(self):
-        return _TextEditor
-
-
-class AnalysisSummary(HasTraits):
-    age = Float
-    error = Float
-    result = Any
-
-    summary = Property(depends_on='age,err')
-
-    header1 = ['ID', 'Date', 'Time']
-    header2 = ['Detector', 'Signal']
-
-    def _get_summary(self):
-        from jinja2 import Template
-        doc = '''
-{{header1}}
-{{data1}}
-
-Name:{{result.filename}}
-Root:{{result.directory}}
-
-{{header2}}
-{%- for k,v in signals %}
-{{k}}\t{{v}} 
-{%- endfor %}
-
-Age : {{obj.age}}\xb1{{obj.error}}    
-'''
-
-        data1 = map(lambda x: getattr(self.result, x), ['rid', 'rundate', 'runtime'])
-
-        temp = Template(doc)
-        join = lambda f, n: ('\t' * n).join(f)
-#        join = '\t\t\t'.join
-        entab = lambda x:map('{}'.format, map(str, x))
-        makerow = lambda x, n: join(entab(x), n)
-        result = self.result
-        r = temp.render(result=result,
-                           header1=makerow(self.header1, 3),
-                           header2=makerow(self.header2, 1),
-                           data1=makerow(data1, 3),
-                           signals=zip(result.iso_keys,
-                                       result.intercepts
-                                       ),
-                           obj=self,
-                           )
-        return r
-
-    def traits_view(self):
-#        s = 51
-        ha1 = wx.TextAttr()
-        f = wx.Font(12, wx.MODERN, wx.NORMAL,
-                         wx.NORMAL, False, u'Consolas')
-        f.SetUnderlined(True)
-        ha1.SetFont(f)
-        ha1.SetTabs([200, ])
-
-        f.SetUnderlined(False)
-        f.SetPointSize(10)
-        f.SetWeight(wx.FONTWEIGHT_NORMAL)
-
-        da = wx.TextAttr(colText=(255, 100, 0))
-        da.SetFont(f)
-
-        ha2 = wx.TextAttr()
-        f.SetPointSize(12)
-        f.SetUnderlined(True)
-        ha2.SetFont(f)
-
-        ba = wx.TextAttr()
-        f.SetUnderlined(False)
-        ba.SetFont(f)
-        f.SetPointSize(10)
-
-        styles = {1:ha1,
-                  2:da,
-                  (3, 4, 5, 6):ba,
-                  7:ha2,
-                  (8, 9, 10, 11):ba
-                  }
-
-        v = View(Item('summary', show_label=False,
-#                      editor=HTMLEditor()
-                        style='custom',
-                      editor=SelectableReadonlyTextEditor(
-                        styles=styles,
-                        )
-                      )
-                 )
-        return v
-
-class Analyzer(HasTraits):
-    fith2 = Str
-    fith1 = Str
-    fitax = Str
-    fitl1 = Str
-    fitl2 = Str
-    fitcdd = Str
-
-    filterh2 = Str(enter_set=True, auto_set=False)
-    filterh1 = Str(enter_set=True, auto_set=False)
-    filterax = Str(enter_set=True, auto_set=False)
-    filterl1 = Str(enter_set=True, auto_set=False)
-    filterl2 = Str(enter_set=True, auto_set=False)
-    filtercdd = Str(enter_set=True, auto_set=False)
-
-    @on_trait_change('fit+,filter+')
-    def _changed(self, name, new):
-
-        if new.startswith('fit'):
-            attr = 'fit_types'
-            trim = 3
-        else:
-            attr = 'filters'
-            trim = 6
-
-        name = name[trim:].upper()
-        plotid = list(self.analysis.iso_keys).index(name)
-        g = self.analysis.signal_graph
-        getattr(g, attr)[plotid] = new
-
-        g._metadata_changed()
-
-    def traits_view(self):
-        grp = VGroup()
-        keys = list(self.analysis.iso_keys)
-        keys.reverse()
-        for det in keys:
-            g = HGroup(
-                       Item('fit{}'.format(det.lower()), label=det.upper(),
-                            editor=EnumEditor(values=['linear', 'parabolic',
-                                               'cubic'
-                                               ])
-                            ),
-                       Item('filter{}'.format(det.lower()), show_label=False
-                            )
-
-                )
-
-            grp.content.append(g)
-
-        v = View(grp)
-        return v
+from src.database.isotope_analysis.analyzer import Analyzer
+from src.database.isotope_analysis.analysis_summary import AnalysisSummary
 
 class AnalysisResult(DBResult):
     title_str = 'Analysis'
@@ -292,7 +114,7 @@ class AnalysisResult(DBResult):
 #        self.selected = 'analyzer'
 
         self.analyzer = Analyzer(analysis=self)
-        self.analyzer.fits = ['linear', ] * len(keys)
+#        self.analyzer.fits = [AnalysisParams(fit='linear', name=k) for k in keys]
 
     def _load_graph(self, data):
         graph = self._graph_factory(klass=StackedTimeSeriesRegressionGraph)

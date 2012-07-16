@@ -229,14 +229,14 @@ class RegressionGraph(Graph):
 #            editor = self.regression_editors[plotid]
 #            editor.set_regression_statistics(return_dict, plotid=plotid)
 #
-#        self.regression_results[plotid] = return_dict
+        self.regression_results[plotid] = return_dict
         return return_dict
 
     def add_datum(self, *args, **kw):
         '''
         '''
         super(RegressionGraph, self).add_datum(*args, **kw)
-        self._metadata_changed()
+        self.regress_plots()
         #self.regress_plot(plot, plotid)
 #        args = self._regress_(**kw)
 #        if args:
@@ -270,12 +270,12 @@ class RegressionGraph(Graph):
 
         return x, y, res
 
-#    def new_plot(self, **kw):
-#        '''
-#
-#        '''
-#        self.regression_results.append(None)
-#        args = super(RegressionGraph, self).new_plot(**kw)
+    def new_plot(self, **kw):
+        '''
+
+        '''
+        self.regression_results.append(None)
+        return super(RegressionGraph, self).new_plot(**kw)
 #        if self.show_regression_editor:
 #
 #            self.regression_editors.append(RegressionEditor(graph=self,

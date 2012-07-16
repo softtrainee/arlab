@@ -104,7 +104,9 @@ class VideoManager(Manager):
             if use_dialog:
                 path = self.save_file_dialog()
             else:
-                path, _ = unique_path(paths.video_dir, 'vm_recording', filetype='avi')
+                path, _ = unique_path(paths.video_dir,
+                                      'vm_recording',
+                                      extension='avi')
 
         self.info('saving recording to path {}'.format(path))
 

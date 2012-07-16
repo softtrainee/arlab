@@ -15,41 +15,23 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Button, Float, Int, on_trait_change
-from traitsui.api import View, Item
+from traits.api import Instance, Button, Float, on_trait_change, Str, \
+    DelegatesTo
+from traitsui.api import View, Item, Group, VGroup
 #============= standard library imports ========================
 from threading import Thread, Event
 import os
 import time
-from numpy import loadtxt, array, arange, diagonal, sqrt
-import math
+
 #============= local library imports  ==========================
-#from src.initializer import Initializer
-from src.managers.spectrometer_manager import SpectrometerManager
 from src.managers.manager import Manager
-from src.managers.remote_manager import RemoteExtractionLineManager
-#from src.helpers.paths import scripts_dir
-#from src.managers.data_managers.pychron_db_data_manager import PychronDBDataManager
 from src.experiment.experiment import Experiment
-from src.managers.data_managers.csv_data_manager import CSVDataManager
 
 from src.paths import paths
 from src.managers.data_managers.h5_data_manager import H5DataManager
-paths.build('_test')
-
-from src.scripts.extraction_line_script import ExtractionLineScript
-from src.data_processing.regression.ols import OLS
-from uncertainties import ufloat
-from src.data_processing.statistical_calculations import calculate_mswd
-from src.graph.graph import Graph
-from src.data_processing.time_series.time_series import smooth
-from src.graph.stacked_graph import StackedGraph
+from src.helpers.filetools import unique_path
 
 DEBUG = True
-
-#class AutomatedAnalysisParameters(HasTraits):
-#    runscript_name = Str
-#    rid = Str
 
 
 class ExperimentManager(Manager):
@@ -59,29 +41,31 @@ class ExperimentManager(Manager):
     spectrometer_manager = Instance(Manager)
     experiment_config = None
 
-    experiment = Instance(Experiment, (), kw=dict(name='dore'))
+    active_experiment = Instance(Experiment, ())
 
     data_manager = Instance(Manager)
-
     #these are remote managers
     extraction_line_manager = Instance(Manager)
     laser_manager = Instance(Manager)
 
-    delay_between_runs = Int(5)
+#    delay_between_runs = Int(5)
 
     _dac_peak_center = Float
     _dac_baseline = Float
 
-    ncounts = Int
-    n_baseline_counts = Int
+#    ncounts = Int
+#    n_baseline_counts = Int
 
     _alive = False
 
     mode = 'normal'
-    equilibration_time = 15
+#    equilibration_time = 15
 
     test2 = Button
+    default_save_directory = Str
 
+    title = DelegatesTo('active_experiment', prefix='name')
+    stats = DelegatesTo('active_experiment')
 #    def _data_manager_default(self):
 #        '''
 #            normally the dbmanager connection parameters are set ie host, name etc
@@ -120,10 +104,24 @@ class ExperimentManager(Manager):
 
         return sm
 
+    def end_runs(self):
+        exp = self.active_experiment
+        exp.stats.nruns_finished = len(exp.automated_runs)
+        exp.stop_stats_timer()
+        self.info('automated runs complete')
+
     def do_automated_runs(self):
-        if self.mode == 'client':
-            man = RemoteExtractionLineManager(host='129.138.12.153',
-                                              port=1061)
+
+        app = self.application
+        if app is not None:
+            protocol = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+            man = app.get_service(protocol)
+
+#        if self.mode == 'client':
+#
+#
+#            man = RemoteExtractionLineManager(host='129.138.12.153',
+#                                              port=1061)
             self.extraction_line_manager = man
 
         self._alive = True
@@ -131,30 +129,39 @@ class ExperimentManager(Manager):
 #        self.csv_data_manager = CSVDataManager()
 
 #        sm = self.get_spectrometer_manager()
-        n = len(self.experiment.automated_runs)
+        exp = self.active_experiment
+        n = len(exp.automated_runs)
 
         err_message = ''
 
         dm = H5DataManager()
-        for i, arun in enumerate(self.experiment.automated_runs):
+
+        exp.reset_stats()
+        nruns = len(exp.automated_runs)
+#        tested_measurement_scripts = dict()
+#        tested_extraction_line_scripts = dict()
+        for i, arun in enumerate(exp.automated_runs):
+#            print arun.configuration['measurement_script'], tested_measurement_scripts
+#            if arun.configuration['measurement_script'] in tested_measurement_scripts:
+#                ms = tested_measurement_scripts[arun.measurement_script_name]
+#                arun.default_measurement_script = ms
+#            if arun.configuration['extraction_line_script'] in tested_extraction_line_scripts:
+#                es = tested_extraction_line_scripts[arun.extraction_line_script_name]
+#                arun.default_extraction_line_script = es
+
+            exp.current_run = arun
+            time.sleep(1)
+            arun.state = 'success'
+#            continue
+
             arun._index = i
-
-            self.experiment.current_run = arun
-
             arun.experiment_manager = self
             arun.spectrometer_manager = self.spectrometer_manager
             arun.extraction_line_manager = self.extraction_line_manager
             arun.data_manager = dm
-
-            arun.configuration = dict(extraction_line_script=os.path.join(paths.scripts_dir,
-                                                        'extraction',
-                                                        'Quick_Air_x1.py'),
-
-                                      measurement_script=os.path.join(paths.scripts_dir,
-                                                                      'measurement',
-                                                                      'measureTest.py')
-                                      )
-
+            arun._debug = DEBUG
+            if arun.identifier.startswith('B'):
+                arun.isblank = True
 
             if not self._continue_check():
                 break
@@ -162,19 +169,15 @@ class ExperimentManager(Manager):
             self.info('Start automated run {}'.format(arun.identifier))
 
             #bootstrap the extraction script and measurement script
-            if not arun.load_extraction_script():
+            if not arun.extraction_script:
                 err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
                 self.warning(err_message)
                 continue # or should we continue
 
-            if not arun.load_measurement_script():
+            if not arun.measurement:
                 err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
                 self.warning(err_message)
                 continue
-
-            arun._debug = DEBUG
-            if arun.identifier.startswith('B'):
-                arun.isblank = True
 
             arun.state = 'extraction'
             arun.do_extraction()
@@ -206,23 +209,19 @@ class ExperimentManager(Manager):
 
             arun.state = 'measurement'
             arun.do_measurement()
-#            if not arun.do_measurement(st):
-#                err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
-#                break
 
             if not self._continue_check():
                 break
 
             self.info('Automated run {} finished'.format(arun.identifier))
-            break
 
             if not self._continue_check():
                 break
 
-            if i + 1 == n:
-                break
-
             arun.state = 'success'
+            if i + 1 == n:
+                self.end_runs()
+                continue
 
             self.info('Delay between runs {}'.format(self.delay_between_runs))
             #delay between runs
@@ -233,9 +232,10 @@ class ExperimentManager(Manager):
                 time.sleep(0.5)
 
         else:
-            self.info('automated runs complete')
+            self.end_runs()
             return
 
+        exp.stop_stats_timer()
         arun.state = 'fail'
         self.warning('automated runs did not complete successfully')
         self.warning('error: {}'.format(err_message))
@@ -333,29 +333,56 @@ class ExperimentManager(Manager):
 #                                           identifier=4
 #                                  )
     def new_experiment(self):
-        exp = Experiment()
-        self.experiment = exp
-        exp.edit_traits()
+
+        #get a path for saving
+        #use it as name as well
+
+        d = self.default_save_directory
+
+        p, _ = unique_path(d, 'Experiment ', extension=None)
+
+
+#        p = self.save_file_dialog(default_path=p,
+#                                  default_directory=d
+#                                  )
+        if p is not None:
+            exp = Experiment()
+            exp.path = p
+            exp.add_run()
+            self.active_experiment = exp
+
+        self.edit_traits()
+
 
     def _test2_fired(self):
 #        sm = self.get_spectrometer_manager()
 #        print sm.spectrometer_microcontroller
 #        self.analyze_data()
-        dm = H5DataManager()
-
-        path = '/Users/ross/Pychrondata/data/automated_runs/B-01-intensity015.hdf5'
-        dm.open_data(path)
-        t = dm.get_table('H1', 'signals')
-        print t
-        for r in t.iterrows():
-            print r['time'], r['value']
+#        dm = H5DataManager()
+#
+#        path = '/Users/ross/Pychrondata/data/automated_runs/B-01-intensity015.hdf5'
+#        dm.open_data(path)
+#        t = dm.get_table('H1', 'signals')
+#        print t
+#        for r in t.iterrows():
+#            print r['time'], r['value']
+#        self.new_experiment()
+        self.execute()
 
     def _test_fired(self):
-        self.execute()
+        self.new_experiment()
 
     def execute(self):
         if self.isAlive():
-            self._alive = False
+
+            if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
+                                     title='Confirm Cancel'
+                                     ):
+
+                self._alive = False
+
+
+
         else:
             self._alive = True
 #        target = self.do_experiment
@@ -389,21 +416,41 @@ class ExperimentManager(Manager):
             self.experiment.ok_to_add = False
 
     def traits_view(self):
-        v = View(Item('test', show_label=False),
-                 Item('test2'),
-                 Item('experiment', show_label=False, style='custom'),
 
+        exc_grp = Group(
+                       Item('test2'),
+                       Item('stats', style='custom'),
+                       show_labels=False,
+                       show_border=True,
+                       label='Execute')
+        exp_grp = Group(
+                       Item('active_experiment',
+                       show_label=False, style='custom'),
+                       show_border=True,
+                       label='Experiment'
+                )
+
+        v = View(
+                VGroup(exc_grp,
+                       exp_grp),
                  resizable=True,
-                 width=500,
-                 height=500,
-                 handler=self.handler_klass
+                 width=850,
+                 height=600,
+                 handler=self.handler_klass,
+                 title=self.title
                  )
         return v
 
-    def execute_view(self):
-        return self.traits_view()
+#    def execute_view(self):
+#        return self.traits_view()
+    def test_view(self):
+        v = View('test')
+        return v
 
+    def _default_save_directory_default(self):
+        return paths.experiment_dir
 if __name__ == '__main__':
+    paths.build('_test')
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('experiment_manager')
@@ -420,6 +467,8 @@ if __name__ == '__main__':
 
 #    e = ExperimentManager(spectrometer_manager=s)
     e = ExperimentManager()
+
+    e.configure_traits(view='test_view')
 #    e.analyze_data()
     e.configure_traits()
 

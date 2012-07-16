@@ -292,7 +292,8 @@ class HoleDetector(Detector):
 
     def _save_(self, holenum, cx, cy, nx, ny, dxmm, dymm):
         path, _ = unique_path(paths.positioning_error_dir,
-                              'positioning_error{:03n}_'.format(int(holenum)), filetype='jpg')
+                              'positioning_error{:03n}_'.format(int(holenum)),
+                            extension='jpg')
         self.target_image.save(path)
         #save an associated text file with some metadata
         head, _ = os.path.splitext(path)

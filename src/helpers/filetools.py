@@ -30,17 +30,21 @@ def unique_dir(root, base):
 
     return p
 
-def unique_path(root, base, filetype='txt'):
+def unique_path(root, base, extension='txt'):
     '''
 
     '''
-    if filetype and '.' not in filetype:
-        filetype = '.{}'.format(filetype)
-    p = os.path.join(root, '{}001{}'.format(base, filetype))
+    if extension:
+        if '.' not in extension:
+            extension = '.{}'.format(extension)
+    else:
+        extension = ''
+
+    p = os.path.join(root, '{}001{}'.format(base, extension))
     cnt = 1
     i = 2
     while os.path.exists(p):
-        p = os.path.join(root, '{}{:03n}{}'.format(base, i, filetype))
+        p = os.path.join(root, '{}{:03n}{}'.format(base, i, extension))
         i += 1
         cnt += 1
 

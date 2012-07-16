@@ -104,7 +104,7 @@ def logging_setup(name, level=None):
     logpath = os.path.join(bdir, '{}_current.log'.format(name))
 
     if os.path.isfile(logpath):
-        backup_logpath, _cnt = unique_path(bdir, name, filetype='log')
+        backup_logpath, _cnt = unique_path(bdir, name, extension='log')
         shutil.copyfile(logpath, backup_logpath)
         os.remove(logpath)
 
