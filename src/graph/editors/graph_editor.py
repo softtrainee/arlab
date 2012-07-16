@@ -16,15 +16,15 @@
 
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, \
-     Font, HasTraits, Any, Color, Property, Int, Str, on_trait_change
+    HasTraits, Any, Color, Property, Int, Str, on_trait_change, \
+    Enum
 from traitsui.api import View, Item, \
-    TextEditor, ColorEditor, Handler, Group, VGroup
+    TextEditor, ColorEditor, Handler, Group, VGroup, HGroup
 #=============standard library imports ========================
 from wx import Colour
 import sys
 #=============local library imports  ==========================
-from src.graph.stacked_graph import StackedGraph
-
+from src.graph.graph import VALID_FONTS
 
 class GraphEditorHandler(Handler):
     def closed(self, info, is_ok):
@@ -34,6 +34,9 @@ class GraphEditorHandler(Handler):
         obj.graph_editor = None
 
 PADDING_KEYS = ['left', 'right', 'top', 'bottom']
+
+FONT_SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22,
+               24, 26, 28, 30, 32]
 class GraphEditor(HasTraits):
     '''
     '''
@@ -43,9 +46,12 @@ class GraphEditor(HasTraits):
     bgcolor_ = Color
 
     title = DelegatesTo('graph', prefix='_title')
-    font = Font
-    global_tick_font = Font
-    global_axis_title_font = Font
+    title_font = Enum(VALID_FONTS)
+    title_font_size = Enum(FONT_SIZES)
+    global_tick_font = Enum(VALID_FONTS)
+    global_tick_font_size = Enum(FONT_SIZES)
+    global_axis_title_font = Enum(VALID_FONTS)
+    global_axis_title_font_size = Enum(FONT_SIZES)
 
     xspacing = Int
     yspacing = Int
@@ -59,29 +65,50 @@ class GraphEditor(HasTraits):
         '''
         '''
         g = self.graph
-        f = 'Helvetica 12'
-        if g and g._title_font and g._title_size:
-            f = '%s %s' % (g._title_font,
-                               g._title_size
-                               )
-        self.font = f
+        if not g:
+            return
 
-        if g and g.plots[0]:
-            f = g.plots[0].x_axis.tick_label_font
-            n = f.face_name
-            if not n:
-                n = 'Helvetica'
-            self.global_tick_font = '{} {}'.format(n, f.size)
+        gtf = g._title_font
+        if gtf is not None:
+            self.title_font = gtf
 
-        if g and g.plots[0]:
-            f = g.plots[0].x_axis.title_font
-            n = f.face_name
-            if not n:
-                n = 'Helvetica'
-            self.global_axis_title_font = '{} {}'.format(n, f.size)
+        gtf = g._title_size
+        if gtf is not None:
+            self.title_font_size = gtf
+
+
+#        f = 'Helvetica 12'
+#        if g and g._title_font and g._title_size:
+#            f = '%s %s' % (g._title_font,
+#                               g._title_size
+#                               )
+        plot = g.plots[0]
+        if not plot:
+            return
+
+        f = plot.x_axis.tick_label_font
+        n = f.face_name
+        s = f.size
+        if not n:
+            n = 'Helvetica'
+        if not s:
+            s = 10
+
+        self.global_tick_font = n
+        self.global_tick_font_size = s
+
+        f = plot.x_axis.title_font
+        n = f.face_name
+        s = f.size
+        if not n:
+            n = 'Helvetica'
+        if not s:
+            s = 10
+        self.global_axis_title_font = n
+        self.global_axis_title_font_size = s
 
         for attr, v in zip(PADDING_KEYS ,
-                           self.graph.plots[0].padding
+                           plot.padding
                            ):
             setattr(self, 'padding_{}'.format(attr), v)
 
@@ -112,11 +139,11 @@ class GraphEditor(HasTraits):
         self.container.bgcolor = v
 #        self.container.invalidate_and_redraw()
         self.container.request_redraw()
-
-    def _font_changed(self):
-        '''
-        '''
-        self._update_()
+#
+#    def _font_changed(self):
+#        '''
+#        '''
+#        self._update_()
 
     def _title_changed(self):
         '''
@@ -128,29 +155,41 @@ class GraphEditor(HasTraits):
         '''
         self.sync()
 
+    @on_trait_change('title_font+')
     def _update_(self):
         '''
         '''
-        font, size = self._get_font_args(self.font)
-        self.graph.set_title(self.title, font=font, size=size)
+#        title_font, size = self._get_font_args(self.title_font)
+#        print title_font, size
+        self.graph.set_title(self.title, font=self.title_font,
+                              size=self.title_font_size)
 
-    def _get_font_args(self, f):
-
-        args = str(f).split(' ')
-        size = args[0]
-
-        font = ' '.join(args[2:])
-        return font, size
-
+#    def _get_font_args(self, f):
+#
+#        args = str(f).split(' ')
+#        size = args[0]
+#
+#        title_font = ' '.join(args[2:])
+#        return title_font, size
+    @on_trait_change('global_tick_font+')
     def _global_tick_font_changed(self):
-        self._change_global_font(self.global_tick_font, 'tick_label_font')
+        self._change_global_font(
+                                 'tick',
+                                 'tick_label_font')
 
+    @on_trait_change('global_axis_title_font+')
     def _global_axis_title_font_changed(self):
-        self._change_global_font(self.global_axis_title_font, 'title_font')
+        self._change_global_font(
+                                 'axis_title',
+#                                 self.global_axis_title_font, 
+                                 'title_font')
 
     def _change_global_font(self, f, key):
         g = self.graph
-        font = str(f)
+
+        fn = getattr(self, 'global_{}_font'.format(f))
+        fs = getattr(self, 'global_{}_font_size'.format(f))
+        font = '{} {}'.format(fn, fs)
         for po in g.plots:
             setattr(po.x_axis, key, font)
             setattr(po.y_axis, key, font)
@@ -176,6 +215,8 @@ class GraphEditor(HasTraits):
 
     @on_trait_change('padding_+')
     def _padding_changed(self):
+        from src.graph.stacked_graph import StackedGraph
+
         try:
 #            p = map(int, self.padding.split(','))
 #            if len(p) == 1:
@@ -206,13 +247,20 @@ class GraphEditor(HasTraits):
         general_grp = Group(
                             Item('title', editor=TextEditor(enter_set=True,
                                                auto_set=False)),
-                            Item('font', style='custom'),
+                            HGroup(Item('title_font', label='Font',),
+                                    Item('title_font_size', show_label=False)
+                                        ),
                             Item('bgcolor', editor=ColorEditor()),
                             label='General',
                             show_border=True)
         tick_grp = Group(
-               Item('global_tick_font', style='custom', label='Tick Font'),
-               Item('global_axis_title_font', style='custom', label='Title Font'),
+               HGroup(Item('global_tick_font', label='Tick Font'),
+                      Item('global_tick_font_size', show_label=False)
+                      ),
+               HGroup(
+                      Item('global_axis_title_font', label='Title Font'),
+                      Item('global_axis_title_font_size', show_label=False)
+                      ),
                label='Ticks',
                show_border=True
                )

@@ -35,7 +35,7 @@ import sys
 #============= local library imports  ==========================
 from src.paths import paths
 #from src.helpers.paths import LOVERA_PATH
-from src.graph.diffusion_graph import DiffusionGraph, GROUPNAMES
+from src.graph.diffusion_graph import DiffusionGraph#, GROUPNAMES
 from src.loggable import Loggable
 from src.modeling.data_loader import DataLoader
 from src.modeling.model_data_directory import ModelDataDirectory
