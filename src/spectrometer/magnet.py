@@ -29,12 +29,21 @@ import time
 from src.data_processing.regression.regressor import Regressor
 from src.paths import paths
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
-import math
+#import math
 from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 class CalibrationPoint(HasTraits):
     x = Float
     y = Float
+
+
+def get_float(func):
+    def dec(*args, **kw):
+        try:
+            return float(func(*args, **kw))
+        except (TypeError, ValueError):
+            pass
+    return dec
 
 class Magnet(SpectrometerDevice):
     mftable = List(
@@ -43,98 +52,44 @@ class Magnet(SpectrometerDevice):
     regressor = Instance(Regressor, ())
     microcontroller = Any
 
-    magnet_dac = Property(depends_on='_magnet_dac')
-    _magnet_dac = Float
-    magnet_dacmin = Float(0.0)
-    magnet_dacmax = Float(10.0)
+    dac = Property(depends_on='_dac')
+    _dac = Float
+    dacmin = Float(0.0)
+    dacmax = Float(10.0)
 
     settling_time = 0.01
 
     calibration_points = Property(depends_on='mftable')
     graph = Instance(Graph, ())
-    def _get_calibration_points(self):
-        pts = []
-        xs, ys = self.mftable
-        for xi, yi in zip(xs, ys):
-            xi = MOLECULAR_WEIGHTS[xi]
-            pts.append(CalibrationPoint(x=xi, y=yi))
-        return pts
+#    def _get_calibration_points(self):
+#        pts = []
+#        xs, ys = self.mftable
+#        for xi, yi in zip(xs, ys):
+#            xi = MOLECULAR_WEIGHTS[xi]
+#            pts.append(CalibrationPoint(x=xi, y=yi))
+#        return pts
 
     def update_graph(self):
         pts = self._get_calibration_points()
         self.set_graph(pts)
         return pts
 
-    def _get_magnet_dac(self):
-        return self._magnet_dac
-
-    def _set_magnet_dac(self, v):
-        self.set_dac(v)
-
-    def get_dac_for_mass(self, mass):
-        reg = self.regressor
-        data = [[MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
-                self.mftable[1]
-                ]
-        if isinstance(mass, str):
-            mass = MOLECULAR_WEIGHTS[mass]
-
-        if data:
-            dac_value = reg.get_value('parabolic', data, mass)
-        else:
-            dac_value = 4
-
-        return dac_value
-
-    def set_axial_mass(self, x, hv_correction=1, dac=None):
-        '''
-            set the axial detector to mass x
-        '''
-        reg = self.regressor
-
-        if dac is None:
-            data = [[MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
-                    self.mftable[1]
-                    ]
-            dac = reg.get_value('parabolic', data, x) * hv_correction
-
-        #print x, dac_value, hv_correction
-
-        self.set_dac(dac)
-
-    def set_dac(self, v):
-        self._magnet_dac = v
-        if self.microcontroller:
-            _r = self.microcontroller.ask('SetMagnetDAC {}'.format(v), verbose=True)
-            time.sleep(self.settling_time)
-
-    def read_dac(self):
-        if self.microcontroller is None:
-            r = 0
-        else:
-            r = self.microcontroller.ask('GetMagnetDAC')
-            try:
-                r = float(r)
-            except:
-                pass
-        return r
-
-    def update_mftable(self, key, value):
-        self.info('update mftable {} {}'.format(key, value))
-        xs = self.mftable[0]
-        ys = self.mftable[1]
-
-
-        refindex = xs.index(key)
-        delta = ys[refindex] - value
-        #need to calculate all ys
-        for i, xi in enumerate(xs):
-            mass = MOLECULAR_WEIGHTS[xi]
-            refmass = MOLECULAR_WEIGHTS[key]
-#            ys[i] -= delta * math.sqrt(mass / refmass)
-            ys[i] = value
-
-        self.dump()
+#    def update_mftable(self, key, value):
+#        self.info('update mftable {} {}'.format(key, value))
+#        xs = self.mftable[0]
+#        ys = self.mftable[1]
+#
+#
+#        refindex = xs.index(key)
+#        delta = ys[refindex] - value
+#        #need to calculate all ys
+#        for i, xi in enumerate(xs):
+#            mass = MOLECULAR_WEIGHTS[xi]
+#            refmass = MOLECULAR_WEIGHTS[key]
+##            ys[i] -= delta * math.sqrt(mass / refmass)
+#            ys[i] = value
+#
+#        self.dump()
 
     def set_graph(self, pts):
 
@@ -176,7 +131,60 @@ class Magnet(SpectrometerDevice):
                  )
         return v
 
+#===============================================================================
+# ##positioning
+#===============================================================================
+    def calculate_dac(self, pos):
+        #is pos a number
+        if not isinstance(pos, (float, int)):
+            #is pos a isokey or a masskey 
+            # eg. Ar40, or 39.962
+            mass = None
+            isokeys = {'Ar40':39.962}
+            try:
+                mass = isokeys[pos]
+            except KeyError:
+                try:
+                    mass = float(pos)
+                except:
+                    self.debug('invalid magnet position {}'.format(pos))
 
+            pos = self._map_mass_to_dac(mass)
+
+        return pos
+
+
+    def map_mass_to_dac(self, mass):
+        reg = self.regressor
+        data = [
+                [MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
+                self.mftable[1]
+                ]
+
+        return reg.get_value('parabolic', data, mass)
+
+    def _get_dac(self):
+        return self._dac
+
+    def _set_dac(self, v):
+        self.set_dac(v)
+
+    def set_dac(self, v):
+        self._dac = v
+        if self.microcontroller:
+            _r = self.microcontroller.ask('SetMagnetDAC {}'.format(v), verbose=True)
+            time.sleep(self.settling_time)
+
+    @get_float
+    def read_dac(self):
+        if self.microcontroller is None:
+            r = 0
+        else:
+            r = self.microcontroller.ask('GetMagnetDAC')
+        return r
+#===============================================================================
+# persistence
+#===============================================================================
     def load(self):
         p = os.path.join(paths.setup_dir, 'spectrometer', 'mftable.csv')
         with open(p, 'U') as f:
@@ -196,3 +204,33 @@ class Magnet(SpectrometerDevice):
             for x, y in zip(self.mftable[0], self.mftable[1]):
                 writer.writerow([x, y])
 #============= EOF =============================================
+# def get_dac_for_mass(self, mass):
+#        reg = self.regressor
+#        data = [[MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
+#                self.mftable[1]
+#                ]
+#        if isinstance(mass, str):
+#            mass = MOLECULAR_WEIGHTS[mass]
+#
+#        if data:
+#            dac_value = reg.get_value('parabolic', data, mass)
+#        else:
+#            dac_value = 4
+#
+#        return dac_value
+#
+#    def set_axial_mass(self, x, hv_correction=1, dac=None):
+#        '''
+#            set the axial detector to mass x
+#        '''
+#        reg = self.regressor
+#
+#        if dac is None:
+#            data = [[MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
+#                    self.mftable[1]
+#                    ]
+#            dac = reg.get_value('parabolic', data, x) * hv_correction
+#
+#        #print x, dac_value, hv_correction
+#
+#        self.set_dac(dac)

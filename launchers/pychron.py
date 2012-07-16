@@ -20,7 +20,7 @@
 import os
 #============= local library imports  ==========================
 
-version_id = ''
+version_id = '_test'
 from helpers import build_version
 build_version(version_id)
 
