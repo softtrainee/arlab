@@ -82,7 +82,7 @@ class DummyLM(object):
     stage_manager = DummySM()
     zoom = 30
     beam = 1.5
-    record_lasing = False
+    record_lasing_video = False
     def set_beam_diameter(self, d, **kw):
         return True
 

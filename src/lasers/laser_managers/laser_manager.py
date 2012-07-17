@@ -44,7 +44,8 @@ class LaserManager(Manager):
     graph_manager = Instance(GraphManager, ())
     stage_manager = Instance(StageManager)
     use_video = Bool(False)
-    record_lasing = Bool(False)
+    record_lasing_video = Bool(False)
+    record_lasing_power = Bool(False)
 
     monitor = Instance(LaserMonitor)
     monitor_name = 'laser_monitor'
@@ -65,7 +66,8 @@ class LaserManager(Manager):
 
         bind_preference(self, 'use_video', '{}.use_video'.format(pref_id))
         bind_preference(self, 'close_after_minutes', '{}.close_after'.format(pref_id))
-        bind_preference(self, 'record_lasing', '{}.record_lasing'.format(pref_id))
+        bind_preference(self, 'record_lasing_video', '{}.record_lasing_video'.format(pref_id))
+        bind_preference(self, 'record_lasing_power', '{}.record_lasing_power'.format(pref_id))
 
         bind_preference(self, 'window_height', '{}.height'.format(pref_id))
         bind_preference(self, 'window_x', '{}.x'.format(pref_id))

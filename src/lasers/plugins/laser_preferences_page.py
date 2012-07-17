@@ -31,7 +31,6 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     use_video_server = Bool(False)
     video_server_port = Int(1084)
 
-    record_lasing = Bool(False)
     show_grids = Bool(True)
     show_laser_position = Bool(True)
     show_desired_position = Bool(True)
@@ -47,11 +46,14 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     crosshairs_offset = Tuple(0, 0)
     crosshairs_offset_color = Color('blue')
 
-    record_patterning = Bool(False)
     show_patterning = Bool(True)
     video_directory = Directory
     recording_zoom = Float(0)
+
+    record_patterning = Bool(False)
     record_brightness = Bool(True)
+    record_lasing_video = Bool(False)
+    record_lasing_power = Bool(False)
 
     use_calibrated_power = Bool(True)
     show_bounds_rect = Bool(True)
@@ -62,11 +64,11 @@ class LaserPreferencesPage(ManagerPreferencesPage):
                          Item('video_identifier', label='ID',
                                enabled_when='use_video'),
                          Item('use_autocenter', label='Auto Center'),
-                         Item('record_lasing', label='Record Lasing',
+                         Item('record_lasing_video', label='Record Lasing',
                                enabled_when='use_video'),
                          Item('video_directory', label='Save to',
-                              enabled_when='record_lasing'),
-                         Item('recording_zoom', label='Zoom', enabled_when='record_lasing'),
+                              enabled_when='record_lasing_video_video'),
+                         Item('recording_zoom', label='Zoom', enabled_when='record_lasing_video'),
                          Item('record_brightness', label='Record Brightness Measure'),
 
                          Item('use_video_server', label='Use Server'),
@@ -101,6 +103,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
         patgrp = Group(Item('record_patterning'),
                        Item('show_patterning'), label='Pattern')
         powergrp = Group(
+                        Item('record_lasing_power'),
                         Item('use_calibrated_power'),
                          label='Power')
         return [canvasgrp, videogrp, patgrp, powergrp]
