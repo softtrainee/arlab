@@ -14,14 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
-
 if __name__ == '__main__':
 
     import os
 
     from helpers import build_version
-    build_version('')
+    build_version('_beta')
 
     from src.helpers.logger_setup import logging_setup
     from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
