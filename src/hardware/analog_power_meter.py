@@ -27,10 +27,12 @@ class AnalogPowerMeter(ADCDevice):
     '''
     watt_range = Enum(0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000)
     voltage_range = Float(5.0)
-
+    voltage_scalar=Float(1000)
     def load_additional_args(self, config):
         super(AnalogPowerMeter, self).load_additional_args(config)
         self.set_attribute(config, 'voltage_range', 'General', 'voltage', cast='float')
+        self.set_attribute(config, 'voltage_scalar', 'General', 'scalar', cast='float')
+
         return True
     
     def traits_view(self):
@@ -51,5 +53,10 @@ class AnalogPowerMeter(ADCDevice):
     def read_power_meter(self, *args, **kw):
         '''
         '''
-        return self.read_voltage(**kw) * self.watt_range / self.voltage_range
+        v=self.read_voltage(**kw)
+        if v is None:
+            v=0
+        
+        v/=self.voltage_scalar
+        return v * self.watt_range / self.voltage_range
 #============= EOF ==============================================
