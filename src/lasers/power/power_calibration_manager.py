@@ -253,7 +253,8 @@ class PowerCalibrationManager(Manager):
 
         x = graph.get_data()
         y = graph.get_data(axis=1)
-        coeffs = polyfit(x, y, 1)
+        if x is not None and y is not None:
+            coeffs = polyfit(x, y, 1)
 
 
 #            self._write_data(pi, , table)
@@ -318,9 +319,12 @@ class PowerCalibrationManager(Manager):
     def _calculate_calibration(self):
         xs = self.graph.get_data()
         ys = self.graph.get_data(axis=1)
-
         deg = FITDEGREES[self.parameters.fit_degree]
 
+        #make x and y same lenght
+        if xs is not None and ys is not None:
+            xs,ys= zip(*zip(xs,ys))
+        
         coeffs = polyfit(xs, ys, deg)
         self._coefficients = list(coeffs)
         return self._coefficients
