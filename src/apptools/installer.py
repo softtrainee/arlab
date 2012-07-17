@@ -100,6 +100,12 @@ class Installer(object):
             else:
                 print '----- No Icon File for {} -----'.format(self.prefix)
 
+            #copy the helpers module
+            helpers_path=os.path.join(launchers_root,'helpers.py')
+            if os.path.isfile(helpers_path):
+                shutil.copyfile(helpers_path,
+                                os.path.join(dist_root, 'Resources','helpers.py')
+                                )
             # ===================================================================
             # #edit the plist
             # ===================================================================

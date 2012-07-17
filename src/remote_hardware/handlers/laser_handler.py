@@ -237,7 +237,14 @@ class LaserHandler(BaseRemoteHardwareHandler):
         return self.error_response(err)
 
     def AbortJog(self, manager, *args):
-        err = manager.stage_manager.pattern_manager.stop_pattern()
+        '''
+            no jog will every be started by mass spec currently 
+            do not bother aborting 
+            causing an issue?
+        '''
+        #err = manager.stage_manager.pattern_manager.stop_pattern()
+        
+        err='OK'
         return self.error_response(err)
 
     def SetBeamDiameter(self, manager, data, *args):

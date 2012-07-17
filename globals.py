@@ -34,7 +34,7 @@ class Globals(object):
     initialize_beam = True
     initialize_zoom = True
 
-    ignore_initialization_warnings = True
+    ignore_initialization_warnings = False
     ignore_connection_warnings = True
     ignore_chiller_unavailable = True
 
@@ -48,9 +48,9 @@ class Globals(object):
 
         boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
         for attr, func in [('use_ipc', boolfunc),
-                           ('ignore_initialization_warnings'),
-                           ('ignore_connection_warnings'),
-                           ('ignore_chiller_unavailable')
+                           ('ignore_initialization_warnings',boolfunc),
+                           ('ignore_connection_warnings',boolfunc),
+                           ('ignore_chiller_unavailable',boolfunc)
                             ]:
             a = ip.get_global(attr)
             if a:
