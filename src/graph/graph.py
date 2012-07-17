@@ -511,7 +511,7 @@ class Graph(Loggable):
                                  font=font,
                                  vjustify='bottom',
                                  overlay_position='top'
-                                 ))
+                                 )
 #        pc.invalidate_and_redraw()
         pc.request_redraw()
 

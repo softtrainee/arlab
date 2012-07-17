@@ -148,6 +148,7 @@ class Client(HasTraits):
 
         sock = socket.socket(family, packet_kind)
         sock.settimeout(5)
+        print addr
         sock.connect(addr)
         return sock
 
@@ -321,18 +322,18 @@ def local_client():
     c.configure_traits()
 
 def power_test():
-    c = Client(
-               port=1068,
-#               host='129.138.12.141',
-                host='192.168.0.253',
-               ask_id='E')
+        c = Client(
+                   port=1068,
+    #               host='129.138.12.141',
+                    host='192.168.0.253',
+                   ask_id='E')
 
-    ask = c.ask
-    ask('Enable')
+        ask = c.ask
+        ask('Enable')
 
-    ask('SetLaserPower 10')
-    time.sleep(4)
-    ask('Disable')
+        ask('SetLaserPower 10')
+        time.sleep(4)
+        ask('Disable')
 #    for i in range(500):
 #        print i
 #        c.ask('Enable')
@@ -364,8 +365,26 @@ def mass_spec_param_test():
     c.ask('Read test_paramfoo')
     c.ask('Read pump_time')
 
+def video_test():
+    c = Client(
+               port=1067,
+               host='localhost',
+               ask_id='E',
+               kind='TCP')
+
+    ask = c.ask
+    for i in range(10):
+        print 'executing run', i
+        ask('Enable')
+
+        time.sleep(5)
+        ask('Disable')
+        print 'finish run', i
+
+        time.sleep(7)
 if __name__ == '__main__':
-    local_client()
+    video_test()
+#    local_client()
 #    diode_client()
 #	system_client()
     #power_test()

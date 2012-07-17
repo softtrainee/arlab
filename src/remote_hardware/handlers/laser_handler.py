@@ -79,33 +79,34 @@ class LaserHandler(BaseRemoteHardwareHandler):
         elif isinstance(err, str):
             err = EnableErrorCode(err)
 
-        if manager.record_lasing:
-            def record():
+        def record():
 
 
-                '''
-                    getting the rid needs to be fixed
-                    
-                    the problem is that instances of pychron can be configured
-                    with a laser but no extraction line manager
-                    
-                    so laser manager needs to be configured with an 
-                    rpc-multruns report manager
-                    
-                '''
+            '''
+                getting the rid needs to be fixed
+                
+                the problem is that instances of pychron can be configured
+                with a laser but no extraction line manager
+                
+                so laser manager needs to be configured with an 
+                rpc-multruns report manager
+                
+            '''
 
-                mrm = self.get_mrm()
-                rid = mrm.get_current_rid() if mrm else 'testrid_001'
-
+            mrm = self.get_mrm()
+            rid = mrm.get_current_rid() if mrm else 'testrid_001'
+            if manager.record_lasing_power:
                 manager.start_power_recording(rid)
-                try:
-                    manager.stage_manager.start_recording(basename=rid)
-                except AttributeError:
-                    #not a video stage manager
-                    pass
 
-            t = Thread(target=record)
-            t.start()
+            try:
+                if manager.record_lasing_video:
+                    manager.stage_manager.start_recording(basename=rid)
+            except AttributeError:
+                #not a video stage manager
+                pass
+
+        t = Thread(target=record)
+        t.start()
 
         return self.error_response(err)
 
@@ -116,8 +117,10 @@ class LaserHandler(BaseRemoteHardwareHandler):
         elif isinstance(err, str):
             err = DisableErrorCode(err)
 
-        if manager.record_lasing:
+        if manager.record_lasing_power:
             manager.stop_power_recording(delay=5)
+
+        if manager.record_lasing_video:
             try:
                 manager.stage_manager.stop_recording(delay=5)
             except AttributeError:
@@ -237,14 +240,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
         return self.error_response(err)
 
     def AbortJog(self, manager, *args):
-        '''
-            no jog will every be started by mass spec currently 
-            do not bother aborting 
-            causing an issue?
-        '''
-        #err = manager.stage_manager.pattern_manager.stop_pattern()
-        
-        err='OK'
+        err = manager.stage_manager.pattern_manager.stop_pattern()
         return self.error_response(err)
 
     def SetBeamDiameter(self, manager, data, *args):
