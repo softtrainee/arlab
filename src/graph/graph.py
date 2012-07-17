@@ -445,9 +445,12 @@ class Graph(Loggable):
 
         if isinstance(series, int):
             series = 'plot%i' % series
-        p.showplot(series) if v else p.hideplot(series)
+        try:
+            p.showplot(series) if v else p.hideplot(series)
 
-        self.plotcontainer.invalidate_and_redraw()
+            self.plotcontainer.invalidate_and_redraw()
+        except KeyError:
+            pass
 
     def get_x_limits(self, plotid=0):
         '''

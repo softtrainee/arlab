@@ -26,9 +26,10 @@ import sys
 import time
 
 #============= local library imports  ==========================
+from src.loggable import Loggable
 #from src.initializer import MProgressDialog
 
-class FortranProcess(HasTraits):
+class FortranProcess(Loggable):
     _thread = None
     _process = None
     name = Str
@@ -87,6 +88,7 @@ class FortranProcess(HasTraits):
             return True
 
         except OSError, e:
+            self.warning_dialog('Clovera programs are not executable. Check Default Clovera Directory.\n{}'.format(e))
             import traceback
             traceback.print_exc()
             #warning(None, '{} - {}'.format(e, self.name))

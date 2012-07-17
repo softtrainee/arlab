@@ -32,6 +32,7 @@ from chaco.data_range_1d import DataRange1D
 
 
 class SeriesEditor(HasTraits):
+#    name = Property(depends_on='series')
     name = Property(depends_on='_name')
     _name = Str
 
@@ -43,12 +44,15 @@ class SeriesEditor(HasTraits):
     show = Bool(True)
 
     def _get_name(self):
-        if not self._name:
-            return 'series{:03d}'.format(self.id)
         return self._name
+#        return self.graph.get_series_label(plotid=self.plotid, series=self.id)
 
-    def _set_name(self, v):
-        self._name = v
+#        if not self._name:
+#            return 'series{:03d}'.format(self.id)
+#        return self._name
+#
+#    def _set_name(self, v):
+#        self._name = v
 
     @on_trait_change('series.+')
     def _series_changed(self, obj, name, new):
@@ -76,7 +80,6 @@ class SeriesEditor(HasTraits):
     def _show_changed(self, name, old, new):
         '''
         '''
-
         self.graph.set_series_visiblity(new, plotid=self.plotid,
                                         series=self.name
 
@@ -87,7 +90,7 @@ class SeriesEditor(HasTraits):
         '''
 
         return View(VGroup(
-                            Item('name', show_label=False),
+                            Item('name', show_label=False, style='readonly'),
                             Item('series', style='custom', show_label=False)
                            )
                     )

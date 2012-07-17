@@ -62,11 +62,8 @@ class DiffusionGraph(Graph):
         i = self.selected_plotid
 #        names = ['Spectrum', 'LogR/Ro', 'Arrhenius', 'CoolingHistory', 'UncontrainedThermalHistory']
 #        names=self.include_panels
-
-        names = []
-        for n in self.include_panels:
-            names.append(LABELS[n])
-
+#
+        names = [LABELS[n] for n in self.include_panels]
         self._show_plot_editor(**{'name': names[i]})
 
     def clear(self):

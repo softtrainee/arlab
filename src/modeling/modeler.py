@@ -406,6 +406,7 @@ class Modeler(Loggable):
         g.clear()
         g.new_graph()
         self._spec_cnt = 0
+        self._chist_cnt = 0
 
         if sync:
             g.bindings = bindings
@@ -689,6 +690,9 @@ class Modeler(Loggable):
         g = self.graph
         def build(data):
             g.build_cooling_history(pid=plotidcounter, *data)
+            g.set_series_label('{}.chist.l'.format(runid), plotid=plotidcounter, series=self._chist_cnt)
+            g.set_series_label('{}.chist.h'.format(runid), plotid=plotidcounter, series=self._chist_cnt + 1)
+            self._chist_cnt += 2
 
         data = dl.load_cooling_history()
         self._try(build, data)
