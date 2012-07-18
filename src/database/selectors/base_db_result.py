@@ -157,7 +157,7 @@ class DBResult(BaseDBResult):
 
     def traits_view(self):
 
-        grps = Group(self._get_info_grp)
+        grps = Group(self._get_info_grp())
 #        grps = Group()
 
         agrps = self._get_additional_tabs()

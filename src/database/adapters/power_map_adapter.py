@@ -22,6 +22,7 @@
 from src.database.selectors.power_map_selector import PowerMapSelector
 from src.database.orms.power_map_orm import PowerMapTable, PowerMapPathTable
 from src.database.adapters.database_adapter import DatabaseAdapter
+from src.paths import paths
 
 
 class PowerMapAdapter(DatabaseAdapter):
@@ -43,8 +44,8 @@ class PowerMapAdapter(DatabaseAdapter):
         return b
 
 if __name__ == '__main__':
-    db = PowerMapAdapter(dbname='co2laserdb',
-                            password='Argon')
+    db = PowerMapAdapter(dbname=paths.co2laser_db,
+                         kind='sqlite')
     db.connect()
 
     dbs = PowerMapSelector(_db=db)

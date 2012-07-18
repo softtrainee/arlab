@@ -36,6 +36,10 @@ class PowerMapProcessor:
     color_map = 'hot'
     levels = 15
     interpolation_factor = 5
+    def get_data3D(self, dm):
+        z, metadata = self._extract_h5(dm)
+        x, y, z = self._prep_2D_data(z, normalize=False)
+        return x, y, z
 
     def load_graph(self, reader, window_title=''):
         '''
@@ -239,15 +243,15 @@ class PowerMapProcessor:
 
         return bi
 
-    def _prep_2D_data(self, z):
+    def _prep_2D_data(self, z, normalize=True):
         '''
      
         '''
         z = transpose(z)
 #        print z
-        mx = float(max(z))
-
-        z = array([100 * x / mx for x in [y for y in z]])
+        if normalize:
+            mx = float(max(z))
+            z = array([100 * x / mx for x in [y for y in z]])
 
         r, c = shape(z)
         x = linspace(0, 1, r)

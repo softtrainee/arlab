@@ -453,7 +453,7 @@ class FusionsLaserManager(LaserManager):
                                   ),
                            HGroup(
                                Item('requested_power', style='readonly',
-                                    format_str='%0.2f'
+                                    format_str='%0.2f',
                                     ),
                                 spring,
                                Item('units', show_label=False, style='readonly'),
