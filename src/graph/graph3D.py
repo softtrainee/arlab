@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance
 from traitsui.api import View, Item
@@ -110,6 +108,17 @@ class Graph3D(HasTraits):
 #                          #representation = 'wireframe'
 #                          )
 #        return s
+    def clear(self):
+        self.scene.mlab.clf()
+
+    def plot_data(self, z, func='surf', outline=True,
+                  **kw):
+
+        mlab = self.scene.mlab
+        getattr(mlab, func)(z, **kw)
+
+        if outline:
+            mlab.outline()
 
     def traits_view(self):
 #        self.scene.mlab.points3d(x, y, z)

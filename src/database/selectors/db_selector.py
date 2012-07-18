@@ -84,10 +84,15 @@ class DBSelector(Loggable):
     def load_recent(self):
         self._execute_query(
                             param='{}.{}'.format(self.query_table.__tablename__,
-                                           'rundate'),
+                                           'id'),
                             comp='=',
-                            criteria='this month'
-                            )
+                            criteria='1')
+#        self._execute_query(
+#                            param='{}.{}'.format(self.query_table.__tablename__,
+#                                           'rundate'),
+#                            comp='=',
+#                            criteria='this month'
+#                            )
 
     def traits_view(self):
 
