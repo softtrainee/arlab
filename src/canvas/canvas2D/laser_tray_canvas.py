@@ -331,6 +331,7 @@ class LaserTrayCanvas(MapCanvas):
     def adjust_limits(self, mapper, val, delta=None):
         '''
         '''
+        print mapper, val
         if val is None:
             return
 
