@@ -649,15 +649,17 @@ ABLE TO USE THE HARDWARE JOYSTICK
             eargs = r.split(',')
             try:
                 error_code = int(eargs[0])
-                error_msg = eargs[-1]
+#                error_msg = eargs[-1]
                 if error_code == 0:
                     error = None
                 else:
                     error = error_code
-                    gWarningDisplay.add_text('%s - %s' % (self.name, error_msg))
+                    self.warning('Newport Motion Controller:{} {}'.format(self.name, r))
+#                    gWarningDisplay.add_text('%s - %s' % (self.name, error_msg))
             except:
                 pass
         return error
+
     def set_group_motion_parameters(self, acceleration=None, deceleration=None, velocity=None):
         if self.groupobj is not None:
             if acceleration is not None:

@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #=============enthought library imports=======================
 from traits.api import HasTraits, List, Float, Str, Button
 from traitsui.api import View, Item, CustomEditor, Handler, HGroup, VGroup, spring
@@ -36,6 +34,7 @@ class DisplayHandler(Handler):
         object.delegated_text = object.text
 
         object.opened = False
+        object.was_closed = True
         return True
 
     def init(self, info):
@@ -56,6 +55,7 @@ class RichTextDisplay(HasTraits):
     ok_to_open = True
 
     opened = False
+    was_closed = False
 
     default_color = Str('red')
     bg_color = Str('white')
@@ -66,9 +66,7 @@ class RichTextDisplay(HasTraits):
     #height of the text panel == height-_hspacer
     _hspacer = 25
 
-
     def close(self):
-
         if self.ui is not None:
             self.ui.dispose()
 
@@ -108,6 +106,9 @@ class RichTextDisplay(HasTraits):
                             style=wx.VSCROLL | wx.HSCROLL | wx.TE_READONLY
                             )
 
+        #prevent moving the cursor
+        rtc.Bind(wx.EVT_LEFT_DOWN, lambda x: x)
+
         rtc.SetBackgroundColour(self.bg_color)
 
         rtc.SetEditable(self.editable)
@@ -116,12 +117,6 @@ class RichTextDisplay(HasTraits):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(rtc, 1, wx.EXPAND | wx.ALL, 5)
         panel.SetSizer(sizer)
-        #panel.Layout()
-
-
-        if self.delegated_text:
-            for msg, kw in self.delegated_text:
-                self._add_(msg, **kw)
 
         return panel
 
@@ -145,13 +140,12 @@ class RichTextDisplay(HasTraits):
         family = wx.FONTFAMILY_MODERN
         style = wx.FONTSTYLE_NORMAL
         weight = wx.FONTWEIGHT_NORMAL
-        font = wx.Font(size, family, style, weight)
+        font = wx.Font(size, family, style, weight, False, 'Consolas')
+        d.Freeze()
         d.BeginFont(font)
-#        d.BeginFontSize(10)
         d.BeginTextColour(color)
         d.WriteText(msg)
         d.EndTextColour()
-#        d.EndFontSize()
         d.EndFont()
 
         if new_line:
@@ -159,16 +153,18 @@ class RichTextDisplay(HasTraits):
 
         lp = d.GetLastPosition()
         d.ShowPosition(lp + 600)
+        d.Thaw()
 
     def add_text(self, msg, **kw):
         '''
         '''
 
+        tappend = self.text.append
         if isinstance(msg, (list, tuple)):
             for mi in msg:
-                self.text.append((mi, kw))
+                tappend(len(mi) + 1)
         else:
-            self.text.append((msg, kw))
+            tappend(len(msg) + 1)
 
         if self._display:
             if isinstance(msg, (list, tuple)):
@@ -176,17 +172,9 @@ class RichTextDisplay(HasTraits):
                     self._add_(mi, **kw)
             else:
                 self._add_(msg, **kw)
-            if len(self.text) > 500:
-                a = self.text.pop(0)[0]
-                self._display.Remove(0, len(a) + 1)
+            if len(self.text) > 300:
+                self._display.Remove(0, self.text.pop(0))
                 self._display.SetInsertionPointEnd()
-
-        else:
-            if isinstance(msg, (list, tuple)):
-                for mi in msg:
-                    self.delegated_text.append((mi, kw))
-            else:
-                self.delegated_text.append((msg, kw))
 
 
 from email.mime.multipart import MIMEMultipart

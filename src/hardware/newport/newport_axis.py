@@ -570,7 +570,6 @@ class NewportAxis(Axis):
 #        return results
         results.edit_traits()
 
-
     def _anytrait_changed(self, name, old, new):
 #        '''
 #
