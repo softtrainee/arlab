@@ -69,7 +69,7 @@ class RemoteHardwareManager(Manager):
         if os.path.isfile(p):
             with open(p, 'r') as f:
                 hosts = [l.strip() for l in f if l.strip()]
-
+        print ip.get_processors()
         for pi in ip.get_processors():
             cp = self._command_processor_factory(path=pi)
             cp._hosts = hosts
@@ -80,8 +80,11 @@ class RemoteHardwareManager(Manager):
 
     def bootstrap(self):
         if self.enable_hardware_server:
+            
             if globalv.use_ipc:
+                print self.processors
                 for p in self.processors.itervalues():
+                    self.info('bootstrapping {}'.format(p.name))
                     p.manager = self
                     p.bootstrap()
             else:

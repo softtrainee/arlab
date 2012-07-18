@@ -130,6 +130,8 @@ class CommandProcessor(ConfigLoadable):
         '''
 
         '''
+        from globals import globalv
+        print 'asdfffffffffffffffffff', globalv.use_ipc
         if not globalv.use_ipc:
             return True
 
@@ -264,7 +266,6 @@ class CommandProcessor(ConfigLoadable):
     @end_request
     def _process_request(self, request_type, data, sender_addr, sock=None):
         #self.debug('Request: {}, {}'.format(request_type, data.strip()))
-
         try:
 
             auth_err = self._authenticate(data, sender_addr)
