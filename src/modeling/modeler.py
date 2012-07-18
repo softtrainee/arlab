@@ -41,6 +41,7 @@ from src.modeling.data_loader import DataLoader
 from src.modeling.model_data_directory import ModelDataDirectory
 from src.helpers.color_generators import colorname_generator
 from src.modeling.fortran_process import FortranProcess
+from src.graph.diffusion_graph import GROUPNAMES
 
 class DummyDirectoryDialog(object):
     path = os.path.join(paths.modeling_data_dir, '59702-43')
@@ -68,9 +69,6 @@ class Modeler(Loggable):
 
     status_text = Str
     sync_groups = None
-
-#    include_panels = List(GROUPNAMES[:-1])
-#    include_panels = List(['spectrum', 'arrhenius', 'logr_ro', 'cooling_history'])
 
     panel1 = Str('spectrum')
     panel2 = Str('arrhenius')
@@ -232,7 +230,6 @@ class Modeler(Loggable):
         croot = self.clovera_directory
 
         if not croot:
-            from src.paths import paths
             croot = paths.clovera_root
 
         rid = os.path.basename(os.getcwd())
@@ -252,13 +249,7 @@ class Modeler(Loggable):
         def _handle(msg):
             if msg:
                 self.info(msg)
-                #func(msg)
-                #information(None, msg)
 
-        #func = getattr(self, '_handle_{}'.format(name))
-
-#        reset clock
-#        time.clock()
         st = time.time()
         #handle std.out 
         while t.isAlive() or not q.empty():
@@ -291,54 +282,6 @@ class Modeler(Loggable):
     def get_panels(self):
         return [getattr(self, 'panel{}'.format(i + 1)) for i in range(4)]
 
-    def load_graph(self, data_directory, gid, color):
-
-        data_directory.id = gid
-
-        path = data_directory.path
-        self.info('loading graph for {}'.format(path))
-        g = self.graph
-
-        runid = g.add_runid(path, kind='path')
-        dl = self.data_loader
-        dl.root = data_directory.path
-        for i, pi in enumerate(self.get_panels()):
-            func = getattr(self, '_load_{}'.format(pi))
-            func(data_directory, i, runid, color, gid)
-        self._sync_groups(data_directory)
-
-    def _sync_groups(self, data_directory):
-        g = self.graph
-        #sync the colors
-        try:
-
-            if self.sync_groups:
-                for si in self.sync_groups:
-                    try:
-                        tg = g.groups[si]
-                        sg = self.sync_groups[si]
-                    except KeyError:
-                        return
-
-                    for i, subgroup in enumerate(sg):
-                        for j, series in enumerate(subgroup):
-                            try:
-
-                                tseries = tg[i][j]
-                                if series.__class__.__name__ == 'PolygonPlot':
-                                    for a in ['face_color', 'edge_color']:
-                                        color = series.trait_get(a)
-                                        tseries.trait_set(**color)
-                                else:
-                                    tseries.trait_set(**{'color':series.color})
-
-                            except IndexError:
-                                pass
-        except Exception, e:
-            print 'sync groups', e
-
-        g.set_group_visiblity(data_directory.show, gid=data_directory.id)
-
     def refresh_graph(self):
         '''
         '''
@@ -347,10 +290,6 @@ class Modeler(Loggable):
 
         g = self.graph
         if g is None:
-
-#            panels = GROUPNAMES#['spectrum','logr_ro','arrenhius','cooling_history']
-#            if self.include_panels:
-#                panels = self.include_panels
             panels = self.get_panels()
             l = len(panels)
             r = int(round(l / 2.0))
@@ -407,6 +346,9 @@ class Modeler(Loggable):
         g.new_graph()
         self._spec_cnt = 0
         self._chist_cnt = 0
+        self._arr_cnt = 0
+        self._logr_cnt = 0
+        self._unchist_cnt = 0
 
         if sync:
             g.bindings = bindings
@@ -431,19 +373,56 @@ class Modeler(Loggable):
             if graph_editor is not None:
                 graph_editor.graph = g
 
+    def _load_graph(self, data_directory, gid, color):
+
+        data_directory.id = gid
+
+        path = data_directory.path
+        self.info('loading graph for {}'.format(path))
+        g = self.graph
+
+        runid = g.add_runid(path, kind='path')
+        dl = self.data_loader
+        dl.root = data_directory.path
+        for i, pi in enumerate(self.get_panels()):
+            func = getattr(self, '_load_{}'.format(pi))
+            func(data_directory, i, runid, color, gid)
+
+        self._sync_groups(data_directory)
+
+    def _sync_groups(self, data_directory):
+        g = self.graph
+        g.set_group_visiblity(data_directory.show, gid=data_directory.id)
+        #sync thecolors
+#        try:
+
+#            if self.sync_groups:
+#                for si in self.sync_groups:
+#                    try:
+#                        tg = g.groups[si]
+#                        sg = self.sync_groups[si]
+#                    except KeyError, e:
+#                        print __name__, e
+#                        return
+#
+#                    for i, subgroup in enumerate(sg):
+#                        for j, series in enumerate(subgroup):
+#                            try:
+#
+#                                tseries = tg[i][j]
+#                                if series.__class__.__name__ == 'PolygonPlot':
+#                                    for a in ['face_color', 'edge_color']:
+#                                        color = series.trait_get(a)
+#                                        tseries.trait_set(**color)
+#                                else:
+#                                    tseries.trait_set(**{'color':series.color})
+#
+#                            except IndexError, e:
+#                                print __name__, e
+
+#        except Exception, e:
+#            print 'sync groups', e
 #============= views ===================================
-#    def _get_menubar(self):
-#        '''
-#        '''
-#        load_auto = Action(name = 'Load autoupdate file',
-#                         action = 'load_autoupdate_file')
-#        run_model = Action(name = 'Run Model',
-#                         action = 'run_model')
-#        file_menu = Menu(load_auto,
-#                       run_model,
-#                       name = 'File')
-#        menus = [file_menu]
-#        return MenuBar(*menus)
 #    
     def traits_view(self):
         return self.data_select_view()
@@ -491,9 +470,7 @@ class Modeler(Loggable):
         return v
 
     def configure_view(self):
-        editor = EnumEditor(values=['spectrum', 'arrhenius',
-                                    'logr_ro', 'cooling_history',
-                                    'unconstrained_thermal_history'])
+        editor = EnumEditor(values=GROUPNAMES)
         a = Item(
                  'panel1', editor=editor,
                  show_label=False)
@@ -516,19 +493,8 @@ class Modeler(Loggable):
                title='Panel Layout'
                )
 
-#        v = View(Item('include_panels', editor=CheckListEditor(values=GROUPNAMES),
-#                    show_label=False,
-#                    style='custom'
-#                    ),
-#               kind='modal',
-#               buttons=['OK', 'Cancel']
-#               )
         return v
 
-    def _data_loader_default(self):
-        '''
-        '''
-        return DataLoader()
 
     def _datum_changed(self):
         '''
@@ -563,16 +529,6 @@ class Modeler(Loggable):
     def _update_(self, a, b, c, d):
         '''
         '''
-        self._update_graph()
-
-        #force update of notes and summary 
-        d = self.selected
-        self.selected = None
-        self.selected = d
-
-    def _update_graph(self):
-        '''
-        '''
         self.refresh_graph()
         color_gen = colorname_generator()
         for gid, d in enumerate(self.data):
@@ -582,29 +538,16 @@ class Modeler(Loggable):
             c = color_gen.next()
             d.primary_color = c
 
-            self.load_graph(d, gid, c)
+            self._load_graph(d, gid, c)
 
             #skip a color
             color_gen.next()
 
         self.update_graph_title()
-
-    @on_trait_change('graph.status_text')
-    def update_statusbar(self, obj, name, value):
-        '''
-        '''
-        if name == 'status_text':
-            self.status_text = value
-
-    def _get_graph_title(self):
-        '''
-        '''
-        return ', '.join([a.name for a in self.data if a.show])
-
-    def update_graph_title(self):
-        '''
-        '''
-        self.graph.set_title(self.graph_title, size=18)
+        #force update of notes and summary 
+        d = self.selected
+        self.selected = None
+        self.selected = d
 
 #===============================================================================
 # graph loaders
@@ -618,13 +561,14 @@ class Modeler(Loggable):
                 traceback.print_exc()
                 self.info(e)
 
-    def _load_arrhenius(self, data_directory, plotidcounter, runid, color, gid):
+    def _load_arrhenius(self, data_directory, plotidcounter, runid, color):
         dl = self.data_loader
         g = self.graph
 
         def build(data):
             g.build_arrhenius(pid=plotidcounter, type=self.arrhenius_plot_type, *data)
-            g.set_series_label('{}.arr.meas'.format(runid), plotid=plotidcounter, series=2 * gid)
+            g.set_series_label('{}.arr.meas'.format(runid), plotid=plotidcounter, series=self._arr_cnt)
+            self._arr_cnt += 1
 
         data = dl.load_arrhenius('arr.samp')
         self._try(build, data)
@@ -632,12 +576,12 @@ class Modeler(Loggable):
         if data_directory.model_arrhenius_enabled:
             def build(data):
                 g.build_arrhenius(ngroup=False, pid=plotidcounter, type=self.arrhenius_plot_type, *data)
-                g.set_series_label('{}.arr.model'.format(runid), plotid=plotidcounter, series=2 * gid + 1)
-
+                g.set_series_label('{}.arr.model'.format(runid), plotid=plotidcounter, series=self._arr_cnt)
+                self._arr_cnt += 1
             data = dl.load_arrhenius('arr.dat')
             self._try(build, data)
 
-    def _load_logr_ro(self, data_directory, plotidcounter, runid, color, gid):
+    def _load_logr_ro(self, data_directory, plotidcounter, runid, color):
         dl = self.data_loader
         g = self.graph
 
@@ -646,17 +590,18 @@ class Modeler(Loggable):
         if data is not None:
             def build(data):
                 p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
-                s = 2 if data_directory.model_arrhenius_enabled else 1
-                g.set_series_label('{}.logr_ro.meas'.format(runid), plotid=plotidcounter, series=gid * s)
+#                s = 2 if data_directory.model_arrhenius_enabled else 1
+                g.set_series_label('{}.logr_ro.meas'.format(runid), plotid=plotidcounter, series=self._logr_cnt)
                 p.on_trait_change(data_directory.update_pcolor, 'color')
+                self._logr_cnt += 1
             self._try(build, data)
 
         elif data2 is not None:
             def build(data):
                 p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
-                s = 2 if data_directory.model_arrhenius_enabled else 1
-                g.set_series_label('{}.logr_ro.meas'.format(runid), plotid=plotidcounter, series=gid * s)
+                g.set_series_label('{}.logr_ro.meas'.format(runid), plotid=plotidcounter, series=self._logr_cnt)
                 p.on_trait_change(data_directory.update_pcolor, 'color')
+                self._logr_cnt += 1
 
             self._try(build, data2)
 
@@ -664,19 +609,22 @@ class Modeler(Loggable):
 
             def build(data):
                 p = g.build_logr_ro(ngroup=False, line_width=self.logr_ro_line_width, pid=plotidcounter, *data)
-                g.set_series_label('{}.logr_ro.model'.format(runid), plotid=plotidcounter, series=2 * gid + 1)
+                g.set_series_label('{}.logr_ro.model'.format(runid), plotid=plotidcounter, series=self._logr_cnt)
+                self._logr_cnt += 1
                 data_directory.secondary_color = p.color
                 p.on_trait_change(data_directory.update_scolor, 'color')
 
             data = dl.load_logr_ro('logr.dat')
             self._try(build, data)
 
-    def _load_unconstrained_thermal_history(self, data_directory, plotidcounter, runid, color, gid):
+    def _load_unconstrained_thermal_history(self, data_directory, plotidcounter, runid, color):
         dl = self.data_loader
         g = self.graph
         def build(data):
-            g.build_unconstrained_thermal_history(data, pid=plotidcounter)
-
+            g.build_unconstrained_thermal_history(data, pid=plotidcounter,
+                                                  series=self._unchist_cnt
+                                                  )
+            self._unchist_cnt += 1
         data = dl.load_unconstrained_thermal_history()
         self._try(build, data)
 #        if data is not None:
@@ -685,7 +633,7 @@ class Modeler(Loggable):
 #            except Exception, err:
 #                self.info(err)
 
-    def _load_cooling_history(self, data_directory, plotidcounter, runid, color, gid):
+    def _load_cooling_history(self, data_directory, plotidcounter, runid, color):
         dl = self.data_loader
         g = self.graph
         def build(data):
@@ -702,7 +650,7 @@ class Modeler(Loggable):
 #            except Exception, err:
 #                self.info(err)
 
-    def _load_spectrum(self, data_directory, plotidcounter, runid, color, gid):
+    def _load_spectrum(self, data_directory, plotidcounter, runid, color):
         dl = self.data_loader
         data = dl.load_spectrum()
         g = self.graph
@@ -753,6 +701,24 @@ class Modeler(Loggable):
             data = dl.load_inverse_model_spectrum()
             self._try(build, data)
 
+    @on_trait_change('graph.status_text')
+    def update_statusbar(self, obj, name, value):
+        '''
+        '''
+        if name == 'status_text':
+            self.status_text = value
+
+    def _get_graph_title(self):
+        '''
+        '''
+        return ', '.join([a.name for a in self.data if a.show])
+
+    def update_graph_title(self):
+        '''
+        '''
+        self.graph.set_title(self.graph_title, size=18)
+    def _data_loader_default(self):
+        return DataLoader()
 def runfortran():
     q = Queue()
     t = FortranProcess('hello_world', '/Users/Ross/Desktop', q)

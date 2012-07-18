@@ -201,11 +201,12 @@ class DiffusionGraph(Graph):
 
                     for p in plots:
                         p.visible = vis
-                    self.redraw()
                 except IndexError:
                     pass
             except KeyError:
                 pass
+
+        self.redraw()
 
     def set_plot_visibility(self, plot, vis):
         plot.visible = vis
