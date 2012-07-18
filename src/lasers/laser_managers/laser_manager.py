@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Event, Property, Instance, Bool, Str, on_trait_change, Enum
+from traits.api import Event, Property, Instance, Bool, Str, Float, \
+    on_trait_change
 from traitsui.api import View, Item, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -57,10 +58,14 @@ class LaserManager(Manager):
     status_text = Str
     pulse = Instance(Pulse)
 
-    _requested_power = None
+    requested_power = Property(Float, depends_on='_requested_power')
+    _requested_power = Float
     _calibrated_power = None
     use_calibrated_power = Bool(True)
 
+#===============================================================================
+# public interface
+#===============================================================================
     def bind_preferences(self, pref_id):
         from apptools.preferences.preference_binding import bind_preference
 
@@ -74,101 +79,8 @@ class LaserManager(Manager):
         bind_preference(self, 'window_y', '{}.y'.format(pref_id))
         bind_preference(self, 'use_calibrated_power', '{}.use_calibrated_power'.format(pref_id))
 
-    def dispose_optional_windows(self):
-        if self.use_video:
-            self.stage_manager.machine_vision_manager.close_images()
-
-        self._dispose_optional_windows_hook()
-
-    def _dispose_optional_windows_hook(self):
-        pass
-
-#        import wx
-#        ls = self._get_optional_window_labels()
-#        if ls:
-#            for li in ls:
-#                w = wx.FindWindowByLabel(li)
-#                if w is not None:
-#                    w.Destroy()
-#
-#    def _get_optional_window_labels(self):
-#        labels = []
-#
-#        hl = self._get_optional_window_labels_hook()
-#        if hl:
-#            labels += hl
-#
-#        return labels
-#
-#    def _get_optional_window_labels_hook(self):
-#        pass
-
-#    @on_trait_change('stage_manager:canvas:current_position')
-#    def update_status_bar(self, obj, name, old, new):
-#        if isinstance(new, tuple):
-#            self.status_text = 'x = {:n} ({:0.4f} mm), y = {:n} ({:0.4f} mm)'.format(*new)
-
-    def get_pulse_manager(self):
-        return self.pulse
-
-    def get_power_map_manager(self):
-        from src.lasers.power.power_map_manager import PowerMapManager
-
-        pm = PowerMapManager(laser_manager=self)
-        return pm
-
-
-#        path = self.open_file_dialog(default_directory = os.path.join(scripts_dir,
-#                                                                      'laserscripts',
-#                                                                      'power_maps'
-#                                                                      )
-#                                     )
-#        path = '/Users/Ross/Pychrondata_beta/scripts/laserscripts/power_maps/s.rs'
-#        if path:
-#            pm = PowerMapManager()
-#            pm.parent = self
-#            pm.file_name = path
-#            pm.new_script()
-#            return pm
-
-
-    def get_control_buttons(self):
-        '''
-        '''
-        return [('enable', 'enable_label', None)
-                ]
-    def get_control_sliders(self):
-        pass
-
-    def get_additional_controls(self):
-        pass
-
-    def get_power_slider(self):
-        '''
-        '''
-        return self._slider_group_factory([('request_power', 'request_power', dict(enabled_when='enabled'))])
-
-    def finish_loading(self):
-        self.enabled_led.state = 'red' if not self.enabled else 'green'
-
-    def _enable_fired(self):
-        '''
-        '''
-        if not self.enabled:
-            self.enable_laser()
-        else:
-
-            self.disable_laser()
-
-    def start_power_recording(self, *args, **kw):
-        pass
-
-    def stop_power_recording(self, *args, **kw):
-        pass
-
     def enable_laser(self):
 
-#    def enable_laser(self, is_ok=True):
         self.info('enable laser')
         enabled = self._enable_hook()
 
@@ -203,15 +115,9 @@ class LaserManager(Manager):
             self.monitor.stop()
 
         self.enabled_led.state = 'red'
-        self._requested_power = None
+        self._requested_power = 0
 
         return enabled
-
-    def _enable_hook(self):
-        return True
-
-    def _disable_hook(self):
-        pass
 
     def set_laser_power(self, power, use_calibration=True, *args, **kw):
         '''
@@ -223,34 +129,146 @@ class LaserManager(Manager):
         self._calibrated_power = p
         self._set_laser_power_hook(p)
 
-    def _set_laser_power_hook(self, p):
+    def close(self, ok):
+        self.pulse.dump_pulse()
+        return super(LaserManager, self).close(self)
+
+    def set_laser_monitor_duration(self, d):
+        '''
+            duration in minutes
+        '''
+        self.monitor.max_duration = d
+        self.monitor.reset_start_time()
+
+    def reset_laser_monitor(self):
+        '''
+        '''
+        self.monitor.reset_start_time()
+
+    def emergency_shutoff(self, reason=None):
+        ''' 
+        '''
+        if reason is not None:
+            self.warning('EMERGENCY SHUTDOWN reason: {}'.format(reason))
+            self.failure_reason = reason
+
+        self.disable_laser()
+
+    def start_power_recording(self, *args, **kw):
         pass
 
-    def _get_calibrated_power(self, power, calibration):
+    def stop_power_recording(self, *args, **kw):
+        pass
 
-        if self.use_calibrated_power and calibration:
-            path = None
-            if isinstance(calibration, str):
-                path = calibration
-            elif isinstance(calibration, tuple):
+#===============================================================================
+# manager interface
+#===============================================================================
+    def finish_loading(self):
+        self.enabled_led.state = 'red' if not self.enabled else 'green'
+
+    def dispose_optional_windows(self):
+        if self.use_video:
+            self.stage_manager.machine_vision_manager.close_images()
+
+        self._dispose_optional_windows_hook()
+#===============================================================================
+# public getters
+#===============================================================================
+    def get_pulse_manager(self):
+        return self.pulse
+
+    def get_power_map_manager(self):
+        from src.lasers.power.power_map_manager import PowerMapManager
+
+        pm = PowerMapManager(laser_manager=self)
+        return pm
+
+
+#===============================================================================
+# views
+#===============================================================================
+    def __stage__group__(self):
+        return Item('stage_manager', height=0.70, style='custom', show_label=False)
+
+    def get_unique_view_id(self):
+        return 'pychron.{}'.format(self.__class__.__name__.lower())
+
+    def get_control_buttons(self):
+        '''
+        '''
+        return [('enable', 'enable_label', None)
+                ]
+    def get_control_sliders(self):
+        pass
+
+    def get_additional_controls(self):
+        pass
+
+    def get_power_slider(self):
+        '''
+        '''
+        return self._slider_group_factory([('request_power', 'request_power', dict(enabled_when='enabled'))])
+
+    def traits_view(self):
+        '''
+        '''
+        vg = VGroup()
+
+        hooks = [h for h in dir(self) if '__group__' in h]
+        for h in hooks:
+            vg.content.append(getattr(self, h)())
+
+        return View(
+                    vg,
+                    id=self.get_unique_view_id(),
+                    resizable=True,
+                    title=self.__class__.__name__ if self.title == '' else self.title,
+                    handler=self.handler_klass,
+                    height=self.window_height,
+                    x=self.window_x,
+                    y=self.window_y,
+                    statusbar='status_text'
+                    )
+
+#===============================================================================
+# ##handlers
+#===============================================================================
+    @on_trait_change('stage_manager:canvas:current_position')
+    def update_status_bar(self, obj, name, old, new):
+        if isinstance(new, tuple):
+            self.status_text = 'x = {:n} ({:0.4f} mm), y = {:n} ({:0.4f} mm)'.format(*new)
+
+    def _enable_fired(self):
+        '''
+        '''
+        if not self.enabled:
+            self.enable_laser()
+        else:
+
+            self.disable_laser()
+    def _use_video_changed(self):
+        if not self.use_video:
+            try:
+                self.stage_manager.video.shutdown()
+            except AttributeError:
                 pass
 
-            pc = self.load_power_calibration(calibration_path=path)
-            if power < 0.1:
-                power = 0
-            else:
-#                c = pc.coefficients
-                power, coeffs = pc.get_calibrated_power(power)
+        try:
+            sm = self._stage_manager_factory(self.stage_args)
 
-                sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', coeffs)])
-                self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
-        return power
+            sm.stage_controller = self.stage_manager.stage_controller
+            sm.stage_controller.parent = sm
+            sm.bind_preferences(self.id)
+            sm.visualizer = self.stage_manager.visualizer
 
-    def _get_calibration_path(self, cp):
-        if cp is None:
-            cp = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(self.name))
-        return cp
+            sm.load()
 
+            self.stage_manager = sm
+        except AttributeError:
+            pass
+#===============================================================================
+# persistence
+#===============================================================================
     def dump_power_calibration(self, coefficients, bounds=None, calibration_path=None):
 
         calibration_path = self._get_calibration_path(calibration_path)
@@ -290,116 +308,60 @@ class LaserManager(Manager):
             pc.coefficients = [1, -1]
 
         return pc
+#===============================================================================
+# hooks
+#===============================================================================
+    def _dispose_optional_windows_hook(self):
+        pass
 
-#    def kill(self, **kw):
-#        '''
-#           
-#        '''
-#        if super(LaserManager, self).kill(**kw):
-#
-##            self.emergency_shutoff()
-#            self.disable_laser()
-##            self.stage_manager.kill()
     def _kill_hook(self):
         self.disable_laser()
 
-    def close(self, ok):
-        self.pulse.dump_pulse()
-        return super(LaserManager, self).close(self)
+    def _enable_hook(self):
+        return True
 
-    def set_laser_monitor_duration(self, d):
-        '''
-            duration in minutes
-        '''
-        self.monitor.max_duration = d
-        self.monitor.reset_start_time()
+    def _disable_hook(self):
+        pass
 
-    def reset_laser_monitor(self):
-        '''
-        '''
-        self.monitor.reset_start_time()
+    def _set_laser_power_hook(self, p):
+        pass
+#===============================================================================
+# getter/setters
+#===============================================================================
 
-    def emergency_shutoff(self, reason=None):
-        '''
-            
-        '''
+    def _get_calibrated_power(self, power, calibration):
 
-        if reason is not None:
-            self.warning('EMERGENCY SHUTDOWN reason: {}'.format(reason))
-            self.failure_reason = reason
+        if self.use_calibrated_power and calibration:
+            path = None
+            if isinstance(calibration, str):
+                path = calibration
+            elif isinstance(calibration, tuple):
+                pass
 
-        self.disable_laser()
+            pc = self.load_power_calibration(calibration_path=path)
+            if power < 0.1:
+                power = 0
+            else:
+#                c = pc.coefficients
+                power, coeffs = pc.get_calibrated_power(power)
 
+                sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', coeffs)])
+                self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
+        return power
 
+    def _get_calibration_path(self, cp):
+        if cp is None:
+            cp = os.path.join(paths.hidden_dir, '{}_power_calibration'.format(self.name))
+        return cp
+
+    def _get_requested_power(self):
+        return self._requested_power
 
     def _get_enable_label(self):
         '''
         '''
         return 'DISABLE' if self.enabled else 'ENABLE'
 
-    def _use_video_changed(self):
-        if not self.use_video:
-            try:
-                self.stage_manager.video.shutdown()
-            except AttributeError:
-                pass
-#            self.stage_manager.video_manager.shutdown()
-
-        try:
-            sm = self._stage_manager_factory(self.stage_args)
-
-            sm.stage_controller = self.stage_manager.stage_controller
-            sm.stage_controller.parent = sm
-            sm.bind_preferences(self.id)
-            sm.visualizer = self.stage_manager.visualizer
-
-        #        sm.canvas.crosshairs_offset = self.stage_manager.canvas.crosshairs_offset
-#        bind_preference(sm.canvas, 'show_grids', '{}.show_grids'.format(self.id))
-#
-#        sm .canvas.change_grid_visibility()
-#
-#        bind_preference(sm.canvas, 'show_laser_position', '{}.show_laser_position'.format(self.id))
-#        bind_preference(sm.canvas, 'show_desired_position', '{}.show_laser_position'.format(self.id))
-#        bind_preference(sm.canvas, 'show_map', '{}.show_map'.format(self.id))
-#
-#        bind_preference(sm.canvas, 'crosshairs_kind', '{}.crosshairs_kind'.format(self.id))
-#        bind_preference(sm.canvas, 'crosshairs_color', '{}.crosshairs_color'.format(self.id))
-#
-#        sm.canvas.change_indicator_visibility()
-
-            sm.load()
-
-            self.stage_manager = sm
-        except AttributeError:
-            pass
-
-    #========================= views =========================
-    def __stage__group__(self):
-        return Item('stage_manager', height=0.70, style='custom', show_label=False)
-
-    def get_unique_view_id(self):
-        return 'pychron.{}'.format(self.__class__.__name__.lower())
-
-    def traits_view(self):
-        '''
-        '''
-        vg = VGroup()
-
-        hooks = [h for h in dir(self) if '__group__' in h]
-        for h in hooks:
-            vg.content.append(getattr(self, h)())
-
-        return View(
-                    vg,
-                    id=self.get_unique_view_id(),
-                    resizable=True,
-                    title=self.__class__.__name__ if self.title == '' else self.title,
-                    handler=self.handler_klass,
-                    height=self.window_height,
-                    x=self.window_x,
-                    y=self.window_y,
-#                    statusbar='status_text'
-                    )
 #===============================================================================
 # factories
 #===============================================================================
@@ -453,3 +415,22 @@ if __name__ == '__main__':
 
 #    lm.set_laser_power(10)
 #============= EOF ====================================
+#        import wx
+#        ls = self._get_optional_window_labels()
+#        if ls:
+#            for li in ls:
+#                w = wx.FindWindowByLabel(li)
+#                if w is not None:
+#                    w.Destroy()
+#
+#    def _get_optional_window_labels(self):
+#        labels = []
+#
+#        hl = self._get_optional_window_labels_hook()
+#        if hl:
+#            labels += hl
+#
+#        return labels
+#
+#    def _get_optional_window_labels_hook(self):
+#        pass

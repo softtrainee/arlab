@@ -17,7 +17,7 @@
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
     on_trait_change, Event, Bool, Float, Any
-from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor
+from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor, Label
 from pyface.timer.do_later import do_later
 from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
@@ -43,6 +43,7 @@ class FusionsLaserManager(LaserManager):
     '''
     '''
 
+    units = Property(depends_on='use_calibrated_power')
     logic_board = Instance(FusionsLogicBoard)
     fiber_light = Instance(FiberLight)
 
@@ -450,7 +451,14 @@ class FusionsLaserManager(LaserManager):
 
                                   springy=True
                                   ),
-
+                           HGroup(
+                               Item('requested_power', style='readonly',
+                                    format_str='%0.2f'
+                                    ),
+                                spring,
+                               Item('units', show_label=False, style='readonly'),
+                               spring
+                               ),
                            show_border=True,
                            springy=True,
                            label='Power'
@@ -547,7 +555,8 @@ class FusionsLaserManager(LaserManager):
 
     def _get_record_brightness(self):
         return self.record_brightness and self._get_machine_vision() is not None
-
+    def _get_units(self):
+        return '(W)' if self.use_calibrated_power else '(%)'
 #========================= defaults =======================
     def get_power_database(self):
 #        db = PowerAdapter(dbname='co2laserdb',

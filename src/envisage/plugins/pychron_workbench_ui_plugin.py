@@ -25,7 +25,6 @@ from src.envisage.core.core_ui_plugin import CoreUIPlugin
 
 class PychronWorkbenchUIPlugin(CoreUIPlugin):
     '''
-        G{classtree}
     '''
     id = 'pychron.workbench.ui'
     name = 'Pychron Workbench'

@@ -251,11 +251,12 @@ class PowerCalibrationManager(Manager):
 
             #calculate slope and intercept of data
 
-        x = graph.get_data()
-        y = graph.get_data(axis=1)
-        if x is not None and y is not None:
-            coeffs = polyfit(x, y, 1)
-
+#        x = graph.get_data()
+#        y = graph.get_data(axis=1)
+#        try:
+#            coeffs = polyfit(x, y, 1)
+#        except TypeError:
+#            pass
 
 #            self._write_data(pi, , table)
 
@@ -321,13 +322,16 @@ class PowerCalibrationManager(Manager):
         ys = self.graph.get_data(axis=1)
         deg = FITDEGREES[self.parameters.fit_degree]
 
-        #make x and y same lenght
-        if xs is not None and ys is not None:
-            xs,ys= zip(*zip(xs,ys))
-        
-        coeffs = polyfit(xs, ys, deg)
-        self._coefficients = list(coeffs)
-        return self._coefficients
+        try:
+#            #make x and y same lenght
+#            if xs is not None and ys is not None:
+#                xs, ys = zip(*zip(xs, ys))
+
+            coeffs = polyfit(xs, ys, deg)
+            self._coefficients = list(coeffs)
+            return self._coefficients
+        except TypeError:
+            return [1, 0]
 
     def _open_graph(self, graph=None):
         if graph is None:

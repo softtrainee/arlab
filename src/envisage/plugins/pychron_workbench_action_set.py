@@ -29,35 +29,11 @@ class PychronWorkbenchActionSet(WorkbenchActionSet):
     base = 'src.envisage.plugins.pychron_workbench_actions'
     actions = [
 
-#               Action(name='Save',
-#                      path='MenuBar/File',
-#                      class_name='src.envisage.plugins.pychron_workbench_actions.SaveAction'),
-#               Action(name='Save As',
-#                      path='MenuBar/File',
-#                      class_name='src.envisage.plugins.pychron_workbench_actions.SaveAsAction'),
                Action(name='Logger',
                       path='MenuBar/Tools',
-                      class_name='src.envisage.plugins.pychron_workbench_actions.LoggerAction'),
-               Action(name='Help Page',
-                      path='MenuBar/Help',
-                      class_name='{}.GotoHelpPageAction'.format(base)),
+                      class_name='{}.LoggerAction'.format(base)),
                Action(name='Documentation',
                       path='MenuBar/Help',
                       class_name='{}.DocumentationPageAction'.format(base)),
-#               Action(name='API',
-#                      path='MenuBar/Help',
-#                      class_name='src.envisage.plugins.pychron_workbench_actions.GotoAPIPageAction'),
-               #Action(name='Check For Updates',
-               #       path='MenuBar/Help',
-               #       class_name='src.envisage.plugins.pychron_workbench_actions.OpenUpdateManagerAction'),
-#               Action(name='Check For Updates',
-#                      path='MenuBar/Help',
-#                      class_name='src.envisage.plugins.pychron_workbench_actions.OpenUpdateManagerAction'),
-#               Action(name = 'Refresh Source',
-#                      path = 'MenuBar/Tools',
-#                      class_name = 'src.envisage.plugins.workbench.workbench_actions.RefreshSourceAction'),
-
-
-
                ]
 #============= EOF ====================================

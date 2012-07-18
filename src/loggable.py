@@ -81,7 +81,7 @@ class Loggable(HasTraits):
             if self.use_warning_display:
                 from src.helpers.gdisplays import gWarningDisplay
                 if globalv.show_warnings:
-                    if not gWarningDisplay.opened:
+                    if not gWarningDisplay.opened and not gWarningDisplay.was_closed:
                         do_later(gWarningDisplay.edit_traits)
 
                 func = gWarningDisplay.add_text
@@ -101,7 +101,7 @@ class Loggable(HasTraits):
             if self.use_logger_display:
                 from src.helpers.gdisplays import gLoggerDisplay
                 if globalv.show_infos:
-                    if not gLoggerDisplay.opened:
+                    if not gLoggerDisplay.opened and not gLoggerDisplay.was_closed:
                         do_later(gLoggerDisplay.edit_traits)
 
                 func = gLoggerDisplay.add_text

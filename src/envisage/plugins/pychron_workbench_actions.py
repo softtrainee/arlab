@@ -128,8 +128,9 @@ class LoggerAction(Action):
         if not gLoggerDisplay.opened:
             gLoggerDisplay.edit_traits()
         else:
-            gLoggerDisplay.ui.control.Raise()
-        #parent=self.window.control)
+            ui = gLoggerDisplay.ui
+            if ui is not None:
+                ui.control.Raise()
 
 
 class GotoHelpPageAction(Action):
@@ -141,7 +142,8 @@ class GotoHelpPageAction(Action):
 class DocumentationPageAction(Action):
     def perform(self, event):
         import webbrowser
-        p = 'file://{}/index.html'.format(paths.doc_html_root)
+#        p = 'file://{}/index.html'.format(paths.doc_html_root)
+        p = 'http://129.138.12.131/~documentation/pychron/docs/_build/html/index.html'
         webbrowser.open_new(p)
 
 
