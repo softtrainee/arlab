@@ -146,10 +146,10 @@ class AutoagemonConfig(BaseConfig):
     def _validate_nruns(self, value):
         try:
             m = int(value)
-            if m <= 20 or m >= 199:
-                return value
+            if m >= 20 or m <= 199:
+                return m
         except:
-            return value
+            return
 
     def _get_nruns(self):
         return self._nruns

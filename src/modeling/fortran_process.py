@@ -56,6 +56,7 @@ class FortranProcess(Loggable):
     def start(self):
         self._thread = Thread(target=self._run)
         self._thread.start()
+
     def isAlive(self):
         if self._thread:
             return self._thread.isAlive()
