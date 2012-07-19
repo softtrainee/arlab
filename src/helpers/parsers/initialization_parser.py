@@ -31,6 +31,8 @@ def handle_uncaught_exception(func):
         try:
             return func(*args, **kw)
         except Exception, e:
+            import traceback
+            traceback.print_exc()
             warning(None, 'There is a problem in your initialization file {}'.format(e))
             sys.exit()
 
@@ -271,8 +273,9 @@ class InitializationParser(XMLParser):
 
     def get_systems(self):
         p = self.get_plugin('ExtractionLine')
-        return [(s.text.strip(), s.get('master_host')) for s in p.findall('system')]
-
+        if p:
+            return [(s.text.strip(), s.get('master_host')) for s in p.findall('system')]
+        return []
 #    def get_processors(self):
 #
 #        cat = self._tree.find('remotehardware')
