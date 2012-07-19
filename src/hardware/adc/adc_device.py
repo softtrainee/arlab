@@ -47,4 +47,6 @@ class ADCDevice(AbstractDevice):
             v = self._cdevice.read_device(**kw)
 
         return v
+
+
 #============= EOF =====================================
