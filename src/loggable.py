@@ -19,8 +19,10 @@
 from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
 from pyface.message_dialog import warning
-from pyface.wx.dialog import confirmation
+from pyface.confirmation_dialog import confirm
+
 #============= standard library imports ========================
+import wx
 #============= local library imports  ==========================
 from src.helpers.logger_setup import add_console
 from globals import globalv
@@ -66,7 +68,7 @@ class Loggable(HasTraits):
         warning(None, msg)
 
     def confirmation_dialog(self, msg, title=None):
-        result = confirmation(None, msg, title=title)
+        result = confirm(None, msg, title=title)
         #NO==5104, YES==5103
         return result == 5103
 
@@ -104,11 +106,12 @@ class Loggable(HasTraits):
                     if not gLoggerDisplay.opened and not gLoggerDisplay.was_closed:
                         do_later(gLoggerDisplay.edit_traits)
 
-                func = gLoggerDisplay.add_text
                 args = ('{:<30s} -- {}'.format(self.logger.name.strip(),
                         msg))
                 kw = dict(color=self.color)
-                do_later(func, args, **kw)
+
+                wx.CallAfter(gLoggerDisplay.add_text, args, **kw)
+#                do_later(gLoggerDisplay.add_text, args, **kw)
 
             if decorate:
                 msg = '====== {}'.format(msg)

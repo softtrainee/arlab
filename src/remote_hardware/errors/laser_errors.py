@@ -16,9 +16,10 @@
 
 from error import ErrorCode, code_generator, get_code_decorator
 
-code_gen = code_generator(2, start=1)
+code_gen = code_generator(0, start=1)
+
 def generate_code(*args):
-    return get_code_decorator(code_gen)
+    return get_code_decorator(code_gen)(*args)
 
 @generate_code
 class LogicBoardCommErrorCode(ErrorCode):
