@@ -19,7 +19,7 @@
 from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
 from pyface.message_dialog import warning
-from pyface.confirmation_dialog import confirm
+from pyface.wx.dialog import confirmation
 
 #============= standard library imports ========================
 import wx
@@ -68,7 +68,7 @@ class Loggable(HasTraits):
         warning(None, msg)
 
     def confirmation_dialog(self, msg, title=None):
-        result = confirm(None, msg, title=title)
+        result = confirmation(None, msg, title=title)
         #NO==5104, YES==5103
         return result == 5103
 
