@@ -367,7 +367,6 @@ class ValveManager(Manager):
 
         result = None
         if v is not None:
-
             act = getattr(v, open_close)
 
             result, change = act(mode=mode)

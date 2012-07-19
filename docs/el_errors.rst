@@ -6,21 +6,22 @@ Extraction Line Error Codes
 =============================  ====== =====================================================================
 Name                           Code   Description
 =============================  ====== =====================================================================
-PychronCommErrorCode           001    could not communicate with pychron through {}. socket.error = {}
-InvalidArgumentsErrorCode      002    invalid arguments: {} {}
-ManagerUnavaliableErrorCode    003    manager unavaliable: {}
-InvalidValveGroupErrorCode     004    Invalid valve group - {}
-InvalidValveErrorCode          005    {} is not a registered valve name
-DeviceConnectionErrorCode      006    device {} not connected
-ValveActuationErrorCode        007    Valve {} failed to actuate {}
-FuncCallErrorCode              008    func call problem: err= {} args= {}
-InvalidCommandErrorCode        009    invalid command: {}
-SecurityErrorCode              010    Not an approved ip address {}
-PyScriptErrorCode              011    invalid pyscript {} does not exist
-InvalidIPAddressErrorCode      012    {} is not a registered ip address
-ValveSoftwareLockErrorCode     013    Valve {} is software locked
-NoResponseErrorCode            014    no response from device
-SystemLockErrorCode            015    Access restricted to {} ({}). You are {}
+Name                           Code   Message
+PyScriptErrorCode              001    invalid pyscript None does not exist
+FuncCallErrorCode              002    func call problem: err= None args= None
+InvalidCommandErrorCode        003    invalid command: None
+InvalidArgumentsErrorCode      004    invalid arguments: None None
+InvalidValveErrorCode          005    None is not a registered valve name
+InvalidValveGroupErrorCode     006    Invalid valve group - None
+ManagerUnavaliableErrorCode    007    manager unavaliable: None
+DeviceConnectionErrorCode      008    device None not connected
+InvalidIPAddressErrorCode      009    None is not a registered ip address
+NoResponseErrorCode            010    no response from device
+PychronCommErrorCode           011    could not communicate with pychron through None. socket.error = None
+SystemLockErrorCode            012    Access restricted to None (None). You are None
+SecurityErrorCode              013    Not an approved ip address None
+ValveSoftwareLockErrorCode     014    Valve None is software locked
+ValveActuationErrorCode        015    Valve None failed to actuate None
 =============================  ====== =====================================================================
 
 .. _pychron_comm_err:

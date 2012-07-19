@@ -176,12 +176,12 @@ class FusionsLaserManager(LaserManager):
         if self._get_record_brightness():
             dm.new_table(pg, 'brightness')
 
-        if self.power_timer is not None:
+        if self.power_timer is not None and self.power_timer.isAlive():
             self.power_timer.Stop()
 
         self.power_timer = Timer(1000, self._record_power)
 
-        if self.brightness_timer is not None:
+        if self.brightness_timer is not None and self.brightness_timer.isAlive():
             self.brightness_timer.Stop()
 
         #before starting the timer collect quick baseline

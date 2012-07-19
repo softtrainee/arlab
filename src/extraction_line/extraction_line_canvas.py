@@ -207,8 +207,9 @@ class ExtractionLineCanvas(HasTraits):
     def _canvas3D_default(self):
         '''
         '''
-        e = ExtractionLineCanvas3DDummy(manager=self.manager)
-        return e
+        return
+#        e = ExtractionLineCanvas3DDummy(manager=self.manager)
+#        return e
 
     def _get_canvas_size(self):
         '''

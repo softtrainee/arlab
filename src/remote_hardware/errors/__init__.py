@@ -19,6 +19,8 @@ from laser_errors import *
 
 
 def _print_error_table(errors, loc):
+#    for e in errors:
+#        print e
     def get_code(x):
         try:
             v = loc[x]
@@ -43,12 +45,14 @@ def print_error_table():
     errors = []
     loc = dict()
     for es in [extraction_line_errors, laser_errors]:
+#    for es in [extraction_line_errors]:
+#    for es in [laser_errors]:
         keys = [d for d in dir(es) if d.endswith('Code')]
         values = [getattr(es, k) for k in keys]
 
         errors += keys
         loc.update(dict(zip(keys, values)))
-
+    print loc.keys()
     _print_error_table(errors, loc)
 
 if __name__ == '__main__':

@@ -23,6 +23,7 @@ from src.remote_hardware.errors import InvalidArgumentsErrorCode
 #from dummies import DummyLM
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
     EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode
+from pyface.timer.do_later import do_later
 
 
 class LaserHandler(BaseRemoteHardwareHandler):
@@ -107,7 +108,6 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         t = Thread(target=record)
         t.start()
-
         return self.error_response(err)
 
     def Disable(self, manager, *args):
