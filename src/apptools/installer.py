@@ -19,7 +19,13 @@ import os
 import sys
 import shutil
 import plistlib
-
+def rec_make(pi):
+    if pi and not os.path.exists(pi):
+        try:
+            os.mkdir(pi)
+        except OSError:
+            rec_make(os.path.split(pi)[0])
+            os.mkdir(pi)
 
 class Installer(object):
 
@@ -27,16 +33,27 @@ class Installer(object):
     name = None
     icon_name = None
     version = ''
-
+    include_pkgs = None
+    include_mods = None
     def __init__(
         self,
         prefix,
         name,
         icon_name=None,
+        include_pkgs=None,
+        include_mods=None
         ):
         self.prefix = prefix
         self.name = name
         self.icon_name = icon_name
+        if include_pkgs is None:
+            include_pkgs = []
+        self.include_pkgs = include_pkgs
+
+        if include_mods is None:
+            include_mods = []
+        self.include_mods = include_mods
+
     def change_version(self, op):
         np = op + '~'
 
@@ -101,6 +118,7 @@ class Installer(object):
                 print '----- No Icon File for {} -----'.format(self.prefix)
 
             resource_path = lambda x: os.path.join(dist_root, 'Resources', x)
+            src_path = lambda x:resource_path(os.path.join('src', x))
             #copy the helpers module
             helpers_path = os.path.join(launchers_root, 'helpers.py')
             if os.path.isfile(helpers_path):
@@ -112,8 +130,33 @@ class Installer(object):
             # copy all source file
             # will make this bundle self contained 
             #===================================================================
-            shutil.copytree(os.path.join(root, 'src'),
+            if not self.include_pkgs:
+                #copy entire src directory
+                shutil.copytree(os.path.join(root, 'src'),
                             resource_path('src'))
+            else:
+                for di in self.include_pkgs:
+                    shutil.copytree(os.path.join(root, 'src', di),
+                                src_path(di))
+
+            for mi in self.include_mods + ['__init__']:
+                mi = '{}.py'.format(mi)
+
+                try:
+                    shutil.copyfile(os.path.join(root, 'src', mi),
+                                src_path(mi)
+                                )
+                except IOError:
+                    di = os.path.dirname(src_path(mi))
+                    rec_make(di)
+                    shutil.copyfile(os.path.join(root, 'src', os.path.dirname(mi), '__init__.py'),
+                                    os.path.join(di, '__init__.py')
+                                    )
+                    shutil.copyfile(os.path.join(root, 'src', mi),
+                                src_path(mi)
+                                )
+
+
             shutil.copyfile(os.path.join(root, 'globals.py'),
                             resource_path('globals.py')
                             )

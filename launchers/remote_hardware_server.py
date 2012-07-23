@@ -14,20 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+
 if __name__ == '__main__':
 
     import os
 
     from helpers import build_version
-    build_version('')
+    build_version('_beta')
 
     from src.helpers.logger_setup import logging_setup
     from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
 
+    from src.managers.manager import ManagerHandler
+    class AppHandler(ManagerHandler):
+        def closed(self, info, isok):
+            info.object.kill()
+            info.object.close_displays()
+            return True
+
     logging_setup('server')
-    s = RemoteHardwareServerManager()
+    s = RemoteHardwareServerManager(handler_klass=AppHandler)
     s.load()
     s.configure_traits()
+
+
     os._exit(0)
 
 #    launch()

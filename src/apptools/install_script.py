@@ -115,11 +115,19 @@ def install_pychron_suite():
 
     i = Installer('pychron', 'pychron')
     i.version = version
-    i.install(src_dir)
-
-#    i.prefix = 'remote_hardware_server'
-#    i.name = 'remote_hardware_server'
 #    i.install(src_dir)
+
+    i.prefix = 'remote_hardware_server'
+    i.name = 'remote_hardware_server'
+    i.include_pkgs = ['remote_hardware', 'helpers', 'led', 'messaging',
+                      'hardware', 'rpc'
+                      ]
+    i.include_mods = ['paths', 'loggable', 'config_loadable',
+                      'managers/remote_hardware_server_manager',
+                      'managers/manager', 'viewable',
+                      'managers/displays/rich_text_display'
+                      ]
+    i.install(src_dir)
 #
 #    i.prefix = 'bakeout'
 #    i.name = 'bakeout'

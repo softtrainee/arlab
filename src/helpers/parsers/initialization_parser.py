@@ -273,7 +273,7 @@ class InitializationParser(XMLParser):
 
     def get_systems(self):
         p = self.get_plugin('ExtractionLine')
-        if p:
+        if p is not None:
             return [(s.text.strip(), s.get('master_host')) for s in p.findall('system')]
         return []
 #    def get_processors(self):
