@@ -60,6 +60,7 @@ class MDDModelerUIPlugin(CoreUIPlugin):
               self._create_notes_view,
               self._create_summary_view,
               self._create_process_view,
+              self._create_info_view
               ]
         return rv
 
@@ -106,6 +107,19 @@ class MDDModelerUIPlugin(CoreUIPlugin):
 
         args = dict(id='pychron.modeler.notes_view',
                   name='Notes',
+                  obj=obj
+                  )
+        return self.traitsuiview_factory(args, kw)
+
+    def _create_info_view(self, **kw):
+        from info_view import InfoView
+        obj = InfoView()
+        manager = self._get_manager()
+        if manager is not None:
+            manager.on_trait_change(obj.selected_update, 'selected_datum')
+
+        args = dict(id='pychron.modeler.info_view',
+                  name='Info',
                   obj=obj
                   )
         return self.traitsuiview_factory(args, kw)

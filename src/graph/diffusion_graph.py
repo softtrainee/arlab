@@ -193,18 +193,20 @@ class DiffusionGraph(Graph):
           
         '''
 
-        for k in GROUPNAMES:
-            try:
-                g = self.groups[k]
-                try:
-                    plots = g[gid]
-
-                    for p in plots:
-                        p.visible = vis
-                except IndexError:
-                    pass
-            except KeyError:
-                pass
+#        print self.groups
+#        for k in GROUPNAMES:
+#            print k
+#            try:
+#                g = self.groups[k]
+#                try:
+#                    plots = g[gid]
+#
+#                    for p in plots:
+#                        p.visible = vis
+#                except IndexError:
+#                    pass
+#            except KeyError:
+#                pass
 
         self.redraw()
 
@@ -226,17 +228,18 @@ class DiffusionGraph(Graph):
 
         b, _p = self.new_series(ar39, age, plotid=pid, **kw)
         plots = [b, a] if a is not None else [b]
-        if ngroup is True:
-            self.groups['spectrum'].append(plots)
-        elif isinstance(ngroup, str):
-            try:
-                self.groups[ngroup].append(plots)
-#                print self.groups[ngroup]
-            except KeyError:
-                self.groups[ngroup] = [plots]
 
-        else:
-            self.groups['spectrum'][-1] += plots
+#        if ngroup is True:
+#            self.groups['spectrum'].append(plots)
+#        elif isinstance(ngroup, str):
+#            try:
+#                self.groups[ngroup].append(plots)
+##                print self.groups[ngroup]
+#            except KeyError:
+#                self.groups[ngroup] = [plots]
+#
+#        else:
+#            self.groups['spectrum'][-1] += plots
 
 #        s3 = unicode(u'\u2070')
 #        xtitle = 'Cum. {:c}{!r}Ar{!r} %'.format(s3, s3, s3)
@@ -244,19 +247,19 @@ class DiffusionGraph(Graph):
         xtitle = 'Cum. 39Ar %'
         self.set_x_title(xtitle, plotid=pid)
         self.set_y_title('Age (Ma)', plotid=pid)
-        return b
+        return plots
 
     def build_logr_ro(self, ar39, logr, pid=1, ngroup=True, **kw):
         '''
         '''
 
         a, _ = self.new_series(ar39, logr, plotid=pid, **kw)
-        g = self.groups['logr_ro']
-        if ngroup:
-            g.append([a])
-        else:
-            #g[len(g) - 1].append(a)
-            g[-1].append(a)
+#        g = self.groups['logr_ro']
+#        if ngroup:
+#            g.append([a])
+#        else:
+#            #g[len(g) - 1].append(a)
+#            g[-1].append(a)
 
         self.set_x_title('Cum. 39Ar %', plotid=pid)
 
@@ -264,7 +267,7 @@ class DiffusionGraph(Graph):
 
         self.set_y_title(ytitle, plotid=pid)
 
-        return a
+        return [a]
 
     def build_arrhenius(self, T, Dta, pid=2, ngroup=True, **kw):
         '''
@@ -272,34 +275,44 @@ class DiffusionGraph(Graph):
         '''
 
         a, _p = self.new_series(T, Dta, plotid=pid, marker_size=2.5, **kw)
-        g = self.groups['arrhenius']
-        if ngroup:
-
-            if isinstance(a, tuple):
-                g.append(list(a))
-            else:
-                g.append([a])
-        else:
-            #g[len(g) - 1].append(a)
-            if isinstance(a, tuple):
-                g[-1] += list(a)
-            else:
-                g[-1].append(a)
+#        g = self.groups['arrhenius']
+#        if ngroup:
+#
+#            if isinstance(a, tuple):
+#                g.append(list(a))
+#            else:
+#                g.append([a])
+#        else:
+#            #g[len(g) - 1].append(a)
+#            if isinstance(a, tuple):
+#                g[-1] += list(a)
+#            else:
+#                g[-1].append(a)
         self.set_x_title('10000/T (K)', plotid=pid)
         ytitle = 'log D/a' + u'\u00B2 (' + 's' + u'\u207B\u2071)'
         self.set_y_title(ytitle, plotid=pid)
+        return [a]
 
-    def build_cooling_history(self, ts, Tsl, Tsh, pid=3):
+    def build_cooling_history(self, ts, Tsl, Tsh, pid=3, colors=None):
         '''
         '''
         self.set_x_title('t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
         self.set_y_limits(min=100, plotid=pid)
-        a, _p = self.new_series(ts, Tsl, type='polygon', plotid=pid, color=self.color_generators[pid].next())
-        b, _p = self.new_series(ts, Tsh, type='polygon', plotid=pid, color=self.color_generators[pid].next())
 
-        self.groups['cooling_history'].append([a, b])
+        if colors:
+            p1, p2 = colors
+        else:
+            cg = self.color_generators[pid]
+            p1 = cg.next()
+            p2 = cg.next()
+
+        a, _p = self.new_series(ts, Tsl, type='polygon', plotid=pid, color=p1)
+        b, _p = self.new_series(ts, Tsh, type='polygon', plotid=pid, color=p2)
+
+#        self.groups['cooling_history'].append([a, b])
         self.redraw()
+        return [a, b]
 
     def build_unconstrained_thermal_history(self, datacontainer, pid=4, contour=True):
         self.set_x_title('t (Ma)', plotid=pid)
@@ -336,17 +349,20 @@ class DiffusionGraph(Graph):
             ppoly = plot.contour_plot(zname, type='poly', poly_cmap=cmap,
                              hide_grids=False,
                              **rd)[0]
-            self.groups['unconstrained_thermal_history'].append([pline, ppoly])
+#            self.groups['unconstrained_thermal_history'].append([pline, ppoly])
             #remove zoom
             self.plots[pid].overlays.pop()
 
 #            self.plotcontainer.draw_order = ['background', 'underlay', 'image', 'plot', 'selection', 'border', 'annotation', 'overlay']
-
+            return [pline, ppoly]
         else:
+            plots = []
             for s in datacontainer:
                 xs = s[:, 0]
                 ys = s[:, 1]
-                self.new_series(xs, ys)
+                a, _ = self.new_series(xs, ys)
+                plots.append(a)
+            return plots
 
 #============= EOF ====================================
 

@@ -39,7 +39,7 @@ from src.graph.diffusion_graph import DiffusionGraph#, GROUPNAMES
 from src.loggable import Loggable
 from src.modeling.data_loader import DataLoader
 from src.modeling.model_data_directory import ModelDataDirectory
-from src.helpers.color_generators import colorname_generator
+from src.helpers.color_generators import colorname_generator, paired_colorname_generator
 from src.modeling.fortran_process import FortranProcess
 from src.graph.diffusion_graph import GROUPNAMES
 
@@ -373,7 +373,7 @@ class Modeler(Loggable):
             if graph_editor is not None:
                 graph_editor.graph = g
 
-    def _load_graph(self, data_directory, gid, color):
+    def _load_graph(self, data_directory, gid, pcolor, scolor):
 
         data_directory.id = gid
 
@@ -386,7 +386,8 @@ class Modeler(Loggable):
         dl.root = data_directory.path
         for i, pi in enumerate(self.get_panels()):
             func = getattr(self, '_load_{}'.format(pi))
-            func(data_directory, i, runid, color, gid)
+            func(data_directory, i, runid, pcolor, scolor)
+
 
         self._sync_groups(data_directory)
 
@@ -435,8 +436,17 @@ class Modeler(Loggable):
                 ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show'),
                 CheckboxColumn(name='bind'),
-                ObjectColumn(name='primary_color', editable=False, label='Pc', style='simple'),
-                ObjectColumn(name='secondary_color', editable=False, label='Sc', style='simple'),
+#                ObjectColumn(name='primary_color',
+##                             editable=False, 
+#                             label='Pc',
+##                             style='simple'
+#                             style='custom'
+#                             ),
+#                ObjectColumn(name='secondary_color', editable=False, label='Sc',
+#                             style='custom',
+#                             graph_color_='red'
+##                             style='simple'
+#                             ),
                 CheckboxColumn(name='model_spectrum_enabled', label='Ms'),
                 CheckboxColumn(name='inverse_model_spectrum_enabled', label='IMs'),
                 CheckboxColumn(name='model_arrhenius_enabled', label='Ma'),
@@ -530,18 +540,23 @@ class Modeler(Loggable):
         '''
         '''
         self.refresh_graph()
-        color_gen = colorname_generator()
+        color_gen = paired_colorname_generator()
         for gid, d in enumerate(self.data):
             #need to load all graphs even if we are not going to show them 
             #this is to ensure proper grouping
             #set visiblity after
-            c = color_gen.next()
-            d.primary_color = c
+#            c = color_gen.next()
+#            d.primary_color = c
+            pc, sc = color_gen.next()
 
-            self._load_graph(d, gid, c)
+            self._load_graph(d, gid, pc, sc)
+
+            d.primary_color = pc
+            d.secondary_color = sc
+
 
             #skip a color
-            color_gen.next()
+#            color_gen.next()
 
         self.update_graph_title()
         #force update of notes and summary 
@@ -561,12 +576,16 @@ class Modeler(Loggable):
                 traceback.print_exc()
                 self.info(e)
 
-    def _load_arrhenius(self, data_directory, plotidcounter, runid, color):
+    def _load_arrhenius(self, data_directory, plotidcounter, runid,
+                        pcolor, scolor):
         dl = self.data_loader
         g = self.graph
 
         def build(data):
-            g.build_arrhenius(pid=plotidcounter, type=self.arrhenius_plot_type, *data)
+            p = g.build_arrhenius(pid=plotidcounter,
+                              color=pcolor,
+                              type=self.arrhenius_plot_type, *data)
+            data_directory.plots += p
             g.set_series_label('{}.arr.meas'.format(runid), plotid=plotidcounter, series=self._arr_cnt)
             self._arr_cnt += 1
 
@@ -575,13 +594,19 @@ class Modeler(Loggable):
 
         if data_directory.model_arrhenius_enabled:
             def build(data):
-                g.build_arrhenius(ngroup=False, pid=plotidcounter, type=self.arrhenius_plot_type, *data)
+                p = g.build_arrhenius(ngroup=False, pid=plotidcounter,
+                                  type=self.arrhenius_plot_type,
+                                  color=scolor,
+                                  *data)
+                data_directory.plots += p
+
                 g.set_series_label('{}.arr.model'.format(runid), plotid=plotidcounter, series=self._arr_cnt)
                 self._arr_cnt += 1
             data = dl.load_arrhenius('arr.dat')
             self._try(build, data)
 
-    def _load_logr_ro(self, data_directory, plotidcounter, runid, color):
+    def _load_logr_ro(self, data_directory, plotidcounter, runid,
+                      pcolor, scolor):
         dl = self.data_loader
         g = self.graph
 
@@ -589,18 +614,26 @@ class Modeler(Loggable):
         data2 = dl.load_logr_ro('log.smp') #Produced by running'files' during parsing of autoupdate
         if data is not None:
             def build(data):
-                p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
+                p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width,
+                                    color=pcolor,
+                                    *data)
+                data_directory.plots += p
+
 #                s = 2 if data_directory.model_arrhenius_enabled else 1
                 g.set_series_label('{}.logr_ro.meas'.format(runid), plotid=plotidcounter, series=self._logr_cnt)
-                p.on_trait_change(data_directory.update_pcolor, 'color')
+#                p.on_trait_change(data_directory.update_pcolor, 'color')
                 self._logr_cnt += 1
             self._try(build, data)
 
         elif data2 is not None:
             def build(data):
-                p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width, *data)
+                p = g.build_logr_ro(pid=plotidcounter, line_width=self.logr_ro_line_width,
+                                    color=pcolor,
+                                    *data)
+                data_directory.plots += p
+
                 g.set_series_label('{}.logr_ro.meas'.format(runid), plotid=plotidcounter, series=self._logr_cnt)
-                p.on_trait_change(data_directory.update_pcolor, 'color')
+#                p.on_trait_change(data_directory.update_pcolor, 'color')
                 self._logr_cnt += 1
 
             self._try(build, data2)
@@ -608,11 +641,15 @@ class Modeler(Loggable):
         if data_directory.model_arrhenius_enabled:
 
             def build(data):
-                p = g.build_logr_ro(ngroup=False, line_width=self.logr_ro_line_width, pid=plotidcounter, *data)
+                p = g.build_logr_ro(ngroup=False, line_width=self.logr_ro_line_width,
+                                    pid=plotidcounter,
+                                    color=scolor,
+                                    *data)
+                data_directory.plots += p
+
                 g.set_series_label('{}.logr_ro.model'.format(runid), plotid=plotidcounter, series=self._logr_cnt)
                 self._logr_cnt += 1
-                data_directory.secondary_color = p.color
-                p.on_trait_change(data_directory.update_scolor, 'color')
+#                p.on_trait_change(data_directory.update_scolor, 'color')
 
             data = dl.load_logr_ro('logr.dat')
             self._try(build, data)
@@ -621,44 +658,39 @@ class Modeler(Loggable):
         dl = self.data_loader
         g = self.graph
         def build(data):
-            g.build_unconstrained_thermal_history(data, pid=plotidcounter,
+            p = g.build_unconstrained_thermal_history(data, pid=plotidcounter,
                                                   series=self._unchist_cnt
                                                   )
+            data_directory.plots += p
+
             self._unchist_cnt += 1
         data = dl.load_unconstrained_thermal_history()
         self._try(build, data)
-#        if data is not None:
-#            try:
-#                g.build_unconstrained_thermal_history(data, pid=plotidcounter)
-#            except Exception, err:
-#                self.info(err)
 
-    def _load_cooling_history(self, data_directory, plotidcounter, runid, color):
+    def _load_cooling_history(self, data_directory, plotidcounter, runid, pcolor, scolor):
         dl = self.data_loader
         g = self.graph
         def build(data):
-            g.build_cooling_history(pid=plotidcounter, *data)
+            p = g.build_cooling_history(pid=plotidcounter, colors=[pcolor, scolor], *data)
+            data_directory.plots += p
+
             g.set_series_label('{}.chist.l'.format(runid), plotid=plotidcounter, series=self._chist_cnt)
             g.set_series_label('{}.chist.h'.format(runid), plotid=plotidcounter, series=self._chist_cnt + 1)
             self._chist_cnt += 2
 
         data = dl.load_cooling_history()
         self._try(build, data)
-#        if data is not None:
-#            try:
-#                g.build_cooling_history(pid=plotidcounter, *data)
-#            except Exception, err:
-#                self.info(err)
 
-    def _load_spectrum(self, data_directory, plotidcounter, runid, color):
+    def _load_spectrum(self, data_directory, plotidcounter, runid, pcolor, scolor):
         dl = self.data_loader
         data = dl.load_spectrum()
         g = self.graph
 
         def build(data):
-            g.build_spectrum(color=color,
+            ps = g.build_spectrum(color=pcolor,
                              pid=plotidcounter,
                              *data)
+            data_directory.plots += ps
 
             g.set_series_label('{}.spec.meas-err'.format(runid),
                                plotid=plotidcounter,
@@ -673,14 +705,18 @@ class Modeler(Loggable):
 
         if data_directory.model_spectrum_enabled:
             def build(data):
-                p = g.build_spectrum(*data, ngroup=False, pid=plotidcounter)
+                p = g.build_spectrum(*data,
+                                     color=scolor,
+                                     ngroup=False, pid=plotidcounter)
+                data_directory.plots += p
                 g.set_series_label('{}.model'.format(runid), plotid=plotidcounter
                                    )
-                g.color_generators[-1].next()
-                p.color = g.color_generators[-1].next()
+#                g.color_generators[-1].next()
+#                p.color = g.color_generators[-1].next()
                 self._spec_cnt += 1
 
             data = dl.load_model_spectrum()
+
             self._try(build, data)
 
         if data_directory.inverse_model_spectrum_enabled:
