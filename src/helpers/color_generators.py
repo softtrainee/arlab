@@ -54,15 +54,40 @@ colornames = [ 'black', 'red', 'violet', 'maroon', 'yellow', 'olive',
 
                'blueviolet', 'brown', 'firebrick', 'greenyellow'
                ]
+colorname_pairs = [
+                   (0xffbf33, 0x2b46d6),
+                   (0x00ffff, 0xff5300),
+                   (0xff00ff, 0xebff00),
+                   (0x00cc66, 0xff2c00),
+                   (0x0021cc, 0xffaf00)
+                   #('black', 'red'),
+                   #(0xFF5300, 0x00ffff),
+                   #(0x0000cc, 0xffbd00),
+                   ]
+
+
+
+def compare_colors(cv, r, g, b):
+
+    nc = int('{:02x}{:02x}{:02x}'.format(r, g, b), 16)
+    return cv == nc
+
+def gen(cnames):
+    i = 0
+    while 1:
+        if i == len(cnames):
+            i = 0
+        yield cnames[i]
+        i += 1
+
+def paired_colorname_generator():
+    return gen(colorname_pairs)
+
+
 def colorname_generator():
     '''
     '''
-    i = 0
-    while 1:
-        if i == len(colornames):
-            i = 0
-        yield colornames[i]
-        i += 1
+    return gen(colornames)
 
 
 def color8i_generator():
