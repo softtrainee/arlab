@@ -17,9 +17,10 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Property, Str, Any, on_trait_change
-from wx import Color, ColourDatabase
-
+from traits.api import HasTraits, Bool, List, \
+ Property, Str, Any, on_trait_change, Color
+from wx import ColourDatabase
+from traitsui.api import View, Item
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -35,13 +36,22 @@ class ModelDataDirectory(HasTraits):
     path = Str
     id = 0
     modeler = Any
-    primary_color = Str#Color
-    secondary_color = Str#Color
+#    primary_color = Str
+#    secondary_color = Str
+    primary_color = Color
+    secondary_color = Color
 
     model_spectrum_enabled = Bool
     model_arrhenius_enabled = Bool
 
     inverse_model_spectrum_enabled = Bool
+    plots = List
+
+    def traits_view(self):
+        v = View(Item('name', style='readonly'),
+                 Item('primary_color', style='readonly', label='Primary'),
+                 Item('secondary_color', style='readonly', label='Secondary'))
+        return v
 
     def _get_name(self):
         '''
@@ -52,7 +62,11 @@ class ModelDataDirectory(HasTraits):
         '''
         '''
         if self.modeler:
-            self.modeler.graph.set_group_visiblity(self.show, gid=self.id)
+            for p in self.plots:
+                p.visible = self.show
+
+            self.modeler.graph.redraw()
+
             self.trait_set(
                            model_arrhenius_enabled=self.show,
                            model_spectrum_enabled=self.show,
@@ -105,15 +119,15 @@ class ModelDataDirectory(HasTraits):
         if self.modeler:
             self.modeler.graph.set_group_binding(self.id, self.bind)
 
-    def update_pcolor(self, new):
-        new = [255 * i for i in new[:2]]
-        c = Color(*new)
-        self.primary_color = ColourDatabase().FindName(c).lower()
-
-    def update_scolor(self, new):
-        new = [255 * i for i in new]
-        c = Color(*new)
-        self.secondary_color = ColourDatabase().FindName(c).lower()
+#    def update_pcolor(self, new):
+#        new = [255 * i for i in new[:2]]
+#        c = Color(*new)
+#        self.primary_color = ColourDatabase().FindName(c).lower()
+##
+#    def update_scolor(self, new):
+#        new = [255 * i for i in new]
+#        c = Color(*new)
+#        self.secondary_color = ColourDatabase().FindName(c).lower()
 
     def _try(self, func):
         try:
