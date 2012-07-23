@@ -100,12 +100,32 @@ class Installer(object):
             else:
                 print '----- No Icon File for {} -----'.format(self.prefix)
 
+            resource_path = lambda x: os.path.join(dist_root, 'Resources', x)
             #copy the helpers module
-            helpers_path=os.path.join(launchers_root,'helpers.py')
+            helpers_path = os.path.join(launchers_root, 'helpers.py')
             if os.path.isfile(helpers_path):
                 shutil.copyfile(helpers_path,
-                                os.path.join(dist_root, 'Resources','helpers.py')
+                                resource_path('helpers.py')
                                 )
+
+            #===================================================================
+            # copy all source file
+            # will make this bundle self contained 
+            #===================================================================
+            shutil.copytree(os.path.join(root, 'src'),
+                            resource_path('src'))
+            shutil.copyfile(os.path.join(root, 'globals.py'),
+                            resource_path('globals.py')
+                            )
+
+            #copy pngs
+            for name in map('{}.png'.format, ['splash', 'red_ball',
+                                              'gray_ball', 'green_ball',
+                                              'orange_ball', 'yellow_ball']):
+                shutil.copyfile(os.path.join(root, 'resources', name),
+                            resource_path(name)
+                            )
+
             # ===================================================================
             # #edit the plist
             # ===================================================================

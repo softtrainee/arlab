@@ -22,10 +22,12 @@ from pyface.image_resource import ImageResource
 #from traits.api import List, on_trait_change
 #============= standard library imports ========================
 from os import path
+import os
+from src.loggable import Loggable
 
 #from envisage.ui.tasks.tasks_application import TasksApplication
 #============= local library imports  ==========================
-class Pychron(WorkbenchApplication):
+class Pychron(WorkbenchApplication, Loggable):
 #class Pychron(TasksApplication):
     '''
     '''
@@ -42,13 +44,11 @@ class Pychron(WorkbenchApplication):
 
     def _splash_screen_default(self):
         from src.paths import paths
-        p = path.join(
-                         paths.pychron_src_root,
-                       'resources'
-                       )
+        self.info(paths.pychron_src_root)
+        self.info(os.path.isdir(paths.pychron_src_root))
         sp = SplashScreen(
                           image=ImageResource(name='splash.png',
-                                                search_path=[p]
+                                                search_path=[paths.pychron_src_root]
                                                 )
                           )
         return sp

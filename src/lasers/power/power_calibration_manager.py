@@ -17,13 +17,14 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Button, Instance, Int, \
      Event, Property, Bool, Any, Enum, on_trait_change, List
-from traitsui.api import View, Item, VGroup, Group
+from traitsui.api import View, Item, VGroup, Group, Label
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from numpy import polyfit, linspace, polyval, poly1d
 from scipy import optimize
 from threading import Event as TEvent
-from threading import Thread
+from threading import Thread, Timer
+import wx
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from src.paths import paths
@@ -38,6 +39,14 @@ from src.hardware.analog_power_meter import AnalogPowerMeter
 import random
 
 FITDEGREES = dict(Linear=1, Parabolic=2, Cubic=3)
+
+def confirmation(message):
+    dialog = wx.Dialog(
+                       None, -1, 'Confirmation'
+    )
+
+#    tc = wx.StaticText(dialog, label=message)
+    return dialog
 
 class PowerCalibrationObject(object):
     coefficients = None
@@ -75,10 +84,12 @@ class PowerCalibrationObject(object):
         return power, c
 
 
-#class DummyPowerMeter:
-#    def read_power_meter(self, setpoint):
+class DummyAPM:
+    def read_power_meter(self, setpoint):
 #        import random
-#        return setpoint + random.randint(0, 5)
+        return setpoint + random.randint(0, 5)
+    def check_saturation(self, n=3):
+        return True
 
 class Parameters(HasTraits):
     pstart = Float(0)
@@ -88,7 +99,7 @@ class Parameters(HasTraits):
     sample_delay = Float(1)
     integration_period = Float(1)
     nintegrations = Int(5)
-    use_db = Bool(True)
+    use_db = Bool(False)
     fit_degree = Enum('Linear', 'Parabolic', 'Cubic')
     view = View(
               Item('pstart', label='Start'),
@@ -203,6 +214,7 @@ class PowerCalibrationManager(Manager):
             graph.set_x_limits(pstop, pstart)
 
         apm = self.power_meter
+        apm = DummyAPM()
 #        if self.parent is not None:
 #            apm = self.parent.get_device('analog_power_meter')
 #        else:
@@ -249,6 +261,12 @@ class PowerCalibrationManager(Manager):
             callback(pi, rp / float(nintegrations), *args)
 
 
+            #check for detector saturation
+            if apm is not None:
+                if apm.check_saturation(n=3):
+                    if not self.confirmation_dialog('Increment Power Meter'):
+                        self._alive = False
+                        break
             #calculate slope and intercept of data
 
 #        x = graph.get_data()
@@ -259,7 +277,6 @@ class PowerCalibrationManager(Manager):
 #            pass
 
 #            self._write_data(pi, , table)
-
 
     def _get_parameters_path(self, name):
         p = os.path.join(paths.hidden_dir, 'power_calibration_{}'.format(name))

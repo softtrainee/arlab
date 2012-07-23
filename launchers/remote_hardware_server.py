@@ -19,7 +19,7 @@ if __name__ == '__main__':
     import os
 
     from helpers import build_version
-    build_version('_beta')
+    build_version('')
 
     from src.helpers.logger_setup import logging_setup
     from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
