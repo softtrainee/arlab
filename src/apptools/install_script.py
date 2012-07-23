@@ -117,13 +117,13 @@ def install_pychron_suite():
     i.version = version
     i.install(src_dir)
 
-    i.prefix = 'remote_hardware_server'
-    i.name = 'remote_hardware_server'
-    i.install(src_dir)
-
-    i.prefix = 'bakeout'
-    i.name = 'bakeout'
-    i.install(src_dir)
+#    i.prefix = 'remote_hardware_server'
+#    i.name = 'remote_hardware_server'
+#    i.install(src_dir)
+#
+#    i.prefix = 'bakeout'
+#    i.name = 'bakeout'
+#    i.install(src_dir)
 
     # move data into place
 

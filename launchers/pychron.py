@@ -20,7 +20,7 @@
 import os
 #============= local library imports  ==========================
 
-version_id = '_test'
+version_id = ''
 from helpers import build_version
 build_version(version_id)
 
@@ -37,6 +37,8 @@ def main():
 
     # build directories
     build_directories()
+
+    #
 
 #    from src.helpers.paths import hidden_dir
 #    path = os.path.join(hidden_dir, 'version_info')

@@ -22,7 +22,7 @@ import sys
 
 def build_version(ver):
     #insert pychron src dir into sys.path
-    build_sys_path(ver)
+#    build_sys_path(ver)
 
     #can now use src. 
     #build the global path structure

@@ -22,7 +22,7 @@ Global path structure
 add a path verification function
 make sure directory exists and build if not
 '''
-from os import path, mkdir
+from os import path, mkdir, getcwd
 
 
 
@@ -37,8 +37,8 @@ from os import path, mkdir
 
 class Paths():
     root = None
-    pychron_src_root = None
-    doc_html_root = None
+    #pychron_src_root = None
+    #doc_html_root = None
 
     #_dir suffix ensures the path is checked for existence
     root_dir = root
@@ -109,10 +109,8 @@ class Paths():
         home = 'Pychrondata{}'.format(version)
 
         self.root = root = path.join(HOME, home)
-        src_repo_name = 'pychron{}'.format(version)
-        self.pychron_src_root = pychron_src_root = path.join(HOME, 'Programming', 'mercurial', src_repo_name)
-        self.doc_html_root = path.join(pychron_src_root, 'docs', '_build', 'html')
-
+#        src_repo_name = 'pychron{}'.format(version)
+        self.pychron_src_root = pychron_src_root = path.join('.', 'pychron.app', 'Contents', 'Resources')
         #_dir suffix ensures the path is checked for existence
         self.root_dir = root
         stable_root = path.join(HOME, 'Pychrondata')
