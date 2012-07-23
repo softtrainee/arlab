@@ -30,7 +30,7 @@ from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 
 
 from src.helpers.logger_setup import add_console
-from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay
+from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay
 from globals import globalv
 
 if globalv.open_logger_on_launch:
@@ -195,6 +195,10 @@ def launch():
 
     logger.info('Quiting Pychron')
     app.exit()
+
+    for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
+        gi.close()
+
     return
 
 

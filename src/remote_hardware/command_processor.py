@@ -131,7 +131,6 @@ class CommandProcessor(ConfigLoadable):
 
         '''
         from globals import globalv
-        print 'asdfffffffffffffffffff', globalv.use_ipc
         if not globalv.use_ipc:
             return True
 
