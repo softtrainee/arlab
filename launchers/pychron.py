@@ -38,8 +38,6 @@ def main():
     # build directories
     build_directories()
 
-    #
-
 #    from src.helpers.paths import hidden_dir
 #    path = os.path.join(hidden_dir, 'version_info')
 #    a = VersionInfoDisplay(local_path=path,
