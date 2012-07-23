@@ -25,7 +25,6 @@ import os
 from threading import Thread
 import time
 #=============local library imports  ==========================
-from src.hardware import HW_PACKAGE_MAP
 from src.viewable import Viewable, ViewableHandler
 from pyface.timer.do_later import do_after
 from src.rpc.rpcable import RPCable
@@ -353,6 +352,7 @@ class Manager(Viewable, RPCable):
             class_factory = gdict[klass]
 
         else:
+            from src.hardware import HW_PACKAGE_MAP
             try:
                 package = HW_PACKAGE_MAP[klass]
                 m = __import__(package, globals(), locals(), [klass], -1)

@@ -113,14 +113,16 @@ def install_pychron_suite():
             print 'See http://mercurial.selenic.com/'
             return
 
+    #build pychron
     i = Installer('pychron', 'pychron')
     i.version = version
-#    i.install(src_dir)
+    i.install(src_dir)
 
+    #build remote hardware server
     i.prefix = 'remote_hardware_server'
     i.name = 'remote_hardware_server'
     i.include_pkgs = ['remote_hardware', 'helpers', 'led', 'messaging',
-                      'hardware', 'rpc'
+                      'rpc'
                       ]
     i.include_mods = ['paths', 'loggable', 'config_loadable',
                       'managers/remote_hardware_server_manager',
@@ -128,7 +130,8 @@ def install_pychron_suite():
                       'managers/displays/rich_text_display'
                       ]
     i.install(src_dir)
-#
+
+    #build bakeout
 #    i.prefix = 'bakeout'
 #    i.name = 'bakeout'
 #    i.install(src_dir)
