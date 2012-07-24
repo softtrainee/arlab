@@ -146,7 +146,7 @@ class LaserHandler(BaseRemoteHardwareHandler):
             return InvalidArgumentsErrorCode('SetXY', '{}  {}'.format(data, y))
 
         #need to remember x,y so we can fool mass spec that we are at position
-        manager.stage_manager._temp_position = x, y
+        manager.stage_manager.temp_position = x, y
 
         err = manager.stage_manager.set_xy(x, y)
 

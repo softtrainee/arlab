@@ -364,9 +364,9 @@ class SerialCommunicator(Communicator):
                     self.warning(e)
             return _err
 
-        @err_handle
-        def eread(inw):
-            return self.handle.read(inw)
+#        @err_handle
+#        def eread(inw):
+#            return self.handle.read(inw)
 #            r = None
 #            try:
 #                r = self.handle.read(inw)
@@ -374,9 +374,9 @@ class SerialCommunicator(Communicator):
 #                self.warning(e)
 #            return r
 
-        @err_handle
-        def get_chars():
-            return self.handle.inWaiting()
+#        @err_handle
+#        def get_chars():
+#            return self.handle.inWaiting()
 #            c = 0
 #            try:
 #                c = self.handle.inWaiting()
@@ -385,52 +385,55 @@ class SerialCommunicator(Communicator):
 #            return c
 
         def get_line(terminator=None):
-
-            inw = get_chars()
-            r = eread(inw)
-            if terminator is None:
-                t1 = '\n'
-                t2 = '\r'
-                isline = r.endswith(t1) or r.endswith(t2) if r is not None else False
-            else:
-                isline = r.strip().endswith(terminator) if r is not None else False
-#            print isline, r, inw
+            try:
+                inw = self.handle.inWaiting()
+                r = self.handle.read(inw)
+                if terminator is None:
+                    t1 = '\n'
+                    t2 = '\r'
+                    isline = r.endswith(t1) or r.endswith(t2) if r is not None else False
+                else:
+                    isline = r.endswith(terminator) if r is not None else False
+            except (OSError, IOError), e:
+                self.warning(e)
+##            print isline, r, inw
             return isline, r, inw
 
         r = None
         if self.simulation:
             r = 'simulation'
         else:
-            inw = 0
-            if delay is not None:
+            if delay is None:
+                delay = self.read_delay
+
+            if delay:
                 time.sleep(delay / 1000.)
-                inw = get_chars()
-                r = eread(inw)
-            else:
-                time.sleep(self.read_delay)
-                ready_to_read, _, _ = select.select([self.handle], [], [], 0.5)
-                if ready_to_read:
-#                    print ready_to_read
-                    isline, r, c = get_line(terminator=self.read_terminator)
-                    if not is_hex and not isline:
-                        pcnt = 0
-                        cnt = 0
-                        for _ in xrange(200000):
-                            isline, r, c = get_line(terminator=self.read_terminator)
-                            if isline:
-                                break
-                            if pcnt == c:
-                                cnt += 1
-                            else:
-                                cnt = 0
 
-                            pcnt = c
-                            if cnt > 50000:
-                                break
+            time.sleep(self.read_delay)
+            ready_to_read, _, _ = select.select([self.handle], [], [], 0.5)
+            if ready_to_read:
+                isline, r, c = get_line(terminator=self.read_terminator)
+                if is_hex:
+                    if r:
+                        r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
+                elif not isline:
+                    pcnt = 0
+                    cnt = 0
+                    for _ in xrange(200000):
+                        isline, r, c = get_line(terminator=self.read_terminator)
+                        if isline:
+                            break
+                        if pcnt == c:
+                            cnt += 1
+                        else:
+                            cnt = 0
 
-            if is_hex:
-                if r:
-                    r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
+                        pcnt = c
+                        if cnt > 50000:
+                            break
+
+#                    print 'line', c
+
 
         return r
 #            if inw > 0:
@@ -451,4 +454,18 @@ class SerialCommunicator(Communicator):
 #            r = 'simulation'
 #
 #        return r
+
+if __name__ == '__main__':
+    s = SerialCommunicator()
+    s.read_delay = 0
+    s.port = 'usbmodemfd1221'
+    s.open()
+    time.sleep(2)
+    s.tell('A', verbose=False)
+
+    for i in range(10):
+        print 'dddd', s.ask('1', verbose=False)
+        time.sleep(1)
+#    s.tell('ddd', verbose=False)
+#    print s.ask('ddd', verbose=False)
 #===================== EOF ==========================================

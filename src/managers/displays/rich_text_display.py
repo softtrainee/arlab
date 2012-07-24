@@ -28,13 +28,9 @@ from src.paths import paths
 #=============local library imports  ==========================
 class DisplayHandler(Handler):
     def closed(self, info, is_ok):
-
-        object = info.object
-
-        object.delegated_text = object.text
-
-        object.opened = False
-        object.was_closed = True
+        obj = info.object
+        obj.opened = False
+        obj.was_closed = True
         return True
 
     def init(self, info):
@@ -49,7 +45,7 @@ class RichTextDisplay(HasTraits):
     ui = None
     width = Float(625)
     height = Float(415)
-    delegated_text = List
+#    delegated_text = List
     text = List
     editable = False
     ok_to_open = True
@@ -120,7 +116,7 @@ class RichTextDisplay(HasTraits):
 
         return panel
 
-    def _add_(self, msg, new_line=True, color=None, **kw):
+    def _add_(self, msg, new_line=True, color=None, size=9, **kw):
         '''
             
         '''
@@ -136,11 +132,11 @@ class RichTextDisplay(HasTraits):
         else:
             color = wx.Colour(*color)
 
-        size = 9
         family = wx.FONTFAMILY_MODERN
         style = wx.FONTSTYLE_NORMAL
         weight = wx.FONTWEIGHT_NORMAL
         font = wx.Font(size, family, style, weight, False, 'Consolas')
+
         d.Freeze()
         d.BeginFont(font)
         d.BeginTextColour(color)
@@ -149,10 +145,16 @@ class RichTextDisplay(HasTraits):
         d.EndFont()
 
         if new_line:
-            self._display.Newline()
+            d.Newline()
 
         lp = d.GetLastPosition()
         d.ShowPosition(lp + 600)
+        n = 300
+        if len(self.text) >= n:
+            pop = self.text.pop
+            s = sum(pop(0) for _ in xrange(n))
+            d.Remove(0, s)
+
         d.Thaw()
 
     def add_text(self, msg, **kw):
@@ -165,16 +167,14 @@ class RichTextDisplay(HasTraits):
                 tappend(len(mi) + 1)
         else:
             tappend(len(msg) + 1)
-
-        if self._display:
+        disp = self._display
+        if disp:
             if isinstance(msg, (list, tuple)):
                 for mi in msg:
                     self._add_(mi, **kw)
             else:
                 self._add_(msg, **kw)
-            if len(self.text) > 300:
-                self._display.Remove(0, self.text.pop(0))
-                self._display.SetInsertionPointEnd()
+
 
 
 from email.mime.multipart import MIMEMultipart
