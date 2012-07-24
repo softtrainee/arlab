@@ -28,7 +28,7 @@ from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 
 
 class MapCanvas(MarkupCanvas):
-    map = Instance(StageMap)
+    _map = Instance(StageMap)
     calibration_item = Instance(CalibrationObject)
     calibrate = Bool(False)
     hole_color = (0, 0, 0)
@@ -36,7 +36,7 @@ class MapCanvas(MarkupCanvas):
     show_axes = False
     bitmap_underlay = None
     show_bitmap = Bool(False)
-    render_map = Bool(True)
+    render_map = Bool(False)
     hole_crosshairs_kind = Enum(1, 2)
     hole_crosshairs_color = Enum('red', 'green', 'blue', 'yellow', 'black')
     current_hole = None
@@ -92,7 +92,7 @@ class MapCanvas(MarkupCanvas):
                 aff.translate(-cpos[0], -cpos[1])
                 aff.translate(*cpos)
 
-                mpos = self.map.get_hole_pos(self.current_hole)
+                mpos = self.mp.get_hole_pos(self.current_hole)
                 dpos = aff.transformPt(mpos)
                 spos = self.map_data((event.x, event.y))
 
@@ -111,7 +111,7 @@ class MapCanvas(MarkupCanvas):
         ca = self.calibration_item
         if ca:
 
-            for obj in self.map.sample_holes:
+            for obj in self.mp.sample_holes:
                 hole = obj.id
                 pos = obj.x, obj.y
 
@@ -151,48 +151,38 @@ class MapCanvas(MarkupCanvas):
         return ci
 
     def set_map(self, mp):
-        self.map = mp
+        self._map = mp
         self.bitmap_underlay.path = mp.bitmap_path
-        self.map.on_trait_change(self.request_redraw, 'g_shape')
-        self.map.on_trait_change(self.request_redraw, 'g_dimension')
-
+        self._map.on_trait_change(self.request_redraw, 'g_shape')
+        self._map.on_trait_change(self.request_redraw, 'g_dimension')
 
     def _draw_hook(self, gc, *args, **kw):
-        self._draw_map(gc)
+        if self.render_map:
+            self._draw_map(gc)
 
     def _draw_map(self, gc, *args, **kw):
         gc.save_state()
-
-        map = self.map
-        if map is not None:
+        mp = self._map
+        if mp is not None:
             ca = self.calibration_item
 
             if ca:
                 ox, oy = self.map_screen([(0, 0)])[0]
 
                 cx, cy = self.map_screen([ca.center])[0]
-#                cx += 1
-#                cy += 1
+
                 rot = ca.rotation
-#                
-#                #sw=self.bounds[0]/float(self.outer_bounds[0])
-#                #sh=self.bounds[1]/float(self.outer_bounds[1])
-#                #do rotation around center point
+
                 gc.translate_ctm(cx, cy)
                 gc.rotate_ctm(math.radians(rot))
                 gc.translate_ctm(-cx , -cy)
-#
-##                tpos = (ox, oy)
-###                print tpos
-###                #translate to the center pos
-#              #  gc.translate_ctm(cx, cy)
-#              #  gc.translate_ctm(ox, oy)
+
                 gc.translate_ctm(cx - ox, cy - oy)
 
-#                sw,sh=0.99,0.99
-#                gc.scale_ctm(sw,sh)
-
-            for hole in map.sample_holes:
+            gshape = mp.g_shape
+            get_draw_func = lambda x: getattr(self, '_draw_{}'.format(x))
+            func = get_draw_func(gshape)
+            for hole in mp.sample_holes:
                 tweaked = False
                 if ca:
                     tweaked = hole.id in ca.tweak_dict
@@ -205,28 +195,42 @@ class MapCanvas(MarkupCanvas):
                         if str(hole.id) in ca.tweak_dict and isinstance(ca, CalibrationItem):
                             tweak = ca.tweak_dict[str(hole.id)]
 
-#                    x,y=self.parent._map_calibrated_space((hole.x, hole.y))
                     x, y = self.map_screen([(hole.x, hole.y)])[0]
-                    self._draw_sample_hole(gc, x, y, hole.dimension, hole.shape, tweak=tweak)
+
+                    if hole.shape != gshape:
+                        func = get_draw_func(hole.shape)
+                    self._draw_sample_hole(gc, x, y, hole.dimension,
+                                           func, tweak=tweak)
 
         gc.restore_state()
 
-    def _draw_sample_hole(self, gc, x, y, size, shape, tweak=None):
+    def _draw_sample_hole(self, gc, x, y, size, func, tweak=None):
         '''
 
         '''
         gc.set_stroke_color(self.hole_color)
 
-        if self.hole_crosshairs_kind == 2:
-            func = getattr(self, '_draw_{}'.format(shape))
-        else:
+        if self.hole_crosshairs_kind != 2:
             if self.show_indicators:
-                func = self._draw_cross_indicator
-                func(gc, x, y, float(size), tweak=tweak)
-
-            func = getattr(self, '_draw_{}'.format(shape))
-
+                f = self._draw_cross_indicator
+                f(gc, x, y, float(size), tweak=tweak)
         func(gc, x, y, float(size))
+
+#    def _draw_sample_hole(self, gc, x, y, size, func, tweak=None):
+#        '''
+#
+#        '''
+#        gc.set_stroke_color(self.hole_color)
+#
+#        if self.hole_crosshairs_kind == 2:
+#            func = getattr(self, '_draw_{}'.format(shape))
+#        else:
+#            if self.show_indicators:
+#                f = self._draw_cross_indicator
+#                f(gc, x, y, float(size), tweak=tweak)
+#
+##            func = getattr(self, '_draw_{}'.format(shape))
+#        func(gc, x, y, float(size))
 
     def _draw_cross_indicator(self, gc, x, y, size, tweak=None):
         w, h = self._get_wh(size, size)

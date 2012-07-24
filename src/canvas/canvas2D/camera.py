@@ -174,7 +174,6 @@ class Camera(ConfigLoadable):
     def set_limits_by_zoom(self, zoom, cx, cy, canvas=None):
         '''
         '''
-        print 'set limits by zoom', cx,cy
         def _set_limits(axis_key, px_per_cm, cur_pos, canvas):
 
             if axis_key == 'x':

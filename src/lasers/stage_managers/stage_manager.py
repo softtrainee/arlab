@@ -229,6 +229,7 @@ class StageManager(Manager):
         #load defaults
         self._default_z = self.config_get(config, 'Defaults', 'z', default=13, cast='float')
 
+        self.canvas.set_map(sm)
         self.canvas.request_redraw()
 
     def initialize_stage(self):

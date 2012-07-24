@@ -58,16 +58,16 @@ class RegisterManager(Manager):
                     if self.manager is not BLANK_STR:
                         man = getattr(man, self.manager)
 
-                if not app.get_service(ICoreDevice, 'name=="{}"'.format(self.name)):
-
+                if not app.get_service(ICoreDevice, 'name=="{}"'.format(self.name)) and \
+                            man is not None:
                     dev = man.create_device(self.name,
                                              dev_class=self.klass)
-                    dev.bootstrap()
-                    dev.post_initialize()
-                    app.register_service(ICoreDevice, dev, {'display': True})
+                    if dev.bootstrap():
+                        dev.post_initialize()
+                        app.register_service(ICoreDevice, dev, {'display': True})
 
-                    hm = app.get_service('src.managers.hardware_manager.HardwareManager')
-                    hm.load_devices()
+                        hm = app.get_service('src.managers.hardware_manager.HardwareManager')
+                        hm.load_devices()
 
     def _get_klasses(self):
         from src.hardware import HW_PACKAGE_MAP
