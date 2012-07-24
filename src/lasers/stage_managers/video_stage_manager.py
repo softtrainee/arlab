@@ -128,36 +128,6 @@ class VideoStageManager(StageManager):
         else:
             self._start_recording(**kw)
 
-    def _start_recording(self, path=None, basename='vm_recording',
-                         use_dialog=False, user='remote',):
-        self.info('start video recording ')
-        if path is None:
-            if use_dialog:
-                path = self.save_file_dialog()
-            else:
-                vd = self.video_directory if self.video_directory else paths.video_dir
-                path, _ = unique_path(vd, basename, extension='avi')
-
-        d = os.path.dirname(path)
-        if not os.path.isdir(d):
-            self.warning('invalid directory {}'.format(d))
-            self.warning('using default directory')
-            path, _ = unique_path(paths.video_dir, basename,
-                                   extension='avi')
-
-        self.info('saving recording to path {}'.format(path))
-
-        self.use_db = True
-        if self.use_db:
-            db = self.get_video_database()
-#            db = VideoAdapter(dbname=co2laser_db, kind='sqlite')
-            db.connect()
-
-            v = db.add_video_record(rid=basename)
-            db.add_path(v, path, commit=True)
-            self.info('saving {} to database'.format(basename))
-
-        self.video.start_recording(path, user=user)
 
     def stop_recording(self, user='remote', delay=0.1):
         '''
@@ -197,8 +167,8 @@ class VideoStageManager(StageManager):
 
         self.video.open(identifier=self.video_identifier - 1,
                         user='underlay')
-        
-        s=self.stage_controller
+
+        s = self.stage_controller
         xa = s.axes['x'].drive_ratio
         ya = s.axes['y'].drive_ratio
 
@@ -222,8 +192,6 @@ class VideoStageManager(StageManager):
             self.info('saving snapshot {}'.format(path))
             self.video.record_frame(path, swap_rb=False)
 
-
-
     def kill(self):
         '''
         '''
@@ -244,83 +212,59 @@ class VideoStageManager(StageManager):
                               root=self.video_directory)
                 ar.clean()
 
+        def _clean_():
+            #clean the video directory
+            if self.video_directory:
+                self.info('Cleaning video directory')
+                if os.path.isdir(self.video_directory):
+                    ar = Archiver(archive_days=3)
+                    ar.clean(self.video_directory)
 
+        p = Thread(target=_clean_)
+        p.start()
 
-#        def _clean_():
-#            #clean the video directory
-#            if self.video_directory:
-#                self.info('Cleaning video directory')
-#                if os.path.isdir(self.video_directory):
-#                    ar = Archiver(archive_days=3)
-#                    ar.clean(self.video_directory)
+    def get_video_database(self):
+#        from src.helpers.paths import co2laser_db
 
-#        p = Process(target=_clean_)
-#        p.start()
+        from src.database.adapters.video_adapter import VideoAdapter
 
-    def _canvas_factory(self):
-        '''
-        '''
-        try:
-            video = self.video
-        except AttributeError:
-            self.warning('Video not Available')
-            video = None
+#        db = PowerAdapter(dbname='co2laserdb',
+#                                   password='Argon')
+        db = VideoAdapter(dbname=self.parent.dbname,
+                          kind='sqlite')
 
-        v = VideoLaserTrayCanvas(parent=self,
-                               padding=30,
-                               video=video,
-#                               use_camera=True,
-                               map=self._stage_map)
-        return v
+        return db
 
-    def _canvas_editor_factory(self):
-        camera = self.camera
-        canvas = self.canvas
-        w = camera.width * int(canvas.scaling * 10) / 10.
-        h = camera.height * int(canvas.scaling * 10) / 10.
-        l = canvas.padding_left
-        r = canvas.padding_right
-        t = canvas.padding_top
-        b = canvas.padding_bottom
-        return self.canvas_editor_klass(width=w + l + r,
-                                        height=h + t + b)
+    def _start_recording(self, path=None, basename='vm_recording',
+                         use_dialog=False, user='remote',):
+        self.info('start video recording ')
+        if path is None:
+            if use_dialog:
+                path = self.save_file_dialog()
+            else:
+                vd = self.video_directory if self.video_directory else paths.video_dir
+                path, _ = unique_path(vd, basename, extension='avi')
 
-    def _sconfig__group__(self):
-        g = super(VideoStageManager, self)._sconfig__group__()
-        mv = Group(HGroup(Item('use_autocenter', label='Enabled'),
-                          Item('autocenter_button', show_label=False, enabled_when='use_autocenter')),
-                   Item('mapcenters_button', show_label=False),
-                   Item('configure_mv_button', show_label=False),
-                   label='Machine Vision', show_border=True)
+        d = os.path.dirname(path)
+        if not os.path.isdir(d):
+            self.warning('invalid directory {}'.format(d))
+            self.warning('using default directory')
+            path, _ = unique_path(paths.video_dir, basename,
+                                   extension='avi')
 
-        g.content.append(Group(Item('camera_xcoefficients'),
-                               Item('camera_ycoefficients'),
-                               #Item('drive_xratio'),
-                               #Item('drive_yratio'),
-                               mv,
-                               HGroup(Item('snapshot_button', show_label=False),
-                                      Item('auto_save_snapshot')),
-                               HGroup(self._button_factory('record', 'record_label'),
-                                      #Item('auto_save_snapshot')
-                                      ),
-                               Item('autofocus_manager', show_label=False, style='custom'),
-                               #HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
-#                               Item('pxpercmx'),
-#                               Item('pxpercmy'),
-#                               HGroup(Item('calibrate_focus', show_label=False), Spring(width=20,
-#                                                                                          springy=False),
-#                                      Item('focus_z',
-#                                            label='Focus',
-#                                            style='readonly'
-#                                            )),
-                               label='Camera')
-                         )
+        self.info('saving recording to path {}'.format(path))
 
-        return g
+        self.use_db = True
+        if self.use_db:
+            db = self.get_video_database()
+#            db = VideoAdapter(dbname=co2laser_db, kind='sqlite')
+            db.connect()
 
-#    def _move_to_point_hook(self):
-#        if self._autocenter():
-#            self._point = 0
+            v = db.add_video_record(rid=basename)
+            db.add_path(v, path, commit=True)
+            self.info('saving {} to database'.format(basename))
+
+        self.video.start_recording(path, user=user)
 
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.use_autocenter:
@@ -342,12 +286,6 @@ class VideoStageManager(StageManager):
 
 
             self.video.close(user='autocenter')
-
-    #@on_trait_change('autocenter_button')
-    def _autocenter_button_fired(self):
-
-        t = Thread(name='stage.autocenter', target=self._autocenter)
-        t.start()
 
     def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
@@ -389,174 +327,6 @@ class VideoStageManager(StageManager):
 
 
         return rpos, interp
-
-#==============================================================================
-# handlers
-#==============================================================================
-    @on_trait_change('parent:zoom')
-    def _update_zoom(self, new):
-        s = self.stage_controller
-        self.camera.set_limits_by_zoom(new, s.x, s.y)
-
-    def _configure_mv_button_fired(self):
-        info = self.machine_vision_manager.edit_traits(view='configure_view',
-                                                kind='livemodal')
-        if info.result:
-            self.machine_vision_manager.dump_hole_detector()
-
-    def _mapcenters_button_fired(self):
-        self.info('Mapping all holes for {}'.format(self.stage_map))
-        mv = self.machine_vision_manager
-        sm = self._stage_map
-        #enumerate the current stage map holes
-        for hole in sm.sample_holes:
-            self.info('finding center of hole= {} ({},{}) '.format(hole.id,
-                                                                    hole.x,
-                                                                     hole.y))
-            self.hole = int(hole.id)
-            x = self.stage_controller._x_position
-            y = self.stage_controller._y_position
-
-            time.sleep(0.25)
-            newpos = mv.locate_target(x, y, hole.id)
-            if newpos:
-                self.info('calculated center of hole= {} ({},{}) '.format(hole.id,
-                                                                           *newpos))
-                sm.set_hole_correction(hole.id, *newpos)
-            time.sleep(0.25)
-
-    def _snapshot_button_fired(self):
-        self.snapshot()
-
-    def _record_fired(self):
-        def _rec_():
-            self.start_recording()
-#            time.sleep(4)
-#            self.stop_recording()
-        if self.is_recording:
-            self.is_recording = False
-            self.stop_recording()
-        else:
-            self.is_recording = True
-            t = Thread(target=_rec_)
-            t.start()
-
-    def _calculate_fired(self):
-        t = Thread(target=self._calculate_camera_parameters)
-        t.start()
-
-    def _calibrate_focus_fired(self):
-        z = self.stage_controller.z
-        self.info('setting focus posiition {}'.format(z))
-        self.canvas.camera.focus_z = z
-        self.canvas.camera.save_focus()
-
-    def _use_video_server_changed(self):
-        if self.use_video_server:
-            self.video_server.start()
-        else:
-            self.video_server.stop()
-
-    def __stage_map_changed(self):
-        self.visualizer.stage_map = self._stage_map
-
-#==============================================================================
-# Defaults
-#==============================================================================
-    def _camera_default(self):
-        camera = Camera(parent=self.canvas)
-
-        camera.calibration_data.on_trait_change(self.update_camera_params, 'xcoeff_str')
-        camera.calibration_data.on_trait_change(self.update_camera_params, 'ycoeff_str')
-#        camera.on_trait_change(self.parent.update_camera_params, 'focus_z')
-
-        p = os.path.join(paths.canvas2D_dir, 'camera.cfg')
-        camera.load(p)
-
-#        camera.current_position = (0, 0)
-        camera.set_limits_by_zoom(0, 0, 0)
-
-        vid = self.video
-        #swap red blue channels True or False
-        vid.swap_rb = camera.swap_rb
-
-        vid.vflip = camera.vflip
-        vid.hflip = camera.hflip
-
-        return camera
-
-    def _video_default(self):
-
-        v = Video()
-        return v
-
-    def _video_server_default(self):
-        return VideoServer(video=self.video)
-
-    def _camera_calibration_manager_default(self):
-        return CameraCalibrationManager()
-
-    def _machine_vision_manager_default(self):
-        return MachineVisionManager(video=self.video,
-                                    stage_controller=self.stage_controller,
-                                    laser_manager=self.parent,
-                                    autofocus_manager=self.autofocus_manager,
-                                    parent=self
-                                    )
-
-    def _autofocus_manager_default(self):
-        return AutofocusManager(video=self.video,
-                                laser_manager=self.parent,
-                                stage_controller=self.stage_controller,
-                                canvas=self.canvas
-                                )
-
-#==============================================================================
-# Property Get/Set
-#==============================================================================
-#    def _get_drive_xratio(self):
-#        return self._drive_xratio
-#
-#    def _set_drive_xratio(self, v):
-#        self._drive_xratio = v
-#        ax = self.stage_controller.axes['x']
-#        ax.drive_ratio = v
-#        ax.save()
-#
-#    def _get_drive_yratio(self):
-#        return self._drive_yratio
-#
-#    def _set_drive_yratio(self, v):
-#        self._drive_yratio = v
-#        ax = self.stage_controller.axes['y']
-#        ax.drive_ratio = v
-#        ax.save()
-
-    def _get_camera_xcoefficients(self):
-        return self._camera_xcoefficients
-
-    def _set_camera_xcoefficients(self, v):
-        self._camera_coefficients = v
-        self.canvas.camera.calibration_data.xcoeff_str = v
-
-        if self.parent is not None:
-            z = self.parent.zoom
-        else:
-            z = 0
-        self.canvas.camera.set_limits_by_zoom(z)
-
-    def _get_camera_ycoefficients(self):
-        return self._camera_ycoefficients
-
-    def _set_camera_ycoefficients(self, v):
-        self._camera_ycoefficients = v
-        self.canvas.camera.calibration_data.ycoeff_str = v
-
-        if self.parent is not None:
-            z = self.parent.zoom
-        else:
-            z = 0
-        self.canvas.camera.set_limits_by_zoom(z)
 
     def _calculate_indicator_positions(self, shift=None):
         ccm = self.camera_calibration_manager
@@ -619,12 +389,229 @@ class VideoStageManager(StageManager):
                 except ZeroDivisionError:
                     self.drive_xratio = 100
 
+#===============================================================================
+# views
+#===============================================================================
+#===============================================================================
+# view groups
+#===============================================================================
+    def _sconfig__group__(self):
+        g = super(VideoStageManager, self)._sconfig__group__()
+        mv = Group(HGroup(Item('use_autocenter', label='Enabled'),
+                          Item('autocenter_button', show_label=False, enabled_when='use_autocenter')),
+                   Item('mapcenters_button', show_label=False),
+                   Item('configure_mv_button', show_label=False),
+                   label='Machine Vision', show_border=True)
+
+        g.content.append(Group(Item('camera_xcoefficients'),
+                               Item('camera_ycoefficients'),
+                               #Item('drive_xratio'),
+                               #Item('drive_yratio'),
+                               mv,
+                               HGroup(Item('snapshot_button', show_label=False),
+                                      Item('auto_save_snapshot')),
+                               HGroup(self._button_factory('record', 'record_label'),
+                                      #Item('auto_save_snapshot')
+                                      ),
+                               Item('autofocus_manager', show_label=False, style='custom'),
+                               #HGroup(Item('calculate', show_label=False), Item('calculate_offsets'), spring),
+#                               Item('pxpercmx'),
+#                               Item('pxpercmy'),
+#                               HGroup(Item('calibrate_focus', show_label=False), Spring(width=20,
+#                                                                                          springy=False),
+#                                      Item('focus_z',
+#                                            label='Focus',
+#                                            style='readonly'
+#                                            )),
+                               label='Camera')
+                         )
+
+        return g
+#===============================================================================
+# handlers
+#===============================================================================
+    @on_trait_change('parent:zoom')
+    def _update_zoom(self, new):
+        s = self.stage_controller
+        self.camera.set_limits_by_zoom(new, s.x, s.y)
+
+    def _autocenter_button_fired(self):
+
+        t = Thread(name='stage.autocenter', target=self._autocenter)
+        t.start()
+
+    def _configure_mv_button_fired(self):
+        info = self.machine_vision_manager.edit_traits(view='configure_view',
+                                                kind='livemodal')
+        if info.result:
+            self.machine_vision_manager.dump_hole_detector()
+
+    def _mapcenters_button_fired(self):
+        self.info('Mapping all holes for {}'.format(self.stage_map))
+        mv = self.machine_vision_manager
+        sm = self._stage_map
+        #enumerate the current stage map holes
+        for hole in sm.sample_holes:
+            self.info('finding center of hole= {} ({},{}) '.format(hole.id,
+                                                                    hole.x,
+                                                                     hole.y))
+            self.hole = int(hole.id)
+            x = self.stage_controller._x_position
+            y = self.stage_controller._y_position
+
+            time.sleep(0.25)
+            newpos = mv.locate_target(x, y, hole.id)
+            if newpos:
+                self.info('calculated center of hole= {} ({},{}) '.format(hole.id,
+                                                                           *newpos))
+                sm.set_hole_correction(hole.id, *newpos)
+            time.sleep(0.25)
+
+    def _snapshot_button_fired(self):
+        self.snapshot()
+
+    def _record_fired(self):
+        def _rec_():
+            self.start_recording()
+#            time.sleep(4)
+#            self.stop_recording()
+        if self.is_recording:
+            self.is_recording = False
+            self.stop_recording()
+        else:
+            self.is_recording = True
+            t = Thread(target=_rec_)
+            t.start()
+
+    def _calculate_fired(self):
+        t = Thread(target=self._calculate_camera_parameters)
+        t.start()
+
+    def _calibrate_focus_fired(self):
+        z = self.stage_controller.z
+        self.info('setting focus posiition {}'.format(z))
+        self.canvas.camera.focus_z = z
+        self.canvas.camera.save_focus()
+
+    def _use_video_server_changed(self):
+        if self.use_video_server:
+            self.video_server.start()
+        else:
+            self.video_server.stop()
+
+    def __stage_map_changed(self):
+        self.visualizer.stage_map = self._stage_map
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_camera_xcoefficients(self):
+        return self._camera_xcoefficients
+
+    def _set_camera_xcoefficients(self, v):
+        self._camera_coefficients = v
+        self.canvas.camera.calibration_data.xcoeff_str = v
+
+        if self.parent is not None:
+            z = self.parent.zoom
+        else:
+            z = 0
+        self.canvas.camera.set_limits_by_zoom(z)
+
+    def _get_camera_ycoefficients(self):
+        return self._camera_ycoefficients
+
+    def _set_camera_ycoefficients(self, v):
+        self._camera_ycoefficients = v
+        self.canvas.camera.calibration_data.ycoeff_str = v
+
+        if self.parent is not None:
+            z = self.parent.zoom
+        else:
+            z = 0
+        self.canvas.camera.set_limits_by_zoom(z)
+
     def _get_record_label(self):
         return 'Record' if not self.is_recording else 'Stop'
+#===============================================================================
+# factories
+#===============================================================================
+    def _canvas_factory(self):
+        '''
+        '''
+        try:
+            video = self.video
+        except AttributeError:
+            self.warning('Video not Available')
+            video = None
 
-    #this is nor oo programming
-    #tray cal man default defined in stage man
+        v = VideoLaserTrayCanvas(parent=self,
+                               padding=30,
+                               video=video,
+#                               use_camera=True,
+                               map=self._stage_map)
+        return v
 
+    def _canvas_editor_factory(self):
+        camera = self.camera
+        canvas = self.canvas
+        w = camera.width * int(canvas.scaling * 10) / 10.
+        h = camera.height * int(canvas.scaling * 10) / 10.
+        l = canvas.padding_left
+        r = canvas.padding_right
+        t = canvas.padding_top
+        b = canvas.padding_bottom
+        return self.canvas_editor_klass(width=w + l + r,
+                                        height=h + t + b)
+#===============================================================================
+# defaults
+#===============================================================================
+    def _camera_default(self):
+        camera = Camera(parent=self.canvas)
+
+        camera.calibration_data.on_trait_change(self.update_camera_params, 'xcoeff_str')
+        camera.calibration_data.on_trait_change(self.update_camera_params, 'ycoeff_str')
+#        camera.on_trait_change(self.parent.update_camera_params, 'focus_z')
+
+        p = os.path.join(paths.canvas2D_dir, 'camera.cfg')
+        camera.load(p)
+
+#        camera.current_position = (0, 0)
+        camera.set_limits_by_zoom(0, 0, 0)
+
+        vid = self.video
+        #swap red blue channels True or False
+        vid.swap_rb = camera.swap_rb
+
+        vid.vflip = camera.vflip
+        vid.hflip = camera.hflip
+
+        return camera
+
+    def _video_default(self):
+
+        v = Video()
+        return v
+
+    def _video_server_default(self):
+        return VideoServer(video=self.video)
+
+    def _camera_calibration_manager_default(self):
+        return CameraCalibrationManager()
+
+    def _machine_vision_manager_default(self):
+        return MachineVisionManager(video=self.video,
+                                    stage_controller=self.stage_controller,
+                                    laser_manager=self.parent,
+                                    autofocus_manager=self.autofocus_manager,
+                                    parent=self
+                                    )
+
+    def _autofocus_manager_default(self):
+        return AutofocusManager(video=self.video,
+                                laser_manager=self.parent,
+                                stage_controller=self.stage_controller,
+                                canvas=self.canvas
+                                )
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
@@ -679,3 +666,22 @@ if __name__ == '__main__':
     #                    adys.append(ady)
     #                print 'xffset', sum(adxs) / len(adxs)
     #                print 'yffset', sum(adys) / len(adys)
+
+    #    def _get_drive_xratio(self):
+#        return self._drive_xratio
+#
+#    def _set_drive_xratio(self, v):
+#        self._drive_xratio = v
+#        ax = self.stage_controller.axes['x']
+#        ax.drive_ratio = v
+#        ax.save()
+#
+#    def _get_drive_yratio(self):
+#        return self._drive_yratio
+#
+#    def _set_drive_yratio(self, v):
+#        self._drive_yratio = v
+#        ax = self.stage_controller.axes['y']
+#        ax.drive_ratio = v
+#        ax.save()
+

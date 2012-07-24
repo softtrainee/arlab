@@ -865,7 +865,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         if event is not None:
             event.clear()
 
-        time.sleep(0.05)
+#        time.sleep(0.05)
 
         while self._moving_(axis=axis):
             # is the sleep necessary and ehat period 
@@ -891,32 +891,28 @@ ABLE TO USE THE HARDWARE JOYSTICK
             if self.mode == 'grouped':
                 return self.group_moving()
             else:
-                for _ in range(5):
-                    r = self.ask(self._build_command('MD?', xx=axis),
-                                verbose=False
-                                )
-                    if r in ['0', '1']:
-                        break
+
+                r = self.repeat_command(('MD?', axis), 5, check_type=int)
+                if r is not None:
+                    return not int(r)
+#                for _ in range(5):
+#                    r = self.ask(self._build_command('MD?', xx=axis),
+#                                verbose=False
+#                                )
+#                    if r in ['0', '1']:
+#                        break
 #                    time.sleep(0.25)
 #                time.sleep(0.5)
-                return True if r == '0' else False
+#                return True if r == '0' else False
 
         moving = False
         if not self.simulation:
 #        else:
-            retries = 5
-            i = 0
-            r = ''
-            while not r or i > retries:
-                r = self.ask(self._build_command('TX'),
-                         verbose=False
-                         )
-                i += 1
+            r = self.repeat_command('TX', 5, check_type=str, verbose=False)
 
             if r is not None:
                 if len(r) > 0:
-                    r = r[0]
-                    controller_state = ord(r)
+                    controller_state = ord(r[0])
 
                     cs = make_bitarray(controller_state, width=8)
                     moving = cs[3] == '1'
