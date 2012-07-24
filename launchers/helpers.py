@@ -22,7 +22,7 @@ import sys
 
 def build_version(ver):
     #insert pychron src dir into sys.path
-#    build_sys_path(ver)
+    build_sys_path(ver)
 
     #can now use src. 
     #build the global path structure
@@ -37,7 +37,7 @@ def build_sys_path(ver):
                         'Programming',
                         'mercurial')
     src = os.path.join(merc, 'pychron{}'.format(ver))
-    sys.path.insert(0, src)
+    sys.path.insert(1, src)
 
 def build_globals():
     from src.helpers.parsers.initialization_parser import InitializationParser

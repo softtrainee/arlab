@@ -188,7 +188,6 @@ class PowerMapping(Loggable):
 #                self.data_manager.write_to_frame(datum)
 #
                 #write to the table
-#                print tab
                 nr = tab.row
                 nr['row'] = i
                 nr['col'] = j

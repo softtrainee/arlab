@@ -19,7 +19,7 @@ from time import time
 
 
 def convert_to_bool(v):
-    return True if v.lower().strip() in ['t', 'true'] else False
+    return True if v.lower().strip() in ['t', 'true', '1', 'on'] else False
 
 class Flag(object):
     _set = False
@@ -42,7 +42,7 @@ class Flag(object):
 
 class TimedFlag(Flag):
     duration = 1
-    _start_time=None
+    _start_time = None
     def __init__(self, name, t):
         super(TimedFlag, self).__init__(name)
         self.duration = float(t)
@@ -58,7 +58,7 @@ class TimedFlag(Flag):
         return True
 
     def get(self):
-        t=0
+        t = 0
         if self._start_time is not None:
             t = max(0, self.duration - (time() - self._start_time))
         return t

@@ -191,9 +191,9 @@ class Manager(Viewable, RPCable):
         return self._file_dialog_('save as', **kw)
 
     def get_error(self):
-        e = self._error_code if self._error_code else ' '
+        e = self._error_code
         self._error_code = None
-        return e
+        return str(e)
 
     def _set_error_code(self, e):
         self._error_code = e

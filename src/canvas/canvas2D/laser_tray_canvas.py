@@ -211,8 +211,7 @@ class LaserTrayCanvas(MapCanvas):
 
     @on_trait_change('''render_map,show_laser_position, show_desired_position,
                          desired_position_color,
-                         crosshairs_kind, crosshairs_color,crosshairs_radius,
-                         crosshairs_offset,crosshairs_offset_color
+                         crosshairs_+
                          ''')
     def change_indicator_visibility(self):
         self.request_redraw()
@@ -226,14 +225,20 @@ class LaserTrayCanvas(MapCanvas):
     def valid_position(self, x, y):
         '''
         '''
-        if self.x < x <= self.x2 and self.y < y <= self.y2:
+        between = lambda mi, v, ma: mi < v <= ma
+        if between(self.x, x, self.x2) and between(self.y, y, self.y2):
             if self.parent is not None:
                 p = self.parent.stage_controller
                 x, y = self.map_data((x, y))
 
-                if 'x' in p.axes and 'y' in p.axes:
-                    if p.xaxes_min < x <= p.xaxes_max and p.yaxes_min < y <= p.yaxes_max:
+                try:
+                    if between(p.xaxes_min, x, p.xaxes_max) and \
+                        between(p.yaxes_min, y, p.yaxes_max):
+#                    if p.xaxes_min < x <= p.xaxes_max and p.yaxes_min < y <= p.yaxes_max:
                         return x, y
+                except AttributeError:
+                    pass
+#                if 'x' in p.axes and 'y' in p.axes:
 
     def normal_left_down(self, event):
         '''
@@ -331,7 +336,6 @@ class LaserTrayCanvas(MapCanvas):
     def adjust_limits(self, mapper, val, delta=None):
         '''
         '''
-        print mapper, val
         if val is None:
             return
 
@@ -359,10 +363,6 @@ class LaserTrayCanvas(MapCanvas):
     def _draw_hook(self, gc, *args, **kw):
         '''
         '''
-
-        if self.render_map:
-            self._draw_map(gc)
-
         if self.show_desired_position and self.desired_position is not None:
             #draw the place you want the laser to be
             self._draw_crosshairs(gc, self.desired_position, color=self.desired_position_color, kind=2)
