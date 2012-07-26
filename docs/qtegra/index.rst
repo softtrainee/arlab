@@ -12,5 +12,4 @@ Welcome to Qtegra Software Interface's documentation!
    intro   
    qtegra_master
    qtegra_slave
-   key_concepts
 

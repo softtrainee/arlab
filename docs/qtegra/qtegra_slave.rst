@@ -8,10 +8,23 @@ you can think of Qtegra simply as the mass spectrometer's firmware.
 
 Interface with Qtegra
 -------------------------
+Server
+------
+	#. Start Server
+	#. Accept incoming commands
+	#. Parse command
+	#. Execute command with Qtegra core
+	#. Return response
+	
+Client
+-------
+	#. Open connection to Server
+	#. Send ASCII command
+	#. Read response
 
 Key Concepts
 -------------
-
+	#. sockets
 	#. TCP and UDP
 	#. C-sharp and .NET
 
@@ -19,17 +32,41 @@ Key Concepts
 Command Set
 ------------
 
-============= ============= ==============================================================
-Command       Arguments     Description
-============= ============= ==============================================================
-GetData                     Return csv-list of detector intensities
-SetHV         <volts>       Set source accelerating voltage
-GetHV                       Set source accelerating voltage
-SetDeflection <det>,<volts> Set ``det`` deflection voltage to ``volts``
-GetDeflection <det>         Get ``det`` deflection voltage
-============= ============= ==============================================================
+.. table:: Qtegra Commands
 
+	============= ============= ==============================================================
+	Command       Arguments     Description
+	============= ============= ==============================================================
+	SetParameter  ``param,val`` Set ``param`` to ``val``
+	GetParameter  ``param``     Get ``param`` 
+	============= ============= ==============================================================
 
-.. rubric:: Footnotes
+Examples
+---------
 
-.. [#] Data can be returned in a tagged and untagged version. e.g H1:1000,H2:100... or 1000,100. Use the variable ``tag_data`` in RemoteControlServer.cs to control this behavior
+`````````````````````
+Server boilerplate
+`````````````````````
+.. code-block:: csharp
+	
+	public void main()
+	{
+	//start server
+	}
+	private void start_server()
+	{	
+	}
+	private void parse_command(string cmd)
+	{
+	}
+	
+````````````````````````````
+Client boilerplate (python) 
+````````````````````````````
+.. code-block:: python
+
+	import socket
+	sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	sock.send('GetParameter Y-symmetry')
+	print sock.read()
+	
