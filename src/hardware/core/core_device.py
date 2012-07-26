@@ -183,6 +183,8 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
         if self._communicator is not None:
             self._communicator.scheduler = s
 #            self._communicator._lock=s._lock
+    def _parse_response(self, v):
+        return v
 
     def repeat_command(self, cmd, ntries=2, check_val=None, check_type=None,
                        verbose=True):
