@@ -15,24 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import on_trait_change, Any
+from traits.api import on_trait_change
 #============= standard library imports ========================
-from numpy import percentile, histogram, argmax
+from numpy import percentile
 
 #============= local library imports  ==========================
 from src.image.cvwrapper import asMat, grayspace, colorspace, \
-    dilate, sharpen
+    dilate, sharpen, new_point
 from src.image.cvwrapper import smooth as smooth_image
 from src.image.image import StandAloneImage
 from hole_detector import HoleDetector
 from time import time
-from timeit import Timer
+#from timeit import Timer
 
 
 class CO2HoleDetector(HoleDetector):
 
-    target_image = Any(transient=True)
 #    target_area = None
+
+    @on_trait_change('canny+')
+    def update_target(self):
+        self.locate_sample_well(0, 0, 0, 1, new_image=False)
 
     @on_trait_change('target_image:ui')
     def _add_target_window(self, new):
@@ -85,7 +88,7 @@ class CO2HoleDetector(HoleDetector):
         src = asMat(img_rescale)
         return src
 
-    def locate_sample_well(self, cx, cy, holenum, holedim, **kw):
+    def locate_sample_well(self, cx, cy, holenum, holedim, new_image=True, **kw):
         '''
             if do_all== true
 
@@ -93,17 +96,18 @@ class CO2HoleDetector(HoleDetector):
 
         #convert hole dim to pxpermm
         holedim *= self.pxpermm
+        if new_image:
+            if self.target_image is not None:
+                self.target_image.close()
 
-        if self.target_image is not None:
-            self.target_image.close()
+            im = StandAloneImage(title='Positioning Error',
+                                 view_identifier='pychron.fusions.co2.target')
+            self.target_image = im
 
-        im = StandAloneImage(title='Positioning Error',
-                             view_identifier='pychron.fusions.co2.target')
-        self.target_image = im
-
-        #use a manager to open so will auto close on quit
-        self.parent.open_view(im)
-
+            #use a manager to open so will auto close on quit
+            self.parent.open_view(im)
+        else:
+            im = self.target_image
         self._nominal_position = (cx, cy)
         self.current_hole = holenum
         self.info('locating CO2 sample hole {}'.format(holenum if holenum else ''))
@@ -141,18 +145,18 @@ class CO2HoleDetector(HoleDetector):
             make it a attribute 
             its more for debugging anyways
         '''
-
         width = 4
         ba = lambda v: [bool((v >> i) & 1) for i in xrange(width - 1, -1, -1)]
         test = [ba(i) for i in range(2 ** 4)]
 
         pos_argss = []
         ntests = 1
+#        test = [(False, False, False, False)]
         for convextest, sharpen, smooth, contrast in test:
             params = self._process_image(src, im, cx, cy, holenum, holedim,
-#                                 smooth=smooth,
+                                 smooth=smooth,
                                  contrast=contrast,
-#                                 sharpen=sharpen,
+                                 sharpen=sharpen,
                                  convextest=convextest
                                  )
             if self.use_all_permutations:
@@ -160,23 +164,12 @@ class CO2HoleDetector(HoleDetector):
             else:
                 if params is not None:
                     pos_argss.append(params)
-                    if len(pos_argss) > ntests:
+                    if len(pos_argss) >= ntests:
                         nxs, nys = zip(*pos_argss)
                         nx = sum(nxs) / len(nxs)
                         ny = sum(nys) / len(nys)
-#                        print nxs
-#                        print nys
-#                        print nx
-#                        print ny
-#                        bx, vx = histogram(nx, 3)
-#                        by, vy = histogram(ny, 3)
-#
-#
-#                        avg = lambda v, b: (v[argmax(b)] + v[argmax(b) + 1]) / 2.
-#                        cen = avg(vx, bx), avg(vy, by)
-#                        print cen
-                        src = self.target_image.get_frame(0)
 
+                        src = self.target_image.get_frame(0)
 
                         cx, cy = self._get_true_xy(src)
                         nomx, nomy = self._nominal_position
@@ -188,8 +181,6 @@ class CO2HoleDetector(HoleDetector):
                                              size=10)
                         return nx, ny
 
-#                        return avg(vx, bx), avg(vy, by)
-
         return pos_argss
 
     def _process_image(self, src, im, cx, cy, holenum, holedim,
@@ -199,7 +190,10 @@ class CO2HoleDetector(HoleDetector):
 
 #        print self.use_all_permutations
 #        seg1 = self.segmentation_style
-        seg1 = 'threshold'
+#        seg1 = 'adaptive_threshold'
+#        seg1 = 'edge'
+        seg1 = 'region'
+#        seg1 = 'threshold'
         self.info('using {} segmentation smooth={} contrast={} sharpen={} \
 convextest={}'.format(seg1, smooth, contrast, sharpen, convextest))
 
@@ -238,7 +232,7 @@ convextest={}'.format(seg, smooth, contrast, sharpen, convextest))
                                                 )
             if params is None:
                 self.info('Failed segmentation={}. Trying alternates'.format(seg1))
-                test_alternates = True
+                test_alternates = False
                 if test_alternates:
                     for seg in ['region', 'edge', 'threshold']:
                         if seg == seg1:
@@ -282,60 +276,37 @@ convextest={}'.format(seg, smooth, contrast, sharpen, convextest))
             self._threshold_start = None
             self._threshold_end = None
             return segment(src, **kw), self._threshold_start, self._threshold_end
-#        retries = 25
-#        s = 2
-#        for j in range(1, retries):
-#            self.info('segmentation iteration{}'.format(j))
-#            params = dict()
-##            if self.use_dilation:
-##                ndilation = 2
-##                for i in range(ndilation):
-##                    #self.info('target not found. increasing dilation')
-##                    #self.info('dilating image (increase white areas). value={}'.format(i + 1))
-##        #            src = dilate(src, self._dilation_value)
-##                    osrc = dilate(src, i)
-##                    self.target_image.set_frame(0, colorspace(osrc))
-###                    self.image.frames[0] = colorspace(osrc)
-###                    self.working_image.frames[0] = colorspace(osrc)
-##            else:
-##                osrc = src
-#            osrc = src
-#            if style == 'region':
-#                params['tlow'] = 125 - s * j
-#                params['thigh'] = 125 + s * j
-#    #            import time
-#    #            time.sleep(2)
-#            npos = segment(osrc, **params)
-#            if npos:
-#                return npos
 
-    def _get_corrected_position(self, args, cx, cy, holenum, holedim):
-        mi = holedim ** 2 * 3.14 * 0.75
-        ma = holedim ** 2 * 3.14 * 1.25
-        if args is None:
+    def _get_corrected_position(self, targets, cx, cy, holenum, holedim):
+        miholedim = 0.75 * holedim
+        maholedim = 1.25 * holedim
+        mi = miholedim ** 2 * 3.1415
+        ma = maholedim ** 2 * 3.1415
+
+#        src = self.target_image.get_frame(0)
+#        self._draw_indicator(src, new_point(*self._get_true_xy(src)),
+#                             shape='circle',
+#                             color=(0, 0, 255),
+#                             size=int(miholedim),
+#                             thickness=1
+#                             )
+#        self._draw_indicator(src, new_point(*self._get_true_xy(src)),
+#                             shape='circle',
+#                             color=(0, 0, 255),
+#                             size=int(maholedim),
+#                             thickness=1
+#                             )
+
+        if targets is None:
             return
-
-        targets = [t for t in args if ma > t.area > mi]
 
         #use only targets that are close to cx,cy
         targets = [t for t in targets
-                   if self._near_center(*t.centroid_value)]
+                   if self._near_center(*t.centroid_value) and  ma > t.area > mi]
         if targets:
             nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
             #self.info('found a target at {},{}'.format(nx, ny))
             return nx, ny
-
-
-                #do not dilation on the first try
-
-#            if args is not None:
-#                break
-
-#        else:
-#            self.warning('no target found during search. threshold {} - {}'.
-#                         format(s, e))
-#            self._draw_center_indicator(self.image.frames[0])
-#            return
 
 
 #============= EOF =====================================

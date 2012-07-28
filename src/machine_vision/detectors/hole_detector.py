@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  Float, Range, Int, Bool, Enum
+from traits.api import  Float, Range, Int, Bool, Enum, Instance
 from traitsui.api import View, Item, VGroup, Group
 #============= standard library imports ========================
 from numpy import histogram, argmax, array, asarray, zeros_like, invert, \
@@ -26,11 +26,12 @@ import os
 from src.image.cvwrapper import draw_polygons, \
     threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
     draw_rectangle, draw_lines, colorspace, draw_circle, get_size, \
-    asMat#, add_images
+    asMat, draw_contour_list#, add_images
 
 from src.paths import paths
 from src.helpers.filetools import unique_path
 from detector import Detector
+from src.image.image import StandAloneImage
 
 DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
@@ -45,6 +46,7 @@ class Target(object):
     poly_points = None
     bounding_rect = None
     threshold = None
+    area = None
 
     @property
     def dev_centroid(self):
@@ -61,11 +63,12 @@ class Target(object):
         return self.bounding_rect.width / float(self.bounding_rect.height)
 
     @property
-    def area(self):
+    def bounding_area(self):
         return self.bounding_rect.width * self.bounding_rect.height
 
 
 class HoleDetector(Detector):
+    target_image = Instance(StandAloneImage, transient=True)
 
     radius_mm = Float(1.5)
 
@@ -98,6 +101,13 @@ class HoleDetector(Detector):
     _threshold_end = None
 #    def close_image(self):
 #        pass
+
+
+    #canny parameters
+    canny_low_threshold = Range(0, 1., 0.06)
+    canny_high_threshold = Range(0, 1., 0.16)
+    canny_sigma = Int(5)
+
     def _get_mask_radius(self):
         r = self._hole_radius
         if not r:
@@ -117,18 +127,26 @@ class HoleDetector(Detector):
     def _edge_segmentation(self, src, **kw):
         from scipy import ndimage
         from skimage.filter import canny
-
+        from skimage.morphology import closing, square
         ndsrc = src.ndarray / 255.
-        edges = canny(ndsrc, sigma=2)
+        edges = canny(ndsrc,
+                      low_threshold=self.canny_low_threshold,
+                      high_threshold=self.canny_high_threshold,
+                      sigma=self.canny_sigma)
         filled = ndimage.binary_fill_holes(edges)
+        filled = invert(filled) * 255
+#        label_objects, _ = ndimage.label(filled)
+#        sizes = bincount(label_objects.ravel())
+#
+#        mask_sizes = sizes > 1
+#        mask_sizes[0] = 0
+#        cleaned = mask_sizes[label_objects]
+#        cleaned = asarray(cleaned, 'uint8')
+#        cleaned = closing(cleaned, square(5))
 
-        label_objects, _ = ndimage.label(filled)
-        sizes = bincount(label_objects.ravel())
-
-        mask_sizes = sizes > 20
-        mask_sizes[0] = 0
-        cleaned = mask_sizes[label_objects]
-        self._locate_helper(cleaned, **kw)
+#        self._locate_helper(invert(cleaned), **kw)
+        nsrc = asarray(filled, 'uint8')
+        return self._locate_helper(nsrc, **kw)
 
     def _region_segmentation(self, src, tlow=100, thigh=150, **kw):
         from skimage.filter import sobel
@@ -144,11 +162,18 @@ class HoleDetector(Detector):
         wsrc = watershed(el_map, markers)
         return self._locate_helper(invert(wsrc), **kw)
 
+    def _adaptive_threshold_segmentation(self, src, **kw):
+        from skimage.filter import threshold_adaptive
+        ndsrc = src.ndarray[:]
+        block_size = 50
+        bsrc = threshold_adaptive(ndsrc, block_size)
+#        bsrc = invert(bsrc)
+        return self._locate_helper(bsrc * 255., **kw)
+
     def _threshold_segmentation(self, src, **kw):
         start = self.start_threshold_search_value
         end = start + self.threshold_search_width
         expand_value = self.threshold_expansion_scalar
-
 
         for i in range(self.threshold_tries):
             s = start - i * expand_value
@@ -175,6 +200,13 @@ class HoleDetector(Detector):
             kw['hole'] = False
 
         t = self._locate_targets(src, **kw)
+
+#        contours, hieararchy = contour(src)
+
+#        self.target_image.load(colorspace(src))
+#        self._draw_markup(self.target_image.get_frame(0), t)
+#        draw_contour_list(self.target_image.get_frame(0), contours, hieararchy)
+
 #        self.permutations.append((t, kw))
 #        t2 = None
 #        if self.use_all_permutations:
@@ -198,7 +230,7 @@ class HoleDetector(Detector):
     def _locate_targets(self, src, **kw):
 #        dsrc = self.working_image.frames[0]
         contours, hieararchy = contour(src)
-#        draw_contour_list(dsrc, contours, hieararchy)
+#        draw_contour_list(src, contours, hieararchy)
 #        do polygon approximation
         polygons, brs, areas = get_polygons(contours, hieararchy,
 #                                            convextest=False,
@@ -215,23 +247,16 @@ class HoleDetector(Detector):
                 continue
 
             cx, cy = centroid(pi)
-#            use_radius_filter = False
-#            use_radius_filter = True
-#            if use_radius_filter:
-#                (cx, cy), pi = self._radius_filter(pi, cx, cy)
 
             tr = Target()
             tr.origin = self._get_true_xy(src)
             tr.centroid_value = cx, cy
             tr.poly_points = pi
             tr.bounding_rect = br
-
-#            if 'thresh' in kw:
-#                tr.threshold = kw['thresh']
+            tr.area = ai
 
             targets.append(tr)
 
-#        self.info('found {} targets'.format(len(targets)))
         return targets
 
     def _get_positioning_error(self, targets, cx, cy, holenum):
@@ -271,12 +296,13 @@ class HoleDetector(Detector):
         except Exception, e:
             #debugging 
             pass
-        src = grayspace(self.target_image.source_frame)
+#        src = grayspace(self.target_image.source_frame)
 
-        csrc = colorspace(crop(src.clone(), *self.croprect))
-        self.target_image.set_frame(0, csrc)
+#        csrc = colorspace(crop(src.clone(), *self.croprect))
+#        self.target_image.set_frame(0, csrc)
 #        self.image.frames[0] = colorspace(crop(src, *self.croprect))
-        self._draw_markup(csrc, targets, dev=(dx, dy))
+        self._draw_markup(self.target_image.get_frame(0), targets, dev=(dx, dy))
+
         self.parent._nominal_position = cx, cy
         self.parent._corrected_position = nx, ny
 
@@ -330,7 +356,6 @@ class HoleDetector(Detector):
         for pi in results:
 
 #            f0 = self.target_image.get_frame(0)
-
             draw_polygons(src, [pi.poly_points], color=(255, 255, 0), thickness=1)
 
             #draw the centroid in blue
@@ -425,7 +450,14 @@ class HoleDetector(Detector):
 
         return src
 
+
     def traits_view(self):
+        v = View(Item('canny_sigma'),
+                 Item('canny_low_threshold'),
+                 Item('canny_high_threshold'),
+                 Item('target_image', show_label=False, style='custom'))
+        return v
+    def configure_view(self):
         search_grp = Group(Item('start_threshold_search_value'),
                             Item('threshold_search_width'),
                             Item('threshold_expansion_scalar'),

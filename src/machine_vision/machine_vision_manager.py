@@ -390,14 +390,20 @@ class MachineVisionManager(Manager):
 #            self.get_intensity()
 #            self._spawn_thread(self.map_holes)
 #            self._zoom_calibration()
-#            self._spawn_thread(self.locate_target,
-#                               10, 0, 1
-#                               )
+            self._spawn_thread(self.locate_target,
+                               10, 0, 1
+                               )
 
 #            self._spawn_thread(self.learn)
-            self.learn()
+#            self.learn()
         else:
             self.testing = False
+
+
+    def _test_view(self):
+        v = View(
+                 Item('hole_detector', show_label=False, style='custom'))
+        return v
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
@@ -405,7 +411,8 @@ if __name__ == '__main__':
 
     m = MachineVisionManager(_debug=True,
                              )
-    m.configure_traits()
+    m.locate_target(0, 0, 1)
+    m.configure_traits(view='_test_view')
 #    m.configure_traits(view='configure_view')
 
 #    time_comp()

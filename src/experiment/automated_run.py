@@ -129,6 +129,7 @@ class AutomatedRun(Loggable):
     extraction_script = Property
     _extraction_script = Any
 
+    signals = Dict
 #    @on_trait_change('_measurement_script')
 #    def ascd(self, obj, name, new):
 #        print name, new
@@ -180,9 +181,8 @@ class AutomatedRun(Loggable):
 
         ms = MeasurementPyScript(root=os.path.dirname(ec['measurement_script']),
             name=mname,
-            arun=self
+            automated_run=self
             )
-
         return ms
     #        print self.scripts.keys()
 #        print mname
@@ -512,8 +512,9 @@ class AutomatedRun(Loggable):
             cdd = signals[keys.index('CDD')]
 
             x = time.time() - starttime# if not self._debug else i + starttime
-
             data_write_hook(x, keys, signals)
+
+            self.signals = dict(zip(keys, signals))
 #                dm.write_to_frame((x, h1, cdd))
 
             if i % 100 == 0:
@@ -542,7 +543,7 @@ class AutomatedRun(Loggable):
         if fname in self.scripts:
             self.info('script "{}" already loaded... cloning'.format(fname))
             s = self.scripts[fname].clone_traits()
-            s.arun = self
+            s.automated_run = self
             return s
         else:
             self.info('loading script "{}"'.format(fname))

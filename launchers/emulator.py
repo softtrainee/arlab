@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-import os
-
 version_id = '_test'
 from helpers import build_version
 build_version(version_id)
@@ -82,6 +80,8 @@ class Server(Loggable):
         server.info = self.info
         #server.allow_reuse_address = True
         self.server = server
+
+        server.socket.setsockopt(socket.SOL_SOCKET, socket.TCP_NODELAY, 1)
 #        server.start_server(host)
         server.serve_forever()
 

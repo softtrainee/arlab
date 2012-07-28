@@ -161,7 +161,12 @@ class PyScript(Loggable):
         ks = [((k[0], k[1]) if isinstance(k, tuple) else (k, k))
                for k in self.get_commands()]
 
+        ks += [(v, v) for v in self.get_variables()]
+
         return dict([(k, getattr(self, fname)) for k, fname in ks])
+
+    def get_variables(self):
+        return []
 
     def get_commands(self):
         cmds = ['sleep',

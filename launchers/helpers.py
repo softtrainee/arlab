@@ -37,7 +37,7 @@ def build_sys_path(ver):
                         'Programming',
                         'mercurial')
     src = os.path.join(merc, 'pychron{}'.format(ver))
-    sys.path.insert(1, src)
+    sys.path.insert(0, src)
 
 def build_globals():
     from src.helpers.parsers.initialization_parser import InitializationParser
