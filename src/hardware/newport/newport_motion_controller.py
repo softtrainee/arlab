@@ -269,58 +269,51 @@ ABLE TO USE THE HARDWARE JOYSTICK
         v1 = self.parent.canvas.map_data((0, 0))
         v2 = self.parent.canvas.map_data((1, 1))
 
-
         if ax_key == 'y':
             v = (v2[1] - v1[1]) * direction * ax.sign + self._y_position
-#            v = self._y_position + v
-#            x = self._x_position
-#            y = v
 
         else:
             v = (v2[0] - v1[0]) * direction * ax.sign + self._x_position
-#            v = self._x_position + v
-#            x = v
-#            y = self._y_position
-
-        #self.parent.canvas.set_desired_position(x, y)
-        #self.parent.canvas.set_stage_position(x, y)
 
         self.single_axis_move(ax_key, v, block=False, mode='relative', update=False)
         setattr(self, '_{}_position'.format(ax_key), v)
 
-
     def multiple_point_move(self, points, nominal_displacement=0.5):
-
+        gid = self.groupobj.id
         self.timer = self.timer_factory()
         #use a nominal displacement to set the motion params
         self.configure_group(True, displacement=nominal_displacement)
+
+        #is this command necessary or is it
         cmd = self._build_command('HQ', xx=self.groupobj.id, nn=10)
         self.tell(cmd, verbose=True)
 
         avaliable_spaces = 10
         while 1:
-            #isue the first 10 points and wait
-            for x, y in points[:avaliable_spaces]:
-                #sign correct each point
-                x = self._sign_correct(x, 'x')
-                y = self._sign_correct(y, 'y')
-                cmd = self._build_command('HL', xx=self.groupobj.id, nn='{:0.5f},{:0.5f}'.format(x, y))
-                self.tell(cmd, verbose=True)
+            #issue the first 10 points and wait
+            cmd = ';'.join([self._build_command('HL', xx=gid,
+                                                nn='{:0.5f},{:0.5f}'.format(self._sign_correct(x, 'x'),
+                                                                            self._sign_correct(y, 'y')))
+                            for x, y in points[:avaliable_spaces]
+                            ])
+            self.tell(cmd, verbose=True)
 
             waiting = True
             resp = 0
+            cmd = self._build_query('HQ', xx=gid)
             while waiting and not self.simulation:
-                cmd = self._build_query('HQ', xx=self.groupobj.id)
+                # wait until the via point buffer is empty 
+                # e.i HQ?=10 10 via point spaces available in buffer
                 resp = self.ask(cmd, verbose=False)
                 if resp is not None:
                     resp = resp.strip()
                     resp = int(resp)
-                    waiting = True if resp < 6 else False
+                    waiting = resp != 10
                 else:
                     break
-                time.sleep(0.05)
+                time.sleep(0.1)
+
             points = points[avaliable_spaces:]
-            avaliable_spaces = resp
             if not points:
                 break
 

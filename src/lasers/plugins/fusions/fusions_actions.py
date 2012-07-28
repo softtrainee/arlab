@@ -143,4 +143,16 @@ class FInitializeZoomAction(Action):
         manager = self.get_manager(event)
         if manager is not None:
             manager.do_motor_initialization('zoom')
+
+
+#===============================================================================
+# patterning
+#===============================================================================
+class FOpenPatternManagerAction(Action):
+    def perform(self, event):
+        manager = self.get_manager(event)
+        if manager is not None:
+            app = self.window.application
+            open_manager(app,
+                         manager.stage_manager.pattern_manager, view='pattern_maker_view')
 #============= EOF =============================================

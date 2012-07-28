@@ -23,6 +23,13 @@ from numpy import linspace, cos, sin, hstack
 import math
 import random
 #============= local library imports  ==========================
+def circular_contour_pattern(cx, cy, radius, nsteps, pc):
+
+    for ni in range(nsteps):
+        ps = [pi for pi in arc_pattern(cx, cy, 360, radius * (1 + ni * pc))][1:-1]
+        for pi in ps:
+            yield pi
+
 def polygon_pattern(cx, cy, radius, nsides, rotation=0):
 
 

@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Enum, Instance, Button, Str, Property, Event, Bool, DelegatesTo
 from traitsui.api import View, Item, HGroup, VGroup, InstanceEditor, spring
@@ -32,7 +30,7 @@ from src.paths import paths
 #from src.graph.graph import Graph
 from src.lasers.stage_managers.pattern.patterns import Pattern, \
      LineSpiralPattern, SquareSpiralPattern, \
-     RandomPattern, PolygonPattern, ArcPattern
+     RandomPattern, PolygonPattern, ArcPattern, CircularContourPattern
 import time
 from pyface.timer.do_later import do_later
 #from src.canvas.canvas2D.image_underlay import ImageUnderlay
@@ -43,19 +41,20 @@ class PatternManager(Manager):
     kind = Property(Enum(
                          'Polygon',
                          'Arc',
-
                          'LineSpiral',
-                'SquareSpiral',
-
-                'Random'
-                ), depends_on='_kind')
-    _kind = Enum(
-                 'Polygon',
-                 'Arc',
-                 'LineSpiral',
-                'SquareSpiral',
-                'Random'
-                )
+                        'SquareSpiral',
+                        'Random',
+                        'CircularContour'
+                        ),
+                        depends_on='_kind')
+    _kind = Str('CircularContour')
+#                 'Polygon',
+#                 'Arc',
+#                 'LineSpiral',
+#                'SquareSpiral',
+#                'Random',
+#                'Diamond'
+#                )
 
     pattern = Instance(Pattern)
     load_button = Button('Load')
@@ -237,14 +236,19 @@ class PatternManager(Manager):
             path = self.open_file_dialog(default_directory=paths.pattern_dir)
 
         if path is not None and os.path.isfile(path):
-            self.pattern = None
+#            self.pattern = None
             with open(path, 'rb') as f:
-                p = pickle.load(f)
-                p.path = path
-                self.pattern = p
-                self._kind = self.pattern.__class__.__name__.partition('Pattern')[0]
-                self.info('loaded {} from {}'.format(self.pattern_name, path))
-                self.pattern.replot()
+                try:
+                    p = pickle.load(f)
+                    p.path = path
+                    self.pattern = p
+                    self._kind = self.pattern.__class__.__name__.partition('Pattern')[0]
+                    self.info('loaded {} from {}'.format(self.pattern_name, path))
+                    self.pattern.replot()
+                except:
+                    if self.confirmation_dialog('Invalid Pattern File {}'.format(path)):
+                        os.remove(path)
+
 
     def save_pattern(self):
 #        if not self.pattern_name:
@@ -263,8 +267,8 @@ class PatternManager(Manager):
             self.info('saved {} pattern to {}'.format(self.pattern_name, path))
 
     def pattern_factory(self, kind):
-        pattern = globals()['{}Pattern'.format(kind)]()
 
+        pattern = globals()['{}Pattern'.format(kind)]()
         pattern.replot()
         pattern.calculate_transit_time()
         return pattern
@@ -317,7 +321,10 @@ class PatternManager(Manager):
 #        return g
 
     def _pattern_default(self):
-        return self.pattern_factory(self.kind)
+        print 'asdfds'
+        p = self.pattern_factory(self.kind)
+        print p
+        return p
 
     def _save_button_fired(self):
         self.save_pattern()
@@ -325,10 +332,10 @@ class PatternManager(Manager):
     def _load_button_fired(self):
         self.load_pattern()
 
-        info = self.pattern.edit_traits(kind='modal')
-
-        if not info.result:
-            self.pattern = None
+#        info = self.pattern.edit_traits(kind='modal')
+#
+#        if not info.result:
+#            self.pattern = None
 
     def _get_kind(self):
         return self._kind
@@ -349,6 +356,7 @@ class PatternManager(Manager):
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('pattern')
+    paths.build('_test')
     pm = PatternManager()
     pm.configure_traits(view='pattern_maker_view')
 #    pm.configure_traits(view='execute_view')
