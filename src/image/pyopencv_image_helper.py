@@ -381,8 +381,10 @@ def find_lines(src, t1, minlen=100):
                 3, 8)
     return dst, lines
 
-def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
-                 convextest=True, hole=True, nsizes=5, **kw):
+def get_polygons(contours, hierarchy,
+                 convextest=True, hole=True, nsides=5,
+                 min_area=100,
+                 **kw):
     '''
     '''
 
@@ -403,24 +405,33 @@ def get_polygons(contours, hierarchy, min_area=0, max_area=1e10,
         else:
             hole_flag = True
 
+        if not hole_flag:
+            continue
+
+        if not len(result) > nsides:
+            continue
+
+        if not area > min_area:
+            continue
 #        print cv.isContourConvex(res_mat)
 #        print result
 #            print 'checking',len(result), area,area>min_area, area<max_area,cv.isContourConvex(res_mat) == bool(convextest), hole_flag 
 #            print cv.isContourConvex(res_mat), convextest
-        if (len(result) > nsizes
-            and area > min_area
-            and area < max_area
-            #and area < 3e6
-#            and cv.isContourConvex(res_mat) == bool(convextest)
-            and hole_flag
-                ):
+#        if (len(result) > nsides
+#            and area > min_area
+##            and area < max_area
+#            #and area < 3e6
+##            and cv.isContourConvex(res_mat) == bool(convextest)
+#            and hole_flag
+#                ):
 
-            if convextest and not cv.isContourConvex(res_mat):
-                continue
 
-            polygons.append(result)
-            brs.append(cv.boundingRect(res_mat))
-            areas.append(area)
+        if convextest and not cv.isContourConvex(res_mat):
+            continue
+
+        polygons.append(result)
+        brs.append(cv.boundingRect(res_mat))
+        areas.append(area)
 #    print len(polygons), len(contours), area
     return polygons, brs, areas
 
@@ -473,7 +484,7 @@ def draw_polygons(img, polygons, thickness=1, color=(0, 255, 0)):
 
 
 def draw_contour_list(src, clist, hierarchy=None,
-                       external_color=(0, 0, 255),
+                       external_color=(0, 255, 255),
                       hole_color=(255, 0, 255),
                       thickness=1
                       ):
@@ -497,12 +508,10 @@ def draw_contour_list(src, clist, hierarchy=None,
         p.create([ci])
         cv.drawContours(src,
                         p,
-#                   clist,
-                    - 1,
-                   #convert_color(external_color),
+                    0,
                    convert_color(color),
                    #255,
-                   thickness=thickness
+#                   thickness=thickness
                    )
 
 
@@ -527,10 +536,8 @@ def draw_circle(src, center, radius, color=(255.0, 0, 0), thickness=1):
 
     if isinstance(center, tuple):
         center = new_point(*center)
-
     cv.circle(src, center, radius,
               convert_color(color),
-#              cv.CV_RGB(255, 0, 0),
               thickness=thickness,
               lineType=cv.CV_AA
               )

@@ -68,7 +68,6 @@ class _ImageEditor(Editor):
         '''
         panel = Panel(parent, -1, style=CLIP_CHILDREN)
 
-#        panel.Bind(EVT_IDLE, self.onIdle)
         self._set_bindings(panel)
         return panel
 
@@ -77,6 +76,7 @@ class _ImageEditor(Editor):
 #        if track_mouse:
 #            panel.Bind(EVT_MOTION, self.onMotion)
 
+        panel.Bind(EVT_IDLE, self.onIdle)
         panel.Bind(EVT_LEFT_DOWN, self.onLeftDown)
 
     def onLeftDown(self, event):
@@ -97,13 +97,13 @@ class _ImageEditor(Editor):
 
         '''
         self._draw_(event)
-        event.RequestMore()
-#    def onIdle(self, event):
+
+    def onIdle(self, event):
 #        '''
 #
 #        '''
-#        self._draw_()
-#        event.RequestMore()
+        self._draw_(event)
+        event.RequestMore()
 
     def _draw_(self, event):
         '''

@@ -206,7 +206,7 @@ def colorspace1D(src, channel='r'):
     return dst
 
 
-def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True, **kw):
+def get_polygons(contours, convextest=0, hole=True, **kw):
     '''
     '''
 
@@ -228,7 +228,6 @@ def get_polygons(contours, min_area=0, max_area=1e10, convextest=0, hole=True, *
             hole_flag = cont.flags & CV_SEQ_FLAG_HOLE == 0
 
         if (result.total >= 4
-            and area > min_area
             #and area < max_area
             #and area < 3e6
             and cvCheckContourConvexity(result) == convextest

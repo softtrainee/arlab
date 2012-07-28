@@ -15,15 +15,56 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any
+from traits.api import Any, on_trait_change
 #============= standard library imports ========================
 from pyscript import PyScript
 import time
 from src.scripts.pyscripts.pyscript import verbose_skip
+import os
+from src.paths import paths
+import random
 #============= local library imports  ==========================
 
 
+class Detector(object):
+    name = None
+    mass = None
+    signal = None
+    def __init__(self, name, mass, signal):
+        self.name = name
+        self.mass = mass
+        self.signal = signal
 
+from traits.api import HasTraits, Button, Dict
+from traitsui.api import View
+class AutomatedRun(HasTraits):
+    test = Button
+    traits_view = View('test')
+    signals = Dict
+    def _test_fired(self):
+        m = MeasurementPyScript(root=os.path.join(paths.scripts_dir, 'measurement'),
+                            name='measureTest.py',
+                            automated_run=self
+                            )
+        m.bootstrap()
+    #    print m._text
+        m.execute()
+
+    def do_sniff(self, ncounts, *args, **kw):
+        keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
+        for i in range(ncounts):
+            vals = [random.random() for _ in range(len(keys))]
+            self.signals = dict(zip(keys, vals))
+            time.sleep(0.1)
+
+    def set_spectrometer_parameter(self, *args, **kw):
+        pass
+    def set_magnet_position(self, *args, **kw):
+        pass
+    def activate_detectors(self, *args, **kw):
+        pass
+    def do_data_collection(self, *args, **kw):
+        pass
 
 class MeasurementPyScript(PyScript):
     automated_run = Any
@@ -31,10 +72,23 @@ class MeasurementPyScript(PyScript):
 
     _series_count = 0
     _regress_id = 0
+
+    _detectors = None
+    def __init__(self, *args, **kw):
+        super(MeasurementPyScript, self).__init__(*args, **kw)
+        self._detectors = dict([(k, Detector(k, m, 0)) for k, m in
+                              zip(['H2', 'H1', 'AX', 'L1', 'L2', 'CDD'],
+                                  [40, 39, 38, 37, 36, 35])
+                              ])
+
+    def _get_detectors(self):
+        return self._detectors
+    detector = property(fget=_get_detectors)
+
     def get_commands(self):
         cmds = super(MeasurementPyScript, self).get_commands()
         cmds += ['baselines', 'position', 'set_time_zero', 'peak_center',
-                 'detectors', 'collect', 'regress', 'sniff',
+                 'activate_detectors', 'collect', 'regress', 'sniff',
 
                  'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',
                  'set_extraction_lens', 'set_deflection'
@@ -42,21 +96,38 @@ class MeasurementPyScript(PyScript):
                  ]
         return cmds
 
+    def get_variables(self):
+        return ['detector']
+
+    @on_trait_change('automated_run:signals')
+    def update_signals(self, obj, name, old, new):
+        try:
+            det = self.detector
+            for k, v in new.iteritems():
+                det[k].signal = v
+        except AttributeError:
+            pass
 #===============================================================================
 # commands
 #===============================================================================
     @verbose_skip
     def sniff(self, ncounts):
-        self.arun.do_sniff(ncounts,
+        if self.automated_run is None:
+            return
+
+        self.automated_run.do_sniff(ncounts,
                            self._time_zero,
-                           series=self._series_count
+                           series=self._series_count,
+
                            )
         self._series_count += 1
 
     @verbose_skip
     def regress(self, kind):
+        if self.automated_run is None:
+            return
 
-        self.arun.regress(kind, series=self._regress_id)
+        self.automated_run.regress(kind, series=self._regress_id)
         self._series_count += 3
 
     @verbose_skip
@@ -65,8 +136,11 @@ class MeasurementPyScript(PyScript):
 
     @verbose_skip
     def collect(self, ncounts=200, integration_time=1):
-#        print 'cooooll', ncounts, self._time_zero, integration_time
-        self.arun.do_data_collection(ncounts, self._time_zero,
+        if self.automated_run is None:
+            return
+
+#         print 'cooooll', ncounts, self._time_zero, integration_time
+        self.automated_run.do_data_collection(ncounts, self._time_zero,
                       series=self._series_count,
                       #update_x=True
                       )
@@ -74,16 +148,22 @@ class MeasurementPyScript(PyScript):
         self._series_count += 1
 
     @verbose_skip
-    def detectors(self, *dets):
+    def activate_detectors(self, *dets):
+        if self.automated_run is None:
+            return
+
         if dets:
-            self.arun.activate_detectors(dets)
+            self.automated_run.activate_detectors(dets)
 
     @verbose_skip
     def baselines(self, ncounts, position=None, detector=None):
         '''
             if detector is not none then it is peak hopped
         '''
-        self.arun.do_baselines(ncounts, self._time_zero,
+        if self.automated_run is None:
+            return
+
+        self.automated_run.do_baselines(ncounts, self._time_zero,
                                position=position,
                                detector=detector,
                                series=self._series_count
@@ -92,13 +172,17 @@ class MeasurementPyScript(PyScript):
 
     @verbose_skip
     def peak_center(self):
-        self.arun.do_peak_center()
+        if self.automated_run is None:
+            return
+
+        self.automated_run.do_peak_center()
 
     @verbose_skip
     def position(self, pos, detector='AX'):
-        arun = self.arun
+        if self.automated_run is None:
+            return
 
-        func = arun.set_magnet_position
+        func = self.automated_run.set_magnet_position
         if isinstance(pos, str):
             dac = None
         else:
@@ -108,24 +192,46 @@ class MeasurementPyScript(PyScript):
 
     @verbose_skip
     def set_ysymmetry(self, v):
-        self.arun.set_spectrometer_parameter('SetYSymmetry', v)
+        if self.automated_run is None:
+            return
+
+        self.automated_run.set_spectrometer_parameter('SetYSymmetry', v)
 
     @verbose_skip
     def set_zsymmetry(self, v):
-        self.arun.set_spectrometer_parameter('SetZSymmetry', v)
+        if self.automated_run is None:
+            return
+
+        self.automated_run.set_spectrometer_parameter('SetZSymmetry', v)
 
     @verbose_skip
     def set_zfocus(self, v):
-        self.arun.set_spectrometer_parameter('SetZFocus', v)
+        if self.automated_run is None:
+            return
+
+        self.automated_run.set_spectrometer_parameter('SetZFocus', v)
 
     @verbose_skip
     def set_extraction_lens(self, v):
-        self.arun.set_spectrometer_parameter('SetExtractionLens', v)
+        if self.automated_run is None:
+            return
+
+        self.automated_run.set_spectrometer_parameter('SetExtractionLens', v)
 
     @verbose_skip
     def set_deflection(self, detname, v):
-        v = '{},{}'.format(detname, v)
-        self.arun.set_spectrometer_parameter('SetDeflection', v)
+        if self.automated_run is None:
+            return
 
+        v = '{},{}'.format(detname, v)
+        self.automated_run.set_spectrometer_parameter('SetDeflection', v)
+
+if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    paths.build('_test')
+    logging_setup('m_pyscript')
+
+    d = AutomatedRun()
+    d.configure_traits()
 
 #============= EOF =============================================
