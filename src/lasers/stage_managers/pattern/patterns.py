@@ -33,6 +33,8 @@ import os
 #from chaco.data_range_1d import DataRange1D
 #from chaco.linear_mapper import LinearMapper
 import math
+from src.lasers.stage_managers.pattern.pattern_generators import circular_contour_pattern, \
+    diamond_pattern
 
 
 class TargetOverlay(AbstractOverlay):
@@ -85,7 +87,7 @@ class Pattern(HasTraits):
     graph = Instance(Graph, (), transient=True)
     cx = Float(transient=True)
     cy = Float(transient=True)
-    target_radius = Float(1)
+    target_radius = Range(0.0, 3.0, 1)
 
 #    beam_radius = Float(1, enter_set=True, auto_set=False)
     show_overlap = Bool(False)
@@ -140,6 +142,8 @@ class Pattern(HasTraits):
         oo.visible = self.show_overlap
         oo.request_redraw()
 
+    def _target_radius_changed(self):
+        self.graph.plots[0].plots['plot0'][0].overlays[0].target_radius = self.target_radius
 #    def set_mapping(self, px):
 #        self.pxpermm = px / 10.0
 #
@@ -275,15 +279,17 @@ class Pattern(HasTraits):
         g.set_y_limits(*cby)
 
         lp, _plot = g.new_series()
-        lp.overlays.append(TargetOverlay(component=lp,
-                                                      cx=cx,
-                                                      cy=cy,
-                                                      target_radius=tr
-                                                      ))
+        t = TargetOverlay(component=lp,
+                      cx=cx,
+                      cy=cy,
+                      target_radius=tr)
+
+        lp.overlays.append(t)
         overlap_overlay = OverlapOverlay(component=lp,
                                               visible=self.show_overlap
                                               )
         lp.overlays.append(overlap_overlay)
+
         g.new_series(type='scatter', marker='circle')
         return g
 
@@ -313,6 +319,7 @@ class Pattern(HasTraits):
                                  label='Time (s)',
                                  style='readonly',
                                  format_str='%0.1f')),
+                     Item('target_radius'),
                      Item('show_overlap'),
                      Item('beam_radius', enabled_when='show_overlap'),
                      Item('graph',
@@ -407,12 +414,17 @@ class ArcPattern(Pattern):
     def pattern_generator_factory(self, **kw):
         return arc_pattern(self.cx, self.cy, self.degrees, self.radius)
 
-
-class SpiralPattern(Pattern):
-
+class CircularPattern(Pattern):
     nsteps = Range(1, 10, 2)
     radius = Range(0.01, 0.5, 0.1)
     percent_change = Range(0.01, 5.0, 0.8)
+    def get_parameter_group(self):
+        return Group('radius',
+                     'nsteps',
+                     'percent_change',
+                     )
+
+class SpiralPattern(CircularPattern):
 
     def replot(self):
         ox, oy = self.plot()
@@ -433,11 +445,6 @@ class SpiralPattern(Pattern):
 #        self.graph.set_data(xs, series=1)
 #        self.graph.set_data(ys, axis=1, series=1)
 
-    def get_parameter_group(self):
-        return Group('radius',
-                     'nsteps',
-                     'percent_change',
-                     )
 
 
 class LineSpiralPattern(SpiralPattern):
@@ -466,6 +473,12 @@ class SquareSpiralPattern(SpiralPattern):
                                       )
 
 
+class CircularContourPattern(CircularPattern):
+    def pattern_generator_factory(self, **kw):
+        return circular_contour_pattern(self.cx, self.cy, self.radius,
+                                        self.nsteps,
+                                        self.percent_change
+                                        )
 
 if __name__ == '__main__':
     p = PolygonPattern()

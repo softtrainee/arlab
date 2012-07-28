@@ -93,7 +93,16 @@ class FusionsActionSet(WorkbenchActionSet):
                 Action(name='Power Calibration',
                        path=results_path,
                        class_name='{}OpenPowerCalibrationAction'.format(self.action_path)
+                       ),
+
+                #===============================================================
+                # patterning
+                #===============================================================
+                Action(name='Pattern...',
+                       path=laser_path,
+                       class_name='{}OpenPatternManagerAction'.format(self.action_path)
                        )
+
                 ]
 
 #============= EOF ====================================

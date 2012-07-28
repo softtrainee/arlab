@@ -36,6 +36,7 @@ class DisplayHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
         info.object.opened = True
+        info.object.load_text_buffer()
 
 class RichTextDisplay(HasTraits):
     '''
@@ -61,6 +62,7 @@ class RichTextDisplay(HasTraits):
 
     #height of the text panel == height-_hspacer
     _hspacer = 25
+    _text_buffer = List
 
     def close(self):
         if self.ui is not None:
@@ -115,6 +117,10 @@ class RichTextDisplay(HasTraits):
         panel.SetSizer(sizer)
 
         return panel
+
+    def load_text_buffer(self):
+        self.add_text(self._text_buffer)
+        self._text_buffer = []
 
     def _add_(self, msg, new_line=True, color=None, size=9, **kw):
         '''
@@ -171,9 +177,14 @@ class RichTextDisplay(HasTraits):
         if disp:
             if isinstance(msg, (list, tuple)):
                 for mi in msg:
-                    self._add_(mi, **kw)
+                    if isinstance(mi, tuple):
+                        self._add_(mi[0], **mi[1])
+                    else:
+                        self._add_(msg, **kw)
             else:
                 self._add_(msg, **kw)
+        else:
+            self._text_buffer.append((msg, kw))
 
 
 

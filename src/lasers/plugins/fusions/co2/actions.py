@@ -17,11 +17,12 @@
 #============= enthought library imports =======================
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
-from src.lasers.plugins.fusions.fusions_actions import FInitializeZoomAction,\
-    FInitializeBeamAction, FOpenVideoAction, FOpenPowerRecordGraphAction,\
-    FOpenPowerMapAction, FOpenPowerCalibrationAction, FLoadStageVisualizerAction,\
-    FOpenStageVisualizerAction, FPowerCalibrationAction, FPowerMapAction,\
-    FOpenMotionControllerManagerAction, FOpenLaserManagerAction
+from src.lasers.plugins.fusions.fusions_actions import FInitializeZoomAction, \
+    FInitializeBeamAction, FOpenVideoAction, FOpenPowerRecordGraphAction, \
+    FOpenPowerMapAction, FOpenPowerCalibrationAction, FLoadStageVisualizerAction, \
+    FOpenStageVisualizerAction, FPowerCalibrationAction, FPowerMapAction, \
+    FOpenMotionControllerManagerAction, FOpenLaserManagerAction, \
+    FOpenPatternManagerAction
 #from src.database.adapters.power_adapter import PowerAdapter
 #from src.helpers.paths import co2laser_db
 #from traits.api import on_trait_change
@@ -64,7 +65,7 @@ class PowerMapAction(FPowerMapAction):
 
 class PowerCalibrationAction(FPowerCalibrationAction):
     get_manager = get_manager
-    
+
 class OpenStageVisualizerAction(FOpenStageVisualizerAction):
     get_manager = get_manager
 
@@ -94,7 +95,11 @@ class InitializeBeamAction(FInitializeBeamAction):
 class InitializeZoomAction(FInitializeZoomAction):
     get_manager = get_manager
 
-
+#===============================================================================
+# patterning
+#===============================================================================
+class OpenPatternManagerAction(FOpenPatternManagerAction):
+    get_manager = get_manager
 #===============================================================================
 # unused
 #===============================================================================

@@ -21,7 +21,8 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerMana
     FPowerMapAction, FPowerCalibrationAction, FOpenLaserManagerAction, \
     FOpenStageVisualizerAction, FOpenPowerCalibrationAction, \
     FLoadStageVisualizerAction, FInitializeZoomAction, FInitializeBeamAction, \
-    FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction
+    FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
+    FOpenPatternManagerAction
 #from traits.api import on_trait_change
 
 #============= standard library imports ========================
@@ -113,6 +114,11 @@ class InitializeBeamAction(FInitializeBeamAction):
 class InitializeZoomAction(FInitializeZoomAction):
     get_manager = get_manager
 
+#===============================================================================
+# patterning
+#===============================================================================
+class OpenPatternManagerAction(FOpenPatternManagerAction):
+    get_manager = get_manager
 #===============================================================================
 # unused
 #===============================================================================
