@@ -32,7 +32,6 @@ def circular_contour_pattern(cx, cy, radius, nsteps, pc):
 
 def polygon_pattern(cx, cy, radius, nsides, rotation=0):
 
-
     for i in range(nsides + 1 + 2):
         if i == 0 or i == nsides + 2:
             x, y = cx, cy

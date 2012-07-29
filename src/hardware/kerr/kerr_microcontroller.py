@@ -31,10 +31,6 @@ class KerrMicrocontroller(KerrDevice):
     def initialize(self, *args, **kw):
         '''
         '''
-        progress = kw['progress'] if 'progress' in kw else None
-        if progress is not None:
-            progress.change_message('Initialize Microcontroller')
-
         #clear the buffers
         self.info('init microcontroller')
         self.parent.tell('0' * 40, is_hex=True)

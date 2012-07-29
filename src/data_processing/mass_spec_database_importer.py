@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Instance, Button
 from traitsui.api import View, Item, Group, HGroup, VGroup
@@ -25,13 +23,14 @@ import csv
 import struct
 import os
 #from pylab import transpose
-from numpy import loadtxt
+from numpy import loadtxt, array
 #============= local library imports  ==========================
-from src.database.nmgrl_database_adapter import NMGRLDatabaseAdapter
-from src.loggable import Loggable
+#from src.database.nmgrl_database_adapter import NMGRLDatabaseAdapter
+#from src.loggable import Loggable
 #from src.helpers.paths import data_dir
 from src.data_processing.regression.ols import OLS
-from src.managers.manager import Manager
+from src.loggable import Loggable
+from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 
 mkeys = ['l2 value', 'l1 value', 'ax value', 'h1 value', 'h2 value']
 
@@ -41,203 +40,72 @@ following information is necessary
 
 '''
 
-RUN_TYPE_DICT = dict(Air=2, Blank=5)
+RUN_TYPE_DICT = dict(Unknown=1, Air=2, Blank=5)
 SAMPLE_DICT = dict(Air=2, Blank=1)
 ISO_LABELS = dict(H1='Ar40', AX='Ar39', L1='Ar38', L2='Ar37', CDD='Ar36')
 
 DEBUG = True
 
+class MassSpecDatabaseImporter(Loggable):
+    db = Instance(MassSpecDatabaseAdapter)
+    test = Button
+    def _test_fired(self):
+        self.add_analysis('19999-01', 'Unknown')
 
-class MassSpecDatabaseImporter(Manager):
-    '''
-        this class takes an csw file from Imhotep preps it for
-        saving into a database
-    '''
-    _db = Instance(NMGRLDatabaseAdapter, dict(dbname='massspecdata_test'))
+    def traits_view(self):
+        v = View(Item('test', show_label=False))
+        return v
+    def _db_default(self):
+        db = MassSpecDatabaseAdapter(dbname='massspecdata_test')
+        if db.connect():
+            return db
 
-    load_button = Button
-
-
-
-    def upload_data(self, path):
+    def add_analysis(self, rid, runtype):
         '''
+            
         '''
-        fail = ''
-        root = os.path.dirname(path)
-        if os.path.isfile(path):
-            self.info('uploading {}'.format(path))
-            fail = self.write_data_to_db(root, path)
-        else:
-            self.warning('Invalid data path {}'.format(path))
-            return
+        db = self.db
+        #=======================================================================
+        # add analysis
+        #=======================================================================
+        analysis = db.add_analysis(rid, RUN_TYPE_DICT[runtype])
+        #=======================================================================
+        # add data reduction session
+        #=======================================================================
+        drs = db.add_data_reduction_session()
+        #=======================================================================
+        # add changeable items
+        #=======================================================================
+        item = db.add_changeable_items(analysis, drs, commit=True)
+        analysis.ChangeableItemsID = item.ChangeableItemsID
+        #=======================================================================
+        # add signal data
+        #=======================================================================
 
-        if fail:
-            self.info(fail)
-            self._db.rollback()
-
-        else:
-            self.info('committing session')
-            self._db.commit()
-            self._db.close()
-
-        self.info('upload finished')
-
-    def write_data_to_db(self, root, path):
-        '''
-        '''
-        if DEBUG:
-            for name in ['AnalysesChangeableItemsTable',
-                         'DetectorTable', 'BaselinesTable',
-                         'IsotopeTable', 'IsotopeResultsTable',
-                         'PeakTimeTable']:
-                self._db.clear_table(name)
-                self._db.commit()
-
-        fail = None
-
-        header, lines = self._load_config_file(path, delimiter='\t')
-        for l in lines:
-            #make a dictionary of the values using header as keys
-            analysis_args = dict(zip(header, l))
-            #==================================================================
-            # #save project info
-            #==================================================================
-            try:
-                d = dict(Project=analysis_args['Project'])
-                _dbproject = self._db.add_project(d)
-            except KeyError:
-                pass
-
-            #==================================================================
-            # save sample info
-            #==================================================================
-            d = dict(Sample=analysis_args['Sample'])
-            try:
-                project = analysis_args['Project']
-            except KeyError:
-                project = None
-            _dbsample = self._db.add_sample(d, project=project)
-
-            #==================================================================
-            # add analysis
-            #==================================================================
-            rid = analysis_args['RID']
-            try:
-                samplekey = analysis_args['Sample'].strip()
-            except KeyError:
-                self.warning('invalid sample using default 5 (Air)')
-                samplekey = 5
-
-            try:
-                runtype = analysis_args['RunType'].strip()
-            except KeyError:
-                self.warning('invalid runt type using default Air')
-                runtype = 'Air'
-
-            try:
-                runtime = analysis_args['RunDateTime'].strip()
-            except KeyError:
-                runtime = '2012-03-01 01:01:01'
-
-            try:
-                a = analysis_args['Detectors'].strip()
-                det_keys = a.split(',')
-            except KeyError:
-                return 'Need to specify Detectors in config file'
-
-            try:
-                labels = analysis_args['Labels'].strip()
-            except KeyError:
-                labels = [ISO_LABELS[dk.upper()] for dk in det_keys]
-
-            d = dict(RID=rid,
-                   RedundantSampleID=SAMPLE_DICT[samplekey],
-                   RunDateTime=runtime,
-                   LoginSessionID=1,
-                   SpecRunType=RUN_TYPE_DICT[runtype]
-                   )
-
-            self.info('adding analysis {}'.format(rid))
-            dbanalysis, _new = self._db.add_analysis(d, dbirradiationpos= -2)
-            self._db.flush()
-            self._load_analysis_items(root, rid, dbanalysis, det_keys, labels)
-
-        return fail
-
-    def _load_analysis_items(self, root, rid, dbanalysis, detector_keys,
-                              iso_labels):
-        #load baseline
-        pb = os.path.join(root, '{}-baseline001.txt'.format(rid))
-        baseline_data = loadtxt(pb, delimiter=',', unpack=True)
-
-        #======================================================================
-        # #load time v intensity
-        #======================================================================
-        p = os.path.join(root, '{}-intensity001.txt'.format(rid))
-
-        ISO_FORMAT_STR = "%Y-%m-%d %H:%M:%S"
-        from datetime import datetime
-        dt = datetime.fromtimestamp(os.stat(p).st_mtime)
-        dbanalysis.RunDateTime = dt.strftime(ISO_FORMAT_STR)
-
-        intensity_data = loadtxt(p, delimiter=',', unpack=True)
-        #======================================================================
-        # add the detector info
-        #======================================================================
-        detectors = []
-
-        for i, (dk, label) in enumerate(zip(detector_keys, iso_labels)):
-            args = dict(DetectorTypeID=i + 24,
-                        Disc=1,
-                        DiscEr=0,
-                        ICFactor=1,
-                        ICFactorEr=0,
-                        Label=dk.upper()
-                        )
-            dbdetector = self._db.add_detector(args)
-            self._db.flush()
-            detectors.append(dbdetector)
-
-            tb = baseline_data[0]
-            vb = baseline_data[i + 1]
-
+        for det, iso in ISO_LABELS.iteritems():
+            #===================================================================
+            # isotopes
+            #===================================================================
+            iso = db.add_isotope(rid, det, iso)
+            #===================================================================
+            # baselines
+            #===================================================================
+            tb = array([1, 2, 3, 4, 5])
+            vb = array([1, 1, 1, 1, 1])
             blob = self._build_timeblob(tb, vb)
-            d = dict(PeakTimeBlob=blob,
-                      Label='{} Baseline'.format(dk.upper()),
-                      NumCnts=tb.shape[0])
+            label = '{} Baseline'.format(det.upper())
+            ncnts = tb.shape[0]
+            db.add_baseline(blob, label, ncnts)
+            #===================================================================
+            # oeak time
+            #===================================================================
+            tb = array([1, 2, 3, 4, 5])
+            vb = array([100, 99, 98, 97, 96])
+            blob = self._build_timeblob(tb, vb)
+            db.add_peaktimeblob(blob, iso)
 
-            dbbaseline = self._db.add_baseline(d)
-            bi = vb.mean()
-            bie = vb.std()
-
-            self._db.flush()
-
-            d = dict(Label=label, NumCnts=1)
-            d['BslnID'] = dbbaseline.BslnID
-
-            dbisotope = self._db.add_isotope(d,
-                               dbanalysis=dbanalysis,
-                               dbdetector=detectors[i])
-            t = intensity_data[0]
-            v = intensity_data[i + 1]
-
-            o = OLS(t, v, fitdegree=2)
-            i = o.get_coefficients()[2]
-            ie = o.get_coefficient_standard_errors()[2]
-
-#            self._db.add_isotope_result(
-#                                        dict(Intercept=i,
-#                                             InterceptEr=ie,
-#                                             Iso=i - bi,
-#                                             IsoEr=(ie ** 2 + bie ** 2) ** 0.5,
-#                                             DataReductionSessionID=0,
-#                                             BkgdDetTypeID=0
-#                                             ),
-#                                        dbisotope=dbisotope)
-            if dbisotope is not None:
-                #add the peak time series
-                _pk = self._db.add_peaktimeblob(self._build_timeblob(t, v),
-                                      dbisotope=dbisotope)
+        db.commit()
+#        db.delete_analysis(rid)
 
     def _build_timeblob(self, t, v):
         '''
@@ -247,46 +115,246 @@ class MassSpecDatabaseImporter(Manager):
             blob += struct.pack('>ff', float(vi), float(ti))
         return blob
 
-    def _parse_timeblob(self, blob):
-        '''
-        '''
-        v = []
-        t = []
-        for i in range(0, len(blob), 8):
-            vi, ti = struct.unpack('>ff', blob[i:i + 8])
-            v.append(vi)
-            t.append(ti)
-
-        return t, v
-
-    def _load_config_file(self, path, **kw):
-        '''
-        '''
-        with open(path, 'U') as f:
-            reader = csv.reader(f, **kw)
-            header = reader.next()
-            lines = [line for line in reader]
-            return header, lines
-
-    def traits_view(self):
-        v = View(Item('_db', show_label=False,
-                      style='custom'),
-                 Item('load_button',
-                      show_label=False)
-                 )
-        return v
-
-    def _load_button_fired(self):
-        p = self.open_file_dialog()
-        if p is not None:
-            self._db.connect()
-            self.upload_data(p)
+#class MassSpecDatabaseImporter(Manager):
+#    '''
+#        this class takes an csw file from Imhotep preps it for
+#        saving into a database
+#    '''
+#    _db = Instance(NMGRLDatabaseAdapter, dict(dbname='massspecdata_test'))
+#
+#    load_button = Button
+#
+#
+#
+#    def upload_data(self, path):
+#        '''
+#        '''
+#        fail = ''
+#        root = os.path.dirname(path)
+#        if os.path.isfile(path):
+#            self.info('uploading {}'.format(path))
+#            fail = self.write_data_to_db(root, path)
+#        else:
+#            self.warning('Invalid data path {}'.format(path))
+#            return
+#
+#        if fail:
+#            self.info(fail)
+#            self._db.rollback()
+#
+#        else:
+#            self.info('committing session')
+#            self._db.commit()
+#            self._db.close()
+#
+#        self.info('upload finished')
+#
+#    def write_data_to_db(self, root, path):
+#        '''
+#        '''
+#        if DEBUG:
+#            for name in ['AnalysesChangeableItemsTable',
+#                         'DetectorTable', 'BaselinesTable',
+#                         'IsotopeTable', 'IsotopeResultsTable',
+#                         'PeakTimeTable']:
+#                self._db.clear_table(name)
+#                self._db.commit()
+#
+#        fail = None
+#
+#        header, lines = self._load_config_file(path, delimiter='\t')
+#        for l in lines:
+#            #make a dictionary of the values using header as keys
+#            analysis_args = dict(zip(header, l))
+#            #==================================================================
+#            # #save project info
+#            #==================================================================
+#            try:
+#                d = dict(Project=analysis_args['Project'])
+#                _dbproject = self._db.add_project(d)
+#            except KeyError:
+#                pass
+#
+#            #==================================================================
+#            # save sample info
+#            #==================================================================
+#            d = dict(Sample=analysis_args['Sample'])
+#            try:
+#                project = analysis_args['Project']
+#            except KeyError:
+#                project = None
+#            _dbsample = self._db.add_sample(d, project=project)
+#
+#            #==================================================================
+#            # add analysis
+#            #==================================================================
+#            rid = analysis_args['RID']
+#            try:
+#                samplekey = analysis_args['Sample'].strip()
+#            except KeyError:
+#                self.warning('invalid sample using default 5 (Air)')
+#                samplekey = 5
+#
+#            try:
+#                runtype = analysis_args['RunType'].strip()
+#            except KeyError:
+#                self.warning('invalid runt type using default Air')
+#                runtype = 'Air'
+#
+#            try:
+#                runtime = analysis_args['RunDateTime'].strip()
+#            except KeyError:
+#                runtime = '2012-03-01 01:01:01'
+#
+#            try:
+#                a = analysis_args['Detectors'].strip()
+#                det_keys = a.split(',')
+#            except KeyError:
+#                return 'Need to specify Detectors in config file'
+#
+#            try:
+#                labels = analysis_args['Labels'].strip()
+#            except KeyError:
+#                labels = [ISO_LABELS[dk.upper()] for dk in det_keys]
+#
+#            d = dict(RID=rid,
+#                   RedundantSampleID=SAMPLE_DICT[samplekey],
+#                   RunDateTime=runtime,
+#                   LoginSessionID=1,
+#                   SpecRunType=RUN_TYPE_DICT[runtype]
+#                   )
+#
+#            self.info('adding analysis {}'.format(rid))
+#            dbanalysis, _new = self._db.add_analysis(d, dbirradiationpos= -2)
+#            self._db.flush()
+#            self._load_analysis_items(root, rid, dbanalysis, det_keys, labels)
+#
+#        return fail
+#
+#    def _load_analysis_items(self, root, rid, dbanalysis, detector_keys,
+#                              iso_labels):
+#        #load baseline
+#        pb = os.path.join(root, '{}-baseline001.txt'.format(rid))
+#        baseline_data = loadtxt(pb, delimiter=',', unpack=True)
+#
+#        #======================================================================
+#        # #load time v intensity
+#        #======================================================================
+#        p = os.path.join(root, '{}-intensity001.txt'.format(rid))
+#
+#        ISO_FORMAT_STR = "%Y-%m-%d %H:%M:%S"
+#        from datetime import datetime
+#        dt = datetime.fromtimestamp(os.stat(p).st_mtime)
+#        dbanalysis.RunDateTime = dt.strftime(ISO_FORMAT_STR)
+#
+#        intensity_data = loadtxt(p, delimiter=',', unpack=True)
+#        #======================================================================
+#        # add the detector info
+#        #======================================================================
+#        detectors = []
+#
+#        for i, (dk, label) in enumerate(zip(detector_keys, iso_labels)):
+#            args = dict(DetectorTypeID=i + 24,
+#                        Disc=1,
+#                        DiscEr=0,
+#                        ICFactor=1,
+#                        ICFactorEr=0,
+#                        Label=dk.upper()
+#                        )
+#            dbdetector = self._db.add_detector(args)
+#            self._db.flush()
+#            detectors.append(dbdetector)
+#
+#            tb = baseline_data[0]
+#            vb = baseline_data[i + 1]
+#
+#            blob = self._build_timeblob(tb, vb)
+#            d = dict(PeakTimeBlob=blob,
+#                      Label='{} Baseline'.format(dk.upper()),
+#                      NumCnts=tb.shape[0])
+#
+#            dbbaseline = self._db.add_baseline(d)
+#            bi = vb.mean()
+#            bie = vb.std()
+#
+#            self._db.flush()
+#
+#            d = dict(Label=label, NumCnts=1)
+#            d['BslnID'] = dbbaseline.BslnID
+#
+#            dbisotope = self._db.add_isotope(d,
+#                               dbanalysis=dbanalysis,
+#                               dbdetector=detectors[i])
+#            t = intensity_data[0]
+#            v = intensity_data[i + 1]
+#
+#            o = OLS(t, v, fitdegree=2)
+#            i = o.get_coefficients()[2]
+#            ie = o.get_coefficient_standard_errors()[2]
+#
+##            self._db.add_isotope_result(
+##                                        dict(Intercept=i,
+##                                             InterceptEr=ie,
+##                                             Iso=i - bi,
+##                                             IsoEr=(ie ** 2 + bie ** 2) ** 0.5,
+##                                             DataReductionSessionID=0,
+##                                             BkgdDetTypeID=0
+##                                             ),
+##                                        dbisotope=dbisotope)
+#            if dbisotope is not None:
+#                #add the peak time series
+#                _pk = self._db.add_peaktimeblob(self._build_timeblob(t, v),
+#                                      dbisotope=dbisotope)
+#
+#    def _build_timeblob(self, t, v):
+#        '''
+#        '''
+#        blob = ''
+#        for ti, vi in zip(t, v):
+#            blob += struct.pack('>ff', float(vi), float(ti))
+#        return blob
+#
+#    def _parse_timeblob(self, blob):
+#        '''
+#        '''
+#        v = []
+#        t = []
+#        for i in range(0, len(blob), 8):
+#            vi, ti = struct.unpack('>ff', blob[i:i + 8])
+#            v.append(vi)
+#            t.append(ti)
+#
+#        return t, v
+#
+#    def _load_config_file(self, path, **kw):
+#        '''
+#        '''
+#        with open(path, 'U') as f:
+#            reader = csv.reader(f, **kw)
+#            header = reader.next()
+#            lines = [line for line in reader]
+#            return header, lines
+#
+#    def traits_view(self):
+#        v = View(Item('_db', show_label=False,
+#                      style='custom'),
+#                 Item('load_button',
+#                      show_label=False)
+#                 )
+#        return v
+#
+#    def _load_button_fired(self):
+#        p = self.open_file_dialog()
+#        if p is not None:
+#            self._db.connect()
+#            self.upload_data(p)
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('db_import')
     d = MassSpecDatabaseImporter()
+
     d.configure_traits()
 #    d._db = NMGRLDatabaseAdapter(dbname='massspecdata_test')
 

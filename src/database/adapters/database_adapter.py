@@ -160,6 +160,7 @@ class DatabaseAdapter(Loggable):
         if self.sess is None:
             if self.session_factory is not None:
                 self.sess = self.session_factory()
+                self.sess.autoflush = False
             else:
                 self.warning_dialog('Not connect to the database {}'.format(self.dbname))
 
@@ -310,6 +311,25 @@ class DatabaseAdapter(Loggable):
             s.load_recent()
             return s
 
+#    def _get(self, table, query_dict, func='one'):
+#        sess = self.get_session()
+#        q = sess.query(table)
+#        f = q.filter_by(**query_dict)
+#        return getattr(f, func)()
+
+#    def _get_one(self, table, query_dict):
+#        sess = self.get_session()
+#        q = sess.query(table)
+#        f = q.filter_by(**query_dict)
+#        try:
+#            return f.one()
+#        except Exception, e:
+#            print 'get_one', e
+#
+#    def _get_all(self, query_args):
+#        sess = self.get_session()
+#        p = sess.query(*query_args).all()
+#        return p
 
 class PathDatabaseAdapter(DatabaseAdapter):
     path_table = None

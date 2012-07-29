@@ -30,6 +30,8 @@ from src.experiment.experiment import Experiment
 from src.paths import paths
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.helpers.filetools import unique_path
+from src.database.adapters.isotope_adapter import IsotopeAdapter
+from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 
 DEBUG = True
 
@@ -48,6 +50,8 @@ class ExperimentManager(Manager):
     extraction_line_manager = Instance(Manager)
     laser_manager = Instance(Manager)
 
+    db = Instance(IsotopeAdapter)
+    massspec_importer = Instance(MassSpecDatabaseImporter)
 #    delay_between_runs = Int(5)
 
     _dac_peak_center = Float
@@ -65,18 +69,7 @@ class ExperimentManager(Manager):
     default_save_directory = Str
 
     title = DelegatesTo('active_experiment', prefix='name')
-    stats = DelegatesTo('active_experiment')
-#    def _data_manager_default(self):
-#        '''
-#            normally the dbmanager connection parameters are set ie host, name etc
-#            for now just use default root, localhost
-#        '''
-#        dbman = PychronDBDataManager()
-#
-#        db = dbman.database
-#        db.connect()
-#
-#        return dbman
+#    stats = DelegatesTo('active_experiment')
 
 #    def load_experiment_configuration(self, p):
 #        anals = []
@@ -130,38 +123,28 @@ class ExperimentManager(Manager):
 
 #        sm = self.get_spectrometer_manager()
         exp = self.active_experiment
-        n = len(exp.automated_runs)
+        nruns = len(exp.automated_runs)
 
         err_message = ''
 
         dm = H5DataManager()
 
         exp.reset_stats()
-        nruns = len(exp.automated_runs)
-#        tested_measurement_scripts = dict()
-#        tested_extraction_line_scripts = dict()
+
         for i, arun in enumerate(exp.automated_runs):
-#            print arun.configuration['measurement_script'], tested_measurement_scripts
-#            if arun.configuration['measurement_script'] in tested_measurement_scripts:
-#                ms = tested_measurement_scripts[arun.measurement_script_name]
-#                arun.default_measurement_script = ms
-#            if arun.configuration['extraction_line_script'] in tested_extraction_line_scripts:
-#                es = tested_extraction_line_scripts[arun.extraction_line_script_name]
-#                arun.default_extraction_line_script = es
-
             exp.current_run = arun
-            time.sleep(1)
-            arun.state = 'success'
-#            continue
 
-            arun._index = i
+            arun.index = i
             arun.experiment_manager = self
             arun.spectrometer_manager = self.spectrometer_manager
             arun.extraction_line_manager = self.extraction_line_manager
             arun.data_manager = dm
+            arun.db = self.db
+            arun.massspec_importer = self.massspec_importer
+
             arun._debug = DEBUG
-            if arun.identifier.startswith('B'):
-                arun.isblank = True
+#            if arun.identifier.startswith('B'):
+#                arun.isblank = True
 
             if not self._continue_check():
                 break
@@ -219,7 +202,7 @@ class ExperimentManager(Manager):
                 break
 
             arun.state = 'success'
-            if i + 1 == n:
+            if i + 1 == nruns:
                 self.end_runs()
                 continue
 
@@ -419,7 +402,8 @@ class ExperimentManager(Manager):
 
         exc_grp = Group(
                        Item('test2'),
-                       Item('stats', style='custom'),
+                       Item('object.active_experiment.stats',
+                            style='custom'),
                        show_labels=False,
                        show_border=True,
                        label='Execute')
@@ -449,6 +433,20 @@ class ExperimentManager(Manager):
 
     def _default_save_directory_default(self):
         return paths.experiment_dir
+
+    def _massspec_importer_default(self):
+        msdb = MassSpecDatabaseImporter()
+        if msdb.db.connect():
+            return msdb
+
+    def _db_default(self):
+        db = IsotopeAdapter(kind='sqlite',
+#                            dbname=paths.isotope_db,
+                            dbname='/Users/ross/Pychrondata_test/testing/isotope_test.sqlite'
+                            )
+        if db.connect():
+            return db
+
 if __name__ == '__main__':
     paths.build('_test')
     from src.helpers.logger_setup import logging_setup
@@ -471,6 +469,7 @@ if __name__ == '__main__':
     e.configure_traits(view='test_view')
 #    e.analyze_data()
     e.configure_traits()
+#============= EOF ====================================
 
 #===============================================================================
 # ##analysis code 
@@ -736,4 +735,3 @@ if __name__ == '__main__':
 #        return array(cor_h1), array(cor_cdd)
 
 
-#============= EOF ====================================

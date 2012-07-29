@@ -89,11 +89,12 @@ class KerrMotor(KerrDevice):
         '''
         '''
         self.info('init {}'.format(self.name))
-        progress = kw['progress'] if 'progress' in kw else None
-        if progress is not None:
-            progress.change_message('Initialize {}'.format(self.name))
-            self.progress = progress
-            progress.increment()
+
+#        progress = kw['progress'] if 'progress' in kw else None
+#        if progress is not None:
+#            progress.change_message('Initialize {}'.format(self.name))
+#            self.progress = progress
+#            progress.increment()
 
 
     def _finish_initialize(self):
@@ -128,15 +129,13 @@ class KerrMotor(KerrDevice):
 
         self._home_motor(*args, **kw)
 
-    def _home_motor(self, *args, **kw):
+    def _home_motor(self, progress=None, *args, **kw):
         '''
         '''
-        progress = None
-        if 'progress' in kw:
-            progress = kw['progress']
-            progress.change_message('Homing {}'.format(self.name))
-            progress.increment()
-            time.sleep(0.25)
+
+        progress.increase_max()
+        progress.change_message('Homing {}'.format(self.name))
+        progress.increment()
 
         addr = self.address
 
@@ -176,9 +175,6 @@ class KerrMotor(KerrDevice):
         '''
         fail_cnt = 0
         pos_buffer = []
-
-        if progress is None:
-            progress = self.progress
 
         while not self.parent.simulation:
 

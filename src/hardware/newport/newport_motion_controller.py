@@ -44,20 +44,10 @@ class NewportMotionController(MotionController):
     def initialize(self, *args, **kw):
         '''
         '''
-        progress = kw['progress'] if 'progress' in kw else None
-
-
 
         #try to get x position to test comms
-        if progress is not None:
-            progress.change_message('Testing controller communications')
-
-
 
         r = True if self.get_current_position('x') is not None else False
-        msg = 'Communications Fail' if not r else 'Communications Success'
-        if progress is not None:
-            progress.change_message(msg)
 
         #force group destruction
         self.destroy_group(force=True)

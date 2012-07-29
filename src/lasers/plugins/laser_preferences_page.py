@@ -48,7 +48,12 @@ class LaserPreferencesPage(ManagerPreferencesPage):
 
     show_patterning = Bool(True)
     video_directory = Directory
-    recording_zoom = Float(0)
+    use_video_archiver = Bool(True)
+    video_archive_months = Range(0, 12, 1)
+    video_archive_hours = Range(0, 23, 0)
+    video_archive_days = Range(0, 31, 7)
+
+    recording_zoom = Range(0, 100.0, 0.0)
 
     record_patterning = Bool(False)
     record_brightness = Bool(True)
@@ -59,27 +64,50 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     show_bounds_rect = Bool(True)
 
     def get_additional_groups(self):
-        videogrp = VGroup(Item('use_video'),
-                     VGroup(
-                         Item('video_identifier', label='ID',
-                               enabled_when='use_video'),
-                         Item('use_autocenter', label='Auto Center'),
-                         Item('record_lasing_video', label='Record Lasing',
-                               enabled_when='use_video'),
-                         Item('video_directory', label='Save to',
-                              enabled_when='record_lasing_video_video'),
-                         Item('recording_zoom', label='Zoom', enabled_when='record_lasing_video'),
-                         Item('record_brightness', label='Record Brightness Measure'),
-
-                         Item('use_video_server', label='Use Server'),
-                         VGroup(Item('video_server_port', label='Port',
+        archivergrp = Group(Item('use_video_archiver'),
+                            Item('video_archive_days',
+                                  label='Archive after N. days',
+                                  enabled_when='use_video_archiver',
+                                  ),
+                            Item('video_archive_hours',
+                                  label='Archive after N. hours',
+                                  enabled_when='use_video_archiver',
+                                  ),
+                             Item('video_archive_months',
+                                  label='Delete after N. months',
+                                  enabled_when='use_video_archiver',
+                                  ),
+                             show_border=True,
+                             label='Archiver'
+                           )
+        recgrp = Group(Item('record_lasing_video', label='Record Lasing'),
+                       Item('record_brightness',
+                            label='Record Brightness Measure',
+                            ),
+                       Item('video_directory', label='Save to',
+                            enabled_when='record_lasing_video_video'),
+                       Item('recording_zoom', enabled_when='record_lasing_video'),
+                       show_border=True,
+                       label='Record'
+                     )
+        vservergrp = VGroup(Item('use_video_server', label='Use Server'),
+                                Item('video_server_port', label='Port',
                                 enabled_when='use_video_server'),
                                 show_border=True,
                                 label='Server'
-                                ),
+                                )
+        videogrp = VGroup(Item('use_video'),
+                     VGroup(
+#                         Item('video_identifier', label='ID',
+#                               enabled_when='use_video'),
+                         Item('use_autocenter', label='Auto Center'),
 
+                         recgrp,
+                         archivergrp,
+                         vservergrp,
                          enabled_when='use_video'
                          ),
+
                       label='Video')
         canvasgrp = VGroup(
                Item('show_bounds_rect'),

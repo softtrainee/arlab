@@ -89,7 +89,9 @@ class VideoStageManager(StageManager):
     record_label = Property(depends_on='is_recording')
     is_recording = Bool
 
-    video_directory = Directory
+#    video_directory = Directory
+    use_video_archiver = Bool(True)
+    video_archiver = Instance(Archiver)
     video_identifier = Enum(1, 2)
     use_video_server = Bool(False)
     video_server = Instance(VideoServer)
@@ -107,8 +109,8 @@ class VideoStageManager(StageManager):
                          'show_patterning',
                          '{}.show_patterning'.format(pref_id))
 
-        bind_preference(self, 'video_directory',
-                        '{}.video_directory'.format(pref_id)
+        bind_preference(self, 'use_video_archiver',
+                        '{}.use_video_archiver'.format(pref_id)
                         )
 
         bind_preference(self, 'video_identifier',
@@ -117,6 +119,19 @@ class VideoStageManager(StageManager):
 
         bind_preference(self, 'use_video_server',
                         '{}.use_video_server'.format(pref_id)
+                        )
+
+        bind_preference(self.video_archiver, 'archive_months',
+                        '{}.video_archive_months'.format(pref_id)
+                        )
+        bind_preference(self.video_archiver, 'archive_days',
+                        '{}.video_archive_days'.format(pref_id)
+                        )
+        bind_preference(self.video_archiver, 'archive_hours',
+                        '{}.video_archive_hours'.format(pref_id)
+                        )
+        bind_preference(self.video_archiver, 'root',
+                        '{}.video_directory'.format(pref_id)
                         )
 
     def start_recording(self, new_thread=True, **kw):
@@ -136,8 +151,12 @@ class VideoStageManager(StageManager):
             self.info('stop video recording')
     #        self.stop()
             self.video.stop_recording()
-            time.sleep(4)
-            self.video.close(user=user)
+#            time.sleep(1)
+#            self.video.close(user=user)
+
+            #clean the video directory
+            self.clean_video_archive()
+
             #delay briefly before deleting the capture object
 #            t = Timer(4, self.video.close, kwargs=dict(user=user))
 #            t.start()
@@ -205,23 +224,12 @@ class VideoStageManager(StageManager):
         for s in self._stage_maps:
             s.dump_correction_file()
 
-        if self.video_directory:
+        self.clean_video_archive()
+
+    def clean_video_archive(self):
+        if self.use_video_archiver:
             self.info('Cleaning video directory')
-            if os.path.isdir(self.video_directory):
-                ar = Archiver(archive_days=14,
-                              root=self.video_directory)
-                ar.clean()
-
-        def _clean_():
-            #clean the video directory
-            if self.video_directory:
-                self.info('Cleaning video directory')
-                if os.path.isdir(self.video_directory):
-                    ar = Archiver(archive_days=3)
-                    ar.clean(self.video_directory)
-
-        p = Thread(target=_clean_)
-        p.start()
+            self.video_archiver.clean()
 
     def get_video_database(self):
 #        from src.helpers.paths import co2laser_db
@@ -242,7 +250,9 @@ class VideoStageManager(StageManager):
             if use_dialog:
                 path = self.save_file_dialog()
             else:
-                vd = self.video_directory if self.video_directory else paths.video_dir
+                vd = self.video_archiver.root
+                if vd is None:
+                    vd = paths.video_dir
                 path, _ = unique_path(vd, basename, extension='avi')
 
         d = os.path.dirname(path)
@@ -594,6 +604,9 @@ class VideoStageManager(StageManager):
 
     def _video_server_default(self):
         return VideoServer(video=self.video)
+
+    def _video_archiver_default(self):
+        return Archiver()
 
     def _camera_calibration_manager_default(self):
         return CameraCalibrationManager()

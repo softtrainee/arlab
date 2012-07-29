@@ -108,6 +108,9 @@ class Pattern(HasTraits):
 #    def map_pt(self, x, y):
 #
 #        return self.pxpermm * x + self.image_width / 2, self.pxpermm * y + self.image_height / 2
+    @property
+    def kind(self):
+        return self.__class__.__name__
 
     def _get_name(self):
         if not self.path:

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
 #============= enthought library imports =======================
 from envisage.core_plugin import CorePlugin
 from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
@@ -177,6 +176,7 @@ def launch():
             run_tests(logger)
 
         app.on_trait_change(start_test, 'started')
+
 
     try:
         app.run()

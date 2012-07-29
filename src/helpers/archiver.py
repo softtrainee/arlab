@@ -37,7 +37,7 @@ MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', \
 class Archiver(Loggable):
     archive_hours = Range(0, 23, 0)
     archive_days = Range(0, 31, 0)
-    archive_months = Range(0, 12, 3)
+    archive_months = Range(0, 12, 1)
     clean_archives = Bool(True)
     root = Str
     use_logger_display = False
@@ -54,7 +54,9 @@ class Archiver(Loggable):
         root = self.root
         if not root:
             return
-        archive_date = datetime.today() - timedelta(days=self.archive_days,
+
+        archive_date = datetime.today() - timedelta(
+                                                    days=self.archive_days,
                                                     hours=self.archive_hours
                                                     )
         self.info('Files older than {} will be archived'.format(archive_date))
@@ -65,6 +67,7 @@ class Archiver(Loggable):
             result = os.stat(rp)
             mt = result.st_mtime
             creation_date = datetime.fromtimestamp(mt)
+
             if creation_date < archive_date:
                 self._archive(root, p)
                 cnt += 1
@@ -132,8 +135,9 @@ class Archiver(Loggable):
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('video_main')
-    c = Archiver(trim_days=30)
-    root = '/Users/ross/Desktop/test'
-    c.clean(root)
+    c = Archiver(archive_days=1
+                 )
+    c.root = '/Users/ross/Sandbox/video_test'
+    c.clean()
 
 

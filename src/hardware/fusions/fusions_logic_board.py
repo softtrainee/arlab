@@ -65,11 +65,8 @@ class FusionsLogicBoard(CoreDevice):
     def initialize(self, *args, **kw):
         '''
         '''
-        progress = kw['progress'] if 'progress' in kw else None
 
         #disable laser
-        if progress is not None:
-            progress.change_message('Disabling Laser')
 
         #test communciations with board issue warning if 
         #no handle or response is none
@@ -88,8 +85,6 @@ class FusionsLogicBoard(CoreDevice):
             return True
 
         #turn off pointer
-        if progress is not None:
-            progress.change_message('Turning off pointer laserr')
         self.set_pointer_onoff(False)
 
         #initialize Kerr devices
