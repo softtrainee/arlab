@@ -27,19 +27,34 @@ from sqlalchemy.orm import relation, relationship
 #=============local library imports  ==========================
 Base = declarative_base()
 
+class PreferencesTable(Base):
+    __tablename__ = 'PreferencesTable'
+    PreferencesSetID = Column(Integer, primary_key=True)
+    changeable_items = relationship('AnalysesChangeableItemsTable')
+
 class DataReductionSessionTable(Base):
     '''
     '''
     __tablename__ = 'datareductionsessiontable'
     DataReductionSessionID = Column(Integer, primary_key=True)
     SessionDate = Column(DateTime)
+    changeable_items = relationship('AnalysesChangeableItemsTable')
+
+class DetectorTypeTable(Base):
+    __tablename__ = 'DetectorTypeTable'
+    DetectorTypeID = Column(Integer, primary_key=True)
+    Label = Column(String(40))
+    ResistorValue = Column(Float, default=None)
+    ScaleFactor = Column(Float, default=None)
+
+    detectors = relationship('DetectorTable')
 
 class DetectorTable(Base):
     '''
     '''
     __tablename__ = 'DetectorTable'
     DetectorID = Column(Integer, primary_key=True)
-    DetectorTypeID = Column(Integer, default=0)
+    DetectorTypeID = Column(Integer, ForeignKey('DetectorTypeTable.DetectorTypeID'))
     EMV = Column(Float, default=0)
     Gain = Column(Float, default=0)
     Disc = Column(Float, default=1)
@@ -86,12 +101,14 @@ class AnalysesChangeableItemsTable(Base):
     __tablename__ = 'AnalysesChangeableItemsTable'
     ChangeableItemsID = Column(Integer, primary_key=True)
     AnalysisID = Column(Integer, ForeignKey('AnalysesTable.AnalysisID'))
+    DataReductionSessionID = Column(Integer, ForeignKey('datareductionsessiontable.DataReductionSessionID'))
     Disc = Column(Float, default=1)
     DiscEr = Column(Float, default=0)
     History = Column(String, default='')
     StatusReason = Column(Integer, default=1)
     StatusLevel = Column(Integer, default=1)
     SignalNormalizationFactor = Column(Float, default=1)
+    PreferencesSetID = Column(Integer, ForeignKey('PreferencesTable.PreferencesSetID'))
 
 
 class AnalysesTable(Base):
@@ -102,6 +119,7 @@ class AnalysesTable(Base):
     RID = Column(String(40))
 
     IrradPosition = Column(Integer, ForeignKey('IrradiationPositionTable.IrradPosition'))
+    Aliquot = Column(Integer)
     SpecParametersID = Column(Integer, default=0)
     PwrAchievedSD = Column(Float, default=0)
     PwrAchieved_Max = Column(Float, default=0)
@@ -111,6 +129,8 @@ class AnalysesTable(Base):
     ManifoldOpt = Column(Integer, default=0)
     OriginalImportID = Column(String(1), default=0)
     RedundantSampleID = Column(Integer, ForeignKey('SampleTable.SampleID'))
+    ChangeableItemsID = Column(Integer, default=0)
+
     RunDateTime = Column(DateTime)
     LoginSessionID = Column(Integer)
     SpecRunType = Column(Integer)
@@ -118,7 +138,9 @@ class AnalysesTable(Base):
     isotopes = relation('IsotopeTable', backref='AnalysesTable')
     araranalyses = relation('ArArAnalysisTable')
 #    araranalyses = relation('ArArAnalysisTable', backref='AnalysesTable')
-    changeable = relation('AnalysesChangeableItemsTable', uselist=False)
+    changeable = relationship('AnalysesChangeableItemsTable',
+                              backref='AnalysesTable',
+                              uselist=False)
 
 
 class ArArAnalysisTable(Base):
@@ -247,11 +269,12 @@ class PeakTimeTable(Base):
     PeakTimeBlob = Column(BLOB)
     IsotopeID = Column(Integer, ForeignKey('IsotopeTable.IsotopeID'))
 
+
 class ProjectTable(Base):
     '''
-        G{classtree}
     '''
     __tablename__ = 'projecttable'
     ProjectID = Column(Integer, primary_key=True)
     Project = Column(String(40))
     samples = relation('SampleTable', backref='projecttable')
+

@@ -19,25 +19,22 @@ from traits.api import Any, Str, String, Int, List, Enum, Property, \
      Event, Float, Instance, Bool, cached_property, Dict, on_trait_change
 from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group
 from traitsui.tabular_adapter import TabularAdapter
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 import os
 import time
-#============= local library imports  ==========================
-#from src.managers.data_managers.pychron_db_data_manager import PychronDBDataManager
-from src.loggable import Loggable
-from src.scripts.extraction_line_script import ExtractionLineScript
-#from src.scripts.measurement.measurement_script import MeasurementScript
-from src.experiment.heat_schedule import HeatStep
-#from src.graph.graph import Graph
-from src.graph.stacked_graph import StackedGraph
-from pyface.timer.do_later import do_later
 import random
+#============= local library imports  ==========================
+from src.loggable import Loggable
+from src.experiment.heat_schedule import HeatStep
+from src.graph.stacked_graph import StackedGraph
 from src.data_processing.regression.regressor import Regressor
+from src.scripts.extraction_line_script import ExtractionLineScript
 from src.scripts.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.scripts.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.paths import paths
-
+from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 
 class AutomatedRunAdapter(TabularAdapter):
 
@@ -82,16 +79,12 @@ class AutomatedRun(Loggable):
     extraction_line_manager = Any
     experiment_manager = Any
 
-#    extraction_line_script_name = Str
-    #extraction_line_scripts = List(['script1', 'script2', 'script5'])
-
-#    measurement_script_name = Str
-    #measurement_scripts = List(['script1', 'script2', 'script5'])
-
     sample = Str
 
     identifier = String(enter_set=True, auto_set=False)
     state = Enum('not run', 'extraction', 'measurement', 'success', 'fail')
+    runtype = Enum('Blank', 'Air')
+    irrad_level = Str
 
     heat_step = Instance(HeatStep)
     duration = Property(depends_on='heat_step,_duration')
@@ -112,11 +105,9 @@ class AutomatedRun(Loggable):
 
     sample_data_record = Any
 
-    isblank = False
-
     _debug = True
 
-    _active_detectors = None
+    _active_detectors = List
     configuration = None
 
     _loaded = False
@@ -130,9 +121,9 @@ class AutomatedRun(Loggable):
     _extraction_script = Any
 
     signals = Dict
-#    @on_trait_change('_measurement_script')
-#    def ascd(self, obj, name, new):
-#        print name, new
+
+    db = Any
+    massspec_importer = Any
 
     def get_estimated_duration(self):
         '''
@@ -164,17 +155,6 @@ class AutomatedRun(Loggable):
 
         return default
 
-#    @cached_property
-    def _get_measurement_script(self):
-        if self._measurement_script is None:
-            self._measurement_script = self._load_script('measurement')
-
-        return self._measurement_script
-
-    @cached_property
-    def _get_extraction_script(self):
-        return self._load_script('extraction')
-
     def measurement_script_factory(self, ec):
         ec = self.configuration
         mname = os.path.basename(ec['measurement_script'])
@@ -184,8 +164,6 @@ class AutomatedRun(Loggable):
             automated_run=self
             )
         return ms
-    #        print self.scripts.keys()
-#        print mname
 
     def extraction_script_factory(self, ec):
         #get the klass
@@ -210,11 +188,8 @@ class AutomatedRun(Loggable):
                     hole=self.position,
                     heat_duration=self.duration,
                     temp_or_power=self.temp_or_power,
-
                     manager=self.extraction_line_manager,
-                    isblank=self.isblank,
                     **params
-
                     )
 
 #===============================================================================
@@ -236,7 +211,6 @@ class AutomatedRun(Loggable):
         self._post_analysis_save()
 
         self.info('measurement finished')
-
 
     def do_data_collection(self, ncounts, starttime, series=0):
 
@@ -290,33 +264,33 @@ class AutomatedRun(Loggable):
             sm.spectrometer.set_magnet_position(**kw)
 
     def activate_detectors(self, dets):
-        self._active_detectors = dets
-
-        g = StackedGraph(window_width=500,
-                         window_height=700,
-                         window_y=0.05 + 0.01 * self._index,
-                         window_x=0.6 + 0.01 * self._index,
-                         window_title='Plot Panel {}'.format(self.identifier)
-                         )
+        g = self.graph
+        if g is None:
+            g = StackedGraph(window_width=500,
+                             window_height=700,
+                             window_y=0.05 + 0.01 * self.index,
+                             window_x=0.6 + 0.01 * self.index,
+                             window_title='Plot Panel {}'.format(self.identifier)
+                             )
+            self.graph = g
+            do_later(self.graph.edit_traits)
 
         for i, l in enumerate(dets):
-            g.new_plot()
-            g.new_series(type='scatter',
-                         marker='circle',
-                         marker_size=1.25,
-                         label=l, plotid=i)
-
-
+            if not l in self._active_detectors:
+                g.new_plot()
+                g.new_series(type='scatter',
+                             marker='circle',
+                             marker_size=1.25,
+                             label=l)
 
 #            g.new_series(type='scatter',
 #                         marker='circle',
 #                         marker_size=1.25,
 #                         label=l, plotid=i)
 
-        self.graph = g
-        do_later(self.graph.edit_traits)
 
-        do_later(self.experiment_manager.ui.control.Raise)
+        self._active_detectors = dets
+#        do_later(self.experiment_manager.ui.control.Raise)
 
 #===============================================================================
 # 
@@ -353,71 +327,6 @@ class AutomatedRun(Loggable):
                          )
             g.redraw()
 
-    def _pre_analysis_save(self):
-        self.info('pre analysis save')
-        dm = self.data_manager
-        #make a new frame for saving data
-        dm.new_frame(directory='automated_runs',
-                     base_frame_name='{}-intensity'.format(self.identifier))
-
-
-        #create initial structure
-        dm.new_group('baselines')
-        dm.new_group('sniffs')
-        dm.new_group('signals')
-
-
-    def _post_analysis_save(self):
-        self.info('post analysis save')
-
-        #save to a database
-        db = IsotopeAdapter(kind='sqlite',
-#                            dbname=paths.isotope_db,
-                            dbname='/Users/ross/Pychrondata_test/testing/isotope_test.sqlite'
-                            )
-        if db.connect():
-            self.labnumber = 1
-            a = db.add_analysis(self.labnumber)
-            p = self.data_manager.get_current_path()
-            db.add_analysis_path(p, analysis=a)
-            db.commit()
-
-    def traits_view(self):
-
-        scripts = VGroup(
-                       Item('extraction_line_script_name',
-                        editor=EnumEditor(name='extraction_line_scripts'),
-                        label='Extraction'
-                        ),
-                       Item('measurement_script_name',
-                            editor=EnumEditor(name='measurement_scripts'),
-                            label='Measurement'
-                            ),
-                       label='Scripts',
-                       show_border=True
-                       )
-        v = View(
-                 VGroup(
-                     Group(
-                     Item('identifier'),
-                     Item('sample', style='readonly'),
-                     Item('weight'),
-                     Item('comment'),
-                     show_border=True,
-                     label='Info'
-                     ),
-                     Group(
-                         Item('position'),
-                         Item('multiposition', label='Multi. position run'),
-                         Item('endposition'),
-                         show_border=True,
-                         label='Position'
-                     ),
-#                     scripts,
-                     )
-                 )
-        return v
-
     def _state_changed(self):
         #update the analysis table
         self.update = True
@@ -427,21 +336,6 @@ class AutomatedRun(Loggable):
         #build tables
         for di in self._active_detectors:
             dm.new_table('/{}'.format(gn), di)
-
-    def _get_data_writer(self, grpname):
-        dm = self.data_manager
-        def write_data(x, keys, signals):
-#            print x, keys, signals
-#            print grpname
-            for k in self._active_detectors:
-                t = dm.get_table(k, '/{}'.format(grpname))
-                nrow = t.row
-                nrow['time'] = x
-                nrow['value'] = signals[keys.index(k)]
-                nrow.append()
-                t.flush()
-
-        return write_data
 
     def _peak_hop(self, name, detector, masses, ncounts, starttime, series):
         self.info('peak hopping {} detector={}'.format(name, detector))
@@ -478,13 +372,10 @@ class AutomatedRun(Loggable):
                     self.graph.add_datum((x, v), plotid=mi, ** kw)
 
     def _measure_iteration(self, grpname, data_write_hook,
-                           ncounts, starttime, series,
-#                 update_x=True,
-#                 sniff=False
-                 ):
+                           ncounts, starttime, series):
+
         self.info('measuring {}'.format(grpname))
 
-        dm = self.data_manager
         sm = self.spectrometer_manager
 
         for i in xrange(0, ncounts, 1):
@@ -557,9 +448,73 @@ class AutomatedRun(Loggable):
                 except Exception, e:
                     self.warning(e)
 
+    def _pre_analysis_save(self):
+        self.info('pre analysis save')
+        dm = self.data_manager
+        #make a new frame for saving data
+        dm.new_frame(directory='automated_runs',
+                     base_frame_name='{}-intensity'.format(self.identifier))
+
+
+        #create initial structure
+        dm.new_group('baselines')
+        dm.new_group('sniffs')
+        dm.new_group('signals')
+
+    def _post_analysis_save(self):
+        self.info('post analysis save')
+        db = self.db
+
+        if db:
+        #save to a database
+            self.labnumber = 1
+            a = db.add_analysis(self.labnumber)
+            p = self.data_manager.get_current_path()
+            db.add_analysis_path(p, analysis=a)
+            db.commit()
+
+        #save to mass spec database
+        self.massspec_importer.add_analysis(self.identifier,
+                                            self.irrad_level,
+                                            self.sample,
+                                            self.runtype
+                                            )
 #===============================================================================
 # property get/set
 #===============================================================================
+    def _get_data_writer(self, grpname):
+        dm = self.data_manager
+        def write_data(x, keys, signals):
+#            print x, keys, signals
+#            print grpname
+            for k in self._active_detectors:
+                t = dm.get_table(k, '/{}'.format(grpname))
+                nrow = t.row
+                nrow['time'] = x
+                nrow['value'] = signals[keys.index(k)]
+                nrow.append()
+                t.flush()
+
+        return write_data
+
+    def _get_measurement_script(self):
+        if self._measurement_script is None:
+            self._measurement_script = self._load_script('measurement')
+
+        return self._measurement_script
+
+    @cached_property
+    def _get_extraction_script(self):
+        return self._load_script('extraction')
+
+    @property
+    def index(self):
+        return self._index
+
+    @index.setter
+    def index(self, v):
+        self._index = v
+
     def _get_duration(self):
         if self.heat_step:
             d = self.heat_step.duration
@@ -600,4 +555,44 @@ class AutomatedRun(Loggable):
                 self.heat_step.temp_or_power = t
             else:
                 self._temp_or_power = t
+
+#===============================================================================
+# views
+#===============================================================================
+    def traits_view(self):
+
+#        scripts = VGroup(
+#                       Item('extraction_line_script_name',
+#                        editor=EnumEditor(name='extraction_line_scripts'),
+#                        label='Extraction'
+#                        ),
+#                       Item('measurement_script_name',
+#                            editor=EnumEditor(name='measurement_scripts'),
+#                            label='Measurement'
+#                            ),
+#                       label='Scripts',
+#                       show_border=True
+#                       )
+        v = View(
+                 VGroup(
+                     Group(
+                     Item('identifier'),
+                     Item('irrad_level', label='Irradiation'),
+                     Item('sample', style='readonly'),
+                     Item('weight'),
+                     Item('comment'),
+                     show_border=True,
+                     label='Info'
+                     ),
+                     Group(
+                         Item('position'),
+                         Item('multiposition', label='Multi. position run'),
+                         Item('endposition'),
+                         show_border=True,
+                         label='Position'
+                     ),
+#                     scripts,
+                     )
+                 )
+        return v
 #============= EOF =============================================

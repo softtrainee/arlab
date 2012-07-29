@@ -35,6 +35,9 @@ class MProgressDialog(ProgressDialog):
         v = self.progress_bar.control.Value
         self.update(v + step)
 
+    def increase_max(self, step=1):
+        self.max += step
+
     def _create_control(self, parent):
         '''
         '''
@@ -114,6 +117,12 @@ class Initializer(Loggable):
 
         ok = True
         self.info('Running Initializer')
+        nsteps = 1
+        for idict in self.init_list:
+            nsteps += self.get_nsteps(**idict)
+
+        self.load_progress(nsteps)
+
         for idict in self.init_list:
             ok = self._run_(**idict)
             if not ok:
@@ -128,6 +137,7 @@ class Initializer(Loggable):
         return ok
 
     def info(self, msg, **kw):
+
         pd = self.pd
         if pd is not None:
 
@@ -136,14 +146,37 @@ class Initializer(Loggable):
 
             if offset == pd.max - 1:
                 pd.max += 1
-
-            (cont, skip) = pd.update(offset + 1)
-            if not cont or skip:
-                return
+            pd.update(offset + 1)
+#            (cont, skip) = pd.update(offset + 1)
+#            if not cont or skip:
+#                return
 
             # time.sleep(0.1)
 
         super(Initializer, self).info(msg, **kw)
+
+    def get_nsteps(self, name=None, manager=None, plugin_name=None):
+        parser = self.parser
+        if plugin_name is None:
+            # remove manager from name
+            idx = name.find('_manager')
+            if idx is not -1:
+                name = name[:idx]
+            mp = parser.get_plugin(name)
+        else:
+            mp = parser.get_manager(name, plugin_name)
+
+        if mp is None:
+            mp = parser._tree.find('plugins/{}'.format(name))
+
+        ns = 0
+        if mp is not None:
+            ns += (2 * (len(parser.get_managers(mp)) + 1))
+            ns += (3 * (len(parser.get_devices(mp)) + 1))
+            ns += (len(parser.get_flags(mp)) + 1)
+            ns += (len(parser.get_timed_flags(mp)) + 1)
+
+        return ns
 
     def _run_(
         self,
@@ -196,10 +229,6 @@ class Initializer(Loggable):
             if port and mode != 'client':
                 manager.load_rpc_server(port)
 
-        pdmax = 35
-        if self.pd is None or self.pd.progress_bar is None:
-            self.load_progress(pdmax)
-
         if managers:
             self.info('loading managers - {}'.format(', '.join(managers)))
             manager.name = name
@@ -226,10 +255,12 @@ class Initializer(Loggable):
 
     def load_flags(self, manager, flags):
         for f in flags:
+            self.info('loading {}'.format(f))
             manager.add_flag(f)
 
     def load_timed_flags(self, manager, flags):
         for f in flags:
+            self.info('loading {}'.format(f))
             manager.add_timed_flag(f.text.strip(), f.get('duration'))
 
     def load_managers(
@@ -242,7 +273,6 @@ class Initializer(Loggable):
         '''
 
         for mi in managers:
-
             man = None
             if mi == '':
                 continue

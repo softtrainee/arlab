@@ -167,24 +167,27 @@ class RichTextDisplay(HasTraits):
         '''
         '''
 
-        tappend = self.text.append
-        if isinstance(msg, (list, tuple)):
-            for mi in msg:
-                tappend(len(mi) + 1)
-        else:
-            tappend(len(msg) + 1)
         disp = self._display
         if disp:
+            tappend = self.text.append
+            if isinstance(msg, (list, tuple)):
+                for mi in msg:
+                    tappend(len(mi) + 1)
+            else:
+                tappend(len(msg) + 1)
+
             if isinstance(msg, (list, tuple)):
                 for mi in msg:
                     if isinstance(mi, tuple):
-                        self._add_(mi[0], **mi[1])
-                    else:
-                        self._add_(msg, **kw)
+                        mi = mi[0]
+                        if len(mi) == 2:
+                            kw = mi[1]
+
+                    self._add_(mi, **kw)
             else:
                 self._add_(msg, **kw)
         else:
-            self._text_buffer.append((msg, kw))
+            self._text_buffer.append(msg)
 
 
 

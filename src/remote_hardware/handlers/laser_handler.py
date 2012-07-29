@@ -243,6 +243,12 @@ class LaserHandler(BaseRemoteHardwareHandler):
         err = manager.stage_manager.pattern_manager.stop_pattern()
         return self.error_response(err)
 
+    def IsJogging(self, manager, *args):
+        err = manager.stage_manager.pattern_manager.isAlive()
+
+        # returns "True" or "False"
+        return self.error_response(str(err))
+
     def SetBeamDiameter(self, manager, data, *args):
         try:
             bd = float(data)

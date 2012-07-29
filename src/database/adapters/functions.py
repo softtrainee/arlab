@@ -47,33 +47,51 @@ def add(func):
 
     return _add
 
+def get_first(func):
+    def _get_first(obj, name, *args, **kw):
+        return _getter('first', func, obj, name, *args, **kw)
+    return _get_first
 
 def get_one(func):
     def __get_one(obj, name, *args, **kw):
         return _get_one(func, obj, name, *args, **kw)
     return __get_one
 
-def _get_one(func, obj, name, *args, **kw):
+def _get_one(*args, **kw):
+    return _getter('one', *args, **kw)
+
+def _getter(getfunc, func, obj, name,
+            *args, **kw):
+
+    if name is not None and not isinstance(name, (str, int, long, float)):
+        return name
+
+    order_by = None
     params = func(obj, name, *args, **kw)
     if isinstance(params, tuple):
-        table, attr = params
+        if len(params) == 3:
+            table, attr, order_by = params
+        else:
+            table, attr = params
+
     else:
         table = params
         attr = 'name'
 
     sess = obj.get_session()
     q = sess.query(table)
-    q = q.filter(getattr(table, attr) == name)
-
+    if name is not None:
+        q = q.filter(getattr(table, attr) == name)
+    if order_by is not None:
+        q = q.order_by(order_by)
     try:
-        return q.one()
+        return getattr(q, getfunc)()
     except sqlalchemy.exc.SQLAlchemyError, e:
-        print 'e1', e
+        print 'get_one, e1', e
         try:
-            return q.all()[0]
+            return q.limit(100).all()[-1]
         except (sqlalchemy.exc.SQLAlchemyError, IndexError), e:
-            print 'e2', e
-
+            print 'get_one, e2', e
 
 def delete_one(func):
     def _delete_one(obj, name, *args, **kw):
@@ -81,7 +99,6 @@ def delete_one(func):
         dbr = _get_one(func, obj, name, *args, **kw)
         sess.delete(dbr)
         sess.commit()
-
 
     return _delete_one
 
