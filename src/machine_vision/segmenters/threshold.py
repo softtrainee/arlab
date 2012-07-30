@@ -21,8 +21,9 @@ from traitsui.api import View, Item, TableEditor
 from src.image.cvwrapper import threshold
 #from skimage.morphology import closing, square
 #============= local library imports  ==========================
+from src.machine_vision.segmenters.base import BaseSegmenter
 
-class ThresholdSegmenter(HasTraits):
+class ThresholdSegmenter(BaseSegmenter):
     threshold = Int(125)
     def segment(self, src):
         return threshold(src, self.threshold)

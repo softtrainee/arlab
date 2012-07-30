@@ -282,7 +282,9 @@ class MachineVisionManager(Manager):
                       style='custom'
                       ),
                  buttons=['OK', 'Cancel'],
-                 title='Configure Hole Detector'
+                 title='Configure Hole Detector',
+                 resizable=True,
+                 width=400
                 )
 
         return v
@@ -380,8 +382,8 @@ if __name__ == '__main__':
     m = MachineVisionManager(_debug=True,
                              )
     m.locate_target(0, 0, 1)
-    m.configure_traits()#view='_test_view')
-#    m.configure_traits(view='configure_view')
+#    m.configure_traits()#view='_test_view')
+    m.configure_traits(view='configure_view')
 
 #    time_comp()
 #============= EOF =====================================
