@@ -15,23 +15,25 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  Float, Range, Int, Bool, Enum, Instance
+from traits.api import  Float, Range, Property, Tuple, Bool, Enum, \
+    Instance, Str
 from traitsui.api import View, Item, VGroup, Group
 #============= standard library imports ========================
-from numpy import histogram, argmax, array, asarray, zeros_like, invert, \
-    ones, ogrid, bincount
+from numpy import histogram, argmax, array, asarray, ogrid, percentile
 import random
 import os
+
 #============= local library imports  ==========================
-from src.image.cvwrapper import draw_polygons, \
-    threshold, grayspace, crop, centroid, new_point, contour, get_polygons, \
+from src.image.cvwrapper import draw_polygons, crop, centroid, \
+    new_point, contour, get_polygons, \
     draw_rectangle, draw_lines, colorspace, draw_circle, get_size, \
-    asMat, draw_contour_list#, add_images
+    asMat, sharpen_src, smooth_src
 
 from src.paths import paths
 from src.helpers.filetools import unique_path
 from detector import Detector
 from src.image.image import StandAloneImage
+from src.machine_vision.detectors.target import Target
 
 DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
@@ -39,33 +41,6 @@ DEVX = 0
 DEVY = 0
 CX = 2
 CY = -2
-
-
-class Target(object):
-    centroid_value = None
-    poly_points = None
-    bounding_rect = None
-    threshold = None
-    area = None
-
-    @property
-    def dev_centroid(self):
-        return ((self.origin[0] - self.centroid_value[0]),
-                (self.origin[1] - self.centroid_value[1]))
-
-    @property
-    def dev_br(self):
-        return ((self.origin[0] - self.bounding_rect[0]),
-                (self.origin[1] - self.bounding_rect[1]))
-
-    @property
-    def aspect_ratio(self):
-        return self.bounding_rect.width / float(self.bounding_rect.height)
-
-    @property
-    def bounding_area(self):
-        return self.bounding_rect.width * self.bounding_rect.height
-
 
 class HoleDetector(Detector):
     target_image = Instance(StandAloneImage, transient=True)
@@ -88,26 +63,60 @@ class HoleDetector(Detector):
 #    _dilation_value = 1
 #    use_contrast_equalization = Bool(True)
 
-    segmentation_style = Enum('region', 'edge', 'threshold', 'edge', 'region')
+    segmentation_style = Enum('region', 'edge', 'threshold',
+                              'adaptivethreshold',
+                               )
 #    segmentation_style = Enum('edge', 'threshold', 'edge', 'region')
 
-    start_threshold_search_value = Int(80)
-    threshold_search_width = Int(40)
+#    start_threshold_search_value = Int(80)
+#    threshold_search_width = Int(40)
     crop_tries = Range(0, 102, 1)  # > 101 makes it a spinner
-    threshold_tries = Range(0, 102, 2)
-    threshold_expansion_scalar = Int(5)
 
-    _threshold_start = None
-    _threshold_end = None
-#    def close_image(self):
-#        pass
+#    threshold_tries = Range(0, 102, 2)
+#    threshold_expansion_scalar = Int(5)
 
+#    _threshold_start = None
+#    _threshold_end = None
+    title = Property
+    current_hole = Str
 
-    #canny parameters
-    canny_low_threshold = Range(0, 1., 0.06)
-    canny_high_threshold = Range(0, 1., 0.16)
-    canny_sigma = Int(5)
+    corrected_position = Property(depends_on='_corrected_position')
+    _corrected_position = Tuple(0, 0)
 
+    nominal_position = Property(depends_on='_nominal_position')
+    _nominal_position = Tuple(0, 0)
+#===============================================================================
+# image filters
+#===============================================================================
+    def sharpen(self, src, verbose=True):
+        if verbose:
+            self.info('sharpening image')
+        src = sharpen_src(src)
+        return src
+
+    def smooth(self, src, verbose=True):
+#        if self.use_smoothing:
+        if verbose:
+            self.info('smoothing image')
+        src = smooth_src(src)
+        return src
+
+    def contrast_equalization(self, src, verbose=True):
+#        if self.use_contrast_equalization:
+        from skimage.exposure import rescale_intensity
+
+        if verbose:
+            self.info('maximizing image contrast')
+
+        if hasattr(src, 'ndarray'):
+            src = src.ndarray
+        # Contrast stretching
+        p2 = percentile(src, 2)
+        p98 = percentile(src, 98)
+        img_rescale = rescale_intensity(src, in_range=(p2, p98))
+
+        src = asMat(img_rescale)
+        return src
     def _get_mask_radius(self):
         r = self._hole_radius
         if not r:
@@ -124,78 +133,11 @@ class HoleDetector(Detector):
         src[mask] = 0
         return mask
 
-    def _edge_segmentation(self, src, **kw):
-        from scipy import ndimage
-        from skimage.filter import canny
-        from skimage.morphology import closing, square
-        ndsrc = src.ndarray / 255.
-        edges = canny(ndsrc,
-                      low_threshold=self.canny_low_threshold,
-                      high_threshold=self.canny_high_threshold,
-                      sigma=self.canny_sigma)
-        filled = ndimage.binary_fill_holes(edges)
-        filled = invert(filled) * 255
-#        label_objects, _ = ndimage.label(filled)
-#        sizes = bincount(label_objects.ravel())
-#
-#        mask_sizes = sizes > 1
-#        mask_sizes[0] = 0
-#        cleaned = mask_sizes[label_objects]
-#        cleaned = asarray(cleaned, 'uint8')
-#        cleaned = closing(cleaned, square(5))
-
-#        self._locate_helper(invert(cleaned), **kw)
-        nsrc = asarray(filled, 'uint8')
-        return self._locate_helper(nsrc, **kw)
-
-    def _region_segmentation(self, src, tlow=100, thigh=150, **kw):
-        from skimage.filter import sobel
-        from skimage.morphology import watershed
-
-        ndsrc = src.ndarray[:]
-
-        markers = zeros_like(ndsrc)
-        markers[ndsrc < tlow] = 1
-        markers[ndsrc > thigh] = 255
-
-        el_map = sobel(ndsrc)
-        wsrc = watershed(el_map, markers)
-        return self._locate_helper(invert(wsrc), **kw)
-
-    def _adaptive_threshold_segmentation(self, src, **kw):
-        from skimage.filter import threshold_adaptive
-        ndsrc = src.ndarray[:]
-        block_size = 50
-        bsrc = threshold_adaptive(ndsrc, block_size)
-#        bsrc = invert(bsrc)
-        return self._locate_helper(bsrc * 255., **kw)
-
-    def _threshold_segmentation(self, src, **kw):
-        start = self.start_threshold_search_value
-        end = start + self.threshold_search_width
-        expand_value = self.threshold_expansion_scalar
-
-        for i in range(self.threshold_tries):
-            s = start - i * expand_value
-            e = end + i * expand_value
-#            self.info('searching... thresholding image {} - {}'.format(s,
-#                                                                       e))
-            targets = []
-            for ti in range(s, e):
-                tsrc = threshold(src, ti)
-
-                targets = self._locate_targets(tsrc, **kw)
-#                self.permutations.append((ts, test))
-
-#                if ts:
-#                    targets += ts
-            self._threshold_start = s
-            self._threshold_end = e
-            return targets
-
     def _locate_helper(self, src, *args, **kw):
-
-        src = asMat(asarray(src, 'uint8'))
+        try:
+            src = asMat(asarray(src, 'uint8'))
+        except ValueError:
+            pass
         if not 'hole' in kw:
             kw['hole'] = False
 
@@ -225,7 +167,6 @@ class HoleDetector(Detector):
 
 #            print 'k2', kw, len(ta) if ta else 0
         return t
-
 
     def _locate_targets(self, src, **kw):
 #        dsrc = self.working_image.frames[0]
@@ -296,15 +237,13 @@ class HoleDetector(Detector):
         except Exception, e:
             #debugging 
             pass
-#        src = grayspace(self.target_image.source_frame)
 
-#        csrc = colorspace(crop(src.clone(), *self.croprect))
-#        self.target_image.set_frame(0, csrc)
-#        self.image.frames[0] = colorspace(crop(src, *self.croprect))
         self._draw_markup(self.target_image.get_frame(0), targets, dev=(dx, dy))
 
-        self.parent._nominal_position = cx, cy
-        self.parent._corrected_position = nx, ny
+#        self.parent._nominal_position = cx, cy
+#        self.parent._corrected_position = nx, ny
+        self._nominal_position = cx, cy
+        self._corrected_position = nx, ny
 
         args = cx, cy, nx, ny, dxmm, dymm, round(dx), round(dy)#int(dx), int(dy)
 
@@ -314,7 +253,6 @@ class HoleDetector(Detector):
             self._save_(holenum, cx, cy, nx, ny, dxmm, dymm)
 
         return nx, ny
-
 
     def _save_(self, holenum, cx, cy, nx, ny, dxmm, dymm):
         path, _ = unique_path(paths.positioning_error_dir,
@@ -330,10 +268,6 @@ class HoleDetector(Detector):
             f.write('deviation=     {:5f}, {:5f}'.format(dxmm, dymm))
 
     def _draw_center_indicator(self, src, color=(0, 0, 255), size=10):
-#        w, h = get_size(src)
-#        x = float(w / 2)
-#        y = float(h / 2)
-#        self._draw_indicator(src, new_point(x, y), shape='crosshairs', color=color, size=size)
         self._draw_indicator(src, new_point(*self._get_true_xy(src)),
                              shape='crosshairs',
                              color=(0, 0, 255),
@@ -403,6 +337,7 @@ class HoleDetector(Detector):
             pii = pi
         # 3. recalc centroid
         return centroid(pii), pii
+
     def _get_center(self):
         cx = self.croppixels[0] / 2.0
         cy = self.croppixels[1] / 2.0
@@ -441,32 +376,25 @@ class HoleDetector(Detector):
         src = crop(src, x, y, cw_px, ch_px)
 
         if image:
-#            im = getattr(self.parent, update)
-#            image.frames[0] = colorspace(src.clone())
-
             image.set_frame(0, colorspace(src.clone()))
-#            self.image.frames[0] = colorspace(src.clone())
-#            self.working_image.frames[0] = colorspace(src.clone())
 
         return src
 
 
     def traits_view(self):
-        v = View(Item('canny_sigma'),
-                 Item('canny_low_threshold'),
-                 Item('canny_high_threshold'),
-                 Item('target_image', show_label=False, style='custom'))
+        v = View(Item('target_image', show_label=False, style='custom'))
         return v
+
     def configure_view(self):
-        search_grp = Group(Item('start_threshold_search_value'),
-                            Item('threshold_search_width'),
-                            Item('threshold_expansion_scalar'),
-                            Item('threshold_tries'),
-                            Item('crop_tries'),
-                            Item('crop_expansion_scalar'),
-                            show_border=True,
-                           label='Search',
-                           )
+#        search_grp = Group(Item('start_threshold_search_value'),
+#                            Item('threshold_search_width'),
+#                            Item('threshold_expansion_scalar'),
+#                            Item('threshold_tries'),
+#                            Item('crop_tries'),
+#                            Item('crop_expansion_scalar'),
+#                            show_border=True,
+#                           label='Search',
+#                           )
 
         process_grp = Group(
                             Item('use_smoothing'),
@@ -476,9 +404,28 @@ class HoleDetector(Detector):
                             show_border=True,
                            label='Process')
         return View(Item('segmentation_style'),
-                    VGroup(search_grp, process_grp),
+                    VGroup(process_grp),
                            Item('save_positioning_error'),
                             )
+#==============================================================================
+# getter/setters
+#==============================================================================
+    def _get_corrected_position(self):
+        try:
+            return '{:3f}, {:3f}'.format(*self._corrected_position)
+        except IndexError:
+            pass
+
+    def _get_nominal_position(self):
+        try:
+            return '{:3f}, {:3f}'.format(*self._nominal_position)
+        except IndexError:
+            pass
+
+    def _get_title(self):
+        return 'Positioning Error Hole {}'.format(self.current_hole) \
+                    if self.current_hole else 'Positioning Error'
+
 #============= EOF =====================================
 #    def _watershed_segmentation(self, src, **kw):
 ##        from scipy import ndimage

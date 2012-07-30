@@ -52,13 +52,6 @@ class MachineVisionManager(Manager):
     test = Button
 
     title = Property
-    current_hole = None
-
-    corrected_position = Property(depends_on='_corrected_position')
-    _corrected_position = Tuple(0, 0)
-
-    nominal_position = Property(depends_on='_nominal_position')
-    _nominal_position = Tuple(0, 0)
 
     hole_detector = Instance(CO2HoleDetector)
     brightness_detector = Instance(BrightnessDetector)
@@ -349,32 +342,7 @@ class MachineVisionManager(Manager):
 
     def _brightness_detector_default(self):
         return self.load_brightness_detector()
-#==============================================================================
-# getter/setters
-#==============================================================================
-    def _get_corrected_position(self):
-        try:
-            return '{:3f}, {:3f}'.format(*self._corrected_position)
-        except IndexError:
-            pass
 
-    def _get_nominal_position(self):
-        try:
-            return '{:3f}, {:3f}'.format(*self._nominal_position)
-        except IndexError:
-            pass
-
-    def _get_title(self):
-        return 'Positioning Error Hole {}'.format(self.current_hole) \
-                    if self.current_hole else 'Positioning Error'
-
-    def _get_threshold(self):
-        return self._threshold
-
-    def _set_threshold(self, v):
-        self._threshold = v
-
-#        self.calibration_detector.update_threshold(v)
     def _spawn_thread(self, func, *args, **kw):
 
         from threading import Thread
@@ -399,11 +367,11 @@ class MachineVisionManager(Manager):
         else:
             self.testing = False
 
-
-    def _test_view(self):
-        v = View(
-                 Item('hole_detector', show_label=False, style='custom'))
-        return v
+#
+#    def _test_view(self):
+#        v = View(
+#                 Item('hole_detector', show_label=False, style='custom'))
+#        return v
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
@@ -412,7 +380,7 @@ if __name__ == '__main__':
     m = MachineVisionManager(_debug=True,
                              )
     m.locate_target(0, 0, 1)
-    m.configure_traits(view='_test_view')
+    m.configure_traits()#view='_test_view')
 #    m.configure_traits(view='configure_view')
 
 #    time_comp()
