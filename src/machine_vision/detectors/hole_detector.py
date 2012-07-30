@@ -17,7 +17,7 @@
 #=============enthought library imports=======================
 from traits.api import  Float, Range, Property, Tuple, Bool, Enum, \
     Instance, Str
-from traitsui.api import View, Item, VGroup, Group
+from traitsui.api import View, Item, VGroup, Group, HGroup, spring
 #============= standard library imports ========================
 from numpy import histogram, argmax, array, asarray, ogrid, percentile
 import random
@@ -34,6 +34,7 @@ from src.helpers.filetools import unique_path
 from detector import Detector
 from src.image.image import StandAloneImage
 from src.machine_vision.detectors.target import Target
+from src.machine_vision.segmenters.base import BaseSegmenter
 
 DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
@@ -85,6 +86,8 @@ class HoleDetector(Detector):
 
     nominal_position = Property(depends_on='_nominal_position')
     _nominal_position = Tuple(0, 0)
+
+    segmenter = Instance(BaseSegmenter)
 #===============================================================================
 # image filters
 #===============================================================================
@@ -382,31 +385,18 @@ class HoleDetector(Detector):
 
 
     def traits_view(self):
-        v = View(Item('target_image', show_label=False, style='custom'))
-        return v
-
-    def configure_view(self):
-#        search_grp = Group(Item('start_threshold_search_value'),
-#                            Item('threshold_search_width'),
-#                            Item('threshold_expansion_scalar'),
-#                            Item('threshold_tries'),
-#                            Item('crop_tries'),
-#                            Item('crop_expansion_scalar'),
-#                            show_border=True,
-#                           label='Search',
-#                           )
-
-        process_grp = Group(
-                            Item('use_smoothing'),
-                            Item('use_dilation'),
-                            Item('use_histogram'),
-                            Item('use_contrast_equalization'),
-                            show_border=True,
-                           label='Process')
-        return View(Item('segmentation_style'),
-                    VGroup(process_grp),
-                           Item('save_positioning_error'),
-                            )
+        return View(
+                    VGroup(
+                        HGroup(Item('use_histogram'),
+                               Item('save_positioning_error')),
+                        VGroup(
+                              HGroup(spring, Item('segmentation_style', show_label=False)),
+                              Item('segmenter', style='custom', show_label=False),
+                              show_border=True,
+                              label='Segmentation',
+                              )
+                           )
+                    )
 #==============================================================================
 # getter/setters
 #==============================================================================
@@ -425,6 +415,20 @@ class HoleDetector(Detector):
     def _get_title(self):
         return 'Positioning Error Hole {}'.format(self.current_hole) \
                     if self.current_hole else 'Positioning Error'
+
+    def _segmentation_style_changed(self):
+        self.segmenter = self._segmenter_factory(self.segmentation_style)
+
+    def _segmenter_factory(self, style):
+        klass = '{}Segmenter'.format(style.capitalize())
+        m = __import__('src.machine_vision.segmenters.{}'.format(style), fromlist=[klass])
+        segmenter = getattr(m, klass)()
+        return segmenter
+
+    def _segmenter_default(self):
+        return self._segmenter_factory(self.segmentation_style)
+
+
 
 #============= EOF =====================================
 #    def _watershed_segmentation(self, src, **kw):

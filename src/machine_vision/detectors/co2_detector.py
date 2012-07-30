@@ -170,16 +170,17 @@ class CO2HoleDetector(HoleDetector):
 
         self.info('using {} segmentation'.format(style))
 
-        klass = '{}Segmenter'.format(style.capitalize())
-        m = __import__('src.machine_vision.segmenters.{}'.format(style), fromlist=[klass])
 
-        segmenter = getattr(m, klass)()
+#        klass = '{}Segmenter'.format(style.capitalize())
+#        m = __import__('src.machine_vision.segmenters.{}'.format(style), fromlist=[klass])
 
+#        segmenter = getattr(m, klass)()
+        npos = None
+        segmenter = self.segmenter
         if style == 'region':
-            retries = 4
 
-            for j in range(1, retries):
-                segmenter.threshold_nwidth = j
+            for j in range(1, segmenter.threshold_tries):
+                segmenter.count = j
                 npos = segment(segmenter, src)
                 if npos:
                     break

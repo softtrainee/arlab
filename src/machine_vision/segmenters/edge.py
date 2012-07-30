@@ -23,8 +23,9 @@ from scipy import ndimage
 from skimage.filter import canny
 #from skimage.morphology import closing, square
 #============= local library imports  ==========================
+from src.machine_vision.segmenters.base import BaseSegmenter
 
-class EdgeSegmenter(HasTraits):
+class EdgeSegmenter(BaseSegmenter):
     #canny parameters
     canny_low_threshold = Range(0, 1., 0.06)
     canny_high_threshold = Range(0, 1., 0.16)

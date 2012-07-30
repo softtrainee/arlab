@@ -18,13 +18,7 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from skimage.filter import threshold_adaptive
-from src.machine_vision.segmenters.base import BaseSegmenter
 #============= local library imports  ==========================
-class AdaptivethresholdSegmenter(BaseSegmenter):
-    def segment(self, src):
-        ndsrc = src.ndarray[:]
-        block_size = 50
-        bsrc = threshold_adaptive(ndsrc, block_size)
-        return bsrc * 255.
+class BaseSegmenter(HasTraits):
+    pass
 #============= EOF =============================================

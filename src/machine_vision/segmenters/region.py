@@ -22,16 +22,26 @@ from numpy import zeros_like, invert
 from skimage.filter import sobel, threshold_adaptive
 from skimage.morphology import watershed
 #============= local library imports  ==========================
+from src.machine_vision.segmenters.base import BaseSegmenter
 
-class RegionSegmenter(HasTraits):
-    threshold_low = Property(Int)
-    threshold_high = Property(Int)
+class RegionSegmenter(BaseSegmenter):
+    threshold_low = Property(Int, depends_on='threshold_width,threshold_tries,threshold_base')
+    threshold_high = Property(Int, depends_on='threshold_width,threshold_tries,threshold_base')
 
     threshold_width = Int(5)
-    threshold_nwidth = Int(1)
-    _threshold_base = Int(125)
+    threshold_tries = Int(4)
+    threshold_base = Int(125)
+    count = Int(1)
 
     use_adaptive_threshold = Bool(True)
+    def traits_view(self):
+        return View(
+                    Item('threshold_width', label='Width'),
+                    Item('threshold_tries', label='N.'),
+                    Item('threshold_base', label='Base'),
+                    Item('threshold_low', style='readonly'),
+                    Item('threshold_high', style='readonly')
+                    )
 
     def segment(self, src):
 
@@ -55,7 +65,7 @@ class RegionSegmenter(HasTraits):
 #===============================================================================
 
     def _get_threshold_high(self):
-        return self._threshold_base + (self.threshold_width * self.threshold_nwidth)
+        return min(255, self.threshold_base + (self.threshold_width * self.count))
     def _get_threshold_low(self):
-        return self._threshold_base - (self.threshold_width * self.threshold_nwidth)
+        return max(0, self.threshold_base - (self.threshold_width * self.count))
 #============= EOF =============================================
