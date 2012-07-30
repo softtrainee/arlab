@@ -57,9 +57,9 @@ class VideoResult(RIDDBResult):
 
     exportable = False
     resizable = True
-    window_width=500
-    window_height=350
-    
+    window_width = 500
+    window_height = 350
+
     def isloadable(self):
         return os.path.isfile(self._get_path())
 
@@ -69,7 +69,7 @@ class VideoResult(RIDDBResult):
         self.video_image.load(vid.get_frame())
         self.nframes = int(vid.get_nframes())
         return True
-    
+
     def _fstep_fired(self):
         self._flag_factory()
         self.step_flag.set()
@@ -181,7 +181,7 @@ class VideoResult(RIDDBResult):
         vtab = VGroup(controls,
                      Item('video_image', style='custom',
                     show_label=False,
-                    width=150,height=170,
+                    width=150, height=170,
 #                    width=640, height=480,
                     editor=ImageEditor()))
         return [vtab]

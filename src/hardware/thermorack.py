@@ -139,8 +139,8 @@ class ThermoRack(CoreDevice):
         '''
         '''
         if not kw.has_key('verbose'):
-            kw['verbose']=False
-            
+            kw['verbose'] = False
+
         cmd = self._get_read_command_str(COOLANT_BITS)
 
         resp = self.ask(cmd, **kw)

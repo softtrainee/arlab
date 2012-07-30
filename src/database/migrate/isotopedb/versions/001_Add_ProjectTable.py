@@ -17,12 +17,12 @@ t2 = Table('UserTable', meta,
 def upgrade(migrate_engine):
     # Upgrade operations go here. Don't create your own engine; bind
     # migrate_engine to your metadata
-	meta.bind=migrate_engine
+	meta.bind = migrate_engine
 	t1.create()
 	t2.create()
-		
+
 def downgrade(migrate_engine):
     # Operations to reverse the above upgrade go here.
-    meta.bind=migrate_engine
+    meta.bind = migrate_engine
     t1.drop()
     t2.drop()
