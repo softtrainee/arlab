@@ -12,7 +12,7 @@ if __name__ == '__main__':
 #		('{}/co2.sqlite', 'co2laserdb'),
 #		('{}/bakeoutdb/bakeouts.sqlite', 'bakeoutdb'),
 		('{}/device_scans/device_scans.sqlite', 'device_scans'),
-		('{}/diode.sqlite','diodelaserdb')
+		('{}/diode.sqlite', 'diodelaserdb')
 		]
 
 #	root = '/Users/ross/Sandbox/sqlite'

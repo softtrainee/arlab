@@ -24,7 +24,7 @@ try:
     import statsmodels.api as sm
 except ImportError:
     import scikits.statsmodels.api as sm
-    
+
 #============= local library imports  ==========================
 
 #============= views ===================================

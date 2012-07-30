@@ -85,16 +85,16 @@ class XMLRPCRequestHandler(SimpleXMLRPCRequestHandler):
 class XMLBackend(RPCBackend):
     port = None
     host = None
-    log_requests=False
-    
+    log_requests = False
+
     def _handle_factory(self):
-        
-        obj=xmlrpclib.ServerProxy('http://{}:{}'.format(self.host, 
+
+        obj = xmlrpclib.ServerProxy('http://{}:{}'.format(self.host,
                                                            self.port),
                               allow_none=True)
         socket.setdefaulttimeout(2)
         return obj
-    
+
     def _serve(self):
         host = socket.gethostbyname(socket.gethostname())
         addr = (host, self.port)

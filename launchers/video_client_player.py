@@ -20,11 +20,11 @@ from scipy.misc.pilutil import toimage
 class Client(Thread):
     data = None
     queue = None
-    host='129.138.12.141'
-    port=5556
-    use_color=True
-    width=100
-    height=100
+    host = '129.138.12.141'
+    port = 5556
+    use_color = True
+    width = 100
+    height = 100
     def run(self):
         import zmq
         context = zmq.Context()
@@ -40,22 +40,22 @@ class Client(Thread):
         fp = 1 / 10.
         while 1:
             t = time.time()
-            resp= self._sock.recv()
-            header=fromstring(resp)
-            w,h,fp,depth=header
-            depth=int(depth)
-            self.width=w
-            self.height=h
+            resp = self._sock.recv()
+            header = fromstring(resp)
+            w, h, fp, depth = header
+            depth = int(depth)
+            self.width = w
+            self.height = h
 
             resp = self._sock.recv()
             data = fromstring(resp, dtype='uint8')
 
-            if depth==3:
-                shape=(WIDTH, HEIGHT, 3)
-                self.use_color=True
+            if depth == 3:
+                shape = (WIDTH, HEIGHT, 3)
+                self.use_color = True
             else:
-                self.use_color=False
-                shape=(HEIGHT,WIDTH)
+                self.use_color = False
+                shape = (HEIGHT, WIDTH)
                 data = data.reshape(*shape)
 #
             self.data = data
@@ -73,12 +73,12 @@ class VideoClientPlayer(wx.Frame):
     ID_PLAY = 4
 
     ID_TIMER_PLAY = 5
-    bmp=None
-    
+    bmp = None
+
     def __init__(self, parent):
         wx.Frame.__init__(self, parent, -1, title="pyCan Video Player - Version 1.0.0",
 #                          size=dim2,
-                          size=(500,300),
+                          size=(500, 300),
                           style=wx.RESIZE_BORDER | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN
                           )
 
@@ -118,10 +118,10 @@ class VideoClientPlayer(wx.Frame):
 
     def _get_best_size(self):
         (window_width, _) = self.GetSizeTuple()
-        
-        w,h=WIDTH,float(HEIGHT)
-        w,h=self.client.width, self.client.height
-        new_height = window_width /(w/h)
+
+        w, h = WIDTH, float(HEIGHT)
+        w, h = self.client.width, self.client.height
+        new_height = window_width / (w / h)
         new_size = (window_width, new_height)
         return new_size
 
@@ -139,13 +139,13 @@ class VideoClientPlayer(wx.Frame):
         if frame is not None:
             if self.client.use_color:
                 if self.obmp is None:
-                    self.obmp=wx.BitmapFromBuffer(self.client.width, 
+                    self.obmp = wx.BitmapFromBuffer(self.client.width,
                                                   self.client.height,
                                                   frame
                                                   )
                 else:
                     self.obmp.CopyFromBuffer(frame)
-                wimg=self.obmp.ConvertToImage()
+                wimg = self.obmp.ConvertToImage()
             else:
 #            print frame.dtype, frame.shape
                 img = toimage(frame)
