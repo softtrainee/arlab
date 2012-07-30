@@ -242,13 +242,13 @@ def denoise(src):
 #    return src
 
 
-def smooth(src):
+def smooth_src(src):
     dst = src.clone()
     cv.smooth(src, dst, cv.CV_BLUR, 3, 3, 0)
     return dst
 
 
-def sharpen(src):
+def sharpen_src(src):
 #    im = src.clone()
     w, h = src.size()
     im = new_dst(w, h)
@@ -382,7 +382,7 @@ def find_lines(src, t1, minlen=100):
     return dst, lines
 
 def get_polygons(contours, hierarchy,
-                 convextest=True, hole=True, nsides=5,
+                 convextest=False, hole=True, nsides=5,
                  min_area=100,
                  **kw):
     '''
