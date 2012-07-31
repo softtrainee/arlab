@@ -222,7 +222,7 @@ class Initializer(Loggable):
             managers = parser.get_managers(mp)
             devices = parser.get_devices(mp)
             flags = parser.get_flags(mp)
-            timed_flags = parser.get_timed_flags(mp, element=True)
+            timed_flags = parser.get_timed_flags(mp)
 
             #set rpc server
             mode, _, port = parser.get_rpc_params(mp)
@@ -243,8 +243,7 @@ class Initializer(Loggable):
             self.load_flags(manager, flags)
 
         if timed_flags:
-            s = ', '.join([f.text.strip() for f in timed_flags])
-            self.info('loading timed flags - {}'.format(s))
+            self.info('loading timed flags - {}'.format(','.join(timed_flags)))
             self.load_timed_flags(manager, timed_flags)
 
         if manager is not None:
@@ -261,7 +260,7 @@ class Initializer(Loggable):
     def load_timed_flags(self, manager, flags):
         for f in flags:
             self.info('loading {}'.format(f))
-            manager.add_timed_flag(f.text.strip(), f.get('duration'))
+            manager.add_timed_flag(f)
 
     def load_managers(
         self,
