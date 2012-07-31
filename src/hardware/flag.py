@@ -43,14 +43,16 @@ class Flag(object):
 class TimedFlag(Flag):
     duration = 1
     _start_time = None
-    def __init__(self, name, t):
-        super(TimedFlag, self).__init__(name)
-        self.duration = float(t)
+    
+#    def __init__(self, name, t):
+#        super(TimedFlag, self).__init__(name)
+#        self.duration = float(t)
 
-    def set(self, value):
+    def set(self, value):     
         super(TimedFlag, self).set(value)
 
         if self._set:
+            self.duration=value
             self._start_time = time()
             t = Timer(self.duration, self.clear)
             t.start()
