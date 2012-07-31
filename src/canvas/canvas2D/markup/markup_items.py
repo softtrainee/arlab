@@ -194,6 +194,7 @@ class BaseValve(MarkupItem):
             func(*args)
 #            gc.rect(x - 2, y - 2, w + 4, h + 4)
             gc.draw_path()
+            gc.restore_state()
 
 class RoughValve(BaseValve):
     width = 2
