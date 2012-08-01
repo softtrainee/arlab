@@ -255,9 +255,9 @@ class Manager(Viewable, RPCable):
 
         self.flags.append(Flag(f))
 
-    def add_timed_flag(self, f, t):
+    def add_timed_flag(self, f):
         from src.hardware.flag import TimedFlag
-        self.flags.append(TimedFlag(f, t))
+        self.flags.append(TimedFlag(f))
 
     def get_mass_spec_param(self, name):
         from src.paths import paths
