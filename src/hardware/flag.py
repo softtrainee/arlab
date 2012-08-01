@@ -16,10 +16,12 @@
 from threading import Timer
 from time import time
 
-
-
 def convert_to_bool(v):
-    return True if v.lower().strip() in ['t', 'true', '1', 'on'] else False
+    try:
+        v = float(v)
+        return bool(v)
+    except:
+        return v.lower().strip() in ['t', 'true', 'on']
 
 class Flag(object):
     _set = False
@@ -40,28 +42,38 @@ class Flag(object):
     def clear(self):
         self._set = False
 
+    def isSet(self):
+        return self._set
+
 class TimedFlag(Flag):
     duration = 1
     _start_time = None
-    
+
 #    def __init__(self, name, t):
 #        super(TimedFlag, self).__init__(name)
 #        self.duration = float(t)
 
-    def set(self, value):     
-        super(TimedFlag, self).set(value)
+    def set(self, value):
+        try:
+            value = float(value)
+        except ValueError:
+            return 'Invalid flag value'
 
-        if self._set:
-            self.duration=value
+        super(TimedFlag, self).set(value)
+        if self.isSet():
+            self.duration = value
             self._start_time = time()
             t = Timer(self.duration, self.clear)
             t.start()
 
         return True
 
+    def isStarted(self):
+        return self._start_time is not None
+
     def get(self):
         t = 0
-        if self._start_time is not None:
+        if self.isSet() and self.isStarted():
             t = max(0, self.duration - (time() - self._start_time))
         return t
 
