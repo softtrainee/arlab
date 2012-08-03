@@ -16,7 +16,9 @@
 
 #=============enthought library imports=======================
 from traits.api import Button, DelegatesTo, Instance
+import apptools.sweet_pickle as pickle
 #=============standard library imports ========================
+import os
 #=============local library imports  ==========================
 from src.hardware.fusions.fusions_co2_logic_board import FusionsCO2LogicBoard
 #from src.monitors.co2_laser_monitor import CO2LaserMonitor
@@ -25,6 +27,16 @@ from fusions_laser_manager import FusionsLaserManager
 from src.monitors.fusions_laser_monitor import FusionsLaserMonitor
 from src.paths import paths
 from src.monitors.fusions_co2_laser_monitor import FusionsCO2LaserMonitor
+
+from traits.api import HasTraits
+from numpy import polyval
+
+class PowerMeterCalibration(object):
+    _coefficients = None
+    def get_watts(self, m):
+        coeffs = self._coefficients
+        if coeffs:
+            return polyval(coeffs, m)
 
 class FusionsCO2Manager(FusionsLaserManager):
     '''
@@ -46,11 +58,39 @@ class FusionsCO2Manager(FusionsLaserManager):
     dbname = paths.co2laser_db
     db_root = paths.co2laser_db_root
 
+    power_meter_calibration = None
+
+    def finish_loading(self):
+        super(FusionsCO2Manager, self).finish_loading()
+        self.load_power_meter_calibration()
+
+    def load_power_meter_calibration(self):
+        p = os.path.join(paths.hidden_dir,
+                         '{}.power_meter_calibration'.format(self.name))
+        if os.path.isfile(p):
+            self.info('loading power meter calibration: {}'.format(p))
+            try:
+                with open(p, 'rb') as f:
+                    c = pickle.load(f)
+                    if isinstance(c, PowerMeterCalibration):
+                        self.power_meter_calibration = c
+            except (OSError, pickle.PickleError):
+                pass
+
+    def dump_power_meter_calibration(self):
+        p = os.path.join(paths.hidden_dir,
+                         '{}.power_meter_calibration'.format(self.name))
+        self.info('dumping power meter calibration to {}'.format(p))
+        try:
+            with open(p, 'wb') as f:
+                pickle.dump(self.power_meter_calibration, f)
+        except (OSError, pickle.PickleError):
+            pass
+
     def _brightness_meter_default(self):
         mv = self._get_machine_vision()
         return BrightnessPIDManager(parent=self,
                                     machine_vision=mv)
-
 
     def _set_laser_power_hook(self, rp):
         '''
@@ -71,7 +111,10 @@ class FusionsCO2Manager(FusionsLaserManager):
         #will have to simple normalize to 100
 
         if w is not None:
-            w = w / 255. * 100
+            if self.power_meter_calibration is not None:
+                w = self.power_meter_calibration.get_watts(w)
+            else:
+                w = w / 255. * 100
 
         return w
 
