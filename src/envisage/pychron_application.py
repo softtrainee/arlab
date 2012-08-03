@@ -46,8 +46,11 @@ class Pychron(WorkbenchApplication, Loggable):
         from src.paths import paths
         sp = SplashScreen(
                           image=ImageResource(name='splash.png',
-                                                search_path=[paths.pychron_src_root]
-                                                )
+                                                search_path=[paths.pychron_src_root,
+                                                             paths.pychron_dev_src_root
+                                                             ]
+                                                ),
+                          text='buttohole'
                           )
         return sp
 

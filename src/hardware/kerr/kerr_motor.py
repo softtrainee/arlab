@@ -96,6 +96,12 @@ class KerrMotor(KerrDevice):
 #            self.progress = progress
 #            progress.increment()
 
+    def _update_position_changed(self):
+        try:
+            self.progress.change_message('{} position = {}'.format(self.name, self.update_position))
+        except AttributeError:
+            #self.progress is None
+            pass
 
     def _finish_initialize(self):
         '''
@@ -106,12 +112,19 @@ class KerrMotor(KerrDevice):
             self._data_position = self.max
             self.update_position = self.max
 
-    def initialize(self, *args, **kw):
+
+    def initialize(self, progress=None, *args, **kw):
         '''
         '''
+        self.progress = progress
+
         self._start_initialize(*args, **kw)
         self._initialize_(*args, **kw)
         self._finish_initialize()
+
+        #remove reference to progress
+        self.progress = True
+
         return True
 
     def _initialize_(self, *args, **kw):
@@ -168,7 +181,7 @@ class KerrMotor(KerrDevice):
         self._execute_hex_commands(cmds)
 
         #move to the home position
-        self._set_data_position(0)
+        self._set_data_position(self.nominal_position, progress=progress)
 
     def block(self, n=3, tolerance=1, progress=None):
         '''

@@ -111,6 +111,10 @@ class Paths():
         self.root = root = path.join(HOME, home)
 #        src_repo_name = 'pychron{}'.format(version)
         self.pychron_src_root = pychron_src_root = path.join('.', 'pychron.app', 'Contents', 'Resources')
+        self.pychron_dev_src_root = path.join(HOME, 'Programming', 'mercurial',
+                                             'pychron{}'.format(version),
+                                             'resources'
+                                            )
         #_dir suffix ensures the path is checked for existence
         self.root_dir = root
         stable_root = path.join(HOME, 'Pychrondata')
