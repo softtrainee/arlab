@@ -113,10 +113,13 @@ class KerrMotor(KerrDevice):
             self.update_position = self.max
 
 
-    def initialize(self, progress=None, *args, **kw):
+    def initialize(self, *args, **kw):
         '''
         '''
-        self.progress = progress
+        try:
+            self.progress = kw['progress']
+        except KeyError:
+            pass
 
         self._start_initialize(*args, **kw)
         self._initialize_(*args, **kw)
@@ -142,14 +145,16 @@ class KerrMotor(KerrDevice):
 
         self._home_motor(*args, **kw)
 
-    def _home_motor(self, progress=None, *args, **kw):
+    def _home_motor(self, *args, **kw):
         '''
         '''
-
-        progress.increase_max()
-        progress.change_message('Homing {}'.format(self.name))
-        progress.increment()
-
+        progress=self.progress
+        if progress is not None:
+            progress=kw['progress']
+            progress.increase_max()
+            progress.change_message('Homing {}'.format(self.name))
+            progress.increment()
+            
         addr = self.address
 
         cmd = '94'
@@ -158,7 +163,6 @@ class KerrMotor(KerrDevice):
         v = self._float_to_hexstr(self.home_velocity)
         a = self._float_to_hexstr(self.home_acceleration)
         move_cmd = ''.join((cmd, control, v, a))
-
 
         cmds = [#(addr,home_cmd,10,'=======Set Homing===='),
               (addr, move_cmd, 100, 'Send to Home')]
@@ -181,8 +185,9 @@ class KerrMotor(KerrDevice):
         self._execute_hex_commands(cmds)
 
         #move to the home position
-        self._set_data_position(self.nominal_position, progress=progress)
-
+        self._set_data_position(self.nominal_position)
+        self.block(4, progress=progress)
+        
     def block(self, n=3, tolerance=1, progress=None):
         '''
         '''
