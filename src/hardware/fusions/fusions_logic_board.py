@@ -93,12 +93,10 @@ class FusionsLogicBoard(CoreDevice):
         if globalv.initialize_zoom:
             zm = self.zoom_motor
             zm.initialize(*args, **kw)
-            self.set_zoom(zm.nominal_position)
 
         if globalv.initialize_beam:
             bm = self.beam_motor
             bm.initialize(*args, **kw)
-            self.set_beam_diameter(bm.nominal_position)
 
         return True
 
