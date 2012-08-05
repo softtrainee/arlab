@@ -32,7 +32,7 @@ class Communicator(ConfigLoadable):
       
     '''
     _lock = None
-    name = Str
+#    name = Str
     simulation = Bool(True)
     _terminator = chr(13)  # '\r'
 

@@ -29,12 +29,27 @@ from src.hardware.core.communicators.communicator import Communicator
 class RpcCommunicator(Communicator):
     '''
     '''
-
+    test_func = None
     def load(self, config, path):
         '''
         '''
         self._backend_load_hook(config)
         return True
+
+    def initialize(self, **kw):
+        if self.test_func is None:
+            self.info('not testing rpc communicator {}'.format(self.name))
+            self.simulation = False
+            return True
+
+        self.info('testing rpc communicator - {} test_func={}'.format(self.name,
+                                                                      self.test_func
+                                                                      ))
+        try:
+            getattr(self.handle, self.test_func)()
+            return True
+        except Exception, err:
+            self.warning(err)
 
     def config_get(self, config, section, option, **kw):
         if isinstance(config, dict):
@@ -45,6 +60,7 @@ class RpcCommunicator(Communicator):
     def _backend_load_hook(self, config):
         backend = self.config_get(config, 'Communications', 'backend', optional=True)
 
+        self.set_attribute(config, 'test_func', 'Communications', 'test_func')
         if backend == 'pyro':
             from src.rpc.backends import PyroBackend
             bk = PyroBackend()

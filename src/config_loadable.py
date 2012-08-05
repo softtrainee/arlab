@@ -30,6 +30,7 @@ class ConfigLoadable(Loggable):
 
     configuration_dir_name = None
     configuration_dir_path = None
+    configuration_name = None
     name = None
     config_path = None
 
@@ -166,7 +167,9 @@ class ConfigLoadable(Loggable):
 
                 self.configuration_dir_path = base
                 if name is None:
-                    name = self.name
+                    name = self.configuration_name
+                    if name is None:
+                        name = self.name
 
                 path = os.path.join(base, '{}.cfg'.format(name))
 

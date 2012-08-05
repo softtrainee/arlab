@@ -318,10 +318,6 @@ class FusionsLaserManager(LaserManager):
     def get_laser_watts(self):
         return self._requested_power
 
-    def get_laser_internal_temperature(self):
-        '''
-        '''
-        return 0
 
     def get_coolant_temperature(self, **kw):
         '''

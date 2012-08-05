@@ -211,6 +211,15 @@ class Graph(Loggable):
         p = self.plots[plotid]
         return p.data.get_data(s[axis])
 
+    def get_aux_data(self, plotid=0, series=1):
+        plot = self.plots[plotid]
+
+        si = plot.plots['aux{:03n}'.format(series)][0]
+
+        oi = si.index.get_data()
+        ov = si.value.get_data()
+        return oi, ov
+
     def save_png(self, path=None):
         '''
         '''
@@ -331,6 +340,11 @@ class Graph(Loggable):
             attr = [attr]
         for a in attr:
             setattr(ax, '{}_color'.format(a), color)
+
+    def set_aux_data(self, x, y, plotid=0, series=1):
+        p = self.plots[plotid].plots['aux{:03n}'.format(series)][0]
+        p.index.set_data(x)
+        p.value.set_data(y)
 
     def set_data(self, d, plotid=0, series=0, axis=0):
         '''
@@ -671,14 +685,11 @@ class Graph(Loggable):
                 x = np.array([])
             if y is None:
                 y = np.array([])
-            renderer = create_line_plot((x, y))
-#            l, b = add_default_axes(renderer)
-#
-#            l.orientation = 'right'
-#            b.orientation = 'top'
+
+            rd.pop('render_style')
+            renderer = create_line_plot((x, y), **rd)
 
             plotobj.add(renderer)
-#            print 'plotobj%s' % names[0][-1:][0]
             n = 'aux{:03n}'.format(int(names[0][-1:][0]))
             plotobj.plots[n] = [renderer]
 
@@ -745,30 +756,44 @@ class Graph(Loggable):
         '''
         pass
 
-    def add_aux_axis(self, po, p):
+    def add_aux_axis(self, po, p, title='', color='black'):
         '''
         '''
 #        from chaco.axis import PlotAxis
+
         axis = PlotAxis(p, orientation='right',
+                        title=title,
                         axis_line_visible=False,
-                        tick_color='red',
-                        tick_label_color='red')
+                        tick_color=color,
+                        tick_label_color=color,
+                        title_color=color
+                        )
+
         p.underlays.append(axis)
         po.add(p)
-        po.plots['aux'] = [p]
+#        po.plots['aux'] = [p]
 
-    def add_datum_to_aux_plot(self, datum, plotid=0, series=1):
+        po.x_grid.visible = False
+        po.y_grid.visible = False
+
+    def add_aux_datum(self, datum, plotid=0, series=1, do_after=False):
         '''
         '''
-        plot = self.plots[plotid]
+        def add():
+            plot = self.plots[plotid]
 
-        series = plot.plots['aux{:03n}'.format(series)][0]
+            si = plot.plots['aux{:03n}'.format(series)][0]
 
-        oi = series.index.get_data()
-        ov = series.value.get_data()
+            oi = si.index.get_data()
+            ov = si.value.get_data()
 
-        series.index.set_data(np.hstack((oi, [datum[0]])))
-        series.value.set_data(np.hstack((ov, [datum[1]])))
+            si.index.set_data(np.hstack((oi, [datum[0]])))
+            si.value.set_data(np.hstack((ov, [datum[1]])))
+
+        if do_after:
+            do_after_timer(do_after, add)
+        else:
+            add()
 
     def add_data(self, data, plotlist=None, **kw):
         '''

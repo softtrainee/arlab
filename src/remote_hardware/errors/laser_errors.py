@@ -25,6 +25,7 @@ def generate_code(*args):
 class LogicBoardCommErrorCode(ErrorCode):
     msg = 'Failed communication with logic board'
 
+
 @generate_code
 class EnableErrorCode(ErrorCode):
     msg = 'Laser failed to enable {}'
@@ -32,6 +33,7 @@ class EnableErrorCode(ErrorCode):
     def __init__(self, reason, *args, **kw):
         self.msg = self.msg.format(reason)
         super(EnableErrorCode, self).__init__(*args, **kw)
+
 
 @generate_code
 class DisableErrorCode(ErrorCode):
@@ -41,6 +43,7 @@ class DisableErrorCode(ErrorCode):
         self.msg = self.msg.format(reason)
         super(EnableErrorCode, self).__init__(*args, **kw)
 
+
 @generate_code
 class InvalidSampleHolderErrorCode(ErrorCode):
     msg = 'Invalid sample holder. {}'
@@ -49,3 +52,11 @@ class InvalidSampleHolderErrorCode(ErrorCode):
         self.msg = self.msg.format(sh)
         super(InvalidSampleHolderErrorCode, self).__init__(*args, **kw)
 
+
+@generate_code
+class LaserMonitorErrorCode(ErrorCode):
+    msg = 'emergency shutdown. {}'
+
+    def __init__(self, sh, *args, **kw):
+        self.msg = self.msg.format(sh)
+        super(LaserMonitorErrorCode, self).__init__(*args, **kw)

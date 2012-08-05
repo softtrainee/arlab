@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+import socket
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
@@ -23,18 +24,12 @@ def rpc_query(func, **kw):
         handle = obj._communicator.handle
         try:
             return getattr(handle, func.__name__)(**kw)
-        except Exception, e:
+        except socket.error:
+            pass
+        except Exception, e :
             print 'remote query', e
 
     return _query
 
-#class RemoteDevice(CoreDevice):
-#
-#    def _query_(self, k):
-#        handle = self._communicator.handle
-#        try:
-#            func = getattr(handle, k)
-#            return func()
-#        except Exception, e:
-#            print 'remote device', e
+
 #============= EOF =============================================
