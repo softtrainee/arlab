@@ -65,14 +65,14 @@ class CompositeCalibrationManager(Manager):
     parent_name = 'FusionsDiode'
 
     power = Float
-    output = Float
+    input = Float
 
 
     def _power_changed(self):
         pc = self._load_calibration()
         pc
         if pc is not None:
-            self.output, _ = pc.get_calibrated_power(self.power)
+            self.input, _ = pc.get_input(self.power)
 
     def _load_calibration(self):
         try:
@@ -181,7 +181,7 @@ class CompositeCalibrationManager(Manager):
                          label='Data')
 
         process_tab = Group(
-                            HGroup(Item('power'), Item('output',
+                            HGroup(Item('power'), Item('input',
                                                        format_str='    %0.3f   ', style='readonly'),
                                    spring, Item('save', show_label=False),
                                    Item('load_graph', show_label=False)),

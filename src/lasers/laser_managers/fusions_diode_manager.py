@@ -42,8 +42,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         
     '''
     id = 'pychron.fusions.diode'
-    name = 'FusionsDiode'
-    configuration_dir_name = 'co2'
+    name = 'fusions_diode'
 
     pyrometer = Instance(MikronGA140Pyrometer)
     temperature_controller = Instance(WatlowEZZone)
@@ -84,15 +83,29 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
         return self.temperature_controller.get_temperature()
 
-    def get_pyrometer_temperature(self):
+    def _try(self, obj, func, kw):
+        try:
+
+            obj = getattr(self, obj)
+            func = getattr(obj, func)
+            return func(**kw)
+
+        except AttributeError:
+            pass
+
+
+    def get_pyrometer_temperature(self, **kw):
         '''
         '''
-        return self.pyrometer.read_temperature()
+        return self._try('pyrometer',
+                         'read_temperature', kw)
+
 
     def get_laser_internal_temperature(self, **kw):
         '''
         '''
-        return self.control_module_manager.get_internal_temperature(**kw)
+        return self._try('control_module_manager',
+                         'get_internal_temperature', kw)
 
     def get_power_slider(self):
         return None
@@ -338,6 +351,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
         '''
         b = FusionsDiodeLogicBoard(name='diodelogicboard',
+                                   configuration_name='logicboard',
                                    configuration_dir_name='diode')
         return b
 
@@ -353,6 +367,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
         '''
         args = dict(name='diodestage',
+                    configuration_name='stage',
                             configuration_dir_name='diode',
                              parent=self,
                              )

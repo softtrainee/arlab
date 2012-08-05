@@ -114,6 +114,14 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
                 self._loaded = True
             return r
 
+    def initialize(self, *args, **kw):
+        a = super(CoreDevice, self).initialize(*args, **kw)
+        b = False
+        if self._communicator is not None:
+            b = self._communicator.initialize(*args, **kw)
+
+        return a and b
+
     def load_additional_args(self, config):
         '''
         '''

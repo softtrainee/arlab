@@ -126,6 +126,9 @@ class FusionsLogicBoard(CoreDevice):
         if b is not None:
             self.beam_motor.load(os.path.join(self.configuration_dir_path, b))
 
+        #load power meter calibration
+
+
         return True
 
     def _configure_fired(self):

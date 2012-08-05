@@ -739,6 +739,7 @@ class StageManager(Manager):
             factory = AerotechMotionController
 
         m = factory(name='{}controller'.format(self.name),
+                    configuration_name='stagecontroller',
                     configuration_dir_name=self.configuration_dir_name,
                     parent=self
                     )

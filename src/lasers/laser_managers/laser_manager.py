@@ -30,7 +30,7 @@ from src.monitors.laser_monitor import LaserMonitor
 from src.managers.graph_manager import GraphManager
 from pulse import Pulse
 from src.paths import paths
-from src.lasers.power.power_calibration_manager import PowerCalibrationObject
+from src.hardware.meter_calibration import MeterCalibration
 
 
 class LaserManager(Manager):
@@ -151,6 +151,9 @@ class LaserManager(Manager):
         if reason is not None:
             self.warning('EMERGENCY SHUTDOWN reason: {}'.format(reason))
             self.failure_reason = reason
+
+            from src.remote_hardware.errors.laser_errors import LaserMonitorErrorCode
+            self.error_code = LaserMonitorErrorCode(reason)
 
         self.disable_laser()
 
@@ -282,8 +285,7 @@ class LaserManager(Manager):
         else:
             self.info(coeffstr(coefficients))
 
-        pc = PowerCalibrationObject()
-        pc.coefficients = coefficients
+        pc = MeterCalibration(coefficients)
         pc.bounds = bounds
         try:
             with open(calibration_path, 'wb') as f:
@@ -301,11 +303,10 @@ class LaserManager(Manager):
                     pc = pickle.load(f)
                 except (pickle.PickleError, EOFError, OSError), e:
                     self.warning('unpickling error {}'.format(e))
-                    pc = PowerCalibrationObject()
-                    pc.coefficients = [1, 1]
+                    pc = MeterCalibration([1, 0])
+
         else:
-            pc = PowerCalibrationObject()
-            pc.coefficients = [1, -1]
+            pc = MeterCalibration([1, 0])
 
         return pc
 #===============================================================================
@@ -342,11 +343,10 @@ class LaserManager(Manager):
             if power < 0.1:
                 power = 0
             else:
-#                c = pc.coefficients
-                power, coeffs = pc.get_calibrated_power(power)
-
-                sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', coeffs)])
-                self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
+                power, coeffs = pc.get_input(power)
+                if coeffs is not None:
+                    sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', coeffs)])
+                    self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
         return power
 
     def _get_calibration_path(self, cp):

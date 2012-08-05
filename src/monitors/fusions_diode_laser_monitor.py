@@ -130,10 +130,14 @@ class FusionsDiodeLaserMonitor(FusionsLaserMonitor):
     def __check_laser_temp(self):
         '''
         '''
+
         manager = self.manager
         #check laser temp
-        #self.info('Check laser temperature')
+        self.info('Check laser internal temperature')
         lt = manager.get_laser_internal_temperature(verbose=False)
+        if lt is None:
+            self.warning('could not read laser internal temperature')
+
         #self._update_max_temp = lt
         if lt > self.max_temp:
             self.warning('Laser over temperature {:0.2f}'.format(lt))
