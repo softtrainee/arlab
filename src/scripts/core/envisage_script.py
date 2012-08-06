@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Property, String, Any
 from traitsui.api import View, Item
@@ -93,7 +91,7 @@ class EnvisageScript(EnvisageEditable):
 
 
         if self.parent:
-            path = self.parent.validator.parser.__check_valid_subroutine__(sub)
+            path = self.parent.validator.parser._check_valid_subroutine__(sub)
             self.parent.open(path=path)
 #            if path:
 #                self.parent.add_script(path)

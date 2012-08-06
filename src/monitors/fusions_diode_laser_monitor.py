@@ -127,7 +127,7 @@ class FusionsDiodeLaserMonitor(FusionsLaserMonitor):
 #        '''
 #        return self._update_max_coolant_temp
 
-    def __check_laser_temp(self):
+    def _fcheck_laser_temp(self):
         '''
         '''
 

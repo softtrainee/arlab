@@ -35,7 +35,7 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
     request_powermax = Float(100)
 
     power_meter_calibration = None
-    power_output_calibration = None
+
 
     def load_additional_args(self, config):
         '''
@@ -96,7 +96,6 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
         '''
         cmd = self._build_command('ADC1')
         r = self._parse_response(self.ask(cmd, verbose=verbose))
-
         if r is not None:
             try:
                 r = float(r)
@@ -105,13 +104,18 @@ class FusionsCO2LogicBoard(FusionsLogicBoard):
             #will have to simple normalize to 100
 
                 if self.power_meter_calibration is not None:
-                    r = self.power_meter_calibration.get_calibrated_value(r)
+                    r = self.power_meter_calibration.get_input(r)
                 else:
                     r = r / 255. * 100
 
             except ValueError:
                 self.warning('*Bad response from ADC ==> {} (len={})'.format(r, len(r)))
                 r = None
+
+        if self.simulation:
+            r = self.get_random_value()
+
+        self.internal_meter_response = r
 
         return r
 

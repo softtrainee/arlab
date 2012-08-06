@@ -60,6 +60,7 @@ class FusionsCO2Manager(FusionsLaserManager):
         '''
         '''
         self.logic_board._set_laser_power_(rp)
+        self.monitor.setpoint = self._requested_power
 
         if self.data_manager:
             with self._data_manager_lock:

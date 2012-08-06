@@ -60,3 +60,13 @@ class LaserMonitorErrorCode(ErrorCode):
     def __init__(self, sh, *args, **kw):
         self.msg = self.msg.format(sh)
         super(LaserMonitorErrorCode, self).__init__(*args, **kw)
+
+
+@generate_code
+class SetpointErrorCode(ErrorCode):
+    msg = 'failed to reach setpoint {}'
+
+    def __init__(self, sh, *args, **kw):
+        self.msg = self.msg.format(sh)
+        super(SetpointErrorCode, self).__init__(*args, **kw)
+

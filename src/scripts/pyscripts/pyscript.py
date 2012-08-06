@@ -14,9 +14,9 @@
 # limitations under the License.
 #===============================================================================
 
-from traits.api import Str, Any, Bool, Enum
+from traits.api import Str, Any, Bool
 import time
-from threading import Thread, Event, Timer, currentThread, Condition
+from threading import Thread, Event, Condition
 from src.loggable import Loggable
 import os
 from pyface.timer.do_later import do_later

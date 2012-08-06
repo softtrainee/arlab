@@ -30,10 +30,10 @@ class Monitor(ConfigLoadable):
     '''
     sample_delay = Float(5)
     manager = None
-    #parent = None
-#    kill = False
     _monitoring = False
     _invalid_checks = None
+    _stop_signal = None
+
     def is_monitoring(self):
         return self._monitoring
 
@@ -78,10 +78,7 @@ class Monitor(ConfigLoadable):
         '''
         '''
         self.start_time = time.time()
-#    def _monitor_(self):
-#        '''
-#        '''
-#        raise NotImplementedError
+
     def _monitor_(self, stop_signal):
         '''
         '''
@@ -90,25 +87,54 @@ class Monitor(ConfigLoadable):
         self.load()
 
         if self.manager is not None:
+            #clear error
+            self.manager.error_code = None
+
             self.gntries = 0
             self.reset_start_time()
-
+            funcs = [getattr(self, h) for h in dir(self)
+                     if '_fcheck' in h and h not in self._invalid_checks]
             while not stop_signal.isSet():
-                #execute check hooks
-                '''
-                    does the order in which the check hooks are executed matter?
-                    
-                '''
-                for h in dir(self):
-                    '''
-                        methods are prefaced with the class name
-                        _LaserMonitor__check_duration
-                    '''
-                    if '__check' in h and h not in self._invalid_checks:
-                        func = getattr(self, h)
-                        func()
-                        if stop_signal.isSet():
-                            break
+                for fi in funcs:
+                    fi()
+                    if stop_signal.isSet():
+                        break
+
                 #sleep before running monitor again
                 time.sleep(self.sample_delay)
 #============= EOF ====================================
+#    def _monitor_(self, stop_signal):
+#        '''
+#        '''
+#        #load before every monitor call so that changes to the config file
+#        #are incorpoated
+#        self.load()
+#
+#        if self.manager is not None:
+#            self.gntries = 0
+#            self.reset_start_time()
+#            cnt = 0
+#            while not stop_signal.isSet():
+#                '''
+#                    double checks executed twice for every check
+#                '''
+#                for h in dir(self):
+#                    if '_doublecheck' in h and h not in self._invalid_checks:
+#                        func = getattr(self, h)
+#                        func()
+#                        if stop_signal.isSet():
+#                            break
+#
+#                if cnt % 2 == 0:
+#                    for h in dir(self):
+#                        if '_check' in h and h not in self._invalid_checks:
+#                            func = getattr(self, h)
+#                            func()
+#                            if stop_signal.isSet():
+#                                break
+#
+#                cnt += 1
+#                if cnt == 100:
+#                    cnt = 0
+#                #sleep before running monitor again
+#                time.sleep(self.sample_delay / 2.0)

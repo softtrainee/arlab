@@ -13,17 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
-
-
-from pyface.message_dialog import warning
 '''
 Fusions Control board
 a combination of the logic board and the kerr microcontroller
 see Photon Machines Logic Board Command Set for additional information
 '''
 #=============enthought library imports=======================
-from traits.api import  Instance, DelegatesTo, Str, Button
+from traits.api import  Instance, DelegatesTo, Str, Button, Float
 from traitsui.api import Item, VGroup, RangeEditor
 #=============standard library imports ========================
 import os
@@ -61,6 +57,8 @@ class FusionsLogicBoard(CoreDevice):
 
     prefix = Str
     scan_func = 'read_power_meter'
+
+    internal_meter_response = Float
 
     def initialize(self, *args, **kw):
         '''
@@ -145,13 +143,15 @@ class FusionsLogicBoard(CoreDevice):
 #==============================================================================
 #laser methods
 #==============================================================================
-    def check_interlocks(self):
+    def check_interlocks(self, verbose=True):
         '''
         '''
         lock_bits = []
-        self.info('checking interlocks')
+        if verbose:
+            self.info('checking interlocks')
+
         if not self.simulation:
-            resp = self.repeat_command('INTLK', check_type=int)
+            resp = self.repeat_command('INTLK', check_type=int, verbose=verbose)
 
             try:
                 resp = int(resp)
