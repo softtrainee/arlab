@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
@@ -74,7 +72,7 @@ class ScriptParser(object):
                 text = text.split('\n')
 
             for linenum, line in enumerate(text):
-                errors.append(self.__check_line__(linenum + 1, line.strip()))
+                errors.append(self._check_line(linenum + 1, line.strip()))
 
         return errors
 
@@ -89,7 +87,7 @@ class ScriptParser(object):
             subroutine = sub
             return os.path.join(RUNSCRIPT_DIR, '%s.rs' % subroutine)
 
-    def __check_valid_subroutine__(self, subroutine):
+    def _check_valid_subroutine__(self, subroutine):
         '''
             @type subroutine: C{str}
             @param subroutine:
@@ -99,7 +97,7 @@ class ScriptParser(object):
         if path and os.path.isfile(path):
             return path
 
-    def __check_line__(self, linenum, line):
+    def _check_line(self, linenum, line):
         '''
         '''
         self.set_lexer(line)
@@ -322,7 +320,7 @@ class ScriptParser(object):
             error = 'Expected a subroutine'
         else:
             #check for valid subroutine
-            subpath = self.__check_valid_subroutine__(subroutine)
+            subpath = self._check_valid_subroutine__(subroutine)
             if not subpath:
 
                 error = 'Invalid subroutine %s' % subroutine
@@ -447,14 +445,14 @@ class ScriptParser(object):
             true_statement, else_ = get_statement()
 
             if true_statement:
-                error = self.__check_line__(linenum, true_statement)[2]
+                error = self._check_line(linenum, true_statement)[2]
             else:
                 error = 'Specify a true statement'
 
             if error is None and else_:
                 false_statement, else_ = get_statement()
                 if false_statement:
-                    error = self.__check_line__(linenum, false_statement)[2]
+                    error = self._check_line(linenum, false_statement)[2]
                 else:
                     error = 'Specify a false statement'
 

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Event, Property, Instance, Bool, Str, Float, \
-    on_trait_change
+    on_trait_change, DelegatesTo
 from traitsui.api import View, Item, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -62,6 +62,7 @@ class LaserManager(Manager):
     _requested_power = Float
     _calibrated_power = None
     use_calibrated_power = Bool(True)
+    internal_meter_response = DelegatesTo('logic_board')
 
 #===============================================================================
 # public interface
@@ -371,6 +372,8 @@ class LaserManager(Manager):
             lm = self.monitor_klass(manager=self,
                             configuration_dir_name=paths.monitors_dir,
                             name=self.monitor_name)
+
+        self.on_trait_change(lm.update_imb, 'logic_board:internal_meter_response')
         return lm
 
     def _stage_manager_factory(self, args):
