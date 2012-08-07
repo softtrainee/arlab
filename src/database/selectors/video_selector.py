@@ -23,13 +23,13 @@ import os
 import time
 from threading import Thread, Event
 #============= local library imports  ==========================
-from src.database.selectors.db_selector import DBSelector
+from src.database.core.db_selector import DBSelector
 from src.database.orms.video_orm import VideoTable
 from src.image.image_editor import ImageEditor
 from src.image.image import Image
 from src.image.video import Video
-from src.database.selectors.base_db_result import RIDDBResult
-from src.database.selectors.base_results_adapter import RIDResultsAdapter
+from src.database.core.base_db_result import RIDDBResult
+from src.database.core.base_results_adapter import RIDResultsAdapter
 
 
 class VideoResult(RIDDBResult):

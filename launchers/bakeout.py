@@ -15,22 +15,21 @@
 # limitations under the License.
 #===============================================================================
 
-import os
-import sys
-# add src to the path
-version = ''
-SRC_DIR = os.path.join(os.path.expanduser('~'), 'Programming',
-                     'mercurial',
-                     'pychron{}'.format(version))
-sys.path.insert(0, SRC_DIR)
 
-from src.bakeout.bakeout_manager import launch_bakeout
-from src.helpers.logger_setup import logging_setup
 
 if __name__ == '__main__':
+    from helpers import build_version
+    build_version('')
+    from src.helpers.logger_setup import logging_setup
+
+    from src.bakeout.bakeout_manager import BakeoutManager
 
     logging_setup('bakeout', level='DEBUG')
-    launch_bakeout()
+
+    bm = BakeoutManager()
+    bm.load()
+    bm.configure_traits()
+    import os
     os._exit(0)
 
 # ============= EOF ====================================

@@ -116,25 +116,46 @@ def install_pychron_suite():
     #build pychron
     i = Installer('pychron', 'pychron')
     i.version = version
-    i.install(src_dir)
+#    i.install(src_dir)
 
     #build remote hardware server
     i.prefix = 'remote_hardware_server'
     i.name = 'remote_hardware_server'
-    i.include_pkgs = ['remote_hardware', 'helpers', 'led', 'messaging',
-                      'rpc'
-                      ]
-    i.include_mods = ['paths', 'loggable', 'config_loadable',
-                      'managers/remote_hardware_server_manager',
-                      'managers/manager', 'viewable',
-                      'managers/displays/rich_text_display'
-                      ]
-    i.install(src_dir)
+    default_pkgs = ['rpc', 'helpers', 'led']
+    i.include_pkgs = ['remote_hardware', 'messaging'] + default_pkgs
 
-    #build bakeout
-#    i.prefix = 'bakeout'
-#    i.name = 'bakeout'
+    default_mods = ['paths', 'loggable', 'config_loadable',
+                    'viewable', 'managers/displays/rich_text_display',
+                    'managers/manager',
+                    ]
+    i.include_mods = [
+                      'managers/remote_hardware_server_manager',
+                      ] + default_mods
 #    i.install(src_dir)
+
+#    build bakeout
+    i.prefix = 'bakeout'
+    i.name = 'bakeout'
+    i.include_mods = ['hardware/bakeout_controller',
+                      'hardware/watlow_ezzone',
+                      'database/orms/bakeout_orm',
+                      'database/adapters/bakeout_adapter',
+                      'database/selectors/bakeout_selector',
+                      'database/data_warehouse',
+                      'managers/script_manager',
+                      'has_communicator'
+                      ] + default_mods
+    i.include_pkgs = ['bakeout',
+                      'hardware/core',
+                      'hardware/gauges',
+                      'scripts',
+                      'managers/data_managers',
+                      'graph',
+                      'data_processing/time_series',
+                      'database/core'
+                      ] + default_pkgs
+
+    i.install(src_dir)
 
     # move data into place
 

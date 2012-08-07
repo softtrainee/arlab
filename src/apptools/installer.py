@@ -131,15 +131,22 @@ class Installer(object):
             # will make this bundle self contained 
             #===================================================================
             if not self.include_pkgs:
+                print 'Copying entire src tree'
                 #copy entire src directory
                 shutil.copytree(os.path.join(root, 'src'),
                             resource_path('src'))
             else:
+                print 'Copying include_pkgs...'
+                self.include_pkgs.sort()
                 for di in self.include_pkgs:
+                    print 'pkg - ', di
                     shutil.copytree(os.path.join(root, 'src', di),
                                 src_path(di))
 
-            for mi in self.include_mods + ['__init__']:
+            print 'Copying include_mods...'
+            self.include_mods.sort()
+            for mi in self.include_mods:
+                print 'mod - ', mi
                 mi = '{}.py'.format(mi)
 
                 try:
@@ -157,6 +164,14 @@ class Installer(object):
                                 )
 
 
+            #walk the resource dir and add __init__ if missing
+            for rt, _, files in os.walk(resource_path('src')):
+                if not '__init__.py' in files:
+                    p = os.path.join(rt, '__init__.py')
+                    with open(p, 'w') as f:
+                        pass
+
+
             shutil.copyfile(os.path.join(root, 'globals.py'),
                             resource_path('globals.py')
                             )
@@ -168,6 +183,8 @@ class Installer(object):
                 shutil.copyfile(os.path.join(root, 'resources', name),
                             resource_path(name)
                             )
+
+
 
             # ===================================================================
             # #edit the plist

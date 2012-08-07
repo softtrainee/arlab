@@ -28,7 +28,7 @@ import ConfigParser
 #============= local library imports  ==========================
 from src.messaging.command_repeater import CommandRepeater
 from src.messaging.remote_command_server import RemoteCommandServer
-from src.managers.manager import Manager
+from src.managers.manager import Manager, AppHandler
 from src.paths import paths
 
 class RemoteHardwareServerManager(Manager):
@@ -107,7 +107,7 @@ class RemoteHardwareServerManager(Manager):
                  width=700,
                  height=360,
                  resizable=True,
-                 handler=self.handler_klass
+                 handler=AppHandler
                  )
 
         return v

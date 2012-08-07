@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from src.database.adapters.database_adapter import DatabaseAdapter
+from src.database.core.database_adapter import DatabaseAdapter
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 
 from src.paths import paths
@@ -23,7 +23,7 @@ from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, 
     MaterialTable, AnalysisTable, AnalysisPathTable, LabTable
 import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
-from src.database.adapters.functions import add, sql_retrieve, get_one, \
+from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
 #from src.database.adapters.adapter_decorators import add, get_one, commit
 #from sqlalchemy.sql.expression import or_

@@ -160,15 +160,23 @@ class BakeoutController(WatlowEZZone):
         return True
 
     def load_scripts(self):
-        sd = os.path.join(paths.scripts_dir, 'bakeoutscripts')
-        files = os.listdir(sd)
-
-#        files=[f.replace(':','/') for f in files]
-
-        self.scripts = ['---'] + [f for f in files
-                    if not os.path.basename(f).startswith('.') and
+        sd = os.path.join(paths.scripts_dir, 'bakeout')
+        if os.path.isdir(sd):
+            files = os.listdir(sd)
+#            s = [f for f in files
+#                        if not os.path.basename(f).startswith('.') and
+#                             os.path.splitext(f)[1] in ['.py', '.bo']]
+#            print s
+            s = ['---'] + [f for f in files if not f.startswith('.') and
                         os.path.isfile(os.path.join(sd, f)) and
-                         os.path.splitext(f)[1] in ['.py', '.bo']]
+                        os.path.splitext(f)[1] in ['.py', '.bo']]
+            self.scripts = s
+
+        else:
+            self.scripts = ['---']
+            if self.confirmation_dialog('Default Bakeout script directory does not exist. \
+Add {}'.format(sd)):
+                os.mkdir(sd)
 
     def ok_to_run(self):
         ok = True
@@ -210,14 +218,14 @@ class BakeoutController(WatlowEZZone):
             if self.script.endswith('.bo'):
                 t = BakeoutScript(name='{}_script'.format(self.name),
                                   source_dir=os.path.join(paths.scripts_dir,
-                                                          'bakeoutscripts'),
+                                                          'bakeout'),
                                      file_name=self.script,
                                      controller=self)
                 t.bootstrap()
             else:
                 from src.scripts.pyscripts.bakeout_pyscript import BakeoutPyScript
                 t = BakeoutPyScript(root=os.path.join(paths.scripts_dir,
-                                                          'bakeoutscripts'),
+                                                          'bakeout'),
                                     name=self.script,
                                     controller=self)
                 t.bootstrap()
@@ -358,8 +366,8 @@ class BakeoutController(WatlowEZZone):
 
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
-#        self.get_temp_and_power(verbose=True)
-        self.get_temp_and_power(verbose=False)
+        self.get_temp_and_power(verbose=True)
+#        self.get_temp_and_power(verbose=False)
 
         if self._duration_timeout:
             if time.time() - self.start_time > self._oduration * 3600.:

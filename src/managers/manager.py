@@ -56,6 +56,12 @@ class ManagerHandler(ViewableHandler):
         info.object.close(isok)
         return True
 
+class AppHandler(ManagerHandler):
+    def closed(self, info, isok):
+        info.object.kill()
+        info.object.close_displays()
+        return True
+
 class Manager(Viewable, RPCable):
     '''
     '''

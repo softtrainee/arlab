@@ -25,8 +25,8 @@ from src.database.orms.massspec_orm import IsotopeResultsTable, \
     IrradiationPositionTable, MaterialTable, SampleTable, ProjectTable, \
     PeakTimeTable, DetectorTypeTable, DataReductionSessionTable, \
     PreferencesTable
-from src.database.adapters.database_adapter import DatabaseAdapter
-from src.database.adapters.functions import add, get_one, delete_one, get_first
+from src.database.core.database_adapter import DatabaseAdapter
+from src.database.core.functions import add, get_one, delete_one, get_first
 from sqlalchemy.sql.expression import func
 
 

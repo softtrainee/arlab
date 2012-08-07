@@ -48,16 +48,17 @@ TIMEDICT = dict(s=1, m=60.0, h=60.0 * 60.0)
 class BakeoutPyScript(PyScript):
     controller = Any
 
-    def _get_help_hook(self):
-#        return HTML_HELP_PATH
-        return HTML_HELP
+#    def _get_help_hook(self):
+##        return HTML_HELP_PATH
+#        return HTML_HELP
+#
+#    def get_help_path(self):
+##        p = os.path.join(paths.doc_html_root, 'bakeout_scripting.html')
+##        return p
+#        pass
 
-    def get_help_path(self):
-        p = os.path.join(paths.doc_html_root, 'bakeout_scripting.html')
-        return p
-
-    def _get_commands(self):
-        cmds = super(BakeoutPyScript, self)._get_commands()
+    def get_commands(self):
+        cmds = super(BakeoutPyScript, self).get_commands()
         cmds += ['setpoint', 'ramp']
         return cmds
 

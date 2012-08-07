@@ -25,8 +25,8 @@ from datetime import datetime, timedelta
 #============= local library imports  ==========================
 from src.helpers.datetime_tools import  get_date
 from src.loggable import Loggable
-from src.database.adapters.database_adapter import DatabaseAdapter
-from src.database.selectors.base_results_adapter import BaseResultsAdapter
+from src.database.core.database_adapter import DatabaseAdapter
+from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.graph.time_series_graph import TimeSeriesGraph
 
 

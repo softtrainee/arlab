@@ -23,7 +23,7 @@ from sqlalchemy import Column, Integer, Float, String, \
 from sqlalchemy.orm import relationship
 
 #=============local library imports  ==========================
-from base_orm import ResultsMixin, BaseMixin, PathMixin
+from src.database.core.base_orm import ResultsMixin, BaseMixin, PathMixin
 
 Base = declarative_base()
 

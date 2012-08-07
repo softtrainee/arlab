@@ -19,11 +19,11 @@
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.database.adapters.database_adapter import PathDatabaseAdapter
+from src.database.core.database_adapter import PathDatabaseAdapter
 from src.database.selectors.device_scan_selector import DeviceScanSelector
 from src.database.orms.device_scan_orm import ScanTable, DeviceTable, \
     ScanPathTable
-from src.database.adapters.functions import get_one, delete_one
+from src.database.core.functions import get_one, delete_one
 
 class DeviceScanAdapter(PathDatabaseAdapter):
     test_func = None

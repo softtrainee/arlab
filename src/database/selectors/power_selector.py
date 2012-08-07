@@ -19,11 +19,11 @@ from traits.api import String, Float
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.database.selectors.db_selector import DBSelector
+from src.database.core.db_selector import DBSelector
 from src.database.orms.power_orm import PowerTable
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.database.selectors.base_db_result import RIDDBResult
-from src.database.selectors.base_results_adapter import RIDResultsAdapter
+from src.database.core.base_db_result import RIDDBResult
+from src.database.core.base_results_adapter import RIDResultsAdapter
 
 
 class PowerResult(RIDDBResult):

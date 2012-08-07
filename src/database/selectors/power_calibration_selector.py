@@ -21,10 +21,10 @@ from traitsui.api import Item, HGroup, VGroup
 import os
 from numpy import linspace, polyval, polyfit, array
 #============= local library imports  ==========================
-from src.database.selectors.db_selector import DBSelector
+from src.database.core.db_selector import DBSelector
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.orms.power_calibration_orm import PowerCalibrationTable
-from src.database.selectors.base_db_result import DBResult
+from src.database.core.base_db_result import DBResult
 
 FITDEGREE = dict(Linear=1, Parabolic=2, Cubic=3)
 class PowerCalibrationResult(DBResult):

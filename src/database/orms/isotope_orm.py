@@ -24,8 +24,8 @@ from sqlalchemy import Column, Integer, String, \
 from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
-from base_orm import BaseMixin, NameMixin
-from src.database.orms.base_orm import PathMixin, ResultsMixin
+from src.database.core.base_orm import BaseMixin, NameMixin
+from src.database.core.base_orm import PathMixin, ResultsMixin
 
 Base = declarative_base()
 
