@@ -120,6 +120,12 @@ class StageManager(Manager):
         self.add_output('Welcome')
         self.stage_controller = self._stage_controller_factory()
 
+    def get_video_database(self):
+        from src.database.adapters.video_adapter import VideoAdapter
+        db = VideoAdapter(dbname=self.parent.dbname,
+                          kind='sqlite')
+        return db
+
     def kill(self):
         r = super(StageManager, self).kill()
 

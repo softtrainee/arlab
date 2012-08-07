@@ -34,7 +34,6 @@ from pyface.api import warning
 #from src.scripts.pyscripts.pyscript import PyScript, HTML_HELP
 from src.scripts.pyscripts.api import *
 from src.scripts.pyscripts.pyscript_runner import PyScriptRunner
-from src.envisage.core.action_helper import open_manager
 import time
 from pyface.message_dialog import information
 #from traitsui.wx.code_editor import SourceEditor
@@ -115,13 +114,13 @@ class PyScriptManager(Manager):
     scripts = Dict
 
     def _help_button_fired(self):
-
-        import webbrowser
+        pass
+#        import webbrowser
 #        self.s
-        print self.help_path
+#        print self.help_path
 
         #to open in browser needs file:// prepended
-        webbrowser.open('file://{}'.format(self.help_path))
+#        webbrowser.open('file://{}'.format(self.help_path))
 
 #        self.edit_traits(view='help_view')
 
@@ -137,7 +136,7 @@ class PyScriptManager(Manager):
             self.execute_script()
 
     def _check_save(self):
-        return self.test_script()
+        return self.test_script(report_success=False)
 
 #        if self.script_validator.errors:
 #            n = len(self.script_validator.errors)
@@ -214,7 +213,7 @@ class PyScriptManager(Manager):
             self._load_script(path)
             self.save_path = path
 
-    def test_script(self):
+    def test_script(self, report_success=True):
         self.execute_enabled = False
 #        if os.path.isfile(self.save_path):
 #            root, name = os.path.split(self.save_path)
@@ -232,10 +231,11 @@ class PyScriptManager(Manager):
         if err:
             warning(None, 'This is not a valid PY script\n{}'.format(err))
         else:
-            n = 'new script' if not self.save_path else os.path.basename(self.save_path)
-            msg = 'No syntax errors found in {}'.format(n)
-            information(None, msg)
-            self.info(msg)
+            if report_success:
+                n = 'new script' if not self.save_path else os.path.basename(self.save_path)
+                msg = 'No syntax errors found in {}'.format(n)
+                information(None, msg)
+                self.info(msg)
             self.execute_enabled = True
             return True
 

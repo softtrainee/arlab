@@ -291,12 +291,14 @@ class WatlowEZZone(CoreDevice):
                 setattr(self, attr, v)
 
     def get_temp_and_power(self, **kw):
-        if 'verbose' in kw and kw['verbose']:
-            self.info('Read temperature and heat power')
+#        if 'verbose' in kw and kw['verbose']:
+#            self.info('Read temperature and heat power')
 
-
+        kww = kw.copy()
+        kww['verbose'] = False
         if self.memory_blocks_enabled:
-            args = self.read(self._process_working_address, nregisters=self._process_memory_len, **kw)
+            args = self.read(self._process_working_address,
+                             nregisters=self._process_memory_len, **kww)
 
             if not args or not isinstance(args, (tuple, list)):
                 args = None, None
@@ -304,8 +306,8 @@ class WatlowEZZone(CoreDevice):
             t, p = args
 
         else:
-            t = self.read_process_value(1, **kw)
-            p = self.read_heat_power(**kw)
+            t = self.read_process_value(1, **kww)
+            p = self.read_heat_power(**kww)
 
         if self.simulation:
 #            t = 4 + self.closed_loop_setpoint

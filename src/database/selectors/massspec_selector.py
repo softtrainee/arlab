@@ -19,10 +19,10 @@ from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-from src.database.selectors.db_selector import DBSelector
+from src.database.core.db_selector import DBSelector
 
 from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
-from src.database.selectors.base_db_result import RIDDBResult
+from src.database.core.base_db_result import RIDDBResult
 
 class MassSpecDBResult(RIDDBResult):
     pass

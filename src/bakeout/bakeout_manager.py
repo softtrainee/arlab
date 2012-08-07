@@ -28,7 +28,7 @@ import time
 from threading import Thread, Lock
 from ConfigParser import NoSectionError
 #============= local library imports  ==========================
-from src.managers.manager import Manager, ManagerHandler
+from src.managers.manager import Manager, AppHandler
 from src.hardware.bakeout_controller import BakeoutController
 from src.hardware.core.communicators.rs485_scheduler import RS485Scheduler
 from src.paths import paths
@@ -37,7 +37,7 @@ from src.paths import paths
 
 from src.graph.time_series_graph import TimeSeriesStackedGraph, \
     TimeSeriesStreamStackedGraph
-from src.helpers.datetime_tools import generate_datestamp, get_datetime
+from src.helpers.datetime_tools import generate_datestamp
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.hardware.core.i_core_device import ICoreDevice
 from src.graph.graph import Graph
@@ -50,8 +50,8 @@ from src.helpers.archiver import Archiver
 from src.database.adapters.bakeout_adapter import BakeoutAdapter
 from src.database.data_warehouse import DataWarehouse
 from src.scripts.core.process_view import ProcessView
-from pyface.timer.do_later import do_later
-from pyface.wx.dialog import confirmation
+from pyface.timer.do_later import do_later, do_after
+#from pyface.wx.dialog import confirmation
 #from pyface.constant import NO, YES
 from src.scripts.pyscripts.pyscript_editor import PyScriptManager
 
@@ -289,7 +289,9 @@ class BakeoutManager(Manager):
             t.start()
 
     def opened(self):
-        self.reset_general_scan()
+        self.info('opened')
+        #delay 1s before starting scan
+        do_after(1000, self.reset_general_scan)
 
     def load(self, *args, **kw):
         app = self.application
@@ -540,7 +542,7 @@ class BakeoutManager(Manager):
         v = View(VGroup(HGroup(control_grp, HGroup(scan_grp,
                  pressure_grp, enabled_when='not alive')),
                  controller_grp, Item('graph', show_label=False,
-                 style='custom')), handler=ManagerHandler,
+                 style='custom')), handler=AppHandler,
                  resizable=True, title='Bakeout Manager', height=830)
         return v
 
@@ -796,7 +798,7 @@ class BakeoutManager(Manager):
                     dm.set_group_attribute(cgrp, attr, getattr(ci, attr))
 
                 if ci.script != '---':
-                    p = os.path.join(paths.scripts_dir, 'bakeoutscripts', ci.script)
+                    p = os.path.join(paths.scripts_dir, 'bakeout', ci.script)
                     with open(p, 'r') as f:
                         txt = f.read()
                 else:
@@ -1088,7 +1090,7 @@ class BakeoutManager(Manager):
 
     def _script_editor_default(self):
         kw = dict(kind='Bakeout',
-                  default_directory_name='bakeoutscripts')
+                  default_directory_name='bakeout')
         if self.script_style == 'pyscript':
             klass = PyScriptManager
             kw['execute_visible'] = False
@@ -1214,10 +1216,10 @@ class BakeoutManager(Manager):
 #        for ac in self._get_active_controllers():
 #            ac.end(error=None if success else 'Max duration exceeded max={:0.1f}, dur={:0.1f}'.format(self._max_duration,
 
-def launch_bakeout():
-    b = BakeoutManager()
-    b.load()
-    b.configure_traits()
+#def launch_bakeout():
+#    b = BakeoutManager()
+#    b.load()
+#    b.configure_traits()
 
 ##bm = BakeoutManager()
 #

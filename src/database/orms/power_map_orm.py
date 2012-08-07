@@ -21,7 +21,7 @@ from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 
 #=============local library imports  ==========================
-from base_orm import ResultsMixin, PathMixin
+from src.database.core.base_orm import ResultsMixin, PathMixin
 Base = declarative_base()
 
 

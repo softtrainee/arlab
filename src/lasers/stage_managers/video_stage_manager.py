@@ -231,18 +231,6 @@ class VideoStageManager(StageManager):
             self.info('Cleaning video directory')
             self.video_archiver.clean()
 
-    def get_video_database(self):
-#        from src.helpers.paths import co2laser_db
-
-        from src.database.adapters.video_adapter import VideoAdapter
-
-#        db = PowerAdapter(dbname='co2laserdb',
-#                                   password='Argon')
-        db = VideoAdapter(dbname=self.parent.dbname,
-                          kind='sqlite')
-
-        return db
-
     def _start_recording(self, path=None, basename='vm_recording',
                          use_dialog=False, user='remote',):
         self.info('start video recording ')

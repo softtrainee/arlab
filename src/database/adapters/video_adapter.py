@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.adapters.database_adapter import DatabaseAdapter, \
+from src.database.core.database_adapter import DatabaseAdapter, \
     PathDatabaseAdapter
 from src.database.orms.video_orm import VideoTable, VideoPathTable
 from src.database.selectors.video_selector import VideoSelector

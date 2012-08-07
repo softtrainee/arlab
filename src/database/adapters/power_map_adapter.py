@@ -21,7 +21,7 @@
 
 from src.database.selectors.power_map_selector import PowerMapSelector
 from src.database.orms.power_map_orm import PowerMapTable, PowerMapPathTable
-from src.database.adapters.database_adapter import DatabaseAdapter
+from src.database.core.database_adapter import DatabaseAdapter
 from src.paths import paths
 
 

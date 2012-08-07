@@ -20,11 +20,11 @@ from traitsui.api import VGroup, HGroup, Item
 #============= standard library imports ========================
 from numpy import array
 #============= local library imports  ==========================
-from src.database.selectors.db_selector import DBSelector
+from src.database.core.db_selector import DBSelector
 from src.database.orms.device_scan_orm import ScanTable
 from src.graph.time_series_graph import TimeSeriesGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.database.selectors.base_db_result import DBResult
+from src.database.core.base_db_result import DBResult
 
 
 class ScanResult(DBResult):

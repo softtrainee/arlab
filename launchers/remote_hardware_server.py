@@ -25,15 +25,15 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager
 
-    from src.managers.manager import ManagerHandler
-    class AppHandler(ManagerHandler):
-        def closed(self, info, isok):
-            info.object.kill()
-            info.object.close_displays()
-            return True
+#    from src.managers.manager import ManagerHandler
+#    class AppHandler(ManagerHandler):
+#        def closed(self, info, isok):
+#            info.object.kill()
+#            info.object.close_displays()
+#            return True
 
     logging_setup('server')
-    s = RemoteHardwareServerManager(handler_klass=AppHandler)
+    s = RemoteHardwareServerManager()#handler_klass=AppHandler)
     s.load()
     s.configure_traits()
 

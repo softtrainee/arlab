@@ -38,8 +38,7 @@ from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 
 #=============local library imports  ==========================
-from base_orm import PathMixin
-from src.database.orms.base_orm import RIDMixin
+from src.database.core.base_orm import PathMixin, RIDMixin
 Base = declarative_base()
 
 class VideoTable(Base, RIDMixin):
