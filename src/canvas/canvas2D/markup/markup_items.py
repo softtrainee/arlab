@@ -233,14 +233,17 @@ class RoughValve(BaseValve):
             w3 = w / 3.
 
             gc.set_line_width(2)
+            gc.begin_path()
             gc.move_to(x + w2, y + h)
             gc.line_to(x + w2, y + h - l)
             gc.draw_path()
 
+            gc.begin_path()
             gc.move_to(x, y)
             gc.line_to(x + w3, y + l)
             gc.draw_path()
 
+            gc.begin_path()
             gc.move_to(x + w, y)
             gc.line_to(x + w - w3, y + l)
             gc.draw_path()
@@ -326,11 +329,14 @@ class Line(MarkupItem):
         gc.set_line_width(self.width)
         x, y = self.start_point.get_xy()
         #x, y = self.canvas.map_screen([(self.start_point.x, self.start_point.y)])[0]
+        gc.begin_path()
         gc.move_to(x, y)
 
         x, y = self.end_point.get_xy()
         #x, y = self.canvas.map_screen([(self.end_point.x, self.end_point.y)])[0]
         gc.line_to(x, y)
+        gc.close_path()
+        gc.draw_path()
 
     def adjust(self, dx, dy):
         self.start_point.adjust(dx, dy)
@@ -374,6 +380,7 @@ class Triangle(MarkupItem):
 
                 if len(points) == 3:
                     gc.line_to(*func(points[0][:2]))
+                gc.close_path()
                 gc.stroke_path()
             else:
                 f = color_map_name_dict['hot'](DataRange1D(low_setting=0, high_setting=300))
@@ -381,13 +388,12 @@ class Triangle(MarkupItem):
                     x, y = func((x, y))
                     gc.set_fill_color(f.map_screen(array([v]))[0])
                     gc.arc(x - 2, y - 2, 2, 0, 360)
-                    gc.fill_path()
+                gc.fill_path()
 
-#            
-            if self.draw_text:
+#                        if self.draw_text:
                 gc.set_font_size(9)
                 for x, y, v in points:
-                    x, y = self.canvas.map_screen((x, y))
+                    x, y = func((x, y))
                     gc.set_text_position(x + 5, y + 5)
                     gc.show_text('{:0.3f}'.format(v))
 

@@ -417,7 +417,8 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
         state = item.state
         if isinstance(item, RoughValve) and not state:
-            result = confirmation(None, 'Are you sure you wait to open {}'.format(item.name))
+            event.handled = True
+            result = confirmation(None, 'Are you sure you want to open {}'.format(item.name))
             if result == 5104:
                 return
 
@@ -441,7 +442,6 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             item.state = state
 
         self.invalidate_and_redraw()
-
 #    def _draw_hook(self, gc, *args, **kw):
 #        '''
 #

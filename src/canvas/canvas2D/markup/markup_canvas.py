@@ -181,6 +181,8 @@ class MarkupCanvas(BaseDataCanvas):
         self._selection_hook(obj)
         self.invalidate_and_redraw()
 
+    def _selection_hook(self, obj):
+        pass
 
     def _menu_factory(self, event):
         import wx
