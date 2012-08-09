@@ -30,25 +30,26 @@ If a connection is made you will be prompted for a ``username`` and ``password``
 
 **Enter the username and password of the computer you are trying to connect to**.
  
-============== ========= ============== ==============
-Computer       Username  Address        short address
-============== ========= ============== ==============
-Pychron mini   pychron   129.138.12.153 pychron.local
-Obama iMac     obama     129.138.12.136 obama.local
-Jan iMac       jan       129.138.12.150 jan.local
-ArgonLab1 iMac argonlab1 129.138.12.138 argonlab1.local
-ArgonLab2 iMac argonlab2 129.138.12.143 argonlab1.local
-============== ========= ============== ==============
+============== ========= ============== =============== =====================
+Computer       Username  Address        short address   Task
+============== ========= ============== =============== =====================
+Pychron mini   pychron   129.138.12.153 pychron.local   Extraction Line, CO2
+Obama iMac     obama     129.138.12.136 obama.local     Mass Spec Master
+Jan iMac       jan       129.138.12.150 jan.local       Mass Spec Master
+Diode mini	   diode	 129.138.12.134 diode.local     Diode
+ArgonLab1 iMac argonlab1 129.138.12.138 argonlab1.local Lab computer
+ArgonLab2 iMac argonlab2 129.138.12.143 argonlab1.local Lab computer
+============== ========= ============== =============== ======================
 
 -------------
-WindowsArgon4039
+Windows
 -------------
-============= ======== ============== 
-Computer      Username Address        
-============= ======== ============== 
-ObamaArgus    Thermo   129.138.12.
-JanArgus      Thermo   129.138.12.
-============= ======== ============== 
+============= ======== ============== =============
+Computer      Username Address        Task
+============= ======== ============== =============
+ObamaArgus    Thermo   129.138.12.145 Qtegra
+JanArgus      Thermo   129.138.12.152 Qtegra
+============= ======== ============== =============
 
 To connect to a Windows computer using a remote desktop client such as `TightVNC <http://www.tightvnc.com>`_ 
 or `Chicken of the VNC <http://sourceforge.net/projects/cotvnc/>`_
