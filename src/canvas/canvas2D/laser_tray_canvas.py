@@ -447,7 +447,8 @@ class LaserTrayCanvas(MapCanvas):
                 gc.move_to(*p1)
                 gc.line_to(*p2)
                 gc.close_path()
-                gc.stroke_path()
+                gc.draw_path()
+#                gc.stroke_path()
 
         if kind in [1, 4, 5]:
             gc.set_fill_color((0, 0, 0, 0))
