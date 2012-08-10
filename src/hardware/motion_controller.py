@@ -109,7 +109,10 @@ class MotionController(CoreDevice):
 
         x = self.get_current_position('x')
         y = self.get_current_position('y')
+
         if not self._moving_():
+            x = self.get_current_position('x')
+            y = self.get_current_position('y')
             self.timer.Stop()
 
 #        self.info('setting x={:3f}, y={:3f}'.format(x, y))

@@ -583,9 +583,7 @@ class NewportAxis(Axis):
                     new += 1
 
                 cmd = self.parent._build_command(attr, xx=self.id, nn=new)
-                print 'telling ', cmd, name
                 self.parent.tell(cmd)
-
 
             except KeyError, e:
                 pass

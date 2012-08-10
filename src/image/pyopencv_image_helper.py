@@ -571,7 +571,7 @@ def get_frame_size(cap):
 def get_capture_device(deviceid):
 
     if not isinstance(deviceid, int):
-        deviceid = str(deviceid)
+        deviceid = int(deviceid)
 
     cap = cv.VideoCapture(deviceid)
     return cap

@@ -71,8 +71,8 @@ class LaserTrayCanvas(MapCanvas):
 
     use_zoom = False
 
-    beam_radius = 1
-    crosshairs_kind = Enum(1, 2, 3, 4)
+    beam_radius = Float(0)
+    crosshairs_kind = Enum(1)#Enum(1, 2, 3, 4, 5)
     crosshairs_color = Color('maroon')
     crosshairs_offset_color = Color('blue')
 
@@ -186,24 +186,6 @@ class LaserTrayCanvas(MapCanvas):
 #
 #        self._jog_moving = False
 
-    def normal_key_pressed(self, event):
-#        if not self._jog_moving:
-#            c = event.character
-#            if c in ['Left', 'Right', 'Up', 'Down']:
-#                    event.handled = True
-#                    controller = self.parent.stage_controller
-#                    controller.jog_move(c)
-#                    self._jog_moving = True
-
-
-        c = event.character
-        if c in ['Left', 'Right', 'Up', 'Down']:
-            event.handled = True
-            self.parent.stage_controller.relative_move(c)
-#            self.parent.canvas.set_stage_position(x, y)
-
-        super(LaserTrayCanvas, self).normal_key_pressed(event)
-
     def _get_current_position(self):
 
         md = self.map_data(self.cur_pos)
@@ -219,7 +201,7 @@ class LaserTrayCanvas(MapCanvas):
     @on_trait_change('parent:parent:beam')
     def set_beam_radius(self, obj, name, old, new):
         if new:
-            self.radius = new / 2.0
+            self.beam_radius = new / 2.0
             self.request_redraw()
 
     def valid_position(self, x, y):
@@ -372,10 +354,10 @@ class LaserTrayCanvas(MapCanvas):
             #laser indicator is always the center of the screen
             pos = (self.x + (self.x2 - self.x) / 2.0  , self.y + (self.y2 - self.y) / 2.0)
 
-            #add the offset
-            if self.crosshairs_offset is not (0, 0):
-                pos_off = pos[0] + self.crosshairs_offset[0], pos[1] + self.crosshairs_offset[1]
-                self._draw_crosshairs(gc, pos_off, color=self.crosshairs_offset_color, kind=5)
+#            #add the offset
+#            if self.crosshairs_offset is not (0, 0):
+#                pos_off = pos[0] + self.crosshairs_offset[0], pos[1] + self.crosshairs_offset[1]
+#                self._draw_crosshairs(gc, pos_off, color=self.crosshairs_offset_color, kind=5)
 
 
 #            self._draw_crosshairs(gc, pos, color = colors1f[self.crosshairs_color])
@@ -386,10 +368,42 @@ class LaserTrayCanvas(MapCanvas):
     def _draw_crosshairs(self, gc, xy, color=(1, 0, 0), kind=None):
         '''
         '''
-        gc.save_state()
-        mx = xy[0]
-        my = xy[1]
 
+        gc.save_state()
+        gc.set_stroke_color(color)
+        mx, my = xy
+        mx += 1
+        my += 1
+        r = self._get_wh(self.beam_radius, 0)[0]
+        b = 4
+
+        ls = self._line_segment
+
+        #draw center
+        gc.save_state()
+        gc.set_stroke_color((1, 1, 0, 1))
+
+        ls(gc, (mx - b, my), (mx + b, my))
+        ls(gc, (mx, my - b), (mx, my + b))
+
+        gc.restore_state()
+
+        #draw extensions
+        for p1, p2 in [((self.x, my), (mx - r, my)),
+                       ((mx + r, my), (self.x2, my)),
+
+                       ((mx, self.y), (mx, my - r)),
+                       ((mx, my + r), (mx, self.y2))
+                       ]:
+
+            ls(gc, p1, p2)
+
+        #draw circle
+        gc.set_fill_color((0, 0, 0, 0))
+        gc.arc(mx, my, r, 0, math.radians(360))
+        gc.draw_path()
+
+        gc.restore_state()
 #===============================================================================
 #             
 #           1 |
@@ -402,68 +416,68 @@ class LaserTrayCanvas(MapCanvas):
 #        kind 2 with out circle
 #        kind 3 +
 #===============================================================================
-        if kind is None:
-            kind = self.crosshairs_kind
-        radius = 0
-        if kind in [1, 5]:
-#            args = self.map_screen([(0, 0), (0, self.beam_radius + 0.5),
-#                                    (0, 0), (self.beam_radius + 0.5, 0)
-#                                    ])
-#            radius = abs(args[0][1] - args[1][1])
-            radius = self._get_wh(self.beam_radius, 0)[0]
 
-        elif kind == 2:
-            radius = 10
-        elif kind == 3:
-            radius = 0
-        elif kind == 4:
-            radius = self._get_wh(self.crosshairs_radius, 0)[0]
-        else:
-            return
-
-        gc.set_stroke_color(color)
-
-        if kind is not 5:
-            p00 = self.x, my
-            p01 = mx - radius, my
-
-            p10 = mx, my + radius
-            p11 = mx, self.y2
-
-            p20 = mx + radius, my
-            p21 = self.x2, my
-
-            p30 = mx, my - radius
-            p31 = mx, self.y
-
-            points = [(p00, p01), (p10, p11),
-                      (p20, p21), (p30, p31)]
-
-
-
-            for p1, p2 in points:
-
-                gc.begin_path()
-                gc.move_to(*p1)
-                gc.line_to(*p2)
-                gc.close_path()
-                gc.draw_path()
-#                gc.stroke_path()
-
-        if kind in [1, 4, 5]:
-            gc.set_fill_color((0, 0, 0, 0))
-            if kind == 5:
-                step = 20
-                for i in range(0, 360, step):
-                    gc.arc(mx, my, radius, math.radians(i),
-                                           math.radians(i + step / 2.0))
-                    gc.draw_path()
-
-            else:
-                gc.arc(mx, my, radius, 0, math.radians(360))
-            gc.draw_path()
-
-        gc.restore_state()
+#        if kind is None:
+#            kind = self.crosshairs_kind
+#
+#        beam_radius = 0
+#        if kind in [1, 5]:
+##            args = self.map_screen([(0, 0), (0, self.beam_radius + 0.5),
+##                                    (0, 0), (self.beam_radius + 0.5, 0)
+##                                    ])
+##            beam_radius = abs(args[0][1] - args[1][1])
+#            beam_radius = self._get_wh(self.beam_radius, 0)[0]
+#
+#        elif kind == 2:
+#            beam_radius = 10
+#        elif kind == 3:
+#            beam_radius = 0
+#        elif kind == 4:
+#            beam_radius = self._get_wh(self.crosshairs_radius, 0)[0]
+#        else:
+#            return
+#
+#        gc.set_stroke_color(color)
+#
+#        if kind is not 5:
+#            p00 = self.x, my
+#            p01 = mx - beam_radius, my
+#
+#            p10 = mx, my + beam_radius
+#            p11 = mx, self.y2
+#
+#            p20 = mx + beam_radius, my
+#            p21 = self.x2, my
+#
+#            p30 = mx, my - beam_radius
+#            p31 = mx, self.y
+#
+#            points = [(p00, p01), (p10, p11),
+#                      (p20, p21), (p30, p31)]
+#
+#            for p1, p2 in points:
+#
+#                gc.begin_path()
+#                gc.move_to(*p1)
+#                gc.line_to(*p2)
+#                gc.close_path()
+#                gc.draw_path()
+##                gc.stroke_path()
+#
+#        if kind in [1, 4, 5]:
+#            gc.set_fill_color((0, 0, 0, 0))
+#            if kind == 5:
+#                step = 20
+#                for i in range(0, 360, step):
+#                    gc.arc(mx, my, beam_radius, math.radians(i),
+#                                           math.radians(i + step / 2.0))
+#                    gc.draw_path()
+#
+#            else:
+#                gc.arc(mx, my, beam_radius, 0, math.radians(360))
+#            gc.draw_path()
+#
+#        gc.restore_state()
 
 
 

@@ -207,26 +207,28 @@ class BaseDataCanvas(DataView):
     def _vertical_line(self, gc, x, y1, y2, color=(0, 0, 0)):
         '''
         '''
-        gc.save_state()
-        gc.set_stroke_color(color)
-        gc.begin_path()
-        gc.move_to(x, y1)
-        gc.line_to(x, y2)
-        gc.close_path()
-        gc.draw_path()
-        gc.restore_state()
+
+        p1 = (x, y1)
+        p2 = (x, y2)
+        self.line_segment(gc, p1, p2, color)
 
     def _horizontal_line(self, gc, y, x1, x2, color=(0, 0, 0)):
         '''
 
         '''
+        p1 = (x1, y)
+        p2 = (x2, y)
+        self.line_segment(gc, p1, p2, color)
+
+    def _line_segment(self, gc, p1, p2, color=None):
         gc.save_state()
-        gc.set_stroke_color(color)
-        gc.begin_path()
-        gc.move_to(x1, y)
-        gc.line_to(x2, y)
-        gc.close_path()
+        if color is not None:
+            gc.set_stroke_color(color)
+
+        gc.move_to(*p1)
+        gc.line_to(*p2)
         gc.draw_path()
+
         gc.restore_state()
 
     def _draw_hook(self, gc, *args, **kw):

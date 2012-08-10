@@ -45,7 +45,7 @@ class Video(Image):
     _prev_frame = None
     _stop_recording_event = None
 
-    def open(self, user=None, identifier=0, force=False):
+    def open(self, user=None, identifier= -1, force=False):
         '''
 
         '''
