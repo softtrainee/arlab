@@ -243,16 +243,16 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         if key_direction == 'Left':
             ax_key = 'x'
-            direction = 1
+            direction = -1
         elif key_direction == 'Right':
             ax_key = 'x'
-            direction = -1
+            direction = 1
         elif key_direction == 'Down':
             ax_key = 'y'
-            direction = -1
+            direction = 1
         elif key_direction == 'Up':
             ax_key = 'y'
-            direction = 1
+            direction = -1
 
         ax = self.axes[ax_key]
 

@@ -95,7 +95,7 @@ class MarkupItem(HasTraits):
 
     def get_xy(self):
         x, y = self.x, self.y
-        offset = -0.5
+        offset = 1
         if self.space == 'data':
             if self.canvas is None:
                 print self

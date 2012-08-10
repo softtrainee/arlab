@@ -62,13 +62,13 @@ class MapCanvas(MarkupCanvas):
         self.bitmap_underlay.scale = self.bitmap_scale
         self.request_redraw()
 
-    def normal_key_pressed(self, event):
-        super(MapCanvas, self).normal_key_pressed(event)
-
-        if event.handled:
-            pass
-        elif self.current_hole is not None and event.character == 'Backspace':
-            self.calibration_item.tweak_dict.pop(self.current_hole)
+#    def normal_key_pressed(self, event):
+##        super(MapCanvas, self).normal_key_pressed(event)
+#
+#        if event.handled:
+#            pass
+#        elif self.current_hole is not None and event.character == 'Backspace':
+#            self.calibration_item.tweak_dict.pop(self.current_hole)
 
 
     def normal_left_down(self, event):
@@ -199,7 +199,7 @@ class MapCanvas(MarkupCanvas):
 
                     if hole.shape != gshape:
                         func = get_draw_func(hole.shape)
-                    self._draw_sample_hole(gc, x, y, hole.dimension,
+                    self._draw_sample_hole(gc, x + 1, y + 1, hole.dimension,
                                            func, tweak=tweak)
 
         gc.restore_state()

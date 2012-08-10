@@ -37,5 +37,21 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
                                                      canvas=self, space='screen',
                                                      fill=False
                                                      )
+    def normal_key_pressed(self, event):
+#        if not self._jog_moving:
+#            c = event.character
+#            if c in ['Left', 'Right', 'Up', 'Down']:
+#                    event.handled = True
+#                    controller = self.parent.stage_controller
+#                    controller.jog_move(c)
+#                    self._jog_moving = True
 
+
+        c = event.character
+        if c in ['Left', 'Right', 'Up', 'Down']:
+            event.handled = True
+            self.parent.stage_controller.relative_move(c)
+#            self.parent.canvas.set_stage_position(x, y)
+
+#        super(LaserTrayCanvas, self).normal_key_pressed(event)
 #============= EOF ====================================
