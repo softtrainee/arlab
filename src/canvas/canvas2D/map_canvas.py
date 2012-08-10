@@ -249,17 +249,14 @@ class MapCanvas(MarkupCanvas):
             gc.translate_ctm(*self._get_wh(*tweak))
 
         gc.set_stroke_color((1, 1, 0))
-        gc.begin_path()
+
         gc.move_to(x - w, y)
         gc.line_to(x + w, y)
-        gc.close_path()
-        gc.stroke_path()
+        gc.draw_path()
 
-        gc.begin_path()
         gc.move_to(x, y - h)
         gc.line_to(x, y + h)
-        gc.close_path()
-        gc.stroke_path()
+        gc.draw_path()
 
         gc.restore_state()
 
@@ -267,22 +264,19 @@ class MapCanvas(MarkupCanvas):
         '''
 
         '''
-        gc.begin_path()
-
         pts = self.map_screen([(diam / 2.0, 0), (0, 0)])
         rad = pts[0][0] - pts[1][0]
 
         gc.arc(x, y, rad, 0, 360)
-        gc.stroke_path()
+        gc.draw_path()
 
     def _draw_square(self, gc, x, y, size):
         '''
  
         '''
-        gc.begin_path()
         w, h = self._get_wh(size, size)
         gc.rect(x - w / 2.0, y - h / 2.0, w, h)
-        gc.stroke_path()
+        gc.draw_path()
 
 
 #============= EOF =============================================

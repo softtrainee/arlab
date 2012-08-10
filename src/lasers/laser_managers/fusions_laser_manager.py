@@ -360,12 +360,12 @@ class FusionsLaserManager(LaserManager):
 
     def move_to_hole(self, holenumber):
         if self.stage_manager is not None:
-            #if not self.stage_manager.opened:
+            if not self.stage_manager.opened:
                 #do_later opens the stage manager from the main thread
-            do_later(self.show_stage_manager)
+                do_later(self.show_stage_manager)
 
-            #give the stage manager some time to open
-            time.sleep(1)
+                #give the stage manager some time to open
+                time.sleep(1)
 
             self.stage_manager.move_to_hole(holenumber)
 

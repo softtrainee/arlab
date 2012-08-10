@@ -148,13 +148,13 @@ class KerrMotor(KerrDevice):
     def _home_motor(self, *args, **kw):
         '''
         '''
-        progress=self.progress
+        progress = self.progress
         if progress is not None:
-            progress=kw['progress']
+            progress = kw['progress']
             progress.increase_max()
             progress.change_message('Homing {}'.format(self.name))
             progress.increment()
-            
+
         addr = self.address
 
         cmd = '94'
@@ -187,7 +187,7 @@ class KerrMotor(KerrDevice):
         #move to the home position
         self._set_data_position(self.nominal_position)
         self.block(4, progress=progress)
-        
+
     def block(self, n=3, tolerance=1, progress=None):
         '''
         '''

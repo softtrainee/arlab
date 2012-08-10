@@ -233,17 +233,14 @@ class RoughValve(BaseValve):
             w3 = w / 3.
 
             gc.set_line_width(2)
-            gc.begin_path()
             gc.move_to(x + w2, y + h)
             gc.line_to(x + w2, y + h - l)
             gc.draw_path()
 
-            gc.begin_path()
             gc.move_to(x, y)
             gc.line_to(x + w3, y + l)
             gc.draw_path()
 
-            gc.begin_path()
             gc.move_to(x + w, y)
             gc.line_to(x + w - w3, y + l)
             gc.draw_path()
@@ -328,13 +325,10 @@ class Line(MarkupItem):
 #        gc.begin_path()
         gc.set_line_width(self.width)
         x, y = self.start_point.get_xy()
-        #x, y = self.canvas.map_screen([(self.start_point.x, self.start_point.y)])[0]
-        gc.begin_path()
-        gc.move_to(x, y)
+        x1, y1 = self.end_point.get_xy()
 
-        x, y = self.end_point.get_xy()
-        #x, y = self.canvas.map_screen([(self.end_point.x, self.end_point.y)])[0]
-        gc.line_to(x, y)
+        gc.move_to(x, y)
+        gc.line_to(x1, y1)
         gc.close_path()
         gc.draw_path()
 
