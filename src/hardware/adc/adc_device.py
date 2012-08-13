@@ -23,6 +23,7 @@ from src.hardware.core.abstract_device import AbstractDevice
 
 class ADCDevice(AbstractDevice):
 #    scan_func = 'read_voltage'
+    _rvoltage=0
     def load_additional_args(self, config):
         '''
 
@@ -45,7 +46,7 @@ class ADCDevice(AbstractDevice):
         v = 1
         if self._cdevice is not None:
             v = self._cdevice.read_device(**kw)
-
+            self._rvoltage=v
         return v
 
 

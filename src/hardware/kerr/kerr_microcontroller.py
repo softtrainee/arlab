@@ -41,5 +41,5 @@ class KerrMicrocontroller(KerrDevice):
                   (addr, '2103FF', 50, 'setting module 3 address'),
 
                   ]
-        self._execute_hex_commands(commands)
+        self._execute_hex_commands(commands, tell=True)
         return True

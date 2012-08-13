@@ -229,7 +229,7 @@ class PowerCalibrationManager(Manager):
         pstep = params.pstep
         pstart = params.pstart
         sample_delay = params.sample_delay
-        nintegrations = params.nintegrations
+#        nintegrations = params.nintegrations
 
         if self.parent is None:
             sample_delay /= 10.
@@ -238,7 +238,7 @@ class PowerCalibrationManager(Manager):
         sign, dev = self._set_graph_limits(pstart, pstop)
 
         apm = self.power_meter
-        apm = DummyAPM()
+#        apm = DummyAPM()
 #        if self.parent is not None:
 #            apm = self.parent.get_device('analog_power_meter')
 #        else:
@@ -263,7 +263,7 @@ class PowerCalibrationManager(Manager):
 
             rp = 0
             if apm is not None:
-                data = self._get_iteration_data(pi)
+                pi,rp = self._get_iteration_data(pi)
 #                    for _ in range(nintegrations):
 #        #                if not self._alive:
 #        #                    break
@@ -285,9 +285,9 @@ class PowerCalibrationManager(Manager):
                     break
 
 #                graph.add_datum(data, do_after=1)
-                self._graph_data(data)
+                self._graph_data((pi,rp))
 
-                callback(pi, rp / float(nintegrations), *args)
+                callback(pi, rp, *args)
 
 
             #check for detector saturation
@@ -325,7 +325,6 @@ class PowerCalibrationManager(Manager):
         integration_period = params.integration_period
         rp = 0
         apm = self.power_meter
-        apm = DummyAPM()
         if apm is not None:
             for _ in range(nintegrations):
                 if self._stop_signal.isSet():
@@ -333,7 +332,7 @@ class PowerCalibrationManager(Manager):
                 rp += apm.read_power_meter(pi)
                 time.sleep(integration_period)
 
-        return (pi, rp)
+        return (pi, rp/float(nintegrations))
 
     def _get_parameters_path(self, name):
         p = os.path.join(paths.hidden_dir, 'power_calibration_{}'.format(name))
@@ -357,8 +356,9 @@ class PowerCalibrationManager(Manager):
     def _apply_calibration(self):
 
         if self.confirmation_dialog('Apply Calibration'):
+            self._calculate_calibration()
 #            pc = PowerCalibrationObject()
-            pc = MeterCalibration(self._calculate_calibration())
+            pc = MeterCalibration(self._coefficients)
             self._dump_calibration(pc)
 
 
@@ -377,7 +377,10 @@ class PowerCalibrationManager(Manager):
         if self.parent is not None:
             lb = self.parent.logic_board
             config = lb.get_configuration()
-            config.set('PowerOutput',
+            section='PowerOutput'
+            if not config.has_section(section):
+                config.add_section(section)
+            config.set(section,
                        'coefficients',
                        ','.join(map('{:0.3f}'.format, pc.coefficients))
                        )
