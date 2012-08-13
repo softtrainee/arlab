@@ -15,7 +15,8 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import  Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, Enum
+from traits.api import  Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, \
+    Enum, Int
 from traitsui.api import View, Item
 from chaco.api import AbstractOverlay
 
@@ -72,7 +73,7 @@ class LaserTrayCanvas(MapCanvas):
     use_zoom = False
 
     beam_radius = Float(0)
-    crosshairs_kind = Enum(1)#Enum(1, 2, 3, 4, 5)
+    crosshairs_kind = Int(1)#Enum(1)#Enum(1, 2, 3, 4, 5)
     crosshairs_color = Color('maroon')
     crosshairs_offset_color = Color('blue')
 

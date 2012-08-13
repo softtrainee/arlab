@@ -53,14 +53,14 @@ class KerrDevice(ConfigLoadable):
 #    def load_additional_args(self, config):
 #        pass
 
-    def _execute_hex_commands(self, commands):
+    def _execute_hex_commands(self, commands, **kw):
         '''
         '''
         #commands list of tuples (addr,hex-command,delay,description)
         for cmd in commands:
-            self._execute_hex_command(cmd)
+            self._execute_hex_command(cmd,**kw)
 
-    def _execute_hex_command(self, cmd, **kw):
+    def _execute_hex_command(self, cmd,tell=False, **kw):
         '''
         '''
         addr, cmd, delay, desc = cmd
@@ -70,8 +70,9 @@ class KerrDevice(ConfigLoadable):
         if cmd is not None:
             if desc:
                 self.info(desc)
-
-            r = self.ask(cmd, is_hex=True, delay=delay, **kw)
+            func=self.ask if not tell else self.tell
+            r=func(cmd, is_hex=True, delay=delay, **kw)
+#            r = self.ask(cmd, is_hex=True, delay=delay, **kw)
 
         return r
 

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import Float, Enum
+from traits.api import Float, Enum, Int
 from traitsui.api import View, Item
 #=============standard library imports ========================
 
@@ -26,17 +26,20 @@ class AnalogPowerMeter(ADCDevice):
     '''
     '''
     watt_range = Enum(0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000)
-    voltage_range = Float(5.0)
+    max_volts_out=Int(2)
+    _saturation_count=0
+    
     def load_additional_args(self, config):
         super(AnalogPowerMeter, self).load_additional_args(config)
-        self.set_attribute(config, 'voltage_range', 'General', 'voltage', cast='float')
-        self.set_attribute(config, 'voltage_scalar', 'General', 'scalar', cast='float')
+        #self.set_attribute(config, 'voltage_range', 'General', 'voltage', cast='float')
+        #self.set_attribute(config, 'voltage_scalar', 'General', 'scalar', cast='float')
+        self.set_attribute(config, 'watt_range', 'General', 'range', cast='float')
 
         return True
 
     def traits_view(self):
         v = View(Item('watt_range', label='Watt Range'),
-                 Item('voltage_range', label='ADC range'),
+                 Item('max_volts_out', label='ADC range'),
                  buttons=['OK', 'Cancel']
                  )
         return v
@@ -56,8 +59,14 @@ class AnalogPowerMeter(ADCDevice):
         v = self.read_voltage(**kw)
         if v is None:
             v = 0
+        return v * self.watt_range / self.max_volts_out
+    
+    def check_saturation(self,n=3):
+        if self._rvoltage>(self.max_volts_out+0.1):
+            self._saturation_count+=1
+        else:
+            self._saturation_count=0
 
-        return v * self.watt_range / self.voltage_range
-
-
+        if self._saturation_count>=n:
+            return True
 #============= EOF ==============================================
