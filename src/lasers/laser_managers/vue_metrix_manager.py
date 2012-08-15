@@ -68,7 +68,7 @@ class VueMetrixManager(Manager):
     def _control_default(self):
         '''
         '''
-        b = VueDiodeControlModule(name='diodecontrolmodule',
+        b = VueDiodeControlModule(name='vue_metrix_controlmodule',
                                       configuration_dir_name='diode'
                                       )
         return b
