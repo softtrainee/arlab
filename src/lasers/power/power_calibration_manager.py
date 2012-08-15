@@ -263,7 +263,7 @@ class PowerCalibrationManager(Manager):
 
             rp = 0
             if apm is not None:
-                pi,rp = self._get_iteration_data(pi)
+                pi, rp = self._get_iteration_data(pi)
 #                    for _ in range(nintegrations):
 #        #                if not self._alive:
 #        #                    break
@@ -285,7 +285,7 @@ class PowerCalibrationManager(Manager):
                     break
 
 #                graph.add_datum(data, do_after=1)
-                self._graph_data((pi,rp))
+                self._graph_data((pi, rp))
 
                 callback(pi, rp, *args)
 
@@ -332,7 +332,7 @@ class PowerCalibrationManager(Manager):
                 rp += apm.read_power_meter(pi)
                 time.sleep(integration_period)
 
-        return (pi, rp/float(nintegrations))
+        return (pi, rp / float(nintegrations))
 
     def _get_parameters_path(self, name):
         p = os.path.join(paths.hidden_dir, 'power_calibration_{}'.format(name))
@@ -377,7 +377,7 @@ class PowerCalibrationManager(Manager):
         if self.parent is not None:
             lb = self.parent.logic_board
             config = lb.get_configuration()
-            section='PowerOutput'
+            section = 'PowerOutput'
             if not config.has_section(section):
                 config.add_section(section)
             config.set(section,

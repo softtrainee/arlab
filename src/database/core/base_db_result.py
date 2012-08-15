@@ -77,6 +77,8 @@ class DBResult(BaseDBResult):
 
             self.title = '{} {}'.format(self.title_str, self.rid)
             self._load_hook(dbr)
+        elif self.directory is not None and self.filename is not None:
+            self._load_hook('')
 
     def _load_hook(self, dbr):
         pass

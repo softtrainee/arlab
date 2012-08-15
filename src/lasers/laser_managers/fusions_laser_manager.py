@@ -257,7 +257,6 @@ class FusionsLaserManager(LaserManager):
 
     def load_lens_configurations(self):
         for config_name in ['gaussian', 'homogenizer']:
-            self.config_path = None
             config = self.get_configuration(name=config_name)
             if config:
                 self.info('loading lens configuration {}'.format(config_name))

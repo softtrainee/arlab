@@ -213,7 +213,8 @@ def contour(src):
     '''
     '''
 #    c, h = cv.findContours(src.clone(), cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE)
-    c, h = cv.findContours(src.clone(), cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE)
+#    c, h = cv.findContours(src.clone(), cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE)
+    c, h = cv.findContours(src.clone(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_NONE)
 
     return c, h
 
@@ -382,7 +383,9 @@ def find_lines(src, t1, minlen=100):
     return dst, lines
 
 def get_polygons(contours, hierarchy,
-                 convextest=False, hole=True, nsides=5,
+                 convextest=False,
+#                 hole=False, 
+                 nsides=5,
                  min_area=100,
                  **kw):
     '''
@@ -399,32 +402,30 @@ def get_polygons(contours, hierarchy,
         result = cv.approxPolyDP_int(cont, m * 0.01, True)
         res_mat = cv.asMat(result)
         area = abs(cv.contourArea(res_mat))
+#        print 'areas', area
+#        if hole:
+#            hole_flag = hi[3] != -1
+#        else:
+#            hole_flag = True
 
-        if hole:
-            hole_flag = hi[3] != -1
-        else:
-            hole_flag = True
-
-        if not hole_flag:
-            continue
+#        if area > min_area:
+#            print 'area', area,
+#            print 'hole', hole_flag
+#            print 'hi', hi
+#            print 'sides', len(result),
+#            print 'convext', cv.isContourConvex(res_mat),
+#            ch = cv.asMat(cv.convexHull_int(cont))
+#            ch = cv.asMat(ch.ndarray.flatten())
+#            seq = cv.convexityDefects(cont, ch, cv.createMemStorage(0))
+#            
+#        if not hole_flag:
+#            continue
 
         if not len(result) > nsides:
             continue
 
         if not area > min_area:
             continue
-#        print cv.isContourConvex(res_mat)
-#        print result
-#            print 'checking',len(result), area,area>min_area, area<max_area,cv.isContourConvex(res_mat) == bool(convextest), hole_flag 
-#            print cv.isContourConvex(res_mat), convextest
-#        if (len(result) > nsides
-#            and area > min_area
-##            and area < max_area
-#            #and area < 3e6
-##            and cv.isContourConvex(res_mat) == bool(convextest)
-#            and hole_flag
-#                ):
-
 
         if convextest and not cv.isContourConvex(res_mat):
             continue

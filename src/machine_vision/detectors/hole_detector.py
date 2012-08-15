@@ -27,7 +27,7 @@ import os
 from src.image.cvwrapper import draw_polygons, crop, centroid, \
     new_point, contour, get_polygons, \
     draw_rectangle, draw_lines, colorspace, draw_circle, get_size, \
-    asMat, sharpen_src, smooth_src
+    asMat, sharpen_src, smooth_src, draw_contour_list
 
 from src.paths import paths
 from src.helpers.filetools import unique_path
@@ -58,6 +58,7 @@ class HoleDetector(Detector):
 
     save_positioning_error = Bool(False)
     use_histogram = Bool(True)
+    display_processed_image = Bool(True)
 #    use_smoothing = Bool(True)
     use_crop = Bool(True)
 #    use_dilation = Bool(False)
@@ -141,15 +142,20 @@ class HoleDetector(Detector):
             src = asMat(asarray(src, 'uint8'))
         except ValueError:
             pass
-        if not 'hole' in kw:
-            kw['hole'] = False
+
+#        if not 'hole' in kw:
+#            kw['hole'] = False
+        if self.display_processed_image:
+            self.target_image.load(colorspace(src))
 
         t = self._locate_targets(src, **kw)
+#        print 't', t
 
-#        contours, hieararchy = contour(src)
+#        if t:
+#            self._draw_markup(self.target_image.get_frame(0), t)
 
-#        self.target_image.load(colorspace(src))
-#        self._draw_markup(self.target_image.get_frame(0), t)
+#        import time
+#        time.sleep(1)
 #        draw_contour_list(self.target_image.get_frame(0), contours, hieararchy)
 
 #        self.permutations.append((t, kw))
@@ -174,14 +180,14 @@ class HoleDetector(Detector):
     def _locate_targets(self, src, **kw):
 #        dsrc = self.working_image.frames[0]
         contours, hieararchy = contour(src)
-#        draw_contour_list(src, contours, hieararchy)
+        draw_contour_list(self.target_image.get_frame(0), contours, hieararchy)
+
 #        do polygon approximation
         polygons, brs, areas = get_polygons(contours, hieararchy,
 #                                            convextest=False,
 #                                            hole=False,
                                             **kw
                                             )
-
         if not polygons:
             return
 
@@ -241,7 +247,7 @@ class HoleDetector(Detector):
             #debugging 
             pass
 
-        self._draw_markup(self.target_image.get_frame(0), targets, dev=(dx, dy))
+#        self._draw_markup(self.target_image.get_frame(0), targets, dev=(dx, dy))
 
 #        self.parent._nominal_position = cx, cy
 #        self.parent._corrected_position = nx, ny
@@ -251,11 +257,10 @@ class HoleDetector(Detector):
         args = cx, cy, nx, ny, dxmm, dymm, round(dx), round(dy)#int(dx), int(dy)
 
         self.info('current pos: {:0.3f},{:0.3f} calculated pos: {:0.3f}, {:0.3f} dev: {:0.3f},{:0.3f} ({:n},{:n})'.format(*args))
-
         if self.save_positioning_error and holenum:
             self._save_(holenum, cx, cy, nx, ny, dxmm, dymm)
 
-        return nx, ny
+        return dx, dy
 
     def _save_(self, holenum, cx, cy, nx, ny, dxmm, dymm):
         path, _ = unique_path(paths.positioning_error_dir,
@@ -273,8 +278,8 @@ class HoleDetector(Detector):
     def _draw_center_indicator(self, src, color=(0, 0, 255), size=10):
         self._draw_indicator(src, new_point(*self._get_true_xy(src)),
                              shape='crosshairs',
-                             color=(0, 0, 255),
-                             size=10)
+                             color=color,
+                             size=size)
 
     def _draw_result(self, src, result, with_br=False, thickness=1, color=(255, 0, 0)):
         self._draw_indicator(src, new_point(*result.centroid_value), shape='crosshairs')
@@ -300,7 +305,6 @@ class HoleDetector(Detector):
 
         #draw the center of the image
         true_cx, true_cy = self._get_true_xy(src)
-        self._draw_center_indicator(src)
 
 #        #draw the calculated center
         if dev:

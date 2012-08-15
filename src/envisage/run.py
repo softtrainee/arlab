@@ -28,14 +28,18 @@ from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 #from src.helpers.paths import plugins_dir
 
 
-from src.helpers.logger_setup import add_console
+#from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay
 from globals import globalv
+import logging
+from src.helpers.logger_setup import new_logger
 
 if globalv.open_logger_on_launch:
     do_later(gLoggerDisplay.edit_traits)
 
-logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
+logger = new_logger('launcher')
+#logger = logging.getLogger('launcher')
+#logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
 
 PACKAGE_DICT = dict(
                    DatabasePlugin='src.database.plugins.database_plugin',
@@ -173,10 +177,9 @@ def launch():
         def start_test():
             #run the test suite
             from src.testing.testrunner import run_tests
-            run_tests(logger)
+#            run_tests(logger)
 
         app.on_trait_change(start_test, 'started')
-
 
     try:
         app.run()

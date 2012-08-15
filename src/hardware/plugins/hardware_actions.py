@@ -85,4 +85,13 @@ class RegisterDeviceAction(Action):
                      )
 
 
+class OpenFlagManagerAction(Action):
+    def perform(self, event):
+        fm = event.window.application.get_service('src.managers.flag_manager.FlagManager')
+        open_manager(self.window.application,
+                     fm
+                     )
+
+
+
 #============= EOF ====================================
