@@ -146,4 +146,11 @@ class PowerCalibrationSelector(DBSelector):
     def _get_selector_records(self, **kw):
         return self._db.get_calibration_records(**kw)
 
+if __name__ == '__main__':
+    p = PowerCalibrationResult(directory='/Users/ross/Sandbox',
+                               filename='power_calibration004.hdf5')
+    p.load()
+    p.initialize()
+    p.load_graph()
+    p.configure_traits()
 #============= EOF =============================================

@@ -39,6 +39,9 @@ class HardwareActionSet(WorkbenchActionSet):
                Action(name='Device Scans...',
                       path='MenuBar/Results',
                       class_name='{}:OpenDeviceScansAction'.format(p)),
-
+               Action(name='Flag Manager',
+                      path='MenuBar/Tools',
+                      class_name='{}:OpenFlagManagerAction'.format(p)
+                      )
               ]
 #============= EOF ====================================

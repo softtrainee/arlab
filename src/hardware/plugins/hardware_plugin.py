@@ -24,6 +24,7 @@ from src.remote_hardware.remote_hardware_manager import RemoteHardwareManager
 from apptools.preferences.preference_binding import bind_preference
 from src.managers.hardware_manager import HardwareManager
 from src.hardware.core.i_core_device import ICoreDevice
+from src.managers.flag_manager import FlagManager
 #from src.managers.system_lock_manager import SystemLockManager
 
 class Preference(HasTraits):
@@ -59,11 +60,15 @@ class HardwarePlugin(CorePlugin):
                           protocol=RemoteHardwareManager,
                           factory=self._remote_hardware_manager_factory)
 
-#        so2 = self.service_offer_factory(
-#                          protocol=SystemLockManager,
-#                          factory=self._system_lock_manager_factory
-#                          )
-        return [so, so1]
+        so2 = self.service_offer_factory(
+                          protocol=FlagManager,
+                          factory=self._flag_manager_factory
+                          )
+        return [so, so1, so2]
+
+#@todo: add flag manager 
+    def _flag_manager_factory(self):
+        return FlagManager(application=self.application)
 
     def _hardware_manager_factory(self):
         return HardwareManager(application=self.application)

@@ -106,7 +106,8 @@ class Video(Image):
             with self._lock:
                 if globalv.test:
                     if self.source_frame is None:
-                        p = path.join(paths.test_dir, 'pos_err_test.jpg')
+                        p = '/Users/ross/Sandbox/pos_err/pos_err_3_0-002.jpg'
+#                        p = path.join(paths.test_dir, 'pos_err_test.jpg')
                         self.load(p)
                     f = self.source_frame
                 else:

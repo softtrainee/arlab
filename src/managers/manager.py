@@ -258,12 +258,21 @@ class Manager(Viewable, RPCable):
 #===============================================================================
     def add_flag(self, f):
         from src.hardware.flag import Flag
-
-        self.flags.append(Flag(f))
+        ff = Flag(f)
+        self.flags.append(ff)
+        if self.application:
+            fm = self.application.get_service('src.managers.flag__manager.FlagManager')
+            if fm is not None:
+                fm.add_flag(ff)
 
     def add_timed_flag(self, f):
         from src.hardware.flag import TimedFlag
-        self.flags.append(TimedFlag(f))
+        ff = TimedFlag(f)
+        self.flags.append(ff)
+        if self.application:
+            fm = self.application.get_service('src.managers.flag__manager.FlagManager')
+            if fm is not None:
+                fm.add_timed_flag(ff)
 
     def get_mass_spec_param(self, name):
         from src.paths import paths

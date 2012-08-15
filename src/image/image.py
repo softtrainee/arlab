@@ -23,6 +23,7 @@ from traits.api import HasTraits, Any, List, Int, Bool, on_trait_change
 import wx
 from numpy import asarray, flipud, ndarray, hstack, array, ones, vstack, zeros, \
     percentile
+from globals import globalv
 #=============local library imports  ==========================
 try:
     from cvwrapper import swapRB, grayspace, cvFlip, \
@@ -169,13 +170,14 @@ class Image(HasTraits):
             if size:
                 frame = resize(frame, *size)
 
-            if vflip:
-                if hflip:
-                    cvFlip(frame, -1)
-                else:
-                    cvFlip(frame, 0)
-            elif hflip:
-                cvFlip(frame, 1)
+            if not globalv.test:
+                if vflip:
+                    if hflip:
+                        cvFlip(frame, -1)
+                    else:
+                        cvFlip(frame, 0)
+                elif hflip:
+                    cvFlip(frame, 1)
 
             self._frame = frame
             return frame

@@ -20,8 +20,9 @@ import os
 from unittest import TestCase
 
 #============= local library imports  ==========================
-from src.lasers.power.power_calibration_manager import PowerCalibrationObject
+#from src.lasers.power.power_calibration_manager import PowerCalibrationObject
 from src.paths import paths
+from src.hardware.meter_calibration import MeterCalibration
 
 
 class LaserTests(TestCase):
@@ -97,14 +98,14 @@ class LaserTests(TestCase):
     def testCB_LoadPowerCalibration(self):
         man = self._laser
         pc = man.load_power_calibration(calibration_path=self._power_calibration_path)
-        self.assertIsInstance(pc, PowerCalibrationObject)
+        self.assertIsInstance(pc, MeterCalibration)
         self.assertListEqual(pc.coefficients, self._power_calibration_coeffs)
 
     def testCD_LoadPowerCalibrationCorrupted(self):
         man = self._laser
         p = '{}_corrupt'.format(self._power_calibration_path)
         pc = man.load_power_calibration(calibration_path=p)
-        self.assertIsInstance(pc, PowerCalibrationObject)
+        self.assertIsInstance(pc, MeterCalibration)
         self.assertListEqual(pc.coefficients, [1, 1])
 
 #===============================================================================

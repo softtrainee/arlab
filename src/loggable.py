@@ -24,9 +24,10 @@ from pyface.wx.dialog import confirmation
 #============= standard library imports ========================
 import wx
 #============= local library imports  ==========================
-from src.helpers.logger_setup import add_console
+#from src.helpers.logger_setup import add_console
 from globals import globalv
 from src.helpers.color_generators import colorname_generator
+from src.helpers.logger_setup import new_logger
 
 color_name_gen = colorname_generator()
 
@@ -58,7 +59,7 @@ class Loggable(HasTraits):
         else:
             name = self.__class__.__name__
 
-        self.logger = add_console(name=name)
+        self.logger = new_logger(name)
         c = color_name_gen.next()
         if c in [ 'gray', 'silver', 'greenyellow']:
             c = color_name_gen.next()

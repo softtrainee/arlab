@@ -26,9 +26,9 @@ class AnalogPowerMeter(ADCDevice):
     '''
     '''
     watt_range = Enum(0.03, 0.1, 0.3, 1, 3, 10, 30, 100, 300, 1000, 3000, 10000)
-    max_volts_out=Int(2)
-    _saturation_count=0
-    
+    max_volts_out = Int(2)
+    _saturation_count = 0
+
     def load_additional_args(self, config):
         super(AnalogPowerMeter, self).load_additional_args(config)
         #self.set_attribute(config, 'voltage_range', 'General', 'voltage', cast='float')
@@ -60,13 +60,13 @@ class AnalogPowerMeter(ADCDevice):
         if v is None:
             v = 0
         return v * self.watt_range / self.max_volts_out
-    
-    def check_saturation(self,n=3):
-        if self._rvoltage>(self.max_volts_out+0.1):
-            self._saturation_count+=1
-        else:
-            self._saturation_count=0
 
-        if self._saturation_count>=n:
+    def check_saturation(self, n=3):
+        if self._rvoltage > (self.max_volts_out + 0.1):
+            self._saturation_count += 1
+        else:
+            self._saturation_count = 0
+
+        if self._saturation_count >= n:
             return True
 #============= EOF ==============================================

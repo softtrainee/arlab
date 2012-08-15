@@ -133,6 +133,8 @@ class H5DataManager(DataManager):
             self._frame = openFile(path, 'r')
             return True
         except Exception:
+            import traceback
+            traceback.print_exc()
             return False
 
     def close(self):

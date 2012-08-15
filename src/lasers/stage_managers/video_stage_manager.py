@@ -268,8 +268,8 @@ class VideoStageManager(StageManager):
         if correct and self.use_autocenter:
             sm = self._stage_map
 #            time.sleep(0.75)
-            self.video.open(user='autocenter')
-            pos, interp = self._autocenter(holenum=holenum, ntries=2)
+#            self.video.open(user='autocenter')
+            pos, interp = self._autocenter(holenum=holenum, ntries=1)
             if pos:
                 #add an adjustment value to the stage map
                 sm.set_hole_correction(holenum, *pos)
@@ -282,8 +282,7 @@ class VideoStageManager(StageManager):
             func = getattr(self.visualizer, 'record_{}'.format(f))
             func(holenum, *pos)
 
-
-            self.video.close(user='autocenter')
+#            self.video.close(user='autocenter')
 
     def _autocenter(self, holenum=None, ntries=1):
         #use machine vision to calculate positioning error
@@ -299,12 +298,12 @@ class VideoStageManager(StageManager):
                         )
 
                 if rpos:
-                    if rpos:
+#                    if rpos:
     #                    rpos = newpos
-                        self.linear_move(*rpos, block=True,
-                                         use_calibration=False,
-                                         update_hole=False
-                                         )
+                    self.linear_move(*rpos, block=True,
+                                     use_calibration=False,
+                                     update_hole=False
+                                     )
                     time.sleep(0.25)
                 else:
                     self.snapshot(auto=True,
@@ -322,7 +321,6 @@ class VideoStageManager(StageManager):
                     s = 'None'
 
                 self.info('interpolated position= {}'.format(s))
-
 
         return rpos, interp
 

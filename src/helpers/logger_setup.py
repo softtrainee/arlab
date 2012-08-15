@@ -22,38 +22,37 @@
 #=============standard library imports ========================
 import os
 import sys
-import logging
+import logging.handlers
 #=============local library imports  =========================
 from src.paths import paths
 from filetools import unique_path
-from globals import globalv
-from pyface.timer.do_later import do_later
+#from globals import globalv
+#from pyface.timer.do_later import do_later
 import shutil
 
-FORMAT = '%(name)-12s: %(asctime)s %(levelname)-7s (%(threadName)-10s) %(message)s'
-FORMATTER = logging.Formatter(FORMAT)
+gFORMAT = '%(name)-12s: %(asctime)s %(levelname)-7s (%(threadName)-10s) %(message)s'
 
-LEVEL = logging.DEBUG
+gLEVEL = logging.DEBUG
 
-LOGGER_LIST = []
+#LOGGER_LIST = []
 
-class DisplayHandler(logging.StreamHandler):
-    '''
-    '''
-    output = None
-    def emit(self, record):
-        '''
-
-        '''
-        if self.output is not None:
-            msg = '{record.name}{record.message}'.format(record=record)
-#            import wx
-#            print type(self.output._display), not isinstance(self.output._display, wx._core._wxPyDeadObject)
-#            if not isinstance(self.output._display, wx._core._wxPyDeadObject):
-
-            do_later(self.output.add_text, color='red' if record.levelno > 20 else 'black',
-                                 msg=msg,
-                                 kind='warning' if record.levelno > 20 else 'info',)
+#class DisplayHandler(logging.StreamHandler):
+#    '''
+#    '''
+#    output = None
+#    def emit(self, record):
+#        '''
+#
+#        '''
+#        if self.output is not None:
+#            msg = '{record.name}{record.message}'.format(record=record)
+##            import wx
+##            print type(self.output._display), not isinstance(self.output._display, wx._core._wxPyDeadObject)
+##            if not isinstance(self.output._display, wx._core._wxPyDeadObject):
+#
+#            do_later(self.output.add_text, color='red' if record.levelno > 20 else 'black',
+#                                 msg=msg,
+#                                 kind='warning' if record.levelno > 20 else 'info',)
 #            self.output.add_text(
 #                                     color='red' if record.levelno > 20 else 'black',
 #                                 msg=msg,
@@ -91,8 +90,9 @@ class DisplayHandler(logging.StreamHandler):
 #                
 #    print 'clean up finished'
 
+rhandler = None
 
-def logging_setup(name, level=None):
+def logging_setup(name, **kw):
     '''
     '''
 
@@ -101,8 +101,8 @@ def logging_setup(name, level=None):
     if not os.path.isdir(bdir):
         os.mkdir(bdir)
 
-    logpath = os.path.join(bdir, '{}_current.log'.format(name))
-
+    #create a new logging file
+    logpath = os.path.join(bdir, '{}.current.log'.format(name))
     if os.path.isfile(logpath):
         backup_logpath, _cnt = unique_path(bdir, name, extension='log')
         shutil.copyfile(logpath, backup_logpath)
@@ -112,34 +112,40 @@ def logging_setup(name, level=None):
         logging.basicConfig()
     else:
 
-        if level is not None:
-            level = getattr(logging, level)
-        else:
-            level = LEVEL
+        root = logging.getLogger()
+        shandler = logging.StreamHandler()
 
-#        print 'ffff'
-        logging.basicConfig(level=level,
-                        format=FORMAT,
-                        filename=logpath,
-                        filemode='w'
-                      )
+#        global rhandler
+        rhandler = logging.handlers.RotatingFileHandler(
+              logpath, maxBytes=1e7, backupCount=5)
+#
+#        for hi in [shandler, rhandler]:
+        for hi in [shandler, rhandler]:
+            hi.setLevel(gLEVEL)
+            hi.setFormatter(logging.Formatter(gFORMAT))
+            root.addHandler(hi)
 
-    if globalv.use_debug_logger:
-
-        #main_logger = logging.getLogger()
-        #main_logger.setLevel(logging.NOTSET)
-        add_console(name='main', level=logging.NOTSET)
+#        #main_logger.setLevel(logging.NOTSET)
+#        add_console(name='main')
 
 
-MAXLEN = 30
-def add_console(logger=None, name=None,
-                display=None, level=LEVEL, unique=False):
-    '''
+#MAXLEN = 30
+#def add_console(logger=None, name=None,
+#                display=None, level=LEVEL, unique=False):
+#def add_console(logger=None, name=None):
+#    '''
+#
+#    '''
+#    if name:
+#        n = '{:<{}}'.format(name, MAXLEN)
+#        logger = new_logger(n)
 
-    '''
-    if name:
-        n = '{:<{}}'.format(name, MAXLEN)
-        logger = new_logger(n)
+#        if name == 'main':
+#            shandler = logging.StreamHandler()
+#    #        logger.setLevel(logging.NOTSET)
+#            shandler.setLevel(logging.NOTSET)
+#            shandler.setFormatter(logging.Formatter(gFORMAT))
+#            logger.addHandler(shandler)
 #        if unique:
 #            i = 1
 #            while logger in LOGGER_LIST:
@@ -149,41 +155,43 @@ def add_console(logger=None, name=None,
 #                logger = new_logger(n)
 #                i += 1
 
-#    print logger, name
-    if logger and logger not in LOGGER_LIST:
-        LOGGER_LIST.append(logger)
-        #print use_debug_logger, name
-
-        if name == 'main' or not globalv.use_debug_logger:
-            console = logging.StreamHandler()
-
-            console.setLevel(level)
-
-            # tell the handler to use this format 
-            console.setFormatter(FORMATTER)
-
-            logger.addHandler(console)
-
+#    if logger and logger not in LOGGER_LIST:
+#        LOGGER_LIST.append(logger)
+#        #print use_debug_logger, name
+#
+#        if name == 'main' or not globalv.use_debug_logger:
+#            console = logging.StreamHandler()
+###
+###            # tell the handler to use this format 
+#            console.setFormatter(logging.Formatter(gFORMAT))
+##            console.setLevel(logging.NOTSET)
+##
+#            logger.addHandler(console)
             #rich text or styled text handlers
-            if display:
+#            if display:
+#
+##                _class_ = 'DisplayHandler'
+##                gdict = globals()
+##                if _class_ in gdict:
+##                    h = gdict[_class_]()
+#                h = DisplayHandler()
+#                h.output = display
+#                h.setLevel(LEVEL)
+#                h.setFormatter(FORMATTER)
+#                logger.addHandler(h)
 
-#                _class_ = 'DisplayHandler'
-#                gdict = globals()
-#                if _class_ in gdict:
-#                    h = gdict[_class_]()
-                h = DisplayHandler()
-                h.output = display
-                h.setLevel(LEVEL)
-                h.setFormatter(FORMATTER)
-                logger.addHandler(h)
-
-    return logger
+#    return logger
 
 def new_logger(name):
-    '''
-    '''
-    if name == 'main':
-        l = logging.getLogger()
-    else:
-        l = logging.getLogger(name)
+    name = '{:<{}}'.format(name, 30)
+    l = logging.getLogger(name)
+    l.setLevel(gLEVEL)
+
     return l
+#    '''
+#    '''
+#    if name.strip() == 'main':
+#        l = logging.getLogger()
+#    else:
+#        l = logging.getLogger(name)
+#    return l

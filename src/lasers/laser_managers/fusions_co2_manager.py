@@ -51,6 +51,8 @@ class FusionsCO2Manager(FusionsLaserManager):
 
     _stop_signal = None
 
+    configuration_dir_name = 'co2'
+
     def _brightness_meter_default(self):
         mv = self._get_machine_vision()
         return BrightnessPIDManager(parent=self,
@@ -76,7 +78,7 @@ class FusionsCO2Manager(FusionsLaserManager):
         '''
         b = FusionsCO2LogicBoard(name='co2logicboard',
                                  configuration_name='logicboard',
-                                 configuration_dir_name='co2')
+                                 configuration_dir_name=self.configuration_dir_name)
         return b
 
     def _stage_manager_default(self):
@@ -84,7 +86,7 @@ class FusionsCO2Manager(FusionsLaserManager):
         '''
         args = dict(name='co2stage',
                             configuration_name='stage',
-                            configuration_dir_name='co2',
+                            configuration_dir_name=self.configuration_dir_name,
                              parent=self)
 
         return self._stage_manager_factory(args)

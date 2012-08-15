@@ -42,7 +42,7 @@ class Globals(object):
     #= True == an instance of RemoteHardwareServer must be launched
     use_ipc = False
 
-    _test = None #set mode to 'test' when running tests
+    _test = False #set test to 'true' when running tests
 
     def build(self, ip):
 

@@ -20,7 +20,7 @@ from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from numpy import zeros_like, invert
 from skimage.filter import sobel, threshold_adaptive
-from skimage.morphology import watershed
+#from skimage.morphology import watershed
 #============= local library imports  ==========================
 from src.machine_vision.segmenters.base import BaseSegmenter
 
@@ -44,21 +44,21 @@ class RegionSegmenter(BaseSegmenter):
                     )
 
     def segment(self, src):
-
-        ndsrc = src.ndarray[:]
-
-        markers = zeros_like(ndsrc)
-        if self.use_adaptive_threshold:
-            block_size = 40
-            markers = threshold_adaptive(ndsrc, block_size) * 255
-            markers[markers < 1] = 1
-        else:
-            markers[ndsrc < self.threshold_low] = 1
-            markers[ndsrc > self.threshold_high] = 255
-
-        el_map = sobel(ndsrc)
-        wsrc = watershed(el_map, markers)
-        return invert(wsrc)
+        return src
+#        ndsrc = src.ndarray[:]
+#
+#        markers = zeros_like(ndsrc)
+#        if self.use_adaptive_threshold:
+#            block_size = 40
+#            markers = threshold_adaptive(ndsrc, block_size) * 255
+#            markers[markers < 1] = 1
+#        else:
+#            markers[ndsrc < self.threshold_low] = 1
+#            markers[ndsrc > self.threshold_high] = 255
+#
+#        el_map = sobel(ndsrc)
+#        wsrc = watershed(el_map, markers)
+#        return invert(wsrc)
 
 #===============================================================================
 # property get/set

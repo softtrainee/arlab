@@ -14,7 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
 #=============enthought library imports=======================
 from traits.api import Any, Instance, Range, Button, Int, Property, Tuple, \
     DelegatesTo, on_trait_change, Bool
@@ -29,6 +28,8 @@ from src.paths import paths
 from src.machine_vision.detectors.co2_detector import CO2HoleDetector
 from src.machine_vision.detectors.tray_mapper import TrayMapper
 from src.machine_vision.detectors.brightness_detector import BrightnessDetector
+from src.image.video import Video
+#from pyface.timer.do_later import do_later
 
 
 class ImageHandler(Handler):
@@ -56,12 +57,11 @@ class MachineVisionManager(Manager):
     hole_detector = Instance(CO2HoleDetector)
     brightness_detector = Instance(BrightnessDetector)
 
-    segmentation_style = DelegatesTo('hole_detector')
 
     calibration_detector = Any
 
-    testing = False
-    _debug = Bool(False)
+#    testing = False
+#    _debug = Bool(False)
 
     application = DelegatesTo('parent')
 
@@ -92,9 +92,14 @@ class MachineVisionManager(Manager):
                 holedim = sm.g_dimension / 2.
             else:
                 holedim = 1.5
+#            cx = 0
+#            cy = 0
+            params = self.hole_detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
+            msg = 'Target found at {:0.3n}, {:0.3n}'.format(*params) if params else 'No target found'
+            self.info(msg)
+            return params
 
-            return self.hole_detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
-        except TypeError, e:
+        except TypeError:
             import traceback
             traceback.print_exc()
 
@@ -104,7 +109,7 @@ class MachineVisionManager(Manager):
             pickle.dump(self.hole_detector, f)
 
     def load_hole_detector(self):
-        return self._load_detector('hole_detecotor', CO2HoleDetector)
+        return self._load_detector('hole_detector', CO2HoleDetector)
 
     def load_brightness_detector(self):
         return self._load_detector('brightness_detector', BrightnessDetector)
@@ -231,7 +236,7 @@ class MachineVisionManager(Manager):
                         calibrated_center=cpos,
                         calibrated_rotation=rot,
                         pxpermm=self.pxpermm,
-                        _debug=self._debug,
+#                        _debug=self._debug,
                         parent=self
                         )
 
@@ -290,19 +295,21 @@ class MachineVisionManager(Manager):
         return v
 
     def get_new_frame(self, path=None):
-        if self._debug:
-            if path is None:
-                src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
-                src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
-                src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
+#        if self._debug:
+#            if path is None:
+#                src = '/Users/Ross/Downloads/Archive/puck_screen_shot3.tiff'
+#                src = '/Users/ross/Desktop/tray_screen_shot3.tiff'
+#                src = '/Users/ross/Sandbox/tray_screen_shot3.596--13.321-an2.tiff'
+#
+##                src = self._debug_path
+#                src = '/Users/ross/Sandbox/pos_err/pos_err_53001.jpg'
+#                src = '/Users/ross/Sandbox/pos_err/pos_err_3_0-002.jpg'
+#            else:
+#                src = path
+#
+#        else:
+        src = self.video.get_frame()
 
-#                src = self._debug_path
-                src = '/Users/ross/Sandbox/pos_err/pos_err_53001.jpg'
-            else:
-                src = path
-
-        else:
-            src = self.video.get_frame()
         return src
 
     @on_trait_change('laser_manager:zoom')
@@ -320,23 +327,27 @@ class MachineVisionManager(Manager):
 
     def _load_detector(self, name, klass):
 #        hd = CO2HoleDetector()
-        hd = klass()
+#        hd = klass()
         p = path.join(paths.hidden_dir, name)
         if path.isfile(p):
             with open(p, 'rb') as f:
                 try:
                     hd = pickle.load(f)
+                    if not isinstance(hd, klass):
+                        hd = klass()
+
                 except Exception, e:
                     print e
+        else:
+            hd = klass()
 
         hd.parent = self
         if self.laser_manager is not None:
             z = self.laser_manager.zoom
             hd.pxpermm = self._calc_pxpermm_by_zoom(z)
 
+#        hd._debug = self._debug
         hd.name = name
-        hd._debug = self._debug
-
         return hd
 
     def _hole_detector_default(self):
@@ -350,24 +361,33 @@ class MachineVisionManager(Manager):
         from threading import Thread
         t = Thread(target=func, args=args, kwargs=kw)
         t.start()
+    def _video_default(self):
+        if self.parent is None:
+            v = Video()
+            v.open()
+        else:
+            v = self.parent.video
+
+        return v
 
     def _test_fired(self):
-        if not self.testing:
-            self.hole_detector._debug = self._debug
+#        if not self.testing:
+#            self.hole_detector._debug = self._debug
 #            self.show_image()
-            self.testing = True
+#        do_later(self.hole_detector.target_image.edit_traits)
+#            self.testing = True
 #            self.brightness_detector.collect_baseline_intensity()
 #            self.get_intensity()
 #            self._spawn_thread(self.map_holes)
 #            self._zoom_calibration()
-            self._spawn_thread(self.locate_target,
-                               10, 0, 1
-                               )
+        self._spawn_thread(self.locate_target,
+                           0, 0, 1
+                           )
 
 #            self._spawn_thread(self.learn)
 #            self.learn()
-        else:
-            self.testing = False
+#        else:
+#            self.testing = False
 
 #
 #    def _test_view(self):
@@ -376,14 +396,18 @@ class MachineVisionManager(Manager):
 #        return v
 
 if __name__ == '__main__':
+
     from src.helpers.logger_setup import logging_setup
     logging_setup('machine_vision')
+    from globals import globalv
+    globalv._test = True
 
-    m = MachineVisionManager(_debug=True,
+    m = MachineVisionManager(
+#                             _debug=True,
                              )
-    m.locate_target(0, 0, 1)
-#    m.configure_traits()#view='_test_view')
-    m.configure_traits(view='configure_view')
+#    m.locate_target(0, 0, 3)
+    m.configure_traits()#view='_test_view')
+#    m.configure_traits(view='configure_view')
 
 #    time_comp()
 #============= EOF =====================================

@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import on_trait_change
 #============= standard library imports ========================
-
+from numpy import histogram, array, argmax
 #============= local library imports  ==========================
 from src.image.cvwrapper import  grayspace, colorspace
 
@@ -86,43 +86,42 @@ class CO2HoleDetector(HoleDetector):
             self.info('cropping image to {}mm x {}mm'.format(cw, ch))
             src = self._crop_image(src, cw, ch, image=im)
 
-        width = 4
+        width = 3
         ba = lambda v: [bool((v >> i) & 1) for i in xrange(width - 1, -1, -1)]
-        test = [ba(i) for i in range(2 ** 4)]
+        test = [ba(i) for i in range(2 ** width)]
 
-#        pos_argss = []
-#        ntests = 1
+        pos_argss = []
+        ntests = 3
 #        test = [(False, False, False, False)]
 
         osrc = src.clone()
         seg = self.segmentation_style
 #        seg = 'region'
-        for convextest, sharpen, smooth, contrast in test:
-
+        for sharpen, smooth, contrast in test:
             src = self._apply_filters(osrc, smooth, contrast, sharpen)
             params = self._segment_source(src, seg,
-                                         cx, cy,
-                                         holenum, holedim)
+                                         (cx, cy, holenum, holedim)
+                                         )
 
             if params is not None:
                 nx, ny = params
-#                pos_argss.append(params)
-#                if len(pos_argss) >= ntests:
-#                nxs, nys = zip(*pos_argss)
-#                nx = sum(nxs) / len(nxs)
-#                ny = sum(nys) / len(nys)
+                pos_argss.append(params)
+                if len(pos_argss) >= ntests:
+                    nxs, nys = zip(*pos_argss)
+                    def hist(d):
+                        f, v = histogram(array(d))
+                        i = len(f)  if argmax(f) == len(f) - 1 else argmax(f)
+                        return v[i]
 
-                src = self.target_image.get_frame(0)
+                    nx = hist(nxs)
+                    ny = hist(nys)
 
-                cx, cy = self._get_true_xy(src)
-                nomx, nomy = self._nominal_position
-
-                dx = (nomx - nx) * self.pxpermm
-                dy = (nomy - ny) * self.pxpermm
-
-                self._draw_indicator(src, (cx - dx, cy + dy), shape='crosshairs',
-                                     size=10)
-                return nx, ny
+                    src = self.target_image.get_frame(0)
+                    tcx, tcy = self._get_true_xy(src)
+                    self._draw_indicator(src, (tcx - nx, tcy - ny) , shape='crosshairs',
+                                         size=10)
+                    self._draw_center_indicator(src, size=5)
+                    return nx, ny
             else:
                 self.info('Failed segmentation={}. Trying alternates'.format(seg))
                 test_alternates = False
@@ -133,8 +132,7 @@ class CO2HoleDetector(HoleDetector):
 
                         src = self._apply_filters(osrc, smooth, contrast, sharpen)
                         params = self._segment_source(src, aseg,
-                                                        cx, cy,
-                                                        holenum, holedim,
+                                                        (cx, cy, holenum, holedim)
 #                                                        convextest=False
                                                         )
                         if params is not None:
@@ -152,24 +150,8 @@ class CO2HoleDetector(HoleDetector):
             src = self.smooth(src)
         return src
 
-    def _segment_source(self, src, style, cx, cy, holenum, holedim, **kw):
-        def segment(seg, si):
-            targets = self._locate_helper(seg.segment(si), **kw)
-            if targets:
-                miholedim = 0.75 * holedim
-                maholedim = 1.25 * holedim
-                mi = miholedim ** 2 * 3.1415
-                ma = maholedim ** 2 * 3.1415
-
-                #use only targets that are close to cx,cy
-                targets = [t for t in targets
-                           if self._near_center(*t.centroid_value) and  ma > t.area > mi]
-                if targets:
-                    nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
-                    return nx, ny
-
+    def _segment_source(self, src, style, holeargs, **kw):
         self.info('using {} segmentation'.format(style))
-
 
 #        klass = '{}Segmenter'.format(style.capitalize())
 #        m = __import__('src.machine_vision.segmenters.{}'.format(style), fromlist=[klass])
@@ -181,13 +163,34 @@ class CO2HoleDetector(HoleDetector):
 
             for j in range(1, segmenter.threshold_tries):
                 segmenter.count = j
-                npos = segment(segmenter, src)
+                npos = self._segment_hook(src, segmenter, holeargs, **kw)
+#                npos = segment(segmenter, src)
                 if npos:
                     break
             return npos
         else:
-            return segment(segmenter, src)
+#            return segment(segmenter, src)
+            return self._segment_hook(src, segmenter, holeargs, **kw)
 
+    def _segment_hook(self, src, segmenter, holeargs, **kw):
+        cx, cy, holenum, holedim = holeargs
+        targets = self._locate_helper(segmenter.segment(src), **kw)
+        if targets:
+            miholedim = 0.5 * holedim
+            maholedim = 1.25 * holedim
+            mi = miholedim ** 2 * 3.1415
+            ma = maholedim ** 2 * 3.1415
+#                print 'targets pre', len(targets), mi, ma
+#
+#                for t in targets:
+#                    print t.centroid_value, t.area
 
+            #use only targets that are close to cx,cy
+            targets = [t for t in targets
+                       if self._near_center(*t.centroid_value) and  ma > t.area > mi]
 
+#                print 'targets post', len(targets)
+            if targets:
+                nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
+                return nx, ny
 #============= EOF =====================================

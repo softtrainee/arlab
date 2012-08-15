@@ -43,6 +43,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     '''
     id = 'pychron.fusions.diode'
     name = 'fusions_diode'
+    configuration_dir_name = 'diode'
 
     pyrometer = Instance(MikronGA140Pyrometer)
     temperature_controller = Instance(WatlowEZZone)
@@ -377,13 +378,13 @@ class FusionsDiodeManager(FusionsLaserManager):
         '''
         '''
         w = WatlowEZZone(name='temperature_controller',
-                        configuration_dir_name='diode')
+                        configuration_dir_name=self.configuration_dir_name)
         return w
     def _pyrometer_temperature_monitor_default(self):
         '''
         '''
         py = PyrometerTemperatureMonitor(name='pyrometer_tm',
-                                       configuration_dir_name='diode')
+                                       configuration_dir_name=self.configuration_dir_name)
         return py
     def _title_default(self):
         '''

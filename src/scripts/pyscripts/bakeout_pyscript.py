@@ -75,7 +75,6 @@ class BakeoutPyScript(PyScript):
             if c is not None:
                 #possible to just read the process_value 
                 #for now force a query to the device
-                #TODO: is this necessary
                 ctemp = int(c.get_temperature())
                 start = max(start, ctemp)
 
