@@ -110,9 +110,10 @@ class FusionsLaserMonitor(LaserMonitor):
         self.info('Check laser coolant status')
 
         status = manager.get_coolant_status()
+        #returns an empty list
         if status is None:
             self._chiller_unavailable()
-        else:
+        elif status:
             status = ','.join(status) if isinstance(status, list) else status
             reason = 'Laser coolant error {}'.format(status)
             self.warning(reason)
@@ -139,5 +140,8 @@ class FusionsLaserMonitor(LaserMonitor):
             self._cur_setpoints = []
 
     setpoint = property(fget=_get_setpoint, fset=_set_setpoint)
+
+    def update_imb(self, *args, **kw):
+        pass
 
 #============= EOF ====================================
