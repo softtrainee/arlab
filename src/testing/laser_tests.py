@@ -168,6 +168,7 @@ class CO2Tests(LaserTests):
 class DiodeTests(LaserTests):
     def setUp(self):
         from src.envisage.run import app
+
         self.app = app
 
         dp = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
@@ -178,5 +179,7 @@ class DiodeTests(LaserTests):
         self._power_calibration_path = os.path.join(paths.test_dir, 'diode_test_power_calibration')
         self._power_calibration_coeffs = [2, 5]
         self._calibrated_power = 2.5
+
+
 
 #============= EOF =============================================

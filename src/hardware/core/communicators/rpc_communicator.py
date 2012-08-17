@@ -47,6 +47,7 @@ class RpcCommunicator(Communicator):
                                                                       ))
         try:
             getattr(self.handle, self.test_func)()
+            self.simulation = False
             return True
         except Exception, err:
             self.warning(err)
