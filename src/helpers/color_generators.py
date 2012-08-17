@@ -55,11 +55,15 @@ colornames = [ 'black', 'red', 'violet', 'maroon', 'yellow', 'olive',
                'blueviolet', 'brown', 'firebrick', 'greenyellow'
                ]
 colorname_pairs = [
-                   (0xffbf33, 0x2b46d6),
-                   (0x00ffff, 0xff5300),
-                   (0xff00ff, 0xebff00),
-                   (0x00cc66, 0xff2c00),
-                   (0x0021cc, 0xffaf00)
+#                   (0xffbf33, 0x2b46d6),
+#                   (0x00ffff, 0xff5300),
+#                   (0xff00ff, 0xebff00),
+#                   (0x00cc66, 0xff2c00),
+#                   (0x0021cc, 0xffaf00),
+
+                   (0xffe200, 0x4d00cc),
+                   (0xdff400, 0xcc00c8),
+                   (0x5adb00, 0xe40034),
                    #('black', 'red'),
                    #(0xFF5300, 0x00ffff),
                    #(0x0000cc, 0xffbd00),
