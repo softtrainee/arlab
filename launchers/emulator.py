@@ -240,6 +240,7 @@ class QtegraEmulator(Loggable):
 
 @verbose_all
 class LaserEmulator(Loggable):
+    _position = '1,2,3'
     def handlePychronReady(self):
         return 'OK'
     def handleSetLaserPower(self, p):
@@ -248,22 +249,38 @@ class LaserEmulator(Loggable):
         return 'OK'
     def handleDisableLaser(self):
         return 'OK'
+
     def handleGetPosition(self):
         return self._position
+
     def handleSetXY(self, xy):
         self._position = xy + ',5'
+
     def handleGetBeamDiameter(self):
         return 0
     def handleSetBeamDiameter(self, v):
         return 0
     def handleGetLaserStatus(self):
         return 'OK'
+    def handleGetZoom(self):
+        return 0
+    def handleSetSampleHolder(self, v):
+        return 'OK'
+
+_state = True
+
 @verbose_all
 class ExtractionLineEmulator(Loggable):
+
     def handleOpen(self, name):
         return 'OK'
     def handleClose(self, name):
         return 'OK'
+
+    def handleGetValveState(self, name):
+        global _state
+        _state = not _state
+        return str(_state)
 
     def handleGetValveStates(self):
         keys = 'ABCDEF'
@@ -315,21 +332,26 @@ class EmulatorHandler(SocketServer.BaseRequestHandler):
             try:
                 func = None
                 for name in ['qtegra', 'el', 'laser']:
+
                     obj = getattr(self, '_{}_em'.format(name))
                     try:
                         func = getattr(obj, 'handle{}'.format(cmd))
                         break
                     except AttributeError, e:
                         continue
+                    except Exception, e:
+                        print e
+
                 else:
                     result = 'Error: Command {} not available'.format(cmd)
+
                 if func:
                     try:
                         result = str(func(*args))
                     except TypeError:
                         result = 'Error: Invalid parameters %s passed to %s' % (args, cmd)
             except AttributeError:
-                result = 'Error: Command %s not available' % cmd
+                result = 'Error: Command {} not available'.format(cmd)
         except IndexError:
             result = 'Error: poorly formatted command {}'.format(data)
 

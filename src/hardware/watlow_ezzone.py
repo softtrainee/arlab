@@ -214,14 +214,18 @@ class WatlowEZZone(CoreDevice):
         '''
         '''
 
-        #set open loop and closed loop to zero
-        self.disable()
-        if self.program_memory_blocks:
-            self._program_memory_blocks()
+        if self.read_baudrate(port=2):
 
-        self.initialization_hook()
+            #set open loop and closed loop to zero
+            self.disable()
+            if self.program_memory_blocks:
+                self._program_memory_blocks()
 
-        return True
+            self.initialization_hook()
+
+            return True
+        else:
+            self.warning('Failed connecting to Diode Temperature Controller')
 
     def is_programmed(self):
         r = self.get_temp_and_power()
