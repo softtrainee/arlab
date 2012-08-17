@@ -39,7 +39,7 @@ Jan iMac       jan       129.138.12.150 jan.local       Mass Spec Master
 Diode mini     diode     129.138.12.134 diode.local     Diode
 ArgonLab1 iMac argonlab1 129.138.12.138 argonlab1.local Lab computer
 ArgonLab2 iMac argonlab2 129.138.12.143 argonlab1.local Lab computer
-============== ========= ============== =============== ======================
+============== ========= ============== =============== =====================
 
 -------------
 Windows
