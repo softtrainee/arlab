@@ -54,7 +54,7 @@ class Video(Image):
         self.height = 480
         if self.cap is None or force:
 
-            if globalv.test:
+            if globalv.video_test:
                 self.cap = 1
             else:
                 #ideally an identifier is passed in 
@@ -103,11 +103,11 @@ class Video(Image):
         if cap is not None:
 #            if lock:
             with self._lock:
-                if globalv.test:
+                if globalv.video_test:
                     if self.source_frame is None:
-                        p = '/Users/ross/Sandbox/pos_err/pos_err_3_0-002.jpg'
-#                        p = path.join(paths.test_dir, 'pos_err_test.jpg')
+                        p = globalv.video_test_path
                         self.load(p)
+
                     f = self.source_frame
                 else:
                     f = query_frame(cap)

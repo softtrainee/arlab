@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, String, DelegatesTo, Property, Button, \
- Float, Bool, Event, Directory, Enum, on_trait_change
+ Float, Bool, Event, Enum, on_trait_change
 from traitsui.api import Group, Item, HGroup
 from pyface.timer.api import do_later
 from apptools.preferences.preference_binding import bind_preference
@@ -269,9 +269,7 @@ class VideoStageManager(StageManager):
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.use_autocenter:
             sm = self._stage_map
-#            time.sleep(0.75)
-#            self.video.open(user='autocenter')
-            pos, interp = self._autocenter(holenum=holenum, ntries=1)
+            pos, interp = self._autocenter(holenum=holenum, ntries=2)
             if pos:
                 #add an adjustment value to the stage map
                 sm.set_hole_correction(holenum, *pos)
@@ -284,25 +282,19 @@ class VideoStageManager(StageManager):
             func = getattr(self.visualizer, 'record_{}'.format(f))
             func(holenum, *pos)
 
-#            self.video.close(user='autocenter')
 
     def _autocenter(self, holenum=None, ntries=1):
-        #use machine vision to calculate positioning error
         rpos = None
         interp = False
         if self.use_autocenter:
-#            newpos = None
             for _t in range(max(1, ntries)):
-
+                #use machine vision to calculate positioning error
                 rpos = self.autocenter_manager.locate_target(
                         self.stage_controller.x,
                         self.stage_controller.y,
                         holenum
                         )
-                print rpos
                 if rpos:
-#                    if rpos:
-    #                    rpos = newpos
                     self.linear_move(*rpos, block=True,
                                      use_calibration=False,
                                      update_hole=False

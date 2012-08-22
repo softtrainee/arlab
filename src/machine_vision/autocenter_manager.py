@@ -31,7 +31,7 @@ class AutocenterManager(MachineVisionManager):
         try:
             if self.parent:
                 sm = self.parent._stage_map
-                holedim = sm.g_dimension / 2.
+                holedim = sm.g_dimension
             else:
                 holedim = 1.5
 
@@ -62,4 +62,13 @@ class AutocenterManager(MachineVisionManager):
     def load_detector(self):
         return self._load_detector('co2_detector', CO2HoleDetector)
 
+    def _test_fired(self):
+        self.locate_target(-13, -10, 55)
+
+    def traits_view(self):
+        return View('test')
+
+if __name__ == '__main__':
+    am = AutocenterManager()
+    am.configure_traits()
 #============= EOF =============================================
