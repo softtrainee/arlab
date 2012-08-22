@@ -221,15 +221,12 @@ class BaseDataCanvas(DataView):
         self.line_segment(gc, p1, p2, color)
 
     def _line_segment(self, gc, p1, p2, color=None):
-        gc.save_state()
         if color is not None:
             gc.set_stroke_color(color)
 
         gc.move_to(*p1)
         gc.line_to(*p2)
         gc.draw_path()
-
-        gc.restore_state()
 
     def _draw_hook(self, gc, *args, **kw):
         '''

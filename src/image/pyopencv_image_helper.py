@@ -394,7 +394,6 @@ def get_polygons(contours, hierarchy,
     polygons = []
     brs = []
     areas = []
-
     for cont, hi in zip(contours, hierarchy.tolist()):
         cont = cv.asMat(cont)
 #        for i in [0.01]:
@@ -433,7 +432,7 @@ def get_polygons(contours, hierarchy,
         polygons.append(result)
         brs.append(cv.boundingRect(res_mat))
         areas.append(area)
-#    print len(polygons), len(contours), area
+
     return polygons, brs, areas
 
 

@@ -29,7 +29,7 @@ import os
 from src.helpers.filetools import unique_path
 from src.paths import paths
 from camera_calibration_manager import CameraCalibrationManager
-from src.machine_vision.machine_vision_manager import MachineVisionManager
+#from src.machine_vision.machine_vision_manager import MachineVisionManager
 from src.machine_vision.autofocus_manager import AutofocusManager
 
 from src.helpers.archiver import Archiver
@@ -39,6 +39,7 @@ from src.canvas.canvas2D.camera import Camera
 
 from stage_manager import StageManager
 from video_component_editor import VideoComponentEditor
+from src.machine_vision.autocenter_manager import AutocenterManager
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -76,11 +77,12 @@ class VideoStageManager(StageManager):
 
     autocenter_button = Button('AutoCenter')
     mapcenters_button = Button('Map Centers')
-    configure_mv_button = Button('Configure')
+    configure_autocenter_button = Button('Configure')
 
     autofocus_manager = Instance(AutofocusManager)
 
-    machine_vision_manager = Instance(MachineVisionManager)
+#    machine_vision_manager = Instance(MachineVisionManager)
+    autocenter_manager = Instance(AutocenterManager)
 
     snapshot_button = Button('Snapshot')
     auto_save_snapshot = Bool(True)
@@ -291,7 +293,8 @@ class VideoStageManager(StageManager):
         if self.use_autocenter:
 #            newpos = None
             for _t in range(max(1, ntries)):
-                rpos = self.machine_vision_manager.locate_target(
+
+                rpos = self.autocenter_manager.locate_target(
                         self.stage_controller.x,
                         self.stage_controller.y,
                         holenum
@@ -396,7 +399,10 @@ class VideoStageManager(StageManager):
         mv = Group(HGroup(Item('use_autocenter', label='Enabled'),
                           Item('autocenter_button', show_label=False, enabled_when='use_autocenter')),
                    Item('mapcenters_button', show_label=False),
-                   Item('configure_mv_button', show_label=False),
+                   Item('configure_autocenter_button', show_label=False),
+
+#                   Item('')
+
                    label='Machine Vision', show_border=True)
 
         g.content.append(Group(Item('camera_xcoefficients'),
@@ -597,11 +603,10 @@ class VideoStageManager(StageManager):
     def _camera_calibration_manager_default(self):
         return CameraCalibrationManager()
 
-    def _machine_vision_manager_default(self):
-        return MachineVisionManager(video=self.video,
+    def _autocenter_manager_default(self):
+        return AutocenterManager(video=self.video,
                                     stage_controller=self.stage_controller,
                                     laser_manager=self.parent,
-                                    autofocus_manager=self.autofocus_manager,
                                     parent=self
                                     )
 

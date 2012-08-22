@@ -28,7 +28,7 @@ from src.lasers.stage_managers.stage_manager import StageManager
 from src.lasers.stage_managers.video_stage_manager import VideoStageManager
 from src.monitors.laser_monitor import LaserMonitor
 from src.managers.graph_manager import GraphManager
-from pulse import Pulse
+from src.lasers.laser_managers.pulse import Pulse
 from src.paths import paths
 from src.hardware.meter_calibration import MeterCalibration
 
@@ -64,6 +64,7 @@ class LaserManager(Manager):
     use_calibrated_power = Bool(True)
     internal_meter_response = DelegatesTo('logic_board')
 
+    _power_calibration = None
 #===============================================================================
 # public interface
 #===============================================================================
@@ -120,15 +121,23 @@ class LaserManager(Manager):
 
         return enabled
 
-    def set_laser_power(self, power, use_calibration=True, *args, **kw):
+    def set_laser_power(self, power, use_calibration=True,
+                        memoize_calibration=False,
+                        verbose=True,
+                         *args, **kw):
         '''
         '''
-        p = self._get_calibrated_power(power, use_calibration)
+        p = self._get_calibrated_power(power,
+                                       use_calibration,
+                                       memoize_calibration,
+                                       verbose=verbose)
 
-        self.info('request power {:0.2f}, calibrated power {:0.2f}'.format(power, p))
+        if verbose:
+            self.info('request power {:0.2f}, calibrated power {:0.2f}'.format(power, p))
+
         self._requested_power = power
         self._calibrated_power = p
-        self._set_laser_power_hook(p)
+        self._set_laser_power_hook(p, verbose=verbose)
 
     def close(self, ok):
         self.pulse.dump_pulse()
@@ -171,9 +180,9 @@ class LaserManager(Manager):
         self.enabled_led.state = 'red' if not self.enabled else 'green'
 
     def dispose_optional_windows(self):
-        if self.use_video:
-            self.stage_manager.machine_vision_manager.close_images()
-
+#        if self.use_video:
+#            self.stage_manager.machine_vision_manager.close_images()
+#
         self._dispose_optional_windows_hook()
 #===============================================================================
 # public getters
@@ -294,11 +303,13 @@ class LaserManager(Manager):
         except  (pickle.PickleError, EOFError, OSError), e:
             self.warning('pickling error {}'.format(e))
 
-    def load_power_calibration(self, calibration_path=None):
+    def load_power_calibration(self, calibration_path=None, verbose=True):
         ospath = os.path
         calibration_path = self._get_calibration_path(calibration_path)
         if ospath.isfile(calibration_path):
-            self.info('loading power calibration {}'.format(calibration_path))
+            if verbose:
+                self.info('loading power calibration {}'.format(calibration_path))
+
             with open(calibration_path, 'rb') as f:
                 try:
                     pc = pickle.load(f)
@@ -309,6 +320,7 @@ class LaserManager(Manager):
         else:
             pc = MeterCalibration([1, 0])
 
+        self._power_calibration = pc
         return pc
 #===============================================================================
 # hooks
@@ -325,13 +337,15 @@ class LaserManager(Manager):
     def _disable_hook(self):
         pass
 
-    def _set_laser_power_hook(self, p):
+    def _set_laser_power_hook(self, *args, **kw):
         pass
 #===============================================================================
 # getter/setters
 #===============================================================================
 
-    def _get_calibrated_power(self, power, calibration):
+    def _get_calibrated_power(self, power, calibration,
+                              memoize_calibration=False,
+                              verbose=True):
 
         if self.use_calibrated_power and calibration:
             path = None
@@ -340,14 +354,22 @@ class LaserManager(Manager):
             elif isinstance(calibration, tuple):
                 pass
 
-            pc = self.load_power_calibration(calibration_path=path)
+            if memoize_calibration:
+                pc = self._power_calibration
+                if pc is None:
+                    pc = self.load_power_calibration(calibration_path=path, verbose=verbose)
+
+            else:
+                pc = self.load_power_calibration(calibration_path=path, verbose=verbose)
+
             if power < 0.1:
                 power = 0
             else:
                 power, coeffs = pc.get_input(power)
                 if coeffs is not None:
                     sc = ','.join(['{}={:0.2f}'.format(*c) for c in zip('abcdefg', coeffs)])
-                    self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
+                    if verbose:
+                        self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
         return power
 
     def _get_calibration_path(self, cp):

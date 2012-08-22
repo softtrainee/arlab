@@ -109,7 +109,8 @@ class RectSelectionTool(AbstractOverlay):
         '''
 
         '''
-        if self.active and not self.parent.filters[self.plotid]:
+        if self.active:
+        #and not self.parent.filters[self.plotid]:
             self.parent.selected_plotid = self.plotid
 
             token = self._get_selection_token(event)

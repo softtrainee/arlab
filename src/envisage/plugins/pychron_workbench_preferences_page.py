@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Any, List, HasTraits, Bool, Str, on_trait_change
+from traits.api import Any, List, HasTraits, Bool, Instance, Str, on_trait_change
 from traitsui.api import View, Item, TableEditor, ListEditor
 from apptools.preferences.ui.api import PreferencesPage
 from traitsui.extras.checkbox_column import CheckboxColumn
@@ -65,10 +65,8 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
     preferences_path = 'pychron.workbench'
     name = 'Plugins'
 
-    def __init__(self, *args, **kw):
-        super(PychronWorkbenchPreferencesPage, self).__init__(*args, **kw)
-#        p = os.path.join(setup_dir, 'initialization.xml')
-        self.parser = InitializationParser()
+    parser = Instance(InitializationParser, (), transient=True)
+
 
     def _categories_default(self):
         '''

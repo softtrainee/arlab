@@ -150,7 +150,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     def set_laser_temperature(self, temp):
         self._set_laser_power_hook(temp, mode='closed')
 
-    def _set_laser_power_hook(self, power, mode='open'):
+    def _set_laser_power_hook(self, power, mode='open', **kw):
         ''' 
         '''
 #        super(FusionsDiodeManager, self).set_laser_power(power)

@@ -16,10 +16,11 @@
 
 #=============enthought library imports=======================
 from traits.api import  Float, Range, Property, Tuple, Bool, Enum, \
-    Instance, Str
-from traitsui.api import View, Item, VGroup, Group, HGroup, spring
+    Instance, Str, on_trait_change
+from traitsui.api import View, Item, VGroup, HGroup, spring
 #============= standard library imports ========================
 from numpy import histogram, argmax, array, asarray, ogrid, percentile
+from skimage.exposure import rescale_intensity
 import random
 import os
 
@@ -89,6 +90,14 @@ class HoleDetector(Detector):
     _nominal_position = Tuple(0, 0)
 
     segmenter = Instance(BaseSegmenter)
+
+    @on_trait_change('target_image:ui')
+    def _add_target_window(self, new):
+        try:
+            #added windows will be closed by the application on exit
+            self.parent.add_window(new)
+        except AttributeError:
+            pass
 #===============================================================================
 # image filters
 #===============================================================================
@@ -105,12 +114,7 @@ class HoleDetector(Detector):
         src = smooth_src(src)
         return src
 
-    def contrast_equalization(self, src, verbose=True):
-#        if self.use_contrast_equalization:
-        from skimage.exposure import rescale_intensity
-
-        if verbose:
-            self.info('maximizing image contrast')
+    def contrast_equalization(self, src):
 
         if hasattr(src, 'ndarray'):
             src = src.ndarray
@@ -149,7 +153,6 @@ class HoleDetector(Detector):
             self.target_image.load(colorspace(src))
 
         t = self._locate_targets(src, **kw)
-#        print 't', t
 
 #        if t:
 #            self._draw_markup(self.target_image.get_frame(0), t)
@@ -387,7 +390,6 @@ class HoleDetector(Detector):
 
         return src
 
-
     def traits_view(self):
         return View(
                     VGroup(
@@ -432,7 +434,67 @@ class HoleDetector(Detector):
     def _segmenter_default(self):
         return self._segmenter_factory(self.segmentation_style)
 
+    def _apply_filters(self, src, smooth=False,
+                        contrast=False, sharpen=False, verbose=False):
+        if verbose:
+            self.debug('applying filters. smooth={} contrast={} sharpen={}'.format(smooth, contrast, sharpen))
 
+        if sharpen:
+            src = self.sharpen(src)
+        if contrast:
+            src = self.contrast_equalization(src)
+        if smooth:
+            src = self.smooth(src)
+
+        try:
+            return asMat(src)
+        except TypeError:
+            return src
+
+    def _segment_source(self, src, style, verbose=True, **kw):
+        if verbose:
+            self.info('using {} segmentation'.format(style))
+        kw['verbose'] = verbose
+
+        npos = None
+        segmenter = self.segmenter
+        if style == 'region':
+
+            for j in range(1, segmenter.threshold_tries):
+                segmenter.count = j
+                npos = self._segment_hook(src, segmenter,
+                                           **kw)
+                if npos:
+                    break
+            return npos
+        else:
+            return self._segment_hook(src, segmenter, **kw)
+
+    def _segment_hook(self, src, segmenter, **kw):
+        targets = self._locate_helper(segmenter.segment(src), **kw)
+        if targets:
+            #use only targets that are close to cx,cy and the right size
+            targets = self._filter_targets(targets)
+            return targets
+#            if targets:
+#                nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
+#                return nx, ny
+
+    def _get_filter_target_area(self):
+        holedim = self.holedim
+        miholedim = 0.5 * holedim
+        maholedim = 1.25 * holedim
+        mi = miholedim ** 2 * 3.1415
+        ma = maholedim ** 2 * 3.1415
+        return mi, ma
+
+    def _filter_targets(self, targets):
+        mi, ma = self._get_filter_target_area()
+        def test_target(tar):
+            return self._near_center(*tar.centroid_value) and \
+                ma > tar.area > mi
+
+        return [t for t in targets if test_target(t)]
 
 #============= EOF =====================================
 #    def _watershed_segmentation(self, src, **kw):
