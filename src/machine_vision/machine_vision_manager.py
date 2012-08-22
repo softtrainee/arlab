@@ -67,10 +67,12 @@ class MachineVisionManager(Manager):
         pxpercm = polyval(c, z)
 
         return pxpercm / 10.0
-
+    def load_detector(self):
+        pass
+    def dump_detector(self):
+        pass
     def _detector_default(self):
         return self.load_detector()
-
     def _dump_detector(self, name, obj):
         p = path.join(paths.hidden_dir, name)
         with open(p, 'wb') as f:
@@ -337,23 +339,23 @@ class MachineVisionManager(Manager):
 #    def close_images(self):
 #        self.hole_detector.close_images()
 #
-#    def traits_view(self):
-#        v = View('test')
-#        return v
-#
-#    def configure_view(self):
-#
-#        v = View(
-#                 Item('hole_detector', show_label=False,
-#                      style='custom'
-#                      ),
-#                 buttons=['OK', 'Cancel'],
-#                 title='Configure Hole Detector',
-#                 resizable=True,
-#                 width=400
-#                )
-#
-#        return v
+    def traits_view(self):
+        v = View('test')
+        return v
+
+    def configure_view(self):
+
+        v = View(
+                 Item('detector', show_label=False,
+                      style='custom'
+                      ),
+                 buttons=['OK', 'Cancel'],
+                 title='Configure Hole Detector',
+                 resizable=True,
+                 width=400
+                )
+
+        return v
 #
 #    def get_new_frame(self, path=None):
 ##        if self._debug:

@@ -76,12 +76,9 @@ class VideoStageManager(StageManager):
     use_auto_center_interpolation = Bool(True)
 
     autocenter_button = Button('AutoCenter')
-    mapcenters_button = Button('Map Centers')
     configure_autocenter_button = Button('Configure')
 
     autofocus_manager = Instance(AutofocusManager)
-
-#    machine_vision_manager = Instance(MachineVisionManager)
     autocenter_manager = Instance(AutocenterManager)
 
     snapshot_button = Button('Snapshot')
@@ -91,7 +88,6 @@ class VideoStageManager(StageManager):
     record_label = Property(depends_on='is_recording')
     is_recording = Bool
 
-#    video_directory = Directory
     use_video_archiver = Bool(True)
     video_archiver = Instance(Archiver)
     video_identifier = Enum(1, 2)
@@ -389,12 +385,10 @@ class VideoStageManager(StageManager):
     def _sconfig__group__(self):
         g = super(VideoStageManager, self)._sconfig__group__()
         mv = Group(HGroup(Item('use_autocenter', label='Enabled'),
-                          Item('autocenter_button', show_label=False, enabled_when='use_autocenter')),
-                   Item('mapcenters_button', show_label=False),
-                   Item('configure_autocenter_button', show_label=False),
-
-#                   Item('')
-
+                          Item('autocenter_button', show_label=False,
+                               enabled_when='use_autocenter'),
+                          Item('configure_autocenter_button', show_label=False),
+                          ),
                    label='Machine Vision', show_border=True)
 
         g.content.append(Group(Item('camera_xcoefficients'),
@@ -434,32 +428,11 @@ class VideoStageManager(StageManager):
         t = Thread(name='stage.autocenter', target=self._autocenter)
         t.start()
 
-    def _configure_mv_button_fired(self):
-        info = self.machine_vision_manager.edit_traits(view='configure_view',
+    def _configure_autocenter_button_fired(self):
+        info = self.autocenter_manager.edit_traits(view='configure_view',
                                                 kind='livemodal')
         if info.result:
-            self.machine_vision_manager.dump_hole_detector()
-
-    def _mapcenters_button_fired(self):
-        self.info('Mapping all holes for {}'.format(self.stage_map))
-        mv = self.machine_vision_manager
-        sm = self._stage_map
-        #enumerate the current stage map holes
-        for hole in sm.sample_holes:
-            self.info('finding center of hole= {} ({},{}) '.format(hole.id,
-                                                                    hole.x,
-                                                                     hole.y))
-            self.hole = int(hole.id)
-            x = self.stage_controller._x_position
-            y = self.stage_controller._y_position
-
-            time.sleep(0.25)
-            newpos = mv.locate_target(x, y, hole.id)
-            if newpos:
-                self.info('calculated center of hole= {} ({},{}) '.format(hole.id,
-                                                                           *newpos))
-                sm.set_hole_correction(hole.id, *newpos)
-            time.sleep(0.25)
+            self.autocenter_manager.dump_detector()
 
     def _snapshot_button_fired(self):
         self.snapshot()
@@ -629,6 +602,26 @@ if __name__ == '__main__':
 
     s.configure_traits()
 #============= EOF ====================================
+#    def _mapcenters_button_fired(self):
+#        self.info('Mapping all holes for {}'.format(self.stage_map))
+#        mv = self.machine_vision_manager
+#        sm = self._stage_map
+#        #enumerate the current stage map holes
+#        for hole in sm.sample_holes:
+#            self.info('finding center of hole= {} ({},{}) '.format(hole.id,
+#                                                                    hole.x,
+#                                                                     hole.y))
+#            self.hole = int(hole.id)
+#            x = self.stage_controller._x_position
+#            y = self.stage_controller._y_position
+#
+#            time.sleep(0.25)
+#            newpos = mv.locate_target(x, y, hole.id)
+#            if newpos:
+#                self.info('calculated center of hole= {} ({},{}) '.format(hole.id,
+#                                                                           *newpos))
+#                sm.set_hole_correction(hole.id, *newpos)
+#            time.sleep(0.25)
 #    def _camera_coefficients_changed(self):
 #        print self.camera_coefficients
 
