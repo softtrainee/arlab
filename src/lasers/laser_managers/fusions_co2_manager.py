@@ -27,6 +27,7 @@ from fusions_laser_manager import FusionsLaserManager
 
 from src.paths import paths
 from src.monitors.fusions_co2_laser_monitor import FusionsCO2LaserMonitor
+from src.helpers.timer import Timer
 
 
 class FusionsCO2Manager(FusionsLaserManager):
@@ -45,7 +46,7 @@ class FusionsCO2Manager(FusionsLaserManager):
     monitor_name = 'co2_laser_monitor'
     monitor_klass = FusionsCO2LaserMonitor
 
-    brightness_meter = Instance(BrightnessPIDManager, ())
+
     dbname = paths.co2laser_db
     db_root = paths.co2laser_db_root
 
@@ -53,15 +54,15 @@ class FusionsCO2Manager(FusionsLaserManager):
 
     configuration_dir_name = 'co2'
 
-    def _brightness_meter_default(self):
-        mv = self._get_machine_vision()
-        return BrightnessPIDManager(parent=self,
-                                    machine_vision=mv)
+#    def _brightness_meter_default(self):
+#        mv = self._get_machine_vision()
+#        return BrightnessPIDManager(parent=self,
+#                                    machine_vision=mv)
 
-    def _set_laser_power_hook(self, rp):
+    def _set_laser_power_hook(self, rp, **kw):
         '''
         '''
-        self.logic_board._set_laser_power_(rp)
+        self.logic_board._set_laser_power_(rp, **kw)
         self.monitor.setpoint = self._requested_power
 
         if self.data_manager:
@@ -95,7 +96,8 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     from src.initializer import Initializer
 
-
+    from launchers.helpers import build_version
+    build_version('_test')
     logging_setup('fusions co2')
     f = FusionsCO2Manager()
     f.use_video = True

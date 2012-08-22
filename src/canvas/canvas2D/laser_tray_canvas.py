@@ -73,7 +73,7 @@ class LaserTrayCanvas(MapCanvas):
     use_zoom = False
 
     beam_radius = Float(0)
-    crosshairs_kind = Int(1)#Enum(1)#Enum(1, 2, 3, 4, 5)
+    crosshairs_kind = Enum('BeamRadius', 'UserRadius')
     crosshairs_color = Color('maroon')
     crosshairs_offset_color = Color('blue')
 
@@ -167,7 +167,7 @@ class LaserTrayCanvas(MapCanvas):
                Item('show_laser_position'),
                Item('crosshairs_kind', enabled_when='show_laser_position'),
                Item('crosshairs_color', show_label=False, enabled_when='show_laser_position'),
-               Item('crosshairs_radius', enabled_when='show_laser_position and object.crosshairs_kind==4'),
+               Item('crosshairs_radius', enabled_when='show_laser_position and object.crosshairs_kind=="UserRadius"'),
                Item('crosshairs_offset'),
                Item('crosshairs_offset_color', show_label=False, enabled_when='object.crosshairs_offset!=(0,0)'),
                )
@@ -375,20 +375,15 @@ class LaserTrayCanvas(MapCanvas):
         mx, my = xy
         mx += 1
         my += 1
-        r = self._get_wh(self.beam_radius, 0)[0]
+
+        if self.crosshairs_kind == 'BeamRadius':
+            r = self.beam_radius
+        else:
+            r = self.crosshairs_radius
+        r = self._get_wh(r, 0)[0]
         b = 4
 
         ls = self._line_segment
-
-        #draw center
-        gc.save_state()
-        gc.set_stroke_color((1, 1, 0, 1))
-
-        ls(gc, (mx - b, my), (mx + b, my))
-        ls(gc, (mx, my - b), (mx, my + b))
-
-        gc.restore_state()
-
         #draw extensions
         for p1, p2 in [((self.x, my), (mx - r, my)),
                        ((mx + r, my), (self.x2, my)),
@@ -403,6 +398,12 @@ class LaserTrayCanvas(MapCanvas):
         gc.set_fill_color((0, 0, 0, 0))
         gc.arc(mx, my, r, 0, math.radians(360))
         gc.draw_path()
+
+        #draw center
+        gc.set_stroke_color((1, 1, 0, 1))
+
+        ls(gc, (mx - b, my), (mx + b, my))
+        ls(gc, (mx, my - b), (mx, my + b))
 
         gc.restore_state()
 #===============================================================================

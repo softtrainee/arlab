@@ -36,7 +36,7 @@ class LaserPreferencesPage(ManagerPreferencesPage):
     show_desired_position = Bool(True)
     show_map = Bool(False)
 
-    crosshairs_kind = Enum(1, 2, 3, 4)
+    crosshairs_kind = Enum('BeamRadius', 'UserRadius')
     crosshairs_color = Color('maroon')
     desired_position_color = Color('green')
     calibration_style = Enum('MassSpec', 'pychron-auto')

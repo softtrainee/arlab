@@ -57,6 +57,7 @@ class RegionSegmenter(BaseSegmenter):
 
         el_map = sobel(ndsrc)
         wsrc = watershed(el_map, markers)
+
         return invert(wsrc)
 
 #===============================================================================

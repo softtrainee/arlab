@@ -67,7 +67,6 @@ class Video(Image):
         if not user in self.users:
             self.users.append(user)
 
-
     def shutdown(self):
         self.users = []
         del(self.cap)
@@ -112,6 +111,7 @@ class Video(Image):
                     f = self.source_frame
                 else:
                     f = query_frame(cap)
+
             return f
 
     def start_recording(self, path, user=None):

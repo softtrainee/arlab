@@ -122,7 +122,7 @@ class RichTextDisplay(HasTraits):
         self.add_text(self._text_buffer)
         self._text_buffer = []
 
-    def _add_(self, msg, new_line=True, color=None, size=9, **kw):
+    def _add_(self, msg, color=None, size=9, **kw):
         '''
             
         '''
@@ -149,18 +149,16 @@ class RichTextDisplay(HasTraits):
         d.WriteText(msg)
         d.EndTextColour()
         d.EndFont()
+        d.Newline()
 
-        if new_line:
-            d.Newline()
-
-        lp = d.GetLastPosition()
-        d.ShowPosition(lp + 600)
         n = 300
         if len(self.text) >= n:
             pop = self.text.pop
-            s = sum(pop(0) for _ in xrange(n))
+            s = sum(pop(0) for _ in xrange(n / 5))
             d.Remove(0, s)
 
+        lp = d.GetLastPosition()
+        d.ShowPosition(lp + 600)
         d.Thaw()
 
     def add_text(self, msg, **kw):

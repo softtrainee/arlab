@@ -39,6 +39,7 @@ from src.lasers.power.power_calibration_manager import PowerCalibrationManager
 from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 
 from laser_manager import LaserManager
+from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
 class FusionsLaserManager(LaserManager):
     '''
     '''
@@ -88,6 +89,7 @@ class FusionsLaserManager(LaserManager):
     _current_rid = None
 
     power_calibration_manager = Instance(PowerCalibrationManager)
+    brightness_meter = Instance(BrightnessPIDManager)
 
     chiller = Any
 
@@ -173,23 +175,20 @@ class FusionsLaserManager(LaserManager):
         pg = dm.new_group('Power')
         dm.new_table(pg, 'internal')
 
-        if self._get_record_brightness():
-            dm.new_table(pg, 'brightness')
-
         if self.power_timer is not None and self.power_timer.isAlive():
             self.power_timer.Stop()
 
         self.power_timer = Timer(1000, self._record_power)
 
+        if self._get_record_brightness():
+            dm.new_table(pg, 'brightness')
         if self.brightness_timer is not None and self.brightness_timer.isAlive():
             self.brightness_timer.Stop()
 
         #before starting the timer collect quick baseline
         #default is 5 counts @ 25 ms per count
         if self._get_record_brightness():
-            self.collect_baseline_intensity()
-
-        if self._get_record_brightness():
+            self.collect_baseline_brightness()
             self.brightness_timer = Timer(175, self._record_brightness)
 
     def stop_power_recording(self, delay=5, save=True):
@@ -291,7 +290,6 @@ class FusionsLaserManager(LaserManager):
 #            self.fiber_light._cdevice = self.subsystem.get_module('FiberLightModule')
 
         super(FusionsLaserManager, self).finish_loading()
-
         self.load_lens_configurations()
 
     @on_trait_change('pointer')
@@ -299,20 +297,17 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         self.pointer_state = not self.pointer_state
-
         self.logic_board.set_pointer_onoff(self.pointer_state)
 
-    def collect_baseline_intensity(self, **kw):
-        mv = self._get_machine_vision()
-        if mv:
-            mv.collect_baseline_intensity(**kw)
+    def collect_baseline_brightness(self, **kw):
+        bm = self.brightness_manager
+        if bm is not None:
+            bm.collect_baseline(**kw)
 
-    def get_laser_intensity(self, **kw):
-        sm = self.stage_manager
-        m = 'machine_vision_manager'
-        if hasattr(sm, m):
-            mv = getattr(sm, m)
-            return mv.get_intensity(**kw)
+    def get_laser_brightness(self, **kw):
+        bm = self.brightness_manager
+        if bm is not None:
+            return bm.get_value(**kw)
 
     def get_laser_watts(self):
         return self._requested_power
@@ -496,7 +491,7 @@ class FusionsLaserManager(LaserManager):
         return vg
 
     def _record_brightness(self):
-        cp = self.get_laser_intensity(verbose=False)
+        cp = self.get_laser_brightness(verbose=False)
         if cp is None:
             cp = 0
 
@@ -527,13 +522,13 @@ class FusionsLaserManager(LaserManager):
         if self.power_graph is not None:
             self.power_graph.close()
 
-    def _get_machine_vision(self):
-        sm = self.stage_manager
-        m = 'machine_vision_manager'
-        mv = None
-        if hasattr(sm, m):
-            mv = getattr(sm, m)
-        return mv
+#    def _get_machine_vision(self):
+#        sm = self.stage_manager
+#        m = 'machine_vision_manager'
+#        mv = None
+#        if hasattr(sm, m):
+#            mv = getattr(sm, m)
+#        return mv
 
     def _lens_configuration_changed(self):
 
@@ -572,11 +567,16 @@ class FusionsLaserManager(LaserManager):
 #        '''
 #        return ArduinoSubsystem(name='arduino_subsystem_2')
     def _power_calibration_manager_default(self):
-        mv = self._get_machine_vision()
         return PowerCalibrationManager(parent=self,
-                                       machine_vision=mv,
                                        db=self.get_power_calibration_database()
                                        )
+
+    def _brightness_meter_default(self):
+        if self.use_video:
+            b = BrightnessPIDManager(parent=self)
+#            b.brightness_manager.video = self.stage_manager.video
+
+            return b
 
     def _fiber_light_default(self):
         '''

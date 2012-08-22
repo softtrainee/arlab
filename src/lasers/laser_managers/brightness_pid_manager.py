@@ -25,28 +25,60 @@ import random
 from src.managers.manager import Manager
 from src.hardware.core.pid_object import PIDObject
 from src.paths import paths
-from src.helpers.timer import Timer
+#from src.helpers.timer import Timer
+from pyface.timer.api import Timer
 from src.graph.stream_graph import StreamGraph
+from src.machine_vision.brigthness_manager import BrightnessManager
 #from pyface.timer.api import do_later
+
+
+from traits.api import HasTraits, Button, Str
+class DummySM(HasTraits):
+    video = Any
+    _camera_xcoefficients = '1, 231'
+    def _video_default(self):
+        from src.image.video import Video
+        v = Video()
+        v.open(identifier=1)
+        return v
+
+class DummyParent(HasTraits):
+
+    enabled = Bool(True)
+    enable = Button
+    enable_label = Str
+
+    request_power = Float
+    application = Any
+    stage_manager = DummySM()
+    zoom = 0
+    def _enable_fired(self):
+        self.enabled = not self.enabled
+    def set_laser_power(self, p, **kw):
+        pass
+
 
 class BrightnessPIDManager(Manager):
     pid_object = Instance(PIDObject)
     brightness_timer = None
-    pid_loop_period = 200
+    pid_loop_period = 750
     setpoint = Float(auto_set=False, enter_set=True)
     output = Float
     error = Float
-    graph = Instance(StreamGraph, transient=True)
-    machine_vision = Any(transient=True)
+    graph = Instance(StreamGraph)
+    brightness_manager = Instance(BrightnessManager)
     _collect_baseline = Bool(True)
 
     request_power = DelegatesTo('parent')
+
     enabled = DelegatesTo('parent')
     enable = DelegatesTo('parent')
     enable_label = DelegatesTo('parent')
 
     application = DelegatesTo('parent')
 
+    cnt = 0
+    slope = 1
     def set_brightness_setpoint(self, b):
         #start a timer for the pid loop
         self.info('setting brightness {}'.format(b))
@@ -57,36 +89,50 @@ class BrightnessPIDManager(Manager):
         if b:
             self.brightness_timer = Timer(self.pid_loop_period, self.set_output, b)
 
-    def set_output(self, sp):
-        #get the current brightness
-        if self.machine_vision:
-            intensity = self.machine_vision.get_intensity(verbose=False)
-            err = sp - intensity
+    def get_value(self):
+        if self.brightness_manager:
+            v = self.brightness_manager.get_value(verbose=False)
         else:
-            err = sp + random.random()
+            v = random.random()
 
+        if self.cnt < 30:
+            v = self.cnt * (self.slope + random.random())
+        else:
+            import math
+            v = self.setpoint + math.sin(self.cnt)
+        self.cnt += 1
+
+        return v
+
+    def set_output(self, sp):
+        #get the current brightness error
+        brightness = self.get_value()
+        err = sp - brightness
+
+        #get the pid output
         out = self.pid_object.iterate(err, self.pid_loop_period)
 
         if self.parent:
-            self.parent.set_laser_power(out)
+            self.parent.set_laser_power(out, verbose=False,
+                                        memoize_calibration=True
+                                        )
 
         self.output = out
         self.error = err
-        self.graph.record_multiple((err, out), do_after=10)
+        self.graph.record_multiple((err, out, brightness), do_after=10)
 
     def close(self, is_ok):
         self._dump_pid_object()
         if self.brightness_timer:
             self.brightness_timer.Stop()
 
-        if self.machine_vision:
-            self.machine_vision.close_images()
+#        if self.brightness_manager:
+#            self.brightness_manager.close_images()
 
         return True
 
     def traits_view(self):
-        v = View(
-                 HGroup(
+        ctrl_grp = HGroup(
                         self._button_factory('enable', 'enable_label'),
                         Item('request_power', editor=RangeEditor(low=0,
                                                           high=100),
@@ -94,9 +140,11 @@ class BrightnessPIDManager(Manager):
                              show_label=False,
                              width=0.8
                              ),
-                        ),
+                        )
+        v = View(
+                 ctrl_grp,
                  Item('pid_object', style='custom', show_label=False),
-                 Item('setpoint'),
+                 Item('setpoint', enabled_when='object.enabled'),
                  HGroup(Item('output', style='readonly', format_str='%0.3f'),
                         Spring(width=60, springy=False),
                          Item('error', style='readonly', format_str='%0.3f')),
@@ -112,8 +160,8 @@ class BrightnessPIDManager(Manager):
     def _setpoint_changed(self):
         if self._collect_baseline:
             self._collect_baseline = False
-            if self.machine_vision:
-                self.machine_vision.collect_baseline_intensity()
+            if self.brightness_manager:
+                self.brightness_manager.collect_baseline()
 #                do_later(self._set_window)
 
         if abs(self.setpoint) < 0.001:
@@ -129,8 +177,19 @@ class BrightnessPIDManager(Manager):
         g.new_plot(data_limit=60)
         g.new_series()
         g.new_series()
+        g.new_series()
 
         return g
+
+    def _brightness_manager_default(self):
+
+
+        b = BrightnessManager(laser_manager=self.parent,
+                              parent=self.parent.stage_manager,
+                              video=self.parent.stage_manager.video
+                             )
+
+        return b
 
     def _load_pid_object(self):
         p = os.path.join(paths.hidden_dir, 'brightness_pid_object')
@@ -159,7 +218,7 @@ class BrightnessPIDManager(Manager):
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('bm')
-    b = BrightnessPIDManager()
+    b = BrightnessPIDManager(parent=DummyParent())
     b.configure_traits()
 
 #============= EOF =============================================

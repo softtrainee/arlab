@@ -14,10 +14,9 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Bool, Float, List, on_trait_change, Range
+from traits.api import HasTraits, Str, Bool, Float, List, on_trait_change, \
+     Range, Instance
 from traitsui.api import View, Item, VGroup, TableEditor, Group, HGroup
 from apptools.preferences.ui.api import PreferencesPage
 from traitsui.table_column import ObjectColumn
@@ -52,10 +51,8 @@ class ManagerPreferencesPage(PreferencesPage):
     x = Float(10)
     y = Float(20)
 
-    def __init__(self, *args, **kw):
-        super(ManagerPreferencesPage, self).__init__(*args, **kw)
-#        p = os.path.join(setup_dir, 'initialization.xml')
-        self.parser = InitializationParser()
+    parser = Instance(InitializationParser, (), transient=True)
+
 
     @on_trait_change('managers:enabled')
     def _managers_changed(self, obj, name, old, new):
