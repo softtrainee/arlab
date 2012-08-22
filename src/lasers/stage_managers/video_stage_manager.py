@@ -607,7 +607,8 @@ class VideoStageManager(StageManager):
         return AutocenterManager(video=self.video,
                                     stage_controller=self.stage_controller,
                                     laser_manager=self.parent,
-                                    parent=self
+                                    parent=self,
+                                    application=self.application
                                     )
 
     def _autofocus_manager_default(self):
