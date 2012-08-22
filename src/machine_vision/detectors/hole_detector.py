@@ -59,7 +59,7 @@ class HoleDetector(Detector):
 
     save_positioning_error = Bool(False)
     use_histogram = Bool(True)
-    display_processed_image = Bool(True)
+    display_processed_image = Bool(False)
 #    use_smoothing = Bool(True)
     use_crop = Bool(True)
 #    use_dilation = Bool(False)
@@ -394,7 +394,9 @@ class HoleDetector(Detector):
         return View(
                     VGroup(
                         HGroup(Item('use_histogram'),
-                               Item('save_positioning_error')),
+                               Item('save_positioning_error'),
+                               Item('display_processed_image')
+                               ),
                         VGroup(
                               HGroup(spring, Item('segmentation_style', show_label=False)),
                               Item('segmenter', style='custom', show_label=False),

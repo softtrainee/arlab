@@ -55,9 +55,7 @@ class AutocenterManager(MachineVisionManager):
 # persistence
 #===============================================================================
     def dump_detector(self):
-        p = path.join(paths.hidden_dir, 'co2_detector')
-        with open(p, 'wb') as f:
-            pickle.dump(self.detector, f)
+        self._dump_detector('co2_detector', self.detector)
 
     def load_detector(self):
         return self._load_detector('co2_detector', CO2HoleDetector)
@@ -65,8 +63,6 @@ class AutocenterManager(MachineVisionManager):
     def _test_fired(self):
         self.locate_target(-13, -10, 55)
 
-    def traits_view(self):
-        return View('test')
 
 if __name__ == '__main__':
     am = AutocenterManager()
