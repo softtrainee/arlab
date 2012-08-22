@@ -50,7 +50,9 @@ class Globals(object):
         for attr, func in [('use_ipc', boolfunc),
                            ('ignore_initialization_warnings', boolfunc),
                            ('ignore_connection_warnings', boolfunc),
-                           ('ignore_chiller_unavailable', boolfunc)
+                           ('ignore_chiller_unavailable', boolfunc),
+                           ('initialize_beam', boolfunc),
+                           ('initialize_zoom', boolfunc)
                             ]:
             a = ip.get_global(attr)
             if a:
