@@ -40,7 +40,7 @@ class ImageHandler(Handler):
 class MachineVisionManager(Manager):
     video = Any
     laser_manager = Any
-    pxpermm = Float
+    pxpermm = Float(23.1)
 
     detector = Instance(HoleDetector)
 

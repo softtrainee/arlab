@@ -299,7 +299,7 @@ class VideoStageManager(StageManager):
                         self.stage_controller.y,
                         holenum
                         )
-
+                print rpos
                 if rpos:
 #                    if rpos:
     #                    rpos = newpos

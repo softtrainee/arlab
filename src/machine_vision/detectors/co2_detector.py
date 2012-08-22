@@ -102,7 +102,7 @@ class CO2HoleDetector(HoleDetector):
         for sharpen, smooth, contrast in test:
             src = self._apply_filters(osrc, smooth, contrast, sharpen)
             targets = self._segment_source(src, seg)
-            if targets is not None:
+            if targets:
                 nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
                 pos_argss.append((nx, ny))
             else:
