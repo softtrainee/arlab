@@ -46,7 +46,6 @@ class CO2HoleDetector(HoleDetector):
                              view_identifier='pychron.fusions.co2.target'
                              )
         self.target_image = im
-
         if self.parent is not None:
             #use a manager to open so will auto close on quit
             self.parent.open_view(im)

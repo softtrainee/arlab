@@ -41,7 +41,6 @@ class MachineVisionManager(Manager):
     video = Any
     laser_manager = Any
     pxpermm = Float(23.1)
-
     detector = Instance(HoleDetector)
 
     def get_new_frame(self):
