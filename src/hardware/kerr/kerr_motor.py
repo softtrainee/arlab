@@ -125,8 +125,12 @@ class KerrMotor(KerrDevice):
         self._initialize_(*args, **kw)
         self._finish_initialize()
 
+        #move to the home position
+        self._set_data_position(self.nominal_position)
+        self.block(4, progress=self.progress)
+
         #remove reference to progress
-        self.progress = True
+        self.progress = None
 
         return True
 
@@ -183,10 +187,6 @@ class KerrMotor(KerrDevice):
         cmds = [(addr, '00', 100, 'reset position')]
 
         self._execute_hex_commands(cmds)
-
-        #move to the home position
-        self._set_data_position(self.nominal_position)
-        self.block(4, progress=progress)
 
     def block(self, n=3, tolerance=1, progress=None):
         '''

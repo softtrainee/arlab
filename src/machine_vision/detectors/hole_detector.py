@@ -154,8 +154,8 @@ class HoleDetector(Detector):
 
         t = self._locate_targets(src, **kw)
 
-#        if t:
-#            self._draw_markup(self.target_image.get_frame(0), t)
+        if t:
+            self._draw_markup(self.target_image.get_frame(0), t)
 
 #        import time
 #        time.sleep(1)
@@ -476,9 +476,6 @@ class HoleDetector(Detector):
             #use only targets that are close to cx,cy and the right size
             targets = self._filter_targets(targets)
             return targets
-#            if targets:
-#                nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
-#                return nx, ny
 
     def _get_filter_target_area(self):
         holedim = self.holedim
@@ -490,6 +487,7 @@ class HoleDetector(Detector):
 
     def _filter_targets(self, targets):
         mi, ma = self._get_filter_target_area()
+
         def test_target(tar):
             return self._near_center(*tar.centroid_value) and \
                 ma > tar.area > mi
