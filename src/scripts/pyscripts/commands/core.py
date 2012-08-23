@@ -48,7 +48,7 @@ class Command(HasTraits):
 class Info(Command):
     message = Str
     def _get_view(self):
-        return 'message'
+        return Item('message', width=500)
 
     def to_string(self):
         return self.indent('info("{}")'.format(self.message))
