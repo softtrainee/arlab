@@ -134,6 +134,8 @@ class BakeoutManager(Manager):
 
     database = Any
     _suppress_commit = False
+    
+    force_program=False
 #    def _convert_to_h5(self, path):
 #        args = self._bakeout_csv_parser(path)
 #        (names, nseries, ib, data, path, attrs) = args
@@ -586,13 +588,16 @@ class BakeoutManager(Manager):
 
                         if it is apply to all subsequent controllers
                     '''
-                    if cnt == 0:
-                        if not bc.is_programmed():
-                            program = True
-                        m1 = 'Watlow controllers require programming. Programming automatically'
-                        m2 = 'Watlow controllers are properly programmed'
-                        self.info(m1 if program else m2)
-
+                    if not self.force_program:
+                        if cnt == 0:
+                            if not bc.is_programmed():
+                                program = True
+                            m1 = 'Watlow controllers require programming. Programming automatically'
+                            m2 = 'Watlow controllers are properly programmed'
+                            self.info(m1 if program else m2)
+                    else:
+                        program=True
+                        
                     bc.program_memory_blocks = program
 
                     bc.initialize()
