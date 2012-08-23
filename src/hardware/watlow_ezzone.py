@@ -214,7 +214,7 @@ class WatlowEZZone(CoreDevice):
         '''
         '''
 
-        if self.read_baudrate(port=2):
+        if self.read_baudrate(port=1):
 
             #set open loop and closed loop to zero
             self.disable()
