@@ -372,14 +372,18 @@ class PyScriptManager(Manager):
                                         editable=False,
                                         right_clicked='selected_command',
                                         selected_index='selected_index'
-                                        )
+                                        ),
+                         width=200,
+                         height=200,
+                         resizable=False
                            ),
                      label=label,
-                     show_border=True
+                     show_border=True,
                      )
     def traits_view(self):
         editor = VGroup(HGroup(spring, 'kind', visible_when='show_kind'),
-                 Item('body', editor=CodeEditor(), show_label=False))
+                 Item('body', editor=CodeEditor(),
+                      show_label=False))
 
         command_grp = VGroup(self._get_commands_group('core_commands', 'Core'),
                              self._get_commands_group('script_commands', self.kind)
@@ -411,7 +415,7 @@ class PyScriptManager(Manager):
                           Action(name='Save As', action='save_as')
                           ],
                  width=700,
-                 height=500,
+                 height=575,
                  handler=ScriptHandler,
                  title=self.title
                  )
