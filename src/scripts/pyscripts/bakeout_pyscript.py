@@ -57,6 +57,25 @@ class BakeoutPyScript(PyScript):
 ##        return p
 #        pass
 
+    _current_setpoint = 0
+
+    def calculate_graph(self):
+        xs, ys = self._calculate_graph()
+
+        #convert to hours
+        xs = [xi / 3600. for xi in xs]
+        from src.graph.graph import Graph
+        g = Graph(container_dict=dict(padding=[50, 10, 10, 50],
+                                      bgcolor='gray'),
+                   window_title='Bakeout Profile'
+                  )
+        g.new_plot(xtitle='Time (hrs)',
+                   ytitle='Temperature (C)',
+                   )
+        g.new_series(xs, ys)
+        g.set_y_limits(min(ys), max(ys), pad=10)
+        g.edit_traits()
+
     def get_script_commands(self):
         return ['setpoint', 'ramp']
 
@@ -64,6 +83,18 @@ class BakeoutPyScript(PyScript):
         setpoint = float(setpoint)
         rate = float(rate)
         period = float(period)
+
+        if self._graph_calc:
+
+            xs = self._xs[-1]
+            ds = setpoint - self._current_setpoint
+            self._current_setpoint = setpoint
+
+            dx = ds / (rate / 3600.)
+            self._xs.append(xs + dx)
+            self._ys.append(setpoint)
+            return
+
         if self._syntax_checking or self._cancel:
             return
 
@@ -111,6 +142,14 @@ class BakeoutPyScript(PyScript):
 
     def setpoint(self, temp, duration, units='h'):
         ts = TIMEDICT[units]
+        if self._graph_calc:
+            self._current_setpoint = temp
+            self._xs.append(self._xs[-1])
+            self._xs.append(self._xs[-1] + duration * ts)
+            self._ys.append(temp)
+            self._ys.append(temp)
+            return
+
         if self._syntax_checking or self._cancel:
             return
 
