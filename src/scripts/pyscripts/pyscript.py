@@ -140,6 +140,8 @@ class PyScript(Loggable):
 
     _estimated_duration = 0
 
+    _graph_calc = False
+
     def get_estimated_duration(self):
         return self._estimated_duration
 
@@ -340,6 +342,13 @@ class PyScript(Loggable):
         self.info(msg)
 
     def sleep(self, v):
+
+        if self._graph_calc:
+            va = self._xs[-1] + v
+            self._xs.append(va)
+            self._ys.append(self._ys[-1])
+            return
+
         if self._syntax_checking or self._cancel:
             self._estimated_duration += v
             if self.parent_script is not None:
@@ -356,7 +365,7 @@ class PyScript(Loggable):
 
             ok = True
             if not self._syntax_checked:
-                r = self._test()
+                self._test()
 
             if ok:
                 self._execute()
@@ -366,6 +375,14 @@ class PyScript(Loggable):
             t.start()
         else:
             _ex_()
+
+    def _calculate_graph(self):
+        self._xs = [0]
+        self._ys = [0]
+        self._graph_calc = True
+        self.bootstrap()
+        self._test()
+        return self._xs, self._ys
 
     def _test(self):
 
@@ -420,7 +437,10 @@ class PyScript(Loggable):
             self._completed = True
             if self.parent:
                 self.parent._executing = False
-                del self.parent.scripts[self.hash_key]
+                try:
+                    del self.parent.scripts[self.hash_key]
+                except KeyError:
+                    pass
 
     def _post_execute_hook(self):
         pass

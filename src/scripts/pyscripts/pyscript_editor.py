@@ -86,8 +86,10 @@ class PyScriptManager(Manager):
     show_kind = Bool(False)
     kind = Enum('ExtractionLine', 'Bakeout')
     body = String('''def main():
-    gosub('subs/gtest')
-
+    sleep(10)
+    ramp(100,10)
+    setpoint(150,4)
+    ramp(0,-75)
 ''')
     help_message = Str
     save_enabled = Bool(False)
@@ -106,6 +108,7 @@ class PyScriptManager(Manager):
     execute_button = Event
     execute_label = Property(depends_on='_executing')
 
+    calc_graph_button = Button('Graph Profile')
 #    help_button = Button('Help')
 
     runner = Instance(PyScriptRunner, ())
@@ -140,20 +143,15 @@ class PyScriptManager(Manager):
             self._executing = True
             self.execute_script()
 
+    def _calc_graph_button_fired(self):
+        ps = self._pyscript_factory(self.kind, runner=self.runner)
+        ps.set_text(self.body)
+
+        #graph calculated in secs
+        ps.calculate_graph()
+
     def _check_save(self):
         return self.test_script(report_success=False)
-
-#        if self.script_validator.errors:
-#            n = len(self.script_validator.errors)
-#            is_are = 'is' if n == 1 else 'are'
-#            e_es = 'error' if n == 1 else 'errors'
-#            d = confirmation(None, '''There {} {} {}.
-#Are you sure you want to save ?'''.format(is_are, n, e_es))
-#            r = d == 5103
-#        else:
-#            r = True
-#
-#        return r
 
     def _get_default_directory(self):
         if self.default_directory_name:
@@ -400,11 +398,13 @@ class PyScriptManager(Manager):
 #                        VGroup(
 #                               Item('help_button', show_label=False),
 #                               shell_grp)),
-
-                 self._button_factory('execute_button', 'execute_label',
+                        HGroup(
+                               self._button_factory('execute_button', 'execute_label',
                                       enabled_when='object.execute_enabled',
                                       visible_when='object.execute_visible',
                                       align='left'),
+                               Item('calc_graph_button', show_label=False)
+                       ),
                  ),
                  resizable=True,
                  buttons=[
