@@ -28,15 +28,15 @@ colors8i = dict(
                 maroon=(127, 0, 0),
                 yellow=(255, 255, 0),
                 olive=(127, 127, 0),
-                lime=(0, 255, 0),
+                limegreen=(0, 255, 0),
                 green=(0, 127, 0),
                 gray=(127, 127, 127),
-                aqua=(0, 255, 255),
+                aquamarine=(0, 255, 255),
                 teal=(0, 127, 127),
                 blue=(0, 0, 255),
                 silver=(191, 191, 191),
                 navy=(0, 0, 127),
-                fuchsia=(255, 0, 255),
+                plum=(255, 0, 255),
                 purple=(127, 0, 127),
                 blueviolet=(159, 95, 159),
                 brown=(165, 42, 42),
@@ -44,16 +44,45 @@ colors8i = dict(
                 greenyellow=(147, 219, 112)
 
               )
+
 colors1f = dict()
 for color in colors8i:
     c = colors8i[color]
     colors1f[color] = c[0] / 255., c[1] / 255., c[2] / 255.
-colornames = [ 'black', 'red', 'violet', 'maroon', 'yellow', 'olive',
-               'lime', 'gray', 'green', 'aqua', 'teal',
-               'blue', 'silver', 'navy', 'fuchsia', 'purple',
+colornames = [ 'black', 'red', 'violet', 'maroon', 'yellow',
+#               'olive',
+               'lime green', 'gray', 'green', 'aquamarine',
+               # 'teal',
+               'blue', 'silver', 'navy', 'plum', 'purple',
 
-               'blueviolet', 'brown', 'firebrick', 'greenyellow'
+               'blue violet', 'brown', 'firebrick', 'green yellow'
                ]
+
+allcolornames = ['aquamarine'
+'black', 'blue violet', 'blue', 'brown',
+'cadet blue', 'coral', 'cornflower blue', 'cyan',
+'dark green', 'dark grey', 'dark olive green', 'dark orchid',
+'dark slate blue', 'dark slate grey', 'dark turquoise', 'dim grey',
+'firebrick', 'forest green',
+'gold', 'goldenrod', 'green yellow', 'green', 'grey',
+'indian red',
+'khaki',
+'light blue', 'light grey', 'light steel blue', 'lime green',
+'magenta', 'maroon', 'medium aquamarine', 'medium blue',
+'medium forest green', 'medium goldenrod', 'medium orchid', 'medium sea green',
+'medium slate blue', 'medium spring green', 'medium turquoise', 'medium violet red', 'midnight blue',
+'navy',
+'orange red', 'orange', 'orchid',
+'pale green', 'pink', 'plum', 'purple'
+'red',
+'salmon', 'sea green', 'sienna', 'sky blue', 'slate blue', 'spring green', 'steel blue',
+'tan', 'thistle', 'turquoise',
+'violet red', 'violet',
+'wheat', 'white',
+'yellow green', 'yellow' ]
+
+
+
 colorname_pairs = [
                    (0xffbf33, 0x2b46d6),
                    (0x00ffff, 0xff5300),

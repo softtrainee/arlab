@@ -85,9 +85,8 @@ class MeasurementPyScript(PyScript):
         return self._detectors
     detector = property(fget=_get_detectors)
 
-    def get_commands(self):
-        cmds = super(MeasurementPyScript, self).get_commands()
-        cmds += ['baselines', 'position', 'set_time_zero', 'peak_center',
+    def get_script_commands(self):
+        cmds = ['baselines', 'position', 'set_time_zero', 'peak_center',
                  'activate_detectors', 'collect', 'regress', 'sniff',
 
                  'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',

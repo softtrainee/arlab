@@ -14,16 +14,12 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float
+from traits.api import Float
 
 #============= standard library imports ========================
-from threading import Lock, Thread, Condition
-import time
-from Queue import Queue, Empty
-from src.helpers.logger_setup import add_console
+from threading import Lock
+
 from src.loggable import Loggable
 
 #============= local library imports  ==========================
@@ -78,36 +74,35 @@ class RS485Scheduler(Loggable):
             return func(*args, **kwargs)
 
 
-class Consumer(Thread):
-
-    def __init__(self, q, b, cd):
-        Thread.__init__(self)
-        self._q = q
-        self._buf = b
-        self.logger = add_console(name='consumer')
-#        self.cond = cond
-        self.cd = cd
-
-    def run(self):
-        while 1:
-#            self.cond.acquire()
-            while self._q.empty():
-                time.sleep(0.0001)
-#                self.cond.wait(timeout=0.05)
-#            st = time.time()
-            func, args, kwargs = self._q.get()
-
-            while SINGLE_ITEM_BUF and not self._buf.empty():
-                time.sleep(0.0001)
-
-            r = func(*args, **kwargs)
-#            self.logger.info(r)
-            self._buf.put(r)
-#            self.cond.release()
-
-#            time.sleep(self.cd/1000.)
-#            time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
-
+#class Consumer(Thread):
+#
+#    def __init__(self, q, b, cd):
+#        Thread.__init__(self)
+#        self._q = q
+#        self._buf = b
+##        self.logger = add_console(name='consumer')
+##        self.cond = cond
+#        self.cd = cd
+#
+#    def run(self):
+#        while 1:
+##            self.cond.acquire()
+#            while self._q.empty():
+#                time.sleep(0.0001)
+##                self.cond.wait(timeout=0.05)
+##            st = time.time()
+#            func, args, kwargs = self._q.get()
+#
+#            while SINGLE_ITEM_BUF and not self._buf.empty():
+#                time.sleep(0.0001)
+#
+#            r = func(*args, **kwargs)
+##            self.logger.info(r)
+#            self._buf.put(r)
+##            self.cond.release()
+#
+##            time.sleep(self.cd/1000.)
+##            time.sleep(max(0.0001, self.cd / 1000. - (time.time() - st) - 0.001))
 
 
 #============= EOF ====================================

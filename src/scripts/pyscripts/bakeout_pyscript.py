@@ -57,10 +57,8 @@ class BakeoutPyScript(PyScript):
 ##        return p
 #        pass
 
-    def get_commands(self):
-        cmds = super(BakeoutPyScript, self).get_commands()
-        cmds += ['setpoint', 'ramp']
-        return cmds
+    def get_script_commands(self):
+        return ['setpoint', 'ramp']
 
     def ramp(self, setpoint, rate, start=None, period=60):
         setpoint = float(setpoint)

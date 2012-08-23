@@ -15,8 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Event, Float, Str, Instance, Bool, Property
-from traitsui.api import View, Item, EnumEditor, spring, HGroup, Label, VGroup, Spring
+from traits.api import List, Event, Float, Str, Instance, Bool, Property, \
+    Color
+from traitsui.api import View, Item, spring, HGroup, Label, VGroup, Spring, \
+    ButtonEditor, EnumEditor
 #from pyface.timer.api import Timer
 #============= standard library imports ========================
 import time
@@ -83,29 +85,13 @@ class BakeoutController(WatlowEZZone):
 
     _timer = None
 
-    def _script_changed(self):
-        self._duration = 0
-        self.setpoint = 0
+    state_button = Event
+    state_label = Property(depends_on='alive')
 
-    def _record_process_changed(self):
-        if self.record_process:
-            if self._duration < 0.0001:
-                self._duration = 100
-            self.script = '---'
+    ok_to_run = Property
+#    (depends_on='_ok_to_run')
+#    _ok_to_run = Bool(False)
 
-    def _validate_max_output(self, v):
-        try:
-            return float(v)
-        except Exception:
-            pass
-
-    def _set_max_output(self, v):
-        self._max_output = v
-        self.set_high_power_scale(v)
-        self.read_high_power_scale()
-
-    def _get_max_output(self):
-        return self._max_output
 
     def initialization_hook(self):
         '''
@@ -115,27 +101,7 @@ class BakeoutController(WatlowEZZone):
         #read the current max output setting
         self._max_output = self.read_high_power_scale()
 
-    def _setpoint_changed(self):
-        if self.isAlive():
-            self.set_closed_loop_setpoint(self.setpoint)
 
-    def _get_duration(self):
-        return self._duration
-
-    def _set_duration(self, v):
-        if self.isAlive():
-            self._oduration = v
-            self.start_time = time.time()
-
-        self._duration = v
-
-    def _validate_duration(self, v):
-        try:
-            value = float(v)
-        except ValueError:
-            value = self._duration
-
-        return value
 
     def isAlive(self):
         return self.alive
@@ -178,7 +144,7 @@ class BakeoutController(WatlowEZZone):
 Add {}'.format(sd)):
                 os.mkdir(sd)
 
-    def ok_to_run(self):
+    def _get_ok_to_run(self):
         ok = True
         if not self.record_process:
             if self.script == '---':
@@ -291,8 +257,8 @@ Add {}'.format(sd)):
     def end(self, user_kill=False, script_kill=False, msg=None, error=None):
         self.led.state = 'red'
         if self.isActive() and self.isAlive():
-            if hasattr(self, '_timer'):
-                self._timer.Stop()
+#            if hasattr(self, '_timer'):
+#                self._timer.Stop()
 
             if self._active_script is not None:
 #                if not script_kill:
@@ -314,7 +280,7 @@ Add {}'.format(sd)):
             func(msg)
             self.alive = False
             self.active = False
-
+            self._duration = 0
 #            self.process_value = 0
 
 #    def complex_query(self, **kw):
@@ -366,43 +332,101 @@ Add {}'.format(sd)):
 
         #self.get_temperature(verbose=False)
         #self.complex_query(verbose=False)
-        self.get_temp_and_power(verbose=True)
-#        self.get_temp_and_power(verbose=False)
+#        self.get_temp_and_power(verbose=True)
+        self.get_temp_and_power(verbose=False)
 
         if self._duration_timeout:
             if time.time() - self.start_time > self._oduration * 3600.:
                 self.end()
 
+
+#===============================================================================
+# handlers
+#===============================================================================
+
+    def _state_button_fired(self):
+        if self.isAlive():
+            self.end()
+        else:
+            self.run()
+
+    def _setpoint_changed(self):
+        if self.isAlive():
+            self.set_closed_loop_setpoint(self.setpoint)
+
+    def _script_changed(self):
+        self._duration = 0
+        self.setpoint = 0
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_state_label(self):
+        return 'Stop' if self.isAlive() else 'Start'
+
+    def _validate_max_output(self, v):
+        try:
+            return float(v)
+        except Exception:
+            pass
+
+    def _set_max_output(self, v):
+        self._max_output = v
+        self.set_high_power_scale(v)
+        self.read_high_power_scale()
+
+    def _get_max_output(self):
+        return self._max_output
+
+    def _get_duration(self):
+        return self._duration
+
+    def _set_duration(self, v):
+        if self.isAlive():
+            self._oduration = v
+            self.start_time = time.time()
+
+        self._duration = v
+
+    def _validate_duration(self, v):
+        try:
+            value = float(v)
+        except ValueError:
+            value = self._duration
+
+        return value
+#===============================================================================
+# defaults
+#===============================================================================
     def _led_default(self):
         return ButtonLED(callable=self.on_led_action)
-
 #============= views ===================================
     def traits_view(self):
         '''
         '''
+        state_item = Item('state_button', editor=ButtonEditor(label_value='state_label'),
+                          show_label=False,
+                          enabled_when='ok_to_run'
+                        )
         show_label = False
         if self.name.endswith('1'):
             show_label = True
-            header_grp = HGroup(spring,
+            header_grp = HGroup(
+                            Spring(width=100, springy=False),
                             HGroup(
-#                                   spring,
                                    Label(self.name[-1]),
-                                  # spring,
                                    Item('led', editor=LEDEditor(),
                                         show_label=False, style='custom'),
-                                    springy=True
                             ),
-                            springy=True
+                            state_item,
+#                            Item('color', show_label=False, style='readonly')
                             )
             process_grp = HGroup(
                                  Spring(width=35, springy=False),
                                  Label('Temp. (C)'),
                                  spring,
                                    Item('process_value', show_label=False,
-                                  style='readonly', format_str='%0.1f'),
+                                   style='readonly', format_str='%0.1f'),
                                    spring,
-                                   Item('record_process', show_label=False),
-#                                   springy=False
                                    )
         else:
             header_grp = HGroup(
@@ -410,16 +434,16 @@ Add {}'.format(sd)):
                                 Label(self.name[-1]),
                                 Item('led', editor=LEDEditor(),
                                         show_label=False, style='custom'),
-                                springy=True
-                                ))
+                                state_item,
+#                                Item('color', show_label=False, style='readonly')
+                                ),
+                                )
             process_grp = HGroup(
                                    spring,
                                    Item('process_value', label='Temp (C)',
                                         show_label=False,
                                   style='readonly', format_str='%0.1f'),
                                    spring,
-                                   Item('record_process', show_label=False),
-                                   #springy=False
                                    )
         v = View(
                  VGroup(
