@@ -134,8 +134,8 @@ class BakeoutManager(Manager):
 
     database = Any
     _suppress_commit = False
-    
-    force_program=False
+
+    force_program = False
 #    def _convert_to_h5(self, path):
 #        args = self._bakeout_csv_parser(path)
 #        (names, nseries, ib, data, path, attrs) = args
@@ -248,11 +248,7 @@ class BakeoutManager(Manager):
 
             self._set_configuration(path)
             self._load_configurations()
-
-    def reset_general_scan(self):
-        self.info('Starting general scan')
-        self._buffer_lock = Lock()
-
+    def reset_data_recording(self):
         controllers = self._get_controllers()
         self.data_manager = self._data_manager_factory(controllers,
                                                        [],
@@ -260,6 +256,11 @@ class BakeoutManager(Manager):
 
         self._add_bakeout_to_db(controllers,
                                     self.data_manager.get_current_path())
+    def reset_general_scan(self):
+        self.info('Starting general scan')
+        self._buffer_lock = Lock()
+
+        self.reset_data_recording()
         #reset the graph
         self.graph = self._graph_factory()
         for i, name in enumerate(self._get_controller_names()):
@@ -293,6 +294,7 @@ class BakeoutManager(Manager):
                 self.data_manager.close()
 
             self.alive = False
+            self.reset_data_recording()
 #            self.reset_general_scan()
 
         else:
@@ -596,8 +598,8 @@ class BakeoutManager(Manager):
                             m2 = 'Watlow controllers are properly programmed'
                             self.info(m1 if program else m2)
                     else:
-                        program=True
-                        
+                        program = True
+
                     bc.program_memory_blocks = program
 
                     bc.initialize()
