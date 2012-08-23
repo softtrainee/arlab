@@ -147,107 +147,7 @@ class BakeoutManager(Manager):
 #            dm.new_array('/{}'.format(n), 'data', d.transpose())
 #
 #        dm.close()
-#==============================================================================
-# database 
-#==============================================================================
-    def _database_default(self):
-        db = BakeoutAdapter(dbname=paths.bakeout_db,
-#                            password='Argon',
-                            kind='sqlite'
-                            )
-        db.connect()
-        return db
 
-    def _add_bakeout_to_db(self, controllers, path):
-        db = self.database
-
-        #add to BakeoutTable
-        b = db.add_bakeout()
-
-        #add to PathTable
-        db.add_path(b, path)
-
-        args = dict()
-
-        #add to ControllerTable
-        for c in controllers:
-            args['name'] = c.name
-            args['script'] = c.script
-            args['setpoint'] = c.setpoint
-            args['duration'] = c.duration
-            _ci = db.add_controller(b, **args)
-
-#==============================================================================
-# Button handlers
-#==============================================================================
-    def _edit_scripts_button_fired(self):
-        se = self.script_editor
-        if se.save_path:
-            se.title = 'Script Editor {}'.format(se.save_path)
-
-        se.edit_traits(kind='livemodal')
-
-        for ci in self._get_controllers():
-            ci.load_scripts()
-
-    def _open_button_fired(self):
-        use_db = True
-        if use_db:
-            db = self.database
-#            db = BakeoutAdapter(dbname='bakeoutdb',
-#                                password='Argon')
-            db.connect()
-            db.open_selector()
-
-        else:
-            path = self._file_dialog_('open',
-                                      default_directory=os.path.join(paths.data_dir,
-                                      '.bakeouts'),
-                                      wildcard='Data files (*.h5,*.csv, *.txt)|*.h5;*.csv;*.txt'
-                                      )
-
-#            db = BakeoutAdapter(dbname='bakeoutdb',
-#                                password='Argon')
-#            db.connect()
-
-#        if path is not None:
-#            self._open_graph(path)
-
-    def _save_fired(self):
-
-        path = self._file_dialog_('save as',
-                                  default_directory=paths.bakeout_config_dir)
-
-        if not path.endswith('.cfg'):
-            path += '.cfg'
-
-        if path is not None:
-            config = self.get_configuration_writer()
-            config.add_section('Include')
-            config.set('Include', 'temp', self.include_temp)
-            config.set('Include', 'heat', self.include_heat)
-            config.set('Include', 'pressure', self.include_pressure)
-
-            config.add_section('Scan')
-            config.set('Scan', 'interval', self.update_interval)
-            config.set('Scan', 'window', self.scan_window)
-
-            for tr in self._get_controller_names():
-                tr_obj = getattr(self, tr)
-                config.add_section(tr)
-
-                script = getattr(tr_obj, 'script')
-                if script != '---':
-                    config.set(tr, 'script', script)
-                else:
-                    for attr in ['duration', 'setpoint', 'record_process']:
-                        config.set(tr, attr, getattr(tr_obj, attr))
-
-            with open(path, 'w') as f:
-                config.write(f)
-
-            self._set_configuration(path)
-            self._load_configurations()
     def reset_data_recording(self):
         controllers = self._get_controllers()
         self.data_manager = self._data_manager_factory(controllers,
@@ -256,6 +156,7 @@ class BakeoutManager(Manager):
 
         self._add_bakeout_to_db(controllers,
                                     self.data_manager.get_current_path())
+
     def reset_general_scan(self):
         self.info('Starting general scan')
         self._buffer_lock = Lock()
@@ -270,45 +171,6 @@ class BakeoutManager(Manager):
         for i, c in enumerate(cs):
         #reset the general timers
             c.start_timer()
-
-
-    def _execute_fired(self):
-        if self.alive:
-
-            self._suppress_commit = True
-            self.kill(user_kill=True,
-                      close=False
-                      )
-            self._suppress_commit = False
-
-            if not self.db_save_dialog():
-                self.info('rolling back')
-                self.database.rollback()
-                self.database.close()
-                if self.data_manager:
-                    self.data_manager.delete_frame()
-            else:
-                self.database.commit()
-
-            if self.data_manager is not None:
-                self.data_manager.close()
-
-            self.alive = False
-            self.reset_data_recording()
-#            self.reset_general_scan()
-
-        else:
-            states = []
-            for c in self._get_controllers():
-                if c.ok_to_run:
-                    c.on_trait_change(self.update_alive, 'alive')
-                    c.run()
-                    states.append(True)
-
-            self.alive = True in states
-
-#            t = Thread(name='bakeout.execute', target=self._execute_)
-#            t.start()
 
     def opened(self):
         self.info('opened')
@@ -349,17 +211,6 @@ class BakeoutManager(Manager):
         else:
             self.alive = bool(len(self._get_active_controllers()))
 
-    def _alive_changed(self, name, old, new):
-        if old and not new and not self._suppress_commit:
-            if self.database is not None:
-                self.info('commit session to db')
-                do_later(self.database.commit)
-            if self.data_manager is not None:
-                self.data_manager.close()
-
-            #completed successfully so we should restart a general scan
-#            self.reset_general_scan()
-
     def kill(self, close=True, **kw):
         '''
         '''
@@ -386,98 +237,39 @@ class BakeoutManager(Manager):
         if self.include_heat:
             self.graph.new_series(plotid=self.plotids[1])
 
-    def _execute2_(self):
-        '''
-        '''
-        self._buffer_lock = Lock()
-        pid = 0
-        header = []
-        self.data_buffer = []
-        self.data_buffer_x = []
-        self.data_count_flag = 0
-        for c in self._get_controllers():
-            c.stop_timer()
-
-        self.graph = self._graph_factory()
-
-        controllers = []
-        for bc in self._get_controllers():
-            name = bc.name
-#        for name in self._get_controller_names():
-#            bc = self.trait_get(name)[name]
-            if bc.ok_to_run():
-
-                bc.on_trait_change(self.update_alive, 'alive')
-
-                # set up graph
-#                self.graph.new_series()
-#                self.graph_info[bc.name] = dict(id=pid)
-#
-#                self.graph.set_series_label(name, series=pid)
-
-#                if self.include_heat:
-#                    self.graph.new_series(plotid=self.plotids[1])
-                self._setup_graph(name, pid)
-                if pid == 0:
-                    header.append('#{}_time'.format(name))
-                else:
-                    header.append('{}_time'.format(name))
-
-                if self.include_temp:
-                    header.append('{}_temp'.format(name))
-
-                if self.include_heat:
-                    header.append('{}_heat_power'.format(name))
-
-                if self.include_pressure:
-                    header.append('pressure')
-
-                controllers.append(bc)
-
-                pid += 1
-
-        if controllers:
-            self.data_manager = self._data_manager_factory(controllers, header,
-                                                           style='h5')
-
-            self._add_bakeout_to_db(controllers,
-                                    self.data_manager.get_current_path())
-
-            self._nactivated_controllers = len(controllers)
-            pv = ProcessView()
-            for c in controllers:
-                c.run()
-                try:
-                    a = c._active_script
-                    if a is not None:
-                        pv.add_script(c.name, a)
-                except Exception, _e:
-                    #this isnt a .bo script not currently conducive to process view
-                    pass
-
-            if pv.scripts:
-                do_later(pv.edit_traits)
-
-#            time.sleep(0.5)
-            for c in controllers:
-                c.start_timer()
-
-            if self.include_pressure:
-                # pressure plot
-                self.graph.new_series(type='line',
-                        render_style='connectedpoints',
-                        plotid=self.plotids[2])
-
-            # start a pressure monitor thread
-#                t = Thread(target=self._pressure_monitor)
-#                t.start()
-
-            self._start_time = time.time()
+    def _db_save(self):
+        if not self.db_save_dialog():
+                self.info('rolling back')
+                self.database.rollback()
+                self.database.close()
+                if self.data_manager:
+                    self.data_manager.delete_frame()
         else:
-            self.alive = False
-            self.reset_general_scan()
+            self.database.commit()
 
-    def _graph_(self):
+        if self.data_manager is not None:
+            self.data_manager.close()
+
+    def _add_bakeout_to_db(self, controllers, path):
+        db = self.database
+
+        #add to BakeoutTable
+        b = db.add_bakeout()
+
+        #add to PathTable
+        db.add_path(b, path)
+
+        args = dict()
+
+        #add to ControllerTable
+        for c in controllers:
+            args['name'] = c.name
+            args['script'] = c.script
+            args['setpoint'] = c.setpoint
+            args['duration'] = c.duration
+            _ci = db.add_controller(b, **args)
+
+    def _do_graph(self):
         for ci, (_name, i, pi, hi) in enumerate(self.data_buffer):
             track_x = ci == len(self.data_buffer) - 1
             kwargs = dict(series=i,
@@ -520,55 +312,6 @@ class BakeoutManager(Manager):
         self.data_buffer = []
         self.data_buffer_x = []
         self.data_count_flag = 0
-
-# ============= views ===================================
-    def traits_view(self):
-        '''
-        '''
-        controller_grp = HGroup()
-        for tr in self._get_controller_names():
-            controller_grp.content.append(Item(tr,
-                                     show_label=False, style='custom'))
-
-        control_grp = HGroup(VGroup(Item('execute',
-                             editor=ButtonEditor(label_value='execute_label'
-                             ), show_label=False,
-                             enabled_when='execute_ok'),
-                             Item('open_button',
-                             editor=ButtonEditor(label_value='open_label'
-                             ), show_label=False),
-                            Item('edit_scripts_button', show_label=False,
-#                                 enabled_when='not alive'
-                                 ),
-                                    ),
-                             HGroup(Item('configuration',
-                             editor=EnumEditor(name='configurations'),
-                             show_label=False), Item('save',
-                             show_label=False)),
-                             VGroup('include_pressure', 'include_heat',
-                             'include_temp', enabled_when='not alive'),
-                             label='Control', show_border=True),
-
-        scan_grp = VGroup(Item('update_interval',
-                          label='Sample Period (s)'), Item('scan_window'
-                          , label='Data Window (mins)'), label='Scan',
-                          show_border=True)
-
-        pressure_grp = VGroup(HGroup(Item('use_pressure_monitor'),
-                              Item('_pressure_sampling_period',
-                              label='Sample Period (s)')),
-                              VGroup(Item('_max_duration',
-                              label='Max. Duration (hrs)'),
-                              Item('_pressure_monitor_std_threshold'),
-                              Item('_pressure_monitor_threshold'),
-                              enabled_when='use_pressure_monitor'),
-                              label='Pressure', show_border=True)
-        v = View(VGroup(HGroup(control_grp, HGroup(scan_grp,
-                 pressure_grp, enabled_when='not alive')),
-                 controller_grp, Item('graph', show_label=False,
-                 style='custom')), handler=AppHandler,
-                 resizable=True, title='Bakeout Manager', height=830)
-        return v
 
     def _load_controllers(self):
         '''
@@ -710,217 +453,14 @@ class BakeoutManager(Manager):
 #==============================================================================
 #    def _get_process_value(self):
 #        while 1:
-    @on_trait_change('bakeout+:process_value_flag')
-    def update_graph_temperature(
-        self,
-        obj,
-        name,
-        old,
-        new,
-        ):
-
-#        if self.alive and not obj.isAlive():
-#            return
-
-        try:
-            pid = self.graph_info[obj.name]['id']
-        except KeyError:
-            return
-
-        pv = getattr(obj, 'process_value')
-        hp = getattr(obj, 'heat_power_value')
-        with self._buffer_lock:
-            self.data_buffer.append((obj.name, pid, pv, hp))
-
-            self.data_count_flag += 1
-
-            if self.alive:
-                n = len(self.active_controllers)
-            else:
-                n = len(self._get_controller_names())
-
-            if self.data_count_flag >= n:
-                do_after_timer(1, self._graph_)
-
-    def _update_interval_changed(self):
-        for tr in self._get_controller_names():
-            bc = self.trait_get(tr)[tr]
-            bc.update_interval = self.update_interval
-
-        self.graph.set_scan_delay(self.update_interval)
-
-    def __configuration_changed(self):
-        for tr in self._get_controller_names():
-            kw = dict()
-            tr_obj = getattr(self, tr)
-            for attr, v in [('duration', 0),
-                             ('setpoint', 0),
-                             ('record_process', False)]:
-                kw[attr] = v
-
-            kw['script'] = '---'
-            tr_obj.trait_set(**kw)
-
-        if self.configuration is not '---':
-            self._parse_config_file(self._configuration)
-#        self.reset_general_scan()
 
 
-    @on_trait_change('include_+')
-    def _toggle_graphs(self):
-        self.graph = self._graph_factory()
-        self.reset_general_scan()
 
     def _clean_archive(self):
         root = os.path.join(paths.data_dir, 'bakeouts')
         self.info('cleaning bakeout data directory {}'.format(root))
         a = Archiver(root=root, archive_days=14)
         a.clean()
-
-# ==========================================================================
-# factories
-# ==========================================================================
-    def _controller_factory(self, name):
-        bc = BakeoutController(name=name,
-                               configuration_dir_name='bakeout',
-                               update_interval=self.update_interval)
-        return bc
-
-    def _data_manager_factory(self, controllers, header, style='csv'):
-        from src.managers.data_managers.h5_data_manager import H5DataManager
-
-        dm = CSVDataManager() if style == 'csv' else H5DataManager()
-
-        ni = 'bakeout-{}'.format(generate_datestamp())
-
-        dw = DataWarehouse(root=paths.bakeout_db_root)
-#                           os.path.join(data_dir, base_dir))
-        dw.build_warehouse()
-
-        _dn = dm.new_frame(directory=dw.get_current_dir(),
-                base_frame_name=ni)
-
-        if style == 'csv':
-            d = map(str, map(int, [self.include_temp,
-                    self.include_heat, self.include_pressure]))
-            d[0] = '#' + d[0]
-            dm.write_to_frame(d)
-
-            # set the header in for the data file
-            dm.write_to_frame(header)
-        else:
-            for ci in controllers:
-                cgrp = dm.new_group(ci.name)
-                if self.include_temp:
-                    dm.new_table(cgrp, 'temp')
-                if self.include_heat:
-                    dm.new_table(cgrp, 'heat')
-                if self.include_pressure:
-                    dm.new_table(cgrp, 'pressure')
-
-                for attr in ['script', 'setpoint',
-                             'duration', 'max_output']:
-                    dm.set_group_attribute(cgrp, attr, getattr(ci, attr))
-
-                if ci.script != '---':
-                    p = os.path.join(paths.scripts_dir, 'bakeout', ci.script)
-                    with open(p, 'r') as f:
-                        txt = f.read()
-                else:
-                    txt = ''
-                dm.set_group_attribute(cgrp, 'script_text', txt)
-        return dm
-
-#    def _bakeout_factory(
-#        self,
-##        header,
-#        names,
-#        nseries,
-#        include_bits,
-#        data,
-#        path,
-#        attrs,
-#        ph=0.5,
-#        transpose_data=True,
-#        ** kw
-#        ):
-#
-#        ph = DISPLAYSIZE.height * ph / max(1, sum(include_bits))
-#
-#        graph = self._graph_factory(stream=False,
-#                                    include_bits=include_bits,
-#                                    panel_height=ph,
-#                                    plot_kwargs=dict(pan=True, zoom=True),
-#                                     **kw)
-#        plotids = self.plotids
-##        print names, nseries, include_bits
-##        for i in range(nseries / sum(include_bits)):
-##            print i
-#            # set up graph
-##            name = names[i]#[i / sum(include_bits)]
-#        for i, name in enumerate(names):
-#            for j in range(3):
-#                if include_bits[j]:
-#                    graph.new_series(plotid=plotids[j])
-#                    graph.set_series_label(name, series=i,
-#                                           plotid=plotids[j])
-#
-#        ma0 = -1
-#        mi0 = 1e8
-#        ma1 = -1
-#        mi1 = 1e8
-#        ma2 = -1
-#        mi2 = 1e8
-#
-#        for (i, da) in enumerate(data):
-#
-#            if transpose_data:
-#                da = np.transpose(da)
-#
-#            x = da[0]
-#            if include_bits[0]:
-#                y = da[1]
-#                ma0 = max(ma0, max(y))
-#                mi0 = min(mi0, min(y))
-#                graph.set_data(x, series=i, axis=0, plotid=plotids[0])
-#                graph.set_data(da[1], series=i, axis=1,
-#                               plotid=plotids[0])
-#                graph.set_y_limits(mi0, ma0, pad='0.1',
-#                                   plotid=plotids[0])
-#
-#            if include_bits[1]:
-#                y = da[2]
-#                ma1 = max(ma1, max(y))
-#                mi1 = min(mi1, min(y))
-#                graph.set_data(x, series=i, axis=0, plotid=plotids[1])
-#                graph.set_data(y, series=i, axis=1, plotid=plotids[1])
-#                graph.set_y_limits(mi1, ma1, pad='0.1',
-#                                   plotid=plotids[1])
-#
-#            if include_bits[2]:
-#                y = da[3]
-#                ma2 = max(ma2, max(y))
-#                mi2 = min(mi2, min(y))
-#                graph.set_data(x, series=i, axis=0, plotid=plotids[2])
-#                graph.set_data(y, series=i, axis=1, plotid=plotids[2])
-#                graph.set_y_limits(mi2, ma2, pad='0.1',
-#                                   plotid=plotids[2])
-#
-#                # prevent multiple pressure plots
-#
-#                include_bits[2] = False
-#
-#        graph.set_x_limits(min(x), max(x))
-#        (name, _ext) = os.path.splitext(name)
-#        graph.set_title(name)
-#        return graph
-
-#    def _bakeout_parser(self, path, ish5):
-#
-#        if ish5:
-#            return self._bakeout_h5_parser(path)
-#        else:
-#            return self._bakeout_csv_parser(path)
 
     def _write_data(self):
 
@@ -978,69 +518,263 @@ class BakeoutManager(Manager):
 
         self.data_manager2.write_to_frame(container)
 
-#    def _bakeout_h5_parser(self, path):
-#        from src.managers.data_managers.h5_data_manager import H5DataManager
-#        dm = H5DataManager()
-#        if not dm.open_data(path):
+#===============================================================================
+# handlers 
+#===============================================================================
+    def _update_interval_changed(self):
+        for tr in self._get_controller_names():
+            bc = self.trait_get(tr)[tr]
+            bc.update_interval = self.update_interval
+
+        self.graph.set_scan_delay(self.update_interval)
+
+    def __configuration_changed(self):
+        for tr in self._get_controller_names():
+            kw = dict()
+            tr_obj = getattr(self, tr)
+            for attr, v in [('duration', 0),
+                             ('setpoint', 0),
+                             ('record_process', False)]:
+                kw[attr] = v
+
+            kw['script'] = '---'
+            tr_obj.trait_set(**kw)
+
+        if self.configuration is not '---':
+            self._parse_config_file(self._configuration)
+#        self.reset_general_scan()
+
+    def _alive_changed(self, name, old, new):
+        if old and not new and not self._suppress_commit:
+            if self.database is not None:
+                self.info('commit session to db')
+                do_later(self.database.commit)
+            if self.data_manager is not None:
+                self.data_manager.close()
+
+            #completed successfully so we should restart a general scan
+#            self.reset_general_scan()
+
+
+    @on_trait_change('include_+')
+    def _toggle_graphs(self):
+        self.graph = self._graph_factory()
+        self.reset_general_scan()
+
+    @on_trait_change('bakeout+:process_value_flag')
+    def _update_graph_temperature(
+        self,
+        obj,
+        name,
+        old,
+        new,
+        ):
+
+#        if self.alive and not obj.isAlive():
 #            return
-#
-#        controllers = dm.get_groups()
-#        datagrps = []
-#        attrs = []
-#        ib = [0, 0, 0]
-#        for ci in controllers:
-#
-#            attrs_i = dict()
-#            for ai in ['script', 'setpoint', 'duration', 'script_text']:
-#                attrs_i[ai] = getattr(ci._v_attrs, ai)
-#            attrs.append(attrs_i)
-#            data = []
-#            for i, ti in enumerate(['temp', 'heat']):
-#                try:
-#                    table = getattr(ci, ti)
-#                    xs = [x['time'] for x in table]
-#                    ys = [x['value'] for x in table]
-#                    if i == 0:
-#                        data.append(xs)
-#                    data.append(ys)
-#                    ib[i] = 1
-#                except Exception, e:
-#                    print 'bakeout_manager._bakeout_h5_parser', e
-#
-#            if data:
-#                datagrps.append(data)
-#
-#        names = [ci._v_name for ci in controllers]
-#        nseries = len(controllers) * sum(ib)
-#        return names, nseries, ib, np.array(datagrps), path, attrs
-#
-#    def _bakeout_csv_parser(self, path):
-#        import csv
-#        attrs = None
-#        with open(path, 'r') as f:
-##            reader = csv.reader(open(path, 'r'))
-#            reader = csv.reader(f)
-#
-#            # first line is the include bits
-#            l = reader.next()
-#            l[0] = (l[0])[1:]
-##
-#            ib = map(int, l)
-#
-#            # second line is a header
-#            header = reader.next()
-#            header[0] = (header[0])[1:]
-#            nseries = len(header) / (sum(ib) + 1)
-#            names = [(header[(1 + sum(ib)) * i])[:-5] for i in range(nseries)]
-#
-##            average load time for 2MB file =0.42 s (n=10)
-##            data = np.loadtxt(f, delimiter=',')
-#
-##            average load time for 2MB file = 0.19 s (n=10)
-#            data = np.array([r for r in reader], dtype=float)
-#
-#            data = np.array_split(data, nseries, axis=1)
-#        return (names, nseries, ib, data, path, attrs)
+
+        try:
+            pid = self.graph_info[obj.name]['id']
+        except KeyError:
+            return
+
+        pv = getattr(obj, 'process_value')
+        hp = getattr(obj, 'heat_power_value')
+        with self._buffer_lock:
+            self.data_buffer.append((obj.name, pid, pv, hp))
+
+            self.data_count_flag += 1
+
+            if self.alive:
+                n = len(self.active_controllers)
+            else:
+                n = len(self._get_controller_names())
+
+            if self.data_count_flag >= n:
+                do_after_timer(1, self._do_graph)
+#==============================================================================
+# Button handlers
+#==============================================================================
+    def _edit_scripts_button_fired(self):
+        se = self.script_editor
+        if se.save_path:
+            se.title = 'Script Editor {}'.format(se.save_path)
+
+        se.edit_traits(kind='livemodal')
+
+        for ci in self._get_controllers():
+            ci.load_scripts()
+
+    def _open_button_fired(self):
+        use_db = True
+        if use_db:
+            db = self.database
+            db.connect()
+            db.open_selector()
+
+        else:
+            path = self._file_dialog_('open',
+                                      default_directory=os.path.join(paths.data_dir,
+                                      '.bakeouts'),
+                                      wildcard='Data files (*.h5,*.csv, *.txt)|*.h5;*.csv;*.txt'
+                                      )
+            if path is not None:
+                self._open_graph(path)
+
+    def _save_fired(self):
+
+        path = self._file_dialog_('save as',
+                                  default_directory=paths.bakeout_config_dir)
+
+        if not path.endswith('.cfg'):
+            path += '.cfg'
+
+        if path is not None:
+            config = self.get_configuration_writer()
+            config.add_section('Include')
+            config.set('Include', 'temp', self.include_temp)
+            config.set('Include', 'heat', self.include_heat)
+            config.set('Include', 'pressure', self.include_pressure)
+
+            config.add_section('Scan')
+            config.set('Scan', 'interval', self.update_interval)
+            config.set('Scan', 'window', self.scan_window)
+
+            for tr in self._get_controller_names():
+                tr_obj = getattr(self, tr)
+                config.add_section(tr)
+
+                script = getattr(tr_obj, 'script')
+                if script != '---':
+                    config.set(tr, 'script', script)
+                else:
+                    for attr in ['duration', 'setpoint', 'record_process']:
+                        config.set(tr, attr, getattr(tr_obj, attr))
+
+            with open(path, 'w') as f:
+                config.write(f)
+
+            self._set_configuration(path)
+            self._load_configurations()
+
+    def _execute_fired(self):
+        if self.alive:
+
+            self._suppress_commit = True
+            self.kill(user_kill=True,
+                      close=False
+                      )
+            self._suppress_commit = False
+
+            self._db_save()
+
+            self.alive = False
+            self.reset_data_recording()
+#            self.reset_general_scan()
+
+        else:
+            states = []
+            for c in self._get_controllers():
+                if c.ok_to_run:
+                    c.on_trait_change(self.update_alive, 'alive')
+                    c.run()
+                    states.append(True)
+
+            self.alive = True in states
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_configurations(self):
+        return [os.path.basename(p) for p in self._configurations]
+
+    def _get_configuration(self):
+        return os.path.splitext(os.path.basename(self._configuration))[0]
+
+    def _set_configuration(self, c):
+        self._configuration = os.path.join(paths.bakeout_config_dir, c)
+
+    def _get_execute_label(self):
+        return 'Stop' if self.alive else 'Execute'
+
+    def _get_controller_names(self):
+        '''
+        '''
+
+        c = [tr for tr in self.traits() if tr.startswith('bakeout')]
+        c.sort()
+        return c
+
+    def _get_controllers(self):
+        return [getattr(self, tr)
+                for tr in self._get_controller_names()]
+
+    def _get_active_controllers(self):
+#        ac = []
+#        for tr in self._get_controllers():
+#            if tr.isActive() and tr.isAlive():
+#                ac.append(tr)
+
+        return [tr for tr in self._get_controllers() if tr.isActive()
+                and tr.isAlive()
+                ]
+
+    def _get_execute_ok(self):
+        return sum(map(int, [self.include_temp, self.include_heat,
+                   self.include_pressure])) > 0
+
+#===============================================================================
+# factories
+#===============================================================================
+    def _controller_factory(self, name):
+        bc = BakeoutController(name=name,
+                               configuration_dir_name='bakeout',
+                               update_interval=self.update_interval)
+        return bc
+
+    def _data_manager_factory(self, controllers, header, style='csv'):
+        from src.managers.data_managers.h5_data_manager import H5DataManager
+
+        dm = CSVDataManager() if style == 'csv' else H5DataManager()
+
+        ni = 'bakeout-{}'.format(generate_datestamp())
+
+        dw = DataWarehouse(root=paths.bakeout_db_root)
+#                           os.path.join(data_dir, base_dir))
+        dw.build_warehouse()
+
+        _dn = dm.new_frame(directory=dw.get_current_dir(),
+                base_frame_name=ni)
+
+        if style == 'csv':
+            d = map(str, map(int, [self.include_temp,
+                    self.include_heat, self.include_pressure]))
+            d[0] = '#' + d[0]
+            dm.write_to_frame(d)
+
+            # set the header in for the data file
+            dm.write_to_frame(header)
+        else:
+            for ci in controllers:
+                cgrp = dm.new_group(ci.name)
+                if self.include_temp:
+                    dm.new_table(cgrp, 'temp')
+                if self.include_heat:
+                    dm.new_table(cgrp, 'heat')
+                if self.include_pressure:
+                    dm.new_table(cgrp, 'pressure')
+
+                for attr in ['script', 'setpoint',
+                             'duration', 'max_output']:
+                    dm.set_group_attribute(cgrp, attr, getattr(ci, attr))
+
+                if ci.script != '---':
+                    p = os.path.join(paths.scripts_dir, 'bakeout', ci.script)
+                    with open(p, 'r') as f:
+                        txt = f.read()
+                else:
+                    txt = ''
+                dm.set_group_attribute(cgrp, 'script_text', txt)
+        return dm
 
     def _graph_factory(
         self,
@@ -1108,7 +842,9 @@ class BakeoutManager(Manager):
             graph.set_x_limits(0, self.scan_window * 60)
 
         return graph
-
+#===============================================================================
+# defaults
+#===============================================================================
     def _graph_default(self):
         g = self._graph_factory()
         return g
@@ -1125,43 +861,13 @@ class BakeoutManager(Manager):
         m = klass(**kw)
         return m
 
-    def _get_configurations(self):
-        return [os.path.basename(p) for p in self._configurations]
-
-    def _get_configuration(self):
-        return os.path.splitext(os.path.basename(self._configuration))[0]
-
-    def _set_configuration(self, c):
-        self._configuration = os.path.join(paths.bakeout_config_dir, c)
-
-    def _get_execute_label(self):
-        return 'Stop' if self.alive else 'Execute'
-
-    def _get_controller_names(self):
-        '''
-        '''
-
-        c = [tr for tr in self.traits() if tr.startswith('bakeout')]
-        c.sort()
-        return c
-
-    def _get_controllers(self):
-        return [getattr(self, tr)
-                for tr in self._get_controller_names()]
-
-    def _get_active_controllers(self):
-#        ac = []
-#        for tr in self._get_controllers():
-#            if tr.isActive() and tr.isAlive():
-#                ac.append(tr)
-
-        return [tr for tr in self._get_controllers() if tr.isActive()
-                and tr.isAlive()
-                ]
-
-    def _get_execute_ok(self):
-        return sum(map(int, [self.include_temp, self.include_heat,
-                   self.include_pressure])) > 0
+    def _database_default(self):
+        db = BakeoutAdapter(dbname=paths.bakeout_db,
+#                            password='Argon',
+                            kind='sqlite'
+                            )
+        db.connect()
+        return db
 
 #==============================================================================
 # Pressure
@@ -1205,6 +911,175 @@ class BakeoutManager(Manager):
                             dtime)
                     ac.end(error=error)
 
+    def traits_view(self):
+        '''
+        '''
+        controller_grp = HGroup()
+        for tr in self._get_controller_names():
+            controller_grp.content.append(Item(tr,
+                                     show_label=False, style='custom'))
+
+        control_grp = HGroup(VGroup(Item('execute',
+                             editor=ButtonEditor(label_value='execute_label'
+                             ), show_label=False,
+                             enabled_when='execute_ok'),
+                             Item('open_button',
+                             editor=ButtonEditor(label_value='open_label'
+                             ), show_label=False),
+                            Item('edit_scripts_button', show_label=False,
+#                                 enabled_when='not alive'
+                                 ),
+                                    ),
+                             HGroup(Item('configuration',
+                             editor=EnumEditor(name='configurations'),
+                             show_label=False), Item('save',
+                             show_label=False)),
+                             VGroup('include_pressure', 'include_heat',
+                             'include_temp', enabled_when='not alive'),
+                             label='Control', show_border=True),
+
+        scan_grp = VGroup(Item('update_interval',
+                          label='Sample Period (s)'), Item('scan_window'
+                          , label='Data Window (mins)'), label='Scan',
+                          show_border=True)
+
+        pressure_grp = VGroup(HGroup(Item('use_pressure_monitor'),
+                              Item('_pressure_sampling_period',
+                              label='Sample Period (s)')),
+                              VGroup(Item('_max_duration',
+                              label='Max. Duration (hrs)'),
+                              Item('_pressure_monitor_std_threshold'),
+                              Item('_pressure_monitor_threshold'),
+                              enabled_when='use_pressure_monitor'),
+                              label='Pressure', show_border=True)
+        v = View(VGroup(HGroup(control_grp, HGroup(scan_grp,
+                 pressure_grp, enabled_when='not alive')),
+                 controller_grp, Item('graph', show_label=False,
+                 style='custom')), handler=AppHandler,
+                 resizable=True, title='Bakeout Manager', height=830)
+        return v
+#def launch_bakeout():
+#    b = BakeoutManager()
+#    b.load()
+#    b.configure_traits()
+
+##bm = BakeoutManager()
+#
+#
+#def load_h5():
+#    bm._bakeout_h5_parser(path + '.h5')
+#
+#
+#def load_csv():
+#    bm._bakeout_csv_parser(path + '.txt')
+#
+if __name__ == '__main__':
+    path = os.path.join(paths.data_dir, 'bakeouts', 'bakeout-2012-03-31007.txt')
+    b = BakeoutManager()
+    b.load()
+    b._add_bakeout_to_db()
+#    b._convert_to_h5(path)
+#    n = 10
+#    from timeit import Timer
+#    t = Timer('load_h5()', 'from __main__ import load_h5')
+#    h5_time = t.timeit(n) / float(n)
+#    print 'h5', h5_time
+#
+#    t = Timer('load_csv()', 'from __main__ import load_csv')
+#    csv_time = t.timeit(n) / float(n)
+#
+#    print 'csv', csv_time
+#def _execute2_(self):
+#        '''
+#        '''
+#        self._buffer_lock = Lock()
+#        pid = 0
+#        header = []
+#        self.data_buffer = []
+#        self.data_buffer_x = []
+#        self.data_count_flag = 0
+#        for c in self._get_controllers():
+#            c.stop_timer()
+#
+#        self.graph = self._graph_factory()
+#
+#        controllers = []
+#        for bc in self._get_controllers():
+#            name = bc.name
+##        for name in self._get_controller_names():
+##            bc = self.trait_get(name)[name]
+#            if bc.ok_to_run():
+#
+#                bc.on_trait_change(self.update_alive, 'alive')
+#
+#                # set up graph
+##                self.graph.new_series()
+##                self.graph_info[bc.name] = dict(id=pid)
+##
+##                self.graph.set_series_label(name, series=pid)
+#
+##                if self.include_heat:
+##                    self.graph.new_series(plotid=self.plotids[1])
+#                self._setup_graph(name, pid)
+#                if pid == 0:
+#                    header.append('#{}_time'.format(name))
+#                else:
+#                    header.append('{}_time'.format(name))
+#
+#                if self.include_temp:
+#                    header.append('{}_temp'.format(name))
+#
+#                if self.include_heat:
+#                    header.append('{}_heat_power'.format(name))
+#
+#                if self.include_pressure:
+#                    header.append('pressure')
+#
+#                controllers.append(bc)
+#
+#                pid += 1
+#
+#        if controllers:
+#            self.data_manager = self._data_manager_factory(controllers, header,
+#                                                           style='h5')
+#
+#            self._add_bakeout_to_db(controllers,
+#                                    self.data_manager.get_current_path())
+#
+#            self._nactivated_controllers = len(controllers)
+#            pv = ProcessView()
+#            for c in controllers:
+#                c.run()
+#                try:
+#                    a = c._active_script
+#                    if a is not None:
+#                        pv.add_script(c.name, a)
+#                except Exception, _e:
+#                    #this isnt a .bo script not currently conducive to process view
+#                    pass
+#
+#            if pv.scripts:
+#                do_later(pv.edit_traits)
+#
+##            time.sleep(0.5)
+#            for c in controllers:
+#                c.start_timer()
+#
+#            if self.include_pressure:
+#                # pressure plot
+#                self.graph.new_series(type='line',
+#                        render_style='connectedpoints',
+#                        plotid=self.plotids[2])
+#
+#            # start a pressure monitor thread
+##                t = Thread(target=self._pressure_monitor)
+##                t.start()
+#
+#            self._start_time = time.time()
+#        else:
+#            self.alive = False
+#            self.reset_general_scan()
+
 #    def _pressure_monitor(self):
 #
 #        window = 100
@@ -1241,35 +1116,4 @@ class BakeoutManager(Manager):
 #        for ac in self._get_active_controllers():
 #            ac.end(error=None if success else 'Max duration exceeded max={:0.1f}, dur={:0.1f}'.format(self._max_duration,
 
-#def launch_bakeout():
-#    b = BakeoutManager()
-#    b.load()
-#    b.configure_traits()
-
-##bm = BakeoutManager()
-#
-#
-#def load_h5():
-#    bm._bakeout_h5_parser(path + '.h5')
-#
-#
-#def load_csv():
-#    bm._bakeout_csv_parser(path + '.txt')
-#
-if __name__ == '__main__':
-    path = os.path.join(paths.data_dir, 'bakeouts', 'bakeout-2012-03-31007.txt')
-    b = BakeoutManager()
-    b.load()
-    b._add_bakeout_to_db()
-#    b._convert_to_h5(path)
-#    n = 10
-#    from timeit import Timer
-#    t = Timer('load_h5()', 'from __main__ import load_h5')
-#    h5_time = t.timeit(n) / float(n)
-#    print 'h5', h5_time
-#
-#    t = Timer('load_csv()', 'from __main__ import load_csv')
-#    csv_time = t.timeit(n) / float(n)
-#
-#    print 'csv', csv_time
 # ============= EOF ====================================
