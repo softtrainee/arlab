@@ -55,12 +55,11 @@ class ExtractionLinePyScript(PyScript):
         if self._resource_flag:
             self._resource_flag.clear()
 
-    def _get_help_hook(self):
-        return HTML_HELP
+#    def _get_help_hook(self):
+#        return HTML_HELP
 
-    def get_commands(self):
-        cmds = super(ExtractionLinePyScript, self).get_commands()
-        cmds += [('open', '_m_open'), 'close',
+    def get_script_commands(self):
+        cmds = [('open', '_m_open'), 'close',
                  'acquire', 'release',
 
                  'move_to_hole', 'heat_sample'

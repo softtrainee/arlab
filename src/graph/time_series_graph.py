@@ -100,6 +100,8 @@ class TimeSeriesGraph(Graph):
                    use_smooth=False, scale=None, ** kw):
         '''
         '''
+
+
         if not time_series:
             return super(TimeSeriesGraph, self).new_series(x=x, y=y, plotid=plotid, **kw)
 

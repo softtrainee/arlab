@@ -375,6 +375,12 @@ class Graph(Loggable):
         plot.trait_set(**d)
         self.plotcontainer.request_redraw()
 
+    def get_series_color(self, plotid=0, series=0):
+        if isinstance(series, int):
+            series = 'plot{:03n}'.format(series)
+
+        p = self.plots[plotid].plots[series][0]
+        return p.color
 #    def set_series_type(self, t, plotid = 0, series = 0):
 #        '''
 
@@ -1140,6 +1146,7 @@ class Graph(Loggable):
         else:
             c = kw['color']
 
+        c = c.replace(' ', '')
         if 'type' in kw:
 
             if kw['type'] == 'bar':

@@ -168,13 +168,19 @@ class PyScript(Loggable):
     def get_variables(self):
         return []
 
-    def get_commands(self):
+    def get_core_commands(self):
         cmds = ['sleep',
             'begin_interval', 'complete_interval',
             'gosub', 'exit', ('info', '_m_info'),
 
             ]
         return cmds
+
+    def get_commands(self):
+        return self.get_core_commands() + self.get_script_commands()
+
+    def get_script_commands(self):
+        return []
 
     def set_text(self, t):
         self._text = t
@@ -236,21 +242,28 @@ class PyScript(Loggable):
         if not name.endswith('.py'):
             name += '.py'
 
-        if '/' in name:
-            d = '/'
-        elif ':' in name:
-            d = ':'
+        if name.startswith('abs://'):
+            p = name[6:]
+            root = os.path.dirname(p)
+            name = os.path.basename(p)
+        else:
+            if '/' in name:
+                d = '/'
+            elif ':' in name:
+                d = ':'
 
-        dirs = name.split(d)
-        name = dirs[0]
-        for di in dirs[1:]:
-            name = os.path.join(name, di)
+            dirs = name.split(d)
+            name = dirs[0]
+            for di in dirs[1:]:
+                name = os.path.join(name, di)
 
-        p = os.path.join(self.root, name)
+            p = os.path.join(self.root, name)
+            root = self.root
+
         if not os.path.isfile(p):
             raise GosubError(p)
 #        print self.__class__
-        s = self.__class__(root=self.root,
+        s = self.__class__(root=root,
 #                          path=p,
                           name=name,
                           _syntax_checked=self._syntax_checked,

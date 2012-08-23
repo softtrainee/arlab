@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+#@todo: individual start/stop buttons
+#@todo: start/stop graph recording
 
 #============= enthought library imports  ==========================
 from traits.api import Array, Instance, Bool, Button, Event, \
@@ -249,15 +251,23 @@ class BakeoutManager(Manager):
         self.info('Starting general scan')
         self._buffer_lock = Lock()
 
+        controllers = self._get_controllers()
+        self.data_manager = self._data_manager_factory(controllers,
+                                                       [],
+                                                       style='h5')
+
+        self._add_bakeout_to_db(controllers,
+                                    self.data_manager.get_current_path())
         #reset the graph
         self.graph = self._graph_factory()
         for i, name in enumerate(self._get_controller_names()):
             self._setup_graph(name, i)
 
         cs = self._get_controllers()
-        for c in cs:
+        for i, c in enumerate(cs):
         #reset the general timers
             c.start_timer()
+
 
     def _execute_fired(self):
         if self.alive:
@@ -272,8 +282,8 @@ class BakeoutManager(Manager):
                 self.info('rolling back')
                 self.database.rollback()
                 self.database.close()
-
-                self.data_manager.delete_frame()
+                if self.data_manager:
+                    self.data_manager.delete_frame()
             else:
                 self.database.commit()
 
@@ -281,12 +291,20 @@ class BakeoutManager(Manager):
                 self.data_manager.close()
 
             self.alive = False
-            self.reset_general_scan()
+#            self.reset_general_scan()
 
         else:
-            self.alive = True
-            t = Thread(name='bakeout.execute', target=self._execute_)
-            t.start()
+            states = []
+            for c in self._get_controllers():
+                if c.ok_to_run:
+                    c.on_trait_change(self.update_alive, 'alive')
+                    c.run()
+                    states.append(True)
+
+            self.alive = True in states
+
+#            t = Thread(name='bakeout.execute', target=self._execute_)
+#            t.start()
 
     def opened(self):
         self.info('opened')
@@ -321,6 +339,7 @@ class BakeoutManager(Manager):
         old,
         new,
         ):
+
         if new:
             self.alive = new
         else:
@@ -333,8 +352,9 @@ class BakeoutManager(Manager):
                 do_later(self.database.commit)
             if self.data_manager is not None:
                 self.data_manager.close()
+
             #completed successfully so we should restart a general scan
-            self.reset_general_scan()
+#            self.reset_general_scan()
 
     def kill(self, close=True, **kw):
         '''
@@ -362,7 +382,7 @@ class BakeoutManager(Manager):
         if self.include_heat:
             self.graph.new_series(plotid=self.plotids[1])
 
-    def _execute_(self):
+    def _execute2_(self):
         '''
         '''
         self._buffer_lock = Lock()
@@ -692,8 +712,8 @@ class BakeoutManager(Manager):
         new,
         ):
 
-        if self.alive and not obj.isAlive():
-            return
+#        if self.alive and not obj.isAlive():
+#            return
 
         try:
             pid = self.graph_info[obj.name]['id']
@@ -714,8 +734,6 @@ class BakeoutManager(Manager):
 
             if self.data_count_flag >= n:
                 do_after_timer(1, self._graph_)
-
-
 
     def _update_interval_changed(self):
         for tr in self._get_controller_names():
@@ -1090,7 +1108,7 @@ class BakeoutManager(Manager):
 
     def _script_editor_default(self):
         kw = dict(kind='Bakeout',
-                  default_directory_name='bakeout')
+                  default_directory_name='bakeoutscripts')
         if self.script_style == 'pyscript':
             klass = PyScriptManager
             kw['execute_visible'] = False

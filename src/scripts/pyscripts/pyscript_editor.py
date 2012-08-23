@@ -14,18 +14,14 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Str, Enum, Bool, Instance, String, Dict, Property, \
-     Event, Button, Any, List
-from traitsui.api import View, Item, HGroup, spring, \
-    Handler, VGroup, HTMLEditor, CodeEditor, ShellEditor
-from pyface.wx.dialog import confirmation
+     Event, Button, Any, List, Int
+from traitsui.api import View, Item, HGroup, Group, spring, \
+    Handler, VGroup, HTMLEditor, CodeEditor, ShellEditor, ListStrEditor
 
 #============= standard library imports ========================
 import os
-
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 from traitsui.menu import Action
@@ -40,17 +36,20 @@ from pyface.message_dialog import information
 #from traitsui.wx.basic_editor_factory import BasicEditorFactory
 #from traitsui.editors.code_editor import ToolkitEditorFactory
 
-SCRIPT_PATHS = dict(bakeout=('src.scripts.bakeout_script', 'BakeoutScript',
-                             'src.scripts.bakeout_script_parser',
-                             'BakeoutScriptParser',
-                             ),
-
-                    extractionline=('src.scripts.extraction_line_script',
-                                             'ExtractionLineScript',
-                            'src.scripts.extraction_line_script_parser',
-                            'ExtractionLineScriptParser',
-                                             )
-                            )
+SCRIPT_PKGS = dict(Bakeout='src.scripts.pyscripts.bakeout_pyscript',
+                    ExtractionLine='src.scripts.pyscripts.extraction_line_pyscript'
+                    )
+#SCRIPT_PATHS = dict(Bakeout=('src.scripts.pyscripts.bakeout_pyscript', 'BakeoutScript',
+#                             'src.scripts.bakeout_script_parser',
+#                             'BakeoutScriptParser',
+#                             ),
+#
+#                    ExtractionLine=('src.scripts.extraction_line_pyscript',
+#                                             'ExtractionLineScript',
+#                            'src.scripts.extraction_line_script_parser',
+#                            'ExtractionLineScriptParser',
+#                                             )
+#                            )
 
 SCRIPT_EXTENSIONS = dict(bakeout='.bo')
 
@@ -59,8 +58,9 @@ class ScriptHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
         if not info.initialized:
-            info.object.load_help()
+#            info.object.load_help()
             info.object.load_context()
+            info.object.load_commands()
 
     def save(self, info):
         info.object.save()
@@ -106,12 +106,17 @@ class PyScriptManager(Manager):
     execute_button = Event
     execute_label = Property(depends_on='_executing')
 
-    help_button = Button('Help')
+#    help_button = Button('Help')
 
     runner = Instance(PyScriptRunner, ())
     name_count = 0
 
     scripts = Dict
+
+    core_commands = List
+    script_commands = List
+    selected_command = Str
+    selected_index = Int
 
     def _help_button_fired(self):
         pass
@@ -180,7 +185,10 @@ class PyScriptManager(Manager):
         self.save_enabled = False
 
     def _pyscript_factory(self, klassname, **kw):
-        klass = globals()['{}PyScript'.format(klassname)]
+
+        klassname = '{}PyScript'.format(klassname)
+        m = __import__(SCRIPT_PKGS[self.kind], fromlist=[klassname])
+        klass = getattr(m, klassname)
         if self.save_path:
             r, n = os.path.split(self.save_path)
             kw['root'] = r
@@ -190,7 +198,7 @@ class PyScriptManager(Manager):
 
         return klass(manager=self.parent,
                      parent=self,
-                     ** kw)
+                     **kw)
 
     def load_context(self):
 #        ps = PyScript(manager=self.parent)
@@ -199,11 +207,19 @@ class PyScriptManager(Manager):
 
         self.context = ps.get_context()
 
-    def load_help(self):
+#    def load_help(self):
+#        ps = self._pyscript_factory(self.kind)
+#        m = ps.get_help()
+##        self.help_path = ps.get_help_path()
+#        self.help_message = m
+
+    def load_commands(self):
         ps = self._pyscript_factory(self.kind)
-        m = ps.get_help()
-#        self.help_path = ps.get_help_path()
-        self.help_message = m
+        prepcommands = lambda cmds: [c[0] if isinstance(c, tuple) else c for c in cmds]
+
+        self.core_commands = prepcommands(ps.get_core_commands())
+        self.script_commands = prepcommands(ps.get_script_commands())
+
 
     def open_script(self, path=None):
         if path is None:
@@ -298,7 +314,9 @@ class PyScriptManager(Manager):
         with open(p, 'w') as f:
             f.write(self.body)
         self._original_body = self.body
-
+#===============================================================================
+# handlers
+#===============================================================================
     def _body_changed(self):
         if self._original_body:
             if self.body == self._original_body:
@@ -307,6 +325,33 @@ class PyScriptManager(Manager):
                 self.execute_enabled = False
                 self.save_enabled = True
 
+    def _selected_command_changed(self):
+        scmd = self.selected_command
+        if scmd:
+
+            #convert to klass name.
+            #camel_case
+            words = scmd.split('_')
+            klass = ''.join(map(str.capitalize, words))
+
+            pkg = 'src.scripts.pyscripts.commands.api'
+            cmd_name = '{}_command_editor'.format(self.selected_command)
+            try:
+                cmd = getattr(self, cmd_name)
+            except AttributeError:
+                m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
+                cmd = getattr(m, klass)()
+                setattr(self, cmd_name, cmd)
+
+            m = cmd.get_text()
+            if m:
+                self.body += m + '\n'
+
+            self.selected_command = ''
+
+#===============================================================================
+# views
+#===============================================================================
     def help_view(self):
         v = View(Item('help_message',
                               editor=HTMLEditor(),
@@ -319,17 +364,38 @@ class PyScriptManager(Manager):
                  )
         return v
 
+    def _get_commands_group(self, name, label):
+        return Group(Item(name,
+                   style='custom',
+                   show_label=False,
+                   editor=ListStrEditor(operations=[],
+                                        editable=False,
+                                        right_clicked='selected_command',
+                                        selected_index='selected_index'
+                                        )
+                           ),
+                     label=label,
+                     show_border=True
+                     )
     def traits_view(self):
         editor = VGroup(HGroup(spring, 'kind', visible_when='show_kind'),
                  Item('body', editor=CodeEditor(), show_label=False))
 
-        shell_grp = Item('context', editor=ShellEditor(share=True),
-                          style='custom', show_label=False)
+        command_grp = VGroup(self._get_commands_group('core_commands', 'Core'),
+                             self._get_commands_group('script_commands', self.kind)
+                        )
+
+#        shell_grp = Item('context', editor=ShellEditor(share=True),
+#                          style='custom', show_label=False)
         v = View(VGroup(
-                 HGroup(editor,
-                        VGroup(
-                               Item('help_button', show_label=False),
-                               shell_grp)),
+                 HGroup(
+                        command_grp,
+                        editor,
+                        ),
+
+#                        VGroup(
+#                               Item('help_button', show_label=False),
+#                               shell_grp)),
 
                  self._button_factory('execute_button', 'execute_label',
                                       enabled_when='object.execute_enabled',
@@ -355,10 +421,11 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('scripts')
-    s = PyScriptManager(kind='ExtractionLine',
-                        default_directory_name='pyscripts')
-#    s = PyScriptManager(kind='Bakeout')
-    p = os.path.join(paths.scripts_dir, 'ms_runscripts', 'Quick Air x1.py')
-    s.open_script(path=p)
+#    s = PyScriptManager(kind='ExtractionLine',
+#                        default_directory_name='pyscripts')
+    s = PyScriptManager(kind='Bakeout')
+#    p = os.path.join(paths.scripts_dir, 'ms_runscripts', 'Quick Air x1.py')
+
+#    s.open_script(path=p)
     s.configure_traits()
 #============= EOF =============================================
