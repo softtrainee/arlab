@@ -45,13 +45,13 @@ class BakeoutDBResult(DBResult):
         if dbr is not None:
             self.rid = dbr.id
             self.rundate = dbr.rundate
-            self.runtime = dbr.runtime
+            self.runtime = dbr.runtime.strftime('%H:%M:%S')
             p = dbr.path
             if p is not None:
                 self.directory = p.root
                 self.filename = p.filename
 
-            self.title = 'Bakeout {}'.format(self._id)
+            self.title = 'Bakeout {}'.format(self.rid)
 
             self.data_manager = self._data_manager_factory()
 
