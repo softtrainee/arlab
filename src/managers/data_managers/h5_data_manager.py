@@ -128,9 +128,9 @@ class H5DataManager(DataManager):
         f = self._frame
         return [n for n in f.walkNodes('/{}'.format(grp), 'Table')]
 
-    def open_data(self, path):
+    def open_data(self, path, mode='r'):
         try:
-            self._frame = openFile(path, 'r')
+            self._frame = openFile(path, mode)
             return True
         except Exception:
             import traceback
