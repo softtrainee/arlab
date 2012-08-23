@@ -189,7 +189,7 @@ Add {}'.format(sd)):
                                      controller=self)
                 t.bootstrap()
             else:
-                from src.scripts.pyscripts.bakeout_pyscript import BakeoutPyScript
+                from src.pyscripts.bakeout_pyscript import BakeoutPyScript
                 t = BakeoutPyScript(root=os.path.join(paths.scripts_dir,
                                                           'bakeout'),
                                     name=self.script,

@@ -240,15 +240,12 @@ class PyScript(Loggable):
 #==============================================================================
 # commands
 #==============================================================================
-    def gosub(self, name):
+    def gosub(self, name=None, root=None):
         if not name.endswith('.py'):
             name += '.py'
 
-        if name.startswith('abs://'):
-            p = name[6:]
-            root = os.path.dirname(p)
-            name = os.path.basename(p)
-        else:
+        if root is None:
+
             if '/' in name:
                 d = '/'
             elif ':' in name:
@@ -258,9 +255,9 @@ class PyScript(Loggable):
             name = dirs[0]
             for di in dirs[1:]:
                 name = os.path.join(name, di)
-
-            p = os.path.join(self.root, name)
             root = self.root
+
+        p = os.path.join(root, name)
 
         if not os.path.isfile(p):
             raise GosubError(p)
@@ -319,7 +316,7 @@ class PyScript(Loggable):
             self._interval_flag.clear()
 
     @verbose_skip
-    def begin_interval(self, timeout):
+    def begin_interval(self, duration=0):
         def wait(t):
             self._sleep(t)
             if not self._cancel:
@@ -327,36 +324,36 @@ class PyScript(Loggable):
                 if self._interval_flag:
                     self._interval_flag.set()
 
-        timeout = float(timeout)
+        duration = float(duration)
 #        if self._syntax_checking or self._cancel:
 #            return
         self._interval_stack.put('b')
 
-        self.info('BEGIN INTERVAL waiting for {}'.format(timeout))
-        t = Thread(target=wait, args=(timeout,))
+        self.info('BEGIN INTERVAL waiting for {}'.format(duration))
+        t = Thread(target=wait, args=(duration,))
         t.start()
 
     @skip
-    def _m_info(self, msg):
+    def _m_info(self, message=None):
 
-        self.info(msg)
+        self.info(message)
 
-    def sleep(self, v):
+    def sleep(self, duration=0):
 
         if self._graph_calc:
-            va = self._xs[-1] + v
+            va = self._xs[-1] + duration
             self._xs.append(va)
             self._ys.append(self._ys[-1])
             return
 
         if self._syntax_checking or self._cancel:
-            self._estimated_duration += v
+            self._estimated_duration += duration
             if self.parent_script is not None:
                 self.parent_script._estimated_duration += self._estimated_duration
             return
 
-        self.info('SLEEP {}'.format(v))
-        self._sleep(v)
+        self.info('SLEEP {}'.format(duration))
+        self._sleep(duration)
 
     def execute(self, new_thread=False):
 

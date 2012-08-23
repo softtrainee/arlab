@@ -19,7 +19,7 @@ from traits.api import Any, on_trait_change
 #============= standard library imports ========================
 from pyscript import PyScript
 import time
-from src.scripts.pyscripts.pyscript import verbose_skip
+from src.pyscripts.pyscript import verbose_skip
 import os
 from src.paths import paths
 import random

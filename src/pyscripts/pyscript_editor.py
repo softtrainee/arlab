@@ -27,17 +27,16 @@ from src.managers.manager import Manager
 from traitsui.menu import Action
 from src.paths import paths
 from pyface.api import warning
-#from src.scripts.pyscripts.pyscript import PyScript, HTML_HELP
-from src.scripts.pyscripts.api import *
-from src.scripts.pyscripts.pyscript_runner import PyScriptRunner
+#from src.pyscripts.pyscript import PyScript, HTML_HELP
+from src.pyscripts.pyscript_runner import PyScriptRunner
 import time
 from pyface.message_dialog import information
 #from traitsui.wx.code_editor import SourceEditor
 #from traitsui.wx.basic_editor_factory import BasicEditorFactory
 #from traitsui.editors.code_editor import ToolkitEditorFactory
 
-SCRIPT_PKGS = dict(Bakeout='src.scripts.pyscripts.bakeout_pyscript',
-                    ExtractionLine='src.scripts.pyscripts.extraction_line_pyscript'
+SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
+                    ExtractionLine='src.pyscripts.extraction_line_pyscript'
                     )
 #SCRIPT_PATHS = dict(Bakeout=('src.scripts.pyscripts.bakeout_pyscript', 'BakeoutScript',
 #                             'src.scripts.bakeout_script_parser',
@@ -332,7 +331,7 @@ class PyScriptManager(Manager):
             words = scmd.split('_')
             klass = ''.join(map(str.capitalize, words))
 
-            pkg = 'src.scripts.pyscripts.commands.api'
+            pkg = 'src.pyscripts.commands.api'
             cmd_name = '{}_command_editor'.format(self.selected_command)
             try:
                 cmd = getattr(self, cmd_name)
@@ -369,7 +368,6 @@ class PyScriptManager(Manager):
                    editor=ListStrEditor(operations=[],
                                         editable=False,
                                         right_clicked='selected_command',
-                                        selected_index='selected_index'
                                         ),
                          width=200,
                          height=200,
@@ -387,17 +385,11 @@ class PyScriptManager(Manager):
                              self._get_commands_group('script_commands', self.kind)
                         )
 
-#        shell_grp = Item('context', editor=ShellEditor(share=True),
-#                          style='custom', show_label=False)
         v = View(VGroup(
                  HGroup(
                         command_grp,
                         editor,
                         ),
-
-#                        VGroup(
-#                               Item('help_button', show_label=False),
-#                               shell_grp)),
                         HGroup(
                                self._button_factory('execute_button', 'execute_label',
                                       enabled_when='object.execute_enabled',
@@ -425,8 +417,7 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('scripts')
-#    s = PyScriptManager(kind='ExtractionLine',
-#                        default_directory_name='pyscripts')
+#    s = PyScriptManager(kind='ExtractionLine')
     s = PyScriptManager(kind='Bakeout')
 #    p = os.path.join(paths.scripts_dir, 'ms_runscripts', 'Quick Air x1.py')
 

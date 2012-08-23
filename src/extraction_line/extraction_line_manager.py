@@ -31,7 +31,7 @@ from src.scripts.extraction_line_script import ExtractionLineScript
 
 from view_controller import ViewController
 from src.managers.manager import Manager
-from src.scripts.pyscripts.pyscript_editor import PyScriptManager
+from src.pyscripts.pyscript_editor import PyScriptManager
 import pickle
 
 #from src.managers.multruns_report_manager import MultrunsReportManager
