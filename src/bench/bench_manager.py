@@ -40,17 +40,48 @@ class BenchManager(HasTraits):
                  )
         return v
 
-    def new_workspace(self, root):
+    def demo_workspace(self, root):
+
         if not os.path.exists(root):
             os.mkdir(root)
 
         self.current_workspace = ws = Workspace()
 
-#        ws.init_repository(root)
-        ws.load_repository(root)
+        ws.init_repository(root)
+#        ws.load_repository(root)
         ws.load_branches()
+#        return
+
+        src = 'foo.txt'
+
+        with open(src, 'w') as f:
+            f.write('foo')
+
+        ws.add_file(src)
+
+        for i in range(3):
+            name = 'mod{}'.format(i)
+            ws.create_branch(name)
+            ws.switch_branch(name)
+            src = os.path.join(ws._repo_path, src)
+            with open(src, 'w') as f:
+                f.write('foo\n')
+                for j in range(i + 1):
+                    f.write('modification {},{}\n'.format(i, j))
+
+            ws.commit_file(src)
 
         ws.switch_branch('master')
+
+        ws.load_branches()
+        ws.set_current_file(src)
+#        ws.create_branch('mod2')
+#        ws.create_branch('mod3')
+
+#        ws.switch_branch('master')
+
+#        ws.test_modify()
+#        ws.switch_commit()
 #        ws.create_branch('test2')
 #        ws.switch_branch('test2')
 #        ws.switch_branch('test')
@@ -98,7 +129,7 @@ if __name__ == '__main__':
     bm = BenchManager()
     root = '/Users/ross/Sandbox/testrepo'
 
-    bm.new_workspace(root)
-
+#    bm.new_workspace(root)
+    bm.demo_workspace(root)
     bm.configure_traits()
 #============= EOF =============================================

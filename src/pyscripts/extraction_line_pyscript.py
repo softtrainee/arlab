@@ -21,22 +21,7 @@ from traits.api import Any
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.scripts.pyscripts.pyscript import PyScript, verbose_skip
-HTML_HELP = '''
-<tr>
-    <td>open</td>
-    <td>valvekey</td>
-    <td>Open a valve</td>
-    <td>open('B')</td>
-</tr>
-<tr>
-    <td>close</td>
-    <td>valvekey</td>
-    <td>close a valve</td>
-    <td>close('B')</td>
-</tr>
-'''
-
+from src.pyscripts.pyscript import PyScript, verbose_skip
 
 
 class ExtractionLinePyScript(PyScript):
@@ -55,8 +40,6 @@ class ExtractionLinePyScript(PyScript):
         if self._resource_flag:
             self._resource_flag.clear()
 
-#    def _get_help_hook(self):
-#        return HTML_HELP
 
     def get_script_commands(self):
         cmds = [('open', '_m_open'), 'close',
@@ -83,41 +66,46 @@ class ExtractionLinePyScript(PyScript):
         return d
 
 
-    def move_to_hole(self, holeid):
-        self.info('move to hole {}'.format(holeid))
+    def move_to_hole(self, hole=0):
+        self.info('move to hole {}'.format(hole))
 
         man_protocol = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
         result = self._manager_action('move_to_hole', manager=man_protocol)
         self.report_result(result)
 
-    def heat_sample(self, pwr, duration):
-        self.info('heat sample to power {}, {}'.format(pwr, duration))
+    def heat_sample(self, power=0, duration=0):
+        self.info('heat sample to power {}, {}'.format(power, duration))
         man_protocol = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
         self._manager_action([('enable_laser', (), {}),
-                                       ('set_laser_power', (pwr,), {})
+                                       ('set_laser_power', (power,), {})
                                        ], manager=man_protocol)
         self.sleep(duration)
         self._manager_action('disable_laser', manager=man_protocol)
 
     @verbose_skip
-    def _m_open(self, vname):
+    def _m_open(self, name=None, description=None):
+#        if self._syntax_checking or self._cancel:
+#            return
+        if description is None:
+            description = '---'
+
+        self.info('opening {} ({})'.format(name, description))
+
+        self._manager_action('open_valve', None, description=name, moe='script')
+
+    @verbose_skip
+    def close(self, name=None, description=None):
 #        if self._syntax_checking or self._cancel:
 #            return
 
-        self.info('opening {}'.format(vname))
+        if description is None:
+            description = '---'
 
-        self._manager_action('open_valve', None, description=vname, mode='script')
-
-    @verbose_skip
-    def close(self, vname):
-#        if self._syntax_checking or self._cancel:
-#            return
-
-        self.info('closing {}'.format(vname))
-        self._manager_action('close_valve', None, description=vname, mode='script')
+        self.info('closing {} ({})'.format(name, description))
+        self._manager_action('close_valve', None, description=name, mode='script')
 
     @verbose_skip
-    def acquire(self, resource):
+    def acquire(self, name=None):
 
 #        if self._syntax_checking or self._cancel:
 #            return
@@ -125,8 +113,8 @@ class ExtractionLinePyScript(PyScript):
         if self.runner is None:
             return
 
-        self.info('acquire {}'.format(resource))
-        r = self.runner.get_resource(resource)
+        self.info('acquire {}'.format(name))
+        r = self.runner.get_resource(name)
 
         s = r.isSet()
         if s:
@@ -142,15 +130,15 @@ class ExtractionLinePyScript(PyScript):
         if not self._cancel:
             self._resource_flag = r
             r.set()
-            self.info('{} acquired'.format(resource))
+            self.info('{} acquired'.format(name))
 
     @verbose_skip
-    def release(self, resource):
+    def release(self, name=None):
 #        if self._syntax_checking or self._cancel:
 #            return
 
-        self.info('release {}'.format(resource))
-        r = self.runner.get_resource(resource)
+        self.info('release {}'.format(name))
+        r = self.runner.get_resource(name)
         r.clear()
 
 #============= EOF ====================================

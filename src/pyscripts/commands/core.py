@@ -25,7 +25,31 @@ import os
 
 class Command(HasTraits):
     def to_string(self):
+        m = '{}({})'.format(
+                          self._get_command(),
+                          self._to_string()
+                          )
+        return self.indent(m)
+
+    def _get_command(self):
+        return self.__class__.__name__.lower()
+
+    def _to_string(self):
         pass
+
+    @classmethod
+    def _keywords(cls, words):
+        return ', '.join([cls._keyword(*args) for args in words])
+
+    @classmethod
+    def _keyword(cls, k, v, number=False):
+        if not number:
+            v = cls._quote(v)
+        return '{}={}'.format(k, v)
+
+    @classmethod
+    def _quote(cls, m):
+        return '"{}"'.format(m)
 
     @classmethod
     def indent(cls, m, n=1):
@@ -50,8 +74,8 @@ class Info(Command):
     def _get_view(self):
         return Item('message', width=500)
 
-    def to_string(self):
-        return self.indent('info("{}")'.format(self.message))
+    def _to_string(self):
+        return self._keyword('message', self.message)
 
 
 class Sleep(Command):
@@ -59,8 +83,9 @@ class Sleep(Command):
     def _get_view(self):
         return Item('duration', label='Duration (s)')
 
-    def to_string(self):
-        return self.indent('sleep({})'.format(self.duration))
+    def _to_string(self):
+        return self._keyword('duration', self.duration,
+                             number=True)
 
 
 class Gosub(Command):
@@ -71,11 +96,13 @@ class Gosub(Command):
                     width=600,
                     )
 
-    def to_string(self):
+    def _to_string(self):
         if os.path.isfile(self.path):
-            m = 'gosub("abs://{}")'.format(self.path)
-            return self.indent(m)
-
+            head, tail = os.path.split(self.path)
+            words = [('name', tail),
+                     ('root', head),
+                     ]
+            return self._keywords(words)
 
 class BeginInterval(Command):
     duration = Float
@@ -83,7 +110,7 @@ class BeginInterval(Command):
         return Item('duration', label='Duration (s)')
 
     def to_string(self):
-        m = 'begin_interval({})'.format(self.duration)
+        m = 'begin_interval(duration={})'.format(self.duration)
         m2 = 'complete_interval()'
         return self.indent(m) + '\n    \n' + self.indent(m2)
 

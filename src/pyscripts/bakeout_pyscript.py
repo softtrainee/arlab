@@ -21,41 +21,13 @@ from traits.api import Any
 #============= standard library imports ========================
 from numpy import linspace
 #============= local library imports  ==========================
-from src.scripts.pyscripts.pyscript import PyScript
+from src.pyscripts.pyscript import PyScript
 import time
-from src.paths import paths
-import os
-HTML_HELP = '''
-<tr>
-    <td>setpoint</td>
-    <td>temp,duration[,units]</td>
-    <td>set controller to setpoint for n hours</td>
-    <td>setpoint(100,4)</td>
-</tr>
-<tr>
-    <td>ramp</td>
-    <td>setpoint,rate[,start,period]</td>
-    <td>ramp to setpoint at rate C/hr</td>
-    <td>ramp(100,60,start=50)</td>
-</tr>
-
-'''
-
 
 TIMEDICT = dict(s=1, m=60.0, h=60.0 * 60.0)
 
-
 class BakeoutPyScript(PyScript):
     controller = Any
-
-#    def _get_help_hook(self):
-##        return HTML_HELP_PATH
-#        return HTML_HELP
-#
-#    def get_help_path(self):
-##        p = os.path.join(paths.doc_html_root, 'bakeout_scripting.html')
-##        return p
-#        pass
 
     _current_setpoint = 0
 
@@ -79,20 +51,20 @@ class BakeoutPyScript(PyScript):
     def get_script_commands(self):
         return ['setpoint', 'ramp']
 
-    def ramp(self, setpoint, rate, start=None, period=60):
-        setpoint = float(setpoint)
+    def ramp(self, temperature=0, rate=0, start=None, period=60):
+        temperature = float(temperature)
         rate = float(rate)
         period = float(period)
 
         if self._graph_calc:
 
             xs = self._xs[-1]
-            ds = setpoint - self._current_setpoint
-            self._current_setpoint = setpoint
+            ds = temperature - self._current_setpoint
+            self._current_setpoint = temperature
 
             dx = ds / (rate / 3600.)
             self._xs.append(xs + dx)
-            self._ys.append(setpoint)
+            self._ys.append(temperature)
             return
 
         if self._syntax_checking or self._cancel:
@@ -108,23 +80,23 @@ class BakeoutPyScript(PyScript):
                 start = max(start, ctemp)
 
         self.info('ramping from {} to {} rate= {} C/h, period= {} s'.format(start,
-                                                                    setpoint,
+                                                                    temperature,
                                                                     rate,
                                                                     period
                                                                     ))
 
-        dT = setpoint - start
+        dT = temperature - start
         dur = abs(dT / rate)
         if c is not None:
             c.duration = dur
 
         #convert period to hours
 #        hperiod = period / 3600.
-#        steps = linspace(start, setpoint, dur * 3600 / float(period))
+#        steps = linspace(start, temperature, dur * 3600 / float(period))
 
         check_period = 0.5
         samples_per_hr = 3600 / float(period)
-        steps = linspace(start, setpoint, dur * samples_per_hr)
+        steps = linspace(start, temperature, dur * samples_per_hr)
         for si in steps:
             if self._cancel:
                 break
@@ -140,14 +112,14 @@ class BakeoutPyScript(PyScript):
             else:
                 time.sleep(period)
 
-    def setpoint(self, temp, duration, units='h'):
+    def setpoint(self, temperature=0, duration=0, units='h'):
         ts = TIMEDICT[units]
         if self._graph_calc:
-            self._current_setpoint = temp
+            self._current_setpoint = temperature
             self._xs.append(self._xs[-1])
             self._xs.append(self._xs[-1] + duration * ts)
-            self._ys.append(temp)
-            self._ys.append(temp)
+            self._ys.append(temperature)
+            self._ys.append(temperature)
             return
 
         if self._syntax_checking or self._cancel:
@@ -156,10 +128,10 @@ class BakeoutPyScript(PyScript):
         #convert duration from units to seconds
 
         duration *= ts
-        self.info('setting setpoint to {} for {}'.format(temp, duration))
+        self.info('setting setpoint to {} for {}'.format(temperature, duration))
         c = self.controller
         if c is not None:
-            self._set_setpoint(temp)
+            self._set_setpoint(temperature)
             #convert back to hours
             self.controller.duration = duration / 3600.
 

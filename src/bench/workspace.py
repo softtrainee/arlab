@@ -61,19 +61,6 @@ class Workspace(Loggable):
         self.info('initializing repository {}'.format(name))
         self._repo = repo = Repo.init(name)
         self._repo_path = name
-#        repo.create_head('master')
-#        print repo.heads
-
-        p = os.path.join(name, 'foo.dat')
-        with open(p, 'w') as f:
-            f.write('foo\n')
-            f.write('moofff\n')
-#
-#        #stage the new file
-        ind = self._repo.index
-        ind.add([p])
-        #commit the current stage
-        self._do_commit()
 
     def load_branches(self):
         self.branches = [b.name for b in self._repo.heads]
@@ -93,6 +80,13 @@ class Workspace(Loggable):
             br.checkout()
         except AttributeError:
             pass
+
+    def switch_commit(self):
+        repo = self._repo
+        for c in repo.iter_commits('test'):
+            print c, c.message
+
+        c.checkout()
 
     def add_file(self, src):
         self.info('adding file {}'.format(src))
@@ -116,20 +110,23 @@ class Workspace(Loggable):
 
         self._do_commit()
 
-#    def test_modify(self):
-#        repo = self._repo
+    def set_current_file(self, path):
+        self.current_file = WorkspaceFile(path)
+
+    def test_modify(self):
+        repo = self._repo
 #        repo.heads.test.checkout()
-#
-#        p = os.path.join(self._repo_path, 'foo.dat')
-#        with open(p, 'w') as f:
-#            f.write('foofffddf\n')
-#            f.write('moofffasdfsdfd\n')
-#
-#        #stage the new file
-#        ind = repo.index
-#        ind.add([p])
-##        #commit the current stage
-#        self._do_commit()
+
+        p = os.path.join(self._repo_path, 'foo.dat')
+        with open(p, 'w') as f:
+            f.write('foofffddf\n')
+            f.write('moofffasdfsdfd\n')
+
+        #stage the new file
+        ind = repo.index
+        ind.add([p])
+#        #commit the current stage
+        self._do_commit()
 
 #    def compare(self):
 #        repo = self._repo

@@ -19,7 +19,7 @@ from traits.api import Float, Str
 from traitsui.api import View, Item, VGroup, EnumEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.scripts.pyscripts.commands.core import Command
+from src.pyscripts.commands.core import Command
 from traitsui.menu import OKCancelButtons
 
 class Ramp(Command):
@@ -40,18 +40,21 @@ class Ramp(Command):
                 )
         return v
 
-    def to_string(self):
+    def _to_string(self):
         start = None
         try:
             start = float(start)
         except (ValueError, TypeError):
             pass
 
-        cmd = 'ramp({}, {}, start={}, period={})'.format(self.setpoint,
-                                                     self.rate,
-                                                     start, self.period
-                                                     )
-        return self.indent(cmd)
+        words = [('setpoint', self.setpoint, True),
+               ('rate', self.rate, True),
+               ('start', start, True),
+               ('period', self.period, True)
+               ]
+
+        return self._keywords(words)
+
 
 time_dict = dict(h='hours', m='minutes', s='seconds')
 class Setpoint(Command):
@@ -68,10 +71,12 @@ class Setpoint(Command):
                )
 
         return v
+    def _to_string(self):
+        words = [('temperature', self.setpoint, True),
+               ('duration', self.duration, True),
+               ('units', self.units)
+               ]
+        return self._keywords(words)
 
-    def to_string(self):
-        m = 'setpoint({}, {}, units="{}")'.format(self.setpoint,
-                                                self.duration,
-                                                self.units)
-        return self.indent(m)
+
 #============= EOF =============================================

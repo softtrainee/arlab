@@ -55,7 +55,7 @@ from src.scripts.core.process_view import ProcessView
 from pyface.timer.do_later import do_later, do_after
 #from pyface.wx.dialog import confirmation
 #from pyface.constant import NO, YES
-from src.scripts.pyscripts.pyscript_editor import PyScriptManager
+from src.pyscripts.pyscript_editor import PyScriptManager
 
 BATCH_SET_BAUDRATE = False
 BAUDRATE = '38400'

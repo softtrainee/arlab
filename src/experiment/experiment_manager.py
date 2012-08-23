@@ -361,11 +361,7 @@ class ExperimentManager(Manager):
             if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
                                      title='Confirm Cancel'
                                      ):
-
                 self._alive = False
-
-
-
         else:
             self._alive = True
 #        target = self.do_experiment
@@ -466,7 +462,7 @@ if __name__ == '__main__':
 #    e = ExperimentManager(spectrometer_manager=s)
     e = ExperimentManager()
 
-    e.configure_traits(view='test_view')
+#    e.configure_traits(view='test_view')
 #    e.analyze_data()
     e.configure_traits()
 #============= EOF ====================================

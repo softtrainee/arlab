@@ -30,8 +30,8 @@ from src.experiment.heat_schedule import HeatStep
 from src.graph.stacked_graph import StackedGraph
 from src.data_processing.regression.regressor import Regressor
 from src.scripts.extraction_line_script import ExtractionLineScript
-from src.scripts.pyscripts.measurement_pyscript import MeasurementPyScript
-from src.scripts.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
+from src.pyscripts.measurement_pyscript import MeasurementPyScript
+from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.paths import paths
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
