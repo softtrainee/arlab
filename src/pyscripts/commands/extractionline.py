@@ -80,9 +80,6 @@ class MoveToHole(Command):
     def _get_view(self):
         return Item('hole')
 
-    def _get_command(self):
-        return 'move_to_hole'
-
     def _to_string(self):
         return '{}'.format(self.hole)
 
@@ -91,9 +88,6 @@ class HeatSample(Command):
     value = Float
     def _get_view(self):
         return Item('value')
-
-    def _get_command(self):
-        return 'heat_sample'
 
     def _to_string(self):
         return '{}'.format(self.value)

@@ -28,9 +28,15 @@ from src.database.orms.massspec_orm import IsotopeResultsTable, \
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.core.functions import add, get_one, delete_one, get_first
 from sqlalchemy.sql.expression import func
+from src.database.selectors.massspec_selector import MassSpecSelector
 
 
 class MassSpecDatabaseAdapter(DatabaseAdapter):
+    selector_klass = MassSpecSelector
+
+    def get_analyses(self, **kw):
+        return self._get_items(AnalysesTable, globals(), **kw)
+
 #===============================================================================
 # getters
 #===============================================================================

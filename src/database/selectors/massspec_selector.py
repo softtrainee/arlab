@@ -15,17 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import Str
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 from src.database.core.db_selector import DBSelector
-
-from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 from src.database.core.base_db_result import RIDDBResult
+from src.database.orms.massspec_orm import AnalysesTable
 
 class MassSpecDBResult(RIDDBResult):
-    pass
+    rid = Str
+    def _set_metadata(self, dbr):
+        self.rid = dbr.RID
 
 class MassSpecDBResultsAdapter(TabularAdapter):
     columns = [('RunID', 'rid')
@@ -55,30 +57,36 @@ class MassSpecDBResultsAdapter(TabularAdapter):
 class MassSpecSelector(DBSelector):
     date_str = 'RunDateTime'
     tabular_adapter = MassSpecDBResultsAdapter
+    query_table = AnalysesTable
+    result_klass = MassSpecDBResult
 
-    def _get__parameters(self):
-        return ['AnalysesTable.RID',
-                'AnalysesTable.RunDateTime',
-                ]
+    def _get_selector_records(self, **kw):
+        return self._db.get_analyses(**kw)
 
-    def _search_(self):
-        db = self._db
-        if db is not None:
-            tablename, param = self.parameter.split('.')
-
-            c = self._convert_comparator(self.comparator)
-            results = db.get_results(tablename,
-                                 **{param:(c, self.criteria)}
-                                 )
-            for i, r in enumerate(results):
-                r = MassSpecDBResult(_db_result=r,
-                                     rid=r.RID,
-#                                     ridt=i
-                                     )
-                self.results.append(r)
+#    def _get__parameters(self):
+#        return ['AnalysesTable.RID',
+#                'AnalysesTable.RunDateTime',
+#                ]
+#
+#    def _search_(self):
+#        db = self._db
+#        if db is not None:
+#            tablename, param = self.parameter.split('.')
+#
+#            c = self._convert_comparator(self.comparator)
+#            results = db.get_results(tablename,
+#                                 **{param:(c, self.criteria)}
+#                                 )
+#            for i, r in enumerate(results):
+#                r = MassSpecDBResult(_db_result=r,
+#                                     rid=r.RID,
+##                                     ridt=i
+#                                     )
+#                self.results.append(r)
 
 
 if __name__ == '__main__':
+    from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
     m = MassSpecSelector(parameter='AnalysesTable.RID',
                          criteria='21351-01')
 

@@ -170,6 +170,8 @@ class Paths():
         self.snapshot_dir = path.join(data_dir, 'snapshots')
         self.video_dir = path.join(data_dir, 'videos')
         self.stage_visualizer_dir = path.join(data_dir, 'stage_visualizer')
+
+        self.arar_dir = path.join(data_dir, 'arar')
         #initialization_dir = path.join(setup_dir, 'initializations')
         #device_creator_dir = path.join(device_dir, 'device_creator')
 

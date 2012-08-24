@@ -110,7 +110,7 @@ class MeasurementPyScript(PyScript):
 # commands
 #===============================================================================
     @verbose_skip
-    def sniff(self, ncounts):
+    def sniff(self, ncounts=0):
         if self.automated_run is None:
             return
 
@@ -122,7 +122,7 @@ class MeasurementPyScript(PyScript):
         self._series_count += 1
 
     @verbose_skip
-    def regress(self, kind):
+    def regress(self, kind='linear'):
         if self.automated_run is None:
             return
 
