@@ -18,10 +18,16 @@
 from traits.api import HasTraits, Str, Float
 from traitsui.api import View, Item, FileEditor
 from traitsui.menu import OKCancelButtons
-from src.paths import paths
-import os
 #============= standard library imports ========================
+import os
+import re
 #============= local library imports  ==========================
+from src.paths import paths
+first_cap_re = re.compile('(.)([A-Z][a-z]+)')
+all_cap_re = re.compile('([a-z0-9])([A-Z])')
+def uncamelcase(name):
+    s1 = first_cap_re.sub(r'\1_\2', name)
+    return all_cap_re.sub(r'\1_\2', s1).lower()
 
 class Command(HasTraits):
     def to_string(self):
@@ -32,7 +38,8 @@ class Command(HasTraits):
         return self.indent(m)
 
     def _get_command(self):
-        return self.__class__.__name__.lower()
+        return uncamelcase(self.__class__.__name__)
+#        return self.__class__.__name__.lower()
 
     def _to_string(self):
         pass

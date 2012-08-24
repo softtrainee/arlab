@@ -102,9 +102,14 @@ class StackedGraph(Graph):
         pt = self.plotcontainer.padding_top + \
                 self.plotcontainer.padding_bottom + \
                     padding_top + padding_bottom
+
+
         if self.equi_stack:
             for p in self.plots:
                 p.bounds[1] = (bounds[1] - pt) / len(self.plots)
         else:
-            self.plots[0].bounds[1] = (bounds[1] - pt) / max(1, (len(self.plots) - 1))
+            try:
+                self.plots[0].bounds[1] = (bounds[1] - pt) / max(1, (len(self.plots) - 1))
+            except IndexError:
+                pass
 #============= EOF ====================================

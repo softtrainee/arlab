@@ -63,18 +63,18 @@ class DBResult(BaseDBResult):
 
     def initialize(self):
         return self.isloadable()
-
+    def _set_metadata(self, dbr):
+        self.rid = dbr.id
+        self.rundate = dbr.rundate
+        self.runtime = dbr.runtime.strftime('%H:%M:%S')
+        p = dbr.path
+        if p is not None:
+            self.directory = p.root if p.root else ''
+            self.filename = p.filename if p.filename else ''
     def load(self):
         dbr = self._db_result
         if dbr is not None:
-            self.rid = dbr.id
-            self.rundate = dbr.rundate
-            self.runtime = dbr.runtime.strftime('%H:%M:%S')
-            p = dbr.path
-            if p is not None:
-                self.directory = p.root if p.root else ''
-                self.filename = p.filename if p.filename else ''
-
+            self._set_metadata(dbr)
             self.title = '{} {}'.format(self.title_str, self.rid)
             self._load_hook(dbr)
         elif self.directory is not None and self.filename is not None:

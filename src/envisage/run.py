@@ -31,7 +31,7 @@ from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
 #from src.helpers.logger_setup import add_console
 from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay
 from globals import globalv
-import logging
+#import logging
 from src.helpers.logger_setup import new_logger
 
 if globalv.open_logger_on_launch:
@@ -74,6 +74,9 @@ PACKAGE_DICT = dict(
                    TwitterUIPlugin='src.social.plugins.twitter_ui_plugin',
                    EmailPlugin='src.social.plugins.email_plugin',
                    EmailUIPlugin='src.social.plugins.email_ui_plugin',
+
+                   ArArPlugin='src.arar.plugins.arar_plugin',
+                   ArArUIPlugin='src.arar.plugins.arar_ui_plugin'
                  )
 
 def get_module_name(klass):

@@ -87,13 +87,15 @@ class DBSelector(Loggable):
 #                                           'id'),
 #                            comp='=',
 #                            criteria='1')
-        self._execute_query(
+        try:
+            self._execute_query(
                             param='{}.{}'.format(self.query_table.__tablename__,
-                                           'rundate'),
+                                           self.date_str),
                             comp='=',
                             criteria='this month'
                             )
-
+        except AttributeError:
+            pass
     def traits_view(self):
 
         qgrp = HGroup(
@@ -194,7 +196,10 @@ class DBSelector(Loggable):
 
     def _get_order(self):
         from sqlalchemy.sql.expression import desc
-        return [desc(getattr(self.query_table, attr)) for attr in ['rundate', 'runtime']]
+        try:
+            return [desc(getattr(self.query_table, attr)) for attr in ['rundate', 'runtime']]
+        except AttributeError:
+            pass
 
     def _execute_query(self, param=None, comp=None, criteria=None):
         if param is None:
@@ -380,8 +385,9 @@ class DBSelector(Loggable):
 
         f = lambda x:[str(col)
                            for col in x.__table__.columns]
-        params = f(b)
-        return list(params)
+        params = list(f(b))
+        self.parameter = params[0]
+        return params
 
     def _between(self, p, l, g):
         return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)

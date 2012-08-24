@@ -45,14 +45,9 @@ class SeriesEditor(HasTraits):
 
     def _get_name(self):
         return self._name
-#        return self.graph.get_series_label(plotid=self.plotid, series=self.id)
-
-#        if not self._name:
-#            return 'series{:03d}'.format(self.id)
-#        return self._name
 #
-#    def _set_name(self, v):
-#        self._name = v
+    def _set_name(self, v):
+        self._name = v
 
     @on_trait_change('series.+')
     def _series_changed(self, obj, name, new):

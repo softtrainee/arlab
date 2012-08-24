@@ -33,9 +33,9 @@ def create_url(kind, user, hostname, db, password=None):
     '''
     if kind == 'mysql':
         if password is not None:
-            url = 'mysql://{}:{}@{}/{}'.format(user, password, hostname, db)
+            url = 'mysql://{}:{}@{}/{}?connect_timeout=3'.format(user, password, hostname, db)
         else:
-            url = 'mysql://{}@{}/{}'.format(user, hostname, db)
+            url = 'mysql://{}@{}/{}?connect_timeout=3'.format(user, hostname, db)
     else:
         url = 'sqlite:///{}'.format(db)
 
@@ -51,7 +51,7 @@ class DatabaseAdapter(Loggable):
     kind = Str('mysql')
     user = Str('root')
     host = Str('localhost')
-    dbname = Str('pychrondb')
+    dbname = Str('massspecdata_local')
     password = Password('Argon')
     use_db = Bool
 
@@ -62,6 +62,8 @@ class DatabaseAdapter(Loggable):
     application = Any
 
     test_func = None
+    def _host_changed(self):
+        print self.host
 #    window = Any
 
 #    @on_trait_change('[user,host,password,dbname, use_db]')

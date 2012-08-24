@@ -232,7 +232,7 @@ class IsotopeTable(Base):
     HallProbeAtStartOfRun = Column(Float, nullable=True)
     HallProbeAtEndOfRun = Column(Float, nullable=True)
 
-    peak_time_series = relation('PeakTimeTable')
+    peak_time_series = relation('PeakTimeTable', uselist=False)
 
     results = relation('IsotopeResultsTable')
 
@@ -258,7 +258,7 @@ class SampleTable(Base):
     Temperature = Column(Float, default=0)
 
     irradpositions = relation('IrradiationPositionTable')
-    analyses = relation('AnalysesTable')
+    analyses = relation('AnalysesTable', backref='sample')
 
 
 class PeakTimeTable(Base):

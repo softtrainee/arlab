@@ -36,7 +36,8 @@ from pyface.message_dialog import information
 #from traitsui.editors.code_editor import ToolkitEditorFactory
 
 SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
-                    ExtractionLine='src.pyscripts.extraction_line_pyscript'
+                    ExtractionLine='src.pyscripts.extraction_line_pyscript',
+                    Measurement='src.pyscripts.measurement_pyscript'
                     )
 #SCRIPT_PATHS = dict(Bakeout=('src.scripts.pyscripts.bakeout_pyscript', 'BakeoutScript',
 #                             'src.scripts.bakeout_script_parser',
@@ -83,7 +84,7 @@ class ScriptHandler(Handler):
 
 class PyScriptManager(Manager):
     show_kind = Bool(False)
-    kind = Enum('ExtractionLine', 'Bakeout')
+    kind = Enum('ExtractionLine', 'Bakeout', 'Measurement')
     body = String('''def main():
     sleep(10)
     ramp(100,10)
@@ -418,7 +419,8 @@ if __name__ == '__main__':
 
     logging_setup('scripts')
 #    s = PyScriptManager(kind='ExtractionLine')
-    s = PyScriptManager(kind='Bakeout')
+#    s = PyScriptManager(kind='Bakeout')
+    s = PyScriptManager(kind='Measurement')
 #    p = os.path.join(paths.scripts_dir, 'ms_runscripts', 'Quick Air x1.py')
 
 #    s.open_script(path=p)
