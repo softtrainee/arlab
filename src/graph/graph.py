@@ -440,12 +440,13 @@ class Graph(Loggable):
 
         try:
             plots = self.plots[plotid].plots[series]
+            self.plots[plotid].plots[label] = plots
+            self.plots[plotid].plots.pop(series)
+
         except:
             print series
             print self.plots[plotid].plots.keys()
 
-        self.plots[plotid].plots[label] = plots
-        self.plots[plotid].plots.pop(series)
 
 #        print legend.plots['plot0'][0].visible
 #        print legend.labels

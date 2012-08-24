@@ -25,16 +25,15 @@ from apptools.preferences.ui.preferences_page import PreferencesPage
 class ArArPreferencesPage(PreferencesPage):
     '''
     '''
-    id = 'pychron.arar.prefernces_page'
     name = 'ArAr'
     preferences_path = 'pychron.arar'
 
-    dbname = Str('massspecdata')
-    host = Str('129.138.12.131')
-    user = Str('massspec')
-    password = Password('DBArgon')
+    dbname = Str#('massspecdata')
+    host = Str#('129.138.12.131')
+    user = Str#('massspec')
+    password = Password#('DBArgon')
     def traits_view(self):
-        v = View(Item('dbname'),
+        v = View(Item('dbname', label='Database'),
                  Item('host'),
                  Item('user'),
                  Item('password'))
