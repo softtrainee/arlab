@@ -54,7 +54,7 @@ class ArArUIPlugin(CoreUIPlugin):
               self._create_notes_view,
               self._create_info_view,
               self._create_engine_view,
-              self._create_engine_configure_view,
+#              self._create_engine_configure_view,
               self._create_database_view
               ]
         return rv
@@ -62,10 +62,12 @@ class ArArUIPlugin(CoreUIPlugin):
     def _create_database_view(self, **kw):
         man = self._get_db()
         man.connect()
+
+        man.selector_factory()
         args = dict(
                   id='pychron.arar.database',
                   name='Database',
-                  obj=man._selector_factory()
+                  obj=man.selector
                   )
         return self.traitsuiview_factory(args, kw)
 

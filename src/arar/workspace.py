@@ -15,12 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, List
+from traits.api import Str, List, Instance
 from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.arar.nodes import ExperimentNode
+from src.arar.nodes.experiment import ExperimentNode
 import os
 
 
@@ -28,6 +28,8 @@ class Workspace(Loggable):
     name = Str('Workspace')
     experiments = List(ExperimentNode)
     root = Str
+    current_experiment = Instance(ExperimentNode)
+
     def traits_view(self):
         v = View(
                  Item('name', show_label=False, style='readonly'),
@@ -43,8 +45,12 @@ class Workspace(Loggable):
         else:
             os.mkdir(self.root)
 
-    def new_experiment(self, name):
-        exp = ExperimentNode(name=name)
+    def new_experiment(self, name, kind):
+        klass = '{}Node'.format(kind.capitalize())
+        m = __import__('src.arar.nodes.{}'.format(kind), fromlist=[klass])
+        cls = getattr(m, klass)
+        exp = cls(name=name)
+        self.current_experiment = exp
         self.experiments.append(exp)
         return exp
 

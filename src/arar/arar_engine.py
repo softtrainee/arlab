@@ -17,30 +17,15 @@
 #============= enthought library imports =======================
 from traits.api import Instance, Any, Enum
 from traitsui.api import View, Item, TreeEditor, TreeNode
-from chaco.api import ArrayDataSource
 #============= standard library imports ========================
-import numpy as np
-import math
 import os
 #============= local library imports  ==========================
 from src.graph.graph import Graph
-from src.graph.stacked_graph import StackedGraph
 from src.paths import paths
 from src.loggable import Loggable
 from src.arar.workspace import Workspace
-from src.arar.nodes import AnalysisNode, ExperimentNode
-from src.graph.error_bar_overlay import ErrorBarOverlay
-
-def weighted_mean(x, errs):
-    x = np.asarray(x)
-    errs = np.asarray(errs)
-
-    weights = np.asarray(map(lambda e: 1 / e ** 2, errs))
-
-    wtot = weights.sum()
-    wmean = (weights * x).sum() / wtot
-    werr = wtot ** -0.5
-    return wmean, werr
+from src.arar.nodes.api import AnalysisNode, ExperimentNode
+from src.database.core.database_adapter import DatabaseAdapter
 
 
 class ArArEngine(Loggable):
@@ -49,10 +34,9 @@ class ArArEngine(Loggable):
     workspace = Instance(Workspace)
     graph = Instance(Graph)
 
+    db = Instance(DatabaseAdapter)
     selected = Any
-    cnt = 0
 
-    experiment_kind = Enum('spectrum', 'ideo')
     def new_workspace(self, name=None):
         self.workspace = ws = Workspace()
         if name is not None:
@@ -62,187 +46,36 @@ class ArArEngine(Loggable):
         ws.init()
         return ws
 
+    def add_data(self, data):
+        exp = self.workspace.current_experiment
+        db = self.db
+        for d in data:
+            ref = db.get_analysis(d.rid)
+            irrad_pos = db.get_irradiation_position(ref.IrradPosition)
+#
+            arar_analysis = ref.araranalyses[-1]
+            rid = ref.RID
+            kwargs = dict(
+                        sample=ref.sample.Sample,
+                        irradiation=irrad_pos.IrradiationLevel,
+                        age=arar_analysis.Age,
+                        age_err=arar_analysis.ErrAge
+                        )
+            exp.load_database_reference(ref, rid, kwargs)
 
-    def _replot_experiment(self, experiment):
-        if self.experiment_kind == 'spectrum':
-            self._replot_spectrum(experiment)
-        else:
-            self._replot_ideogram(experiment)
-
-    def _replot_ideogram(self, exp):
-        g = StackedGraph(panel_height=200,
-                         equi_stack=False
-                         )
-        self.graph = g
-
-        g.new_plot()
-        g.add_minor_xticks()
-        g.add_minor_xticks(placement='opposite')
-        g.add_minor_yticks()
-        g.add_minor_yticks(placement='opposite')
-        g.add_opposite_ticks()
-
-        g.set_x_title('Age (Ma)')
-        g.set_y_title('Relative Probability')
-
-
-        ages = [1.6, 2, 3, 1.4, 1, 2.8]
-        errors = [1, 1, 1, 1, 1, 1]
-        pad = 1
-        mi = min(ages) - pad
-        ma = max(ages) + pad
-        n = 500
-        bins = np.linspace(mi, ma, n)
-        probs = np.zeros(n)
-        g.set_x_limits(min=mi, max=ma)
-
-        ages = np.asarray(ages)
-        wm, we = weighted_mean(ages, errors)
-#        print ages
-#        print errors
-#        print 'waieht', wm, we
-        for ai, ei in zip(ages, errors):
-            for j, bj in enumerate(bins):
-                #calculate the gaussian prob
-                #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
-                #see http://en.wikipedia.org/wiki/Normal_distribution
-                delta = math.pow(ai - bj, 2)
-                prob = math.exp(-delta / (2 * ei * ei)) / (math.sqrt(2 * math.pi * ei * ei))
-
-                #cumulate probablities
-                probs[j] += prob
-
-        minp = min(probs)
-        maxp = max(probs)
-        g.set_y_limits(min=minp, max=maxp * 1.05)
-
-        g.new_series(x=bins, y=probs)
-
-        dp = maxp - minp
-
-        s, _p = g.new_series([wm], [maxp - 0.85 * dp], type='scatter', color='black')
-        s.underlays.append(ErrorBarOverlay(component=s))
-        nsigma = 2
-        s.xerror = ArrayDataSource([nsigma * we])
-
-        g.new_plot(bounds=[50, 100])
-        g.add_minor_xticks(plotid=1, placement='opposite')
-
-        g.add_minor_yticks(plotid=1)
-        g.add_minor_yticks(plotid=1, placement='opposite')
-
-        g.add_opposite_ticks(plotid=1)
-
-        g.set_y_title('Analysis #', plotid=1)
-        g.set_axis_traits(orientation='right', plotid=1, axis='y')
-
-        n = zip(ages, errors)
-#        ages.sort()
-        n = sorted(n, key=lambda x:x[0])
-        ages, errors = zip(*n)
-#        print ages, errors
-#        for ni in n:
-#            print ni
-        s, _p = g.new_series(ages, range(1, len(ages) + 1, 1), type='scatter', marker='circle', plotid=1)
-        s.underlays.append(ErrorBarOverlay(component=s))
-        s.xerror = ArrayDataSource(errors)
-
-        g.set_y_limits(min=0, max=len(ages) + 1, plotid=1)
-
-
-    def _replot_spectrum(self, exp):
-        self.graph = g = StackedGraph(panel_height=200,
-                         equi_stack=False
-                         )
-
-        g.new_plot()
-
-        ar39s = [0, 0.1, 0.5, 1]
-        ages = [10, 10.4, 20, 30]
-        errors = [1, 1, 3, 2]
-
-        xs = []
-        ys = []
-        es = []
-        sar = sum(ar39s)
-        prev = 0
-
-        for ai, ei, ar in zip(ages, errors, ar39s):
-#            print ai, ei
-            xs.append(prev)
-            ys.append(ai)
-            es.append(ei)
-
-            s = 100 * ar / sar
-
-            xs.append(s)
-            ys.append(ai)
-            es.append(ei)
-            prev = s
-
-        ys.append(ai)
-        es.append(ei)
-        xs.append(100)
-
-        #main age line
-#        g.new_series(xs, ys)
-        #error box
-        ox = xs[:]
-        xs.reverse()
-        xp = ox + xs
-
-        yu = [yi + ei for (yi, ei) in zip(ys, es)]
-
-        yl = [yi - ei for (yi, ei) in zip(ys, es)]
-        yl.reverse()
-
-        yp = yu + yl
-        g.new_series(x=xp, y=yp, type='polygon')
-        g.set_y_limits(min=min(ys) * 0.95, max=max(ys) * 1.05)
-
-    def _replot_analysis(self, analysis):
-        n = len(analysis.isotope_names)
-        r = 1
-        c = 3
-        if n % c:
-            r = 2
-        self.graph = self._graph_factory((r, c))
-        g = self.graph
-
-        def axis_formatter(x):
-            if x > 0.01:
-                return '{:0.2f}'.format(x)
-            else:
-                return '{:0.2e}'.format(x)
-
-        for i, iso in enumerate(analysis.isotope_names):
-            g.new_plot(title=iso,
-                       padding_right=5,
-                       padding_top=20,
-                       padding_left=75,
-                       padding_bottom=50,
-                       xtitle='Time (s)',
-                       ytitle='Signal (fA)'
-#                       fill_padding=True,
-#                       bgcolor='yellow'
-                       )
-
-            g.set_axis_traits(tick_label_formatter=axis_formatter, plotid=i, axis='y')
-#            g.set_axis_traits(plotid=i, axis='y')
-            x, y = analysis.iso_series[iso]
-#            x = range(10)
-#            y = [i * i for i in x]
-            g.new_series(x, y, type='scatter', marker='circle', marker_size=0.75)
-
+        #refresh the plot
+        self._selected_changed()
 #===============================================================================
 # handlers
 #===============================================================================
     def _selected_changed(self):
-        if isinstance(self.selected, AnalysisNode):
-            self._replot_analysis(self.selected)
-        elif isinstance(self.selected, ExperimentNode):
-            self._replot_experiment(self.selected)
-
+        selected = self.selected
+        if selected and not isinstance(selected, Workspace):
+            graph = selected.replot()
+            if graph:
+                self.graph = graph
+            if isinstance(selected, ExperimentNode):
+                self.workspace.current_experiment = self.selected
 
 #===============================================================================
 # factories
@@ -266,9 +99,9 @@ class ArArEngine(Loggable):
 #===============================================================================
 # views
 #===============================================================================
-    def configure_view(self):
-        v = View(Item('experiment_kind', show_label=False))
-        return v
+#    def configure_view(self):
+#        v = View()
+#        return v
 
     def graph_view(self):
         v = View(Item('graph',
