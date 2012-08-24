@@ -62,6 +62,8 @@ class DatabaseAdapter(Loggable):
     application = Any
 
     test_func = None
+
+    selector = Any
     def _host_changed(self):
         print self.host
 #    window = Any
@@ -306,6 +308,9 @@ class DatabaseAdapter(Loggable):
         s = self._selector_factory()
         if s:
             s.edit_traits()
+
+    def selector_factory(self):
+        self.selector = self._selector_factory()
 
     def _selector_factory(self):
         if self.selector_klass:

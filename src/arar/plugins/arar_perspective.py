@@ -37,11 +37,11 @@ class ArArPerspective(Perspective):
                              relative_to='pychron.arar.engine',
                              position='bottom'
                               ),
-                PerspectiveItem(id='pychron.arar.engine.configure',
-                              #width = 0.65
-                             relative_to='pychron.arar.info',
-                             position='with'
-                              ),
+#                PerspectiveItem(id='pychron.arar.engine.configure',
+#                              #width = 0.65
+#                             relative_to='pychron.arar.info',
+#                             position='with'
+#                              ),
                 PerspectiveItem(id='pychron.arar.database',
                               #width = 0.65
                              relative_to='pychron.arar.info',

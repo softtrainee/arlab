@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str
+from traits.api import Str, Button, Event, List
+from traitsui.api import HGroup, Item, spring
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -59,10 +60,22 @@ class MassSpecSelector(DBSelector):
     tabular_adapter = MassSpecDBResultsAdapter
     query_table = AnalysesTable
     result_klass = MassSpecDBResult
+    add_selection_changed = Event
 
+    open_button_label = 'Add'
     def _get_selector_records(self, **kw):
         return self._db.get_analyses(**kw)
 
+    def _open_button_fired(self):
+        self.add_selection_changed = True
+
+
+    def load_recent(self):
+        self._execute_query(
+                            param='AnalysesTable.RID',
+                            comp='contains',
+                            criteria='17005'
+                            )
 #    def _get__parameters(self):
 #        return ['AnalysesTable.RID',
 #                'AnalysesTable.RunDateTime',

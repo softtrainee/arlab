@@ -18,7 +18,7 @@
 from traits.api import Str, String, Button, List, Any, Event, \
     Dict, Property, Bool, Int
 
-from traitsui.api import View, Item, TabularEditor, EnumEditor, \
+from traitsui.api import View, Item, TabularEditor, EnumEditor, ButtonEditor, \
     HGroup, VGroup, spring
 #============= standard library imports ========================
 from datetime import datetime, timedelta
@@ -48,7 +48,8 @@ class DBSelector(Loggable):
     results = List
 
     search = Button
-    open_button = Button('Open')
+    open_button = Button
+    open_button_label = 'Open'
 
     _db = DatabaseAdapter
 
@@ -96,6 +97,13 @@ class DBSelector(Loggable):
                             )
         except AttributeError:
             pass
+
+    def _get_button_grp(self):
+        return HGroup(
+                        Item('open_button', editor=ButtonEditor(label_value='open_button_label'),
+                             show_label=False),
+                        spring, Item('search', show_label=False))
+
     def traits_view(self):
 
         qgrp = HGroup(
@@ -124,6 +132,7 @@ class DBSelector(Loggable):
                                operations=['move', ],
                                multi_select=True
                                )
+        button_grp = self._get_button_grp()
         v = View(
                  HGroup(Item('multi_select_graph',
                              defined_when='multi_graphable'
@@ -135,9 +144,7 @@ class DBSelector(Loggable):
                       ),
 
                  qgrp,
-                 HGroup(
-                        Item('open_button', show_label=False),
-                        spring, Item('search', show_label=False)),
+                 button_grp,
 
 
                  resizable=True,
