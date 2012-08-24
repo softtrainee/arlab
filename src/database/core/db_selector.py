@@ -29,6 +29,7 @@ from src.database.core.database_adapter import DatabaseAdapter
 from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.graph.time_series_graph import TimeSeriesGraph
 
+#@todo: added multiple parameter queries
 
 class DBSelector(Loggable):
     parameter = String

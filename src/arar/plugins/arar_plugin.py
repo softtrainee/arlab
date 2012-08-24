@@ -50,7 +50,7 @@ class ArArPlugin(CorePlugin):
         bind_preference(m, 'host', 'pychron.arar.host')
         bind_preference(m, 'user', 'pychron.arar.user')
         bind_preference(m, 'password', 'pychron.arar.password')
-        bind_preference(m, 'name', 'pychron.arar.dbname')
+        bind_preference(m, 'dbname', 'pychron.arar.dbname')
         return m
 
     def _factory(self):
@@ -58,6 +58,7 @@ class ArArPlugin(CorePlugin):
         '''
         m = ArArManager(application=self.application)
         m.new_engine()
+
 #        bind_preference(m.modeler, 'logr_ro_line_width', 'pychron.mdd.logr_ro_line_width')
 #        bind_preference(m.modeler, 'arrhenius_plot_type', 'pychron.mdd.plot_type')
 #        bind_preference(m.modeler, 'clovera_directroy', 'pychron.mdd.clovera_directory')

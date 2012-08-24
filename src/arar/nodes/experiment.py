@@ -15,71 +15,70 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, List, Any, Float, Set
+from traits.api import Str, List, Any, Float, Int, Instance
 from traitsui.api import View, Item, TabularEditor
-from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import struct
 #============= local library imports  ==========================
-from core import CoreNode
 from analysis import AnalysisNode
+from src.arar.nodes.series import SeriesNode
 
-
-class AnalysesAdapter(TabularAdapter):
-    columns = [('RunID', 'rid'), ('Age', 'age'), ('Error', 'age_err')]
-
-
-class ExperimentNode(CoreNode):
-    name = Str('Exp1')
-    analyses = List(CoreNode)
-    experiments = List(CoreNode)
+class ExperimentNode(SeriesNode):
+    name = 'Experiment 1'
+#    experiments = List(CoreNode)
+#    airs = List(AnalysisNode)
+#    blanks = List(AnalysisNode)
+    series = List(SeriesNode)
+#    air_series = Instance(SeriesNode, ())
+#    blank_series = Instance(SeriesNode, ())
     selected_analysis = Any
     age = Float
     age_err = Float
-#    analyses_table = Property(depends_on='analyses')
-#    def _get_analyses_table(self):
-#        plus_minus = unicode('\xb1')
-#        return ['{:0.3f}{}{:0.3f}'.format(a.age,
-#                                plus_minus, a.age_err) for a in self.analyses]
-#    dclicked = Event
-#    selected = Any
-#    def _dclicked_fired(self):
-#        if self.selected:
-#            info = self.selected.edit_traits()
-#            info.control.Raise()
+    def _series_default(self):
+        return [SeriesNode(name='airs'), SeriesNode(name='blanks')]
 
     def traits_view(self):
         def readonly(name, **kw):
             return Item(name, style='readonly', **kw)
-#        readonly = lambda x, kw:Item(x, style='readonly', **kw)
+
         v = View(
                  readonly('name', show_label=False),
                  readonly('age', format_str='%0.3f'),
                  readonly('age_err', label='Error', format_str='%0.3f'),
-#                 Item('name', show_label=False, style='readonly'),
-#                 Item('age', style='readonly'),
-#                 Item('age_err', style='readonly'),
-                 Item('analyses',
-#                      style='readonly',
-                      show_label=False,
-                      height=300,
-                      editor=TabularEditor(adapter=AnalysesAdapter(),
-#                                           right_clicked='dclicked',
-                                           selected='object.selected_analysis',
-                                           editable=False, operations=[]))
+                 self._get_analysis_grp()
                  )
         return v
 
-    def load_database_reference(self, ref, rid, kwargs):
-        if not next((a for a in self.analyses if a.rid == rid), None):
-            anode = AnalysisNode(rid=rid, **kwargs)
+    def has_node(self, node):
+        return node in self.analyses
 
-            #save peak regressions
-            for iso in ref.isotopes:
-                ps = iso.peak_time_series
-                xs, ys = self.parse_timeblob(ps.PeakTimeBlob)
-                anode.add_iso_series(iso.Label, xs, ys)
+    def load_analysis_reference(self, ref, rid, kwargs):
+        if not next((a for a in self.analyses if a.rid == rid), None):
+            anode = self._analysis_factory(ref, rid, kwargs)
             self.analyses.append(anode)
+
+    def _analysis_factory(self, ref, rid, kwargs):
+        anode = AnalysisNode(rid=rid, **kwargs)
+
+        #save peak regressions
+        for iso in ref.isotopes:
+            ps = iso.peak_time_series
+            xs, ys = self.parse_timeblob(ps.PeakTimeBlob)
+            anode.add_iso_series(iso.Label, xs, ys)
+            r = iso.results[-1]
+            label = iso.Label.lower()
+            d = {label:r.Iso,
+                       '{}_er'.format(label):r.IsoEr
+                       }
+            anode.trait_set(**d)
+        return anode
+
+    def load_series_reference(self, sname, ref, rid, kwargs):
+        series = next((s for s in self.series if s.name == sname), None)
+        if series:
+            if not next((a for a in series.analyses if a.rid == rid), None):
+                anode = self._analysis_factory(ref, rid, kwargs)
+                series.analyses.append(anode)
 
     @classmethod
     def parse_timeblob(cls, blob):

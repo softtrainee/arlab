@@ -15,19 +15,23 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Str
 from traitsui.api import View, Item, TableEditor
 from src.graph.graph import Graph
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class CoreNode(HasTraits):
-
+    name = Str
+    def replot(self):
+        pass
 #===============================================================================
 # factories
 #===============================================================================
-    def _graph_factory(self, shape):
-        g = Graph(container_dict=dict(type='g',
+    def _graph_factory(self, shape, klass=None):
+        if klass is None:
+            klass = Graph
+        g = klass(container_dict=dict(type='g',
                                       shape=shape,
                                       bgcolor='gray',
                                       padding=10

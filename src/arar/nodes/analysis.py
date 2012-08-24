@@ -15,13 +15,37 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Float, Dict
+from traits.api import Str, Float, Dict, Int
 from traitsui.api import View, Item, VGroup
 #============= standard library imports ========================
 import re
 #============= local library imports  ==========================
 
 from core import CoreNode
+from src.graph.regression_graph import RegressionGraph
+from traitsui.tabular_adapter import TabularAdapter
+class AnalysesAdapter(TabularAdapter):
+    columns = [('RunID', 'rid'),
+               ('Age', 'age'),
+               ('Error', 'age_err'),
+               ('Ar40', 'ar40'), ('Ar39', 'ar39'),
+               ('Ar39', 'ar39'),
+               ('Ar38', 'ar38'),
+               ('Ar37', 'ar37'),
+               ('Ar36', 'ar36'),
+               ]
+
+    ar40_format = Str('%0.2e')
+    ar39_format = Str('%0.2e')
+    ar38_format = Str('%0.2e')
+    ar37_format = Str('%0.2e')
+    ar36_format = Str('%0.2e')
+
+    age_format = Str('%0.2f')
+    age_err_format = Str('%0.2f')
+    age_width = Int(50)
+    age_err_width = Int(50)
+    rid_width = Int(80)
 class AnalysisNode(CoreNode):
     rid = Str('54341-01')
     sample = Str('py-2')
@@ -29,6 +53,13 @@ class AnalysisNode(CoreNode):
     iso_series = Dict
     age = Float
     age_err = Float
+
+    ar40 = Float
+    ar39 = Float
+    ar38 = Float
+    ar37 = Float
+    ar36 = Float
+
     def _get_isotope_names(self):
 
         return sorted(self.iso_series.keys(),
@@ -63,11 +94,11 @@ class AnalysisNode(CoreNode):
 
     def replot(self):
         n = len(self.isotope_names)
-        r = 1
         c = 3
+        r = n / c
         if n % c:
-            r = 2
-        g = self._graph_factory((r, c))
+            r += 1
+        g = self._graph_factory((r, c), klass=RegressionGraph)
 
         def axis_formatter(x):
             if x > 0.01:
@@ -92,6 +123,7 @@ class AnalysisNode(CoreNode):
             x, y = self.iso_series[iso]
 #            x = range(10)
 #            y = [i * i for i in x]
-            g.new_series(x, y, type='scatter', marker='circle', marker_size=0.75)
+            g.new_series(x, y, plotid=i,
+                         type='scatter', marker='circle', marker_size=0.75)
         return g
 #============= EOF =============================================
