@@ -19,7 +19,7 @@ from traits.api import Str, String, Button, List, Any, Event, \
     Dict, Property, Bool, Int
 
 from traitsui.api import View, Item, TabularEditor, EnumEditor, ButtonEditor, \
-    HGroup, VGroup, spring
+    HGroup, VGroup, spring, ListEditor, InstanceEditor, Spring
 #============= standard library imports ========================
 from datetime import datetime, timedelta
 #============= local library imports  ==========================
@@ -29,23 +29,101 @@ from src.database.core.database_adapter import DatabaseAdapter
 from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.graph.time_series_graph import TimeSeriesGraph
 
+
 #@todo: added multiple parameter queries
 
-class DBSelector(Loggable):
+from traits.api import HasTraits
+class TableSelector(HasTraits):
     parameter = String
-    _parameters = Property
+    parameters = Property
+
+    def _get_parameters(self):
+        params = [
+                'Material',
+                'Sample',
+                'Detector',
+                'IrradiationPosition',
+                ]
+        self.parameter = params[0]
+        return params
+
+    def traits_view(self):
+        v = View(Item('parameter',
+                      show_label=False,
+                       editor=EnumEditor(name='parameters')),
+                 buttons=['OK', 'Cancel'],
+                 kind='livemodal'
+                 )
+        return v
+
+class Query(HasTraits):
+    parameter = String
+    parameters = Property
+
+    comparator = Str('=')
+    comparisons = List(['=', '<', '>', '<=', '>=', '!=',
+                         'like',
+                         'contains'
+                         ])
+    criteria = String('this month')
+    query_table = Any
+
+    parent = Any
+    add = Button('+')
+    remove = Button('-')
+    removable = Bool(True)
+
+    def _get_parameters(self):
+
+        b = self.query_table
+
+        f = lambda x:[str(col)
+                           for col in x.__table__.columns]
+        params = list(f(b))
+        self.parameter = params[0]
+        return params
+
+    def _add_fired(self):
+
+        g = TableSelector()
+        info = g.edit_traits()
+        if info.result:
+            self.parent.add_query(g.parameter)
+
+    def _remove_fired(self):
+        self.parent.remove_query(self)
+
+    def traits_view(self):
+        qgrp = HGroup(
+                Item('parameter', editor=EnumEditor(name='parameters'), width= -150),
+                spring,
+                Item('comparator', editor=EnumEditor(name='comparisons')),
+                Item('criteria'),
+                Item('add'),
+                Spring(springy=False,
+                       width=50, visible_when='not removable'),
+                Item('remove', visible_when='removable'),
+                show_labels=False
+                )
+        v = View(qgrp)
+        return v
+
+
+class DBSelector(Loggable):
+#    parameter = String
+#    _parameters = Property
 
     join_table_parameter = String
     _join_table_parameters = Property
     join_table_col = String
     join_table = String
 
-    comparator = Str('=')
-    _comparisons = List(['=', '<', '>', '<=', '>=', '!=',
-                         'like',
-                         'contains'
-                         ])
-    criteria = String('this month')
+#    comparator = Str('=')
+#    _comparisons = List(['=', '<', '>', '<=', '>=', '!=',
+#                         'like',
+#                         'contains'
+#                         ])
+#    criteria = String('this month')
     results = List
 
     search = Button
@@ -79,9 +157,33 @@ class DBSelector(Loggable):
     multi_select_graph = Bool(False)
     multi_graphable = Bool(False)
 
+    queries = List(Query)
+
     def __init__(self, *args, **kw):
         super(DBSelector, self).__init__(*args, **kw)
         self._load_hook()
+
+    def _queries_default(self):
+        return [self._query_factory(removable=False)]
+
+    def _query_factory(self, removable=True, table=None):
+        if table is None:
+            table = self.query_table
+        else:
+            table = '{}Table'.format(table)
+            m = __import__(self.orm_path, fromlist=[table])
+            table = getattr(m, table)
+
+        q = Query(parent=self,
+                  removable=removable,
+                  query_table=table)
+        return q
+
+    def add_query(self, table):
+        self.queries.append(self._query_factory(table=table))
+
+    def remove_query(self, q):
+        self.queries.remove(q)
 
     def load_recent(self):
 #        self._execute_query(
@@ -107,23 +209,27 @@ class DBSelector(Loggable):
 
     def traits_view(self):
 
-        qgrp = HGroup(
-                Item('parameter', editor=EnumEditor(name='_parameters')),
-                Item('comparator', editor=EnumEditor(name='_comparisons')),
-                Item('criteria'),
-                show_labels=False
-                )
-
-        jt = self._get__join_table_parameters()
-#        print jt
-        if jt is not None:
-            qgrp = VGroup(
-                      Item('join_table_parameter',
-                           label='Device',
-                            editor=EnumEditor(name='_join_table_parameters'),
-                           ),
-                      qgrp
-                      )
+#        qgrp = HGroup(
+#                Item('parameter', editor=EnumEditor(name='_parameters')),
+#                Item('comparator', editor=EnumEditor(name='_comparisons')),
+#                Item('criteria'),
+#                show_labels=False
+#                )
+        qgrp = Item('queries', show_label=False,
+                    style='custom',
+                    editor=ListEditor(mutable=False,
+                                      style='custom',
+                                      editor=InstanceEditor()))
+#        jt = self._get__join_table_parameters()
+##        print jt
+#        if jt is not None:
+#            qgrp = VGroup(
+#                      Item('join_table_parameter',
+#                           label='Device',
+#                            editor=EnumEditor(name='_join_table_parameters'),
+#                           ),
+#                      qgrp
+#                      )
 
         editor = TabularEditor(adapter=self.tabular_adapter(),
                                dclicked='object.dclicked',
@@ -147,9 +253,8 @@ class DBSelector(Loggable):
                  qgrp,
                  button_grp,
 
-
                  resizable=True,
-                 width=500,
+                 width=600,
                  height=500,
                  x=0.1,
                  y=0.1,
@@ -231,16 +336,16 @@ class DBSelector(Loggable):
                       limit=self.limit,
                       order=self._get_order()
                       )
+            print table, _col
+#            if not table == self.query_table.__tablename__:
+#                kw['join_table'] = table
 
-            if not table == self.query_table.__tablename__:
-                kw['join_table'] = table
-
-            elif self.join_table:
-                kw['join_table'] = self.join_table
-                kw['filter_str'] = s + ' and {}.{}=="{}"'.format(self.join_table,
-                                                               self.join_table_col,
-                                                                        self.join_table_parameter
-                                                                        )
+#            elif self.join_table:
+#                kw['join_table'] = self.join_table
+#                kw['filter_str'] = s + ' and {}.{}=="{}"'.format(self.join_table,
+#                                                               self.join_table_col,
+#                                                                        self.join_table_parameter
+#                                                                        )
 
 
             dbs = self._get_selector_records(**kw)
@@ -387,15 +492,7 @@ class DBSelector(Loggable):
             c = '__ge__'
         return c
 
-    def _get__parameters(self):
 
-        b = self.query_table
-
-        f = lambda x:[str(col)
-                           for col in x.__table__.columns]
-        params = list(f(b))
-        self.parameter = params[0]
-        return params
 
     def _between(self, p, l, g):
         return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)

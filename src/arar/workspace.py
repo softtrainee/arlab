@@ -59,24 +59,34 @@ class ArArWorkspace(Loggable):
         self.experiments.append(exp)
         return exp
 
-    def add_data(self, data):
-        exp = self.current_experiment
-        db = self.db
-        for d in data:
-            ref = db.get_analysis(d.rid)
-            irrad_pos = db.get_irradiation_position(ref.IrradPosition)
-#
-            arar_analysis = ref.araranalyses[-1]
-            rid = ref.RID
-            kwargs = dict(
-                        sample=ref.sample.Sample,
-                        irradiation=irrad_pos.IrradiationLevel,
-                        age=arar_analysis.Age,
-                        age_err=arar_analysis.ErrAge
-                        )
-            exp.load_analysis_reference(ref, rid, kwargs)
+    def add_sample(self, sample):
+        dbr = sample._db_result
+        for ai in dbr.analyses:
+            self._add_analysis(ai)
 
-            exp.load_series_reference('airs', ref, rid, kwargs)
+    def _add_analysis(self, ref):
+        db = self.db
+        exp = self.current_experiment
+        irrad_pos = db.get_irradiation_position(ref.IrradPosition)
+#
+        arar_analysis = ref.araranalyses[-1]
+        rid = ref.RID
+        kwargs = dict(
+                    sample=ref.sample.Sample,
+                    irradiation=irrad_pos.IrradiationLevel,
+                    age=arar_analysis.Age,
+                    age_err=arar_analysis.ErrAge
+                    )
+        exp.load_analysis_reference(ref, rid, kwargs)
+
+        exp.load_series_reference('airs', ref, rid, kwargs)
+
+
+    def add_analyses(self, analyses):
+        db = self.db
+        for d in analyses:
+            ref = db.get_analysis(d.rid)
+            self._add_analysis(ref)
 
 #        #refresh the plot
 #        self._selected_changed()

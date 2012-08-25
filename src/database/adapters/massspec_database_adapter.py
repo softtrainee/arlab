@@ -36,6 +36,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
     def get_analyses(self, **kw):
         return self._get_items(AnalysesTable, globals(), **kw)
+    def get_samples(self, **kw):
+        return self._get_items(SampleTable, globals(), **kw)
 
 #===============================================================================
 # getters
@@ -550,3 +552,14 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #                     ArArAnalysisTable.DataReductionSessionID,
 #                     ).filter_by(AnalysisID=a_id).all()
 #        return p,sess
+if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('ia')
+    ia = MassSpecDatabaseAdapter()
+    ia.connect()
+
+    ia.selector_factory()
+    dbs = ia.selector
+    dbs.load_recent()
+
+    dbs.configure_traits()
