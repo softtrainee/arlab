@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, DelegatesTo, Any, List, Str
+from traits.api import HasTraits, Instance, Any, List, Str, Enum
 from traitsui.api import View, Item, TreeEditor, TreeNode
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -48,6 +48,7 @@ class ArArManager(EnvisageManager):
 
     selection = Any
     selected = Any
+    mode = Enum('sample', 'runid')
 
     def _active_workspace(self, ws):
         w = self.application.workbench.windows[0]
@@ -66,7 +67,6 @@ class ArArManager(EnvisageManager):
 
     def _selected_changed(self):
         selected = self.selected
-        print selected
         if selected:
             if isinstance(selected, ArArWorkspace):
                 self.workspace = self.selected
@@ -84,9 +84,12 @@ class ArArManager(EnvisageManager):
                     self.workspace.current_experiment = self.selected
 
     def update_db_selection(self, obj, name, old, new):
-        if self.selection:
-            self.workspace.add_data(self.selection)
 
+        if self.selection:
+            if self.mode == 'runid':
+                self.workspace.add_analysis(self.selection)
+            else:
+                self.workspace.add_sample(self.selection[0])
         self._selected_changed()
 
     def update_db_selected(self, obj, name, old, new):

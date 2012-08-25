@@ -23,15 +23,19 @@ from traitsui.tabular_adapter import TabularAdapter
 
 from src.database.core.db_selector import DBSelector
 from src.database.core.base_db_result import RIDDBResult
-from src.database.orms.massspec_orm import AnalysesTable
+from src.database.orms.massspec_orm import AnalysesTable, SampleTable
 
 class MassSpecDBResult(RIDDBResult):
     rid = Str
+    sample = Str
     def _set_metadata(self, dbr):
-        self.rid = dbr.RID
+#        self.rid = dbr.RID
+        self.sample = dbr.Sample
 
 class MassSpecDBResultsAdapter(TabularAdapter):
-    columns = [('RunID', 'rid')
+    columns = [
+#               ('RunID', 'rid'),
+               ('Sample', 'sample'),
                #('ID', '_id'),
                #('Date', 'RunDateTime'),
                #('Time', 'runtime')
@@ -58,23 +62,25 @@ class MassSpecDBResultsAdapter(TabularAdapter):
 class MassSpecSelector(DBSelector):
     date_str = 'RunDateTime'
     tabular_adapter = MassSpecDBResultsAdapter
-    query_table = AnalysesTable
+#    query_table = AnalysesTable
+    query_table = SampleTable
+
     result_klass = MassSpecDBResult
     add_selection_changed = Event
-
+    orm_path = 'src.database.orms.massspec_orm'
     open_button_label = 'Add'
     def _get_selector_records(self, **kw):
-        return self._db.get_analyses(**kw)
+        return self._db.get_samples(**kw)
 
     def _open_button_fired(self):
         self.add_selection_changed = True
 
-
     def load_recent(self):
         self._execute_query(
-                            param='AnalysesTable.RID',
-                            comp='contains',
-                            criteria='17005'
+                            param='SampleTable.Sample',
+#                            param='AnalysesTable.RID',
+                            comp='=',
+                            criteria='J045'
                             )
 #    def _get__parameters(self):
 #        return ['AnalysesTable.RID',
@@ -98,12 +104,12 @@ class MassSpecSelector(DBSelector):
 #                self.results.append(r)
 
 
-if __name__ == '__main__':
-    from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
-    m = MassSpecSelector(parameter='AnalysesTable.RID',
-                         criteria='21351-01')
-
-    m._db = db = MassSpecDatabaseAdapter(dbname='massspecdata_local')
-    db.connect()
-    m.configure_traits()
+#if __name__ == '__main__':
+#    from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
+#    m = MassSpecSelector(parameter='AnalysesTable.RID',
+#                         criteria='21351-01')
+#    m.load_recent()
+#    m._db = db = MassSpecDatabaseAdapter(dbname='massspecdata_local')
+#    db.connect()
+#    m.configure_traits()
 #============= EOF =============================================
