@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, Str, Button, \
-    Bool, Property, Float, Int, on_trait_change, Time, Dict, cached_property
+from traits.api import HasTraits, List, Instance, Str, Button, Any, \
+    Bool, Property, Float, Int, on_trait_change, Dict
 from traitsui.api import View, Item, TabularEditor, VGroup, HGroup, spring, \
     EnumEditor
 #============= standard library imports ========================
@@ -38,7 +38,7 @@ class ExperimentStats(HasTraits):
     etf = Str
     total_time = Property(depends_on='_total_time')
     _total_time = Float
-
+    _timer = Any(transient=True)
     def calculate_etf(self, runs):
         self.nruns = len(runs)
 
@@ -86,11 +86,11 @@ class ExperimentStats(HasTraits):
     def stop_timer(self):
         self._timer.Stop()
 
-class Experiment(Loggable):
+class ExperimentSet(Loggable):
     automated_runs = List(AutomatedRun)
     automated_run = Instance(AutomatedRun)
     current_run = Instance(AutomatedRun)
-    heat_schedule = Instance(HeatSchedule, ())
+    heat_schedule = Instance(HeatSchedule, (), transient=True)
 
     ok_to_add = Bool(False)
     apply = Button
@@ -98,7 +98,7 @@ class Experiment(Loggable):
 
     name = Property(depends_on='path')
     path = Str
-    stats = Instance(ExperimentStats, ())
+    stats = Instance(ExperimentStats, (), transient=True)
 
     loaded_scripts = Dict
 
@@ -111,6 +111,17 @@ class Experiment(Loggable):
     extraction_script = Str
     extraction_scripts = Property(depends_on='_extraction_scripts')
     _extraction_scripts = List
+
+    delay_between_runs = Float(1)
+
+    dirty = Property(depends_on='_dirty,path')
+    _dirty = Bool(False)
+
+    def _set_dirty(self, d):
+        self._dirty = d
+
+    def _get_dirty(self):
+        return self._dirty and os.path.isfile(self.path)
 
     def _load_script_names(self, name):
         p = os.path.join(paths.scripts_dir, name)
@@ -125,25 +136,51 @@ class Experiment(Loggable):
         else:
             self.warning_dialog('{} script directory does not exist!'.format(p))
 
-#    @cached_property
-    def _get_extraction_scripts(self):
-        es = self._load_script_names('extraction')
-        if es:
-            self.extraction_script = es[0]
-        return es
-
-#    @cached_property
-    def _get_measurement_scripts(self):
-        ms = self._load_script_names('measurement')
-        if ms:
-            self.measurement_script = ms[0]
-        return ms
 
     def update_loaded_scripts(self, new):
         self.loaded_scripts[new.name] = new
 
+
+
+    def reset_stats(self):
+        self.stats.start_timer()
+
+    def stop_stats_timer(self):
+        self.stats.stop_timer()
+
+    def _auto_increment_runid(self, rid):
+        try:
+            head, tail = rid.split('-')
+            rid = '{}-{}'.format(head, int(tail) + 1)
+        except ValueError:
+            try:
+                rid = str(int(rid) + 1)
+            except ValueError:
+                pass
+
+        return rid
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def _add_fired(self):
+
+        self.automated_runs.append(self.automated_run)
+
+        #@todo: auto increment the runid
+        rid = self._auto_increment_runid(self.automated_run.identifier)
+        self.automated_run = self._automated_run_factory(rid)
+        self.ok_to_add = False
+
+
+    def _apply_fired(self):
+        for s in self.heat_schedule.steps:
+            a = AutomatedRun(heat_step=s)
+            self.automated_runs.append(a)
+
     @on_trait_change('current_run,automated_runs[]')
     def update_stats(self, obj, name, old, new):
+        self.dirty = True
         #updated the experiments stats
         if name == 'current_run':
             if not new is self.automated_runs[0]:
@@ -152,30 +189,13 @@ class Experiment(Loggable):
 
         elif name == 'automated_runs_items':
             self.stats.calculate_etf(self.automated_runs)
-
-    def reset_stats(self):
-        self.stats.start_timer()
-
-    def stop_stats_timer(self):
-        self.stats.stop_timer()
-
-    def _get_name(self):
-        if self.path:
-            return os.path.splitext(os.path.basename(self.path))[0]
-        else:
-            return 'New Experiment'
-
-    def _add_fired(self):
-
-        self.automated_runs.append(self.automated_run)
-        self.automated_run = self._automated_run_factory()
-        self.ok_to_add = False
-
-    def _apply_fired(self):
-        for s in self.heat_schedule.steps:
-            a = AutomatedRun(heat_step=s)
-            self.automated_runs.append(a)
-
+#===============================================================================
+# views
+#===============================================================================
+    def _automated_run_editor(self, update=''):
+        return TabularEditor(adapter=AutomatedRunAdapter(),
+                             update=update
+                                )
     def traits_view(self):
         new_analysis = VGroup(
                               Item('automated_run',
@@ -188,11 +208,9 @@ class Experiment(Loggable):
                                      )
                               )
 
-        editor = TabularEditor(adapter=AutomatedRunAdapter(),
-                                update='object.current_run.update'
-                                )
+
         analysis_table = Item('automated_runs', show_label=False,
-                              editor=editor,
+                              editor=self._automated_run_editor(update='object.current_run.update'),
                               height=0.5
                              )
 
@@ -227,6 +245,46 @@ class Experiment(Loggable):
         return v
 
 
+#===============================================================================
+# factories
+#===============================================================================
+    def _automated_run_factory(self, **kw):
+        '''
+             always use this factory for new AutomatedRuns
+             it sets the configuration, loaded scripts and binds our update_loaded_script
+             handler so we are aware of scripts that have been tested
+        '''
+
+        a = AutomatedRun(
+                         configuration=self.test_configuration,
+                         scripts=self.loaded_scripts,
+                         **kw
+                         )
+
+        a.on_trait_change(self.update_loaded_scripts, '_measurement_script')
+        a.on_trait_change(self.update_loaded_scripts, '_extraction_script')
+        return a
+
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_name(self):
+        if self.path:
+            return os.path.splitext(os.path.basename(self.path))[0]
+        else:
+            return 'New ExperimentSet'
+
+    def _get_extraction_scripts(self):
+        es = self._load_script_names('extraction')
+        if es:
+            self.extraction_script = es[0]
+        return es
+
+    def _get_measurement_scripts(self):
+        ms = self._load_script_names('measurement')
+        if ms:
+            self.measurement_script = ms[0]
+        return ms
     def _get_test_configuration(self):
         c = dict(extraction_script=os.path.join(paths.scripts_dir,
                                                         'extraction',
@@ -237,35 +295,21 @@ class Experiment(Loggable):
                                                   'measureTest.py')
                   )
         return c
-
-    def _automated_run_factory(self, identifier=None):
-        '''
-             always use this factory for new AutomatedRuns
-             it sets the configuration, loaded scripts and binds our update_loaded_script
-             handler so we are aware of scripts that have been tested
-        '''
-
-        a = AutomatedRun(identifier=identifier,
-                         configuration=self.test_configuration,
-                         scripts=self.loaded_scripts
-                         )
-
-        a.on_trait_change(self.update_loaded_scripts, '_measurement_script')
-        a.on_trait_change(self.update_loaded_scripts, '_extraction_script')
-        return a
-
+#===============================================================================
+# defaults
+#===============================================================================
     def _automated_run_default(self):
-        return self._automated_run_factory('B-1')
+        return self._automated_run_factory()
 #===============================================================================
 # debugging
 #===============================================================================
-    def add_run(self):
-        a = self._automated_run_factory('B-1')
-        self.automated_runs.append(a)
+#    def add_run(self):
+#        a = self._automated_run_factory('B-1')
+#        self.automated_runs.append(a)
 #        print a.measurement_script
-
-        a = self._automated_run_factory('B-2')
-        self.automated_runs.append(a)
+#
+#        a = self._automated_run_factory('B-2')
+#        self.automated_runs.append(a)
 #        a = AutomatedRun(identifier='B-dd12',
 #                         scripts=self.loaded_scripts,
 #                         configuration=self.test_configuration

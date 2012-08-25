@@ -62,6 +62,16 @@ class AppHandler(ManagerHandler):
         info.object.close_displays()
         return True
 
+class SaveableHandler(Handler):
+    def save(self, info):
+        info.object.save()
+
+    def save_as(self, info):
+        info.object.save_as()
+
+class SaveableManagerHandler(SaveableHandler, ManagerHandler):
+    pass
+
 class Manager(Viewable, RPCable):
     '''
     '''

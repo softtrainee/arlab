@@ -75,9 +75,9 @@ class AutomatedRunAdapter(TabularAdapter):
 
 
 class AutomatedRun(Loggable):
-    spectrometer_manager = Any
-    extraction_line_manager = Any
-    experiment_manager = Any
+    spectrometer_manager = Any(transient=True)
+    extraction_line_manager = Any(transient=True)
+    experiment_manager = Any(transient=True)
 
     sample = Str
 
@@ -124,6 +124,7 @@ class AutomatedRun(Loggable):
 
     db = Any
     massspec_importer = Any
+    graph = Any
 
     def get_estimated_duration(self):
         '''
@@ -199,7 +200,7 @@ class AutomatedRun(Loggable):
         self.info('extraction')
         self.state = 'extraction'
 
-        self._extraction_script.execute()
+        self.extraction_script.execute()
         self.info('extraction finished')
 
     def do_measurement(self):
@@ -207,8 +208,8 @@ class AutomatedRun(Loggable):
         #measurement sequence
 
         self._pre_analysis_save()
-        self._measurement_script.execute()
-        self._post_analysis_save()
+        if self.measurement_script.execute():
+            self._post_analysis_save()
 
         self.info('measurement finished')
 
@@ -300,11 +301,11 @@ class AutomatedRun(Loggable):
         r = Regressor()
         g = self.graph
 
-        time_zero_offset = int(self.experiment_manager.equilibration_time * 2 / 3.)
+        time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
         for pi in range(len(g.plots)):
             x = g.get_data(plotid=pi, series=series)[time_zero_offset:]
             y = g.get_data(plotid=pi, series=series, axis=1)[time_zero_offset:]
-
+            x, y = zip(*zip(x, y))
             rdict = r._regress_(x, y, kind)
 
             self.info('intercept {}+/-{}'.format(rdict['coefficients'][-1],
@@ -473,12 +474,12 @@ class AutomatedRun(Loggable):
             db.add_analysis_path(p, analysis=a)
             db.commit()
 
-        #save to mass spec database
-        self.massspec_importer.add_analysis(self.identifier,
-                                            self.irrad_level,
-                                            self.sample,
-                                            self.runtype
-                                            )
+#        #save to mass spec database
+#        self.massspec_importer.add_analysis(self.identifier,
+#                                            self.irrad_level,
+#                                            self.sample,
+#                                            self.runtype
+#                                            )
 #===============================================================================
 # property get/set
 #===============================================================================

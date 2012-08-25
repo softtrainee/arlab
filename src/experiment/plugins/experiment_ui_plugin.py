@@ -25,10 +25,13 @@ from src.envisage.core.core_ui_plugin import CoreUIPlugin
 
 class ExperimentUIPlugin(CoreUIPlugin):
     '''
-        G{classtree}
     '''
     id = 'pychron.experiment.ui'
     name = 'Experiment UI'
+#    def _perspectives_default(self):
+#        from experiment_perspective import ExperimentPerspective
+#        p = [ExperimentPerspective]
+#        return p
 
     def _action_sets_default(self):
         '''
@@ -39,8 +42,17 @@ class ExperimentUIPlugin(CoreUIPlugin):
 #    def _views_default(self):
 #        '''
 #        '''
-#        return [self._create_analysis_graph_view]
+#        return [self._create_experiment_set_view]
 
+#    def _create_experiment_set_view(self, **kw):
+#        app = self.application
+#        man = app.get_service('src.experiment.experiment_manager.ExperimentManager')
+#        args = dict(id='pychron.experiment_set',
+#                         name='Experiment Set',
+#                         obj=man
+#                         )
+#
+#        return self.traitsuiview_factory(args, kw)
 
 #    def _create_analysis_graph_view(self, **kw):
 #        '''

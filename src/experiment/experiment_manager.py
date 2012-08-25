@@ -16,16 +16,19 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Button, Float, on_trait_change, Str, \
-    DelegatesTo
+    DelegatesTo, Bool, Property, Event
 from traitsui.api import View, Item, Group, VGroup
+from traitsui.menu import Action
+#import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-from threading import Thread, Event
+from threading import Thread
+from threading import Event as TEvent
 import os
 import time
 
 #============= local library imports  ==========================
-from src.managers.manager import Manager
-from src.experiment.experiment import Experiment
+from src.managers.manager import Manager, SaveableManagerHandler
+from src.experiment.experiment_set import ExperimentSet
 
 from src.paths import paths
 from src.managers.data_managers.h5_data_manager import H5DataManager
@@ -34,6 +37,10 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 
 DEBUG = True
+class ExperimentManagerHandler(SaveableManagerHandler):
+    def object_active_experiment_set_changed(self, info):
+        if info.initialized:
+            info.ui.title = info.object.title
 
 
 class ExperimentManager(Manager):
@@ -43,7 +50,7 @@ class ExperimentManager(Manager):
     spectrometer_manager = Instance(Manager)
     experiment_config = None
 
-    active_experiment = Instance(Experiment, ())
+    active_experiment_set = Instance(ExperimentSet, ())
 
     data_manager = Instance(Manager)
     #these are remote managers
@@ -60,16 +67,23 @@ class ExperimentManager(Manager):
 #    ncounts = Int
 #    n_baseline_counts = Int
 
-    _alive = False
+#    _alive = False
 
     mode = 'normal'
 #    equilibration_time = 15
 
     test2 = Button
-    default_save_directory = Str
 
-    title = DelegatesTo('active_experiment', prefix='name')
-#    stats = DelegatesTo('active_experiment')
+    _alive = Bool(False)
+    execute_button = Event
+    execute_label = Property(depends_on='_alive')
+
+#    open_button = Button
+#    save_button = Button
+#    default_save_directory = Str
+
+    title = DelegatesTo('active_experiment_set', prefix='name')
+#    stats = DelegatesTo('active_experiment_set')
 
 #    def load_experiment_configuration(self, p):
 #        anals = []
@@ -85,6 +99,14 @@ class ExperimentManager(Manager):
 #        a.runscript_name = args[1]
 #
 #        return a
+    dirty = DelegatesTo('active_experiment_set')
+
+    def save(self):
+        self.save_experiment_set()
+
+    def save_as(self):
+        self.save_as_experiment_set()
+
     def recall_analysis(self):
         pass
 
@@ -98,7 +120,9 @@ class ExperimentManager(Manager):
         return sm
 
     def end_runs(self):
-        exp = self.active_experiment
+
+        self._alive = False
+        exp = self.active_experiment_set
         exp.stats.nruns_finished = len(exp.automated_runs)
         exp.stop_stats_timer()
         self.info('automated runs complete')
@@ -122,7 +146,7 @@ class ExperimentManager(Manager):
 #        self.csv_data_manager = CSVDataManager()
 
 #        sm = self.get_spectrometer_manager()
-        exp = self.active_experiment
+        exp = self.active_experiment_set
         nruns = len(exp.automated_runs)
 
         err_message = ''
@@ -157,7 +181,7 @@ class ExperimentManager(Manager):
                 self.warning(err_message)
                 continue # or should we continue
 
-            if not arun.measurement:
+            if not arun.measurement_script:
                 err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
                 self.warning(err_message)
                 continue
@@ -173,7 +197,7 @@ class ExperimentManager(Manager):
             # ie do_equilibration is nonblocking
 
             #use an Event object so that we dont finish before eq is done
-            event = Event()
+            event = TEvent()
             event.clear()
 
             eqtime = arun.get_measurement_parameter('equilibration_time', default=15)
@@ -203,22 +227,26 @@ class ExperimentManager(Manager):
 
             arun.state = 'success'
             if i + 1 == nruns:
+                exp.stop_stats_timer()
                 self.end_runs()
-                continue
+                return
 
-            self.info('Delay between runs {}'.format(self.delay_between_runs))
+            delay = self.active_experiment_set.delay_between_runs
+            self.info('Delay between runs {}'.format(delay))
             #delay between runs
             st = time.time()
-            while time.time() - st < self.delay_between_runs:
+            while time.time() - st < delay:
                 if not self._continue_check():
                     break
                 time.sleep(0.5)
 
         else:
+            exp.stop_stats_timer()
             self.end_runs()
             return
 
-        exp.stop_stats_timer()
+
+        #executed if break out of for loop
         arun.state = 'fail'
         self.warning('automated runs did not complete successfully')
         self.warning('error: {}'.format(err_message))
@@ -261,101 +289,7 @@ class ExperimentManager(Manager):
         t = Thread(target=eq, args=(event,))
         t.start()
 
-#    def do_extraction(self, arun):
-#
-#        self.info('Do extraction. Runscript = {}'.format(name))
-#        ec = ExtractionLineScript(source_dir=os.path.join(scripts_dir,
-#                                                 'extraction_scripts'),
-#                                  file_name=name
-#                                  )
-#
-#        ec.bootstrap()
-#        ec.join()
-#
-#        self.time_zero = ec.get_time_zero()
-
-#    def _measure(self, ncounts, dac):
-#        #set magnet to be on the peak
-#        self.spectometer_manager.set_dac(dac)
-#        dm = self.data_manager
-#
-#        dm.new_frame()
-#
-#        st = time.time()
-#        for _ in xrange(ncounts):
-#
-#            time.sleep(0.9)
-#
-#            data = self.spectometer_manager.get_intensities(tagged=True)
-#            keys, signals = zip(*data)
-#
-#            h1 = signals[keys.index('H1')]
-#            cdd = signals[keys.index('CDD')]
-#            x = time.time() - st
-#            dm.write_to_frame((x, h1, cdd))
-#
-#            self.graph.record(h1, x=x)
-#            self.graph.record(cdd, x=x, series=1)
-
-#    def do_measurement(self):
-#        self._measure(self.ncounts, self._dac_peak_center)
-
-#    def do_peak_center(self):
-#        spec = self.spectometer_manager
-#        if spec is not None:
-#            spec.peak_center()
-
-#    def do_baseline(self):
-#        self._measure(self.n_baseline_counts, self._dac_baseline)
-
-#    def load_experiment_config(self):
-#        self.info('loading experiment configuration')
-#        self.analysis_config = dict(
-#                                           extraction_line_script=os.path.join(scripts_dir, 'runscripts', 'test.rs'),
-#                                           analysis_script=os.path.join(scripts_dir, 'analysisscripts', 'test.rs'),
-#                                           identifier=4
-#                                  )
-    def new_experiment(self):
-
-        #get a path for saving
-        #use it as name as well
-
-        d = self.default_save_directory
-
-        p, _ = unique_path(d, 'Experiment ', extension=None)
-
-
-#        p = self.save_file_dialog(default_path=p,
-#                                  default_directory=d
-#                                  )
-        if p is not None:
-            exp = Experiment()
-            exp.path = p
-            exp.add_run()
-            self.active_experiment = exp
-
-        self.edit_traits()
-
-
-    def _test2_fired(self):
-#        sm = self.get_spectrometer_manager()
-#        print sm.spectrometer_microcontroller
-#        self.analyze_data()
-#        dm = H5DataManager()
-#
-#        path = '/Users/ross/Pychrondata/data/automated_runs/B-01-intensity015.hdf5'
-#        dm.open_data(path)
-#        t = dm.get_table('H1', 'signals')
-#        print t
-#        for r in t.iterrows():
-#            print r['time'], r['value']
-#        self.new_experiment()
-        self.execute()
-
-    def _test_fired(self):
-        self.new_experiment()
-
-    def execute(self):
+    def _execute(self):
         if self.isAlive():
 
             if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
@@ -369,14 +303,116 @@ class ExperimentManager(Manager):
             t = Thread(target=self.do_automated_runs)
             t.start()
 
-#    def _add_fired(self):
-#        self.experiment.analyses.append(self.experiment.analysis)
-#        self.experiment.analysis = Analysis()
+    def new_experiment_set(self):
+        self.active_experiment_set = ExperimentSet()
+
+
+#    def close(self, isok):
+#        self.dirty_save_as = False
+#===============================================================================
+# persistence
+#===============================================================================
+    def load_experiment_set(self, path=None):
+        if path is None:
+            path = self.open_file_dialog(default_directory=paths.experiment_dir)
+
+        if path is not None:
+
+            exp = ExperimentSet(path=path)
+            with open(path, 'rb') as f:
+                #read meta
+                #read until break
+                for line in f:
+                    if line.startswith('#====='):
+                        break
+                delim = '\t'
+                header = f.next().split(delim)
+                for ai in f:
+                    args = ai.split(delim)
+                    identifier = args[header.index('identifier')]
+                    arun = exp._automated_run_factory(identifier=identifier,
+                                                      _extraction_script=''
+
+                                                      )
+                    exp.automated_runs.append(arun)
+
+            self.active_experiment_set = exp
+
+#            except Exception:
+#                self.warning_dialog('Invalid experiment file {}'.format(path))
+    def save_as_experiment_set(self):
+        p = self.save_file_dialog(default_directory=paths.experiment_dir)
+        self._dump_experiment_set(p)
+        self.active_experiment_set.path = p
+        self.active_experiment_set.dirty = False
+
+    def save_experiment_set(self):
+        p = self.active_experiment_set.path
+        self._dump_experiment_set(p)
+        self.active_experiment_set.dirty = False
+
+    def _dump_experiment_set(self, p):
+#        if not p:
+#            p = '/Users/ross/Pychrondata_experiment/experiments/foo.txt'
+#            p = self.save_file_dialog(default_directory=paths.experiment_dir)
 #
-#    def _apply_fired(self):
-#        for s in self.heat_schedule.steps:
-#            a = Analysis(heat_step = s)
-#            self.experiment.analyses.append(a)
+
+        if not p:
+            return
+
+        self.info('saving experiment to {}'.format(p))
+        self.active_experiment_set.dirty = False
+
+        header = ['identifier', 'extraction', 'measurement']
+        with open(p, 'wb') as f:
+            writeline = lambda m: f.write(m + '\n')
+            tab = lambda l: writeline('\t'.join(map(str, l)))
+
+            #write metadata
+            writeline(self.active_experiment_set.name)
+            writeline('#' + '=' * 80)
+            tab(header)
+            for arun in self.active_experiment_set.automated_runs:
+                tab([arun.identifier, arun.measurement_script.name, arun.extraction_script.name])
+
+
+
+
+
+
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def _execute_button_fired(self):
+        self._execute()
+#    def _open_button_fired(self):
+#        p = '/Users/ross/Pychrondata_experiment/experiments/foo.txt'
+#        self.load_experiment_set(path=p)
+#
+##        self._load_experiment(path=None)
+#    def _save_button_fired(self):
+##        p = '/Users/ross/Pychrondata_experiment/experiments/foo.exp'
+#        self._dump_experiment_set()
+##        self._dump_experiment(path=None)
+#
+#    def _save_as_button_fired(self):
+#        self._dump_experiment_set()
+
+#    def _test2_fired(self):
+#        sm = self.get_spectrometer_manager()
+#        print sm.spectrometer_microcontroller
+#        self.analyze_data()
+#        dm = H5DataManager()
+#
+#        path = '/Users/ross/Pychrondata/data/automated_runs/B-01-intensity015.hdf5'
+#        dm.open_data(path)
+#        t = dm.get_table('H1', 'signals')
+#        print t
+#        for r in t.iterrows():
+#            print r['time'], r['value']
+#        self.new_experiment()
+#        self.execute()
 
     @on_trait_change('experiment:automated_run:identifier')
     def identifier_update(self, obj, name, old, new):
@@ -393,18 +429,46 @@ class ExperimentManager(Manager):
                     self.experiment.ok_to_add = True
         else:
             self.experiment.ok_to_add = False
+#===============================================================================
+# views
+#===============================================================================
+    def execute_view(self):
+        editor = self.active_experiment_set._automated_run_editor(update='object.active_experiment_set.current_run.update')
+
+        exc_grp = Group(
+                        self._button_factory('execute_button',
+                                             label='execute_label', align='right'),
+                       Item('object.active_experiment_set.stats',
+                            style='custom'),
+                       show_labels=False,
+                       show_border=True,
+                       label='Execute')
+        v = View(
+                 exc_grp,
+                 Item('object.active_experiment_set.automated_runs',
+                      style='custom',
+                      show_label=False,
+                      editor=editor
+                      ),
+                 width=700,
+                 height=500,
+                 resizable=True
+                 )
+        return v
 
     def traits_view(self):
 
         exc_grp = Group(
-                       Item('test2'),
-                       Item('object.active_experiment.stats',
+#                       Item('test2'),
+#                       Item('open_button'),
+#                       Item('save_button'),
+                       Item('object.active_experiment_set.stats',
                             style='custom'),
                        show_labels=False,
                        show_border=True,
                        label='Execute')
         exp_grp = Group(
-                       Item('active_experiment',
+                       Item('active_experiment_set',
                        show_label=False, style='custom'),
                        show_border=True,
                        label='Experiment'
@@ -416,7 +480,12 @@ class ExperimentManager(Manager):
                  resizable=True,
                  width=850,
                  height=600,
-                 handler=self.handler_klass,
+                 buttons=['OK', 'Cancel',
+                          Action(name='Save', action='save', enabled_when='object.dirty'),
+                          Action(name='Save As', action='save_as'),
+
+                          ],
+                 handler=ExperimentManagerHandler,
                  title=self.title
                  )
         return v
@@ -427,6 +496,14 @@ class ExperimentManager(Manager):
         v = View('test')
         return v
 
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_execute_label(self):
+        return 'Start' if not self._alive else 'Stop'
+#===============================================================================
+# defaults
+#===============================================================================
     def _default_save_directory_default(self):
         return paths.experiment_dir
 

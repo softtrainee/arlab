@@ -366,12 +366,14 @@ class PyScript(Loggable):
 
             if ok:
                 self._execute()
+            return self._completed
 
         if new_thread:
             t = Thread(target=_ex_)
             t.start()
         else:
-            _ex_()
+            return _ex_()
+
 
     def _calculate_graph(self):
         self._xs = [0]

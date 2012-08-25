@@ -152,7 +152,7 @@ class MeasurementPyScript(PyScript):
             return
 
         if dets:
-            self.automated_run.activate_detectors(dets)
+            self.automated_run.activate_detectors(list(dets))
 
     @verbose_skip
     def baselines(self, ncounts, position=None, detector=None):

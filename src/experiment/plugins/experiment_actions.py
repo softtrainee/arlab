@@ -18,47 +18,96 @@
 
 #============= enthought library imports =======================
 from pyface.action.api import Action
+from src.envisage.core.action_helper import open_manager
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-
+EXPERIMENT_MANAGER_PROTOCOL = 'src.experiment.experiment_manager.ExperimentManager'
 def get_manager(event):
     app = event.window.application
-    manager = app.get_service('src.experiment.experiment_manager.ExperimentManager')
+    manager = app.get_service(EXPERIMENT_MANAGER_PROTOCOL)
     return manager
 
 
-class ExecuteExperimentAction(Action):
+class ExecuteExperimentSetAction(Action):
     name = 'Execute'
     def perform(self, event):
         man = get_manager(event)
-        man.edit_traits(view='execute_view')
+
+        p = '/Users/ross/Pychrondata_experiment/experiments/foo.txt'
+
+        man.load_experiment_set(path=p)
+        open_manager(event.window.application, man, view='execute_view')
 
 
-class NewExperimentAction(Action):
+class NewExperimentSetAction(Action):
     '''
     '''
-    description = 'Create a new experiment'
-    name = 'New Experiment'
+    description = 'Create a new experiment set'
+    name = 'New Experiment Set'
 
     def perform(self, event):
         '''
         '''
         manager = get_manager(event)
-        manager.new_experiment()
+        manager.new_experiment_set()
+        open_manager(event.window.application, manager)
 
 
-class OpenExperimentAction(Action):
+class OpenExperimentSetAction(Action):
     '''
     '''
-    description = 'Create a Open experiment'
-    name = 'Open Experiment'
+    description = 'Open experiment set'
+    name = 'Open Experiment Set'
 
     def perform(self, event):
         '''
         '''
         manager = get_manager(event)
-        manager.open()
+        manager.load_experiment_set()
+        open_manager(event.window.application, manager)
+#class EnableableAction(Action):
+#
+#    dirty_traitname = 'dirty'
+#    def __init__(self, *args, **kw):
+#        super(EnableableAction, self).__init__(*args, **kw)
+#        em = self.window.workbench.application.get_service(EXPERIMENT_MANAGER_PROTOCOL)
+#        em.on_trait_change(self._update_enabled, self.dirty_traitname)
+#        self.enabled = False
+#
+#    def _update_enabled(self, new):
+#        if isinstance(new, bool):
+#            self.enabled = new
+#        else:
+#            self.enabled = new is not None
+#
+#
+#class SaveExperimentSetAction(EnableableAction):
+#    '''
+#    '''
+#    description = 'Save experiment set'
+#    name = 'Save Experiment Set'
+#
+#    def perform(self, event):
+#        '''
+#        '''
+#        manager = get_manager(event)
+#        manager.save_experiment_set()
+#
+#class SaveAsExperimentSetAction(Action):
+##class SaveAsExperimentSetAction(EnableableAction):
+#    '''
+#    '''
+#    description = 'Save as experiment set'
+#    name = 'Save As Experiment Set'
+#
+#    def perform(self, event):
+#        '''
+#        '''
+#        manager = get_manager(event)
+#        manager.save_as_experiment_set()
+
+
 
 
 class RecallAnalysisAction(Action):

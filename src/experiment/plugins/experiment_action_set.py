@@ -27,7 +27,7 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 
 BASE = 'src.experiment.plugins.experiment_actions'
 PATH = 'MenuBar/Experiment'
-
+FILEPATH = 'MenuBar/File/Experiment'
 
 class ExperimentActionSet(WorkbenchActionSet):
     '''
@@ -36,16 +36,26 @@ class ExperimentActionSet(WorkbenchActionSet):
 #    menus = [
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
-    actions = [Action(name='New Experiment',
-                      path=PATH,
-                    class_name='{}:NewExperimentAction'.format(BASE)
+    actions = [Action(name='New',
+                      path=FILEPATH,
+                    class_name='{}:NewExperimentSetAction'.format(BASE)
 
                     ),
-                Action(name='Open Experiment',
-                       path=PATH,
-                       class_name='{}:OpenExperimentAction'.format(BASE)
+                Action(name='Open...',
+                       path=FILEPATH,
+                       class_name='{}:OpenExperimentSetAction'.format(BASE)
 
                        ),
+#                Action(name='Save',
+#                       path=FILEPATH,
+#                       class_name='{}:SaveExperimentSetAction'.format(BASE)
+#
+#                       ),
+#                Action(name='Save As...',
+#                       path=FILEPATH,
+#                       class_name='{}:SaveAsExperimentSetAction'.format(BASE)
+#
+#                       ),
                 Action(name='Recall',
                        path=PATH,
                        class_name='{}:RecallAnalysisAction'.format(BASE)
@@ -53,7 +63,7 @@ class ExperimentActionSet(WorkbenchActionSet):
                        ),
                 Action(name='Execute',
                        path=PATH,
-                       class_name='{}:ExecuteExperimentAction'.format(BASE)
+                       class_name='{}:ExecuteExperimentSetAction'.format(BASE)
 
                        )
              ]
