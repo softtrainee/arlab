@@ -18,27 +18,46 @@
 
 #============= enthought library imports =======================
 from pyface.action.api import Action
+from src.envisage.core.action_helper import open_manager
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-SPECTROMETER_PROTOCOL = 'src.managers.spectrometer_manager.SpectrometerManager'
-class MagFieldCalibrationAction(Action):
-    description = 'Update the magnetic field calibration table'
+SPECTROMETER_PROTOCOL = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
+ION_OPTICS_PROTOCOL = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
+SCAN_PROTOCOL = 'src.spectrometer.scan_manager.ScanManager'
+def get_manager(event, protocol):
+    app = event.window.application
+    manager = app.get_service(protocol)
+    return manager
+
+class OpenIonOpticsAction(Action):
     def perform(self, event):
-        app = event.window.application
+        man = get_manager(event, ION_OPTICS_PROTOCOL)
+        open_manager(event.window.application, man)
 
-        manager = app.get_service(SPECTROMETER_PROTOCOL)
-        manager.peak_center(update_mftable=True)
-
-class PeakCenterAction(Action):
-    description = 'Calculate peak center'
+class OpenScanManagerAction(Action):
+    accelerator = 'Ctrl+D'
     def perform(self, event):
-        app = event.window.application
+        man = get_manager(event, SCAN_PROTOCOL)
+        open_manager(event.window.application, man)
 
-        manager = app.get_service(SPECTROMETER_PROTOCOL)
-
-        manager.peak_center(threaded=True,
-                            update_mftable=True
-                            )
+#class MagFieldCalibrationAction(Action):
+#    description = 'Update the magnetic field calibration table'
+#    def perform(self, event):
+#        app = event.window.application
+#
+#        manager = app.get_service(SPECTROMETER_PROTOCOL)
+#        manager.peak_center(update_mftable=True)
+#
+#class PeakCenterAction(Action):
+#    description = 'Calculate peak center'
+#    def perform(self, event):
+#        app = event.window.application
+#
+#        manager = app.get_service(SPECTROMETER_PROTOCOL)
+#
+#        manager.peak_center(threaded=True,
+#                            update_mftable=True
+#                            )
 #============= EOF ====================================

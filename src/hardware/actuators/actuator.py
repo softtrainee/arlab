@@ -35,7 +35,7 @@ PACKAGES = dict(AgilentGPActuator='src.hardware.actuators.agilent_gp_actuator',
 #              ObamaArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
 #              JanArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
               ArgusGPActuator='src.hardware.actuators.argus_gp_actuator',
-
+              PychronGPActuator='src.hardware.actuators.pychron_gp_actuator'
               )
 
 

@@ -45,23 +45,18 @@ from src.helpers.filetools import unique_dir
 DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False
 
-def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.002):
-    x = np.linspace(start, stop, step)
-    gaussian = lambda x: magnitude * np.exp(-((center - x) / peak_width) ** 2)
 
-    for i, d in enumerate(gaussian(x)):
-        if abs(center - x[i]) < 0.00125:
-            d = magnitude + magnitude / 50.0 * random.random()
-        yield d
 
 
 class Spectrometer(SpectrometerDevice):
     regressor = Instance(Regressor, ())
     magnet = Instance(Magnet, ())
     source = Instance(Source, ())
-    detectors = Property(List, depends_on='_detectors')
-    _detectors = Dict()
-    detector_names = Dict
+
+    detectors = List(Detector)
+#    detectors = Property(List, depends_on='_detectors')
+#    _detectors = Dict()
+#    detector_names = Dict
 
     microcontroller = Any
     integration_time = Enum(0.065536, 0.131072, 0.262144, 0.524288,
@@ -69,11 +64,12 @@ class Spectrometer(SpectrometerDevice):
                             16.777216, 33.554432, 67.108864)
 
     reference_detector = Str('H1')
-    magnet_dac = DelegatesTo('magnet')
-    _magnet_dac = DelegatesTo('magnet')
 
-    magnet_dacmin = DelegatesTo('magnet')
-    magnet_dacmax = DelegatesTo('magnet')
+    magnet_dac = DelegatesTo('magnet', prefix='dac')
+#    _magnet_dac = DelegatesTo('magnet', prefix='_dac')
+
+    magnet_dacmin = DelegatesTo('magnet', prefix='dacmin')
+    magnet_dacmax = DelegatesTo('magnet', prefix='dacmin')
 
     current_hv = DelegatesTo('source')
     scan_timer = None
@@ -86,8 +82,8 @@ class Spectrometer(SpectrometerDevice):
     sub_cup_configuration = Property(depends_on='_sub_cup_configuration')
     _sub_cup_configuration = Str
 
-    peak_center_results = None
-    data_manager = Instance(CSVDataManager, ())
+#    peak_center_results = None
+#    data_manager = Instance(CSVDataManager, ())
 
     dc_start = Int(0)
     dc_stop = Int(500)
@@ -97,10 +93,9 @@ class Spectrometer(SpectrometerDevice):
     dc_threshold = Int(3)
     dc_npeak_centers = Int(3)
 
-    pc_window_cnt = 0
-    pc_window = Float(0.015)
-    pc_step_width = Float(0.0005)
-
+#    pc_window_cnt = 0
+#    pc_window = Float(0.015)
+#    pc_step_width = Float(0.0005)
 
     _alive = False
 
@@ -113,7 +108,7 @@ class Spectrometer(SpectrometerDevice):
         self.magnet.microcontroller = m
         self.source.microcontroller = m
         self.microcontroller = m
-        for d in self._detectors.itervalues():
+        for d in self.detectors:
             d.microcontroller = m
 
     def get_hv_correction(self, current=False):
@@ -188,248 +183,116 @@ class Spectrometer(SpectrometerDevice):
         return self._alive
 
 
-    def peak_center(self, update_mftable=False, graph=None, update_pos=True, center_pos=None):
-        '''
-            default is to set position by mass
-            if mass is a str it needs to be a mol wt key ie Ar40
-            else should be float ie 39.962
-        '''
-        self.peak_center_results = None
-        self.info('Peak center')
-        if graph is None:
-            if self.peak_center_graph is None:
-                graph = Graph(window_title='Peak Centering',
-                              window_x=300 + self.pc_window_cnt * 25,
-                              window_y=25 + self.pc_window_cnt * 25
-                              )
-                self.pc_window_cnt += 1
-                self.peak_center_graph = graph
-            else:
-                graph = self.peak_center_graph
 
-        graph.close()
-        graph.clear()
-        do_later(graph.edit_traits)
 
+#    def scan_dac(self, dac_values, graph):
+#        period = self.integration_time
+#        if self.simulation:
+#            period = 0.05
+#
+#        gen = (i for i in dac_values)
+#
+#
+#        #move to first position and delay 
+#        self.magnet.set_dac(gen.next())
+#        time.sleep(2)
+#
+#        while 1:
+#            if not self.isAlive():
+#                break
+#            try:
+#                dac = gen.next()
+#                self.magnet.set_dac(dac)
+#                time.sleep(period)
+#
+#                data = self.get_intensities()
+#                if self.simulation:
+#                    intensity = self.peak_generator.next()
+#
+#                if data is not None:
+##                    if self.simulation:
+##                        intensity = self.peak_generator.next()
+##                    else:
+#
+#                    intensity = data[DETECTOR_ORDER.index(self.reference_detector)][1]
+##                print intensity, self.reference_detector
+#                self.intensities.append(intensity)
+#                graph.add_datum(
+#                                (dac, intensity),
+#                                update_y_limits=True,
+#                                do_after=1)
+##                do_after(1, graph.add_datum, (dac, intensity), update_y_limits=True)
+#
+#            except StopIteration:
+#                break
+
+#    def calculate_peak_center(self, x, y):
+#        peak_threshold = self.dc_threshold
+#
+#        peak_percent = 0.5
+#        x = np.array(x)
+#        y = np.array(y)
+#
+#        ma = np.max(y)
+#
+#        if ma < peak_threshold:
+#            self.warning('No peak greater than {}. max = {}'.format(peak_threshold, ma))
+#            return
+#
+#        cindex = np.where(y == ma)[0][0]
+#        mx = x[cindex]
+#        my = ma
+#        #look backward for point that is peak_percent% of max
+#        for i in range(cindex, cindex - 50, -1):
+#            #this prevent looping around to the end of the list
+#            if i < 0:
+#                self.warning('PeakCenterError: could not find a low pos')
+#                return
+#
+#            try:
+#                if y[i] < (ma * peak_percent):
+#                    break
+#            except IndexError:
+#                '''
+#                could not find a low pos
+#                '''
+#                self.warning('PeakCenterError: could not find a low pos')
+#                return
+#
+#        lx = x[i]
+#        ly = y[i]
+#
+#        #look forward for point that is 80% of max
+#        for i in range(cindex, cindex + 50, 1):
+#            try:
+#                if y[i] < (ma * peak_percent):
+#                    break
+#            except IndexError:
+#                '''
+#                    could not find a high pos
+#                '''
+#                self.warning('PeakCenterError: could not find a high pos')
+#                return
+#
+#        hx = x[i]
+#        hy = y[i]
+#
+#        cx = (hx + lx) / 2.0
+#        cy = ma
+#
+#        cindex = i - 5
+#        #check to see if were on a plateau
+#        yppts = y[cindex - 2:cindex + 2]
+#        rdict = self.regressor.linear(range(len(yppts)), yppts)
+#        std = rdict['statistics']['stddev']
+#        slope = rdict['coefficients'][0]
+#
+#        if std > 5 and abs(slope) < 1:
+#            self.warning('No peak plateau std = {} slope = {}'.format(std, slope))
+#            return
 #        else:
-#            graph.clear()
-#            graph.close()
-
-        #graph.edit_traits()
-        '''
-            center pos needs to be ne axial dac units now
-        '''
-
-        if isinstance(center_pos, str):
-            '''
-                passing in a mol weight key ie Ar40
-                get_dac_for_mass can take a str or a float 
-                if str assumes key else assumes mass
-            '''
-            center_pos = self.magnet.get_dac_for_mass(center_pos)
-
-        if center_pos is None:
-            #center at current position
-            m = self.magnet.read_dac()
-            if isinstance(m, str) and 'ERROR' in m:
-                m = 6.01
-        else:
-            m = center_pos
-
-        ntries = 2
-        success = False
-        result = None
-
-        for i in range(ntries):
-            if not self.isAlive():
-                break
-            wnd = self.pc_window
-
-            start = m - wnd * (i + 1)
-            end = m + wnd * (i + 1)
-            self.info('Scan parameters center={} start={} end={} step width={}'.format(m, start, end, self.pc_step_width))
-
-            self._peak_center_graph_factory(graph, start, end)
-
-            width = self.pc_step_width
-            try:
-                if self.simulation:
-                    width = 0.001
-            except AttributeError:
-                width = 0.001
-
-            self.intensities = []
-            sign = 1 if start < end else -1
-            nsteps = abs(end - start + width * sign) / width
-            dac_values = np.linspace(start, end, nsteps)
-            self.peak_generator = psuedo_peak(m + 0.001, start, end, nsteps)
-
-            if self.scan_timer and self.scan_timer.IsRunning():
-                self.scan_timer.Stop()
-
-            t = Thread(target=self.scan_dac, args=(dac_values, graph))
-            t.start()
-            t.join()
-
-            self._timer_factory()
-            if not self.isAlive():
-                break
-
-            result = self.finish_peak_center(graph, dac_values, self.intensities)
-            if result is not None:
-#                adjust the center position for nominal high voltage
-                xs = result[0]
-                refpos = xs[1] / self.get_hv_correction(current=True)
-
-                if update_mftable:
-#                    update the field table
-                    self.magnet.update_mftable(self.molecular_weight, refpos)
-                success = True
-                break
-
-        if not success:
-            self.warning('Peak centering failed')
-        elif update_pos:
-#            force magnet update
-            self.set_magnet_position(MOLECULAR_WEIGHTS[self.molecular_weight])
-
-
-    def finish_peak_center(self, graph, dac_values, intensities, plotid=0):
-        result = self.calculate_peak_center(dac_values, intensities)
-        if result is not None:
-            xs, ys, mx, my = result
-            graph.set_data(xs, plotid=plotid, series=1)
-            graph.set_data(ys, plotid=plotid, series=1, axis=1)
-
-            graph.set_data(mx, plotid=plotid, series=2)
-            graph.set_data(my, plotid=plotid, series=2, axis=1)
-
-            graph.add_vertical_rule(xs[1])
-            self.peak_center_results = result
-#            xs = result[0]
-
-            #adjust the center position for nominal high voltage
-            refpos = xs[1] / self.get_hv_correction(current=True)
-            self.info('''{} Peak center results
-                                        current hv = {}  {}
-                                        nominal hv = {}  {}'''.format(self.reference_detector,
-                                                                      xs[1], self.source.current_hv,
-                                                                      refpos, self.source.nominal_hv,
-                                                                      ),
-                       decorate=False
-                       )
-
-
-        return result
-
-    def scan_dac(self, dac_values, graph):
-        period = self.integration_time
-        if self.simulation:
-            period = 0.05
-
-        gen = (i for i in dac_values)
-
-
-        #move to first position and delay 
-        self.magnet.set_dac(gen.next())
-        time.sleep(2)
-
-        while 1:
-            if not self.isAlive():
-                break
-            try:
-                dac = gen.next()
-                self.magnet.set_dac(dac)
-                time.sleep(period)
-
-                data = self.get_intensities()
-                if self.simulation:
-                    intensity = self.peak_generator.next()
-
-                if data is not None:
-#                    if self.simulation:
-#                        intensity = self.peak_generator.next()
-#                    else:
-
-                    intensity = data[DETECTOR_ORDER.index(self.reference_detector)][1]
-#                print intensity, self.reference_detector
-                self.intensities.append(intensity)
-                graph.add_datum(
-                                (dac, intensity),
-                                update_y_limits=True,
-                                do_after=1)
-#                do_after(1, graph.add_datum, (dac, intensity), update_y_limits=True)
-
-            except StopIteration:
-                break
-
-    def calculate_peak_center(self, x, y):
-        peak_threshold = self.dc_threshold
-
-        peak_percent = 0.5
-        x = np.array(x)
-        y = np.array(y)
-
-        ma = np.max(y)
-
-        if ma < peak_threshold:
-            self.warning('No peak greater than {}. max = {}'.format(peak_threshold, ma))
-            return
-
-        cindex = np.where(y == ma)[0][0]
-        mx = x[cindex]
-        my = ma
-        #look backward for point that is peak_percent% of max
-        for i in range(cindex, cindex - 50, -1):
-            #this prevent looping around to the end of the list
-            if i < 0:
-                self.warning('PeakCenterError: could not find a low pos')
-                return
-
-            try:
-                if y[i] < (ma * peak_percent):
-                    break
-            except IndexError:
-                '''
-                could not find a low pos
-                '''
-                self.warning('PeakCenterError: could not find a low pos')
-                return
-
-        lx = x[i]
-        ly = y[i]
-
-        #look forward for point that is 80% of max
-        for i in range(cindex, cindex + 50, 1):
-            try:
-                if y[i] < (ma * peak_percent):
-                    break
-            except IndexError:
-                '''
-                    could not find a high pos
-                '''
-                self.warning('PeakCenterError: could not find a high pos')
-                return
-
-        hx = x[i]
-        hy = y[i]
-
-        cx = (hx + lx) / 2.0
-        cy = ma
-
-        cindex = i - 5
-        #check to see if were on a plateau
-        yppts = y[cindex - 2:cindex + 2]
-        rdict = self.regressor.linear(range(len(yppts)), yppts)
-        std = rdict['statistics']['stddev']
-        slope = rdict['coefficients'][0]
-
-        if std > 5 and abs(slope) < 1:
-            self.warning('No peak plateau std = {} slope = {}'.format(std, slope))
-            return
-        else:
-            self.info('peak plateau std = {} slope = {}'.format(std, slope))
-        return [lx, cx, hx ], [ly, cy, hy], [mx], [my]
+#            self.info('peak plateau std = {} slope = {}'.format(std, slope))
+#        return [lx, cx, hx ], [ly, cy, hy], [mx], [my]
 
 #===============================================================================
 # factories
@@ -440,27 +303,7 @@ class Spectrometer(SpectrometerDevice):
         self.scan_timer = Timer((self.integration_time + 0.025) * mult, self.get_intensities)
         self.scan_timer.Start()
 
-    def _peak_center_graph_factory(self, graph, start, end, title=''):
-        graph.container_dict = dict(padding=[10, 0, 30, 10])
-        graph.clear()
-        graph.new_plot(title='{}'.format(title),
-                       xtitle='DAC (V)',
-                       ytitle='Intensity (fA)',
-                       )
 
-        graph.new_series(type='scatter', marker='circle',
-                         marker_size=1.25
-                         )
-        graph.new_series(type='scatter', marker='circle',
-                         marker_size=4
-                         )
-        graph.new_series(type='scatter', marker='circle',
-                         marker_size=4,
-                         color='green'
-                         )
-
-        graph.plots[0].value_range.tight_bounds = False
-        graph.set_x_limits(min=min(start, end), max=max(start, end))
 
 #===============================================================================
 # property get/set
@@ -542,19 +385,25 @@ class Spectrometer(SpectrometerDevice):
         self.molecular_weight = 'Ar40'
 
     def load(self):
-        self.detector_names = {'H2':'1:H2', 'H1':'2:H1',
-                                'AX':'3:AX',
-                                'L1':'4:L1', 'L2':'5:L2',
-                                 'CDD':'6:CDD'}
-#        self.reference_detector = 'AX'
+#        self.detector_names = {'H2':'1:H2', 'H1':'2:H1',
+#                                'AX':'3:AX',
+#                                'L1':'4:L1', 'L2':'5:L2',
+#                                 'CDD':'6:CDD'}
+##        self.reference_detector = 'AX'
 
-        self._detectors = dict(H2=Detector(name='H2', relative_position=1.2, active=True),
-                              H1=Detector(name='H1', relative_position=1.1, active=True),
-                              AX=Detector(name='AX', relative_position=1, active=True),
-                              L1=Detector(name='L1', relative_position=0.9, active=True),
-                              L2=Detector(name='L2', relative_position=0.8, active=True),
-                              CDD=Detector(name='CDD', relative_position=0.7, active=False),
-                              )
+#        self._detectors = dict(H2=Detector(name='H2', relative_position=1.2, active=True),
+#                              H1=Detector(name='H1', relative_position=1.1, active=True),
+#                              AX=Detector(name='AX', relative_position=1, active=True),
+#                              L1=Detector(name='L1', relative_position=0.9, active=True),
+#                              L2=Detector(name='L2', relative_position=0.8, active=True),
+#                              CDD=Detector(name='CDD', relative_position=0.7, active=False),
+#                              )
+        self.detectors = [Detector(name='H2', color='black', relative_position=1.2, active=True),
+                          Detector(name='H1', color='red', relative_position=1.1, active=True),
+                          Detector(name='AX', color='violet', relative_position=1, active=True),
+                          Detector(name='L1', color='maroon', relative_position=0.9, active=True),
+                          Detector(name='L2', color='yellow', relative_position=0.8, active=True),
+                          Detector(name='CDD', color='lime green', relative_position=0.7, active=False)]
 
         self.magnet.load()
 #===============================================================================
@@ -567,43 +416,46 @@ class Spectrometer(SpectrometerDevice):
         datastr = self.microcontroller.ask('GetData', verbose=False)
         keys = []
         signals = []
-        if not 'ERROR' in datastr:
-            try:
-                data = [float(d) for d in datastr.split(',')]
-            except:
+        if datastr:
+            if not 'ERROR' in datastr:
+                try:
+                    data = [float(d) for d in datastr.split(',')]
+                except:
 
-                if tagged:
-                    data = [d for d in datastr.split(',')]
-                    for i in range(0, len(data), 2):
-                        keys.append(data[i])
-                        signals.append(float(data[i + 1]))
-
+                    if tagged:
+                        data = [d for d in datastr.split(',')]
+                        signals = map(float, [data[i + 1] for i in range(0, len(data), 2)])
+#                        
+#                        for i in range(0, len(data), 2):
+#                            keys.append(data[i])
+#                            signals.append(float(data[i + 1]))
         else:
-            data = [5 + random.random() for _i in range(6)]
+            signals = [5 + random.random() for _i in range(6)]
+        return signals
+#        if not tagged:
+#            #update the detector current value
+##            for det, dat in zip(self.detectors, data):
+##
+##                if det.active:
+##                    det.intensity = dat
+##                else:
+##                    det.intensity = 0
+#            rdata = data
+#        else:
+#            return []
+#            data = []
+#            rdata = []
+#            for det in self.detectors:
+#                sig = 0
+#                if det.name in keys:
+#                    sig = signals[keys.index(det.name)]
+#                rdata.append(sig)
+#                data.append((det.name, sig))
+#
+#        if record:
+#            self.databuffer = ','.join([str(yi) for yi in rdata])
 
-        if not tagged:
-            #update the detector current value
-            for det, dat in zip(self.detectors, data):
-
-                if det.active:
-                    det.intensity = dat
-                else:
-                    det.intensity = 0
-            rdata = data
-        else:
-            data = []
-            rdata = []
-            for det in self.detectors:
-                sig = 0
-                if det.name in keys:
-                    sig = signals[keys.index(det.name)]
-                rdata.append(sig)
-                data.append((det.name, sig))
-
-        if record:
-            self.databuffer = ','.join([str(yi) for yi in rdata])
-
-        return data
+#        return data
 
     def get_intensity(self, key):
 

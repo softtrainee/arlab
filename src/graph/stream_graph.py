@@ -124,14 +124,14 @@ class StreamGraph(Graph):
         except IndexError:
             self.time_generators.append(tg)
 
-    def record_multiple(self, ys, plotid=0, **kw):
+    def record_multiple(self, ys, plotid=0, scalar=1, **kw):
 
         tg = self.global_time_generator
         if tg is None:
             tg = time_generator(self.scan_delays[plotid])
             self.global_time_generator = tg
 
-        x = tg.next()
+        x = tg.next() * scalar
         for i, yi in enumerate(ys):
             self.record(yi, x=x, series=i, track_x=False, **kw)
 

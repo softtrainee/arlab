@@ -24,7 +24,9 @@ from traits.api import List
 
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
-from src.managers.spectrometer_manager import SpectrometerManager
+from src.spectrometer.scan_manager import ScanManager
+from src.spectrometer.ion_optics_manager import IonOpticsManager
+from src.spectrometer.spectrometer_manager import SpectrometerManager
 
 
 class SpectrometerPlugin(CorePlugin):
@@ -35,12 +37,32 @@ class SpectrometerPlugin(CorePlugin):
         '''
         so = self.service_offer_factory(
                           protocol=SpectrometerManager,
-                          factory=self._factory)
+                          factory=self._factory_spectrometer)
+        so1 = self.service_offer_factory(
+                          protocol=ScanManager,
+                          factory=self._factory_scan)
+        so2 = self.service_offer_factory(
+                          protocol=IonOpticsManager,
+                          factory=self._factory_ion_optics)
 
-        return [so]
+        return [so, so1, so2]
 
-    def _factory(self, *args, **kw):
-        return SpectrometerManager()
+    def get_spectrometer(self):
+        spec = self.application.get_service('src.spectrometer.spectrometer_manager.SpectrometerManager')
+        return spec.spectrometer
+
+    def _factory_scan(self, *args, **kw):
+
+
+        return ScanManager(application=self.application,
+                           spectrometer=self.get_spectrometer())
+
+    def _factory_ion_optics(self, *args, **kw):
+        return IonOpticsManager(application=self.application,
+                                spectrometer=self.get_spectrometer())
+
+    def _factory_spectrometer(self, *args, **kw):
+        return SpectrometerManager(application=self.application)
 
     managers = List(contributes_to=MANAGERS)
     def _managers_default(self):
