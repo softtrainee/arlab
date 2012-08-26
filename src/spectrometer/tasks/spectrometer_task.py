@@ -15,15 +15,42 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any
-#from traitsui.api import View, Item, TableEditor
+from traits.api import Any, Event, Property, Bool
+#from traitsui.api import View, Item, spring, ButtonEditor, HGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.loggable import Loggable
+from threading import Thread
 #from src.spectrometer.spectrometer import Spectrometer
 
 class SpectrometerTask(Loggable):
     spectrometer = Any
+    execute = Event
+    execute_label = Property(depends_on='_alive')
+    _alive = Bool
+
+    reference_detector = Any
+
+    def _get_execute_label(self):
+        return 'Stop' if self.isAlive() else 'Start'
+
+    def isAlive(self):
+        return self._alive
+
+    def stop(self):
+        self._alive = False
+
+    def _execute_fired(self):
+        if self.isAlive():
+            self.stop()
+            self._end()
+        else:
+            self._alive = True
+            t = Thread(name='magnet_scan', target=self._execute)
+            t.start()
+
+    def _execute(self):
+        pass
 
 
 #============= EOF =============================================

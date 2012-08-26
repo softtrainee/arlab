@@ -57,6 +57,7 @@ class StreamGraph(Graph):
 
     force_track_x_flag = None
 
+
     def clear(self):
         self.scan_delays = []
         self.time_generators = []

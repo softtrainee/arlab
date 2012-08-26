@@ -15,58 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Instance, Float, Bool, Str
-from traitsui.api import View, Item, TableEditor
+from traits.api import Float, Str
 #============= standard library imports ========================
-from numpy import linspace, exp, array, where, max, polyfit
-import random
+from numpy import linspace, array, where, max, polyfit
 #============= local library imports  ==========================
-from src.loggable import Loggable
-from src.spectrometer.magnet import Magnet
-#from threading import Thread
-from src.spectrometer.spectrometer import Spectrometer
-from src.spectrometer.magnet_scan import MagnetScan
-
-
+from magnet_scan import MagnetScan
 
 class PeakCenter(MagnetScan):
     center_dac = Float
-#    spectrometer = Instance(Spectrometer)
     detector_label = Str('AX')
-#    window_cnt = 0
 
     window = Float(0.015)
     step_width = Float(0.0005)
     min_peak_height = Float(3)
+    canceled = False
 
     def get_peak_center(self, ntries=2):
-        self._new_stop_signal()
+        self._alive = True
         graph = self.graph
         center_dac = self.center_dac
         self.info('starting peak center. center dac= {}'.format(center_dac))
-
-#        '''
-#            center pos needs to be ne axial dac units now
-#        '''
-#        if isinstance(center_pos, str):
-#            '''
-#                passing in a mol weight key ie Ar40
-#                get_dac_for_mass can take a str or a float 
-#                if str assumes key else assumes mass
-#            '''
-#            center_pos = self.magnet.get_dac_for_mass(center_pos)
-#
-#        if center_pos is None:
-#            #center at current position
-#            center_dac = self.magnet.read_dac()
-#            if isinstance(center_dac, str) and 'ERROR' in center_dac:
-#                center_dac = 6.01
-#        else:
-#            center_dac = center_pos
-
-#        ntries = 2
-#        success = False
-#        result = None
 
         for i in range(ntries):
             if not self.isAlive():
@@ -97,20 +65,20 @@ class PeakCenter(MagnetScan):
             intensities = self._scan_dac(dac_values, self.detector_label)
 
             if intensities:
-                result = self._calculate_peak_center(dac_values, intensities)
-                if result is not None:
-                    xs, ys, mx, my = result
-                    center = xs[1]
-                    graph.set_data(xs, series=1)
-                    graph.set_data(ys, series=1, axis=1)
+                if not self.canceled:
+                    result = self._calculate_peak_center(dac_values, intensities)
+                    if result is not None:
+                        xs, ys, mx, my = result
+                        center = xs[1]
+                        graph.set_data(xs, series=1)
+                        graph.set_data(ys, series=1, axis=1)
 
-                    graph.set_data([mx], series=2)
-                    graph.set_data([my], series=2, axis=1)
+                        graph.set_data([mx], series=2)
+                        graph.set_data([my], series=2, axis=1)
 
-                    graph.add_vertical_rule(center)
+                        graph.add_vertical_rule(center)
 
-                    self._stop_signal.set()
-                    return center
+                        return center
 
     def _calculate_peak_center(self, x, y):
         peak_threshold = self.min_peak_height
@@ -207,3 +175,26 @@ class PeakCenter(MagnetScan):
         graph.set_x_limits(min=min([start, end]), max=max([start, end]))
 
 #============= EOF =============================================
+#        '''
+#            center pos needs to be ne axial dac units now
+#        '''
+#        if isinstance(center_pos, str):
+#            '''
+#                passing in a mol weight key ie Ar40
+#                get_dac_for_mass can take a str or a float 
+#                if str assumes key else assumes mass
+#            '''
+#            center_pos = self.magnet.get_dac_for_mass(center_pos)
+#
+#        if center_pos is None:
+#            #center at current position
+#            center_dac = self.magnet.read_dac()
+#            if isinstance(center_dac, str) and 'ERROR' in center_dac:
+#                center_dac = 6.01
+#        else:
+#            center_dac = center_pos
+
+#        ntries = 2
+#        success = False
+#        result = None
+

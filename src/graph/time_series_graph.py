@@ -100,8 +100,6 @@ class TimeSeriesGraph(Graph):
                    use_smooth=False, scale=None, ** kw):
         '''
         '''
-
-
         if not time_series:
             return super(TimeSeriesGraph, self).new_series(x=x, y=y, plotid=plotid, **kw)
 
@@ -122,7 +120,6 @@ class TimeSeriesGraph(Graph):
                     fmt = '%a %b %d %H:%M:%S %Y'
                     xd = [timefunc(xi, fmt) for xi in x]
 
-
         if downsample:
             xd = downsample_1d(x, downsample)
             y = downsample_1d(y, downsample)
@@ -133,7 +130,6 @@ class TimeSeriesGraph(Graph):
         if xd is not None:
             xd = array(xd)
             if normalize:
-    #            xd = [xi - xd[0] for xi in xd]
                 xd = xd - xd[0]
 
             if scale:
@@ -148,34 +144,29 @@ class TimeSeriesGraph(Graph):
 
         plota = plot.plot(names, **rd)[0]
 
-#        print plota.use_downsampling
-        plota.unified_draw = True
+#        plota.unified_draw = True
         plota.use_downsampling = True
-        #this is a hack to hide the default plotaxis
-        #since a basexyplot's axis cannot be a ScalesPlotAxis (must be instance of PlotAxis)
-        #we cant remove the default axis and set the x_axis to the scaled axis
 
-        #also we cant remove the default axis because then we cant change the axis title
-        for i, underlay in enumerate(plot.underlays):
-            if underlay.orientation == 'bottom':
-#                 underlay.visible = False
-#                 underlay.tick_visible=False
-                title = underlay.title
-                plot.underlays.pop(i)
-#                #make the labels invisible by either setting color to plotcontainers bgcolor
-#                #or use the label formatter to always return a empty string
-#                #underlay.tick_label_color=self.plotcontainer.bgcolor
-#                underlay.tick_label_formatter=lambda x:''
+        #if the plot is not visible dont remove the underlays
+        if plota.visible:
+            #this is a hack to hide the default plotaxis
+            #since a basexyplot's axis cannot be a ScalesPlotAxis (must be instance of PlotAxis)
+            #we cant remove the default axis and set the x_axis to the scaled axis
+            #also we cant remove the default axis because then we cant change the axis title
+            for i, underlay in enumerate(plot.underlays):
+                if underlay.orientation == 'bottom':
+                    title = underlay.title
+                    plot.underlays.pop(i)
 
-        if plotid == 0 or timescale:
-            axis = ScalesPlotAxis(plota, orientation="bottom",
-                                  title=title,
-                                  tick_generator=ScalesTickGenerator(scale=CalendarScaleSystem(*HMSScales)
-                                                                       # scale = TimeScale()
-                                                                       )
-                                    )
+            if plotid == 0 or timescale:
+                axis = ScalesPlotAxis(plota, orientation="bottom",
+                                      title=title,
+                                      tick_generator=ScalesTickGenerator(scale=CalendarScaleSystem(*HMSScales)
+                                                                           # scale = TimeScale()
+                                                                           )
+                                        )
 
-            plot.underlays.append(axis)
+                plot.underlays.append(axis)
 
         return names
 

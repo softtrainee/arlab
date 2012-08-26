@@ -509,7 +509,7 @@ class ExperimentManager(Manager):
 
     def _massspec_importer_default(self):
         msdb = MassSpecDatabaseImporter()
-        if msdb.db.connect():
+        if msdb.db.isConnected():
             return msdb
 
     def _db_default(self):

@@ -23,7 +23,7 @@ from threading import Thread
 import random
 import time
 #============= local library imports  ==========================
-from src.spectrometer.spectrometer_task import SpectrometerTask
+from spectrometer_task import SpectrometerTask
 
 def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.008):
     x = linspace(start, stop, step)
@@ -36,29 +36,15 @@ def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.008):
 
 class MagnetScan(SpectrometerTask):
     graph = Any
-    _stop_signal = None
 
-    execute = Event
-    execute_label = Property(depends_on='_alive')
-    _alive = Bool
-#    alive = Property
+#    execute = Event
+#    execute_label = Property(depends_on='_alive')
+#    _alive = Bool
 
     start_mass = Float(36)
     stop_mass = Float(40)
     step_mass = Float(1)
 
-    reference_detector = Any
-
-    def _get_execute_label(self):
-        return 'Stop' if self.isAlive() else 'Start'
-
-    def isAlive(self):
-        return self._alive
-
-#    def _get_alive(self):
-#    
-#        if self._stop_signal:
-#            return not self._stop_signal.isSet()
 
     def _scan_dac(self, values, det, delay=1):
 
@@ -70,7 +56,7 @@ class MagnetScan(SpectrometerTask):
 
         do = values[0]
         mag.set_dac(do)
-        time.sleep(delay)
+        time.sleep(delay / 1000.)
         graph = self.graph
 
         intensities = []
@@ -92,20 +78,11 @@ class MagnetScan(SpectrometerTask):
                                 update_y_limits=True,
                                 do_after=1)
 
-            time.sleep(delay)
+            time.sleep(delay / 1000.)
 
         return intensities
 
-    def _execute_fired(self):
-        if self.isAlive():
-            self._alive = False
-        else:
-            t = Thread(name='magnet_scan', target=self._scan)
-            t.start()
-
-    def _scan(self):
-
-        self._alive = True
+    def _execute(self):
         mag = self.spectrometer.magnet
         sm = self.start_mass
         em = self.stop_mass

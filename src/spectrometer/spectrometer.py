@@ -115,7 +115,12 @@ class Spectrometer(SpectrometerDevice):
         cur = self.source.current_hv
         if current:
             cur = self.source.read_hv()
-        return self.source.nominal_hv / cur
+
+        if cur is None:
+            cor = 1
+        else:
+            cor = self.source.nominal_hv / cur
+        return cor
 
     def get_relative_detector_position(self, det):
         '''

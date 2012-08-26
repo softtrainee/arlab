@@ -16,7 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Enum, Any, DelegatesTo, List
-from traitsui.api import View, VGroup, HGroup, Group, Item, ListEditor, InstanceEditor, EnumEditor
+from traitsui.api import View, VGroup, HGroup, Group, Item, Spring, spring, Label, \
+     ListEditor, InstanceEditor, EnumEditor
 from src.managers.manager import Manager
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 from src.helpers.timer import Timer
@@ -24,19 +25,25 @@ import random
 #============= standard library imports ========================
 #============= local library imports  ==========================
 #'black', 'red', 'violet', 'maroon', 'yellow',
-from traits.api import HasTraits, Range
+from traits.api import HasTraits, Range, Float
 from src.spectrometer.detector import Detector
-from src.spectrometer.magnet_scan import MagnetScan
+from src.spectrometer.tasks.magnet_scan import MagnetScan
+from src.spectrometer.tasks.rise_rate import RiseRate
 
 class Magnet(HasTraits):
     dac = Range(0.0, 6.0)
+class Source(HasTraits):
+    y_symmetry = Float
 
 class DummySpectrometer(HasTraits):
     detectors = List
     magnet = Instance(Magnet, ())
+    source = Instance(Source, ())
     def get_intensities(self):
         return [random.random() + (i * 12.3) for i in range(len(self.detectors))]
 
+    def get_intensity(self, *args, **kw):
+        return 1
 
 class ScanManager(Manager):
     spectrometer = Any
@@ -49,19 +56,23 @@ class ScanManager(Manager):
     detectors = DelegatesTo('spectrometer')
     reference_detector = Instance(Detector)
     magnet = DelegatesTo('spectrometer')
-#    detectors = List
-#    @on_trait_change('detectors.active')
-
+    source = DelegatesTo('spectrometer')
     scanner = Instance(MagnetScan)
+    rise_rate = Instance(RiseRate)
+
+    def _rise_rate_default(self):
+        r = RiseRate(spectrometer=self.spectrometer,
+                     graph=self.graph)
+        return r
 
     def _scanner_default(self):
-        s = MagnetScan(spectrometer=self.spectrometer,
-                    reference_detector=self.reference_detector
-                    )
+        s = MagnetScan(spectrometer=self.spectrometer)
         return s
 
     def _reference_detector_changed(self):
         self.scanner.reference_detector = self.reference_detector
+        self.rise_rate.reference_detector = self.reference_detector
+
         nominal_width = 1
         emphasize_width = 5
         for name, plot in self.graph.plots[0].plots.iteritems():
@@ -69,10 +80,11 @@ class ScanManager(Manager):
             plot.line_width = emphasize_width if name == self.reference_detector.name else nominal_width
 
     def _toggle_detector(self, obj, name, old, new):
-#        print obj, name, old, new
         self.graph.set_series_visiblity(new, series=obj.name)
 
     def opened(self):
+        self.graph = self._graph_factory()
+
         self._start_timer()
 
         #listen to detector for enabling 
@@ -85,10 +97,14 @@ class ScanManager(Manager):
         self._stop_timer()
 
     def _update_scan_graph(self):
+
         intensities = self.spectrometer.get_intensities()
         self.graph.record_multiple(intensities, do_later=10)
 
+
     def _start_timer(self):
+        self._first_iteration = True
+
         self.info('starting scan timer')
         self.integration_time = 1.048576
         self.timer = self._timer_factory()
@@ -117,8 +133,13 @@ class ScanManager(Manager):
                    )
 
         for det in self.detectors:
-            g.new_series()
+#            if not det.active:
+            g.new_series(visible=det.active)
             g.set_series_label(det.name)
+
+
+#        for det in self.detectors:
+#            g.set_series_visiblity(det.active, series=det.name, do_later=10)
 
         return g
 
@@ -158,29 +179,35 @@ class ScanManager(Manager):
 #                                                             ],
 #                                                    )
 #                             )
-
-        magnet_grp = VGroup(Item('magnet', style='custom', show_label=False),
-                            Item('scanner', style='custom', show_label=False))
+        custom = lambda n:Item(n, style='custom', show_label=False)
+        magnet_grp = VGroup(
+                            custom('magnet'),
+                            custom('scanner'),
+                            label='Magnet'
+                            )
         detector_grp = VGroup(
                               Item('reference_detector', editor=EnumEditor(name='detectors')),
+                              HGroup(Spring(springy=False, width=100), Label('Deflection')),
                               Item('detectors',
-
-                            show_label=False,
-                            editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
+                                   show_label=False,
+                                   editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
                               label='Detectors'
                               )
 
+        rise_grp = custom('rise_rate')
+        source_grp = custom('source')
+
         control_grp = Group(
+                          source_grp,
+                          rise_grp,
                           magnet_grp,
                           detector_grp,
                           layout='tabbed')
-        graph_grp = Item('graph', show_label=False, style='custom')
+        graph_grp = custom('graph')
         v = View(
                     HGroup(
-#                           detector_grp,
                            control_grp,
                            graph_grp,
-
                            ),
                     title='Spectrometer Manager',
                     resizable=True,
@@ -195,7 +222,8 @@ if __name__ == '__main__':
 
     detectors = [
              Detector(name='H2',
-                      color='black'
+                      color='black',
+                      isheader=True
                       ),
              Detector(name='H1',
                       color='red'
@@ -210,7 +238,8 @@ if __name__ == '__main__':
                       color='yellow'
                       ),
              Detector(name='CDD',
-                      color='lime green'
+                      color='lime green',
+                      active=False
                       ),
 
              ]
