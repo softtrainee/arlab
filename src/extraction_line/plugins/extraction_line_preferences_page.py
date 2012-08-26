@@ -56,35 +56,36 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
 
     query_valve_state = Bool(True)
 
-    owners = List
-    groups = List
+#    owners = List
+#    groups = List
+#
+#    def _groups_default(self):
+#        g = get_valve_group_names()
+#        for gi in g:
+#            self.add_trait(gi, Str(''))
+#        return g
 
-    def _groups_default(self):
-        g = get_valve_group_names()
-        for gi in g:
-            self.add_trait(gi, Str(''))
-        return g
-
-    def _owners_default(self):
-        o = ['']
-        from src.helpers.parsers.initialization_parser import InitializationParser
-
-        ip = InitializationParser()
-
-        systems = ip.get_systems()
-        o = list(zip(*systems)[0])
-
-#        config = ConfigParser()
-#        config.read(os.path.join(setup_dir, 'system_locks.cfg'))
-#        for s in config.sections():
-#            o.append(config.get(s, 'name'))
-        return o
+#    def _owners_default(self):
+#        o = ['']
+#        from src.helpers.parsers.initialization_parser import InitializationParser
+#
+#        ip = InitializationParser()
+#
+#        systems = ip.get_systems()
+#        if systems
+#        o = list(zip(*systems)[0])
+#
+##        config = ConfigParser()
+##        config.read(os.path.join(setup_dir, 'system_locks.cfg'))
+##        for s in config.sections():
+##            o.append(config.get(s, 'name'))
+#        return o
 
 #============= views ===================================
     def get_general_group(self):
-        valve_grp_grp = VGroup()
-        for gi in self.groups:
-            valve_grp_grp.content.append(Item(gi, editor=EnumEditor(name='owners')))
+#        valve_grp_grp = VGroup()
+#        for gi in self.groups:
+#            valve_grp_grp.content.append(Item(gi, editor=EnumEditor(name='owners')))
 
         return Group(Item('open_on_startup'),
                      HGroup(
@@ -92,7 +93,7 @@ class ExtractionLinePreferencesPage(ManagerPreferencesPage):
                             Item('enable_close_after', show_label=False)
                             ),
                      Item('query_valve_state'),
-                    valve_grp_grp
+#                    valve_grp_grp
                     )
 
     def get_additional_groups(self):

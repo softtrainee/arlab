@@ -32,7 +32,7 @@ import time
 from src.loggable import Loggable
 import random
 from Queue import Queue
-from src.hardware.actuators.argus_gp_actuator import ArgusGPActuator
+#from src.hardware.actuators.argus_gp_actuator import ArgusGPActuator
 from globals import globalv
 
 
@@ -76,7 +76,7 @@ class ValveManager(Manager):
     def create_device(self, name, *args, **kw):
         '''
         '''
-        dev = Manager.create_device(self, name, *args, **kw)
+        dev = super(ValveManager, self).create_device(name, *args, **kw)
         if 'actuator' in name or 'controller' in name:
             if dev is not None:
                 self.actuators.append(dev)
@@ -563,6 +563,7 @@ class ValveManager(Manager):
         vqs = v_elem.get('query_state')
         if vqs:
             qs = vqs == 'true'
+
         hv = HardwareValve(name,
                            address=address.text.strip() if address is not None else '',
                            actuator=actuator,

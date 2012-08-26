@@ -467,6 +467,7 @@ class Graph(Loggable):
 
         if isinstance(series, int):
             series = 'plot%i' % series
+
         try:
             p.showplot(series) if v else p.hideplot(series)
 

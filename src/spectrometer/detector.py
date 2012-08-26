@@ -17,10 +17,9 @@
 
 
 #============= enthought library imports =======================
-from traits.api import  Float, Str, Bool, Property
-
+from traits.api import  Float, Str, Bool, Property, Color
+from traitsui.api import View, Item, VGroup, HGroup, spring, Label
 from src.spectrometer.spectrometer_device import SpectrometerDevice
-#from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
 
@@ -34,7 +33,12 @@ class Detector(SpectrometerDevice):
     _deflection = Float
 
     intensity = Float
-    active = Bool
+    active = Bool(True)
+
+    color = Color
+    def __repr__(self):
+        return self.name
+
     def finish_loading(self):
         self.read_deflection()
 
@@ -52,6 +56,21 @@ class Detector(SpectrometerDevice):
         except ValueError:
             pass
 
+    def traits_view(self):
+        v = View(VGroup(
+                        HGroup(spring, Label('deflection'), spring),
+                        HGroup(
+                                Item('name', style='readonly'),
+                                spring,
+                                Item('active',),
+                                Item('deflection'),
+                                Item('color', style='readonly'),
+                                show_labels=False
+                                )
+                      )
+               )
+
+        return v
 if __name__ == '__main__':
     d = Detector()
 
