@@ -36,6 +36,8 @@ class Detector(SpectrometerDevice):
     active = Bool(True)
 
     color = Color
+
+
     def __repr__(self):
         return self.name
 
@@ -58,7 +60,6 @@ class Detector(SpectrometerDevice):
 
     def traits_view(self):
         v = View(VGroup(
-                        HGroup(spring, Label('deflection'), spring),
                         HGroup(
                                 Item('name', style='readonly'),
                                 spring,

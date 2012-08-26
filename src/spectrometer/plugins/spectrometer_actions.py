@@ -50,14 +50,20 @@ class OpenScanManagerAction(Action):
 #        manager = app.get_service(SPECTROMETER_PROTOCOL)
 #        manager.peak_center(update_mftable=True)
 #
-#class PeakCenterAction(Action):
-#    description = 'Calculate peak center'
-#    def perform(self, event):
-#        app = event.window.application
-#
-#        manager = app.get_service(SPECTROMETER_PROTOCOL)
-#
-#        manager.peak_center(threaded=True,
-#                            update_mftable=True
-#                            )
+class PeakCenterAction(Action):
+    description = 'Calculate peak center'
+
+    def __init__(self, *args, **kw):
+        super(PeakCenterAction, self).__init__(*args, **kw)
+        man = self.window.workbench.application.get_service(ION_OPTICS_PROTOCOL)
+        man.on_trait_change(self._update_enabled, 'alive')
+        self.enabled = True
+
+    def _update_enabled(self, new):
+        self.enabled = not self.enabled
+
+    def perform(self, event):
+        man = get_manager(event, ION_OPTICS_PROTOCOL)
+        man.do_peak_center(confirm_save=True)
+#        man.open_peak_center()
 #============= EOF ====================================

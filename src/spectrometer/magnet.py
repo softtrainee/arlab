@@ -18,7 +18,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, Any, Property, Float
-from traitsui.api import View, Item, VGroup, HGroup, TableEditor, RangeEditor, spring, Group
+from traitsui.api import View, Item, VGroup, HGroup, Group, Spring, spring, \
+    TableEditor, RangeEditor
 from traitsui.table_column import ObjectColumn
 
 #============= standard library imports ========================
@@ -33,7 +34,7 @@ from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 #import math
 #from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
-from src.spectrometer.magnet_scan import MagnetScan
+
 class CalibrationPoint(HasTraits):
     x = Float
     y = Float
@@ -81,7 +82,7 @@ class Magnet(SpectrometerDevice):
 #        return pts
 
 
-    def update_mftable(self, key, value):
+    def update_field_table(self, key, value):
         self.info('update mftable {} {}'.format(key, value))
         xs = self.mftable[0]
         ys = self.mftable[1]
@@ -306,7 +307,14 @@ class Magnet(SpectrometerDevice):
                          Item('mass', editor=RangeEditor(mode='slider', low_name='massmin',
                                                         high_name='massmax',
                                                         format='%0.3f')),
-                         HGroup(spring, Item('massmin', width= -40), spring, Item('massmax', width= -40), show_labels=False),
+                         HGroup(Spring(springy=False,
+                                       width=48),
+                                Item('massmin', width= -40), Spring(springy=False,
+                                                                    width=138,
+                                                                    ),
+                                Item('massmax', width= -55),
+
+                                show_labels=False),
                         show_border=True,
                         label='Control'
                         ),

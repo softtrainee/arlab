@@ -46,10 +46,15 @@ class SpectrometerActionSet(WorkbenchActionSet):
 #                       path='MenuBar/Spec',
 #                       class_name='src.spectrometer.plugins.spectrometer_actions:MagFieldCalibrationAction'
 #                       ),
-                Action(name='IonOptics',
-                       path=PATH,
-                       class_name='{}:OpenIonOpticsAction'.format(BASE)
+#                Action(name='IonOptics',
+#                       path=PATH,
+#                       class_name='{}:OpenIonOpticsAction'.format(BASE)
+#                       ),
+                Action(name='Peak Center',
+                       path=PATH + '/IonOptics',
+                       class_name='{}:PeakCenterAction'.format(BASE)
                        ),
+
                 Action(name='Scan',
                        path=PATH,
                        class_name='{}:OpenScanManagerAction'.format(BASE)

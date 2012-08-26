@@ -17,8 +17,8 @@
 
 
 #============= enthought library imports =======================
-from traits.api import  Float
-#from traitsui.api import View, Item, Group, HGroup, VGroup
+from traits.api import  Float, Range, Property
+from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
 
@@ -29,17 +29,78 @@ class Source(SpectrometerDevice):
     nominal_hv = Float(4500)
     current_hv = Float(4500)
 
+    y_symmetry = Property(Range(-50.0, 50.0), depends_on='_y_symmetry')
+    z_symmetry = Property(Range(-50.0, 50.0), depends_on='_z_symmetry')
+    extraction_lens = Property(Range(0, 100.0), depends_on='_extraction_lens')
+
+    _y_symmetry = Float#Range(0.0, 100.)
+    _z_symmetry = Float#Range(0.0, 100.)
+    _extraction_lens = Float#Range(0.0, 100.)
+
+
+
+
+    def read_y_symmetry(self):
+        return self._read_value('GetYSymmetry', 'y_symmetry')
+
+    def read_z_symmetry(self):
+        return self._read_value('GetZSymmetry', 'z_symmetry')
+
     def read_hv(self):
-        if self.microcontroller is None:
-            r = 4500
+        return self._read_value('GetHighVoltage', 'current_hv')
 
-        else:
-            r = self.microcontroller.ask('GetHighVoltage')
-            try:
-                r = float(r)
-            except:
-                r = self.nominal_hv
+    def _set_value(self, name, v):
+        r = self.microcontroller.ask('{} {}'.format(name, v))
+        if r is not None:
+            if r.lower().strip() == 'ok':
+                return True
 
-        self.current_hv = r
-        return r
+    def _read_value(self, name, value):
+        r = self.microcontroller.ask(name)
+        try:
+            setattr(self, value, float(r))
+            return getattr(self, value)
+        except (ValueError, TypeError):
+            pass
+
+    def sync_parameters(self):
+        self.read_y_symmetry()
+        self.read_z_symmetry()
+        self.read_hv()
+
+    def traits_view(self):
+        v = View(
+               Item('nominal_hv'),
+               Item('current_hv', style='readonly'),
+               Item('y_symmetry'),
+               Item('z_symmetry'),
+               Item('extraction_lens')
+
+               )
+        return v
+
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_y_symmetry(self):
+        return self._y_symmetry
+
+    def _get_z_symmetry(self):
+        return self._z_symmetry
+
+    def _get_extraction_lens(self):
+        return self._extraction_lens
+
+    def _set_y_symmetry(self, v):
+        if self._set_value('SetYSymmetry', v):
+            self._y_symmetry = v
+
+    def _set_z_symmetry(self, v):
+        if self._set_value('SetZSymmetry', v):
+            self._z_symmetry = v
+
+    def _set_extraction_lens(self, v):
+        if self._set_value('SetExtractionLens', v):
+            self._extraction_lens = v
+
 #============= EOF =============================================

@@ -115,7 +115,7 @@ class SpectrometerManager(Manager):
         self.spectrometer.set_microcontroller(self.spectrometer_microcontroller)
 
         #update the current hv
-        self.spectrometer.source.read_hv()
+        self.spectrometer.source.sync_parameters()
         #update the current magnet dac
         self.spectrometer.magnet.read_dac()
         #set integration time

@@ -55,6 +55,7 @@ class MassSpecDatabaseImporter(Loggable):
     def traits_view(self):
         v = View(Item('test', show_label=False))
         return v
+
     def _db_default(self):
         db = MassSpecDatabaseAdapter(dbname='massspecdata_test')
         if db.connect():

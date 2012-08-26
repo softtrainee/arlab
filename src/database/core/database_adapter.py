@@ -87,6 +87,8 @@ class DatabaseAdapter(Loggable):
 #
 #        if sess is not None:
 #            sess.close()
+    def isConnected(self):
+        return self.connected
 
     def connect(self, test=True):
         '''
@@ -100,15 +102,12 @@ class DatabaseAdapter(Loggable):
 
         self.session_factory = sessionmaker(bind=self.engine)
         if test:
-            if self._test_db_connection():
-                self.connected = True
-            else:
-                self.connected = False
-
+            self.connected = self._test_db_connection()
+        else:
+            self.connected = True
         return self.connected
 
     def _test_db_connection(self):
-        self.connected = True
         sess = None
         try:
             connected = True
