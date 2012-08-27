@@ -111,41 +111,43 @@ class Spectrometer(SpectrometerDevice):
         for d in self.detectors:
             d.microcontroller = m
 
-    def get_hv_correction(self, current=False):
-        cur = self.source.current_hv
-        if current:
-            cur = self.source.read_hv()
+    def get_detector(self, name):
+        return next((det for det in self.detectors if det.name == name), None)
+#    def get_hv_correction(self, current=False):
+#        cur = self.source.current_hv
+#        if current:
+#            cur = self.source.read_hv()
+#
+#        if cur is None:
+#            cor = 1
+#        else:
+#            cor = self.source.nominal_hv / cur
+#        return cor
 
-        if cur is None:
-            cor = 1
-        else:
-            cor = self.source.nominal_hv / cur
-        return cor
+#    def get_relative_detector_position(self, det):
+#        '''
+#            return position relative to ref detector in dac space
+#        '''
+#        if det is None:
+#            return 0
+#        else:
+#            return 0
 
-    def get_relative_detector_position(self, det):
-        '''
-            return position relative to ref detector in dac space
-        '''
-        if det is None:
-            return 0
-        else:
-            return 0
-
-    def set_magnet_position(self, pos, detector=None):
-        #calculate the dac value for pos is on the reference detector
-        #the mftable should be set to the ref detector
-        dac = self.magnet.calculate_dac(pos)
-
-        #correct for detector
-        #calculate the dac so that this position is shifted onto the given
-        #detector. 
-        dac += self.get_detector_position(detector)
-
-        #correct for deflection
-        self.magnet.dac = dac
-
-        #correct for hv
-        dac *= self.get_hv_correction(current=True)
+#    def set_magnet_position(self, pos, detector=None):
+#        #calculate the dac value for pos is on the reference detector
+#        #the mftable should be set to the ref detector
+#        dac = self.magnet.calculate_dac(pos)
+#
+#        #correct for detector
+#        #calculate the dac so that this position is shifted onto the given
+#        #detector. 
+##        dac += self.get_detector_position(detector)
+#
+#        #correct for deflection
+#        self.magnet.dac = dac
+#
+#        #correct for hv
+#        dac *= self.get_hv_correction(current=True)
 
 #===============================================================================
 # change handlers
@@ -419,7 +421,7 @@ class Spectrometer(SpectrometerDevice):
             return
 
         datastr = self.microcontroller.ask('GetData', verbose=False)
-        keys = []
+#        keys = []
         signals = []
         if datastr:
             if not 'ERROR' in datastr:
@@ -429,14 +431,19 @@ class Spectrometer(SpectrometerDevice):
 
                     if tagged:
                         data = [d for d in datastr.split(',')]
+
+                        keys = [data[i] for i in range(0, len(data), 2)]
                         signals = map(float, [data[i + 1] for i in range(0, len(data), 2)])
-#                        
+#
 #                        for i in range(0, len(data), 2):
 #                            keys.append(data[i])
 #                            signals.append(float(data[i + 1]))
         else:
             signals = [5 + random.random() for _i in range(6)]
-        return signals
+            if tagged:
+                keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
+
+        return keys, signals
 #        if not tagged:
 #            #update the detector current value
 ##            for det, dat in zip(self.detectors, data):
@@ -464,12 +471,13 @@ class Spectrometer(SpectrometerDevice):
 
     def get_intensity(self, key):
 
-        index = DETECTOR_ORDER.index(key)
+#        index = DETECTOR_ORDER.index(key)
         data = self.get_intensities()
         if data is not None:
-            data = data[index]
+            keys, signals = data
+            return signals[keys.index(key)]
 
-        return data
+#        return data
 #============= EOF =============================================
 #    def _peak_center_scan_step(self, di, graph, plotid, cond):
 ##       3print cond

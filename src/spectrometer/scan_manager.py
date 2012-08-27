@@ -32,6 +32,9 @@ from src.spectrometer.tasks.rise_rate import RiseRate
 
 class Magnet(HasTraits):
     dac = Range(0.0, 6.0)
+    def map_mass_to_dac(self, d):
+        return d
+
 class Source(HasTraits):
     y_symmetry = Float
 
@@ -40,7 +43,7 @@ class DummySpectrometer(HasTraits):
     magnet = Instance(Magnet, ())
     source = Instance(Source, ())
     def get_intensities(self):
-        return [random.random() + (i * 12.3) for i in range(len(self.detectors))]
+        return [d.name for d in self.detectors], [random.random() + (i * 12.3) for i in range(len(self.detectors))]
 
     def get_intensity(self, *args, **kw):
         return 1
@@ -60,6 +63,9 @@ class ScanManager(Manager):
     scanner = Instance(MagnetScan)
     rise_rate = Instance(RiseRate)
 
+    def _graph_changed(self):
+        self.rise_rate.graph = self.graph
+
     def _rise_rate_default(self):
         r = RiseRate(spectrometer=self.spectrometer,
                      graph=self.graph)
@@ -70,14 +76,15 @@ class ScanManager(Manager):
         return s
 
     def _reference_detector_changed(self):
-        self.scanner.reference_detector = self.reference_detector
-        self.rise_rate.reference_detector = self.reference_detector
+        if self.reference_detector:
+            self.scanner.reference_detector = self.reference_detector
+            self.rise_rate.reference_detector = self.reference_detector
 
-        nominal_width = 1
-        emphasize_width = 5
-        for name, plot in self.graph.plots[0].plots.iteritems():
-            plot = plot[0]
-            plot.line_width = emphasize_width if name == self.reference_detector.name else nominal_width
+            nominal_width = 1
+            emphasize_width = 5
+            for name, plot in self.graph.plots[0].plots.iteritems():
+                plot = plot[0]
+                plot.line_width = emphasize_width if name == self.reference_detector.name else nominal_width
 
     def _toggle_detector(self, obj, name, old, new):
         self.graph.set_series_visiblity(new, series=obj.name)
@@ -90,6 +97,8 @@ class ScanManager(Manager):
         #listen to detector for enabling 
         self.on_trait_change(self._toggle_detector, 'detectors.active')
 
+        #force update
+        self.reference_detector = None
         #set reference detector default
         self.reference_detector = self.detectors[0]
 
@@ -98,8 +107,10 @@ class ScanManager(Manager):
 
     def _update_scan_graph(self):
 
-        intensities = self.spectrometer.get_intensities()
-        self.graph.record_multiple(intensities, do_later=10)
+        data = self.spectrometer.get_intensities()
+        if data:
+            _, signals = data
+            self.graph.record_multiple(signals, do_later=10)
 
 
     def _start_timer(self):

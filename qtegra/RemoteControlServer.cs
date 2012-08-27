@@ -87,7 +87,7 @@ class RemoteControl
 	//	Commands:
 	//		GetTuningSettingsList #return a comma separated string
 	//		SetTuningSettings
-	//		GetData returns tagged data e.g. H2:aaa,L1:bbb,CDD:ccc
+	//		GetData returns tagged data e.g. H2,aaa,L1,bbb,CDD,ccc
 	//		SetIntegrationTime <seconds> ****currently not enabled****
 	// 		BlankBeam <true or false> if true set y-symmetry to -50 else return to previous value
     

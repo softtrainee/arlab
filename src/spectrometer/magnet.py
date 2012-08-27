@@ -82,14 +82,19 @@ class Magnet(SpectrometerDevice):
 #        return pts
 
 
-    def update_field_table(self, key, value):
-        self.info('update mftable {} {}'.format(key, value))
+    def update_field_table(self, isotope, dac):
+        '''
+        
+            dac needs to be in axial units
+        '''
+
+
+        self.info('update mftable {} {}'.format(isotope, dac))
         xs = self.mftable[0]
         ys = self.mftable[1]
 
-
-        refindex = xs.index(key)
-        delta = value - ys[refindex]
+        refindex = xs.index(isotope)
+        delta = dac - ys[refindex]
         #need to calculate all ys
         #using simple linear offset
         ys = [yi + delta for yi in ys]
@@ -97,7 +102,7 @@ class Magnet(SpectrometerDevice):
         self.mftable = [xs, ys]
 #        for i, xi in enumerate(xs):
 #            mass = MOLECULAR_WEIGHTS[xi]
-#            refmass = MOLECULAR_WEIGHTS[key]
+#            refmass = MOLECULAR_WEIGHTS[isotope]
 #            ys[i] -= delta * math.sqrt(mass / refmass)
 #            ys[i] += delta
 
@@ -146,26 +151,26 @@ class Magnet(SpectrometerDevice):
 #===============================================================================
 # ##positioning
 #===============================================================================
-    def calculate_dac(self, pos):
-        #is pos a number
-        if not isinstance(pos, (float, int)):
-            #is pos a isokey or a masskey 
-            # eg. Ar40, or 39.962
-            mass = None
-            isokeys = {'Ar40':39.962}
-            try:
-                mass = isokeys[pos]
-            except KeyError:
-                try:
-                    mass = float(pos)
-                except:
-                    self.debug('invalid magnet position {}'.format(pos))
+#    def calculate_dac(self, pos):
+#        #is pos a number
+#        if not isinstance(pos, (float, int)):
+#            #is pos a isokey or a masskey 
+#            # eg. Ar40, or 39.962
+#            mass = None
+#            isokeys = {'Ar40':39.962}
+#            try:
+#                mass = isokeys[pos]
+#            except KeyError:
+#                try:
+#                    mass = float(pos)
+#                except:
+#                    self.debug('invalid magnet position {}'.format(pos))
+#
+#            print 'ionpt', mass, pos,
+#            pos = self.map_mass_to_dac(mass)
+#            print pos
 
-#        print 'ionpt', pos
-        pos = self._map_mass_to_dac(pos)
-
-
-        return pos
+#        return pos
 
     def set_dac(self, v):
         self._dac = v
@@ -209,7 +214,7 @@ class Magnet(SpectrometerDevice):
 #===============================================================================
 # mapping
 #===============================================================================
-    def _map_dac_to_mass(self, d):
+    def map_dac_to_mass(self, d):
         from numpy import polyfit
         x, y = zip(*[(c.x, c.y) for c in  self.calibration_points])
         a, b, c = polyfit(x, y, 2)
@@ -218,7 +223,7 @@ class Magnet(SpectrometerDevice):
 
         return m
 
-    def _map_mass_to_dac(self, mass):
+    def map_mass_to_dac(self, mass):
         reg = self.regressor
         if self.mftable:
             data = ([MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
@@ -226,7 +231,7 @@ class Magnet(SpectrometerDevice):
             return reg.get_value('parabolic', data, mass)
 
     def __dac_changed(self):
-        m = self._map_dac_to_mass(self._dac)
+        m = self.map_dac_to_mass(self._dac)
 #        print 'get mass', m, type(m), nan, type(nan)
         if not isnan(m):
             self._mass = m
@@ -239,7 +244,7 @@ class Magnet(SpectrometerDevice):
 
     def _set_mass(self, m):
 #        print 'set mass', m
-        d = self._map_mass_to_dac(m)
+        d = self.map_mass_to_dac(m)
 #        self._dac = d
         self.dac = d
 

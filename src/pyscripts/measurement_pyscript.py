@@ -170,24 +170,24 @@ class MeasurementPyScript(PyScript):
         self._series_count += 1
 
     @verbose_skip
-    def peak_center(self):
+    def peak_center(self, detector=None, isotope=None):
         if self.automated_run is None:
             return
 
-        self.automated_run.do_peak_center()
+        self.automated_run.do_peak_center(detector=detector, isotope=isotope)
 
     @verbose_skip
-    def position(self, pos, detector='AX'):
+    def position(self, pos, detector='AX', dac=False):
+        '''
+            position(4.54312, dac=True) # detector is not relevant
+            position(39.962, detector='AX')
+            position('Ar40', detector='AX') #Ar40 will be converted to 39.962 use mole weight dict
+            
+        '''
+
         if self.automated_run is None:
             return
-
-        func = self.automated_run.set_magnet_position
-        if isinstance(pos, str):
-            dac = None
-        else:
-            dac = pos
-
-        func(pos, detector=detector, dac=dac)
+        self.automated_run.set_position(pos, detector, dac=dac)
 
     @verbose_skip
     def set_ysymmetry(self, v):

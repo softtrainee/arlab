@@ -26,6 +26,7 @@ from src.helpers.logger_setup import logging_setup
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from src.viewable import Viewable
+from src.hardware.core.communicators.ethernet_communicator import EthernetCommunicator
 
 
 class PyScriptRunner(Viewable):
@@ -44,10 +45,13 @@ class PyScriptRunner(Viewable):
     def get_resource(self, resource):
         with self._resource_lock:
             if not resource in self.resources:
-                self.resources[resource] = Event()
+                self.resources[resource] = self._get_resource(resource)
 
             r = self.resources[resource]
             return r
+
+    def _get_resource(self, name):
+        return Event()
 
     def traits_view(self):
 
@@ -67,6 +71,45 @@ class PyScriptRunner(Viewable):
                  title='ScriptRunner'
                  )
         return v
+
+
+
+class RemoteResource(object):
+    handle = None
+    name = None
+
+#===============================================================================
+# threading.Event interface
+#===============================================================================
+    def isSet(self):
+        resp = self.handle.ask('Read {}'.format(self.name))
+        if resp is not None:
+            return bool(int(resp))
+    def set(self):
+        self._set(1)
+
+    def clear(self):
+        self._set(0)
+
+    def _set(self, v):
+        self.handle.ask('Set {} {}'.format(self.name, v))
+
+class RemotePyScriptRunner(PyScriptRunner):
+    handle = None
+    def __init__(self, host, port, kind, *args, **kw):
+        super(RemotePyScriptRunner, self).__init__(*args, **kw)
+        self.handle = EthernetCommunicator()
+        self.handle.host = host
+        self.handle.port = port
+        self.handle.kind = kind
+        self.handle.open()
+
+    def _get_resource(self, name):
+        r = RemoteResource()
+        r.name = name
+        r.handle = self.handle
+        return r
+
 
 if __name__ == '__main__':
     logging_setup('py_runner')

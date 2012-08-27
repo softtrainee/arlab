@@ -27,7 +27,7 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 
 BASE = 'src.experiment.plugins.experiment_actions'
 PATH = 'MenuBar/Experiment'
-FILEPATH = 'MenuBar/File/Experiment'
+SETSPATH = 'MenuBar/Experiment/Sets...'
 
 class ExperimentActionSet(WorkbenchActionSet):
     '''
@@ -37,22 +37,22 @@ class ExperimentActionSet(WorkbenchActionSet):
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
     actions = [Action(name='New',
-                      path=FILEPATH,
+                      path=SETSPATH,
                     class_name='{}:NewExperimentSetAction'.format(BASE)
 
                     ),
                 Action(name='Open...',
-                       path=FILEPATH,
+                       path=SETSPATH,
                        class_name='{}:OpenExperimentSetAction'.format(BASE)
 
                        ),
 #                Action(name='Save',
-#                       path=FILEPATH,
+#                       path=SETSPATH,
 #                       class_name='{}:SaveExperimentSetAction'.format(BASE)
 #
 #                       ),
 #                Action(name='Save As...',
-#                       path=FILEPATH,
+#                       path=SETSPATH,
 #                       class_name='{}:SaveAsExperimentSetAction'.format(BASE)
 #
 #                       ),

@@ -86,17 +86,20 @@ class MagnetScan(SpectrometerTask):
         mag = self.spectrometer.magnet
         sm = self.start_mass
         em = self.stop_mass
+        stm = self.step_mass
+        if abs(sm - em) > stm:
+    #        ds = mag.calculate_dac(sm)
+            ds = mag.map_mass_to_dac(sm)
+            de = mag.map_mass_to_dac(em)
+    #        de = mag.calculate_dac(em)
+            massdev = abs(sm - em)
+            dacdev = abs(ds - de)
 
-        ds = mag.calculate_dac(sm)
-        de = mag.calculate_dac(em)
-        massdev = abs(sm - em)
-        dacdev = abs(ds - de)
+            dacstep = stm / float(massdev) * dacdev
 
-        dacstep = self.step_mass / float(massdev) * dacdev
-
-        values = self._calc_dacvalues(ds, de, dacstep)
-        self._scan_dac(values, self.reference_detector.name)
-        self._alive = False
+            values = self._calc_dacvalues(ds, de, dacstep)
+            self._scan_dac(values, self.reference_detector.name)
+            self._alive = False
 
     def _calc_dacvalues(self, start, end, width):
         sign = 1 if start < end else -1
