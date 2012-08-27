@@ -35,6 +35,7 @@ from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.paths import paths
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
+from src.helpers.datetime_tools import get_datetime
 
 class AutomatedRunAdapter(TabularAdapter):
 
@@ -106,7 +107,7 @@ class AutomatedRun(Loggable):
 
     experiment_name = Str
     identifier = String(enter_set=True, auto_set=False)
-    aliquot = Int(1)
+    aliquot = Int
     state = Enum('not run', 'extraction', 'measurement', 'success', 'fail')
     runtype = Enum('Blank', 'Air')
     irrad_level = Str
@@ -144,6 +145,8 @@ class AutomatedRun(Loggable):
     _loaded = False
     configuration = None
 
+    _rundate = None
+    _runtime = None
     def get_estimated_duration(self):
         '''
             use the pyscripts to calculate etd
@@ -218,21 +221,25 @@ class AutomatedRun(Loggable):
 # doers
 #===============================================================================
     def do_extraction(self):
-        self.info('extraction')
+        self.info('======== Extraction Started========')
         self.state = 'extraction'
 
-        self.extraction_script.execute()
-        self.info('extraction finished')
+        self._pre_extraction_save()
+        if self.extraction_script.execute():
+            self._post_extraction_save()
+
+        self.info('======== Extraction Finished========')
+
 
     def do_measurement(self):
         #use a measurement_script to explicitly define 
         #measurement sequence
-
-        self._pre_analysis_save()
+        self.info('======== Measurement Started ========')
+        self._pre_measurement_save()
         if self.measurement_script.execute():
-            self._post_analysis_save()
+            self._post_measurement_save()
 
-        self.info('measurement finished')
+        self.info('======== Measurement Finished ========')
 
     def do_data_collection(self, ncounts, starttime, series=0):
 
@@ -504,8 +511,31 @@ class AutomatedRun(Loggable):
                 except Exception, e:
                     self.warning(e)
 
-    def _pre_analysis_save(self):
-        self.info('pre analysis save')
+    def _pre_extraction_save(self):
+        # set our aliquot
+        db = self.db
+        if self.identifier == 'B':
+            identifier = 1
+        elif self.identifier == 'A':
+            identifier = 2
+
+        ln = db.get_labnumber(identifier)
+        if ln is not None:
+            aliquot = ln.aliquot + 1
+            self.aliquot = aliquot
+        else:
+            self.warning('invalid lab number {}'.format(self.identifier))
+
+        d = get_datetime()
+        self._runtime = d.time()
+        self.info('analysis started at {}'.format(self._runtime))
+        self._rundate = d.date()
+
+    def _post_extraction_save(self):
+        pass
+
+    def _pre_measurement_save(self):
+        self.info('pre measurement save')
         dm = self.data_manager
         #make a new frame for saving data
         dm.new_frame(directory='automated_runs',
@@ -517,8 +547,9 @@ class AutomatedRun(Loggable):
         dm.new_group('sniffs')
         dm.new_group('signals')
 
-    def _post_analysis_save(self):
-        self.info('post analysis save')
+
+    def _post_measurement_save(self):
+        self.info('post measurement save')
         db = self.db
 
         if db:
@@ -538,7 +569,13 @@ class AutomatedRun(Loggable):
             lab = db.add_labnumber(identifier, aliquot, sample=sample)
 
             experiment = db.get_experiment(self.experiment_name)
-            a = db.add_analysis(lab)
+            d = get_datetime()
+
+            self.info('analysis finished at {}'.format(d.time()))
+            a = db.add_analysis(lab, runtime=self._runtime,
+                                    rundate=self._rundate,
+                                    endtime=d.time()
+                                )
             experiment.analyses.append(a)
 
             db.add_extraction(
@@ -557,11 +594,11 @@ class AutomatedRun(Loggable):
             db.commit()
 
 #        #save to mass spec database
-#        self.massspec_importer.add_analysis(self.identifier,
-#                                            self.irrad_level,
-#                                            self.sample,
-#                                            self.runtype
-#                                            )
+        self.massspec_importer.add_analysis(self.identifier,
+                                            self.irrad_level,
+                                            self.sample,
+                                            self.runtype
+                                            )
 #===============================================================================
 # property get/set
 #===============================================================================

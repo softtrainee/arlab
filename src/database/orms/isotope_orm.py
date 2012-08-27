@@ -15,12 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, \
-     ForeignKey, BLOB, Float
+     ForeignKey, BLOB, Float, Time
 from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
@@ -38,7 +37,6 @@ def stringcolumn(size=40):
 class ProjectTable(Base, NameMixin):
     users = relationship('UserTable', backref='project')
     samples = relationship('SampleTable', backref='project')
-    analyses = relationship('AnalysisTable', backref='project')
 
 
 class UserTable(Base, NameMixin):
@@ -46,8 +44,8 @@ class UserTable(Base, NameMixin):
 
 
 class SampleTable(Base, NameMixin):
-    project_id = foreignkey('ProjectTable')
     material_id = foreignkey('MaterialTable')
+    project_id = foreignkey('ProjectTable')
     labnumbers = relationship('LabTable', backref='sample')
 
 class MaterialTable(Base, NameMixin):
@@ -55,12 +53,11 @@ class MaterialTable(Base, NameMixin):
 
 
 class AnalysisTable(Base, ResultsMixin):
-    project_id = foreignkey('ProjectTable')
     lab_id = foreignkey('LabTable')
     extraction_id = foreignkey('ExtractionTable')
     measurement_id = foreignkey('MeasurementTable')
     experiment_id = foreignkey('ExperimentTable')
-
+    endtime = Column(Time)
 
 class AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('AnalysisTable')

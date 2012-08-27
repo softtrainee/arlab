@@ -26,65 +26,11 @@ import datetime
 #============= local library imports  ==========================
 from src.experiment.automated_run import AutomatedRun, AutomatedRunAdapter
 from src.experiment.heat_schedule import HeatSchedule
-from pyface.timer.api import Timer
 from src.paths import paths
 from src.loggable import Loggable
+from src.experiment.batch_edit import BatchEdit
+from src.experiment.stats import ExperimentStats
 
-class ExperimentStats(HasTraits):
-    elapsed = Property(depends_on='_elapsed')
-    _elapsed = Float
-    nruns = Int
-    nruns_finished = Int
-    etf = Str
-    total_time = Property(depends_on='_total_time')
-    _total_time = Float
-    _timer = Any(transient=True)
-    def calculate_etf(self, runs):
-        self.nruns = len(runs)
-
-        dur = sum([a.get_estimated_duration() for a in runs])
-        self._total_time = dur
-
-        dt = (datetime.datetime.now() + \
-                       datetime.timedelta(seconds=int(dur)))
-        self.etf = dt.strftime('%I:%M:%S %p %a %m/%d')
-
-    def _get_total_time(self):
-        dur = self._total_time
-        return '{:0.3f} hrs ({} secs)'.format(dur / 3600., dur)
-
-    def _get_elapsed(self):
-        return str(datetime.timedelta(seconds=self._elapsed))
-
-    def traits_view(self):
-        v = View(VGroup(
-                        Item('nruns',
-                            label='Total Runs',
-                            style='readonly'
-                            ),
-                        Item('nruns_finished',
-                             label='Completed',
-                             style='readonly'
-                             ),
-                        Item('total_time',
-                              style='readonly'),
-                        Item('etf', style='readonly', label='Est. finish'),
-                        Item('elapsed',
-                             style='readonly'),
-                        )
-                 )
-        return v
-
-    def start_timer(self):
-        st = time.time()
-        def update_time():
-            self._elapsed = int(time.time() - st)
-
-        self._timer = Timer(1000, update_time)
-        self._timer.Start()
-
-    def stop_timer(self):
-        self._timer.Stop()
 
 def extraction_path(name):
     return os.path.join(paths.scripts_dir, 'extraction', name)
@@ -92,117 +38,6 @@ def extraction_path(name):
 def measurement_path(name):
     return os.path.join(paths.scripts_dir, 'measurement', name)
 
-class BatchEdit(HasTraits):
-    batch = Bool(False)
-
-    measurement_scripts = List
-    measurement_script = Str
-    orig_measurement_script = Str
-    apply_measurement_script = Bool
-
-
-    extraction_scripts = List
-    extraction_script = Str
-    orig_extraction_script = Str
-    apply_extraction_script = Bool
-
-    power = Float
-    apply_power = Bool
-    orig_power = Float
-
-    duration = Float
-    apply_duration = Bool
-    orig_duration = Float
-
-    position = Int
-    apply_position = Bool
-    orig_position = Int
-    auto_increment_position = Bool
-    auto_increment_step = Int(1)
-
-    def apply_edits(self, runs):
-        for i, ri in enumerate(runs):
-            for name in ['extraction', 'measurement']:
-                sname = '{}_script'.format(name)
-                if getattr(self, 'apply_{}'.format(sname)):
-                    pi = ri.configuration[sname]
-                    ni = globals()['{}_path'.format(name)](getattr(self, sname))
-                    if pi != ni:
-                        ri.configuration[sname] = ni
-                        setattr(ri, '{}_dirty'.format(sname), True)
-
-            for attr, name in [('temp_or_power', 'power'),
-                               ('duration', 'duration'),
-                               ]:
-                if getattr(self, 'apply_{}'.format(name)):
-                    setattr(ri, attr, getattr(self, name))
-
-            if self.apply_position:
-                if self.auto_increment_position:
-                    pos = i * self.auto_increment_step + self.position
-                    ri.position = pos
-                else:
-                    ri.position = self.position
-#            ri.temp_or_power = self.power
-
-
-#    def _extraction_script_changed(self):
-#        self._changed('extraction_script')
-#
-#    def _measurement_script_changed(self):
-#        self._changed('measurement_script')
-#
-#    def _power_changed(self):
-
-    @on_trait_change('measurement_script,extraction_script,power,duration,position')
-    def _changed(self, obj, name, old, new):
-        ap = getattr(self, name) != getattr(self, 'orig_{}'.format(name))
-        setattr(self, 'apply_{}'.format(name), ap)
-
-
-    def reset(self):
-        #disable all the apply_
-        for k in ['measurement_script',
-                   'extraction_script',
-                   'power',
-                   'duration',
-                   'position'
-                   ]:
-            setattr(self, 'apply_{}'.format(k), False)
-
-    def traits_view(self):
-
-        fgroup = lambda n: HGroup(Item('apply_{}'.format(n), show_label=False),
-                                spring,
-                                Item(n)
-                                )
-
-        sgroup = lambda n: HGroup(Item('apply_{}_script'.format(n), show_label=False),
-                                  spring,
-                                  Item('{}_script'.format(n),
-                                       label=n.capitalize(),
-                                       editor=EnumEditor(name='{}_scripts'.format(n)))
-                                  )
-
-        return View(
-                    VGroup(
-                           sgroup('extraction'),
-                           sgroup('measurement'),
-                           fgroup('power'),
-                           fgroup('duration'),
-                           VGroup(
-                                  fgroup('position'),
-                                  HGroup(spring,
-                                         Item('auto_increment_position'),
-                                         Item('auto_increment_step', label='Step'),
-                                         enabled_when='batch'
-                                         )
-                                  )
-                           ),
-                    title='Batch Edit',
-                    kind='livemodal',
-                    buttons=['OK', 'Cancel']
-                    )
 
 class ExperimentSet(Loggable):
     automated_runs = List(AutomatedRun)
@@ -220,8 +55,6 @@ class ExperimentSet(Loggable):
     stats = Instance(ExperimentStats, ())
 
     loaded_scripts = Dict
-
-#    test_configuration = Property
 
     measurement_script = String
     measurement_scripts = Property#(depends_on='_measurement_scripts')
@@ -273,12 +106,6 @@ class ExperimentSet(Loggable):
                 be.apply_edits(self.selected)
                 self.automated_run.update = True
 
-#    def _selected_changed(self):
-#        print self.selected
-#        if self.selected:
-#            self.automated_run = self.selected[0]
-
-
     def _load_script_names(self, name):
         p = os.path.join(paths.scripts_dir, name)
         if os.path.isdir(p):
@@ -293,7 +120,6 @@ class ExperimentSet(Loggable):
             self.warning_dialog('{} script directory does not exist!'.format(p))
 
     def _build_configuration(self, extraction, measurement):
-#    def _get_test_configuration(self):
         c = dict(extraction_script=extraction_path(extraction),
                   measurement_script=measurement_path(measurement)
                   )
@@ -301,7 +127,8 @@ class ExperimentSet(Loggable):
 
     def save_to_db(self):
         db = self.db
-        db.add_experiment()
+        db.add_experiment(self.name)
+        db.commit()
 
     def update_loaded_scripts(self, new):
         self.loaded_scripts[new.name] = new
@@ -314,14 +141,6 @@ class ExperimentSet(Loggable):
 
     def _auto_increment_runid(self, rid):
 
-#        try:
-#            head, tail = rid.split('-')
-#            rid = '{}-{}'.format(head, int(tail) + 1)
-#        except ValueError:
-#            try:
-#                rid = str(int(rid) + 1)
-#            except ValueError:
-#                pass
         try:
             rid = str(int(rid) + 1)
         except ValueError:
@@ -366,27 +185,11 @@ class ExperimentSet(Loggable):
                 fo[ai.identifier] = ai.aliquot
 
 
-#                if pi is None:
-#                    if ai.identifier == self.automated_run.identifier:
-#                        pi = ai.aliquot
-#                else:
-
-
-
-
     def _apply_fired(self):
         for i, s in enumerate(self.heat_schedule.steps):
-#            a = AutomatedRun(heat_step=s)
             a = self.automated_run_factory(temp_or_power=s.temp_or_power,
                                          duration=s.duration,
                                          )
-#            a = self.automated_run.clone_traits()
-#            a.load_scripts=self.loaded_scripts
-#            a.configuration=self._b
-#            self._bind_automated_run(a)
-
-#            a.temp_or_power = s.temp_or_power
-#            a.duration = s.duration
             a.aliquot += i
             self.automated_runs.append(a)
 
@@ -428,8 +231,6 @@ class ExperimentSet(Loggable):
         arun.irrad_level = ''
 
         if identifier:
-            ars = self.automated_runs
-
             oidentifier = identifier
             if identifier == 'B':
                 identifier = 1
@@ -444,34 +245,12 @@ class ExperimentSet(Loggable):
                                   if ai.identifier == oidentifier
                                   ])
                 arun.aliquot = ln.aliquot + noccurrences + 1
-#                run = next((ars[-(i + 1)] for i in range(len(ars))
-#                             if ars[-(i + 1)].identifier == oidentifier), None)
-#
-#                run = len([ars[-(i + 1)] for i in range(len(ars))
-#                             if ars[-(i + 1)].identifier == oidentifier])
-#
-#                if run:
-#                    arun.aliquot = ln.aliquot + run + 1
-#                    print ln.aliquot, run, arun.aliquot, 'sdaf'
-#                else:
-#                    arun.aliquot = ln.aliquot + 1
-                #get last aliquot in set
-
-
 
                 ipos = ln.irradiation_position
                 irrad = ipos.irradiation
                 arun.irrad_level = '{}{}'.format(irrad.name, irrad.level)
-#                arun.irrad_level=
-#                arun.irrad_level =
-#                if self.automated_run.aliquot != a:
-#                    self.automated_run.aliquot = a + 1
-#                else:
-#                    self.automated_run.aliquot += 1
+
                 self.ok_to_add = True
-
-
-
 
 #===============================================================================
 # property get/set
