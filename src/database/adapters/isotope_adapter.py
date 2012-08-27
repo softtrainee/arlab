@@ -112,6 +112,22 @@ class IsotopeAdapter(DatabaseAdapter):
             return user, False
 
 
+#    @add
+#    def add_sample(self, name, material=None, **kw):
+#        sample = SampleTable(name=name, **kw)
+#        if isinstance(material, str):
+#            material = self.get_material(material)
+#
+#        q = self._build_query_and(SampleTable, name, MaterialTable, material)
+#
+#        sam = sql_retrieve(q.one)
+##        if sam is not None:
+##            addflag = not sam.material == material
+#        if sam is None:
+#            return sample, True
+#        else:
+#            self.info('sample={} material={} already exists'.format(name, material.name))
+#            return sample, False
     @add
     def add_sample(self, name, project=None, material=None, **kw):
         sample = SampleTable(name=name, **kw)
@@ -170,7 +186,6 @@ class IsotopeAdapter(DatabaseAdapter):
         if isinstance(labnumber, (str, int)):
             labnumber = self.get_labnumber(labnumber)
 
-        kw = self._get_datetime_keywords(kw)
         anal = AnalysisTable(**kw)
         if labnumber is not None:
             labnumber.analyses.append(anal)
