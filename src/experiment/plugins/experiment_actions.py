@@ -35,7 +35,7 @@ class ExecuteExperimentSetAction(Action):
         man = get_manager(event)
 
         p = '/Users/ross/Pychrondata_experiment/experiments/foo.txt'
-
+#        p=None
         man.load_experiment_set(path=p)
         open_manager(event.window.application, man, view='execute_view')
 

@@ -35,8 +35,9 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.helpers.filetools import unique_path
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
+from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 
-DEBUG = True
+DEBUG = False
 class ExperimentManagerHandler(SaveableManagerHandler):
     def object_active_experiment_set_changed(self, info):
         if info.initialized:
@@ -48,14 +49,17 @@ class ExperimentManager(Manager):
         manager to handle running multiple analyses
     '''
     spectrometer_manager = Instance(Manager)
+    data_manager = Instance(Manager)
+
+    extraction_line_manager = Instance(Manager)
+    laser_manager = Instance(Manager)
+    ion_optics_manager = Instance(Manager)
+
     experiment_config = None
 
     active_experiment_set = Instance(ExperimentSet, ())
 
-    data_manager = Instance(Manager)
-    #these are remote managers
-    extraction_line_manager = Instance(Manager)
-    laser_manager = Instance(Manager)
+    pyscript_runner = Instance(PyScriptRunner)
 
     db = Instance(IsotopeAdapter)
     massspec_importer = Instance(MassSpecDatabaseImporter)
@@ -110,14 +114,14 @@ class ExperimentManager(Manager):
     def recall_analysis(self):
         pass
 
-    def get_spectrometer_manager(self):
-        sm = self.spectrometer_manager
-        if sm is None:
-            protocol = 'src.managers.spectrometer_manager.SpectrometerManager'
-            if self.application is not None:
-                sm = self.spectrometer_manager = self.application.get_service(protocol)
-
-        return sm
+#    def get_spectrometer_manager(self):
+#        sm = self.spectrometer_manager
+#        if sm is None:
+#            protocol = 'src.managers.spectrometer_manager.SpectrometerManager'
+#            if self.application is not None:
+#                sm = self.spectrometer_manager = self.application.get_service(protocol)
+#
+#        return sm
 
     def end_runs(self):
 
@@ -129,17 +133,16 @@ class ExperimentManager(Manager):
 
     def do_automated_runs(self):
 
-        app = self.application
-        if app is not None:
-            protocol = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-            man = app.get_service(protocol)
+#        app = self.application
+#        if app is not None:
+#            protocol = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+#            man = app.get_service(protocol)
+#            self.extraction_line_manager = man
 
-#        if self.mode == 'client':
-#
-#
-#            man = RemoteExtractionLineManager(host='129.138.12.153',
-#                                              port=1061)
-            self.extraction_line_manager = man
+        if self.mode == 'client':
+            runner = RemotePyScriptRunner('129.138.12.153', 1061, 'udp')
+        else:
+            runner = PyScriptRunner()
 
         self._alive = True
         self.info('start automated runs')
@@ -162,10 +165,12 @@ class ExperimentManager(Manager):
             arun.experiment_manager = self
             arun.spectrometer_manager = self.spectrometer_manager
             arun.extraction_line_manager = self.extraction_line_manager
+            arun.ion_optics_manager = self.ion_optics_manager
             arun.data_manager = dm
             arun.db = self.db
             arun.massspec_importer = self.massspec_importer
-
+            arun.runner = runner
+            arun.integration_time = 1.06
             arun._debug = DEBUG
 #            if arun.identifier.startswith('B'):
 #                arun.isblank = True
@@ -326,13 +331,16 @@ class ExperimentManager(Manager):
                     if line.startswith('#====='):
                         break
                 delim = '\t'
-                header = f.next().split(delim)
+                header = map(str.strip, f.next().split(delim))
                 for ai in f:
-                    args = ai.split(delim)
+                    args = map(str.strip, ai.split(delim))
                     identifier = args[header.index('identifier')]
-                    arun = exp._automated_run_factory(identifier=identifier,
-                                                      _extraction_script=''
-
+                    measurement = args[header.index('measurement')]
+                    extraction = args[header.index('extraction')]
+                    arun = exp._automated_run_factory(
+                                                      extraction,
+                                                      measurement,
+                                                      identifier=identifier,
                                                       )
                     exp.automated_runs.append(arun)
 
@@ -521,7 +529,7 @@ class ExperimentManager(Manager):
             return db
 
 if __name__ == '__main__':
-    paths.build('_test')
+    paths.build('_experiment')
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('experiment_manager')

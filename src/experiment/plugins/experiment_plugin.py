@@ -56,8 +56,13 @@ class ExperimentPlugin(CorePlugin):
         ip = InitializationParser()
         plugin = ip.get_plugin('Experiment', category='general')
         mode = plugin.get('mode')
-
+        p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+        p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
+        p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
         return ExperimentManager(application=self.application,
+                                 extraction_line_manager=self.application.get_service(p1),
+                                 spectrometer_manager=self.application.get_service(p2),
+                                 ion_optics_manager=self.application.get_service(p3),
                                  mode=mode
                                  )
 #============= EOF ====================================

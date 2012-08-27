@@ -40,6 +40,8 @@ class AutomatedRunAdapter(TabularAdapter):
 
     state_image = Property
     state_text = Property
+    extraction_script_text = Property
+    measurement_script_text = Property
 
     def _columns_default(self):
         hp = ('Temp', 'temp_or_power')
@@ -48,7 +50,15 @@ class AutomatedRunAdapter(TabularAdapter):
             hp = ('Power', 'temp_or_power')
 
         return  [('', 'state'), ('id', 'identifier'), ('sample', 'sample'),
-               hp, ('Duration', 'duration')]
+               hp, ('Duration', 'duration'),
+               ('Extraction', 'extraction_script'),
+               ('Measurement', 'measurement_script'),
+               ]
+    def _get_extraction_script_text(self, trait, item):
+        return self.item.extraction_script.name
+
+    def _get_measurement_script_text(self, trait, item):
+        return self.item.measurement_script.name
 
     def _get_state_text(self):
         return ''
@@ -75,9 +85,16 @@ class AutomatedRunAdapter(TabularAdapter):
 
 
 class AutomatedRun(Loggable):
-    spectrometer_manager = Any(transient=True)
-    extraction_line_manager = Any(transient=True)
-    experiment_manager = Any(transient=True)
+    spectrometer_manager = Any
+    extraction_line_manager = Any
+    experiment_manager = Any
+    ion_optics_manager = Any
+    data_manager = Any
+
+    db = Any
+    massspec_importer = Any
+    runner = Any
+    graph = Any
 
     sample = Str
 
@@ -99,32 +116,23 @@ class AutomatedRun(Loggable):
     weight = Float
     comment = Str
 
-    update = Event
-
-    data_manager = Any
-
+    scripts = Dict
+    signals = Dict
     sample_data_record = Any
 
-    _debug = True
-
-    _active_detectors = List
-    configuration = None
-
-    _loaded = False
-
-    scripts = Dict
+    update = Event
 
     measurement_script = Property
     _measurement_script = Any
 
+
     extraction_script = Property
     _extraction_script = Any
 
-    signals = Dict
-
-    db = Any
-    massspec_importer = Any
-    graph = Any
+    _active_detectors = List
+    _debug = False
+    _loaded = False
+    configuration = None
 
     def get_estimated_duration(self):
         '''
@@ -142,7 +150,7 @@ class AutomatedRun(Loggable):
         return s
 
     def get_measurement_parameter(self, key, default=None):
-        ms = self._measurement_script
+        ms = self.measurement_script
         import ast
         import yaml
         m = ast.parse(ms._text)
@@ -153,6 +161,8 @@ class AutomatedRun(Loggable):
                 return params[key]
             except KeyError:
                 pass
+            except TypeError:
+                self.warning('Invalid yaml docstring in {}. Could not retrieve {}'.format(ms.name, key))
 
         return default
 
@@ -165,7 +175,7 @@ class AutomatedRun(Loggable):
             automated_run=self
             )
         return ms
-
+#
     def extraction_script_factory(self, ec):
         #get the klass
 
@@ -190,6 +200,7 @@ class AutomatedRun(Loggable):
                     heat_duration=self.duration,
                     temp_or_power=self.temp_or_power,
                     manager=self.extraction_line_manager,
+                    runner=self.runner,
                     **params
                     )
 
@@ -247,11 +258,19 @@ class AutomatedRun(Loggable):
             self._peak_hop(gn, detector, masses, ncounts, starttime, series)
 
     def do_peak_center(self, **kw):
-        sm = self.spectrometer_manager
-        if sm is not None:
-            sm.spectrometer._alive = True
-            sm.peak_center(**kw)
-            sm.spectrometer._alive = False
+        ion = self.ion_optics_manager
+        if ion is not None:
+
+            t = ion.do_peak_center(**kw)
+
+            #block until finished
+            t.join()
+
+#        sm = self.spectrometer_manager
+#        if sm is not None:
+##            sm.spectrometer._alive = True
+#            sm.peak_center(**kw)
+##            sm.spectrometer._alive = False
 
     def set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
@@ -259,30 +278,47 @@ class AutomatedRun(Loggable):
         if sm is not None:
             sm.spectrometer.set_parameter(name, v)
 
-    def set_magnet_position(self, v, **kw):
-        sm = self.spectrometer_manager
-        if sm is not None:
-            sm.spectrometer.set_magnet_position(**kw)
+    def set_position(self, pos, detector, dac=False):
+        ion = self.ion_optics_manager
+        if ion is not None:
+            ion.position(pos, detector, dac)
+
+#    def set_magnet_position(self, v, **kw):
+#        sm = self.spectrometer_manager
+#        if sm is not None:
+#            sm.spectrometer.set_magnet_position(v, **kw)
 
     def activate_detectors(self, dets):
         g = self.graph
         if g is None:
-            g = StackedGraph(window_width=500,
+            g = StackedGraph(
+                             container_dict=dict(padding=5, bgcolor='gray',
+                                                 ),
+                             window_width=500,
                              window_height=700,
                              window_y=0.05 + 0.01 * self.index,
                              window_x=0.6 + 0.01 * self.index,
                              window_title='Plot Panel {}'.format(self.identifier)
                              )
             self.graph = g
-            do_later(self.graph.edit_traits)
 
+
+            self.experiment_manager.open_view(self.graph)
+#            do_later(self.graph.edit_traits)
+
+#        dets.reverse()
         for i, l in enumerate(dets):
+
+            l = dets[-(i + 1)]
+
             if not l in self._active_detectors:
-                g.new_plot()
+                g.new_plot(ytitle='{} Signal (fA)'.format(l))
                 g.new_series(type='scatter',
                              marker='circle',
                              marker_size=1.25,
                              label=l)
+        g.set_x_limits(min=0, max=100)
+#        dets.reverse()
 
 #            g.new_series(type='scatter',
 #                         marker='circle',
@@ -302,13 +338,17 @@ class AutomatedRun(Loggable):
         g = self.graph
 
         time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
-        for pi in range(len(g.plots)):
+        n = len(self._active_detectors)
+
+        for i, dn in enumerate(self._active_detectors):
+#        for pi in range(len(g.plots)):
+            pi = n - (i + 1)
             x = g.get_data(plotid=pi, series=series)[time_zero_offset:]
             y = g.get_data(plotid=pi, series=series, axis=1)[time_zero_offset:]
             x, y = zip(*zip(x, y))
             rdict = r._regress_(x, y, kind)
-
-            self.info('intercept {}+/-{}'.format(rdict['coefficients'][-1],
+            self.info('{} intercept {}+/-{}'.format(dn,
+                                                    rdict['coefficients'][-1],
                                                  rdict['coeff_errors'][-1]
                                                  ))
             g.new_series(rdict['x'],
@@ -354,7 +394,9 @@ class AutomatedRun(Loggable):
                     spec.set_magnet_position()
 
                 x = time.time() - starttime
-                if i % 100 == 0 or x > self.graph.get_x_limits()[1]:
+#                if i % 100 == 0 or x > self.graph.get_x_limits()[1]:
+                print x, self.graph.get_x_limits()[1]
+                if x > self.graph.get_x_limits()[1]:
                     self.graph.set_x_limits(0, x + 10)
 
                 signals = [1200 * (1 + random.random()),
@@ -377,7 +419,7 @@ class AutomatedRun(Loggable):
 
         self.info('measuring {}'.format(grpname))
 
-        sm = self.spectrometer_manager
+        spec = self.spectrometer_manager.spectrometer
 
         for i in xrange(0, ncounts, 1):
             if i % 50 == 0:
@@ -387,46 +429,49 @@ class AutomatedRun(Loggable):
             time.sleep(m)
 
             if not self._debug:
-                data = sm.get_intensities(tagged=True)
-                keys, signals = zip(*data)
+                data = spec.get_intensities(tagged=True)
+                if data is not None:
+                    keys, signals = data
+#                keys, signals = zip(*data)
             else:
                 keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 
                 if series == 0:
                     signals = [10, 1000, 8, 8, 8, 3]
-                else:
+                elif series == 1:
                     r = random.randint(0, 75)
                     signals = [0.1, (0.015 * (i - 2800 + r)) ** 2,
                                0.1, 1, 0.1, (0.001 * (i - 2000 + r)) ** 2
                                ]
-
-            h1 = signals[keys.index('H1')]
-            cdd = signals[keys.index('CDD')]
+                else:
+                    signals = [1, 2, 3, 4, 5, 6]
 
             x = time.time() - starttime# if not self._debug else i + starttime
             data_write_hook(x, keys, signals)
 
             self.signals = dict(zip(keys, signals))
-#                dm.write_to_frame((x, h1, cdd))
 
-            if i % 100 == 0:
-                self.graph.set_x_limits(0, x + 10)
-
-#                self.graph.set_x_limits(0, min(i + 100,
-##                                               x
-#                                               #ncounts + self.nbaseline_counts + self.delay_before_baseline
-#                                               )
-#                                        )
-            kw = dict(series=series, do_after=1,)
+            kw = dict(series=series, do_after=1, update_y_limits=True)
             if len(self.graph.series[0]) < series + 1:
                 kw['marker'] = 'circle'
                 kw['type'] = 'scatter'
                 kw['marker_size'] = 1.25
-                self.graph.new_series(x=[x], y=[h1], plotid=0, **kw)
-                self.graph.new_series(x=[x], y=[cdd], plotid=1, **kw)
+                func = lambda x, signal, kw: self.graph.new_series(x=[x],
+                                                                 y=[signal],
+                                                                 **kw
+                                                                 )
             else:
-                self.graph.add_datum((x, h1), plotid=0, ** kw)
-                self.graph.add_datum((x, cdd), plotid=1, **kw)
+                func = lambda x, signal, kw: self.graph.add_datum((x, signal), **kw)
+            dets = self._active_detectors
+            n = len(dets)
+            for pi, dn in enumerate(dets):
+                signal = signals[keys.index(dn)]
+                kw['plotid'] = n - (pi + 1)
+                func(x, signal, kw)
+
+
+            if (i and i % 100 == 0) or x > self.graph.get_x_limits()[1]:
+                self.graph.set_x_limits(0, x + 10)
 
     def _load_script(self, name):
 
@@ -498,15 +543,15 @@ class AutomatedRun(Loggable):
 
         return write_data
 
+    @cached_property
     def _get_measurement_script(self):
-        if self._measurement_script is None:
-            self._measurement_script = self._load_script('measurement')
-
+        self._measurement_script = self._load_script('measurement')
         return self._measurement_script
 
     @cached_property
     def _get_extraction_script(self):
-        return self._load_script('extraction')
+        self._extraction_script = self._load_script('extraction')
+        return self._extraction_script
 
     @property
     def index(self):

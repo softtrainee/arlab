@@ -37,6 +37,7 @@ class RiseRate(SpectrometerTask):
 
     def _execute(self):
         self.result = 0
+
         self._starttime = self.graph.get_data()[-1]
         self._start_intensity = self._get_intensity()
         self._start_intensity = 0

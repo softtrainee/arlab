@@ -117,7 +117,7 @@ class EthernetCommunicator(Communicator):
 
         handler = self.get_handler()
         #send a test command so see if wer have connection
-        if handler.send_packet('GetHV'):
+        if handler.send_packet('***'):
             r = handler.get_packet()
             if r is None:
                 self.simulation = True

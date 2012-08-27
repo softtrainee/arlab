@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, Str, Button, Any, \
-    Bool, Property, Float, Int, on_trait_change, Dict
+    Bool, Property, Float, Int, on_trait_change, Dict, String, cached_property
 from traitsui.api import View, Item, TabularEditor, VGroup, HGroup, spring, \
     EnumEditor
 #============= standard library imports ========================
@@ -102,20 +102,33 @@ class ExperimentSet(Loggable):
 
     loaded_scripts = Dict
 
-    test_configuration = Property
+#    test_configuration = Property
 
-    measurement_script = Str
-    measurement_scripts = Property(depends_on='_measurement_scripts')
-    _measurement_scripts = List
+    measurement_script = String
+    measurement_scripts = Property#(depends_on='_measurement_scripts')
+#    _measurement_scripts = List
 
-    extraction_script = Str
-    extraction_scripts = Property(depends_on='_extraction_scripts')
-    _extraction_scripts = List
+    extraction_script = String
+    extraction_scripts = Property#(depends_on='_extraction_scripts')
+#    _extraction_scripts = List
 
     delay_between_runs = Float(1)
 
     dirty = Property(depends_on='_dirty,path')
     _dirty = Bool(False)
+
+
+
+    def _extraction_script_changed(self):
+        self.automated_run.configuration['extraction_script'] = os.path.join(paths.scripts_dir,
+                                                        'extraction',
+                                                        self.extraction_script)
+
+    def _measurement_script_changed(self):
+        self.automated_run.configuration['measurement_script'] = os.path.join(paths.scripts_dir,
+                                                        'measurement',
+                                                        self.measurement_script)
+
 
     def _set_dirty(self, d):
         self._dirty = d
@@ -139,8 +152,6 @@ class ExperimentSet(Loggable):
 
     def update_loaded_scripts(self, new):
         self.loaded_scripts[new.name] = new
-
-
 
     def reset_stats(self):
         self.stats.start_timer()
@@ -169,7 +180,9 @@ class ExperimentSet(Loggable):
 
         #@todo: auto increment the runid
         rid = self._auto_increment_runid(self.automated_run.identifier)
-        self.automated_run = self._automated_run_factory(rid)
+        self.automated_run = self._automated_run_factory(self.extraction_script, self.measurement_script,
+                                                         identifier=rid
+                                                         )
         self.ok_to_add = False
 
 
@@ -222,16 +235,16 @@ class ExperimentSet(Loggable):
                  HGroup(
                  VGroup(
                         new_analysis,
-                        Item('measurement_script',
-                             label='Measurement',
-                             editor=EnumEditor(name='measurement_scripts',
-                                                                     evaluate=lambda x:x
-                                                                    )),
                         Item('extraction_script',
                              label='Extraction',
                              editor=EnumEditor(name='extraction_scripts',
-                                                                     evaluate=lambda x:x
-                                                                    ))
+#                                                                     evaluate=lambda x:x
+                                                                    )),
+                        Item('measurement_script',
+                             label='Measurement',
+                             editor=EnumEditor(name='measurement_scripts',
+#                                                                     evaluate=lambda x:x
+                                                                    )),
                         ),
                  VGroup(
                          heat_schedule_table,
@@ -248,19 +261,17 @@ class ExperimentSet(Loggable):
 #===============================================================================
 # factories
 #===============================================================================
-    def _automated_run_factory(self, **kw):
+    def _automated_run_factory(self, extraction, measurement, **kw):
         '''
              always use this factory for new AutomatedRuns
              it sets the configuration, loaded scripts and binds our update_loaded_script
              handler so we are aware of scripts that have been tested
         '''
-
         a = AutomatedRun(
-                         configuration=self.test_configuration,
+                         configuration=self._build_configuration(extraction, measurement),
                          scripts=self.loaded_scripts,
                          **kw
                          )
-
         a.on_trait_change(self.update_loaded_scripts, '_measurement_script')
         a.on_trait_change(self.update_loaded_scripts, '_extraction_script')
         return a
@@ -274,32 +285,40 @@ class ExperimentSet(Loggable):
         else:
             return 'New ExperimentSet'
 
+    @cached_property
     def _get_extraction_scripts(self):
         es = self._load_script_names('extraction')
         if es:
             self.extraction_script = es[0]
         return es
 
+    @cached_property
     def _get_measurement_scripts(self):
         ms = self._load_script_names('measurement')
         if ms:
             self.measurement_script = ms[0]
         return ms
-    def _get_test_configuration(self):
+    def _build_configuration(self, extraction, measurement):
+#    def _get_test_configuration(self):
         c = dict(extraction_script=os.path.join(paths.scripts_dir,
                                                         'extraction',
-                                                        'Quick_Air_x1.py'),
+                                                        extraction),
 
                   measurement_script=os.path.join(paths.scripts_dir,
                                                   'measurement',
-                                                  'measureTest.py')
+                                                  measurement)
                   )
         return c
 #===============================================================================
 # defaults
 #===============================================================================
     def _automated_run_default(self):
-        return self._automated_run_factory()
+
+        es = self.extraction_scripts[0]
+        ms = self.measurement_scripts[0]
+
+
+        return self._automated_run_factory(es, ms, identifier='B-1')
 #===============================================================================
 # debugging
 #===============================================================================
