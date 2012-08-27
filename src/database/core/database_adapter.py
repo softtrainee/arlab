@@ -105,7 +105,15 @@ class DatabaseAdapter(Loggable):
             self.connected = self._test_db_connection()
         else:
             self.connected = True
+
+
+        if self.connected:
+            self.initialize_database()
+
         return self.connected
+
+    def initialize_database(self):
+        pass
 
     def _test_db_connection(self):
         sess = None

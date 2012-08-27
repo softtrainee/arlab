@@ -20,8 +20,9 @@ from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 
 from src.paths import paths
 from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
-    MaterialTable, AnalysisTable, AnalysisPathTable, LabTable
-import sqlalchemy
+    MaterialTable, AnalysisTable, AnalysisPathTable, LabTable, ExtractionTable, \
+    MeasurementTable
+#import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
@@ -41,9 +42,32 @@ class IsotopeAdapter(DatabaseAdapter):
     selector_klass = IsotopeAnalysisSelector
     path_table = AnalysisPathTable
 
+    def initialize_database(self):
+        self.add_sample('B')
+#        self.add_labnumber('A')
+
     #===========================================================================
     # adders
     #===========================================================================
+    @add
+    def add_extraction(self, analysis, name, **kw):
+        ex = ExtractionTable(script_name=name, **kw)
+        if isinstance(analysis, str):
+            analysis = self.get_analysis(analysis)
+        if analysis:
+            analysis.extraction = ex
+        return ex, True
+
+    @add
+    def add_measurement(self, analysis, name, **kw):
+        ms = MeasurementTable(script_name=name, **kw)
+        if isinstance(analysis, str):
+            analysis = self.get_analysis(analysis)
+        if analysis:
+            analysis.measurement = ms
+
+        return ms, True
+
     @add
     def add_project(self, name, **kw):
         proj = ProjectTable(name=name, **kw)
@@ -115,13 +139,20 @@ class IsotopeAdapter(DatabaseAdapter):
 
 
     @add
-    def add_labnumber(self, labnumber, sample=None, **kw):
-        ln = LabTable(labnumber=labnumber, **kw)
+    def add_labnumber(self, labnumber, aliquot, sample=None, **kw):
+        ln = LabTable(labnumber=labnumber,
+                      aliquot=aliquot,
+                      ** kw)
 
         if isinstance(sample, str):
             sample = self.get_sample(sample)
 
-        ln = self._add_unique(ln, 'labnumber', labnumber)
+#        ln = self._add_unique(ln, 'labnumber', labnumber)
+        pln = self.get_labnumber(labnumber)
+        if pln is not None:
+            if pln.aliquot == aliquot:
+                return ln, False
+
         if sample is not None and ln is not None:
             sample.labnumbers.append(ln)
 

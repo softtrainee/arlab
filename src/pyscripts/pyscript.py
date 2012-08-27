@@ -142,6 +142,9 @@ class PyScript(Loggable):
 
     _graph_calc = False
 
+    def toblob(self):
+        return self._text
+
     def get_estimated_duration(self):
         return self._estimated_duration
 
