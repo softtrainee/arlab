@@ -37,7 +37,7 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 
-DEBUG = False
+DEBUG = True
 class ExperimentManagerHandler(SaveableManagerHandler):
     def object_active_experiment_set_changed(self, info):
         if info.initialized:
@@ -425,21 +425,21 @@ class ExperimentManager(Manager):
 #        self.new_experiment()
 #        self.execute()
 
-    @on_trait_change('experiment:automated_run:identifier')
-    def identifier_update(self, obj, name, old, new):
-        print name, old, new
-        if new:
-            if new == 'A':
-                self.experiment.ok_to_add = True
-            else:
-                #check db for this sample identifier
-                db = self.data_manager
-                sample = db.get_sample(dict(identifier=new))
-                if sample is not None:
-                    self.experiment.analysis.sample_data_record = sample
-                    self.experiment.ok_to_add = True
-        else:
-            self.experiment.ok_to_add = False
+#    @on_trait_change('experiment:automated_run:identifier')
+#    def identifier_update(self, obj, name, old, new):
+#        print name, old, new
+#        if new:
+#            if new == 'A':
+#                self.experiment.ok_to_add = True
+#            else:
+#                #check db for this sample identifier
+#                db = self.data_manager
+#                sample = db.get_sample(dict(identifier=new))
+#                if sample is not None:
+#                    self.experiment.analysis.sample_data_record = sample
+#                    self.experiment.ok_to_add = True
+#        else:
+#            self.experiment.ok_to_add = False
 #===============================================================================
 # views
 #===============================================================================

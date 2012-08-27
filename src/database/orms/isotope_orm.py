@@ -20,7 +20,7 @@ from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, \
-     ForeignKey
+     ForeignKey, BLOB, Float
 from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
@@ -54,6 +54,8 @@ class MaterialTable(Base, NameMixin):
 class AnalysisTable(Base, ResultsMixin):
     project_id = foreignkey('ProjectTable')
     lab_id = foreignkey('LabTable')
+    extraction_id = foreignkey('ExtractionTable')
+    measurement_id = foreignkey('MeasurementTable')
 
 class AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('AnalysisTable')
@@ -61,7 +63,32 @@ class AnalysisPathTable(Base, PathMixin):
 
 class LabTable(Base, BaseMixin):
     labnumber = Column(Integer)
+    aliquot = Column(Integer)
     sample_id = foreignkey('SampleTable')
     analyses = relationship('AnalysisTable', backref='labnumber')
 #    irradiation_id = foreignkey('IrradiationTable')
+
+
+class ScriptTable(BaseMixin):
+    script_name = Column(String(80))
+    script_blob = Column(BLOB)
+
+
+class MeasurementTable(Base, ScriptTable):
+    analysis = relationship('AnalysisTable', backref='measurement',
+                          uselist=False
+                          )
+
+
+class ExtractionTable(Base, ScriptTable):
+    position = Column(Integer)
+    value = Column(Float)
+    heat_duration = Column(Float)
+    clean_up_duration = Column(Float)
+
+    analysis = relationship('AnalysisTable', backref='extraction',
+                          uselist=False
+                          )
+
+
 #============= EOF =============================================

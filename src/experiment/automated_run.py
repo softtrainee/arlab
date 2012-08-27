@@ -513,8 +513,30 @@ class AutomatedRun(Loggable):
 
         if db:
         #save to a database
-            self.labnumber = 1
-            a = db.add_analysis(self.labnumber)
+#            self.labnumber = 1
+            identifier = self.identifier
+            identifier, aliquot = identifier.split('-')
+            if identifier == 'B':
+                identifier = 1
+                sample = 'B'
+            elif identifier == 'A':
+                identifier = 2
+            else:
+                identifier = int(identifier)
+
+            lab = db.add_labnumber(identifier, aliquot, sample=sample)
+            a = db.add_analysis(lab)
+            db.add_extraction(
+                              a,
+                              self.extraction_script.name,
+                              script_blob=self.measurement_script.toblob()
+                              )
+            db.add_measurement(
+                              a,
+                              self.measurement_script.name,
+                              script_blob=self.measurement_script.toblob()
+                              )
+
             p = self.data_manager.get_current_path()
             db.add_analysis_path(p, analysis=a)
             db.commit()
