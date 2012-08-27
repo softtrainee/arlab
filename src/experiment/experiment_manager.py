@@ -39,7 +39,7 @@ from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 
 DEBUG = True
 class ExperimentManagerHandler(SaveableManagerHandler):
-    def object_active_experiment_set_changed(self, info):
+    def object_experiment_set_changed(self, info):
         if info.initialized:
             info.ui.title = info.object.title
 
@@ -57,7 +57,7 @@ class ExperimentManager(Manager):
 
     experiment_config = None
 
-    active_experiment_set = Instance(ExperimentSet, ())
+    experiment_set = Instance(ExperimentSet)
 
     pyscript_runner = Instance(PyScriptRunner)
 
@@ -86,8 +86,8 @@ class ExperimentManager(Manager):
 #    save_button = Button
 #    default_save_directory = Str
 
-    title = DelegatesTo('active_experiment_set', prefix='name')
-#    stats = DelegatesTo('active_experiment_set')
+    title = DelegatesTo('experiment_set', prefix='name')
+#    stats = DelegatesTo('experiment_set')
 
 #    def load_experiment_configuration(self, p):
 #        anals = []
@@ -103,7 +103,7 @@ class ExperimentManager(Manager):
 #        a.runscript_name = args[1]
 #
 #        return a
-    dirty = DelegatesTo('active_experiment_set')
+    dirty = DelegatesTo('experiment_set')
 
     def save(self):
         self.save_experiment_set()
@@ -129,7 +129,7 @@ class ExperimentManager(Manager):
     def end_runs(self):
 
         self._alive = False
-        exp = self.active_experiment_set
+        exp = self.experiment_set
         exp.stats.nruns_finished = len(exp.automated_runs)
         exp.stop_stats_timer()
         self.info('automated runs complete')
@@ -152,7 +152,7 @@ class ExperimentManager(Manager):
 #        self.csv_data_manager = CSVDataManager()
 
 #        sm = self.get_spectrometer_manager()
-        exp = self.active_experiment_set
+        exp = self.experiment_set
         nruns = len(exp.automated_runs)
 
         err_message = ''
@@ -161,10 +161,13 @@ class ExperimentManager(Manager):
 
         exp.reset_stats()
 
+        exp.save_to_db()
+
         for i, arun in enumerate(exp.automated_runs):
             exp.current_run = arun
 
             arun.index = i
+            arun.experiment_name = exp.name
             arun.experiment_manager = self
             arun.spectrometer_manager = self.spectrometer_manager
             arun.extraction_line_manager = self.extraction_line_manager
@@ -173,7 +176,7 @@ class ExperimentManager(Manager):
             arun.db = self.db
             arun.massspec_importer = self.massspec_importer
             arun.runner = runner
-            arun.integration_time = 1.06
+            arun.integration_time = 1.04
             arun._debug = DEBUG
 #            if arun.identifier.startswith('B'):
 #                arun.isblank = True
@@ -239,7 +242,7 @@ class ExperimentManager(Manager):
                 self.end_runs()
                 return
 
-            delay = self.active_experiment_set.delay_between_runs
+            delay = self.experiment_set.delay_between_runs
             self.info('Delay between runs {}'.format(delay))
             #delay between runs
             st = time.time()
@@ -312,7 +315,8 @@ class ExperimentManager(Manager):
             t.start()
 
     def new_experiment_set(self):
-        self.active_experiment_set = ExperimentSet()
+#        self.experiment_set = ExperimentSet()
+        self.experiment_set = self._experiment_set_factory()
 
 
 #    def close(self, isok):
@@ -325,8 +329,8 @@ class ExperimentManager(Manager):
             path = self.open_file_dialog(default_directory=paths.experiment_dir)
 
         if path is not None:
-
-            exp = ExperimentSet(path=path)
+            exp = self._experiment_set_factory(path=path)
+#            exp = ExperimentSet(path=path)
             with open(path, 'rb') as f:
                 #read meta
                 #read until break
@@ -347,20 +351,20 @@ class ExperimentManager(Manager):
                                                       )
                     exp.automated_runs.append(arun)
 
-            self.active_experiment_set = exp
+            self.experiment_set = exp
 
 #            except Exception:
 #                self.warning_dialog('Invalid experiment file {}'.format(path))
     def save_as_experiment_set(self):
         p = self.save_file_dialog(default_directory=paths.experiment_dir)
         self._dump_experiment_set(p)
-        self.active_experiment_set.path = p
-        self.active_experiment_set.dirty = False
+        self.experiment_set.path = p
+        self.experiment_set.dirty = False
 
     def save_experiment_set(self):
-        p = self.active_experiment_set.path
+        p = self.experiment_set.path
         self._dump_experiment_set(p)
-        self.active_experiment_set.dirty = False
+        self.experiment_set.dirty = False
 
     def _dump_experiment_set(self, p):
 #        if not p:
@@ -372,7 +376,7 @@ class ExperimentManager(Manager):
             return
 
         self.info('saving experiment to {}'.format(p))
-        self.active_experiment_set.dirty = False
+        self.experiment_set.dirty = False
 
         header = ['identifier', 'extraction', 'measurement']
         with open(p, 'wb') as f:
@@ -380,16 +384,11 @@ class ExperimentManager(Manager):
             tab = lambda l: writeline('\t'.join(map(str, l)))
 
             #write metadata
-            writeline(self.active_experiment_set.name)
+            writeline(self.experiment_set.name)
             writeline('#' + '=' * 80)
             tab(header)
-            for arun in self.active_experiment_set.automated_runs:
+            for arun in self.experiment_set.automated_runs:
                 tab([arun.identifier, arun.measurement_script.name, arun.extraction_script.name])
-
-
-
-
-
 
 
 #===============================================================================
@@ -444,19 +443,19 @@ class ExperimentManager(Manager):
 # views
 #===============================================================================
     def execute_view(self):
-        editor = self.active_experiment_set._automated_run_editor(update='object.active_experiment_set.current_run.update')
+        editor = self.experiment_set._automated_run_editor(update='object.experiment_set.current_run.update')
 
         exc_grp = Group(
                         self._button_factory('execute_button',
                                              label='execute_label', align='right'),
-                       Item('object.active_experiment_set.stats',
+                       Item('object.experiment_set.stats',
                             style='custom'),
                        show_labels=False,
                        show_border=True,
                        label='Execute')
         v = View(
                  exc_grp,
-                 Item('object.active_experiment_set.automated_runs',
+                 Item('object.experiment_set.automated_runs',
                       style='custom',
                       show_label=False,
                       editor=editor
@@ -473,13 +472,13 @@ class ExperimentManager(Manager):
 #                       Item('test2'),
 #                       Item('open_button'),
 #                       Item('save_button'),
-                       Item('object.active_experiment_set.stats',
+                       Item('object.experiment_set.stats',
                             style='custom'),
                        show_labels=False,
                        show_border=True,
                        label='Execute')
         exp_grp = Group(
-                       Item('active_experiment_set',
+                       Item('experiment_set',
                        show_label=False, style='custom'),
                        show_border=True,
                        label='Experiment'
@@ -513,6 +512,14 @@ class ExperimentManager(Manager):
     def _get_execute_label(self):
         return 'Start' if not self._alive else 'Stop'
 #===============================================================================
+# factories
+#===============================================================================
+    def _experiment_set_factory(self, **kw):
+        return ExperimentSet(
+                             db=self.db,
+                             **kw)
+
+#===============================================================================
 # defaults
 #===============================================================================
     def _default_save_directory_default(self):
@@ -526,10 +533,13 @@ class ExperimentManager(Manager):
     def _db_default(self):
         db = IsotopeAdapter(kind='sqlite',
 #                            dbname=paths.isotope_db,
-                            dbname='/Users/ross/Pychrondata_test/testing/isotope_test.sqlite'
+                            dbname='/Users/ross/Pychrondata_experiment/data/isotopedb.sqlite'
                             )
         if db.connect():
             return db
+
+    def _experiment_set_default(self):
+        return ExperimentSet(db=self.db)
 
 if __name__ == '__main__':
     paths.build('_experiment')
@@ -537,6 +547,8 @@ if __name__ == '__main__':
 
     logging_setup('experiment_manager')
 
+    from globals import globalv
+    globalv.show_infos = False
 
 #    s = SpectrometerManager()
 #    s.bootstrap()

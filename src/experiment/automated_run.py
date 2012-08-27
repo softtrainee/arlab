@@ -42,6 +42,7 @@ class AutomatedRunAdapter(TabularAdapter):
     state_text = Property
     extraction_script_text = Property
     measurement_script_text = Property
+    can_edit = False
 
     def _columns_default(self):
         hp = ('Temp', 'temp_or_power')
@@ -49,11 +50,15 @@ class AutomatedRunAdapter(TabularAdapter):
         if power:
             hp = ('Power', 'temp_or_power')
 
-        return  [('', 'state'), ('id', 'identifier'), ('sample', 'sample'),
+        return  [('', 'state'), ('id', 'identifier'), ('aliquot', 'aliquot'),
+
+                 ('sample', 'sample'),
                hp, ('Duration', 'duration'),
                ('Extraction', 'extraction_script'),
                ('Measurement', 'measurement_script'),
                ]
+
+
     def _get_extraction_script_text(self, trait, item):
         return self.item.extraction_script.name
 
@@ -98,7 +103,9 @@ class AutomatedRun(Loggable):
 
     sample = Str
 
+    experiment_name = Str
     identifier = String(enter_set=True, auto_set=False)
+    aliquot = Int(1)
     state = Enum('not run', 'extraction', 'measurement', 'success', 'fail')
     runtype = Enum('Blank', 'Air')
     irrad_level = Str
@@ -122,11 +129,13 @@ class AutomatedRun(Loggable):
 
     update = Event
 
-    measurement_script = Property
+    measurement_script_dirty = Event
+    measurement_script = Property(depends_on='measurement_script_dirty')
     _measurement_script = Any
 
 
-    extraction_script = Property
+    extraction_script_dirty = Event
+    extraction_script = Property(depends_on='extraction_script_dirty')
     _extraction_script = Any
 
     _active_detectors = List
@@ -368,9 +377,9 @@ class AutomatedRun(Loggable):
                          )
             g.redraw()
 
-    def _state_changed(self):
-        #update the analysis table
-        self.update = True
+#    def _state_changed(self):
+#        #update the analysis table
+#        self.update = True
 
     def _build_tables(self, gn):
         dm = self.data_manager
@@ -395,7 +404,7 @@ class AutomatedRun(Loggable):
 
                 x = time.time() - starttime
 #                if i % 100 == 0 or x > self.graph.get_x_limits()[1]:
-                print x, self.graph.get_x_limits()[1]
+#                print x, self.graph.get_x_limits()[1]
                 if x > self.graph.get_x_limits()[1]:
                     self.graph.set_x_limits(0, x + 10)
 
@@ -515,7 +524,8 @@ class AutomatedRun(Loggable):
         #save to a database
 #            self.labnumber = 1
             identifier = self.identifier
-            identifier, aliquot = identifier.split('-')
+            aliquot = self.aliquot
+
             if identifier == 'B':
                 identifier = 1
                 sample = 'B'
@@ -525,7 +535,11 @@ class AutomatedRun(Loggable):
                 identifier = int(identifier)
 
             lab = db.add_labnumber(identifier, aliquot, sample=sample)
+
+            experiment = db.get_experiment(self.experiment_name)
             a = db.add_analysis(lab)
+            experiment.analyses.append(a)
+
             db.add_extraction(
                               a,
                               self.extraction_script.name,
@@ -641,12 +655,17 @@ class AutomatedRun(Loggable):
 #                       label='Scripts',
 #                       show_border=True
 #                       )
+        def readonly(n, **kw):
+            return Item(n, style='readonly', **kw)
+
         v = View(
                  VGroup(
                      Group(
-                     Item('identifier'),
-                     Item('irrad_level', label='Irradiation'),
-                     Item('sample', style='readonly'),
+                     HGroup(Item('identifier'),
+                            readonly('aliquot')
+                            ),
+                     readonly('sample'),
+                     readonly('irrad_level', label='Iradiation'),
                      Item('weight'),
                      Item('comment'),
                      show_border=True,

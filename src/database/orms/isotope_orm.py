@@ -32,6 +32,9 @@ Base = declarative_base()
 def foreignkey(name):
     return Column(Integer, ForeignKey('{}.id'.format(name)))
 
+def stringcolumn(size=40):
+    return Column(String(size))
+
 class ProjectTable(Base, NameMixin):
     users = relationship('UserTable', backref='project')
     samples = relationship('SampleTable', backref='project')
@@ -56,6 +59,8 @@ class AnalysisTable(Base, ResultsMixin):
     lab_id = foreignkey('LabTable')
     extraction_id = foreignkey('ExtractionTable')
     measurement_id = foreignkey('MeasurementTable')
+    experiment_id = foreignkey('ExperimentTable')
+
 
 class AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('AnalysisTable')
@@ -66,11 +71,11 @@ class LabTable(Base, BaseMixin):
     aliquot = Column(Integer)
     sample_id = foreignkey('SampleTable')
     analyses = relationship('AnalysisTable', backref='labnumber')
-#    irradiation_id = foreignkey('IrradiationTable')
+    irradiation_id = foreignkey('IrradiationPositionTable')
 
 
 class ScriptTable(BaseMixin):
-    script_name = Column(String(80))
+    script_name = stringcolumn(80)
     script_blob = Column(BLOB)
 
 
@@ -90,5 +95,16 @@ class ExtractionTable(Base, ScriptTable):
                           uselist=False
                           )
 
+class IrradiationPositionTable(Base, BaseMixin):
+    labnumber = relationship('LabTable', backref='irradiation_position',
+                             uselist=False
+                             )
+    irradiation_id = foreignkey('IrradiationTable')
 
+class IrradiationTable(Base, NameMixin):
+    positions = relationship('IrradiationPositionTable', backref='irradiation')
+    level = stringcolumn()
+
+class ExperimentTable(Base, NameMixin):
+    analyses = relationship('AnalysisTable', backref='experiment')
 #============= EOF =============================================
