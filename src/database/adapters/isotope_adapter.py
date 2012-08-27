@@ -21,7 +21,7 @@ from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 from src.paths import paths
 from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
     MaterialTable, AnalysisTable, AnalysisPathTable, LabTable, ExtractionTable, \
-    MeasurementTable
+    MeasurementTable, ExperimentTable
 #import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
@@ -42,13 +42,20 @@ class IsotopeAdapter(DatabaseAdapter):
     selector_klass = IsotopeAnalysisSelector
     path_table = AnalysisPathTable
 
-    def initialize_database(self):
-        self.add_sample('B')
+#    def initialize_database(self):
+#        self.add_sample('B')
+#        self.commit()
 #        self.add_labnumber('A')
 
-    #===========================================================================
-    # adders
-    #===========================================================================
+#===========================================================================
+# adders
+#===========================================================================
+
+    @add
+    def add_experiment(self, name, **kw):
+        exp = ExperimentTable(name=name, **kw)
+        return exp, True
+
     @add
     def add_extraction(self, analysis, name, **kw):
         ex = ExtractionTable(script_name=name, **kw)
@@ -199,6 +206,10 @@ class IsotopeAdapter(DatabaseAdapter):
 #===========================================================================
 # getters single
 #===========================================================================
+    @get_one
+    def get_experiment(self, name):
+        return ExperimentTable
+
     @get_one
     def get_analysis(self, rid):
         return AnalysisTable, 'lab_id'
