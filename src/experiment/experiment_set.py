@@ -93,6 +93,8 @@ def measurement_path(name):
     return os.path.join(paths.scripts_dir, 'measurement', name)
 
 class BatchEdit(HasTraits):
+    batch = Bool(False)
+
     measurement_scripts = List
     measurement_script = Str
     orig_measurement_script = Str
@@ -112,8 +114,14 @@ class BatchEdit(HasTraits):
     apply_duration = Bool
     orig_duration = Float
 
+    position = Int
+    apply_position = Bool
+    orig_position = Int
+    auto_increment_position = Bool
+    auto_increment_step = Int(1)
+
     def apply_edits(self, runs):
-        for ri in runs:
+        for i, ri in enumerate(runs):
             for name in ['extraction', 'measurement']:
                 sname = '{}_script'.format(name)
                 if getattr(self, 'apply_{}'.format(sname)):
@@ -123,9 +131,18 @@ class BatchEdit(HasTraits):
                         ri.configuration[sname] = ni
                         setattr(ri, '{}_dirty'.format(sname), True)
 
-            for attr, name in [('temp_or_power', 'power'), ('duration', 'duration')]:
+            for attr, name in [('temp_or_power', 'power'),
+                               ('duration', 'duration'),
+                               ]:
                 if getattr(self, 'apply_{}'.format(name)):
                     setattr(ri, attr, getattr(self, name))
+
+            if self.apply_position:
+                if self.auto_increment_position:
+                    pos = i * self.auto_increment_step + self.position
+                    ri.position = pos
+                else:
+                    ri.position = self.position
 #            ri.temp_or_power = self.power
 
 
@@ -137,7 +154,7 @@ class BatchEdit(HasTraits):
 #
 #    def _power_changed(self):
 
-    @on_trait_change('measurement_script,extraction_script,power,duration')
+    @on_trait_change('measurement_script,extraction_script,power,duration,position')
     def _changed(self, obj, name, old, new):
         ap = getattr(self, name) != getattr(self, 'orig_{}'.format(name))
         setattr(self, 'apply_{}'.format(name), ap)
@@ -149,6 +166,7 @@ class BatchEdit(HasTraits):
                    'extraction_script',
                    'power',
                    'duration',
+                   'position'
                    ]:
             setattr(self, 'apply_{}'.format(k), False)
 
@@ -171,7 +189,15 @@ class BatchEdit(HasTraits):
                            sgroup('extraction'),
                            sgroup('measurement'),
                            fgroup('power'),
-                           fgroup('duration')
+                           fgroup('duration'),
+                           VGroup(
+                                  fgroup('position'),
+                                  HGroup(spring,
+                                         Item('auto_increment_position'),
+                                         Item('auto_increment_step', label='Step'),
+                                         enabled_when='batch'
+                                         )
+                                  )
                            ),
                     title='Batch Edit',
                     kind='livemodal',
@@ -221,6 +247,7 @@ class ExperimentSet(Loggable):
             ms = selected.measurement_script.name
             es = selected.extraction_script.name
             be = BatchEdit(
+                           batch=len(self.selected) > 1,
                            measurement_scripts=self.measurement_scripts,
                            measurement_script=ms,
                            orig_measurement_script=ms,
@@ -229,13 +256,14 @@ class ExperimentSet(Loggable):
                            extraction_script=es,
                            orig_extraction_script=es,
 
-
                            power=selected.temp_or_power,
                            orig_power=selected.temp_or_power,
 
                            duration=selected.duration,
-                           orig_duration=selected.duration
+                           orig_duration=selected.duration,
 
+                           position=selected.position,
+                           orig_position=selected.position
 
                            )
 
@@ -347,9 +375,24 @@ class ExperimentSet(Loggable):
 
 
     def _apply_fired(self):
-        for s in self.heat_schedule.steps:
-            a = AutomatedRun(heat_step=s)
+        for i, s in enumerate(self.heat_schedule.steps):
+#            a = AutomatedRun(heat_step=s)
+            a = self.automated_run_factory(temp_or_power=s.temp_or_power,
+                                         duration=s.duration,
+                                         )
+#            a = self.automated_run.clone_traits()
+#            a.load_scripts=self.loaded_scripts
+#            a.configuration=self._b
+#            self._bind_automated_run(a)
+
+#            a.temp_or_power = s.temp_or_power
+#            a.duration = s.duration
+            a.aliquot += i
             self.automated_runs.append(a)
+
+        self.automated_run.aliquot = a.aliquot + 1
+
+
 
     def _extraction_script_changed(self):
         self.automated_run.configuration['extraction_script'] = os.path.join(paths.scripts_dir,
@@ -461,6 +504,16 @@ class ExperimentSet(Loggable):
 #===============================================================================
 # factories
 #===============================================================================
+    def automated_run_factory(self, **kw):
+        extraction = self.extraction_script
+        measurement = self.measurement_script
+        arun = self.automated_run
+        return self._automated_run_factory(extraction, measurement,
+                                           identifier=arun.identifier,
+                                           position=arun.position,
+                                           aliquot=arun.aliquot
+                                           )
+
     def _automated_run_factory(self, extraction, measurement, **kw):
         '''
              always use this factory for new AutomatedRuns
@@ -472,9 +525,12 @@ class ExperimentSet(Loggable):
                          scripts=self.loaded_scripts,
                          **kw
                          )
+        self._bind_automated_run(a)
+        return a
+
+    def _bind_automated_run(self, a):
         a.on_trait_change(self.update_loaded_scripts, '_measurement_script')
         a.on_trait_change(self.update_loaded_scripts, '_extraction_script')
-        return a
 
 #===============================================================================
 # defaults
@@ -511,32 +567,37 @@ class ExperimentSet(Loggable):
                               )
 
 
-        analysis_table = Item('automated_runs', show_label=False,
-                              editor=self._automated_run_editor(
-#                                                                update='object.current_run.update, object.automated_run.update'
-                                                                ),
-                              height=0.5
-                             )
+        analysis_table = VGroup(Item('automated_runs', show_label=False,
+                                    editor=self._automated_run_editor(),
+#                                    height=0.5
+                                    ), show_border=True,
+
+                                label='Analyses'
+                                )
 
         heat_schedule_table = Item('heat_schedule', style='custom',
                                    show_label=False,
                                    height=0.35
                                    )
-        v = View(
-                 HGroup(
-                 VGroup(
-                        new_analysis,
+
+
+        script_grp = VGroup(
                         Item('extraction_script',
                              label='Extraction',
-                             editor=EnumEditor(name='extraction_scripts',
-#                                                                     evaluate=lambda x:x
-                                                                    )),
+                             editor=EnumEditor(name='extraction_scripts')),
                         Item('measurement_script',
                              label='Measurement',
-                             editor=EnumEditor(name='measurement_scripts',
-#                                                                     evaluate=lambda x:x
-                                                                    )),
-                        ),
+                             editor=EnumEditor(name='measurement_scripts')),
+                        show_border=True,
+                        label='Scripts'
+                        )
+
+        v = View(
+                 HGroup(
+                        VGroup(new_analysis,
+                               script_grp
+                               ),
+
                  VGroup(
                          heat_schedule_table,
                          HGroup(spring, Item('apply', enabled_when='ok_to_add'),

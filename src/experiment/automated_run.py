@@ -50,9 +50,10 @@ class AutomatedRunAdapter(TabularAdapter):
         if power:
             hp = ('Power', 'temp_or_power')
 
-        return  [('', 'state'), ('id', 'identifier'), ('aliquot', 'aliquot'),
+        return  [('', 'state'), ('RunID', 'identifier'), ('Aliquot', 'aliquot'),
 
-                 ('sample', 'sample'),
+                 ('Sample', 'sample'),
+                 ('Position', 'position'),
                hp, ('Duration', 'duration'),
                ('Extraction', 'extraction_script'),
                ('Measurement', 'measurement_script'),
