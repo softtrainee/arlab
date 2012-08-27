@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Str, String, Button, List, Any, Event, \
-    Dict, Property, Bool, Int
+    Dict, Property, Bool, Int, Enum
 
 from traitsui.api import View, Item, TabularEditor, EnumEditor, ButtonEditor, \
     HGroup, VGroup, spring, ListEditor, InstanceEditor, Spring
@@ -33,6 +33,7 @@ from src.graph.time_series_graph import TimeSeriesGraph
 #@todo: added multiple parameter queries
 
 from traits.api import HasTraits
+from pyface.timer.do_later import do_later
 class TableSelector(HasTraits):
     parameter = String
     parameters = Property
@@ -132,8 +133,11 @@ class DBSelector(Loggable):
 
     _db = DatabaseAdapter
 
-    dclicked = Event
+#    dclicked = Event
+    dclicked = Any
     selected = Any
+#    activated = Any
+#    selected_row = Int
     column_clicked = Any
 
     wx = 0.4
@@ -151,7 +155,7 @@ class DBSelector(Loggable):
     reverse_sort = False
     _sort_field = None
 
-    limit = Int(100)
+    limit = Int(30)
     date_str = 'rundate'
 
     multi_select_graph = Bool(False)
@@ -159,9 +163,19 @@ class DBSelector(Loggable):
 
     queries = List(Query)
 
+    style = Enum('normal', 'simple')
+
     def __init__(self, *args, **kw):
         super(DBSelector, self).__init__(*args, **kw)
         self._load_hook()
+
+#    def _activated_changed(self):
+#        print self.activated
+#        if self.activated:
+#            print self.activated.rid
+#
+#    def _selected_changed(self):
+#        print self.selected
 
     def _queries_default(self):
         return [self._query_factory(removable=False)]
@@ -205,7 +219,7 @@ class DBSelector(Loggable):
         return HGroup(
                         Item('open_button', editor=ButtonEditor(label_value='open_button_label'),
                              show_label=False),
-                        spring, Item('search', show_label=False))
+                        spring, Item('search', show_label=False), defined_when='style=="normal"')
 
     def traits_view(self):
 
@@ -219,7 +233,8 @@ class DBSelector(Loggable):
                     style='custom',
                     editor=ListEditor(mutable=False,
                                       style='custom',
-                                      editor=InstanceEditor()))
+                                      editor=InstanceEditor()),
+                     defined_when='style=="normal"')
 #        jt = self._get__join_table_parameters()
 ##        print jt
 #        if jt is not None:
@@ -234,6 +249,8 @@ class DBSelector(Loggable):
         editor = TabularEditor(adapter=self.tabular_adapter(),
                                dclicked='object.dclicked',
                                selected='object.selected',
+#                               activated='object.activated',
+#                               selected_row='selected_row',
                                column_clicked='object.column_clicked',
                                editable=False,
                                operations=['move', ],
@@ -255,7 +272,7 @@ class DBSelector(Loggable):
 
                  resizable=True,
                  width=600,
-                 height=500,
+                 height=650,
                  x=0.1,
                  y=0.1,
                  title=self.title
@@ -317,12 +334,14 @@ class DBSelector(Loggable):
     def _execute_query(self, param=None, comp=None, criteria=None):
         if param is None:
             param = self.parameter
-
+        self.parameter = param
         if comp is None:
             comp = self.comparator
+        self.comparator = comp
 
         if criteria is None:
             criteria = self.criteria
+        self.criteria = criteria
 
         db = self._db
         if db is not None:
@@ -331,12 +350,11 @@ class DBSelector(Loggable):
             if s is None:
                 return
 
-            table, _col = param.split('.')
             kw = dict(filter_str=s,
                       limit=self.limit,
                       order=self._get_order()
                       )
-            print table, _col
+#            table, _ = param.split('.')
 #            if not table == self.query_table.__tablename__:
 #                kw['join_table'] = table
 
@@ -355,7 +373,8 @@ class DBSelector(Loggable):
             self.results = []
             if dbs:
                 for di in dbs:
-                    d = self.result_klass(_db_result=di)
+                    d = self._result_factory(di)
+#                    d = self.result_klass(_db_result=di)
                     d.load()
                     d._loadable = True
                     self.results.append(d)
@@ -363,6 +382,18 @@ class DBSelector(Loggable):
 #                        self.results.append(d)
 
             self._sort_columns(self.results)
+
+#            self.activated = self.results[-1:]
+#            self.selected = self.results[-1:]
+#            self.selected_row = 10
+#            f = lambda: self.trait_set(selected=self.results[30:31],
+#                                       activated=self.results[30:31]
+#                                       )
+#
+#            do_later(f)
+#            
+    def _result_factory(self, di, **kw):
+        return self.result_klass(_db_result=di, **kw)
 
     def _open_selected(self):
         s = self.selected
@@ -455,19 +486,24 @@ class DBSelector(Loggable):
                     reverse=self.reverse_sort)
         self._sort_field = field
 
-    def _dclicked_fired(self):
+#    def _dclicked_fired(self):
+    def _dclicked_changed(self):
         self._open_selected()
 
     def _open_button_fired(self):
         self._open_selected()
 
-    def _search_fired(self):
-        self._execute_query()
-
-    def _omit_bogus_changed(self):
-        self._execute_query()
-
+#    def _search_fired(self):
+#        self._execute_query()
+#
+#    def _omit_bogus_changed(self):
+#        self._execute_query()
+#
     def _limit_changed(self):
+
+
+
+
         self._execute_query()
 
     def _column_clicked_changed(self, event):

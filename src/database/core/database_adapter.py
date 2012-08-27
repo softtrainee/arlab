@@ -308,12 +308,13 @@ class DatabaseAdapter(Loggable):
         if s:
             s.edit_traits()
 
-    def selector_factory(self):
-        self.selector = self._selector_factory()
+    def selector_factory(self, **kw):
+        self.selector = self._selector_factory(**kw)
+        return self.selector
 
-    def _selector_factory(self):
+    def _selector_factory(self, **kw):
         if self.selector_klass:
-            s = self.selector_klass(_db=self)
+            s = self.selector_klass(_db=self, **kw)
             s.load_recent()
             return s
 

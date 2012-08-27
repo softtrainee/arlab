@@ -32,6 +32,7 @@ from src.database.orms.isotope_orm import AnalysisTable
 from src.graph.regression_graph import StackedTimeSeriesRegressionGraph
 from src.database.isotope_analysis.analyzer import Analyzer
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
+from src.database.core.base_results_adapter import BaseResultsAdapter
 
 class AnalysisResult(DBResult):
     title_str = 'Analysis'
@@ -52,6 +53,10 @@ class AnalysisResult(DBResult):
 
     iso_keys = None
     intercepts = None
+
+    @property
+    def labnumber(self):
+        return self._db_result.labnumber
 
     def traits_view(self):
         info = self._get_info_grp()
@@ -163,12 +168,22 @@ class AnalysisResult(DBResult):
                            )
         return keys, sniffs, signals, baselines
 
+
+class IsotopeResultsAdapter(BaseResultsAdapter):
+    columns = [('ID', 'rid'),
+               ('Labnumber', 'labnumber'),
+               ('Date', 'rundate'),
+               ('Time', 'runtime')
+               ]
+
 class IsotopeAnalysisSelector(DBSelector):
     title = 'Recall Analyses'
 
     parameter = String('AnalysisTable.rundate')
     query_table = AnalysisTable
     result_klass = AnalysisResult
+
+    tabular_adapter = IsotopeResultsAdapter
 #    multi_graphable = Bool(True)
 
 #    def _load_hook(self):

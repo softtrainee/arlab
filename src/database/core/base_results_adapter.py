@@ -42,4 +42,5 @@ class RIDResultsAdapter(BaseResultsAdapter):
                ('Time', 'runtime')
                ]
 
+
 #============= EOF =============================================

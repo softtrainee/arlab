@@ -108,20 +108,29 @@ class OpenExperimentSetAction(Action):
 #        manager.save_as_experiment_set()
 
 
-
-
-class RecallAnalysisAction(Action):
-    '''
-    '''
-    description = 'Recall an Analysis'
-    name = 'Recall Analysis'
+class OpenRecentTableAction(Action):
+    description = 'Open the Recent Analysis Table'
+    name = 'Lab Table'
     accelerator = 'Ctrl+R'
 
     def perform(self, event):
-        '''
-        '''
         manager = get_manager(event)
-        manager.recall_analysis()
+        manager.open_recent()
+
+#class RecallAnalysisAction(Action):
+#    '''
+#    '''
+#    description = 'Recall an Analysis'
+#    name = 'Recall Analysis'
+#    accelerator = 'Ctrl+R'
+#
+#    def perform(self, event):
+#        '''
+#        '''
+#        manager = get_manager(event)
+##        app = event.window.application
+##        man = app.get_service('src.experiment.recall_manager.RecallManager')
+#        manager.open_recent()
 
 
 #===============================================================================
