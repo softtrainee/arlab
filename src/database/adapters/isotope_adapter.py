@@ -270,8 +270,9 @@ if __name__ == '__main__':
                         kind='sqlite')
     ia.connect()
 
-    dbs = IsotopeAnalysisSelector(_db=ia)
-    dbs._execute_query()
+    dbs = IsotopeAnalysisSelector(_db=ia, style='simple')
+#    dbs._execute_query()
+    dbs.load_recent()
 
     dbs.configure_traits()
 #    ia.add_user(project=p, name='mosuer', commit=True)

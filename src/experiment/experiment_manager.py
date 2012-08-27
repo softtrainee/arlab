@@ -111,8 +111,11 @@ class ExperimentManager(Manager):
     def save_as(self):
         self.save_as_experiment_set()
 
-    def recall_analysis(self):
-        pass
+    def open_recent(self):
+        db = self.db
+
+        selector = db.selector_factory(style='simple')
+        self.open_view(selector)
 
 #    def get_spectrometer_manager(self):
 #        sm = self.spectrometer_manager

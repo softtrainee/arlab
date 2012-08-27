@@ -39,6 +39,7 @@ class ExperimentPlugin(CorePlugin):
 #                          protocol='src.experiments.experiments_manager.ExperimentsManager',
                           factory=self._factory
                           )
+
 #        so1 = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
 #                           factory='src.experiments.process_view.ProcessView'
 #                           )

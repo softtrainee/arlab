@@ -56,11 +56,12 @@ class ExperimentActionSet(WorkbenchActionSet):
 #                       class_name='{}:SaveAsExperimentSetAction'.format(BASE)
 #
 #                       ),
-                Action(name='Recall',
-                       path=PATH,
-                       class_name='{}:RecallAnalysisAction'.format(BASE)
+                Action(name='Lab Table',
+                       path=PATH + '/Recall',
+                       class_name='{}:OpenRecentTableAction'.format(BASE)
 
                        ),
+
                 Action(name='Execute',
                        path=PATH,
                        class_name='{}:ExecuteExperimentSetAction'.format(BASE)
