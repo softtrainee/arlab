@@ -186,11 +186,12 @@ class VideoStageManager(StageManager):
                         user='underlay')
 
         s = self.stage_controller
-        xa = s.axes['x'].drive_ratio
-        ya = s.axes['y'].drive_ratio
+        if s.axes:
+            xa = s.axes['x'].drive_ratio
+            ya = s.axes['y'].drive_ratio
 
-        self._drive_xratio = xa
-        self._drive_yratio = ya
+            self._drive_xratio = xa
+            self._drive_yratio = ya
 
         self._update_zoom(0)
 

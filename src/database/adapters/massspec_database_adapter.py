@@ -78,22 +78,24 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 # adders
 #===============================================================================
     @add
-    def add_analysis(self, rid, runtype, **kw):
+    def add_analysis(self, rid, aliquot, irradpos, runtype, **kw):
         '''
         '''
+
+        rid = '{}-{}'.format(rid, aliquot)
         analysis = self.get_analysis(rid)
         if analysis is None:
-            args = rid.split('-')
-            r = int(args[0])
-            d = int(args[1]) if len(args) == 2 else None
+#            rid, aliquot = rid.split('-')
+#            r = int(args[0])
+#            d = int(args[1]) if len(args) == 2 else None
 
 
             #query the IrradiationPositionTable
-            irradpos = self.get_irradiation_position(r)
+            irradpos = self.get_irradiation_position(irradpos)
 
             analysis = AnalysesTable(RID=rid,
-                                     IrradPosition=r,
-                                     Aliquot=d,
+                                     IrradPosition=irradpos.IrradPosition,
+                                     Aliquot=aliquot,
                                      RunDateTime=func.current_timestamp(),
                                      LoginSessionID=1,
                                      SpecRunType=runtype,
@@ -124,7 +126,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         iso = self.get_isotope(iso)
         pk = PeakTimeTable(PeakTimeBlob=blob)
         if iso is not None:
-            iso.peak_time_series.append(pk)
+            iso.peak_time_series = pk
             return pk, True
 
         return pk, False

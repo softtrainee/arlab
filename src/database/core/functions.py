@@ -87,11 +87,12 @@ def _getter(getfunc, func, obj, name,
     try:
         return getattr(q, getfunc)()
     except sqlalchemy.exc.SQLAlchemyError, e:
-        print 'get_one, e1', e
+#        print 'get_one, e1', e
         try:
             return q.limit(100).all()[-1]
         except (sqlalchemy.exc.SQLAlchemyError, IndexError), e:
-            print 'get_one, e2', e
+#            print 'get_one, e2', e    
+            pass
 
 def delete_one(func):
     def _delete_one(obj, name, *args, **kw):

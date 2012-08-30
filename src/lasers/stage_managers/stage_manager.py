@@ -228,6 +228,9 @@ class StageManager(Manager):
 
         self.stage_controller.linear_move(*pos, **kw)
 
+    def move_to_hole(self, hole, **kw):
+        self._move_to_hole(hole, **kw)
+
     def set_xy(self, x, y):
         hole = self._get_hole_by_position(x, y)
         if hole:
@@ -409,12 +412,13 @@ class StageManager(Manager):
         self.info('Move complete')
         self.point_thread = None
 
-    def _move_to_hole(self, key):
+    def _move_to_hole(self, key, correct_position=True):
         self.info('Move to hole {}'.format(key))
 #        holes = self._stage_map.holes
         pos = self._stage_map.get_corrected_hole_pos(key)
+        print pos, 'poss'
         if pos is not None:
-            correct = True
+#            correct_position = True
             if abs(pos[0]) < 1e-6:
                 pos = self._stage_map.get_hole_pos(key)
                 #map the position to calibrated space
@@ -427,14 +431,14 @@ class StageManager(Manager):
                     self.info('using an interpolated value')
                 else:
                     self.info('using previously calculated corrected position')
-#                    correct = False
+#                    correct_position = False
 
             self.stage_controller.linear_move(block=True, *pos)
             if self.tray_calibration_manager.calibration_style == 'MassSpec':
                 if not self.tray_calibration_manager.isCalibrating():
-                    self._move_to_hole_hook(key, correct)
+                    self._move_to_hole_hook(key, correct_position)
             else:
-                self._move_to_hole_hook(key, correct)
+                self._move_to_hole_hook(key, correct_position)
 
             self.info('Move complete')
             self.update_axes(update_hole=False)

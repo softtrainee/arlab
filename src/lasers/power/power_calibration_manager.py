@@ -375,7 +375,7 @@ class PowerCalibrationManager(Manager):
 
         #also update logic board configuration file
         if self.parent is not None:
-            lb = self.parent.logic_board
+            lb = self.parent.laser_controller
             config = lb.get_configuration()
             section = 'PowerOutput'
             if not config.has_section(section):
@@ -565,7 +565,7 @@ class PowerCalibrationManager(Manager):
         return 'Stop' if self._alive else 'Start'
 
     def _get_coefficients(self):
-        return ','.join(['{:0.2f}'.format(c) for c in self._coefficients]) if self._coefficients else ''
+        return ','.join(['{:0.4f}'.format(c) for c in self._coefficients]) if self._coefficients else ''
 
     def _validate_coefficients(self, v):
         try:
@@ -625,7 +625,7 @@ class FusionsCO2PowerCalibrationManager(PowerCalibrationManager):
 #                pass
         #write coeffs to logic board config file
         if self.parent:
-            lb = self.parent.logic_board
+            lb = self.parent.laser_controller
             config = lb.get_configuration()
             sec = 'PowerMeter'
             if not config.has_section(sec):

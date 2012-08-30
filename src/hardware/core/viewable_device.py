@@ -14,7 +14,7 @@
 # limitations under the License.
 #===============================================================================
 #=============enthought library imports=======================
-from traits.api import Instance, Str, Property, Bool, CStr
+from traits.api import Instance, Str, Property, Bool, CStr, Button
 from traitsui.api import View, Item, Group, VGroup, HGroup, spring, ButtonEditor
 #=============standard library imports ========================
 
@@ -42,6 +42,14 @@ class ViewableDevice(ConfigLoadable):
     last_response = Str
 
     current_scan_value = CStr
+
+    reinitialize_button = Button('Reinitialize')
+
+    def _reinitialize(self):
+        self.bootstrap()
+
+    def _reinitialize_button_fired(self):
+        self._reinitialize()
 
     def _get_config_short_path(self):
         '''
@@ -84,16 +92,14 @@ class ViewableDevice(ConfigLoadable):
                      Item('current_scan_value', style='readonly'),
                      label='General'
                      )
-
-
         v = View(gen_grp)
 
         return v
 
     def info_view(self):
-        v = View(
-                 Group(
-                       VGroup(
+
+        info_grp = VGroup(
+                         Item('reinitialize_button', show_label=False),
                          Item('name', style='readonly'),
                          Item('klass', style='readonly', label='Class'),
                          Item('connected', style='readonly'),
@@ -101,10 +107,15 @@ class ViewableDevice(ConfigLoadable):
                          Item('config_short_path', style='readonly'),
                          Item('loaded', style='readonly'),
                          label='Info',
-                         ),
+                         )
+
+        v = View(
+                 Group(
+                       info_grp,
                        layout='tabbed'
                        )
                  )
+
         cg = self.get_control_group()
 
         config_group = self.get_configure_group()

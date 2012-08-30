@@ -96,7 +96,7 @@ class EthernetCommunicator(Communicator):
     host = None
     port = None
     handler = None
-
+    kind = 'UDP'
     def load(self, config, path):
         '''
         '''

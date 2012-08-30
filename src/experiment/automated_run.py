@@ -29,13 +29,17 @@ from src.loggable import Loggable
 from src.experiment.heat_schedule import HeatStep
 from src.graph.stacked_graph import StackedGraph
 from src.data_processing.regression.regressor import Regressor
-from src.scripts.extraction_line_script import ExtractionLineScript
+#from src.scripts.extraction_line_script import ExtractionLineScript
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
-from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.paths import paths
+#from src.database.adapters.isotope_adapter import IsotopeAdapter
+#from src.paths import paths
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
+from src.database.sync.repository import Repository
+
+
+HEATDEVICENAMES = ['Fusions Diode', 'Fusions CO2']
 
 class AutomatedRunAdapter(TabularAdapter):
 
@@ -43,6 +47,7 @@ class AutomatedRunAdapter(TabularAdapter):
     state_text = Property
     extraction_script_text = Property
     measurement_script_text = Property
+
     can_edit = False
 
     def _columns_default(self):
@@ -55,11 +60,13 @@ class AutomatedRunAdapter(TabularAdapter):
 
                  ('Sample', 'sample'),
                  ('Position', 'position'),
-               hp, ('Duration', 'duration'),
-               ('Extraction', 'extraction_script'),
-               ('Measurement', 'measurement_script'),
-               ]
-
+                 ('Autocenter', 'autocenter'),
+                 ('HeatDevice', 'heat_device_name'),
+                 hp,
+                 ('Duration', 'duration'),
+                 ('Extraction', 'extraction_script'),
+                 ('Measurement', 'measurement_script'),
+                 ]
 
     def _get_extraction_script_text(self, trait, item):
         return self.item.extraction_script.name
@@ -99,7 +106,8 @@ class AutomatedRun(Loggable):
     data_manager = Any
 
     db = Any
-    massspec_importer = Any
+    massspec_importer = Instance(MassSpecDatabaseImporter)
+    repository = Instance(Repository)
     runner = Any
     graph = Any
 
@@ -118,9 +126,13 @@ class AutomatedRun(Loggable):
     _duration = Float
     _temp_or_power = Float
 
+    heat_device_name = Str
+
     position = Int
     endposition = Int
     multiposition = Bool
+    autocenter = Bool
+
 
     weight = Float
     comment = Str
@@ -200,21 +212,18 @@ class AutomatedRun(Loggable):
 
         if file_name.endswith('.py'):
             klass = ExtractionLinePyScript
-            params = dict(root=source_dir,
-                    name=file_name,)
-        elif file_name.endswith('.rs'):
-            klass = ExtractionLineScript
-            params = dict(source_dir=source_dir,
-                    file_name=file_name,)
 
-        if klass:
+            hdn = self.heat_device_name.replace(' ', '_').lower()
+
             return klass(
+                    root=source_dir,
+                    name=file_name,
                     hole=self.position,
                     heat_duration=self.duration,
                     temp_or_power=self.temp_or_power,
-                    manager=self.extraction_line_manager,
+
                     runner=self.runner,
-                    **params
+                    heat_device_name=hdn
                     )
 
 #===============================================================================
@@ -223,6 +232,7 @@ class AutomatedRun(Loggable):
     def do_extraction(self):
         self.info('======== Extraction Started========')
         self.state = 'extraction'
+        self.extraction_script.manager = self.experiment_manager
 
         self._pre_extraction_save()
         if self.extraction_script.execute():
@@ -300,40 +310,41 @@ class AutomatedRun(Loggable):
         if ion is not None:
             ion.position(pos, detector, dac)
 
-#    def set_magnet_position(self, v, **kw):
-#        sm = self.spectrometer_manager
-#        if sm is not None:
-#            sm.spectrometer.set_magnet_position(v, **kw)
-
     def activate_detectors(self, dets):
         g = self.graph
-        if g is None:
-            g = StackedGraph(
-                             container_dict=dict(padding=5, bgcolor='gray',
-                                                 ),
-                             window_width=500,
-                             window_height=700,
-                             window_y=0.05 + 0.01 * self.index,
-                             window_x=0.6 + 0.01 * self.index,
-                             window_title='Plot Panel {}'.format(self.identifier)
-                             )
-            self.graph = g
+        if g is not None:
+            g.close()
 
+        g = StackedGraph(
+                         container_dict=dict(padding=5, bgcolor='gray',
+                                             ),
+                         window_width=500,
+                         window_height=700,
+                         window_y=0.05 + 0.01 * self.index,
+                         window_x=0.6 + 0.01 * self.index,
+                         window_title='Plot Panel {}-{}'.format(self.identifier, self.aliquot)
+                         )
+        self.graph = g
 
-            self.experiment_manager.open_view(self.graph)
+        self.experiment_manager.open_view(self.graph)
 #            do_later(self.graph.edit_traits)
+        dets.reverse()
+#        get_detector = lambda name: next((n for n in self._active_detectors if n.name == name), None)
 
-#        dets.reverse()
-        for i, l in enumerate(dets):
+        spec = self.spectrometer_manager.spectrometer
+#        for i, l in enumerate(dets):
+        for l in dets:
+#            l = dets[-(i + 1)]
 
-            l = dets[-(i + 1)]
+            det = spec.get_detector(l)
+#            if det is None:
+#            if not l in self._active_detectors:
+            g.new_plot(ytitle='{} Signal (fA)'.format(det.isotope))
+            g.new_series(type='scatter',
+                         marker='circle',
+                         marker_size=1.25,
+                         label=l)
 
-            if not l in self._active_detectors:
-                g.new_plot(ytitle='{} Signal (fA)'.format(l))
-                g.new_series(type='scatter',
-                             marker='circle',
-                             marker_size=1.25,
-                             label=l)
         g.set_x_limits(min=0, max=100)
 #        dets.reverse()
 
@@ -342,8 +353,8 @@ class AutomatedRun(Loggable):
 #                         marker_size=1.25,
 #                         label=l, plotid=i)
 
-
-        self._active_detectors = dets
+#        dets =
+        self._active_detectors = [spec.get_detector(n) for n in dets]
 #        do_later(self.experiment_manager.ui.control.Raise)
 
 #===============================================================================
@@ -364,7 +375,7 @@ class AutomatedRun(Loggable):
             y = g.get_data(plotid=pi, series=series, axis=1)[time_zero_offset:]
             x, y = zip(*zip(x, y))
             rdict = r._regress_(x, y, kind)
-            self.info('{} intercept {}+/-{}'.format(dn,
+            self.info('{} intercept {}+/-{}'.format(dn.name,
                                                     rdict['coefficients'][-1],
                                                  rdict['coeff_errors'][-1]
                                                  ))
@@ -393,7 +404,7 @@ class AutomatedRun(Loggable):
         dm = self.data_manager
         #build tables
         for di in self._active_detectors:
-            dm.new_table('/{}'.format(gn), di)
+            dm.new_table('/{}'.format(gn), di.name)
 
     def _peak_hop(self, name, detector, masses, ncounts, starttime, series):
         self.info('peak hopping {} detector={}'.format(name, detector))
@@ -482,7 +493,7 @@ class AutomatedRun(Loggable):
             dets = self._active_detectors
             n = len(dets)
             for pi, dn in enumerate(dets):
-                signal = signals[keys.index(dn)]
+                signal = signals[keys.index(dn.name)]
                 kw['plotid'] = n - (pi + 1)
                 func(x, signal, kw)
 
@@ -538,8 +549,18 @@ class AutomatedRun(Loggable):
         self.info('pre measurement save')
         dm = self.data_manager
         #make a new frame for saving data
-        dm.new_frame(directory='automated_runs',
-                     base_frame_name='{}-intensity'.format(self.identifier))
+
+        #the new frame is untracked and will be added to the git repo
+        #at post_measurement_save
+        dm.new_frame(
+                     path=os.path.join(self.repository.root,
+                                       '{}-{}.h5'.format(self.identifier, self.aliquot)
+                                       )
+#                     directory=self.repository.root,
+#                     directory='automated_runs',
+#                     base_frame_name='{}-{}'.format(self.identifier, self.aliquot)
+
+                     )
 
 
         #create initial structure
@@ -548,10 +569,10 @@ class AutomatedRun(Loggable):
         dm.new_group('signals')
 
 
+
     def _post_measurement_save(self):
         self.info('post measurement save')
         db = self.db
-
         if db:
         #save to a database
 #            self.labnumber = 1
@@ -560,7 +581,7 @@ class AutomatedRun(Loggable):
 
             if identifier == 'B':
                 identifier = 1
-                sample = 'B'
+                sample = 'BoneBlank'
             elif identifier == 'A':
                 identifier = 2
             else:
@@ -590,14 +611,57 @@ class AutomatedRun(Loggable):
                               )
 
             p = self.data_manager.get_current_path()
+
+            #use a path relative to the repo repo
+            p = './' + os.path.relpath(p, self.repository.root)
             db.add_analysis_path(p, analysis=a)
             db.commit()
 
+        #version control new analysis
+        self._version_control_analysis(p, a)
+        self._save_to_massspec()
+
+    def _version_control_analysis(self, apath, analysis):
+        repo = self.repository
+
+        ln = analysis.labnumber
+        identifier = '{}-{}'.format(ln.labnumber, ln.aliquot)
+
+        #add files to repo and commit
+        repo.add(os.path.basename(apath))
+        dbname = os.path.basename(self.db.dbname)
+        repo.add(dbname)
+        repo.commit('added analysis {}, updated isotopedb'.format(identifier))
+        repo.push()
+
+    def _save_to_massspec(self):
 #        #save to mass spec database
+        dm = self.data_manager
+        baselines = []
+        signals = []
+        detectors = []
+        for det in self._active_detectors:
+            ai = det.name
+            table = dm.get_table(ai, '/baselines')
+            bi = [(row['time'], row['value']) for row in table.iterrows()]
+
+#            table = dm.get_table('signals', '/{}'.format(ai))
+            table = dm.get_table(ai, '/signals')
+            si = [(row['time'], row['value']) for row in table.iterrows()]
+
+            baselines.append(bi)
+            signals.append(si)
+            detectors.append((ai, det.isotope))
+
         self.massspec_importer.add_analysis(self.identifier,
-                                            self.irrad_level,
-                                            self.sample,
-                                            self.runtype
+                                            self.aliquot,
+                                            self.identifier,
+                                            baselines,
+                                            signals,
+                                            detectors,
+#                                            self.irrad_level,
+#                                            self.sample,
+#                                            self.runtype
                                             )
 #===============================================================================
 # property get/set
@@ -607,7 +671,8 @@ class AutomatedRun(Loggable):
         def write_data(x, keys, signals):
 #            print x, keys, signals
 #            print grpname
-            for k in self._active_detectors:
+            for det in self._active_detectors:
+                k = det.name
                 t = dm.get_table(k, '/{}'.format(grpname))
                 nrow = t.row
                 nrow['time'] = x
@@ -710,6 +775,8 @@ class AutomatedRun(Loggable):
                      label='Info'
                      ),
                      Group(
+                         Item('heat_device_name', editor=EnumEditor(values=HEATDEVICENAMES)),
+                         Item('autocenter'),
                          Item('position'),
                          Item('multiposition', label='Multi. position run'),
                          Item('endposition'),

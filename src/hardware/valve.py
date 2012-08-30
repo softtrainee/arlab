@@ -133,7 +133,7 @@ class HardwareValve(Loggable):
 
         '''
         self._state_change = False
-        self.info('%s open' % mode)
+        self.info('open mode={}'.format(mode))
         self.debug = mode == 'debug'
         self._fsm.Open()
 
@@ -156,7 +156,7 @@ class HardwareValve(Loggable):
 
         '''
         self._state_change = False
-        self.info('%s close' % mode)
+        self.info('close mode={}'.format(mode))
 
         self.debug = mode == 'debug'
 #        if mode in ['auto', 'manual', 'debug', 'remote']:

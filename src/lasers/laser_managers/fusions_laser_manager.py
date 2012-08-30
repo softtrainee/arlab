@@ -40,24 +40,25 @@ from src.database.adapters.power_calibration_adapter import PowerCalibrationAdap
 
 from laser_manager import LaserManager
 from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
+
 class FusionsLaserManager(LaserManager):
     '''
     '''
 
     units = Property(depends_on='use_calibrated_power')
-    logic_board = Instance(FusionsLogicBoard)
+    laser_controller = Instance(FusionsLogicBoard)
     fiber_light = Instance(FiberLight)
 
-    beam = DelegatesTo('logic_board')
-    beammin = DelegatesTo('logic_board')
-    beammax = DelegatesTo('logic_board')
-    update_beam = DelegatesTo('logic_board')
+    beam = DelegatesTo('laser_controller')
+    beammin = DelegatesTo('laser_controller')
+    beammax = DelegatesTo('laser_controller')
+    update_beam = DelegatesTo('laser_controller')
     beam_enabled = Bool(True)
 
-    zoom = DelegatesTo('logic_board')
-    zoommin = DelegatesTo('logic_board')
-    zoommax = DelegatesTo('logic_board')
-    update_zoom = DelegatesTo('logic_board')
+    zoom = DelegatesTo('laser_controller')
+    zoommin = DelegatesTo('laser_controller')
+    zoommax = DelegatesTo('laser_controller')
+    update_zoom = DelegatesTo('laser_controller')
 
     pointer = Event
     pointer_state = Bool(False)
@@ -81,7 +82,7 @@ class FusionsLaserManager(LaserManager):
     record_label = Property(depends_on='_recording_power_state')
     _recording_power_state = Bool(False)
 
-    simulation = DelegatesTo('logic_board')
+    simulation = DelegatesTo('laser_controller')
 
     data_manager = None
     _data_manager_lock = None
@@ -297,7 +298,7 @@ class FusionsLaserManager(LaserManager):
         '''
         '''
         self.pointer_state = not self.pointer_state
-        self.logic_board.set_pointer_onoff(self.pointer_state)
+        self.laser_controller.set_pointer_onoff(self.pointer_state)
 
     def collect_baseline_brightness(self, **kw):
         bm = self.brightness_manager
@@ -327,8 +328,8 @@ class FusionsLaserManager(LaserManager):
             return chiller.get_faults(**kw)
 
     def do_motor_initialization(self, name):
-        if self.logic_board:
-            motor = getattr(self.logic_board, '{}_motor'.format(name))
+        if self.laser_controller:
+            motor = getattr(self.laser_controller, '{}_motor'.format(name))
             if motor is not None:
                 n = 4
                 pd = MProgressDialog(max=n, size=(550, 15))
@@ -341,7 +342,7 @@ class FusionsLaserManager(LaserManager):
         '''
         result = False
         if self.beam_enabled or force:
-            self.logic_board.set_beam_diameter(bd, **kw)
+            self.laser_controller.set_beam_diameter(bd, **kw)
             result = True
         else:
             self.info('beam disabled by lens configuration {}'.format(self.lens_configuration))
@@ -350,29 +351,36 @@ class FusionsLaserManager(LaserManager):
     def set_zoom(self, z, **kw):
         '''
         '''
-        self.logic_board.set_zoom(z, **kw)
+        self.laser_controller.set_zoom(z, **kw)
 
-    def move_to_hole(self, holenumber):
+#===============================================================================
+# pyscript interface
+#===============================================================================
+    def move_to_position(self, position):
         if self.stage_manager is not None:
-            if not self.stage_manager.opened:
-                #do_later opens the stage manager from the main thread
-                do_later(self.show_stage_manager)
+            self.stage_manager.move_to_hole(position)
 
-                #give the stage manager some time to open
-                time.sleep(1)
+#            if not self.stage_manager.opened:
+#                #do_later opens the stage manager from the main thread
+#                do_later(self.show_stage_manager)
+#
+#                #give the stage manager some time to open
+#                time.sleep(1)
 
-            self.stage_manager.move_to_hole(holenumber)
+    def set_stage_map(self, mapname):
+        if self.stage_manager is not None:
+            self.stage_manager.set_stage_map(mapname)
 
     def _enable_hook(self):
-        resp = self.logic_board._enable_laser_()
-        if self.logic_board.simulation:
+        resp = self.laser_controller._enable_laser()
+        if self.laser_controller.simulation:
             resp = True
 
         return resp
 
     def _disable_hook(self):
-        resp = self.logic_board._disable_laser_()
-        if self.logic_board.simulation:
+        resp = self.laser_controller._disable_laser()
+        if self.laser_controller.simulation:
             resp = True
 
         return resp
@@ -647,7 +655,7 @@ if __name__ == '__main__':
 #        sm = self.stream_manager
 #        dm = sm.data_manager
 #
-#        available_streams.append(self.logic_board)
+#        available_streams.append(self.laser_controller)
 #
 #        streams = sm.open_stream_loader(available_streams)
 #
@@ -675,7 +683,7 @@ if __name__ == '__main__':
 #        self.stage_manager.edit_traits()
 
 #    def show_motor_configurer(self):
-#        self.logic_board.configure_motors()
+#        self.laser_controller.configure_motors()
 
 #    def show_video(self):
 #        self.video_manager = VideoManager()

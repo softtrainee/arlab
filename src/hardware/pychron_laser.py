@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,16 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-
+from traits.api import HasTraits
+from traitsui.api import View, Item, TableEditor
+from src.hardware.core.core_device import CoreDevice
+from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
-from src.lasers.plugins.fusions.fusions_laser_plugin import FusionsLaserPlugin
 
-class FusionsDiodePlugin(FusionsLaserPlugin):
-    '''
-    '''
-    id = 'pychron.fusions.diode'
-    name = 'fusions_diode'
-    klass = ('src.lasers.laser_managers.fusions_diode_manager', 'FusionsDiodeManager')
-#============= EOF ====================================
+
+class PychronLaser(FusionsLogicBoard):
+    pass
+
+
+#============= EOF =============================================

@@ -15,14 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from pyface.action.api import Action
+#from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
 from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerManagerAction, \
     FPowerMapAction, FPowerCalibrationAction, FOpenLaserManagerAction, \
     FOpenStageVisualizerAction, FOpenPowerCalibrationAction, \
     FLoadStageVisualizerAction, FInitializeZoomAction, FInitializeBeamAction, \
     FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
-    FOpenPatternManagerAction
+    FOpenPatternManagerAction, LaserAction
 #from traits.api import on_trait_change
 
 #============= standard library imports ========================
@@ -41,7 +41,7 @@ def get_manager(_, event, app=None, window=None):
     return manager
 
 
-class DegasAction(Action):
+class DegasAction(LaserAction):
     def perform(self, event):
         manager = get_manager(None, event)
         if manager is not None:
@@ -50,7 +50,7 @@ class DegasAction(Action):
             open_manager(app, man)
 
 
-class ConfigureWatlowAction(Action):
+class ConfigureWatlowAction(LaserAction):
     def perform(self, event):
         manager = get_manager(None, event)
         if manager is not None:
