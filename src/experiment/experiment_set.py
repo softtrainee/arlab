@@ -21,8 +21,8 @@ from traitsui.api import View, Item, TabularEditor, VGroup, HGroup, spring, \
     EnumEditor
 #============= standard library imports ========================
 import os
-import time
-import datetime
+#import time
+#import datetime
 #============= local library imports  ==========================
 from src.experiment.automated_run import AutomatedRun, AutomatedRunAdapter
 from src.experiment.heat_schedule import HeatSchedule
@@ -30,6 +30,7 @@ from src.paths import paths
 from src.loggable import Loggable
 from src.experiment.batch_edit import BatchEdit
 from src.experiment.stats import ExperimentStats
+from src.helpers.filetools import str_to_bool
 
 
 def extraction_path(name):
@@ -71,6 +72,57 @@ class ExperimentSet(Loggable):
 
     selected = Any
     right_clicked = Any
+    def _run_parser(self, header, line, delim='\t'):
+        params = dict()
+        args = map(str.strip, line.split(delim))
+
+
+        #load strings
+        for attr in ['identifier', 'measurement', 'extraction', 'heat_device']:
+            params[attr] = args[header.index(attr)]
+
+        #load booleans
+        for attr in ['autocenter']:
+            param = args[header.index(attr)]
+            if param.strip():
+                params[attr] = str_to_bool(param)
+
+        #load numbers
+        for attr in ['duration', 'temp_or_power', 'position']:
+            param = args[header.index(attr)].strip()
+            if param:
+                params[attr] = float(param)
+
+        extraction = args[header.index('extraction')]
+        measurement = args[header.index('measurement')]
+
+        params['configuration'] = self._build_configuration(extraction, measurement)
+        return params
+
+    def load_automated_runs(self):
+        with open(self.path, 'rb') as f:
+            #read meta
+            #read until break
+            for line in f:
+                if line.startswith('#====='):
+                    break
+            delim = '\t'
+            header = map(str.strip, f.next().split(delim))
+            for line in f:
+#                args = map(str.strip, ai.split(delim))
+#                identifier = args[header.index('identifier')]
+
+#                extraction = args[header.index('extraction')]
+#                measurement = args[header.index('measurement')]
+
+#                hd = args[header.index('heat_device')]
+#                autocenter = str_to_bool(args[header.index('autocenter')])
+
+#                position = int(args[header.index('position')])
+
+                params = self._run_parser(header, line)
+                arun = self._automated_run_factory(**params)
+                self.automated_runs.append(arun)
 
     def _right_clicked_changed(self):
 
@@ -287,13 +339,17 @@ class ExperimentSet(Loggable):
         extraction = self.extraction_script
         measurement = self.measurement_script
         arun = self.automated_run
-        return self._automated_run_factory(extraction, measurement,
+
+        configuration = self._build_configuration(extraction, measurement)
+
+        return self._automated_run_factory(
                                            identifier=arun.identifier,
                                            position=arun.position,
-                                           aliquot=arun.aliquot
+                                           aliquot=arun.aliquot,
+                                           configuration=configuration
                                            )
 
-    def _automated_run_factory(self, extraction, measurement, **kw):
+    def _automated_run_factory(self, **kw):
         '''
              always use this factory for new AutomatedRuns
              it sets the configuration, loaded scripts and binds our update_loaded_script
@@ -303,11 +359,10 @@ class ExperimentSet(Loggable):
         #copy some of the last runs values
         if self.automated_runs:
             pa = self.automated_runs[-1]
-            for k in ['heat_device_name', 'autocenter']:
+            for k in ['heat_device', 'autocenter']:
                 kw[k] = getattr(pa, k)
 
         a = AutomatedRun(
-                         configuration=self._build_configuration(extraction, measurement),
                          scripts=self.loaded_scripts,
                          **kw
                          )

@@ -345,33 +345,16 @@ class ExperimentManager(Manager):
         if path is not None:
             exp = self._experiment_set_factory(path=path)
 #            exp = ExperimentSet(path=path)
-            with open(path, 'rb') as f:
-                #read meta
-                #read until break
-                for line in f:
-                    if line.startswith('#====='):
-                        break
-                delim = '\t'
-                header = map(str.strip, f.next().split(delim))
-                for ai in f:
-                    args = map(str.strip, ai.split(delim))
-                    identifier = args[header.index('identifier')]
-                    extraction = args[header.index('extraction')]
-                    measurement = args[header.index('measurement')]
-
-                    hd = args[header.index('heat_device')]
-                    autocenter = str_to_bool(args[header.index('autocenter')])
-
-                    arun = exp._automated_run_factory(
-                                                      extraction,
-                                                      measurement,
-                                                      identifier=identifier,
-                                                      heat_device_name=hd,
-                                                      autocenter=autocenter
-                                                      )
-                    exp.automated_runs.append(arun)
-
+#            try:
+            exp.load_automated_runs()
             self.experiment_set = exp
+#            except Exception, e:
+#
+#                import traceback
+#                traceback.print_stack()
+
+#                self.warning_dialog('Invalid Experiment file {}. Error- {}'.format(path, e))
+
 
 #            except Exception:
 #                self.warning_dialog('Invalid experiment file {}'.format(path))

@@ -92,17 +92,23 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 
             #query the IrradiationPositionTable
             irradpos = self.get_irradiation_position(irradpos)
+            params = dict(RID=rid,
+                         Aliquot=aliquot,
+                         RunDateTime=func.current_timestamp(),
+                         LoginSessionID=1,
+                         SpecRunType=runtype,
+                         )
+            #IrradPosition cannot be null
+            if irradpos is not None:
+                ip = irradpos.IrradPosition
+                sa = irradpos.SampleID
+            else:
+                ip = -2
+                sa = 0
 
-            analysis = AnalysesTable(RID=rid,
-                                     IrradPosition=irradpos.IrradPosition,
-                                     Aliquot=aliquot,
-                                     RunDateTime=func.current_timestamp(),
-                                     LoginSessionID=1,
-                                     SpecRunType=runtype,
-                                     RedundantSampleID=irradpos.SampleID
-                                     )
-
-
+            params['RedundantSampleID'] = sa
+            params['IrradPosition'] = ip
+            analysis = AnalysesTable(**params)
 
 #            sample = self.get_sample(sample)
 #            if sample is not None and \

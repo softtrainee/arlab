@@ -93,27 +93,27 @@ class OpenViewControllerAction(Action):
                      )
 
 
-class OpenDeviceStreamerAction(Action):
-    description = 'Open the device streamer manager'
-    name = 'Open Device Streamer'
-
-    enabled = False
-
-    def __init__(self, *args, **kw):
-        super(OpenDeviceStreamerAction, self).__init__(*args, **kw)
-        manager = get_manager(self.window)
-        if manager.device_stream_manager is not None:
-            self.enabled = True
-
-    def perform(self, event):
-        manager = get_manager(self.window)
-        manager.window = self.window
-        manager.show_device_streamer()
+#class OpenDeviceStreamerAction(Action):
+#    description = 'Open the device streamer manager'
+#    name = 'Open Device Streamer'
+#
+#    enabled = False
+#
+#    def __init__(self, *args, **kw):
+#        super(OpenDeviceStreamerAction, self).__init__(*args, **kw)
+#        manager = get_manager(self.window)
+#        if manager.device_stream_manager is not None:
+#            self.enabled = True
+#
+#    def perform(self, event):
+#        manager = get_manager(self.window)
+#        manager.window = self.window
+#        manager.show_device_streamer()
 
 
 class OpenPyScriptEditorAction(Action):
     def perform(self, event):
         manager = get_manager(self.window)
-        manager.open_pyscript_editor()
+        open_manager(event.window.application, manager.pyscript_editor)
 
 #============= EOF ====================================

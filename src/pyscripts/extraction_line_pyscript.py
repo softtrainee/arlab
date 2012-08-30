@@ -29,7 +29,7 @@ class ExtractionLinePyScript(PyScript):
     runner = Any
     _resource_flag = None
 
-    heat_device_name = None
+    heat_device = None
 
     def _runner_changed(self):
         self.runner.scripts.append(self)
@@ -49,7 +49,6 @@ class ExtractionLinePyScript(PyScript):
                  'acquire', 'release',
 
                  'move_to_position', 'heat_sample',
-                  'set_stage_map'
 
                  ]
         return cmds
@@ -75,19 +74,19 @@ class ExtractionLinePyScript(PyScript):
         result = self._manager_action([('move_to_position', (position,), {})
                                         ],
                                       protocol=ILaserManager,
-                                      name=self.heat_device_name
+                                      name=self.heat_device
                                       )
         self.report_result(result)
 
-    @verbose_skip
-    def set_stage_map(self, mapname=None):
-        self.info('set stage map to {}, using position correction={}'.format(mapname))
-        result = self._manager_action([('set_stage_map', (mapname), {})
-                                        ],
-                                      protocol=ILaserManager,
-                                      name=self.heat_device_name
-                                      )
-        self.report_result(result)
+#    @verbose_skip
+#    def set_stage_map(self, mapname=None):
+#        self.info('set stage map to {}, using position correction={}'.format(mapname))
+#        result = self._manager_action([('set_stage_map', (mapname), {})
+#                                        ],
+#                                      protocol=ILaserManager,
+#                                      name=self.heat_device
+#                                      )
+#        self.report_result(result)
 
     @verbose_skip
     def heat_sample(self, power=0, duration=0):
@@ -96,12 +95,12 @@ class ExtractionLinePyScript(PyScript):
                                        ('set_laser_power', (power,), {})
                                        ],
                                       protocol=ILaserManager,
-                                      name=self.heat_device_name
+                                      name=self.heat_device
                              )
         self.sleep(duration)
         self._manager_action([('disable_laser', (), {})],
                              protocol=ILaserManager,
-                             name=self.heat_device_name
+                             name=self.heat_device
                              )
 
     @verbose_skip

@@ -62,6 +62,7 @@ def str_to_bool(a):
 
     fks += [i.capitalize() for i in fks]
     fks += [i.upper() for i in fks]
+
     if a in tks:
         return True
     elif a in fks:

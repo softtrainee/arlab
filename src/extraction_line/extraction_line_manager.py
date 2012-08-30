@@ -387,9 +387,6 @@ class ExtractionLineManager(Manager):
     def get_script_state(self, key):
         return self.pyscript_editor.get_script_state(key)
 
-    def open_pyscript_editor(self):
-        self.pyscript_editor.edit_traits()
-
     def set_selected_explanation_item(self, obj):
         if self.explanation:
             selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
