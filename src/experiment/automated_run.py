@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str, String, Int, List, Enum, Property, \
+from traits.api import Any, Str, String, Int, CInt, List, Enum, Property, \
      Event, Float, Instance, Bool, cached_property, Dict, on_trait_change
 from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group
 from traitsui.tabular_adapter import TabularAdapter
@@ -61,7 +61,7 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Sample', 'sample'),
                  ('Position', 'position'),
                  ('Autocenter', 'autocenter'),
-                 ('HeatDevice', 'heat_device_name'),
+                 ('HeatDevice', 'heat_device'),
                  hp,
                  ('Duration', 'duration'),
                  ('Extraction', 'extraction_script'),
@@ -69,10 +69,12 @@ class AutomatedRunAdapter(TabularAdapter):
                  ]
 
     def _get_extraction_script_text(self, trait, item):
-        return self.item.extraction_script.name
+        if self.item.extraction_script:
+            return self.item.extraction_script.name
 
     def _get_measurement_script_text(self, trait, item):
-        return self.item.measurement_script.name
+        if self.item.measurement_script:
+            return self.item.measurement_script.name
 
     def _get_state_text(self):
         return ''
@@ -126,9 +128,9 @@ class AutomatedRun(Loggable):
     _duration = Float
     _temp_or_power = Float
 
-    heat_device_name = Str
+    heat_device = Str
 
-    position = Int
+    position = CInt
     endposition = Int
     multiposition = Bool
     autocenter = Bool
@@ -213,7 +215,7 @@ class AutomatedRun(Loggable):
         if file_name.endswith('.py'):
             klass = ExtractionLinePyScript
 
-            hdn = self.heat_device_name.replace(' ', '_').lower()
+            hdn = self.heat_device.replace(' ', '_').lower()
 
             return klass(
                     root=source_dir,
@@ -223,7 +225,7 @@ class AutomatedRun(Loggable):
                     temp_or_power=self.temp_or_power,
 
                     runner=self.runner,
-                    heat_device_name=hdn
+                    heat_device=hdn
                     )
 
 #===============================================================================
@@ -269,10 +271,10 @@ class AutomatedRun(Loggable):
 
     def do_baselines(self, ncounts, starttime, detector=None,
                      position=None, series=0):
-        sm = self.spectrometer_manager
-        if sm:
+        spec = self.spectrometer_manager.spectrometer
+        if spec:
             if position is not None:
-                sm.spectrometer.set_magnet_position(position)
+                spec.set_magnet_position(position)
 
         gn = 'baselines'
         self._build_tables(gn)
@@ -525,9 +527,10 @@ class AutomatedRun(Loggable):
     def _pre_extraction_save(self):
         # set our aliquot
         db = self.db
-        if self.identifier == 'B':
+        identifier = self.identifier
+        if identifier == 'B':
             identifier = 1
-        elif self.identifier == 'A':
+        elif identifier == 'A':
             identifier = 2
 
         ln = db.get_labnumber(identifier)
@@ -579,11 +582,13 @@ class AutomatedRun(Loggable):
             identifier = self.identifier
             aliquot = self.aliquot
 
+            sample = self.sample
             if identifier == 'B':
                 identifier = 1
                 sample = 'BoneBlank'
             elif identifier == 'A':
                 identifier = 2
+                sample = 'Air'
             else:
                 identifier = int(identifier)
 
@@ -775,7 +780,7 @@ class AutomatedRun(Loggable):
                      label='Info'
                      ),
                      Group(
-                         Item('heat_device_name', editor=EnumEditor(values=HEATDEVICENAMES)),
+                         Item('heat_device', editor=EnumEditor(values=HEATDEVICENAMES)),
                          Item('autocenter'),
                          Item('position'),
                          Item('multiposition', label='Multi. position run'),
