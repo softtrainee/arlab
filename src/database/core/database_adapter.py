@@ -90,6 +90,10 @@ class DatabaseAdapter(Loggable):
     def isConnected(self):
         return self.connected
 
+    def reset(self):
+        self.info('clearing current session. uncommitted changes will be deleted')
+        self.sess = None
+
     def connect(self, test=True):
         '''
         '''

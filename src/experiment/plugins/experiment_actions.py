@@ -31,6 +31,7 @@ def get_manager(event):
 
 class ExecuteExperimentSetAction(Action):
     name = 'Execute'
+    accelerator = 'Ctrl+E'
     def perform(self, event):
         man = get_manager(event)
 

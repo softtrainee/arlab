@@ -270,7 +270,8 @@ class ExtractionLineManager(Manager):
         if self.valve_manager is not None:
             if address:
                 name = self.valve_manager.get_name_by_address(address)
-            if description:
+
+            if description and description != '---':
                 name = self.valve_manager.get_name_by_description(description)
 
             result = self._change_valve_state(name, mode, action, **kw)
@@ -323,10 +324,14 @@ class ExtractionLineManager(Manager):
 
         func = getattr(self.valve_manager, '{}_by_name'.format(action))
 
-        claimer = self.valve_manager.get_system(sender_address)
         owned = False
-        if claimer:
-            owned = self.valve_manager.check_group_ownership(name, claimer)
+        try:
+            claimer = self.valve_manager.get_system(sender_address)
+            if claimer:
+                owned = self.valve_manager.check_group_ownership(name, claimer)
+        except AttributeError:
+            #no systems are defined
+            pass
 
         change = False
         if not owned:

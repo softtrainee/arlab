@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Event, Property, Instance, Bool, Str, Float, \
-    on_trait_change, DelegatesTo
+    on_trait_change, DelegatesTo, Interface, implements
 from traitsui.api import View, Item, VGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -32,11 +32,16 @@ from src.lasers.laser_managers.pulse import Pulse
 from src.paths import paths
 from src.hardware.meter_calibration import MeterCalibration
 
+class ILaserManager(Interface):
+    def move_to_position(self, pos):
+        pass
 
 class LaserManager(Manager):
     '''
         Base class for a GUI representation of a laser device
     '''
+    implements(ILaserManager)
+
     enable = Event
     enable_label = Property(depends_on='enabled')
     enabled_led = Instance(LED, ())
@@ -62,7 +67,7 @@ class LaserManager(Manager):
     _requested_power = Float
     _calibrated_power = None
     use_calibrated_power = Bool(True)
-    internal_meter_response = DelegatesTo('logic_board')
+    internal_meter_response = DelegatesTo('laser_controller')
 
     _power_calibration = None
 #===============================================================================
@@ -80,6 +85,8 @@ class LaserManager(Manager):
         bind_preference(self, 'window_x', '{}.x'.format(pref_id))
         bind_preference(self, 'window_y', '{}.y'.format(pref_id))
         bind_preference(self, 'use_calibrated_power', '{}.use_calibrated_power'.format(pref_id))
+
+        self.stage_manager.bind_preferences(pref_id)
 
     def enable_laser(self):
 
@@ -259,6 +266,7 @@ class LaserManager(Manager):
         else:
 
             self.disable_laser()
+
     def _use_video_changed(self):
         if not self.use_video:
             try:
@@ -395,7 +403,7 @@ class LaserManager(Manager):
                             configuration_dir_name=paths.monitors_dir,
                             name=self.monitor_name)
 
-        self.on_trait_change(lm.update_imb, 'logic_board:internal_meter_response')
+        self.on_trait_change(lm.update_imb, 'laser_controller:internal_meter_response')
         return lm
 
     def _stage_manager_factory(self, args):

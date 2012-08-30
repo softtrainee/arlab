@@ -119,7 +119,6 @@ HTML_HELP = '''
 class PyScript(Loggable):
     _text = None
     manager = Any
-    laser_manager = Any
     parent = Any
     root = Str
     parent_script = Any
@@ -449,23 +448,27 @@ class PyScript(Loggable):
 #        if self.controller is not None:
 #            self.controller.end()
 
-    def _manager_action(self, func, manager=None, *args, **kw):
+    def _manager_action(self, func, name=None, protocol=None, *args, **kw):
 #        man = self._get_manager()
         man = self.manager
-#        print man, manager, func
-        if manager is not None and man is not None:
+
+        if protocol is not None and man is not None:
             app = man.application
             if app is not None:
-                man = app.get_service(manager)
+                args = (protocol,)
+                if name is not None:
+                    args = (protocol, 'name=="{}"'.format(name))
 
+                man = app.get_service(*args)
+
+#        print man, manager, 'sadf'
         if man is not None:
-
             if not isinstance(func, list):
                 func = [(func, args, kw)]
-
             for f, a, k in func:
                 getattr(man, f)(*a, **k)
-
+        else:
+            self.warning('could not find manager {}'.format(name))
 #    def _get_manager(self):
 #        return self.manager
 

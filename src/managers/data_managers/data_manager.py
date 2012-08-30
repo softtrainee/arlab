@@ -60,6 +60,9 @@ class DataManager(Manager):
         if base_frame_name is None:
             base_frame_name = 'scan'
 
+        '''
+            if directory is an absolute path paths.data_dir is not joined
+        '''
         base = os.path.join(paths.data_dir, directory)
         if not os.path.isdir(base):
             os.mkdir(base)

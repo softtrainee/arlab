@@ -405,12 +405,12 @@ class Spectrometer(SpectrometerDevice):
 #                              L2=Detector(name='L2', relative_position=0.8, active=True),
 #                              CDD=Detector(name='CDD', relative_position=0.7, active=False),
 #                              )
-        self.detectors = [Detector(name='H2', color='black', relative_position=1.2, active=True),
-                          Detector(name='H1', color='red', relative_position=1.1, active=True),
-                          Detector(name='AX', color='violet', relative_position=1, active=True),
-                          Detector(name='L1', color='maroon', relative_position=0.9, active=True),
-                          Detector(name='L2', color='yellow', relative_position=0.8, active=True),
-                          Detector(name='CDD', color='lime green', relative_position=0.7, active=False)]
+        self.detectors = [Detector(name='H2', color='black', relative_position=1.2, active=True, isotope='Ar41'),
+                          Detector(name='H1', color='red', relative_position=1.1, active=True, isotope='Ar40'),
+                          Detector(name='AX', color='violet', relative_position=1, active=True, isotope='Ar39'),
+                          Detector(name='L1', color='maroon', relative_position=0.9, active=True, isotope='Ar38'),
+                          Detector(name='L2', color='yellow', relative_position=0.8, active=True, isotope='Ar37'),
+                          Detector(name='CDD', color='lime green', relative_position=0.7, active=False, isotope='Ar36')]
 
         self.magnet.load()
 #===============================================================================

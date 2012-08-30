@@ -50,7 +50,7 @@ class FusionsLaserMonitor(LaserMonitor):
         #check laser interlocks
         manager = self.manager
         self.info('Check laser interlocks')
-        interlocks = manager.logic_board.check_interlocks(verbose=False)
+        interlocks = manager.laser_controller.check_interlocks(verbose=False)
 
         if interlocks:
             inter = ' '.join(interlocks)
@@ -59,36 +59,6 @@ class FusionsLaserMonitor(LaserMonitor):
 #        elif interlocks is None:
 #            manager.emergency_shutoff(reason='failed checking interlocks')
 
-#    def _doublecheck_setpoint(self):
-#        if self.setpoint:
-#            manager = self.manager
-#            self.info('Check at setpoint')
-#            w = manager.get_laser_watts()
-#            if w is not None:
-#                self._cur_setpoints.append(w)
-#                self._cur_setpoints = self._cur_setpoints[-5:]
-#                if abs(sum(self._cur_setpoints) / len(self._cur_setpoints) - self.setpoint) > self._setpoint_tolerance:
-#                    self._setpoint_check_cnt += 1
-#
-#            if self._setpoint_check_cnt > self.max_setpoint_tries:
-#                manager.emergency_shutoff(reason='failed to reach setpoint {}'.format(self.setpoint))
-
-#        for i in range(NTRIES):
-#            interlocks = manager.logic_board.check_interlocks(verbose=False)
-#
-#            if interlocks:
-#                inter = ' '.join(interlocks)
-#                self.warning(inter)
-#                manager.emergency_shutoff(reason=inter)
-#                break
-#            else:
-#                break
-
-#        if i == NTRIES - 1:
-#            #failed checking interlocks 
-#            self.gntries += 1
-#            if self.gntries > NFAILURES:
-#                manager.emergency_shutoff(reason='failed checking interlocks')
 
     def _fcheck_coolant_temp(self):
         '''
@@ -144,4 +114,36 @@ class FusionsLaserMonitor(LaserMonitor):
     def update_imb(self, *args, **kw):
         pass
 
+
+
 #============= EOF ====================================
+#    def _doublecheck_setpoint(self):
+#        if self.setpoint:
+#            manager = self.manager
+#            self.info('Check at setpoint')
+#            w = manager.get_laser_watts()
+#            if w is not None:
+#                self._cur_setpoints.append(w)
+#                self._cur_setpoints = self._cur_setpoints[-5:]
+#                if abs(sum(self._cur_setpoints) / len(self._cur_setpoints) - self.setpoint) > self._setpoint_tolerance:
+#                    self._setpoint_check_cnt += 1
+#
+#            if self._setpoint_check_cnt > self.max_setpoint_tries:
+#                manager.emergency_shutoff(reason='failed to reach setpoint {}'.format(self.setpoint))
+
+#        for i in range(NTRIES):
+#            interlocks = manager.laser_controller.check_interlocks(verbose=False)
+#
+#            if interlocks:
+#                inter = ' '.join(interlocks)
+#                self.warning(inter)
+#                manager.emergency_shutoff(reason=inter)
+#                break
+#            else:
+#                break
+
+#        if i == NTRIES - 1:
+#            #failed checking interlocks 
+#            self.gntries += 1
+#            if self.gntries > NFAILURES:
+#                manager.emergency_shutoff(reason='failed checking interlocks')

@@ -34,6 +34,7 @@ from src.graph.time_series_graph import TimeSeriesGraph
 
 from traits.api import HasTraits
 from pyface.timer.do_later import do_later
+import os
 class TableSelector(HasTraits):
     parameter = String
     parameters = Property
@@ -373,7 +374,8 @@ class DBSelector(Loggable):
             self.results = []
             if dbs:
                 for di in dbs:
-                    d = self._result_factory(di)
+                    d = self._result_factory(di,
+                                             root=os.path.dirname(db.dbname))
 #                    d = self.result_klass(_db_result=di)
                     d.load()
                     d._loadable = True

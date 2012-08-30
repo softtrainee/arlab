@@ -43,6 +43,8 @@ class DBResult(BaseDBResult):
     rundate = Property
     runtime = Property
 
+    root = Str
+
     directory = Str
     filename = Str
 
@@ -86,7 +88,13 @@ class DBResult(BaseDBResult):
 
         p = dbr.path
         if p is not None:
-            self.directory = p.root if p.root else ''
+
+            d = p.root
+            if d.startswith('.'):
+                d = os.path.join(self.root,
+                               d[1:]
+                               )
+            self.directory = d if p.root else ''
             self.filename = p.filename if p.filename else ''
 
     def load(self):

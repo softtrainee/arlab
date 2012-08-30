@@ -299,6 +299,13 @@ class ExperimentSet(Loggable):
              it sets the configuration, loaded scripts and binds our update_loaded_script
              handler so we are aware of scripts that have been tested
         '''
+
+        #copy some of the last runs values
+        if self.automated_runs:
+            pa = self.automated_runs[-1]
+            for k in ['heat_device_name', 'autocenter']:
+                kw[k] = getattr(pa, k)
+
         a = AutomatedRun(
                          configuration=self._build_configuration(extraction, measurement),
                          scripts=self.loaded_scripts,

@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, List, String, \
     Float, Bool, Int, Instance, Property, Dict, Enum, on_trait_change, \
-    Str, Trait
+    Str, Trait, cached_property
 from traitsui.api import VGroup, HGroup, Item, Group, View, ListStrEditor, \
     InstanceEditor, ListEditor, EnumEditor, Label, Spring
 #============= standard library imports ========================
@@ -54,9 +54,11 @@ class AnalysisResult(DBResult):
     iso_keys = None
     intercepts = None
 
-    @property
-    def labnumber(self):
-        return self._db_result.labnumber
+    labnumber = Property
+
+    @cached_property
+    def _get_labnumber(self):
+        return self._db_result.labnumber.labnumber
 
     def traits_view(self):
         info = self._get_info_grp()
@@ -133,7 +135,7 @@ class AnalysisResult(DBResult):
             gkw['ytitle'] = key
 
             graph.new_plot(**gkw)
-            graph.new_series(xs, ys, plotid=i)
+            graph.new_series(xs, ys, plotid=i, type='scatter', marker='circle', marker_size=1.25)
 #            graph.set_series_label(key, plotid=i)
 
             params = dict(orientation='right' if i % 2 else 'left',

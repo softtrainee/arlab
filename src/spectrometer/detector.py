@@ -36,7 +36,7 @@ class Detector(SpectrometerDevice):
     active = Bool(True)
 
     color = Color
-
+    isotope = Str
 
     def __repr__(self):
         return self.name
@@ -62,6 +62,7 @@ class Detector(SpectrometerDevice):
         v = View(VGroup(
                         HGroup(
                                 Item('name', style='readonly'),
+                                Item('isotope'),
                                 spring,
                                 Item('active',),
                                 Item('deflection'),

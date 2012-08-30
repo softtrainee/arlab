@@ -32,10 +32,11 @@ from src.experiment.experiment_set import ExperimentSet
 
 from src.paths import paths
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.helpers.filetools import unique_path
+from src.helpers.filetools import unique_path, str_to_bool
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
+from src.database.sync.repository import Repository
 
 DEBUG = True
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -52,7 +53,7 @@ class ExperimentManager(Manager):
     data_manager = Instance(Manager)
 
     extraction_line_manager = Instance(Manager)
-    laser_manager = Instance(Manager)
+#    laser_manager = Instance(Manager)
     ion_optics_manager = Instance(Manager)
 
     experiment_config = None
@@ -113,7 +114,7 @@ class ExperimentManager(Manager):
 
     def open_recent(self):
         db = self.db
-
+        db.reset()
         selector = db.selector_factory(style='simple')
         self.open_view(selector)
 
@@ -133,6 +134,7 @@ class ExperimentManager(Manager):
         exp.stats.nruns_finished = len(exp.automated_runs)
         exp.stop_stats_timer()
         self.info('automated runs complete')
+
 
     def do_automated_runs(self):
 
@@ -158,14 +160,23 @@ class ExperimentManager(Manager):
         err_message = ''
 
         dm = H5DataManager()
-
+        root = '/Users/ross/Sandbox/exprepo/root'
+        repo = Repository(root)
         exp.reset_stats()
 
+        self.db.reset()
+
         exp.save_to_db()
+        name = 'isotopedb.sqlite'
+        p = os.path.join(root, name)
+        #add the db file to the repo
+        if not os.path.isfile(p):
+            repo.add(name)
+            repo.commit('added {}'.format(name))
+            repo.push()
 
         for i, arun in enumerate(exp.automated_runs):
             exp.current_run = arun
-
             arun.index = i
             arun.experiment_name = exp.name
             arun.experiment_manager = self
@@ -177,6 +188,9 @@ class ExperimentManager(Manager):
             arun.massspec_importer = self.massspec_importer
             arun.runner = runner
             arun.integration_time = 1.04
+            arun.repository = repo
+
+
             arun._debug = DEBUG
 #            if arun.identifier.startswith('B'):
 #                arun.isblank = True
@@ -280,12 +294,12 @@ class ExperimentManager(Manager):
             elm = self.extraction_line_manager
             if elm:
                 #close mass spec ion pump
-                elm.close_valve(outlet)
+                elm.close_valve(outlet, mode='script')
                 time.sleep(1)
 
                 #open inlet
-                elm.open_valve(inlet)
-                time.sleep(1)
+                elm.open_valve(inlet, mode='script')
+
             ev.set()
 
             #delay for eq time
@@ -342,12 +356,18 @@ class ExperimentManager(Manager):
                 for ai in f:
                     args = map(str.strip, ai.split(delim))
                     identifier = args[header.index('identifier')]
-                    measurement = args[header.index('measurement')]
                     extraction = args[header.index('extraction')]
+                    measurement = args[header.index('measurement')]
+
+                    hd = args[header.index('heat_device')]
+                    autocenter = str_to_bool(args[header.index('autocenter')])
+
                     arun = exp._automated_run_factory(
                                                       extraction,
                                                       measurement,
                                                       identifier=identifier,
+                                                      heat_device_name=hd,
+                                                      autocenter=autocenter
                                                       )
                     exp.automated_runs.append(arun)
 
@@ -462,7 +482,8 @@ class ExperimentManager(Manager):
                       ),
                  width=700,
                  height=500,
-                 resizable=True
+                 resizable=True,
+                 title=self.experiment_set.name
                  )
         return v
 
@@ -533,7 +554,8 @@ class ExperimentManager(Manager):
     def _db_default(self):
         db = IsotopeAdapter(kind='sqlite',
 #                            dbname=paths.isotope_db,
-                            dbname='/Users/ross/Pychrondata_experiment/data/isotopedb.sqlite'
+#                            dbname='/Users/ross/Pychrondata_experiment/data/isotopedb.sqlite'
+                            dbname='/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite'
                             )
         if db.connect():
             return db

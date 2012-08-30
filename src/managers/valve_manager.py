@@ -382,7 +382,7 @@ class ValveManager(Manager):
                 #result = True
 
         else:
-            self.warning('Valve %s not available' % vid)
+            self.warning('Valve {} not available'.format(vid))
             #result = 'Valve %s not available' % id
 
         return result, change
