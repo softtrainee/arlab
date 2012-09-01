@@ -31,11 +31,15 @@ class IonOpticsManager(Manager):
     graph = Instance(Graph)
     peak_center_button = Button('Peak Center')
     stop_button = Button('Stop')
+
     alive = Bool(False)
     spectrometer = Any
 
     peak_center = Instance(PeakCenter)
     canceled = False
+
+    peak_center_result = None
+
     def get_hv_correction(self, current=False):
         source = self.spectrometer.source
         cur = source.current_hv
@@ -58,12 +62,27 @@ class IonOpticsManager(Manager):
             if isinstance(pos, str):
                 #pos is in isotope
                 pos = MOLECULAR_WEIGHTS[pos]
+
+                #if the pos is an isotope then updated the detectors
+                spec.update_isotopes(detector, pos)
+
             #pos is mass i.e 39.962
             dac = mag.map_mass_to_dac(pos)
 
-        #convert to detector 
         det = spec.get_detector(detector)
+
+        '''
+        convert to axial detector 
+        dac_a=  dac_s / relpos
+        
+        relpos==dac_detA/dac_axial 
+        
+        '''
         dac /= det.relative_position
+
+        #correct for deflection
+        dev = det.get_deflection_correction()
+        dac += dev
 
 #        #correct for hv
         dac *= self.get_hv_correction(current=True)
@@ -104,6 +123,7 @@ class IonOpticsManager(Manager):
                         )
 
         npos = pc.get_peak_center()
+        self.peak_center_result = npos
         if npos:
             args = detector, isotope, npos
             self.info('new center pos {} ({}) @ {}'.format(*args))
@@ -132,6 +152,9 @@ class IonOpticsManager(Manager):
         do_later(d)
 
     def close(self):
+        self.cancel_peak_center()
+
+    def cancel_peak_center(self):
         self.alive = False
         self.canceled = True
         self.peak_center.canceled = True

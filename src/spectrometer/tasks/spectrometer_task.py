@@ -52,5 +52,8 @@ class SpectrometerTask(Loggable):
     def _execute(self):
         pass
 
+    def _end(self):
+        pass
+
 
 #============= EOF =============================================

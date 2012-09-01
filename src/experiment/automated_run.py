@@ -312,6 +312,10 @@ class AutomatedRun(Loggable):
         if ion is not None:
             ion.position(pos, detector, dac)
 
+    def set_isotopes(self, isotopes):
+        for di, iso in zip(isotopes, self._active_detectors):
+            di.isotope = iso
+
     def activate_detectors(self, dets):
         g = self.graph
         if g is not None:

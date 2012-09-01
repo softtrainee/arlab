@@ -58,6 +58,8 @@ class MotionController(CoreDevice):
     z_progress = Float
     motion_profiler = Instance(MotionProfiler, ())
 
+    groupobj = None
+
     def _motion_profiler_default(self):
         mp = MotionProfiler()
         p = os.path.join(self.configuration_dir_path, 'motion_profiler.cfg')
