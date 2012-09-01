@@ -14,16 +14,16 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import  Float, Str, Bool, Property, Color
 from traitsui.api import View, Item, VGroup, HGroup, spring, Label
-from src.spectrometer.spectrometer_device import SpectrometerDevice
-
 #============= standard library imports ========================
-
+import os
+from numpy import loadtxt, polyfit, linspace, polyval
 #============= local library imports  ==========================
+from src.spectrometer.spectrometer_device import SpectrometerDevice
+from src.paths import paths
+
 charge = 1.6021764874e-19
 class Detector(SpectrometerDevice):
     name = Str
@@ -41,8 +41,39 @@ class Detector(SpectrometerDevice):
     def __repr__(self):
         return self.name
 
-    def finish_loading(self):
+    def load(self):
         self.read_deflection()
+
+        #load deflection correction table
+        p = os.path.join(paths.setup_dir, 'spectrometer',
+                         'deflections', self.name)
+        data = loadtxt(p, delimiter=',')
+
+        from pylab import plot, show, ylim
+        x, y = data.transpose()
+
+        print x
+        print y
+
+        y = [yi - y[0] for yi in y]
+        coeffs = polyfit(x, y, 1)
+
+#        plot(x, y, '+')
+#
+#        coeffs = polyfit(x, y, 1)
+#        xf = linspace(min(x), max(x), 100)
+#        plot(xf, polyval(coeffs, xf))
+#
+#        show()
+        self._deflection_correction_factors = coeffs
+
+#        with open(p, 'U') as f:
+#            reader = csv.reader(f)
+#            for line in reader:
+#                print line
+
+
+
 
     def _set_deflection(self, v):
         self._deflection = v
@@ -55,8 +86,13 @@ class Detector(SpectrometerDevice):
         r = self.microcontroller.ask('GetDeflection {}'.format(self.name))
         try:
             self._deflection = float(r)
-        except ValueError:
-            pass
+        except (ValueError, TypeError):
+            self._deflection = 0
+
+    def get_deflection_correction(self):
+        de = self._deflection
+        dev = polyval(self._deflection_correction_factors, [de])
+        return dev
 
     def traits_view(self):
         v = View(VGroup(

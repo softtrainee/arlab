@@ -73,17 +73,17 @@ class MeasurementPyScript(PyScript):
     _series_count = 0
     _regress_id = 0
 
-    _detectors = None
-    def __init__(self, *args, **kw):
-        super(MeasurementPyScript, self).__init__(*args, **kw)
-        self._detectors = dict([(k, Detector(k, m, 0)) for k, m in
-                              zip(['H2', 'H1', 'AX', 'L1', 'L2', 'CDD'],
-                                  [40, 39, 38, 37, 36, 35])
-                              ])
+#    _detectors = None
+#    def __init__(self, *args, **kw):
+#        super(MeasurementPyScript, self).__init__(*args, **kw)
+#        self._detectors = dict([(k, Detector(k, m, 0)) for k, m in
+#                              zip(['H2', 'H1', 'AX', 'L1', 'L2', 'CDD'],
+#                                  [40, 39, 38, 37, 36, 35])
+#                              ])
 
-    def _get_detectors(self):
-        return self._detectors
-    detector = property(fget=_get_detectors)
+#    def _get_detectors(self):
+#        return self._detectors
+#    detector = property(fget=_get_detectors)
 
     def get_script_commands(self):
         cmds = ['baselines', 'position', 'set_time_zero', 'peak_center',
@@ -153,6 +153,13 @@ class MeasurementPyScript(PyScript):
 
         if dets:
             self.automated_run.activate_detectors(list(dets))
+
+#    @verbose_skip
+#    def set_isotopes(self, *isotopes):
+#        if self.automated_run is None:
+#            return
+#        if isotopes:
+#            self.automated_run.set_isotopes(list(isotopes))
 
     @verbose_skip
     def baselines(self, ncounts, position=None, detector=None):

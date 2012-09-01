@@ -66,4 +66,10 @@ class PeakCenterAction(Action):
         man = get_manager(event, ION_OPTICS_PROTOCOL)
         man.do_peak_center(confirm_save=True)
 #        man.open_peak_center()
+
+class RelativePositionsAction(Action):
+    def perform(self, event):
+        man = get_manager(event, SPECTROMETER_PROTOCOL)
+        obj = man.relative_detector_positions_task_factory()
+        open_manager(event.window.application, obj)
 #============= EOF ====================================

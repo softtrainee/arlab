@@ -58,6 +58,9 @@ class SpectrometerActionSet(WorkbenchActionSet):
                 Action(name='Scan',
                        path=PATH,
                        class_name='{}:OpenScanManagerAction'.format(BASE)
+                       ),
+                Action(name='RelativePositions',
+                       path=PATH + '/Utitilies',
+                       class_name='{}:RelativePositionsAction'.format(BASE)
                        )
-
                        ]

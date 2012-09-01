@@ -19,14 +19,14 @@
 #============= enthought library imports =======================
 from traits.api import String, Instance, Int, Property, List, Dict, Any, Enum, Str, DelegatesTo, Float
 from traitsui.api import View, Item, VGroup, EnumEditor, RangeEditor
-from pyface.timer.api import Timer, do_later, do_after
+#from pyface.timer.api import Timer, do_later, do_after
 #from pyface.timer.do_later import do_later
 
 #============= standard library imports ========================
-import numpy as np
-import time
 import random
-from threading import Thread
+#import numpy as np
+#import time
+#from threading import Thread
 
 #============= local library imports  ==========================
 from src.data_processing.regression.regressor import Regressor
@@ -34,18 +34,16 @@ from src.spectrometer.source import Source
 from src.spectrometer.magnet import Magnet
 from src.spectrometer.detector import Detector
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS, MOLECULAR_WEIGHT_KEYS
-from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
-from src.graph.regression_graph import RegressionGraph
-from src.paths import paths
-import os
-from src.managers.data_managers.csv_data_manager import CSVDataManager
-from src.helpers.filetools import unique_dir
+#from src.graph.graph import Graph
+#from src.graph.regression_graph import RegressionGraph
+#from src.paths import paths
+#import os
+#from src.managers.data_managers.csv_data_manager import CSVDataManager
+#from src.helpers.filetools import unique_dir
 
 DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False
-
-
 
 
 class Spectrometer(SpectrometerDevice):
@@ -74,16 +72,12 @@ class Spectrometer(SpectrometerDevice):
     current_hv = DelegatesTo('source')
     scan_timer = None
 
-    databuffer = String
 
     molecular_weight = Str('Ar40')
     sub_cup_configurations = List
 
     sub_cup_configuration = Property(depends_on='_sub_cup_configuration')
     _sub_cup_configuration = Str
-
-#    peak_center_results = None
-#    data_manager = Instance(CSVDataManager, ())
 
     dc_start = Int(0)
     dc_stop = Int(500)
@@ -93,16 +87,11 @@ class Spectrometer(SpectrometerDevice):
     dc_threshold = Int(3)
     dc_npeak_centers = Int(3)
 
-#    pc_window_cnt = 0
-#    pc_window = Float(0.015)
-#    pc_step_width = Float(0.0005)
-
     _alive = False
 
-    peak_center_graph = None
-    def set_parameter(self, name, v):
-        cmd = '{} {}'.format(name, v)
-        self.microcontroller.ask(cmd)
+#    def set_parameter(self, name, v):
+#        cmd = '{} {}'.format(name, v)
+#        self.microcontroller.ask(cmd)
 
     def set_microcontroller(self, m):
         self.magnet.microcontroller = m
@@ -110,6 +99,7 @@ class Spectrometer(SpectrometerDevice):
         self.microcontroller = m
         for d in self.detectors:
             d.microcontroller = m
+            d.load()
 
     def get_detector(self, name):
         return next((det for det in self.detectors if det.name == name), None)
@@ -164,19 +154,19 @@ class Spectrometer(SpectrometerDevice):
 # timers
 #===============================================================================
 
-    def reset_scan_timer(self):
-        if self.scan_timer is not None:
-            self.scan_timer.Stop()
-        self._timer_factory()
-
-    def stop(self):
-        if self._alive == True:
-            self.info('Calibration canceled by user')
-            self._alive = False
-            return False
-        else:
-            self._alive = False
-            return True
+#    def reset_scan_timer(self):
+#        if self.scan_timer is not None:
+#            self.scan_timer.Stop()
+#        self._timer_factory()
+#
+#    def stop(self):
+#        if self._alive == True:
+#            self.info('Calibration canceled by user')
+#            self._alive = False
+#            return False
+#        else:
+#            self._alive = False
+#            return True
 #        if self.centering_timer and self.centering_timer.IsRunning():
 #            self.centering_timer.Stop()
 #            self.info('Peak centering stopped by user')
@@ -304,11 +294,21 @@ class Spectrometer(SpectrometerDevice):
 #===============================================================================
 # factories
 #===============================================================================
-    def _timer_factory(self):
-        mult = 1000
+#    def _timer_factory(self):
+#        mult = 1000
+#
+#        self.scan_timer = Timer((self.integration_time + 0.025) * mult, self.get_intensities)
+#        self.scan_timer.Start()
 
-        self.scan_timer = Timer((self.integration_time + 0.025) * mult, self.get_intensities)
-        self.scan_timer.Start()
+    def update_isotopes(self, detector, isotope):
+        det = self.get_detector(detector)
+        det.isotope = isotope
+        index = self.detectors.index(det)
+
+        nmass = int(isotope[2:])
+        for i, di in enumerate(self.detectors):
+            mass = nmass + (i - index)
+            di.isotope = 'Ar{}'.format(mass)
 
 
 
@@ -405,14 +405,23 @@ class Spectrometer(SpectrometerDevice):
 #                              L2=Detector(name='L2', relative_position=0.8, active=True),
 #                              CDD=Detector(name='CDD', relative_position=0.7, active=False),
 #                              )
-        self.detectors = [Detector(name='H2', color='black', relative_position=1.2, active=True, isotope='Ar41'),
-                          Detector(name='H1', color='red', relative_position=1.1, active=True, isotope='Ar40'),
-                          Detector(name='AX', color='violet', relative_position=1, active=True, isotope='Ar39'),
-                          Detector(name='L1', color='maroon', relative_position=0.9, active=True, isotope='Ar38'),
-                          Detector(name='L2', color='yellow', relative_position=0.8, active=True, isotope='Ar37'),
-                          Detector(name='CDD', color='lime green', relative_position=0.7, active=False, isotope='Ar36')]
+
+
+
+#        self.detectors = [Detector(name='H2', color='black', relative_position=1.2, active=True, isotope='Ar41'),
+#                          Detector(name='H1', color='red', relative_position=1.1, active=True, isotope='Ar40'),
+#                          Detector(name='AX', color='violet', relative_position=1, active=True, isotope='Ar39'),
+#                          Detector(name='L1', color='maroon', relative_position=0.9, active=True, isotope='Ar38'),
+#                          Detector(name='L2', color='yellow', relative_position=0.8, active=True, isotope='Ar37'),
+#                          Detector(name='CDD', color='lime green', relative_position=0.7, active=False, isotope='Ar36')]
 
         self.magnet.load()
+
+    def add_detector(self, **kw):
+        d = Detector(**kw)
+        self.detectors.append(d)
+
+
 #===============================================================================
 # signals
 #===============================================================================
