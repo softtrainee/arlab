@@ -3,28 +3,21 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Pychron's documentation!
-===================================
-
-Contents:
-
-.. toctree::
-   :maxdepth: 3
+Welcome to the New Mexico Gechronology Research Laboratory!
+===========================================================
+.. image:: images/NMGRL_logo.png
+   :scale: 33%
+   :width: 50%
    
-   mdd
-   runscripts
-   scripting
-   procedures
-   remote_hardware
-   meta_documentation
-   testbot
-   computer_names
-
+.. image:: images/RossLabs_logo.png
+   :width: 33%
+   :scale: 70%
    
-Indices and tables
-==================
+.. image:: images/NMT_logo.png
+   :width: 33%
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+:doc:`pychron_documentation`
 
+:doc:`bibliographies`
+
+:doc:`computer_names`
