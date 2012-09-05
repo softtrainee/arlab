@@ -23,3 +23,10 @@ Welcome to the New Mexico Gechronology Research Laboratory!
    bibliographies
    computer_names
    student_projects
+   
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
