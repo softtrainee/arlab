@@ -4,6 +4,9 @@ Student Projects
 Matt Zimmerer
 --------------
 
+Clark Short
+------------
+
 Jake Ross
 -----------
 
@@ -19,8 +22,11 @@ Iain Mason
 Ahmadreza Malekpour
 --------------------
 
+Nels Iverson
+------------
+
 Lisa Gaston
 -------------
 
-Clark Short
-------------
+
+

@@ -11,6 +11,3 @@ Pychron Documentation
    remote_hardware
    meta_documentation
    testbot
-   
-
-   
