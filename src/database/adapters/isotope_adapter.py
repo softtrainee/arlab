@@ -20,8 +20,9 @@ from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 
 from src.paths import paths
 from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
-    MaterialTable, AnalysisTable, AnalysisPathTable, LabTable
-import sqlalchemy
+    MaterialTable, AnalysisTable, AnalysisPathTable, LabTable, ExtractionTable, \
+    MeasurementTable, ExperimentTable
+#import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
@@ -41,9 +42,39 @@ class IsotopeAdapter(DatabaseAdapter):
     selector_klass = IsotopeAnalysisSelector
     path_table = AnalysisPathTable
 
-    #===========================================================================
-    # adders
-    #===========================================================================
+#    def initialize_database(self):
+#        self.add_sample('B')
+#        self.commit()
+#        self.add_labnumber('A')
+
+#===========================================================================
+# adders
+#===========================================================================
+
+    @add
+    def add_experiment(self, name, **kw):
+        exp = ExperimentTable(name=name, **kw)
+        return exp, True
+
+    @add
+    def add_extraction(self, analysis, name, **kw):
+        ex = ExtractionTable(script_name=name, **kw)
+        if isinstance(analysis, str):
+            analysis = self.get_analysis(analysis)
+        if analysis:
+            analysis.extraction = ex
+        return ex, True
+
+    @add
+    def add_measurement(self, analysis, name, **kw):
+        ms = MeasurementTable(script_name=name, **kw)
+        if isinstance(analysis, str):
+            analysis = self.get_analysis(analysis)
+        if analysis:
+            analysis.measurement = ms
+
+        return ms, True
+
     @add
     def add_project(self, name, **kw):
         proj = ProjectTable(name=name, **kw)
@@ -81,6 +112,22 @@ class IsotopeAdapter(DatabaseAdapter):
             return user, False
 
 
+#    @add
+#    def add_sample(self, name, material=None, **kw):
+#        sample = SampleTable(name=name, **kw)
+#        if isinstance(material, str):
+#            material = self.get_material(material)
+#
+#        q = self._build_query_and(SampleTable, name, MaterialTable, material)
+#
+#        sam = sql_retrieve(q.one)
+##        if sam is not None:
+##            addflag = not sam.material == material
+#        if sam is None:
+#            return sample, True
+#        else:
+#            self.info('sample={} material={} already exists'.format(name, material.name))
+#            return sample, False
     @add
     def add_sample(self, name, project=None, material=None, **kw):
         sample = SampleTable(name=name, **kw)
@@ -115,13 +162,20 @@ class IsotopeAdapter(DatabaseAdapter):
 
 
     @add
-    def add_labnumber(self, labnumber, sample=None, **kw):
-        ln = LabTable(labnumber=labnumber, **kw)
+    def add_labnumber(self, labnumber, aliquot, sample=None, **kw):
+        ln = LabTable(labnumber=labnumber,
+                      aliquot=aliquot,
+                      ** kw)
 
         if isinstance(sample, str):
             sample = self.get_sample(sample)
 
-        ln = self._add_unique(ln, 'labnumber', labnumber)
+#        ln = self._add_unique(ln, 'labnumber', labnumber)
+        pln = self.get_labnumber(labnumber)
+        if pln is not None:
+            if pln.aliquot == aliquot:
+                return ln, False
+
         if sample is not None and ln is not None:
             sample.labnumbers.append(ln)
 
@@ -132,7 +186,6 @@ class IsotopeAdapter(DatabaseAdapter):
         if isinstance(labnumber, (str, int)):
             labnumber = self.get_labnumber(labnumber)
 
-        kw = self._get_datetime_keywords(kw)
         anal = AnalysisTable(**kw)
         if labnumber is not None:
             labnumber.analyses.append(anal)
@@ -168,6 +221,10 @@ class IsotopeAdapter(DatabaseAdapter):
 #===========================================================================
 # getters single
 #===========================================================================
+    @get_one
+    def get_experiment(self, name):
+        return ExperimentTable
+
     @get_one
     def get_analysis(self, rid):
         return AnalysisTable, 'lab_id'
@@ -266,12 +323,15 @@ class IsotopeAdapter(DatabaseAdapter):
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('ia')
-    ia = IsotopeAdapter(dbname=paths.isotope_db,
+    ia = IsotopeAdapter(
+                        dbname='/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite',
+#                        dbname=paths.isotope_db,
                         kind='sqlite')
     ia.connect()
 
-    dbs = IsotopeAnalysisSelector(_db=ia)
-    dbs._execute_query()
+    dbs = IsotopeAnalysisSelector(_db=ia, style='simple')
+#    dbs._execute_query()
+    dbs.load_recent()
 
     dbs.configure_traits()
 #    ia.add_user(project=p, name='mosuer', commit=True)

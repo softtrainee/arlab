@@ -100,7 +100,9 @@ class HardwarePlugin(CorePlugin):
             ini.add_initialization(m)
 
         #any loaded managers will be registered as services
-        ini.run(application=self.application)
+        if not ini.run(application=self.application):
+            self.application.exit()
+            return
 
         #create the hardware server
         rhm = self.application.get_service(RemoteHardwareManager)

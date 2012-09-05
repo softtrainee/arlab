@@ -73,24 +73,26 @@ class MeasurementPyScript(PyScript):
     _series_count = 0
     _regress_id = 0
 
+    detector = None
     _detectors = None
-    def __init__(self, *args, **kw):
-        super(MeasurementPyScript, self).__init__(*args, **kw)
-        self._detectors = dict([(k, Detector(k, m, 0)) for k, m in
-                              zip(['H2', 'H1', 'AX', 'L1', 'L2', 'CDD'],
-                                  [40, 39, 38, 37, 36, 35])
-                              ])
+#    def __init__(self, *args, **kw):
+#        super(MeasurementPyScript, self).__init__(*args, **kw)
+#        self._detectors = dict([(k, Detector(k, m, 0)) for k, m in
+#                              zip(['H2', 'H1', 'AX', 'L1', 'L2', 'CDD'],
+#                                  [40, 39, 38, 37, 36, 35])
+#                              ])
 
     def _get_detectors(self):
         return self._detectors
+
     detector = property(fget=_get_detectors)
 
     def get_script_commands(self):
         cmds = ['baselines', 'position', 'set_time_zero', 'peak_center',
                  'activate_detectors', 'collect', 'regress', 'sniff',
-
+                 'peak_hop',
                  'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',
-                 'set_extraction_lens', 'set_deflection'
+                 'set_extraction_lens', 'set_deflection',
 
                  ]
         return cmds
@@ -100,6 +102,7 @@ class MeasurementPyScript(PyScript):
 
     @on_trait_change('automated_run:signals')
     def update_signals(self, obj, name, old, new):
+
         try:
             det = self.detector
             for k, v in new.iteritems():
@@ -152,10 +155,19 @@ class MeasurementPyScript(PyScript):
             return
 
         if dets:
-            self.automated_run.activate_detectors(dets)
+            self._detectors = dict()
+            self.automated_run.activate_detectors(list(dets))
+            for di in list(dets):
+                self._detectors[di] = 0
+#    @verbose_skip
+#    def set_isotopes(self, *isotopes):
+#        if self.automated_run is None:
+#            return
+#        if isotopes:
+#            self.automated_run.set_isotopes(list(isotopes))
 
     @verbose_skip
-    def baselines(self, ncounts, position=None, detector=None):
+    def baselines(self, ncounts=None, mass=None, detector='H1', mode='multicollect'):
         '''
             if detector is not none then it is peak hopped
         '''
@@ -163,31 +175,44 @@ class MeasurementPyScript(PyScript):
             return
 
         self.automated_run.do_baselines(ncounts, self._time_zero,
-                               position=position,
-                               detector=detector,
+                               mass,
+                               detector,
+                               mode,
                                series=self._series_count
                               )
         self._series_count += 1
 
     @verbose_skip
-    def peak_center(self):
+    def peak_hop(self, detector=None, isotopes=None, cycles=5):
         if self.automated_run is None:
             return
-
-        self.automated_run.do_peak_center()
+        self.automated_run.do_peak_hop(detector, isotopes,
+                                    cycles,
+                                    self._time_zero,
+                                    series=self._series_count
+                                    )
+        self._series_count += 1
 
     @verbose_skip
-    def position(self, pos, detector='AX'):
+    def peak_center(self, detector='AX', isotope='Ar40'):
+        print self.automated_run, 'asdfasdfasd'
         if self.automated_run is None:
             return
 
-        func = self.automated_run.set_magnet_position
-        if isinstance(pos, str):
-            dac = None
-        else:
-            dac = pos
+        self.automated_run.do_peak_center(detector=detector, isotope=isotope)
 
-        func(pos, detector=detector, dac=dac)
+    @verbose_skip
+    def position(self, pos, detector='AX', dac=False):
+        '''
+            position(4.54312, dac=True) # detector is not relevant
+            position(39.962, detector='AX')
+            position('Ar40', detector='AX') #Ar40 will be converted to 39.962 use mole weight dict
+            
+        '''
+
+        if self.automated_run is None:
+            return
+        self.automated_run.set_position(pos, detector, dac=dac)
 
     @verbose_skip
     def set_ysymmetry(self, v):

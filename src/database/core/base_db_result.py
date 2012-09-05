@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Long, Str, Any, Instance, Date, Time, \
-    Button
+    Button, cached_property, Property
 from traitsui.api import View, Item, Group, HGroup, VGroup, spring
 #============= standard library imports ========================
 import os
@@ -27,19 +27,27 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 
 
 class BaseDBResult(HasTraits):
-    rid = Long
+    rid = Property
     _db_result = Any
+
+    @cached_property
+    def _get_rid(self):
+        return self._db_result.id
 
 
 class DBResult(BaseDBResult):
     title = Str
     summary = Str
     graph = Instance(Graph)
-    rundate = Date
-    runtime = Str#('%H:%M:%s')
+
+    rundate = Property
+    runtime = Property
+
+    root = Str
 
     directory = Str
     filename = Str
+
     window_x = 0.1
     window_y = 0.1
     window_width = None
@@ -53,6 +61,15 @@ class DBResult(BaseDBResult):
     export_button = Button('Export CSV')
     exportable = True
     resizable = True
+
+    @cached_property
+    def _get_rundate(self):
+        return self._db_result.rundate
+
+    @cached_property
+    def _get_runtime(self):
+        return self._db_result.runtime.strftime('%H:%M:%S')
+
     def _export_button_fired(self):
         self._export_csv()
 
@@ -63,14 +80,23 @@ class DBResult(BaseDBResult):
 
     def initialize(self):
         return self.isloadable()
+
     def _set_metadata(self, dbr):
-        self.rid = dbr.id
-        self.rundate = dbr.rundate
-        self.runtime = dbr.runtime.strftime('%H:%M:%S')
+#        self.rid = dbr.id
+#        self.rundate = dbr.rundate
+#        self.runtime = dbr.runtime.strftime('%H:%M:%S')
+
         p = dbr.path
         if p is not None:
-            self.directory = p.root if p.root else ''
+
+            d = p.root
+            if d.startswith('.'):
+                d = os.path.join(self.root,
+                               d[1:]
+                               )
+            self.directory = d if p.root else ''
             self.filename = p.filename if p.filename else ''
+
     def load(self):
         dbr = self._db_result
         if dbr is not None:

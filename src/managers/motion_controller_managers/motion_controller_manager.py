@@ -49,6 +49,8 @@ class MotionControllerManager(Manager):
     apply_button = Button('Apply')
     read_button = Button('Read')
     load_button = Button('Load')
+    print_param_table = Button('Print')
+
     motion_group = DelegatesTo('motion_controller', prefix='groupobj')
 
     view_style = Enum('simple_view', 'full_view')
@@ -91,8 +93,12 @@ class MotionControllerManager(Manager):
         '''
         keys = self._axes.keys()
         keys.sort()
-
-        return [self._axes[k] for k in keys] + [self.motion_group]
+        axs = [self._axes[k] for k in keys]
+        if self.motion_group:
+            axs += [self.motion_group]
+        return axs
+#        print [self._axes[k] for k in keys] + [self.motion_group]
+#        return [self._axes[k] for k in keys] + [self.motion_group]
 
 #    def _restore_fired(self):
 #        '''
@@ -148,6 +154,23 @@ class MotionControllerManager(Manager):
                 )
         return v
 
+    def _print_param_table_fired(self):
+        table = []
+        for a in self.axes:
+            attrs, codes, params = a.load_parameters()
+            table.append(params)
+
+        try:
+            p = '/Users/ross/Sandbox/unidex_dump.txt'
+            with open(p, 'w') as f:
+                for attr, code, ri in zip(attrs, codes, zip(*table)):
+                    l = ''.join(map('{:<20s}'.format, map(str, ri)))
+                    l = '{:<20s} {} - {}'.format(attr, code, l)
+                    f.write(l + '\n')
+                    print l
+        except Exception, e:
+            print e
+
     def traits_view(self):
         '''
         '''
@@ -160,7 +183,11 @@ class MotionControllerManager(Manager):
                                                 view=self.view_style
                         )
                         ),
-                    HGroup(spring, Item('load_button'), Item('restore'), Item('apply_button'), show_labels=False,
+                    HGroup(spring, Item('load_button'),
+#                           Item('restore'), 
+                           Item('print_param_table'),
+                           Item('apply_button'),
+                           show_labels=False,
                            #visible_when='view_style=="full_view"'
                            ),
                 resizable=True,

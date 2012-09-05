@@ -41,7 +41,7 @@ class Loggable(HasTraits):
     logger_name = String
     use_logger_display = True
     use_warning_display = True
-    color = 'black'
+    logcolor = 'black'
     # logger_display = None
     def __init__(self, *args, **kw):
         super(Loggable, self).__init__(*args, **kw)
@@ -63,7 +63,7 @@ class Loggable(HasTraits):
         c = color_name_gen.next()
         if c in [ 'gray', 'silver', 'greenyellow']:
             c = color_name_gen.next()
-        self.color = c
+        self.logcolor = c
 
     def warning_dialog(self, msg):
         warning(None, msg)
@@ -109,7 +109,7 @@ class Loggable(HasTraits):
 
                 args = ('{:<30s} -- {}'.format(self.logger.name.strip(),
                         msg))
-                kw = dict(color=self.color)
+                kw = dict(color=self.logcolor)
 
                 wx.CallAfter(gLoggerDisplay.add_text, args, **kw)
 #                do_later(gLoggerDisplay.add_text, args, **kw)

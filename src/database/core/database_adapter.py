@@ -87,6 +87,12 @@ class DatabaseAdapter(Loggable):
 #
 #        if sess is not None:
 #            sess.close()
+    def isConnected(self):
+        return self.connected
+
+    def reset(self):
+        self.info('clearing current session. uncommitted changes will be deleted')
+        self.sess = None
 
     def connect(self, test=True):
         '''
@@ -100,15 +106,20 @@ class DatabaseAdapter(Loggable):
 
         self.session_factory = sessionmaker(bind=self.engine)
         if test:
-            if self._test_db_connection():
-                self.connected = True
-            else:
-                self.connected = False
+            self.connected = self._test_db_connection()
+        else:
+            self.connected = True
+
+
+        if self.connected:
+            self.initialize_database()
 
         return self.connected
 
+    def initialize_database(self):
+        pass
+
     def _test_db_connection(self):
-        self.connected = True
         sess = None
         try:
             connected = True
@@ -309,12 +320,13 @@ class DatabaseAdapter(Loggable):
         if s:
             s.edit_traits()
 
-    def selector_factory(self):
-        self.selector = self._selector_factory()
+    def selector_factory(self, **kw):
+        self.selector = self._selector_factory(**kw)
+        return self.selector
 
-    def _selector_factory(self):
+    def _selector_factory(self, **kw):
         if self.selector_klass:
-            s = self.selector_klass(_db=self)
+            s = self.selector_klass(_db=self, **kw)
             s.load_recent()
             return s
 

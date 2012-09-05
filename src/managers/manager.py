@@ -19,7 +19,7 @@ from traits.api import Str, Float, Any, Button, Int, List, Bool
 from traitsui.api import  Item, HGroup, VGroup, Handler, \
     RangeEditor, ButtonEditor, ScrubberEditor, Label, spring
 from traitsui.menu import Action, Menu, MenuBar
-from pyface.api import FileDialog, OK, warning
+from pyface.api import FileDialog, OK, warning, DirectoryDialog
 #=============standard library imports ========================
 import os
 from threading import Thread
@@ -61,6 +61,16 @@ class AppHandler(ManagerHandler):
         info.object.kill()
         info.object.close_displays()
         return True
+
+class SaveableHandler(Handler):
+    def save(self, info):
+        info.object.save()
+
+    def save_as(self, info):
+        info.object.save_as()
+
+class SaveableManagerHandler(SaveableHandler, ManagerHandler):
+    pass
 
 class Manager(Viewable, RPCable):
     '''
@@ -195,6 +205,11 @@ class Manager(Viewable, RPCable):
         '''
         '''
         return self._file_dialog_('save as', **kw)
+
+    def save_directory_dialog(self, **kw):
+        dlg = DirectoryDialog(new_directory=True, **kw)
+        if dlg.open() == OK:
+            return dlg.path
 
     def get_error(self):
         e = self._error_code

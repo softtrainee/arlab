@@ -133,9 +133,8 @@ class HardwareValve(Loggable):
 
         '''
         self._state_change = False
-        self.info('%s open' % mode)
+        self.info('open mode={}'.format(mode))
         self.debug = mode == 'debug'
-
         self._fsm.Open()
 
 #        if mode in ['auto', 'manual', 'debug', 'remote']:
@@ -157,7 +156,7 @@ class HardwareValve(Loggable):
 
         '''
         self._state_change = False
-        self.info('%s close' % mode)
+        self.info('close mode={}'.format(mode))
 
         self.debug = mode == 'debug'
 #        if mode in ['auto', 'manual', 'debug', 'remote']:
@@ -203,11 +202,10 @@ class HardwareValve(Loggable):
 
     def _open_(self, *args, **kw):
         '''
-
         '''
         r = True
         if self.actuator is not None:
-            if self.debug or self.actuator.simulation:
+            if self.debug:
                 r = True
             else:
                 r = True if self.actuator.open_channel(self) else False
@@ -217,15 +215,12 @@ class HardwareValve(Loggable):
             self.state = True
             self._state_change = True
 
-#        print 'open', self.success, self.state
-
     def _close_(self, *args, **kw):
         '''
-
         '''
         r = True
         if self.actuator is not None:
-            if self.debug or self.actuator.simulation:
+            if self.debug:
                 r = True
             else:
                 r = True if self.actuator.close_channel(self) else False
@@ -235,8 +230,6 @@ class HardwareValve(Loggable):
         if self.success:
             self.state = False
             self._state_change = True
-
-#        print 'close', self.success, self.state
 
     def _get_display_state(self):
         return 'Open' if self.state else 'Close'

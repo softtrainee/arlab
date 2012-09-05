@@ -31,13 +31,12 @@ from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
 
 class FusionsUVManager(FusionsLaserManager):
     '''
-        G{classtree}
     '''
     _video_stage = False
-    attenuation = DelegatesTo('logic_board')
-    attenuationmin = DelegatesTo('logic_board')
-    attenuationmax = DelegatesTo('logic_board')
-    update_attenuation = DelegatesTo('logic_board')
+    attenuation = DelegatesTo('laser_controller')
+    attenuationmin = DelegatesTo('laser_controller')
+    attenuationmax = DelegatesTo('laser_controller')
+    update_attenuation = DelegatesTo('lasr_controller')
 
     controller = Instance(ATLLaserControlUnit)
 
@@ -314,7 +313,7 @@ class FusionsUVManager(FusionsLaserManager):
 
         return factory(**args)
 
-    def _logic_board_default(self):
+    def _laser_controller_default(self):
         '''
         '''
         return FusionsUVLogicBoard(name='uvlogicboard',

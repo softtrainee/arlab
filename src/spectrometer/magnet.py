@@ -18,20 +18,22 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, Any, Property, Float
-from traitsui.api import View, Item, HGroup, TableEditor
+from traitsui.api import View, Item, VGroup, HGroup, Group, Spring, spring, \
+    TableEditor, RangeEditor
 from traitsui.table_column import ObjectColumn
 
 #============= standard library imports ========================
 import os
 import csv
 import time
+from numpy import isnan
 #============= local library imports  ==========================
 from src.data_processing.regression.regressor import Regressor
 from src.paths import paths
-from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 #import math
-from src.graph.graph import Graph
+#from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
+
 class CalibrationPoint(HasTraits):
     x = Float
     y = Float
@@ -50,70 +52,79 @@ class Magnet(SpectrometerDevice):
                    #[[40, 39, 38, 36], [2, 5, 10, 26]]
                    )
     regressor = Instance(Regressor, ())
-    microcontroller = Any
 
     dac = Property(depends_on='_dac')
+    mass = Property(depends_on='_mass')
+
     _dac = Float
+    _mass = Float
     dacmin = Float(0.0)
     dacmax = Float(10.0)
+
+    massmin = Property(Float, depends_on='_massmin')
+    massmax = Property(Float, depends_on='_massmax')
+    _massmin = Float(0.0)
+    _massmax = Float(200.0)
 
     settling_time = 0.01
 
     calibration_points = Property(depends_on='mftable')
-    graph = Instance(Graph, ())
-#    def _get_calibration_points(self):
-#        pts = []
-#        xs, ys = self.mftable
-#        for xi, yi in zip(xs, ys):
-#            xi = MOLECULAR_WEIGHTS[xi]
-#            pts.append(CalibrationPoint(x=xi, y=yi))
+
+#    graph = Instance(Graph, ())
+
+
+
+#    def update_graph(self):
+#        pts = self._get_calibration_points()
+#        self.set_graph(pts)
 #        return pts
 
-    def update_graph(self):
-        pts = self._get_calibration_points()
-        self.set_graph(pts)
-        return pts
 
-#    def update_mftable(self, key, value):
-#        self.info('update mftable {} {}'.format(key, value))
-#        xs = self.mftable[0]
-#        ys = self.mftable[1]
+    def update_field_table(self, isotope, dac):
+        '''
+        
+            dac needs to be in axial units
+        '''
+
+
+        self.info('update mftable {} {}'.format(isotope, dac))
+        xs = self.mftable[0]
+        ys = self.mftable[1]
+
+        refindex = xs.index(isotope)
+        delta = dac - ys[refindex]
+        #need to calculate all ys
+        #using simple linear offset
+        ys = [yi + delta for yi in ys]
+
+        self.mftable = [xs, ys]
+
+
+        self.dump()
+
+#    def set_graph(self, pts):
+#
+#        g = Graph(container_dict=dict(padding=10))
+#        g.clear()
+#        g.new_plot(xtitle='Mass',
+#                   ytitle='DAC',
+#                   padding=[30, 0, 0, 30],
+#                   zoom=True,
+#                   pan=True
+#                   )
+#        g.set_x_limits(0, 150)
+#        g.set_y_limits(0, 100)
+#        xs = [cp.x for cp in pts]
+#        ys = [cp.y * 10 for cp in pts]
+#
+#        reg = self.regressor
+#        rdict = reg.parabolic(xs, ys, data_range=(0, 150), npts=5000)
+#
+#        g.new_series(x=xs, y=ys, type='scatter')
 #
 #
-#        refindex = xs.index(key)
-#        delta = ys[refindex] - value
-#        #need to calculate all ys
-#        for i, xi in enumerate(xs):
-#            mass = MOLECULAR_WEIGHTS[xi]
-#            refmass = MOLECULAR_WEIGHTS[key]
-##            ys[i] -= delta * math.sqrt(mass / refmass)
-#            ys[i] = value
-#
-#        self.dump()
-
-    def set_graph(self, pts):
-
-        g = Graph(container_dict=dict(padding=10))
-        g.clear()
-        g.new_plot(xtitle='Mass',
-                   ytitle='DAC',
-                   padding=[30, 0, 0, 30],
-                   zoom=True,
-                   pan=True
-                   )
-        g.set_x_limits(0, 150)
-        g.set_y_limits(0, 100)
-        xs = [cp.x for cp in pts]
-        ys = [cp.y * 10 for cp in pts]
-
-        reg = self.regressor
-        rdict = reg.parabolic(xs, ys, data_range=(0, 150), npts=5000)
-
-        g.new_series(x=xs, y=ys, type='scatter')
-
-
-        g.new_series(x=rdict['x'], y=rdict['y'])
-        self.graph = g
+#        g.new_series(x=rdict['x'], y=rdict['y'])
+#        self.graph = g
 
     def mftable_view(self):
         cols = [ObjectColumn(name='x', label='Mass'),
@@ -134,40 +145,26 @@ class Magnet(SpectrometerDevice):
 #===============================================================================
 # ##positioning
 #===============================================================================
-    def calculate_dac(self, pos):
-        #is pos a number
-        if not isinstance(pos, (float, int)):
-            #is pos a isokey or a masskey 
-            # eg. Ar40, or 39.962
-            mass = None
-            isokeys = {'Ar40':39.962}
-            try:
-                mass = isokeys[pos]
-            except KeyError:
-                try:
-                    mass = float(pos)
-                except:
-                    self.debug('invalid magnet position {}'.format(pos))
+#    def calculate_dac(self, pos):
+#        #is pos a number
+#        if not isinstance(pos, (float, int)):
+#            #is pos a isokey or a masskey 
+#            # eg. Ar40, or 39.962
+#            mass = None
+#            isokeys = {'Ar40':39.962}
+#            try:
+#                mass = isokeys[pos]
+#            except KeyError:
+#                try:
+#                    mass = float(pos)
+#                except:
+#                    self.debug('invalid magnet position {}'.format(pos))
+#
+#            print 'ionpt', mass, pos,
+#            pos = self.map_mass_to_dac(mass)
+#            print pos
 
-            pos = self._map_mass_to_dac(mass)
-
-        return pos
-
-
-    def map_mass_to_dac(self, mass):
-        reg = self.regressor
-        data = [
-                [MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
-                self.mftable[1]
-                ]
-
-        return reg.get_value('parabolic', data, mass)
-
-    def _get_dac(self):
-        return self._dac
-
-    def _set_dac(self, v):
-        self.set_dac(v)
+#        return pos
 
     def set_dac(self, v):
         self._dac = v
@@ -186,23 +183,156 @@ class Magnet(SpectrometerDevice):
 # persistence
 #===============================================================================
     def load(self):
-        p = os.path.join(paths.setup_dir, 'spectrometer', 'mftable.csv')
-        with open(p, 'U') as f:
-            reader = csv.reader(f)
-            xs = []
-            ys = []
-            for line in reader:
-                xs.append(line[0])
-                ys.append(float(line[1]))
+        p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
+        if os.path.isfile(p):
+            with open(p, 'U') as f:
+                reader = csv.reader(f)
+                xs = []
+                ys = []
+                for line in reader:
+                    xs.append(line[0])
+                    ys.append(float(line[1]))
 
-        self.mftable = [xs, ys]
+            self.mftable = [xs, ys]
+        else:
+            self.warning_dialog('No Magnet Field Table. Create {}'.format(p))
+
 
     def dump(self):
-        p = os.path.join(paths.setup_dir, 'spectrometer', 'mftable.csv')
+        p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
         with open(p, 'w') as f:
             writer = csv.writer(f)
             for x, y in zip(self.mftable[0], self.mftable[1]):
                 writer.writerow([x, y])
+
+#===============================================================================
+# mapping
+#===============================================================================
+    def map_dac_to_mass(self, d):
+        from numpy import polyfit
+        x, y = zip(*[(c.x, c.y) for c in  self.calibration_points])
+        a, b, c = polyfit(x, y, 2)
+        c = c - d
+        m = (-b + (b * b - 4 * a * c) ** 0.5) / (2 * a)
+
+        return m
+
+    def map_mass_to_dac(self, mass):
+        reg = self.regressor
+
+        molweights = self.spectrometer.molecular_weights
+        if self.mftable:
+            data = ([molweights[i] for i in self.mftable[0]],
+                    self.mftable[1])
+            return reg.get_value('parabolic', data, mass)
+
+    def __dac_changed(self):
+        m = self.map_dac_to_mass(self._dac)
+#        print 'get mass', m, type(m), nan, type(nan)
+        if not isnan(m):
+            self._mass = m
+
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_mass(self):
+        return self._mass
+
+    def _set_mass(self, m):
+#        print 'set mass', m
+        d = self.map_mass_to_dac(m)
+#        self._dac = d
+        self.dac = d
+
+    def _validate_dac(self, d):
+        return self._validate_float(d)
+
+    def _get_dac(self):
+        return self._dac
+
+    def _set_dac(self, v):
+        if v is not None:
+            self.set_dac(v)
+
+    def _validate_float(self, d):
+        try:
+            return float(d)
+        except (ValueError, TypeError):
+            return d
+
+    def _validate_massmin(self, d):
+        d = self._validate_float(d)
+        if isinstance(d, float):
+            if d > self.massmax:
+                d = str(d)
+        return d
+
+    def _get_massmin(self):
+        return self._massmin
+
+    def _set_massmin(self, v):
+        self._massmin = v
+
+    def _validate_massmax(self, d):
+        d = self._validate_float(d)
+        if isinstance(d, float):
+            if d < self.massmin:
+                d = str(d)
+        return d
+
+    def _get_massmax(self):
+        return self._massmax
+
+    def _set_massmax(self, v):
+        self._massmax = v
+
+    def _get_calibration_points(self):
+
+        if self.mftable:
+            molweights = self.spectrometer.molecular_weights
+            xs, ys = self.mftable
+            return [CalibrationPoint(x=molweights[xi], y=yi) for xi, yi in zip(xs, ys)]
+#===============================================================================
+# views
+#===============================================================================
+
+    def traits_view(self):
+        v = View(
+                 VGroup(
+                     VGroup(
+                         Item('dac', editor=RangeEditor(low_name='dacmin',
+                                                        high_name='dacmax',
+                                                        format='%0.3f',
+                                                        )),
+
+                         Item('mass', editor=RangeEditor(mode='slider', low_name='massmin',
+                                                        high_name='massmax',
+                                                        format='%0.3f')),
+                         HGroup(Spring(springy=False,
+                                       width=48),
+                                Item('massmin', width= -40), Spring(springy=False,
+                                                                    width=138,
+                                                                    ),
+                                Item('massmax', width= -55),
+
+                                show_labels=False),
+                        show_border=True,
+                        label='Control'
+                        ),
+#                     Group(Item('scanner', style='custom', show_label=False),
+#                           label='Scanner',
+#                           show_border=True)
+                        )
+                 )
+
+        return v
+
+if __name__ == '__main__':
+    from launchers.helpers import build_version
+    build_version('_experiment')
+    m = Magnet()
+    m.load()
+    m.configure_traits()
 #============= EOF =============================================
 # def get_dac_for_mass(self, mass):
 #        reg = self.regressor

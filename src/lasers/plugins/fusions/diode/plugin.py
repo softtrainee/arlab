@@ -25,6 +25,6 @@ class FusionsDiodePlugin(FusionsLaserPlugin):
     '''
     '''
     id = 'pychron.fusions.diode'
-    name = 'fusions_diode_manager'
+    name = 'fusions_diode'
     klass = ('src.lasers.laser_managers.fusions_diode_manager', 'FusionsDiodeManager')
 #============= EOF ====================================

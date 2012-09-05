@@ -115,6 +115,9 @@ class Axis(ConfigLoadable):
     def save(self):
         pass
 
+    def ask(self, cmd):
+        return self.parent.ask(cmd)
+
     def _get_parameters(self, path):
         '''
   

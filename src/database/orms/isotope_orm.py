@@ -15,12 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, \
-     ForeignKey
+     ForeignKey, BLOB, Float, Time
 from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
@@ -32,10 +31,12 @@ Base = declarative_base()
 def foreignkey(name):
     return Column(Integer, ForeignKey('{}.id'.format(name)))
 
+def stringcolumn(size=40):
+    return Column(String(size))
+
 class ProjectTable(Base, NameMixin):
     users = relationship('UserTable', backref='project')
     samples = relationship('SampleTable', backref='project')
-    analyses = relationship('AnalysisTable', backref='project')
 
 
 class UserTable(Base, NameMixin):
@@ -43,8 +44,8 @@ class UserTable(Base, NameMixin):
 
 
 class SampleTable(Base, NameMixin):
-    project_id = foreignkey('ProjectTable')
     material_id = foreignkey('MaterialTable')
+    project_id = foreignkey('ProjectTable')
     labnumbers = relationship('LabTable', backref='sample')
 
 class MaterialTable(Base, NameMixin):
@@ -52,8 +53,11 @@ class MaterialTable(Base, NameMixin):
 
 
 class AnalysisTable(Base, ResultsMixin):
-    project_id = foreignkey('ProjectTable')
     lab_id = foreignkey('LabTable')
+    extraction_id = foreignkey('ExtractionTable')
+    measurement_id = foreignkey('MeasurementTable')
+    experiment_id = foreignkey('ExperimentTable')
+    endtime = Column(Time)
 
 class AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('AnalysisTable')
@@ -61,7 +65,43 @@ class AnalysisPathTable(Base, PathMixin):
 
 class LabTable(Base, BaseMixin):
     labnumber = Column(Integer)
+    aliquot = Column(Integer)
     sample_id = foreignkey('SampleTable')
     analyses = relationship('AnalysisTable', backref='labnumber')
-#    irradiation_id = foreignkey('IrradiationTable')
+    irradiation_id = foreignkey('IrradiationPositionTable')
+
+
+class ScriptTable(BaseMixin):
+    script_name = stringcolumn(80)
+    script_blob = Column(BLOB)
+
+
+class MeasurementTable(Base, ScriptTable):
+    analysis = relationship('AnalysisTable', backref='measurement',
+                          uselist=False
+                          )
+
+
+class ExtractionTable(Base, ScriptTable):
+    position = Column(Integer)
+    value = Column(Float)
+    heat_duration = Column(Float)
+    clean_up_duration = Column(Float)
+
+    analysis = relationship('AnalysisTable', backref='extraction',
+                          uselist=False
+                          )
+
+class IrradiationPositionTable(Base, BaseMixin):
+    labnumber = relationship('LabTable', backref='irradiation_position',
+                             uselist=False
+                             )
+    irradiation_id = foreignkey('IrradiationTable')
+
+class IrradiationTable(Base, NameMixin):
+    positions = relationship('IrradiationPositionTable', backref='irradiation')
+    level = stringcolumn()
+
+class ExperimentTable(Base, NameMixin):
+    analyses = relationship('AnalysisTable', backref='experiment')
 #============= EOF =============================================

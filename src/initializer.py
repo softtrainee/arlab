@@ -310,6 +310,7 @@ class Initializer(Loggable):
 #                     )
             d = dict(name=mi, device_dir=device_dir, manager=man,
                      plugin_name=manager.name)
+
             self.add_initialization(d)
 
     def load_devices(

@@ -27,7 +27,7 @@ from envisage.ui.workbench.api import WorkbenchActionSet
 
 BASE = 'src.experiment.plugins.experiment_actions'
 PATH = 'MenuBar/Experiment'
-
+SETSPATH = 'MenuBar/Experiment/Sets...'
 
 class ExperimentActionSet(WorkbenchActionSet):
     '''
@@ -36,24 +36,35 @@ class ExperimentActionSet(WorkbenchActionSet):
 #    menus = [
 #           Menu(name = '&File', path = 'MenuBar')
 #           ]
-    actions = [Action(name='New Experiment',
-                      path=PATH,
-                    class_name='{}:NewExperimentAction'.format(BASE)
+    actions = [Action(name='New',
+                      path=SETSPATH,
+                    class_name='{}:NewExperimentSetAction'.format(BASE)
 
                     ),
-                Action(name='Open Experiment',
-                       path=PATH,
-                       class_name='{}:OpenExperimentAction'.format(BASE)
+                Action(name='Open...',
+                       path=SETSPATH,
+                       class_name='{}:OpenExperimentSetAction'.format(BASE)
 
                        ),
-                Action(name='Recall',
-                       path=PATH,
-                       class_name='{}:RecallAnalysisAction'.format(BASE)
+#                Action(name='Save',
+#                       path=SETSPATH,
+#                       class_name='{}:SaveExperimentSetAction'.format(BASE)
+#
+#                       ),
+#                Action(name='Save As...',
+#                       path=SETSPATH,
+#                       class_name='{}:SaveAsExperimentSetAction'.format(BASE)
+#
+#                       ),
+                Action(name='Lab Table',
+                       path=PATH + '/Recall',
+                       class_name='{}:OpenRecentTableAction'.format(BASE)
 
                        ),
+
                 Action(name='Execute',
                        path=PATH,
-                       class_name='{}:ExecuteExperimentAction'.format(BASE)
+                       class_name='{}:ExecuteExperimentSetAction'.format(BASE)
 
                        )
              ]

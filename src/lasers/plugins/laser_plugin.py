@@ -20,6 +20,8 @@ from traits.api import List
 
 #============= local library imports  ==========================
 from src.envisage.core.core_plugin import CorePlugin
+from src.helpers.parsers.initialization_parser import InitializationParser
+from src.lasers.laser_managers.laser_manager import ILaserManager
 
 class LaserPlugin(CorePlugin):
     '''
@@ -36,7 +38,9 @@ class LaserPlugin(CorePlugin):
             raise NotImplementedError
 
         so = self.service_offer_factory(
-                          protocol='.'.join(self.klass),
+#                          protocol='.'.join(self.klass),
+                          protocol=ILaserManager,
+#                          'src.lasers.laser_managers.laser_manager.ILaserManager',
                           factory=self._factory)
 
         return [so]
@@ -44,11 +48,34 @@ class LaserPlugin(CorePlugin):
     def _factory(self):
         '''
         '''
-        factory = __import__(self.klass[0], fromlist=[self.klass[1]])
-        m = getattr(factory, self.klass[1])()
+#        factory = __import__(self.klass[0], fromlist=[self.klass[1]])
+
+        ip = InitializationParser()
+        plugin = ip.get_plugin(self.klass[1].replace('Manager', ''), category='hardware')
+        mode = plugin.get('mode')
+
+        if mode == 'client':
+            klass = 'PychronLaserManager'
+            pkg = 'src.lasers.laser_managers.pychron_laser_manager'
+            try:
+                tag = plugin.find('communications')
+                params = dict()
+                for attr in ['host', 'port', 'kind']:
+                    try:
+                        params[attr] = tag.find(attr).text.strip()
+                    except Exception, e:
+                        print e
+            except Exception, e:
+                print e
+            params['name'] = self.name
+            factory = __import__(pkg, fromlist=[klass])
+            m = getattr(factory, klass)(**params)
+        else:
+            factory = __import__(self.klass[0], fromlist=[self.klass[1]])
+            m = getattr(factory, self.klass[1])()
+
         m.bootstrap()
         m.bind_preferences(self.id)
-        m.stage_manager.bind_preferences(self.id)
 
         return m
 
@@ -60,7 +87,8 @@ class LaserPlugin(CorePlugin):
         d = []
         if self.klass is not None:
             d = [dict(name=self.name,
-                     manager=app.get_service('.'.join(self.klass)))]
+                     manager=app.get_service(ILaserManager, 'name=="{}"'.format(self.name)
+                                             ))]
 
         return d
 #============= EOF ====================================

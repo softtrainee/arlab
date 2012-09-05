@@ -152,12 +152,12 @@ class ExtractionLineManager(Manager):
         bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
         bind_preference(self, 'close_after_minutes', 'pychron.extraction_line.close_after')
 
-        from src.extraction_line.plugins.extraction_line_preferences_page import get_valve_group_names
-
-        for name in get_valve_group_names():
-            self.add_trait(name, Str(''))
-            self.on_trait_change(self._owner_change, name)
-            bind_preference(self, name, 'pychron.extraction_line.{}'.format(name))
+#        from src.extraction_line.plugins.extraction_line_preferences_page import get_valve_group_names
+#
+#        for name in get_valve_group_names():
+#            self.add_trait(name, Str(''))
+#            self.on_trait_change(self._owner_change, name)
+#            bind_preference(self, name, 'pychron.extraction_line.{}'.format(name))
 
     def _owner_change(self, name, value):
         self.valve_manager.claim_section(name.split('_')[0], value.lower)
@@ -270,7 +270,8 @@ class ExtractionLineManager(Manager):
         if self.valve_manager is not None:
             if address:
                 name = self.valve_manager.get_name_by_address(address)
-            if description:
+
+            if description and description != '---':
                 name = self.valve_manager.get_name_by_description(description)
 
             result = self._change_valve_state(name, mode, action, **kw)
@@ -323,15 +324,18 @@ class ExtractionLineManager(Manager):
 
         func = getattr(self.valve_manager, '{}_by_name'.format(action))
 
-        claimer = self.valve_manager.get_system(sender_address)
         owned = False
-        if claimer:
-            owned = self.valve_manager.check_group_ownership(name, claimer)
+        try:
+            claimer = self.valve_manager.get_system(sender_address)
+            if claimer:
+                owned = self.valve_manager.check_group_ownership(name, claimer)
+        except AttributeError:
+            #no systems are defined
+            pass
 
         change = False
         if not owned:
             result, change = func(name, mode=mode)
-
         else:
             result = '{} owned by {}'.format(name, claimer)
             self.warning(result)
@@ -348,8 +352,10 @@ class ExtractionLineManager(Manager):
 #        else:
 
         if isinstance(result, bool):
-            self.canvas.update_valve_state(name, True if action == 'open' else False)
-            result = True
+            #valve state show as changed if even it didnt actuate
+            if result:
+                self.canvas.update_valve_state(name, True if action == 'open' else False)
+#                result = True
 
         return result, change
 
@@ -381,9 +387,6 @@ class ExtractionLineManager(Manager):
 
     def get_script_state(self, key):
         return self.pyscript_editor.get_script_state(key)
-
-    def open_pyscript_editor(self):
-        self.pyscript_editor.edit_traits()
 
     def set_selected_explanation_item(self, obj):
         if self.explanation:

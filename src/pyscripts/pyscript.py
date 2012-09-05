@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,32 +14,21 @@
 # limitations under the License.
 #===============================================================================
 
+#============= enthought library imports =======================
 from traits.api import Str, Any, Bool
-import time
-from threading import Thread, Event, Condition
-from src.loggable import Loggable
-import os
 from pyface.timer.do_later import do_later
-from Queue import Queue, Empty
-from src.scripts.wait_dialog import WaitDialog
 from pyface.wx.dialog import confirmation
+#============= standard library imports ========================
+import time
+import os
+import inspect
+from threading import Thread, Event, Condition
+#============= local library imports  ==========================
+from src.pyscripts.wait_dialog import WaitDialog
+from src.loggable import Loggable
 
 
-def verbose_skip(func):
-    def decorator(obj, *args, **kw):
-        if obj._syntax_checking or obj._cancel:
-            return
-        obj.debug('{} {} {}'.format(func.__name__, args, kw))
-        return func(obj, *args, **kw)
-    return decorator
-
-def skip(func):
-    def decorator(obj, *args, **kw):
-        if obj._syntax_checking or obj._cancel:
-            return
-        return func(obj, *args, **kw)
-    return decorator
-
+from Queue import Queue, Empty
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
         self.info('open valve')
@@ -73,53 +62,42 @@ class MainError(Exception):
         return 'No "main" function defined'
 
 
-HTML_HELP = '''
-<body>
-<table border="1">
-    <tr>
-        <th>Keyword</th>
-        <th>Parameters</th>
-        <th>Description</th>
-        <th>Example</th>
-    </tr>
-    <tr><td colspan="4" align="center" bgcolor=#C0C0C0>
-        Script Specific</td></tr>
-    {}
-    <tr><td colspan="4" align="center" bgcolor=#C0C0C0>
-        General</td></tr>
-    <tr>
-        <td>sleep</td>
-        <td>seconds</td>
-        <td>delay execution</td>
-        <td>sleep(1.5)</td>
-    </tr>
-    <tr>
-        <td>begininterval</td>
-        <td>seconds</td>
-        <td>start an interval (t>=5 opens a wait dialog)</td>
-        <td>begininterval(40)</td>
-    </tr>
-    <tr>
-        <td>completeinterval</td>
-        <td></td>
-        <td>blocks execution until begininterval is released</td>
-        <td>completeinterval</td>
-    </tr>
-    <tr>
-        <td>info</td>
-        <td>message</td>
-        <td>log an info message</td>
-        <td>info("hello info world")</td>
-    </tr>
-</table>
-</body>
-'''
+def verbose_skip(func):
+    def decorator(obj, *args, **kw):
+        fname = func.__name__
+#        print fname, obj._syntax_checking, obj._cancel
+        if fname.startswith('_m_'):
+            fname = fname[3:]
+
+        args1, _, _, defaults = inspect.getargspec(func)
+
+        nd = sum([1 for di in defaults if di is not None]) if defaults else 0
+
+        min_args = len(args1) - 1 - nd
+        an = len(args) + len(kw)
+        if an < min_args:
+            raise PyscriptError('invalid arguments count for {}, args={} kwargs={}'.format(fname,
+                                                                                           args, kw))
+        if obj._syntax_checking or obj._cancel:
+            return
+
+        obj.debug('{} {} {}'.format(fname, args, kw))
+
+        return func(obj, *args, **kw)
+    return decorator
+
+def skip(func):
+    def decorator(obj, *args, **kw):
+        if obj._syntax_checking or obj._cancel:
+            return
+        return func(obj, *args, **kw)
+    return decorator
+
 
 
 class PyScript(Loggable):
     _text = None
     manager = Any
-    laser_manager = Any
     parent = Any
     root = Str
     parent_script = Any
@@ -142,6 +120,9 @@ class PyScript(Loggable):
 
     _graph_calc = False
 
+    def toblob(self):
+        return self._text
+
     def get_estimated_duration(self):
         return self._estimated_duration
 
@@ -152,12 +133,6 @@ class PyScript(Loggable):
                 self.cancel()
             else:
                 self.cancel_flag = False
-
-    def get_help(self):
-        return HTML_HELP.format(self._get_help_hook())
-
-    def _get_help_hook(self):
-        return ''
 
     def get_context(self):
         ks = [((k[0], k[1]) if isinstance(k, tuple) else (k, k))
@@ -230,12 +205,6 @@ class PyScript(Loggable):
             with open(p, 'r') as f:
                 self._text = f.read()
             return True
-
-    def report_result(self, r):
-#        n = currentThread().name
-#        if n == 'MainThread':
-#            print r
-        pass
 
 #==============================================================================
 # commands
@@ -366,12 +335,14 @@ class PyScript(Loggable):
 
             if ok:
                 self._execute()
+            return self._completed
 
         if new_thread:
             t = Thread(target=_ex_)
             t.start()
         else:
-            _ex_()
+            return _ex_()
+
 
     def _calculate_graph(self):
         self._xs = [0]
@@ -389,6 +360,7 @@ class PyScript(Loggable):
 
         if r is not None:
             self.info('invalid syntax')
+            self.warning_dialog(str(r))
             raise PyscriptError(r)
 #            report the traceback
 #            self.info(r)
@@ -417,10 +389,12 @@ class PyScript(Loggable):
         except KeyError:
             return MainError()
 
-        except Exception, _e:
-            import traceback
-            traceback.print_exc()
-            return traceback.format_exc()
+        except Exception, e:
+#            import traceback
+#            traceback.print_exc()
+#            self.warning_dialog(str(e))
+            return e
+#            return  traceback.format_exc()
 
         if self._syntax_checking:
             return
@@ -444,23 +418,29 @@ class PyScript(Loggable):
 #        if self.controller is not None:
 #            self.controller.end()
 
-    def _manager_action(self, func, manager=None, *args, **kw):
+    def _manager_action(self, func, name=None, protocol=None, *args, **kw):
 #        man = self._get_manager()
         man = self.manager
-#        print man, manager, func
-        if manager is not None and man is not None:
+
+        if protocol is not None and man is not None:
             app = man.application
             if app is not None:
-                man = app.get_service(manager)
+                args = (protocol,)
+                if name is not None:
+                    args = (protocol, 'name=="{}"'.format(name))
 
+                man = app.get_service(*args)
+
+#        print man, manager, 'sadf'
         if man is not None:
-
             if not isinstance(func, list):
                 func = [(func, args, kw)]
 
-            for f, a, k in func:
-                getattr(man, f)(*a, **k)
-
+            return [getattr(man, f)(*a, **k) for f, a, k in func]
+#            for f, a, k in func:
+#                getattr(man, f)(*a, **k)
+        else:
+            self.warning('could not find manager {}'.format(name))
 #    def _get_manager(self):
 #        return self.manager
 
@@ -523,4 +503,4 @@ if __name__ == '__main__':
                       _manager=DummyManager())
 
     p.execute()
-
+#============= EOF =============================================

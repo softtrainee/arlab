@@ -33,5 +33,8 @@ HW_PACKAGE_MAP = {'CommandProcessor': 'src.messaging.command_processor',
 
              'RemoteThermoRack':'src.hardware.remote.thermorack',
              'PidController':'src.hardware.pid_controller'
+
+             'PychronLaser:src.hardware.pychron_laser'
+             'PychronMotion:src.hardware.pychron_motion'
              #'ControlModule': 'src.hardware.fusions.vue_diode_control_module'
              }

@@ -75,13 +75,13 @@ class Acquire(Command):
         return self._quote(self.name)
 
 
-class MoveToHole(Command):
-    hole = Int
+class MoveToPosition(Command):
+    position = Int
     def _get_view(self):
-        return Item('hole')
+        return Item('position')
 
     def _to_string(self):
-        return '{}'.format(self.hole)
+        return '{}'.format(self.position)
 
 
 class HeatSample(Command):
@@ -91,4 +91,5 @@ class HeatSample(Command):
 
     def _to_string(self):
         return '{}'.format(self.value)
+
 #============= EOF =============================================

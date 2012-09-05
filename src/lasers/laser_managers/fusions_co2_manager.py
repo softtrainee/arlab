@@ -39,9 +39,9 @@ class FusionsCO2Manager(FusionsLaserManager):
     launch_profile = Button
     launch_step = Button
 
-    request_power = DelegatesTo('logic_board')
-    request_powermin = DelegatesTo('logic_board')
-    request_powermax = DelegatesTo('logic_board')
+    request_power = DelegatesTo('laser_controller')
+    request_powermin = DelegatesTo('laser_controller')
+    request_powermax = DelegatesTo('laser_controller')
 
     monitor_name = 'co2_laser_monitor'
     monitor_klass = FusionsCO2LaserMonitor
@@ -62,7 +62,7 @@ class FusionsCO2Manager(FusionsLaserManager):
     def _set_laser_power_hook(self, rp, **kw):
         '''
         '''
-        self.logic_board._set_laser_power_(rp, **kw)
+        self.laser_controller._set_laser_power_(rp, **kw)
         self.monitor.setpoint = self._requested_power
 
         if self.data_manager:
@@ -72,9 +72,9 @@ class FusionsCO2Manager(FusionsLaserManager):
                     tab.attrs.request_power = rp
 
     def get_laser_watts(self):
-        return self.logic_board.read_power_meter()
+        return self.laser_controller.read_power_meter()
 
-    def _logic_board_default(self):
+    def _laser_controller_default(self):
         '''
         '''
         b = FusionsCO2LogicBoard(name='co2logicboard',

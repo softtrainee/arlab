@@ -55,20 +55,33 @@ class MassSpecDatabaseImporter(Loggable):
     def traits_view(self):
         v = View(Item('test', show_label=False))
         return v
+
     def _db_default(self):
         db = MassSpecDatabaseAdapter(dbname='massspecdata_test')
         if db.connect():
             return db
 
-    def add_analysis(self, rid, runtype):
+    def add_analysis(self, rid, aliquot, irradpos, baselines, signals, keys):
         '''
             
         '''
+        if rid.startswith('B'):
+            runtype = 'Blank'
+            irradpos = -1
+        elif rid.startswith('A'):
+            runtype = 'Air'
+            irradpos = -2
+        else:
+            runtype = 'Unknown'
+
         db = self.db
         #=======================================================================
         # add analysis
         #=======================================================================
-        analysis = db.add_analysis(rid, RUN_TYPE_DICT[runtype])
+        analysis = db.add_analysis(rid,
+                                   aliquot,
+                                   irradpos,
+                                   RUN_TYPE_DICT[runtype])
         #=======================================================================
         # add data reduction session
         #=======================================================================
@@ -76,36 +89,36 @@ class MassSpecDatabaseImporter(Loggable):
         #=======================================================================
         # add changeable items
         #=======================================================================
+
         item = db.add_changeable_items(analysis, drs, commit=True)
         analysis.ChangeableItemsID = item.ChangeableItemsID
         #=======================================================================
         # add signal data
         #=======================================================================
 
-        for det, iso in ISO_LABELS.iteritems():
+#        for det, iso in ISO_LABELS.iteritems():
+
+        for bi, si, (det, iso) in zip(baselines, signals, keys):
             #===================================================================
             # isotopes
             #===================================================================
-            iso = db.add_isotope(rid, det, iso)
+            iso = db.add_isotope(analysis, det, iso)
             #===================================================================
             # baselines
             #===================================================================
-            tb = array([1, 2, 3, 4, 5])
-            vb = array([1, 1, 1, 1, 1])
+            tb, vb = zip(*bi)
             blob = self._build_timeblob(tb, vb)
             label = '{} Baseline'.format(det.upper())
-            ncnts = tb.shape[0]
+            ncnts = len(tb)
             db.add_baseline(blob, label, ncnts)
             #===================================================================
             # oeak time
             #===================================================================
-            tb = array([1, 2, 3, 4, 5])
-            vb = array([100, 99, 98, 97, 96])
+            tb, vb = zip(*si)
             blob = self._build_timeblob(tb, vb)
             db.add_peaktimeblob(blob, iso)
 
         db.commit()
-#        db.delete_analysis(rid)
 
     def _build_timeblob(self, t, v):
         '''

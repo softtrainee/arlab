@@ -85,7 +85,10 @@ class H5DataManager(DataManager):
 
         '''
         p = self._new_frame_path(*args, **kw)
-        self._frame = openFile(p, mode='w')
+        try:
+            self._frame = openFile(p, mode='w')
+        except ValueError:
+            pass
 
 #        self.lock_path(p)
 

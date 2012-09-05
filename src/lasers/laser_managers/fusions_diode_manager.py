@@ -348,7 +348,7 @@ class FusionsDiodeManager(FusionsLaserManager):
                                  configuration_dir_name='diode')
         return p
 
-    def _logic_board_default(self):
+    def _laser_controller_default(self):
         '''
         '''
         b = FusionsDiodeLogicBoard(name='diodelogicboard',

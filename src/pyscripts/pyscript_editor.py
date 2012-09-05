@@ -23,7 +23,7 @@ from traitsui.api import View, Item, HGroup, Group, spring, \
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.managers.manager import Manager
+from src.managers.manager import Manager, SaveableHandler
 from traitsui.menu import Action
 from src.paths import paths
 from pyface.api import warning
@@ -53,20 +53,13 @@ SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
 
 SCRIPT_EXTENSIONS = dict(bakeout='.bo')
 
-
-class ScriptHandler(Handler):
+class ScriptHandler(SaveableHandler):
     def init(self, info):
         info.object.ui = info.ui
         if not info.initialized:
 #            info.object.load_help()
             info.object.load_context()
             info.object.load_commands()
-
-    def save(self, info):
-        info.object.save()
-
-    def save_as(self, info):
-        info.object.save_as()
 
     def open_script(self, info):
         info.object.open_script()

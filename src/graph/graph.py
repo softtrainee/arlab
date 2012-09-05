@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import HasTraits, Instance, Any, Bool, \
-        List, Str, Property, Dict
+        List, Str, Property, Dict, Callable
 from traitsui.api import View, Item, Handler
 
 from enable.component_editor import ComponentEditor
@@ -75,6 +75,9 @@ class GraphHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
 
+    def closed(self, info, isok):
+        info.object.closed()
+
 
 class Graph(Loggable):
     ''' 
@@ -121,12 +124,18 @@ class Graph(Loggable):
     view_identifier = None
 
     ui = Any
+
+    close_func = Callable
+
     def __init__(self, *args, **kw):
         '''
         '''
         super(Graph, self).__init__(*args, **kw)
         self.clear()
 
+    def closed(self):
+        if self.close_func:
+            self.close_func()
 #    def close_ui(self):
 #        if self.ui is not None:
 #            #disposes 50 ms from now
@@ -467,9 +476,9 @@ class Graph(Loggable):
 
         if isinstance(series, int):
             series = 'plot%i' % series
+
         try:
             p.showplot(series) if v else p.hideplot(series)
-
             self.plotcontainer.invalidate_and_redraw()
         except KeyError:
             pass
@@ -871,7 +880,7 @@ class Graph(Loggable):
     def add_horizontal_rule(self, v, plotid=0, **kw):
         '''
         '''
-        plot = self.plots[0]
+        plot = self.plots[plotid]
 
         l = GuideOverlay(plot, value=v, **kw)
 
