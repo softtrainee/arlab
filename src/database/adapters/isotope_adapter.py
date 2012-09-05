@@ -323,7 +323,9 @@ class IsotopeAdapter(DatabaseAdapter):
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('ia')
-    ia = IsotopeAdapter(dbname=paths.isotope_db,
+    ia = IsotopeAdapter(
+                        dbname='/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite',
+#                        dbname=paths.isotope_db,
                         kind='sqlite')
     ia.connect()
 

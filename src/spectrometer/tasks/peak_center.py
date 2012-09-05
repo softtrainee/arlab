@@ -30,6 +30,8 @@ class PeakCenter(MagnetScan):
     min_peak_height = Float(3)
     canceled = False
 
+    data = None
+    result = None
     def get_peak_center(self, ntries=2):
         self._alive = True
         graph = self.graph
@@ -63,12 +65,16 @@ class PeakCenter(MagnetScan):
 
 #            print center_dac + 0.001, start, end, nsteps
             intensities = self._scan_dac(dac_values, self.detector_label)
+            self.data = (dac_values, intensities)
 
             if intensities:
                 if not self.canceled:
                     result = self._calculate_peak_center(dac_values, intensities)
+                    self.result = result
                     if result is not None:
+
                         xs, ys, mx, my = result
+
                         center = xs[1]
                         graph.set_data(xs, series=1)
                         graph.set_data(ys, series=1, axis=1)
@@ -113,7 +119,7 @@ class PeakCenter(MagnetScan):
                 self.warning('PeakCenterError: could not find a low pos')
                 return
         xstep = (x[i] - x[i - 1]) / 2
-        lx = x[i] + xstep
+        lx = x[i] - xstep
         ly = y[i] - (y[i] - y[i - 1]) / 2.
 
         #look forward for point that is 80% of max
@@ -128,7 +134,7 @@ class PeakCenter(MagnetScan):
                 self.warning('PeakCenterError: could not find a high pos')
                 return
 
-        hx = x[i + 1] + xstep
+        hx = x[i + 1] - xstep
         hy = y[i] - (y[i] - y[i + 1]) / 2.
 
         cx = (hx + lx) / 2.0

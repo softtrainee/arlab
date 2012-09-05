@@ -47,8 +47,13 @@ class AutomatedRunAdapter(TabularAdapter):
     state_text = Property
     extraction_script_text = Property
     measurement_script_text = Property
+    autocenter_text = Property
 
     can_edit = False
+#    def get_can_edit(self, obj, trait, row):
+#        if self.item:
+#            if self.item.state == 'not run':
+#                return True
 
     def _columns_default(self):
         hp = ('Temp', 'temp_or_power')
@@ -67,6 +72,12 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
                  ]
+
+    def _get_autocenter_text(self, trait, item):
+        return 'yes' if self.item.autocenter else ''
+
+#    def _set_autocenter_text(self, trait, value):
+#        self.item.autocenter = value == 'yes'
 
     def _get_extraction_script_text(self, trait, item):
         if self.item.extraction_script:
@@ -161,6 +172,8 @@ class AutomatedRun(Loggable):
 
     _rundate = None
     _runtime = None
+
+    executable = Bool(False)
     def get_estimated_duration(self):
         '''
             use the pyscripts to calculate etd
@@ -239,9 +252,11 @@ class AutomatedRun(Loggable):
         self._pre_extraction_save()
         if self.extraction_script.execute():
             self._post_extraction_save()
-
-        self.info('======== Extraction Finished========')
-
+            self.info('======== Extraction Finished========')
+            return True
+        else:
+            self.info('======== Extraction Finished unsuccessfully========')
+            return False
 
     def do_measurement(self):
         #use a measurement_script to explicitly define 
@@ -251,7 +266,11 @@ class AutomatedRun(Loggable):
         if self.measurement_script.execute():
             self._post_measurement_save()
 
-        self.info('======== Measurement Finished ========')
+            self.info('======== Measurement Finished ========')
+            return True
+        else:
+            self.info('======== Measurement Finished unsuccessfully========')
+            return False
 
     def do_data_collection(self, ncounts, starttime, series=0):
 
@@ -269,22 +288,27 @@ class AutomatedRun(Loggable):
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series)
 
-    def do_baselines(self, ncounts, starttime, detector=None,
-                     position=None, series=0):
-        spec = self.spectrometer_manager.spectrometer
-        if spec:
-            if position is not None:
-                spec.set_magnet_position(position)
-
+    def do_baselines(self, ncounts, starttime, mass, detector,
+                     mode, series=0):
+        if mass:
+            ion = self.ion_optics_manager
+            if ion is not None:
+                ion.position(mass, detector, False)
+#
         gn = 'baselines'
         self._build_tables(gn)
-        if detector is None:
+        if mode == 'multicollect':
             self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series)
-        else:
-            masses = [1, 2]
-            self._peak_hop(gn, detector, masses, ncounts, starttime, series)
+##        else:
+##            masses = [1, 2]
+##            self._peak_hop(gn, detector, masses, ncounts, starttime, series)
+
+    def do_peak_hop(self, detector, isotopes, cycles, starttime, series):
+        self._peak_hop('signals', detector,
+                       isotopes, cycles, starttime, series)
+
 
     def do_peak_center(self, **kw):
         ion = self.ion_optics_manager
@@ -295,11 +319,28 @@ class AutomatedRun(Loggable):
             #block until finished
             t.join()
 
-#        sm = self.spectrometer_manager
-#        if sm is not None:
-##            sm.spectrometer._alive = True
-#            sm.peak_center(**kw)
-##            sm.spectrometer._alive = False
+            pc = ion.peak_center
+            if pc.result:
+                dm = self.data_manager
+                tab = dm.new_table('/', 'peakcenter')
+                for xi, yi in zip(*pc.data):
+                    nrow = tab.row
+                    print xi, yi
+                    nrow['time'] = xi
+                    nrow['value'] = yi
+                    nrow.append()
+
+                xs, ys, _mx, _my = pc.result
+                attrs = tab.attrs
+                print xs, ys, 'arun'
+                attrs.low_dac = xs[0]
+                attrs.center_dac = xs[1]
+                attrs.high_dac = xs[2]
+
+                attrs.low_signal = ys[0]
+                attrs.center_signal = ys[1]
+                attrs.high_signal = ys[2]
+                tab.flush()
 
     def set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
@@ -412,7 +453,7 @@ class AutomatedRun(Loggable):
         for di in self._active_detectors:
             dm.new_table('/{}'.format(gn), di.name)
 
-    def _peak_hop(self, name, detector, masses, ncounts, starttime, series):
+    def _peak_hop(self, name, detector, isotopes, ncounts, starttime, series):
         self.info('peak hopping {} detector={}'.format(name, detector))
         spec = None
         sm = self.spectrometer_manager
@@ -420,18 +461,16 @@ class AutomatedRun(Loggable):
             spec = sm.spectrometer
 
         for i in xrange(0, ncounts, 1):
-            for mi, mass in enumerate(masses):
+            for mi, iso in enumerate(isotopes):
                 ti = self.integration_time * 0.99 if not self._debug else 0.01
                 time.sleep(ti)
                 if spec is not None:
-                    #position mass m onto detector
-                    spec.set_magnet_position()
+                    #position isotope onto detector
+                    self.set_position(iso, detector)
 
                 x = time.time() - starttime
 #                if i % 100 == 0 or x > self.graph.get_x_limits()[1]:
 #                print x, self.graph.get_x_limits()[1]
-                if x > self.graph.get_x_limits()[1]:
-                    self.graph.set_x_limits(0, x + 10)
 
                 signals = [1200 * (1 + random.random()),
                         3.5 * (1 + random.random())]
@@ -447,6 +486,9 @@ class AutomatedRun(Loggable):
                     self.graph.new_series(x=[x], y=[v], plotid=mi, **kw)
                 else:
                     self.graph.add_datum((x, v), plotid=mi, ** kw)
+
+                if x > self.graph.get_x_limits()[1]:
+                    self.graph.set_x_limits(0, x + 10)
 
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, series):
@@ -508,25 +550,27 @@ class AutomatedRun(Loggable):
                 self.graph.set_x_limits(0, x + 10)
 
     def _load_script(self, name):
-
         ec = self.configuration
         fname = os.path.basename(ec['{}_script'.format(name)])
         if fname in self.scripts:
             self.info('script "{}" already loaded... cloning'.format(fname))
-            s = self.scripts[fname].clone_traits()
-            s.automated_run = self
-            return s
+            s = self.scripts[fname]
+            if s is not None:
+                s = s.clone_traits()
+                s.automated_run = self
         else:
             self.info('loading script "{}"'.format(fname))
             func = getattr(self, '{}_script_factory'.format(name))
             s = func(ec)
+
+            setattr(self, '_{}_script'.format(name), s)
             if s.bootstrap():
                 try:
                     s._test()
-                    setattr(self, '_{}_script'.format(name), s)
-                    return s
                 except Exception, e:
                     self.warning(e)
+                    self.executable = False
+        return s
 
     def _pre_extraction_save(self):
         # set our aliquot
@@ -626,8 +670,13 @@ class AutomatedRun(Loggable):
             db.add_analysis_path(p, analysis=a)
             db.commit()
 
+        #close h5 file
+        self.data_manager.close()
+
         #version control new analysis
         self._version_control_analysis(p, a)
+
+        #save to massspec
         self._save_to_massspec()
 
     def _version_control_analysis(self, apath, analysis):
@@ -651,16 +700,18 @@ class AutomatedRun(Loggable):
         detectors = []
         for det in self._active_detectors:
             ai = det.name
-            table = dm.get_table(ai, '/baselines')
-            bi = [(row['time'], row['value']) for row in table.iterrows()]
-
-#            table = dm.get_table('signals', '/{}'.format(ai))
-            table = dm.get_table(ai, '/signals')
-            si = [(row['time'], row['value']) for row in table.iterrows()]
-
-            baselines.append(bi)
-            signals.append(si)
             detectors.append((ai, det.isotope))
+
+            table = dm.get_table(ai, '/baselines')
+            if table:
+                bi = [(row['time'], row['value']) for row in table.iterrows()]
+                baselines.append(bi)
+
+            table = dm.get_table(ai, '/signals')
+            if table:
+                si = [(row['time'], row['value']) for row in table.iterrows()]
+                signals.append(si)
+
 
         self.massspec_importer.add_analysis(self.identifier,
                                             self.aliquot,

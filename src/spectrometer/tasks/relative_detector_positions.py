@@ -59,7 +59,7 @@ class RelativeDetectorPositions(SpectrometerTask):
                 self.info('finished calculating relative detector positions')
 
                 config = ConfigParser.ConfigParser()
-                p = os.path.join(paths.setup_dir, 'spectrometer', 'detectors.cfg')
+                p = os.path.join(paths.spectrometer_dir, 'detectors.cfg')
                 config.read(p)
                 for name, rp in rps:
                     self.info('{}={:0.6f}'.format(name, rp))

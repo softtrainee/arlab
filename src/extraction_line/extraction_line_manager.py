@@ -336,7 +336,6 @@ class ExtractionLineManager(Manager):
         change = False
         if not owned:
             result, change = func(name, mode=mode)
-
         else:
             result = '{} owned by {}'.format(name, claimer)
             self.warning(result)
@@ -353,8 +352,10 @@ class ExtractionLineManager(Manager):
 #        else:
 
         if isinstance(result, bool):
-            self.canvas.update_valve_state(name, True if action == 'open' else False)
-            result = True
+            #valve state show as changed if even it didnt actuate
+            if result:
+                self.canvas.update_valve_state(name, True if action == 'open' else False)
+#                result = True
 
         return result, change
 

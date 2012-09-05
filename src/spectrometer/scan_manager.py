@@ -158,38 +158,6 @@ class ScanManager(Manager):
         return self._graph_factory()
 
     def traits_view(self):
-#        control_group = VGroup(
-##                                HGroup(self._button_factory('defscan', 'defscan_label', None),
-#                                       #Item('defscan'),
-#
-##                                        Item('results'), show_labels=False),
-#                                Item('spectrometer', style='custom', show_label=False)
-#                                #Item('current_hv', style = 'readonly'),
-##                                Item('integration_time'),
-##                                Item('molecular_weight', editor = EnumEditor(values = MOLECULAR_WEIGHT_KEYS)),
-##                                Item('sub_cup_configuration', show_label = False,
-##                                     editor = EnumEditor(values = self.sub_cup_configurations)),
-##                                Item('reference_detector', show_label = False, style = 'custom',
-##                                                            editor = EnumEditor(
-##                                                                               values = self.detector_names,
-##                                                                               cols = len(self.detector_names)
-##                                                                               )),
-##                                Item('active_detectors', show_label = False, style = 'custom',
-##                                     editor = CheckListEditor(values = DETECTOR_ORDER,
-##                                                              cols = len(DETECTOR_ORDER)
-##                                                              )),
-#                                #self._slider_factory('magnet_dac', 'magnet_dac'),
-#                                #self._slider_factory('magnet_position', 'magnet_position')
-#                              )
-#        detector_group = Item('detectors',
-#                              show_label=False,
-#                              editor=TableEditor(columns=[ObjectColumn(name='name', editable=False),
-#                                                             ObjectColumn(name='intensity', editable=False),
-#                                                             CheckboxColumn(name='active', editable=True),
-#                                                             ObjectColumn(name='deflection', editable=True)
-#                                                             ],
-#                                                    )
-#                             )
         custom = lambda n:Item(n, style='custom', show_label=False)
         magnet_grp = VGroup(
                             custom('magnet'),

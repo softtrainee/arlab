@@ -32,7 +32,6 @@ from src.experiment.experiment_set import ExperimentSet
 
 from src.paths import paths
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.helpers.filetools import unique_path, str_to_bool
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
@@ -135,6 +134,23 @@ class ExperimentManager(Manager):
         exp.stop_stats_timer()
         self.info('automated runs complete')
 
+    def _setup_automated_run(self, i, arun, repo, dm, runner):
+        exp = self.experiment_set
+
+        exp.current_run = arun
+        arun.index = i
+        arun.experiment_name = exp.name
+        arun.experiment_manager = self
+        arun.spectrometer_manager = self.spectrometer_manager
+        arun.extraction_line_manager = self.extraction_line_manager
+        arun.ion_optics_manager = self.ion_optics_manager
+        arun.data_manager = dm
+        arun.db = self.db
+        arun.massspec_importer = self.massspec_importer
+        arun.runner = runner
+        arun.integration_time = 1.04
+        arun.repository = repo
+        arun._debug = DEBUG
 
     def do_automated_runs(self):
 
@@ -176,29 +192,12 @@ class ExperimentManager(Manager):
             repo.push()
 
         for i, arun in enumerate(exp.automated_runs):
-            exp.current_run = arun
-            arun.index = i
-            arun.experiment_name = exp.name
-            arun.experiment_manager = self
-            arun.spectrometer_manager = self.spectrometer_manager
-            arun.extraction_line_manager = self.extraction_line_manager
-            arun.ion_optics_manager = self.ion_optics_manager
-            arun.data_manager = dm
-            arun.db = self.db
-            arun.massspec_importer = self.massspec_importer
-            arun.runner = runner
-            arun.integration_time = 1.04
-            arun.repository = repo
-
-
-            arun._debug = DEBUG
-#            if arun.identifier.startswith('B'):
-#                arun.isblank = True
 
             if not self._continue_check():
                 break
 
             self.info('Start automated run {}'.format(arun.identifier))
+            self._setup_automated_run(i, arun, repo, dm, runner)
 
             #bootstrap the extraction script and measurement script
             if not arun.extraction_script:
@@ -211,50 +210,41 @@ class ExperimentManager(Manager):
                 self.warning(err_message)
                 continue
 
-            arun.state = 'extraction'
-            arun.do_extraction()
-
             if not self._continue_check():
+                break
+
+            arun.state = 'extraction'
+            if not arun.do_extraction():
+                self._alive = False
+
+            if not self._continue_check(confirm=True):
                 break
 
             # do eq in a separate thread
             # this way we can measure during eq.
             # ie do_equilibration is nonblocking
 
-            #use an Event object so that we dont finish before eq is done
-            event = TEvent()
-            event.clear()
-
-            eqtime = arun.get_measurement_parameter('equilibration_time', default=15)
-            inlet_valve = arun.get_measurement_parameter('inlet_valve', default='H')
-            outlet_valve = arun.get_measurement_parameter('outlet_valve', default='V')
-
-            self.do_equilibration(event, eqtime,
-                                  inlet_valve, outlet_valve)
-
-            if not self._continue_check():
-                break
-
+            evt = self.do_equilibration(arun)#eqtime, inlet_valve, outlet_valve)
             self.debug('waiting for the inlet to open')
-            event.wait()
+            evt.wait()
             self.debug('inlet opened')
 
+            if not self._continue_check():
+                break
+
             arun.state = 'measurement'
-            arun.do_measurement()
-
-            if not self._continue_check():
-                break
-
-            self.info('Automated run {} finished'.format(arun.identifier))
-
-            if not self._continue_check():
-                break
+            if not arun.do_measurement():
+                self._alive = False
 
             arun.state = 'success'
+            self.info('Automated run {} finished'.format(arun.identifier))
             if i + 1 == nruns:
                 exp.stop_stats_timer()
                 self.end_runs()
                 return
+
+            if not self._continue_check():
+                break
 
             delay = self.experiment_set.delay_between_runs
             self.info('Delay between runs {}'.format(delay))
@@ -270,26 +260,38 @@ class ExperimentManager(Manager):
             self.end_runs()
             return
 
-
         #executed if break out of for loop
-        arun.state = 'fail'
-        self.warning('automated runs did not complete successfully')
-        self.warning('error: {}'.format(err_message))
+        if err_message:
+            arun.state = 'fail'
+            self.warning('automated runs did not complete successfully')
+            self.warning('error: {}'.format(err_message))
+        else:
+            self.info('automated runs ended at {}, index={}'.format(arun.identifier, i + 1))
 
 
-    def _continue_check(self):
+    def _continue_check(self, confirm=False):
         c = self.isAlive()
         if c:
             return True
         else:
-            self.info('automated runs cancelled')
+            if confirm:
+                if self.confirmation_dialog('Cancel Experiment Set {}'.format(self.experiment_set.name),
+                                             'Cancel Experiment'):
+                    self.info('automated runs cancelled')
+                else:
+                    self._alive = True
+                    return True
+            else:
+                self._alive = True
+                return True
+
 
     def isAlive(self):
         return self._alive
 
-    def do_equilibration(self, event, eqtime, inlet, outlet):
+    def do_equilibration(self, arun):
 
-        def eq(ev):
+        def eq(ev, inlet, outlet):
 
             elm = self.extraction_line_manager
             if elm:
@@ -310,9 +312,19 @@ class ExperimentManager(Manager):
             if elm:
                 elm.close_valve(inlet)
 
+
+        #use an Event object so that we dont finish before eq is done
+        event = TEvent()
+        event.clear()
+
+        eqtime = arun.get_measurement_parameter('equilibration_time', default=15)
+        inlet_valve = arun.get_measurement_parameter('inlet_valve', default='H')
+        outlet_valve = arun.get_measurement_parameter('outlet_valve', default='V')
+
         self.info('starting equilibration')
-        t = Thread(target=eq, args=(event,))
+        t = Thread(target=eq, args=(event, inlet_valve, outlet_valve))
         t.start()
+        return event
 
     def _execute(self):
         if self.isAlive():
@@ -330,8 +342,10 @@ class ExperimentManager(Manager):
 
     def new_experiment_set(self):
 #        self.experiment_set = ExperimentSet()
-        self.experiment_set = self._experiment_set_factory()
-
+        exp = self._experiment_set_factory()
+        arun = exp.automated_run_factory()
+        exp.automated_runs.append(arun)
+        self.experiment_set = exp
 
 #    def close(self, isok):
 #        self.dirty_save_as = False
@@ -450,7 +464,9 @@ class ExperimentManager(Manager):
 
         exc_grp = Group(
                         self._button_factory('execute_button',
-                                             label='execute_label', align='right'),
+                                             label='execute_label',
+                                             enabled='object.experiment_set.executable',
+                                             align='right'),
                        Item('object.experiment_set.stats',
                             style='custom'),
                        show_labels=False,
@@ -466,7 +482,8 @@ class ExperimentManager(Manager):
                  width=700,
                  height=500,
                  resizable=True,
-                 title=self.experiment_set.name
+                 title=self.experiment_set.name,
+                 handler=self.handler_klass
                  )
         return v
 

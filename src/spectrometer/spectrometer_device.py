@@ -27,7 +27,7 @@ from src.loggable import Loggable
 
 class SpectrometerDevice(Loggable):
     microcontroller = Any
-
+    spectrometer = Any
 #    simulation = DelegatesTo('microcontroller')
 
     simulation = Property

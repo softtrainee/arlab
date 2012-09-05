@@ -72,6 +72,9 @@ class ExperimentSet(Loggable):
 
     selected = Any
     right_clicked = Any
+
+    executable = Bool(True)
+
     def _run_parser(self, header, line, delim='\t'):
         params = dict()
         args = map(str.strip, line.split(delim))
@@ -106,9 +109,13 @@ class ExperimentSet(Loggable):
             for line in f:
                 if line.startswith('#====='):
                     break
+
             delim = '\t'
             header = map(str.strip, f.next().split(delim))
+            self.executable = True
             for line in f:
+                if line.startswith('#'):
+                    continue
 #                args = map(str.strip, ai.split(delim))
 #                identifier = args[header.index('identifier')]
 
@@ -123,6 +130,13 @@ class ExperimentSet(Loggable):
                 params = self._run_parser(header, line)
                 arun = self._automated_run_factory(**params)
                 self.automated_runs.append(arun)
+
+#                arun.extraction_script
+#                arun.measurement_script
+
+                if not arun.executable:
+                    self.executable = False
+                    print self.executable
 
     def _right_clicked_changed(self):
 
@@ -183,7 +197,8 @@ class ExperimentSet(Loggable):
         db.commit()
 
     def update_loaded_scripts(self, new):
-        self.loaded_scripts[new.name] = new
+        if new:
+            self.loaded_scripts[new.name] = new
 
     def reset_stats(self):
         self.stats.start_timer()
@@ -210,23 +225,26 @@ class ExperimentSet(Loggable):
         rid = self._auto_increment_runid(ar.identifier)
 
         ars.append(ar)
-        self.automated_run = self._automated_run_factory(self.extraction_script, self.measurement_script,
+        self.automated_run = self._automated_run_factory(self.extraction_script,
+                                                         self.measurement_script,
                                                          identifier=rid,
                                                          )
 
 
     @on_trait_change('automated_runs[]')
     def _automated_runs_changed(self, obj, name, old, new):
-
+        print  old, new
         if old:
             old = old[0]
-            if old.identifier == self.automated_run.identifier:
-                self.automated_run.aliquot -= 1
+
+            if self.automated_run:
+                if old.identifier == self.automated_run.identifier:
+                    self.automated_run.aliquot -= 1
 
             fo = dict()
             pi = None
-            for ai in self.automated_runs:
 
+            for ai in self.automated_runs:
                 try:
                     pi = fo[ai.identifier]
                     if ai.aliquot != pi + 1:
@@ -235,7 +253,6 @@ class ExperimentSet(Loggable):
                     pass
 
                 fo[ai.identifier] = ai.aliquot
-
 
     def _apply_fired(self):
         for i, s in enumerate(self.heat_schedule.steps):
@@ -250,11 +267,13 @@ class ExperimentSet(Loggable):
 
 
     def _extraction_script_changed(self):
+        print self.extraction_script
         self.automated_run.configuration['extraction_script'] = os.path.join(paths.scripts_dir,
                                                         'extraction',
                                                         self.extraction_script)
 
     def _measurement_script_changed(self):
+        print self.measurement_script
         self.automated_run.configuration['measurement_script'] = os.path.join(paths.scripts_dir,
                                                         'measurement',
                                                         self.measurement_script)
@@ -338,16 +357,20 @@ class ExperimentSet(Loggable):
     def automated_run_factory(self, **kw):
         extraction = self.extraction_script
         measurement = self.measurement_script
-        arun = self.automated_run
 
         configuration = self._build_configuration(extraction, measurement)
 
-        return self._automated_run_factory(
-                                           identifier=arun.identifier,
-                                           position=arun.position,
-                                           aliquot=arun.aliquot,
-                                           configuration=configuration
-                                           )
+        params = dict()
+        arun = self.automated_run
+        if arun:
+            params = dict(
+                          identifier=arun.identifier,
+                          position=arun.position,
+                          aliquot=arun.aliquot)
+
+        params['configuration'] = configuration
+
+        return self._automated_run_factory(**params)
 
     def _automated_run_factory(self, **kw):
         '''
@@ -363,6 +386,7 @@ class ExperimentSet(Loggable):
                 kw[k] = getattr(pa, k)
 
         a = AutomatedRun(
+                         executable=True,
                          scripts=self.loaded_scripts,
                          **kw
                          )
@@ -376,13 +400,13 @@ class ExperimentSet(Loggable):
 #===============================================================================
 # defaults
 #===============================================================================
-    def _automated_run_default(self):
-
-        es = self.extraction_scripts[0]
-        ms = self.measurement_scripts[0]
-
-
-        return self._automated_run_factory(es, ms)
+#    def _automated_run_default(self):
+#
+#        es = self.extraction_scripts[0]
+#        ms = self.measurement_scripts[0]
+#
+#
+#        return self._automated_run_factory(extraction=es, measurement=ms)
 
 #===============================================================================
 # views

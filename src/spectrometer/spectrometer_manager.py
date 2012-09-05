@@ -47,7 +47,7 @@ class SpectrometerManager(Manager):
 
         self.spectrometer.load()
 
-        config = self.get_configuration(path=os.path.join(paths.setup_dir, 'spectrometer', 'detectors.cfg'))
+        config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
         for name in config.sections():
             relative_position = self.config_get(config, name, 'relative_position', cast='float')
             color = self.config_get(config, name, 'color', default='black')

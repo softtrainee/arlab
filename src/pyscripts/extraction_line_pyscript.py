@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Any
 #============= standard library imports ========================
@@ -49,7 +47,7 @@ class ExtractionLinePyScript(PyScript):
                  'acquire', 'release',
 
                  'move_to_position', 'heat_sample',
-
+                 'is_open', 'is_closed'
                  ]
         return cmds
 
@@ -69,6 +67,28 @@ class ExtractionLinePyScript(PyScript):
         return d
 
     @verbose_skip
+    def is_open(self, name=None, description=''):
+
+        self.info('is {} ({}) open?'.format(name, description))
+        result = self._get_valve_state(name)
+        if result:
+            return result[0] == True
+
+    @verbose_skip
+    def is_closed(self, name=None, description=''):
+        self.info('is {} ({}) closed?'.format(name, description))
+        result = self._get_valve_state(name)
+        if result:
+            return result[0] == False
+
+    def _get_valve_state(self, name):
+        return self._manager_action([('get_valve_state', (name,), {})
+                                        ],
+                                      protocol=ELPROTOCOL,
+
+                                      )
+
+    @verbose_skip
     def move_to_position(self, position=0):
         self.info('move to position {}'.format(position))
         result = self._manager_action([('move_to_position', (position,), {})
@@ -76,7 +96,6 @@ class ExtractionLinePyScript(PyScript):
                                       protocol=ILaserManager,
                                       name=self.heat_device
                                       )
-        self.report_result(result)
 
 #    @verbose_skip
 #    def set_stage_map(self, mapname=None):
@@ -104,7 +123,7 @@ class ExtractionLinePyScript(PyScript):
                              )
 
     @verbose_skip
-    def _m_open(self, name=None, description=None):
+    def _m_open(self, name=None, description=''):
 #        if self._syntax_checking or self._cancel:
 #            return
         if description is None:
@@ -118,7 +137,7 @@ class ExtractionLinePyScript(PyScript):
                                                       ))], protocol=ELPROTOCOL)
 
     @verbose_skip
-    def close(self, name=None, description=None):
+    def close(self, name=None, description=''):
 #        if self._syntax_checking or self._cancel:
 #            return
 

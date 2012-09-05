@@ -46,9 +46,12 @@ class MagnetScan(SpectrometerTask):
     step_mass = Float(1)
 
 
-    def _scan_dac(self, values, det, delay=1):
 
+    def _scan_dac(self, values, det, delay=0.1):
+
+        graph = self.graph
         spec = self.spectrometer
+
         mag = spec.magnet
         mag.settling_time = 0.5
 
@@ -57,9 +60,17 @@ class MagnetScan(SpectrometerTask):
         do = values[0]
         mag.set_dac(do)
         time.sleep(delay / 1000.)
-        graph = self.graph
 
-        intensities = []
+        intensity = spec.get_intensity(det)
+        intensity = peak_generator.next()
+        intensities = [intensity]
+
+        if graph:
+            graph.add_datum(
+                            (do, intensity),
+                            update_y_limits=True,
+                            do_after=1)
+
         for di in values[1:]:
             if not self.isAlive():
                 break

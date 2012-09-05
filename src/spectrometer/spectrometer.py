@@ -29,12 +29,12 @@ import random
 #from threading import Thread
 
 #============= local library imports  ==========================
-from src.data_processing.regression.regressor import Regressor
 from src.spectrometer.source import Source
 from src.spectrometer.magnet import Magnet
 from src.spectrometer.detector import Detector
-from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS, MOLECULAR_WEIGHT_KEYS
 from src.spectrometer.spectrometer_device import SpectrometerDevice
+import os
+from src.paths import paths
 #from src.graph.graph import Graph
 #from src.graph.regression_graph import RegressionGraph
 #from src.paths import paths
@@ -47,14 +47,10 @@ debug = False
 
 
 class Spectrometer(SpectrometerDevice):
-    regressor = Instance(Regressor, ())
-    magnet = Instance(Magnet, ())
-    source = Instance(Source, ())
+    magnet = Instance(Magnet)
+    source = Instance(Source)
 
     detectors = List(Detector)
-#    detectors = Property(List, depends_on='_detectors')
-#    _detectors = Dict()
-#    detector_names = Dict
 
     microcontroller = Any
     integration_time = Enum(0.065536, 0.131072, 0.262144, 0.524288,
@@ -64,7 +60,6 @@ class Spectrometer(SpectrometerDevice):
     reference_detector = Str('H1')
 
     magnet_dac = DelegatesTo('magnet', prefix='dac')
-#    _magnet_dac = DelegatesTo('magnet', prefix='_dac')
 
     magnet_dacmin = DelegatesTo('magnet', prefix='dacmin')
     magnet_dacmax = DelegatesTo('magnet', prefix='dacmin')
@@ -74,6 +69,7 @@ class Spectrometer(SpectrometerDevice):
 
 
     molecular_weight = Str('Ar40')
+    molecular_weights = None
     sub_cup_configurations = List
 
     sub_cup_configuration = Property(depends_on='_sub_cup_configuration')
@@ -142,8 +138,8 @@ class Spectrometer(SpectrometerDevice):
 #===============================================================================
 # change handlers
 #===============================================================================
-    def _molecular_weight_changed(self):
-        self.set_magnet_position(MOLECULAR_WEIGHTS[self.molecular_weight])
+#    def _molecular_weight_changed(self):
+#        self.set_magnet_position(MOLECULAR_WEIGHTS[self.molecular_weight])
 
 #    def _integration_time_changed(self):
 #        if self.microcontroller:
@@ -180,126 +176,6 @@ class Spectrometer(SpectrometerDevice):
         return self._alive
 
 
-
-
-#    def scan_dac(self, dac_values, graph):
-#        period = self.integration_time
-#        if self.simulation:
-#            period = 0.05
-#
-#        gen = (i for i in dac_values)
-#
-#
-#        #move to first position and delay 
-#        self.magnet.set_dac(gen.next())
-#        time.sleep(2)
-#
-#        while 1:
-#            if not self.isAlive():
-#                break
-#            try:
-#                dac = gen.next()
-#                self.magnet.set_dac(dac)
-#                time.sleep(period)
-#
-#                data = self.get_intensities()
-#                if self.simulation:
-#                    intensity = self.peak_generator.next()
-#
-#                if data is not None:
-##                    if self.simulation:
-##                        intensity = self.peak_generator.next()
-##                    else:
-#
-#                    intensity = data[DETECTOR_ORDER.index(self.reference_detector)][1]
-##                print intensity, self.reference_detector
-#                self.intensities.append(intensity)
-#                graph.add_datum(
-#                                (dac, intensity),
-#                                update_y_limits=True,
-#                                do_after=1)
-##                do_after(1, graph.add_datum, (dac, intensity), update_y_limits=True)
-#
-#            except StopIteration:
-#                break
-
-#    def calculate_peak_center(self, x, y):
-#        peak_threshold = self.dc_threshold
-#
-#        peak_percent = 0.5
-#        x = np.array(x)
-#        y = np.array(y)
-#
-#        ma = np.max(y)
-#
-#        if ma < peak_threshold:
-#            self.warning('No peak greater than {}. max = {}'.format(peak_threshold, ma))
-#            return
-#
-#        cindex = np.where(y == ma)[0][0]
-#        mx = x[cindex]
-#        my = ma
-#        #look backward for point that is peak_percent% of max
-#        for i in range(cindex, cindex - 50, -1):
-#            #this prevent looping around to the end of the list
-#            if i < 0:
-#                self.warning('PeakCenterError: could not find a low pos')
-#                return
-#
-#            try:
-#                if y[i] < (ma * peak_percent):
-#                    break
-#            except IndexError:
-#                '''
-#                could not find a low pos
-#                '''
-#                self.warning('PeakCenterError: could not find a low pos')
-#                return
-#
-#        lx = x[i]
-#        ly = y[i]
-#
-#        #look forward for point that is 80% of max
-#        for i in range(cindex, cindex + 50, 1):
-#            try:
-#                if y[i] < (ma * peak_percent):
-#                    break
-#            except IndexError:
-#                '''
-#                    could not find a high pos
-#                '''
-#                self.warning('PeakCenterError: could not find a high pos')
-#                return
-#
-#        hx = x[i]
-#        hy = y[i]
-#
-#        cx = (hx + lx) / 2.0
-#        cy = ma
-#
-#        cindex = i - 5
-#        #check to see if were on a plateau
-#        yppts = y[cindex - 2:cindex + 2]
-#        rdict = self.regressor.linear(range(len(yppts)), yppts)
-#        std = rdict['statistics']['stddev']
-#        slope = rdict['coefficients'][0]
-#
-#        if std > 5 and abs(slope) < 1:
-#            self.warning('No peak plateau std = {} slope = {}'.format(std, slope))
-#            return
-#        else:
-#            self.info('peak plateau std = {} slope = {}'.format(std, slope))
-#        return [lx, cx, hx ], [ly, cy, hy], [mx], [my]
-
-#===============================================================================
-# factories
-#===============================================================================
-#    def _timer_factory(self):
-#        mult = 1000
-#
-#        self.scan_timer = Timer((self.integration_time + 0.025) * mult, self.get_intensities)
-#        self.scan_timer.Start()
-
     def update_isotopes(self, detector, isotope):
         det = self.get_detector(detector)
         det.isotope = isotope
@@ -329,47 +205,6 @@ class Spectrometer(SpectrometerDevice):
         self._sub_cup_configuration = v
         self.microcontroller.ask('SetSubCupConfiguration {}'.format(v))
 
-#===============================================================================
-# views
-#===============================================================================
-    def traits_view(self):
-        pc_group = VGroup(Item('pc_window', label='Window'),
-                        Item('pc_step_width', label='Step'),
-                        show_border=True,
-                        label='Peak Center'
-                        )
-        dc_group = VGroup(Item('dc_threshold', label='Threshold (fA)'),
-                          Item('dc_start', label='Start'),
-                        Item('dc_stop', label='Stop'),
-                        Item('dc_step', label='Step', editor=RangeEditor(
-                                                                             low_name='dc_stepmin',
-                                                                             high_name='dc_stepmax',
-                                                                             mode='spinner')),
-                        Item('dc_npeak_centers', label='NPeak Centers', editor=RangeEditor(
-                                                                             low_name='dc_stepmin',
-                                                                             high_name='dc_stepmax',
-                                                                             mode='spinner')),
-                        show_border=True,
-                        label='Steering Calibration'
-                        )
-        v = View(
-                Item('integration_time'),
-                Item('molecular_weight', editor=EnumEditor(values=MOLECULAR_WEIGHT_KEYS)),
-                Item('sub_cup_configuration', show_label=False,
-                     editor=EnumEditor(values=self.sub_cup_configurations)),
-                Item('reference_detector', show_label=False, style='custom',
-                                            editor=EnumEditor(
-                                                               values=self.detector_names,
-                                                               cols=len(self.detector_names)
-                                                               )),
-                Item('magnet_dac', editor=RangeEditor(low_name='magnet_dacmin',
-                                                      high_name='magnet_dacmax',
-                                                      mode='slider'
-                                                      )),
-                pc_group,
-                dc_group
-                )
-        return v
 
 #===============================================================================
 # load
@@ -392,33 +227,19 @@ class Spectrometer(SpectrometerDevice):
         self.molecular_weight = 'Ar40'
 
     def load(self):
-#        self.detector_names = {'H2':'1:H2', 'H1':'2:H1',
-#                                'AX':'3:AX',
-#                                'L1':'4:L1', 'L2':'5:L2',
-#                                 'CDD':'6:CDD'}
-##        self.reference_detector = 'AX'
-
-#        self._detectors = dict(H2=Detector(name='H2', relative_position=1.2, active=True),
-#                              H1=Detector(name='H1', relative_position=1.1, active=True),
-#                              AX=Detector(name='AX', relative_position=1, active=True),
-#                              L1=Detector(name='L1', relative_position=0.9, active=True),
-#                              L2=Detector(name='L2', relative_position=0.8, active=True),
-#                              CDD=Detector(name='CDD', relative_position=0.7, active=False),
-#                              )
-
-
-
-#        self.detectors = [Detector(name='H2', color='black', relative_position=1.2, active=True, isotope='Ar41'),
-#                          Detector(name='H1', color='red', relative_position=1.1, active=True, isotope='Ar40'),
-#                          Detector(name='AX', color='violet', relative_position=1, active=True, isotope='Ar39'),
-#                          Detector(name='L1', color='maroon', relative_position=0.9, active=True, isotope='Ar38'),
-#                          Detector(name='L2', color='yellow', relative_position=0.8, active=True, isotope='Ar37'),
-#                          Detector(name='CDD', color='lime green', relative_position=0.7, active=False, isotope='Ar36')]
+        import csv
+        #load the molecular weights dictionary
+        p = os.path.join(paths.spectrometer_dir, 'molecular_weights.csv')
+        with open(p, 'U') as f:
+            reader = csv.reader(f, delimiter='\t')
+            args = [[l[0], float(l[1])] for l in reader]
+            self.molecular_weights = dict(args)
 
         self.magnet.load()
 
     def add_detector(self, **kw):
-        d = Detector(**kw)
+        d = Detector(spectrometer=self,
+                     **kw)
         self.detectors.append(d)
 
 
@@ -487,6 +308,16 @@ class Spectrometer(SpectrometerDevice):
             return signals[keys.index(key)]
 
 #        return data
+
+#===============================================================================
+# defaults
+#===============================================================================
+    def _magnet_default(self):
+        return Magnet(spectrometer=self)
+
+    def _source_default(self):
+        return Source(spectrometer=self)
+
 #============= EOF =============================================
 #    def _peak_center_scan_step(self, di, graph, plotid, cond):
 ##       3print cond

@@ -33,6 +33,8 @@ from src.graph.regression_graph import StackedTimeSeriesRegressionGraph
 from src.database.isotope_analysis.analyzer import Analyzer
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
 from src.database.core.base_results_adapter import BaseResultsAdapter
+from src.graph.graph import Graph
+from src.spectrometer.tasks.peak_center import PeakCenter
 
 class AnalysisResult(DBResult):
     title_str = 'Analysis'
@@ -42,12 +44,13 @@ class AnalysisResult(DBResult):
     sniff_graph = Instance(StackedTimeSeriesRegressionGraph)
     signal_graph = Instance(StackedTimeSeriesRegressionGraph)
     baseline_graph = Instance(StackedTimeSeriesRegressionGraph)
+    peak_center_graph = Instance(Graph)
 #    sniff_graph = Instance(TimeSeriesStackedGraph)
 #    signal_graph = Instance(TimeSeriesStackedGraph)
 #    baseline_graph = Instance(TimeSeriesStackedGraph)
     analyzer = Instance(Analyzer)
 
-    categories = List(['summary', 'signal', 'sniff', 'baseline', 'analyzer'])
+    categories = List(['summary', 'signal', 'sniff', 'baseline', 'peak center', 'analyzer'])
     selected = Any('signal')
     display_item = Instance(HasTraits)
 
@@ -78,26 +81,27 @@ class AnalysisResult(DBResult):
         return self._view_factory(grp)
 
     def _selected_changed(self):
-        if self.selected is not None:
+        selected = self.selected
+        if selected is not None:
 
-            if self.selected == 'analyzer':
+            selected = selected.replace(' ', '_')
+            if selected == 'analyzer':
                 item = self.analyzer
 #                info = self.analyzer.edit_traits()
 #                if info.result:
 #                    self.analyzer.apply_fits()
-            elif self.selected == 'summary':
+            elif selected == 'summary':
                 item = AnalysisSummary(age=10.0,
                                        error=0.01,
                                        result=self
                                        )
-                item.age = 12
-
+#                item.age = 12
             else:
-                item = getattr(self, '{}_graph'.format(self.selected))
+                item = getattr(self, '{}_graph'.format(selected))
             self.trait_set(display_item=item)
 
     def load_graph(self, graph=None, xoffset=0):
-        keys, sniffs, signals, baselines = self._get_data()
+        keys, sniffs, signals, baselines, peakcenter = self._get_data()
 
         self.iso_keys = keys
 
@@ -118,10 +122,45 @@ class AnalysisResult(DBResult):
         graph = self._load_graph(baselines)
         self.baseline_graph = graph
 
-#        self.selected = 'analyzer'
+        graph = self._load_peak_center_graph(peakcenter)
+        self.peak_center_graph = graph
 
         self.analyzer = Analyzer(analysis=self)
 #        self.analyzer.fits = [AnalysisParams(fit='linear', name=k) for k in keys]
+    def _load_peak_center_graph(self, data):
+        xs = []
+        ys = []
+        if data:
+            xsys, center_dac, pcdacs, pcsignals = data
+            xs, ys = zip(*xsys)
+
+        graph = self._graph_factory()
+        graph.container_dict = dict(padding=[10, 0, 30, 10])
+        graph.clear()
+
+        title = ''
+        graph.new_plot(title='{}'.format(title),
+                       xtitle='DAC (V)',
+                       ytitle='Intensity (fA)',
+                       )
+
+        graph.new_series(
+                         x=xs, y=ys,
+                         type='scatter', marker='circle',
+                         marker_size=1.25
+                         )
+        graph.new_series(
+                         x=pcdacs,
+                         y=pcsignals,
+                         type='scatter', marker='circle',
+                         marker_size=2
+                         )
+        graph.add_vertical_rule(center_dac)
+
+#        graph.plots[0].value_range.tight_bounds = False
+        if xs:
+            graph.set_x_limits(min=min(xs), max=max(xs))
+        return graph
 
     def _load_graph(self, data):
         graph = self._graph_factory(klass=StackedTimeSeriesRegressionGraph)
@@ -157,6 +196,7 @@ class AnalysisResult(DBResult):
         signals = []
         baselines = []
         keys = []
+        peakcenter = None
         if isinstance(dm, H5DataManager):
 
             sniffs = self._get_table_data(dm, 'sniffs')
@@ -168,7 +208,25 @@ class AnalysisResult(DBResult):
                            zip(*signals)[0] if signals else [] +
                            zip(*baselines)[0] if baselines else []
                            )
-        return keys, sniffs, signals, baselines
+
+
+            ti = dm.get_table('peakcenter', '/')
+            if ti is not None:
+                try:
+                    center = ti.attrs.center_dac
+                except AttributeError:
+                    center = 0
+
+                try:
+                    pcsignals = [ti.attrs.low_signal, ti.attrs.high_signal]
+                    pcdacs = [ti.attrs.low_dac, ti.attrs.high_dac]
+                except AttributeError:
+                    pcsignals = []
+                    pcdacs = []
+
+                peakcenter = ([(r['time'], r['value']) for r in  ti.iterrows()], center, pcdacs, pcsignals)
+
+        return keys, sniffs, signals, baselines, peakcenter
 
 
 class IsotopeResultsAdapter(BaseResultsAdapter):

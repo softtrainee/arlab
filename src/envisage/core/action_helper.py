@@ -22,7 +22,8 @@ def open_manager(app, man, **kw):
     if man in MANAGERS:
         try:
             man.ui.control.Raise()
-        except AttributeError:
+        except AttributeError, e:
+            print e
             ui = man.edit_traits(**kw)
     else:
         ui = man.edit_traits(**kw)

@@ -33,7 +33,7 @@ from os import path, mkdir, getcwd
 #    home = '{}_beta{}'.format(home, version)
 #    project_root = 'branches/pychron'
 #
-#project_home = path.join(host_url, project_root)
+#project_home = join(host_url, project_root)
 
 class Paths():
     root = None
@@ -71,7 +71,8 @@ class Paths():
     # setup
     #==============================================================================
     setup_dir = setup_dir = None
-    device_dir = device_dir = None
+    device_dir = None
+    spectrometer_dir = None
     canvas2D_dir = None
     canvas3D_dir = None
     extraction_line_dir = None
@@ -107,78 +108,80 @@ class Paths():
         HOME = path.expanduser('~')
 
         home = 'Pychrondata{}'.format(version)
+        join = path.join
 
-        self.root = root = path.join(HOME, home)
+        self.root = root = join(HOME, home)
 #        src_repo_name = 'pychron{}'.format(version)
-        self.pychron_src_root = pychron_src_root = path.join('.', 'pychron.app', 'Contents', 'Resources')
-        self.pychron_dev_src_root = path.join(HOME, 'Programming', 'mercurial',
+        self.pychron_src_root = pychron_src_root = join('.', 'pychron.app', 'Contents', 'Resources')
+        self.pychron_dev_src_root = join(HOME, 'Programming', 'mercurial',
                                              'pychron{}'.format(version),
                                              'resources'
                                             )
         #_dir suffix ensures the path is checked for existence
         self.root_dir = root
-        stable_root = path.join(HOME, 'Pychrondata')
+        stable_root = join(HOME, 'Pychrondata')
 
         #==============================================================================
         # #database
         #==============================================================================
         db_path = '/usr/local/pychron'
-        self.device_scan_root = device_scan_root = path.join(db_path, 'device_scans')
-        self.device_scan_db = path.join(device_scan_root, 'device_scans.sqlite')
+        self.device_scan_root = device_scan_root = join(db_path, 'device_scans')
+        self.device_scan_db = join(device_scan_root, 'device_scans.sqlite')
 
-        self.bakeout_db_root = bakeout_db_root = path.join(db_path, 'bakeoutdb')
-        self.bakeout_db = path.join(bakeout_db_root, 'bakeouts.sqlite')
-        self.co2laser_db_root = path.join(db_path, 'co2laserdb')
-        self.co2laser_db = path.join(db_path, 'co2.sqlite')
+        self.bakeout_db_root = bakeout_db_root = join(db_path, 'bakeoutdb')
+        self.bakeout_db = join(bakeout_db_root, 'bakeouts.sqlite')
+        self.co2laser_db_root = join(db_path, 'co2laserdb')
+        self.co2laser_db = join(db_path, 'co2.sqlite')
 
-        self.diodelaser_db_root = path.join(db_path, 'diodelaserdb')
-        self.diodelaser_db = path.join(db_path, 'diode.sqlite')
-        self.isotope_db_root = path.join(db_path, 'isotopedb')
-        self.isotope_db = path.join(db_path, 'isotope.sqlite')
+        self.diodelaser_db_root = join(db_path, 'diodelaserdb')
+        self.diodelaser_db = join(db_path, 'diode.sqlite')
+        self.isotope_db_root = join(db_path, 'isotopedb')
+        self.isotope_db = join(db_path, 'isotope.sqlite')
         #==============================================================================
         # root
         #==============================================================================
-        self.scripts_dir = scripts_dir = path.join(root, 'scripts')
-        self.experiment_dir = path.join(root, 'experiments')
-        self.hidden_dir = path.join(root, '.hidden')
-        self.test_dir = path.join(root, 'testing')
+        self.scripts_dir = scripts_dir = join(root, 'scripts')
+        self.experiment_dir = join(root, 'experiments')
+        self.hidden_dir = join(root, '.hidden')
+        self.test_dir = join(root, 'testing')
         #==============================================================================
         # setup
         #==============================================================================
-        self.setup_dir = setup_dir = path.join(root, 'setupfiles')
-        self.device_dir = device_dir = path.join(setup_dir, 'devices')
-        self.canvas2D_dir = path.join(setup_dir, 'canvas2D')
-        self.canvas3D_dir = path.join(setup_dir, 'canvas3D')
-        self.extraction_line_dir = path.join(setup_dir, 'extractionline')
-        self.monitors_dir = path.join(setup_dir, 'monitors')
-        self.jog_dir = path.join(setup_dir, 'jogs')
-        self.pattern_dir = path.join(setup_dir, 'patterns')
+        self.setup_dir = setup_dir = join(root, 'setupfiles')
+        self.spectrometer_dir = join(setup_dir, 'spectrometer')
+        self.device_dir = device_dir = join(setup_dir, 'devices')
+        self.canvas2D_dir = join(setup_dir, 'canvas2D')
+        self.canvas3D_dir = join(setup_dir, 'canvas3D')
+        self.extraction_line_dir = join(setup_dir, 'extractionline')
+        self.monitors_dir = join(setup_dir, 'monitors')
+        self.jog_dir = join(setup_dir, 'jogs')
+        self.pattern_dir = join(setup_dir, 'patterns')
 
-        self.bakeout_config_dir = path.join(setup_dir, 'bakeout_configurations')
-        self.bakeout = path.join(device_dir, 'bakeout')
+        self.bakeout_config_dir = join(setup_dir, 'bakeout_configurations')
+        self.bakeout = join(device_dir, 'bakeout')
 
-        self.heating_schedule_dir = path.join(setup_dir, 'heating_schedules')
-        self.map_dir = map_dir = path.join(setup_dir, 'tray_maps')
-        self.user_points_dir = path.join(map_dir, 'user_points')
+        self.heating_schedule_dir = join(setup_dir, 'heating_schedules')
+        self.map_dir = map_dir = join(setup_dir, 'tray_maps')
+        self.user_points_dir = join(map_dir, 'user_points')
         #==============================================================================
         # data
         #==============================================================================
-        self.data_dir = data_dir = path.join(stable_root, 'data')
-        self.modeling_data_dir = path.join(data_dir, 'modeling')
-        self.argus_data_dir = path.join(data_dir, 'argusVI')
-        self.positioning_error_dir = path.join(data_dir, 'positioning_error')
-        self.snapshot_dir = path.join(data_dir, 'snapshots')
-        self.video_dir = path.join(data_dir, 'videos')
-        self.stage_visualizer_dir = path.join(data_dir, 'stage_visualizer')
+        self.data_dir = data_dir = join(stable_root, 'data')
+        self.modeling_data_dir = join(data_dir, 'modeling')
+        self.argus_data_dir = join(data_dir, 'argusVI')
+        self.positioning_error_dir = join(data_dir, 'positioning_error')
+        self.snapshot_dir = join(data_dir, 'snapshots')
+        self.video_dir = join(data_dir, 'videos')
+        self.stage_visualizer_dir = join(data_dir, 'stage_visualizer')
 
-        self.arar_dir = path.join(data_dir, 'arar')
-        #initialization_dir = path.join(setup_dir, 'initializations')
-        #device_creator_dir = path.join(device_dir, 'device_creator')
+        self.arar_dir = join(data_dir, 'arar')
+        #initialization_dir = join(setup_dir, 'initializations')
+        #device_creator_dir = join(device_dir, 'device_creator')
 
         #==============================================================================
         # lovera exectuables
         #==============================================================================
-        self.clovera_root = path.join(pychron_src_root, 'src', 'modeling', 'lovera', 'bin')
+        self.clovera_root = join(pychron_src_root, 'src', 'modeling', 'lovera', 'bin')
 
 
 paths = Paths()
@@ -202,7 +205,7 @@ def build_directories():
 
 
 #def build_initialization_file(root):
-#    p = path.join(root, 'initialization.xml')
+#    p = join(root, 'initialization.xml')
 #    if os.path.isfile(p):
 #        from src.helpers.initialization_parser import InitializationParser
 #        parser = InitializationParser()
@@ -321,7 +324,7 @@ def build_directories():
 
 #            #ensure plugins dir is a valid python package
 #            if l == 'plugins_dir':
-#                p = path.join(pi, '__init__.py')
+#                p = join(pi, '__init__.py')
 #                if not os.path.isfile(p):
 #                    with open(p, 'w') as _f:
 #                        pass

@@ -33,6 +33,9 @@ class SeriesNode(CoreNode):
         return v
 
     def replot(self):
+        if not self.analyses:
+            return
+
         isos = zip(*[[getattr(a, isoname.lower()) for isoname in a.isotope_names] for a in self.analyses])
 
         n = len(a.isotope_names)

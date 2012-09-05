@@ -30,7 +30,6 @@ from numpy import isnan
 #============= local library imports  ==========================
 from src.data_processing.regression.regressor import Regressor
 from src.paths import paths
-from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 #import math
 #from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
@@ -53,7 +52,6 @@ class Magnet(SpectrometerDevice):
                    #[[40, 39, 38, 36], [2, 5, 10, 26]]
                    )
     regressor = Instance(Regressor, ())
-    microcontroller = Any
 
     dac = Property(depends_on='_dac')
     mass = Property(depends_on='_mass')
@@ -100,11 +98,7 @@ class Magnet(SpectrometerDevice):
         ys = [yi + delta for yi in ys]
 
         self.mftable = [xs, ys]
-#        for i, xi in enumerate(xs):
-#            mass = MOLECULAR_WEIGHTS[xi]
-#            refmass = MOLECULAR_WEIGHTS[isotope]
-#            ys[i] -= delta * math.sqrt(mass / refmass)
-#            ys[i] += delta
+
 
         self.dump()
 
@@ -189,7 +183,7 @@ class Magnet(SpectrometerDevice):
 # persistence
 #===============================================================================
     def load(self):
-        p = os.path.join(paths.setup_dir, 'spectrometer', 'mftable.csv')
+        p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
         if os.path.isfile(p):
             with open(p, 'U') as f:
                 reader = csv.reader(f)
@@ -205,7 +199,7 @@ class Magnet(SpectrometerDevice):
 
 
     def dump(self):
-        p = os.path.join(paths.setup_dir, 'spectrometer', 'mftable.csv')
+        p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
         with open(p, 'w') as f:
             writer = csv.writer(f)
             for x, y in zip(self.mftable[0], self.mftable[1]):
@@ -225,8 +219,10 @@ class Magnet(SpectrometerDevice):
 
     def map_mass_to_dac(self, mass):
         reg = self.regressor
+
+        molweights = self.spectrometer.molecular_weights
         if self.mftable:
-            data = ([MOLECULAR_WEIGHTS[i] for i in self.mftable[0]],
+            data = ([molweights[i] for i in self.mftable[0]],
                     self.mftable[1])
             return reg.get_value('parabolic', data, mass)
 
@@ -293,9 +289,9 @@ class Magnet(SpectrometerDevice):
     def _get_calibration_points(self):
 
         if self.mftable:
-
+            molweights = self.spectrometer.molecular_weights
             xs, ys = self.mftable
-            return [CalibrationPoint(x=MOLECULAR_WEIGHTS[xi], y=yi) for xi, yi in zip(xs, ys)]
+            return [CalibrationPoint(x=molweights[xi], y=yi) for xi, yi in zip(xs, ys)]
 #===============================================================================
 # views
 #===============================================================================

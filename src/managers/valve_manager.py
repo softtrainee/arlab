@@ -262,7 +262,6 @@ class ValveManager(Manager):
         if v is not None:
             if self.query_valve_state and v.query_state:
                 state = v.get_hardware_state()#actuator.get_channel_state(v)
-
             if state is None:
                 state = v.state
             else:
@@ -353,39 +352,7 @@ class ValveManager(Manager):
         '''
         return self._close_(name, mode)
 
-    #@recordable
-    def _actuate_(self, name, open_close, mode, address=None):
-        '''
-        '''
-        change = False
-        if address is None:
-            v = self.get_valve_by_name(name)
-            vid = name
-        else:
-            v = self.get_valve_by_address(address)
-            vid = address
 
-        result = None
-        if v is not None:
-            act = getattr(v, open_close)
-
-            result, change = act(mode=mode)
-            if isinstance(result, bool):#else its an error message
-                if result:
-                    ve = self.get_evalve_by_name(name)
-                    ve.state = True if open_close == 'open' else False
-
-#                update the section state
-#                for s in self.sections:
-#                    s.update_state(action, v, self.valves, self.sample_gas_type, self.canvas3D.scene_graph)
-
-                #result = True
-
-        else:
-            self.warning('Valve {} not available'.format(vid))
-            #result = 'Valve %s not available' % id
-
-        return result, change
 
     def sample(self, name, period):
         v = self.get_valve_by_name(name)
@@ -479,6 +446,39 @@ class ValveManager(Manager):
             return
 
         return self._actuate_(name, open_close, mode)
+    #@recordable
+    def _actuate_(self, name, open_close, mode, address=None):
+        '''
+        '''
+        change = False
+        if address is None:
+            v = self.get_valve_by_name(name)
+            vid = name
+        else:
+            v = self.get_valve_by_address(address)
+            vid = address
+
+        result = None
+        if v is not None:
+            act = getattr(v, open_close)
+
+            result, change = act(mode=mode)
+            if isinstance(result, bool):#else its an error message
+                if result:
+                    ve = self.get_evalve_by_name(name)
+                    ve.state = True if open_close == 'open' else False
+
+#                update the section state
+#                for s in self.sections:
+#                    s.update_state(action, v, self.valves, self.sample_gas_type, self.canvas3D.scene_graph)
+
+                #result = True
+
+        else:
+            self.warning('Valve {} not available'.format(vid))
+            #result = 'Valve %s not available' % id
+
+        return result, change
 
     def _get_system_address(self, name):
         return next((h for k, h in self.systems.iteritems() if k == name), None)

@@ -22,7 +22,6 @@ from src.graph.graph import Graph
 from src.spectrometer.tasks.peak_center import PeakCenter
 from threading import Thread
 from pyface.timer.do_later import do_later
-from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -61,25 +60,31 @@ class IonOpticsManager(Manager):
         else:
             if isinstance(pos, str):
                 #pos is in isotope
-                pos = MOLECULAR_WEIGHTS[pos]
+                molweights = spec.molecular_weights
 
                 #if the pos is an isotope then updated the detectors
                 spec.update_isotopes(detector, pos)
+
+                pos = molweights[pos]
+
 
             #pos is mass i.e 39.962
             dac = mag.map_mass_to_dac(pos)
 
         det = spec.get_detector(detector)
 
+        #dac is in axial units 
+
+        #convert to detector
+        dac *= det.relative_position
+
         '''
         convert to axial detector 
-        dac_a=  dac_s / relpos
+        dac_a=  dac_d / relpos
         
         relpos==dac_detA/dac_axial 
         
         '''
-        dac /= det.relative_position
-
         #correct for deflection
         dev = det.get_deflection_correction()
         dac += dev
@@ -122,17 +127,25 @@ class IonOpticsManager(Manager):
                         spectrometer=spec
                         )
 
-        npos = pc.get_peak_center()
-        self.peak_center_result = npos
-        if npos:
-            args = detector, isotope, npos
+        dac_d = pc.get_peak_center()
+        self.peak_center_result = dac_d
+        if dac_d:
+            args = detector, isotope, dac_d
             self.info('new center pos {} ({}) @ {}'.format(*args))
 
             det = spec.get_detector(detector)
-            npos /= det.relative_position
 
-            self.info('converted to axial units {}'.format(npos))
-            args = detector, isotope, npos
+            #correct for hv
+            dac_d /= self.get_hv_correction(current=True)
+
+            #correct for deflection
+            dac_a = dac_d - det.get_deflection_correction()
+
+            #convert dac to axial units
+            dac_a = dac_d * det.relative_position
+
+            self.info('converted to axial units {}'.format(dac_a))
+            args = detector, isotope, dac_a
 
             if save:
                 save = True
@@ -140,7 +153,7 @@ class IonOpticsManager(Manager):
                     msg = 'Update Magnet Field Table with new peak center- {} ({}) @ {}'.format(*args)
                     save = self.confirmation_dialog(msg)
                 if save:
-                    spec.magnet.update_field_table(isotope, npos)
+                    spec.magnet.update_field_table(isotope, dac_a)
 
         elif not self.canceled:
             self.warning_dialog('centering failed')
