@@ -16,8 +16,17 @@ Welcome to the New Mexico Gechronology Research Laboratory!
 .. image:: images/NMT_logo.png
    :width: 33%
 
-:doc:`pychron_documentation`
+.. toctree::
+   :maxdepth: 1
+   
+   pychron_documentation
+   bibliographies
+   computer_names
+   student_projects
+   
+Indices and tables
+==================
 
-:doc:`bibliographies`
-
-:doc:`computer_names`
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
