@@ -351,8 +351,8 @@ class FusionsDiodeManager(FusionsLaserManager):
     def _laser_controller_default(self):
         '''
         '''
-        b = FusionsDiodeLogicBoard(name='diodelogicboard',
-                                   configuration_name='logicboard',
+        b = FusionsDiodeLogicBoard(name='laser_controller',
+                                   configuration_name='laser_controller',
                                    configuration_dir_name='diode')
         return b
 
@@ -367,7 +367,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     def _stage_manager_default(self):
         '''
         '''
-        args = dict(name='diodestage',
+        args = dict(name='stage',
                     configuration_name='stage',
                             configuration_dir_name='diode',
                              parent=self,

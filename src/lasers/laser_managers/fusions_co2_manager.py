@@ -77,15 +77,15 @@ class FusionsCO2Manager(FusionsLaserManager):
     def _laser_controller_default(self):
         '''
         '''
-        b = FusionsCO2LogicBoard(name='co2logicboard',
-                                 configuration_name='logicboard',
+        b = FusionsCO2LogicBoard(name='laser_controller',
+                                 configuration_name='laser_controller',
                                  configuration_dir_name=self.configuration_dir_name)
         return b
 
     def _stage_manager_default(self):
         '''
         '''
-        args = dict(name='co2stage',
+        args = dict(name='stage',
                             configuration_name='stage',
                             configuration_dir_name=self.configuration_dir_name,
                              parent=self)
