@@ -24,7 +24,6 @@ import math
 #=============local library imports  ==========================
 from src.hardware.core.data_helper import make_bitarray
 from src.hardware.motion_controller import MotionController
-from src.helpers.gdisplays import gWarningDisplay
 from newport_axis import NewportAxis
 from newport_joystick import Joystick
 from newport_group import NewportGroup
@@ -676,9 +675,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         if group:
             if velocity is not None:
+                change = abs(gobj.velocity - velocity) > 0.001
                 gobj.velocity = velocity
-
-            change = self._check_motion_parameters(displacement, gobj)
+            else:
+                change = self._check_motion_parameters(displacement, gobj)
 
         if self.mode == 'grouped':
             if not group:

@@ -141,24 +141,46 @@ class PatternManager(Manager):
             self.parent.start_recording(basename=self.pattern_name)
 
         pat = self.pattern
+
+        for ni in range(pat.niterations):
+            if not self.isAlive():
+                break
+            self.info('doing pattern iteration {}'.format(ni + 1))
+            self._iteration()
+            time.sleep(0.1)
+
+        pat.graph.set_data([], series=1, axis=0)
+        pat.graph.set_data([], series=1, axis=1)
+
+        if self.isAlive():
+            self.info('finished pattern {}'.format(self.pattern_name))
+            self.parent.update_axes()
+            if self.record_patterning:
+                self.parent.stop_recording()
+
+            self.close_ui()
+
+        self._alive = False
+
+    def _iteration(self):
+        pattern = self.pattern
         controller = self.parent.stage_controller
 
-        pat.cx = controller._x_position
-        pat.cy = controller._y_position
-        pts = pat.points_factory()
-        kind = pat.kind
-
+        pattern.cx = controller._x_position
+        pattern.cy = controller._y_position
+        pts = pattern.points_factory()
+        kind = pattern.kind
         if kind == 'ArcPattern':
-            controller.single_axis_move('x', pat.radius, block=True)
-            controller.arc_move(pat.cx, pat.cy, pat.degrees, block=True)
+            controller.single_axis_move('x', pattern.radius, block=True)
+            controller.arc_move(pattern.cx, pattern.cy, pattern.degrees, block=True)
 
         elif kind == 'CircularContourPattern':
-            for ni in range(pat.nsteps):
-                r = pat.radius * (1 + ni * pat.percent_change)
+            for ni in range(pattern.nsteps):
+                r = pattern.radius * (1 + ni * pattern.percent_change)
                 self.info('doing circular contour {} {}'.format(ni + 1, r))
-                controller.single_axis_move('x', pat.cx + r,
+                controller.single_axis_move('x', pattern.cx + r,
                                             block=True)
-                controller.arc_move(pat.cx, pat.cy, 360,
+                controller.arc_move(pattern.cx, pattern.cy, 360,
                                     block=True)
                 time.sleep(0.1)
 
@@ -168,28 +190,15 @@ class PatternManager(Manager):
                 controller.multiple_point_move(pts)
             else:
                 if controller.simulation:
-                    self._simulate_pattern(pat)
+                    self._simulate_pattern(pattern)
                 else:
-                    graph = pat.graph
+#                    graph = pattern.graph
                     for x, y in pts:
-                        graph.set_data([x], series=1, axis=0)
-                        graph.set_data([y], series=1, axis=1)
-                        graph.redraw()
+#                        graph.set_data([x], series=1, axis=0)
+#                        graph.set_data([y], series=1, axis=1)
+#                        graph.redraw()
                         controller.linear_move(x, y, block=True,
-                                               velocity=pat.velocity)
-
-        pat.graph.set_data([], series=1, axis=0)
-        pat.graph.set_data([], series=1, axis=1)
-
-        if self._alive:
-            self.info('finished pattern {}'.format(self.pattern_name))
-            self.parent.update_axes()
-            if self.record_patterning:
-                self.parent.stop_recording()
-
-            self.close_ui()
-        self._alive = False
-
+                                               velocity=pattern.velocity)
     def _simulate_pattern(self, pat):
         from numpy import linspace
         def get_eq(x, y, px, py):

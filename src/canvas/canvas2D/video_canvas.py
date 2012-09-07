@@ -55,6 +55,6 @@ class VideoCanvas(BaseDataCanvas):
 
         if self.camera:
             #@todo: set fps in camera.cfg
-            self.fps = 10
+            self.fps = self.camera.fps
 
 #============= EOF ====================================

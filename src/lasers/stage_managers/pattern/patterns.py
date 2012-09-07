@@ -105,6 +105,8 @@ class Pattern(HasTraits):
 
     velocity = Float(1)
     calculated_transit_time = Float
+
+    niterations = Range(1, 200)
 #    def map_pt(self, x, y):
 #
 #        return self.pxpermm * x + self.image_width / 2, self.pxpermm * y + self.image_height / 2
@@ -117,17 +119,14 @@ class Pattern(HasTraits):
             return 'Pattern'
         return os.path.basename(self.path).split('.')[0]
 
-#    graph_width = 200
-#    graph_height = 200
-
     def _anytrait_changed(self, name, new):
         if name != 'calculated_transit_time':
             self.replot()
             self.calculate_transit_time()
 
     def calculate_transit_time(self):
-        self.calculated_transit_time = (self._get_path_length() *
-                                        self.velocity + self._get_delay())
+        self.calculated_transit_time = ((self._get_path_length() /
+                                        self.velocity) + self._get_delay()) * self.niterations
 
     def _get_path_length(self):
         return 0
@@ -316,7 +315,7 @@ class Pattern(HasTraits):
     def maker_group(self):
         return Group(
                      self.get_parameter_group(),
-
+                     Item('niterations'),
                      HGroup(Item('velocity'),
                             Item('calculated_transit_time',
                                  label='Time (s)',
