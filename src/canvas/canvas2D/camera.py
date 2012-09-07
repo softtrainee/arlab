@@ -127,6 +127,8 @@ class Camera(ConfigLoadable):
     hflip = Bool(False)
     calibration_data = Instance(CalibrationData, ())
     focus_z = Float
+    fps = Int
+
     def save_focus(self):
         self.info('saving focus position to {}'.format(self.config_path))
         config = self.get_configuration(self.config_path)
@@ -156,6 +158,8 @@ class Camera(ConfigLoadable):
         self.set_attribute(config, 'width', 'General', 'width', cast='int')
         self.set_attribute(config, 'height', 'General', 'height', cast='int')
         self.set_attribute(config, 'focus_z', 'General', 'focus', cast='float')
+
+        self.set_attribute(config, 'fps', 'General', 'fps', cast='int', default=5)
 
         cxs = self.config_get(config, 'General', 'xcoefficients')
         cys = self.config_get(config, 'General', 'ycoefficients')
