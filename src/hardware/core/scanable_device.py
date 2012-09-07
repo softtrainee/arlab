@@ -220,9 +220,11 @@ class ScanableDevice(ViewableDevice):
                 if self.db_save_dialog():
                     self.save_scan_to_db()
                 else:
-                    self.data_manager.delete_frame()
+                    if self.data_manager:
+                        self.data_manager.delete_frame()
 
-        self.data_manager.close()
+        if self.data_manager:
+            self.data_manager.close()
         self._auto_started = False
 
     def _get_scan_label(self):
