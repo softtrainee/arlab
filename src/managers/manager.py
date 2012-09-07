@@ -51,10 +51,14 @@ class ManagerHandler(ViewableHandler):
         '''
 
         info.object.kill()
-        MANAGERS.remove(info.object)
-        info.object.application.uis.remove(info.ui)
-#        import gc
-#        gc.collect()
+        try:
+            MANAGERS.remove(info.object)
+            info.object.application.uis.remove(info.ui)
+        except ValueError:
+            pass
+
+        import gc
+        gc.collect()
 
         return True
 
