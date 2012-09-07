@@ -184,6 +184,9 @@ class VideoStageManager(StageManager):
 
         self.video.open(identifier=self.video_identifier - 1,
                         user='underlay')
+#        print self.video
+        if self.video:
+            self.video.open()
 
         s = self.stage_controller
         if s.axes:
@@ -214,8 +217,10 @@ class VideoStageManager(StageManager):
         '''
         '''
         super(VideoStageManager, self).kill()
-        self.camera.save_calibration()
-        self.video.close(user='underlay')
+        if self.camera:
+            self.camera.save_calibration()
+        if self.video:
+            self.video.close()#user='underlay')
 
 #        if self.use_video_server:
 #            self.video_server.stop()
@@ -422,7 +427,8 @@ class VideoStageManager(StageManager):
     @on_trait_change('parent:zoom')
     def _update_zoom(self, new):
         s = self.stage_controller
-        self.camera.set_limits_by_zoom(new, s.x, s.y)
+        if self.camera:
+            self.camera.set_limits_by_zoom(new, s.x, s.y)
 
     def _autocenter_button_fired(self):
 
@@ -512,18 +518,25 @@ class VideoStageManager(StageManager):
             self.warning('Video not Available')
             video = None
 
+#        from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
+#        v = LaserTrayCanvas(parent=self,
         v = VideoLaserTrayCanvas(parent=self,
                                padding=30,
                                video=video,
 #                               use_camera=True,
-                               map=self._stage_map)
+#                               map=self._stage_map
+                               )
         return v
 
     def _canvas_editor_factory(self):
         camera = self.camera
         canvas = self.canvas
-        w = camera.width * int(canvas.scaling * 10) / 10.
-        h = camera.height * int(canvas.scaling * 10) / 10.
+        if camera:
+            w = camera.width * int(canvas.scaling * 10) / 10.
+            h = camera.height * int(canvas.scaling * 10) / 10.
+        else:
+            w = 640
+            h = 480
         l = canvas.padding_left
         r = canvas.padding_right
         t = canvas.padding_top
@@ -547,16 +560,16 @@ class VideoStageManager(StageManager):
         camera.set_limits_by_zoom(0, 0, 0)
 
         vid = self.video
-        #swap red blue channels True or False
-        vid.swap_rb = camera.swap_rb
+        if vid:
+            #swap red blue channels True or False
+            vid.swap_rb = camera.swap_rb
 
-        vid.vflip = camera.vflip
-        vid.hflip = camera.hflip
+            vid.vflip = camera.vflip
+            vid.hflip = camera.hflip
 
         return camera
 
     def _video_default(self):
-
         v = Video()
         return v
 
@@ -566,8 +579,8 @@ class VideoStageManager(StageManager):
     def _video_archiver_default(self):
         return Archiver()
 
-    def _camera_calibration_manager_default(self):
-        return CameraCalibrationManager()
+#    def _camera_calibration_manager_default(self):
+#        return CameraCalibrationManager()
 
     def _autocenter_manager_default(self):
         return AutocenterManager(video=self.video,

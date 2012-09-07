@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 MANAGERS = []
 def open_manager(app, man, **kw):
     ui = None

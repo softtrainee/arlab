@@ -23,6 +23,7 @@ from src.lasers.plugins.fusions.fusions_actions import FInitializeZoomAction, \
     FOpenStageVisualizerAction, FPowerCalibrationAction, FPowerMapAction, \
     FOpenMotionControllerManagerAction, FOpenLaserManagerAction, \
     FOpenPatternManagerAction
+from src.lasers.laser_managers.laser_manager import ILaserManager
 #from src.database.adapters.power_adapter import PowerAdapter
 #from src.helpers.paths import co2laser_db
 #from traits.api import on_trait_change
@@ -35,9 +36,8 @@ def get_manager(_, event, app=None):
 
     if app is None:
         app = event.window.application
-    base = 'src.lasers.laser_managers.{}'
 
-    manager = app.get_service(base.format('fusions_co2_manager.FusionsCO2Manager'))
+    manager = app.get_service(ILaserManager, 'name=="fusions_co2"')
 
     return manager
 

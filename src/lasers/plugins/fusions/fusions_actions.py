@@ -20,6 +20,9 @@ from src.envisage.core.action_helper import open_manager, open_selector
 from src.lasers.laser_managers.laser_manager import ILaserManager
 from src.lasers.laser_managers.pychron_laser_manager import PychronLaserManager
 
+#from guppy import hpy
+#hp = hpy()
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class LaserAction(Action):
@@ -34,8 +37,9 @@ class FOpenLaserManagerAction(LaserAction):
         manager = self.get_manager(event)
         if manager is not None:
             app = self.window.application
+#            hp.setrelheap()
             open_manager(app, manager)
-
+#            print hp.heap()
 
 class FOpenMotionControllerManagerAction(LaserAction):
 

@@ -17,16 +17,19 @@
 
 
 #============= enthought library imports =======================
-from wx import EVT_IDLE
+from traits.api import Any
 #============= standard library imports ========================
+#from wx import EVT_IDLE, EVT_PAINT
+import wx
+#============= local library imports  ==========================
 from src.lasers.stage_managers.stage_component_editor import LaserComponentEditor, \
     _LaserComponentEditor
-#============= local library imports  ==========================
 
 
 class _VideoComponentEditor(_LaserComponentEditor):
     '''
     '''
+    playTimer = Any
     def init(self, parent):
         '''
         Finishes initializing the editor by creating the underlying toolkit
@@ -34,20 +37,28 @@ class _VideoComponentEditor(_LaserComponentEditor):
    
         '''
         super(_VideoComponentEditor, self).init(parent)
-        self.control.Bind(EVT_IDLE, self.onIdle)
+#        self.control.Bind(EVT_IDLE, self.onIdle)
+#        self.control.Bind(EVT_PAINT, self.onPaint)
 
-    def onIdle(self, event):
-        '''
-      
-        '''
-        if self.control is not None:
+        self.playTimer = wx.Timer(self.control, 5)
+        self.control.Bind(wx.EVT_TIMER, self.onNextFrame, self.playTimer)
+        self.playTimer.Start(1000 / self.value.fps)
 
+#    def onIdle(self, event):
+##        '''
+##      
+##        '''
+#        if self.control is not None:
+#            self.control.Refresh()
+##
+###        if not self.value.pause:
+###            #force  the control to refresh perodically rendering a smooth video stream
+#        event.RequestMore()
+#        
+    def onNextFrame(self, evt):
+        if self.control:
             self.control.Refresh()
-
-#        if not self.value.pause:
-#            #force  the control to refresh perodically rendering a smooth video stream
-        event.RequestMore()
-
+        evt.Skip()
 
 class VideoComponentEditor(LaserComponentEditor):
     '''

@@ -25,6 +25,7 @@ class VideoCanvas(BaseDataCanvas):
     video = None
     camera = None
     padding = 0
+    fps = 5
 
     def __init__(self, *args, **kw):
         '''
@@ -52,5 +53,8 @@ class VideoCanvas(BaseDataCanvas):
         if self.video:
             self.on_trait_change(self.video.update_bounds, 'bounds')
 
+        if self.camera:
+            #@todo: set fps in camera.cfg
+            self.fps = 10
 
 #============= EOF ====================================

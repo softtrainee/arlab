@@ -23,6 +23,7 @@ from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerMana
     FLoadStageVisualizerAction, FInitializeZoomAction, FInitializeBeamAction, \
     FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
     FOpenPatternManagerAction, LaserAction
+from src.lasers.laser_managers.laser_manager import ILaserManager
 #from traits.api import on_trait_change
 
 #============= standard library imports ========================
@@ -35,9 +36,9 @@ def get_manager(_, event, app=None, window=None):
     elif app is None:
         app = event.window.application
 
-    base = 'src.lasers.laser_managers.{}'
-    manager = app.get_service(base.format('fusions_diode_manager.FusionsDiodeManager'))
-
+    manager = app.get_service(ILaserManager,
+                              'name=="fusions_diode"',
+                              )
     return manager
 
 

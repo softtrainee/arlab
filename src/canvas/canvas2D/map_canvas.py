@@ -34,8 +34,7 @@ class MapCanvas(MarkupCanvas):
     hole_color = (0, 0, 0)
     show_grids = False
     show_axes = False
-    bitmap_underlay = None
-    show_bitmap = Bool(False)
+
     render_map = Bool(False)
     hole_crosshairs_kind = Enum(1, 2)
     hole_crosshairs_color = Enum('red', 'green', 'blue', 'yellow', 'black')
@@ -47,20 +46,6 @@ class MapCanvas(MarkupCanvas):
 
     scaling = Float(1.0)
 
-    def __init__(self, *args, **kw):
-        super(MapCanvas, self).__init__(*args, **kw)
-        bmu = BitmapUnderlay(component=self,
-#                             path = self.map.bitmap_path,
-                             visible=self.show_bitmap,
-                             canvas_scaling=self.scaling
-                             )
-        self.underlays.append(bmu)
-        self.bitmap_underlay = bmu
-
-
-    def _bitmap_scale_changed(self):
-        self.bitmap_underlay.scale = self.bitmap_scale
-        self.request_redraw()
 
 #    def normal_key_pressed(self, event):
 ##        super(MapCanvas, self).normal_key_pressed(event)
@@ -136,12 +121,6 @@ class MapCanvas(MarkupCanvas):
             self.current_hole = None
             super(MapCanvas, self).normal_mouse_move(event)
 
-    def _show_bitmap_changed(self):
-        self.bitmap_underlay.visible = self.show_bitmap
-        self.bitmap_underlay.canvas_scaling = self.scaling
-
-        self.request_redraw()
-
     def new_calibration_item(self, x, y, rotation, kind='pychron'):
         if kind in ['MassSpec', 'pychron-auto']:
             ci = CalibrationObject()
@@ -152,13 +131,13 @@ class MapCanvas(MarkupCanvas):
 
     def set_map(self, mp):
         self._map = mp
-        self.bitmap_underlay.path = mp.bitmap_path
         self._map.on_trait_change(self.request_redraw, 'g_shape')
         self._map.on_trait_change(self.request_redraw, 'g_dimension')
 
     def _draw_hook(self, gc, *args, **kw):
         if self.render_map:
             self._draw_map(gc)
+        super(MapCanvas, self)._draw_hook(gc, *args, **kw)
 
     def _draw_map(self, gc, *args, **kw):
         gc.save_state()
@@ -182,6 +161,8 @@ class MapCanvas(MarkupCanvas):
             gshape = mp.g_shape
             get_draw_func = lambda x: getattr(self, '_draw_{}'.format(x))
             func = get_draw_func(gshape)
+            map_screen = self.map_screen
+            draw_sample_hole = self._draw_sample_hole
             for hole in mp.sample_holes:
                 tweaked = False
                 if ca:
@@ -195,11 +176,12 @@ class MapCanvas(MarkupCanvas):
                         if str(hole.id) in ca.tweak_dict and isinstance(ca, CalibrationItem):
                             tweak = ca.tweak_dict[str(hole.id)]
 
-                    x, y = self.map_screen([(hole.x, hole.y)])[0]
+                    x, y = map_screen([(hole.x, hole.y)])[0]
 
                     if hole.shape != gshape:
                         func = get_draw_func(hole.shape)
-                    self._draw_sample_hole(gc, x + 1, y + 1, hole.dimension,
+
+                    draw_sample_hole(gc, x + 1, y + 1, hole.dimension,
                                            func, tweak=tweak)
 
         gc.restore_state()
@@ -215,22 +197,6 @@ class MapCanvas(MarkupCanvas):
                 f = self._draw_cross_indicator
                 f(gc, x, y, float(size), tweak=tweak)
         func(gc, x, y, float(size))
-
-#    def _draw_sample_hole(self, gc, x, y, size, func, tweak=None):
-#        '''
-#
-#        '''
-#        gc.set_stroke_color(self.hole_color)
-#
-#        if self.hole_crosshairs_kind == 2:
-#            func = getattr(self, '_draw_{}'.format(shape))
-#        else:
-#            if self.show_indicators:
-#                f = self._draw_cross_indicator
-#                f(gc, x, y, float(size), tweak=tweak)
-#
-##            func = getattr(self, '_draw_{}'.format(shape))
-#        func(gc, x, y, float(size))
 
     def _draw_cross_indicator(self, gc, x, y, size, tweak=None):
         w, h = self._get_wh(size, size)

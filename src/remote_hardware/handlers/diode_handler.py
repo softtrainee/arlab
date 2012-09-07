@@ -27,7 +27,7 @@ from laser_handler import LaserHandler
 
 
 class DiodeHandler(LaserHandler):
-    manager_name = 'Diode'
+    manager_name = 'fusions_diode'
 
 
 

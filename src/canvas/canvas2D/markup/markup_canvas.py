@@ -124,6 +124,7 @@ class MarkupCanvas(BaseDataCanvas):
         # draw the lines currently held in the markupcontainer
         self._draw_current_markup(gc)
         self._draw_markup_dict(gc)
+        super(MarkupCanvas, self)._draw_hook(gc, *args, **kw)
 
     def _draw_current_markup(self, *args, **kw):
         pass

@@ -60,7 +60,7 @@ class ExperimentPlugin(CorePlugin):
         p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
         p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
         p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
-        p4 = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
+#        p4 = 'src.lasers.laser_managers.fusions_diode_manager.FusionsDiodeManager'
 #        lm = self.application.get_service(p4)
 #        if lm is None:
 #            p4 = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
