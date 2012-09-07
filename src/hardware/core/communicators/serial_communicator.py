@@ -53,7 +53,6 @@ class SerialCommunicator(Communicator):
 
     _auto_find_handle = False
     _auto_write_handle = False
-    handle = None
     baudrate = None
     port = None
     bytesize = None

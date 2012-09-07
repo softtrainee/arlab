@@ -35,6 +35,7 @@ class Communicator(ConfigLoadable):
 #    name = Str
     simulation = Bool(True)
     _terminator = chr(13)  # '\r'
+    handle = None
 
     def __init__(self, *args, **kw):
         '''

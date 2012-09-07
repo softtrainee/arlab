@@ -38,20 +38,15 @@ class VideoUnderlay(AbstractOverlay):
 
         '''
         gc.save_state()
-        try:
-            img = self.video.get_frame(
+        img = self.video.get_frame(
 #                                       flip=not self.flip,
-                                         #swap_rb=self.swap_rb,
+                                     #swap_rb=self.swap_rb,
 #                                         mirror=self.mirror,
-                                         size=map(int, (component.width, component.height)))
-            gc.clip_to_rect(component.x, component.y,
-                            component.width, component.height)
-            gc.draw_image(img.ndarray)
-
-        except (AttributeError, UnboundLocalError), e:
-            print e
-        finally:
-            gc.restore_state()
+                                     size=map(int, (component.width, component.height)))
+        gc.clip_to_rect(component.x, component.y,
+                        component.width, component.height)
+        gc.draw_image(img.ndarray)
+        gc.restore_state()
 
 
 

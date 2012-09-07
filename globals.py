@@ -38,7 +38,7 @@ class Globals(object):
     ignore_connection_warnings = True
     ignore_chiller_unavailable = True
 
-    video_test = True
+    video_test = False
     video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
     #use_ipc = False == embed the remote hardware servers into pychron
     #= True == an instance of RemoteHardwareServer must be launched

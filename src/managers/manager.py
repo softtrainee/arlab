@@ -28,6 +28,7 @@ import time
 from src.viewable import Viewable, ViewableHandler
 from pyface.timer.do_later import do_after
 from src.rpc.rpcable import RPCable
+from src.envisage.core.action_helper import MANAGERS
 
 class MassSpecParam(object):
     _value = None
@@ -50,6 +51,11 @@ class ManagerHandler(ViewableHandler):
         '''
 
         info.object.kill()
+        MANAGERS.remove(info.object)
+        info.object.application.uis.remove(info.ui)
+#        import gc
+#        gc.collect()
+
         return True
 
     def close(self, info, isok):

@@ -232,6 +232,7 @@ class LaserManager(Manager):
     def traits_view(self):
         '''
         '''
+
         vg = VGroup()
 
         hooks = [h for h in dir(self) if '__group__' in h]

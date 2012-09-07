@@ -160,7 +160,6 @@ class LaserTrayCanvas(MapCanvas):
         v = View(
                Item('show_bounds_rect'),
                Item('render_map'),
-               Item('show_bitmap'),
                Item('show_grids'),
                Item('show_desired_position'),
                Item('desired_position_color', show_label=False, enabled_when='show_desired_position'),
@@ -339,7 +338,6 @@ class LaserTrayCanvas(MapCanvas):
             delta /= 2.0
             nmi = val - delta
             nma = val + delta
-
 
         self.set_mapper_limits(mapper, (nmi, nma))
 
