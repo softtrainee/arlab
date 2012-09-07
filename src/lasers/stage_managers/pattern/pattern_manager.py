@@ -183,6 +183,7 @@ class PatternManager(Manager):
 
         if self._alive:
             self.info('finished pattern {}'.format(self.pattern_name))
+            self.parent.update_axes()
             if self.record_patterning:
                 self.parent.stop_recording()
 
