@@ -91,7 +91,8 @@ class PatternManager(Manager):
 
         self._alive = True
         if self.show_patterning:
-            do_later(self.edit_traits)
+            self.open_view(self)
+#            do_later(self.edit_traits)
 
         t = Thread(name='pattern.execute',
                    target=self._execute_)
