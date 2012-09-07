@@ -54,7 +54,9 @@ class Globals(object):
                            ('ignore_connection_warnings', boolfunc),
                            ('ignore_chiller_unavailable', boolfunc),
                            ('initialize_beam', boolfunc),
-                           ('initialize_zoom', boolfunc)
+                           ('initialize_zoom', boolfunc),
+                           ('show_infos', boolfunc),
+                           ('show_warnings', boolfunc)
                             ]:
             a = ip.get_global(attr)
             if a:

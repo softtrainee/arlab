@@ -17,16 +17,17 @@
 #============= enthought library imports =======================
 from traits.api import Property, Dict, Float, Any, Instance
 from traitsui.api import View, VGroup, Item, RangeEditor
-#from pyface.timer.api import Timer
-from src.helpers.timer import Timer
+from pyface.timer.api import Timer
+#from src.helpers.timer import Timer
 #============= standard library imports ========================
 import os
 
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
+from pyface.timer.do_later import do_later
 
-UPDATE_MS = 300
+UPDATE_MS = 150
 
 
 class MotionController(CoreDevice):
@@ -113,12 +114,14 @@ class MotionController(CoreDevice):
         y = self.get_current_position('y')
 
         if not self._moving_():
-            x = self.get_current_position('x')
-            y = self.get_current_position('y')
+#            x = self.get_current_position('x')
+#            y = self.get_current_position('y')
             self.timer.Stop()
 
 #        self.info('setting x={:3f}, y={:3f}'.format(x, y))
+#        do_later(self.parent.canvas.set_stage_position, x, y)
         self.parent.canvas.set_stage_position(x, y)
+
 
     def _get_x(self):
         '''
