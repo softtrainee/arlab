@@ -126,7 +126,7 @@ class Pattern(HasTraits):
 
     def calculate_transit_time(self):
         self.calculated_transit_time = ((self._get_path_length() /
-                                        self.velocity) + self._get_delay()) * self.niterations
+                                        max(self.velocity, 0.001)) + self._get_delay()) * self.niterations
 
     def _get_path_length(self):
         return 0

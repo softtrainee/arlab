@@ -299,7 +299,7 @@ class LaserTrayCanvas(MapCanvas):
         '''
         if x is not None and y is not None:
             self._stage_position = (x, y)
-            self.request_redraw()
+            self.invalidate_and_redraw()
 
     def _get_desired_position(self):
         '''
