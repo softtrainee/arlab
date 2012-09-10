@@ -89,7 +89,6 @@ class ExperimentSet(Loggable):
         params = dict()
         args = map(str.strip, line.split(delim))
 
-
         #load strings
         for attr in ['identifier',
                      'measurement', 'extraction', 'post_measurement',
@@ -104,7 +103,7 @@ class ExperimentSet(Loggable):
                 params[attr] = str_to_bool(param)
 
         #load numbers
-        for attr in ['duration', 'position']:
+        for attr in ['duration', 'position', 'overlap']:
             param = args[header.index(attr)].strip()
             if param:
                 params[attr] = float(param)
@@ -226,6 +225,7 @@ class ExperimentSet(Loggable):
         return c
 
     def save_to_db(self):
+        self.info('saving experiment {} to database'.format(self.name))
         db = self.db
         db.add_experiment(self.name)
         db.commit()

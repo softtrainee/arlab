@@ -56,6 +56,8 @@ class AutomatedRunAdapter(TabularAdapter):
     heat_value_text = Property
     duration_text = Property
     autocenter_text = Property
+    overlap_text = Property
+
     can_edit = False
 #    def get_can_edit(self, obj, trait, row):
 #        if self.item:
@@ -73,6 +75,7 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Position', 'position'),
                  ('Autocenter', 'autocenter'),
                  ('HeatDevice', 'heat_device'),
+                 ('Overlap', 'overlap'),
                  ('Heat', 'heat_value'),
                  ('Duration', 'duration'),
                  ('Extraction', 'extraction_script'),
@@ -89,14 +92,18 @@ class AutomatedRunAdapter(TabularAdapter):
             return ''
 
     def _get_duration_text(self, trait, item):
-        if self.item.duration:
-            return self.item.duration
-        else:
-            return ''
+        return self._get_number('duration')
+
+    def _get_overlap_text(self, trait, item):
+        return self._get_number('overlap')
 
     def _get_position_text(self, trait, item):
-        if self.item.position:
-            return self.item.position
+        return self._get_number('position')
+
+    def _get_number(self, attr):
+        v = getattr(self.item, attr)
+        if v:
+            return v
         else:
             return ''
 
@@ -197,6 +204,8 @@ class AutomatedRun(Loggable):
 
     update = Event
 
+    overlap = CInt
+
     measurement_script_dirty = Event
     measurement_script = Property(depends_on='measurement_script_dirty')
     _measurement_script = Any
@@ -230,11 +239,16 @@ class AutomatedRun(Loggable):
     info_display = None#DelegatesTo('experiment_manager')
 
     @property
+    def compound_name(self):
+        return '{}-{}'.format(self.identifier, self.aliquot)
+
+    @property
     def runtype(self):
         if self.identifier.startswith('B'):
             return 'blank'
         elif self.identifier.startswith('A'):
             return 'air'
+
     def finish(self):
         del self.info_display
         if self.plot_panel:
@@ -335,9 +349,27 @@ class AutomatedRun(Loggable):
         self.post_equilibration_script.cancel()
         self.measurement_script.cancel()
         self.post_measurement_script.cancel()
+
+    def wait_for_overlap(self):
+        self.info('waiting for overlap signal')
+        evt = self.overlap_evt
+        evt.wait()
+
+        self.info('starting overlap delay {}'.format(self.overlap))
+        starttime = time.time()
+        while self._alive:
+            if time.time() - starttime > self.overlap:
+                break
+            time.sleep(0.5)
+
 #===============================================================================
 # doers
 #===============================================================================
+    def start(self):
+        self.overlap_evt = TEvent()
+        self.info('Start automated run {}'.format(self.name))
+        self._alive = True
+
     def do_extraction(self):
         if not self._alive:
             return
@@ -346,7 +378,7 @@ class AutomatedRun(Loggable):
         self.state = 'extraction'
         self.extraction_script.manager = self.experiment_manager
 
-        self._pre_extraction_save()
+#        self._pre_extraction_save()
         if self.extraction_script.execute():
             self._post_extraction_save()
             self.info('======== Extraction Finished ========')
@@ -425,6 +457,7 @@ class AutomatedRun(Loggable):
             elm.close_valve(inlet)
 
         self.do_post_equilibration()
+        self.overlap_evt.set()
 
     def do_post_equilibration(self):
         if not self._alive:
@@ -435,10 +468,10 @@ class AutomatedRun(Loggable):
 
         if self.post_equilibration_script.execute():
             self.info('======== Post Equilibration Finished ========')
-            return True
+#            return True
         else:
             self.info('======== Post Equilibration Finished unsuccessfully ========')
-            return False
+#            return False
 
     def do_data_collection(self, ncounts, starttime, series=0):
         if not self._alive:
@@ -765,7 +798,7 @@ class AutomatedRun(Loggable):
                     self.executable = False
         return s
 
-    def _pre_extraction_save(self):
+    def pre_extraction_save(self):
         # set our aliquot
         db = self.db
         identifier = self.identifier
@@ -812,8 +845,6 @@ class AutomatedRun(Loggable):
         dm.new_group('sniffs')
         dm.new_group('signals')
 
-
-
     def _post_measurement_save(self):
         self.info('post measurement save')
         db = self.db
@@ -835,6 +866,7 @@ class AutomatedRun(Loggable):
 
             lab = db.add_labnumber(identifier, aliquot, sample=sample)
 
+            self.info(self.experiment_name)
             experiment = db.get_experiment(self.experiment_name)
             d = get_datetime()
 
