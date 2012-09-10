@@ -24,6 +24,7 @@ from pyface.image_resource import ImageResource
 from os import path
 import os
 from src.loggable import Loggable
+import copy
 
 #from envisage.ui.tasks.tasks_application import TasksApplication
 #============= local library imports  ==========================
@@ -55,9 +56,12 @@ class Pychron(WorkbenchApplication, Loggable):
         return sp
 
     def exit(self):
-        for ui in self.uis:
-            if ui is not None:
-                ui.dispose()
+        uis = copy.copy(self.uis)
+        for ui in uis:
+            try:
+                ui.dispose(abort=True)
+            except AttributeError:
+                pass
 
         super(Pychron, self).exit()
 #    def _started_fired(self):

@@ -21,23 +21,25 @@ from traits.api import HasTraits, Float, Property, Bool, Str
 from traitsui.api import View, Item, RangeEditor, Handler
 from pyface.timer.timer import Timer
 from traitsui.menu import Action
+from src.viewable import ViewableHandler
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-class WDHandler(Handler):
-    def init(self, info):
-        info.object.ui = info.ui
-
-    def closed(self, info, is_ok):
-        info.object.closed(is_ok)
-        return True
+class WDHandler(ViewableHandler):
+#    def init(self, info):
+#        info.object.ui = info.ui
+#
+#    def closed(self, info, is_ok):
+#        info.object.closed(is_ok)
+#        return True
 
     def _continue(self, info):
         info.object._continue()
 
 class WaitDialog(HasTraits):
-    condition = None
+#    condition = None
+    end_evt = None
     wtime = Float
     low_name = Float(2)
     current_time = Property(depends_on='_current_time')
@@ -56,10 +58,19 @@ class WaitDialog(HasTraits):
         super(WaitDialog, self).__init__(*args, **kw)
         self._current_time = self.wtime
         if self.auto_start:
+#            if self.condition is not None:
+#                self.condition.acquire()
+            if self.end_evt is not None:
+                self.end_evt.clear()
             self.timer = Timer(1000, self._update_time)
 
-    def start(self, condition=None):
-        self.condition = condition
+    def start(self, evt=None):
+        evt.clear()
+        self.end_evt = evt
+#        self.condition = condition
+#        if self.condition is not None:
+#            self.condition.acquire()
+
         self.timer = Timer(1000, self._update_time)
         self._continued = False
 
@@ -71,40 +82,35 @@ class WaitDialog(HasTraits):
 
     def _current_time_changed(self):
         if self._current_time <= 0:
-            if self.timer is not None:
-                self.timer.Stop()
-
-            try:
-                self.condition.notifyAll()
-                self.condition.release()
-            except (RuntimeError, AttributeError):
-                pass
+            self._end()
 
     def _update_time(self):
-        if self._current_time == self.wtime:
-            if self.condition is not None:
-
-                self.condition.acquire()
         self._current_time -= 1
 
-    def close(self):
+    def _end(self):
+
         if self.timer is not None:
             self.timer.Stop()
+        if self.end_evt is not None:
+            self.end_evt.set()
+
+    def close(self, isok=None):
+#        self._current_time = -1
+#        self._end()
+        if isok is not None:
+            self._canceled = not isok
+
+        self._end()
         try:
             self.ui.dispose()
         except:
             pass
-
-    def closed(self, ok):
-        if not ok:
-            self._canceled = True
-        else:
-            self._canceled = False
-        self._current_time = -1
-
+#
     def _continue(self):
+        self._canceled = False
         self._continued = True
-        self._current_time = -1
+        self._end()
+#        self.close(True)
 
     def traits_view(self):
 

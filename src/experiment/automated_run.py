@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Str, String, Int, CInt, List, Enum, Property, \
-     Event, Float, Instance, Bool, cached_property, Dict, on_trait_change
+     Event, Float, Instance, Bool, cached_property, Dict, on_trait_change, DelegatesTo
 from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group
 from traitsui.tabular_adapter import TabularAdapter
 from pyface.timer.do_later import do_later
@@ -24,6 +24,8 @@ from pyface.timer.do_later import do_later
 import os
 import time
 import random
+from threading import Thread
+from threading import Event as TEvent
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.experiment.heat_schedule import HeatStep
@@ -37,6 +39,7 @@ from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 from src.database.sync.repository import Repository
+from src.experiment.plot_panel import PlotPanel
 
 
 HEATDEVICENAMES = ['Fusions Diode', 'Fusions CO2']
@@ -47,8 +50,12 @@ class AutomatedRunAdapter(TabularAdapter):
     state_text = Property
     extraction_script_text = Property
     measurement_script_text = Property
+    post_measurement_script_text = Property
+    post_equilibration_script_text = Property
+    position_text = Property
+    heat_value_text = Property
+    duration_text = Property
     autocenter_text = Property
-
     can_edit = False
 #    def get_can_edit(self, obj, trait, row):
 #        if self.item:
@@ -56,10 +63,9 @@ class AutomatedRunAdapter(TabularAdapter):
 #                return True
 
     def _columns_default(self):
-        hp = ('Temp', 'temp_or_power')
-        power = True
-        if power:
-            hp = ('Power', 'temp_or_power')
+#        hp = ('Temp', 'heat_value')
+#        if self.kind == 'watts':
+#            hp =
 
         return  [('', 'state'), ('RunID', 'identifier'), ('Aliquot', 'aliquot'),
 
@@ -67,11 +73,32 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Position', 'position'),
                  ('Autocenter', 'autocenter'),
                  ('HeatDevice', 'heat_device'),
-                 hp,
+                 ('Heat', 'heat_value'),
                  ('Duration', 'duration'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
+                 ('Post Measurement', 'post_measurement_script'),
+                 ('Post equilibration', 'post_equilibration_script'),
                  ]
+
+    def _get_heat_value_text(self, trait, item):
+        _, u = self.item.heat_value
+        if u:
+            return '{:0.2f},{}'.format(*self.item.heat_value)
+        else:
+            return ''
+
+    def _get_duration_text(self, trait, item):
+        if self.item.duration:
+            return self.item.duration
+        else:
+            return ''
+
+    def _get_position_text(self, trait, item):
+        if self.item.position:
+            return self.item.position
+        else:
+            return ''
 
     def _get_autocenter_text(self, trait, item):
         return 'yes' if self.item.autocenter else ''
@@ -86,6 +113,14 @@ class AutomatedRunAdapter(TabularAdapter):
     def _get_measurement_script_text(self, trait, item):
         if self.item.measurement_script:
             return self.item.measurement_script.name
+
+    def _get_post_measurement_script_text(self, trait, item):
+        if self.item.post_measurement_script:
+            return self.item.post_measurement_script.name
+
+    def _get_post_equilibration_script_text(self, trait, item):
+        if self.item.post_equilibration_script:
+            return self.item.post_equilibration_script.name
 
     def _get_state_text(self):
         return ''
@@ -122,7 +157,7 @@ class AutomatedRun(Loggable):
     massspec_importer = Instance(MassSpecDatabaseImporter)
     repository = Instance(Repository)
     runner = Any
-    graph = Any
+    plot_panel = Any
 
     sample = Str
 
@@ -130,14 +165,20 @@ class AutomatedRun(Loggable):
     identifier = String(enter_set=True, auto_set=False)
     aliquot = Int
     state = Enum('not run', 'extraction', 'measurement', 'success', 'fail')
-    runtype = Enum('Blank', 'Air')
+#    runtype = Enum('Blank', 'Air')
     irrad_level = Str
 
     heat_step = Instance(HeatStep)
     duration = Property(depends_on='heat_step,_duration')
-    temp_or_power = Property(depends_on='heat_step,_temp_or_power')
+
+#    temp_or_power = Property(depends_on='heat_step,_temp_or_power')
     _duration = Float
-    _temp_or_power = Float
+
+    heat_value = Property(depends_on='heat_step,_heat_value,_heat_units')
+    _heat_value = Float
+
+    heat_units = Property(depends_on='heat_step,_heat_units')
+    _heat_units = Str#Enum('watts', 'temp', 'percent')
 
     heat_device = Str
 
@@ -160,6 +201,13 @@ class AutomatedRun(Loggable):
     measurement_script = Property(depends_on='measurement_script_dirty')
     _measurement_script = Any
 
+    post_measurement_script_dirty = Event
+    post_measurement_script = Property(depends_on='post_measurement_script_dirty')
+    _post_measurement_script = Any
+
+    post_equilibration_script_dirty = Event
+    post_equilibration_script = Property(depends_on='post_equilibration_script_dirty')
+    _post_equilibration_script = Any
 
     extraction_script_dirty = Event
     extraction_script = Property(depends_on='extraction_script_dirty')
@@ -174,18 +222,43 @@ class AutomatedRun(Loggable):
     _runtime = None
 
     executable = Bool(False)
+    _alive = False
+
+    regression_results = None
+    peak_center = None
+#    info_display = DelegatesTo('experiment_manager')
+    info_display = None#DelegatesTo('experiment_manager')
+
+    @property
+    def runtype(self):
+        if self.identifier.startswith('B'):
+            return 'blank'
+        elif self.identifier.startswith('A'):
+            return 'air'
+    def finish(self):
+        del self.info_display
+        if self.plot_panel:
+            self.plot_panel.close_ui()
+        if self.peak_center:
+            self.peak_center.graph.close()
+
+    def info(self, msg, *args, **kw):
+        super(AutomatedRun, self).info(msg, *args, **kw)
+        if self.info_display:
+            do_later(self.info_display.add_text, msg)
+
     def get_estimated_duration(self):
         '''
             use the pyscripts to calculate etd
         '''
         s = self.duration
-        ms = self.measurement_script
-        if ms is not None:
-            s += ms.get_estimated_duration()
 
-        es = self.extraction_script
-        if es is not None:
-            s += es.get_estimated_duration()
+        for si in [self.measurement_script,
+                   self.extraction_script,
+                   self.post_equilibration_script,
+                   self.post_measurement_script]:
+            if si is not None:
+                s += si.get_estimated_duration()
 
         return s
 
@@ -206,6 +279,7 @@ class AutomatedRun(Loggable):
 
         return default
 
+
     def measurement_script_factory(self, ec):
         ec = self.configuration
         mname = os.path.basename(ec['measurement_script'])
@@ -217,9 +291,20 @@ class AutomatedRun(Loggable):
         return ms
 #
     def extraction_script_factory(self, ec):
+        key = 'extraction_script'
+        return self._extraction_script_factory(ec, key)
+
+    def post_measurement_script_factory(self, ec):
+        key = 'post_measurement_script'
+        return self._extraction_script_factory(ec, key)
+
+    def post_equilibration_script_factory(self, ec):
+        key = 'post_equilibration_script'
+        return self._extraction_script_factory(ec, key)
+
+    def _extraction_script_factory(self, ec, key):
         #get the klass
 
-        key = 'extraction_script'
         path = os.path
 
         source_dir = path.dirname(ec[key])
@@ -227,38 +312,54 @@ class AutomatedRun(Loggable):
 
         if file_name.endswith('.py'):
             klass = ExtractionLinePyScript
-
             hdn = self.heat_device.replace(' ', '_').lower()
-
             return klass(
                     root=source_dir,
                     name=file_name,
+
                     hole=self.position,
-                    heat_duration=self.duration,
-                    temp_or_power=self.temp_or_power,
+
+                    duration=self.duration,
+                    heat_value=self._heat_value,
+                    heat_units=self._heat_units,
+#                    watts=self.watts,
+#                    temp_or_power=self.temp_or_power,
 
                     runner=self.runner,
-                    heat_device=hdn
+                    heat_device=hdn,
+                    runtype=self.runtype
                     )
-
+    def cancel(self):
+        self._alive = False
+        self.extraction_script.cancel()
+        self.post_equilibration_script.cancel()
+        self.measurement_script.cancel()
+        self.post_measurement_script.cancel()
 #===============================================================================
 # doers
 #===============================================================================
     def do_extraction(self):
-        self.info('======== Extraction Started========')
+        if not self._alive:
+            return
+
+        self.info('======== Extraction Started ========')
         self.state = 'extraction'
         self.extraction_script.manager = self.experiment_manager
 
         self._pre_extraction_save()
         if self.extraction_script.execute():
             self._post_extraction_save()
-            self.info('======== Extraction Finished========')
+            self.info('======== Extraction Finished ========')
             return True
         else:
-            self.info('======== Extraction Finished unsuccessfully========')
+            self.info('======== Extraction Finished unsuccessfully ========')
             return False
 
     def do_measurement(self):
+        if not self._alive:
+            return
+
+        self.measurement_script.manager = self.experiment_manager
         #use a measurement_script to explicitly define 
         #measurement sequence
         self.info('======== Measurement Started ========')
@@ -269,36 +370,118 @@ class AutomatedRun(Loggable):
             self.info('======== Measurement Finished ========')
             return True
         else:
-            self.info('======== Measurement Finished unsuccessfully========')
+            self.info('======== Measurement Finished unsuccessfully ========')
+            return False
+
+    def do_post_measurement(self):
+        if not self._alive:
+            return
+
+        self.info('======== Post Measurement Started ========')
+        self.state = 'extraction'
+        self.post_measurement_script.manager = self.experiment_manager
+
+        if self.post_measurement_script.execute():
+            self.info('======== Post Measurement Finished ========')
+            return True
+        else:
+            self.info('======== Post Measurement Finished unsuccessfully ========')
+            return False
+
+    def do_equilibration(self):
+        event = TEvent()
+        if not self._alive:
+            event.set()
+            return event
+
+        self.info('====== Equilibration Started ======')
+        t = Thread(name='equilibration', target=self._equilibrate, args=(event,))
+        t.start()
+        return event
+
+    def _equilibrate(self, evt):
+        eqtime = self.get_measurement_parameter('equilibration_time', default=15)
+        inlet = self.get_measurement_parameter('inlet_valve')
+        outlet = self.get_measurement_parameter('outlet_valve')
+        elm = self.extraction_line_manager
+        if elm:
+            if outlet:
+                #close mass spec ion pump
+                elm.close_valve(outlet, mode='script')
+                time.sleep(1)
+
+            if inlet:
+                #open inlet
+                elm.open_valve(inlet, mode='script')
+
+        evt.set()
+
+        #delay for eq time
+        self.info('equilibrating for {}sec'.format(eqtime))
+        time.sleep(eqtime)
+
+        self.info('====== Equilibration Finished ======')
+        if elm and inlet:
+            elm.close_valve(inlet)
+
+        self.do_post_equilibration()
+
+    def do_post_equilibration(self):
+        if not self._alive:
+            return
+
+        self.info('======== Post Equilibration Started ========')
+        self.post_equilibration_script.manager = self.experiment_manager
+
+        if self.post_equilibration_script.execute():
+            self.info('======== Post Equilibration Finished ========')
+            return True
+        else:
+            self.info('======== Post Equilibration Finished unsuccessfully ========')
             return False
 
     def do_data_collection(self, ncounts, starttime, series=0):
+        if not self._alive:
+            return
+        if self.plot_panel:
+            self.plot_panel._ncounts = ncounts
 
         gn = 'signals'
         self._build_tables(gn)
-        self._measure_iteration(gn,
+        return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series)
 
     def do_sniff(self, ncounts, starttime, series=0):
+        if not self._alive:
+            return
+
+        if self.plot_panel:
+            self.plot_panel._ncounts = ncounts
         gn = 'sniffs'
         self._build_tables(gn)
 
-        self._measure_iteration(gn,
+        return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series)
 
     def do_baselines(self, ncounts, starttime, mass, detector,
                      mode, series=0):
+        if not self._alive:
+            return
+
+        if self.plot_panel:
+            self.plot_panel._ncounts = ncounts
         if mass:
             ion = self.ion_optics_manager
             if ion is not None:
                 ion.position(mass, detector, False)
-#
+                time.sleep(2)
+
         gn = 'baselines'
         self._build_tables(gn)
         if mode == 'multicollect':
-            self._measure_iteration(gn,
+            return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series)
 ##        else:
@@ -306,11 +489,15 @@ class AutomatedRun(Loggable):
 ##            self._peak_hop(gn, detector, masses, ncounts, starttime, series)
 
     def do_peak_hop(self, detector, isotopes, cycles, starttime, series):
+        if not self._alive:
+            return
         self._peak_hop('signals', detector,
                        isotopes, cycles, starttime, series)
 
 
     def do_peak_center(self, **kw):
+        if not self._alive:
+            return
         ion = self.ion_optics_manager
         if ion is not None:
 
@@ -320,19 +507,18 @@ class AutomatedRun(Loggable):
             t.join()
 
             pc = ion.peak_center
+            self.peak_center = pc
             if pc.result:
                 dm = self.data_manager
                 tab = dm.new_table('/', 'peakcenter')
                 for xi, yi in zip(*pc.data):
                     nrow = tab.row
-                    print xi, yi
                     nrow['time'] = xi
                     nrow['value'] = yi
                     nrow.append()
 
                 xs, ys, _mx, _my = pc.result
                 attrs = tab.attrs
-                print xs, ys, 'arun'
                 attrs.low_dac = xs[0]
                 attrs.center_dac = xs[1]
                 attrs.high_dac = xs[2]
@@ -349,50 +535,54 @@ class AutomatedRun(Loggable):
             sm.spectrometer.set_parameter(name, v)
 
     def set_position(self, pos, detector, dac=False):
+        if not self._alive:
+            return
+
         ion = self.ion_optics_manager
+
         if ion is not None:
             ion.position(pos, detector, dac)
+            try:
+                #update the plot_panel labels
+                for det, pi in zip(self._active_detectors, self.plot_panel.graph.plots):
+                    pi.y_axis.title = '{} {} Signal (fA)'.format(det.name, det.isotope)
+            except Exception, e:
+                print 'set_position exception', e
+
 
     def set_isotopes(self, isotopes):
         for di, iso in zip(isotopes, self._active_detectors):
             di.isotope = iso
 
     def activate_detectors(self, dets):
-        g = self.graph
-        if g is not None:
-            g.close()
+        if not self._alive:
+            return
+        p = self.plot_panel
+        if p is not None:
+            p.ui.dispose()
 
-        g = StackedGraph(
-                         container_dict=dict(padding=5, bgcolor='gray',
-                                             ),
-                         window_width=500,
-                         window_height=700,
+        p = PlotPanel(
                          window_y=0.05 + 0.01 * self.index,
                          window_x=0.6 + 0.01 * self.index,
                          window_title='Plot Panel {}-{}'.format(self.identifier, self.aliquot)
                          )
-        self.graph = g
+        p.graph.clear()
 
-        self.experiment_manager.open_view(self.graph)
-#            do_later(self.graph.edit_traits)
+        self.plot_panel = p
+        self.experiment_manager.open_view(p)
         dets.reverse()
-#        get_detector = lambda name: next((n for n in self._active_detectors if n.name == name), None)
 
         spec = self.spectrometer_manager.spectrometer
-#        for i, l in enumerate(dets):
+        g = p.graph
         for l in dets:
-#            l = dets[-(i + 1)]
-
             det = spec.get_detector(l)
-#            if det is None:
-#            if not l in self._active_detectors:
-            g.new_plot(ytitle='{} Signal (fA)'.format(det.isotope))
+            g.new_plot(ytitle='{} {} Signal (fA)'.format(det.name, det.isotope))
             g.new_series(type='scatter',
                          marker='circle',
                          marker_size=1.25,
                          label=l)
 
-        g.set_x_limits(min=0, max=100)
+        g.set_x_limits(min=0, max=400)
 #        dets.reverse()
 
 #            g.new_series(type='scatter',
@@ -404,25 +594,27 @@ class AutomatedRun(Loggable):
         self._active_detectors = [spec.get_detector(n) for n in dets]
 #        do_later(self.experiment_manager.ui.control.Raise)
 
-#===============================================================================
-# 
-#===============================================================================
+    def do_regress(self, fits, series=0):
+        if not self._alive:
+            return
 
-    def regress(self, kind, series=0):
+        n = len(self._active_detectors)
+        if isinstance(fits, str) or len(fits) < n:
+            fits = [fits[0], ] * n
+
         r = Regressor()
-        g = self.graph
+        g = self.plot_panel.graph
 
         time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
-        n = len(self._active_detectors)
+        self.regression_results = dict()
+        for pi, (dn, fi) in enumerate(zip(self._active_detectors, fits)):
 
-        for i, dn in enumerate(self._active_detectors):
-#        for pi in range(len(g.plots)):
-            pi = n - (i + 1)
             x = g.get_data(plotid=pi, series=series)[time_zero_offset:]
             y = g.get_data(plotid=pi, series=series, axis=1)[time_zero_offset:]
             x, y = zip(*zip(x, y))
-            rdict = r._regress_(x, y, kind)
-            self.info('{} intercept {}+/-{}'.format(dn.name,
+            rdict = r._regress_(x, y, fi)
+            self.regression_results[dn.name] = rdict
+            self.info('{}-{} intercept {}+/-{}'.format(dn.name, fi,
                                                     rdict['coefficients'][-1],
                                                  rdict['coeff_errors'][-1]
                                                  ))
@@ -443,10 +635,6 @@ class AutomatedRun(Loggable):
                          )
             g.redraw()
 
-#    def _state_changed(self):
-#        #update the analysis table
-#        self.update = True
-
     def _build_tables(self, gn):
         dm = self.data_manager
         #build tables
@@ -459,7 +647,7 @@ class AutomatedRun(Loggable):
         sm = self.spectrometer_manager
         if sm:
             spec = sm.spectrometer
-
+        graph = self.plot_panel.graph
         for i in xrange(0, ncounts, 1):
             for mi, iso in enumerate(isotopes):
                 ti = self.integration_time * 0.99 if not self._debug else 0.01
@@ -469,8 +657,6 @@ class AutomatedRun(Loggable):
                     self.set_position(iso, detector)
 
                 x = time.time() - starttime
-#                if i % 100 == 0 or x > self.graph.get_x_limits()[1]:
-#                print x, self.graph.get_x_limits()[1]
 
                 signals = [1200 * (1 + random.random()),
                         3.5 * (1 + random.random())]
@@ -478,17 +664,16 @@ class AutomatedRun(Loggable):
                 v = signals[mi]
 
                 kw = dict(series=series, do_after=1,)
-#                print len(self.graph.series[mi])
-                if len(self.graph.series[mi]) < series + 1:
+                if len(graph.series[mi]) < series + 1:
                     kw['marker'] = 'circle'
                     kw['type'] = 'scatter'
                     kw['marker_size'] = 1.25
-                    self.graph.new_series(x=[x], y=[v], plotid=mi, **kw)
+                    graph.new_series(x=[x], y=[v], plotid=mi, **kw)
                 else:
-                    self.graph.add_datum((x, v), plotid=mi, ** kw)
+                    graph.add_datum((x, v), plotid=mi, ** kw)
 
-                if x > self.graph.get_x_limits()[1]:
-                    self.graph.set_x_limits(0, x + 10)
+                if x > graph.get_x_limits()[1]:
+                    graph.set_x_limits(0, x + 10)
 
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, series):
@@ -496,12 +681,18 @@ class AutomatedRun(Loggable):
         self.info('measuring {}'.format(grpname))
 
         spec = self.spectrometer_manager.spectrometer
-
+        graph = self.plot_panel.graph
         for i in xrange(0, ncounts, 1):
+            if i > self.plot_panel.ncounts:
+                break
+
+            if not self._alive:
+                return False
+
             if i % 50 == 0:
                 self.info('collecting point {}'.format(i + 1))
 
-            m = self.integration_time * 0.99 if not self._debug else 0.01
+            m = self.integration_time * 0.99 if not self._debug else 0.1
             time.sleep(m)
 
             if not self._debug:
@@ -528,26 +719,27 @@ class AutomatedRun(Loggable):
             self.signals = dict(zip(keys, signals))
 
             kw = dict(series=series, do_after=1, update_y_limits=True)
-            if len(self.graph.series[0]) < series + 1:
+            if len(graph.series[0]) < series + 1:
                 kw['marker'] = 'circle'
                 kw['type'] = 'scatter'
                 kw['marker_size'] = 1.25
-                func = lambda x, signal, kw: self.graph.new_series(x=[x],
+                func = lambda x, signal, kw: graph.new_series(x=[x],
                                                                  y=[signal],
                                                                  **kw
                                                                  )
             else:
-                func = lambda x, signal, kw: self.graph.add_datum((x, signal), **kw)
+                func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
+
             dets = self._active_detectors
-            n = len(dets)
             for pi, dn in enumerate(dets):
                 signal = signals[keys.index(dn.name)]
-                kw['plotid'] = n - (pi + 1)
+                kw['plotid'] = pi
                 func(x, signal, kw)
 
+            if (i and i % 100 == 0) or x > graph.get_x_limits()[1]:
+                graph.set_x_limits(0, x + 10)
 
-            if (i and i % 100 == 0) or x > self.graph.get_x_limits()[1]:
-                self.graph.set_x_limits(0, x + 10)
+        return True
 
     def _load_script(self, name):
         ec = self.configuration
@@ -558,6 +750,7 @@ class AutomatedRun(Loggable):
             if s is not None:
                 s = s.clone_traits()
                 s.automated_run = self
+                s.runtype = self.runtype
         else:
             self.info('loading script "{}"'.format(fname))
             func = getattr(self, '{}_script_factory'.format(name))
@@ -670,14 +863,15 @@ class AutomatedRun(Loggable):
             db.add_analysis_path(p, analysis=a)
             db.commit()
 
+        #save to massspec
+        self._save_to_massspec()
+
         #close h5 file
         self.data_manager.close()
 
         #version control new analysis
-        self._version_control_analysis(p, a)
+#        self._version_control_analysis(p, a)
 
-        #save to massspec
-        self._save_to_massspec()
 
     def _version_control_analysis(self, apath, analysis):
         repo = self.repository
@@ -693,6 +887,7 @@ class AutomatedRun(Loggable):
         repo.push()
 
     def _save_to_massspec(self):
+        self.info('saving to massspec database')
 #        #save to mass spec database
         dm = self.data_manager
         baselines = []
@@ -712,13 +907,13 @@ class AutomatedRun(Loggable):
                 si = [(row['time'], row['value']) for row in table.iterrows()]
                 signals.append(si)
 
-
         self.massspec_importer.add_analysis(self.identifier,
                                             self.aliquot,
                                             self.identifier,
                                             baselines,
                                             signals,
                                             detectors,
+                                            self.regression_results
 #                                            self.irrad_level,
 #                                            self.sample,
 #                                            self.runtype
@@ -741,6 +936,16 @@ class AutomatedRun(Loggable):
                 t.flush()
 
         return write_data
+
+    @cached_property
+    def _get_post_measurement_script(self):
+        self._post_measurement_script = self._load_script('post_measurement')
+        return self._post_measurement_script
+
+    @cached_property
+    def _get_post_equilibration_script(self):
+        self._post_equilibration_script = self._load_script('post_equilibration')
+        return self._post_equilibration_script
 
     @cached_property
     def _get_measurement_script(self):
@@ -767,20 +972,43 @@ class AutomatedRun(Loggable):
             d = self._duration
         return d
 
-    def _get_temp_or_power(self):
-        if self.heat_step:
+#    def _get_temp_or_power(self):
+#        if self.heat_step:
+#
+#            t = self.heat_step.temp_or_power
+#        else:
+#            t = self._temp_or_power
+#        return t
+#    def _get_temp_or_power(self):
+#        if self.heat_step:
+#
+#            t = self.heat_step.temp_or_power
+#        else:
+#            t = self._temp_or_power
+#        return t
+    def _get_heat_units(self):
+        units = dict(t='temp', w='watts', p='percent')
+        return units[self._heat_units]
 
-            t = self.heat_step.temp_or_power
+    def _set_heat_units(self, v):
+        self._heat_units = v
+
+    def _get_heat_value(self):
+        if self.heat_step:
+            v = self.heat_step.heat_value
+            u = self.heat_step.heat_units
         else:
-            t = self._temp_or_power
-        return t
+            v = self._heat_value
+            u = self._heat_units
+        return (v, u)
 
     def _validate_duration(self, d):
         return self._validate_float(d)
 
-    def _validate_temp_or_power(self, d):
+#    def _validate_temp_or_power(self, d):
+#        return self._validate_float(d)
+    def _validate_heat_value(self, d):
         return self._validate_float(d)
-
     def _validate_float(self, d):
         try:
             return float(d)
@@ -794,12 +1022,12 @@ class AutomatedRun(Loggable):
             else:
                 self._duration = d
 
-    def _set_temp_or_power(self, t):
+    def _set_heat_value(self, t):
         if t is not None:
             if self.heat_step:
-                self.heat_step.temp_or_power = t
+                self.heat_step.heat_value = t
             else:
-                self._temp_or_power = t
+                self._heat_value = t
 
 #===============================================================================
 # views

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, List, Float, Str, Button
+from traits.api import HasTraits, List, Float, Str, Button, Int
 from traitsui.api import View, Item, CustomEditor, Handler, HGroup, VGroup, spring
 
 #=============standard library imports ========================
@@ -55,6 +55,7 @@ class RichTextDisplay(HasTraits):
     was_closed = False
 
     default_color = Str('red')
+    default_size = Int(9)
     bg_color = Str('white')
 
     x = Float(10)
@@ -122,13 +123,15 @@ class RichTextDisplay(HasTraits):
         self.add_text(self._text_buffer)
         self._text_buffer = []
 
-    def _add_(self, msg, color=None, size=9, **kw):
+    def _add_(self, msg, color=None, size=None, **kw):
         '''
             
         '''
         d = self._display
         if color is None:
             color = wx.Colour(*colors8i[self.default_color])
+        if size is None:
+            size = self.default_size
 
         elif isinstance(color, str):
             if color in colors8i:
@@ -154,11 +157,12 @@ class RichTextDisplay(HasTraits):
         n = 300
         if len(self.text) >= n:
             pop = self.text.pop
-            s = sum(pop(0) for _ in xrange(n / 5))
+            s = sum(pop(0) for _ in xrange(n))
             d.Remove(0, s)
 
         lp = d.GetLastPosition()
-        d.ShowPosition(lp + 600)
+        d.ShowPosition(lp + 1000)
+#        d.PageDown(1)
         d.Thaw()
 
     def add_text(self, msg, **kw):

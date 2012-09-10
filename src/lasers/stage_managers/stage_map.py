@@ -19,19 +19,16 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Property, CFloat, Float, List, Enum, Button, on_trait_change
 from traitsui.api import View, Item, TabularEditor, HGroup
-
+from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
-from numpy import polyfit, array
+from numpy import array
+import pickle
 #============= local library imports  ==========================
 from src.helpers.filetools import parse_file
-from traitsui.tabular_adapter import TabularAdapter
 from src.paths import paths
-import pickle
 from src.loggable import Loggable
 from affine import AffineTransform
-from src.data_processing.statistical_calculations import calculate_weighted_mean
-
 
 class SampleHole(HasTraits):
     id = Str

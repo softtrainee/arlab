@@ -46,6 +46,9 @@ class Globals(object):
 
     _test = False #set test to 'true' when running tests
 
+    experiment_debug = False
+#    experiment_debug = True
+
     def build(self, ip):
 
         boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
@@ -56,7 +59,8 @@ class Globals(object):
                            ('initialize_beam', boolfunc),
                            ('initialize_zoom', boolfunc),
                            ('show_infos', boolfunc),
-                           ('show_warnings', boolfunc)
+                           ('show_warnings', boolfunc),
+                           ('video_test', boolfunc),
                             ]:
             a = ip.get_global(attr)
             if a:

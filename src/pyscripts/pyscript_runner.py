@@ -14,8 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
 from traits.api import Any, Button, Dict, List, on_trait_change
 from traitsui.api import View, Item, TableEditor
@@ -81,12 +79,18 @@ class RemoteResource(object):
 #===============================================================================
 # threading.Event interface
 #===============================================================================
-    def isSet(self):
+    def read(self):
         resp = self.handle.ask('Read {}'.format(self.name))
         if resp is not None:
-            return bool(int(resp))
-    def set(self):
-        self._set(1)
+            return int(resp)
+
+    def isSet(self):
+        resp = self.read()
+        if resp is not None:
+            return bool(resp)
+
+    def set(self, value=1):
+        self._set(value)
 
     def clear(self):
         self._set(0)

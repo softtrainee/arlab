@@ -27,7 +27,6 @@ import time
 #=============local library imports  ==========================
 from src.managers.manager import Manager
 from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
-from src.managers.displays.rich_text_display import RichTextDisplay
 from src.helpers.color_generators import colors8i as colors
 
 from src.hardware.motion_controller import MotionController
@@ -62,7 +61,6 @@ class StageManager(Manager):
     _stage_maps = None
 
     canvas = Instance(LaserTrayCanvas)
-    output = Instance(RichTextDisplay)
 
     #===========================================================================
     # buttons
@@ -790,13 +788,6 @@ class StageManager(Manager):
 
     def _motion_controller_manager_default(self):
         return self.motion_configure_factory()
-
-    def _output_default(self):
-        '''
-        '''
-        return RichTextDisplay(height=175,
-                               width=100
-                               )
 
     def _title_default(self):
         '''

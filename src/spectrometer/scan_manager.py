@@ -15,20 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Enum, Any, DelegatesTo, List
+from traits.api import Instance, Enum, Any, DelegatesTo, List, Property, Str
 from traitsui.api import View, VGroup, HGroup, Group, Item, Spring, spring, Label, \
      ListEditor, InstanceEditor, EnumEditor
-from src.managers.manager import Manager
-from src.graph.time_series_graph import TimeSeriesStreamGraph
-from src.helpers.timer import Timer
-import random
+from traits.api import HasTraits, Range, Float
+from pyface.timer.api import Timer
 #============= standard library imports ========================
+import random
+import os
+import pickle
 #============= local library imports  ==========================
 #'black', 'red', 'violet', 'maroon', 'yellow',
-from traits.api import HasTraits, Range, Float
+from src.managers.manager import Manager
+from src.graph.time_series_graph import TimeSeriesStreamGraph
+#from src.helpers.timer import Timer
+
 from src.spectrometer.detector import Detector
 from src.spectrometer.tasks.magnet_scan import MagnetScan
 from src.spectrometer.tasks.rise_rate import RiseRate
+from src.paths import paths
 
 class Magnet(HasTraits):
     dac = Range(0.0, 6.0)
@@ -57,34 +62,13 @@ class ScanManager(Manager):
                             16.777216, 33.554432, 67.108864)
 
     detectors = DelegatesTo('spectrometer')
-    reference_detector = Instance(Detector)
+    detector = Instance(Detector)
     magnet = DelegatesTo('spectrometer')
     source = DelegatesTo('spectrometer')
     scanner = Instance(MagnetScan)
     rise_rate = Instance(RiseRate)
-
-    def _graph_changed(self):
-        self.rise_rate.graph = self.graph
-
-    def _rise_rate_default(self):
-        r = RiseRate(spectrometer=self.spectrometer,
-                     graph=self.graph)
-        return r
-
-    def _scanner_default(self):
-        s = MagnetScan(spectrometer=self.spectrometer)
-        return s
-
-    def _reference_detector_changed(self):
-        if self.reference_detector:
-            self.scanner.reference_detector = self.reference_detector
-            self.rise_rate.reference_detector = self.reference_detector
-
-            nominal_width = 1
-            emphasize_width = 5
-            for name, plot in self.graph.plots[0].plots.iteritems():
-                plot = plot[0]
-                plot.line_width = emphasize_width if name == self.reference_detector.name else nominal_width
+    isotope = Str
+    isotopes = Property
 
     def _toggle_detector(self, obj, name, old, new):
         self.graph.set_series_visiblity(new, series=obj.name)
@@ -98,20 +82,40 @@ class ScanManager(Manager):
         self.on_trait_change(self._toggle_detector, 'detectors.active')
 
         #force update
-        self.reference_detector = None
-        #set reference detector default
-        self.reference_detector = self.detectors[0]
+        self.load_settings()
+
+    def load_settings(self):
+        self.info('load scan settings')
+        spec = self.spectrometer
+        p = os.path.join(paths.hidden_dir, 'scan_settings')
+        if os.path.isfile(p):
+            with open(p, 'rb') as f:
+                try:
+                    params = pickle.load(f)
+                    self.detector = spec.get_detector(params['detector'])
+                    self.isotope = params['isotope']
+                except pickle.PickleError:
+                    self.detector = self.detectors[-1]
+                    self.isotope = self.isotopes[-1]
+
+    def dump_settings(self):
+        self.info('dump scan settings')
+        p = os.path.join(paths.hidden_dir, 'scan_settings')
+        with open(p, 'wb') as f:
+            d = dict(isotope=self.isotope,
+                     detector=self.detector.name)
+            pickle.dump(d, f)
 
     def close(self, isok):
         self._stop_timer()
+        self.dump_settings()
 
     def _update_scan_graph(self):
 
         data = self.spectrometer.get_intensities()
         if data:
             _, signals = data
-            self.graph.record_multiple(signals, do_later=10)
-
+            self.graph.record_multiple(signals)
 
     def _start_timer(self):
         self._first_iteration = True
@@ -123,7 +127,36 @@ class ScanManager(Manager):
     def _stop_timer(self):
         self.info('stopping scan timer')
         self.timer.Stop()
+#===============================================================================
+# handlers
+#===============================================================================
+    def _set_position(self):
+        if self.isotope and self.detector:
+            self.info('set position {} on {}'.format(self.isotope, self.detector))
+            self.ion_optics_manager.position(self.isotope, self.detector.name)
 
+    def _isotope_changed(self):
+        self._set_position()
+
+    def _graph_changed(self):
+        self.rise_rate.graph = self.graph
+
+    def _detector_changed(self):
+        if self.detector:
+            self.scanner.detector = self.detector
+            self.rise_rate.detector = self.detector
+
+            nominal_width = 1
+            emphasize_width = 5
+            for name, plot in self.graph.plots[0].plots.iteritems():
+                plot = plot[0]
+                plot.line_width = emphasize_width if name == self.detector.name else nominal_width
+
+            self._set_position()
+
+#===============================================================================
+# factories
+#===============================================================================
     def _timer_factory(self, func=None):
 
         if func is None:
@@ -137,8 +170,10 @@ class ScanManager(Manager):
         g = TimeSeriesStreamGraph(container_dict=dict(bgcolor='gray',
                                                       padding=5
                                                       )
+
                                   )
         g.new_plot(padding=[50, 5, 5, 50],
+                   data_limit=1000,
                    xtitle='Time (s)',
                    ytitle='Signal (nA)',
                    )
@@ -154,19 +189,46 @@ class ScanManager(Manager):
 
         return g
 
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_isotopes(self):
+        molweights = self.spectrometer.molecular_weights
+        return sorted(molweights.keys(), key=lambda x: int(x[2:]))
+#===============================================================================
+# defaults
+#===============================================================================
     def _graph_default(self):
         return self._graph_factory()
 
+    def _rise_rate_default(self):
+        r = RiseRate(spectrometer=self.spectrometer,
+                     graph=self.graph)
+        return r
+
+    def _scanner_default(self):
+        s = MagnetScan(spectrometer=self.spectrometer)
+        return s
+#===============================================================================
+# views
+#===============================================================================
     def traits_view(self):
         custom = lambda n:Item(n, style='custom', show_label=False)
         magnet_grp = VGroup(
+                            HGroup(
+                                Item('detector',
+                                     show_label=False,
+                                     editor=EnumEditor(name='detectors')),
+                                Item('isotope',
+                                     show_label=False,
+                                     editor=EnumEditor(name='isotopes')
+                                     )),
                             custom('magnet'),
                             custom('scanner'),
                             label='Magnet'
                             )
         detector_grp = VGroup(
-                              Item('reference_detector', editor=EnumEditor(name='detectors')),
-                              HGroup(Spring(springy=False, width=100), Label('Deflection')),
+                              HGroup(Spring(springy=False, width=120), Label('Deflection')),
                               Item('detectors',
                                    show_label=False,
                                    editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
@@ -177,10 +239,10 @@ class ScanManager(Manager):
         source_grp = custom('source')
 
         control_grp = Group(
+                          detector_grp,
                           source_grp,
                           rise_grp,
                           magnet_grp,
-                          detector_grp,
                           layout='tabbed')
         graph_grp = custom('graph')
         v = View(

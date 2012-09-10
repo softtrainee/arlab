@@ -117,19 +117,23 @@ class MeasurementPyScript(PyScript):
         if self.automated_run is None:
             return
 
-        self.automated_run.do_sniff(ncounts,
+        if not self.automated_run.do_sniff(ncounts,
                            self._time_zero,
                            series=self._series_count,
 
-                           )
+                           ):
+            self.cancel()
         self._series_count += 1
 
     @verbose_skip
-    def regress(self, kind='linear'):
+    def regress(self, *fits):
         if self.automated_run is None:
             return
 
-        self.automated_run.regress(kind, series=self._regress_id)
+        if not fits:
+            fits = 'linear'
+
+        self.automated_run.do_regress(fits, series=self._regress_id)
         self._series_count += 3
 
     @verbose_skip
@@ -142,10 +146,12 @@ class MeasurementPyScript(PyScript):
             return
 
 #         print 'cooooll', ncounts, self._time_zero, integration_time
-        self.automated_run.do_data_collection(ncounts, self._time_zero,
+        if not self.automated_run.do_data_collection(ncounts, self._time_zero,
                       series=self._series_count,
                       #update_x=True
-                      )
+                      ):
+            self.cancel()
+
         self._regress_id = self._series_count
         self._series_count += 1
 
@@ -174,12 +180,13 @@ class MeasurementPyScript(PyScript):
         if self.automated_run is None:
             return
 
-        self.automated_run.do_baselines(ncounts, self._time_zero,
+        if not self.automated_run.do_baselines(ncounts, self._time_zero,
                                mass,
                                detector,
                                mode,
                                series=self._series_count
-                              )
+                              ):
+            self.cancel()
         self._series_count += 1
 
     @verbose_skip
@@ -195,7 +202,6 @@ class MeasurementPyScript(PyScript):
 
     @verbose_skip
     def peak_center(self, detector='AX', isotope='Ar40'):
-        print self.automated_run, 'asdfasdfasd'
         if self.automated_run is None:
             return
 

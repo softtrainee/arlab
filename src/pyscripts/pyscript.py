@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Any, Bool
+from traits.api import Str, Any, Bool, DelegatesTo
 from pyface.timer.do_later import do_later
 from pyface.wx.dialog import confirmation
 #============= standard library imports ========================
@@ -115,6 +115,7 @@ class PyScript(Loggable):
 
     cancel_flag = Bool
     hash_key = None
+    info_display = DelegatesTo('manager')
 
     _estimated_duration = 0
 
@@ -209,7 +210,7 @@ class PyScript(Loggable):
 #==============================================================================
 # commands
 #==============================================================================
-    def gosub(self, name=None, root=None):
+    def gosub(self, name=None, root=None, **kw):
         if not name.endswith('.py'):
             name += '.py'
 
@@ -227,7 +228,6 @@ class PyScript(Loggable):
             root = self.root
 
         p = os.path.join(root, name)
-
         if not os.path.isfile(p):
             raise GosubError(p)
 #        print self.__class__
@@ -236,13 +236,13 @@ class PyScript(Loggable):
                           name=name,
                           _syntax_checked=self._syntax_checked,
                           manager=self.manager,
-                          parent_script=self
+                          parent_script=self, **kw
                           )
 #        s.bootstrap()
 
         if self._syntax_checking:
-            if not self._syntax_checked:
-                self._syntax_checked = True
+#            if not self.parent._syntax_checked:
+#                self._syntax_checked = True
                 s.bootstrap()
                 err = s._test()
                 if err:
@@ -304,10 +304,16 @@ class PyScript(Loggable):
 
     @skip
     def _m_info(self, message=None):
-
+        message = str(message)
         self.info(message)
 
+        if self.info_display:
+            do_later(self.info_display.add_text, message)
+
     def sleep(self, duration=0):
+        self._estimated_duration += duration
+        if self.parent_script is not None:
+            self.parent_script._estimated_duration += self._estimated_duration
 
         if self._graph_calc:
             va = self._xs[-1] + duration
@@ -316,9 +322,6 @@ class PyScript(Loggable):
             return
 
         if self._syntax_checking or self._cancel:
-            self._estimated_duration += duration
-            if self.parent_script is not None:
-                self.parent_script._estimated_duration += self._estimated_duration
             return
 
         self.info('SLEEP {}'.format(duration))
@@ -465,20 +468,20 @@ class PyScript(Loggable):
         if dialog:
 
             st = time.time()
-            c = Condition()
-            c.acquire()
+#            c = Condition()
+#            c.acquire()
+            evt = Event()
             self._wait_dialog = wd = WaitDialog(wtime=timeout,
-                                condition=c,
+#                                condition=c,
+                                end_evt=evt,
                                 parent=self,
                                 title='{} - Wait'.format(self.logger_name),
                                 message='Waiting for {}'.format(timeout)
                                 )
 
             do_later(wd.edit_traits)
-            c.wait()
-            c.release()
+            evt.wait(timeout=timeout + 1)
             do_later(wd.close)
-
             if wd._canceled:
                 self.cancel()
             elif wd._continued:
