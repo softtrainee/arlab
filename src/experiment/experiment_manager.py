@@ -106,6 +106,7 @@ class ExperimentManager(Manager):
 #
 #        return a
     dirty = DelegatesTo('experiment_set')
+    err_message = None
 
     def save(self):
         self.save_experiment_set()
@@ -153,9 +154,7 @@ class ExperimentManager(Manager):
         arun.integration_time = 1.04
         arun.repository = repo
         arun._debug = globalv.experiment_debug
-        arun._alive = True
         arun.info_display = self.info_display
-
 
     def do_automated_runs(self):
 
@@ -172,13 +171,8 @@ class ExperimentManager(Manager):
 
         self._alive = True
         self.info('start automated runs')
-#        self.csv_data_manager = CSVDataManager()
 
-#        sm = self.get_spectrometer_manager()
         exp = self.experiment_set
-        nruns = len(exp.automated_runs)
-
-        err_message = ''
 
         dm = H5DataManager()
 
@@ -187,7 +181,6 @@ class ExperimentManager(Manager):
         exp.reset_stats()
 
         self.db.reset()
-
         exp.save_to_db()
 
 #        name = 'isotopedb.sqlite'
@@ -198,162 +191,118 @@ class ExperimentManager(Manager):
 #            repo.commit('added {}'.format(name))
 #            repo.push()
 
-        for i, arun in enumerate(exp.automated_runs):
+        runs = (ai for ai in exp.automated_runs)
+        cnt = 0
+        def launch_run():
+            run = runs.next()
+            self._setup_automated_run(cnt, run, repo, dm, runner)
 
-            if not self._continue_check():
+            run.pre_extraction_save()
+
+            t = Thread(name=run.compound_name,
+                       target=self._do_automated_run,
+                       args=(run,)
+                       )
+            t.start()
+            return t, run
+
+        while 1:
+            if not self.isAlive():
+                break
+            try:
+                t, run = launch_run()
+                cnt += 1
+                if run.overlap:
+                    self.info('overlaping')
+                    run.wait_for_overlap()
+                    to, run = launch_run()
+                    to.join()
+                    cnt += 1
+                else:
+                    t.join()
+
+            except StopIteration:
                 break
 
-            self.info('Start automated run {}'.format(arun.identifier))
-            self._setup_automated_run(i, arun, repo, dm, runner)
+            if self.isAlive():
+                delay = self.experiment_set.delay_between_runs
+                self.info('Delay between runs {}'.format(delay))
+                #delay between runs
+                st = time.time()
+                while time.time() - st < delay:
+                    if not self.isAlive():
+                        break
+                    time.sleep(0.5)
 
-            #bootstrap the extraction script and measurement script
-            if not arun.extraction_script:
-                err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
-                self.warning(err_message)
-                continue # or should we continue
-
-            if not arun.measurement_script:
-                err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
-                self.warning(err_message)
-                continue
-
-            if not arun.post_measurement_script:
-                err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
-                self.warning(err_message)
-                continue
-
-            if not self._continue_check():
-                break
-
-            arun.state = 'extraction'
-            if not arun.do_extraction():
-                self._alive = False
-
-            # do eq in a separate thread
-            # this way we can measure during eq.
-            # ie do_equilibration is nonblocking
-
-#            evt = self.do_equilibration(arun)#eqtime, inlet_valve, outlet_valve)
-#            self.debug('waiting for the inlet to open')
-#            evt.wait()
-#            self.debug('inlet opened')
-
-            if not self._continue_check():
-                break
-            #do_equilibration
-            evt = arun.do_equilibration()
-            self.info('waiting for the inlet to open')
-            evt.wait()
-            self.info('inlet opened')
-
-            if not self._continue_check():
-                break
-
-            arun.state = 'measurement'
-            if not arun.do_measurement():
-                self._alive = False
-
-            if not self._continue_check():
-                break
-
-            if not arun.do_post_measurement():
-                self._alive = False
-
-            arun.state = 'success'
-            self.info('Automated run {} finished'.format(arun.identifier))
-            if i + 1 == nruns:
-                exp.stop_stats_timer()
-                self.end_runs()
-                return
-
-            if not self._continue_check():
-                break
-
-            delay = self.experiment_set.delay_between_runs
-            self.info('Delay between runs {}'.format(delay))
-            #delay between runs
-            st = time.time()
-            while time.time() - st < delay:
-                if not self._continue_check():
-                    break
-                time.sleep(0.5)
-
-            arun.finish()
-
+        if self.err_message:
+            run.state = 'fail'
+            self.warning('automated runs did not complete successfully')
+            self.warning('error: {}'.format(self.err_message))
         else:
             exp.stop_stats_timer()
             self.end_runs()
+
+        self.info('automated runs ended at {}, index={}'.format(run.compound_name, cnt))
+
+    def _do_automated_run(self, arun):
+        def isAlive():
+            if not self.isAlive():
+                self.err_message = 'User quit'
+                return False
+            else:
+                return True
+
+        self.db.reset()
+        arun.start()
+
+        #bootstrap the extraction script and measurement script
+        if not arun.extraction_script:
+            self.err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
             return
 
-        #executed if break out of for loop
-        if err_message:
-            arun.state = 'fail'
-            self.warning('automated runs did not complete successfully')
-            self.warning('error: {}'.format(err_message))
-        else:
-            self.info('automated runs ended at {}, index={}'.format(arun.identifier, i + 1))
+        if not arun.measurement_script:
+            self.err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
+            return
 
-    def _continue_check(self):
-        return self.isAlive()
-#        c = self.isAlive()
-#        if c:
-#            return True
-#        else:
-#            if confirm:
-#                if self.confirmation_dialog('Cancel Experiment Set {}'.format(self.experiment_set.name),
-#                                             'Cancel Experiment'):
-#                    self.info('automated runs cancelled')
-#                else:
-#                    self._alive = True
-#                    return True
-##            else:
-##                self._alive = True
-##                return True
+        if not arun.post_measurement_script:
+            self.err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
+            return
 
+        if not isAlive():
+            return
+
+        arun.state = 'extraction'
+        if not arun.do_extraction():
+            self._alive = False
+
+        if not isAlive():
+            return
+
+        #do_equilibration
+        evt = arun.do_equilibration()
+        self.info('waiting for the inlet to open')
+        evt.wait()
+        self.info('inlet opened')
+
+        if not isAlive():
+            return
+
+        arun.state = 'measurement'
+        if not arun.do_measurement():
+            self._alive = False
+
+        if not isAlive():
+            return
+
+        if not arun.do_post_measurement():
+            self._alive = False
+
+        arun.state = 'success'
+        self.info('Automated run {} finished'.format(arun.compound_name))
+        arun.finish()
 
     def isAlive(self):
         return self._alive
-
-#    def do_equilibration(self, arun):
-#
-#        def eq(ev, inlet, outlet):
-#
-#            elm = self.extraction_line_manager
-#            if elm:
-#                if outlet:
-#                    #close mass spec ion pump
-#                    elm.close_valve(outlet, mode='script')
-#                    time.sleep(1)
-#
-#                if inlet:
-#                    #open inlet
-#                    elm.open_valve(inlet, mode='script')
-#
-#            ev.set()
-#
-#            #delay for eq time
-#            self.info('equilibrating for {}sec'.format(eqtime))
-#            time.sleep(eqtime)
-#
-#            self.info('finish equilibration')
-#            if elm and inlet:
-#                elm.close_valve(inlet)
-#
-#            arun.do_post_equilibration()
-#
-#
-#        #use an Event object so that we dont finish before eq is done
-#        event = TEvent()
-#        event.clear()
-#
-#        eqtime = arun.get_measurement_parameter('equilibration_time', default=15)
-#        inlet_valve = arun.get_measurement_parameter('inlet_valve')
-#        outlet_valve = arun.get_measurement_parameter('outlet_valve')
-#
-#        self.info('starting equilibration')
-#        t = Thread(target=eq, args=(event, inlet_valve, outlet_valve))
-#        t.start()
-#        return event
 
     def _execute(self):
         if self.isAlive():

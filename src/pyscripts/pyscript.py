@@ -325,6 +325,7 @@ class PyScript(Loggable):
             return
 
         self.info('SLEEP {}'.format(duration))
+        duration = 0.1
         self._sleep(duration)
 
     def execute(self, new_thread=False):
