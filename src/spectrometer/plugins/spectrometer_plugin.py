@@ -51,10 +51,12 @@ class SpectrometerPlugin(CorePlugin):
         spec = self.application.get_service('src.spectrometer.spectrometer_manager.SpectrometerManager')
         return spec.spectrometer
 
+    def get_ion_optics(self):
+        return self.application.get_service('src.spectrometer.ion_optics_manager.IonOpticsManager')
+
     def _factory_scan(self, *args, **kw):
-
-
         return ScanManager(application=self.application,
+                           ion_optics_manager=self.get_ion_optics(),
                            spectrometer=self.get_spectrometer())
 
     def _factory_ion_optics(self, *args, **kw):

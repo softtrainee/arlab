@@ -23,7 +23,7 @@
 #============= standard library imports ========================
 import csv
 #============= local library imports  ==========================
-from src.data_processing.statistical_calculations import calculate_mswd, calculate_weighted_mean
+from src.stats import calculate_mswd, calculate_weighted_mean
 from src.data_processing.argon_calculations import calculate_arar_age, find_plateaus
 
 

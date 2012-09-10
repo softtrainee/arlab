@@ -15,23 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str
-from traitsui.api import View, Item
+from traits.api import HasTraits
+from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.database.sync.repository import Repository
 
-
-class CommitDialog(HasTraits):
-    message = Str('test commit messgae')
-    committer = Str('testuser <testuser@gmail.com>')
-    def traits_view(self):
-        v = View(Item('message', style='custom'),
-                 Item('committer', label='committer'),
-                 resizable=True,
-                 buttons=['OK', 'Cancel', 'Revert'],
-                 width=500,
-                 height=300,
-                 kind='livemodal'
-                 )
-        return v
+class WebDAVRepository(Repository):
+    pass
 #============= EOF =============================================

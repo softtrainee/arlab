@@ -32,15 +32,20 @@ from src.paths import paths
 class HeatStepAdapter(TabularAdapter):
     can_drop = True
     kind = Str
+
     state_image = Property
     state_text = Property
     state_width = Property
-
+    def set_kind(self, kind):
+        self.kind = kind
+        self.columns = self._columns_factory()
     def _columns_default(self):
-        hp = ('Temp', 'temp_or_power')
+        return self._columns_factory()
+    def _columns_factory(self):
+        hp = ('Temp', 'heat_value')
 
         if self.kind == 'power':
-            hp = ('Power', 'temp_or_power')
+            hp = ('Power', 'heat_value')
 
         return [
                 #('', 'step'), 
@@ -105,7 +110,7 @@ class HeatStepAdapter(TabularAdapter):
             return os.path.join(root, '{}_ball.png'.format(im))
 
 class HeatStep(HasTraits):
-    temp_or_power = Property
+    heat_value = Property
     _power = Float
 
     duration = Property
@@ -116,13 +121,13 @@ class HeatStep(HasTraits):
     step = Str
 #    update = Event
 
-    def _get_temp_or_power(self):
+    def _get_heat_value(self):
         return self._power
 
-    def _validate_temp_or_power(self, v):
+    def _validate_heat_value(self, v):
         return self._validate_float(v, self._power)
 
-    def _set_temp_or_power(self, v):
+    def _set_heat_value(self, v):
         self._power = v
 
     def _get_duration(self):
@@ -148,7 +153,7 @@ class HeatStep(HasTraits):
 
 class HeatSchedule(HasTraits):
     steps = List(HeatStep)
-    kind = Enum('power', 'temp')
+    kind = Enum('watts', 'temp', 'percent')
     name = Property(depends_on='path')
     path = Str
 
@@ -170,9 +175,13 @@ class HeatSchedule(HasTraits):
 #        for s in self.steps:
 #            s.state = 'not run'
 #            s.elapsed_time = 0
+    def _kind_changed(self):
+        self.adapter.set_kind(self.kind)
 
     def traits_view(self):
-        editor = TabularEditor(adapter=HeatStepAdapter(kind=self.kind),
+        self.adapter = HeatStepAdapter(kind=self.kind)
+
+        editor = TabularEditor(adapter=self.adapter,
                                 operations=['delete', 'edit'],
                                 multi_select=True,
                                 editable=True,
@@ -185,6 +194,7 @@ class HeatSchedule(HasTraits):
                                    ), Item('name',
 #                          show_label=False, 
                           style='readonly'),
+                            Item('kind', show_label=False),
                             spring),
                      Item('steps',
                           show_label=False, editor=editor),

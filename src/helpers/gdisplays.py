@@ -19,7 +19,7 @@
 
 #============= local library imports  ==========================
 
-from src.managers.displays.rich_text_display import RichTextDisplay, ErrorDisplay
+from src.displays.rich_text_display import RichTextDisplay, ErrorDisplay
 try:
     import wx
     sw, sh = wx.DisplaySize()

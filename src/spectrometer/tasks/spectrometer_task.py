@@ -29,7 +29,7 @@ class SpectrometerTask(Loggable):
     execute_label = Property(depends_on='_alive')
     _alive = Bool
 
-    reference_detector = Any
+    detector = Any
 
     def _get_execute_label(self):
         return 'Stop' if self.isAlive() else 'Start'

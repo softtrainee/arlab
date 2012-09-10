@@ -15,47 +15,42 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Str
-from traitsui.api import View, Item
+
 #============= standard library imports ========================
-import os
+from numpy import asarray
 #============= local library imports  ==========================
 
+def calculate_mswd(x, errs):
+    mswd_w = 0
+    if len(x) >= 2:
+        x = asarray(x)
+        errs = asarray(errs)
 
-class WorkspaceFile(HasTraits):
-    dirty = Bool(False)
-    text = Str
-    path = Str
-    _otext = None
+    #    xmean_u = x.mean()    
+        xmean_w, _err = calculate_weighted_mean(x, errs)
 
-    def __init__(self, path, *args, **kw):
-        self.reload(path=path)
+        ssw = (x - xmean_w) ** 2 / errs ** 2
+    #    ssu = (x - xmean_u) ** 2 / errs ** 2
 
-        super(WorkspaceFile, self).__init__(*args, **kw)
+        d = 1.0 / (len(x) - 1)
+        mswd_w = d * ssw.sum()
+    #    mswd_u = d * ssu.sum()
 
-    def _text_changed(self):
-        if self.text != self._otext:
-            self.dirty = True
-        else:
-            self.dirty = False
+    return mswd_w
 
-    def reload(self, path=None):
-        if path is None:
-            path = self.path
+def calculate_weighted_mean(x, errs, error=0):
+    x = asarray(x)
+    errs = asarray(errs)
 
-        if os.path.isfile(path):
-            self.path = path
-            with open(path, 'r') as f:
-                self.text = f.read()
+    weights = asarray(map(lambda e: 1 / e ** 2, errs))
 
-            self._otext = self.text
-            self.dirty = False
+    wtot = weights.sum()
+    wmean = (weights * x).sum() / wtot
 
-    def dump(self):
-        with open(self.path, 'w') as f:
-            f.write(self.text)
+    if error == 0:
+        werr = wtot ** -0.5
+    elif error == 1:
+        werr = 1
+    return wmean, werr
 
-    def traits_view(self):
-        v = View(Item('text', show_label=False, style='custom'))
-        return v
 #============= EOF =============================================

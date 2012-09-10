@@ -42,7 +42,7 @@ class RiseRate(SpectrometerTask):
         self._start_intensity = self._get_intensity()
         self._start_intensity = 0
 
-        self.graph.add_vertical_rule(self._starttime, color=self.reference_detector.color.Get())
+        self.graph.add_vertical_rule(self._starttime, color=self.detector.color.Get())
         self.graph.redraw()
 
     def _calculate_rise_rate(self):
@@ -56,7 +56,7 @@ class RiseRate(SpectrometerTask):
         return rise / run
 
     def _get_intensity(self):
-        return self.spectrometer.get_intensity(self.reference_detector.name)
+        return self.spectrometer.get_intensity(self.detector.name)
 
     def _end(self):
         self.result = self._calculate_rise_rate()

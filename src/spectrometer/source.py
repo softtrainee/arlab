@@ -30,15 +30,12 @@ class Source(SpectrometerDevice):
     current_hv = Float(4500)
 
     y_symmetry = Property(Range(-50.0, 50.0), depends_on='_y_symmetry')
-    z_symmetry = Property(Range(-50.0, 50.0), depends_on='_z_symmetry')
+    z_symmetry = Property(Range(0.0, 100.0), depends_on='_z_symmetry')
     extraction_lens = Property(Range(0, 100.0), depends_on='_extraction_lens')
 
     _y_symmetry = Float#Range(0.0, 100.)
     _z_symmetry = Float#Range(0.0, 100.)
     _extraction_lens = Float#Range(0.0, 100.)
-
-
-
 
     def read_y_symmetry(self):
         return self._read_value('GetYSymmetry', 'y_symmetry')

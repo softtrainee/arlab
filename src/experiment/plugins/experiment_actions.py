@@ -40,8 +40,8 @@ class ExecuteExperimentSetAction(Action):
 #        man.experiment_set_path = p
         from src.envisage.core.action_helper import MANAGERS
         if man not in MANAGERS:
-            man.load_experiment_set(path=p)
-        open_manager(event.window.application, man, view='execute_view')
+            if man.load_experiment_set(path=p):
+                open_manager(event.window.application, man, view='execute_view')
 
 
 class NewExperimentSetAction(Action):

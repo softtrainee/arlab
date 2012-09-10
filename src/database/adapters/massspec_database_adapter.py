@@ -168,6 +168,25 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return iso, True
 
     @add
+    def add_isotope_result(self, isotope, data_reduction_session,
+                           intercept, intercept_err
+                           ):
+
+        isotope = self.get_isotope(isotope)
+        data_reduction_session = self.get_data_reduction_session(data_reduction_session)
+        iso_r = IsotopeResultsTable(DataReductionSessionID=data_reduction_session.DataReductionSessionID,
+                                    Intercept=intercept,
+                                    InterceptEr=intercept_err,
+                                    Iso=intercept,
+                                    IsoEr=intercept_err,
+                                    BkgdDetTypeID=1
+                                    )
+        if isotope:
+            isotope.results.append(iso_r)
+            return iso_r, True
+
+        return iso_r, False
+    @add
     def add_data_reduction_session(self):
         drs = DataReductionSessionTable(
                                    SessionDate=func.current_timestamp()

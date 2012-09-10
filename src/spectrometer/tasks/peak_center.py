@@ -23,15 +23,16 @@ from magnet_scan import MagnetScan
 
 class PeakCenter(MagnetScan):
     center_dac = Float
-    detector_label = Str('AX')
+    detector = Str('AX')
 
     window = Float(0.015)
     step_width = Float(0.0005)
-    min_peak_height = Float(3)
+    min_peak_height = Float(1.0)
     canceled = False
 
     data = None
     result = None
+
     def get_peak_center(self, ntries=2):
         self._alive = True
         graph = self.graph
@@ -64,7 +65,7 @@ class PeakCenter(MagnetScan):
             dac_values = linspace(start, end, nsteps)
 
 #            print center_dac + 0.001, start, end, nsteps
-            intensities = self._scan_dac(dac_values, self.detector_label)
+            intensities = self._scan_dac(dac_values, self.detector)
             self.data = (dac_values, intensities)
 
             if intensities:
@@ -105,7 +106,7 @@ class PeakCenter(MagnetScan):
         #look backward for point that is peak_percent% of max
         for i in range(cindex, cindex - 50, -1):
             #this prevent looping around to the end of the list
-            if i < 0:
+            if i < 1:
                 self.warning('PeakCenterError: could not find a low pos')
                 return
 
@@ -133,16 +134,24 @@ class PeakCenter(MagnetScan):
                 '''
                 self.warning('PeakCenterError: could not find a high pos')
                 return
+        try:
+            hx = x[i + 1] - xstep
+            hy = y[i] - (y[i] - y[i + 1]) / 2.
+        except IndexError:
+            self.warning('peak not well centered')
+            return
 
-        hx = x[i + 1] - xstep
-        hy = y[i] - (y[i] - y[i + 1]) / 2.
+        if (hx - lx) < 0:
+            self.warning('unable to find peak bounds high_pos < low_pos. {} < {}'.format(hx, lx))
+            return
 
         cx = (hx + lx) / 2.0
         cy = ma
 
-        cindex = i - 5
+        #find index in x closest to cx
+        ccx = abs(x - cx).argmin()
         #check to see if were on a plateau
-        yppts = y[cindex - 2:cindex + 2]
+        yppts = y[ccx - 2:ccx + 2]
 
         slope, _ = polyfit(range(len(yppts)), yppts, 1)
         std = yppts.std()
@@ -152,6 +161,7 @@ class PeakCenter(MagnetScan):
             return
         else:
             self.info('peak plateau std = {} slope = {}'.format(std, slope))
+
         return [lx, cx, hx ], [ly, cy, hy], mx, my
 
 #===============================================================================

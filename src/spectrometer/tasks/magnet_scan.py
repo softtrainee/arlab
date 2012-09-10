@@ -19,11 +19,11 @@ from traits.api import Any, Float, Event, Property, Bool
 from traitsui.api import View, Item, ButtonEditor, HGroup, spring
 #============= standard library imports ========================
 from numpy import linspace, exp
-from threading import Thread
 import random
 import time
 #============= local library imports  ==========================
 from spectrometer_task import SpectrometerTask
+from globals import globalv
 
 def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.008):
     x = linspace(start, stop, step)
@@ -45,24 +45,26 @@ class MagnetScan(SpectrometerTask):
     stop_mass = Float(40)
     step_mass = Float(1)
 
-
-
-    def _scan_dac(self, values, det, delay=0.1):
+    def _scan_dac(self, values, det, delay=850):
 
         graph = self.graph
         spec = self.spectrometer
 
         mag = spec.magnet
         mag.settling_time = 0.5
+        if globalv.experiment_debug:
+            delay = 1
+            mag.settling_time = 0.001
 
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
 
         do = values[0]
-        mag.set_dac(do)
+        mag.set_dac(do, verbose=False)
         time.sleep(delay / 1000.)
 
         intensity = spec.get_intensity(det)
-        intensity = peak_generator.next()
+        if globalv.experiment_debug:
+            intensity = peak_generator.next()
         intensities = [intensity]
 
         if graph:
@@ -75,12 +77,13 @@ class MagnetScan(SpectrometerTask):
             if not self.isAlive():
                 break
 
-            mag.set_dac(di)
+            mag.set_dac(di, verbose=False)
 
             intensity = spec.get_intensity(det)
 
-            #debug
-            intensity = peak_generator.next()
+#            debug
+            if globalv.experiment_debug:
+                intensity = peak_generator.next()
 
             intensities.append(intensity)
             if graph:
@@ -94,14 +97,19 @@ class MagnetScan(SpectrometerTask):
         return intensities
 
     def _execute(self):
-        mag = self.spectrometer.magnet
+        spec = self.spectrometer
+        mag = spec.magnet
         sm = self.start_mass
         em = self.stop_mass
         stm = self.step_mass
         if abs(sm - em) > stm:
     #        ds = mag.calculate_dac(sm)
-            ds = mag.map_mass_to_dac(sm)
-            de = mag.map_mass_to_dac(em)
+            ds = spec.correct_dac(self.detector,
+                                  mag.map_mass_to_dac(sm))
+            de = spec.correct_dac(self.detector,
+                                  mag.map_mass_to_dac(em))
+
+
     #        de = mag.calculate_dac(em)
             massdev = abs(sm - em)
             dacdev = abs(ds - de)

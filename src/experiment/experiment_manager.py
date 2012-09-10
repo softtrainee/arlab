@@ -36,8 +36,10 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from src.database.sync.repository import Repository
+from globals import globalv
+from src.displays.rich_text_display import RichTextDisplay
 
-DEBUG = True
+
 class ExperimentManagerHandler(SaveableManagerHandler):
     def object_experiment_set_changed(self, info):
         if info.initialized:
@@ -64,7 +66,7 @@ class ExperimentManager(Manager):
     db = Instance(IsotopeAdapter)
     massspec_importer = Instance(MassSpecDatabaseImporter)
 #    delay_between_runs = Int(5)
-
+    info_display = Instance(RichTextDisplay)
     _dac_peak_center = Float
     _dac_baseline = Float
 
@@ -150,7 +152,10 @@ class ExperimentManager(Manager):
         arun.runner = runner
         arun.integration_time = 1.04
         arun.repository = repo
-        arun._debug = DEBUG
+        arun._debug = globalv.experiment_debug
+        arun._alive = True
+        arun.info_display = self.info_display
+
 
     def do_automated_runs(self):
 
@@ -176,20 +181,22 @@ class ExperimentManager(Manager):
         err_message = ''
 
         dm = H5DataManager()
-        root = '/Users/ross/Sandbox/exprepo/root'
-        repo = Repository(root)
+
+        repo = Repository(os.path.dirname(paths.isotope_db))
+
         exp.reset_stats()
 
         self.db.reset()
 
         exp.save_to_db()
-        name = 'isotopedb.sqlite'
-        p = os.path.join(root, name)
-        #add the db file to the repo
-        if not os.path.isfile(p):
-            repo.add(name)
-            repo.commit('added {}'.format(name))
-            repo.push()
+
+#        name = 'isotopedb.sqlite'
+#        p = os.path.join(ROOT, name)
+#        #add the db file to the repo
+#        if not os.path.isfile(p):
+#            repo.add(name)
+#            repo.commit('added {}'.format(name))
+#            repo.push()
 
         for i, arun in enumerate(exp.automated_runs):
 
@@ -210,6 +217,11 @@ class ExperimentManager(Manager):
                 self.warning(err_message)
                 continue
 
+            if not arun.post_measurement_script:
+                err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
+                self.warning(err_message)
+                continue
+
             if not self._continue_check():
                 break
 
@@ -217,23 +229,34 @@ class ExperimentManager(Manager):
             if not arun.do_extraction():
                 self._alive = False
 
-            if not self._continue_check(confirm=True):
-                break
-
             # do eq in a separate thread
             # this way we can measure during eq.
             # ie do_equilibration is nonblocking
 
-            evt = self.do_equilibration(arun)#eqtime, inlet_valve, outlet_valve)
-            self.debug('waiting for the inlet to open')
+#            evt = self.do_equilibration(arun)#eqtime, inlet_valve, outlet_valve)
+#            self.debug('waiting for the inlet to open')
+#            evt.wait()
+#            self.debug('inlet opened')
+
+            if not self._continue_check():
+                break
+            #do_equilibration
+            evt = arun.do_equilibration()
+            self.info('waiting for the inlet to open')
             evt.wait()
-            self.debug('inlet opened')
+            self.info('inlet opened')
 
             if not self._continue_check():
                 break
 
             arun.state = 'measurement'
             if not arun.do_measurement():
+                self._alive = False
+
+            if not self._continue_check():
+                break
+
+            if not arun.do_post_measurement():
                 self._alive = False
 
             arun.state = 'success'
@@ -255,6 +278,8 @@ class ExperimentManager(Manager):
                     break
                 time.sleep(0.5)
 
+            arun.finish()
+
         else:
             exp.stop_stats_timer()
             self.end_runs()
@@ -268,63 +293,67 @@ class ExperimentManager(Manager):
         else:
             self.info('automated runs ended at {}, index={}'.format(arun.identifier, i + 1))
 
-
-    def _continue_check(self, confirm=False):
-        c = self.isAlive()
-        if c:
-            return True
-        else:
-            if confirm:
-                if self.confirmation_dialog('Cancel Experiment Set {}'.format(self.experiment_set.name),
-                                             'Cancel Experiment'):
-                    self.info('automated runs cancelled')
-                else:
-                    self._alive = True
-                    return True
-            else:
-                self._alive = True
-                return True
+    def _continue_check(self):
+        return self.isAlive()
+#        c = self.isAlive()
+#        if c:
+#            return True
+#        else:
+#            if confirm:
+#                if self.confirmation_dialog('Cancel Experiment Set {}'.format(self.experiment_set.name),
+#                                             'Cancel Experiment'):
+#                    self.info('automated runs cancelled')
+#                else:
+#                    self._alive = True
+#                    return True
+##            else:
+##                self._alive = True
+##                return True
 
 
     def isAlive(self):
         return self._alive
 
-    def do_equilibration(self, arun):
-
-        def eq(ev, inlet, outlet):
-
-            elm = self.extraction_line_manager
-            if elm:
-                #close mass spec ion pump
-                elm.close_valve(outlet, mode='script')
-                time.sleep(1)
-
-                #open inlet
-                elm.open_valve(inlet, mode='script')
-
-            ev.set()
-
-            #delay for eq time
-            self.info('equilibrating for {}sec'.format(eqtime))
-            time.sleep(eqtime)
-
-            self.info('finish equilibration')
-            if elm:
-                elm.close_valve(inlet)
-
-
-        #use an Event object so that we dont finish before eq is done
-        event = TEvent()
-        event.clear()
-
-        eqtime = arun.get_measurement_parameter('equilibration_time', default=15)
-        inlet_valve = arun.get_measurement_parameter('inlet_valve', default='H')
-        outlet_valve = arun.get_measurement_parameter('outlet_valve', default='V')
-
-        self.info('starting equilibration')
-        t = Thread(target=eq, args=(event, inlet_valve, outlet_valve))
-        t.start()
-        return event
+#    def do_equilibration(self, arun):
+#
+#        def eq(ev, inlet, outlet):
+#
+#            elm = self.extraction_line_manager
+#            if elm:
+#                if outlet:
+#                    #close mass spec ion pump
+#                    elm.close_valve(outlet, mode='script')
+#                    time.sleep(1)
+#
+#                if inlet:
+#                    #open inlet
+#                    elm.open_valve(inlet, mode='script')
+#
+#            ev.set()
+#
+#            #delay for eq time
+#            self.info('equilibrating for {}sec'.format(eqtime))
+#            time.sleep(eqtime)
+#
+#            self.info('finish equilibration')
+#            if elm and inlet:
+#                elm.close_valve(inlet)
+#
+#            arun.do_post_equilibration()
+#
+#
+#        #use an Event object so that we dont finish before eq is done
+#        event = TEvent()
+#        event.clear()
+#
+#        eqtime = arun.get_measurement_parameter('equilibration_time', default=15)
+#        inlet_valve = arun.get_measurement_parameter('inlet_valve')
+#        outlet_valve = arun.get_measurement_parameter('outlet_valve')
+#
+#        self.info('starting equilibration')
+#        t = Thread(target=eq, args=(event, inlet_valve, outlet_valve))
+#        t.start()
+#        return event
 
     def _execute(self):
         if self.isAlive():
@@ -333,6 +362,10 @@ class ExperimentManager(Manager):
                                      title='Confirm Cancel'
                                      ):
                 self._alive = False
+                arun = self.experiment_set.current_run
+                if arun:
+                    arun.cancel()
+
         else:
             self._alive = True
 #        target = self.do_experiment
@@ -353,6 +386,7 @@ class ExperimentManager(Manager):
 # persistence
 #===============================================================================
     def load_experiment_set(self, path=None):
+        self.experiment_set = None
         if path is None:
             path = self.open_file_dialog(default_directory=paths.experiment_dir)
 
@@ -360,8 +394,10 @@ class ExperimentManager(Manager):
             exp = self._experiment_set_factory(path=path)
 #            exp = ExperimentSet(path=path)
 #            try:
-            exp.load_automated_runs()
-            self.experiment_set = exp
+
+            if exp.load_automated_runs():
+                self.experiment_set = exp
+                return True
 #            except Exception, e:
 #
 #                import traceback
@@ -479,8 +515,9 @@ class ExperimentManager(Manager):
                       show_label=False,
                       editor=editor
                       ),
-                 width=700,
-                 height=500,
+                 Item('info_display', style='custom', show_label=False),
+                 width=900,
+                 height=700,
                  resizable=True,
                  title=self.experiment_set.name,
                  handler=self.handler_klass
@@ -553,9 +590,10 @@ class ExperimentManager(Manager):
 
     def _db_default(self):
         db = IsotopeAdapter(kind='sqlite',
-#                            dbname=paths.isotope_db,
+                            dbname=paths.isotope_db,
 #                            dbname='/Users/ross/Pychrondata_experiment/data/isotopedb.sqlite'
-                            dbname='/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite'
+#                            dbname=os.path.join(ROOT, 'isotopedb.sqlite')
+#                            '/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite'
                             )
         if db.connect():
             return db
@@ -563,13 +601,18 @@ class ExperimentManager(Manager):
     def _experiment_set_default(self):
         return ExperimentSet(db=self.db)
 
+    def _info_display_default(self):
+        return  RichTextDisplay(height=200,
+                                default_size=12,
+                                bg_color='black',
+                                default_color='white')
+
 if __name__ == '__main__':
     paths.build('_experiment')
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('experiment_manager')
 
-    from globals import globalv
     globalv.show_infos = False
 
 #    s = SpectrometerManager()

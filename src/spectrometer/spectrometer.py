@@ -85,9 +85,9 @@ class Spectrometer(SpectrometerDevice):
 
     _alive = False
 
-#    def set_parameter(self, name, v):
-#        cmd = '{} {}'.format(name, v)
-#        self.microcontroller.ask(cmd)
+    def set_parameter(self, name, v):
+        cmd = '{} {}'.format(name, v)
+        self.microcontroller.ask(cmd)
 
     def set_microcontroller(self, m):
         self.magnet.microcontroller = m
@@ -98,6 +98,7 @@ class Spectrometer(SpectrometerDevice):
             d.load()
 
     def get_detector(self, name):
+
         return next((det for det in self.detectors if det.name == name), None)
 #    def get_hv_correction(self, current=False):
 #        cur = self.source.current_hv
@@ -176,16 +177,15 @@ class Spectrometer(SpectrometerDevice):
         return self._alive
 
 
-    def update_isotopes(self, detector, isotope):
+    def update_isotopes(self, isotope, detector):
         det = self.get_detector(detector)
         det.isotope = isotope
         index = self.detectors.index(det)
 
         nmass = int(isotope[2:])
         for i, di in enumerate(self.detectors):
-            mass = nmass + (i - index)
+            mass = nmass - (i - index)
             di.isotope = 'Ar{}'.format(mass)
-
 
 
 #===============================================================================
@@ -227,6 +227,7 @@ class Spectrometer(SpectrometerDevice):
         self.molecular_weight = 'Ar40'
 
     def load(self):
+
         import csv
         #load the molecular weights dictionary
         p = os.path.join(paths.spectrometer_dir, 'molecular_weights.csv')
@@ -236,6 +237,9 @@ class Spectrometer(SpectrometerDevice):
             self.molecular_weights = dict(args)
 
         self.magnet.load()
+
+    def finish_loading(self):
+        self.magnet.finish_loading()
 
     def add_detector(self, **kw):
         d = Detector(spectrometer=self,
@@ -308,7 +312,39 @@ class Spectrometer(SpectrometerDevice):
             return signals[keys.index(key)]
 
 #        return data
+    def get_hv_correction(self, current=False):
+        source = self.source
+        cur = source.current_hv
+        if current:
+            cur = source.read_hv()
 
+        if cur is None:
+            cor = 1
+        else:
+            cor = source.nominal_hv / cur
+        return cor
+
+    def correct_dac(self, det, dac):
+#        dac is in axial units 
+
+#        convert to detector
+        dac *= det.relative_position
+
+        '''
+        convert to axial detector 
+        dac_a=  dac_d / relpos
+        
+        relpos==dac_detA/dac_axial 
+        
+        '''
+        #correct for deflection
+        dev = det.get_deflection_correction()
+
+        dac += dev
+
+#        #correct for hv
+        dac *= self.get_hv_correction(current=True)
+        return dac
 #===============================================================================
 # defaults
 #===============================================================================

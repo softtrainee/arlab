@@ -127,7 +127,6 @@ class ExtractionLineManager(Manager):
     def opened(self):
         super(ExtractionLineManager, self).opened()
         self.reload_scene_graph()
-
         p = os.path.join(paths.hidden_dir, 'show_explanantion')
         if os.path.isfile(p):
             with open(p, 'rb') as f:
@@ -191,11 +190,13 @@ class ExtractionLineManager(Manager):
                     if vc:
                         vc.soft_lock = v.software_lock
                         v.canvas_valve = vc
+#                        vc.state = v.state
+
                         try:
                             vc.identify = iddict[vc.name]
                         except:
                             pass
-
+            self.canvas.Refresh()
             self.view_controller = self._view_controller_factory()
 
     def load_canvas(self):
@@ -350,11 +351,10 @@ class ExtractionLineManager(Manager):
 #                result = '{} critical section enabled'.format(name)
 #                self.warning(result)
 #        else:
-
         if isinstance(result, bool):
             #valve state show as changed if even it didnt actuate
-            if result:
-                self.canvas.update_valve_state(name, True if action == 'open' else False)
+#            if result:
+            self.canvas.update_valve_state(name, True if action == 'open' else False)
 #                result = True
 
         return result, change

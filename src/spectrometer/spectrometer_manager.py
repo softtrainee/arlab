@@ -73,8 +73,7 @@ class SpectrometerManager(Manager):
 
         #update the current hv
         self.spectrometer.source.sync_parameters()
-        #update the current magnet dac
-        self.spectrometer.magnet.read_dac()
+
         #set integration time
         self.integration_time = integration_time
         #self.integration_time = 0.065536

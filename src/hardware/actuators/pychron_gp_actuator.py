@@ -78,10 +78,12 @@ class PychronGPActuator(GPActuator):
         '''
 
         # returns one if channel close  0 for open
+        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
         cmd = 'GetValveState {}'.format(self._get_valve_name(obj))
         resp = self.ask(cmd)
         if resp is not None:
-            resp = bool(resp)
+            resp = boolfunc(resp.strip())
+
         return resp
 
     def close_channel(self, obj, excl=False):

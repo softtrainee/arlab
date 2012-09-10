@@ -166,11 +166,20 @@ class Magnet(SpectrometerDevice):
 
 #        return pos
 
-    def set_dac(self, v):
+    def set_dac(self, v, verbose=False):
+        micro = self.microcontroller
+        unblank = False
+        if abs(self._dac - v) > 0.1:
+            if micro:
+                micro.ask('BlankBeam True', verbose=verbose)
+                unblank = True
+
         self._dac = v
-        if self.microcontroller:
-            _r = self.microcontroller.ask('SetMagnetDAC {}'.format(v), verbose=True)
+        if micro:
+            self.microcontroller.ask('SetMagnetDAC {}'.format(v), verbose=verbose)
             time.sleep(self.settling_time)
+            if unblank:
+                micro.ask('BlankBeam False', verbose=verbose)
 
     @get_float
     def read_dac(self):
@@ -184,6 +193,7 @@ class Magnet(SpectrometerDevice):
 #===============================================================================
     def load(self):
         p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
+        self.info('loading mftable {}'.format(p))
         if os.path.isfile(p):
             with open(p, 'U') as f:
                 reader = csv.reader(f)
@@ -197,6 +207,10 @@ class Magnet(SpectrometerDevice):
         else:
             self.warning_dialog('No Magnet Field Table. Create {}'.format(p))
 
+    def finish_loading(self):
+        d = self.read_dac()
+        if d is not None:
+            self._dac = d
 
     def dump(self):
         p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
@@ -226,11 +240,11 @@ class Magnet(SpectrometerDevice):
                     self.mftable[1])
             return reg.get_value('parabolic', data, mass)
 
-    def __dac_changed(self):
-        m = self.map_dac_to_mass(self._dac)
-#        print 'get mass', m, type(m), nan, type(nan)
-        if not isnan(m):
-            self._mass = m
+#    def __dac_changed(self):
+#        m = self.map_dac_to_mass(self._dac)
+##        print 'get mass', m, type(m), nan, type(nan)
+#        if not isnan(m):
+#            self._mass = m
 
 #===============================================================================
 # property get/set

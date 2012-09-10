@@ -28,7 +28,10 @@ from pyface.timer.do_later import do_after
 class ViewableHandler(Handler):
     def init(self, info):
         info.object.ui = info.ui
-        info.object.opened()
+        try:
+            info.object.opened()
+        except AttributeError:
+            pass
 
     def close(self, info, is_ok):
         return info.object.close(is_ok)

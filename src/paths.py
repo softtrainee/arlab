@@ -136,7 +136,8 @@ class Paths():
         self.diodelaser_db_root = join(db_path, 'diodelaserdb')
         self.diodelaser_db = join(db_path, 'diode.sqlite')
         self.isotope_db_root = join(db_path, 'isotopedb')
-        self.isotope_db = join(db_path, 'isotope.sqlite')
+        ROOT = '/Users/ross/Sandbox/pychron_test_data/data'
+        self.isotope_db = join(ROOT, 'isotopedb.sqlite')
         #==============================================================================
         # root
         #==============================================================================

@@ -94,11 +94,11 @@ class Detector(SpectrometerDevice):
         v = View(VGroup(
                         HGroup(
                                 Item('name', style='readonly'),
-
                                 spring,
-                                Item('isotope', width= -75,
-                                     editor=EnumEditor(name='isotopes')
-                                     ),
+
+#                                Item('isotope', width= -75,
+#                                     editor=EnumEditor(name='isotopes')
+#                                     ),
                                 Item('active',),
                                 Item('deflection'),
                                 Item('color', style='readonly'),

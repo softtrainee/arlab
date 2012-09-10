@@ -39,6 +39,12 @@ def extraction_path(name):
 def measurement_path(name):
     return os.path.join(paths.scripts_dir, 'measurement', name)
 
+def post_measurement_path(name):
+    return os.path.join(paths.scripts_dir, 'post_measurement', name)
+
+def post_equilibration_path(name):
+    return os.path.join(paths.scripts_dir, 'post_equilibration', name)
+
 
 class ExperimentSet(Loggable):
     automated_runs = List(AutomatedRun)
@@ -58,12 +64,16 @@ class ExperimentSet(Loggable):
     loaded_scripts = Dict
 
     measurement_script = String
-    measurement_scripts = Property#(depends_on='_measurement_scripts')
-#    _measurement_scripts = List
+    measurement_scripts = Property
+
+    post_measurement_script = String
+    post_measurement_scripts = Property
+
+    post_equilibration_script = String
+    post_equilibration_scripts = Property
 
     extraction_script = String
-    extraction_scripts = Property#(depends_on='_extraction_scripts')
-#    _extraction_scripts = List
+    extraction_scripts = Property
 
     delay_between_runs = Float(1)
 
@@ -81,7 +91,10 @@ class ExperimentSet(Loggable):
 
 
         #load strings
-        for attr in ['identifier', 'measurement', 'extraction', 'heat_device']:
+        for attr in ['identifier',
+                     'measurement', 'extraction', 'post_measurement',
+                     'post_equilibration',
+                     'heat_device']:
             params[attr] = args[header.index(attr)]
 
         #load booleans
@@ -91,15 +104,27 @@ class ExperimentSet(Loggable):
                 params[attr] = str_to_bool(param)
 
         #load numbers
-        for attr in ['duration', 'temp_or_power', 'position']:
+        for attr in ['duration', 'position']:
             param = args[header.index(attr)].strip()
             if param:
                 params[attr] = float(param)
 
+        heat = args[header.index('heat')]
+        if heat:
+            v, u = heat.split(',')
+            v = float(v)
+            params['heat_value'] = v
+            params['heat_units'] = u
+
+
         extraction = args[header.index('extraction')]
         measurement = args[header.index('measurement')]
+        post_measurement = args[header.index('post_measurement')]
+        post_equilibration = args[header.index('post_equilibration')]
 
-        params['configuration'] = self._build_configuration(extraction, measurement)
+        params['configuration'] = self._build_configuration(extraction, measurement,
+                                                            post_measurement,
+                                                            post_equilibration)
         return params
 
     def load_automated_runs(self):
@@ -126,17 +151,22 @@ class ExperimentSet(Loggable):
 #                autocenter = str_to_bool(args[header.index('autocenter')])
 
 #                position = int(args[header.index('position')])
-
-                params = self._run_parser(header, line)
-                arun = self._automated_run_factory(**params)
-                self.automated_runs.append(arun)
-
+                try:
+                    params = self._run_parser(header, line)
+                    arun = self._automated_run_factory(**params)
+                    self.automated_runs.append(arun)
+                    if not arun.executable:
+                        self.executable = False
+                except Exception, e:
+                    self.warning_dialog('Invalid Experiment file {}'.format(e))
+                    self.automated_runs = []
+                    self.executable = False
+                    return False
 #                arun.extraction_script
 #                arun.measurement_script
 
-                if not arun.executable:
-                    self.executable = False
-                    print self.executable
+
+            return True
 
     def _right_clicked_changed(self):
 
@@ -155,8 +185,10 @@ class ExperimentSet(Loggable):
                            extraction_script=es,
                            orig_extraction_script=es,
 
-                           power=selected.temp_or_power,
-                           orig_power=selected.temp_or_power,
+#                           power=selected.temp_or_power,
+#                           orig_power=selected.temp_or_power,
+                           power=selected.heat_value,
+                           orig_power=selected.heat_value,
 
                            duration=selected.duration,
                            orig_duration=selected.duration,
@@ -185,9 +217,11 @@ class ExperimentSet(Loggable):
         else:
             self.warning_dialog('{} script directory does not exist!'.format(p))
 
-    def _build_configuration(self, extraction, measurement):
+    def _build_configuration(self, extraction, measurement, post_measurement, post_equilibration):
         c = dict(extraction_script=extraction_path(extraction),
-                  measurement_script=measurement_path(measurement)
+                  measurement_script=measurement_path(measurement),
+                  post_measurement_script=post_measurement_path(post_measurement),
+                  post_equilibration_script=post_equilibration_path(post_equilibration)
                   )
         return c
 
@@ -233,7 +267,6 @@ class ExperimentSet(Loggable):
 
     @on_trait_change('automated_runs[]')
     def _automated_runs_changed(self, obj, name, old, new):
-        print  old, new
         if old:
             old = old[0]
 
@@ -264,8 +297,6 @@ class ExperimentSet(Loggable):
 
         self.automated_run.aliquot = a.aliquot + 1
 
-
-
     def _extraction_script_changed(self):
         print self.extraction_script
         self.automated_run.configuration['extraction_script'] = os.path.join(paths.scripts_dir,
@@ -277,6 +308,16 @@ class ExperimentSet(Loggable):
         self.automated_run.configuration['measurement_script'] = os.path.join(paths.scripts_dir,
                                                         'measurement',
                                                         self.measurement_script)
+    def _post_measurement_script_changed(self):
+        print self.post_measurement_script
+        self.automated_run.configuration['post_measurement_script'] = os.path.join(paths.scripts_dir,
+                                                        'post_measurement',
+                                                        self.post_measurement_script)
+    def _post_equilibration_script_changed(self):
+        print self.post_equilibration_script
+        self.automated_run.configuration['post_equilibration_script'] = os.path.join(paths.scripts_dir,
+                                                        'post_equilibration',
+                                                        self.post_equilibration_script)
 
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
@@ -351,14 +392,31 @@ class ExperimentSet(Loggable):
         if ms:
             self.measurement_script = ms[0]
         return ms
+
+    @cached_property
+    def _get_post_measurement_scripts(self):
+        ms = self._load_script_names('post_measurement')
+        if ms:
+            self.post_measurement_script = ms[0]
+        return ms
+
+    @cached_property
+    def _get_post_equilibration_scripts(self):
+        ms = self._load_script_names('post_equilibration')
+        if ms:
+            self.post_equilibration_script = ms[0]
+        return ms
 #===============================================================================
 # factories
 #===============================================================================
     def automated_run_factory(self, **kw):
         extraction = self.extraction_script
         measurement = self.measurement_script
+        post_measurement = self.post_measurement_script
+        post_equilibration = self.post_equilibration_script
 
-        configuration = self._build_configuration(extraction, measurement)
+        configuration = self._build_configuration(extraction, measurement,
+                                                  post_measurement, post_equilibration)
 
         params = dict()
         arun = self.automated_run
@@ -396,6 +454,8 @@ class ExperimentSet(Loggable):
     def _bind_automated_run(self, a):
         a.on_trait_change(self.update_loaded_scripts, '_measurement_script')
         a.on_trait_change(self.update_loaded_scripts, '_extraction_script')
+        a.on_trait_change(self.update_loaded_scripts, '_post_measurement_script')
+        a.on_trait_change(self.update_loaded_scripts, '_post_equilibration_script')
 
 #===============================================================================
 # defaults
@@ -453,6 +513,12 @@ class ExperimentSet(Loggable):
                         Item('measurement_script',
                              label='Measurement',
                              editor=EnumEditor(name='measurement_scripts')),
+                        Item('post_measurement_script',
+                             label='Post Measurement',
+                             editor=EnumEditor(name='post_measurement_scripts')),
+                        Item('post_equilibration_script',
+                             label='Post Equilibration',
+                             editor=EnumEditor(name='post_equilibration_scripts')),
                         show_border=True,
                         label='Scripts'
                         )

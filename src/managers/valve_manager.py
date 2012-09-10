@@ -246,7 +246,7 @@ class ValveManager(Manager):
     def get_name_by_description(self, d):
         v = self.get_valve_by_description(d)
         if v is not None:
-            return v.name
+            return v.name.split('-')[-1]
 
 
     def get_evalve_by_name(self, n):

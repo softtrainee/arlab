@@ -21,8 +21,7 @@ from traitsui.api import View, Item
 from src.graph.graph import Graph
 from uncertainties import ufloat
 import csv
-from src.data_processing.statistical_calculations import calculate_mswd, \
-    calculate_weighted_mean
+from src.stats import calculate_mswd, calculate_weighted_mean
 #KEYS36 = ['one36', 'two36', 'three36', 'four36', 'five36', 'six36']
 #KEYS40 = ['one40', 'two40', 'three40', 'four40', 'five40', 'six40']
 KEYS = ['one', 'two', 'three', 'four', 'five']

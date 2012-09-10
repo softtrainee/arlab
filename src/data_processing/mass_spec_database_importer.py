@@ -61,7 +61,8 @@ class MassSpecDatabaseImporter(Loggable):
         if db.connect():
             return db
 
-    def add_analysis(self, rid, aliquot, irradpos, baselines, signals, keys):
+    def add_analysis(self, rid, aliquot, irradpos, baselines, signals, keys,
+                     regression_results):
         '''
             
         '''
@@ -92,17 +93,22 @@ class MassSpecDatabaseImporter(Loggable):
 
         item = db.add_changeable_items(analysis, drs, commit=True)
         analysis.ChangeableItemsID = item.ChangeableItemsID
-        #=======================================================================
-        # add signal data
-        #=======================================================================
 
-#        for det, iso in ISO_LABELS.iteritems():
-
-        for bi, si, (det, iso) in zip(baselines, signals, keys):
+        add_results = False
+        isos = []
+        for det, iso in keys:
             #===================================================================
             # isotopes
             #===================================================================
             iso = db.add_isotope(analysis, det, iso)
+
+            if add_results:
+                i = regression_results[det]['coefficients'][-1]
+                ierr = regression_results[det]['coeff_errors'][-1]
+                db.add_isotope_result(iso, drs, i, ierr)
+            isos.append(iso)
+
+        for bi in baselines:
             #===================================================================
             # baselines
             #===================================================================
@@ -111,8 +117,10 @@ class MassSpecDatabaseImporter(Loggable):
             label = '{} Baseline'.format(det.upper())
             ncnts = len(tb)
             db.add_baseline(blob, label, ncnts)
+
+        for iso, si in zip(isos, signals):
             #===================================================================
-            # oeak time
+            # peak time
             #===================================================================
             tb, vb = zip(*si)
             blob = self._build_timeblob(tb, vb)
