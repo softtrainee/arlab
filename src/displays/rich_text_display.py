@@ -64,6 +64,7 @@ class RichTextDisplay(HasTraits):
     #height of the text panel == height-_hspacer
     _hspacer = 25
     _text_buffer = List
+    selectable = False
 
     def close(self):
         if self.ui is not None:
@@ -105,14 +106,14 @@ class RichTextDisplay(HasTraits):
                             style=wx.VSCROLL | wx.HSCROLL | wx.TE_READONLY
                             )
 
-        #prevent moving the cursor
-        rtc.Bind(wx.EVT_LEFT_DOWN, lambda x: x)
+#        prevent moving the cursor
+        if not self.selectable:
+            rtc.Bind(wx.EVT_LEFT_DOWN, lambda x: x)
 
         rtc.SetBackgroundColour(self.bg_color)
 
         rtc.SetEditable(self.editable)
         self._display = rtc
-
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(rtc, 1, wx.EXPAND | wx.ALL, 5)
         panel.SetSizer(sizer)
@@ -123,7 +124,9 @@ class RichTextDisplay(HasTraits):
         self.add_text(self._text_buffer)
         self._text_buffer = []
 
-    def _add_(self, msg, color=None, size=None, **kw):
+    def _add_(self, msg, color=None, size=None,
+              bold=False,
+              underline=False, **kw):
         '''
             
         '''
@@ -147,9 +150,22 @@ class RichTextDisplay(HasTraits):
         font = wx.Font(size, family, style, weight, False, 'Consolas')
 
         d.Freeze()
+
         d.BeginFont(font)
         d.BeginTextColour(color)
+
+        if underline:
+            d.BeginUnderline()
+        if bold:
+            d.BeginBold()
+
         d.WriteText(msg)
+
+        if underline:
+            d.EndUnderline()
+        if bold:
+            d.EndBold()
+
         d.EndTextColour()
         d.EndFont()
         d.Newline()
@@ -161,14 +177,42 @@ class RichTextDisplay(HasTraits):
             d.Remove(0, s)
 
         lp = d.GetLastPosition()
-        d.ShowPosition(lp + 1000)
+#        d.ShowPosition(lp + 1000)
 #        d.PageDown(1)
+        self.show_positon(lp + 100)
+
         d.Thaw()
 
+    def show_positon(self, ipos):
+        d = self._display
+#        def _ShowPosition(self, ipos):
+        line = d.GetVisibleLineForCaretPosition(ipos)
+        ppuX, ppuY = d.GetScrollPixelsPerUnit()  #unit = scroll
+#step
+        startYUnits = d.GetViewStart()[1]
+        sy = d.GetVirtualSize()[1]
+
+        if ppuY == 0:
+            return False  # since there's no scrolling, hence no
+#adjusting
+
+        syUnits = sy / ppuY
+        r = line.GetRect()
+        ry = r.GetY()
+        rh = r.GetHeight()
+        csY = d.GetClientSize()[1]
+        csY -= d.GetBuffer().GetBottomMargin()
+
+#        if self.center_caret:
+        if ry >= startYUnits * ppuY + csY - rh / 2:
+            yUnits = startYUnits + csY / ppuY / 2
+            d.SetScrollbars(ppuX, ppuY, 0, syUnits, 0, yUnits)
+            d.PositionCaret()
+#                return True
+#        return False
     def add_text(self, msg, **kw):
         '''
         '''
-
         disp = self._display
         if disp:
             tappend = self.text.append
@@ -181,16 +225,17 @@ class RichTextDisplay(HasTraits):
             if isinstance(msg, (list, tuple)):
                 for mi in msg:
                     if isinstance(mi, tuple):
-                        mi = mi[0]
                         if len(mi) == 2:
                             kw = mi[1]
-
+                        mi = mi[0]
                     self._add_(mi, **kw)
+
+#                    print 'add', msg
             else:
                 self._add_(msg, **kw)
         else:
-            self._text_buffer.append(msg)
 
+            self._text_buffer.append((msg, kw))
 
 
 from email.mime.multipart import MIMEMultipart

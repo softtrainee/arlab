@@ -29,6 +29,7 @@ from src.loggable import Loggable
 
 
 from Queue import Queue, Empty
+from globals import globalv
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
         self.info('open valve')
@@ -325,7 +326,8 @@ class PyScript(Loggable):
             return
 
         self.info('SLEEP {}'.format(duration))
-        duration = 0.1
+        if globalv.experiment_debug:
+            duration = 0.1
         self._sleep(duration)
 
     def execute(self, new_thread=False):
@@ -394,8 +396,8 @@ class PyScript(Loggable):
             return MainError()
 
         except Exception, e:
-#            import traceback
-#            traceback.print_exc()
+            import traceback
+            traceback.print_exc()
 #            self.warning_dialog(str(e))
             return e
 #            return  traceback.format_exc()

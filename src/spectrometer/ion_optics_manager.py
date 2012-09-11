@@ -46,6 +46,10 @@ class IonOpticsManager(Manager):
     isotope = Str('Ar40')
     dac = Float
 
+    def get_mass(self, isotope_key):
+        spec = self.spectrometer
+        molweights = spec.molecular_weights
+        return molweights[isotope_key]
 
     def position(self, pos, detector, use_dac=False):
         self.info('positioning {} on {}'.format(pos, detector))
@@ -56,13 +60,12 @@ class IonOpticsManager(Manager):
             dac = pos
         else:
             if isinstance(pos, str):
-                #pos is in isotope
-                molweights = spec.molecular_weights
 
                 #if the pos is an isotope then updated the detectors
                 spec.update_isotopes(pos, detector)
 
-                pos = molweights[pos]
+                #pos is in isotope
+                pos = self.get_mass(pos)
                 mag._mass = pos
 
             #pos is mass i.e 39.962

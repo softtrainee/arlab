@@ -17,12 +17,11 @@
 #============= enthought library imports =======================
 from traits.api import Instance, Button, Float, on_trait_change, Str, \
     DelegatesTo, Bool, Property, Event
-from traitsui.api import View, Item, Group, VGroup
+from traitsui.api import View, Item, Group, VGroup, HGroup, spring
 from traitsui.menu import Action
 #import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from threading import Thread
-from threading import Event as TEvent
 import os
 import time
 
@@ -38,6 +37,7 @@ from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from src.database.sync.repository import Repository
 from globals import globalv
 from src.displays.rich_text_display import RichTextDisplay
+from pyface.timer.do_later import do_later
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -108,6 +108,11 @@ class ExperimentManager(Manager):
     dirty = DelegatesTo('experiment_set')
     err_message = None
 
+    def info(self, msg, *args, **kw):
+        super(ExperimentManager, self).info(msg, *args, **kw)
+        if self.info_display:
+            do_later(self.info_display.add_text, msg, color='yellow')
+
     def save(self):
         self.save_experiment_set()
 
@@ -135,7 +140,6 @@ class ExperimentManager(Manager):
         exp = self.experiment_set
         exp.stats.nruns_finished = len(exp.automated_runs)
         exp.stop_stats_timer()
-        self.info('automated runs complete')
 
     def _setup_automated_run(self, i, arun, repo, dm, runner):
         exp = self.experiment_set
@@ -157,6 +161,7 @@ class ExperimentManager(Manager):
         arun.info_display = self.info_display
 
     def do_automated_runs(self):
+        self.info('start automated runs')
 
 #        app = self.application
 #        if app is not None:
@@ -170,15 +175,12 @@ class ExperimentManager(Manager):
             runner = PyScriptRunner()
 
         self._alive = True
-        self.info('start automated runs')
 
         exp = self.experiment_set
+        exp.reset_stats()
 
         dm = H5DataManager()
-
         repo = Repository(os.path.dirname(paths.isotope_db))
-
-        exp.reset_stats()
 
         self.db.reset()
         exp.save_to_db()
@@ -192,40 +194,34 @@ class ExperimentManager(Manager):
 #            repo.push()
 
         runs = (ai for ai in exp.automated_runs)
-        cnt = 0
         def launch_run():
             run = runs.next()
             self._setup_automated_run(cnt, run, repo, dm, runner)
 
             run.pre_extraction_save()
-
-            t = Thread(name=run.compound_name,
+            ta = Thread(name=run.compound_name,
                        target=self._do_automated_run,
                        args=(run,)
                        )
-            t.start()
-            return t, run
+            ta.start()
+            return ta, run
 
-        while 1:
-            if not self.isAlive():
-                break
+        cnt = 0
+        while self.isAlive():
             try:
                 t, run = launch_run()
                 cnt += 1
-                if run.overlap:
-                    self.info('overlaping')
-                    run.wait_for_overlap()
-                    to, run = launch_run()
-                    to.join()
-                    cnt += 1
-                else:
-                    t.join()
-
             except StopIteration:
                 break
 
+            if run.overlap:
+                self.info('overlaping')
+                run.wait_for_overlap()
+            else:
+                t.join()
+
             if self.isAlive():
-                delay = self.experiment_set.delay_between_runs
+                delay = exp.delay_between_runs
                 self.info('Delay between runs {}'.format(delay))
                 #delay between runs
                 st = time.time()
@@ -242,7 +238,7 @@ class ExperimentManager(Manager):
             exp.stop_stats_timer()
             self.end_runs()
 
-        self.info('automated runs ended at {}, index={}'.format(run.compound_name, cnt))
+        self.info('automated runs ended at {}, runs executed={}'.format(run.compound_name, cnt))
 
     def _do_automated_run(self, arun):
         def isAlive():
@@ -452,8 +448,14 @@ class ExperimentManager(Manager):
                                              label='execute_label',
                                              enabled='object.experiment_set.executable',
                                              align='right'),
-                       Item('object.experiment_set.stats',
-                            style='custom'),
+
+                       HGroup(Item('object.experiment_set.stats',
+                                   style='custom'),
+                             spring,
+                             Item('info_display',
+                                  style='custom'),
+                               show_labels=False,
+                              ),
                        show_labels=False,
                        show_border=True,
                        label='Execute')
@@ -464,7 +466,6 @@ class ExperimentManager(Manager):
                       show_label=False,
                       editor=editor
                       ),
-                 Item('info_display', style='custom', show_label=False),
                  width=900,
                  height=700,
                  resizable=True,
@@ -551,12 +552,12 @@ class ExperimentManager(Manager):
         return ExperimentSet(db=self.db)
 
     def _info_display_default(self):
-        return  RichTextDisplay(height=200,
+        return  RichTextDisplay(height=300,
+                                width=575,
                                 default_size=12,
                                 bg_color='black',
-                                default_color='white')
-
-if __name__ == '__main__':
+                                default_color='limegreen')
+def main():
     paths.build('_experiment')
     from src.helpers.logger_setup import logging_setup
 
@@ -578,7 +579,30 @@ if __name__ == '__main__':
 
 #    e.configure_traits(view='test_view')
 #    e.analyze_data()
-    e.configure_traits()
+    e.configure_traits(view='execute_view')
+
+def dum_run(r):
+    print 'start ', r
+    time.sleep(1)
+    print 'finish   ', r
+#    for i in range(5):
+
+
+def test():
+
+    runs = (ri for ri in range(4))
+    while 1:
+        try:
+            run = runs.next()
+        except StopIteration:
+            break
+        t = Thread(target=dum_run, args=(run,))
+        t.start()
+        time.sleep(1.8)
+
+if __name__ == '__main__':
+    main()
+#    test()
 #============= EOF ====================================
 
 #===============================================================================

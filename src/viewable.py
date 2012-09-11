@@ -52,6 +52,8 @@ class Viewable(Loggable):
             #disposes 50 ms from now
             do_after(1, self.ui.dispose)
             #sleep a little so everything has time to update
-            #time.sleep(0.05)
+            #time.sleep(0.05) 
+    def show(self):
+        do_after(1, self.ui.control.Raise)
 
 # ============= EOF ====================================

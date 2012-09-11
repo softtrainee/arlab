@@ -33,6 +33,10 @@ class PlotPanel(Viewable):
 
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
     _ncounts = Int
+
+    detector = None
+    isotopes = None
+
     def _get_ncounts(self):
         return self._ncounts
 

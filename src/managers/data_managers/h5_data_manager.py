@@ -94,12 +94,11 @@ class H5DataManager(DataManager):
 
         return self._frame
 
-    def new_group(self, group_name, parent='root', description=''):
-        if parent == 'root':
-            parent = self._frame
-            parent_group = self._frame.root
+    def new_group(self, group_name, parent=None, description=''):
+        if parent is None:
+            parent = self._frame.root
 
-        grp = parent.createGroup(parent_group, group_name, description)
+        grp = self._frame.createGroup(parent, group_name, description)
         return grp
 
     def new_table(self, group, table_name, table_style='TimeSeries'):
@@ -124,12 +123,21 @@ class H5DataManager(DataManager):
     def get_group(self, name):
         return next((g for g in self.get_groups() if g._v_name == name), None)
 
-    def get_groups(self):
-        return [g for g in self._frame.walkGroups() if g != self._frame.root]
+    def get_groups(self, grp=None):
+        if grp is not None:
+            if isinstance(grp, str):
+                grp = getattr(self._frame.root, grp)
+#            print 'wget', grp
+            return [g for g in grp._f_walkGroups() if g != grp]
+        else:
+            return [g for g in self._frame.walkGroups() if g != self._frame.root]
 
     def get_tables(self, grp):
+        if isinstance(grp, str):
+            grp = '/{}'.format(grp)
+
         f = self._frame
-        return [n for n in f.walkNodes('/{}'.format(grp), 'Table')]
+        return [n for n in f.walkNodes(grp, 'Table')]
 
     def open_data(self, path, mode='r'):
         try:

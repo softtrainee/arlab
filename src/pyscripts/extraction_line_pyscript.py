@@ -77,6 +77,7 @@ class ExtractionLinePyScript(PyScript):
 
     def gosub(self, *args, **kw):
         kw['runtype'] = self.runtype
+        kw['runner'] = self.runner
         super(ExtractionLinePyScript, self).gosub(*args, **kw)
 
     @verbose_skip
