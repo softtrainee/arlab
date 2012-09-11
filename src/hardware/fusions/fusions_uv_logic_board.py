@@ -28,7 +28,6 @@ from src.hardware.kerr.kerr_motor import KerrMotor
 
 class FusionsUVLogicBoard(FusionsLogicBoard):
     '''
-        G{classtree}
     '''
     attenuator_motor = Instance(KerrMotor)
     attenuation = DelegatesTo('attenuator_motor', prefix='data_position')
@@ -36,12 +35,8 @@ class FusionsUVLogicBoard(FusionsLogicBoard):
     attenuationmax = DelegatesTo('attenuator_motor', prefix='max')
     update_attenuation = DelegatesTo('attenuator_motor', prefix='update_position')
 
-
-
     def load_additional_args(self, config):
         '''
-            @type config: C{str}
-            @param config:
         '''
 #        super(FusionsUVLogicBoard, self).load_additional_args(config)
         FusionsLogicBoard.load_additional_args(self, config)

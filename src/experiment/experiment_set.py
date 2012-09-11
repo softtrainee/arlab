@@ -24,13 +24,15 @@ import os
 #import time
 #import datetime
 #============= local library imports  ==========================
-from src.experiment.automated_run import AutomatedRun, AutomatedRunAdapter
+from src.experiment.automated_run import AutomatedRun
+
 from src.experiment.heat_schedule import HeatSchedule
 from src.paths import paths
 from src.loggable import Loggable
 from src.experiment.batch_edit import BatchEdit
 from src.experiment.stats import ExperimentStats
 from src.helpers.filetools import str_to_bool
+from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 
 
 def extraction_path(name):

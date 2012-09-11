@@ -695,7 +695,7 @@ class Graph(Loggable):
         plotobj, names, rd = self._series_factory(x, y, yer=None, **kw)
         #print 'downsample', plotobj.use_downsample
 
-        plotobj.use_downsample = True
+#        plotobj.use_downsample = True
         if aux_plot:
             if x is None:
                 x = np.array([])

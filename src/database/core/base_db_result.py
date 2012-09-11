@@ -144,13 +144,13 @@ class DBResult(BaseDBResult):
     def load_graph(self):
         pass
 
-    def _graph_factory(self, klass=None):
+    def _graph_factory(self, klass=None, width=500, height=300):
 
         if klass is None:
             klass = Graph
         g = klass(container_dict=dict(padding=10),
-                  width=500,
-                  height=300
+                  width=width,
+                  height=height
                   )
         return g
 
@@ -203,7 +203,8 @@ class DBResult(BaseDBResult):
                     resizable=self.resizable,
                     x=self.window_x,
                     y=self.window_y,
-                    title=self.title
+                    title=self.title,
+
                     )
         if self.window_width:
             v.width = self.window_width

@@ -173,7 +173,7 @@ class MeasurementPyScript(PyScript):
 #            self.automated_run.set_isotopes(list(isotopes))
 
     @verbose_skip
-    def baselines(self, ncounts=None, mass=None, detector='H1', mode='multicollect'):
+    def baselines(self, ncounts=None, mass=None, detector=None):
         '''
             if detector is not none then it is peak hopped
         '''
@@ -183,20 +183,20 @@ class MeasurementPyScript(PyScript):
         if not self.automated_run.do_baselines(ncounts, self._time_zero,
                                mass,
                                detector,
-                               mode,
                                series=self._series_count
                               ):
             self.cancel()
         self._series_count += 1
 
     @verbose_skip
-    def peak_hop(self, detector=None, isotopes=None, cycles=5):
+    def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5):
         if self.automated_run is None:
             return
         self.automated_run.do_peak_hop(detector, isotopes,
                                     cycles,
+                                    integrations,
                                     self._time_zero,
-                                    series=self._series_count
+                                    self._series_count
                                     )
         self._series_count += 1
 
