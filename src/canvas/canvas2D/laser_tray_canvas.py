@@ -239,7 +239,8 @@ class LaserTrayCanvas(MapCanvas):
         enable_mouse_wheel_zoom = False
         if enable_mouse_wheel_zoom:
             inc = event.mouse_wheel
-            self.parent.parent.laser_controller.set_zoom(inc, relative=True)
+#            self.parent.parent.laser_controller.set_zoom(inc, relative=True)
+            self.parent.parent.laser_controller.set_motor('zoom', inc, relative=True)
 #            self.parent.parent.logic_board.set_zoom(inc, relative=True)
             event.handled = True
 

@@ -19,13 +19,14 @@ a combination of the logic board and the kerr microcontroller
 see Photon Machines Logic Board Command Set for additional information
 '''
 #=============enthought library imports=======================
-from traits.api import  Instance, DelegatesTo, Str, Button, Float
-from traitsui.api import Item, VGroup, RangeEditor
+from traits.api import  Instance, DelegatesTo, Str, Button, Float, Dict, List
+#from traitsui.api import Item, VGroup, RangeEditor
+from traitsui.api import Item, ListEditor, InstanceEditor, Group
 #=============standard library imports ========================
 import os
 #=============local library imports  ==========================
 from globals import globalv
-from fusions_motor_configurer import FusionsMotorConfigurer
+#from fusions_motor_configurer import FusionsMotorConfigurer
 from src.hardware.core.core_device import CoreDevice
 
 from src.hardware.kerr.kerr_snap_motor import KerrSnapMotor
@@ -39,26 +40,28 @@ class FusionsLogicBoard(CoreDevice):
 
     motor_microcontroller = Instance(KerrMicrocontroller)
 
-    beam_motor = Instance(KerrMotor)
-    beam = DelegatesTo('beam_motor', prefix='data_position')
-    beammin = DelegatesTo('beam_motor', prefix='min')
-    beammax = DelegatesTo('beam_motor', prefix='max')
-    beam_enabled = DelegatesTo('beam_motor', prefix='enabled')
-    update_beam = DelegatesTo('beam_motor', prefix='update_position')
+#    beam_motor = Instance(KerrMotor)
+#    beam = DelegatesTo('beam_motor', prefix='data_position')
+#    beammin = DelegatesTo('beam_motor', prefix='min')
+#    beammax = DelegatesTo('beam_motor', prefix='max')
+#    beam_enabled = DelegatesTo('beam_motor', prefix='enabled')
+#    update_beam = DelegatesTo('beam_motor', prefix='update_position')
+#
+#    zoom_motor = Instance(KerrMotor)
+#    zoom = DelegatesTo('zoom_motor', prefix='data_position')
+#    zoommin = DelegatesTo('zoom_motor', prefix='min')
+#    zoommax = DelegatesTo('zoom_motor', prefix='max')
+#    zoom_enabled = DelegatesTo('zoom_motor', prefix='enabled')
+#    update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
 
-    zoom_motor = Instance(KerrMotor)
-    zoom = DelegatesTo('zoom_motor', prefix='data_position')
-    zoommin = DelegatesTo('zoom_motor', prefix='min')
-    zoommax = DelegatesTo('zoom_motor', prefix='max')
-    zoom_enabled = DelegatesTo('zoom_motor', prefix='enabled')
-    update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
-
-    configure = Button
+#    configure = Button
 
     prefix = Str
     scan_func = 'read_power_meter'
 
     internal_meter_response = Float
+
+    motors = List
 
     def initialize(self, *args, **kw):
         '''
@@ -80,21 +83,23 @@ class FusionsLogicBoard(CoreDevice):
                 if result:
                     os._exit(0)
 
-            return True
-
         #turn off pointer
         self.set_pointer_onoff(False)
 
         #initialize Kerr devices
         self.motor_microcontroller.initialize(*args, **kw)
 
-        if globalv.initialize_zoom:
-            zm = self.zoom_motor
-            zm.initialize(*args, **kw)
+#        for m, v in self.motors.iteritems():
+        for m in self.motors:
+            m.initialize(*args, **kw)
 
-        if globalv.initialize_beam:
-            bm = self.beam_motor
-            bm.initialize(*args, **kw)
+#        if globalv.initialize_zoom:
+#            zm = self.zoom_motor
+#            zm.initialize(*args, **kw)
+#
+#        if globalv.initialize_beam:
+#            bm = self.beam_motor
+#            bm.initialize(*args, **kw)
 
         return True
 
@@ -115,30 +120,58 @@ class FusionsLogicBoard(CoreDevice):
         if self.prefix is None:
             return False
 
-        z = self.config_get(config, 'Motors', 'zoom')
-        b = self.config_get(config, 'Motors', 'beam', optional=True)
 
-        if z is not None:
-            self.zoom_motor.load(os.path.join(self.configuration_dir_path, z))
+        for option in config.options('Motors'):
+            v = config.get('Motors', option)
+            self.add_motor(option, v)
 
-        if b is not None:
-            self.beam_motor.load(os.path.join(self.configuration_dir_path, b))
-
-        #load power meter calibration
+#        z = self.config_get(config, 'Motors', 'zoom')
+#        b = self.config_get(config, 'Motors', 'beam', optional=True)
+#
+#        if z is not None:
+#            self.zoom_motor.load(os.path.join(self.configuration_dir_path, z))
+#
+#        if b is not None:
+#            self.beam_motor.load(os.path.join(self.configuration_dir_path, b))
 
 
         return True
 
-    def _configure_fired(self):
-        '''
-        '''
-        self.configure_motors()
+    def add_motor(self, name, path):
+        p = os.path.join(self.configuration_dir_path, path)
+        config = self.get_configuration(path=p)
+        klassname = self.config_get(config, 'General', 'kind', default='', optional=True)
+        m = self._motor_factory(name, klassname)
+        m.load(p)
+        self.info('adding motor {} klass={}'.format(name, klassname if klassname else 'KerrMotor'))
+        self.motors.append(m)
 
-    def configure_motors(self):
-        '''
-        '''
-        fc = FusionsMotorConfigurer(motors=[self.zoom_motor, self.beam_motor])
-        fc.edit_traits()
+    def get_motor(self, name):
+        return next((m for m in self.motors if m == name), None)
+
+    def _motor_factory(self, name, klassname):
+        if klassname:
+            n = '{}_motor'.format(klassname.lower())
+        else:
+            n = 'motor'
+
+        pkg = 'src.hardware.kerr.kerr_{}'.format(n)
+        klass = 'Kerr{}Motor'.format(klassname)
+        m = __import__(pkg, fromlist=[klass])
+        m = getattr(m, klass)
+        return m(parent=self, name=name)
+
+
+#    def _configure_fired(self):
+#        '''
+#        '''
+#        self.configure_motors()
+#
+#    def configure_motors(self):
+#        '''
+#        '''
+#        fc = FusionsMotorConfigurer(motors=[self.zoom_motor, self.beam_motor])
+#        fc.edit_traits()
 
 #==============================================================================
 #laser methods
@@ -238,19 +271,39 @@ class FusionsLogicBoard(CoreDevice):
         return KerrMicrocontroller(name='microcontroller',
                                    parent=self)
 
-    def _zoom_motor_default(self):
-        '''
-        '''
-        return KerrMotor(name='zoom', parent=self)
-
-    def _beam_motor_default(self):
-        '''
-        '''
-        return KerrSnapMotor(name='beam', parent=self)
+#    def _zoom_motor_default(self):
+#        '''
+#        '''
+#        return KerrMotor(name='zoom', parent=self)
+#
+#    def _beam_motor_default(self):
+#        '''
+#        '''
+#        return KerrSnapMotor(name='beam', parent=self)
 
 #==============================================================================
 #motor methods
 #==============================================================================
+    def set_motor(self, name, value, block=False,
+                  relative=False):
+        motor = next((m for m in self.motors if m.name == name), None)
+        if motor is None:
+            return
+
+        if relative:
+            value = motor.data_position + value
+            if not 0 <= value <= 100:
+                return
+
+        self._enable_motor_(motor, value)
+
+        self.info('setting {} to {:0.1f}'.format(name, value))
+
+        motor.data_position = value
+
+        if block:
+            self._block_(motor)
+
     def _block_(self, motor):
         '''
 
@@ -266,61 +319,70 @@ class FusionsLogicBoard(CoreDevice):
         if motor.data_position != pos:
             motor.enabled = False
 
-    def set_zoom(self, zoom, block=False, relative=False):
-        '''
-
-        '''
-        motor = self.zoom_motor
-
-        if relative:
-            zoom = motor.data_position + zoom
-            if not 0 <= zoom <= 100:
-                return
-
-        self._enable_motor_(motor, zoom)
-
-        self.info('setting zoom to {:0.1f}'.format(zoom))
-
-        motor.data_position = zoom
-
-        if block:
-            self._block_(motor)
-
-    def set_beam_diameter(self, pos, block=True):
-        '''
-
-        '''
-        motor = self.beam_motor
-
-        self._enable_motor_(motor, pos)
-
-        self.info('setting beam position {:0.3f}'.format(pos))
-
-        motor.data_position = pos
-
-        if block == True:
-            self._block_(motor)
+#    def set_zoom(self, zoom, block=False, relative=False):
+#        '''
+#
+#        '''
+#        motor = self.zoom_motor
+#
+#        if relative:
+#            zoom = motor.data_position + zoom
+#            if not 0 <= zoom <= 100:
+#                return
+#
+#        self._enable_motor_(motor, zoom)
+#
+#        self.info('setting zoom to {:0.1f}'.format(zoom))
+#
+#        motor.data_position = zoom
+#
+#        if block:
+#            self._block_(motor)
+#
+#    def set_beam_diameter(self, pos, block=True):
+#        '''
+#
+#        '''
+#        motor = self.beam_motor
+#
+#        self._enable_motor_(motor, pos)
+#
+#        self.info('setting beam position {:0.3f}'.format(pos))
+#
+#        motor.data_position = pos
+#
+#        if block == True:
+#            self._block_(motor)
 
     def get_control_group(self):
-        be = RangeEditor(low_name='beammin',
-                       high_name='beammax'
-                       )
-        ube = RangeEditor(low_name='beammin',
-                        high_name='beammax',
-                        enabled=False
-                        )
-        zo = RangeEditor(low_name='zoommin',
-                        high_name='zoommax'
-                        )
-        uzo = RangeEditor(low_name='zoommin',
-                        high_name='zoommax',
-                        enabled=False
-                        )
-        return VGroup(
-                      Item('zoom', editor=zo),
-                      Item('update_zoom', editor=uzo, show_label=False),
-                      Item('beam', editor=be),
-                      Item('update_beam', editor=ube, show_label=False),
-                      )
+        return Group(Item('motors', style='custom',
+                    editor=ListEditor(mutable=False,
+                                      style='custom',
+                                      editor=InstanceEditor(view='control_view')),
+
+                    show_label=False
+                    ))
+
+#        
+#        be = RangeEditor(low_name='beammin',
+#                       high_name='beammax'
+#                       )
+#        ube = RangeEditor(low_name='beammin',
+#                        high_name='beammax',
+#                        enabled=False
+#                        )
+#        zo = RangeEditor(low_name='zoommin',
+#                        high_name='zoommax'
+#                        )
+#        uzo = RangeEditor(low_name='zoommin',
+#                        high_name='zoommax',
+#                        enabled=False
+#                        )
+#        return VGroup(
+#                      Item('zoom', editor=zo),
+#                      Item('update_zoom', editor=uzo, show_label=False),
+#                      Item('beam', editor=be),
+#                      Item('update_beam', editor=ube, show_label=False),
+#                      )
 
 #================== EOF ================================================

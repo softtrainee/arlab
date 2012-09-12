@@ -94,6 +94,8 @@ class FusionsLaserManager(LaserManager):
 
     chiller = Any
 
+    dbname = ''
+
     def _record_fired(self):
         if self._recording_power_state:
             save = self.db_save_dialog()
@@ -327,7 +329,7 @@ class FusionsLaserManager(LaserManager):
 
     def do_motor_initialization(self, name):
         if self.laser_controller:
-            motor = getattr(self.laser_controller, '{}_motor'.format(name))
+            motor = self.laser_controller.get_motor(name)
             if motor is not None:
                 n = 4
                 pd = MProgressDialog(max=n, size=(550, 15))
@@ -340,7 +342,7 @@ class FusionsLaserManager(LaserManager):
         '''
         result = False
         if self.beam_enabled or force:
-            self.laser_controller.set_beam_diameter(bd, **kw)
+            self.set_motor('beam', bd, **kw)
             result = True
         else:
             self.info('beam disabled by lens configuration {}'.format(self.lens_configuration))
@@ -349,8 +351,10 @@ class FusionsLaserManager(LaserManager):
     def set_zoom(self, z, **kw):
         '''
         '''
-        self.laser_controller.set_zoom(z, **kw)
+        self.set_motor('zoom', z, **kw)
 
+    def set_motor(self, *args, **kw):
+        self.laser_controller.set_motor(*args, **kw)
 #===============================================================================
 # pyscript interface
 #===============================================================================

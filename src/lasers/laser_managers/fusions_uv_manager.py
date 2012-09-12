@@ -32,11 +32,11 @@ from src.lasers.laser_managers.laser_shot_history import LaserShotHistory
 class FusionsUVManager(FusionsLaserManager):
     '''
     '''
-    _video_stage = False
+    name = 'fusions_uv'
     attenuation = DelegatesTo('laser_controller')
     attenuationmin = DelegatesTo('laser_controller')
     attenuationmax = DelegatesTo('laser_controller')
-    update_attenuation = DelegatesTo('lasr_controller')
+    update_attenuation = DelegatesTo('laser_controller')
 
     controller = Instance(ATLLaserControlUnit)
 
@@ -94,6 +94,11 @@ class FusionsUVManager(FusionsLaserManager):
     mirror_led = Bool
 
     gas_handling_state = Enum('none', 'auto', 'mirror')
+
+
+    request_power = 0
+    request_powermin = 0
+    request_powermax = 100
 
     def _auto_fired(self):
         '''
@@ -293,30 +298,37 @@ class FusionsUVManager(FusionsLaserManager):
         for c in self._get_gas_contents():
             vg.content.append(c)
         return vg
+
+    def get_lens_configuration_group(self):
+        return None
+
+    def load_lens_configurations(self):
+        pass
 #============= defaults ===================================
     def _stage_manager_default(self):
         '''
         '''
-        args = dict(name='uvstage',
+        args = dict(name='stage',
                             configuration_dir_name='uv',
                              parent=self,
                              stage_controller_class='Aerotech'
                              )
 
-        if self.video_manager.__class__.__name__ == 'VideoManager' and self._video_stage:
-            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
-            factory = VideoStageManager
-            args['video_manager'] = self.video_manager
-        else:
-            from src.lasers.stage_managers.stage_manager import StageManager
-            factory = StageManager
+#        if self.video_manager.__class__.__name__ == 'VideoManager' and self._video_stage:
+#        if self.use_video:
+#            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
+#            factory = VideoStageManager
+#            args['video_manager'] = self.video_manager
+#        else:
+#            from src.lasers.stage_managers.stage_manager import StageManager
+#            factory = StageManager
 
-        return factory(**args)
+        return self._stage_manager_factory(args)
 
     def _laser_controller_default(self):
         '''
         '''
-        return FusionsUVLogicBoard(name='uvlogicboard',
+        return FusionsUVLogicBoard(name='laser_controller',
                                    configuration_dir_name='uv')
 
     def _controller_default(self):

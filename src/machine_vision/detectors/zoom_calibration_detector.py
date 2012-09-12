@@ -132,7 +132,7 @@ class ZoomCalibrationDetector(Detector):
                 break
 
             if self.parent.laser_manager is not None:
-                self.parent.laser_manager.set_zoom(zi, block=True)
+                self.parent.laser_manager.set_motor('zoom', zi, block=True)
                 time.sleep(1)
 
                 refocus = True

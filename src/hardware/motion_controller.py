@@ -60,11 +60,14 @@ class MotionController(CoreDevice):
     motion_profiler = Instance(MotionProfiler, ())
 
     groupobj = None
+    def save_axes_parameters(self):
+        pass
 
     def _motion_profiler_default(self):
         mp = MotionProfiler()
-        p = os.path.join(self.configuration_dir_path, 'motion_profiler.cfg')
-        mp.load(p)
+        if self.configuration_dir_path:
+            p = os.path.join(self.configuration_dir_path, 'motion_profiler.cfg')
+            mp.load(p)
         return mp
 
     def traits_view(self):

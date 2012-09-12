@@ -93,7 +93,6 @@ class KerrDevice(ConfigLoadable):
         '''
         high_nibble = int(cmd[2:3], 16)
         data_bits = cmd[4:]
-
         return high_nibble == len(data_bits) / 2
 
     def _calc_checksum(self, cmd):

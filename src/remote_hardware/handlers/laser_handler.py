@@ -275,6 +275,18 @@ class LaserHandler(BaseRemoteHardwareHandler):
     def GetZoom(self, manager, *args):
         return manager.zoom
 
+    def SetMotor(self, manager, name, data, *args):
+        try:
+            bd = float(data)
+        except ValueError:
+            return InvalidArgumentsErrorCode('SetMotor', data, logger=self)
+
+        if manager.set_motor(name, bd, block=False):
+            return 'OK'
+        else:
+            return 'OK - beam disabled'
+
+
     def SetSampleHolder(self, manager, name, *args):
         if name is None:
             r = InvalidArgumentsErrorCode('SetSampleHolder', name)

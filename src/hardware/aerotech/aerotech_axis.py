@@ -96,8 +96,13 @@ class AerotechAxis(Axis):
             cmd = self._build_query(code)
             rp = self.ask(cmd)
             if rp is not None:
-                setattr(self, name, rp)
-                param_table.append(rp)
+                rp = rp.strip()
+                try:
+                    setattr(self, name, rp)
+                    param_table.append(rp)
+                except Exception:
+                    self.warning('{} not set invalid value {}'.format(name, rp))
+
 
         names, codes = zip(*attrs)
         return names, codes, param_table

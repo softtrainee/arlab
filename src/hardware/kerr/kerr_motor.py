@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import Float, Property, Bool, Int, CInt
-from traitsui.api import View, Item, HGroup, VGroup, EnumEditor
+from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, RangeEditor, Label
 from pyface.timer.api import Timer
 
 #=============standard library imports ========================
@@ -59,6 +59,24 @@ class KerrMotor(KerrDevice):
 
     _motor_position = CInt
     doing_hysteresis_correction = False
+    def _build_gains(self):
+        '''
+            F6  B004 2003 F401 E803 FF 00 E803 01 01 01
+            cmd p    d    i    il   ol cl el   sr db sm
+        '''
+        p = (0, 4)
+        i = (0, 4)
+        d = (0, 4)
+        il = (10, 4)
+        ol = (10, 2)
+        cl = (10, 2)
+        el = (10, 4)
+        sr = (1, 2)
+        db = (1, 2)
+        sm = (1, 2)
+        hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
+        return ''.join(['F6'] + map(hexfmt, [p, d, i, il, ol, cl, el, sr, db, sm]))
+
     def load_additional_args(self, config):
         '''
         '''
@@ -403,6 +421,19 @@ class KerrMotor(KerrDevice):
             return struct.unpack(fmt, h.decode('hex'))[0]
         except:
             pass
+    def control_view(self):
+        return View(Label(self.name),
+                    Item('data_position', show_label=False,
+                         editor=RangeEditor(low_name='min',
+                                            high_name='max')
+                         ),
+                    Item('update_position', show_label=False,
+                         editor=RangeEditor(low_name='min',
+                                            high_name='max', enabled=False),
+                         ),
+
+                    )
+
 
     def traits_view(self):
         '''
@@ -410,7 +441,7 @@ class KerrMotor(KerrDevice):
         return View(VGroup(
                            HGroup('min', 'max', label='Limits', show_border=True),
                            VGroup('velocity', 'acceleration', Item('sign', editor=EnumEditor(values={'negative':-1, 'positive':1})), label='Move', show_border=True),
-                           VGroup('home_velocity', 'home_acceleration', 'focal_position', label='Home', show_border=True)
+                           VGroup('home_velocity', 'home_acceleration', 'home_position', label='Home', show_border=True)
                            )
                     )
 #============= EOF ====================================

@@ -61,6 +61,7 @@ class FusionsLaserUIPlugin(CoreUIPlugin):
     def start_manager(self, obj, name, old, new):
         protocol = 'src.lasers.laser_managers.laser_manager.ILaserManager'
         name = self.id.replace('.', '_')
+        print name
         lm = self.application.get_service(protocol, 'name=="{}"'.format(name))
 
         pref = 'pychron.fusions.{}.open_on_startup'.format(self.name)

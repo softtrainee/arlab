@@ -40,6 +40,9 @@ class AerotechMotionController(MotionController):
         self.tell('##')
         self._communicator._terminator = chr(10)
 
+#        for a in self.axes.itervalues():
+#            a.load_parameters()
+
         return True
 
     def load_additional_args(self, config):
@@ -229,7 +232,6 @@ class AerotechMotionController(MotionController):
         '''
         '''
         a = AerotechAxis(**kw)
-        a.load_parameters()
         return a
 
 #if __name__ == '__main__':

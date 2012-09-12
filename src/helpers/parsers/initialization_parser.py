@@ -234,6 +234,8 @@ class InitializationParser(XMLParser):
 
             if 'co2' in name:
                 name = name.split('_')[0].capitalize() + 'CO2'
+            elif 'uv' in name:
+                name = name.split('_')[0].capitalize() + 'UV'
             else:
                 name = ''.join([a.capitalize() for a in name.split('_')])
         else:

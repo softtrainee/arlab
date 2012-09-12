@@ -52,8 +52,8 @@ class FusionsDiodeLogicBoard(FusionsLogicBoard):
         cmd = self._build_command('IOWR1', '1' if onoff else '0')
         self.ask(cmd)
 
-    def _beam_motor_default(self):
-        '''
-        '''
-        return KerrThorMotor(name='beam', parent=self)
+#    def _beam_motor_default(self):
+#        '''
+#        '''
+#        return KerrThorMotor(name='beam', parent=self)
 #====================== EOF ===========================================

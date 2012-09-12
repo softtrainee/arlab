@@ -122,11 +122,8 @@ class PowerMapping(Loggable):
         lm = self.parent.laser_manager
         # enable the laser
         lm.enable_laser()
-        if hasattr(lm, 'set_beam_diameter'):
-            '''
-                synrad co2 does not have auto beam setting
-            '''
-            lm.set_beam_diameter(self.beam_diameter)
+
+        lm.set_motor('beam', self.beam_diameter)
 
         lm.set_laser_power(self.request_power)
 

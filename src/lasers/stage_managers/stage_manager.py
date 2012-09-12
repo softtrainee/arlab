@@ -115,7 +115,7 @@ class StageManager(Manager):
 
         '''
         super(StageManager, self).__init__(*args, **kw)
-        self.add_output('Welcome')
+#        self.add_output('Welcome')
         self.stage_controller = self._stage_controller_factory()
 
     def get_video_database(self):
@@ -569,7 +569,10 @@ class StageManager(Manager):
 #===============================================================================
 
     def _get_stage_maps(self):
-        return [s.name for s in self._stage_maps]
+        if self._stage_maps:
+            return [s.name for s in self._stage_maps]
+        else:
+            return []
 
     def _get_stage_map(self):
         if self._stage_map:

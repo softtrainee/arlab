@@ -203,6 +203,7 @@ class Initializer(Loggable):
         managers = []
         devices = []
         flags = []
+        timed_flags = []
 
         if plugin_name is None:
 
@@ -228,6 +229,7 @@ class Initializer(Loggable):
             mode, _, port = parser.get_rpc_params(mp)
             if port and mode != 'client':
                 manager.load_rpc_server(port)
+
 
         if managers:
             self.info('loading managers - {}'.format(', '.join(managers)))

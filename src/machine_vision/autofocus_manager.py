@@ -164,14 +164,14 @@ class AutofocusManager(Manager):
             if zoom:
                 prev_zoom = manager.zoom
                 self.info('setting zoom: {}'.format(zoom))
-                manager.set_zoom(zoom, block=True)
+                manager.set_motor('zoom', zoom, block=True)
 
         args = self._do_focusing(fstart, fend, steps, operator)
 
         if manager is not None:
             if prev_zoom is not None:
                 self.info('returning to previous zoom: {}'.format(prev_zoom))
-                manager.set_zoom(prev_zoom, block=True)
+                manager.set_motor('zoom', prev_zoom, block=True)
 
         if args:
             mi, fmi, ma, fma = args

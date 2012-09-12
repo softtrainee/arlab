@@ -61,6 +61,11 @@ PACKAGE_DICT = dict(
                    FusionsDiodeUIPlugin='src.lasers.plugins.fusions.diode.ui_plugin',
                    FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
                    FusionsCO2UIPlugin='src.lasers.plugins.fusions.co2.ui_plugin',
+
+                   FusionsUVPlugin='src.lasers.plugins.fusions.uv.plugin',
+                   FusionsUVUIPlugin='src.lasers.plugins.fusions.uv.ui_plugin',
+
+
                    SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
                    SynradCO2UIPlugin='src.lasers.plugins.synrad_co2_ui_plugin',
 
