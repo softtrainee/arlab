@@ -33,7 +33,7 @@ from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
-from src.database.sync.repository import Repository
+from src.repo.repository import FTPRepository as Repository
 from src.experiment.plot_panel import PlotPanel
 
 
@@ -745,7 +745,7 @@ class AutomatedRun(Loggable):
 
                      )
 
-
+        self.repository.current_file = dm.get_current_path()
         #create initial structure
 #        dm.new_group('baselines')
 #        dm.new_group('sniffs')
@@ -807,22 +807,24 @@ class AutomatedRun(Loggable):
         #close h5 file
         self.data_manager.close()
 
+        #commit repository
+        self.repository.commit()
         #version control new analysis
 #        self._version_control_analysis(p, a)
 
 
-    def _version_control_analysis(self, apath, analysis):
-        repo = self.repository
-
-        ln = analysis.labnumber
-        identifier = '{}-{}'.format(ln.labnumber, ln.aliquot)
-
-        #add files to repo and commit
-        repo.add(os.path.basename(apath))
-        dbname = os.path.basename(self.db.dbname)
-        repo.add(dbname)
-        repo.commit('added analysis {}, updated isotopedb'.format(identifier))
-        repo.push()
+#    def _version_control_analysis(self, apath, analysis):
+#        repo = self.repository
+#
+#        ln = analysis.labnumber
+#        identifier = '{}-{}'.format(ln.labnumber, ln.aliquot)
+#
+#        #add files to repo and commit
+#        repo.add(os.path.basename(apath))
+#        dbname = os.path.basename(self.db.dbname)
+#        repo.add(dbname)
+#        repo.commit('added analysis {}, updated isotopedb'.format(identifier))
+#        repo.push()
 
     def _save_to_massspec(self):
         self.info('saving to massspec database')

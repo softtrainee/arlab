@@ -15,12 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
+from traits.api import HasTraits, Str, Password
+from traitsui.api import View, Item, TableEditor, Group
+from apptools.preferences.ui.preferences_page import PreferencesPage
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.sync.repository import Repository
+class ExperimentPreferencesPage(PreferencesPage):
+    preferences_path = 'pychron.experiment'
+    username = Str
+    password = Password
+    host = Str
+    remote = Str
 
-class WebDAVRepository(Repository):
-    pass
+    def traits_view(self):
+        repo_grp = Group(Item('host'),
+                         Item('username'),
+                         Item('password'),
+                         Item('remote', label='Data directory'),
+                         show_border=True, label='Repo')
+        return View(
+                    repo_grp
+                    )
 #============= EOF =============================================

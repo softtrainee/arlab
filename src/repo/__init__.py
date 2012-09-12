@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2011 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,23 +14,3 @@
 # limitations under the License.
 #===============================================================================
 
-#============= enthought library imports =======================
-from traits.api import Str
-#============= standard library imports ========================
-import os
-from src.loggable import Loggable
-import shutil
-#============= local library imports  ==========================
-
-class Repository(Loggable):
-    root = Str
-    def __init__(self, root, *args, **kw):
-        self.root = root
-        super(Repository, self).__init__(*args, **kw)
-
-    def addFile(self, src):
-        dst = os.path.join(self.root, os.path.basename(src))
-        shutil.copyfile(src, dst)
-
-
-#============= EOF =============================================

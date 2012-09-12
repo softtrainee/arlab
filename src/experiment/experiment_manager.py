@@ -19,6 +19,7 @@ from traits.api import Instance, Button, Float, on_trait_change, Str, \
     DelegatesTo, Bool, Property, Event
 from traitsui.api import View, Item, Group, VGroup, HGroup, spring
 from traitsui.menu import Action
+from pyface.timer.do_later import do_later
 #import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from threading import Thread
@@ -34,11 +35,10 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
-from src.database.sync.repository import Repository
 from globals import globalv
 from src.displays.rich_text_display import RichTextDisplay
-from pyface.timer.do_later import do_later
-
+from src.repo import FTPRepository as Repository
+from apptools.preferences.preference_binding import bind_preference
 
 class ExperimentManagerHandler(SaveableManagerHandler):
     def object_experiment_set_changed(self, info):
@@ -107,6 +107,19 @@ class ExperimentManager(Manager):
 #        return a
     dirty = DelegatesTo('experiment_set')
     err_message = None
+
+    repository = Instance(Repository)
+
+    def __init__(self, *args, **kw):
+        super(ExperimentManager, self).__init__(*args, **kw)
+        self.bind_preferences()
+
+    def bind_preferences(self):
+        prefid = 'pychron.experiment'
+        bind_preference(self.repository, 'host', '{}.host'.format(prefid))
+        bind_preference(self.repository, 'remote', '{}.remote'.format(prefid))
+        bind_preference(self.repository, 'username', '{}.username'.format(prefid))
+        bind_preference(self.repository, 'password', '{}.password'.format(prefid))
 
     def info(self, msg, *args, **kw):
         super(ExperimentManager, self).info(msg, *args, **kw)
@@ -180,18 +193,15 @@ class ExperimentManager(Manager):
         exp.reset_stats()
 
         dm = H5DataManager()
-        repo = Repository(os.path.dirname(paths.isotope_db))
+#        repo = Repository(
+#                          os.path.dirname(paths.isotope_db),
+#                          user='ross',
+#                          password='jir812'
+#                          )
+        repo = self.repository
 
         self.db.reset()
         exp.save_to_db()
-
-#        name = 'isotopedb.sqlite'
-#        p = os.path.join(ROOT, name)
-#        #add the db file to the repo
-#        if not os.path.isfile(p):
-#            repo.add(name)
-#            repo.commit('added {}'.format(name))
-#            repo.push()
 
         runs = (ai for ai in exp.automated_runs)
         def launch_run():
@@ -557,6 +567,12 @@ class ExperimentManager(Manager):
                                 default_size=12,
                                 bg_color='black',
                                 default_color='limegreen')
+
+    def _repository_default(self):
+        repo = Repository()
+        repo.root = os.path.dirname(paths.isotope_db)
+        return repo
+
 def main():
     paths.build('_experiment')
     from src.helpers.logger_setup import logging_setup
