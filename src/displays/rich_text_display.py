@@ -131,7 +131,11 @@ class RichTextDisplay(HasTraits):
             
         '''
         if not isinstance(msg, (str, unicode)):
-            return
+            #print 'not str or unicode ', msg
+            if not isinstance(msg, tuple):
+                return
+            msg = msg[0]
+
 
         d = self._display
         if color is None:
