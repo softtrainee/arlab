@@ -15,25 +15,67 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Password
-from traitsui.api import View, Item, TableEditor, Group
+from traits.api import Str, Password, Enum
+from traitsui.api import View, Item, TableEditor, Group, VGroup, HGroup, spring
 from apptools.preferences.ui.preferences_page import PreferencesPage
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ExperimentPreferencesPage(PreferencesPage):
+    name = 'Experiment'
     preferences_path = 'pychron.experiment'
+
     username = Str
-    password = Password
-    host = Str
-    remote = Str
+
+    db_name = Str
+    db_username = Str
+    db_password = Password
+    db_host = Str
+    db_kind = Enum('mysql', 'sqlite')
+
+    repo_kind = Enum('local', 'FTP')
+
+    ftp_username = Str
+    ftp_password = Password
+    ftp_host = Str
+    repo_root = Str
+
 
     def traits_view(self):
-        repo_grp = Group(Item('host'),
+        user_grp = Group(
                          Item('username'),
-                         Item('password'),
-                         Item('remote', label='Data directory'),
-                         show_border=True, label='Repo')
+                         label='User'
+                         )
+
+        db_auth_grp = Group(Item('db_host', label='Host'),
+                            Item('db_username', label='Name'),
+                            Item('db_password', label='Password'),
+                            enabled_when='db_kind=="mysql"',
+                            show_border=True,
+                            label='Authentication'
+                            )
+
+        ftp_auth_grp = Group(Item('ftp_host', label='Host'),
+                             Item('ftp_username', label='Name'),
+                             Item('ftp_password', label='Password'),
+                             Item('repo_root', label='Data directory'),
+                             enabled_when='repo_kind=="FTP"',
+                             show_border=True,
+                             label='Authentication'
+                             )
+
+        db_grp = Group(HGroup(Item('db_kind', show_label=False)),
+                       Item('db_name', label='Name'),
+                       db_auth_grp,
+                       show_border=True, label='Database')
+
+        repo_grp = Group(
+                         Item('repo_kind', show_label=False),
+                         ftp_auth_grp,
+                         show_border=True, label='Repo'
+                         )
         return View(
-                    repo_grp
+                        user_grp,
+                        db_grp,
+                        repo_grp
                     )
 #============= EOF =============================================

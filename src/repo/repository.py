@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Str, Password
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import os
@@ -25,24 +25,23 @@ from ftplib import FTP
 
 #============= local library imports  ==========================
 class Repository(HasTraits):
-    root = None
-    current_path = None
+    root = Str
 #    def __init__(self, root, *args, **kw):
 #        self.root = root
 #        super(Repository, self).__init__(*args, **kw)
 
 class FTPRepository(Repository):
-    host = None
-    user = None
-    password = None
-    remote = None
+    host = Str
+    username = Str
+    password = Password
+    remote = Str
 #    def __init__(self, *args, **kw):
 #        self.remote = remote
 #        super(FTPRepository, self).__init__(*args, **kw)
 
     def _get_client(self):
         h = self.host
-        u = self.user
+        u = self.username
         p = self.password
         if h is None:
             h = 'localhost'
@@ -54,18 +53,31 @@ class FTPRepository(Repository):
             pass
         return ftp, e
 
-    def commit(self):
+    def add_file(self, p):
+        cb = lambda ftp:self._add_binary(ftp, p)
+        self._execute(cb)
+
+    def _add_binary(self, ftp, p, dst=None):
+        ftp.cwd(self.remote)
+        if dst is None:
+            dst = os.path.basename(p)
+        with open(p, 'rb') as fp:
+            ftp.storbinary('STOR mo_{}'.format(dst), fp)
+
+    def _add_ascii(self, ftp, p, dst=None):
+        ftp.cwd(self.remote)
+        if dst is None:
+            dst = os.path.basename(p)
+        with open(p, 'r') as fp:
+            ftp.storascii('STOR {}'.format(dst), fp)
+
+    def _execute(self, cb):
         ftp, err = self._get_client()
         if ftp is not None:
-            ftp.cwd(self.remote)
-
-            p = self.current_path
-            name = os.path.basename(p)
-            fp = open(p, 'rb')
-            cmd = 'STOR {}'.format(name)
-            ftp.storbinary(cmd, fp)
+            cb(ftp)
         else:
             print err
+
 
 if __name__ == '__main__':
     c = FTPRepository(
@@ -75,8 +87,7 @@ if __name__ == '__main__':
                       password='jir812'
                       )
 
-    c.current_path = '/Users/ross/Sandbox/ftpdownload.h5'
-    print 'isfile', os.path.isfile(c.current_path)
-    c.commit()
+    p = '/Users/ross/Sandbox/download.h5'
+    c.add_file(p)
 
 #============= EOF =============================================

@@ -40,6 +40,9 @@ class SpectrometerDevice(Loggable):
     def finish_loading(self):
         pass
 
+    def ask(self, *args, **kw):
+        if self.microcontroller:
+            return self.microcontroller.ask(*args, **kw)
 
 
 #============= EOF =============================================

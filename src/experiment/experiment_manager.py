@@ -20,6 +20,7 @@ from traits.api import Instance, Button, Float, on_trait_change, Str, \
 from traitsui.api import View, Item, Group, VGroup, HGroup, spring
 from traitsui.menu import Action
 from pyface.timer.do_later import do_later
+from apptools.preferences.preference_binding import bind_preference
 #import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from threading import Thread
@@ -37,8 +38,8 @@ from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImpo
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from globals import globalv
 from src.displays.rich_text_display import RichTextDisplay
-from src.repo import FTPRepository as Repository
-from apptools.preferences.preference_binding import bind_preference
+from src.repo.repository import Repository, FTPRepository
+
 
 class ExperimentManagerHandler(SaveableManagerHandler):
     def object_experiment_set_changed(self, info):
@@ -109,6 +110,10 @@ class ExperimentManager(Manager):
     err_message = None
 
     repository = Instance(Repository)
+    repo_kind = Str
+    db_kind = Str
+
+    username = Str
 
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
@@ -116,10 +121,26 @@ class ExperimentManager(Manager):
 
     def bind_preferences(self):
         prefid = 'pychron.experiment'
-        bind_preference(self.repository, 'host', '{}.host'.format(prefid))
-        bind_preference(self.repository, 'remote', '{}.remote'.format(prefid))
-        bind_preference(self.repository, 'username', '{}.username'.format(prefid))
-        bind_preference(self.repository, 'password', '{}.password'.format(prefid))
+
+        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
+        bind_preference(self, 'db_kind', '{}.db_kind'.format(prefid))
+        bind_preference(self, 'username', '{}.username'.format(prefid))
+
+        if self.repo_kind == 'FTP':
+            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
+            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
+            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
+            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
+
+        if self.db_kind == 'mysql':
+            bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
+            bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
+            bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
+
+        bind_preference(self.db, 'dbname', '{}.db_name'.format(prefid))
+        if not self.db.connect():
+            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
+            self.db = None
 
     def info(self, msg, *args, **kw):
         super(ExperimentManager, self).info(msg, *args, **kw)
@@ -172,6 +193,8 @@ class ExperimentManager(Manager):
         arun.repository = repo
         arun._debug = globalv.experiment_debug
         arun.info_display = self.info_display
+
+        arun.username = self.username
 
     def do_automated_runs(self):
         self.info('start automated runs')
@@ -341,6 +364,8 @@ class ExperimentManager(Manager):
 # persistence
 #===============================================================================
     def load_experiment_set(self, path=None):
+        self.bind_preferences()
+
         self.experiment_set = None
         if path is None:
             path = self.open_file_dialog(default_directory=paths.experiment_dir)
@@ -549,14 +574,21 @@ class ExperimentManager(Manager):
             return msdb
 
     def _db_default(self):
-        db = IsotopeAdapter(kind='sqlite',
-                            dbname=paths.isotope_db,
-#                            dbname='/Users/ross/Pychrondata_experiment/data/isotopedb.sqlite'
-#                            dbname=os.path.join(ROOT, 'isotopedb.sqlite')
-#                            '/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite'
-                            )
-        if db.connect():
-            return db
+#        kind = self.db_kind
+#        dbname = self.db_name
+#        dbuser = self.db_user
+#        dbpass = self.db_password
+#
+#        db = IsotopeAdapter(kind='sqlite',
+#                            dbname=paths.isotope_db,
+##                            dbname='/Users/ross/Pychrondata_experiment/data/isotopedb.sqlite'
+##                            dbname=os.path.join(ROOT, 'isotopedb.sqlite')
+##                            '/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite'
+#                            )
+#        if db.connect():
+#            return db
+        db = IsotopeAdapter()
+        return db
 
     def _experiment_set_default(self):
         return ExperimentSet(db=self.db)
@@ -569,7 +601,12 @@ class ExperimentManager(Manager):
                                 default_color='limegreen')
 
     def _repository_default(self):
-        repo = Repository()
+        if self.repo_kind == 'local':
+            klass = Repository
+        else:
+            klass = FTPRepository
+
+        repo = klass()
         repo.root = os.path.dirname(paths.isotope_db)
         return repo
 
