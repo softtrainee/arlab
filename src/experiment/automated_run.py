@@ -57,7 +57,7 @@ class AutomatedRun(Loggable):
 
     experiment_name = Str
     identifier = String(enter_set=True, auto_set=False)
-    aliquot = Int
+    aliquot = CInt
     state = Enum('not run', 'extraction', 'measurement', 'success', 'fail')
 #    runtype = Enum('Blank', 'Air')
     irrad_level = Str
@@ -122,6 +122,9 @@ class AutomatedRun(Loggable):
     peak_center = None
 #    info_display = DelegatesTo('experiment_manager')
     info_display = None#DelegatesTo('experiment_manager')
+
+    username = None
+
     def _runner_changed(self):
         self.measurement_script.runner = self.runner
         self.extraction_script.runner = self.runner
@@ -442,6 +445,10 @@ class AutomatedRun(Loggable):
         self.plot_panel = p
         dets.reverse()
 
+        if not self.spectrometer_manager:
+            self.warning('not spectrometer manager')
+            return
+
         spec = self.spectrometer_manager.spectrometer
         g = p.graph
         for l in dets:
@@ -521,6 +528,9 @@ class AutomatedRun(Loggable):
                           name='',
                           masses=None
                           ):
+        if not self.spectrometer_manager:
+            self.warning('not spectrometer manager')
+            return
 
         name = 'peakhop_{}'.format(name)
         p = self._open_plot_panel(self.peak_plot_panel)
@@ -577,8 +587,13 @@ class AutomatedRun(Loggable):
                     ti = self.integration_time * 0.99 if not self._debug else 0.1
                     time.sleep(ti)
                     x = time.time() - starttime
-                    x *= 3
-                    v = spec.get_intensity(detector)
+
+                    if self._debug:
+                        v = random.random()
+                        x *= 3
+                    else:
+                        v = spec.get_intensity(detector)
+
                     data_write_hook(x, detector, iso, v)
                     graph.add_datum((x, v), plotid=mi, **kw)
 
@@ -616,10 +631,14 @@ class AutomatedRun(Loggable):
         self.overlap_evt.set()
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, series):
-
         self.info('measuring {}'.format(grpname))
 
+        if not self.spectrometer_manager:
+            self.warning('not spectrometer manager')
+            return True
+
         spec = self.spectrometer_manager.spectrometer
+
         graph = self.plot_panel.graph
         for i in xrange(0, ncounts, 1):
             if i > self.plot_panel.ncounts:
@@ -735,7 +754,7 @@ class AutomatedRun(Loggable):
 
         #the new frame is untracked and will be added to the git repo
         #at post_measurement_save
-        dm.new_frame(
+        frame = dm.new_frame(
                      path=os.path.join(self.repository.root,
                                        '{}-{}.h5'.format(self.identifier, self.aliquot)
                                        )
@@ -745,7 +764,12 @@ class AutomatedRun(Loggable):
 
                      )
 
-        self.repository.current_file = dm.get_current_path()
+        #save some metadata with the file
+        attrs = frame.root._v_attrs
+        attrs['USER'] = self.username
+        attrs['DATA_FORMAT_VERSION'] = '1.0'
+        frame.flush()
+
         #create initial structure
 #        dm.new_group('baselines')
 #        dm.new_group('sniffs')
@@ -804,11 +828,13 @@ class AutomatedRun(Loggable):
         #save to massspec
         self._save_to_massspec()
 
+        cp = self.data_manager.get_current_path()
         #close h5 file
         self.data_manager.close()
 
         #commit repository
-        self.repository.commit()
+        self.repository.add_file(cp)
+
         #version control new analysis
 #        self._version_control_analysis(p, a)
 

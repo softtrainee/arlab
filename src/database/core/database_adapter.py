@@ -53,7 +53,6 @@ class DatabaseAdapter(Loggable):
     host = Str('localhost')
     dbname = Str('massspecdata_local')
     password = Password('Argon')
-    use_db = Bool
 
     selector_klass = Any
 
@@ -64,6 +63,9 @@ class DatabaseAdapter(Loggable):
     test_func = None
 
     selector = Any
+
+    url = None
+
     def _host_changed(self):
         print self.host
 #    window = Any
@@ -152,6 +154,7 @@ class DatabaseAdapter(Loggable):
         '''
 
         url = create_url(kind, user, host, db, password=password)
+        self.url = url
         self.info('url = %s' % url)
         self.engine = create_engine(url)
 

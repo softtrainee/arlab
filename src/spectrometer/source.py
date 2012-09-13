@@ -47,13 +47,13 @@ class Source(SpectrometerDevice):
         return self._read_value('GetHighVoltage', 'current_hv')
 
     def _set_value(self, name, v):
-        r = self.microcontroller.ask('{} {}'.format(name, v))
+        r = self.ask('{} {}'.format(name, v))
         if r is not None:
             if r.lower().strip() == 'ok':
                 return True
 
     def _read_value(self, name, value):
-        r = self.microcontroller.ask(name)
+        r = self.ask(name)
         try:
             setattr(self, value, float(r))
             return getattr(self, value)

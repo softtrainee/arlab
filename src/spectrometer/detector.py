@@ -72,13 +72,13 @@ class Detector(SpectrometerDevice):
 
     def _set_deflection(self, v):
         self._deflection = v
-        self.microcontroller.ask('SetDeflection {},{}'.format(self.name,
+        self.ask('SetDeflection {},{}'.format(self.name,
                                                                    v))
     def _get_deflection(self):
         return self._deflection
 
     def read_deflection(self):
-        r = self.microcontroller.ask('GetDeflection {}'.format(self.name))
+        r = self.ask('GetDeflection {}'.format(self.name))
         try:
             self._deflection = float(r)
         except (ValueError, TypeError):

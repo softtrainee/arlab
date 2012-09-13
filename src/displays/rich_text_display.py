@@ -130,6 +130,13 @@ class RichTextDisplay(HasTraits):
         '''
             
         '''
+        if not isinstance(msg, (str, unicode)):
+            #print 'not str or unicode ', msg
+            if not isinstance(msg, tuple):
+                return
+            msg = msg[0]
+
+
         d = self._display
         if color is None:
             color = wx.Colour(*colors8i[self.default_color])
