@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2011 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +14,3 @@
 # limitations under the License.
 #===============================================================================
 
-#============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-#============= standard library imports ========================
-#============= local library imports  ==========================
-from src.database.sync.repository import Repository
-
-class WebDAVRepository(Repository):
-    pass
-#============= EOF =============================================

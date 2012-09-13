@@ -87,7 +87,7 @@ class Spectrometer(SpectrometerDevice):
 
     def set_parameter(self, name, v):
         cmd = '{} {}'.format(name, v)
-        self.microcontroller.ask(cmd)
+        self.ask(cmd)
 
     def set_microcontroller(self, m):
         self.magnet.microcontroller = m
