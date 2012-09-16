@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,34 +15,33 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, Int
-from traitsui.tabular_adapter import TabularAdapter
+from traits.api import HasTraits, Instance
+from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class BaseResultsAdapter(TabularAdapter):
-    columns = [('ID', 'rid'),
-               ('Date', 'rundate'),
-               ('Time', 'runtime')
-               ]
+from src.displays.rich_text_display import RichTextDisplay
 
-#    runtime_text = Property
+class Result(HasTraits):
+    display = Instance(RichTextDisplay)
+    def traits_view(self):
+        v = View(Item('display', show_label=False, style='custom'))
+        return v
 #
-#    def _get_runtime_text(self):
-#        return self.item.runtime.strftime('%H:%M:%S')
-    rid_width = Int(20)
-    runtime_width = Int(80)
-    rundate_width = Int(100)
-    def get_bg_color(self, obj, trait, row, *args):
-        if obj.results[row]._loadable:
-            return 'white'
-        else:
-            return '#FF4D4D'
+#    def clear(self):
+#        self.display.clear()
+#        self.display._display.SetSelection(0, 0)
 
-class RIDResultsAdapter(BaseResultsAdapter):
-    columns = [('RunID', 'runid'),
-               ('Date', 'rundate'),
-               ('Time', 'runtime')
-               ]
+    def add(self, obj):
+        d = self.display
+        obj.build_results(d)
 
-
+    def _display_default(self):
+        import wx
+        color = wx.LIGHT_GREY
+#        color = 'lightgrey'
+        d = RichTextDisplay(bg_color=color,
+                            default_size=14,
+                            default_color='black',
+                            height=150)
+        return d
 #============= EOF =============================================

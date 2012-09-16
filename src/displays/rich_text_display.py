@@ -56,7 +56,8 @@ class RichTextDisplay(HasTraits):
 
     default_color = Str('red')
     default_size = Int(9)
-    bg_color = Str('white')
+#    bg_color = Str('white')
+    bg_color = None
 
     x = Float(10)
     y = Float(20)
@@ -110,7 +111,11 @@ class RichTextDisplay(HasTraits):
         if not self.selectable:
             rtc.Bind(wx.EVT_LEFT_DOWN, lambda x: x)
 
-        rtc.SetBackgroundColour(self.bg_color)
+#        print self.bg_color
+#        rtc.SetBackgroundColour(self.bg_color)
+        if self.bg_color:
+            rtc.SetBackgroundColour(self.bg_color)
+#        panel.SetBackgroundColour(self.bg_color)
 
         rtc.SetEditable(self.editable)
         self._display = rtc
@@ -123,6 +128,16 @@ class RichTextDisplay(HasTraits):
     def load_text_buffer(self):
         self.add_text(self._text_buffer)
         self._text_buffer = []
+
+    def clear(self):
+        self.text = []
+        self._text_buffer = []
+
+        d = self._display
+        d.Freeze()
+        d.SelectAll()
+        d.Delete(d.Selection)
+        d.Thaw()
 
     def _add_(self, msg, color=None, size=None,
               bold=False,

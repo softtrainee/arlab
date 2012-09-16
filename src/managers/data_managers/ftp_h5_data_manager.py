@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,34 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, Int
-from traitsui.tabular_adapter import TabularAdapter
+from traits.api import HasTraits
+from traitsui.api import View, Item, TableEditor
+from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.repo.repository import FTPRepository
+import os
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class BaseResultsAdapter(TabularAdapter):
-    columns = [('ID', 'rid'),
-               ('Date', 'rundate'),
-               ('Time', 'runtime')
-               ]
 
-#    runtime_text = Property
-#
-#    def _get_runtime_text(self):
-#        return self.item.runtime.strftime('%H:%M:%S')
-    rid_width = Int(20)
-    runtime_width = Int(80)
-    rundate_width = Int(100)
-    def get_bg_color(self, obj, trait, row, *args):
-        if obj.results[row]._loadable:
-            return 'white'
-        else:
-            return '#FF4D4D'
 
-class RIDResultsAdapter(BaseResultsAdapter):
-    columns = [('RunID', 'runid'),
-               ('Date', 'rundate'),
-               ('Time', 'runtime')
-               ]
+class FTPH5DataManager(H5DataManager):
+    repo = None
+    workspace_root = None
+    def connect(self, host, usr, pwd, remote):
+        self.repo = FTPRepository(host=host, username=usr, password=pwd, remote=remote)
 
+    def open_data(self, p):
+        out = os.path.join(self.workspace_root, p)
+        self.repo.retrieveFile(p, out)
+        return super(FTPH5DataManager, self).open_data(out)
+
+    def isfile(self, path):
+        return self.repo.isfile(path)
 
 #============= EOF =============================================

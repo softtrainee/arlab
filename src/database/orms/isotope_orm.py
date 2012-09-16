@@ -34,6 +34,10 @@ def foreignkey(name):
 def stringcolumn(size=40):
     return Column(String(size))
 
+class MassSpectrometerTable(Base, NameMixin):
+#    experiments = relationship('ExperimentTable', backref='mass_spectrometer')
+    measurements = relationship('MeasurementTable', backref='mass_spectrometer')
+
 class ProjectTable(Base, NameMixin):
     users = relationship('UserTable', backref='project')
     samples = relationship('SampleTable', backref='project')
@@ -51,6 +55,8 @@ class SampleTable(Base, NameMixin):
 class MaterialTable(Base, NameMixin):
     samples = relationship('SampleTable', backref='material')
 
+class AnalysisTypeTable(Base, NameMixin):
+    measurements = relationship('MeasurementTable', backref='analysis_type')
 
 class AnalysisTable(Base, ResultsMixin):
     lab_id = foreignkey('LabTable')
@@ -80,7 +86,8 @@ class MeasurementTable(Base, ScriptTable):
     analysis = relationship('AnalysisTable', backref='measurement',
                           uselist=False
                           )
-
+    mass_spectrometer_id = foreignkey('MassSpectrometerTable')
+    analysis_type_id = foreignkey('AnalysisTypeTable')
 
 class ExtractionTable(Base, ScriptTable):
     position = Column(Integer)
@@ -104,4 +111,6 @@ class IrradiationTable(Base, NameMixin):
 
 class ExperimentTable(Base, NameMixin):
     analyses = relationship('AnalysisTable', backref='experiment')
+
+#    mass_spectrometer_id=foreignkey('MassSpectrometerTable')
 #============= EOF =============================================

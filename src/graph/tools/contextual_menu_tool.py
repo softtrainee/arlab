@@ -68,7 +68,7 @@ class ContextualMenuTool(Interactor):
             x = event.x
             y = h - event.y
 
-            parent._control = window
+#            parent._control = window
 
             menu = parent.get_contextual_menu()
             wxmenu = menu.create_menu(window, None)
@@ -80,10 +80,11 @@ class ContextualMenuTool(Interactor):
         if comps:
             plot = comps[0]
             self.parent.selected_plot = plot
-            display_menu(self.parent, event)
+#            display_menu(self.parent, event)
         else:
             self.parent.selected_plot = None
-            display_menu(self.parent, event)
+
+        display_menu(self.parent, event)
             #if hasattr(self.parent, 'explanable_items'):
     #            self.parent.selected_plotid = self.parent.plotcontainer.explanable_items.index(plot)
 

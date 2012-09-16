@@ -121,8 +121,8 @@ class ExtractionLinePyScript(PyScript):
 #        self.report_result(result)
 
     @verbose_skip
-    def heat(self, power=None):
-        if power is None:
+    def heat(self, power=0):
+        if not power:
             power = self.heat_value
         self.info('heat sample to power {}'.format(power))
         self._manager_action([('enable_laser', (), {}),

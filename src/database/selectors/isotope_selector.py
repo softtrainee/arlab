@@ -23,28 +23,28 @@ from traitsui.api import VGroup, HGroup, Item, Group, View, ListStrEditor, \
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.database.core.db_selector import DBSelector
-from src.graph.time_series_graph import TimeSeriesStackedGraph
-from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.database.core.database_selector import DatabaseSelector
 from src.database.core.base_db_result import DBResult
 from src.database.orms.isotope_orm import AnalysisTable
 
-from src.graph.regression_graph import StackedTimeSeriesRegressionGraph
-from src.database.isotope_analysis.analyzer import Analyzer
+from src.graph.regression_graph import StackedRegressionTimeSeriesGraph
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
 from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.graph.graph import Graph
-from src.spectrometer.tasks.peak_center import PeakCenter
+
 from src.graph.stacked_graph import StackedGraph
+from src.managers.data_managers.ftp_h5_data_manager import FTPH5DataManager
+from traits.trait_errors import TraitError
 
 class AnalysisResult(DBResult):
     title_str = 'Analysis'
     window_height = 600
     window_width = 800
+    color = 'black'
 
     sniff_graph = Instance(Graph)
-    signal_graph = Instance(StackedTimeSeriesRegressionGraph)
-    baseline_graph = Instance(StackedTimeSeriesRegressionGraph)
+    signal_graph = Instance(StackedRegressionTimeSeriesGraph)
+    baseline_graph = Instance(StackedRegressionTimeSeriesGraph)
     peak_center_graph = Instance(Graph)
     peak_hop_graphs = List
 #    sniff_graph = Instance(TimeSeriesStackedGraph)
@@ -64,10 +64,25 @@ class AnalysisResult(DBResult):
     isos = None
     intercepts = None
     baselines = None
+
     labnumber = Property
+    analysis_type = Property
+    aliquot = Property
+
+    def __getattr__(self, attr):
+        try:
+            return getattr(self._db_result, attr)
+        except Exception, e:
+            pass
+
+    def _data_manager_factory(self):
+        dm = FTPH5DataManager(workspace_root='/Users/ross/Sandbox/workspace/foo1')
+        dm.connect('localhost', 'ross', 'jir812', 'Sandbox/ftp/data')
+        return dm
 
     @cached_property
     def _get_labnumber(self):
+#        print 'get aasfd'
         ln = self._db_result.labnumber.labnumber
         if ln == 1:
             return 'Blank'
@@ -75,6 +90,14 @@ class AnalysisResult(DBResult):
             return 'Air'
 
         return ln
+
+    @cached_property
+    def _get_analysis_type(self):
+        return self._db_result.measurement.analysis_type.name
+
+    @cached_property
+    def _get_aliquot(self):
+        return self._db_result.labnumber.aliquot
 
     def traits_view(self):
         info = self._get_info_grp()
@@ -146,12 +169,18 @@ class AnalysisResult(DBResult):
         self.intercepts = dict()
         self.baselines = dict()
         peakhops = self._get_peakhop_signals(dm)
+
+        self.clear()
+
         if peakhops:
             for det, v in peakhops.iteritems():
-
                 self.categories.append(det)
                 pg = self._load_stacked_graph(v, det=det)
-                self.add_class_trait('{}_graph'.format(det), pg)
+                name = '{}_graph'.format(det)
+                try:
+                    self.add_class_trait(name, pg)
+                except TraitError:
+                    self.trait_set({name:pg})
 
                 for iso, rs in zip(self.isos, pg.regression_results):
                     self.intercepts[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
@@ -188,7 +217,12 @@ class AnalysisResult(DBResult):
             for det, v in peakhop_baselines.iteritems():
                 self.categories.append('{} baselines'.format(det))
                 pg = self._load_stacked_graph(v, det=det, fit='average')
-                self.add_class_trait('{}_baselines_graph'.format(det), pg)
+                name = '{}_baselines_graph'.format(det)
+                try:
+                    self.add_class_trait(name, pg)
+                except TraitError:
+                    self.trait_set({name:pg})
+
                 for iso, rs in zip(self.isos, pg.regression_results):
                     self.baselines[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
 
@@ -201,6 +235,10 @@ class AnalysisResult(DBResult):
         self.selected = 'summary'
 #        self.analyzer = Analyzer(analysis=self)
 #        self.analyzer.fits = [AnalysisParams(fit='linear', name=k) for k in keys]
+    def clear(self):
+        self.baselines = dict()
+        self.categories = ['summary']
+
     def get_peakhop_graphs(self):
         return [getattr(self, tr) for tr in self.traits()
                     if tr.endswith('_graph') and
@@ -211,7 +249,8 @@ class AnalysisResult(DBResult):
 
     def _load_stacked_graph(self, data, det=None, fit=None, regress=True):
         if regress:
-            klass = StackedTimeSeriesRegressionGraph
+#            klass = StackedTimeSeriesRegressionGraph
+            klass = StackedRegressionTimeSeriesGraph
         else:
             klass = StackedGraph
 
@@ -316,8 +355,11 @@ class AnalysisResult(DBResult):
 
     def _get_table_data(self, dm, grp):
         ds = dict()
+        try:
+            isogrps = dm.get_groups(grp)
+        except Exception:
+            return
 
-        isogrps = dm.get_groups(grp)
         for ig in isogrps:
             for ti in dm.get_tables(ig):
                 name = ti.name
@@ -380,11 +422,12 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
                ('Date', 'rundate'),
                ('Time', 'runtime')
                ]
+    labnumber_width = Int(70)
 
-class IsotopeAnalysisSelector(DBSelector):
+class IsotopeAnalysisSelector(DatabaseSelector):
     title = 'Recall Analyses'
+    orm_path = 'src.database.orms.isotope_orm'
 
-    parameter = String('AnalysisTable.rundate')
     query_table = AnalysisTable
     result_klass = AnalysisResult
 

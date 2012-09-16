@@ -22,6 +22,7 @@ import os
 import hashlib
 import random
 from ftplib import FTP
+import StringIO
 
 #============= local library imports  ==========================
 class Repository(HasTraits):
@@ -53,19 +54,42 @@ class FTPRepository(Repository):
             pass
         return ftp, e
 
-    def add_file(self, p):
-        cb = lambda ftp:self._add_binary(ftp, p)
+    def get_file_path(self, cp):
+        return os.path.join(self.remote, cp)
+
+    def retrieveFile(self, p, out):
+        cb = lambda ftp:self._retreive_binary(ftp, p, out)
         self._execute(cb)
 
+    def add_file(self, p):
+        cb = lambda ftp:self._add_binary(ftp, p)
+        return self._execute(cb)
+
+    def isfile(self, cp):
+        p = self.get_file_path(cp)
+
+        cb = lambda ftp:self._isfile(ftp, cp)
+        return self._execute(cb)
+
+    def _isfile(self, ftp, cp):
+#        ftp.cwd(self.remote)
+        return cp in ftp.nlst()
+
+    def _retreive_binary(self, ftp, p, op):
+#        ftp.cwd(self.remote)
+
+        cb = open(op, 'wb').write
+        ftp.retrbinary('RETR {}'.format(p), cb)
+
     def _add_binary(self, ftp, p, dst=None):
-        ftp.cwd(self.remote)
+#        ftp.cwd(self.remote)
         if dst is None:
             dst = os.path.basename(p)
         with open(p, 'rb') as fp:
-            ftp.storbinary('STOR mo_{}'.format(dst), fp)
+            ftp.storbinary('STOR {}'.format(dst), fp)
 
     def _add_ascii(self, ftp, p, dst=None):
-        ftp.cwd(self.remote)
+#        ftp.cwd(self.remote)
         if dst is None:
             dst = os.path.basename(p)
         with open(p, 'r') as fp:
@@ -74,7 +98,8 @@ class FTPRepository(Repository):
     def _execute(self, cb):
         ftp, err = self._get_client()
         if ftp is not None:
-            cb(ftp)
+            ftp.cwd(self.remote)
+            return cb(ftp)
         else:
             print err
 

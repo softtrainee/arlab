@@ -19,7 +19,7 @@ from traits.api import String, Float
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.database.core.db_selector import DBSelector
+from src.database.core.database_selector import DatabaseSelector
 from src.database.orms.power_orm import PowerTable
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.core.base_db_result import RIDDBResult
@@ -62,7 +62,7 @@ class PowerResult(RIDDBResult):
 
         self.data_manager = dm
 
-class PowerSelector(DBSelector):
+class PowerSelector(DatabaseSelector):
     parameter = String('PowerTable.rundate')
     query_table = PowerTable
     result_klass = PowerResult

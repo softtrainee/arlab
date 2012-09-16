@@ -21,7 +21,7 @@ from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 from src.paths import paths
 from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
     MaterialTable, AnalysisTable, AnalysisPathTable, LabTable, ExtractionTable, \
-    MeasurementTable, ExperimentTable
+    MeasurementTable, ExperimentTable, MassSpectrometerTable, AnalysisTypeTable
 #import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
@@ -66,12 +66,17 @@ class IsotopeAdapter(DatabaseAdapter):
         return ex, True
 
     @add
-    def add_measurement(self, analysis, name, **kw):
+    def add_measurement(self, analysis, analysis_type, name, **kw):
         ms = MeasurementTable(script_name=name, **kw)
-        if isinstance(analysis, str):
-            analysis = self.get_analysis(analysis)
+#        if isinstance(analysis, str):
+        analysis = self.get_analysis(analysis)
+        analysis_type = self.get_analysis_type(analysis_type)
+
         if analysis:
             analysis.measurement = ms
+
+        if analysis_type:
+            analysis_type.measurements.append(ms)
 
         return ms, True
 
@@ -230,6 +235,10 @@ class IsotopeAdapter(DatabaseAdapter):
         return AnalysisTable, 'lab_id'
 
     @get_one
+    def get_analysis_type(self, name):
+        return AnalysisTypeTable
+
+    @get_one
     def get_project(self, name):
         return ProjectTable
 
@@ -244,6 +253,10 @@ class IsotopeAdapter(DatabaseAdapter):
     @get_one
     def get_labnumber(self, name):
         return LabTable, 'labnumber'
+
+    @get_one
+    def get_mass_spectrometer(self, name):
+        return MassSpectrometerTable
 
 #===============================================================================
 # ##getters multiple
@@ -265,6 +278,12 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_analyses(self, **kw):
         return self._get_items(AnalysisTable, globals(), **kw)
+
+    def get_mass_spectrometers(self, **kw):
+        return self._get_items(MassSpectrometerTable, globals(), **kw)
+
+    def get_analysis_types(self, **kw):
+        return self._get_items(AnalysisTypeTable, globals(), **kw)
 #===============================================================================
 # deleters
 #===============================================================================

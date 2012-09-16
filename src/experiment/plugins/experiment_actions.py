@@ -49,7 +49,7 @@ class NewExperimentSetAction(Action):
     '''
     description = 'Create a new experiment set'
     name = 'New Experiment Set'
-
+    accelerator = 'Ctrl+N'
     def perform(self, event):
         '''
         '''
@@ -63,13 +63,13 @@ class OpenExperimentSetAction(Action):
     '''
     description = 'Open experiment set'
     name = 'Open Experiment Set'
-
+    accelerator = 'Shift+Ctrl+O'
     def perform(self, event):
         '''
         '''
         manager = get_manager(event)
-        manager.load_experiment_set()
-        open_manager(event.window.application, manager)
+        if manager.load_experiment_set():
+            open_manager(event.window.application, manager)
 #class EnableableAction(Action):
 #
 #    dirty_traitname = 'dirty'

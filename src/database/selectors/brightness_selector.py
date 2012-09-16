@@ -17,7 +17,7 @@
 #from traits.api import Str, String, Date, Time, Instance
 ##============= standard library imports ========================
 ##============= local library imports  ==========================
-#from src.database.core.db_selector import DBSelector, DBResult
+#from src.database.core.database_selector import DBSelector, DBResult
 #from src.database.orms.co2laser_orm import PowerTable
 ##from src.managers.data_managers.h5_data_manager import H5DataManager
 #from src.graph.graph import Graph

@@ -21,7 +21,7 @@ from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-from src.database.core.db_selector import DBSelector
+from src.database.core.database_selector import DatabaseSelector
 from src.database.core.base_db_result import RIDDBResult
 from src.database.orms.massspec_orm import AnalysesTable, SampleTable
 
@@ -59,7 +59,7 @@ class MassSpecDBResultsAdapter(TabularAdapter):
 #            return getattr(o, self.columns[column][1])
 #            return o
 
-class MassSpecSelector(DBSelector):
+class MassSpecSelector(DatabaseSelector):
     date_str = 'RunDateTime'
     tabular_adapter = MassSpecDBResultsAdapter
 #    query_table = AnalysesTable

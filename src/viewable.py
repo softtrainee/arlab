@@ -53,7 +53,10 @@ class Viewable(Loggable):
             do_after(1, self.ui.dispose)
             #sleep a little so everything has time to update
             #time.sleep(0.05) 
-    def show(self):
-        do_after(1, self.ui.control.Raise)
+    def show(self, **kw):
+        if self.ui.control:
+            do_after(1, self.ui.control.Raise)
+        else:
+            self.edit_traits(**kw)
 
 # ============= EOF ====================================

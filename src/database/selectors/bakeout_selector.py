@@ -21,7 +21,7 @@ import os
 #============= local library imports  ==========================
 from src.bakeout.bakeout_graph_viewer import BakeoutGraphViewer
 from src.database.orms.bakeout_orm import BakeoutTable, ControllerTable
-from src.database.core.db_selector import DBSelector
+from src.database.core.database_selector import DatabaseSelector
 from src.database.core.base_db_result import DBResult
 
 
@@ -87,7 +87,7 @@ class BakeoutDBResult(DBResult):
 #                    )
 
 
-class BakeoutDBSelector(DBSelector):
+class BakeoutDBSelector(DatabaseSelector):
     parameter = String('BakeoutTable.rundate')
     date_str = 'rundate'
     query_table = BakeoutTable

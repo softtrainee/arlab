@@ -197,6 +197,11 @@ class ExperimentManager(Manager):
         arun.username = self.username
 
     def do_automated_runs(self):
+        #connect to massspec database warning if not
+        if not self.massspec_importer.db.connect():
+            if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
+                return
+
         self.info('start automated runs')
 
 #        app = self.application
@@ -214,6 +219,9 @@ class ExperimentManager(Manager):
 
         exp = self.experiment_set
         exp.reset_stats()
+
+
+
 
         dm = H5DataManager()
 #        repo = Repository(
@@ -355,7 +363,8 @@ class ExperimentManager(Manager):
 #        self.experiment_set = ExperimentSet()
         exp = self._experiment_set_factory()
         arun = exp.automated_run_factory()
-        exp.automated_runs.append(arun)
+        exp.automated_run = arun
+#        exp.automated_runs.append(arun)
         self.experiment_set = exp
 
 #    def close(self, isok):
@@ -377,7 +386,9 @@ class ExperimentManager(Manager):
 
             if exp.load_automated_runs():
                 self.experiment_set = exp
+                self.experiment_set.automated_run = exp.automated_runs[-1]
                 return True
+
 #            except Exception, e:
 #
 #                import traceback
@@ -570,8 +581,7 @@ class ExperimentManager(Manager):
 
     def _massspec_importer_default(self):
         msdb = MassSpecDatabaseImporter()
-        if msdb.db.isConnected():
-            return msdb
+        return msdb
 
     def _db_default(self):
 #        kind = self.db_kind

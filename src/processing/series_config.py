@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,34 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, Int
-from traitsui.tabular_adapter import TabularAdapter
+from traits.api import HasTraits, Bool, Str, Enum
+from traitsui.api import View, Item, HGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class BaseResultsAdapter(TabularAdapter):
-    columns = [('ID', 'rid'),
-               ('Date', 'rundate'),
-               ('Time', 'runtime')
-               ]
 
-#    runtime_text = Property
-#
-#    def _get_runtime_text(self):
-#        return self.item.runtime.strftime('%H:%M:%S')
-    rid_width = Int(20)
-    runtime_width = Int(80)
-    rundate_width = Int(100)
-    def get_bg_color(self, obj, trait, row, *args):
-        if obj.results[row]._loadable:
-            return 'white'
-        else:
-            return '#FF4D4D'
+class SeriesConfig(HasTraits):
+    label = Str
+    show = Bool
+    show_baseline = Bool
 
-class RIDResultsAdapter(BaseResultsAdapter):
-    columns = [('RunID', 'runid'),
-               ('Date', 'rundate'),
-               ('Time', 'runtime')
-               ]
+    fit = Enum('Linear', 'Parabolic', 'Cubic', 'Average')
+    fit_baseline = Enum('Linear', 'Parabolic', 'Cubic', 'Average')
 
-
+    def traits_view(self):
+        v = View(HGroup(Item('show', label=self.label),
+                        Item('fit', show_label=False),
+                        Item('show_baseline', label='Baseline'),
+                        Item('fit_baseline', show_label=False),
+                        )
+                 )
+        return v
 #============= EOF =============================================

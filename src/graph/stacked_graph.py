@@ -55,41 +55,50 @@ class StackedGraph(Graph):
         '''
         '''
 
+        bottom = self.plotcontainer.stack_order == 'bottom_to_top'
         if self.equi_stack:
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
-                kw['bounds'] = (50, self.panel_height)
+                kw['bounds'] = (1, self.panel_height)
 #
         if len(self.plots) == 0:
+#            key = 'padding_top'
             if 'title' not in kw:
                 kw['padding_top'] = 0
 #
         else:
             kw['resizable'] = 'h'
             if 'bounds' not in kw:
-                kw['bounds'] = (50, self.panel_height)
+                kw['bounds'] = (1, self.panel_height)
 
-            kw['padding_bottom'] = 0
-            if 'title' not in kw:
-                kw['padding_top'] = 20
+            if bottom:
+                kw['padding_bottom'] = 0
+                if 'title' not in kw:
+                    kw['padding_top'] = 20
+                else:
+                    kw['padding_top'] = 30
             else:
-                kw['padding_top'] = 30
+                kw['padding_bottom'] = 30
+                kw['padding_top'] = 0
 
         p = super(StackedGraph, self).new_plot(**kw)
         p.value_axis.ensure_labels_bounded = True
+#        print p.padding
+        if len(self.plots) > 1:
+            if not bottom:
+                plotiter = self.plots[:-1]
+            else:
+                plotiter = self.plots[1:]
 
-        for p in self.plots[1:]:
-            p.padding_top = 0
-            p.padding_bottom = 0
+            link = True
+            if 'link' in kw:
+                link = kw['link']
 
-        link = True
-        if 'link' in kw:
-            link = kw['link']
-
-        if len(self.plots) > 1 and link:
-            for p in self.plots[1:]:
-                p.index_axis.visible = False
-                p.index_range = self.plots[0].index_range
+            for pi in plotiter:
+                pi.padding_top = 0
+                pi.padding_bottom = 0
+                if link:
+                    pi.index_range = self.plots[0].index_range
 
     def _bounds_changed_(self, bounds):
         '''
@@ -109,7 +118,7 @@ class StackedGraph(Graph):
                 p.bounds[1] = (bounds[1] - pt) / len(self.plots)
         else:
             try:
-                self.plots[0].bounds[1] = (bounds[1] - pt) / max(1, (len(self.plots) - 1))
+                self.plots[-1].bounds[1] = (bounds[1] - pt) / max(1, (len(self.plots) - 1))
             except IndexError:
                 pass
 #============= EOF ====================================
