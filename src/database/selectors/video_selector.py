@@ -23,7 +23,7 @@ import os
 import time
 from threading import Thread, Event
 #============= local library imports  ==========================
-from src.database.core.db_selector import DBSelector
+from src.database.core.database_selector import DatabaseSelector
 from src.database.orms.video_orm import VideoTable
 from src.image.image_editor import ImageEditor
 from src.image.image import Image
@@ -186,7 +186,7 @@ class VideoResult(RIDDBResult):
                     editor=ImageEditor()))
         return [vtab]
 
-class VideoSelector(DBSelector):
+class VideoSelector(DatabaseSelector):
     parameter = String('VideoTable.rundate')
     query_table = VideoTable
     result_klass = VideoResult

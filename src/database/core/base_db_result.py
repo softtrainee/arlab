@@ -55,6 +55,7 @@ class DBResult(BaseDBResult):
 
     title_str = Str('Base')
     data_manager = None
+    data_manager_klass = H5DataManager
 
     _loadable = True
 
@@ -110,7 +111,7 @@ class DBResult(BaseDBResult):
         pass
 
     def isloadable(self):
-        dm = self._data_manager_factory()
+        dm = self._get_data_manager()
         try:
             self._loadable = dm.open_data(self._get_path())
         except Exception, e:
@@ -122,15 +123,16 @@ class DBResult(BaseDBResult):
     def _get_path(self):
         return os.path.join(self.directory, self.filename)
 
-    def _data_manager_factory(self):
+    def _get_data_manager(self):
 #        dm = self.data_manager
 #        if dm is None:
         data = self._get_path()
         _, ext = os.path.splitext(self.filename)
 
         if ext in ['.h5', '.hdf5']:
-            dm = H5DataManager()
-            if os.path.isfile(data):
+            dm = self._data_manager_factory()
+            if dm.isfile(data):
+#            if os.path.isfile(data):
                 #is it wise to actually open the file now?
 #                    self._loadable = dm.open_data(data)
                 self._loadable = True
@@ -140,6 +142,9 @@ class DBResult(BaseDBResult):
             dm = CSVDataManager()
 
         return dm
+
+    def _data_manager_factory(self):
+        return H5DataManager()
 
     def load_graph(self):
         pass

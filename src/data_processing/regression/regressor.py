@@ -174,23 +174,28 @@ class Regressor(object):
         coeff_errors = []
 
         n = len(y)
-        stats = None
+        if n < 1:
+            return
+
+        stddev = std(y)
+        stderr = stddev / math.sqrt(n)
+        sample_stddev = std(y, ddof=1)
         if n > 2:
-            stddev = std(y)
-            stderr = stddev / math.sqrt(n)
-
-            sample_stddev = std(y, ddof=1)
-
+#            sample_stddev = std(y, ddof=1)
             stderr_mean = stddev / math.sqrt(n - 1)
+        else:
+            stderr_mean = 0
 
-            stats = dict(stddev=stddev,
-                       sample_stddev=sample_stddev,
-                       stderr=stderr,
-                       stderr_mean=stderr_mean
-                       )
+        stats = dict(stddev=stddev,
+                   sample_stddev=sample_stddev,
+                   stderr=stderr,
+                   stderr_mean=stderr_mean
+                   )
 
         if npts is None:
-            npts = 5 * len(x)
+#            npts = 5 * len(x)
+            npts = 500
+
         xreturn = linspace(dr[0], dr[1], npts)
 
         ucly = []

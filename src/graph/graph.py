@@ -133,6 +133,15 @@ class Graph(Loggable):
         super(Graph, self).__init__(*args, **kw)
         self.clear()
 
+        pc = self.plotcontainer
+        menu = ContextualMenuTool(parent=self,
+                                      component=pc,
+#                                      plotid= -1
+                                      )
+
+        pc.tools.append(menu)
+
+
     def closed(self):
         if self.close_func:
             self.close_func()
@@ -664,7 +673,8 @@ class Graph(Loggable):
         if contextmenu:
             menu = ContextualMenuTool(parent=self,
                                       component=pc,
-                                    plotid=plotid)
+#                                      plotid=plotid
+                                      )
 
             pc.tools.append(menu)
 
@@ -981,15 +991,15 @@ class Graph(Loggable):
     def _container_factory(self, **kw):
         '''
         '''
-        if 'type' in kw:
-            type = kw['type']
+        if 'kind' in kw:
+            kind = kw['kind']
         else:
-            type = 'v'
+            kind = 'v'
 
-        types = ['v', 'h', 'g', 'o']
+        kinds = ['v', 'h', 'g', 'o']
         containers = [VPlotContainer, HPlotContainer, GridPlotContainer, OverlayPlotContainer]
 
-        c = containers[types.index(type)]
+        c = containers[kinds.index(kind)]
 
         options = dict(
                        bgcolor='white',
@@ -1221,6 +1231,7 @@ class Graph(Loggable):
                                   pagesize='letter',
                                   dest_box=dest_box,
                                   dest_box_units='inch')
+#        print self.plotcontainer, self.plotcontainer.components
         gc.render_component(self.plotcontainer)
         gc.save()
 

@@ -147,22 +147,24 @@ class RegressionGraph(Graph):
 
             self.redraw()
 
-    def _get_type_dict(self, type):
+    def _get_type_dict(self, kind):
         '''
         '''
+        kind = kind.lower()
+
         kw = dict()
-        if 'average' in type:
-            kw['use_stderr'] = True if 'SEM' in type else False
-            type = 'average'
-        elif type is 'custom':
+        if 'average' in kind:
+            kw['use_stderr'] = True if 'SEM' in kind else False
+            kind = 'average'
+        elif kind is 'custom':
             fitfunc = eval('lambda p,x:%s' % self.fitfunc)
 
-            type = 'least_squares'
+            kind = 'least_squares'
             kw['fitfunc'] = fitfunc
             kw['errfunc'] = lambda p, x, y: fitfunc(p, x) - y
             kw['p0'] = self.initial_guess
 
-        return type, kw
+        return kind, kw
 
     def _regress_(self, sel_indices=None, plotid=None, data_range=None):
         '''
@@ -350,7 +352,13 @@ class RegressionGraph(Graph):
         plot.plot(names, **rd)[0]
         self.set_series_label('lower CI', plotid=plotid, series=3)
 
+        try:
+            self._set_bottom_axis(plot, plot, plotid)
+        except:
+            pass
+
         return plot, scatter, line
+
 
 #    def traits_view(self):
 #        '''
@@ -375,11 +383,13 @@ class RegressionGraph(Graph):
 #                   height=self.window_height)
 #        return v
 
+class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
+    pass
 
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
     pass
 
-class StackedTimeSeriesRegressionGraph(StackedRegressionGraph, TimeSeriesGraph):
+class StackedRegressionTimeSeriesGraph(StackedRegressionGraph, TimeSeriesGraph):
     pass
 
 if __name__ == '__main__':

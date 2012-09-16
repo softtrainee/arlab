@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from migrate.versioning.shell import main
-from src.database.shell import main as pychron_main
+#from src.database.shell import main as pychron_main
 if __name__ == '__main__':
 
 #    main(url='sqlite:////usr/local/pychron/isotope.sqlite', debug='False', repository='isotopedb/')
@@ -12,6 +12,7 @@ if __name__ == '__main__':
 #    main(url='sqlite:///{}'.format(p) , debug='False', repository='isotopedb/')
 
     url = 'mysql://root:Argon@localhost/isotopedb?connect_timeout=3'
+#    url = 'mysql://root:Argon@localhost/isotopedb_dev?connect_timeout=3'
     main(url=url , debug='False', repository='isotopedb/')
 
-    pychron_main()
+#    pychron_main()

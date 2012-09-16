@@ -96,25 +96,26 @@ class DatabaseAdapter(Loggable):
         self.info('clearing current session. uncommitted changes will be deleted')
         self.sess = None
 
-    def connect(self, test=True):
+    def connect(self, test=True, force=False):
         '''
         '''
-        args = []
-        for a in ATTR_KEYS:
-            args.append(getattr(self, a))
+        if not self.isConnected() or force:
+            args = []
+            for a in ATTR_KEYS:
+                args.append(getattr(self, a))
 
-        self._new_engine(*tuple(args))
-        self.info('connecting to database')
+            self._new_engine(*tuple(args))
+            self.info('connecting to database')
 
-        self.session_factory = sessionmaker(bind=self.engine)
-        if test:
-            self.connected = self._test_db_connection()
-        else:
-            self.connected = True
+            self.session_factory = sessionmaker(bind=self.engine)
+            if test:
+                self.connected = self._test_db_connection()
+            else:
+                self.connected = True
 
-
-        if self.connected:
-            self.initialize_database()
+            if self.connected:
+                self.info('connected to db')
+                self.initialize_database()
 
         return self.connected
 
@@ -317,6 +318,8 @@ class DatabaseAdapter(Loggable):
         except Exception, e:
             print e
 
+    def _selector_default(self):
+        return self._selector_factory()
 
     def open_selector(self):
         s = self._selector_factory()

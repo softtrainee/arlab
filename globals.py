@@ -24,15 +24,15 @@ class Globals(object):
     open_logger_on_launch = True
 
     #force display flags
-    show_warnings = True
-    show_infos = True
+    show_warnings = False
+    show_infos = False
 
     #using ipc_dgram is currently not working
     ipc_dgram = False
 
     #fusions logic board flags
-    initialize_beam = True
-    initialize_zoom = True
+#    initialize_beam = True
+#    initialize_zoom = True
 
     ignore_initialization_warnings = False
     ignore_connection_warnings = True

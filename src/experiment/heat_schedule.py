@@ -237,12 +237,12 @@ class HeatSchedule(HasTraits):
             #load a text file
             for args in parse_file(p, delimiter=','):
                 if len(args) == 2:
-                    self.steps.append(HeatStep(temp_or_power=float(args[0]),
+                    self.steps.append(HeatStep(heat_value=float(args[0]),
                                                duration=float(args[1])
                                                ))
                 elif len(args) == 4:
                     for i in range(*map(int, args[:3])):
-                        self.steps.append(HeatStep(temp_or_power=float(i),
+                        self.steps.append(HeatStep(heat_value=float(i),
                                                    duration=float(args[3])
                                                    ))
         else:

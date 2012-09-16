@@ -22,7 +22,7 @@ from traitsui.api import Group, VGroup, Item, EnumEditor, HGroup, spring
 import os
 import csv
 #============= local library imports  ==========================
-from src.database.core.db_selector import DBSelector
+from src.database.core.database_selector import DatabaseSelector
 from src.database.orms.power_map_orm import PowerMapTable
 from src.database.core.base_db_result import DBResult
 from src.graph.graph3D import Graph3D
@@ -121,7 +121,7 @@ class PowerMapResult(DBResult):
 
 
 
-class PowerMapSelector(DBSelector):
+class PowerMapSelector(DatabaseSelector):
     parameter = String('PowerMapTable.rundate')
 
     result_klass = PowerMapResult

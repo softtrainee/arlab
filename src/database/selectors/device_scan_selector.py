@@ -20,7 +20,7 @@ from traitsui.api import VGroup, HGroup, Item
 #============= standard library imports ========================
 from numpy import array
 #============= local library imports  ==========================
-from src.database.core.db_selector import DBSelector
+from src.database.core.database_selector import DatabaseSelector
 from src.database.orms.device_scan_orm import ScanTable
 from src.graph.time_series_graph import TimeSeriesGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
@@ -88,7 +88,7 @@ class ScanResult(DBResult):
 #        #load the datamanager to set _none_loadable flag
 #        self._data_manager_factory()
 
-class DeviceScanSelector(DBSelector):
+class DeviceScanSelector(DatabaseSelector):
     parameter = String('ScanTable.rundate')
     query_table = ScanTable
     result_klass = ScanResult

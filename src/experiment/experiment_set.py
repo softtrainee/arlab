@@ -261,11 +261,11 @@ class ExperimentSet(Loggable):
         rid = self._auto_increment_runid(ar.identifier)
 
         ars.append(ar)
-        self.automated_run = self._automated_run_factory(self.extraction_script,
-                                                         self.measurement_script,
-                                                         identifier=rid,
-                                                         )
-
+#        self.automated_run = self._automated_run_factory(self.extraction_script,
+#                                                         self.measurement_script,
+#                                                         identifier=rid,
+#                                                         )
+        self.automated_run = self.automated_run_factory()
 
     @on_trait_change('automated_runs[]')
     def _automated_runs_changed(self, obj, name, old, new):
@@ -291,7 +291,7 @@ class ExperimentSet(Loggable):
 
     def _apply_fired(self):
         for i, s in enumerate(self.heat_schedule.steps):
-            a = self.automated_run_factory(temp_or_power=s.temp_or_power,
+            a = self.automated_run_factory(heat_value=s.heat_value,
                                          duration=s.duration,
                                          )
             a.aliquot += i
@@ -300,24 +300,28 @@ class ExperimentSet(Loggable):
         self.automated_run.aliquot = a.aliquot + 1
 
     def _extraction_script_changed(self):
-        print self.extraction_script
-        self.automated_run.configuration['extraction_script'] = os.path.join(paths.scripts_dir,
+#        print self.extraction_script
+        if self.automated_run:
+            self.automated_run.configuration['extraction_script'] = os.path.join(paths.scripts_dir,
                                                         'extraction',
                                                         self.extraction_script)
 
     def _measurement_script_changed(self):
-        print self.measurement_script
-        self.automated_run.configuration['measurement_script'] = os.path.join(paths.scripts_dir,
+#        print self.measurement_script
+        if self.automated_run:
+            self.automated_run.configuration['measurement_script'] = os.path.join(paths.scripts_dir,
                                                         'measurement',
                                                         self.measurement_script)
     def _post_measurement_script_changed(self):
-        print self.post_measurement_script
-        self.automated_run.configuration['post_measurement_script'] = os.path.join(paths.scripts_dir,
+#        print self.post_measurement_script
+        if self.automated_run:
+            self.automated_run.configuration['post_measurement_script'] = os.path.join(paths.scripts_dir,
                                                         'post_measurement',
                                                         self.post_measurement_script)
     def _post_equilibration_script_changed(self):
-        print self.post_equilibration_script
-        self.automated_run.configuration['post_equilibration_script'] = os.path.join(paths.scripts_dir,
+#        print self.post_equilibration_script
+        if self.automated_run:
+            self.automated_run.configuration['post_equilibration_script'] = os.path.join(paths.scripts_dir,
                                                         'post_equilibration',
                                                         self.post_equilibration_script)
 
@@ -346,14 +350,18 @@ class ExperimentSet(Loggable):
 
         if identifier:
             oidentifier = identifier
-            if identifier == 'B':
+            if identifier.upper() == 'B':
                 identifier = 1
-            elif identifier == 'A':
+            elif identifier.upper() == 'A':
                 identifier = 2
 
             ln = db.get_labnumber(identifier)
             if ln:
-                arun.sample = ln.sample.name
+                try:
+                    arun.sample = ln.sample.name
+                except AttributeError:
+                    self.warning_dialog('{} does not have sample info'.format(ln.labnumber))
+
 
                 noccurrences = len([ai for ai in self.automated_runs
                                   if ai.identifier == oidentifier
@@ -361,8 +369,12 @@ class ExperimentSet(Loggable):
                 arun.aliquot = ln.aliquot + noccurrences + 1
 
                 ipos = ln.irradiation_position
-                irrad = ipos.irradiation
-                arun.irrad_level = '{}{}'.format(irrad.name, irrad.level)
+                if ipos is None:
+                    self.warning_dialog('{} does not have irradiation info'.format(ln.labnumber))
+                else:
+                    irrad = ipos.irradiation
+                    arun.irrad_level = '{}{}'.format(irrad.name, irrad.level)
+
 
                 self.ok_to_add = True
 
@@ -416,6 +428,16 @@ class ExperimentSet(Loggable):
         measurement = self.measurement_script
         post_measurement = self.post_measurement_script
         post_equilibration = self.post_equilibration_script
+
+        if not extraction:
+            extraction = self.extraction_scripts[0]
+        if not measurement:
+            measurement = self.measurement_scripts[0]
+        if not post_measurement:
+            post_measurement = self.post_measurement_scripts[0]
+        if not post_equilibration:
+            post_equilibration = self.post_equilibration_scripts[0]
+
 
         configuration = self._build_configuration(extraction, measurement,
                                                   post_measurement, post_equilibration)

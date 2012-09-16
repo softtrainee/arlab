@@ -32,7 +32,7 @@ from src.data_processing.regression.regressor import Regressor
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
-from src.helpers.datetime_tools import get_datetime
+from src.helpers.datetime_tools import get_datetime, generate_datetimestamp
 from src.repo.repository import FTPRepository as Repository
 from src.experiment.plot_panel import PlotPanel
 
@@ -754,10 +754,14 @@ class AutomatedRun(Loggable):
 
         #the new frame is untracked and will be added to the git repo
         #at post_measurement_save
+        import uuid
+        name = uuid.uuid4()
+#        name = '{}-{}'.format(self.identifier, self.aliquot)
+#        name = hashlib.sha1(name)
+
+        path = os.path.join(self.repository.root, '{}.h5'.format(name))
         frame = dm.new_frame(
-                     path=os.path.join(self.repository.root,
-                                       '{}-{}.h5'.format(self.identifier, self.aliquot)
-                                       )
+                     path=path
 #                     directory=self.repository.root,
 #                     directory='automated_runs',
 #                     base_frame_name='{}-{}'.format(self.identifier, self.aliquot)
@@ -768,6 +772,9 @@ class AutomatedRun(Loggable):
         attrs = frame.root._v_attrs
         attrs['USER'] = self.username
         attrs['DATA_FORMAT_VERSION'] = '1.0'
+        attrs['TIMESTAMP'] = time.time()
+        attrs['ANALYSIS_TYPE'] = self.runtype
+
         frame.flush()
 
         #create initial structure
@@ -777,6 +784,12 @@ class AutomatedRun(Loggable):
 
     def _post_measurement_save(self):
         self.info('post measurement save')
+
+        cp = self.data_manager.get_current_path()
+        #commit repository
+        self.repository.add_file(cp)
+        np = self.repository.get_file_path(cp)
+
         db = self.db
         if db:
         #save to a database
@@ -815,25 +828,23 @@ class AutomatedRun(Loggable):
             db.add_measurement(
                               a,
                               self.measurement_script.name,
+                              analysis_type=self.runtype,
                               script_blob=self.measurement_script.toblob()
                               )
 
-            p = self.data_manager.get_current_path()
-
             #use a path relative to the repo repo
-            p = './' + os.path.relpath(p, self.repository.root)
-            db.add_analysis_path(p, analysis=a)
+#            np = os.path.join(('.', np))
+            np = os.path.relpath(np, self.repository.root)
+            db.add_analysis_path(np, analysis=a)
             db.commit()
 
         #save to massspec
         self._save_to_massspec()
 
-        cp = self.data_manager.get_current_path()
         #close h5 file
         self.data_manager.close()
 
-        #commit repository
-        self.repository.add_file(cp)
+
 
         #version control new analysis
 #        self._version_control_analysis(p, a)
@@ -1013,6 +1024,10 @@ class AutomatedRun(Loggable):
             return 'blank'
         elif self.identifier.startswith('A'):
             return 'air'
+        elif self.identifier.startswith('C'):
+            return 'cocktail'
+        else:
+            return 'unknown'
 
     def _get_duration(self):
         if self.heat_step:
@@ -1105,7 +1120,7 @@ class AutomatedRun(Loggable):
                             readonly('aliquot')
                             ),
                      readonly('sample'),
-                     readonly('irrad_level', label='Iradiation'),
+                     readonly('irrad_level', label='Irradiation'),
                      Item('weight'),
                      Item('comment'),
                      show_border=True,

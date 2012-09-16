@@ -21,7 +21,7 @@ from traitsui.api import Item, HGroup, VGroup
 import os
 from numpy import linspace, polyval, polyfit, array
 #============= local library imports  ==========================
-from src.database.core.db_selector import DBSelector
+from src.database.core.database_selector import DatabaseSelector
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.orms.power_calibration_orm import PowerCalibrationTable
 from src.database.core.base_db_result import DBResult
@@ -138,7 +138,7 @@ class PowerCalibrationResult(DBResult):
         self.data_manager = dm
 
 
-class PowerCalibrationSelector(DBSelector):
+class PowerCalibrationSelector(DatabaseSelector):
     parameter = String('PowerCalibrationTable.rundate')
     query_table = PowerCalibrationTable
     result_klass = PowerCalibrationResult

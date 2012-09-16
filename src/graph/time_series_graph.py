@@ -34,8 +34,9 @@ from graph import Graph
 HMSScales = [TimeScale(microseconds=100), TimeScale(milliseconds=10)] + \
            [TimeScale(seconds=dt) for dt in (1, 5, 15, 30)] + \
            [TimeScale(minutes=dt) for dt in (5, 15, 30)] + \
-           [TimeScale(hours=dt) for dt in (6, 12, 24)] # + \
-#           [TimeScale(days=dt) for dt in (1, 2, 7)]
+           [TimeScale(hours=dt) for dt in (6, 12, 24)] + \
+           [TimeScale(days=dt) for dt in (1, 2, 7)
+]
 
 
 class TimeSeriesGraph(Graph):
@@ -144,31 +145,60 @@ class TimeSeriesGraph(Graph):
 
         plota = plot.plot(names, **rd)[0]
 
-#        plota.unified_draw = True
+        plota.unified_draw = True
         plota.use_downsampling = True
+
 
         #if the plot is not visible dont remove the underlays
         if plota.visible:
-            #this is a hack to hide the default plotaxis
-            #since a basexyplot's axis cannot be a ScalesPlotAxis (must be instance of PlotAxis)
-            #we cant remove the default axis and set the x_axis to the scaled axis
-            #also we cant remove the default axis because then we cant change the axis title
-            for i, underlay in enumerate(plot.underlays):
-                if underlay.orientation == 'bottom':
-                    title = underlay.title
-                    plot.underlays.pop(i)
+            self._set_bottom_axis(plota, plot, plotid, timescale=timescale)
 
+        return names
+    def _remove_bottom(self, plot):
+        title = ''
+        for i, underlay in enumerate(plot.underlays):
+            if underlay.orientation == 'bottom':
+                title = underlay.title
+                plot.underlays.pop(i)
+        return title
+    def _set_bottom_axis(self, plota, plot, plotid, timescale=False):
+        #this is a hack to hide the default plotaxis
+        #since a basexyplot's axis cannot be a ScalesPlotAxis (must be instance of PlotAxis)
+        #we cant remove the default axis and set the x_axis to the scaled axis
+        #also we cant remove the default axis because then we cant change the axis title
+        title = self._remove_bottom(plot)
+        bottom = self.plotcontainer.stack_order == 'bottom_to_top'
+        if bottom:
             if plotid == 0 or timescale:
                 axis = ScalesPlotAxis(plota, orientation="bottom",
                                       title=title,
-                                      tick_generator=ScalesTickGenerator(scale=CalendarScaleSystem(*HMSScales)
+                                      tick_generator=ScalesTickGenerator(scale=CalendarScaleSystem(
+                                                                                                   #*HMSScales
+                                                                                                   )
                                                                            # scale = TimeScale()
                                                                            )
                                         )
 
+
+                plot.underlays.append(axis)
+        else:
+            for pi in self.plots:
+                title = self._remove_bottom(pi)
+
+            if (plotid == 0 and len(self.plots) == 1) or plotid == len(self.plots) - 1:
+                axis = ScalesPlotAxis(plota, orientation="bottom",
+                                  title=title,
+                                  tick_generator=ScalesTickGenerator(scale=CalendarScaleSystem(
+                                                                                               #*HMSScales
+                                                                                               )
+                                                                       # scale = TimeScale()
+                                                                       )
+                                    )
+
+
                 plot.underlays.append(axis)
 
-        return names
+
 
 
 class TimeSeriesStackedGraph(TimeSeriesGraph, StackedGraph):
