@@ -21,7 +21,8 @@ from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 from src.paths import paths
 from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
     MaterialTable, AnalysisTable, AnalysisPathTable, LabTable, ExtractionTable, \
-    MeasurementTable, ExperimentTable, MassSpectrometerTable, AnalysisTypeTable
+    MeasurementTable, ExperimentTable, MassSpectrometerTable, AnalysisTypeTable, \
+    proc_BlanksHistoryTable, proc_BlanksTable
 #import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
@@ -30,6 +31,8 @@ from src.database.core.functions import add, sql_retrieve, get_one, \
 #from sqlalchemy.sql.expression import or_
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+#@todo: change rundate and runtime to DateTime columns
 
 class IsotopeAdapter(DatabaseAdapter):
     '''
@@ -50,6 +53,20 @@ class IsotopeAdapter(DatabaseAdapter):
 #===========================================================================
 # adders
 #===========================================================================
+    @add
+    def add_blanks_history(self, analysis, **kw):
+        analysis = self.get_analysis(analysis)
+        bh = proc_BlanksHistoryTable(analysis=analysis, **kw)
+        return bh, True
+
+    @add
+    def add_blanks(self, history, **kw):
+        b = proc_BlanksTable(**kw)
+        history = self.get_blanks_history(history)
+        if history:
+            history.blanks.append(b)
+            return b, True
+        return b, False
 
     @add
     def add_experiment(self, name, **kw):
@@ -59,8 +76,7 @@ class IsotopeAdapter(DatabaseAdapter):
     @add
     def add_extraction(self, analysis, name, **kw):
         ex = ExtractionTable(script_name=name, **kw)
-        if isinstance(analysis, str):
-            analysis = self.get_analysis(analysis)
+        analysis = self.get_analysis(analysis)
         if analysis:
             analysis.extraction = ex
         return ex, True
@@ -227,10 +243,6 @@ class IsotopeAdapter(DatabaseAdapter):
 # getters single
 #===========================================================================
     @get_one
-    def get_experiment(self, name):
-        return ExperimentTable
-
-    @get_one
     def get_analysis(self, rid):
         return AnalysisTable, 'lab_id'
 
@@ -239,16 +251,12 @@ class IsotopeAdapter(DatabaseAdapter):
         return AnalysisTypeTable
 
     @get_one
-    def get_project(self, name):
-        return ProjectTable
+    def get_blanks_history(self, name):
+        return proc_BlanksHistoryTable
 
     @get_one
-    def get_material(self, name):
-        return MaterialTable
-
-    @get_one
-    def get_sample(self, name):
-        return SampleTable
+    def get_experiment(self, name):
+        return ExperimentTable
 
     @get_one
     def get_labnumber(self, name):
@@ -258,32 +266,45 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_mass_spectrometer(self, name):
         return MassSpectrometerTable
 
+    @get_one
+    def get_material(self, name):
+        return MaterialTable
+
+    @get_one
+    def get_project(self, name):
+        return ProjectTable
+
+    @get_one
+    def get_sample(self, name):
+        return SampleTable
+
 #===============================================================================
 # ##getters multiple
 #===============================================================================
-    def get_users(self, **kw):
-        return self._get_items(UserTable, globals(), **kw)
+    def get_analyses(self, **kw):
+        return self._get_items(AnalysisTable, globals(), **kw)
 
-    def get_projects(self, **kw):
-        return self._get_items(ProjectTable, globals(), **kw)
-
-    def get_materials(self, **kw):
-        return self._get_items(MaterialTable, globals(), **kw)
-
-    def get_samples(self, **kw):
-        return self._get_items(SampleTable, globals(), **kw)
+    def get_analysis_types(self, **kw):
+        return self._get_items(AnalysisTypeTable, globals(), **kw)
 
     def get_labnumbers(self, **kw):
         return self._get_items(LabTable, globals(), **kw)
 
-    def get_analyses(self, **kw):
-        return self._get_items(AnalysisTable, globals(), **kw)
-
     def get_mass_spectrometers(self, **kw):
         return self._get_items(MassSpectrometerTable, globals(), **kw)
 
-    def get_analysis_types(self, **kw):
-        return self._get_items(AnalysisTypeTable, globals(), **kw)
+    def get_materials(self, **kw):
+        return self._get_items(MaterialTable, globals(), **kw)
+
+    def get_projects(self, **kw):
+        return self._get_items(ProjectTable, globals(), **kw)
+
+    def get_samples(self, **kw):
+        return self._get_items(SampleTable, globals(), **kw)
+
+    def get_users(self, **kw):
+        return self._get_items(UserTable, globals(), **kw)
+
 #===============================================================================
 # deleters
 #===============================================================================

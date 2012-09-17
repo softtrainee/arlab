@@ -212,19 +212,20 @@ class AnalysisResult(DBResult):
             for iso, rs in zip(self.isos, graph.regression_results):
                 self.baselines[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
 
-        peakhop_baselines = self._get_peakhop_baselines(dm)
-        if peakhop_baselines:
-            for det, v in peakhop_baselines.iteritems():
-                self.categories.append('{} baselines'.format(det))
-                pg = self._load_stacked_graph(v, det=det, fit='average')
-                name = '{}_baselines_graph'.format(det)
-                try:
-                    self.add_class_trait(name, pg)
-                except TraitError:
-                    self.trait_set({name:pg})
-
-                for iso, rs in zip(self.isos, pg.regression_results):
-                    self.baselines[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
+#        peakhop_baselines = self._get_peakhop_baselines(dm)
+#        peakhop_baselines = self._get_table_data('peakh')
+#        if peakhop_baselines:
+#            for det, v in peakhop_baselines.iteritems():
+#                self.categories.append('{} baselines'.format(det))
+#                pg = self._load_stacked_graph(v, det=det, fit='average')
+#                name = '{}_baselines_graph'.format(det)
+#                try:
+#                    self.add_class_trait(name, pg)
+#                except TraitError:
+#                    self.trait_set({name:pg})
+#
+#                for iso, rs in zip(self.isos, pg.regression_results):
+#                    self.baselines[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
 
         peakcenter = self._get_peakcenter(dm)
         if peakcenter:
@@ -305,29 +306,30 @@ class AnalysisResult(DBResult):
 
         return graph
 
-    def _get_peakhop_signals(self, dm):
-        return self._get_peakhop(dm, 'signals')
+#    def _get_peakhop_signals(self, dm):
+#        return self._get_table_data(dm, grp)
+#        return self._get_peakhop(dm, 'signals')
 
-    def _get_peakhop_baselines(self, dm):
-        return self._get_peakhop(dm, 'baselines')
+#    def _get_peakhop_baselines(self, dm):
+#        return self._get_peakhop(dm, 'baselines')
 
-    def _get_peakhop(self, dm, name):
-        grp = dm.get_group('peakhop_{}'.format(name))
-        peakhops = dict()
-        if grp is not None:
-            for di in dm.get_groups(grp):
-                peakhop = dict()
-                for ti in dm.get_tables(di):
-                    data = zip(*[(r['time'], r['value']) for r in ti.iterrows()])
-                    try:
-                        fit = ti.attrs.fit
-                    except AttributeError:
-                        fit = None
-                    peakhop[ti._v_name] = [di._v_name, ti._v_name, fit, data]
-    #                p[ti._v_nam] = [ti._v_name, fit, data]
-                peakhops[di._v_name] = peakhop
-
-        return peakhops
+#    def _get_peakhop(self, dm, name):
+#        grp = dm.get_group('peakhop_{}'.format(name))
+#        peakhops = dict()
+#        if grp is not None:
+#            for di in dm.get_groups(grp):
+#                peakhop = dict()
+#                for ti in dm.get_tables(di):
+#                    data = zip(*[(r['time'], r['value']) for r in ti.iterrows()])
+#                    try:
+#                        fit = ti.attrs.fit
+#                    except AttributeError:
+#                        fit = None
+#                    peakhop[ti._v_name] = [di._v_name, ti._v_name, fit, data]
+#    #                p[ti._v_nam] = [ti._v_name, fit, data]
+#                peakhops[di._v_name] = peakhop
+#
+#        return peakhops
 
 #    def _get_sniffs(self, dm):
 #        return self._get_table_data(dm, 'sniffs')

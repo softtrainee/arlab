@@ -33,7 +33,8 @@ lambda_cl36 = ufloat((6.308000e-9, 0))  #per day
 #atmospheric ratios
 #atm4036 = ufloat((295.5, 0.5))
 #atm4038 = ufloat((1575, 2))
-atm4036 = ufloat((295.5, 0.5))
+#atm4036 = ufloat((295.5, 0.5))
+atm4036 = ufloat((295.5, 0))
 atm4038 = ufloat((1575, 2))
 atm3638 = atm4038 / atm4036
 atm3836 = atm4036 / atm4038

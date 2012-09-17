@@ -83,7 +83,7 @@ class StackedGraph(Graph):
 
         p = super(StackedGraph, self).new_plot(**kw)
         p.value_axis.ensure_labels_bounded = True
-#        print p.padding
+
         if len(self.plots) > 1:
             if not bottom:
                 plotiter = self.plots[:-1]
@@ -97,6 +97,7 @@ class StackedGraph(Graph):
             for pi in plotiter:
                 pi.padding_top = 0
                 pi.padding_bottom = 0
+                pi.index_axis.visible = False
                 if link:
                     pi.index_range = self.plots[0].index_range
 
@@ -118,7 +119,7 @@ class StackedGraph(Graph):
                 p.bounds[1] = (bounds[1] - pt) / len(self.plots)
         else:
             try:
-                self.plots[-1].bounds[1] = (bounds[1] - pt) / max(1, (len(self.plots) - 1))
+                self.plots[0].bounds[1] = (bounds[1] - pt) / max(1, (len(self.plots) - 1))
             except IndexError:
                 pass
 #============= EOF ====================================

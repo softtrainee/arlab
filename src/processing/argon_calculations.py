@@ -22,21 +22,37 @@
 from numpy import asarray, argmax
 from . import constants
 from uncertainties import ufloat, umath
-
+import math
 #============= local library imports  ==========================
 
 
-def calculate_arar_age(signals, j, irradinfo):
+def calculate_arar_age(signals, baselines, blanks, j, irradinfo):
 #    print signals
     s40, s39, s38, s37, s36 = signals
+    s40bs, s39bs, s38bs, s37bs, s36bs = baselines
+    s40bl, s39bl, s38bl, s37bl, s36bl = blanks
 #    s40, s40b, s39, s39b, s38, s38b, s37, s37b, s36, s36b = signals
     k4039, ca3937, ca3837, ca3637, k3839, p36cl38cl, t = irradinfo
 
     s40 = ufloat(s40)
-    s39 = ufloat(s39)
+
+    s39 = ufloat(s39) + 100
+
     s38 = ufloat(s38)
     s37 = ufloat(s37)
     s36 = ufloat(s36)
+
+    s40bs = ufloat(s40bs)
+    s39bs = ufloat(s39bs)
+    s38bs = ufloat(s38bs)
+    s37bs = ufloat(s37bs)
+    s36bs = ufloat(s36bs)
+
+    s40bl = ufloat(s40bl)
+    s39bl = ufloat(s39bl)
+    s38bl = ufloat(s38bl)
+    s37bl = ufloat(s37bl)
+    s36bl = ufloat(s36bl)
 
     ca3637 = ufloat(ca3637)
     ca3937 = ufloat(ca3937)
@@ -46,9 +62,18 @@ def calculate_arar_age(signals, j, irradinfo):
     p36cl38cl = ufloat(p36cl38cl)
     j = ufloat(j)
 
-    a37decayfactor = 1 / umath.exp(t * (-1 * constants.lambda_37 * 365.25))
-    a39decayfactor = 1 / umath.exp(t * (-1 * constants.lambda_39 * 365.25))
+    #subtract blanks and baselines
+    s40 -= (s40bl + s40bs)
+    s39 -= (s39bl + s39bs)
+    s38 -= (s38bl + s38bs)
+    s37 -= (s37bl + s37bs)
+    s36 -= (s36bl + s36bs)
 
+    #calculate decay factors
+    a37decayfactor = 1 / math.exp(t * (-1 * constants.lambda_37.nominal_value * 365.25))
+    a39decayfactor = 1 / math.exp(t * (-1 * constants.lambda_39.nominal_value * 365.25))
+
+    #calculate interference corrections
     ca37 = s37 * a37decayfactor
     s39 = s39 * a39decayfactor
     ca36 = ca3637 * ca37
@@ -61,18 +86,24 @@ def calculate_arar_age(signals, j, irradinfo):
         m = p36cl38cl * constants.lambda_cl36 * t
     else:
         m = p36cl38cl
+
     mcl = m / (m * constants.atm3836 - 1)
     cl36 = mcl * (constants.atm3836 * (s36 - ca36) - s38 + k38 + ca38)
     atm36 = s36 - ca36 - cl36
 
+    #calculate rodiogenic
     atm40 = atm36 * constants.atm4036
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
-    JR = j * ar40rad / k39
-    age = (1 / constants.lambdak) * umath.log(1 + JR)
-    result = dict(age=age, rad40=ar40rad)
-    return result
 
+    JR = j * ar40rad / k39
+
+    try:
+        age = (1 / constants.lambdak) * umath.log(1 + JR)
+        result = dict(age=age, rad40=ar40rad, k39=k39)
+        return result
+    except ValueError:
+        pass
 #============= EOF =====================================
 
 ##=============enthought library imports=======================oup
