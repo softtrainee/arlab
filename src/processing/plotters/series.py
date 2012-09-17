@@ -26,8 +26,10 @@ from src.graph.regression_graph import RegressionGraph, \
 
 class Series(object):
     def axis_formatter(self, x):
-        if x > 0.01:
+        if 1000 > abs(x) > 0.01:
             return '{:0.2f}'.format(x)
+        elif 1e5 > abs(x) > 1000:
+            return '{:0.1f}'.format(x)
         elif abs(x) < 1e-7:
             return '{:n}'.format(x)
         else:
@@ -57,12 +59,7 @@ class Series(object):
                                       padding_bottom=5,
                                       padding_left=0,
                                       padding_right=0,
-#                                      spacing=0,
-#                                      padding_left=20,
-#                                      padding_right=0,
                                       stack_order='top_to_bottom'
-#                                      kind='g',
-#                                      shape=shape,
                                       ),
                   equi_stack=True
                   )
@@ -83,6 +80,7 @@ class Series(object):
         for _, (key, fi) in enumerate(basekeys):
             try:
                 xs, ys = zip(*[(a.timestamp, a.signals[key].value) for a in analyses if a.timestamp > 0])
+
                 self._add_series(g, key, xs, ys, fi, padding, plotid=cnt)
                 cnt += 1
             except KeyError, e:

@@ -42,10 +42,9 @@ class Spectrum(object):
             self._add_spectrum(g, anals)
         return g
 
-    def _add_spectrum(self, g, analyses):
-
-        ages, errors = zip(*[a.age for a in analyses])
-        ar39s = [a.signals['Ar39'].value for a in analyses]
+    def _add_spectrum(self, g, analyses, index_key='k39'):
+        ages = [a.age for a in analyses]
+        ar39s = [getattr(a, index_key) for a in analyses]
 
         xs = []
         ys = []
@@ -53,7 +52,7 @@ class Spectrum(object):
         sar = sum(ar39s)
         prev = 0
 
-        for ai, ei, ar in zip(ages, errors, ar39s):
+        for (ai, ei), ar in zip(ages, ar39s):
             xs.append(prev)
             ys.append(ai)
             es.append(ei)
@@ -77,7 +76,6 @@ class Spectrum(object):
         xp = ox + xs
 
         yu = [yi + ei for (yi, ei) in zip(ys, es)]
-
         yl = [yi - ei for (yi, ei) in zip(ys, es)]
         yl.reverse()
 

@@ -16,29 +16,28 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Int, Float, Property, cached_property, Dict, \
-    List, Color, Enum
+    List, Color, Enum, Any, Event, on_trait_change
 from traitsui.api import View, Item, TableEditor
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 from numpy import polyfit, array
 import random
 from src.processing.argon_calculations import calculate_arar_age
+from src.processing.signal import Signal
 #============= local library imports  ==========================
 
 
 class AnalysisTabularAdapter(TabularAdapter):
     iso_keys = List
-#    columns = [('RunID', 'rid'),
-#               ('Age', 'age'),
-#               ('Error', 'age_error'),
-#               ('Ar40', 'ar40'), 
-#               ('Ar39', 'ar39'),
-#               ('Ar39', 'ar39'),
-#               ('Ar38', 'ar38'),
-#               ('Ar37', 'ar37'),
-#               ('Ar36', 'ar36'),
-#               ]
     columns = Property(depends_on='iso_keys')
+
+    def get_font(self, obj, trait, row):
+        import wx
+        s = 9
+        f = wx.FONTFAMILY_DEFAULT
+        st = wx.FONTSTYLE_NORMAL
+        w = wx.FONTWEIGHT_NORMAL
+        return wx.Font(s, f, st, w)
 
     def _get_columns(self):
         return self._columns_factory()
@@ -47,9 +46,10 @@ class AnalysisTabularAdapter(TabularAdapter):
         return self._columns_factory()
 
     def _columns_factory(self):
-        cols = [('RunID', 'rid'),
+        cols = [('Lab ID', 'rid'),
                ('Age', 'age'),
-               ('Error', 'age_error'), ]
+               ('Error', 'age_error'),
+               ]
         cols += [(i.capitalize(), i) for i in self.iso_keys]
         for iso in self.iso_keys:
             self.add_trait('{}_format'.format(iso),
@@ -70,59 +70,6 @@ class AnalysisTabularAdapter(TabularAdapter):
         o = getattr(obj, trait)[row]
         return o.color
 
-class Signal(HasTraits):
-    isotope = Str
-    detector = Str
-    xs = None
-    ys = None
-    fit = 1
-
-    value = Property
-    value_error = Property
-
-    @cached_property
-    def _get_value(self):
-        if self.xs:
-            return polyfit(self.xs, self.ys, self.fit)[-1]
-        else:
-            return 0
-
-    @cached_property
-    def _get_value_error(self):
-        if self.xs:
-            return random.random()
-        else:
-            return 0
-
-class Baseline():
-    @cached_property
-    def _get_value(self):
-        if self.ys:
-            return array(self.ys).mean()
-        else:
-            return 0
-
-    @cached_property
-    def _get_value_error(self):
-        if self.ys:
-            return array(self.ys).std()
-        else:
-            return 0
-
-#    def __add__(self, o):
-#        return o.__add__(self.intercept)
-#    def __sub__(self, o):
-#        return o.__sub__(self.intercept)
-#    def __mul__(self, o):
-#        return o.__mul__(self.intercept)
-#    def __div__(self, o):
-#        return o.__div__(self.intercept)
-#    def __pow__(self, n):
-#        return self.intercept ** n
-#    def __pos__(self):
-#        return self.intercept
-#    def __neg__(self):
-#        return -self.intercept
 
 class Analysis(HasTraits):
     rid = Str
@@ -130,24 +77,47 @@ class Analysis(HasTraits):
     irradiation = Str
 
     analysis_type = Str
+
+    dbresult = Any
+
+    rid = Property(depends_on='dbresult')
+    sample = Property(depends_on='dbresult')
+    labnumber = Property(depends_on='dbresult')
+    irradiation = Property(depends_on='dbresult')
+
     timestamp = Float
 
     signals = Dict
-    baseline = Signal
 
-    age = Property
+    age = Property(depends_on='age_dirty, signals[]')
+    age_dirty = Event
     age_error = Property
+
+    k39 = Float
+    k39err = Float
 
     gid = Int
     color = Color('black')
     uuid = Str
 #    age_scalar = Enum({'Ma':1e6, 'ka':1e3})
     age_scalar = 1e6
+
+#    @on_trait_change('signals:blank_signal')
+#    def _change(self):
+#        print 'fiafsd'
+#        self.age_dirty = True
+
     def __getattr__(self, attr):
         try:
             return self.signals[attr].value
         except KeyError:
-            pass
+            return 0
+
+    @cached_property
+    def _get_rid(self):
+        dbr = self.dbresult
+        ln = dbr.labnumber
+        return '{}-{}'.format(ln.labnumber, ln.aliquot)
 
     @cached_property
     def _get_age(self):
@@ -160,29 +130,59 @@ class Analysis(HasTraits):
 #        age = 10 + random.random()
 #        err = random.random()
 #        if len(signals.keys()) == 5:
+        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+        for iso in keys:
+            for k in ['', 'bs', 'bl']:
+                isok = iso + k
+                if not signals.has_key(isok):
+                    signals[isok] = self._signal_factory(isok, None)
 
-        for iso in ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']:
-            if not signals.has_key(iso):
-                signals[iso] = self._signal_factory(iso, None)
+        fsignals = [(signals[iso].value, signals[iso].error)
+                    for iso in keys]
 
-        fsignals = [(signals[iso].value, signals[iso].value_error) for iso in ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']]
-#            fsignals = [(s.value, s.value_error) for s in signals.itervalues()]
+        bssignals = [(signals[iso].value, signals[iso].error)
+#                     if signals.has_key(iso) else (0, 0)
+                        for iso in map('{}bs'.format, keys)]
 
-        result = calculate_arar_age(fsignals, j, irradinfo)
+        blsignals = [(signals[iso].value, signals[iso].error)
+#                     if signals.has_key(iso) else (0, 0)
+                        for iso in map('{}bl'.format, keys)]
 
-        ai = result['age']
-        ai = ai / self.age_scalar
-        age = ai.nominal_value
-        err = ai.std_dev()
+        result = calculate_arar_age(fsignals, bssignals, blsignals, j, irradinfo)
 
-        age = 10 + random.random()
-        err = random.random()
+        if result:
+            self.k39 = result['k39'].nominal_value
+            self.k39err = result['k39'].std_dev()
+            ai = result['age']
 
+            ai = ai / self.age_scalar
+            age = ai.nominal_value
+            err = ai.std_dev()
+
+            age = 10 + random.random()
+            err = random.random()
+        else:
+            age = 0
+            err = 0
         return age, err
 
     @cached_property
     def _get_age_error(self):
         return self.age[1]
+
+    def load_from_database(self):
+        dbr = self.dbresult
+
+        #load blanks
+        histories = dbr.blanks_histories
+        if histories:
+            hist = histories[-1]
+            for bi in hist.blanks:
+                s = Signal()
+                if not bi.use_set:
+                    s.value = bi.user_value
+                    s.error = bi.user_error
+                self.signals['{}bl'.format(bi.isotope)] = s
 
     def load_from_file(self, df):
 
@@ -190,53 +190,59 @@ class Analysis(HasTraits):
         for iso in df.root.signals:
             name = iso._v_name
             tab = next((n for n in iso._f_iterNodes()), None)
-
             self.signals[name] = self._signal_factory(name, tab)
 
-            self.signals['{}bs'.format(name)] = self._baseline_factory(name, df)
+        for biso in df.root.baselines:
+            name = biso._v_name
+            basetab = next((n for n in biso._f_iterNodes()), None)
+            self.signals['{}bs'.format(name)] = self._signal_factory(name, basetab)
+
         try:
             t = df.root._v_attrs['TIMESTAMP']
         except KeyError:
             t = -1
+#        print t, 'TIMESTAMP'
         self.timestamp = t
 
-    def _baseline_factory(self, iso, df):
-        kw = dict()
-        tab = None
-        if hasattr(df.root, 'baselines'):
-            try:
-                for b in df.root.baselines:
-                    tab = next((n for n in b._f_iterNodes()), None)
-            except Exception, e:
-                print e
-        else:
-            try:
-                #load peakhop 
-                for det in df.root.peakhop_baselines:
-                    tab = next((n for n in det._f_iterNodes() if n._v_name == iso), None)
-            except Exception, e:
-                print e
+    def _blank_factory(self, iso, tab):
 
-        if tab:
-            xs, ys = self._get_xy(tab)
-            kw['xs'] = xs
-            kw['ys'] = ys
-
-        return Signal(isotope=iso, **kw)
+        return self._signal_factory(iso, tab)
 
     def _signal_factory(self, iso, tab):
         kw = dict()
         if tab is not None:
             xs, ys = self._get_xy(tab)
             kw = dict(xs=xs, ys=ys, detector=tab.name)
-        return Signal(isotope=iso, **kw)
+        sig = Signal(isotope=iso, **kw)
+        return sig
 
     def _get_xy(self, tab, x='time', y='value'):
         return zip(*[(r[x], r[y]) for r in tab.iterrows()])
 
     def _get_j(self):
-        return (1, 1)
+        return (1e-4, 1e-7)
 
     def _get_irradinfo(self):
         return (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), 1
+
+
+#timeit
+if __name__ == '__main__':
+    from tables import openFile
+    a = Analysis()
+    def time_load():
+        p = '/Users/ross/Sandbox/pychron_test_data/data/b4e12e97-3526-4834-8a32-507fc37f166f.h5'
+        df = openFile(p)
+        a.load_from_file(df)
+
+    from timeit import Timer
+#    t = Timer('time_load()', 'from __main__ import time_load')
+    t = Timer(time_load)
+    print t.timeit(1)
+
+    '''
+        results = 0.0124s to load 700kb
+            Users/ross/Sandbox/pychron_test_data/data/b4e12e97-3526-4834-8a32-507fc37f166f.h5
+        
+    '''
 #============= EOF =============================================

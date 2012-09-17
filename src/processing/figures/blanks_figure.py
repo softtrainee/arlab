@@ -15,29 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Str, Enum, on_trait_change
-from traitsui.api import View, Item, HGroup
+from traits.api import HasTraits, Event
+from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.figures.base_figure import BaseFigure
 
-class SeriesConfig(HasTraits):
-    label = Str
-    show = Bool
-    show_baseline = Bool
-
-    fit = Enum('Linear', 'Parabolic', 'Cubic', 'Average')
-    fit_baseline = Enum('Linear', 'Parabolic', 'Cubic', 'Average')
-
-    @on_trait_change('show,show_baseline,fit,fit_baseline')
-    def _change(self):
-        self.parent.refresh()
-
-    def traits_view(self):
-        v = View(HGroup(Item('show', label=self.label),
-                        Item('fit', show_label=False),
-                        Item('show_baseline', label='Baseline'),
-                        Item('fit_baseline', show_label=False),
-                        )
-                 )
-        return v
+class BlanksFigure(BaseFigure):
+    apply_blanks_event = Event
 #============= EOF =============================================

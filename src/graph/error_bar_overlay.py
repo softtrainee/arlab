@@ -18,14 +18,18 @@
 
 #=============enthought library imports=======================
 from chaco.api import AbstractOverlay
-import wx
-
+from traits.api import Int
 #============= standard library imports ========================
+import wx
 
 #============= local library imports  ==========================
 
 
 class ErrorBarOverlay(AbstractOverlay):
+    nsigma = Int(1)
+#    def _nsigma_changed(self):
+#        print 'erba', self.nsigma
+
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
             
@@ -37,8 +41,10 @@ class ErrorBarOverlay(AbstractOverlay):
         y = component.value.get_data()
         xer = component.xerror.get_data()
 
-        args1 = component.map_screen(zip(x - xer, y))
-        args2 = component.map_screen(zip(x + xer, y))
+        xer_sigma = xer * self.nsigma
+
+        args1 = component.map_screen(zip(x - xer_sigma, y))
+        args2 = component.map_screen(zip(x + xer_sigma, y))
 
         color = component.color
         if isinstance(color, str):

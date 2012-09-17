@@ -19,12 +19,13 @@
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, \
-     ForeignKey, BLOB, Float, Time
+     ForeignKey, BLOB, Float, Time, Boolean, DateTime
 from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
 from src.database.core.base_orm import BaseMixin, NameMixin
 from src.database.core.base_orm import PathMixin, ResultsMixin
+from sqlalchemy.sql.expression import func
 
 Base = declarative_base()
 
@@ -33,6 +34,18 @@ def foreignkey(name):
 
 def stringcolumn(size=40):
     return Column(String(size))
+
+class proc_BlanksHistoryTable(Base, BaseMixin):
+    analysis_id = foreignkey('AnalysisTable')
+    create_date = Column(DateTime, default=func.now())
+    blanks = relationship('proc_BlanksTable', backref='history')
+
+class proc_BlanksTable(Base, BaseMixin):
+    history_id = foreignkey('proc_BlanksHistoryTable')
+    user_value = Column(Float)
+    user_error = Column(Float)
+    use_set = Column(Boolean)
+    isotope = stringcolumn()
 
 class MassSpectrometerTable(Base, NameMixin):
 #    experiments = relationship('ExperimentTable', backref='mass_spectrometer')
@@ -64,6 +77,9 @@ class AnalysisTable(Base, ResultsMixin):
     measurement_id = foreignkey('MeasurementTable')
     experiment_id = foreignkey('ExperimentTable')
     endtime = Column(Time)
+
+    #proc relationships
+    blanks_histories = relationship('proc_BlanksHistoryTable', backref='analysis')
 
 class AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('AnalysisTable')

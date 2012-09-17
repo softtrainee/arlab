@@ -12,7 +12,7 @@ if __name__ == '__main__':
 #    main(url='sqlite:///{}'.format(p) , debug='False', repository='isotopedb/')
 
     url = 'mysql://root:Argon@localhost/isotopedb?connect_timeout=3'
-#    url = 'mysql://root:Argon@localhost/isotopedb_dev?connect_timeout=3'
+    #url = 'mysql://root:Argon@localhost/isotopedb_dev?connect_timeout=3'
     main(url=url , debug='False', repository='isotopedb/')
 
 #    pychron_main()

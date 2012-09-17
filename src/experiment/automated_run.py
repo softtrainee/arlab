@@ -532,7 +532,7 @@ class AutomatedRun(Loggable):
             self.warning('not spectrometer manager')
             return
 
-        name = 'peakhop_{}'.format(name)
+#        name = 'peakhop_{}'.format(name)
         p = self._open_plot_panel(self.peak_plot_panel)
         self.peak_plot_panel = p
         self.peak_plot_panel.detector = detector
@@ -540,10 +540,11 @@ class AutomatedRun(Loggable):
 
         dm = self.data_manager
 #        dm.new_group('peakhop', root='/')
-        grp = dm.new_group(name)
-        grp = dm.new_group(detector, parent=grp)
+#        grp = dm.new_group(detector, parent=grp)
+        pgrp = dm.new_group(name)
         for iso in isotopes:
-            dm.new_table(grp, iso)
+            grp = dm.new_group(iso, parent=pgrp)
+            dm.new_table(grp, detector)
 
         data_write_hook = self._get_peakhop_data_writer(name)
 #        return self._peak_hop(detector, isotopes, masses, cycles, nintegrations, starttime, series, dwh)
@@ -827,8 +828,8 @@ class AutomatedRun(Loggable):
                               )
             db.add_measurement(
                               a,
+                              self.runtype,
                               self.measurement_script.name,
-                              analysis_type=self.runtype,
                               script_blob=self.measurement_script.toblob()
                               )
 
@@ -977,8 +978,12 @@ class AutomatedRun(Loggable):
 
     def _get_peakhop_data_writer(self, grpname):
         def write_data(x, det, iso, signal):
+            '''
+                root.peakhop.iso.det
+            '''
             dm = self.data_manager
-            tab = dm.get_table(iso, '/{}/{}'.format(grpname, det))
+#            tab = dm.get_table(iso, '/{}/{}'.format(grpname, det))
+            tab = dm.get_table(det, '/{}/{}'.format(grpname, iso))
             nrow = tab.row
             nrow['time'] = x
             nrow['value'] = signal
