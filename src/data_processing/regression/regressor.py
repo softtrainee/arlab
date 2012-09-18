@@ -44,10 +44,14 @@ class Regressor(object):
             kind=linear, parabolic etc
             data= 2D array of values [xvalues, yvalues]
         '''
-        func = getattr(self, kind)
-        rdict = func(*data)
-        return polyval(rdict['coefficients'], x)
 
+        xs, ys = data
+        rdict = self._regress_(xs, ys, kind)
+        return self.get_value_at(rdict, x)
+
+    def get_value_at(self, rdict, x):
+        if rdict:
+            return polyval(rdict['coefficients'], x)
 
     def calc_residuals(self, x, y, xd, yd, kind, **kw):
         '''
@@ -64,22 +68,18 @@ class Regressor(object):
 
         return array(res)
 
-
     def cubic(self, x, y, **kw):
         '''
-
         '''
         return self._regress_(x, y, 'cubic', **kw)
 
     def parabolic(self, x, y, **kw):
         '''
-    
         '''
         return self._regress_(x, y, 'parabolic', **kw)
 
     def average(self, x, y, **kw):
         '''
-    
         '''
         return self._regress_(x, y, 'average', **kw)
 
@@ -145,14 +145,13 @@ class Regressor(object):
     def get_degree(self, kind):
         degree = None
         if isinstance(kind, str):
-            if kind == 'linear':
-                degree = 1
-            elif kind == 'parabolic':
-                degree = 2
-            elif kind == 'cubic':
-                degree = 3
-            elif kind == 'average':
-                degree = 0
+            kind = kind.lower()
+            kinds = ['average', 'linear', 'parabolic', 'cubic']
+            try:
+                degree = kinds.index(kind)
+            except ValueError:
+                pass
+
         else:
             degree = kind
 
@@ -193,7 +192,6 @@ class Regressor(object):
                    )
 
         if npts is None:
-#            npts = 5 * len(x)
             npts = 500
 
         xreturn = linspace(dr[0], dr[1], npts)
@@ -284,15 +282,13 @@ class Regressor(object):
             lcly, ucly = self.calc_confidence_interval(95, x, y, ymodel, xreturn, yreturn)
 
         if degree and len(x) >= degree + 1:
-
-            #@todo: this should be redone using the OLS
             coeffs = polyfit(x, y, degree)
-
             yreturn = polyval(coeffs, xreturn)
 
             yn = polyval(coeffs, x)
             lcly, ucly = self.calc_confidence_interval(95, x, y, yn, xreturn, yreturn)
-            if len(x) > degree + 1:
+
+            if len(x) >= degree + 1:
                 o = OLS(x, y, fitdegree=degree)
                 coeff_errors = o.get_coefficient_standard_errors()
 

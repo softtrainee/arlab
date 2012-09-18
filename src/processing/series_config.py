@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Str, Enum, on_trait_change
-from traitsui.api import View, Item, HGroup
+from traits.api import HasTraits, Bool, Str, Enum, on_trait_change, Any, Property
+from traitsui.api import View, Item, HGroup, EnumEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -25,16 +25,23 @@ class SeriesConfig(HasTraits):
     show = Bool
     show_baseline = Bool
 
-    fit = Enum('Linear', 'Parabolic', 'Cubic', 'Average')
-    fit_baseline = Enum('Linear', 'Parabolic', 'Cubic', 'Average')
+    fit = Str('---')
+    fits = Property
+
+    fit_baseline = Enum('---', 'Linear', 'Parabolic', 'Cubic', 'Average')
+    parent = Any(transient=True)
+
+    def _get_fits(self):
+        return ['---', 'Linear', 'Parabolic', 'Cubic', 'Average']
 
     @on_trait_change('show,show_baseline,fit,fit_baseline')
     def _change(self):
-        self.parent.refresh()
+        if self.parent:
+            self.parent.refresh()
 
     def traits_view(self):
         v = View(HGroup(Item('show', label=self.label),
-                        Item('fit', show_label=False),
+                        Item('fit', editor=EnumEditor(name='fits'), show_label=False),
                         Item('show_baseline', label='Baseline'),
                         Item('fit_baseline', show_label=False),
                         )

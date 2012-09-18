@@ -15,18 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Bool
+from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.graph.regression_graph import RegressionGraph
+from src.processing.plotters.plotter import Plotter
+from src.processing.plotters.results_tabular_adapter import InverseIsochronResults
+from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
+from chaco.array_data_source import ArrayDataSource
 
-class InverseIsochron(object):
+
+class InverseIsochron(Plotter):
+    show_error_ellipse = Bool(False)
     def build(self, analyses, padding):
         if not analyses:
             return
 
-        xs = [a.signals['Ar39'].value / a.signals['Ar40'].value for a in analyses]
-        ys = [a.signals['Ar36'].value / a.signals['Ar40'].value for a in analyses]
+        xs = [a.signals['Ar39'].uvalue / a.signals['Ar40'].uvalue for a in analyses]
+        ys = [a.signals['Ar36'].uvalue / a.signals['Ar40'].uvalue for a in analyses]
+
+        xs, xerrs = zip(*[(a.nominal_value, a.std_dev()) for a in xs])
+        ys, yerrs = zip(*[(a.nominal_value, a.std_dev()) for a in ys])
+#        xs = [a.signals['Ar39']. / a.signals['Ar40'].value for a in analyses]
+#        ys = [a.signals['Ar36'].value / a.signals['Ar40'].value for a in analyses]
         g = RegressionGraph(container_dict=dict(padding=5,
                                                bgcolor='lightgray'
                                                ))
@@ -38,11 +50,47 @@ class InverseIsochron(object):
         g.set_grid_traits(visible=False)
         g.set_grid_traits(visible=False, grid='y')
 
-        g.new_series(xs, ys,
+        po, sc, ln = g.new_series(xs, ys,
+                                  xerror=ArrayDataSource(data=xerrs),
+                                  yerror=ArrayDataSource(data=yerrs),
                     type='scatter', marker='circle', marker_size=2)
+
+        eo = ErrorEllipseOverlay(component=sc)
+        sc.overlays.append(eo)
+
+
 
         g.set_x_limits(min=0)
         g.set_y_limits(min=0, max=1 / 100.)
+        trapped_4036 = 1
+        trapped_4036err = 1
+        try:
+            rdict = g.regression_results[0]
+            try:
+                coeffs = rdict['coefficients']
+                cerrors = rdict['coeff_errors']
+                if coeffs is not None and cerrors is not None:
+                    try:
+                        trapped_4036 = 1 / coeffs[-1]
+                        trapped_4036 = cerrors[-1]
+                    except IndexError, e:
+                        print e
+            except KeyError, e:
+                print e
+        except IndexError, e:
+            print e
+
+        self.results.append(InverseIsochronResults(
+                                                   age=100,
+                                                   error=0.1,
+                                                   mswd=0,
+                                                   trapped_4036=trapped_4036,
+                                                   trapped_4036err=trapped_4036err))
+
         return g
+
+    def _get_content(self):
+        return Item('show_error_ellipse')
+
 
 #============= EOF =============================================

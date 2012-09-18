@@ -18,7 +18,8 @@
 from traits.api import HasTraits, Instance, Any, List, Bool, Property, \
     cached_property, Button, on_trait_change
 from traitsui.api import View, Item, TabularEditor, VSplit, Group, HGroup, VGroup, \
-    spring
+    spring, Handler
+import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from tables import openFile
 import os
@@ -31,16 +32,32 @@ from src.processing.plotters.series import Series
 from src.processing.series_config import SeriesConfig
 from src.processing.processing_selector import ProcessingSelector
 from src.helpers.traitsui_shortcuts import listeditor
+from src.viewable import ViewableHandler, Viewable
+from src.paths import paths
 
-class BaseFigure(Loggable):
+class GraphSelector(HasTraits):
+    show_series = Bool(False)
+    selections = Property
+    @classmethod
+    def _item(cls, name, l):
+        return Item(name, label=l)
+    def _get_selections(self):
+        return [self._item('show_series', 'Series')]
+
+    def traits_view(self):
+        v = View(VGroup(*self.selections))
+        return v
+
+class BaseFigure(Viewable):
     graph = Instance(Graph)
     analyses = List(Analysis)
     selected_analysis = Any
     workspace = Any
-
-    series_list = List
-    show_series = Bool(True)
+    repo = Any
     db = Any
+
+    series_configs = List
+    show_series = Bool(True)
     selector = None
 #    result = Instance(Result, ())
 
@@ -49,7 +66,15 @@ class BaseFigure(Loggable):
 
     manage_data = Button
     signal_keys = Property
-    isotope_keys = Property
+    isotope_keys = Property(depends_on='signal_keys')
+
+    graph_selector = Instance(GraphSelector, ())
+
+    series_klass = Series
+    series_config_klass = SeriesConfig
+
+    use_user_series_configs = True
+    use_user_graph_selector = True
 
     def refresh(self):
         analyses = self.analyses
@@ -67,16 +92,24 @@ class BaseFigure(Loggable):
         padding = [pl, 10, 0, 30]
         self._refresh(graph, analyses, padding)
 
+    def _get_gids(self, analyses):
+        return list(set([(a.gid, True) for a in analyses]))
+
     def _refresh(self, graph, analyses, padding):
+        gs = self.graph_selector
 
         seriespadding = padding
-        if self.show_series:
-            series = Series()
-            sks = [(si.label, si.fit) for si in self.series_list if si.show]
-            bks = [('{}bs'.format(si.label), si.fit_baseline) for si in self.series_list if si.show_baseline]
-            gseries = series.build(analyses, sks, bks, padding=seriespadding)
+        if gs.show_series:
+            series = self.series_klass()
+            sks = [(si.label, si.fit) for si in self.series_configs if si.show]
+            bks = [('{}bs'.format(si.label), si.fit_baseline)
+                    for si in self.series_configs if si.show_baseline]
+
+            gids = self._get_gids(analyses)
+            gseries = series.build(analyses, sks, bks, gids, padding=seriespadding)
             if gseries:
                 graph.plotcontainer.add(gseries.plotcontainer)
+                series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
 
         graph.redraw()
 
@@ -86,7 +119,7 @@ class BaseFigure(Loggable):
         if attrs is None:
             attrs = [dict() for n in names]
 
-        self.nanalyses = len(names) - 1
+        self.nanalyses = len(self.analyses) + len(names) - 1
         _names = [a.uuid for a in self.analyses]
 
         #@todo: change to list comp to speed up
@@ -94,6 +127,7 @@ class BaseFigure(Loggable):
             if not n in _names:
                 a = self._analyses_factory(n, gid=gid, **attr)
                 if a:
+                    self.info('loading analysis {} groupid={}'.format(a.rid, gid))
                     self.analyses.append(a)
                 else:
                     self.warning('could not load {}'.format(n))
@@ -103,11 +137,40 @@ class BaseFigure(Loggable):
 
         self.nanalyses = -1
 
-        snames = [s.label for s in self.series_list]
-        keys = [iso for iso in self.isotope_keys if not iso in snames]
+        keys = self.isotope_keys
         keys.sort(key=lambda k:k[2:4], reverse=True)
-        self.series_list = [SeriesConfig(label=iso, parent=self)
-                                for iso in keys]
+        if not self.series_configs:
+            self.series_configs = [self.series_config_klass(label=iso, parent=self)
+                                   for iso in keys]
+        else:
+            #have a series configs list 
+            #load any missing isotopes
+#            print keys
+            for i, iso in enumerate(keys):
+                se = next((s for s in self.series_configs if s.label == iso), None)
+#                print i, iso, se
+                if not se:
+                    self.series_configs.insert(1, self.series_config_klass(label=iso, parent=self))
+                else:
+                    se.parent = self
+#        snames = [s.label for s in self.series_configs]
+#        keys = [iso for iso in self.isotope_keys if not iso in snames]
+
+        #clone current series list
+#        if self.series_configs is not None:
+#            series = [si.label for si in self.series_configs]
+#            sl = [iso if iso in series else SeriesConfig(label=iso) for iso in keys]
+#            for si in sl:
+#                si.parent = self
+#            self.series_configs = sl
+##            for iso in keys:
+##                if iso in series:
+##                    sl.append(iso)
+##                else:
+##                    sl.appned
+#        else:
+#            self.series_configs = [SeriesConfig(label=iso, parent=self)
+#                                for iso in keys]
 
         self.signal_table_adapter.iso_keys = self.isotope_keys
 
@@ -117,6 +180,64 @@ class BaseFigure(Loggable):
         bs_keys.sort(key=lambda k:k[2:4], reverse=True)
         self.baseline_table_adapter.iso_keys = bs_keys
 
+#===============================================================================
+# viewable
+#===============================================================================
+    def closed(self, ok):
+        self._dump_series_configs()
+        self._dump_graph_selector()
+
+    def opened(self):
+        if self.use_user_series_configs:
+            self._load_series_configs()
+        if self.use_user_graph_selector:
+            self._load_graph_selector()
+#===============================================================================
+# persistence
+#===============================================================================
+    def _get_series_config_path(self):
+        return os.path.join(paths.hidden_dir, 'series_config')
+
+    def _get_graph_selector_path(self):
+        return os.path.join(paths.hidden_dir, 'graph_selector')
+
+    def _load_graph_selector(self):
+        p = self._get_graph_selector_path()
+        obj = self._load_obj(p)
+        if obj is not None:
+            self.graph_selector = obj
+
+    def _load_series_configs(self):
+        p = self._get_series_config_path()
+        obj = self._load_obj(p)
+        if obj:
+            for si in obj:
+                si.parent = self
+            self.series_configs = obj
+
+    def _dump_graph_selector(self):
+        p = self._get_graph_selector_path()
+        self._dump_obj(self.graph_selector, p)
+
+    def _dump_series_configs(self):
+        p = self._get_series_config_path()
+        self._dump_obj(self.series_configs, p)
+
+    def _dump_obj(self, obj, p):
+        try:
+            with open(p, 'wb') as f:
+                pickle.dump(obj, f)
+        except Exception, e :
+            print e
+
+    def _load_obj(self, p):
+        try:
+
+            with open(p, 'rb') as f:
+                obj = pickle.load(f)
+                return obj
+        except Exception, e:
+            print e
 #===============================================================================
 # private
 #===============================================================================
@@ -137,22 +258,9 @@ class BaseFigure(Loggable):
         gids = None
         if names:
             self.load_analyses(names, gids, attrs)
-            self.refresh()
 
-    def _open_file(self, name):
-        p = os.path.join(self.workspace.root, name)
-
-        if os.path.isfile(p):
-            return openFile(p)
-        else:
-            rname = os.path.basename(p)
-            if self.repo.isfile(rname):
-                self.info('fetching file from repo')
-#                out = open(p, 'wb')
-                self.repo.retrieveFile(rname, p)
-                return openFile(p)
-            else:
-                self.warning('{} is not a file'.format(name))
+#        self.refresh()
+#        self.refresh()
 #===============================================================================
 # handlers
 #===============================================================================
@@ -161,7 +269,9 @@ class BaseFigure(Loggable):
 
     @on_trait_change('analyses[]')
     def _analyses_changed(self):
+#        print len(self.analyses), self.nanalyses
         if len(self.analyses) > self.nanalyses:
+            print 'refreshing analysis change'
             self.refresh()
 
     @on_trait_change('show_series')
@@ -180,7 +290,8 @@ class BaseFigure(Loggable):
 
             self.selector = ps
             if self._debug:
-                ps.selected_results = [ps.selector.results[-1]]
+                ps.selected_results = [i for i in ps.selector.results[-6:] if i.analysis_type != 'blank']
+
         else:
             self.selector.show()
 
@@ -195,13 +306,22 @@ class BaseFigure(Loggable):
                        Item('manage_data', show_label=False),
                        )
         bottom = VGroup(tb, bot)
+
         v = View(VSplit(top, bottom),
                  resizable=True,
                  width=0.5,
                  height=0.8,
                  title=' '
                  )
+        v.buttons = self._get_buttons()
+        v.handler = self._get_handler()
         return v
+
+    def _get_buttons(self):
+        return []
+
+    def _get_handler(self):
+        return ViewableHandler
 
     def _get_top_group(self):
         graph_grp = Item('graph', show_label=False, style='custom',
@@ -226,7 +346,7 @@ class BaseFigure(Loggable):
         self.signal_table_adapter = ta = AnalysisTabularAdapter()
         sgrp = Group(Item('analyses',
                       show_label=False,
-                       height=0.3,
+#                       height=0.3,
                       editor=TabularEditor(adapter=ta,
                                            column_clicked='object.column_clicked',
                                            selected='object.selected_analysis',
@@ -240,7 +360,7 @@ class BaseFigure(Loggable):
         self.baseline_table_adapter = ta = AnalysisTabularAdapter()
         baselinegrp = Group(Item('analyses',
                                  show_label=False,
-                                 height=0.3,
+#                                 height=0.3,
                                  editor=TabularEditor(adapter=ta,
                                            editable=False,
                                            )
@@ -250,27 +370,37 @@ class BaseFigure(Loggable):
         return baselinegrp
 
     def _get_graph_edit_group(self):
-        gs = self._get_graph_shows()
-        g = HGroup(VGroup(*gs),
-                 listeditor('series_list', width=200),
+        g = HGroup(Item('graph_selector', style='custom', show_label=False),
+                 listeditor('series_configs',
+                            height=125,
+                            width=200),
                  label='Graph'
                  )
         return g
-
-    def _get_graph_shows(self):
-        return [Item('show_series', label='Series')]
+#    def _get_graph_edit_group(self):
+#        gs = self._get_graph_shows()
+#        g = HGroup(VGroup(*gs),
+#                 listeditor('series_configs', width=200),
+#                 label='Graph'
+#                 )
+#        return g
+#
+#    def _get_graph_shows(self):
+#        return [Item('show_series', label='Series')]
 #===============================================================================
 # factories
 #===============================================================================
     def _analyses_factory(self, n, **kw):
 
-        df = self._open_file(n)
-        if df:
-            a = Analysis(uuid=n,
-                         **kw)
+#        df = self._open_file(n)
+#        if df:
+        a = Analysis(uuid=n,
+                     repo=self.repo,
+                     workspace=self.workspace,
+                     ** kw)
 
-            #need to call both load from file and database
-            a.load_from_file(df)
+        #need to call both load from file and database
+        if a.load_from_file(n):
             a.load_from_database()
 
             return a

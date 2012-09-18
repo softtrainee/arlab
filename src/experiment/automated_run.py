@@ -87,6 +87,8 @@ class AutomatedRun(Loggable):
 
     scripts = Dict
     signals = Dict
+
+    mass_spec_name = Str
     sample_data_record = Any
 
     update = Event
@@ -124,7 +126,6 @@ class AutomatedRun(Loggable):
     info_display = None#DelegatesTo('experiment_manager')
 
     username = None
-
     def _runner_changed(self):
         self.measurement_script.runner = self.runner
         self.extraction_script.runner = self.runner
@@ -778,11 +779,6 @@ class AutomatedRun(Loggable):
 
         frame.flush()
 
-        #create initial structure
-#        dm.new_group('baselines')
-#        dm.new_group('sniffs')
-#        dm.new_group('signals')
-
     def _post_measurement_save(self):
         self.info('post measurement save')
 
@@ -829,6 +825,7 @@ class AutomatedRun(Loggable):
             db.add_measurement(
                               a,
                               self.runtype,
+                              self.mass_spec_name,
                               self.measurement_script.name,
                               script_blob=self.measurement_script.toblob()
                               )

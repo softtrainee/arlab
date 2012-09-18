@@ -145,8 +145,8 @@ class TimeSeriesGraph(Graph):
 
         plota = plot.plot(names, **rd)[0]
 
-        plota.unified_draw = True
-        plota.use_downsampling = True
+#        plota.unified_draw = True
+#        plota.use_downsampling = True
 
 
         #if the plot is not visible dont remove the underlays
@@ -154,6 +154,7 @@ class TimeSeriesGraph(Graph):
             self._set_bottom_axis(plota, plot, plotid, timescale=timescale)
 
         return names
+
     def _remove_bottom(self, plot):
         title = ''
         for i, underlay in enumerate(plot.underlays):

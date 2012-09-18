@@ -21,6 +21,7 @@ from numpy import asarray
 #============= local library imports  ==========================
 
 def calculate_mswd(x, errs):
+
     mswd_w = 0
     if len(x) >= 2:
         x = asarray(x)

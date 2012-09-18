@@ -445,7 +445,10 @@ class Graph(Loggable):
 
         legend = self.plots[plotid].legend
         if series is None:
-            series = len(self.series[plotid]) - 1
+            n = len(self.plots[plotid].plots.keys())
+#            n = len(self.series[plotid])
+            series = n - 1
+#            series = len(self.series[plotid]) - 1
 
         if isinstance(series, int):
             series = 'plot{}'.format(series)
@@ -505,6 +508,12 @@ class Graph(Loggable):
     def set_y_limits(self, min=None, max=None, pad=0, plotid=0, **kw):
         '''
         '''
+        mmin, mmax = self.get_y_limits(plotid)
+        if min is None:
+            min = mmin
+        if max is None:
+            max = mmax
+
         self._set_limits(min, max, 'value', plotid, pad, **kw)
 
     def set_x_limits(self, min=None, max=None, pad=0, plotid=0, **kw):
@@ -523,6 +532,18 @@ class Graph(Loggable):
         else:
             plot.index_range.high_setting = 'auto'
             plot.index_range.low_setting = 'auto'
+
+    def set_y_tracking(self, track, plotid=0):
+        '''
+        '''
+        plot = self.plots[plotid]
+        if track:
+            plot.value_range.tracking_amount = track
+            plot.value_range.high_setting = 'track'
+            plot.value_range.low_setting = 'auto'
+        else:
+            plot.value_range.high_setting = 'auto'
+            plot.value_range.low_setting = 'auto'
 
     def set_title(self, t, font='Helvetica', size=None):
         '''
@@ -1349,6 +1370,7 @@ class Graph(Loggable):
             except ValueError:
                 return
         else:
+
             if isinstance(pad, str):
                 #interpet pad as a percentage of the range
                 #ie '0.1' => 0.1*(ma-mi)
@@ -1356,6 +1378,7 @@ class Graph(Loggable):
                     pad = float(pad) * (ma - mi)
                     if abs(pad - 0) < 1e-10:
                         pad = 1
+
             if ma is not None:
                 ma += pad
 

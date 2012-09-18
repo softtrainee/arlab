@@ -36,6 +36,8 @@ class ViewableHandler(Handler):
     def close(self, info, is_ok):
         return info.object.close(is_ok)
 
+    def closed(self, info, is_ok):
+        info.object.closed(is_ok)
 
 class Viewable(Loggable):
     ui = Any
@@ -47,16 +49,21 @@ class Viewable(Loggable):
     def close(self, ok):
         return ok
 
+    def closed(self, ok):
+        pass
+
     def close_ui(self):
         if self.ui is not None:
             #disposes 50 ms from now
             do_after(1, self.ui.dispose)
             #sleep a little so everything has time to update
             #time.sleep(0.05) 
-    def show(self, **kw):
-        if self.ui.control:
-            do_after(1, self.ui.control.Raise)
-        else:
-            self.edit_traits(**kw)
 
+    def show(self, **kw):
+        if self.ui is None or self.ui.control is None:
+            func = lambda:self.edit_traits(**kw)
+        else:
+            func = lambda:do_after(1, self.ui.control.Raise)
+
+        func()
 # ============= EOF ====================================
