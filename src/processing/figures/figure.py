@@ -23,34 +23,31 @@ from traitsui.editors.tabular_editor import TabularEditor
 #============= local library imports  ==========================
 from src.processing.plotters.api import Ideogram, InverseIsochron, Spectrum
 from src.processing.blanks_editor import BlanksEditor
-from src.processing.figures.base_figure import BaseFigure
-from src.processing.result import Result
+from src.processing.figures.base_figure import BaseFigure, GraphSelector
+#from src.processing.result import Result
 from src.helpers.traitsui_shortcuts import instance_item
 
-class Figure(BaseFigure):
+class FigureGraphSelector(GraphSelector):
+    show_ideo = Bool(True)
+    show_inverse_isochron = Bool(False)
+    show_spectrum = Bool(False)
 
+    def _get_selections(self):
+        s = super(FigureGraphSelector, self)._get_selections()
+        return s + [    Item('show_ideo', label='Ideogram'),
+                        Item('show_inverse_isochron', label='Inv. Isochron'),
+                        Item('show_spectrum', label='Spectrum')
+                        ]
+
+class Figure(BaseFigure):
     ideogram = Instance(Ideogram)
+    _cached_ideogram = Instance(Ideogram)
     spectrum = Instance(Spectrum)
     inverse_isochron = Instance(InverseIsochron)
 
+    graph_selector = Instance(FigureGraphSelector, ())
     blanks_editor = Instance(BlanksEditor)
     nanalyses = -1
-
-    show_ideo = Bool(True)
-#    show_isochron = Bool(True)
-#    show_spectrum = Bool(True)
-
-#    show_ideo = Bool(False)
-    show_isochron = Bool(False)
-    show_spectrum = Bool(False)
-#    show_series = Bool(True)
-    def _get_graph_shows(self):
-        return [
-                Item('show_series', label='Series'),
-                Item('show_ideo', label='Ideogram'),
-                Item('show_isochron', label='Isochron'),
-                Item('show_spectrum', label='Spectrum')
-                ]
 
     def _refresh(self, graph, analyses, padding):
 
@@ -63,32 +60,47 @@ class Figure(BaseFigure):
         ideopadding = padding
         isopadding = padding
 #        seriespadding = padding
-
-        if self.show_ideo:
+        gs = self.graph_selector
+        if gs.show_ideo:
             '''
                 need to do self.ig for .on_trait_change to work
             '''
-            self.ideogram = ig = Ideogram()
-            ig.on_trait_change(self._update_selected_analysis, 'selected_analysis')
+            if self._cached_ideogram is not None:
+                self.ideogram = ideo = self._cached_ideogram
+            else:
+                self.ideogram = ideo = Ideogram()
 
-            gideo = ig.build(analyses, padding=ideopadding)
+            ideo.on_trait_change(self._update_selected_analysis, 'selected_analysis')
+
+            gideo = ideo.build(analyses, padding=ideopadding)
             if gideo:
                 graph.plotcontainer.add(gideo.plotcontainer)
 #                result.add(ig)
         else:
-            self.ideogram = None
+            self._cached_ideogram = self.ideogram.clone_traits()
+            del self.ideogram
 
-        if self.show_spectrum:
-            spectrum = Spectrum()
-            gspec = spectrum.build(analyses, padding=specpadding)
+        if gs.show_spectrum:
+            spec = self.spectrum
+            if spec is None:
+                spec = Spectrum()
+                self.spectrum = spec
+            gspec = spec.build(analyses, padding=specpadding)
             if gspec:
                 graph.plotcontainer.add(gspec.plotcontainer)
+        else:
+            del self.spectrum
 
-        if self.show_isochron:
-            isochron = InverseIsochron()
+        if gs.show_inverse_isochron:
+            isochron = self.inverse_isochron
+            if isochron is None:
+                isochron = InverseIsochron()
+                self.inverse_isochron = isochron
             giso = isochron.build(analyses, padding=isopadding)
             if giso:
                 graph.plotcontainer.add(giso.plotcontainer)
+        else:
+            del self.inverse_isochron
 
         super(Figure, self)._refresh(graph, analyses, padding)
 
@@ -103,14 +115,17 @@ class Figure(BaseFigure):
         bl_keys = [i for i in keys if i.endswith('bl')]
         bl_keys.sort(key=lambda k:k[2:4], reverse=True)
 
+#        print bl_keys
         self.blank_table_adapter.iso_keys = bl_keys
+
         self.blanks_editor.add(self.isotope_keys)
 
 #===============================================================================
 # handlers
 #===============================================================================
-    @on_trait_change('analyses:age_dirty,show_ideo,show_isochron,show_spectrum')
+    @on_trait_change('analyses:age_dirty,graph_selector:show_+')
     def _refresh_graph(self, obj, name, old, new):
+        print name
         self.refresh()
 
 #===============================================================================
@@ -142,10 +157,19 @@ class Figure(BaseFigure):
                              instance_item('ideogram', height=200),
                              visible_when='ideogram',
                              label='Edit Ideo.')
+        editinvisogrp = VGroup(
+                             instance_item('inverse_isochron', height=200),
+                             visible_when='inverse_isochron',
+                             label='Edit Inv. Isochron')
+        editspecgrp = VGroup(
+                             instance_item('spectrum', height=200),
+                             visible_when='spectrum',
+                             label='Edit Spectrum.')
 
         grp.content.append(editblankgrp)
         grp.content.append(editideogrp)
-
+        grp.content.append(editinvisogrp)
+        grp.content.append(editspecgrp)
         return grp
 
 #============= EOF =============================================

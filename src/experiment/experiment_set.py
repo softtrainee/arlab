@@ -33,6 +33,7 @@ from src.experiment.batch_edit import BatchEdit
 from src.experiment.stats import ExperimentStats
 from src.helpers.filetools import str_to_bool
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
+import yaml
 
 
 def extraction_path(name):
@@ -62,6 +63,9 @@ class ExperimentSet(Loggable):
     name = Property(depends_on='path')
     path = Str
     stats = Instance(ExperimentStats, ())
+
+#    mass_spec = Str
+#    metadata = Dict
 
     loaded_scripts = Dict
 
@@ -117,7 +121,6 @@ class ExperimentSet(Loggable):
             params['heat_value'] = v
             params['heat_units'] = u
 
-
         extraction = args[header.index('extraction')]
         measurement = args[header.index('measurement')]
         post_measurement = args[header.index('post_measurement')]
@@ -131,10 +134,13 @@ class ExperimentSet(Loggable):
     def load_automated_runs(self):
         with open(self.path, 'rb') as f:
             #read meta
+            metastr = ''
             #read until break
             for line in f:
+                metastr += line
                 if line.startswith('#====='):
                     break
+            meta = yaml.load(metastr)
 
             delim = '\t'
             header = map(str.strip, f.next().split(delim))
@@ -142,18 +148,10 @@ class ExperimentSet(Loggable):
             for line in f:
                 if line.startswith('#'):
                     continue
-#                args = map(str.strip, ai.split(delim))
-#                identifier = args[header.index('identifier')]
 
-#                extraction = args[header.index('extraction')]
-#                measurement = args[header.index('measurement')]
-
-#                hd = args[header.index('heat_device')]
-#                autocenter = str_to_bool(args[header.index('autocenter')])
-
-#                position = int(args[header.index('position')])
                 try:
                     params = self._run_parser(header, line)
+                    params['mass_spec_name'] = meta['mass_spec']
                     arun = self._automated_run_factory(**params)
                     self.automated_runs.append(arun)
                     if not arun.executable:
@@ -163,9 +161,6 @@ class ExperimentSet(Loggable):
                     self.automated_runs = []
                     self.executable = False
                     return False
-#                arun.extraction_script
-#                arun.measurement_script
-
 
             return True
 

@@ -67,6 +67,11 @@ class RegressionGraph(Graph):
             if coeffs is not None:
                 return coeffs[-1]
 
+    def get_value_at(self, t, plotid=0):
+        results = self.regression_results[plotid]
+        return self.regressor.get_value_at(results, t)
+
+
 #    def _selected_plotid_changed(self):
 #        '''
 #        '''
@@ -94,15 +99,15 @@ class RegressionGraph(Graph):
         '''
         '''
 
-        t = time.time()
-        if self.last_regress_time is None:
-            self.last_regress_time = t
-
-        elif (t < self.last_regress_time or
-                abs(t - self.last_regress_time) < 0.75):
-            return
-
-        self.last_regress_time = t
+#        t = time.time()
+#        if self.last_regress_time is None:
+#            self.last_regress_time = t
+#
+#        elif (t < self.last_regress_time or
+#                abs(t - self.last_regress_time) < 0.75):
+#            return
+#
+#        self.last_regress_time = t
         self.regress_plots()
 
     def regress_plots(self):
@@ -137,7 +142,8 @@ class RegressionGraph(Graph):
 
                 lline.index.set_data(args['lower_x'])
                 lline.value.set_data(args['lower_y'])
-
+#                lline.value_range.high_setting = 'auto'
+#                lline.value_range.low_setting = 'auto'
             #hover hook
             hover = scatter.index.metadata.get('hover', [])
             if hover:
@@ -147,13 +153,12 @@ class RegressionGraph(Graph):
 
             self.redraw()
 
-    def _get_type_dict(self, kind):
+    def _get_kind_dict(self, kind):
         '''
         '''
         kind = kind.lower()
-
         kw = dict()
-        if 'average' in kind:
+        if kind.startswith('average'):
             kw['use_stderr'] = True if 'SEM' in kind else False
             kind = 'average'
         elif kind is 'custom':
@@ -163,6 +168,8 @@ class RegressionGraph(Graph):
             kw['fitfunc'] = fitfunc
             kw['errfunc'] = lambda p, x, y: fitfunc(p, x) - y
             kw['p0'] = self.initial_guess
+        elif not kind in ['linear', 'parabolic', 'cubic']:
+            kind = None
 
         return kind, kw
 
@@ -212,7 +219,7 @@ class RegressionGraph(Graph):
 #            fiterrdata = self.get_data(axis = 2)
 
         ftype = self.fit_types[plotid]
-        ftype, kw = self._get_type_dict(ftype)
+        ftype, kw = self._get_kind_dict(ftype)
 
 #        ftype = 'weighted_least_squares'
 #        ftype = 'least_squares'
@@ -221,18 +228,19 @@ class RegressionGraph(Graph):
 #        kw['errfunc'] = lambda c, x, y: fitfunc(c, x) - y
 #        kw['fiterrdata'] = fiterrdata
 #        kw['p0'] = [1, 1]
-        r = getattr(self.regressor, ftype)
+        if ftype:
+            r = getattr(self.regressor, ftype)
 
-        kw['data_range'] = data_range
-        return_dict = r(indexdata, fitdata, **kw)
+            kw['data_range'] = data_range
+            return_dict = r(indexdata, fitdata, **kw)
 
-#        if self.show_regression_editor and return_dict:
-#
-#            editor = self.regression_editors[plotid]
-#            editor.set_regression_statistics(return_dict, plotid=plotid)
-#
-        self.regression_results[plotid] = return_dict
-        return return_dict
+    #        if self.show_regression_editor and return_dict:
+    #
+    #            editor = self.regression_editors[plotid]
+    #            editor.set_regression_statistics(return_dict, plotid=plotid)
+    #
+            self.regression_results[plotid] = return_dict
+            return return_dict
 
     def add_datum(self, *args, **kw):
         '''
@@ -264,7 +272,7 @@ class RegressionGraph(Graph):
                 yd = delete(y, s, 0)
 
                 ty = self.fit_types[plotid]
-                ty, kw = self._get_type_dict(ty)
+                ty, kw = self._get_kind_dict(ty)
                 res = self.regressor.calc_residuals(x, y, xd, yd, ty, **kw)
             else:
                 x = []
@@ -286,30 +294,33 @@ class RegressionGraph(Graph):
     def new_series(self, x=None, y=None, plotid=0, fit_type='linear', regress=True, *args, **kw):
         '''
         '''
-        if not regress:
+        if not regress or not fit_type:
             return super(RegressionGraph, self).new_series(x=x, y=y, plotid=plotid, *args, **kw)
 
         kw['type'] = 'scatter'
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
         scatter = plot.plot(names, **rd)[0]
-        self.set_series_label('data', plotid=plotid, series=0)
+        self.set_series_label('data', plotid=plotid)
 #        si = ScatterTool(component = scatter,
 #                         selection_color = 'blue'
 #                         )#, parent = self, plotid = plotid)
 #     #   scatter.tools.append(si)
 
-        overlay = ScatterInspectorOverlay(component=scatter,
-                                        hover_color='green',
-                                #        hover_metadata_name = 'no',
-                                        selection_color='red',
-                                        )
-        scatter.overlays.append(overlay)
+#        overlay = ScatterInspectorOverlay(component=scatter,
+#                                        hover_color='green',
+#                                #        hover_metadata_name = 'no',
+#                                        selection_color='red',
+#                                        )
+#        scatter.overlays.append(overlay)
 
         scatter.index.on_trait_change(self._metadata_changed,
                                             'metadata_changed')
 
         rect_tool = RectSelectionTool(scatter, parent=self, plotid=plotid)
         scatter.overlays.append(rect_tool)
+
+        #add a broadcaster so scatterinspector and rect selection will received events
+
 
         self.plots[plotid].tools[0].tools.insert(0, rect_tool)
 
@@ -321,36 +332,38 @@ class RegressionGraph(Graph):
         self.fit_types.append(fit_type)
         self.filters.append(None)
 
+        x = None
+        y = None
+        ux = None
+        uy = None
+        lx = None
+        ly = None
         if x is not None and y is not None:
             args = self._regress_(plotid=plotid)
-            x = args['x']
-            y = args['y']
-            ux = args['upper_x']
-            uy = args['upper_y']
-            lx = args['lower_x']
-            ly = args['lower_y']
-
-        else:
-            x = None
-            y = None
-            ux = None
-            uy = None
-            lx = None
-            ly = None
+            if args:
+                x = args['x']
+                y = args['y']
+                ux = args['upper_x']
+                uy = args['upper_y']
+                lx = args['lower_x']
+                ly = args['lower_y']
 
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
         line = plot.plot(names, **rd)[0]
-        self.set_series_label('fit', plotid=plotid, series=1)
+        self.set_series_label('fit', plotid=plotid)
+#        self.set_series_label('fit', plotid=plotid, series=1)
         if 'color' in kw:
             kw.pop('color')
 
         plot, names, rd = self._series_factory(ux, uy, line_style='dash', color='red', plotid=plotid, **kw)
         plot.plot(names, **rd)[0]
-        self.set_series_label('upper CI', plotid=plotid, series=2)
+#        self.set_series_label('upper CI', plotid=plotid, series=2)
+        self.set_series_label('upper CI', plotid=plotid)
 
         plot, names, rd = self._series_factory(lx, ly, line_style='dash', color='red', plotid=plotid, **kw)
         plot.plot(names, **rd)[0]
-        self.set_series_label('lower CI', plotid=plotid, series=3)
+#        self.set_series_label('lower CI', plotid=plotid, series=3)
+        self.set_series_label('lower CI', plotid=plotid)
 
         try:
             self._set_bottom_axis(plot, plot, plotid)

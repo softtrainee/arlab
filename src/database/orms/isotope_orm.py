@@ -35,6 +35,10 @@ def foreignkey(name):
 def stringcolumn(size=40):
     return Column(String(size))
 
+class proc_BlanksSetTable(Base, BaseMixin):
+    blank_id = foreignkey('proc_BlanksTable')
+    blank_analysis_id = foreignkey('AnalysisTable')
+
 class proc_BlanksHistoryTable(Base, BaseMixin):
     analysis_id = foreignkey('AnalysisTable')
     create_date = Column(DateTime, default=func.now())
@@ -46,6 +50,8 @@ class proc_BlanksTable(Base, BaseMixin):
     user_error = Column(Float)
     use_set = Column(Boolean)
     isotope = stringcolumn()
+    fit = Column(String(40))
+    sets = relationship('proc_BlanksSetTable', backref='blanks')
 
 class MassSpectrometerTable(Base, NameMixin):
 #    experiments = relationship('ExperimentTable', backref='mass_spectrometer')
@@ -80,6 +86,7 @@ class AnalysisTable(Base, ResultsMixin):
 
     #proc relationships
     blanks_histories = relationship('proc_BlanksHistoryTable', backref='analysis')
+    blanks_sets = relationship('proc_BlanksSetTable', backref='analysis')
 
 class AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('AnalysisTable')

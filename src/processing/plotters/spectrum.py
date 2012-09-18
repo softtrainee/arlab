@@ -15,13 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-
-from src.graph.stacked_graph import StackedGraph
+#from traits.api import HasTraits
 #============= standard library imports ========================
 from numpy import array
 #============= local library imports  ==========================
+from src.graph.stacked_graph import StackedGraph
+from src.processing.plotters.results_tabular_adapter import SpectrumResults, \
+    SpectrumResultsAdapter
+from src.processing.plotters.plotter import Plotter
 
-class Spectrum(object):
+class Spectrum(Plotter):
+
+    def _get_adapter(self):
+        return SpectrumResultsAdapter
 
     def build(self, analyses, padding):
         if not analyses:
@@ -84,10 +90,14 @@ class Spectrum(object):
         pad = 0.1
         g.set_y_limits(min=min(ys) * (1 - pad), max=max(ys) * (1 + pad))
 
+        ages = [a.age[0] for a in analyses]
         ages = array(ages)
-        self.age = ages.mean()
-        self.age_error = ages.std()
+        age = ages.mean()
+        error = ages.std()
 
+        self.results.append(SpectrumResults(
+                                           age=age,
+                                           error=error))
 
         return g
 

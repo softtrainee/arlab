@@ -20,7 +20,7 @@
 from chaco.api import AbstractOverlay
 
 #============= standard library imports ========================
-from numpy import linspace, hstack, sqrt, power, corrcoef
+from numpy import linspace, hstack, sqrt, power, corrcoef, nan
 from numpy.linalg import eig
 import math
 
@@ -49,12 +49,15 @@ class ErrorEllipseOverlay(AbstractOverlay):
 #        b = 0.00002
 
         pxy = corrcoef(x, y)[0][1]
+        try:
+            for cx, cy, ox, oy in zip(x, y, xer, yer):
+                a, b, rot = self.calculate_ellipse(component, cx, cy, ox, oy, pxy)
+                gc.save_state()
+                self._draw_ellipse(gc, component, cx, cy, a, b, rot)
+                gc.restore_state()
+        except Exception, e:
+            print e
 
-        for cx, cy, ox, oy in zip(x, y, xer, yer):
-            a, b, rot = self.calculate_ellipse(component, cx, cy, ox, oy, pxy)
-            gc.save_state()
-            self._draw_ellipse(gc, component, cx, cy, a, b, rot)
-            gc.restore_state()
 
     def calculate_ellipse(self, component, x, y, ox, oy, pxy,):
 
@@ -89,11 +92,10 @@ class ErrorEllipseOverlay(AbstractOverlay):
         ox, oy = component.map_screen([(0, 0)])[0]
 #        gc.translate_ctm(-scx, -scy)
         #gc.rotate_ctm(45)
-        x1 = linspace(-a, a)
+        x1 = linspace(-a, a, 200)
         y1 = sqrt(power(b, 2) * (1 - power(x1, 2) / power(a, 2)))
 
         x2 = x1[::-1]
-
         y2 = -sqrt(power(b, 2) * (1 - power(x2, 2) / power(a, 2)))
 
         x = hstack((x1, x2))
@@ -107,9 +109,7 @@ class ErrorEllipseOverlay(AbstractOverlay):
         gc.translate_ctm(scx - ox, scy - oy)
 
         gc.begin_path()
-
         gc.lines(pts)
-
         gc.stroke_path()
 
 if __name__ == '__main__':

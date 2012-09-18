@@ -22,7 +22,7 @@ from src.paths import paths
 from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
     MaterialTable, AnalysisTable, AnalysisPathTable, LabTable, ExtractionTable, \
     MeasurementTable, ExperimentTable, MassSpectrometerTable, AnalysisTypeTable, \
-    proc_BlanksHistoryTable, proc_BlanksTable
+    proc_BlanksHistoryTable, proc_BlanksTable, proc_BlanksSetTable
 #import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
@@ -69,6 +69,18 @@ class IsotopeAdapter(DatabaseAdapter):
         return b, False
 
     @add
+    def add_blanks_set(self, blank, analysis, **kw):
+        bs = proc_BlanksSetTable(**kw)
+        blank = self.get_blank(blank)
+        analysis = self.get_analysis(analysis)
+
+        if analysis:
+            bs.blank_analysis_id = analysis.id
+        if blank:
+            blank.sets.append(bs)
+        return bs, True
+
+    @add
     def add_experiment(self, name, **kw):
         exp = ExperimentTable(name=name, **kw)
         return exp, True
@@ -82,17 +94,20 @@ class IsotopeAdapter(DatabaseAdapter):
         return ex, True
 
     @add
-    def add_measurement(self, analysis, analysis_type, name, **kw):
+    def add_measurement(self, analysis, analysis_type, mass_spec, name, **kw):
         ms = MeasurementTable(script_name=name, **kw)
 #        if isinstance(analysis, str):
         analysis = self.get_analysis(analysis)
         analysis_type = self.get_analysis_type(analysis_type)
-
+        mass_spec = self.get_mass_spectrometer(mass_spec)
         if analysis:
             analysis.measurement = ms
 
         if analysis_type:
             analysis_type.measurements.append(ms)
+
+        if mass_spec:
+            mass_spec.measurements.append(ms)
 
         return ms, True
 
@@ -249,6 +264,10 @@ class IsotopeAdapter(DatabaseAdapter):
     @get_one
     def get_analysis_type(self, name):
         return AnalysisTypeTable
+
+    @get_one
+    def get_blank(self, name):
+        return proc_BlanksTable
 
     @get_one
     def get_blanks_history(self, name):

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Any, Int, Str, Float, List
+from traits.api import HasTraits, Instance, Any, Int, Str, Float, List, Range
 from traitsui.api import View, Item, HGroup, spring, TabularEditor
 from chaco.api import ArrayDataSource, ScatterInspectorOverlay
 from chaco.tools.api import ScatterInspector
@@ -27,59 +27,59 @@ import math
 
 from src.graph.stacked_graph import StackedGraph
 from src.graph.error_bar_overlay import ErrorBarOverlay
+from src.processing.plotters.results_tabular_adapter import IdeoResults, \
+    IdeoResultsAdapter
+from src.processing.plotters.plotter import Plotter
+from src.stats.core import calculate_weighted_mean, calculate_mswd
 #from src.processing.figure import AgeResult
 
-def weighted_mean(x, errs):
-    x = asarray(x)
-    errs = asarray(errs)
+#def weighted_mean(x, errs):
+#    x = asarray(x)
+#    errs = asarray(errs)
+#
+#    weights = asarray(map(lambda e: 1 / e ** 2, errs))
+#
+#    wtot = weights.sum()
+#    wmean = (weights * x).sum() / wtot
+#    werr = wtot ** -0.5
+#    return wmean, werr
 
-    weights = asarray(map(lambda e: 1 / e ** 2, errs))
-
-    wtot = weights.sum()
-    wmean = (weights * x).sum() / wtot
-    werr = wtot ** -0.5
-    return wmean, werr
-
-class IdeoResultsTabularAdapter(TabularAdapter):
-    columns = [('Age', 'age'),
-               ('Error(1s)', 'error')
-             ]
-    age_format = Str('%0.3f')
-    error_format = Str('%0.3f')
-class IdeoResult(HasTraits):
-    age = Float
-    error = Float
-
-class Ideogram(HasTraits):
+class Ideogram(Plotter):
     ages = None
     errors = None
-    graph = Any
-    selected_analysis = Any
-    analyses = Any
+    error_bar_overlay = Any
+#    graph = Any
+#    selected_analysis = Any
+#    analyses = Any
 
-    ideoresults = List
-    nsigma = Int(1, enter_set=True, auto_set=False)
+#    nsigma = Int(1, enter_set=True, auto_set=False)
+    nsigma = Range(1, 3, enter_set=True, auto_set=False)
+
+    def _get_adapter(self):
+        return IdeoResultsAdapter
+
     def _nsigma_changed(self):
-        self.error_bar_overlay.nsigma = self.nsigma
-        self.graph.redraw()
+        if self.error_bar_overlay:
+            self.error_bar_overlay.nsigma = self.nsigma
+            self.graph.redraw()
 
-    def build_results(self, display):
-        width = lambda x, w = 8:'{{:<{}s}}='.format(w).format(x)
-#        floatfmt = lambda x, w = 3:'{{:0.{}f}}'.format(w).format(x)
-        floatfmt = lambda x:'{:0.3f}'.format(x)
-        attr = lambda n, v:'{}{}'.format(width(n), floatfmt(v))
-
-#        display.add_text(' ')
-#        lines = []
-
-#        for ai, ei in zip(self.ages, self.errors):
-        for ri in self.ideoresults:
-            display.add_text(attr('age', ri.age))
-            display.add_text(attr('error', ri.error))
+#    def build_results(self, display):
+#        width = lambda x, w = 8:'{{:<{}s}}='.format(w).format(x)
+##        floatfmt = lambda x, w = 3:'{{:0.{}f}}'.format(w).format(x)
+#        floatfmt = lambda x:'{:0.3f}'.format(x)
+#        attr = lambda n, v:'{}{}'.format(width(n), floatfmt(v))
+#
+##        display.add_text(' ')
+##        lines = []
+#
+##        for ai, ei in zip(self.ages, self.errors):
+#        for ri in self.results:
+#            display.add_text(attr('age', ri.age))
+#            display.add_text(attr('error', ri.error))
 
 
     def build(self, analyses, padding):
-        self.ideoresults = []
+        self.results = []
         self.analyses = analyses
         g = StackedGraph(panel_height=200,
                                 equi_stack=False,
@@ -106,6 +106,9 @@ class Ideogram(HasTraits):
 
         pad = 2
         ages = [a.age[0] for a in analyses]
+#        for ai in analyses:
+#            print a.age
+#        ages = None
         if not ages:
             return
 
@@ -127,12 +130,13 @@ class Ideogram(HasTraits):
         probs = zeros(n)
 
         ages = asarray(ages)
-        wm, we = weighted_mean(ages, errors)
-#        self.age = wm
-#        self.age_error = we
-#        self.ages.append(wm)
-#        self.errors.append(we)
-        self.ideoresults.append(IdeoResult(age=wm, error=we))
+        wm, we = calculate_weighted_mean(ages, errors)
+        mswd = calculate_mswd(ages, errors)
+
+        self.results.append(IdeoResults(
+                                        age=wm,
+                                        mswd=mswd,
+                                        error=we))
         for ai, ei in zip(ages, errors):
             if abs(ai) < 1e-7:
                 continue
@@ -160,7 +164,7 @@ class Ideogram(HasTraits):
                              marker_size=3,
                              color=s.color)
 
-        self.error_bar_overlay = ebo = ErrorBarOverlay(component=s, nsgima=self.nsigma)
+        self.error_bar_overlay = ebo = ErrorBarOverlay(component=s, nsigma=self.nsigma)
         s.underlays.append(ebo)
         s.xerror = ArrayDataSource([we])
 
@@ -207,44 +211,47 @@ class Ideogram(HasTraits):
         scatter.underlays.append(ErrorBarOverlay(component=scatter))
 #        scatter.underlays.append(ErrorBarOverlay(component=s))
         scatter.xerror = ArrayDataSource(errors)
-
-        #add a scatter hover tool
-        scatter.tools.append(ScatterInspector(scatter, selection_mode='off'))
-        overlay = ScatterInspectorOverlay(scatter,
-                    hover_color="red",
-                    hover_marker_size=6,
-                    )
-        scatter.overlays.append(overlay)
-
-        #bind to the metadata
-        scatter.index.on_trait_change(self.update_graph_metadata, 'metadata_changed')
-        self.metadata = scatter.index.metadata
+        self._add_scatter_inspector(scatter)
+#        #add a scatter hover tool
+#        scatter.tools.append(ScatterInspector(scatter, selection_mode='off'))
+#        overlay = ScatterInspectorOverlay(scatter,
+#                    hover_color="red",
+#                    hover_marker_size=6,
+#                    )
+#        scatter.overlays.append(overlay)
+#
+#        #bind to the metadata
+#        scatter.index.on_trait_change(self.update_graph_metadata, 'metadata_changed')
+#        self.metadata = scatter.index.metadata
 
         g.set_y_limits(min=0, max=len(ages) + 1, plotid=1)
 
-
-    def update_graph_metadata(self, obj, name, old, new):
-##        print obj, name, old, new
-        hover = self.metadata.get('hover')
-        if hover:
-            hoverid = hover[0]
-            self.selected_analysis = sorted([a for a in self.analyses], key=lambda x:x.age)[hoverid]
-
+#
+#    def update_graph_metadata(self, obj, name, old, new):
+###        print obj, name, old, new
+#        hover = self.metadata.get('hover')
+#        if hover:
+#            hoverid = hover[0]
+#            self.selected_analysis = sorted([a for a in self.analyses], key=lambda x:x.age)[hoverid]
+    def _cmp_analyses(self, x):
+        return x.age[0]
 #===============================================================================
 # views
 #===============================================================================
-    def traits_view(self):
-        v = View(HGroup(Item('nsigma'), spring),
-                 Item('ideoresults',
-                      style='custom',
-                      show_label=False,
-                      editor=TabularEditor(adapter=IdeoResultsTabularAdapter())
-
-
-                      )
-
-                 )
-        return v
+    def _get_content(self):
+        return HGroup(Item('nsigma', style='custom'), spring)
+#    def traits_view(self):
+#        v = View(HGroup(Item('nsigma'), spring),
+#                 Item('results',
+#                      style='custom',
+#                      show_label=False,
+#                      editor=TabularEditor(adapter=IdeoResultsAdapter())
+#
+#
+#                      )
+#
+#                 )
+#        return v
 
 #class MultipleIdeogram(Ideogram):
 #    def _build_ideo(self, g):

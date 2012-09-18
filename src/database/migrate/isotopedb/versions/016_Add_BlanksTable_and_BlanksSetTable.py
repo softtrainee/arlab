@@ -14,13 +14,13 @@ Column('history_id', Integer),
 Column('user_value',Float),
 Column('user_error',Float),
 Column('use_set',Boolean),
-Column('isotope',String(40))
+Column('isotope',String(40)),
+Column('fit',String(40)),
 )
 bst=Table('proc_BlanksSetTable',meta,
 Column('id',Integer, primary_key=True),
 Column('blank_analysis_id', Integer),
 Column('blank_id', Integer),
-Column('fit',String(40)),
 )
 
 def upgrade(migrate_engine):

@@ -16,15 +16,16 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Int, Float, Property, cached_property, Dict, \
-    List, Color, Enum, Any, Event, on_trait_change
-from traitsui.api import View, Item, TableEditor
+    List, Color, Any, Event
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
-from numpy import polyfit, array
 import random
-from src.processing.argon_calculations import calculate_arar_age
-from src.processing.signal import Signal
+import os
+from tables import openFile
 #============= local library imports  ==========================
+from src.processing.argon_calculations import calculate_arar_age
+from src.processing.signal import Signal, Blank
+from src.loggable import Loggable
 
 
 class AnalysisTabularAdapter(TabularAdapter):
@@ -71,7 +72,9 @@ class AnalysisTabularAdapter(TabularAdapter):
         return o.color
 
 
-class Analysis(HasTraits):
+class Analysis(Loggable):
+    workspace = Any
+    repo = Any
     rid = Str
     sample = Str
     irradiation = Str
@@ -125,6 +128,7 @@ class Analysis(HasTraits):
         j = self._get_j()
         irradinfo = self._get_irradinfo()
 
+#        print 'agege'
 #        age = 0
 #        err = 0
 #        age = 10 + random.random()
@@ -147,9 +151,9 @@ class Analysis(HasTraits):
         blsignals = [(signals[iso].value, signals[iso].error)
 #                     if signals.has_key(iso) else (0, 0)
                         for iso in map('{}bl'.format, keys)]
-
+#        return 1, 0
         result = calculate_arar_age(fsignals, bssignals, blsignals, j, irradinfo)
-
+#        print result
         if result:
             self.k39 = result['k39'].nominal_value
             self.k39err = result['k39'].std_dev()
@@ -159,8 +163,10 @@ class Analysis(HasTraits):
             age = ai.nominal_value
             err = ai.std_dev()
 
-            age = 10 + random.random()
-            err = random.random()
+#            age = 10 + random.random()
+#            err = random.random()
+            age = 10
+            err = 1
         else:
             age = 0
             err = 0
@@ -170,39 +176,75 @@ class Analysis(HasTraits):
     def _get_age_error(self):
         return self.age[1]
 
-    def load_from_database(self):
-        dbr = self.dbresult
+    def _open_file(self, name):
+        p = os.path.join(self.workspace.root, name)
+
+        if os.path.isfile(p):
+            return openFile(p)
+        else:
+            rname = os.path.basename(p)
+            if self.repo.isfile(rname):
+                self.info('fetching file from repo')
+#                out = open(p, 'wb')
+                self.repo.retrieveFile(rname, p)
+                return openFile(p)
+            else:
+                self.warning('{} is not a file'.format(name))
+
+    def load_from_database(self, dbr=None):
+        if dbr is None:
+            dbr = self.dbresult
 
         #load blanks
         histories = dbr.blanks_histories
         if histories:
             hist = histories[-1]
             for bi in hist.blanks:
-                s = Signal()
+                isotope = bi.isotope
+                s = Blank(timestamp=self.timestamp)
                 if not bi.use_set:
                     s.value = bi.user_value
                     s.error = bi.user_error
-                self.signals['{}bl'.format(bi.isotope)] = s
+                else:
+                    #load signals
+                    s.fit = bi.fit
+                    def an_factory(bii):
+                        c = self.__class__(
+#                                           dbresult=bii.analysis,
+                                            repo=self.repo,
+                                            workspace=self.workspace
+                                            )
+                        c.load_from_file(bii.analysis.path.filename)
+                        return c
 
-    def load_from_file(self, df):
+                    xs, ys = zip(*[(ba.timestamp, ba.signals[isotope].value)
+                                   for ba in map(an_factory, bi.sets)])
+                    s.xs = xs
+                    s.ys = ys
 
-        #get the signals
-        for iso in df.root.signals:
-            name = iso._v_name
-            tab = next((n for n in iso._f_iterNodes()), None)
-            self.signals[name] = self._signal_factory(name, tab)
+                self.signals['{}bl'.format(isotope)] = s
 
-        for biso in df.root.baselines:
-            name = biso._v_name
-            basetab = next((n for n in biso._f_iterNodes()), None)
-            self.signals['{}bs'.format(name)] = self._signal_factory(name, basetab)
+    def load_from_file(self, name):
+        df = self._open_file(name)
+        if df:
+            #get the signals
+            for iso in df.root.signals:
+                name = iso._v_name
+                tab = next((n for n in iso._f_iterNodes()), None)
+                self.signals[name] = self._signal_factory(name, tab)
 
-        try:
-            t = df.root._v_attrs['TIMESTAMP']
-        except KeyError:
-            t = -1
-#        print t, 'TIMESTAMP'
-        self.timestamp = t
+            for biso in df.root.baselines:
+                name = biso._v_name
+                basetab = next((n for n in biso._f_iterNodes()), None)
+                self.signals['{}bs'.format(name)] = self._signal_factory(name, basetab)
+
+            try:
+                t = df.root._v_attrs['TIMESTAMP']
+            except KeyError:
+                t = -1
+    #        print t, 'TIMESTAMP'
+            self.timestamp = t
+            return True
 
     def _blank_factory(self, iso, tab):
 

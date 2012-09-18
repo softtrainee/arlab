@@ -13,18 +13,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from src.graph.graph import Graph
-from src.graph.time_series_graph import TimeSeriesGraph
-from src.graph.regression_graph import RegressionGraph, \
-    RegressionTimeSeriesGraph, StackedRegressionTimeSeriesGraph
 
 #============= enthought library imports =======================
-#from traits.api import HasTraits
+from traits.api import HasTraits, Any
 #from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+#from src.graph.graph import Graph
+#from src.graph.time_series_graph import TimeSeriesGraph
+from src.graph.regression_graph import RegressionGraph, \
+    RegressionTimeSeriesGraph, StackedRegressionTimeSeriesGraph
+from src.processing.plotters.plotter import Plotter
+def colorname_gen():
+    r = ['black', 'red', 'green', 'blue', 'yellow']
+    i = 0
+    while 1:
+        yield r[i]
+        i += 1
 
-class Series(object):
+
+class Series(Plotter):
+    fits = None
     def axis_formatter(self, x):
         if 1000 > abs(x) > 0.01:
             return '{:0.2f}'.format(x)
@@ -35,7 +44,9 @@ class Series(object):
         else:
             return '{:0.2e}'.format(x)
 
-    def build(self, analyses, keys, basekeys, padding):
+    def build(self, analyses, keys, basekeys, gids, padding):
+        self.analyses = analyses
+        self.colorgen = colorname_gen()
         if isinstance(keys, str):
             keys = [keys]
 
@@ -63,57 +74,64 @@ class Series(object):
                                       ),
                   equi_stack=True
                   )
+        self.graph = g
+
+        self.fits = dict()
         cnt = 0
-        for _, (key, fi) in enumerate(keys):
-#        g = self._graph_factory((r, c))
-#        for i, (ti, iso) in enumerate(zip(a.isotope_names, isos)):
-            xs, ys = zip(*[(a.timestamp, a.signals[key].value) for a in analyses if a.timestamp > 0])
-
-#        import random
-#        xs = range(100)
-#        ys = [random.random() for i in xs]
-
-            self._add_series(g, key, xs, ys, fi, padding, plotid=cnt)
-            cnt += 1
-
-
-        for _, (key, fi) in enumerate(basekeys):
-            try:
-                xs, ys = zip(*[(a.timestamp, a.signals[key].value) for a in analyses if a.timestamp > 0])
-
-                self._add_series(g, key, xs, ys, fi, padding, plotid=cnt)
-                cnt += 1
-            except KeyError, e:
-                print e
-        return g
-
-    def _add_series(self, g, ti, xs, ys, fi, padding, plotid=0):
-
-#        ti.replace('-baseline', 'bs')
-#        print padding
-        g.new_plot(padding_left=padding[0],
+        pxma = None
+        pxmi = None
+        for k, f in keys + basekeys:
+            g.new_plot(padding_left=padding[0],
                    padding_right=padding[1],
                    padding_top=padding[2],
                    padding_bottom=padding[3],
+                   ytitle='{} (fA)'.format(k))
 
-#                   title=ti,
-#                   padding_right=5,
-#                   padding_top=20,
-#                   padding_left=75,
-#                   padding_bottom=50,
-#                   xtitle='Time',
-                   ytitle='{} (fA)'.format(ti))
+            self.fits[k] = f
 
-#        n = len(iso)
-#        x = range(n)
-        g.new_series(xs, ys,
+            for gid, regress in gids:
+                xs, ys = zip(*[(a.timestamp, self._get_series_value(a, k, gid)) for a in analyses if a.timestamp > 0 and a.gid == gid])
+
+                self._add_series(g, xs, ys, f, padding, regress, gid, plotid=cnt)
+                xma = max(xs)
+                xmi = min(xs)
+
+                if pxma:
+                    xma = max(pxma, xma)
+                    xmi = min(pxmi, xmi)
+
+                pxma = xma
+                pxmi = xmi
+            cnt += 1
+
+        if pxma and pxmi:
+            g.set_x_limits(pxmi, pxma, plotid=0)
+
+        return g
+
+    def _get_series_value(self, a, k, gid):
+        return a.signals[k].value
+
+
+    def _add_series(self, g, xs, ys, fi, padding, regress, gid, plotid=0):
+        args = g.new_series(xs, ys,
                      plotid=plotid,
                      fit_type=fi,
-                     type='scatter', marker='circle', marker_size=1.25)
+                     regress=regress,
+                     type='scatter',
+                     marker='circle',
+                     color=self.colorgen.next(),
+                     marker_size=2)
 
-        g.set_y_limits(min(ys), max(ys), pad='0.1', plotid=plotid)
-        g.set_x_limits(min(xs), max(xs), pad=1, plotid=plotid)
+#        g.set_x_limits(min(xs), max(xs), pad='0.25', plotid=plotid)
 
         g.set_axis_traits(tick_label_formatter=self.axis_formatter, plotid=plotid, axis='y')
 
+        if regress:
+            scatter = args[1]
+        else:
+            scatter = g.plots[plotid].plots['plot{}'.format(args[0][-1])][0]
+
+        self._add_scatter_inspector(scatter, gid)
+        g.regress_plots()
 #============= EOF =============================================
