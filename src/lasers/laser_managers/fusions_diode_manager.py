@@ -71,7 +71,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     request_powermin = Float(0)
     request_powermax = Float(1500)
 
-    dbname = paths.diodelaser_db
+    name = paths.diodelaser_db
     db_root = paths.diodelaser_db_root
 #    def finish_loading(self):
 #        super(FusionsDiodeManager, self).finish_loading()

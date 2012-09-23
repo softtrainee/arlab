@@ -108,7 +108,7 @@ if __name__ == '__main__':
     logging_setup('dvs')
 
     from src.paths import paths
-    db = DeviceScanAdapter(dbname=paths.device_scan_db,
+    db = DeviceScanAdapter(name=paths.device_scan_db,
                             kind='sqlite')
     db.connect()
 

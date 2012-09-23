@@ -80,7 +80,7 @@ class BlanksSeries(Series):
             elif fit == 'bracketing interpolate':
                 n = bracketing_interpolate_blanks(ts=ts, *args)
             elif fit == 'bracketing average':
-                n = bracketing_interpolate_blanks(ts=ts, *args)
+                n = bracketing_average_blanks(ts=ts, *args)
 
 #            if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
 #                fit = '{}_blanks'.format(fit.replace(' ', '_'))
@@ -153,10 +153,12 @@ class BlanksFigure(BaseFigure):
         gids = list(set([(a.gid, True) for a in analyses]))
         gids = [(g, True if i == 0 else False) for i, (g, _) in enumerate(gids)]
         return gids
+
     @property
     def fit_series(self):
-        return (si for si in self.series_configs if si.show and si.fit != '---')
+        return [si for si in self.series_configs if si.show and si.fit != '---']
+
     @property
     def dirty(self):
-        return next(self.fit_series, None)
+        return next((s for s in self.fit_series), None)
 #============= EOF =============================================

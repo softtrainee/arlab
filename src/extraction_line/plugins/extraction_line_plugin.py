@@ -23,6 +23,7 @@ from traits.api import List
 #============= local library imports  ==========================
 from src.extraction_line.extraction_line_manager import ExtractionLineManager
 from src.envisage.core.core_plugin import CorePlugin
+from src.helpers.parsers.initialization_parser import InitializationParser
 
 class ExtractionLinePlugin(CorePlugin):
     '''
@@ -54,7 +55,10 @@ class ExtractionLinePlugin(CorePlugin):
     def _factory(self):
         '''
         '''
-        elm = ExtractionLineManager()
+        ip = InitializationParser()
+        plugin = ip.get_plugin('Experiment', category='general')
+        mode = plugin.get('mode')
+        elm = ExtractionLineManager(mode=mode)
         elm.bind_preferences()
 
         return elm

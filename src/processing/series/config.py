@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,42 +14,25 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-from traits.api import Instance, Button
-from traitsui.api import View, Item
-from src.managers.manager import Manager
-
+from traits.api import HasTraits, Bool, Str, Enum, Float
+from traitsui.api import View, Item, HGroup
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
-from src.database.core.database_adapter import DatabaseAdapter
-class DBDataManager(Manager):
-    database = Instance(DatabaseAdapter)
 
-    #host = DelegatesTo('database')
-    #dbname = DelegatesTo('database')
-    #password = DelegatesTo('database')
-    #user = DelegatesTo('database')
-    #kind = DelegatesTo('database')
-    #connected = DelegatesTo('database')
-    #use_db = DelegatesTo('database')
-    importbutton = Button('Import')
-    def _importbutton_fired(self):
-        self._import_()
-
-    def _import_(self):
-        pass
-
-
+class Config(HasTraits):
+    label = Str
+    value = Float()
+    error = Float()
+    save = Bool(False)
     def traits_view(self):
-
-        v = View(Item('importbutton', show_label=False),
-                 Item('database', style='custom', show_label=False)
+        v = View(HGroup(
+                        Item('label', show_label=False, style='readonly'),
+                        Item('value', show_label=False),
+                        Item('error', show_label=False),
+                        Item('save', show_label=False)
+                        )
                  )
         return v
+#============= EOF =============================================
 
-
-
-#============= EOF ====================================

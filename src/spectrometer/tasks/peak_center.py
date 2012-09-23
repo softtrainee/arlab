@@ -188,7 +188,9 @@ class PeakCenter(MagnetScan):
                          )
 
         graph.plots[0].value_range.tight_bounds = False
+
         graph.set_x_limits(min=min([start, end]), max=max([start, end]))
+
 
 #============= EOF =============================================
 #        '''

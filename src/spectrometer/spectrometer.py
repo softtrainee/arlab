@@ -17,7 +17,8 @@
 
 
 #============= enthought library imports =======================
-from traits.api import String, Instance, Int, Property, List, Dict, Any, Enum, Str, DelegatesTo, Float
+from traits.api import String, Instance, Int, Property, List, Dict, \
+    Any, Enum, Str, DelegatesTo, Float, Event
 from traitsui.api import View, Item, VGroup, EnumEditor, RangeEditor
 #from pyface.timer.api import Timer, do_later, do_after
 #from pyface.timer.do_later import do_later
@@ -84,6 +85,7 @@ class Spectrometer(SpectrometerDevice):
     dc_npeak_centers = Int(3)
 
     _alive = False
+    intensity_dirty = Event
 
     def set_parameter(self, name, v):
         cmd = '{} {}'.format(name, v)
@@ -277,6 +279,7 @@ class Spectrometer(SpectrometerDevice):
             if tagged:
                 keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 
+        self.intensity_dirty = dict(zip(keys, signals))
         return keys, signals
 #        if not tagged:
 #            #update the detector current value

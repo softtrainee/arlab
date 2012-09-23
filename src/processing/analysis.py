@@ -24,13 +24,23 @@ import os
 from tables import openFile
 #============= local library imports  ==========================
 from src.processing.argon_calculations import calculate_arar_age
-from src.processing.signal import Signal, Blank
+from src.processing.signal import Signal, Blank, Background
 from src.loggable import Loggable
 
 
 class AnalysisTabularAdapter(TabularAdapter):
     iso_keys = List
     columns = Property(depends_on='iso_keys')
+
+    def get_column_keys(self):
+        '''
+            simple wrapper to add er columns
+        '''
+        isos = self.iso_keys
+        es = map(lambda xi:'{}_er'.format(xi), isos)
+        return [ci
+                for pi in zip(isos, es)
+                    for ci in pi]
 
     def get_font(self, obj, trait, row):
         import wx
@@ -51,18 +61,21 @@ class AnalysisTabularAdapter(TabularAdapter):
                ('Age', 'age'),
                ('Error', 'age_error'),
                ]
-        cols += [(i.capitalize(), i) for i in self.iso_keys]
-        for iso in self.iso_keys:
+        colskeys = self.get_column_keys()
+        cols += [(i.capitalize(), i) for i in colskeys]
+        for iso in colskeys:
             self.add_trait('{}_format'.format(iso),
                            '%0.4f')
+            self.add_trait('{}_width'.format(iso),
+                           60)
         return cols
 
     age_text = Property
     age_error_format = Str('%0.2f')
 
-    age_width = Int(80)
-    age_error_width = Int(80)
-    rid_width = Int(80)
+    age_width = Int(60)
+    age_error_width = Int(40)
+    rid_width = Int(60)
 
     def _get_age_text(self, trait, item):
         return '{:0.3f}'.format(self.item.age[0])
@@ -79,15 +92,13 @@ class Analysis(Loggable):
     sample = Str
     irradiation = Str
 
-    analysis_type = Str
-
     dbresult = Any
 
     rid = Property(depends_on='dbresult')
     sample = Property(depends_on='dbresult')
     labnumber = Property(depends_on='dbresult')
     irradiation = Property(depends_on='dbresult')
-
+    analysis_type = Property(depends_on='labnumber')
     timestamp = Float
 
     signals = Dict
@@ -109,18 +120,8 @@ class Analysis(Loggable):
 #    def _change(self):
 #        print 'fiafsd'
 #        self.age_dirty = True
-
-    def __getattr__(self, attr):
-        try:
-            return self.signals[attr].value
-        except KeyError:
-            return 0
-
-    @cached_property
-    def _get_rid(self):
-        dbr = self.dbresult
-        ln = dbr.labnumber
-        return '{}-{}'.format(ln.labnumber, ln.aliquot)
+    def load_age(self):
+        self.info('{} age={}'.format(self.rid, self.age))
 
     @cached_property
     def _get_age(self):
@@ -128,31 +129,23 @@ class Analysis(Loggable):
         j = self._get_j()
         irradinfo = self._get_irradinfo()
 
-#        print 'agege'
-#        age = 0
-#        err = 0
-#        age = 10 + random.random()
-#        err = random.random()
-#        if len(signals.keys()) == 5:
         keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
         for iso in keys:
-            for k in ['', 'bs', 'bl']:
+            for k in ['', 'bs', 'bl', 'bg']:
                 isok = iso + k
                 if not signals.has_key(isok):
                     signals[isok] = self._signal_factory(isok, None)
 
-        fsignals = [(signals[iso].value, signals[iso].error)
-                    for iso in keys]
 
-        bssignals = [(signals[iso].value, signals[iso].error)
-#                     if signals.has_key(iso) else (0, 0)
-                        for iso in map('{}bs'.format, keys)]
+        sigs = lambda name: [(signals[iso].value, signals[iso].error)
+                                for iso in map('{{}}{}'.format(name).format, keys)]
+        fsignals = sigs('')
+        bssignals = sigs('bs')
+        blsignals = sigs('bl')
+        bksignals = sigs('bg')
 
-        blsignals = [(signals[iso].value, signals[iso].error)
-#                     if signals.has_key(iso) else (0, 0)
-                        for iso in map('{}bl'.format, keys)]
 #        return 1, 0
-        result = calculate_arar_age(fsignals, bssignals, blsignals, j, irradinfo)
+        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irradinfo)
 #        print result
         if result:
             self.k39 = result['k39'].nominal_value
@@ -171,10 +164,6 @@ class Analysis(Loggable):
             age = 0
             err = 0
         return age, err
-
-    @cached_property
-    def _get_age_error(self):
-        return self.age[1]
 
     def _open_file(self, name):
         p = os.path.join(self.workspace.root, name)
@@ -195,48 +184,84 @@ class Analysis(Loggable):
         if dbr is None:
             dbr = self.dbresult
 
+#        #load blanks
+#        histories = dbr.blanks_histories
+#        if histories:
+#            hist = histories[-1]
+#            for bi in hist.blanks:
+#                isotope = bi.isotope
+#                s = Blank(timestamp=self.timestamp)
+#                if not bi.use_set:
+#                    s.value = bi.user_value
+#                    s.error = bi.user_error
+#                else:
+#                    #load signals
+#                    s.fit = bi.fit.lower()
+##                    def an_factory(bii):
+##                        c = self.__class__(
+###                                           dbresult=bii.analysis,
+##                                            repo=self.repo,
+##                                            workspace=self.workspace
+##                                            )
+##                        c.load_from_file(bii.analysis.path.filename)
+##                        return c
+#
+#                    xs, ys = zip(*[(ba.timestamp, ba.signals[isotope].value)
+#                                   for ba in map(self._analysis_factory, bi.sets)])
+#                    s.xs = xs
+#                    s.ys = ys
+#
+#                self.signals['{}bl'.format(isotope)] = s
         #load blanks
-        histories = dbr.blanks_histories
+        self._load_from_history(dbr, 'blanks', 'bl', Blank)
+
+        #load backgrounds
+        self._load_from_history(dbr, 'backgrounds', 'bg', Background)
+
+    def _load_from_history(self, dbr, name, key, klass, **kw):
+        histories = getattr(dbr, '{}_histories'.format(name))
         if histories:
             hist = histories[-1]
-            for bi in hist.blanks:
+            items = getattr(hist, name)
+            for bi in items:
                 isotope = bi.isotope
-                s = Blank(timestamp=self.timestamp)
+                s = klass(timestamp=self.timestamp, **kw)
                 if not bi.use_set:
                     s.value = bi.user_value
                     s.error = bi.user_error
                 else:
-                    #load signals
-                    s.fit = bi.fit
-                    def an_factory(bii):
-                        c = self.__class__(
-#                                           dbresult=bii.analysis,
-                                            repo=self.repo,
-                                            workspace=self.workspace
-                                            )
-                        c.load_from_file(bii.analysis.path.filename)
-                        return c
-
+                    s.fit = bi.fit.lower()
                     xs, ys = zip(*[(ba.timestamp, ba.signals[isotope].value)
-                                   for ba in map(an_factory, bi.sets)])
+                                   for ba in map(self._analysis_factory, bi.sets)])
                     s.xs = xs
                     s.ys = ys
+                self.signals['{}{}'.format(isotope, key)] = s
 
-                self.signals['{}bl'.format(isotope)] = s
+    def _analysis_factory(self, dbr):
+        klass = self.__class__
+        c = klass(repo=self.repo, workspace=self.workspace)
+        c.load_from_file(dbr.analysis.path.filename)
+        return c
 
     def load_from_file(self, name):
         df = self._open_file(name)
         if df:
-            #get the signals
-            for iso in df.root.signals:
-                name = iso._v_name
-                tab = next((n for n in iso._f_iterNodes()), None)
-                self.signals[name] = self._signal_factory(name, tab)
+            try:
+                #get the signals
+                for iso in df.root.signals:
+                    name = iso._v_name
+                    tab = next((n for n in iso._f_iterNodes()), None)
+                    self.signals[name] = self._signal_factory(name, tab)
+            except Exception:
+                pass
 
-            for biso in df.root.baselines:
-                name = biso._v_name
-                basetab = next((n for n in biso._f_iterNodes()), None)
-                self.signals['{}bs'.format(name)] = self._signal_factory(name, basetab)
+            try:
+                for biso in df.root.baselines:
+                    name = biso._v_name
+                    basetab = next((n for n in biso._f_iterNodes()), None)
+                    self.signals['{}bs'.format(name)] = self._signal_factory(name, basetab)
+            except Exception:
+                pass
 
             try:
                 t = df.root._v_attrs['TIMESTAMP']
@@ -254,7 +279,14 @@ class Analysis(Loggable):
         kw = dict()
         if tab is not None:
             xs, ys = self._get_xy(tab)
-            kw = dict(xs=xs, ys=ys, detector=tab.name)
+            try:
+                fit = tab._v_attrs['fit']
+            except Exception:
+                fit = 1
+
+            kw = dict(xs=xs, ys=ys,
+                      fit=fit,
+                      detector=tab.name)
         sig = Signal(isotope=iso, **kw)
         return sig
 
@@ -267,7 +299,49 @@ class Analysis(Loggable):
     def _get_irradinfo(self):
         return (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), 1
 
+    def __getattr__(self, attr):
+        try:
+#            print attr, self.signals[attr].value
+            return self.signals[attr].value
+        except KeyError:
+            if attr.endswith('_er'):
+                try:
+                    attr = attr.replace('_er', '')
+                    return self.signals[attr].error
+                except KeyError:
+                    print 'eee', 0
+                    return 0
 
+    @cached_property
+    def _get_age_error(self):
+        return self.age[1]
+
+    @cached_property
+    def _get_analysis_type(self):
+        dbr = self.dbresult
+        return dbr.measurement.analysis_type.name
+
+    @cached_property
+    def _get_labnumber(self):
+        dbr = self.dbresult
+        ln = dbr.labnumber
+        return ln.labnumber
+
+    @cached_property
+    def _get_rid(self):
+        dbr = self.dbresult
+        ln = dbr.labnumber
+        return '{}-{}'.format(ln.labnumber, ln.aliquot)
+
+    @cached_property
+    def _get_sample(self):
+        dbr = self.dbresult
+        return dbr.sample.name
+
+    @cached_property
+    def _get_irradiation(self):
+        dbr = self.dbresult
+        return dbr.irradiation.name
 #timeit
 if __name__ == '__main__':
     from tables import openFile

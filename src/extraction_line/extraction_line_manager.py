@@ -69,6 +69,7 @@ class ExtractionLineManager(Manager):
     pyscript_editor = Instance(PyScriptManager)
 
     learner = None
+    mode = 'normal'
 
     def get_subsystem_module(self, subsystem, module):
         '''
@@ -134,6 +135,8 @@ class ExtractionLineManager(Manager):
                     self.show_explanation = pickle.load(f)
                 except pickle.PickleError:
                     pass
+
+
 
 #    def _view_controller(self):
 #        print self.ui.control
@@ -420,13 +423,16 @@ class ExtractionLineManager(Manager):
         if self.valve_manager is not None and e is not None:
             e.load(self.valve_manager.explanable_items)
             self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
-
+            self.valve_manager.mode = self.mode
 #=================== defaults ===========================
 #    def _view_controller_default(self):
 #        return self._view_controller_factory()
     def _pyscript_editor_default(self):
         return PyScriptManager(parent=self)
 
+    def _valve_manager_default(self):
+        from src.extraction_line.valve_manager import ValveManager
+        return ValveManager(extraction_line_manager=self)
 #    def _explanation_default(self):
 ##        '''
 ##        '''

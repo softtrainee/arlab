@@ -198,7 +198,7 @@ class ScanableDevice(ViewableDevice):
 
     def save_scan_to_db(self):
         from src.database.adapters.device_scan_adapter import DeviceScanAdapter
-        db = DeviceScanAdapter(dbname=paths.device_scan_db,
+        db = DeviceScanAdapter(name=paths.device_scan_db,
                                kind='sqlite')
         db.connect()
         dev = db.add_device(self.name, klass=self.__class__.__name__)

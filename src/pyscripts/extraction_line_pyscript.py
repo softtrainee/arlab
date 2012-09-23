@@ -27,7 +27,7 @@ ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 class ExtractionLinePyScript(PyScript):
     runner = Any
     _resource_flag = None
-    runtype = None
+    analysis_type = None
     heat_device = None
     heat_value = None
     heat_units = None
@@ -69,14 +69,14 @@ class ExtractionLinePyScript(PyScript):
 
 #        d['holeid'] = 123
 #        d['OverlapRuns'] = True
-        d['runtype'] = self.runtype
+        d['analysis_type'] = self.analysis_type
         d['duration'] = self.duration
         d['heat_value'] = self.heat_value
         d['heat_units'] = self.heat_units
         return d
 
     def gosub(self, *args, **kw):
-        kw['runtype'] = self.runtype
+        kw['analysis_type'] = self.analysis_type
         kw['runner'] = self.runner
         super(ExtractionLinePyScript, self).gosub(*args, **kw)
 

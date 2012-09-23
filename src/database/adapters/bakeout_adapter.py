@@ -49,7 +49,7 @@ class BakeoutAdapter(PathDatabaseAdapter):
 
 
 if __name__ == '__main__':
-    db = BakeoutAdapter(dbname=paths.bakeout_db,
+    db = BakeoutAdapter(name=paths.bakeout_db,
                             kind='sqlite')
     db.connect()
 

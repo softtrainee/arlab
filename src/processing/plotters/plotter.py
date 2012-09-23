@@ -43,7 +43,7 @@ class Plotter(Viewable):
         scatter.tools.append(ScatterInspector(scatter, selection_mode='off'))
         overlay = ScatterInspectorOverlay(scatter,
                     hover_color="red",
-                    hover_marker_size=6,
+                    hover_marker_size=int(scatter.marker_size + 2)
                     )
         scatter.overlays.append(overlay)
         u = lambda a, b, c, d: self.update_graph_metadata(gid, a, b, c, d)
@@ -57,6 +57,7 @@ class Plotter(Viewable):
             hoverid = hover[0]
             self.selected_analysis = sorted([a for a in self.analyses if a.gid == gid], key=self._cmp_analyses)[hoverid]
 
+#        print hover
 #        hover = self.metadata.get('hover')
 #        if hover:
 #            hoverid = hover[0]

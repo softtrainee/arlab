@@ -391,7 +391,7 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator):
 #    def save_scan_to_db(self):
 ##        p = '/Users/ross/Sandbox/device_scans.sqlite'
 #        p = device_scan_db
-#        db = DeviceScanAdapter(dbname=p,
+#        db = DeviceScanAdapter(name=p,
 #                               kind='sqlite')
 #        db.connect(test=True)
 #        dev = db.add_device(self.name, klass=self.__class__.__name__)

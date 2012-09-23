@@ -89,7 +89,7 @@ class MeasurementPyScript(PyScript):
 
     def get_script_commands(self):
         cmds = ['baselines', 'position', 'set_time_zero', 'peak_center',
-                 'activate_detectors', 'collect', 'regress', 'sniff',
+                 'activate_detectors', 'multicollect', 'regress', 'sniff',
                  'peak_hop',
                  'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',
                  'set_extraction_lens', 'set_deflection',
@@ -141,7 +141,7 @@ class MeasurementPyScript(PyScript):
         self._time_zero = time.time()
 
     @verbose_skip
-    def collect(self, ncounts=200, integration_time=1):
+    def multicollect(self, ncounts=200, integration_time=1):
         if self.automated_run is None:
             return
 
@@ -173,17 +173,19 @@ class MeasurementPyScript(PyScript):
 #            self.automated_run.set_isotopes(list(isotopes))
 
     @verbose_skip
-    def baselines(self, ncounts=None, mass=None, detector=None):
+    def baselines(self, counts=None, cycles=5, mass=None, detector=''):
         '''
             if detector is not none then it is peak hopped
         '''
         if self.automated_run is None:
             return
 
-        if not self.automated_run.do_baselines(ncounts, self._time_zero,
+        if not self.automated_run.do_baselines(counts, self._time_zero,
                                mass,
                                detector,
-                               series=self._series_count
+                               series=self._series_count,
+                               nintegrations=cycles
+
                               ):
             self.cancel()
         self._series_count += 1
@@ -192,6 +194,7 @@ class MeasurementPyScript(PyScript):
     def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5):
         if self.automated_run is None:
             return
+#        isotopes = sorted(isotopes, key=lambda k:int(k[2:4]))
         self.automated_run.do_peak_hop(detector, isotopes,
                                     cycles,
                                     integrations,

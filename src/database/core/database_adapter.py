@@ -26,20 +26,23 @@ from src.loggable import Loggable
 from src.helpers.datetime_tools import get_datetime
 import os
 from sqlalchemy.sql.expression import asc, desc
-ATTR_KEYS = ['kind', 'user', 'host', 'dbname', 'password']
-def create_url(kind, user, hostname, db, password=None):
-    '''
+from src.database.core.base_orm import MigrateVersionTable
+ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
 
-    '''
-    if kind == 'mysql':
-        if password is not None:
-            url = 'mysql://{}:{}@{}/{}?connect_timeout=3'.format(user, password, hostname, db)
-        else:
-            url = 'mysql://{}@{}/{}?connect_timeout=3'.format(user, hostname, db)
-    else:
-        url = 'sqlite:///{}'.format(db)
 
-    return url
+
+
+#def create_url(kind, user, hostname, db, password=None):
+
+#    if kind == 'mysql':
+#        if password is not None:
+#            url = 'mysql://{}:{}@{}/{}?connect_timeout=3'.format(user, password, hostname, db)
+#        else:
+#            url = 'mysql://{}@{}/{}?connect_timeout=3'.format(user, hostname, db)
+#    else:
+#        url = 'sqlite:///{}'.format(db)
+#
+#    return url
 
 
 class DatabaseAdapter(Loggable):
@@ -48,11 +51,11 @@ class DatabaseAdapter(Loggable):
     sess = None
 
     connected = Bool(False)
-    kind = Str('mysql')
-    user = Str('root')
-    host = Str('localhost')
-    dbname = Str('massspecdata_local')
-    password = Password('Argon')
+    kind = Str#('mysql')
+    username = Str#('root')
+    host = Str#('localhost')
+#    name = Str#('massspecdata_local')
+    password = Password#('Argon')
 
     selector_klass = Any
 
@@ -60,25 +63,46 @@ class DatabaseAdapter(Loggable):
 
     application = Any
 
-    test_func = None
+    test_func = 'get_migrate_version'
 
     selector = Any
 
-    url = None
+#    url = None
 
-    def _host_changed(self):
-        print self.host
+    @property
+    def url(self):
+        kind = self.kind
+        password = self.password
+        user = self.username
+        host = self.host
+        name = self.name
+        if kind == 'mysql':
+            if password is not None:
+                url = 'mysql://{}:{}@{}/{}?connect_timeout=3'.format(user, password, host, name)
+            else:
+                url = 'mysql://{}@{}/{}?connect_timeout=3'.format(user, host, name)
+        else:
+            url = 'sqlite:///{}'.format(name)
+
+        return url
+
+    @property
+    def enabled(self):
+        return self.kind in ['mysql', 'sqlite']
+
+
 #    window = Any
 
-#    @on_trait_change('[user,host,password,dbname, use_db]')
-#    def connect_attributes_changed(self, obj, name, old, new):
+#    @on_trait_change('username,host,password,name')
+#    def _connect_attributes_changed(self, obj, name, old, new):
 #        if name == 'use_db':
 #            if new:
 #                self.connect()
 #            else:
 #                self.connected = False
 #        else:
-#            self.connect()
+#        self.reset()
+#        self.connect()
 #
 #        #refresh the open database views
 #        sess = None
@@ -94,28 +118,35 @@ class DatabaseAdapter(Loggable):
 
     def reset(self):
         self.info('clearing current session. uncommitted changes will be deleted')
-        self.sess = None
+        if self.sess:
+            self.sess.close()
+            self.sess = None
+
 
     def connect(self, test=True, force=False):
         '''
         '''
         if not self.isConnected() or force:
-            args = []
-            for a in ATTR_KEYS:
-                args.append(getattr(self, a))
+#            args = []
+#            for a in ATTR_KEYS:
+#                args.append(getattr(self, a))
+#            print args
+#            self._new_engine(*tuple(args))
+            self.connected = False
+            if self.enabled:
+#                self._new_engine(self.kind, self.username, self.host, self.name, self.password)
 
-            self._new_engine(*tuple(args))
-            self.info('connecting to database')
+                self.info('connecting to database {}'.format(self.url))
+                engine = create_engine(self.url)
+                self.session_factory = sessionmaker(bind=engine)
+                if test:
+                    self.connected = self._test_db_connection()
+                else:
+                    self.connected = True
 
-            self.session_factory = sessionmaker(bind=self.engine)
-            if test:
-                self.connected = self._test_db_connection()
-            else:
-                self.connected = True
-
-            if self.connected:
-                self.info('connected to db')
-                self.initialize_database()
+                if self.connected:
+                    self.info('connected to db')
+                    self.initialize_database()
 
         return self.connected
 
@@ -129,17 +160,17 @@ class DatabaseAdapter(Loggable):
             if self.test_func is not None:
                 sess = self.session_factory()
                 self.info('testing database connection')
-                getattr(self, self.test_func)
+                getattr(self, self.test_func)()
 #                _users, sess = getattr(self, self.test_func)(sess=sess)
 
         except Exception, e:
-            print e
-            if self.kind == 'mysql':
-                url = '{}@{}/{}' .format(self.user, self.host,
-                                                        self.dbname)
-            else:
-                url = self.dbname
-            self.warning('connection failed to {}'.format(url))
+#            print e
+#            if self.kind == 'mysql':
+#                url = '{}@{}/{}' .format(self.user, self.host,
+#                                                        self.name)
+#            else:
+#                url = self.name
+            self.warning('connection failed to {}'.format(self.url))
             connected = False
 
         finally:
@@ -149,15 +180,15 @@ class DatabaseAdapter(Loggable):
 
         return connected
 
-    def _new_engine(self, kind, user, host, db, password):
-        '''
+#    def _new_engine(self, kind, user, host, db, password):
+#        '''
 
-        '''
+#        '''
 
-        url = create_url(kind, user, host, db, password=password)
-        self.url = url
-        self.info('url = %s' % url)
-        self.engine = create_engine(url)
+#        url = create_url(kind, user, host, db, password=password)
+#        self.url = url
+#        self.info('url = %s' % url)
+#        self.engine = create_engine(url)
 
 #    def _get_record(self, record, func, sess):
 #        '''
@@ -181,7 +212,7 @@ class DatabaseAdapter(Loggable):
                 self.sess = self.session_factory()
                 self.sess.autoflush = False
             else:
-                self.warning_dialog('Not connect to the database {}'.format(self.dbname))
+                self.warning_dialog('Not connect to the database {}'.format(self.name))
 
         return self.sess
 
@@ -206,16 +237,15 @@ class DatabaseAdapter(Loggable):
             self.sess.close()
             self.sess = None
 
-    def traits_view(self):
-        v = View('user',
-               'password',
-               'host',
-               'dbname'
-               )
-        return v
-
     def _get_tables(self):
         pass
+
+    def get_migrate_version(self):
+        sess = self.get_session()
+        q = sess.query(MigrateVersionTable)
+        mv = q.one()
+        self.close()
+        return mv
 
     def get_results(self, tablename, **kw):
         tables = self._get_tables()
@@ -254,7 +284,7 @@ class DatabaseAdapter(Loggable):
     def _add_unique(self, item, attr, name):
         #test if already exists 
         nitem = getattr(self, 'get_{}'.format(attr))(name)
-        if nitem is None:
+        if nitem is None or isinstance(nitem, (str, unicode)):
             self.info('adding {}= {}'.format(attr, name))
             return item, True
         else:

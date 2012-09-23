@@ -15,18 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Password
-from traitsui.api import View, Item, TableEditor
+from traits.api import Str, Password, Property, cached_property
 #============= standard library imports ========================
 import os
-import hashlib
-import random
-from ftplib import FTP
-import StringIO
-
+import ftplib as ftp
 #============= local library imports  ==========================
-class Repository(HasTraits):
+
+
+from src.loggable import Loggable
+class Repository(Loggable):
     root = Str
+
+    @property
+    def name(self):
+        return os.path.basename(self.root)
+
+    @property
+    def url(self):
+        return self.root
+
 #    def __init__(self, root, *args, **kw):
 #        self.root = root
 #        super(Repository, self).__init__(*args, **kw)
@@ -39,20 +46,34 @@ class FTPRepository(Repository):
 #    def __init__(self, *args, **kw):
 #        self.remote = remote
 #        super(FTPRepository, self).__init__(*args, **kw)
+#    client = Property(depends_on='host, username, password')
+    client = Property(depends_on='host, username, password')
 
+    @property
+    def url(self):
+        return '{}@{}/{}'.format(self.username,
+                                 self.host,
+                                 self.remote
+                                 )
+    def connect(self):
+        c, _ = self.client
+        return c is not None
+
+    @cached_property
     def _get_client(self):
         h = self.host
         u = self.username
         p = self.password
         if h is None:
             h = 'localhost'
-        ftp = None
+        fc = None
         e = None
+
         try:
-            ftp = FTP(h, user=u, passwd=p)
+            fc = ftp.FTP(h, user=u, passwd=p, timeout=2)
         except Exception, e:
             pass
-        return ftp, e
+        return fc, e
 
     def get_file_path(self, cp):
         return os.path.join(self.remote, cp)

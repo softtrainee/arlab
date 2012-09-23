@@ -71,6 +71,33 @@ class PychronGPActuator(GPActuator):
             addr = obj.name.split('-')[1]
         return addr
 
+    def get_lock_state(self, obj):
+#        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
+        cmd = 'GetValveLockStates'
+        resp = self.ask(cmd)
+        if resp is not None:
+            d = dict()
+            if ',' in resp:
+                d = dict([(r[:-1], bool(r[-1:])) for r in resp.split(',')])
+            else:
+#                for i in xrange(0, len(resp), 2):
+#                    print resp[i:i + 2]
+#                    print (resp[i:i + 1][0], bool(resp[i:i + 1][1]))
+
+                d = dict([(resp[i:i + 2][0], bool(int(resp[i:i + 2][1]))) for i in xrange(0, len(resp), 2)])
+#            print d, self._get_valve_name(obj)
+            try:
+                resp = d[self._get_valve_name(obj)]
+            except KeyError, e:
+                print e
+                return False
+
+
+#            resp = boolfunc(resp.strip())
+
+        return resp
+
+
     def get_channel_state(self, obj):
         '''
         Query the hardware for the channel state

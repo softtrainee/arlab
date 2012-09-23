@@ -196,11 +196,11 @@ class PowerMapManager(Manager):
 #        return RasterCanvas()
     def _database_default(self):
 #        db = PowerMapAdapter(
-#                             dbname='co2laserdb',
+#                             name='co2laserdb',
 #                            password='Argon'
 #                            )
         db = PowerMapAdapter(
-                             dbname=paths.co2laser_db,
+                             name=paths.co2laser_db,
                             kind='sqlite'
                             )
         db.connect()

@@ -389,7 +389,7 @@ class PowerCalibrationManager(Manager):
 
     def _save_to_db(self):
         if self.parameters.use_db:
-#            db = PowerCalibrationAdapter(dbname=co2laser_db,
+#            db = PowerCalibrationAdapter(name=co2laser_db,
 #                                         kind='sqlite')
             db = self.db
             db.connect()

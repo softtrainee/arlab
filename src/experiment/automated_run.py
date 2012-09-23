@@ -28,13 +28,14 @@ from threading import Event as TEvent
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.experiment.heat_schedule import HeatStep
-from src.data_processing.regression.regressor import Regressor
+from src.regression.regressor import Regressor
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime, generate_datetimestamp
 from src.repo.repository import FTPRepository as Repository
 from src.experiment.plot_panel import PlotPanel
+from globals import globalv
 
 
 HEATDEVICENAMES = ['Fusions Diode', 'Fusions CO2']
@@ -59,13 +60,11 @@ class AutomatedRun(Loggable):
     identifier = String(enter_set=True, auto_set=False)
     aliquot = CInt
     state = Enum('not run', 'extraction', 'measurement', 'success', 'fail')
-#    runtype = Enum('Blank', 'Air')
     irrad_level = Str
 
     heat_step = Instance(HeatStep)
     duration = Property(depends_on='heat_step,_duration')
 
-#    temp_or_power = Property(depends_on='heat_step,_temp_or_power')
     _duration = Float
 
     heat_value = Property(depends_on='heat_step,_heat_value,_heat_units')
@@ -117,7 +116,7 @@ class AutomatedRun(Loggable):
     _rundate = None
     _runtime = None
 
-    executable = Bool(False)
+    _executable = Bool(True)
     _alive = False
 
     regression_results = None
@@ -126,11 +125,17 @@ class AutomatedRun(Loggable):
     info_display = None#DelegatesTo('experiment_manager')
 
     username = None
+    _save_isotopes = List
+
     def _runner_changed(self):
-        self.measurement_script.runner = self.runner
-        self.extraction_script.runner = self.runner
-        self.post_equilibration_script.runner = self.runner
-        self.post_measurement_script.runner = self.runner
+        for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
+            sc = getattr(self, '{}_script'.format(s))
+            if sc is not None:
+                setattr(sc, 'runner', self.runner)
+#        self.measurement_script.runner = self.runner
+#        self.extraction_script.runner = self.runner
+#        self.post_equilibration_script.runner = self.runner
+#        self.post_measurement_script.runner = self.runner
 
     def finish(self):
         del self.info_display
@@ -186,10 +191,15 @@ class AutomatedRun(Loggable):
 
     def cancel(self):
         self._alive = False
-        self.extraction_script.cancel()
-        self.post_equilibration_script.cancel()
-        self.measurement_script.cancel()
-        self.post_measurement_script.cancel()
+        for s in ['extraction', 'measurement', 'post_equilibration', 'post_measurement']:
+            script = getattr(self, '{}_script'.format(s))
+            if script is not None:
+                script.cancel()
+#        self.extraction_script.cancel()
+#        
+#        self.post_equilibration_script.cancel()
+#        self.measurement_script.cancel()
+#        self.post_measurement_script.cancel()
 
     def wait_for_overlap(self):
         '''
@@ -261,6 +271,10 @@ class AutomatedRun(Loggable):
             return False
 
     def do_equilibration(self):
+        inlet = self.get_measurement_parameter('inlet_valve')
+        if inlet is None:
+            return
+
         event = TEvent()
         if not self._alive:
             event.set()
@@ -271,10 +285,10 @@ class AutomatedRun(Loggable):
         t.start()
         return event
 
-
-
     def do_post_equilibration(self):
         if not self._alive:
+            return
+        if self.post_equilibration_script is None:
             return
 
         self.info('======== Post Equilibration Started ========')
@@ -317,7 +331,7 @@ class AutomatedRun(Loggable):
             return
 
         ion = self.ion_optics_manager
-        if detector is None:
+        if not detector:
             if self.plot_panel:
                 self.plot_panel._ncounts = ncounts
                 self.plot_panel.show()
@@ -325,6 +339,7 @@ class AutomatedRun(Loggable):
                 if ion is not None:
                     ion.position(mass, detector, False)
                     time.sleep(2)
+
             gn = 'baselines'
             self._build_tables(gn)
             return self._measure_iteration(gn,
@@ -340,6 +355,7 @@ class AutomatedRun(Loggable):
     def do_peak_hop(self, *args):
         if not self._alive:
             return
+
         self._peak_hop_factory(*args, name='signals')
 
     def do_peak_center(self, **kw):
@@ -378,7 +394,6 @@ class AutomatedRun(Loggable):
     def do_regress(self, fits, series=0):
         if not self._alive:
             return
-
 #        time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
         self.regression_results = dict()
 
@@ -391,16 +406,18 @@ class AutomatedRun(Loggable):
             if isinstance(fits, str) or len(fits) < n:
                 fits = [fits[0], ] * n
             for pi, (iso, fi) in enumerate(zip(ppp.isotopes, fits)):
-                tab = dm.get_table(iso, '/peakhop/{}'.format(ppp.detector))
+                tab = dm.get_table(ppp.detector, '/signals/{}'.format(iso))
                 if tab is None:
                     continue
 
                 rdict = self._regress_graph(reg,
                                             ppp.graph,
+                                            iso,
                                             ppp.detector,
                                             fi, tab, pi)
-
+                self.regression_results[ppp.detector + iso] = rdict
                 tab.attrs.fit = fi
+            ppp.series_cnt += 3
 
         n = len(self._active_detectors)
         if isinstance(fits, str) or len(fits) < n:
@@ -413,7 +430,9 @@ class AutomatedRun(Loggable):
                     continue
 
                 rdict = self._regress_graph(reg,
-                                            self.plot_panel.graph, dn.name, fi, tab, pi)
+                                            self.plot_panel.graph,
+                                            iso,
+                                            dn.name, fi, tab, pi)
                 self.regression_results[dn.name] = rdict
                 tab.attrs.fit = fi
 
@@ -442,9 +461,8 @@ class AutomatedRun(Loggable):
         if not self._alive:
             return
 
-        p = self._open_plot_panel(self.plot_panel)
+        p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
         self.plot_panel = p
-        dets.reverse()
 
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
@@ -452,7 +470,7 @@ class AutomatedRun(Loggable):
 
         spec = self.spectrometer_manager.spectrometer
         g = p.graph
-        for l in dets:
+        for i, l in enumerate(dets):
             det = spec.get_detector(l)
             g.new_plot(ytitle='{} {} Signal (fA)'.format(det.name, det.isotope))
             g.new_series(type='scatter',
@@ -460,49 +478,55 @@ class AutomatedRun(Loggable):
                          marker_size=1.25,
                          label=l)
 
-        g.set_x_limits(min=0, max=400)
+            g.set_x_limits(min=0, max=400, plotid=i)
         self._active_detectors = [spec.get_detector(n) for n in dets]
 
-    def _open_plot_panel(self, p):
+    def _open_plot_panel(self, p=None, stack_order='bottom_to_top'):
         if p is not None:
             p.ui.dispose()
+            del p
 
         p = PlotPanel(
                          window_y=0.05 + 0.01 * self.index,
                          window_x=0.6 + 0.01 * self.index,
-                         window_title='Plot Panel {}-{}'.format(self.identifier, self.aliquot)
+                         window_title='Plot Panel {}-{}'.format(self.identifier, self.aliquot),
+                         stack_order=stack_order,
+                         parent=self
                          )
         p.graph.clear()
 
         self.experiment_manager.open_view(p)
         return p
 
-    def _regress_graph(self, reg, g, dn, fi, tab, pi):
+    def _regress_graph(self, reg, g, iso, dn, fi, tab, pi):
         x, y = zip(*[(ri['time'], ri['value']) for ri in tab.iterrows()])
         rdict = reg._regress_(x, y, fi)
-
+        try:
 #        self.regression_results[dn.name] = rdict
-        self.info('{}-{} intercept {}+/-{}'.format(dn, fi,
-                                                rdict['coefficients'][-1],
-                                             rdict['coeff_errors'][-1]
-                                             ))
-        g.new_series(rdict['x'],
-                     rdict['y'],
-                     plotid=pi, color='black')
-        kw = dict(color='red',
-                     line_style='dash',
-                     plotid=pi)
+            self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,
+                                                    rdict['coefficients'][-1],
+                                                 rdict['coeff_errors'][-1]
+                                                 ))
 
-        g.new_series(rdict['upper_x'],
-                     rdict['upper_y'],
-                     **kw
-                     )
-        g.new_series(rdict['lower_x'],
-                     rdict['lower_y'],
-                     **kw
-                     )
-        g.redraw()
-        return rdict
+            g.new_series(rdict['x'],
+                         rdict['y'],
+                         plotid=pi, color='black')
+            kw = dict(color='red',
+                         line_style='dash',
+                         plotid=pi)
+
+            g.new_series(rdict['upper_x'],
+                         rdict['upper_y'],
+                         **kw
+                         )
+            g.new_series(rdict['lower_x'],
+                         rdict['lower_y'],
+                         **kw
+                         )
+            g.redraw()
+            return rdict
+        except:
+            self.warning('problem regressing')
     def _set_table_attr(self, name, grp, attr, value):
 #        print name, attr, value
         dm = self.data_manager
@@ -519,11 +543,15 @@ class AutomatedRun(Loggable):
 #            tab.attrs.isotope = di.isotope
     def _build_tables(self, gn):
         dm = self.data_manager
+
         dm.new_group(gn)
         for d in self._active_detectors:
             iso = d.isotope
+            name = d.name
             isogrp = dm.new_group(iso, parent='/{}'.format(gn))
-            dm.new_table(isogrp, d.name)
+            dm.new_table(isogrp, name)
+            self._save_isotopes.append((iso, name, gn))
+
 
     def _peak_hop_factory(self, detector, isotopes, ncycles, nintegrations, starttime, series,
                           name='',
@@ -532,41 +560,69 @@ class AutomatedRun(Loggable):
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
             return
-
+        add_plot = False
+        p = self.peak_plot_panel
+        if p is None:
 #        name = 'peakhop_{}'.format(name)
-        p = self._open_plot_panel(self.peak_plot_panel)
-        self.peak_plot_panel = p
-        self.peak_plot_panel.detector = detector
-        self.peak_plot_panel.isotopes = isotopes
+            p = self._open_plot_panel(stack_order='top_to_bottom')
+            self.peak_plot_panel = p
+            add_plot = True
+            p.series_cnt = 0
+
+        p.detector = detector
+        p.isotopes = isotopes
+#        p._ncounts = ncycles
 
         dm = self.data_manager
+#        db = self.db
 #        dm.new_group('peakhop', root='/')
 #        grp = dm.new_group(detector, parent=grp)
+
+        #get/add the detector to db
+
         pgrp = dm.new_group(name)
         for iso in isotopes:
             grp = dm.new_group(iso, parent=pgrp)
             dm.new_table(grp, detector)
 
+            #add isotope to db
+#            db.add_isotope(iso, det, kind=name)
+            self._save_isotopes.append((iso, detector, name))
+
         data_write_hook = self._get_peakhop_data_writer(name)
-#        return self._peak_hop(detector, isotopes, masses, cycles, nintegrations, starttime, series, dwh)
-#
-#    def _peak_hop(self, detector, isotopes, masses,
-#                  ncycles, nintegrations,
-#                  starttime, series,
-#                  data_write_hook):
+
         self.info('peak hopping {} on {}'.format(','.join(isotopes), detector))
 #        spec = None
         spec = self.spectrometer_manager.spectrometer
 
         graph = self.peak_plot_panel.graph
-        for _i, iso in enumerate(isotopes):
-            graph.new_plot(xtitle='Time (S)',
-                           ytitle='{} Signal'.format(detector))
-            graph.new_series(type='scatter', marker='circle', marker_size=1.25)
+        for i, iso in enumerate(isotopes):
+            if add_plot:
+                graph.new_plot(xtitle='Time (s)',
+                           ytitle='{}'.format(iso))
 
-        graph.set_x_limits(0, 400)
+                graph.set_x_limits(0, 400, plotid=i)
+                pi = graph.plots[i]
+#                pi.value_range.epsilon = 0.01
+                pi.value_range.margin = 0.5
+                pi.value_range.tight_bounds = False
+#                graph.set_y_tracking(3, plotid=i)
 
-        kw = dict(series=0, do_after=1, update_y_limits=True)
+
+#            graph.set_y_limits(min='auto', max='auto')
+            graph.new_series(type='scatter',
+                             marker='circle',
+                             marker_size=1.25,
+                             plotid=i)
+
+
+        kw = dict(series=p.series_cnt, do_after=1,
+                  #update_y_limits=True,
+                   #ypadding=1, ymin_anchor=0
+                   )
+        p.series_cnt += 1
+        ti = self.integration_time * 0.99 if not self._debug else 0.1
+        settle_time = ti * 1.1
 
         for _ in xrange(0, ncycles, 1):
             if not self._alive:
@@ -582,11 +638,11 @@ class AutomatedRun(Loggable):
                     mass = iso
                 #position isotope onto detector
                 self.set_position(mass, detector)
-                for _ni in xrange(nintegrations):
+                time.sleep(settle_time)
+                for _ni in xrange(int(nintegrations)):
                     if not self._alive:
                         return False
 
-                    ti = self.integration_time * 0.99 if not self._debug else 0.1
                     time.sleep(ti)
                     x = time.time() - starttime
 
@@ -624,13 +680,14 @@ class AutomatedRun(Loggable):
         #delay for eq time
         self.info('equilibrating for {}sec'.format(eqtime))
         time.sleep(eqtime)
+        if self._alive:
+            self.info('====== Equilibration Finished ======')
+            if elm and inlet:
+                elm.close_valve(inlet)
 
-        self.info('====== Equilibration Finished ======')
-        if elm and inlet:
-            elm.close_valve(inlet)
+            self.do_post_equilibration()
+            self.overlap_evt.set()
 
-        self.do_post_equilibration()
-        self.overlap_evt.set()
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, series):
         self.info('measuring {}'.format(grpname))
@@ -678,7 +735,7 @@ class AutomatedRun(Loggable):
 
             self.signals = dict(zip(keys, signals))
 
-            kw = dict(series=series, do_after=1, update_y_limits=True)
+            kw = dict(series=series, do_after=1, update_y_limits=True, ypadding=1)
             if len(graph.series[0]) < series + 1:
                 kw['marker'] = 'circle'
                 kw['type'] = 'scatter'
@@ -702,28 +759,36 @@ class AutomatedRun(Loggable):
         return True
 
     def _load_script(self, name):
+
         ec = self.configuration
         fname = os.path.basename(ec['{}_script'.format(name)])
+        if not fname:
+            return
+
         if fname in self.scripts:
             self.info('script "{}" already loaded... cloning'.format(fname))
             s = self.scripts[fname]
             if s is not None:
                 s = s.clone_traits()
                 s.automated_run = self
-                s.runtype = self.runtype
+                s.analysis_type = self.analysis_type
+            return s
         else:
             self.info('loading script "{}"'.format(fname))
             func = getattr(self, '{}_script_factory'.format(name))
             s = func(ec)
+            if os.path.isfile(s.filename):
+                setattr(self, '_{}_script'.format(name), s)
+                if s.bootstrap():
+                    try:
+                        s._test()
+                    except Exception, e:
+                        self.warning(e)
+                        self._executable = False
+                return s
+            else:
+                self.warning_dialog('Invalid Script {}'.format(s.filename))
 
-            setattr(self, '_{}_script'.format(name), s)
-            if s.bootstrap():
-                try:
-                    s._test()
-                except Exception, e:
-                    self.warning(e)
-                    self.executable = False
-        return s
 
     def pre_extraction_save(self):
         # set our aliquot
@@ -775,7 +840,7 @@ class AutomatedRun(Loggable):
         attrs['USER'] = self.username
         attrs['DATA_FORMAT_VERSION'] = '1.0'
         attrs['TIMESTAMP'] = time.time()
-        attrs['ANALYSIS_TYPE'] = self.runtype
+        attrs['ANALYSIS_TYPE'] = self.analysis_type
 
         frame.flush()
 
@@ -801,19 +866,25 @@ class AutomatedRun(Loggable):
             elif identifier == 'A':
                 identifier = 2
                 sample = 'Air'
+            elif identifier == 'C':
+                identifier = 3
+                sample = 'Cocktail'
+
+            elif identifier == 'Bg':
+                identifier = 4
+                sample = 'Background'
             else:
                 identifier = int(identifier)
 
             lab = db.add_labnumber(identifier, aliquot, sample=sample)
 
-            self.info(self.experiment_name)
             experiment = db.get_experiment(self.experiment_name)
             d = get_datetime()
 
             self.info('analysis finished at {}'.format(d.time()))
             a = db.add_analysis(lab, runtime=self._runtime,
                                     rundate=self._rundate,
-                                    endtime=d.time()
+                                    endtime=d.time(),
                                 )
             experiment.analyses.append(a)
 
@@ -824,7 +895,7 @@ class AutomatedRun(Loggable):
                               )
             db.add_measurement(
                               a,
-                              self.runtype,
+                              self.analysis_type,
                               self.mass_spec_name,
                               self.measurement_script.name,
                               script_blob=self.measurement_script.toblob()
@@ -834,7 +905,12 @@ class AutomatedRun(Loggable):
 #            np = os.path.join(('.', np))
             np = os.path.relpath(np, self.repository.root)
             db.add_analysis_path(np, analysis=a)
-            db.commit()
+
+            #            #save to db also
+
+            self._save_isotope_info(a)
+            if globalv.experiment_savedb:
+                db.commit()
 
         #save to massspec
         self._save_to_massspec()
@@ -842,27 +918,27 @@ class AutomatedRun(Loggable):
         #close h5 file
         self.data_manager.close()
 
+    def _save_isotope_info(self, analysis):
+        db = self.db
+        for iso, detname, kind in self._save_isotopes:
+            det = db.get_detector(detname)
+            if det is None:
+                det = db.add_detector(detname)
 
-
-        #version control new analysis
-#        self._version_control_analysis(p, a)
-
-
-#    def _version_control_analysis(self, apath, analysis):
-#        repo = self.repository
-#
-#        ln = analysis.labnumber
-#        identifier = '{}-{}'.format(ln.labnumber, ln.aliquot)
-#
-#        #add files to repo and commit
-#        repo.add(os.path.basename(apath))
-#        dbname = os.path.basename(self.db.dbname)
-#        repo.add(dbname)
-#        repo.commit('added analysis {}, updated isotopedb'.format(identifier))
-#        repo.push()
+            db.add_isotope(analysis, iso, det, kind=kind)
+            if globalv.experiment_savedb:
+                db.commit()
+#        for d in self._active_detectors:
+#            iso = d.isotope
+#            det = db.get_detector(d)
+#            if det is None:
+#                det = db.add_detector(d)
+#            db.add_isotope(iso, det, kind='signal')
 
     def _save_to_massspec(self):
-        self.info('saving to massspec database')
+        h = self.massspec_importer.db.host
+        dn = self.massspec_importer.db.name
+        self.info('saving to massspec database {}/{}'.format(h, dn))
 #        #save to mass spec database
         dm = self.data_manager
         baselines = []
@@ -889,9 +965,7 @@ class AutomatedRun(Loggable):
                                             signals,
                                             detectors,
                                             self.regression_results
-#                                            self.irrad_level,
-#                                            self.sample,
-#                                            self.runtype
+
                                             )
 #===============================================================================
 # factories
@@ -942,7 +1016,7 @@ class AutomatedRun(Loggable):
 
                     runner=self.runner,
                     heat_device=hdn,
-                    runtype=self.runtype
+                    analysis_type=self.analysis_type
                     )
 #===============================================================================
 # property get/set
@@ -1017,19 +1091,26 @@ class AutomatedRun(Loggable):
         self._index = v
 
     @property
-    def compound_name(self):
+    def runid(self):
         return '{}-{}'.format(self.identifier, self.aliquot)
 
     @property
-    def runtype(self):
-        if self.identifier.startswith('B'):
+    def analysis_type(self):
+        #check for Bg before B
+        if self.identifier.startswith('Bg'):
+            return 'background'
+        elif self.identifier.startswith('B'):
             return 'blank'
         elif self.identifier.startswith('A'):
             return 'air'
-        elif self.identifier.startswith('C'):
+        elif self.identifier.startswith('C-'):
             return 'cocktail'
         else:
             return 'unknown'
+
+    @property
+    def executable(self):
+        return self.extraction_script is not None and self.measurement_script is not None and self._executable
 
     def _get_duration(self):
         if self.heat_step:

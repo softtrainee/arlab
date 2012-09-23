@@ -106,7 +106,7 @@
 ##        print q.all()
 #
 #if __name__ == '__main__':
-#    db = PowersAdapter(dbname='powermapdb',
+#    db = PowersAdapter(name='powermapdb',
 #                            password='Argon')
 #    db.connect()
 #

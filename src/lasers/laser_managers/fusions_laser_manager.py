@@ -94,7 +94,7 @@ class FusionsLaserManager(LaserManager):
 
     chiller = Any
 
-    dbname = ''
+    name = ''
 
     def _record_fired(self):
         if self._recording_power_state:
@@ -559,16 +559,16 @@ class FusionsLaserManager(LaserManager):
         return '(W)' if self.use_calibrated_power else '(%)'
 #========================= defaults =======================
     def get_power_database(self):
-#        db = PowerAdapter(dbname='co2laserdb',
+#        db = PowerAdapter(name='co2laserdb',
 #                                   password='Argon')
-        db = PowerAdapter(dbname=self.dbname,
+        db = PowerAdapter(name=self.name,
                           kind='sqlite')
 
         return db
 
     def get_power_calibration_database(self):
 
-        db = PowerCalibrationAdapter(dbname=self.dbname,
+        db = PowerCalibrationAdapter(name=self.name,
                                              kind='sqlite')
 #        db.connect()
         return db

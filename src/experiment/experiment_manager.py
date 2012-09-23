@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Button, Float, on_trait_change, Str, \
-    DelegatesTo, Bool, Property, Event
+    DelegatesTo, Bool, Property, Event, Int
 from traitsui.api import View, Item, Group, VGroup, HGroup, spring
 from traitsui.menu import Action
 from pyface.timer.do_later import do_later
@@ -39,6 +39,7 @@ from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from globals import globalv
 from src.displays.rich_text_display import RichTextDisplay
 from src.repo.repository import Repository, FTPRepository
+from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -52,11 +53,11 @@ class ExperimentManager(Manager):
         manager to handle running multiple analyses
     '''
     spectrometer_manager = Instance(Manager)
-    data_manager = Instance(Manager)
-
     extraction_line_manager = Instance(Manager)
-#    laser_manager = Instance(Manager)
     ion_optics_manager = Instance(Manager)
+#    laser_manager = Instance(Manager)
+
+    data_manager = Instance(H5DataManager, ())
 
     experiment_config = None
 
@@ -66,18 +67,11 @@ class ExperimentManager(Manager):
 
     db = Instance(IsotopeAdapter)
     massspec_importer = Instance(MassSpecDatabaseImporter)
-#    delay_between_runs = Int(5)
     info_display = Instance(RichTextDisplay)
     _dac_peak_center = Float
     _dac_baseline = Float
 
-#    ncounts = Int
-#    n_baseline_counts = Int
-
-#    _alive = False
-
     mode = 'normal'
-#    equilibration_time = 15
 
     test2 = Button
 
@@ -90,22 +84,7 @@ class ExperimentManager(Manager):
 #    default_save_directory = Str
 
     title = DelegatesTo('experiment_set', prefix='name')
-#    stats = DelegatesTo('experiment_set')
 
-#    def load_experiment_configuration(self, p):
-#        anals = []
-#        with open(p, 'r') as f:
-#            for l  in f:
-#
-#                an = self._automated_analysis_factory(l.split('\t'))
-#                anals.append(an)
-#
-#    def _automated_analysis_factory(self, args):
-#        a = AutomatedAnalysisParameters()
-#        a.rid = args[0]
-#        a.runscript_name = args[1]
-#
-#        return a
     dirty = DelegatesTo('experiment_set')
     err_message = None
 
@@ -114,16 +93,52 @@ class ExperimentManager(Manager):
     db_kind = Str
 
     username = Str
+    end_at_run_completion = Bool(False)
+    delay_between_runs_readback = Float
+    editing_signal = None
 
+    _last_ran = None
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
+#        self.populate_default_tables()
+        self.info_display.clear()
+
+#    def opened(self):
+#        pass
+#        do_later(self.test_connections)
+#        self.test_connections()
+#        self.populate_default_tables()
+
+    def test_connections(self):
+        if not self.db.connect():
+            self.warning_dialog('Failed connecting to database. {}'.format(self.db.url))
+
+        if not self.repository.connect():
+            self.warning_dialog('Failed connecting to repository {}'.format(self.repository.url))
+
+    def populate_default_tables(self):
+        db = self.db
+        if self.db:
+            db.connect()
+            for name, mass in MOLECULAR_WEIGHTS.iteritems():
+                db.add_molecular_weight(name, mass)
+
+            for at in ['blank', 'air', 'cocktail', 'background', 'unknown']:
+                db.add_analysis_type(at)
+
+            for mi in ['obama', 'jan']:
+                db.add_mass_spectrometer(mi)
+
+            db.commit()
 
     def bind_preferences(self):
+        if self.db is None:
+            self.db = self._db_factory()
         prefid = 'pychron.experiment'
 
         bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
-        bind_preference(self, 'db_kind', '{}.db_kind'.format(prefid))
+        bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
         bind_preference(self, 'username', '{}.username'.format(prefid))
 
         if self.repo_kind == 'FTP':
@@ -132,15 +147,15 @@ class ExperimentManager(Manager):
             bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
             bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
 
-        if self.db_kind == 'mysql':
+        if self.db.kind == 'mysql':
             bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
             bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
             bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
 
-        bind_preference(self.db, 'dbname', '{}.db_name'.format(prefid))
-        if not self.db.connect():
-            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
-            self.db = None
+        bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
+#        if not self.db.connect():
+#            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
+#            self.db = None
 
     def info(self, msg, *args, **kw):
         super(ExperimentManager, self).info(msg, *args, **kw)
@@ -196,64 +211,107 @@ class ExperimentManager(Manager):
 
         arun.username = self.username
 
+#        arun.preceeding_blank=
+    def _launch_run(self, runsgen, cnt):
+        repo = self.repository
+        dm = self.data_manager
+        runner = self.pyscript_runner
+
+        run = runsgen.next()
+        self._setup_automated_run(cnt, run, repo, dm, runner)
+
+        run.pre_extraction_save()
+        ta = Thread(name=run.runid,
+                   target=self._do_automated_run,
+                   args=(run,)
+                   )
+        ta.start()
+        return ta, run
+
     def do_automated_runs(self):
+        self.end_at_run_completion = False
         #connect to massspec database warning if not
+
+        #explicitly set db connection info here for now
+        self.massspec_importer.db.kind = 'mysql'
+        self.massspec_importer.db.host = 'localhost'
+        self.massspec_importer.db.username = 'root'
+        self.massspec_importer.db.password = 'Argon'
+
         if not self.massspec_importer.db.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
+                self._alive = False
                 return
+
+        #check for a preceeding blank
+        if not self._has_preceeding_blank_or_background():
+            self.info('experiment canceled because no blank was found of configured')
+            self._alive = False
+            return
 
         self.info('start automated runs')
 
-#        app = self.application
-#        if app is not None:
-#            protocol = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-#            man = app.get_service(protocol)
-#            self.extraction_line_manager = man
-
         if self.mode == 'client':
-            runner = RemotePyScriptRunner('129.138.12.153', 1061, 'udp')
+            runner = RemotePyScriptRunner('localhost', 1061, 'udp')
+#            runner = RemotePyScriptRunner('129.138.12.153', 1061, 'udp')
         else:
             runner = PyScriptRunner()
 
+        self.pyscript_runner = runner
         self._alive = True
 
         exp = self.experiment_set
         exp.reset_stats()
 
-
-
-
-        dm = H5DataManager()
-#        repo = Repository(
-#                          os.path.dirname(paths.isotope_db),
-#                          user='ross',
-#                          password='jir812'
-#                          )
-        repo = self.repository
+#        dm = H5DataManager()
+#        self.data_manager = dm
+#        repo = self.repository
 
         self.db.reset()
         exp.save_to_db()
 
-        runs = (ai for ai in exp.automated_runs)
-        def launch_run():
-            run = runs.next()
-            self._setup_automated_run(cnt, run, repo, dm, runner)
-
-            run.pre_extraction_save()
-            ta = Thread(name=run.compound_name,
-                       target=self._do_automated_run,
-                       args=(run,)
-                       )
-            ta.start()
-            return ta, run
+        rgen, nruns = exp.new_runs_generator()
 
         cnt = 0
+        totalcnt = 0
         while self.isAlive():
+
+
+#            if the user is editing the experiment set dont continue?
+            if self.editing_signal:
+                self.editing_signal.wait()
+
+            #check for mods
+            if exp.check_for_mods():
+                cnt = 0
+                self.info('the experiment set was modified')
+                #load the exp and get an new rgen
+                exp.load_automated_runs()
+                rgen, nruns = exp.new_runs_generator(self._last_ran)
+
+            if self.isAlive() and \
+                    cnt < nruns and \
+                            not cnt == 0:
+                delay = exp.delay_between_analyses
+                self.delay_between_runs_readback = delay
+                self.info('Delay between runs {}'.format(delay))
+
+                #delay between runs
+                st = time.time()
+                while time.time() - st < delay:
+                    if not self.isAlive():
+                        break
+                    time.sleep(0.5)
+                    self.delay_between_runs_readback -= 0.5
+
             try:
-                t, run = launch_run()
-                cnt += 1
+                t, run = self._launch_run(rgen, cnt)
             except StopIteration:
                 break
+
+            self._last_ran = run
+#            if run.analysis_type == 'unknown':
+#                self._last_ran = run
 
             if run.overlap:
                 self.info('overlaping')
@@ -261,15 +319,12 @@ class ExperimentManager(Manager):
             else:
                 t.join()
 
-            if self.isAlive():
-                delay = exp.delay_between_runs
-                self.info('Delay between runs {}'.format(delay))
-                #delay between runs
-                st = time.time()
-                while time.time() - st < delay:
-                    if not self.isAlive():
-                        break
-                    time.sleep(0.5)
+            if self.end_at_run_completion:
+                break
+
+
+            cnt += 1
+            totalcnt += 1
 
         if self.err_message:
             run.state = 'fail'
@@ -279,7 +334,14 @@ class ExperimentManager(Manager):
             exp.stop_stats_timer()
             self.end_runs()
 
-        self.info('automated runs ended at {}, runs executed={}'.format(run.compound_name, cnt))
+        self.info('automated runs ended at {}, runs executed={}'.format(run.runid, totalcnt))
+
+    def _has_preceeding_blank_or_background(self):
+        if self.experiment_set.automated_runs[0].analysis_type not in ['blank', 'background']:
+            #the experiment set doesnt start with a blank
+            #ask user for preceeding blank
+            return False
+        return True
 
     def _do_automated_run(self, arun):
         def isAlive():
@@ -317,9 +379,10 @@ class ExperimentManager(Manager):
 
         #do_equilibration
         evt = arun.do_equilibration()
-        self.info('waiting for the inlet to open')
-        evt.wait()
-        self.info('inlet opened')
+        if evt:
+            self.info('waiting for the inlet to open')
+            evt.wait()
+            self.info('inlet opened')
 
         if not isAlive():
             return
@@ -335,7 +398,7 @@ class ExperimentManager(Manager):
             self._alive = False
 
         arun.state = 'success'
-        self.info('Automated run {} finished'.format(arun.compound_name))
+        self.info('Automated run {} finished'.format(arun.runid))
         arun.finish()
 
     def isAlive(self):
@@ -372,8 +435,12 @@ class ExperimentManager(Manager):
 #===============================================================================
 # persistence
 #===============================================================================
-    def load_experiment_set(self, path=None):
-        self.bind_preferences()
+    def load_experiment_set(self, path=None, edit=False):
+#        self.bind_preferences()
+
+        #make sure we have a database connection
+        if not self.test_connections():
+            return
 
         self.experiment_set = None
         if path is None:
@@ -381,12 +448,14 @@ class ExperimentManager(Manager):
 
         if path is not None:
             exp = self._experiment_set_factory(path=path)
+            exp.isediting = edit
 #            exp = ExperimentSet(path=path)
 #            try:
 
             if exp.load_automated_runs():
                 self.experiment_set = exp
                 self.experiment_set.automated_run = exp.automated_runs[-1]
+#                exp._update_aliquots()
                 return True
 
 #            except Exception, e:
@@ -414,8 +483,6 @@ class ExperimentManager(Manager):
 #        if not p:
 #            p = '/Users/ross/Pychrondata_experiment/experiments/foo.txt'
 #            p = self.save_file_dialog(default_directory=paths.experiment_dir)
-#
-
         if not p:
             return
 
@@ -433,7 +500,6 @@ class ExperimentManager(Manager):
             tab(header)
             for arun in self.experiment_set.automated_runs:
                 tab([arun.identifier, arun.measurement_script.name, arun.extraction_script.name])
-
 
 #===============================================================================
 # handlers
@@ -487,14 +553,20 @@ class ExperimentManager(Manager):
 # views
 #===============================================================================
     def execute_view(self):
+
         editor = self.experiment_set._automated_run_editor(update='object.experiment_set.current_run.update')
 
-        exc_grp = Group(
-                        self._button_factory('execute_button',
+        tb = HGroup(
+                    Item('delay_between_runs_readback',
+                         label='Delay Countdown',
+                         style='readonly', format_str='%i'),
+                    spring,
+                    Item('end_at_run_completion'),
+                    self._button_factory('execute_button',
                                              label='execute_label',
                                              enabled='object.experiment_set.executable',
-                                             align='right'),
-
+                                             ))
+        exc_grp = Group(tb,
                        HGroup(Item('object.experiment_set.stats',
                                    style='custom'),
                              spring,
@@ -584,19 +656,9 @@ class ExperimentManager(Manager):
         return msdb
 
     def _db_default(self):
-#        kind = self.db_kind
-#        dbname = self.db_name
-#        dbuser = self.db_user
-#        dbpass = self.db_password
-#
-#        db = IsotopeAdapter(kind='sqlite',
-#                            dbname=paths.isotope_db,
-##                            dbname='/Users/ross/Pychrondata_experiment/data/isotopedb.sqlite'
-##                            dbname=os.path.join(ROOT, 'isotopedb.sqlite')
-##                            '/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite'
-#                            )
-#        if db.connect():
-#            return db
+        return self._db_factory()
+
+    def _db_factory(self):
         db = IsotopeAdapter()
         return db
 

@@ -70,7 +70,7 @@ class MagnetScan(SpectrometerTask):
         if graph:
             graph.add_datum(
                             (do, intensity),
-                            update_y_limits=True,
+#                            update_y_limits=True,
                             do_after=1)
 
         for di in values[1:]:

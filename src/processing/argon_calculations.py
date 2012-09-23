@@ -20,23 +20,37 @@
 
 #============= standard library imports ========================
 from numpy import asarray, argmax
-from . import constants
+
 from uncertainties import ufloat, umath
 import math
+from src.processing import constants
 #============= local library imports  ==========================
+def calculate_flux(ar40, ar39, age):
+    ar40 = ufloat(ar40)
+    ar39 = ufloat(ar39)
+    age = ufloat(age)
+#    age = (1 / constants.lambdak) * umath.log(1 + JR)
+    r = ar40 / ar39
 
+    j = (umath.exp(age * constants.lambdak) - 1) / r
+    return j.nominal_value, j.std_dev()
 
-def calculate_arar_age(signals, baselines, blanks, j, irradinfo):
+def calculate_arar_age(signals, baselines, blanks, backgrounds,
+                       j, irradinfo,
+                       a37decayfactor=None,
+                       a39decayfactor=None
+                       ):
 #    print signals
     s40, s39, s38, s37, s36 = signals
     s40bs, s39bs, s38bs, s37bs, s36bs = baselines
     s40bl, s39bl, s38bl, s37bl, s36bl = blanks
+    s40bk, s39bk, s38bk, s37bk, s36bk = backgrounds
 #    s40, s40b, s39, s39b, s38, s38b, s37, s37b, s36, s36b = signals
-    k4039, ca3937, ca3837, ca3637, k3839, p36cl38cl, t = irradinfo
+    k4039, k3839, ca3937, ca3837, ca3637, cl3638, t = irradinfo
 
     s40 = ufloat(s40)
 
-    s39 = ufloat(s39) + 100
+    s39 = ufloat(s39)
 
     s38 = ufloat(s38)
     s37 = ufloat(s37)
@@ -54,26 +68,59 @@ def calculate_arar_age(signals, baselines, blanks, j, irradinfo):
     s37bl = ufloat(s37bl)
     s36bl = ufloat(s36bl)
 
+    s40bk = ufloat(s40bk)
+    s39bk = ufloat(s39bk)
+    s38bk = ufloat(s38bk)
+    s37bk = ufloat(s37bk)
+    s36bk = ufloat(s36bk)
+
     ca3637 = ufloat(ca3637)
     ca3937 = ufloat(ca3937)
     ca3837 = ufloat(ca3837)
     k4039 = ufloat(k4039)
     k3839 = ufloat(k3839)
-    p36cl38cl = ufloat(p36cl38cl)
+    cl3638 = ufloat(cl3638)
     j = ufloat(j)
 
     #subtract blanks and baselines
-    s40 -= (s40bl + s40bs)
-    s39 -= (s39bl + s39bs)
-    s38 -= (s38bl + s38bs)
-    s37 -= (s37bl + s37bs)
-    s36 -= (s36bl + s36bs)
+    s40 -= (s40bl + s40bs + s40bk)
+    s39 -= (s39bl + s39bs + s39bk)
+    s38 -= (s38bl + s38bs + s38bk)
+    s37 -= (s37bl + s37bs + s37bk)
+    s36 -= (s36bl + s36bs + s36bk)
 
+#    d = ufloat((1.006, 0.001))
+#    d = ufloat((1.006, 1))
+
+    #correct for discrimination
+#    s40 *= umath.pow(d, 4.)
+#    s39 *= umath.pow(d, 3.)
+#    s38 *= umath.pow(d, 2.)
+#    s37 *= umath.pow(d, 1.)
+#    print '40/39', s40 / s39
     #calculate decay factors
-    a37decayfactor = 1 / math.exp(t * (-1 * constants.lambda_37.nominal_value * 365.25))
-    a39decayfactor = 1 / math.exp(t * (-1 * constants.lambda_39.nominal_value * 365.25))
+    if a37decayfactor is None:
+        a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
+    if a39decayfactor is None:
+        a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
+#
 
+    #t = umath.log(a39decayfactor) / (constants.lambda_39.nominal_value * 365.25)
+    #t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
+
+#    print 't39', t
+#    print 't37', t1
+#    print 'p39', 1 / umath.exp(-t1 * (1 * constants.lambda_39.nominal_value * 365.25))
+#    print 'p37', 1 / umath.exp(-t1 * (1 * constants.lambda_37.nominal_value * 365.25))
+
+#    print 'mmm', 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
+#    print t, a39decayfactor
+#    print umath.exp(t * constants.lambda_39.nominal_value * 365.25)
+#
+#    print t, t1 , 'fff'
+#    print abs(t1 - t)
     #calculate interference corrections
+#    print s37, a37decayfactor
     ca37 = s37 * a37decayfactor
     s39 = s39 * a39decayfactor
     ca36 = ca3637 * ca37
@@ -82,10 +129,11 @@ def calculate_arar_age(signals, baselines, blanks, j, irradinfo):
     k39 = s39 - ca39
     k38 = k3839 * k39
 
+#    print '38/39', k38 / k39
     if constants.lambda_cl36 < 0.1:
-        m = p36cl38cl * constants.lambda_cl36 * t
+        m = cl3638 * constants.lambda_cl36 * 365.25 * t
     else:
-        m = p36cl38cl
+        m = cl3638
 
     mcl = m / (m * constants.atm3836 - 1)
     cl36 = mcl * (constants.atm3836 * (s36 - ca36) - s38 + k38 + ca38)
@@ -100,10 +148,14 @@ def calculate_arar_age(signals, baselines, blanks, j, irradinfo):
 
     try:
         age = (1 / constants.lambdak) * umath.log(1 + JR)
-        result = dict(age=age, rad40=ar40rad, k39=k39)
+        result = dict(age=age,
+                      rad40=ar40rad,
+                      k39=k39,
+                      ca37=ca37,
+                      )
         return result
-    except ValueError:
-        pass
+    except ValueError, e:
+        return e
 #============= EOF =====================================
 
 ##=============enthought library imports=======================oup
@@ -229,16 +281,58 @@ def time_non_recursive():
     find_plateaus(ages, errors)
 
 if __name__ == '__main__':
-    from timeit import Timer
-    t = Timer('time_recursive', 'from __main__ import time_recursive')
+    #21055-02
+#    signals = ((8.681775, 0.004059),
+#                   (9.557604, 0.003301),
+#                   (0.128056, 0.000320),
+#                   (0.055542, 0.000151), (0.000267, 0.000013))
+#    baselines = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
+#    blanks = ((0.013131, 0.00069),
+#              (0.0008725, 0.00007),
+#              (0.00003314, 0.0000088),
+#
+#              (0.0002788, 0.000013), (0.00005382, 0.0000048))
+#    t = 
+#    print 'asdfs', 1 / umath.exp(-constants.lambda_37 * t)
+#    print 1 / (constants.lambda_37) * umath.log(3.801e1)
+    #60754-10
+    signals = ((2655.294, 0.12),
+               (377.5964, 0.046),
+               (4.999, 0.012),
+               (0.0853, 0.014),
+               (0.013245, 0.00055)
+               )
+    baselines = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
+    blanks = ((1.5578, 0.023),
+              (0.0043, 0.024),
+              (-0.0198, 0.011),
+              (0.0228, 0.012),
+              (0.00611, 0.00033))
+    backgrounds = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
+    j = (2.2408e-3, 1.7795e-6)
+    irradinfo = ((1e-2, 2e-3),
+                     (1.3e-2, 0),
 
-    n = 5
-    tr = t.timeit(n)
-    print 'time r', tr / 5
+                     (7e-4, 2e-6),
+                     (0, 0),
+                     (2.8e-4, 2e-5),
+                     (2.5e2, 0), 0.50429815306)
+    calculate_arar_age(signals, baselines, blanks, backgrounds, j, irradinfo,
 
-    t = Timer('time_non_recursive', 'from __main__ import time_non_recursive')
-    tr = t.timeit(n)
-    print 'time nr', tr / 5
+#                       a37decayfactor=1.956,
+#                       a39decayfactor=1.0
+#                       a37decayfactor=3.801e1, a39decayfactor=1.001
+                       )
+#    from timeit import Timer
+#    t = Timer('time_recursive', 'from __main__ import time_recursive')
+#
+#    n = 5
+#    tr = t.timeit(n)
+#    print 'time r', tr / 5
+#
+#    t = Timer('time_non_recursive', 'from __main__ import time_non_recursive')
+#    tr = t.timeit(n)
+#    print 'time nr', tr / 5
 #    find_plateaus(ages, errors)
 #def find_plateaus(ages, errors):
 #    def __add_plateau(s, e, p, di):

@@ -22,7 +22,10 @@ from src.paths import paths
 from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
     MaterialTable, AnalysisTable, AnalysisPathTable, LabTable, ExtractionTable, \
     MeasurementTable, ExperimentTable, MassSpectrometerTable, AnalysisTypeTable, \
-    proc_BlanksHistoryTable, proc_BlanksTable, proc_BlanksSetTable
+    proc_BlanksHistoryTable, proc_BlanksTable, proc_BlanksSetTable, \
+    proc_BackgroundsHistoryTable, proc_BackgroundsTable, \
+    proc_BackgroundsSetTable, IsotopeTable, DetectorTable, MolecularWeightTable, \
+    irrad_ProductionTable, irrad_IrradiationTable, irrad_HolderTable
 #import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
@@ -81,6 +84,38 @@ class IsotopeAdapter(DatabaseAdapter):
         return bs, True
 
     @add
+    def add_backgrounds_history(self, analysis, **kw):
+        analysis = self.get_analysis(analysis)
+        bh = proc_BackgroundsHistoryTable(analysis=analysis, **kw)
+        return bh, True
+
+    @add
+    def add_backgrounds(self, history, **kw):
+        b = proc_BackgroundsTable(**kw)
+        history = self.get_backgrounds_history(history)
+        if history:
+            history.backgrounds.append(b)
+            return b, True
+        return b, False
+
+    @add
+    def add_backgrounds_set(self, background, analysis, **kw):
+        bs = proc_BackgroundsSetTable(**kw)
+        background = self.get_background(background)
+        analysis = self.get_analysis(analysis)
+
+        if analysis:
+            bs.background_analysis_id = analysis.id
+        if background:
+            background.sets.append(bs)
+        return bs, True
+
+    @add
+    def add_detector(self, name, **kw):
+        det = DetectorTable(name=name, **kw)
+        return self._add_unique(det, 'detector', name)
+
+    @add
     def add_experiment(self, name, **kw):
         exp = ExperimentTable(name=name, **kw)
         return exp, True
@@ -92,6 +127,35 @@ class IsotopeAdapter(DatabaseAdapter):
         if analysis:
             analysis.extraction = ex
         return ex, True
+
+    @add
+    def add_irradiation_holder(self, name, **kw):
+        print name, 'fffff', self.get_irradiation_holder(name)
+#        return None, False
+        ih = irrad_HolderTable(name=name, **kw)
+        return self._add_unique(ih, 'irradiation_holder', name)
+
+    @add
+    def add_irradiation_production(self, **kw):
+        ip = irrad_ProductionTable(**kw)
+        return ip, True
+
+    @add
+    def add_isotope(self, analysis, molweight, det, **kw):
+        iso = IsotopeTable(**kw)
+        analysis = self.get_analysis(analysis)
+        if analysis:
+            analysis.isotopes.append(iso)
+
+        det = self.get_detector(det)
+        if det is not None:
+            det.isotopes.append(iso)
+
+        molweight = self.get_molecular_weight(molweight)
+        if molweight is not None:
+            molweight.isotopes.append(iso)
+
+        return iso, True
 
     @add
     def add_measurement(self, analysis, analysis_type, mass_spec, name, **kw):
@@ -112,14 +176,24 @@ class IsotopeAdapter(DatabaseAdapter):
         return ms, True
 
     @add
-    def add_project(self, name, **kw):
-        proj = ProjectTable(name=name, **kw)
-        return self._add_unique(proj, 'project', name)
+    def add_mass_spectrometer(self, name):
+        ms = MassSpectrometerTable(name=name)
+        return self._add_unique(ms, 'mass_spectrometer', name)
 
     @add
     def add_material(self, name, **kw):
         mat = MaterialTable(name=name, **kw)
         return self._add_unique(mat, 'material', name)
+
+    @add
+    def add_molecular_weight(self, name, mass):
+        mw = MolecularWeightTable(name=name, mass=mass)
+        return self._add_unique(mw, 'molecular_weight', name)
+
+    @add
+    def add_project(self, name, **kw):
+        proj = ProjectTable(name=name, **kw)
+        return self._add_unique(proj, 'project', name)
 
     @add
     def add_user(self, name, project=None, **kw):
@@ -240,6 +314,10 @@ class IsotopeAdapter(DatabaseAdapter):
             return anal_path, True
 
         return None, False
+    @add
+    def add_analysis_type(self, name):
+        at = AnalysisTypeTable(name=name)
+        return self._add_unique(at, 'analysis_type', name)
 
 #    @add
 #    def add_irradiation_chronology(self, irradiations, **kw):
@@ -274,11 +352,43 @@ class IsotopeAdapter(DatabaseAdapter):
         return proc_BlanksHistoryTable
 
     @get_one
+    def get_background(self, name):
+        return proc_BackgroundsTable
+
+    @get_one
+    def get_backgrounds_history(self, name):
+        return proc_BackgroundsHistoryTable
+
+    @get_one
+    def get_detector(self, name):
+        return DetectorTable
+
+    @get_one
     def get_experiment(self, name):
         return ExperimentTable
 
     @get_one
+    def get_irradiation_holder(self, name):
+        return irrad_HolderTable
+
+    @get_one
+    def get_irradiation_production(self, name):
+        return irrad_ProductionTable
+
     def get_labnumber(self, name):
+        if isinstance(name, str):
+            if name == 'Bg':
+                name = 4
+            elif name == 'B':
+                name = 1
+            elif name == 'A':
+                name = 2
+            elif name.upper() == 'C':
+                name = 3
+        return self._get_labnumber(name)
+
+    @get_one
+    def _get_labnumber(self, name):
         return LabTable, 'labnumber'
 
     @get_one
@@ -288,6 +398,10 @@ class IsotopeAdapter(DatabaseAdapter):
     @get_one
     def get_material(self, name):
         return MaterialTable
+
+    @get_one
+    def get_molecular_weight(self, name):
+        return MolecularWeightTable
 
     @get_one
     def get_project(self, name):
@@ -305,6 +419,12 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_analysis_types(self, **kw):
         return self._get_items(AnalysisTypeTable, globals(), **kw)
+
+    def get_irradiations(self, **kw):
+        return self._get_items(irrad_IrradiationTable, globals(), **kw)
+
+    def get_irradiation_productions(self, **kw):
+        return self._get_items(irrad_ProductionTable, globals(), **kw)
 
     def get_labnumbers(self, **kw):
         return self._get_items(LabTable, globals(), **kw)
@@ -383,8 +503,8 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('ia')
     ia = IsotopeAdapter(
-#                        dbname='/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite',
-                        dbname=paths.isotope_db,
+#                        name='/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite',
+                        name=paths.isotope_db,
                         kind='sqlite')
     ia.connect()
 

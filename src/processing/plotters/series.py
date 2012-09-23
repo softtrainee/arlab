@@ -21,8 +21,7 @@ from traits.api import HasTraits, Any
 #============= local library imports  ==========================
 #from src.graph.graph import Graph
 #from src.graph.time_series_graph import TimeSeriesGraph
-from src.graph.regression_graph import RegressionGraph, \
-    RegressionTimeSeriesGraph, StackedRegressionTimeSeriesGraph
+from src.graph.regression_graph import StackedRegressionTimeSeriesGraph
 from src.processing.plotters.plotter import Plotter
 def colorname_gen():
     r = ['black', 'red', 'green', 'blue', 'yellow']
@@ -39,8 +38,8 @@ class Series(Plotter):
             return '{:0.2f}'.format(x)
         elif 1e5 > abs(x) > 1000:
             return '{:0.1f}'.format(x)
-        elif abs(x) < 1e-7:
-            return '{:n}'.format(x)
+        elif abs(x) < 1e-15:
+            return '{:0.2f}'.format(0)
         else:
             return '{:0.2e}'.format(x)
 
@@ -50,19 +49,7 @@ class Series(Plotter):
         if isinstance(keys, str):
             keys = [keys]
 
-#        isos = zip(*[[getattr(a, isoname.lower()) for isoname in a.isotope_names] for a in self.analyses])
-#        n = len(a.isotope_names)
-#        c = 3
-#        r = n / c
-#        if n % c:
-#            r += 1
-
-#        r = 1
-#        c = 1
-#        shape = r, c
         klass = StackedRegressionTimeSeriesGraph
-#        klass = RegressionTimeSeriesGraph
-#        klass = TimeSeriesGraph
         g = klass(container_dict=dict(
                                       bgcolor='lightgray',
 #                                      padding=2,
@@ -85,7 +72,14 @@ class Series(Plotter):
                    padding_right=padding[1],
                    padding_top=padding[2],
                    padding_bottom=padding[3],
+                   pan=False,
+                   zoom=False,
                    ytitle='{} (fA)'.format(k))
+
+            p = g.plots[-1]
+
+            p.value_range.tight_bounds = False
+            p.value_range.margin = 0.1
 
             self.fits[k] = f
 
@@ -105,7 +99,7 @@ class Series(Plotter):
             cnt += 1
 
         if pxma and pxmi:
-            g.set_x_limits(pxmi, pxma, plotid=0)
+            g.set_x_limits(pxmi, pxma, plotid=0, pad='0.1')
 
         return g
 
@@ -116,8 +110,8 @@ class Series(Plotter):
     def _add_series(self, g, xs, ys, fi, padding, regress, gid, plotid=0):
         args = g.new_series(xs, ys,
                      plotid=plotid,
-                     fit_type=fi,
-                     regress=regress,
+                     fit=fi,
+#                     regress=regress,
                      type='scatter',
                      marker='circle',
                      color=self.colorgen.next(),
@@ -133,5 +127,7 @@ class Series(Plotter):
             scatter = g.plots[plotid].plots['plot{}'.format(args[0][-1])][0]
 
         self._add_scatter_inspector(scatter, gid)
-        g.regress_plots()
+#        g.regress_plots()
+
+
 #============= EOF =============================================

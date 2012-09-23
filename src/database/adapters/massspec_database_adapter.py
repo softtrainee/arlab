@@ -200,6 +200,12 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         drs = self.get_data_reduction_session(drs)
         if analysis is not None and drs is not None:
             #get the lastest preferencesetid
+#            sess = self.get_session()
+#            q = sess.query(PreferencesTable)
+#            q = q.order_by(PreferencesTable.PreferencesSetID.desc())
+#            q = q.limit(1)
+#            pref = q.one()
+
             pref = self.get_preferences_set(None)
 #            item.AnalysisID = analysis.AnalysisID
             analysis.changeable = item

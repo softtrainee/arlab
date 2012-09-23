@@ -47,11 +47,15 @@ class Regressor(object):
 
         xs, ys = data
         rdict = self._regress_(xs, ys, kind)
+#        print rdict['coefficients'], 'coefss'
         return self.get_value_at(rdict, x)
 
     def get_value_at(self, rdict, x):
         if rdict:
-            return polyval(rdict['coefficients'], x)
+            try:
+                return polyval(rdict['coefficients'], x)
+            except:
+                pass
 
     def calc_residuals(self, x, y, xd, yd, kind, **kw):
         '''

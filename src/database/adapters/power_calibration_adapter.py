@@ -42,10 +42,10 @@ class PowerCalibrationAdapter(PathDatabaseAdapter):
 
 
 if __name__ == '__main__':
-#    db = PowerAdapter(dbname='co2laserdb',
+#    db = PowerAdapter(name='co2laserdb',
 #                            password='Argon')
     from src.paths import paths
-    db = PowerCalibrationAdapter(dbname=paths.co2laser_db,
+    db = PowerCalibrationAdapter(name=paths.co2laser_db,
                             kind='sqlite')
     db.connect()
 

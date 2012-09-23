@@ -36,6 +36,11 @@ class PlotPanel(Viewable):
 
     detector = None
     isotopes = None
+    stack_order = 'bottom_to_top'
+    series_cnt = 0
+    def close(self, isok):
+        self.parent.cancel()
+        return isok
 
     def _get_ncounts(self):
         return self._ncounts
@@ -49,6 +54,7 @@ class PlotPanel(Viewable):
 
     def _graph_factory(self):
         return StackedGraph(container_dict=dict(padding=5, bgcolor='gray',
+                                                stack_order=self.stack_order
                                              ))
     def traits_view(self):
         v = View(
@@ -60,7 +66,7 @@ class PlotPanel(Viewable):
                        ),
 
                  width=500,
-                 height=700,
+                 height=725,
                  x=self.window_x,
                  y=self.window_y,
                  title=self.window_title,

@@ -18,7 +18,7 @@
 from traits.api import HasTraits, List, Instance, DelegatesTo, Button, Property, Str, Int, \
     Event, Any
 from traitsui.api import View, Item, HGroup, VGroup, spring, HSplit, \
-    InstanceEditor, ListStrEditor, EnumEditor
+    InstanceEditor, ListStrEditor, EnumEditor, Spring
 from src.database.core.database_adapter import DatabaseAdapter
 from traitsui.list_str_adapter import ListStrAdapter
 from traitsui.editors.tabular_editor import TabularEditor as traitsTabularEditor, \
@@ -44,24 +44,27 @@ from src.helpers.color_generators import colorname_generator
 #    def _get_klass(self):
 #        return _TabularEditor
 
-class LAdapter(ListStrAdapter):
-
-#    def get_bg_color(self, obj, trait, row):
-    def get_text_color(self, obj, trait, row):
-#        print obj, trait, row
-        o = getattr(obj, trait)[row]
-
-        if 'group_marker' in str(o):
-            return 'red'
-        else:
-            return 'black'
-    def get_text(self, obj, tr, ind):
-
-        o = getattr(obj, tr)[ind]
-        if 'group_marker' in str(o):
-            return '-----------------------'
-        else:
-            return o
+#class LAdapter(ListStrAdapter):
+#
+##    def get_bg_color(self, obj, trait, row):
+#    def get_text_color(self, obj, trait, row):
+##        print obj, trait, row
+#        o = getattr(obj, trait)[row]
+#
+#        if 'group_marker' in str(o):
+#            return 'red'
+#        else:
+#            return 'black'
+#
+#    def get_text(self, obj, tr, ind):
+#
+#        o = getattr(obj, tr)[ind]
+#        if 'group_marker' in str(o):
+#            return '-----------------------'
+#        elif 'mean_marker' in str(o):
+#            return '***********************'
+#        else:
+#            return o
 
 
 class SelectedResultsAdapter(TabularAdapter):
@@ -70,12 +73,17 @@ class SelectedResultsAdapter(TabularAdapter):
 
     rid_text = Property
     text_color = Property
+    font = 'monospace'
+
     def _get_text_color(self):
         return self.item.color
 
     def _get_rid_text(self):
-        if self.item.rid == '---':
-            return '---'
+        if self.item.rid == ' ':
+            return ' '
+#            return '---'
+#        elif self.item.rid == '***':
+#            return '***'
         else:
             return '{:05n}'.format(self.item.rid)
 
@@ -85,10 +93,12 @@ class SelectedResultsAdapter(TabularAdapter):
                 ]
         return cols
 
-class GroupMarker(HasTraits):
-    color = 'red'
+
+class Marker(HasTraits):
+    color = 'white'
     def __getattr__(self, attr):
-        return '---'
+        return ' '
+
 
 class ProcessingSelector(Viewable, ColumnSorterMixin):
     selected_result_labels = Property(depends_on='selected_results')
@@ -106,29 +116,22 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
     analysis_type = Str('---')
     analysis_types = Property
 
-    add_group_marker = Button
+    add_group_marker = Button('Set Group')
+    add_mean_marker = Button('Set Mean')
 
     update_data = Event
 
     selected_row = Any
-    def _selected_row_changed(self):
-        gid = 0
-        colornames = colorname_generator()
-        color = colornames.next()
-        for a in self.selected_results:
-            if a.rid == '---':
-                gid += 1
-                color = colornames.next()
-            a.gid = gid
-            a.color = color
+    selected = Any
 
 
     def _load_selected_results(self):
         for r in self.selector.selected:
             if r not in self.selected_results:
                 self.selected_results.append(r)
-#                self.selected_results_obj.labels = self.selected_result_labels
-#                self.selected_results_obj = SelectedResults(labels=self.selected_result_labels)
+
+        self.selected_row = self.selected_results[-1]
+
     def close(self, isok):
         if isok:
             self.update_data = True
@@ -139,8 +142,15 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
 
     def _add_group_marker_fired(self):
-        self.selected_results.append(GroupMarker())
+        for r in self.selected:
+            r.gid = 1
+            r.color = 'red'
 
+        oruns = set(self.selected_results) ^ set(self.selected)
+        self.selected_results = list(oruns) + [Marker()] + self.selected
+
+    def _add_mean_marker_fired(self):
+        pass
 
     def _append_fired(self):
         self._load_selected_results()
@@ -193,11 +203,10 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
         mi = db.get_mass_spectrometer(ma)
 
+        at = self.analysis_type.lower()
         def exclude(meas):
-            a = False
-            if self.analysis_type != '---':
-                a = meas.analysis_type.name != self.analysis_type
-            return a
+            if at != '---':
+                return meas.analysis_type.name != at
 
         nrs = [me.analysis for me in mi.measurements if not exclude(me)]
         selector.load_results(nrs)
@@ -211,16 +220,19 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
             return
 
         atype = db.get_analysis_type(at)
+        pr = self.project
+        ma = self.machine
         def exclude(meas):
             m = False
             p = False
-            if self.machine != '---':
-                m = meas.mass_spectrometer.name != self.machine
-            if self.project != '---':
-#                an for s in pi.samples
-#                    for ln in s.labnumbers
-#                        for an in ln.analyses
-                p = meas.analysis.labnumber.sample.project != self.project
+            if ma != '---':
+                try:
+                    m = meas.mass_spectrometer.name != ma
+                except AttributeError, e:
+                    print e
+
+            if pr != '---':
+                p = meas.analysis.labnumber.sample.project != pr
             return m or p
 
         nrs = [mi.analysis for mi in atype.measurements if not exclude(mi)]
@@ -251,13 +263,13 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                               HGroup(
                                      Item('append', show_label=False, width= -80),
                                      Item('replace', show_label=False, width= -80),
-                                     spring,
+#                                     Spring(springy=False, width= -50),
                                      Item('object.selector.limit')
                                      ),
                               Item('selector',
                                    show_label=False, style='custom',
                                    editor=InstanceEditor(view='panel_view'),
-                                   width=500
+                                   width=300
 #                                   width=0.75,
                                 )
                               )
@@ -267,19 +279,25 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                               Item('selected_results',
                                           show_label=False,
                                           style='custom',
-                                          editor=TabularEditor(multi_select=True,
+                                          editor=TabularEditor(
+                                                               multi_select=True,
                                                         editable=False,
-                                                        drag_move=True,
+#                                                        drag_move=True,
+                                                        selected='object.selected',
                                                         selected_row='object.selected_row',
                                                         column_clicked='object.column_clicked',
 #                                                        operations=['drag']
-                                                        adapter=SelectedResultsAdapter(can_edit=False),
+                                                        adapter=SelectedResultsAdapter(
+#                                                                                       can_drop=True,
+#                                                                                       can_edit=True
+                                                                                       ),
                                                         ),
 #                                          width=0.25,
                                           width= -140
                                           ),
 #                                    springy=False
-                                Item('add_group_marker', show_label=False)
+                                Item('add_group_marker', show_label=False),
+                                Item('add_mean_marker', show_label=False)
                                 )
 
 
@@ -296,7 +314,10 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                   buttons=['OK', 'Cancel'],
 #                  width=900,
                   height=500,
-                  resizable=True
+                  resizable=True,
+                  id='processing_selector',
+                  title='Manage Data'
+
                )
 
         return v
@@ -334,5 +355,6 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
     def _get_selected_result_labels(self):
         return ['{} {}'.format(r.rid, r.labnumber) for r in self.selected_results]
+
 
 #============= EOF =============================================

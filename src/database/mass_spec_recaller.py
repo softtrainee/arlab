@@ -66,7 +66,7 @@ class MassSpecRecaller(HasTraits):
 
 
     def _selector_default(self):
-        db = MassSpecDatabaseAdapter(dbname='massspecdata_local',
+        db = MassSpecDatabaseAdapter(name='massspecdata_local',
                                   #host='129.138.12.131',
 #                                  user='massspec',
 #                                  password='DBArgon'

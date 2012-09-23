@@ -54,6 +54,48 @@ class wxLED(wx.Control):
 
         self._obj = obj
         self.set_state(state)
+        s = self._obj.shape
+        if s == 'circle':
+            self.ascii_led = '''
+        000000-----000000      
+        0000---------0000
+        000-----------000
+        00-----XXX-----00
+        0----XXXXXXX----0
+        0---XXXXXXXXX---0
+        ----XXXXXXXXX----
+        ---XXXXXXXXXXX---
+        ---XXXXXXXXXXX---
+        ---XXXXXXXXXXX---
+        ----XXXXXXXXX----
+        0---XXXXXXXXX---0
+        0----XXXXXXX----0
+        00-----XXX-----00
+        000-----------000
+        0000---------0000
+        000000-----000000
+        '''.strip()
+        else:
+            self.ascii_led = '''
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        XXXXXXXXXXXXXXXXX
+        '''.strip()
+
 
     def OnMotion(self, event):
         print event
@@ -117,25 +159,7 @@ class wxLED(wx.Control):
             color1 = base_color
             color2 = change_intensity(base_color, 0.5)
 
-        ascii_led = '''
-        000000-----000000      
-        0000---------0000
-        000-----------000
-        00-----XXX-----00
-        0----XXXXXXX----0
-        0---XXXXXXXXX---0
-        ----XXXXXXXXX----
-        ---XXXXXXXXXXX---
-        ---XXXXXXXXXXX---
-        ---XXXXXXXXXXX---
-        ----XXXXXXXXX----
-        0---XXXXXXXXX---0
-        0----XXXXXXX----0
-        00-----XXX-----00
-        000-----------000
-        0000---------0000
-        000000-----000000
-        '''.strip()
+
 
         xpm = ['17 17 3 1', # width height ncolors chars_per_pixel
                '0 c None',
@@ -146,7 +170,7 @@ class wxLED(wx.Control):
                ]
 
 
-        xpm += [s.strip() for s in ascii_led.splitlines()]
+        xpm += [s.strip() for s in self.ascii_led.splitlines()]
         self.bmp = wx.BitmapFromXPMData(xpm)
         self.Refresh()
 

@@ -20,6 +20,11 @@ from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
+def get_name(func):
+    def _get_name(obj, trait, item):
+        name = func(obj, trait, item)
+        return name if name else ''
+    return _get_name
 
 class AutomatedRunAdapter(TabularAdapter):
 
@@ -40,13 +45,18 @@ class AutomatedRunAdapter(TabularAdapter):
 #        if self.item:
 #            if self.item.state == 'not run':
 #                return True
+    def get_bg_color(self, obj, trait, row):
+        item = getattr(obj, trait)[row]
+        if not item.executable:
+            return 'red'
 
     def _columns_default(self):
 #        hp = ('Temp', 'heat_value')
 #        if self.kind == 'watts':
 #            hp =
 
-        return  [('', 'state'), ('RunID', 'identifier'), ('Aliquot', 'aliquot'),
+        return  [('', 'state'),
+                 ('RunID', 'identifier'), ('Aliquot', 'aliquot'),
 
                  ('Sample', 'sample'),
                  ('Position', 'position'),
@@ -87,22 +97,29 @@ class AutomatedRunAdapter(TabularAdapter):
     def _get_autocenter_text(self, trait, item):
         return 'yes' if self.item.autocenter else ''
 
+    @get_name
     def _get_extraction_script_text(self, trait, item):
         if self.item.extraction_script:
             return self.item.extraction_script.name
 
+    @get_name
     def _get_measurement_script_text(self, trait, item):
         if self.item.measurement_script:
             return self.item.measurement_script.name
 
+    @get_name
     def _get_post_measurement_script_text(self, trait, item):
         if self.item.post_measurement_script:
             return self.item.post_measurement_script.name
 
+    @get_name
     def _get_post_equilibration_script_text(self, trait, item):
         if self.item.post_equilibration_script:
+#            return self.item.post_equilibration_script.name
             return self.item.post_equilibration_script.name
 
+#    def _get_script_name(self, name):
+#        return name is name is not None else ''
     def _get_state_text(self):
         return ''
 

@@ -346,6 +346,15 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         pass
     def OnProperties(self, event):
         pass
+#    def OnSample(self, event):
+#        self.manager.sample(self.active_item.name, mode='normal')
+#
+#    def OnCycle(self, event):
+#        self.manager.cycle(self.active_item.name, mode='normal')
+
+#
+#    def OnProperties(self, event):
+#        self.manager.show_valve_properties(self.active_item.name)
 
     def _show_menu(self, event, obj):
         enabled = True
@@ -360,14 +369,15 @@ class ExtractionLineCanvas2D(MarkupCanvas):
         self._popup_menu = wx.Menu()
 
         panel = event.window.control#GetEventObject()
-        t = 'Lock'
-        lfunc = self.OnLock
-        if obj.soft_lock:
-            t = 'Unlock'
+        if self.manager.mode != 'client':
+            t = 'Lock'
+            lfunc = self.OnLock
+            if obj.soft_lock:
+                t = 'Unlock'
 
-        item = self._popup_menu.Append(-1, t)
-        item.Enable(enabled)
-        panel.Bind(wx.EVT_MENU, lfunc, item)
+            item = self._popup_menu.Append(-1, t)
+            item.Enable(enabled)
+            panel.Bind(wx.EVT_MENU, lfunc, item)
 
         en = not obj.state
         try:
@@ -394,7 +404,8 @@ class ExtractionLineCanvas2D(MarkupCanvas):
     def select_right_down(self, event):
         item = self.active_item
 
-        if item is not None and isinstance(item, BaseValve):
+        if item is not None and\
+             isinstance(item, BaseValve):
             self._show_menu(event, item)
 
 #        item = self.valves[self.active_item]

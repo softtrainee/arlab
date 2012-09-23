@@ -82,6 +82,10 @@ class SaveableHandler(Handler):
 class SaveableManagerHandler(SaveableHandler, ManagerHandler):
     pass
 
+SaveableButtons = [Action(name='Save', action='save',
+                                enabled_when='object.save_enabled'),
+                          Action(name='Save As', action='save_as')]
+
 class Manager(Viewable, RPCable):
     '''
     '''

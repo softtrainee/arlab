@@ -34,6 +34,8 @@ from src.data_processing.regression.regressor import Regressor
 from editors.regression_editor import RegressionEditor
 from tools.rect_selection_tool import RectSelectionTool
 from src.graph.time_series_graph import TimeSeriesGraph
+from chaco.tools.broadcaster import BroadcasterTool
+from src.graph.tools.data_tool import DataTool, DataToolOverlay
 
 
 class RegressionGraph(Graph):
@@ -316,13 +318,30 @@ class RegressionGraph(Graph):
         scatter.index.on_trait_change(self._metadata_changed,
                                             'metadata_changed')
 
+
+#        broadcaster = plot.container.tools[0]
+#        if not isinstance(broadcaster, BroadcasterTool):
+        broadcaster = BroadcasterTool()
+        self.plots[plotid].container.tools.append(broadcaster)
+
+
         rect_tool = RectSelectionTool(scatter, parent=self, plotid=plotid)
         scatter.overlays.append(rect_tool)
 
         #add a broadcaster so scatterinspector and rect selection will received events
+        broadcaster.tools.append(rect_tool)
 
+        data_tool = DataTool(component=plot,
+                             plot=scatter
+                             )
+        data_tool_overlay = DataToolOverlay(component=scatter,
+                                            tool=data_tool,
+                                            )
+        scatter.overlays.append(data_tool_overlay)
 
-        self.plots[plotid].tools[0].tools.insert(0, rect_tool)
+        broadcaster.tools.append(data_tool)
+#        self.plots[plotid].container.tools.append(broadcaster)
+#        self.plots[plotid].tools[0].tools.insert(0, rect_tool)
 
         #rect_tool.on_trait_change(self._metadata_changed, 'update_flag')
 
@@ -421,7 +440,7 @@ if __name__ == '__main__':
     yer = [1, 1, 1, 1, 1, 1]  # [0.2, 0.2, 0.4, 0.3, 0.6]
     from src.data_processing.regression.ols import WLS
 
-    w = WLS(xs, ys, yer)
+#    w = WLS(xs, ys, yer)
 
 #    xs=[]
 #    ys=[]

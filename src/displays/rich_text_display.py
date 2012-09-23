@@ -66,7 +66,7 @@ class RichTextDisplay(HasTraits):
     _hspacer = 25
     _text_buffer = List
     selectable = False
-
+    id = ''
     def close(self):
         if self.ui is not None:
             self.ui.dispose()
@@ -89,6 +89,7 @@ class RichTextDisplay(HasTraits):
 #                     height=self.height,
                      x=self.x,
                      y=self.y,
+                     id=self.id
                      )
 
     def factory(self, window, editor):
@@ -134,10 +135,16 @@ class RichTextDisplay(HasTraits):
         self._text_buffer = []
 
         d = self._display
-        d.Freeze()
-        d.SelectAll()
-        d.Delete(d.Selection)
-        d.Thaw()
+        if d:
+            d.Freeze()
+#            for i in range(4):
+            d.SelectAll()
+#                d.DeleteSelection()
+            d.Delete(d.Selection)
+            d.SelectNone()
+            d.Thaw()
+
+            d.SetInsertionPoint(0)
 
     def _add_(self, msg, color=None, size=None,
               bold=False,
@@ -150,7 +157,6 @@ class RichTextDisplay(HasTraits):
             if not isinstance(msg, tuple):
                 return
             msg = msg[0]
-
 
         d = self._display
         if color is None:
@@ -256,7 +262,7 @@ class RichTextDisplay(HasTraits):
             else:
                 self._add_(msg, **kw)
         else:
-
+#            pass
             self._text_buffer.append((msg, kw))
 
 

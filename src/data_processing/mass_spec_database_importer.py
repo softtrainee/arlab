@@ -57,9 +57,10 @@ class MassSpecDatabaseImporter(Loggable):
         return v
 
     def _db_default(self):
-        db = MassSpecDatabaseAdapter(dbname='massspecdata_test')
-        if db.connect():
-            return db
+        db = MassSpecDatabaseAdapter(name='massspecdata_test')
+#        if db.connect():
+
+        return db
 
     def add_analysis(self, rid, aliquot, irradpos, baselines, signals, keys,
                      regression_results):

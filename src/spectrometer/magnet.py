@@ -28,7 +28,7 @@ import csv
 import time
 from numpy import isnan
 #============= local library imports  ==========================
-from src.data_processing.regression.regressor import Regressor
+from src.regression.regressor import Regressor
 from src.paths import paths
 #import math
 #from src.graph.graph import Graph

@@ -21,13 +21,13 @@ import os
 import pickle
 from pickle import PickleError
 #=============local library imports  ==========================
-from manager import Manager
+from src.managers.manager import Manager
 from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve
 from src.extraction_line.section import Section
 from src.paths import paths
 from src.helpers.parsers.valve_parser import ValveParser
-from threading import Timer, Thread, Condition, Event
+from threading import Timer, Thread, Event
 import time
 from src.loggable import Loggable
 import random
@@ -48,7 +48,7 @@ class ValveManager(Manager):
     '''
     valves = Dict
     explanable_items = List
-    #parent = Any
+    extraction_line_manager = Any
     sampletime = 0.1
     #actuator = Any
     actuators = List
@@ -63,6 +63,7 @@ class ValveManager(Manager):
 
     systems = None
     valve_groups = None
+    mode = 'normal'
 
     def show_valve_properties(self, name):
         v = self.get_valve_by_name(name)
@@ -115,35 +116,44 @@ class ValveManager(Manager):
             pickle.dump(obj, f)
 
     def load_soft_lock_state(self):
-        p = os.path.join(paths.hidden_dir, 'soft_lock_state')
-        if os.path.isfile(p):
-            self.info('loading soft lock state from {}'.format(p))
+        if self.mode == 'client':
+            for k, v in self.valves.iteritems():
+                s = v.get_lock_state()
+                if s:
+                    self.lock(k, save=False)
+                else:
+                    self.unlock(k, save=False)
+        else:
+            p = os.path.join(paths.hidden_dir, 'soft_lock_state')
+            if os.path.isfile(p):
+                self.info('loading soft lock state from {}'.format(p))
 
-            with open(p, 'rb') as f:
-                try:
-                    sls = pickle.load(f)
-                except PickleError:
-                    pass
+                with open(p, 'rb') as f:
+                    try:
+                        sls = pickle.load(f)
+                    except PickleError:
+                        pass
 
-                for v in self.valves:
+                    for v in self.valves:
 
-                    if v in sls and sls[v]:
-                        self.lock(v, save=False)
-                    else:
-                        self.unlock(v, save=False)
+                        if v in sls and sls[v]:
+                            self.lock(v, save=False)
+                        else:
+                            self.unlock(v, save=False)
 
     def get_software_locks(self):
-        locks = []
-        for k, v in self.valves.items():
-            locks.append(k)
-            locks.append('1' if v.software_lock else '0')
+#        locks = []
+#        for k, v in self.valves.items():
+#            locks.append(k)
+#            locks.append('1' if v.software_lock else '0')
 
 #            if self.query_valve_state:
 #                s = self.get_state_by_name(k)
 #            else:
 #                s = v.state
 
-        return ''.join(locks)
+        return ','.join(['{}{}'.format(k, int(v.software_lock)) for k, v in self.valves.iteritems()])
+#        return ''.join(locks)
 
     def _get_states(self, times_up_event, sq):
 
@@ -364,7 +374,7 @@ class ValveManager(Manager):
 #
 #            self.info('end sample')
 #            self.close_by_name(name)
-#    def sample(self, vid, parent):
+#    def sample(self, vid, extraction_line_manager):
 #        '''
 #
 #        '''
@@ -374,14 +384,14 @@ class ValveManager(Manager):
 #        v = self.get_valve_by_name(vid)
 #        if self.validate(v) and not v.state:
 #
-#            parent.open(v.name)
-#            parent.update()
+#            extraction_line_manager.open(v.name)
+#            extraction_line_manager.update()
 #
 #            self.info('start sampling')
 #            time.sleep(self.sampletime)
 #
-#            parent.close(v.name)
-#            parent.update()
+#            extraction_line_manager.close(v.name)
+#            extraction_line_manager.update()
 #
 #            self.info('end sampling')
 
@@ -576,15 +586,15 @@ class ValveManager(Manager):
     def _load_explanation_valve(self, v):
         s = v.get_hardware_state()
         #update the extraction line managers canvas
-#            self.parent.canvas.update_valve_state(v.name[-1], s)
+#            self.extraction_line_manager.canvas.update_valve_state(v.name[-1], s)
         name = v.name.split('-')[1]
-        self.parent.update_valve_state(name, s)
+        self.extraction_line_manager.update_valve_state(name, s)
 #        args = dict(
 #                    )
         ev = ExplanableValve(name=name,
                     address=v.address,
                     description=v.description,
-                    canvas=self.parent.canvas,)
+                    canvas=self.extraction_line_manager.canvas,)
         ev.state = s if s is not None else False
 
         self.explanable_items.append(ev)
@@ -719,12 +729,12 @@ if __name__ == '__main__':
 #            s = v.get_hardware_state()
 #
 #            #update the extraction line managers canvas
-##            self.parent.canvas.update_valve_state(v.name[-1], s)
-#            self.parent.update_valve_state(v.name[-1], s)
+##            self.extraction_line_manager.canvas.update_valve_state(v.name[-1], s)
+#            self.extraction_line_manager.update_valve_state(v.name[-1], s)
 #            args = dict(name=a[0],
 #                        address=a[1],
 #                        description=a[3],
-#                        canvas=self.parent.canvas,
+#                        canvas=self.extraction_line_manager.canvas,
 #
 #                        )
 #            ev = ExplanableValve(**args)
