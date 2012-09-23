@@ -147,7 +147,7 @@ class Entry(HasTraits):
         return getattr(self, name)
     def _db_default(self):
         db = IsotopeAdapter(kind='sqlite',
-                            dbname=paths.isotope_db
+                            name=paths.isotope_db
                             )
         if db.connect():
             return db

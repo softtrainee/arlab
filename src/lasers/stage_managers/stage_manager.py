@@ -120,7 +120,7 @@ class StageManager(Manager):
 
     def get_video_database(self):
         from src.database.adapters.video_adapter import VideoAdapter
-        db = VideoAdapter(dbname=self.parent.dbname,
+        db = VideoAdapter(name=self.parent.name,
                           kind='sqlite')
         return db
 

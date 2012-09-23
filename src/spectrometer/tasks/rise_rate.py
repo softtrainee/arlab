@@ -18,12 +18,14 @@
 from traits.api import Float, Any, Button, Bool
 from traitsui.api import View, Item, spring, ButtonEditor, HGroup
 #============= standard library imports ========================
+from numpy import polyfit, linspace
 #============= local library imports  ==========================
 from spectrometer_task import SpectrometerTask
 import time
 
 class RiseRate(SpectrometerTask):
-    result = Float
+    result_fit = Float
+    result_endpoints = Float
     graph = Any
     clear_button = Button('Clear')
     calculated = Bool
@@ -40,32 +42,48 @@ class RiseRate(SpectrometerTask):
 
         self._starttime = self.graph.get_data()[-1]
         self._start_intensity = self._get_intensity()
-        self._start_intensity = 0
-
-        self.graph.add_vertical_rule(self._starttime, color=self.detector.color.Get())
+#        print self._starttime
+        self.graph.add_vertical_rule(self._starttime,
+#                                     color='black'
+#                                     color=self.detector.color.Get()
+                                     )
         self.graph.redraw()
 
     def _calculate_rise_rate(self):
         rise = self._get_intensity() - self._start_intensity
 
-        ts = self.graph.get_data()[-1]
+        xs = self.graph.get_data()
+        ys = self.graph.get_data(axis=1, series=self.detector.series_id)
+        yss = ys[xs >= self._starttime]
+
+        ts = xs[-1]
         run = (ts - self._starttime) / 60.
+        rrendpoints = rise / run
+
+        rrfit = polyfit(linspace(0, run, len(yss)), yss, 1)[0]
+
         self.graph.add_vertical_rule(ts)
         self.graph.redraw()
         self.calculated = True
-        return rise / run
+        self.info('calculated rise rate {:0.1f} {:0.3f}/{:0.3f}, {:0.3f}'.format(rrendpoints, rise, run, rrfit))
+
+        self.result_endpoints = rrendpoints
+        self.result_fit = rrfit
 
     def _get_intensity(self):
         return self.spectrometer.get_intensity(self.detector.name)
 
     def _end(self):
-        self.result = self._calculate_rise_rate()
+        self._calculate_rise_rate()
 
     def traits_view(self):
         v = View(
-                 Item('result', style='readonly',
+                 Item('result_endpoints', style='readonly',
                       format_str='%0.3f',
-                      label='Rise Rate (fA/min)'),
+                      label='Rise Rate endpoints (fA/min)'),
+                 Item('result_fit', style='readonly',
+                      format_str='%0.3f',
+                      label='Rise Rate linear fit  (fA/min)'),
                   HGroup(spring,
                          Item('clear_button', show_label=False, enabled_when='calculated'),
                          Item('execute',

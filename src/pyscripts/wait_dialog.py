@@ -21,7 +21,7 @@ from traits.api import HasTraits, Float, Property, Bool, Str
 from traitsui.api import View, Item, RangeEditor, Handler
 from pyface.timer.timer import Timer
 from traitsui.menu import Action
-from src.viewable import ViewableHandler
+from src.viewable import ViewableHandler, Viewable
 
 #============= standard library imports ========================
 
@@ -37,7 +37,7 @@ class WDHandler(ViewableHandler):
     def _continue(self, info):
         info.object._continue()
 
-class WaitDialog(HasTraits):
+class WaitDialog(Viewable):
 #    condition = None
     end_evt = None
     wtime = Float
@@ -103,8 +103,8 @@ class WaitDialog(HasTraits):
         self._end()
         try:
             self.ui.dispose()
-        except:
-            pass
+        except Exception, e:
+            print 'wait dialog close exception', e
 #
     def _continue(self):
         self._canceled = False

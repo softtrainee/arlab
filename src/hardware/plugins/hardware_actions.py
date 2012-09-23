@@ -69,7 +69,7 @@ class OpenDeviceScansAction(Action):
 
 #        p = 'src.remote_hardware.remote_hardware_manager.RemoteHardwareManager'
 #        open_protocol(self.window, p)
-        db = DeviceScanAdapter(dbname=paths.device_scan_db,
+        db = DeviceScanAdapter(name=paths.device_scan_db,
                                kind='sqlite',
                                application=self.window.application)
         open_selector(db, self.window.application)

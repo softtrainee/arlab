@@ -32,7 +32,7 @@ class DatabasePreferencesPage(PreferencesPage):
     id = 'pychron.workbench.database.preferences_page'
     name = 'Database'
     preferences_path = 'pychron.database'
-    dbname = Str
+    name = Str
     user = Str
     password = Password
     host = Str
@@ -45,7 +45,7 @@ class DatabasePreferencesPage(PreferencesPage):
         v = View(VGroup(
                     Item('use_db'),
                     VGroup(
-                    Item('dbname', label='Database Name'),
+                    Item('name', label='Database Name'),
                     Item('host'),
                     Item('user'),
                     Item('password'),

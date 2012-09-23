@@ -44,7 +44,7 @@ class PowerMapAdapter(DatabaseAdapter):
         return b
 
 if __name__ == '__main__':
-    db = PowerMapAdapter(dbname=paths.co2laser_db,
+    db = PowerMapAdapter(name=paths.co2laser_db,
                          kind='sqlite')
     db.connect()
 

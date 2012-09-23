@@ -34,6 +34,10 @@ from src.processing.processing_selector import ProcessingSelector
 from src.helpers.traitsui_shortcuts import listeditor
 from src.viewable import ViewableHandler, Viewable
 from src.paths import paths
+from src.database.core.database_selector import ColumnSorterMixin
+from src.displays.rich_text_display import RichTextDisplay
+from src.processing.export.csv_exporter import CSVExporter
+from src.processing.export.excel_exporter import ExcelExporter
 
 class GraphSelector(HasTraits):
     show_series = Bool(False)
@@ -48,7 +52,7 @@ class GraphSelector(HasTraits):
         v = View(VGroup(*self.selections))
         return v
 
-class BaseFigure(Viewable):
+class BaseFigure(Viewable, ColumnSorterMixin):
     graph = Instance(Graph)
     analyses = List(Analysis)
     selected_analysis = Any
@@ -61,6 +65,7 @@ class BaseFigure(Viewable):
     selector = None
 #    result = Instance(Result, ())
 
+#    _debug = False
     _debug = True
     series = Instance(Series)
 
@@ -76,7 +81,18 @@ class BaseFigure(Viewable):
     use_user_series_configs = True
     use_user_graph_selector = True
 
+    results_display = Instance(RichTextDisplay, (),
+                               )
+
+
+    show_results = Button('stats')
+    export_csv = Button('csv')
+    export_pdf = Button('pdf')
+    export_excel = Button('excel')
+
+
     def refresh(self):
+        self.results_display.clear()
         analyses = self.analyses
         if not analyses:
             return
@@ -91,6 +107,50 @@ class BaseFigure(Viewable):
         pl = 70 if self.show_series else 40
         padding = [pl, 10, 0, 30]
         self._refresh(graph, analyses, padding)
+
+        self._refresh_stats()
+
+    def _refresh_stats(self):
+        rd = self.results_display
+        rd.clear()
+        if self.series:
+            if self.series.graph:
+                tabulate = lambda xs:' '.join(map('{:<10s}'.format,
+                                          map('{:0.7f}'.format,
+                                              xs)))
+#                xx = ['', ' *x', ' *x2', ' *x3']
+                for config, reg in zip(self.series_configs,
+                                       self.series.graph.regressors):
+                    if 'average' in config.fit.lower():
+                        h = '          mean          SD          SEM'
+                        rd.add_text(h)
+                        rd.add_text('{} ={}'.format(config.label,
+                                                    '{:<10s}'.format('{:0.7f}'.format(reg.coefficients[0]))))
+#                        es = ''.join(map('{:0.7f}'.format, reg.coefficient_errors))
+                        es = tabulate(reg.coefficient_errors)
+                        es = '{:<10s}'.format(es)
+                        rd.add_text('err  =            {}'.format(es))
+                    else:
+                        h = '          c          x          x2          x3'
+                        rd.add_text(h)
+#                    cs = reg.coefficients
+#                    ss = ' + '.join(map(lambda x:'{:0.7f}{}'.format(*x),
+#                                              zip(cs, xx[:len(cs)][::-1])))
+                        cs = reg.coefficients
+                        cs = cs[::-1]
+#                        ss = ' '.join(map('{:<10s}'.format,
+#                                          map('{:0.7f}'.format,
+#                                              cs)))
+                        ce = reg.coefficient_errors
+                        ce = ce[::-1]
+#                        se = ' '.join(map('{:<10s}'.format,
+#                                          map('{:0.7f}'.format,
+#                                              ce)))
+    ##                    
+                        ss = tabulate(cs)
+                        se = tabulate(ce)
+                        rd.add_text('{} ='.format(config.label) + ss)
+                        rd.add_text('err  ='.format(config.label) + se)
 
     def _get_gids(self, analyses):
         return list(set([(a.gid, True) for a in analyses]))
@@ -110,7 +170,8 @@ class BaseFigure(Viewable):
             if gseries:
                 graph.plotcontainer.add(gseries.plotcontainer)
                 series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
-
+            self.series = series
+            self.series.graph.on_trait_change(self._refresh_stats, 'regression_results')
         graph.redraw()
 
     def load_analyses(self, names, groupids=None, attrs=None):
@@ -153,6 +214,9 @@ class BaseFigure(Viewable):
                     self.series_configs.insert(1, self.series_config_klass(label=iso, parent=self))
                 else:
                     se.parent = self
+
+        for i, se in enumerate(self.series_configs):
+            se.graphid = i
 #        snames = [s.label for s in self.series_configs]
 #        keys = [iso for iso in self.isotope_keys if not iso in snames]
 
@@ -178,6 +242,7 @@ class BaseFigure(Viewable):
         signal_keys.sort(key=lambda k:k[2:4], reverse=True)
         bs_keys = [i for i in signal_keys if i.endswith('bs')]
         bs_keys.sort(key=lambda k:k[2:4], reverse=True)
+
         self.baseline_table_adapter.iso_keys = bs_keys
 
 #===============================================================================
@@ -286,23 +351,50 @@ class BaseFigure(Viewable):
             ps = ProcessingSelector(db=self.db)
             ps.selector.style = 'panel'
             ps.on_trait_change(self._update_data, 'update_data')
-#            ps.edit_traits()
+            ps.edit_traits()
 
             self.selector = ps
             if self._debug:
-                ps.selected_results = [i for i in ps.selector.results[-6:] if i.analysis_type != 'blank']
+                ps.selected_results = [i for i in ps.selector.results[2:6] if i.analysis_type != 'blank']
 
         else:
             self.selector.show()
 
         self._update_data()
+    def _show_results_fired(self):
+        self.results_display.edit_traits()
+
+    def _export_csv_fired(self):
+        self.info('exporting to csv')
+        self._export(CSVExporter)
+
+    def _export_excel_fired(self):
+        self.info('exporting to csv')
+        self._export(ExcelExporter)
+
+    def _export_pdf_fired(self):
+        self.info('exporting to pdf')
+#        self._export(pdfExporter)
+
+    def _export(self, klass):
+        exp = klass(figure=self)
+        exp.export(path='/Users/ross/Sandbox/aaaaaaaaaexporttest.xls')
 #===============================================================================
 # views
 #===============================================================================
     def traits_view(self):
         top = self._get_top_group()
         bot = self._get_bottom_group()
-        tb = HGroup(spring,
+        export = HGroup(spring, 'export_csv', 'export_excel', 'export_pdf', show_labels=False,
+                        enabled_when='analyses'
+                        )
+        tb = HGroup(
+#                    spring,
+                    export,
+#                    Item('export_csv', show_label=False),
+#                    Item('export_excel', show_label=False),
+#                    Item('export_pdf', show_label=False),
+                    Item('show_results', show_label=False),
                        Item('manage_data', show_label=False),
                        )
         bottom = VGroup(tb, bot)
@@ -316,6 +408,7 @@ class BaseFigure(Viewable):
         v.buttons = self._get_buttons()
         v.handler = self._get_handler()
         return v
+
 
     def _get_buttons(self):
         return []
@@ -343,31 +436,42 @@ class BaseFigure(Viewable):
         return g
 
     def _get_signals_group(self):
-        self.signal_table_adapter = ta = AnalysisTabularAdapter()
-        sgrp = Group(Item('analyses',
-                      show_label=False,
-#                       height=0.3,
-                      editor=TabularEditor(adapter=ta,
-                                           column_clicked='object.column_clicked',
-                                           selected='object.selected_analysis',
-                                           editable=False, operations=['delete'])
-                       ),
-                       label='Signals',
-                       )
-        return sgrp
+        grp, ta = self._analyses_table_factroy('Signals')
+        self.signal_table_adapter = ta
+        return grp
+
+#        self.signal_table_adapter = ta = AnalysisTabularAdapter()
+#        sgrp = Group(Item('analyses',
+#                      show_label=False,
+##                       height=0.3,
+#                      editor=TabularEditor(adapter=ta,
+#                                           column_clicked='object.column_clicked',
+#                                           selected='object.selected_analysis',
+#                                           editable=False,
+##                                            operations=['delete']
+#                                            )
+#                       ),
+#                       label='Signals',
+#                       )
+#        return sgrp
 
     def _get_baselines_group(self):
-        self.baseline_table_adapter = ta = AnalysisTabularAdapter()
-        baselinegrp = Group(Item('analyses',
-                                 show_label=False,
-#                                 height=0.3,
-                                 editor=TabularEditor(adapter=ta,
-                                           editable=False,
-                                           )
-                       ),
-                       label='Baselines',
-                       )
-        return baselinegrp
+        grp, ta = self._analyses_table_factroy('Baselines')
+        self.baseline_table_adapter = ta
+        return grp
+
+#        self.baseline_table_adapter = ta = AnalysisTabularAdapter()
+#        baselinegrp = Group(Item('analyses',
+#                                 show_label=False,
+##                                 height=0.3,
+#                                 editor=TabularEditor(adapter=ta,
+#                                           selected='object.selected_analysis',
+#                                           editable=False,
+#                                           )
+#                       ),
+#                       label='Baselines',
+#                       )
+#        return baselinegrp
 
     def _get_graph_edit_group(self):
         g = HGroup(Item('graph_selector', style='custom', show_label=False),
@@ -402,30 +506,63 @@ class BaseFigure(Viewable):
         #need to call both load from file and database
         if a.load_from_file(n):
             a.load_from_database()
-
+            a.load_age()
             return a
 
     def _graph_factory(self, klass=None, **kw):
         g = Graph(container_dict=dict(kind='h', padding=10,
-                                      bgcolor='red',
+                                      bgcolor='lightgray',
                                       spacing=10,
                                       ))
         return g
+
+    def _analyses_table_factroy(self, name):
+        ta = AnalysisTabularAdapter()
+        grp = Group(Item('analyses',
+                                 show_label=False,
+                                 height=0.3,
+                                 editor=TabularEditor(adapter=ta,
+                                           editable=False,
+                                           column_clicked='object.column_clicked',
+                                           selected='object.selected_analysis',
+                                           )
+                       ),
+                       label=name,
+                       )
+        return grp, ta
 #===============================================================================
 # defaults
 #===============================================================================
     def _graph_default(self):
         return self._graph_factory()
 
+    def _results_display_default(self):
+        r = RichTextDisplay(default_size=10,
+                            default_color='black',
+                            width=290,
+                            selectable=True,
+                            id='stats_display.{}'.format(self.workspace.name)
+                            )
+        r.title = '{} Stats'.format(self.workspace.name)
+#        r.title = ''.format(self)
+        return r
 #===============================================================================
 # property get/set
 #===============================================================================
     def _get_isotope_keys(self):
+        excks = ['bs', 'bl', 'bg']
+        def exc(ki):
+            f = lambda ei: ki.endswith(ei)
+            return sum(map(f, excks)) > 0
+
         keys = self.signal_keys
-        return [i for i in keys if not (i.endswith('bs') or i.endswith('bl'))]
+        return [ki for ki in keys if not exc(ki)]
+#        exc=lambda x: i.endswith('bs') or i.endswith
+#        return [i for i in keys if not (i.endswith('bs') or i.endswith('bl'))]
 
     def _get_signal_keys(self):
         keys = [ki for ai in self.analyses
                     for ki in ai.signals.keys()]
-        return list(set(keys))
+
+        return sorted(list(set(keys)), key=lambda x:int(x[2:4]), reverse=True)
 #============= EOF =============================================

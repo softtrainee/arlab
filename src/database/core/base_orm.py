@@ -17,10 +17,15 @@
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, Time, Date
 #============= local library imports  ==========================
+Base = declarative_base()
+class MigrateVersionTable(Base):
+    __tablename__ = 'migrate_version'
+    repository_id = Column(String(40), primary_key=True)
+    version = Column(Integer)
 
 class BaseMixin(object):
     @declared_attr

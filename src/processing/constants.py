@@ -20,10 +20,15 @@ from uncertainties import ufloat
 
 #=============local library imports  ==========================
 
-lambda_epsilon = ufloat((5.81e-11,
-                                    0))
-lambda_beta = ufloat((4.962e-10,
-                                 0))
+#lambda_epsilon = ufloat((5.81e-11,
+#                                    0))
+#lambda_beta = ufloat((4.962e-10,
+#                                 0))
+
+lambda_epsilon = ufloat((5.755e-11,
+                                    1.6e-13))
+lambda_beta = ufloat((4.9737e-10,
+                                 9.3e-13))
 lambdak = lambda_epsilon + lambda_beta
 
 lambda_37 = ufloat((0.01975, 0)) #per day

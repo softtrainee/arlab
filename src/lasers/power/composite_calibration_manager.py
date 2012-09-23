@@ -218,10 +218,10 @@ class CompositeCalibrationManager(Manager):
     def _db_default(self):
 
         if self.parent_name == 'FusionsDiode':
-            dbname = paths.diodelaser_db
+            name = paths.diodelaser_db
         else:
-            dbname = paths.co2laser_db
-        db = PowerCalibrationAdapter(dbname=dbname, kind='sqlite')
+            name = paths.co2laser_db
+        db = PowerCalibrationAdapter(name=name, kind='sqlite')
         db.connect()
         return db
 

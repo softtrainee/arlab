@@ -63,6 +63,7 @@ class OLS(object):
     def get_coefficient_standard_errors(self):
         #return np.sqrt(np.diagonal(self.results.cov_params()))
         return self.results.bse
+
     def get_residuals(self):
         return self._get_result_param('resid')
 

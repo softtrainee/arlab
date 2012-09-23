@@ -29,7 +29,7 @@ from chaco.tools.api import ZoomTool, LineInspector, RangeSelection, \
 from chaco.axis import PlotAxis
 from traitsui.menu import Menu, Action
 from pyface.api import FileDialog, OK
-
+from kiva.fonttools import Font
 from pyface.timer.api import do_after as do_after_timer
 #=============standard library imports ========================
 import numpy as np
@@ -606,10 +606,13 @@ class Graph(Loggable):
 ##        x, y = .map_screen([(x, y)])[0]
 #        x, y = self.plots[plotid].map_screen([(x, y)])[0]
 #        print x, y
-        c = self.plots[plotid].plots['plot1'][0]
-        self.plots[plotid].overlays.append(PlotLabel(txt,
-                                                     component=c,
-                                                     x=x, y=y))
+        c = self.plots[plotid]
+        pl = PlotLabel(txt, overlay_position='inside top',
+                                         hjustify='left',
+                                         component=c)
+        c.overlays.append(pl)
+        return pl
+
 
     def add_data_label(self, x, y, plotid=0):
         '''
@@ -682,21 +685,20 @@ class Graph(Loggable):
                 kwargs['constrain'] = True
                 kwargs['constrain_direction'] = pan
                 kwargs['constrain_key'] = None
-            pt = PanTool(p, **kwargs)
-#            p.tools.append(pt)
+            pt = PanTool(p, container=pc, **kwargs)
             tools.append(pt)
+
+        plotid = len(self.plots) - 1
 
         for tool in pc.tools:
             if isinstance(tool, ContextualMenuTool):
                 contextmenu = False
 
-        plotid = len(self.plots) - 1
         if contextmenu:
             menu = ContextualMenuTool(parent=self,
                                       component=pc,
 #                                      plotid=plotid
                                       )
-
             pc.tools.append(menu)
 
         for t in ['x', 'y']:
@@ -705,8 +707,7 @@ class Graph(Loggable):
                 self._set_title('{}_axis'.format(t), kw[title], plotid)
 
 
-        broadcaster = BroadcasterTool(compnent=p,
-                                      tools=tools
+        broadcaster = BroadcasterTool(tools=tools
                                       )
         p.tools.insert(0, broadcaster)
 
@@ -852,10 +853,13 @@ class Graph(Loggable):
                            plotid=pi,
                            ** kw)
 
-    def add_datum(self, datum, plotid=0, series=0, update_y_limits=False, ypadding=10, do_after=None):
+    def add_datum(self, datum, plotid=0, series=0, update_y_limits=False,
+                   ypadding=10,
+                   ymin_anchor=None, do_after=None):
         '''
         '''
         def add():
+
             names = self.series[plotid][series]
             plot = self.plots[plotid]
             for i, name in enumerate(names):
@@ -869,7 +873,14 @@ class Graph(Loggable):
                     ma = max(nd)
 
             if update_y_limits:
-                self.set_y_limits(min=mi - ypadding,
+                mi -= ypadding
+                if ymin_anchor is not None:
+                    mi = max(ymin_anchor, mi)
+
+#                if ypadding / ma > 0.5:
+#                    ypadding = 0
+
+                self.set_y_limits(min=mi,
                                   max=ma + ypadding,
                                   plotid=plotid)
 
@@ -1186,8 +1197,8 @@ class Graph(Loggable):
             c = color_gen.next()
         else:
             c = kw['color']
-
-        c = c.replace(' ', '')
+        if isinstance(c, str):
+            c = c.replace(' ', '')
         if 'type' in kw:
 
             if kw['type'] == 'bar':
@@ -1252,8 +1263,12 @@ class Graph(Loggable):
                                   pagesize='letter',
                                   dest_box=dest_box,
                                   dest_box_units='inch')
-#        print self.plotcontainer, self.plotcontainer.components
-        gc.render_component(self.plotcontainer)
+
+        pc = self.plotcontainer
+        if len(pc.components) == 1:
+            gc.render_component(pc.components[0])
+        else:
+            gc.render_component(pc)
         gc.save()
 
     def _render_to_pic(self, filename):
@@ -1370,7 +1385,6 @@ class Graph(Loggable):
             except ValueError:
                 return
         else:
-
             if isinstance(pad, str):
                 #interpet pad as a percentage of the range
                 #ie '0.1' => 0.1*(ma-mi)
@@ -1378,18 +1392,26 @@ class Graph(Loggable):
                     pad = float(pad) * (ma - mi)
                     if abs(pad - 0) < 1e-10:
                         pad = 1
+            if isinstance(ma, (int, float)):
+                if ma is not None:
+                    ma += pad
 
-            if ma is not None:
-                ma += pad
+            if isinstance(mi, (int, float)):
+                if mi is not None:
+                    mi -= pad
 
-            if mi is not None:
-                mi -= pad
 
         if mi is not None:
-            if mi < ra.high_setting:
+            if isinstance(mi, (int, float)):
+                if mi < ra.high_setting:
+                    ra.low_setting = mi
+            else:
                 ra.low_setting = mi
         if ma is not None:
-            if ma > ra.low_setting:
+            if isinstance(ma, (int, float)):
+                if ma > ra.low_setting:
+                    ra.high_setting = ma
+            else:
                 ra.high_setting = ma
 
         self.redraw(force=force)

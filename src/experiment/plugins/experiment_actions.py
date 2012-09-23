@@ -31,7 +31,7 @@ def get_manager(event):
 
 class ExecuteExperimentSetAction(Action):
     name = 'Execute'
-    accelerator = 'Ctrl+E'
+    accelerator = 'Ctrl+W'
     def perform(self, event):
         man = get_manager(event)
 
@@ -68,7 +68,7 @@ class OpenExperimentSetAction(Action):
         '''
         '''
         manager = get_manager(event)
-        if manager.load_experiment_set():
+        if manager.load_experiment_set(edit=True):
             open_manager(event.window.application, manager)
 #class EnableableAction(Action):
 #

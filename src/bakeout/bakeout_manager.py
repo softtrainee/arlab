@@ -862,7 +862,7 @@ class BakeoutManager(Manager):
         return m
 
     def _database_default(self):
-        db = BakeoutAdapter(dbname=paths.bakeout_db,
+        db = BakeoutAdapter(name=paths.bakeout_db,
 #                            password='Argon',
                             kind='sqlite'
                             )

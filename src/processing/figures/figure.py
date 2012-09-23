@@ -22,10 +22,11 @@ from traitsui.editors.tabular_editor import TabularEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.plotters.api import Ideogram, InverseIsochron, Spectrum
-from src.processing.blanks_editor import BlanksEditor
+from src.processing.series.blanks_editor import BlanksEditor
 from src.processing.figures.base_figure import BaseFigure, GraphSelector
 #from src.processing.result import Result
 from src.helpers.traitsui_shortcuts import instance_item
+from src.processing.series.backgrounds_editor import BackgroundsEditor
 
 class FigureGraphSelector(GraphSelector):
     show_ideo = Bool(True)
@@ -47,6 +48,7 @@ class Figure(BaseFigure):
 
     graph_selector = Instance(FigureGraphSelector, ())
     blanks_editor = Instance(BlanksEditor)
+    backgrounds_editor = Instance(BackgroundsEditor)
     nanalyses = -1
 
     def _refresh(self, graph, analyses, padding):
@@ -77,7 +79,8 @@ class Figure(BaseFigure):
                 graph.plotcontainer.add(gideo.plotcontainer)
 #                result.add(ig)
         else:
-            self._cached_ideogram = self.ideogram.clone_traits()
+            if self.ideogram:
+                self._cached_ideogram = self.ideogram.clone_traits()
             del self.ideogram
 
         if gs.show_spectrum:
@@ -107,45 +110,46 @@ class Figure(BaseFigure):
     def load_analyses(self, *args, **kw):
         super(Figure, self).load_analyses(*args, **kw)
         self.blanks_editor = BlanksEditor(db=self.db,
-                                          workspace=self.workspace,
-                                          repo=self.repo,
-                                          analyses=self.analyses)
+                                          figure=self
+                                          )
+        self.blanks_editor.add(self.isotope_keys)
+
+        self.backgrounds_editor = BackgroundsEditor(db=self.db,
+                                          figure=self
+                                          )
+        self.backgrounds_editor.add(self.isotope_keys)
 
         keys = self.signal_keys
         bl_keys = [i for i in keys if i.endswith('bl')]
-        bl_keys.sort(key=lambda k:k[2:4], reverse=True)
+        bg_keys = [i for i in keys if i.endswith('bg')]
 
-#        print bl_keys
         self.blank_table_adapter.iso_keys = bl_keys
-
-        self.blanks_editor.add(self.isotope_keys)
+        self.background_table_adapter.iso_keys = bg_keys
 
 #===============================================================================
 # handlers
 #===============================================================================
     @on_trait_change('analyses:age_dirty,graph_selector:show_+')
     def _refresh_graph(self, obj, name, old, new):
-        print name
+#        print name
         self.refresh()
 
 #===============================================================================
 # views
 #===============================================================================
+
+
     def _get_bottom_group(self):
         grp = super(Figure, self)._get_bottom_group()
 
-        self.blank_table_adapter = ta = AnalysisTabularAdapter()
-        blanksgrp = Group(Item('analyses',
-                                 show_label=False,
-                                 height=0.3,
-                                 editor=TabularEditor(adapter=ta,
-                                           editable=False,
-                                           )
-                       ),
-                       label='Blanks',
-                       )
+        blanksgrp , ta = self._analyses_table_factroy('Blanks')
+        self.blank_table_adapter = ta
 
         grp.content.append(blanksgrp)
+
+        backsgrp, ta = self._analyses_table_factroy('Backgrounds')
+        self.background_table_adapter = ta
+        grp.content.append(backsgrp)
 
         editblankgrp = VGroup(
                               Item('blanks_editor',
@@ -153,6 +157,12 @@ class Figure(BaseFigure):
                                    show_label=False, style='custom'),
                               visible_when='blanks_editor',
                               label='Edit Blanks')
+        editbackgrp = VGroup(
+                              Item('backgrounds_editor',
+                                   height=200,
+                                   show_label=False, style='custom'),
+                              visible_when='backgrounds_editor',
+                              label='Edit Backgrounds')
         editideogrp = VGroup(
                              instance_item('ideogram', height=200),
                              visible_when='ideogram',
@@ -167,6 +177,7 @@ class Figure(BaseFigure):
                              label='Edit Spectrum.')
 
         grp.content.append(editblankgrp)
+        grp.content.append(editbackgrp)
         grp.content.append(editideogrp)
         grp.content.append(editinvisogrp)
         grp.content.append(editspecgrp)

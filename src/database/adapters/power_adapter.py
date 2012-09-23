@@ -40,10 +40,10 @@ class PowerAdapter(PathDatabaseAdapter):
         return b
 
 if __name__ == '__main__':
-#    db = PowerAdapter(dbname='co2laserdb',
+#    db = PowerAdapter(name='co2laserdb',
 #                            password='Argon')
     from src.paths import paths
-    db = PowerAdapter(dbname=paths.co2laser_db,
+    db = PowerAdapter(name=paths.co2laser_db,
                             kind='sqlite')
     db.connect()
 

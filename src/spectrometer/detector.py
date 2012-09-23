@@ -15,15 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Float, Str, Bool, Property, Color
-from traitsui.api import View, Item, VGroup, HGroup, spring, \
-     Label, EnumEditor
+from traits.api import  Float, Str, Bool, Property, Color, \
+    Int, on_trait_change, Array, Instance
+from traitsui.api import View, Item, VGroup, HGroup, \
+     spring, Label, Spring, CustomEditor
 #============= standard library imports ========================
 import os
-from numpy import loadtxt, polyfit, polyval
+from numpy import loadtxt, polyfit, polyval, hstack
 #============= local library imports  ==========================
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.paths import paths
+import wx
+
 
 charge = 1.6021764874e-19
 class Detector(SpectrometerDevice):
@@ -33,13 +36,29 @@ class Detector(SpectrometerDevice):
     deflection = Property(Float(enter_set=True, auto_set=False), depends_on='_deflection')
     _deflection = Float
 
+#    intensity = Property(depends_on='spectrometer:intensity_dirty')
     intensity = Float
+    std = Float
+    intensities = Array
+    nstd = Int(10)
     active = Bool(True)
 
     color = Color
+    series_id = Int
     isotope = Str
 
     isotopes = Property
+    color_square = None
+#    @cached_property
+#    def _get_intensity(self):
+#        return self.spectrometer.get_intensity(self.name)
+    @on_trait_change('spectrometer:intensity_dirty')
+    def _intensity_changed(self, new):
+        if new:
+            n = self.nstd
+            self.intensity = intensity = new[self.name]
+            self.intensities = hstack((self.intensities[-n:], [intensity]))
+            self.std = self.intensities.std()
 
     def _get_isotopes(self):
         molweights = self.spectrometer.molecular_weights
@@ -72,8 +91,7 @@ class Detector(SpectrometerDevice):
 
     def _set_deflection(self, v):
         self._deflection = v
-        self.ask('SetDeflection {},{}'.format(self.name,
-                                                                   v))
+        self.ask('SetDeflection {},{}'.format(self.name, v))
     def _get_deflection(self):
         return self._deflection
 
@@ -90,6 +108,35 @@ class Detector(SpectrometerDevice):
 
         return dev
 
+    def color_square_factory(self, width=10, height=10):
+        def color_factory(window, editor):
+            panel = wx.Panel(window,
+                           - 1,
+                           size=(width, height)
+                           )
+            panel.SetBackgroundColour(self.color)
+            return panel
+        return color_factory
+
+    def intensity_view(self):
+        v = View(HGroup(
+                        Item('name', style='readonly'),
+                        spring,
+                        Item('color_square',
+                             editor=CustomEditor(factory=self.color_square_factory()),
+                             show_label=False
+                             ),
+                        Spring(width=80, springy=False),
+                        Item('intensity', format_str='%0.5f', style='readonly',
+                             ),
+                        Spring(springy=False, width=20),
+                        Item('std', format_str='%0.5f', style='readonly',
+                             ),
+                        Spring(springy=False, width=50),
+                        show_labels=False
+                        )
+                 )
+        return v
     def traits_view(self):
         v = View(VGroup(
                         HGroup(
@@ -101,7 +148,9 @@ class Detector(SpectrometerDevice):
 #                                     ),
                                 Item('active',),
                                 Item('deflection'),
-                                Item('color', style='readonly'),
+                                Item('color_square',
+                                     editor=CustomEditor(factory=self.color_square_factory(width=30))
+                                     ),
                                 show_labels=False
                                 )
                       )

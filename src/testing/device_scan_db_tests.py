@@ -31,7 +31,7 @@ class DeviceScanDBTests(BaseDatabaseTests):
     @classmethod
     def _db_factory(self):
         db = DeviceScanAdapter(kind='sqlite',
-                             dbname=path.join(paths.test_dir, 'scans_test.sqlite')
+                             name=path.join(paths.test_dir, 'scans_test.sqlite')
                              )
         return db
 

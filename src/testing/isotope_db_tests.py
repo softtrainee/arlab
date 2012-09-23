@@ -30,7 +30,7 @@ class IsotopeDBTests(BaseDatabaseTests):
     @classmethod
     def _db_factory(self):
         db = IsotopeAdapter(kind='sqlite',
-                             dbname=path.join(paths.test_dir, 'isotope_test.sqlite')
+                             name=path.join(paths.test_dir, 'isotope_test.sqlite')
                              )
         return db
 

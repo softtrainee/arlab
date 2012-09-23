@@ -259,7 +259,7 @@ class VideoStageManager(StageManager):
         self.use_db = True
         if self.use_db:
             db = self.get_video_database()
-#            db = VideoAdapter(dbname=co2laser_db, kind='sqlite')
+#            db = VideoAdapter(name=co2laser_db, kind='sqlite')
             db.connect()
 
             v = db.add_video_record(rid=basename)

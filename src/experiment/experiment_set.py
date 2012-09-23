@@ -23,9 +23,10 @@ from traitsui.api import View, Item, TabularEditor, VGroup, HGroup, spring, \
 import os
 #import time
 #import datetime
+import yaml
+import sha
 #============= local library imports  ==========================
 from src.experiment.automated_run import AutomatedRun
-
 from src.experiment.heat_schedule import HeatSchedule
 from src.paths import paths
 from src.loggable import Loggable
@@ -33,7 +34,7 @@ from src.experiment.batch_edit import BatchEdit
 from src.experiment.stats import ExperimentStats
 from src.helpers.filetools import str_to_bool
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
-import yaml
+
 
 
 def extraction_path(name):
@@ -81,7 +82,7 @@ class ExperimentSet(Loggable):
     extraction_script = String
     extraction_scripts = Property
 
-    delay_between_runs = Float(1)
+    delay_between_analyses = Float(1)
 
     dirty = Property(depends_on='_dirty,path')
     _dirty = Bool(False)
@@ -90,6 +91,43 @@ class ExperimentSet(Loggable):
     right_clicked = Any
 
     executable = Bool(True)
+
+    isediting = False
+    _text = None
+
+    _cached_runs = None
+
+    def check_for_mods(self):
+        currenthash = sha.new(self._text).hexdigest()
+        with open(self.path, 'r') as f:
+            diskhash = sha.new(f.read()).hexdigest()
+        return currenthash != diskhash
+
+    def new_runs_generator(self, last_ran=None):
+        runs = [ai for ai in self.automated_runs if ai.executable]
+
+        n = len(runs)
+        rgen = (r for r in runs)
+        if last_ran is not None:
+            #get index of last run in self.automated_runs
+            startid = next((i for i, r in enumerate(runs) if r.runid == last_ran.runid), None)
+            if startid is not None:
+                if self._cached_runs:
+                    #for graphic clarity load the finished runs back in
+                    cached = self._cached_runs[:startid - 1]
+                    for ai in self.automated_runs:
+                        crun = next((r for r in cached if r.runid == ai.runid), None)
+                        if crun is not None:
+                            ai.state = crun.state
+
+                newruns = runs[startid + 1:]
+                self.info('starting at analysis {} (startid={} of {})'.format(newruns[0].runid, startid + 2, n))
+                n = len(newruns)
+                rgen = (r for r in newruns)
+            else:
+                self.info('last ran analysis {} does not exist in modified experiment set. starting from the beginning')
+
+        return rgen, n
 
     def _run_parser(self, header, line, delim='\t'):
         params = dict()
@@ -132,37 +170,48 @@ class ExperimentSet(Loggable):
         return params
 
     def load_automated_runs(self):
-        with open(self.path, 'rb') as f:
+        if self.automated_runs is not None:
+            self._cached_runs = self.automated_runs
+
+        self.automated_runs = []
+        with open(self.path, 'r') as fp:
+            self._text = fp.read()
+
+        f = (l for l in self._text.split('\n'))
+#        print self._text.split('\n')
+        metastr = ''
+        for line in f:
             #read meta
-            metastr = ''
-            #read until break
-            for line in f:
-                metastr += line
-                if line.startswith('#====='):
-                    break
-            meta = yaml.load(metastr)
+        #read until break
+#        for line in f:
+            if line.startswith('#====='):
+                break
+            metastr += '{}\n'.format(line)
+#        print metastr
+        meta = yaml.load(metastr)
 
-            delim = '\t'
-            header = map(str.strip, f.next().split(delim))
-            self.executable = True
-            for line in f:
-                if line.startswith('#'):
-                    continue
+        delim = '\t'
+        header = map(str.strip, f.next().split(delim))
+        self.executable = True
+        for line in f:
+            if line.startswith('#'):
+                continue
 
-                try:
-                    params = self._run_parser(header, line)
-                    params['mass_spec_name'] = meta['mass_spec']
-                    arun = self._automated_run_factory(**params)
-                    self.automated_runs.append(arun)
-                    if not arun.executable:
-                        self.executable = False
-                except Exception, e:
-                    self.warning_dialog('Invalid Experiment file {}'.format(e))
-                    self.automated_runs = []
-                    self.executable = False
-                    return False
+            try:
+                self.delay_between_analyses = meta['delay_between_analyses']
+                params = self._run_parser(header, line)
+                params['mass_spec_name'] = meta['mass_spec']
+                arun = self._automated_run_factory(**params)
+                self.automated_runs.append(arun)
+            except Exception, e:
 
-            return True
+                self.warning_dialog('Invalid Experiment file {}'.format(e))
+                self.automated_runs = []
+                self.executable = False
+                return False
+
+        self._update_aliquots()
+        return True
 
     def _right_clicked_changed(self):
 
@@ -262,27 +311,27 @@ class ExperimentSet(Loggable):
 #                                                         )
         self.automated_run = self.automated_run_factory()
 
-    @on_trait_change('automated_runs[]')
-    def _automated_runs_changed(self, obj, name, old, new):
-        if old:
-            old = old[0]
-
-            if self.automated_run:
-                if old.identifier == self.automated_run.identifier:
-                    self.automated_run.aliquot -= 1
-
-            fo = dict()
-            pi = None
-
-            for ai in self.automated_runs:
-                try:
-                    pi = fo[ai.identifier]
-                    if ai.aliquot != pi + 1:
-                        ai.aliquot -= 1
-                except KeyError:
-                    pass
-
-                fo[ai.identifier] = ai.aliquot
+#    @on_trait_change('automated_runs[]')
+#    def _automated_runs_changed(self, obj, name, old, new):
+#        if old:
+#            old = old[0]
+#
+#            if self.automated_run:
+#                if old.identifier == self.automated_run.identifier:
+#                    self.automated_run.aliquot -= 1
+#
+#            fo = dict()
+#            pi = None
+#
+#            for ai in self.automated_runs:
+#                try:
+#                    pi = fo[ai.identifier]
+#                    if ai.aliquot != pi + 1:
+#                        ai.aliquot -= 1
+#                except KeyError:
+#                    pass
+#
+#                fo[ai.identifier] = ai.aliquot
 
     def _apply_fired(self):
         for i, s in enumerate(self.heat_schedule.steps):
@@ -334,6 +383,8 @@ class ExperimentSet(Loggable):
 
     @on_trait_change('automated_run.identifier')
     def _update_identifier(self, identifier):
+        if not self.isediting:
+            return
         arun = self.automated_run
         #check for id in labtable
         self.ok_to_add = False
@@ -344,11 +395,7 @@ class ExperimentSet(Loggable):
         arun.irrad_level = ''
 
         if identifier:
-            oidentifier = identifier
-            if identifier.upper() == 'B':
-                identifier = 1
-            elif identifier.upper() == 'A':
-                identifier = 2
+#            oidentifier = identifier
 
             ln = db.get_labnumber(identifier)
             if ln:
@@ -357,11 +404,11 @@ class ExperimentSet(Loggable):
                 except AttributeError:
                     self.warning_dialog('{} does not have sample info'.format(ln.labnumber))
 
-
-                noccurrences = len([ai for ai in self.automated_runs
-                                  if ai.identifier == oidentifier
-                                  ])
-                arun.aliquot = ln.aliquot + noccurrences + 1
+#                noccurrences = len([ai for ai in self.automated_runs
+#                                  if ai.identifier == oidentifier
+#                                  ])
+#                print noccurrences, ln.aliquot
+#                arun.aliquot = ln.aliquot + noccurrences + 1
 
                 ipos = ln.irradiation_position
                 if ipos is None:
@@ -370,8 +417,32 @@ class ExperimentSet(Loggable):
                     irrad = ipos.irradiation
                     arun.irrad_level = '{}{}'.format(irrad.name, irrad.level)
 
-
                 self.ok_to_add = True
+
+    def _update_aliquots(self):
+        db = self.db
+        idcnt_dict = dict()
+        stdict = dict()
+        for arun in self.automated_runs:
+            arunid = arun.identifier
+            ln = db.get_labnumber(arunid)
+            if arunid in idcnt_dict:
+                c = idcnt_dict[arunid]
+                c += 1
+            else:
+                c = 1
+            if ln is not None:
+                st = ln.aliquot
+            else:
+                if arunid in stdict:
+                    st = stdict[arunid]
+#                    st += 1
+                else:
+                    st = 0
+
+            arun.aliquot = st + c
+            idcnt_dict[arunid] = c
+            stdict[arunid] = st
 
 #===============================================================================
 # property get/set
@@ -463,7 +534,7 @@ class ExperimentSet(Loggable):
                 kw[k] = getattr(pa, k)
 
         a = AutomatedRun(
-                         executable=True,
+#                         _executable=True,
                          scripts=self.loaded_scripts,
                          **kw
                          )

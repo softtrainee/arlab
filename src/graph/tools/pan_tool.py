@@ -28,25 +28,28 @@ class MyPanTool(PanTool):
     '''
     '''
     active = False
-
+    container = None
     def normal_key_pressed(self, event):
         '''
 
         '''
-#        print event.character
-        #print self.component
         if event.character == 'p':
             self.active = not self.active
 
-            #disable the other tools
-            bc = self.component.tools[0]
-            for t in bc.tools:
-                if t is not self:
-                    t.active = not self.active
+            tools = self.container.tools
+#            #disable the other tools
+            if tools:
+                for t in tools:
+                    for ti in t.tools:
+                        if ti is not self:
+                            ti.active = not self.active
+
             if self.active:
                 event.window.set_pointer('hand')
             else:
                 event.window.set_pointer('arrow')
+
+            event.handled = True
 
         elif event.character == 'Esc':
             c = self.component
@@ -54,8 +57,8 @@ class MyPanTool(PanTool):
                 ra = getattr(c, '%s_range' % r)
                 for s in ['low', 'high']:
                     ra.trait_set(**{'%s_setting' % s: 'auto'})
+            event.handled = True
 
-        event.handled = True
 
     def normal_left_down(self, event):
         '''

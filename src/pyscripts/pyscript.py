@@ -101,6 +101,7 @@ class PyScript(Loggable):
     manager = Any
     parent = Any
     root = Str
+
     parent_script = Any
 
     _interval_stack = Queue
@@ -122,6 +123,9 @@ class PyScript(Loggable):
 
     _graph_calc = False
 
+    @property
+    def filename(self):
+        return os.path.join(self.root, self.name)
     def toblob(self):
         return self._text
 
@@ -203,8 +207,9 @@ class PyScript(Loggable):
         self._interval_flag = Event()
         self._interval_stack = Queue()
         if self.root and self.name and load:
-            p = os.path.join(self.root, self.name)
-            with open(p, 'r') as f:
+#            p = os.path.join(self.root, self.name)
+
+            with open(self.filename, 'r') as f:
                 self._text = f.read()
             return True
 

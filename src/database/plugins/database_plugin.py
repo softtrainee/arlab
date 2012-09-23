@@ -56,7 +56,7 @@ class DatabasePlugin(CorePlugin):
             adapter = PychronDatabaseAdapter(kind='mysql')
 
             #bind the preferences to the Database adapter
-            for key in ['dbname', 'user', 'password', 'host', 'use_db']:
+            for key in ['name', 'user', 'password', 'host', 'use_db']:
                 prefname = base % key
                 bind_preference(adapter, key, prefname)
 

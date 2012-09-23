@@ -28,6 +28,7 @@ def get_manager(window):
 class OpenExtractionLineManager(Action):
     description = 'Open extraction line manager'
     name = 'Open Extraction Line Manager'
+    accelerator = 'Ctrl+E'
     def perform(self, event):
 
         man = get_manager(event.window)

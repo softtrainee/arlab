@@ -30,6 +30,21 @@ from src.database.core.query import Query
 from src.viewable import Viewable
 
 from traits.api import HasTraits
+#from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
+#
+##class _TabularEditor(wxTabularEditor):
+##    def init(self, parent):
+##        print 'sadfsad'
+##        wxTabularEditor.init(self, parent)
+###        self.control.SetWidth(100)
+##        print self.control.GetSize()
+#
+#class myTabularEditor(TabularEditor):
+#
+#    def _get_klass(self):
+#        print 'fffff'
+#        return _TabularEditor
+
 class ColumnSorterMixin(HasTraits):
     _sort_field = None
     _reverse_sort = False
@@ -68,8 +83,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #    dclicked = Event
     dclicked = Any
     selected = Any
+    scroll_to_row = Any
 #    activated = Any
-#    selected_row = Int
+    selected_row = Any
 
     wx = 0.4
     wy = 0.1
@@ -160,13 +176,19 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self.results = []
         self._load_results(dbs)
         self._sort_columns(self.results)
+#        self.selected = self.results[-1:]
+#        self.scroll_to_row = [30]#len(self.results) - 1
+#        self.selected_row = [29, 30]#len(self.results) - 1
+#        print self.scroll_to_row
+#        print self.selected
+#        print self.selected_row
 
     def _load_results(self, results):
         db = self._db
         if results:
             for di in results:
                 d = self._result_factory(di,
-                                         root=os.path.dirname(db.dbname))
+                                         root=os.path.dirname(db.name))
 #                    d = self.result_klass(_db_result=di)
                 d.load()
                 d._loadable = True
@@ -318,7 +340,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def traits_view(self):
         v = self._view_factory()
         v.title = self.title
-        v.width = 600,
+        v.width = 600
         v.height = 650
         v.x = 0.1
         v.y = 0.1
@@ -329,16 +351,25 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         editor = TabularEditor(adapter=self.tabular_adapter(),
                                dclicked='object.dclicked',
                                selected='object.selected',
+                               scroll_to_row='object.scroll_to_row',
 #                               activated='object.activated',
-#                               selected_row='selected_row',
+                               selected_row='object.selected_row',
+#                                auto_update=False,
+#                                stretch_last_section=False,
+                                stretch_last_section=False,
+                                auto_update=True,
+                               scroll_to_row_hint='visible',
                                column_clicked='object.column_clicked',
                                editable=False,
                                operations=[
-                                           #'move', 
+#                                           'move', 
 #                                           'drag'
                                            ],
-                               multi_select=True
+                               multi_select=True,
+
+
                                )
+
         button_grp = self._get_button_grp()
         qgrp = Item('queries', show_label=False,
                     style='custom',
@@ -355,8 +386,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                       style='custom',
                       editor=editor,
                       show_label=False,
-                      height=300,
-#                      width=300,
+                      height= -400,
+                      width= -300,
                       ),
 
                  qgrp,

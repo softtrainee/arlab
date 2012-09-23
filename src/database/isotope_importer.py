@@ -32,7 +32,7 @@ def import_file(path):
 
 
     db = IsotopeAdapter(kind='sqlite',
-                      dbname=paths.isotope_db
+                      name=paths.isotope_db
 
                       )
     db.connect()

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Any, Int, Str, Float, List, Range
+from traits.api import HasTraits, Instance, Any, Int, Str, Float, List, Range, Property
 from traitsui.api import View, Item, HGroup, spring, TabularEditor
 from chaco.api import ArrayDataSource, ScatterInspectorOverlay
 from chaco.tools.api import ScatterInspector
@@ -54,7 +54,8 @@ class Ideogram(Plotter):
 
 #    nsigma = Int(1, enter_set=True, auto_set=False)
     nsigma = Range(1, 3, enter_set=True, auto_set=False)
-
+    plot_label_text = Property(depends_on='nsigma')
+    plot_label = Any
     def _get_adapter(self):
         return IdeoResultsAdapter
 
@@ -62,6 +63,9 @@ class Ideogram(Plotter):
         if self.error_bar_overlay:
             self.error_bar_overlay.nsigma = self.nsigma
             self.graph.redraw()
+
+    def _plot_label_text_changed(self):
+        self.plot_label.text = self.plot_label_text
 
 #    def build_results(self, display):
 #        width = lambda x, w = 8:'{{:<{}s}}='.format(w).format(x)
@@ -90,6 +94,7 @@ class Ideogram(Plotter):
         self.graph = g
         g.new_plot(
                    padding=padding)
+
 
         g.set_grid_traits(visible=False)
         g.set_grid_traits(visible=False, grid='y')
@@ -121,7 +126,20 @@ class Ideogram(Plotter):
             self._add_ideo(g, anals, xmin, xmax, padding)
 
         g.set_x_limits(min=xmin, max=xmax)
+
+        minp = self.minprob
+        maxp = self.maxprob
+        g.set_y_limits(min=minp, max=maxp * 1.05)
+
+        #add meta plot info
+#        sigma = '03c3'
+        self.plot_label = g.add_plot_label(self.plot_label_text, 0, 0)
+
         return g
+
+    def _get_plot_label_text(self):
+        ustr = u'data 1\u03c3, age ' + str(self.nsigma) + u'\u03c3'
+        return ustr
 
     def _add_ideo(self, g, analyses, xmi, xma, padding):
         ages, errors = zip(*[a.age for a in analyses])
@@ -177,7 +195,7 @@ class Ideogram(Plotter):
         self.minprob = minp
         self.maxprob = maxp
 
-        g.set_y_limits(min=minp, max=maxp * 1.05)
+#        g.set_y_limits(min=minp, max=maxp * 1.05)
 
         self._add_aux_plot(g, ages, errors, padding)
 
@@ -203,7 +221,6 @@ class Ideogram(Plotter):
         n = zip(ages, errors)
         n = sorted(n, key=lambda x:x[0])
         ages, errors = zip(*n)
-
         scatter, _p = g.new_series(ages, range(1, len(ages) + 1, 1),
                                    type='scatter', marker='circle',
                                    marker_size=2,

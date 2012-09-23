@@ -109,7 +109,7 @@ class MassSpecSelector(DatabaseSelector):
 #    m = MassSpecSelector(parameter='AnalysesTable.RID',
 #                         criteria='21351-01')
 #    m.load_recent()
-#    m._db = db = MassSpecDatabaseAdapter(dbname='massspecdata_local')
+#    m._db = db = MassSpecDatabaseAdapter(name='massspecdata_local')
 #    db.connect()
 #    m.configure_traits()
 #============= EOF =============================================

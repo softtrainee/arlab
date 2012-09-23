@@ -86,20 +86,30 @@ class StackedGraph(Graph):
 
         if len(self.plots) > 1:
             if not bottom:
-                plotiter = self.plots[:-1]
+#                plotiter = self.plots[1:]
+                plotiter1 = self.plots[:-1]
             else:
-                plotiter = self.plots[1:]
+#                plotiter = self.plots[:-1]
+                plotiter1 = self.plots[1:]
 
             link = True
             if 'link' in kw:
                 link = kw['link']
-
-            for pi in plotiter:
+            if link:
+                pm = self.plots[0].index_mapper
+                for pi in self.plots:
+                    pi.index_mapper = pm
+#                print pi, link, self.plots[0]
+##                pi.padding_top = 0
+##                pi.padding_bottom = 0
+#                if link:
+##                    pi.index_range = self.plots[0].index_range
+#                    pi.index_mapper = self.plots[0].index_mapper
+            for pi in plotiter1:
+                pi.index_axis.visible = False
                 pi.padding_top = 0
                 pi.padding_bottom = 0
-                pi.index_axis.visible = False
-                if link:
-                    pi.index_range = self.plots[0].index_range
+
 
     def _bounds_changed_(self, bounds):
         '''

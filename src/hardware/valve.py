@@ -82,6 +82,9 @@ class HardwareValve(Loggable):
             name = 'VALVE-{}'.format(name)
         return name == self.name
 
+    def get_lock_state(self):
+        if self.actuator:
+            return self.actuator.get_lock_state(self)
 
     def get_hardware_state(self):
         '''

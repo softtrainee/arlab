@@ -35,6 +35,7 @@ class RectSelectionTool(AbstractOverlay):
     #update_flag = Bool
     parent = Any
     plotid = Int
+    plot = Any
     threshold = 5
     hover_metadata_name = Str('hover')
     persistent_hover = False
@@ -44,7 +45,6 @@ class RectSelectionTool(AbstractOverlay):
     def normal_mouse_move(self, event):
         control = event.window.control
         self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
-
         plot = self.component
         index = plot.map_index((event.x, event.y), threshold=self.threshold)
         if index is not None:
@@ -105,16 +105,24 @@ class RectSelectionTool(AbstractOverlay):
                 already = True
         return already
 
+#    def normal_key_pressed(self, event):
+##        print event
+#        if event.character == 'p':
+#            self.active = False
+#        else:
+#            self.active = True
+
     def normal_left_down(self, event):
         '''
 
         '''
         if self.active:
         #and not self.parent.filters[self.plotid]:
-            self.parent.selected_plotid = self.plotid
-
+#            self.parent.selected_plotid = self.plotid
+            self.parent.selected_plot = self.plot
+            self.parent.selected_component = self.component
             token = self._get_selection_token(event)
-            if not token:
+            if token is None:
     #                self.component.index.metadata[self.selection_metadata_name] = []
                 self._start_select(event)
             else:
@@ -187,7 +195,7 @@ class RectSelectionTool(AbstractOverlay):
         self._update_selection()
 
         self._end_select(event)
-        event.handled = True
+#        event.handled = True
 
     def select_mouse_move(self, event):
         '''
@@ -200,8 +208,6 @@ class RectSelectionTool(AbstractOverlay):
     def _update_selection(self):
         '''
         '''
-
-
         comp = self.component
         index = comp.index
         ind = []
@@ -222,11 +228,13 @@ class RectSelectionTool(AbstractOverlay):
                     if dx <= x <= dx2 and dy >= y >= dy2
                    ]
 
+#        print selection, ind
         if not ind and self.parent.filters[self.plotid]:
             return
 
         selection = index.metadata[self.selection_metadata_name]
-        index.metadata[self.selection_metadata_name] = list(set(ind) - set(selection))
+
+        index.metadata[self.selection_metadata_name] = list(set(ind) ^ set(selection))
 #        else:
 #            index.metadata[self.selection_metadata_name] = ind
 
@@ -240,6 +248,12 @@ class RectSelectionTool(AbstractOverlay):
         self.component.request_redraw()
         self.event_state = 'normal'
         event.window.set_pointer('arrow')
+        if self._end_pos is None:
+            self.component.index.metadata[self.selection_metadata_name] = []
+        elif abs(self._end_pos[0] - self._start_pos[0]) < 2 and \
+                abs(self._end_pos[1] - self._start_pos[1]) < 2:
+            self.component.index.metadata[self.selection_metadata_name] = []
+
         self._end_pos = None
 
     def _start_select(self, event):
