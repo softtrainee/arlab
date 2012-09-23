@@ -18,16 +18,17 @@
 from traits.api import HasTraits, Int, Property, on_trait_change
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import polyval, polyfit, vander, asarray
+from numpy import polyval, polyfit, vander, asarray, column_stack, ones
 
 from statsmodels.api import OLS
+
 #============= local library imports  ==========================
 from base_regressor import BaseRegressor
 
 class OLSRegressor(BaseRegressor):
     degree = Property(depends_on='_degree')
     _degree = Int
-
+#    _result = None
 #    @on_trait_change('xs,ys')
 #    def _update_data(self):
 #        self._ols = OLS(self.xs, vander(self.ys, self.degree + 1))
@@ -59,15 +60,30 @@ class OLSRegressor(BaseRegressor):
         if len(self.xs) != len(self.ys):
             return
 
-        xs = asarray(self.xs)
+#        xs = asarray(self.xs)
         ys = asarray(self.ys)
+#        self._ols = OLS(ys, vander(xs, self.degree + 1))
+#        self._result = self._ols.fit()
 #            print len(xs), len(ys)
 #        print self.degree
 #        print vander(xs, self.degree + 1)
-        X = self._get_X(xs)
-        self._ols = OLS(ys, vander(xs, self.degree + 1))
-        self._result = self._ols.fit()
+        X = self._get_X()
+        if X is not None:
+            self._ols = OLS(ys, X)
+            self._result = self._ols.fit()
 #        print self.degree, self._result.summary()
+    def predict(self, pos):
+        pos = asarray(pos)
+##        print pos.shape
+#        pos = pos.reshape((len(pos), 1))
+#        print pos
+#        coeffs = self.coefficients
+#        print 'coeffs', coeffs
+#        print 'value_at polyval', polyval(coeffs, pos)
+#        print 'value_at predict', self._ols.predict(pos)
+#        return polyval(coeffs, pos)
+        X = self._get_X(xs=pos)
+        return self._result.predict(X)
 
     def calculate_y(self, x):
         coeffs = self.coefficients
@@ -86,12 +102,26 @@ class OLSRegressor(BaseRegressor):
             params = [a,b,c]
             where y=ax**2+bx+c
         '''
+        if self._result:
 #        print 'dsaffsadf', self._result.params
-        return self._result.params
+            return self._result.params
 #        return polyfit(self.xs, self.ys, self.degree)
 
     def _calculate_coefficient_errors(self):
-        return self._result.bse
+        if self._result:
+#            result = self._result
+#            covar_diag = result.cov_params().diagonal()
+#            n = result.nobs
+#            q = result.df_model
+#            ssr = result.ssr
+#            sigma_fit = (ssr / ((n - 1) - q)) ** 0.5
+#            errors = sigma_fit * covar_diag
+#            print errors, self._result.bse
+            return self._result.bse
+
+#    def _calculate_confidence_interval(self, x):
+#        return self._result.conf_int
+
 
     def _get_degree(self):
         return self._degree
@@ -108,7 +138,66 @@ class OLSRegressor(BaseRegressor):
     def summary(self):
         return self._result.summary()
 
-def PolynomialRegressor(OLSRegressor):
-    def _get_X(self, xs):
+class PolynomialRegressor(OLSRegressor):
+    def _get_X(self, xs=None):
+        if xs is None:
+            xs = asarray(self.xs)
         return vander(xs, self.degree + 1)
+
+class MultipleLinearRegressor(OLSRegressor):
+    '''
+        xs=[(x1,y1),(x2,y2),...,(xn,yn)]
+        ys=[z1,z2,z3,...,zn]
+        
+        if you have a list of x's and y's 
+        X=array(zip(x,y))
+        if you have a tuple of x,y pairs
+        X=array(xy)
+    '''
+
+    def value_at(self, pos):
+        '''
+            pos should be (x,y)
+        '''
+        return self._ols.predict(asarray(pos))
+
+
+    def _get_X(self):
+        '''
+           
+        '''
+        xs = self.xs
+        xs = asarray(xs)
+        r, c = xs.shape
+        if c == 2:
+            xs = column_stack((xs, ones(r)))
+            return xs
+
+    def _calculate_coefficient_errors(self):
+        result = self._result
+        covar_diag = result.cov_params().diagonal()
+        n = result.nobs
+        q = result.df_model
+        ssr = result.ssr
+        sigma_fit = (ssr / ((n - 1) - q)) ** 0.5
+        errors = sigma_fit * covar_diag
+        print errors, self._result.bse
+        return errors
+
+
+#        return dict(result=result,
+#                    coefficients=result.params,
+#                    coefficient_errs=errors)
+
+
+if __name__ == '__main__':
+    import numpy as np
+    xs = np.linspace(0, 10, 20)
+    bo = 4
+    b1 = 3
+    ei = np.random.rand(len(xs))
+    ys = bo + b1 * xs + ei
+    print ys
+    m = PolynomialRegressor(xs=xs, ys=ys, degree=1)
+    print m.value_at(5)
 #============= EOF =============================================

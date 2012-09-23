@@ -136,7 +136,13 @@ class Analysis(Loggable):
                 if not signals.has_key(isok):
                     signals[isok] = self._signal_factory(isok, None)
 
-
+#        print map('{{}}{}'.format('').format, keys)
+#        for k, si in signals.iteritems():
+#            print si.value, k
+#            ei = si.error
+#            print ei
+#            print si.error, k
+#            print si.value, si.error
         sigs = lambda name: [(signals[iso].value, signals[iso].error)
                                 for iso in map('{{}}{}'.format(name).format, keys)]
         fsignals = sigs('')

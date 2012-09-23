@@ -15,9 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Array
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
+from numpy import average
 #============= local library imports  ==========================
 from base_regressor import BaseRegressor
 
@@ -55,4 +56,23 @@ sem={}
     @property
     def sem(self):
         return self.std * 1 / len(self.ys) ** 0.5
+
+class WeightedMeanRegressor(MeanRegressor):
+    errors = Array
+    @property
+    def mean(self):
+        return average(self.ys, weights=self.weights)
+
+    @property
+    def std(self):
+        var = 1 / sum(self.weights)
+        return var ** 0.5
+
+    @property
+    def weights(self):
+        return 1 / self.errors ** 2
+
+#        return self.ys.average(weights=ws)
+
+
 #============= EOF =============================================

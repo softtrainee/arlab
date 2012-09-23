@@ -23,7 +23,7 @@ import random
 #from src.regression.regressor import Regressor
 from uncertainties import ufloat
 from src.regression.mean_regressor import MeanRegressor
-from src.regression.ols_regressor import OLSRegressor
+from src.regression.ols_regressor import PolynomialRegressor
 #============= local library imports  ==========================
 
 
@@ -57,10 +57,10 @@ class Signal(HasTraits):
             if 'average' in self.fit.lower():
                 reg = MeanRegressor(xs=self.xs, ys=self.ys)
             else:
-                reg = OLSRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
+                reg = PolynomialRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
 
         except Exception:
-            reg = OLSRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
+            reg = PolynomialRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
         return reg
 
     @cached_property
@@ -74,7 +74,7 @@ class Signal(HasTraits):
     @cached_property
     def _get_error(self):
         if self.xs is not None and len(self.xs) > 0:
-            return self._get_regession_param('coefficient_errors')
+            return self._get_regression_param('coefficient_errors')
         else:
             return self._error
 
