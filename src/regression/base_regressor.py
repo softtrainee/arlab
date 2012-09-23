@@ -39,11 +39,14 @@ class BaseRegressor(Loggable):
     _coefficients = List
     _coefficient_errors = List
 
-#    @cached_property
+    def predict(self, x):
+        return x
+
+    @cached_property
     def _get_coefficients(self):
         return self._calculate_coefficients()
 
-#    @cached_property
+    @cached_property
     def _get_coefficient_errors(self):
         return self._calculate_coefficient_errors()
 
@@ -58,8 +61,10 @@ class BaseRegressor(Loggable):
             rx = [rx]
         X = self.xs
         Y = self.ys
-        model = polyval(self.coefficients, X)
-        rmodel = polyval(self.coefficients, rx)
+#        model = polyval(self.coefficients, X)
+#        rmodel = polyval(self.coefficients, rx)
+        model = self.predict(X)
+        rmodel = self.predict(rx)
         return self._calculate_confidence_interval(X, Y, model, rx, rmodel)
 #    def _calculate_confidence_interval(self, confidence, x, observations, model, rx, rmodel):
 
@@ -80,13 +85,14 @@ class BaseRegressor(Loggable):
             observations = array(observations)
             model = array(model)
 
-            syx = math.sqrt(1. / (n - 2) * ((observations - model) ** 2).sum())
-            ssx = ((x - xm) ** 2).sum()
-
+#            syx = math.sqrt(1. / (n - 2) * ((observations - model) ** 2).sum())
+#            ssx = ((x - xm) ** 2).sum()
             #ssx = sum([(xi - xm) ** 2 for xi in x])
 
             ti = tinv(alpha, n - 2)
 
+            syx = self.syx
+            ssx = self.ssx
 #            for i, xi in enumerate(rx):
             def _calc_interval(xi):
                 d = 1.0 / n + (xi - xm) ** 2 / ssx
@@ -95,7 +101,18 @@ class BaseRegressor(Loggable):
             cors = [_calc_interval(xi) for xi in rx]
             return zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
 
+    @property
+    def syx(self):
+        n = len(self.xs)
+        obs = self.ys
+        model = self.predict(self.xs)
+        return (1. / (n - 2) * ((obs - model) ** 2).sum()) ** 0.5
 
+    @property
+    def ssx(self):
+        x = self.xs
+        xm = self.xs.mean()
+        return ((x - xm) ** 2).sum()
 #            lower=[]
 #                lower.append(rmodel[i] - cor)
 #                upper.append(rmodel[i] + cor)

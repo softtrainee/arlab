@@ -156,7 +156,7 @@ class Ideogram(Plotter):
                                         mswd=mswd,
                                         error=we))
         for ai, ei in zip(ages, errors):
-            if abs(ai) < 1e-7:
+            if abs(ai) < 1e-10 or abs(ei) < 1e-10:
                 continue
 
             for j, bj in enumerate(bins):
