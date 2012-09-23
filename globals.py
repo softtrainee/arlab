@@ -47,7 +47,7 @@ class Globals(object):
     _test = False #set test to 'true' when running tests
 
 #    experiment_debug = False
-    experiment_debug = True
+    experiment_debug = False
     experiment_savedb = True
 
     def build(self, ip):

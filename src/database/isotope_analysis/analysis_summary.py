@@ -18,11 +18,11 @@
 from traits.api import HasTraits, Float, Property, Any, Instance
 from traitsui.api import View, Item
 #============= standard library imports ========================
-import wx
+#import wx
 #============= local library imports  ==========================
-from src.database.isotope_analysis.selectable_readonly_texteditor import SelectableReadonlyTextEditor
+#from src.database.isotope_analysis.selectable_readonly_texteditor import SelectableReadonlyTextEditor
 from src.displays.rich_text_display import RichTextDisplay
-from src.data_processing.regression.regressor import Regressor
+#from src.data_processing.regression.regressor import Regressor
 
 PLUSMINUS = unicode('\xb1')
 PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)

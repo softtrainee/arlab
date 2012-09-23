@@ -25,10 +25,10 @@ import time
 import random
 from threading import Thread
 from threading import Event as TEvent
+from numpy import linspace
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.experiment.heat_schedule import HeatStep
-from src.regression.regressor import Regressor
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
@@ -36,6 +36,7 @@ from src.helpers.datetime_tools import get_datetime, generate_datetimestamp
 from src.repo.repository import FTPRepository as Repository
 from src.experiment.plot_panel import PlotPanel
 from globals import globalv
+from src.regression.ols_regressor import PolynomialRegressor
 
 
 HEATDEVICENAMES = ['Fusions Diode', 'Fusions CO2']
@@ -397,7 +398,7 @@ class AutomatedRun(Loggable):
 #        time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
         self.regression_results = dict()
 
-        reg = Regressor()
+        reg = PolynomialRegressor()
         dm = self.data_manager
         ppp = self.peak_plot_panel
         if ppp:
@@ -500,33 +501,68 @@ class AutomatedRun(Loggable):
 
     def _regress_graph(self, reg, g, iso, dn, fi, tab, pi):
         x, y = zip(*[(ri['time'], ri['value']) for ri in tab.iterrows()])
-        rdict = reg._regress_(x, y, fi)
-        try:
-#        self.regression_results[dn.name] = rdict
-            self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,
-                                                    rdict['coefficients'][-1],
-                                                 rdict['coeff_errors'][-1]
-                                                 ))
+        reg.xs=x
+        reg.ys=y
+        reg.fit=fi
+#        reg.predict()
 
-            g.new_series(rdict['x'],
-                         rdict['y'],
-                         plotid=pi, color='black')
-            kw = dict(color='red',
+        i=reg.coefficients[-1]
+        ie=reg.coefficient_errors[-1]
+        self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,i,ie))
+        
+        mi,ma=g.get_x_limits()
+        fx=linspace(mi,ma,200)
+        fy=reg.predict(fx)
+        lci,uci=reg.calculate_ci(fx)
+        #plot fit
+        g.new_series(
+                     fx,fy,
+                     plotid=pi, color='black')
+        
+
+        kw = dict(color='red',
                          line_style='dash',
                          plotid=pi)
-
-            g.new_series(rdict['upper_x'],
-                         rdict['upper_y'],
-                         **kw
-                         )
-            g.new_series(rdict['lower_x'],
-                         rdict['lower_y'],
-                         **kw
-                         )
-            g.redraw()
-            return rdict
-        except:
-            self.warning('problem regressing')
+        #plot upper ci
+        g.new_series(fx,uci
+                     **kw
+                     )
+        g.new_series(fx,lci,
+                     **kw
+                     )
+        g.redraw()
+        return reg
+        #plot lower ci
+        
+#        rdict = reg._regress_(x, y, fi)
+#        try:
+##        self.regression_results[dn.name] = rdict
+#            self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,
+#                                                    rdict['coefficients'][-1],
+#                                                 rdict['coeff_errors'][-1]
+#                                                 ))
+#
+#            g.new_series(rdict['x'],
+#                         rdict['y'],
+#                         plotid=pi, color='black')
+#            kw = dict(color='red',
+#                         line_style='dash',
+#                         plotid=pi)
+#
+#            g.new_series(rdict['upper_x'],
+#                         rdict['upper_y'],
+#                         **kw
+#                         )
+#            g.new_series(rdict['lower_x'],
+#                         rdict['lower_y'],
+#                         **kw
+#                         )
+#            g.redraw()
+#            return rdict
+#        except:
+#            self.warning('problem regressing')
+            
+            
     def _set_table_attr(self, name, grp, attr, value):
 #        print name, attr, value
         dm = self.data_manager

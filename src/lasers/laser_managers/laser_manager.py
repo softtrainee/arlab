@@ -25,7 +25,7 @@ import os
 from src.managers.manager import Manager
 from src.led.led import LED
 from src.lasers.stage_managers.stage_manager import StageManager
-from src.lasers.stage_managers.video_stage_manager import VideoStageManager
+#
 from src.monitors.laser_monitor import LaserMonitor
 from src.managers.graph_manager import GraphManager
 from src.lasers.laser_managers.pulse import Pulse
@@ -410,6 +410,7 @@ class LaserManager(Manager):
     def _stage_manager_factory(self, args):
         self.stage_args = args
         if self.use_video:
+            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
             klass = VideoStageManager
         else:
             klass = StageManager

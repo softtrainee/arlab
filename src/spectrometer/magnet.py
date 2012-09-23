@@ -26,13 +26,13 @@ from traitsui.table_column import ObjectColumn
 import os
 import csv
 import time
-from numpy import isnan
+from numpy import isnan, polyval, polyfit
 #============= local library imports  ==========================
-from src.regression.regressor import Regressor
 from src.paths import paths
 #import math
 #from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
+#from src.regression.ols_regressor import PolynomialRegressor
 
 class CalibrationPoint(HasTraits):
     x = Float
@@ -51,7 +51,7 @@ class Magnet(SpectrometerDevice):
     mftable = List(
                    #[[40, 39, 38, 36], [2, 5, 10, 26]]
                    )
-    regressor = Instance(Regressor, ())
+    #regressor = Instance(PolynomialRegressor, ())
 
     dac = Property(depends_on='_dac')
     mass = Property(depends_on='_mass')
@@ -223,7 +223,6 @@ class Magnet(SpectrometerDevice):
 # mapping
 #===============================================================================
     def map_dac_to_mass(self, d):
-        from numpy import polyfit
         x, y = zip(*[(c.x, c.y) for c in  self.calibration_points])
         a, b, c = polyfit(x, y, 2)
         c = c - d
@@ -232,13 +231,13 @@ class Magnet(SpectrometerDevice):
         return m
 
     def map_mass_to_dac(self, mass):
-        reg = self.regressor
-
         molweights = self.spectrometer.molecular_weights
         if self.mftable:
-            data = ([molweights[i] for i in self.mftable[0]],
-                    self.mftable[1])
-            return reg.get_value('parabolic', data, mass)
+
+            xs=[molweights[i] for i in self.mftable[0]]
+            ys=self.mftable[1]
+            return polyval(polyfit(xs,ys,2),mass)
+        
 
 #    def __dac_changed(self):
 #        m = self.map_dac_to_mass(self._dac)

@@ -172,24 +172,24 @@ class AnalysisResult(DBResult):
         self.fits = dict()
         self.intercepts = dict()
         self.baselines = dict()
-        peakhops = self._get_peakhop_signals(dm)
+#        peakhops = self._get_peakhop_signals(dm)
 
         self.clear()
 
-        if peakhops:
-            for det, v in peakhops.iteritems():
-                self.categories.append(det)
-                pg = self._load_stacked_graph(v, det=det)
-                name = '{}_graph'.format(det)
-                try:
-                    self.add_class_trait(name, pg)
-                except TraitError:
-                    self.trait_set({name:pg})
-
-                for iso, rs in zip(self.isos, pg.regression_results):
-                    self.intercepts[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
-
-                pg.set_x_limits(min=0)
+#        if peakhops:
+#            for det, v in peakhops.iteritems():
+#                self.categories.append(det)
+#                pg = self._load_stacked_graph(v, det=det)
+#                name = '{}_graph'.format(det)
+#                try:
+#                    self.add_class_trait(name, pg)
+#                except TraitError:
+#                    self.trait_set({name:pg})
+#
+#                for iso, rs in zip(self.isos, pg.regression_results):
+#                    self.intercepts[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
+#
+#                pg.set_x_limits(min=0)
 
         signals = self._get_table_data(dm, 'signals')
         if signals:
@@ -198,7 +198,7 @@ class AnalysisResult(DBResult):
             graph = self._load_stacked_graph(signals)
 
             for iso, rs in zip(self.isos, graph.regression_results):
-                self.intercepts[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
+                self.intercepts[iso] = (rs.coefficients[-1], rs.coefficient_errors[-1])
 
             self.signal_graph = graph
 
@@ -214,7 +214,7 @@ class AnalysisResult(DBResult):
             graph = self._load_stacked_graph(baselines, fit='average')
             self.baseline_graph = graph
             for iso, rs in zip(self.isos, graph.regression_results):
-                self.baselines[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
+                self.baselines[iso] = (rs.coefficients[-1], rs.coefficient_errors[-1])
 
 #        peakhop_baselines = self._get_peakhop_baselines(dm)
 #        peakhop_baselines = self._get_table_data('peakh')
