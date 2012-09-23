@@ -104,8 +104,8 @@ class MassSpecDatabaseImporter(Loggable):
             iso = db.add_isotope(analysis, det, iso)
 
             if add_results:
-                i = regression_results[det]['coefficients'][-1]
-                ierr = regression_results[det]['coeff_errors'][-1]
+                i = regression_results[det].coefficients[-1]
+                ierr = regression_results[det].coefficient_errors[-1]
                 db.add_isotope_result(iso, drs, i, ierr)
             isos.append(iso)
 

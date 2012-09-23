@@ -67,8 +67,8 @@ class InverseIsochron(Plotter):
         try:
             rdict = g.regression_results[0]
             try:
-                coeffs = rdict['coefficients']
-                cerrors = rdict['coeff_errors']
+                coeffs = rdict.coefficients
+                cerrors = rdict.coefficient_errors
                 if coeffs is not None and cerrors is not None:
                     try:
                         trapped_4036 = 1 / coeffs[-1]

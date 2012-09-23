@@ -67,11 +67,7 @@ class DataTool(BaseTool):
                 xi = date.strftime('%d/%m %H:%M:%S')
             else:
                 xi = self.x_format.format(x)
-            try:
-                reg = self.parent.regressors[self.plotid]
-                #d['coeffs'] = reg.coefficients
-            except IndexError:
-                pass
+            
             d['xy'] = (xi, '{:0.3f}'.format(y))
             self.new_value = d
 

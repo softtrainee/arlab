@@ -38,6 +38,7 @@ from src.paths import paths
 from chaco.log_mapper import LogMapper
 from chaco.linear_mapper import LinearMapper
 from src.graph.tools.data_tool import DataTool, DataToolOverlay
+from chaco.data_range_1d import DataRange1D
 
 class Magnet(HasTraits):
     dac = Range(0.0, 6.0)
@@ -128,7 +129,7 @@ class ScanManager(Manager):
 #                    for pi in ['graph_ymin','graph_ymax']:
 
 
-                except (pickle.PickleError, EOFError):
+                except (pickle.PickleError, EOFError, KeyError):
                     self.detector = self.detectors[-1]
                     self.isotope = self.isotopes[-1]
 
@@ -136,12 +137,22 @@ class ScanManager(Manager):
         self.info('dump scan settings')
         p = os.path.join(paths.hidden_dir, 'scan_settings')
         with open(p, 'wb') as f:
-            d = dict(isotope=self.isotope,
-                     detector=self.detector.name)
-
+            iso=self.isotope
+            if not iso:
+                iso=self.isotopes[0]
+                
+            det=self.detector
+            if not det:
+                det=self.detectors[0]
+                
+            d = dict(isotope=iso,
+                     detector=det.name)
+#            print type(det), type(iso)
+#            d=dict()
             for ki in self.graph_attr_keys:
                 d[ki] = getattr(self, ki)
-
+#            
+#            print d
             pickle.dump(d, f)
 
     @property
@@ -229,14 +240,20 @@ class ScanManager(Manager):
 
     def _graph_scale_changed(self, new):
         p = self.graph.plots[0]
-        dr = p.value_mapper.range
+        dr = p.value_range
         hp = p.value_mapper.high_pos
         lp = p.value_mapper.low_pos
-        d = dict(range=dr, high_pos=hp, low_pos=lp)
+        d = dict(high_pos=hp, low_pos=lp)
         if new == 'log':
             klass = LogMapper
+            d['range']=DataRange1D(low_setting=max(0.01,dr.low), high_setting=dr.high_setting)
         else:
             klass = LinearMapper
+            d['range']=dr
+            
+#        for pi in p.plots.itervalues():
+#            pi[0].value_mapper=klass(**d)
+            
         p.value_mapper = klass(**d)
         self.graph.redraw()
 

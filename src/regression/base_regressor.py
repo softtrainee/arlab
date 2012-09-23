@@ -19,7 +19,7 @@ from traits.api import HasTraits, Array, List, Event, Property, cached_property,
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import math
-from numpy import array, polyval
+from numpy import array, polyval, asarray
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from tinv import tinv
@@ -99,7 +99,8 @@ class BaseRegressor(Loggable):
                 return ti * syx * math.sqrt(d)
 
             cors = [_calc_interval(xi) for xi in rx]
-            return zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+            lci,uci=zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+            return asarray(lci), asarray(uci)
 
     @property
     def syx(self):
