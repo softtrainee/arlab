@@ -61,7 +61,6 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     db = Any
 
     series_configs = List
-    show_series = Bool(True)
     selector = None
 #    result = Instance(Result, ())
 
@@ -91,7 +90,9 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     export_excel = Button('excel')
 
 
-    def refresh(self):
+    def refresh(self, caller=None):
+        print 'refresh called from {}'.format(caller)
+
         self.results_display.clear()
         analyses = self.analyses
         if not analyses:
@@ -104,7 +105,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         except Exception:
             pass
 
-        pl = 70 if self.show_series else 40
+        pl = 70 if self.graph_selector.show_series else 40
         padding = [pl, 10, 0, 30]
         self._refresh(graph, analyses, padding)
 
@@ -118,12 +119,12 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                 tabulate = lambda xs:' '.join(map('{:<10s}'.format,
                                           map('{:0.7f}'.format,
                                               xs)))
-#                xx = ['', ' *x', ' *x2', ' *x3']
+                header = lambda hs: '          ' + ''.join(map('{:<10s}'.format, hs))
+
                 for config, reg in zip(self.series_configs,
                                        self.series.graph.regressors):
                     if 'average' in config.fit.lower():
-                        h = '          mean          SD          SEM'
-                        rd.add_text(h)
+                        rd.add_text(header(['mean', 'SD', 'SEM']))
                         rd.add_text('{} ={}'.format(config.label,
                                                     '{:<10s}'.format('{:0.7f}'.format(reg.coefficients[0]))))
 #                        es = ''.join(map('{:0.7f}'.format, reg.coefficient_errors))
@@ -131,29 +132,31 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                         es = '{:<10s}'.format(es)
                         rd.add_text('err  =            {}'.format(es))
                     else:
-                        h = '          c          x          x2          x3'
-                        rd.add_text(h)
+
+                        rd.add_text(header(['c', 'x', 'x2', 'x3']))
 #                    cs = reg.coefficients
 #                    ss = ' + '.join(map(lambda x:'{:0.7f}{}'.format(*x),
 #                                              zip(cs, xx[:len(cs)][::-1])))
                         cs = reg.coefficients
-                        cs = cs[::-1]
-#                        ss = ' '.join(map('{:<10s}'.format,
-#                                          map('{:0.7f}'.format,
-#                                              cs)))
-                        ce = reg.coefficient_errors
-                        ce = ce[::-1]
-#                        se = ' '.join(map('{:<10s}'.format,
-#                                          map('{:0.7f}'.format,
-#                                              ce)))
-    ##                    
-                        ss = tabulate(cs)
-                        se = tabulate(ce)
-                        rd.add_text('{} ='.format(config.label) + ss)
-                        rd.add_text('err  ='.format(config.label) + se)
+                        if cs is not None:
+                            cs = cs[::-1]
+    #                        ss = ' '.join(map('{:<10s}'.format,
+    #                                          map('{:0.7f}'.format,
+    #                                              cs)))
+                            ce = reg.coefficient_errors
+                            ce = ce[::-1]
+    #                        se = ' '.join(map('{:<10s}'.format,
+    #                                          map('{:0.7f}'.format,
+    #                                              ce)))
+        ##                    
+                            ss = tabulate(cs)
+                            se = tabulate(ce)
+                            rd.add_text('{} ='.format(config.label) + ss)
+                            rd.add_text('err  ='.format(config.label) + se)
 
     def _get_gids(self, analyses):
-        return list(set([(a.gid, True) for a in analyses]))
+        return list(set([a.gid for a in analyses]))
+#        return list(set([(a.gid + offset, True) for a in analyses]))
 
     def _refresh(self, graph, analyses, padding):
         gs = self.graph_selector
@@ -167,6 +170,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
             gids = self._get_gids(analyses)
             gseries = series.build(analyses, sks, bks, gids, padding=seriespadding)
+
             if gseries:
                 graph.plotcontainer.add(gseries.plotcontainer)
                 series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
@@ -174,27 +178,39 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             self.series.graph.on_trait_change(self._refresh_stats, 'regression_results')
         graph.redraw()
 
-    def load_analyses(self, names, groupids=None, attrs=None):
+    def _add_analysis(self, a, **kw):
+        self.analyses.append(a)
+
+    def load_analyses(self, names, groupids=None, attrs=None, **kw):
+
         if groupids is None:
             groupids = [0 for n in names]
         if attrs is None:
             attrs = [dict() for n in names]
 
-        self.nanalyses = len(self.analyses) + len(names) - 1
         _names = [a.uuid for a in self.analyses]
+#        rnames = []
+#        if exclusive:
+        rnames = set(_names) - set(names)
 
-        #@todo: change to list comp to speed up
+        newnames = set(names) - set(_names)
+        self.nanalyses = len(self.analyses) - len(rnames) + len(newnames) - 1
+
         for n, gid, attr in zip(names, groupids, attrs):
             if not n in _names:
                 a = self._analyses_factory(n, gid=gid, **attr)
                 if a:
                     self.info('loading analysis {} groupid={}'.format(a.rid, gid))
-                    self.analyses.append(a)
+                    self._add_analysis(a, **kw)
+#                    self.analyses.append(a)
                 else:
                     self.warning('could not load {}'.format(n))
             else:
                 a = next((a for a in self.analyses if a.uuid == n), None)
                 a.gid = gid
+
+        #remove analyses not in names
+        self.analyses = [ai for ai in self.analyses if ai.uuid not in rnames]
 
         self.nanalyses = -1
 
@@ -217,24 +233,6 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
         for i, se in enumerate(self.series_configs):
             se.graphid = i
-#        snames = [s.label for s in self.series_configs]
-#        keys = [iso for iso in self.isotope_keys if not iso in snames]
-
-        #clone current series list
-#        if self.series_configs is not None:
-#            series = [si.label for si in self.series_configs]
-#            sl = [iso if iso in series else SeriesConfig(label=iso) for iso in keys]
-#            for si in sl:
-#                si.parent = self
-#            self.series_configs = sl
-##            for iso in keys:
-##                if iso in series:
-##                    sl.append(iso)
-##                else:
-##                    sl.appned
-#        else:
-#            self.series_configs = [SeriesConfig(label=iso, parent=self)
-#                                for iso in keys]
 
         self.signal_table_adapter.iso_keys = self.isotope_keys
 
@@ -307,25 +305,31 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 # private
 #===============================================================================
     def _update_data(self):
-        ps = self.selector
-        names = [ri.filename for ri in ps.selected_results if ri.filename != '---']
-        attrs = [dict(dbresult=ri._db_result)
-                      for ri in ps.selected_results if ri.filename != '---']
+        from threading import Thread
+        def _do():
+            ps = self.selector
+            names = [ri.filename for ri in ps.selected_results if ri.filename != '---']
+            attrs = [dict(dbresult=ri._db_result)
+                          for ri in ps.selected_results if ri.filename != '---']
 
-        gids = []
-        gid = 0
-        for ri in ps.selected_results:
-            if ri.filename == '---':
-                gid += 1
-                continue
-            gids.append(gid)
+            gids = []
+            gid = 0
+            for ri in ps.selected_results:
+                if ri.filename == '---':
+                    gid += 1
+                    continue
+                gids.append(gid)
 
-        gids = None
-        if names:
-            self.load_analyses(names, gids, attrs)
+            if names:
+                self.load_analyses(names, gids, attrs, **self._get_load_keywords())
 
-#        self.refresh()
-#        self.refresh()
+        t = Thread(target=_do)
+        t.start()
+
+    def _get_load_keywords(self):
+        return {}
+
+
 #===============================================================================
 # handlers
 #===============================================================================
@@ -336,12 +340,11 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _analyses_changed(self):
 #        print len(self.analyses), self.nanalyses
         if len(self.analyses) > self.nanalyses:
-            print 'refreshing analysis change'
-            self.refresh()
+            self.refresh(caller='analyses_changed')
 
-    @on_trait_change('show_series')
+    @on_trait_change('graph_selector:show_series')
     def _refresh_graph(self, obj, name, old, new):
-        self.refresh()
+        self.refresh(caller='show_series')
 
     def _manage_data_fired(self):
         db = self.db
@@ -351,16 +354,17 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             ps = ProcessingSelector(db=self.db)
             ps.selector.style = 'panel'
             ps.on_trait_change(self._update_data, 'update_data')
-            ps.edit_traits()
+#            ps.edit_traits()
 
             self.selector = ps
-            if self._debug:
-                ps.selected_results = [i for i in ps.selector.results[2:6] if i.analysis_type != 'blank']
+#            if self._debug:
+            ps.selected_results = [i for i in ps.selector.results[-5:-3] if i.analysis_type != 'blank']
 
         else:
             self.selector.show()
 
         self._update_data()
+
     def _show_results_fired(self):
         self.results_display.edit_traits()
 
@@ -506,8 +510,8 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         #need to call both load from file and database
         if a.load_from_file(n):
             a.load_from_database()
-            a.load_age()
-            return a
+            if a.load_age():
+                return a
 
     def _graph_factory(self, klass=None, **kw):
         g = Graph(container_dict=dict(kind='h', padding=10,

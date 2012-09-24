@@ -72,14 +72,15 @@ class FitSeriesEditor(Loggable):
         if sanalyses:
             names, attrs = zip(*[(bi.path.filename, dict(dbresult=bi)) for bi in sanalyses])
 
-            f.load_analyses(names, attrs=attrs)
+            f.load_analyses(names, attrs=attrs, ispredictor=True)
 
-            names = [ai.dbresult.path.filename for ai in self.analyses]
-            gids = [1] * len(names)
-            attrs = [dict(dbresult=ai.dbresult) for ai in self.analyses]
-            #also load this analysis
-            f.load_analyses(names, groupids=gids,
-                            attrs=attrs)
+        names = [ai.dbresult.path.filename for ai in self.analyses]
+
+        gids = [1] * len(names)
+        attrs = [dict(dbresult=ai.dbresult) for ai in self.analyses]
+        #also load this analysis
+        f.load_analyses(names, groupids=gids,
+                        attrs=attrs)
 
 #        self.db.reset()
 
@@ -129,6 +130,7 @@ class FitSeriesEditor(Loggable):
     def _apply(self, analysis):
         sn = self._series_name
         db = self.db
+
         an = analysis.dbresult
         histories = getattr(an, '{}_histories'.format(sn))
         phistory = histories[-1] if histories else None
@@ -154,26 +156,27 @@ class FitSeriesEditor(Loggable):
                      )
                 self.info('setting {} {}. {:0.5f} +/- {:0.5f}'.format(l, sn, uv, ue))
 
-                self._copy_from_previous(phistory, l)
+                self._copy_from_previous(phistory, history, l)
 
-    def _copy_from_previous(self, history, isotope):
-        if history is None:
+    def _copy_from_previous(self, phistory, chistory, isotope):
+        if phistory is None:
             return
 
         sn = self._series_name
         db = self.db
 
         #copy configs from a previous history
-        bs = getattr(history, sn)
-        for bi in bs:
+        bs = getattr(phistory, sn)
+        bss = [bi for bi in bs if bi.isotope != isotope]
+        for bi in bss:
             li = bi.isotope
-            if li == isotope:
-                continue
+#            if li != isotope:
+#                continue
 
             uv = bi.user_value
             ue = bi.user_error
             func = getattr(db, 'add_{}'.format(sn))
-            func(history,
+            func(chistory,
                   isotope=li,
                   use_set=bi.use_set,
                   user_value=uv,
@@ -215,6 +218,7 @@ class FitSeriesEditor(Loggable):
         pass
 
     def _apply_fired(self):
+        self.db.rollback()
         for a in self.analyses:
             self._apply(a)
 

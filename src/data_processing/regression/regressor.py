@@ -323,7 +323,7 @@ class Regressor(object):
 
     def calc_confidence_interval(self, confidence, x, observations, model, rx, rmodel):
         '''
-
+        http://people.stfx.ca/bliengme/ExcelTips/RegressionAnalysisConfidence2.htm
         '''
         alpha = 1.0 - confidence / 100.0
 
@@ -357,7 +357,13 @@ class Regressor(object):
 
 
         return array(lower), array(upper)
-
+#    def _calculate_syx(self):
+#        xs=self.
+#        
+#        yi =
+#        ym = self.value_at([])
+#
+#        return 1 / (n - 2) * ((yi - ym) ** 2).sum()
 #    def calc_confidence_interval(self,confidence,observations,model):
 #        
 #        alpha=1.0-confidence/100.0

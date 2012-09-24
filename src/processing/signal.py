@@ -59,27 +59,47 @@ class Signal(HasTraits):
             else:
                 reg = PolynomialRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
 
-        except Exception:
+        except Exception, e:
             reg = PolynomialRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
         return reg
 
     @cached_property
     def _get_value(self):
-
-        if self.xs is not None and len(self.xs) > 0:
+        if self.xs is not None and len(self.xs) > 1:# and self.ys is not None:
+#            if len(self.xs) > 2 and len(self.ys) > 2:
+#            print self.xs
+#            print self._get_regression_param('coefficients')
             return self._get_regression_param('coefficients')
         else:
             return self._value
 
     @cached_property
     def _get_error(self):
-        if self.xs is not None and len(self.xs) > 0:
+        if self.xs is not None and len(self.xs) > 1:
+#            if len(self.xs) > 2 and len(self.ys) > 2:
             return self._get_regression_param('coefficient_errors')
         else:
             return self._error
 
     def _get_regression_param(self, name, ind= -1):
         return getattr(self.regressor, name)[ind]
+
+
+class Baseline(Signal):
+    @cached_property
+    def _get_value(self):
+        if self.ys:
+            return array(self.ys).mean()
+        else:
+            return 0
+
+    @cached_property
+    def _get_error(self):
+        if self.ys:
+            return array(self.ys).std()
+        else:
+            return 0
+
 
 def preceeding_blanks(xs, ys, tm):
     ti = where(xs < tm)
@@ -112,7 +132,9 @@ def _bracketing_blanks(ts, ys, tm):
     except IndexError:
         return 0
 
-class Blank(Signal):
+
+
+class InterpolatedSignal(Signal):
     timestamp = None
     @cached_property
     def _get_value(self):
@@ -131,29 +153,19 @@ class Blank(Signal):
             elif fit == 'bracketing average':
                 return bracketing_average_blanks(xs, ys, tm)
             else:
-                return self.regressor.get_value(fit, (xs, ys), tm)
+                return self.regressor.predict([tm])[0]
+#                return self.regressor.get_value(fit, (xs, ys), tm)
         else:
             return self._value
 
     def _get_error(self):
         return self._error
 
-class Baseline(Signal):
-    @cached_property
-    def _get_value(self):
-        if self.ys:
-            return array(self.ys).mean()
-        else:
-            return 0
-
-    @cached_property
-    def _get_error(self):
-        if self.ys:
-            return array(self.ys).std()
-        else:
-            return 0
+class Blank(InterpolatedSignal):
+    pass
 
 
-class Background(Signal):
+
+class Background(InterpolatedSignal):
     pass
 #============= EOF =============================================

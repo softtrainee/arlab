@@ -38,6 +38,7 @@ class BaseRegressor(Loggable):
     coefficient_errors = Property(depends_on='coefficients')
     _coefficients = List
     _coefficient_errors = List
+    _result = None
 
     def predict(self, x):
         return x
@@ -99,7 +100,7 @@ class BaseRegressor(Loggable):
                 return ti * syx * math.sqrt(d)
 
             cors = [_calc_interval(xi) for xi in rx]
-            lci,uci=zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+            lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
             return asarray(lci), asarray(uci)
 
     @property

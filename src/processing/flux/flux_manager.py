@@ -27,6 +27,7 @@ import struct
 #============= standard library imports ========================
 #============= local library imports  ==========================
 plusminus = u'\u00b1'
+one_sigma = u'1\u03c3'
 #class PositionAdapter(TabularAdapter):
 #    columns = [
 #             ('Labnumber', 'labnumber'),
@@ -137,7 +138,7 @@ class FluxManager(DatabaseManager):
                       editor=EnumEditor(name='level_labels')
                       ),
                  Item('holder', style='readonly'),
-                 HGroup(Item('age'), Item('age_error', label=plusminus + u'1\u03c3')),
+                 HGroup(Item('age'), Item('age_error', label=plusminus + one_sigma)),
                  Item('positions',
                       show_label=False,
                       editor=TableEditor(columns=cols,

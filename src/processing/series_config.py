@@ -45,7 +45,7 @@ class SeriesConfig(HasTraits):
     @on_trait_change('show,show_baseline,fit,fit_baseline')
     def _change(self):
         if self.parent:
-            self.parent.refresh()
+            self.parent.refresh(caller='series_config._change')
 #            if self.parent.series:
 #                reg = self.parent.series.graph.regressors[self.graphid]
 #            else:

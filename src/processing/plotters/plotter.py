@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Any
+from traits.api import Property, List, Any, Range
 from traitsui.api import View, Item, VGroup, TabularEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -24,6 +24,8 @@ from src.processing.plotters.results_tabular_adapter import ResultsTabularAdapte
     BaseResults
 from chaco.tools.scatter_inspector import ScatterInspector
 from chaco.scatter_inspector_overlay import ScatterInspectorOverlay
+from chaco.array_data_source import ArrayDataSource
+from src.graph.error_bar_overlay import ErrorBarOverlay
 
 class Plotter(Viewable):
     adapter = Property
@@ -31,12 +33,21 @@ class Plotter(Viewable):
     graph = Any
     selected_analysis = Any
     analyses = Any
-
+    error_bar_overlay = Any
     def _get_adapter(self):
         return ResultsTabularAdapter
 
     def _get_content(self):
         return
+
+    def _add_error_bars(self, scatter, errors, axis, sigma_trait=None):
+        ebo = ErrorBarOverlay(component=scatter, orientation=axis)
+        scatter.underlays.append(ebo)
+        setattr(scatter, '{}error'.format(axis), ArrayDataSource(errors))
+        if sigma_trait:
+            self.on_trait_change(ebo.update_sigma, sigma_trait)
+
+
 
     def _add_scatter_inspector(self, scatter, gid=0):
         #add a scatter hover tool

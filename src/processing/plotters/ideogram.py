@@ -16,10 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Any, Int, Str, Float, List, Range, Property
-from traitsui.api import View, Item, HGroup, spring, TabularEditor
-from chaco.api import ArrayDataSource, ScatterInspectorOverlay
-from chaco.tools.api import ScatterInspector
-from traitsui.tabular_adapter import TabularAdapter
+from traitsui.api import View, Item, HGroup, spring
+from chaco.api import ArrayDataSource
 #============= standard library imports ========================
 from numpy import asarray, linspace, zeros
 import math
@@ -47,22 +45,23 @@ from src.stats.core import calculate_weighted_mean, calculate_mswd
 class Ideogram(Plotter):
     ages = None
     errors = None
-    error_bar_overlay = Any
+#    error_bar_overlay = Any
 #    graph = Any
 #    selected_analysis = Any
 #    analyses = Any
 
 #    nsigma = Int(1, enter_set=True, auto_set=False)
     nsigma = Range(1, 3, enter_set=True, auto_set=False)
+
     plot_label_text = Property(depends_on='nsigma')
     plot_label = Any
     def _get_adapter(self):
         return IdeoResultsAdapter
 
-    def _nsigma_changed(self):
-        if self.error_bar_overlay:
-            self.error_bar_overlay.nsigma = self.nsigma
-            self.graph.redraw()
+#    def _nsigma_changed(self):
+#        if self.error_bar_overlay:
+#            self.error_bar_overlay.nsigma = self.nsigma
+#            self.graph.redraw()
 
     def _plot_label_text_changed(self):
         self.plot_label.text = self.plot_label_text
@@ -110,7 +109,7 @@ class Ideogram(Plotter):
         gids = list(set([a.gid for a in analyses]))
 
         pad = 2
-        ages = [a.age[0] for a in analyses]
+        ages = [a.age[0] for a in analyses if a.age is not None]
 #        for ai in analyses:
 #            print a.age
 #        ages = None
@@ -182,9 +181,7 @@ class Ideogram(Plotter):
                              marker_size=3,
                              color=s.color)
 
-        self.error_bar_overlay = ebo = ErrorBarOverlay(component=s, nsigma=self.nsigma)
-        s.underlays.append(ebo)
-        s.xerror = ArrayDataSource([we])
+        self._add_error_bars(s, [we], 'x', sigma_trait='nsigma')
 
         if self.minprob:
             minp = min(self.minprob, minp)
@@ -225,9 +222,7 @@ class Ideogram(Plotter):
                                    type='scatter', marker='circle',
                                    marker_size=2,
                                    plotid=1)
-        scatter.underlays.append(ErrorBarOverlay(component=scatter))
-#        scatter.underlays.append(ErrorBarOverlay(component=s))
-        scatter.xerror = ArrayDataSource(errors)
+        self._add_error_bars(scatter, errors, 'x')
         self._add_scatter_inspector(scatter)
 #        #add a scatter hover tool
 #        scatter.tools.append(ScatterInspector(scatter, selection_mode='off'))

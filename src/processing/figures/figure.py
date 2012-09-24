@@ -132,7 +132,7 @@ class Figure(BaseFigure):
     @on_trait_change('analyses:age_dirty,graph_selector:show_+')
     def _refresh_graph(self, obj, name, old, new):
 #        print name
-        self.refresh()
+        self.refresh(caller='figure._refresh_graph')
 
 #===============================================================================
 # views
