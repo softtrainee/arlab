@@ -48,6 +48,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #    s40, s40b, s39, s39b, s38, s38b, s37, s37b, s36, s36b = signals
     k4039, k3839, ca3937, ca3837, ca3637, cl3638, t = irradinfo
 
+#    try:
     s40 = ufloat(s40)
 
     s39 = ufloat(s39)
@@ -81,6 +82,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k3839 = ufloat(k3839)
     cl3638 = ufloat(cl3638)
     j = ufloat(j)
+#    except Exception, e:
+#        return
 
     #subtract blanks and baselines
     s40 -= (s40bl + s40bs + s40bk)
@@ -155,7 +158,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                       )
         return result
     except ValueError, e:
-        return e
+        print e
+#        return e
 #============= EOF =====================================
 
 ##=============enthought library imports=======================oup

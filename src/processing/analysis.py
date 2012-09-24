@@ -62,7 +62,13 @@ class AnalysisTabularAdapter(TabularAdapter):
                ('Error', 'age_error'),
                ]
         colskeys = self.get_column_keys()
-        cols += [(i.capitalize(), i) for i in colskeys]
+        def get_name(n):
+            if n.endswith('_er'):
+                return u'\u00b11s'
+            else:
+                return n.capitalize()
+
+        cols += [(get_name(i), i) for i in colskeys]
         for iso in colskeys:
             self.add_trait('{}_format'.format(iso),
                            '%0.4f')
@@ -121,7 +127,11 @@ class Analysis(Loggable):
 #        print 'fiafsd'
 #        self.age_dirty = True
     def load_age(self):
-        self.info('{} age={}'.format(self.rid, self.age))
+        if self.age:
+            self.info('{} age={}'.format(self.rid, self.age))
+            return True
+        else:
+            self.warning('could not compute age for {}'.format(self.rid))
 
     @cached_property
     def _get_age(self):
@@ -136,22 +146,20 @@ class Analysis(Loggable):
                 if not signals.has_key(isok):
                     signals[isok] = self._signal_factory(isok, None)
 
-#        print map('{{}}{}'.format('').format, keys)
-#        for k, si in signals.iteritems():
-#            print si.value, k
-#            ei = si.error
-#            print ei
-#            print si.error, k
-#            print si.value, si.error
         sigs = lambda name: [(signals[iso].value, signals[iso].error)
                                 for iso in map('{{}}{}'.format(name).format, keys)]
+#        try:
         fsignals = sigs('')
         bssignals = sigs('bs')
         blsignals = sigs('bl')
         bksignals = sigs('bg')
+#        except Exception, e:
+#            print 'analysis._get_age', e
+#            return None
 
 #        return 1, 0
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irradinfo)
+
 #        print result
         if result:
             self.k39 = result['k39'].nominal_value
@@ -164,12 +172,7 @@ class Analysis(Loggable):
 
 #            age = 10 + random.random()
 #            err = random.random()
-            age = 10
-            err = 1
-        else:
-            age = 0
-            err = 0
-        return age, err
+            return age, err
 
     def _open_file(self, name):
         p = os.path.join(self.workspace.root, name)

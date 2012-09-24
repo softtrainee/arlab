@@ -45,32 +45,34 @@ class RegressionGraph(Graph):
 #        print self.selected_plot, 'aa'
 #        print self.selected_plotid
         self.regressors = []
-        plot = self.selected_plot
+#        plot = self.selected_plot
         for plot in self.plots:
-            scatter = plot.plots['data'][0]
-            if scatter.fit and scatter.fit != '---':
-                line = plot.plots['fit'][0]
-                uline = plot.plots['upper CI'][0]
-                lline = plot.plots['lower CI'][0]
-                sel = scatter.index.metadata.get('selections', [])
+            try:
+                scatter = plot.plots['data'][0]
+                if scatter.fit and scatter.fit != '---':
+                    line = plot.plots['fit'][0]
+                    uline = plot.plots['upper CI'][0]
+                    lline = plot.plots['lower CI'][0]
+                    sel = scatter.index.metadata.get('selections', [])
 
-                args = self._regress(selection=sel,
-                                               plot=plot,
-                                               fit=scatter.fit)
-                if args:
+                    args = self._regress(selection=sel,
+                                                   plot=plot,
+                                                   fit=scatter.fit)
+                    if args:
 
 
-                    fx, fy, ly, uy = args
-#                    print fy
-                    line.index.set_data(fx)
-                    line.value.set_data(fy)
+                        fx, fy, ly, uy = args
+    #                    print fy
+                        line.index.set_data(fx)
+                        line.value.set_data(fy)
 
-                    lline.index.set_data(fx)
-                    lline.value.set_data(ly)
+                        lline.index.set_data(fx)
+                        lline.value.set_data(ly)
 
-                    uline.index.set_data(fx)
-                    uline.value.set_data(uy)
-
+                        uline.index.set_data(fx)
+                        uline.value.set_data(uy)
+            except Exception, e:
+                print e
         self.regression_results = self.regressors
 
     def _regress(self, x=None, y=None,
@@ -81,18 +83,17 @@ class RegressionGraph(Graph):
                  filterstr=None,
                  fit=None):
 
+        fit = self._convert_fit(fit)
+        if fit is None:
+#            self.regressors.append(None)
+            return
+
         if plot is None:
             plot = self.plots[plotid]
 
         if x is None or y is None:
             x = plot.data.get_data('x0')
             y = plot.data.get_data('y0')
-
-#        print y
-        fit = self._convert_fit(fit)
-        if fit is None:
-            self.regressors.append(None)
-            return
 
         if filterstr:
             x, y = self._apply_filter(filterstr, x, y)
@@ -106,16 +107,17 @@ class RegressionGraph(Graph):
         if fit in [1, 2, 3]:
             st = low
             xn = x - st
-            r = PolynomialRegressor(xs=xn, ys=y, degree=fit)
-            coeffs = r.coefficients
+            r = PolynomialRegressor(xs=xn, ys=y,
+                                    degree=fit)
             self.regressors.append(r)
-
             fx = linspace(0, (high - low), 200)
-            fy = polyval(coeffs, fx)
+            fy = r.predict(fx)
             ci = r.calculate_ci(fx)
             if ci is not None:
                 ly, uy = ci
-            fx += st
+            else:
+                ly, uy = fy, fy
+            fx += low
 
         else:
             r = MeanRegressor(xs=x, ys=y)
@@ -131,6 +133,7 @@ class RegressionGraph(Graph):
             fy = ones(n) * m
             uy = fy + s
             ly = fy - s
+
         return fx, fy, ly, uy
 
     def _convert_fit(self, f):
@@ -176,7 +179,9 @@ class RegressionGraph(Graph):
         kw['marker'] = marker
         kw['marker_size'] = marker_size
         if not fit:
-            return super(RegressionGraph, self).new_series(x, y, *args, **kw)
+            return super(RegressionGraph, self).new_series(x, y,
+                                                           plotid=plotid,
+                                                           *args, **kw)
 
         kw['type'] = 'scatter'
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)

@@ -87,6 +87,7 @@ class Spectrometer(SpectrometerDevice):
     _alive = False
     intensity_dirty = Event
 
+    testcnt = 0
     def set_parameter(self, name, v):
         cmd = '{} {}'.format(name, v)
         self.ask(cmd)
@@ -275,7 +276,8 @@ class Spectrometer(SpectrometerDevice):
 #                            keys.append(data[i])
 #                            signals.append(float(data[i + 1]))
         else:
-            signals = [5 + random.random() for _i in range(6)]
+            signals = [(i + self.testcnt) + random.random() for i in range(6)]
+            self.testcnt += 1
             if tagged:
                 keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 

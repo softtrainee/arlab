@@ -85,14 +85,15 @@ class AnalysisResult(DBResult):
 #        print 'get aasfd'
         ln = self._db_result.labnumber.labnumber
         if ln == 1:
-            return 'Blank'
+            ln = 'Blank'
         elif ln == 2:
-            return 'Air'
+            ln = 'Air'
         elif ln == 3:
-            return 'Cocktail'
+            ln = 'Cocktail'
         elif ln == 4:
-            return 'Background'
+            ln = 'Background'
 
+        ln = '{}-{}'.format(ln, self.aliquot)
         return ln
 
     @cached_property
@@ -449,12 +450,13 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 #        jt = self._join_table_parameters
 #        if jt:
 #            self.join_table_parameter = str(jt[0])
-    def _selected_changed(self):
-        print self.selected
+#    def _selected_changed(self):
+#        print self.selected
+
     def _get_selector_records(self, **kw):
         sess = self._db.get_session()
         q = sess.query(AnalysisTable)
-        q = q.order_by(AnalysisTable.id.desc())
+#        q = q.order_by(AnalysisTable.id.desc())
         q = q.filter(AnalysisTable.status != -1)
         return q.all()
 

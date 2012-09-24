@@ -18,9 +18,10 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 from src.processing.figures.base_figure import BaseFigure
+from src.processing.figures.fit_series_figure import FitSeriesFigure
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BackgroundFigure(BaseFigure):
-    pass
+class BackgroundFigure(FitSeriesFigure):
+    _name = 'backgrounds'
 #============= EOF =============================================

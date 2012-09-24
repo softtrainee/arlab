@@ -28,6 +28,7 @@ from base_regressor import BaseRegressor
 class OLSRegressor(BaseRegressor):
     degree = Property(depends_on='_degree')
     _degree = Int
+    constant = None
 #    _result = None
 #    @on_trait_change('xs,ys')
 #    def _update_data(self):
@@ -57,6 +58,7 @@ class OLSRegressor(BaseRegressor):
         if not len(self.xs) or \
             not len(self.ys):
             return
+
         if len(self.xs) != len(self.ys):
             return
 
@@ -69,8 +71,13 @@ class OLSRegressor(BaseRegressor):
 #        print vander(xs, self.degree + 1)
         X = self._get_X()
         if X is not None:
-            self._ols = OLS(ys, X)
-            self._result = self._ols.fit()
+            try:
+                self._ols = OLS(ys, X)
+                self._result = self._ols.fit()
+            except Exception, e:
+                print e
+#                print 'X', X
+#                print 'ys', ys
 #        print self.degree, self._result.summary()
     def predict(self, pos):
         pos = asarray(pos)
@@ -131,6 +138,9 @@ class OLSRegressor(BaseRegressor):
             d = d.lower()
             fits = ['linear', 'parabolic', 'cubic']
             d = fits.index(d) + 1
+
+        if d is None:
+            d = 1
 #        print 'set', d
         self._degree = d
 
@@ -142,7 +152,12 @@ class PolynomialRegressor(OLSRegressor):
     def _get_X(self, xs=None):
         if xs is None:
             xs = asarray(self.xs)
-        return vander(xs, self.degree + 1)
+
+        c = vander(xs, self.degree + 1)
+        if self.constant:
+            c[:, self.degree] *= self.constant
+        return c
+
 
 class MultipleLinearRegressor(OLSRegressor):
     '''

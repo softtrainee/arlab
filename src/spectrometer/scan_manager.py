@@ -26,37 +26,16 @@ import random
 import os
 import pickle
 #============= local library imports  ==========================
-#'black', 'red', 'violet', 'maroon', 'yellow',
 from src.managers.manager import Manager
 from src.graph.time_series_graph import TimeSeriesStreamGraph
-#from src.helpers.timer import Timer
-
 from src.spectrometer.detector import Detector
 from src.spectrometer.tasks.magnet_scan import MagnetScan
 from src.spectrometer.tasks.rise_rate import RiseRate
 from src.paths import paths
-from chaco.log_mapper import LogMapper
-from chaco.linear_mapper import LinearMapper
 from src.graph.tools.data_tool import DataTool, DataToolOverlay
-from chaco.data_range_1d import DataRange1D
 
-class Magnet(HasTraits):
-    dac = Range(0.0, 6.0)
-    def map_mass_to_dac(self, d):
-        return d
 
-class Source(HasTraits):
-    y_symmetry = Float
 
-class DummySpectrometer(HasTraits):
-    detectors = List
-    magnet = Instance(Magnet, ())
-    source = Instance(Source, ())
-    def get_intensities(self):
-        return [d.name for d in self.detectors], [random.random() + (i * 12.3) for i in range(len(self.detectors))]
-
-    def get_intensity(self, *args, **kw):
-        return 1
 
 class ScanManager(Manager):
     spectrometer = Any
@@ -76,21 +55,21 @@ class ScanManager(Manager):
     isotopes = Property
 
     graph_scale = Enum('linear', 'log')
-    graph_ymin_auto = Bool(True)
-    graph_ymax_auto = Bool(True)
+
+    graph_y_auto = Bool
 
     graph_ymin = Property(Float, depends_on='_graph_ymin')
     graph_ymax = Property(Float, depends_on='_graph_ymax')
     _graph_ymin = Float
     _graph_ymax = Float
-    graph_scan_width = Int(1000) #in secs
+    graph_scan_width = Int #in minutes
 
     def _update_graph_limits(self, name, new):
-#        print name, new
         if 'high' in name:
-            self._graph_ymax = new
+            self._graph_ymax = max(new, self._graph_ymin)
         else:
-            self._graph_ymin = new
+            self._graph_ymin = min(new, self._graph_ymax)
+
 
     def _toggle_detector(self, obj, name, old, new):
         self.graph.set_series_visiblity(new, series=obj.name)
@@ -123,11 +102,6 @@ class ScanManager(Manager):
                             setattr(self, pi, params[pi])
                         except KeyError, e:
                             print pi, e
-#                    self.graph_scale = params['graph_scale']
-#                    self.graph_scale = params['graph_scale']
-#                    self.graph_scale = params['graph_scale']
-#                    for pi in ['graph_ymin','graph_ymax']:
-
 
                 except (pickle.PickleError, EOFError, KeyError):
                     self.detector = self.detectors[-1]
@@ -137,49 +111,48 @@ class ScanManager(Manager):
         self.info('dump scan settings')
         p = os.path.join(paths.hidden_dir, 'scan_settings')
         with open(p, 'wb') as f:
-            iso=self.isotope
+            iso = self.isotope
             if not iso:
-                iso=self.isotopes[0]
-                
-            det=self.detector
+                iso = self.isotopes[0]
+
+            det = self.detector
             if not det:
-                det=self.detectors[0]
-                
+                det = self.detectors[0]
+
             d = dict(isotope=iso,
                      detector=det.name)
-#            print type(det), type(iso)
-#            d=dict()
+
             for ki in self.graph_attr_keys:
                 d[ki] = getattr(self, ki)
-#            
-#            print d
+
             pickle.dump(d, f)
 
     @property
     def graph_attr_keys(self):
         return ['graph_scale',
-                'graph_ymin', 'graph_ymax',
-                'graph_ymin_auto', 'graph_ymax_auto',
+                'graph_ymin',
+                'graph_ymax',
+                'graph_y_auto',
+                'graph_scan_width'
                 ]
+
     def close(self, isok):
         self._stop_timer()
         self.dump_settings()
 
         #clear our graph settings so on reopen events will fire
         del self.graph_scale
+        del self._graph_ymax
+        del self._graph_ymin
+        del self.graph_y_auto
+        del self.graph_scan_width
 
-#    @on_trait_change('spectrometer:intensity_dirty')
-#    def _update_scan_graph(self, new):
     def _update_scan_graph(self):
         data = self.spectrometer.get_intensities()
         if data:
             _, signals = data
-#            _, signals = zip(*[(k, v) for k, v in new.iteritems()])
-#            _, signals = zip(*new.iteritems())
             self.graph.record_multiple(signals,
                                        track_y=False,
-#                                       track_y=s,
-                                       #track_y_pad=1
                                        )
 
     def _start_timer(self):
@@ -222,47 +195,45 @@ class ScanManager(Manager):
 
             self._set_position()
 
-    def _graph_ymin_auto_changed(self, new):
+    def _graph_y_auto_changed(self, new):
         p = self.graph.plots[0]
         if new:
             p.value_range.low_setting = 'auto'
-        else:
-            p.value_range.low_setting = self.graph_ymin
-        self.graph.redraw()
-
-    def _graph_ymax_auto_changed(self, new):
-        p = self.graph.plots[0]
-        if new:
             p.value_range.high_setting = 'auto'
         else:
+            p.value_range.low_setting = self.graph_ymin
             p.value_range.high_setting = self.graph_ymax
         self.graph.redraw()
 
+
+#    def _graph_ymin_auto_changed(self, new):
+#        p = self.graph.plots[0]
+#        if new:
+#            p.value_range.low_setting = 'auto'
+#        else:
+#            p.value_range.low_setting = self.graph_ymin
+#        self.graph.redraw()
+#
+#    def _graph_ymax_auto_changed(self, new):
+#        p = self.graph.plots[0]
+#        if new:
+#            p.value_range.high_setting = 'auto'
+#        else:
+#            p.value_range.high_setting = self.graph_ymax
+#        self.graph.redraw()
+
     def _graph_scale_changed(self, new):
         p = self.graph.plots[0]
-        dr = p.value_range
-        hp = p.value_mapper.high_pos
-        lp = p.value_mapper.low_pos
-        d = dict(high_pos=hp, low_pos=lp)
-        if new == 'log':
-            klass = LogMapper
-            d['range']=DataRange1D(low_setting=max(0.01,dr.low), high_setting=dr.high_setting)
-        else:
-            klass = LinearMapper
-            d['range']=dr
-            
-#        for pi in p.plots.itervalues():
-#            pi[0].value_mapper=klass(**d)
-            
-        p.value_mapper = klass(**d)
+        p.value_scale = new
         self.graph.redraw()
 
     def _graph_scan_width_changed(self):
         g = self.graph
         n = self.graph_scan_width
-        n = max(n, 1)
-        g.data_limits[0] = n
-        g.set_x_tracking(n * 1.01)
+        n = max(n, 1 / 60.)
+        mins = n * 60
+        g.data_limits[0] = mins
+        g.set_x_tracking(mins * 1.01)
 
 #===============================================================================
 # factories
@@ -282,7 +253,7 @@ class ScanManager(Manager):
                                                       )
 
                                   )
-        n = 1000
+        n = self.graph_scan_width * 60
         g.new_plot(padding=[50, 5, 5, 50],
                    data_limit=n,
                    xtitle='Time',
@@ -309,6 +280,12 @@ class ScanManager(Manager):
                               tool=dt)
         p.tools.append(dt)
         p.overlays.append(dto)
+
+#        self.graph_ymax_auto = True
+#        self.graph_ymin_auto = True
+#        p.value_range.low_setting = 'auto'
+#        p.value_range.high_setting = 'auto'
+#        p.value_range.tight_bounds = False
 #        for det in self.detectors:
 #            g.set_series_visiblity(det.active, series=det.name, do_later=10)
 
@@ -399,26 +376,17 @@ class ScanManager(Manager):
 
         rise_grp = custom('rise_rate')
         source_grp = custom('source')
-        graph_cntrl_grp = VGroup(
-                                 HGroup(Item('graph_scan_width', label='Scan Width'), spring),
-                                 HGroup(Item('graph_scale', show_label=False,), spring),
-                                 HGroup(spring, Label('Auto')),
-                                 HGroup(
-                                        Item('graph_ymax',
-                                             enabled_when='not graph_ymax_auto',
-                                             format_str='%0.3f', label='Y max'),
-                                        spring,
-                                        Item('graph_ymax_auto', show_label=False)
-                                        ),
-                                 HGroup(
-                                        Item('graph_ymin',
-                                             enabled_when='not graph_ymin_auto',
-                                             format_str='%0.3f', label='Y min'),
-                                        spring,
-                                        Item('graph_ymin_auto', show_label=False)
-                                        ),
 
-#                                 Item('graph_ymin', label='Y min')
+        right_spring = Spring(springy=False, width=275)
+        def hitem(n, l, **kw):
+            return HGroup(Label(l), spring, Item(n, show_label=False, **kw), right_spring)
+
+        graph_cntrl_grp = VGroup(
+                                 hitem('graph_scan_width', 'Scan Width (mins)'),
+                                 hitem('graph_scale', 'Scale'),
+                                 hitem('graph_y_auto', 'Autoscale Y'),
+                                 hitem('graph_ymax', 'Max', format_str='%0.3f'),
+                                 hitem('graph_ymin', 'Min', format_str='%0.3f'),
                                  )
         control_grp = Group(
                           graph_cntrl_grp,
@@ -452,6 +420,23 @@ class ScanManager(Manager):
 
 
 if __name__ == '__main__':
+    class Magnet(HasTraits):
+        dac = Range(0.0, 6.0)
+        def map_mass_to_dac(self, d):
+            return d
+
+    class Source(HasTraits):
+        y_symmetry = Float
+
+    class DummySpectrometer(HasTraits):
+        detectors = List
+        magnet = Instance(Magnet, ())
+        source = Instance(Source, ())
+        def get_intensities(self):
+            return [d.name for d in self.detectors], [random.random() + (i * 12.3) for i in range(len(self.detectors))]
+
+        def get_intensity(self, *args, **kw):
+            return 1
 
     detectors = [
              Detector(name='H2',
