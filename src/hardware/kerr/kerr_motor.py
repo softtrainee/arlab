@@ -35,7 +35,9 @@ class KerrMotor(KerrDevice):
     '''
     use_hysteresis = Bool(False)
     hysteresis_value = Int(0)
-    velocity = Float
+
+    velocity = Property
+    _velocity = Float
     acceleration = Float
     home_delay = Float
     home_velocity = Float
@@ -64,16 +66,17 @@ class KerrMotor(KerrDevice):
             F6  B004 2003 F401 E803 FF 00 E803 01 01 01
             cmd p    d    i    il   ol cl el   sr db sm
         '''
-        p = (0, 4)
-        i = (0, 4)
-        d = (0, 4)
-        il = (10, 4)
-        ol = (10, 2)
-        cl = (10, 2)
-        el = (10, 4)
+        p = (45060, 4)
+        i = (8195, 4)
+        d = (62465, 4)
+        il = (59395, 4)
+        ol = (255, 2)
+        cl = (0, 2)
+        el = (59395, 4)
         sr = (1, 2)
         db = (1, 2)
         sm = (1, 2)
+
         hexfmt = lambda a: '{{:0{}x}}'.format(a[1]).format(a[0])
         return ''.join(['F6'] + map(hexfmt, [p, d, i, il, ol, cl, el, sr, db, sm]))
 
@@ -143,6 +146,8 @@ class KerrMotor(KerrDevice):
         self._initialize_(*args, **kw)
         self._finish_initialize()
 
+#        self._clear_bits()
+
         #move to the home position
         self._set_data_position(self.nominal_position)
         self.block(4, progress=self.progress)
@@ -151,6 +156,9 @@ class KerrMotor(KerrDevice):
         self.progress = None
 
         return True
+    def _clear_bits(self):
+        cmd = (self.address, '0b', 100, 'clear bits')
+        self._execute_hex_command(cmd)
 
     def _initialize_(self, *args, **kw):
         '''
@@ -159,7 +167,7 @@ class KerrMotor(KerrDevice):
         addr = self.address
         commands = [(addr, '1706', 100, 'stop motor, turn off amp'),
                   (addr, '1800', 100, 'configure io pins'),
-                  (addr, 'F6B0042003F401E803FF00E803010101', 100, 'set gains'),
+                  (addr, self._build_gains(), 100, 'set gains'),
                   (addr, '1701', 100, 'turn on amp'),
                   (addr, '00', 100, 'reset position'),
                   ]
@@ -235,18 +243,35 @@ class KerrMotor(KerrDevice):
         if fail_cnt > 5:
             self.warning('Problem Communicating')
 
+    def read_status(self, cb):
+        if isinstance(cb, str):
+            cb = '{:02x}'.format(int(cb, 2))
+
+        addr = self.address
+        cb = '13{}'.format(cb)
+        cmd = self._build_command(addr, cb)
+        status_byte = self.ask(cmd, is_hex=True,
+                                delay=100,
+                                info='get status byte')
+        return status_byte
+
+    def read_defined_status(self):
+
+        addr = self.address
+        cmd = '0E'
+        cmd = self._build_command(addr, cmd)
+        status_byte = self.ask(cmd, is_hex=True,
+                                delay=100,
+                                info='get defined status')
+        return status_byte
+
     def _check_status_byte(self, check_bit):
         '''
         return bool 
         check bit =0 False
         check bit =1 True
         '''
-        addr = self.address
-        cmd = '0E'
-        cmd = self._build_command(addr, cmd)
-        status_byte = self.ask(cmd, is_hex=True,
-                                delay=100,
-                                info='get status byte')
+        status_byte = self.read_defined_status()
 
         if status_byte == 'simulation':
             status_byte = 'DFDF'
@@ -281,7 +306,7 @@ class KerrMotor(KerrDevice):
         cmd = ''.join((cmd, control))
         cmd = (addr, cmd, 100, '')
 
-        pos = self._execute_hex_command(cmd, **kw)
+        pos = self._execute_hex_command(cmd, nbyte=6, **kw)
 
         #trim off status and checksum bits
         if pos is not None:
@@ -290,6 +315,24 @@ class KerrMotor(KerrDevice):
 #            self._motor_position = pos
             return pos
 
+    def _load_trajectory_controlbyte(self):
+        '''
+           control byte
+                7 6 5 4 3 2 1 0
+            97- 1 0 0 1 0 1 1 1
+            
+            0=load pos
+            1=load vel
+            2=load acce
+            3=load pwm
+            4=enable servo
+            5=profile mode 0=trap 1=vel
+            6=direction trap mode 0=abs 1=rel vel mode 0=for. 1=back
+            7=start motion now
+            
+        '''
+        return '{:02x}'.format(int('10010111', 2))
+
     def _set_motor_position_(self, pos, hysteresis=0):
         '''
         '''
@@ -297,12 +340,11 @@ class KerrMotor(KerrDevice):
         #============pos is in mm===========
         addr = self.address
         cmd = 'D4'
-        control = '97'
-
+        control = self._load_trajectory_controlbyte()
         position = self._float_to_hexstr(pos)
-
         v = self._float_to_hexstr(self.velocity)
         a = self._float_to_hexstr(self.acceleration)
+        print cmd, control, position, v, a
         cmd = ''.join((cmd, control, position, v, a))
         cmd = (addr, cmd, 100, 'setting motor steps {}'.format(pos))
 
@@ -419,8 +461,9 @@ class KerrMotor(KerrDevice):
         fmt = '%sI' % ('<' if endianness == 'little' else '>')
         try:
             return struct.unpack(fmt, h.decode('hex'))[0]
-        except:
-            pass
+        except Exception, e:
+            print e
+
     def control_view(self):
         return View(Label(self.name),
                     Item('data_position', show_label=False,
@@ -444,4 +487,11 @@ class KerrMotor(KerrDevice):
                            VGroup('home_velocity', 'home_acceleration', 'home_position', label='Home', show_border=True)
                            )
                     )
+
+
+    def _get_velocity(self):
+        return self._velocity
+
+    def _set_velocity(self, v):
+        self._velocity = v
 #============= EOF ====================================

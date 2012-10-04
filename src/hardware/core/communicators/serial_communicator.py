@@ -350,109 +350,159 @@ class SerialCommunicator(Communicator):
 #            time.sleep(50e-9)
             write(cmd)
 
-    def _read(self, is_hex=False, time_out=1, delay=None):
-        '''
-            use the serial handle to read available bytes from the serial buffer
-            
-        '''
-        def err_handle(func):
-            def _err(*args):
-                try:
-                    return func(*args)
-                except (OSError, IOError), e:
-                    self.warning(e)
-            return _err
+    def _read(self, is_hex=False, nbytes=1, timeout=1, delay=None):
+        func = lambda:self._get_nbytes(nbytes) if is_hex else self._get_isline
+        if delay is not None:
+            time.sleep(delay / 1000.)
 
-#        @err_handle
-#        def eread(inw):
-#            return self.handle.read(inw)
-#            r = None
-#            try:
-#                r = self.handle.read(inw)
-#            except (OSError, IOError), e:
-#                self.warning(e)
-#            return r
-
-#        @err_handle
-#        def get_chars():
-#            return self.handle.inWaiting()
-#            c = 0
-#            try:
-#                c = self.handle.inWaiting()
-#            except (OSError, IOError), e:
-#                self.warning(e)
-#            return c
-
-        def get_line(terminator=None):
-            try:
-                inw = self.handle.inWaiting()
-                r = self.handle.read(inw)
-                if terminator is None:
-                    t1 = '\n'
-                    t2 = '\r'
-                    isline = r.endswith(t1) or r.endswith(t2) if r is not None else False
-                else:
-                    isline = r.endswith(terminator) if r is not None else False
-            except (OSError, IOError), e:
-                self.warning(e)
-##            print isline, r, inw
-            return isline, r, inw
+        elif self.read_delay:
+            time.sleep(self.read_delay / 1000.)
 
         r = None
-        if self.simulation:
-            r = 'simulation'
-        else:
-            if delay is None:
-                delay = self.read_delay
+        st = time.time()
 
-            if delay:
-                time.sleep(delay / 1000.)
+        while time.time() - st < timeout:
+            try:
+                r, isline = func()
+                if isline:
+                    break
+            except ValueError:
+                pass
 
-            time.sleep(self.read_delay)
-            ready_to_read, _, _ = select.select([self.handle], [], [], 0.5)
-            if ready_to_read:
-                isline, r, c = get_line(terminator=self.read_terminator)
-                if is_hex:
-                    if r:
-                        r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
-                elif not isline:
-                    pcnt = 0
-                    cnt = 0
-                    for _ in xrange(200000):
-                        isline, r, c = get_line(terminator=self.read_terminator)
-                        if isline:
-                            break
-                        if pcnt == c:
-                            cnt += 1
-                        else:
-                            cnt = 0
-
-                        pcnt = c
-                        if cnt > 50000:
-                            break
-
-#                    print 'line', c
-
+        if is_hex:
+            if r:
+                r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
 
         return r
-#            if inw > 0:
+
+    def _get_nbytes(self, nbytes=8):
+        '''
+            1 byte == 2 chars
+        '''
+        try:
+            inw = self.handle.inWaiting()
+            if inw / 2 == nbytes:
+                r = self.handle.read(inw)
+                return r, True
+        except (OSError, IOError), e:
+            self.warning(e)
+
+    def _get_isline(self, terminator=None):
+        try:
+            inw = self.handle.inWaiting()
+            r = self.handle.read(inw)
+            if terminator is None:
+                t1 = '\n'
+                t2 = '\r'
+                return r, r.endswith(t1) or r.endswith(t2) if r is not None else False
+            else:
+                return r, r.endswith(terminator) if r is not None else False
+
+        except (OSError, IOError), e:
+            self.warning(e)
+#    def _read(self, is_hex=False, time_out=1, delay=None):
+#        '''
+#            use the serial handle to read available bytes from the serial buffer
+#            
+#        '''
+#        def err_handle(func):
+#            def _err(*args):
 #                try:
-#                    r = self.handle.read(inw)
-##                    self.handle.flush()
-#                    if is_hex:
-#                        r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
-##                        rr = ''
-##                        for ri in r:
-##                            rr += '{:02X}' % ord(ri)
-##                        r = rr
-#
+#                    return func(*args)
 #                except (OSError, IOError), e:
 #                    self.warning(e)
-
-#        else:
+#            return _err
+#
+##        @err_handle
+##        def eread(inw):
+##            return self.handle.read(inw)
+##            r = None
+##            try:
+##                r = self.handle.read(inw)
+##            except (OSError, IOError), e:
+##                self.warning(e)
+##            return r
+#
+##        @err_handle
+##        def get_chars():
+##            return self.handle.inWaiting()
+##            c = 0
+##            try:
+##                c = self.handle.inWaiting()
+##            except (OSError, IOError), e:
+##                self.warning(e)
+##            return c
+#
+#        def get_line(terminator=None):
+#            try:
+#                inw = self.handle.inWaiting()
+#                r = self.handle.read(inw)
+#                if terminator is None:
+#                    t1 = '\n'
+#                    t2 = '\r'
+#                    isline = r.endswith(t1) or r.endswith(t2) if r is not None else False
+#                else:
+#                    isline = r.endswith(terminator) if r is not None else False
+#            except (OSError, IOError), e:
+#                self.warning(e)
+###            print isline, r, inw
+#            return isline, r, inw
+#
+#        r = None
+#        if self.simulation:
 #            r = 'simulation'
+#        else:
+#            if delay is None:
+#                delay = self.read_delay
+#
+#            if delay:
+#                time.sleep(delay / 1000.)
+#
+#            time.sleep(self.read_delay)
+#            ready_to_read, _, _ = select.select([self.handle], [], [], 0.5)
+#            if ready_to_read:
+#                isline, r, c = get_line(terminator=self.read_terminator)
+#                if is_hex:
+#                    if r:
+#                        r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
+#                elif not isline:
+#                    pcnt = 0
+#                    cnt = 0
+#                    for _ in xrange(200000):
+#                        isline, r, c = get_line(terminator=self.read_terminator)
+#                        if isline:
+#                            break
+#                        if pcnt == c:
+#                            cnt += 1
+#                        else:
+#                            cnt = 0
+#
+#                        pcnt = c
+#                        if cnt > 50000:
+#                            break
+#
+##                    print 'line', c
+#
 #
 #        return r
+##            if inw > 0:
+##                try:
+##                    r = self.handle.read(inw)
+###                    self.handle.flush()
+##                    if is_hex:
+##                        r = ''.join(['{:02X}'.format(ri) for ri in map(ord, r)])
+###                        rr = ''
+###                        for ri in r:
+###                            rr += '{:02X}' % ord(ri)
+###                        r = rr
+##
+##                except (OSError, IOError), e:
+##                    self.warning(e)
+#
+##        else:
+##            r = 'simulation'
+##
+##        return r
 
 if __name__ == '__main__':
     s = SerialCommunicator()

@@ -66,13 +66,17 @@ class FusionsActionSet(WorkbenchActionSet):
                 #===============================================================
                 # 
                 #===============================================================
-                Action(name='Beam',
-                       path='{}/Initialize'.format(laser_path),
-                       class_name='{}InitializeBeamAction'.format(self.action_path)
-                       ),
-                Action(name='Zoom',
-                       path='{}/Initialize'.format(laser_path),
-                       class_name='{}InitializeZoomAction'.format(self.action_path)
+#                Action(name='Beam',
+#                       path='{}/Initialize'.format(laser_path),
+#                       class_name='{}InitializeBeamAction'.format(self.action_path)
+#                       ),
+#                Action(name='Zoom',
+#                       path='{}/Initialize'.format(laser_path),
+#                       class_name='{}InitializeZoomAction'.format(self.action_path)
+#                       ),
+                Action(name='Motor Configure',
+                       path='{}'.format(laser_path),
+                       class_name='{}MotorConfigureAction'.format(self.action_path)
                        ),
 
                 #===============================================================

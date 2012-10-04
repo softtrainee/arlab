@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from src.hardware.kerr.kerr_manager import KerrManager
 '''
 Fusions Control board
 a combination of the logic board and the kerr microcontroller
@@ -136,6 +137,10 @@ class FusionsLogicBoard(CoreDevice):
 
 
         return True
+    def open_motor_configure(self):
+        mc = KerrManager(motor=self.get_motor('attenuator'))
+
+        mc.edit_traits()
 
     def add_motor(self, name, path):
         p = os.path.join(self.configuration_dir_path, path)
@@ -147,7 +152,7 @@ class FusionsLogicBoard(CoreDevice):
         self.motors.append(m)
 
     def get_motor(self, name):
-        return next((m for m in self.motors if m == name), None)
+        return next((m for m in self.motors if m.name == name), None)
 
     def _motor_factory(self, name, klassname):
         if klassname:
