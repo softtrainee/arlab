@@ -351,7 +351,7 @@ class SerialCommunicator(Communicator):
             write(cmd)
 
     def _read(self, is_hex=False, nbytes=7, timeout=1, delay=None):
-        func = lambda:self._get_nbytes(nbytes) if is_hex else self._get_isline
+        func = (lambda:self._get_nbytes(nbytes)) if is_hex else self._get_isline
         if delay is not None:
             time.sleep(delay / 1000.)
 
@@ -360,7 +360,7 @@ class SerialCommunicator(Communicator):
         
         r = None
         st = time.time()
-
+        
         while time.time() - st < timeout:
             try:
                 r, isline = func()

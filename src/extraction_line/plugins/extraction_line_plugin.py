@@ -56,8 +56,13 @@ class ExtractionLinePlugin(CorePlugin):
         '''
         '''
         ip = InitializationParser()
-        plugin = ip.get_plugin('Experiment', category='general')
-        mode = plugin.get('mode')
+        try:
+            plugin = ip.get_plugin('Experiment', category='general')
+            mode = plugin.get('mode')
+        except AttributeError:
+            #no epxeriment plugin defined
+            mode='normal'
+            
         elm = ExtractionLineManager(mode=mode)
         elm.bind_preferences()
 
