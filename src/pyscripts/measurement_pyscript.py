@@ -133,8 +133,9 @@ class MeasurementPyScript(PyScript):
         if not fits:
             fits = 'linear'
 
-        self.automated_run.do_regress(fits, series=self._regress_id)
-        self._series_count += 3
+#        self.automated_run.set_regress_fits(fits, series=self._regress_id)
+        self.automated_run.set_regress_fits(fits)
+#        self._series_count += 3
 
     @verbose_skip
     def set_time_zero(self):
@@ -152,8 +153,8 @@ class MeasurementPyScript(PyScript):
                       ):
             self.cancel()
 
-        self._regress_id = self._series_count
-        self._series_count += 1
+#        self._regress_id = self._series_count
+        self._series_count += 4
 
     @verbose_skip
     def activate_detectors(self, *dets):
@@ -201,7 +202,7 @@ class MeasurementPyScript(PyScript):
                                     self._time_zero,
                                     self._series_count
                                     )
-        self._series_count += 1
+        self._series_count += 3
 
     @verbose_skip
     def peak_center(self, detector='AX', isotope='Ar40'):

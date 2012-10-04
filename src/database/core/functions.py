@@ -63,7 +63,7 @@ def _get_one(*args, **kw):
 def _getter(getfunc, func, obj, name,
             *args, **kw):
 
-    if name is not None and not isinstance(name, (str, int, long, float)):
+    if name is not None and not isinstance(name, (str, int, unicode, long, float)):
         return name
 
     order_by = None

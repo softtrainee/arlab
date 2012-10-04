@@ -27,7 +27,6 @@ from chaco.api import PlotGraphicsContext, OverlayPlotContainer, \
 from chaco.tools.api import ZoomTool, LineInspector, RangeSelection, \
     RangeSelectionOverlay
 from chaco.axis import PlotAxis
-from traitsui.menu import Menu, Action
 from pyface.api import FileDialog, OK
 from kiva.fonttools import Font
 from pyface.timer.api import do_after as do_after_timer
@@ -47,6 +46,7 @@ from tools.pan_tool import MyPanTool as PanTool
 from chaco.data_label import DataLabel
 from src.loggable import Loggable
 from chaco.tools.broadcaster import BroadcasterTool
+from src.graph.context_menu_mixin import ContextMenuMixin
 VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande',
 #               'Times New Roman',
@@ -79,7 +79,7 @@ class GraphHandler(Handler):
         info.object.closed()
 
 
-class Graph(Loggable):
+class Graph(Loggable, ContextMenuMixin):
     ''' 
     '''
     name = Str
@@ -153,63 +153,6 @@ class Graph(Loggable):
     def update_group_attribute(self, plot, attr, value, dataid=0):
         pass
 
-    def action_factory(self, name, func, **kw):
-        '''
-        '''
-        return Action(name=name, on_perform=getattr(self, func),
-                       **kw)
-
-    def get_contextual_menu_save_actions(self):
-        '''
-        '''
-        return [
-                ('Clipboard', '_render_to_clipboard', {}),
-                ('PDF', 'save_pdf', {}),
-               ('PNG', 'save_png', {})]
-
-    def contextual_menu_contents(self):
-        '''
-        '''
-        save_actions = []
-        for n, f, kw in self.get_contextual_menu_save_actions():
-            save_actions.append(self.action_factory(n, f, **kw))
-
-        save_menu = Menu(
-                       name='Save Figure',
-                       *save_actions)
-
-        if not self.crosshairs_enabled:
-            crosshairs_action = self.action_factory('Show Crosshairs',
-                           'show_crosshairs'
-                           )
-        else:
-            crosshairs_action = self.action_factory('Hide Crosshairs',
-                           'destroy_crosshairs')
-
-        export_actions = [
-                          self.action_factory('Window', 'export_data'),
-                          self.action_factory('All', 'export_raw_data'),
-
-                          ]
-
-        export_menu = Menu(name='Export',
-                         *export_actions)
-        contents = [save_menu, crosshairs_action, export_menu]
-
-        if self.editor_enabled:
-            pa = self.action_factory('Show Plot Editor', 'show_plot_editor')
-            pa.enabled = self.selected_plot is not None
-            contents += [pa]
-            contents += [self.action_factory('Show Graph Editor', 'show_graph_editor')]
-
-        return contents
-
-    def get_contextual_menu(self):
-        '''
-        '''
-        menu = Menu(*self.contextual_menu_contents()
-                         )
-        return menu
 
     def get_num_plots(self):
         '''
@@ -855,11 +798,11 @@ class Graph(Loggable):
 
     def add_datum(self, datum, plotid=0, series=0, update_y_limits=False,
                    ypadding=10,
-                   ymin_anchor=None, do_after=None):
+                   ymin_anchor=None, do_after=None, **kw):
         '''
         '''
         def add():
-
+#            print plotid, series, self.series
             names = self.series[plotid][series]
             plot = self.plots[plotid]
             for i, name in enumerate(names):
@@ -873,15 +816,21 @@ class Graph(Loggable):
                     ma = max(nd)
 
             if update_y_limits:
-                mi -= ypadding
+                if isinstance(ypadding, str):
+
+                    ypad = max(0.1, abs(mi - ma)) * float(ypadding)
+                else:
+                    ypad = ypadding
+                mi -= ypad
                 if ymin_anchor is not None:
                     mi = max(ymin_anchor, mi)
+
 
 #                if ypadding / ma > 0.5:
 #                    ypadding = 0
 
                 self.set_y_limits(min=mi,
-                                  max=ma + ypadding,
+                                  max=ma + ypad,
                                   plotid=plotid)
 
         if do_after:

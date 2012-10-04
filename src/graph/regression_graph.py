@@ -36,9 +36,15 @@ class RegressionGraph(Graph):
     selected_component = Any
     regressors = List
     regression_results = Event
+    fits = List
 #    def clear(self):
 #        super(RegressionGraph, self).clear()
 #        self.regressors = []
+    def set_fits(self, fits):
+        self.fits = fits
+#        for fi, pi in zip(fits, self.plots):
+#            scatter = pi.plots['data'][0]
+#            scatter.fit = fi
 
     def _update_graph(self):
 #        print 'assssss'
@@ -46,10 +52,12 @@ class RegressionGraph(Graph):
 #        print self.selected_plotid
         self.regressors = []
 #        plot = self.selected_plot
-        for plot in self.plots:
+        for fi, plot in zip(self.fits, self.plots):
             try:
                 scatter = plot.plots['data'][0]
-                if scatter.fit and scatter.fit != '---':
+#                print scatter, fi
+                if fi:
+#                if scatter.fit and scatter.fit != '---':
                     line = plot.plots['fit'][0]
                     uline = plot.plots['upper CI'][0]
                     lline = plot.plots['lower CI'][0]
@@ -57,7 +65,9 @@ class RegressionGraph(Graph):
 
                     args = self._regress(selection=sel,
                                                    plot=plot,
-                                                   fit=scatter.fit)
+                                                   fit=fi,
+                                                   x=scatter.index.get_data(),
+                                                   y=scatter.value.get_data())
                     if args:
 
 
@@ -71,8 +81,10 @@ class RegressionGraph(Graph):
 
                         uline.index.set_data(fx)
                         uline.value.set_data(uy)
-            except Exception, e:
-                print e
+            except KeyError:
+                pass
+#                print 'update graph', e
+
         self.regression_results = self.regressors
 
     def _regress(self, x=None, y=None,
@@ -105,13 +117,22 @@ class RegressionGraph(Graph):
         low = plot.index_range.low
         high = plot.index_range.high
         if fit in [1, 2, 3]:
+            if len(y) < fit + 1:
+                return
+
             st = low
             xn = x - st
+
             r = PolynomialRegressor(xs=xn, ys=y,
                                     degree=fit)
             self.regressors.append(r)
             fx = linspace(0, (high - low), 200)
+
+#            print r.coefficients
             fy = r.predict(fx)
+            if fy is None:
+                return
+
             ci = r.calculate_ci(fx)
             if ci is not None:
                 ly, uy = ci
@@ -193,6 +214,7 @@ class RegressionGraph(Graph):
         scatter = plot.plot(names, **rd)[0]
         self.set_series_label('data', plotid=plotid)
         scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
+
         scatter.fit = fit
 
         if x is not None and y is not None:

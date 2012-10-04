@@ -164,6 +164,7 @@ class DatabaseAdapter(Loggable):
 #                _users, sess = getattr(self, self.test_func)(sess=sess)
 
         except Exception, e:
+            print e
 #            print e
 #            if self.kind == 'mysql':
 #                url = '{}@{}/{}' .format(self.user, self.host,

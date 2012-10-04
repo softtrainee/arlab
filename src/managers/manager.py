@@ -103,7 +103,6 @@ class Manager(Viewable, RPCable):
     simulation = False
 
     _killed = False
-    failure_reason = None
     enable_close_after = Bool
     close_after_minutes = Int #in minutes
 

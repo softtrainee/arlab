@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,28 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from src.experiment.processing.series.config import Config
 
+#============= enthought library imports =======================
 
+#============= standard library imports ========================
+#============= local library imports  ==========================
 
-#=============enthought library imports=======================
-from traits.api import Any, Int
-from chaco.tools.api import ScatterInspector
-
-#=============standard library imports ========================
-
-#=============local library imports  ==========================
-
-
-class ScatterTool(ScatterInspector):
-#    '''
-#    '''
-#    parent = Any
-#    plotid = Int(0)
-#
-    def normal_mouse_move(self, event):
-#        '''
-#      
-#        '''
-#        #self.parent.selected_plotid = self.plotid
-        super(ScatterTool, self).normal_mouse_move(event)
-#        ScatterInspector.normal_mouse_move(self, event)
+class BackgroundConfig(Config):
+    pass
+#============= EOF =============================================

@@ -29,12 +29,16 @@ class FusionsLaserMonitor(LaserMonitor):
     '''
     '''
 
+
     max_coolant_temp = Float(25)
-    max_setpoint_tries = Float(6)
+    max_coolant_temp_tries = Int(3)
+
+    max_setpoint_tries = Int(6)
 
     _setpoint = None
-    _setpoint_check_cnt = 0
     _cur_setpoints = None
+    _setpoint_check_cnt = 0
+    _coolant_check_cnt = 0
     _setpoint_tolerance = 5
 
     def load_additional_args(self, config):
@@ -54,8 +58,7 @@ class FusionsLaserMonitor(LaserMonitor):
 
         if interlocks:
             inter = ' '.join(interlocks)
-            self.warning(inter)
-            manager.emergency_shutoff(reason=inter)
+            manager.emergency_shutoff(inter)
 #        elif interlocks is None:
 #            manager.emergency_shutoff(reason='failed checking interlocks')
 
@@ -72,8 +75,13 @@ class FusionsLaserMonitor(LaserMonitor):
 #            pass
             self._chiller_unavailable()
         elif ct > self.max_coolant_temp:
-            self.warning('Laser coolant over temperature {:0.2f}'.format(ct))
-            manager.emergency_shutoff(reason='Coolant over temp {:0.2f}'.format(ct))
+
+            if self._coolant_check_cnt > self.max_coolant_temp_tries:
+                manager.emergency_shutoff('Coolant over temp {:0.2f}'.format(ct))
+            else:
+                self._coolant_check_cnt += 1
+        else:
+            self._coolant_check_cnt = 0
 
     def _fcheck_coolant_status(self):
         manager = self.manager
@@ -86,15 +94,13 @@ class FusionsLaserMonitor(LaserMonitor):
         elif status:
             status = ','.join(status) if isinstance(status, list) else status
             reason = 'Laser coolant error {}'.format(status)
-            self.warning(reason)
-            manager.emergency_shutoff(reason=reason)
+            manager.emergency_shutoff(reason)
 
     def _chiller_unavailable(self):
         from globals import globalv
         if not globalv.ignore_chiller_unavailable:
             reason = 'Laser chiller not available'
-            self.manager.emergency_shutoff(reason=reason)
-            self.warning(reason)
+            self.manager.emergency_shutoff(reason)
 
     def stop(self):
         self.setpoint = 0

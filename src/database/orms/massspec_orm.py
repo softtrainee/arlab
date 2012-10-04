@@ -26,77 +26,6 @@ from sqlalchemy.orm import relation, relationship
 
 #=============local library imports  ==========================
 Base = declarative_base()
-
-class PreferencesTable(Base):
-    __tablename__ = 'PreferencesTable'
-    PreferencesSetID = Column(Integer, primary_key=True)
-    changeable_items = relationship('AnalysesChangeableItemsTable')
-
-class DataReductionSessionTable(Base):
-    '''
-    '''
-    __tablename__ = 'datareductionsessiontable'
-    DataReductionSessionID = Column(Integer, primary_key=True)
-    SessionDate = Column(DateTime)
-    changeable_items = relationship('AnalysesChangeableItemsTable')
-
-class DetectorTypeTable(Base):
-    __tablename__ = 'DetectorTypeTable'
-    DetectorTypeID = Column(Integer, primary_key=True)
-    Label = Column(String(40))
-    ResistorValue = Column(Float, default=None)
-    ScaleFactor = Column(Float, default=None)
-
-    detectors = relationship('DetectorTable')
-
-class DetectorTable(Base):
-    '''
-    '''
-    __tablename__ = 'DetectorTable'
-    DetectorID = Column(Integer, primary_key=True)
-    DetectorTypeID = Column(Integer, ForeignKey('DetectorTypeTable.DetectorTypeID'))
-    EMV = Column(Float, default=0)
-    Gain = Column(Float, default=0)
-    Disc = Column(Float, default=1)
-    DiscEr = Column(Float, default=0)
-    ICFactor = Column(Float, default=1)
-    ICFactorEr = Column(Float, default=0)
-    IonCounterDeadtimeSec = Column(Float, default=0)
-    Label = Column(String(40))
-
-    isotopes = relation('IsotopeTable')
-
-
-class IsotopeResultsTable(Base):
-    '''
-    iso = intercept - bkgrd
-    '''
-    __tablename__ = 'IsotopeResultsTable'
-    Counter = Column(Integer, primary_key=True)
-    LastSaved = Column(DateTime)
-    IsotopeID = Column(Integer, ForeignKey('IsotopeTable.IsotopeID'))
-    DataReductionSessionID = Column(Integer)
-    InterceptEr = Column(Float)
-    Intercept = Column(Float)
-    Iso = Column(Float)
-    IsoEr = Column(Float)
-    CalibMolesPerSignalAtUnitGain = Column(Float)
-    CalibMolesPerSignalAtUnitGainEr = Column(Float)
-    SensCalibMoles = Column(Float)
-    SensCalibMolesEr = Column(Float)
-    VolumeCalibFactor = Column(Float)
-    VolumeCalibFactorEr = Column(Float)
-    VolumeCalibratedValue = Column(Float)
-    VolumeCalibratedValueEr = Column(Float)
-    Bkgd = Column(Float)
-    BkgdEr = Column(Float)
-    BkgdDetTypeID = Column(Integer)
-    PkHtChangePct = Column(Float)
-    Fit = Column(Integer)
-    GOF = Column(Float)
-    PeakScaleFactor = Column(Float)
-
-
 class AnalysesChangeableItemsTable(Base):
     __tablename__ = 'AnalysesChangeableItemsTable'
     ChangeableItemsID = Column(Integer, primary_key=True)
@@ -180,14 +109,46 @@ class BaselinesTable(Base):
     PeakTimeBlob = Column(BLOB, nullable=True)
 
 
-class MaterialTable(Base):
-    '''
-    '''
-    __tablename__ = 'MaterialTable'
-    ID = Column(Integer, primary_key=True)
-    Material = Column(String(40))
+class DatabaseVersionTable(Base):
+    __tablename__ = 'databaseversiontable'
+    Version = Column(Float, primary_key=True)
 
-    irradpositions = relation('IrradiationPositionTable')
+class DataReductionSessionTable(Base):
+    '''
+    '''
+    __tablename__ = 'datareductionsessiontable'
+    DataReductionSessionID = Column(Integer, primary_key=True)
+    SessionDate = Column(DateTime)
+    changeable_items = relationship('AnalysesChangeableItemsTable')
+
+
+class DetectorTable(Base):
+    '''
+    '''
+    __tablename__ = 'DetectorTable'
+    DetectorID = Column(Integer, primary_key=True)
+    DetectorTypeID = Column(Integer, ForeignKey('DetectorTypeTable.DetectorTypeID'))
+    EMV = Column(Float, default=0)
+    Gain = Column(Float, default=0)
+    Disc = Column(Float, default=1)
+    DiscEr = Column(Float, default=0)
+    ICFactor = Column(Float, default=1)
+    ICFactorEr = Column(Float, default=0)
+    IonCounterDeadtimeSec = Column(Float, default=0)
+    Label = Column(String(40))
+
+    isotopes = relation('IsotopeTable')
+
+
+class DetectorTypeTable(Base):
+    __tablename__ = 'DetectorTypeTable'
+    DetectorTypeID = Column(Integer, primary_key=True)
+    Label = Column(String(40))
+    ResistorValue = Column(Float, default=None)
+    ScaleFactor = Column(Float, default=None)
+
+    detectors = relationship('DetectorTable')
+
 
 
 class IrradiationPositionTable(Base):
@@ -211,6 +172,34 @@ class IrradiationPositionTable(Base):
 
     analyses = relation('AnalysesTable')
 
+class IsotopeResultsTable(Base):
+    '''
+    iso = intercept - bkgrd
+    '''
+    __tablename__ = 'IsotopeResultsTable'
+    Counter = Column(Integer, primary_key=True)
+    LastSaved = Column(DateTime)
+    IsotopeID = Column(Integer, ForeignKey('IsotopeTable.IsotopeID'))
+    DataReductionSessionID = Column(Integer)
+    InterceptEr = Column(Float)
+    Intercept = Column(Float)
+    Iso = Column(Float)
+    IsoEr = Column(Float)
+    CalibMolesPerSignalAtUnitGain = Column(Float)
+    CalibMolesPerSignalAtUnitGainEr = Column(Float)
+    SensCalibMoles = Column(Float)
+    SensCalibMolesEr = Column(Float)
+    VolumeCalibFactor = Column(Float)
+    VolumeCalibFactorEr = Column(Float)
+    VolumeCalibratedValue = Column(Float)
+    VolumeCalibratedValueEr = Column(Float)
+    Bkgd = Column(Float)
+    BkgdEr = Column(Float)
+    BkgdDetTypeID = Column(Integer)
+    PkHtChangePct = Column(Float)
+    Fit = Column(Integer)
+    GOF = Column(Float)
+    PeakScaleFactor = Column(Float)
 
 class IsotopeTable(Base):
     '''
@@ -237,6 +226,40 @@ class IsotopeTable(Base):
     results = relation('IsotopeResultsTable')
 
 
+class MaterialTable(Base):
+    '''
+    '''
+    __tablename__ = 'MaterialTable'
+    ID = Column(Integer, primary_key=True)
+    Material = Column(String(40))
+
+    irradpositions = relation('IrradiationPositionTable')
+
+
+class PeakTimeTable(Base):
+    '''
+    '''
+    __tablename__ = 'PeakTimeTable'
+    Counter = Column(Integer, primary_key=True)
+    PeakTimeBlob = Column(BLOB)
+    IsotopeID = Column(Integer, ForeignKey('IsotopeTable.IsotopeID'))
+
+
+class PreferencesTable(Base):
+    __tablename__ = 'PreferencesTable'
+    PreferencesSetID = Column(Integer, primary_key=True)
+    changeable_items = relationship('AnalysesChangeableItemsTable')
+
+
+class ProjectTable(Base):
+    '''
+    '''
+    __tablename__ = 'projecttable'
+    ProjectID = Column(Integer, primary_key=True)
+    Project = Column(String(40))
+    samples = relation('SampleTable', backref='projecttable')
+
+
 class SampleTable(Base):
     '''
     '''
@@ -259,22 +282,4 @@ class SampleTable(Base):
 
     irradpositions = relation('IrradiationPositionTable')
     analyses = relation('AnalysesTable', backref='sample')
-
-
-class PeakTimeTable(Base):
-    '''
-    '''
-    __tablename__ = 'PeakTimeTable'
-    Counter = Column(Integer, primary_key=True)
-    PeakTimeBlob = Column(BLOB)
-    IsotopeID = Column(Integer, ForeignKey('IsotopeTable.IsotopeID'))
-
-
-class ProjectTable(Base):
-    '''
-    '''
-    __tablename__ = 'projecttable'
-    ProjectID = Column(Integer, primary_key=True)
-    Project = Column(String(40))
-    samples = relation('SampleTable', backref='projecttable')
 

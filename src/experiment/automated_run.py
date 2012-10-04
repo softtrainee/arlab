@@ -25,18 +25,18 @@ import time
 import random
 from threading import Thread
 from threading import Event as TEvent
-from numpy import linspace
+#from numpy import linspace
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.experiment.heat_schedule import HeatStep
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
-from src.helpers.datetime_tools import get_datetime, generate_datetimestamp
-from src.repo.repository import FTPRepository as Repository
+from src.helpers.datetime_tools import get_datetime
+from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
 from globals import globalv
-from src.regression.ols_regressor import PolynomialRegressor
+#from src.regression.ols_regressor import PolynomialRegressor
 
 
 HEATDEVICENAMES = ['Fusions Diode', 'Fusions CO2']
@@ -110,7 +110,6 @@ class AutomatedRun(Loggable):
     _extraction_script = Any
 
     _active_detectors = List
-    _debug = False
     _loaded = False
     configuration = None
 
@@ -310,9 +309,13 @@ class AutomatedRun(Loggable):
 
         gn = 'signals'
         self._build_tables(gn)
+        fits = self.fits
+        if fits is None:
+            fits = ['linear', ] * len(self._active_detectors)
+
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
-                                ncounts, starttime, series)
+                                ncounts, starttime, series, fits)
 
     def do_sniff(self, ncounts, starttime, series=0):
         if not self._alive:
@@ -320,11 +323,15 @@ class AutomatedRun(Loggable):
 
         if self.plot_panel:
             self.plot_panel._ncounts = ncounts
+
+        fits = ['', ] * len(self._active_detectors)
         gn = 'sniffs'
         self._build_tables(gn)
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
-                                ncounts, starttime, series)
+                                ncounts, starttime, series,
+                                fits
+                                )
 
     def do_baselines(self, ncounts, starttime, mass, detector,
                     series=0, nintegrations=5):
@@ -338,14 +345,15 @@ class AutomatedRun(Loggable):
                 self.plot_panel.show()
             if mass:
                 if ion is not None:
-                    ion.position(mass, detector, False)
+                    ion.position(mass, self._active_detectors[0].name, False)
                     time.sleep(2)
 
             gn = 'baselines'
             self._build_tables(gn)
+            fits = ['', ] * len(self._active_detectors)
             return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
-                                ncounts, starttime, series)
+                                ncounts, starttime, series, fits)
         else:
             isotopes = [di.isotope for di in self._active_detectors]
             masses = [ion.get_mass(iso) + mass for iso in isotopes]
@@ -392,50 +400,50 @@ class AutomatedRun(Loggable):
                 attrs.high_signal = ys[2]
                 tab.flush()
 
-    def do_regress(self, fits, series=0):
-        if not self._alive:
-            return
-#        time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
-        self.regression_results = dict()
-
-        reg = PolynomialRegressor()
-        dm = self.data_manager
-        ppp = self.peak_plot_panel
-        if ppp:
-#            print ppp.isotopes
-            n = len(ppp.isotopes)
-            if isinstance(fits, str) or len(fits) < n:
-                fits = [fits[0], ] * n
-            for pi, (iso, fi) in enumerate(zip(ppp.isotopes, fits)):
-                tab = dm.get_table(ppp.detector, '/signals/{}'.format(iso))
-                if tab is None:
-                    continue
-
-                rdict = self._regress_graph(reg,
-                                            ppp.graph,
-                                            iso,
-                                            ppp.detector,
-                                            fi, tab, pi)
-                self.regression_results[ppp.detector + iso] = rdict
-                tab.attrs.fit = fi
-            ppp.series_cnt += 3
-
-        n = len(self._active_detectors)
-        if isinstance(fits, str) or len(fits) < n:
-            fits = [fits[0], ] * n
-
-        if self.plot_panel:
-            for pi, (dn, fi) in enumerate(zip(self._active_detectors, fits)):
-                tab = dm.get_table(dn.name, '/signals/{}'.format(dn.isotope))
-                if tab is None:
-                    continue
-
-                rdict = self._regress_graph(reg,
-                                            self.plot_panel.graph,
-                                            iso,
-                                            dn.name, fi, tab, pi)
-                self.regression_results[dn.name] = rdict
-                tab.attrs.fit = fi
+#    def do_regress(self, fits, series=0):
+#        if not self._alive:
+#            return
+##        time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
+#        self.regression_results = dict()
+#
+#        reg = PolynomialRegressor()
+#        dm = self.data_manager
+#        ppp = self.peak_plot_panel
+#        if ppp:
+##            print ppp.isotopes
+#            n = len(ppp.isotopes)
+#            if isinstance(fits, str) or len(fits) < n:
+#                fits = [fits[0], ] * n
+#            for pi, (iso, fi) in enumerate(zip(ppp.isotopes, fits)):
+#                tab = dm.get_table(ppp.detector, '/signals/{}'.format(iso))
+#                if tab is None:
+#                    continue
+#
+#                rdict = self._regress_graph(reg,
+#                                            ppp.graph,
+#                                            iso,
+#                                            ppp.detector,
+#                                            fi, tab, pi)
+#                self.regression_results[ppp.detector + iso] = rdict
+#                tab.attrs.fit = fi
+#            ppp.series_cnt += 3
+#
+#        n = len(self._active_detectors)
+#        if isinstance(fits, str) or len(fits) < n:
+#            fits = [fits[0], ] * n
+#
+#        if self.plot_panel:
+#            for pi, (dn, fi) in enumerate(zip(self._active_detectors, fits)):
+#                tab = dm.get_table(dn.name, '/signals/{}'.format(dn.isotope))
+#                if tab is None:
+#                    continue
+#
+#                rdict = self._regress_graph(reg,
+#                                            self.plot_panel.graph,
+#                                            iso,
+#                                            dn.name, fi, tab, pi)
+#                self.regression_results[dn.name] = rdict
+#                tab.attrs.fit = fi
 
     def set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
@@ -455,6 +463,7 @@ class AutomatedRun(Loggable):
                 #update the plot_panel labels
                 for det, pi in zip(self._active_detectors, self.plot_panel.graph.plots):
                     pi.y_axis.title = '{} {} Signal (fA)'.format(det.name, det.isotope)
+#                self.plot_panel.isotopes = [d.isotope for d in self._active_detectors]
             except Exception, e:
                 print 'set_position exception', e
 
@@ -477,10 +486,32 @@ class AutomatedRun(Loggable):
             g.new_series(type='scatter',
                          marker='circle',
                          marker_size=1.25,
-                         label=l)
+                         fit=None,
+                         label=l, plotid=i)
 
             g.set_x_limits(min=0, max=400, plotid=i)
+#            g.set_x_limits(min=0, max=40, plotid=i)
         self._active_detectors = [spec.get_detector(n) for n in dets]
+#        self.plot_panel.isotopes = [d.isotope for d in self._active_detectors]
+        self.plot_panel.detectors = self._active_detectors
+
+    def set_regress_fits(self, fits, series=0):
+        n = len(self._active_detectors)
+        if isinstance(fits, str):
+            fits = [fits, ] * n
+        elif isinstance(fits, tuple):
+            if len(fits) == 1:
+                fits = [fits[0], ] * n
+
+        fits = list(fits)
+        if self.plot_panel:
+            self.plot_panel.fits = fits
+#            self.plot_panel.regress_id = series
+        if self.peak_plot_panel:
+            self.peak_plot_panel.fits = fits
+#            self.peak_plot_panel.regress_id = series
+
+        self.fits = fits
 
     def _open_plot_panel(self, p=None, stack_order='bottom_to_top'):
         if p is not None:
@@ -499,41 +530,41 @@ class AutomatedRun(Loggable):
         self.experiment_manager.open_view(p)
         return p
 
-    def _regress_graph(self, reg, g, iso, dn, fi, tab, pi):
-        x, y = zip(*[(ri['time'], ri['value']) for ri in tab.iterrows()])
-        reg.xs=x
-        reg.ys=y
-        reg.fit=fi
-#        reg.predict()
-
-        i=reg.coefficients[-1]
-        ie=reg.coefficient_errors[-1]
-        self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,i,ie))
-        
-        mi,ma=g.get_x_limits()
-        fx=linspace(mi,ma,200)
-        fy=reg.predict(fx)
-        lci,uci=reg.calculate_ci(fx)
-        #plot fit
-        g.new_series(
-                     fx,fy,
-                     plotid=pi, color='black')
-        
-
-        kw = dict(color='red',
-                         line_style='dash',
-                         plotid=pi)
-        #plot upper ci
-        g.new_series(fx,uci
-                     **kw
-                     )
-        g.new_series(fx,lci,
-                     **kw
-                     )
-        g.redraw()
-        return reg
+#    def _regress_graph(self, reg, g, iso, dn, fi, tab, pi):
+#        x, y = zip(*[(ri['time'], ri['value']) for ri in tab.iterrows()])
+#        reg.xs=x
+#        reg.ys=y
+#        reg.fit=fi
+##        reg.predict()
+#
+#        i=reg.coefficients[-1]
+#        ie=reg.coefficient_errors[-1]
+#        self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,i,ie))
+#        
+#        mi,ma=g.get_x_limits()
+#        fx=linspace(mi,ma,200)
+#        fy=reg.predict(fx)
+#        lci,uci=reg.calculate_ci(fx)
+#        #plot fit
+#        g.new_series(
+#                     fx,fy,
+#                     plotid=pi, color='black')
+#        
+#
+#        kw = dict(color='red',
+#                         line_style='dash',
+#                         plotid=pi)
+#        #plot upper ci
+#        g.new_series(fx,uci
+#                     **kw
+#                     )
+#        g.new_series(fx,lci,
+#                     **kw
+#                     )
+#        g.redraw()
+#        return reg
         #plot lower ci
-        
+
 #        rdict = reg._regress_(x, y, fi)
 #        try:
 ##        self.regression_results[dn.name] = rdict
@@ -561,8 +592,8 @@ class AutomatedRun(Loggable):
 #            return rdict
 #        except:
 #            self.warning('problem regressing')
-            
-            
+
+
     def _set_table_attr(self, name, grp, attr, value):
 #        print name, attr, value
         dm = self.data_manager
@@ -656,8 +687,10 @@ class AutomatedRun(Loggable):
                   #update_y_limits=True,
                    #ypadding=1, ymin_anchor=0
                    )
+
+        _debug = globalv.automated_run_debug
         p.series_cnt += 1
-        ti = self.integration_time * 0.99 if not self._debug else 0.1
+        ti = self.integration_time * 0.99 if not _debug else 0.1
         settle_time = ti * 1.1
 
         for _ in xrange(0, ncycles, 1):
@@ -682,7 +715,7 @@ class AutomatedRun(Loggable):
                     time.sleep(ti)
                     x = time.time() - starttime
 
-                    if self._debug:
+                    if _debug:
                         v = random.random()
                         x *= 3
                     else:
@@ -725,7 +758,7 @@ class AutomatedRun(Loggable):
             self.overlap_evt.set()
 
     def _measure_iteration(self, grpname, data_write_hook,
-                           ncounts, starttime, series):
+                           ncounts, starttime, series, fits):
         self.info('measuring {}'.format(grpname))
 
         if not self.spectrometer_manager:
@@ -745,10 +778,11 @@ class AutomatedRun(Loggable):
             if i % 50 == 0:
                 self.info('collecting point {}'.format(i + 1))
 
-            m = self.integration_time * 0.99 if not self._debug else 0.1
+            _debug = globalv.automated_run_debug
+            m = self.integration_time * 0.99 if not _debug else 0.1
             time.sleep(m)
 
-            if not self._debug:
+            if not _debug:
                 data = spec.get_intensities(tagged=True)
                 if data is not None:
                     keys, signals = data
@@ -759,7 +793,7 @@ class AutomatedRun(Loggable):
                 if series == 0:
                     signals = [10, 1000, 8, 8, 8, 3]
                 elif series == 1:
-                    r = random.randint(0, 75)
+                    r = random.randint(0, 10)
                     signals = [0.1, (0.015 * (i - 2800 + r)) ** 2,
                                0.1, 1, 0.1, (0.001 * (i - 2000 + r)) ** 2
                                ]
@@ -771,7 +805,10 @@ class AutomatedRun(Loggable):
 
             self.signals = dict(zip(keys, signals))
 
-            kw = dict(series=series, do_after=1, update_y_limits=True, ypadding=1)
+            kw = dict(series=series, do_after=1,
+                      update_y_limits=True,
+                      ypadding='0.5'
+                      )
             if len(graph.series[0]) < series + 1:
                 kw['marker'] = 'circle'
                 kw['type'] = 'scatter'
@@ -782,15 +819,22 @@ class AutomatedRun(Loggable):
                                                                  )
             else:
                 func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
+#            func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
 
             dets = self._active_detectors
-            for pi, dn in enumerate(dets):
+
+            self.plot_panel.signals = self.signals
+#            print fits
+            for pi, (fi, dn) in enumerate(zip(fits, dets)):
                 signal = signals[keys.index(dn.name)]
                 kw['plotid'] = pi
+                kw['fit'] = fi
+#                print kw
                 func(x, signal, kw)
 
-            if (i and i % 100 == 0) or x > graph.get_x_limits()[1]:
-                graph.set_x_limits(0, x + 10)
+
+#            if (i and i % 100 == 0) or x > graph.get_x_limits()[1]:
+#                graph.set_x_limits(0, x + 10)
 
         return True
 
@@ -922,6 +966,7 @@ class AutomatedRun(Loggable):
                                     rundate=self._rundate,
                                     endtime=d.time(),
                                 )
+
             experiment.analyses.append(a)
 
             db.add_extraction(

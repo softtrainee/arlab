@@ -424,7 +424,8 @@ class AnalysisResult(DBResult):
         return graph
 
 class IsotopeResultsAdapter(BaseResultsAdapter):
-    columns = [('ID', 'rid'),
+    columns = [
+#               ('ID', 'rid'),
                ('Labnumber', 'labnumber'),
                ('Date', 'rundate'),
                ('Time', 'runtime')

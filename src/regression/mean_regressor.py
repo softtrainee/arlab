@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Array
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import average
+from numpy import average, ones, asarray
 #============= local library imports  ==========================
 from base_regressor import BaseRegressor
 
@@ -56,6 +56,9 @@ sem={}
     @property
     def sem(self):
         return self.std * 1 / len(self.ys) ** 0.5
+
+    def predict(self, xs, *args):
+        return ones(asarray(xs).shape) * self.mean
 
 class WeightedMeanRegressor(MeanRegressor):
     errors = Array

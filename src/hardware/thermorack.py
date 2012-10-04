@@ -111,7 +111,7 @@ class ThermoRack(CoreDevice):
         '''
         '''
         cmd = self._get_read_command_str(SETPOINT_BITS)
-        resp = self.ask(cmd)
+        resp = self.ask(cmd, nbytes=2)
         sp = None
         if not self.simulation and resp is not None:
             sp = self.parse_response(resp, scale=0.1)
@@ -121,18 +121,19 @@ class ThermoRack(CoreDevice):
         '''
         '''
         cmd = self._get_read_command_str(FAULT_BITS)
-        resp = self.ask(cmd)
+        resp = self.ask(cmd, nbytes=1)
 
         if self.simulation:
             resp = '0'
 
         #parse the fault byte
         fault_byte = make_bitarray(int(resp, 16))
-        faults = []
-        for i, fault in enumerate(FAULTS_TABLE):
-            if fault and fault_byte[7 - i] == '1':
-                faults.append(fault)
-
+#        faults = []
+#        for i, fault in enumerate(FAULTS_TABLE):
+#            if fault and fault_byte[7 - i] == '1':
+#                faults.append(fault)
+        faults = [fault for i, fault in enumerate(FAULTS_TABLE)
+                    if fault and fault_byte[7 - i] == '1']
         return faults
 
     def get_coolant_out_temperature(self, **kw):
@@ -143,7 +144,7 @@ class ThermoRack(CoreDevice):
 
         cmd = self._get_read_command_str(COOLANT_BITS)
 
-        resp = self.ask(cmd, **kw)
+        resp = self.ask(cmd, nbytes=2, **kw)
         if not self.simulation and resp is not None:
             temp = self.parse_response(resp, scale=0.1)
         else:

@@ -49,6 +49,7 @@ class Globals(object):
 #    experiment_debug = False
     experiment_debug = False
     experiment_savedb = True
+    automated_run_debug = False
 
     def build(self, ip):
 
