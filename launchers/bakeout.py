@@ -19,11 +19,13 @@
 
 if __name__ == '__main__':
     from helpers import build_version
-    build_version('')
-    from globals import globalv
-    globalv.show_infos = False
-    globalv.show_warnings = False
+    build_version('_bakeout')
 
+#    from globals import globalv
+#    globalv.show_infos = False
+#    globalv.show_warnings = False
+
+#    from src.helpers.logger_setup import logging_setup
     from src.helpers.logger_setup import logging_setup
     from src.bakeout.bakeout_manager import BakeoutManager
 

@@ -53,7 +53,6 @@ class wxLED(wx.Control):
         self.Bind(wx.EVT_LEFT_DOWN, self.OnLeft, self)
 
         self._obj = obj
-        self.set_state(state)
         s = self._obj.shape
         if s == 'circle':
             self.ascii_led = '''
@@ -95,6 +94,8 @@ class wxLED(wx.Control):
         XXXXXXXXXXXXXXXXX
         XXXXXXXXXXXXXXXXX
         '''.strip()
+        
+        self.set_state(state)
 
 
     def OnMotion(self, event):
@@ -168,7 +169,6 @@ class wxLED(wx.Control):
                #'= c %s' % shadow_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii'),
                #'* c %s' % highlight_color.GetAsString(wx.C2S_HTML_SYNTAX).encode('ascii')
                ]
-
 
         xpm += [s.strip() for s in self.ascii_led.splitlines()]
         self.bmp = wx.BitmapFromXPMData(xpm)
