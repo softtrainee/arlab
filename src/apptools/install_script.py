@@ -44,7 +44,11 @@ def install_pychron_suite():
                         type=str,
                         default=[''],
                         help='set the version number e.g 1.0')
-
+    parser.add_argument('-A', '--applications',
+                        nargs=1,
+                        type=str,
+                        default=['pychron', 'remote_hardware_server', 'bakeout'],
+                        help='set the version number e.g 1.0')
     parser.add_argument(
         '-r',
         '--root',
@@ -113,52 +117,62 @@ def install_pychron_suite():
             print 'See http://mercurial.selenic.com/'
             return
 
-    #build pychron
-    i = Installer('pychron', 'pychron')
-    i.version = version
+
+    apps = args.applications
+    for ai in apps:
+        if ai == 'pychron':
+            temp = PychronTemplate()
+        elif ai == 'remote_hardware_server':
+            RemoteHardwareServerTemplate()
+        else:
+            temp = BakeoutTemplate()
+
+        temp.install(version, src_dir)
+#    #build pychron
+#    i = Installer('pychron', 'pychron', icon_name='pyvalve')
+#    i.version = version
 #    i.install(src_dir)
-
-    #build remote hardware server
-    i.prefix = 'remote_hardware_server'
-    i.name = 'remote_hardware_server'
-    default_pkgs = ['rpc', 'helpers', 'led']
-    i.include_pkgs = ['remote_hardware', 'messaging'] + default_pkgs
-
-    default_mods = ['paths', 'loggable', 'config_loadable',
-                    'viewable', 'displays/rich_text_display',
-                    'managers/manager',
-                    ]
-    i.include_mods = [
-                      'managers/remote_hardware_server_manager',
-                      ] + default_mods
+#
+#    #build remote hardware server
+#    i.prefix = 'remote_hardware_server'
+#    i.name = 'remote_hardware_server'
+#    default_pkgs = ['rpc', 'helpers', 'led']
+#    i.include_pkgs = ['remote_hardware', 'messaging'] + default_pkgs
+#
+#    default_mods = ['paths', 'loggable', 'config_loadable',
+#                    'viewable', 'managers/displays/rich_text_display',
+#                    'managers/manager',
+#                    ]
+#    i.include_mods = [
+#                      'managers/remote_hardware_server_manager',
+#                      ] + default_mods
 #    i.install(src_dir)
-
-#    build bakeout
-    i.prefix = 'bakeout'
-    i.name = 'bakeout'
-    i.include_mods = ['hardware/bakeout_controller',
-                      'hardware/watlow_ezzone',
-                      'database/orms/bakeout_orm',
-                      'database/adapters/bakeout_adapter',
-                      'database/selectors/bakeout_selector',
-                      'database/data_warehouse',
-                      'managers/script_manager',
-                      'has_communicator'
-                      ] + default_mods
-    i.include_pkgs = ['bakeout',
-                      'hardware/core',
-                      'hardware/gauges',
-                      'scripts',
-                      'managers/data_managers',
-                      'graph',
-                      'data_processing/time_series',
-                      'database/core'
-                      ] + default_pkgs
-
-    i.install(src_dir)
+#
+##    build bakeout
+#    i.prefix = 'bakeout'
+#    i.name = 'bakeout'
+#    i.include_mods = ['hardware/bakeout_controller',
+#                      'hardware/watlow_ezzone',
+#                      'database/orms/bakeout_orm',
+#                      'database/adapters/bakeout_adapter',
+#                      'database/selectors/bakeout_selector',
+#                      'database/data_warehouse',
+#                      'managers/script_manager',
+#                      'has_communicator'
+#                      ] + default_mods
+#    i.include_pkgs = ['bakeout',
+#                      'hardware/core',
+#                      'hardware/gauges',
+#                      'scripts',
+#                      'managers/data_managers',
+#                      'graph',
+#                      'data_processing/time_series',
+#                      'database/core'
+#                      ] + default_pkgs
+#
+#    i.install(src_dir)
 
     # move data into place
-
     if not args.data:
         return
 
@@ -180,6 +194,60 @@ def install_pychron_suite():
             shutil.rmtree(dst, ignore_errors=True)
             shutil.copytree(data, dst)
 
+class InstallTemplate():
+    name = None
+    prefix = None
+    icon_name = None
+    default_mods = ['paths', 'loggable', 'config_loadable',
+                    'viewable', 'managers/displays/rich_text_display',
+                    'managers/manager',
+                    ]
+    default_pkgs = ['rpc', 'helpers', 'led']
+    def install(self, version, src_dir):
+        ins = Installer(self.name, self.prefix, icon_name=self.icon_name)
+        ins.version = version
+        self._install(ins, src_dir)
+
+class PychronTemplate(InstallTemplate):
+    name = 'pychron'
+    prefix = 'pychron'
+    icon_name = 'pyvalve_icon'
+    def _install(self, ins, src_dir):
+        ins.install(src_dir)
+
+class RemoteHardwareServerTemplate(InstallTemplate):
+    name = 'remote_hardware_server'
+    prefix = 'remote_hardware_server'
+    def _install(self, ins, src_dir):
+        ins.include_pkgs = ['remote_hardware', 'messaging'] + self.default_pkgs
+        ins.include_mods = [
+                          'managers/remote_hardware_server_manager',
+                          ] + self.default_mods
+        ins.install(src_dir)
+
+class BakeoutTemplate(InstallTemplate):
+    name = 'bakeout'
+    prefix = 'bakeout'
+    def _install(self, ins, src_dir):
+        ins.include_mods = ['hardware/bakeout_controller',
+                      'hardware/watlow_ezzone',
+                      'database/orms/bakeout_orm',
+                      'database/adapters/bakeout_adapter',
+                      'database/selectors/bakeout_selector',
+                      'database/data_warehouse',
+                      'managers/script_manager',
+                      'has_communicator'
+                      ] + self.default_mods
+        ins.include_pkgs = ['bakeout',
+                      'hardware/core',
+                      'hardware/gauges',
+                      'scripts',
+                      'managers/data_managers',
+                      'graph',
+                      'data_processing/time_series',
+                      'database/core'
+                      ] + self.default_pkgs
+        ins.install(src_dir)
 
 if __name__ == '__main__':
 
