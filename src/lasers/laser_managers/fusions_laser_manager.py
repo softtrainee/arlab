@@ -49,16 +49,16 @@ class FusionsLaserManager(LaserManager):
     laser_controller = Instance(FusionsLogicBoard)
     fiber_light = Instance(FiberLight)
 
-    beam = DelegatesTo('laser_controller')
-    beammin = DelegatesTo('laser_controller')
-    beammax = DelegatesTo('laser_controller')
-    update_beam = DelegatesTo('laser_controller')
-    beam_enabled = Bool(True)
-
-    zoom = DelegatesTo('laser_controller')
-    zoommin = DelegatesTo('laser_controller')
-    zoommax = DelegatesTo('laser_controller')
-    update_zoom = DelegatesTo('laser_controller')
+#    beam = DelegatesTo('laser_controller')
+#    beammin = DelegatesTo('laser_controller')
+#    beammax = DelegatesTo('laser_controller')
+#    update_beam = DelegatesTo('laser_controller')
+#    beam_enabled = Bool(True)
+#
+#    zoom = DelegatesTo('laser_controller')
+#    zoommin = DelegatesTo('laser_controller')
+#    zoommax = DelegatesTo('laser_controller')
+#    update_zoom = DelegatesTo('laser_controller')
 
     pointer = Event
     pointer_state = Bool(False)
@@ -94,7 +94,10 @@ class FusionsLaserManager(LaserManager):
 
     chiller = Any
 
-    name = ''
+    dbname = ''
+
+    def open_motor_configure(self):
+        self.laser_controller.open_motor_configure()
 
     def _record_fired(self):
         if self._recording_power_state:
@@ -559,16 +562,16 @@ class FusionsLaserManager(LaserManager):
         return '(W)' if self.use_calibrated_power else '(%)'
 #========================= defaults =======================
     def get_power_database(self):
-#        db = PowerAdapter(name='co2laserdb',
+#        db = PowerAdapter(dbname='co2laserdb',
 #                                   password='Argon')
-        db = PowerAdapter(name=self.name,
+        db = PowerAdapter(dbname=self.dbname,
                           kind='sqlite')
 
         return db
 
     def get_power_calibration_database(self):
 
-        db = PowerCalibrationAdapter(name=self.name,
+        db = PowerCalibrationAdapter(dbname=self.dbname,
                                              kind='sqlite')
 #        db.connect()
         return db

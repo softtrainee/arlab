@@ -140,22 +140,28 @@ class FOpenVideoAction(LaserAction):
             db = manager.stage_manager.get_video_database()
             open_selector(db, self.window.application)
 
+
+class FMotorConfigureAction(LaserAction):
+    def perform(self, event):
+        manager = self.get_manager(event)
+        if manager is not None:
+            manager.open_motor_configure()
+
 #===============================================================================
 # initializations
 #===============================================================================
-class FInitializeBeamAction(LaserAction):
-    def perform(self, event):
-        manager = self.get_manager(event)
-        if manager is not None:
-            manager.do_motor_initialization('beam')
-
-
-class FInitializeZoomAction(LaserAction):
-    def perform(self, event):
-        manager = self.get_manager(event)
-        if manager is not None:
-            manager.do_motor_initialization('zoom')
-
+#class FInitializeBeamAction(LaserAction):
+#    def perform(self, event):
+#        manager = self.get_manager(event)
+#        if manager is not None:
+#            manager.do_motor_initialization('beam')
+#
+#
+#class FInitializeZoomAction(LaserAction):
+#    def perform(self, event):
+#        manager = self.get_manager(event)
+#        if manager is not None:
+#            manager.do_motor_initialization('zoom')
 
 #===============================================================================
 # patterning

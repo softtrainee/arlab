@@ -60,7 +60,7 @@ class KerrDevice(ConfigLoadable):
         for cmd in commands:
             self._execute_hex_command(cmd, **kw)
 
-    def _execute_hex_command(self, cmd, tell=False, **kw):
+    def _execute_hex_command(self, cmd, tell=False, nbytes=2, **kw):
         '''
         '''
         addr, cmd, delay, desc = cmd
@@ -71,7 +71,7 @@ class KerrDevice(ConfigLoadable):
             if desc:
                 self.info(desc)
             func = self.ask if not tell else self.tell
-            r = func(cmd, is_hex=True, delay=delay, **kw)
+            r = func(cmd, is_hex=True, delay=delay, nbytes=nbytes, **kw)
 #            r = self.ask(cmd, is_hex=True, delay=delay, **kw)
 
         return r
@@ -105,7 +105,6 @@ class KerrDevice(ConfigLoadable):
 
         r = '%02X' % sum
         return r[-2:]
-
 
     def _check_bits(self, bits):
         '''
