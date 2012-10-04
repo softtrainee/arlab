@@ -125,7 +125,7 @@ def install_pychron_suite():
     i.include_pkgs = ['remote_hardware', 'messaging'] + default_pkgs
 
     default_mods = ['paths', 'loggable', 'config_loadable',
-                    'viewable', 'managers/displays/rich_text_display',
+                    'viewable', 'displays/rich_text_display',
                     'managers/manager',
                     ]
     i.include_mods = [
