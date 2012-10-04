@@ -293,8 +293,8 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @add
     def add_analysis(self, labnumber, **kw):
-        if isinstance(labnumber, (str, int)):
-            labnumber = self.get_labnumber(labnumber)
+#        if isinstance(labnumber, (str, int, unicode)):
+        labnumber = self.get_labnumber(labnumber)
 
         anal = AnalysisTable(**kw)
         if labnumber is not None:

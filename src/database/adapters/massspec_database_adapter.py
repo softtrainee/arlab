@@ -24,7 +24,7 @@ from src.database.orms.massspec_orm import IsotopeResultsTable, \
      IsotopeTable, AnalysesTable, ArArAnalysisTable, \
     IrradiationPositionTable, MaterialTable, SampleTable, ProjectTable, \
     PeakTimeTable, DetectorTypeTable, DataReductionSessionTable, \
-    PreferencesTable
+    PreferencesTable, DatabaseVersionTable
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.core.functions import add, get_one, delete_one, get_first
 from sqlalchemy.sql.expression import func
@@ -33,15 +33,19 @@ from src.database.selectors.massspec_selector import MassSpecSelector
 
 class MassSpecDatabaseAdapter(DatabaseAdapter):
     selector_klass = MassSpecSelector
+    test_func = 'get_database_version'
 
     def get_analyses(self, **kw):
         return self._get_items(AnalysesTable, globals(), **kw)
     def get_samples(self, **kw):
         return self._get_items(SampleTable, globals(), **kw)
 
+    def get_database_version(self):
+        return self._get_items(DatabaseVersionTable, globals())
 #===============================================================================
 # getters
 #===============================================================================
+
     @get_one
     def get_analysis(self, rid):
         return AnalysesTable, 'RID'

@@ -56,7 +56,6 @@ class LaserManager(Manager):
     monitor = Instance(LaserMonitor)
     monitor_name = 'laser_monitor'
     monitor_klass = LaserMonitor
-    failure_reason = None
 
     #simulation_led = Instance(LED, ())
 
@@ -102,7 +101,6 @@ class LaserManager(Manager):
             self.monitor.monitor()
             self.enabled_led.state = 'green'
         else:
-#            self.failure_reason = 'Could not enable laser'
             self.warning('Could not enable laser')
 
             if self.set_flag('enable_error_flag'):
@@ -162,12 +160,11 @@ class LaserManager(Manager):
         '''
         self.monitor.reset_start_time()
 
-    def emergency_shutoff(self, reason=None):
+    def emergency_shutoff(self, reason):
         ''' 
         '''
         if reason is not None:
             self.warning('EMERGENCY SHUTDOWN reason: {}'.format(reason))
-            self.failure_reason = reason
 
             from src.remote_hardware.errors.laser_errors import LaserMonitorErrorCode
             self.error_code = LaserMonitorErrorCode(reason)

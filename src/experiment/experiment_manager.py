@@ -113,9 +113,13 @@ class ExperimentManager(Manager):
     def test_connections(self):
         if not self.db.connect():
             self.warning_dialog('Failed connecting to database. {}'.format(self.db.url))
+            return
 
         if not self.repository.connect():
             self.warning_dialog('Failed connecting to repository {}'.format(self.repository.url))
+            return
+
+        return True
 
     def populate_default_tables(self):
         db = self.db

@@ -35,13 +35,14 @@ class ExecuteExperimentSetAction(Action):
     def perform(self, event):
         man = get_manager(event)
 
-        p = '/Users/ross/Pychrondata_experiment/experiments/foo.txt'
-#        p=None
+        p = '/Users/ross/Pychrondata_experiment/experiments/bar.txt'
+        p = None
 #        man.experiment_set_path = p
         from src.envisage.core.action_helper import MANAGERS
         if man not in MANAGERS:
             if man.load_experiment_set(path=p):
                 open_manager(event.window.application, man, view='execute_view')
+
 
 
 class NewExperimentSetAction(Action):

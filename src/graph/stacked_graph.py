@@ -97,8 +97,10 @@ class StackedGraph(Graph):
                 link = kw['link']
             if link:
                 pm = self.plots[0].index_mapper
+#                pii = self.plots[0].index_axis
                 for pi in self.plots:
                     pi.index_mapper = pm
+#                    pi.index_axis = pii
 #                print pi, link, self.plots[0]
 ##                pi.padding_top = 0
 ##                pi.padding_bottom = 0

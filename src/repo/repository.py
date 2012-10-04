@@ -23,6 +23,7 @@ import ftplib as ftp
 
 
 from src.loggable import Loggable
+import shutil
 class Repository(Loggable):
     root = Str
 
@@ -34,6 +35,18 @@ class Repository(Loggable):
     def url(self):
         return self.root
 
+    def connect(self):
+        return True
+
+    def add_file(self, p):
+        pass
+#        src = p
+#        dst = self.get_file_path(p)
+#        shutil.copyfile(src, dst)
+
+    def get_file_path(self, p):
+        dst = os.path.join(self.root, os.path.basename(p))
+        return dst
 #    def __init__(self, root, *args, **kw):
 #        self.root = root
 #        super(Repository, self).__init__(*args, **kw)

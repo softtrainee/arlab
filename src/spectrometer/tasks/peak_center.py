@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Float, Str
 #============= standard library imports ========================
-from numpy import linspace, array, where, max, polyfit
+from numpy import linspace, array, where, max, polyfit, argmax
 #============= local library imports  ==========================
 from magnet_scan import MagnetScan
 
@@ -89,29 +89,30 @@ class PeakCenter(MagnetScan):
 
     def _calculate_peak_center(self, x, y):
         peak_threshold = self.min_peak_height
+        peak_percent = 0.8
 
-        peak_percent = 0.5
         x = array(x)
         y = array(y)
 
         ma = max(y)
+        max_i = argmax(y)
 
         if ma < peak_threshold:
             self.warning('No peak greater than {}. max = {}'.format(peak_threshold, ma))
             return
 
-        cindex = where(y == ma)[0][0]
-        mx = x[cindex]
+        mx = x[max_i]
         my = ma
+
         #look backward for point that is peak_percent% of max
-        for i in range(cindex, cindex - 50, -1):
+        for i in range(max_i, max_i - 50, -1):
             #this prevent looping around to the end of the list
             if i < 1:
                 self.warning('PeakCenterError: could not find a low pos')
                 return
 
             try:
-                if y[i] < (ma * peak_percent):
+                if y[i] < (ma * (1 - peak_percent)):
                     break
             except IndexError:
                 '''
@@ -119,14 +120,15 @@ class PeakCenter(MagnetScan):
                 '''
                 self.warning('PeakCenterError: could not find a low pos')
                 return
-        xstep = (x[i] - x[i - 1]) / 2
+
+        xstep = (x[i] - x[i - 1]) / 2.
         lx = x[i] - xstep
         ly = y[i] - (y[i] - y[i - 1]) / 2.
 
         #look forward for point that is 80% of max
-        for i in range(cindex, cindex + 50, 1):
+        for i in range(max_i, max_i + 50, 1):
             try:
-                if y[i] < (ma * peak_percent):
+                if y[i] < (ma * (1 - peak_percent)):
                     break
             except IndexError:
                 '''

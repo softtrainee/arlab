@@ -136,12 +136,12 @@ class FusionsDiodeManager(FusionsLaserManager):
 #        '''
 #        return self.control_module.read_measured_power()
 
-    def emergency_shutoff(self, **kw):
+    def emergency_shutoff(self, *args, **kw):
         '''
  
         '''
 
-        super(FusionsDiodeManager, self).emergency_shutoff(**kw)
+        super(FusionsDiodeManager, self).emergency_shutoff(*args, **kw)
         self.control_module_manager.disable()
 
         self.temperature_controller.set_control_mode('open')

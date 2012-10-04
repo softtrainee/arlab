@@ -90,7 +90,8 @@ class OLSRegressor(BaseRegressor):
 #        print 'value_at predict', self._ols.predict(pos)
 #        return polyval(coeffs, pos)
         X = self._get_X(xs=pos)
-        return self._result.predict(X)
+        if self._result:
+            return self._result.predict(X)
 
     def calculate_y(self, x):
         coeffs = self.coefficients
