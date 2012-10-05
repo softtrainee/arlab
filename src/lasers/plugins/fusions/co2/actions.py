@@ -17,12 +17,11 @@
 #============= enthought library imports =======================
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
-from src.lasers.plugins.fusions.fusions_actions import FInitializeZoomAction, \
-    FInitializeBeamAction, FOpenVideoAction, FOpenPowerRecordGraphAction, \
+from src.lasers.plugins.fusions.fusions_actions import FOpenVideoAction, FOpenPowerRecordGraphAction, \
     FOpenPowerMapAction, FOpenPowerCalibrationAction, FLoadStageVisualizerAction, \
     FOpenStageVisualizerAction, FPowerCalibrationAction, FPowerMapAction, \
     FOpenMotionControllerManagerAction, FOpenLaserManagerAction, \
-    FOpenPatternManagerAction
+    FOpenPatternManagerAction, FMotorConfigureAction
 from src.lasers.laser_managers.laser_manager import ILaserManager
 #from src.database.adapters.power_adapter import PowerAdapter
 #from src.helpers.paths import co2laser_db
@@ -48,7 +47,8 @@ class ConfigureBrightnessMeterAction(Action):
         if manager is not None:
             app = self.window.application
             open_manager(app, manager.brightness_meter)
-
+class MotorConfigureAction(FMotorConfigureAction):
+    get_manager = get_manager
 #===============================================================================
 # ##fusions action
 #===============================================================================
@@ -89,11 +89,11 @@ class OpenVideoAction(FOpenVideoAction):
 #===============================================================================
 # initializations
 #===============================================================================
-class InitializeBeamAction(FInitializeBeamAction):
-    get_manager = get_manager
-
-class InitializeZoomAction(FInitializeZoomAction):
-    get_manager = get_manager
+#class InitializeBeamAction(FInitializeBeamAction):
+#    get_manager = get_manager
+#
+#class InitializeZoomAction(FInitializeZoomAction):
+#    get_manager = get_manager
 
 #===============================================================================
 # patterning

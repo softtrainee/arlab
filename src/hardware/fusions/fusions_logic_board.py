@@ -92,6 +92,8 @@ class FusionsLogicBoard(CoreDevice):
 
 #        for m, v in self.motors.iteritems():
         for m in self.motors:
+            if m.name=='beam':
+                continue
             m.initialize(*args, **kw)
 
 #        if globalv.initialize_zoom:

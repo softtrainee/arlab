@@ -19,8 +19,10 @@ from traits.api import HasTraits, Int, Property, on_trait_change
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from numpy import polyval, polyfit, vander, asarray, column_stack, ones
-
-from statsmodels.api import OLS
+try:
+    from statsmodels.api import OLS
+except ImportError:
+    from scikits.statsmodels.api import OLS
 
 #============= local library imports  ==========================
 from base_regressor import BaseRegressor
