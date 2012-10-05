@@ -53,7 +53,7 @@ class FusionsLaserManager(LaserManager):
 #    beammin = DelegatesTo('laser_controller')
 #    beammax = DelegatesTo('laser_controller')
 #    update_beam = DelegatesTo('laser_controller')
-#    beam_enabled = Bool(True)
+    beam_enabled = Bool(True)
 #
 #    zoom = DelegatesTo('laser_controller')
 #    zoommin = DelegatesTo('laser_controller')
@@ -420,9 +420,10 @@ class FusionsLaserManager(LaserManager):
     def get_control_sliders(self):
         '''
         '''
-        s = [('zoom', 'zoom', {}),
-            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
-            ]
+#        s = [('zoom', 'zoom', {}),
+#            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
+#            ]
+        s=[]
         return s
 
     def get_lens_configuration_group(self):

@@ -157,7 +157,7 @@ class SerialCommunicator(Communicator):
             #self._lock.release()
             return r
 
-    def ask(self, cmd, is_hex=False, verbose=True, delay=None, replace=None, remove_eol=True, info=None):
+    def ask(self, cmd, is_hex=False, verbose=True, delay=None, replace=None, remove_eol=True, info=None, nbytes=7):
         '''
             
         '''
@@ -171,7 +171,7 @@ class SerialCommunicator(Communicator):
         with self._lock:
 #            self.info('acquiring lock {}'.format(self._lock))
             self._write(cmd, is_hex=is_hex)
-            re = self._read(is_hex=is_hex, delay=delay)
+            re = self._read(is_hex=is_hex, delay=delay, nbytes=nbytes)
 
             re = self.process_response(re, replace, remove_eol)
 

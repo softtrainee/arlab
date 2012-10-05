@@ -306,7 +306,7 @@ class KerrMotor(KerrDevice):
         cmd = ''.join((cmd, control))
         cmd = (addr, cmd, 100, '')
 
-        pos = self._execute_hex_command(cmd, nbyte=6, **kw)
+        pos = self._execute_hex_command(cmd, nbytes=6, **kw)
 
         #trim off status and checksum bits
         if pos is not None:

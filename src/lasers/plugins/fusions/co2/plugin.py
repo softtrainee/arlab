@@ -27,6 +27,6 @@ class FusionsCO2Plugin(FusionsLaserPlugin):
     '''
     id = 'pychron.fusions.co2'
 
-    name = 'fusions_co2_manager'
+    name = 'fusions_co2'
     klass = ('src.lasers.laser_managers.fusions_co2_manager', 'FusionsCO2Manager')
 #============= EOF ====================================
