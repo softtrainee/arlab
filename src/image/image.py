@@ -101,6 +101,7 @@ class Image(HasTraits):
 #        print img.reshape(960, 960)
         self.source_frame = img
         self.frames = [img.clone()]
+        
 #        self.frames = [clone(img)]
 
     def update_bounds(self, obj, name, old, new):
@@ -130,6 +131,11 @@ class Image(HasTraits):
 
     def get_frame(self, vflip=None, hflip=None , gray=False, swap_rb=None,
                   clone=False, croprect=None, size=None, **kw):
+        try:
+            del self._frame
+        except AttributeError:
+            pass
+        
         frame = self._get_frame(**kw)
 
         if frame is not None:
@@ -144,7 +150,9 @@ class Image(HasTraits):
             hflip = _get_param(hflip, 'hflip')
 
             if clone:
-                frame = frame.clone()
+                nframe = frame.clone()
+                del frame
+                frame=nframe
 
             if swap_rb:
                 frame = swapRB(frame)
@@ -200,7 +208,7 @@ class Image(HasTraits):
             return frame.to_wx_bitmap()
         except AttributeError:
             if frame is not None:
-                self._frame = frame
+#                self._frame = frame
                 return wx.BitmapFromBuffer(frame.width,
                                        frame.height,
                                        frame.data_as_string()
