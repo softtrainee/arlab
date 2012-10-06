@@ -176,6 +176,9 @@ class Paths():
         self.stage_visualizer_dir = join(data_dir, 'stage_visualizer')
 
         self.arar_dir = join(data_dir, 'arar')
+        
+        self.isotope_dir=join(self.data_dir,'isotopes')
+
         #initialization_dir = join(setup_dir, 'initializations')
         #device_creator_dir = join(device_dir, 'device_creator')
 

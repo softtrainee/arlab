@@ -238,9 +238,10 @@ class ExperimentManager(Manager):
 
         #explicitly set db connection info here for now
         self.massspec_importer.db.kind = 'mysql'
-        self.massspec_importer.db.host = 'localhost'
-        self.massspec_importer.db.username = 'root'
-        self.massspec_importer.db.password = 'Argon'
+        self.massspec_importer.db.host = '129.138.12.131'
+        self.massspec_importer.db.username = 'massspec'
+        self.massspec_importer.db.password = 'DBArgon'
+        self.massspec_importer.db.name='massspecdata_test'
 
         if not self.massspec_importer.db.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
@@ -563,7 +564,8 @@ class ExperimentManager(Manager):
         tb = HGroup(
                     Item('delay_between_runs_readback',
                          label='Delay Countdown',
-                         style='readonly', format_str='%i'),
+                         style='readonly', format_str='%i', 
+                         width=-50),
                     spring,
                     Item('end_at_run_completion'),
                     self._button_factory('execute_button',
@@ -683,7 +685,8 @@ class ExperimentManager(Manager):
             klass = FTPRepository
 
         repo = klass()
-        repo.root = os.path.dirname(paths.isotope_db)
+        #use local data dir
+        repo.root = paths.isotope_dir
         return repo
 
 def main():

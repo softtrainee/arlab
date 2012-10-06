@@ -211,9 +211,12 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 #            pref = q.one()
 
             pref = self.get_preferences_set(None)
+            if pref is not None:
+                pref.changeable_items.append(item)
+            else:
+                item.PreferencesSetID=0
 #            item.AnalysisID = analysis.AnalysisID
             analysis.changeable = item
-            pref.changeable_items.append(item)
             drs.changeable_items.append(item)
             return item, True
 

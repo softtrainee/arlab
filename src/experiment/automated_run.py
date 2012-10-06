@@ -800,6 +800,9 @@ class AutomatedRun(Loggable):
                 else:
                     signals = [1, 2, 3, 4, 5, 6]
 
+            if not keys or not signals:
+                continue
+            
             x = time.time() - starttime# if not self._debug else i + starttime
             data_write_hook(x, keys, signals)
 
@@ -878,6 +881,11 @@ class AutomatedRun(Loggable):
             identifier = 1
         elif identifier == 'A':
             identifier = 2
+        elif identifier=='C':
+            identifier=3
+        elif identifier=='Bg':
+            identifier=4
+            
 
         ln = db.get_labnumber(identifier)
         if ln is not None:

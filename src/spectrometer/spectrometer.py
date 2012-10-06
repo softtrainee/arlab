@@ -258,7 +258,7 @@ class Spectrometer(SpectrometerDevice):
             return
 
         datastr = self.microcontroller.ask('GetData', verbose=False)
-#        keys = []
+        keys = []
         signals = []
         if datastr:
             if not 'ERROR' in datastr:

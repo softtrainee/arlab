@@ -35,8 +35,6 @@ from src.paths import paths
 from src.graph.tools.data_tool import DataTool, DataToolOverlay
 
 
-
-
 class ScanManager(Manager):
     spectrometer = Any
 
