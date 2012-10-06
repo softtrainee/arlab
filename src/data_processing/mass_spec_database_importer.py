@@ -57,7 +57,8 @@ class MassSpecDatabaseImporter(Loggable):
         return v
 
     def _db_default(self):
-        db = MassSpecDatabaseAdapter(name='massspecdata_test')
+        db = MassSpecDatabaseAdapter(
+                                     )
 #        if db.connect():
 
         return db

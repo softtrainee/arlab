@@ -156,15 +156,16 @@ class DatabaseAdapter(Loggable):
     def _test_db_connection(self):
         sess = None
         try:
-            connected = True
+            connected = False
             if self.test_func is not None:
                 sess = self.session_factory()
                 self.info('testing database connection')
                 getattr(self, self.test_func)()
+                connected = True
 #                _users, sess = getattr(self, self.test_func)(sess=sess)
 
         except Exception, e:
-            print e
+            print e,'kkkkk'
 #            print e
 #            if self.kind == 'mysql':
 #                url = '{}@{}/{}' .format(self.user, self.host,
@@ -322,32 +323,31 @@ class DatabaseAdapter(Loggable):
                    order=None,
                    key=None
                    ):
-        try:
-            if isinstance(join_table, str):
-                join_table = gtables[join_table]
 
-            q = self._get_query(table, join_table=join_table,
-                                 filter_str=filter_str)
-            if order:
-                for o in order \
-                        if isinstance(order, list) else [order]:
-                    q = q.order_by(o)
+        if isinstance(join_table, str):
+            join_table = gtables[join_table]
 
-            if limit:
-                q = q.limit(limit)
+        q = self._get_query(table, join_table=join_table,
+                             filter_str=filter_str)
+        if order:
+            for o in order \
+                    if isinstance(order, list) else [order]:
+                q = q.order_by(o)
 
-            #reorder based on id
-            if order:
-                q = q.from_self()
-                q = q.order_by(table.id)
+        if limit:
+            q = q.limit(limit)
 
-            res = q.all()
-            if key:
-                return [getattr(ri, key) for ri in res]
-            return res
+        #reorder based on id
+        if order:
+            q = q.from_self()
+            q = q.order_by(table.id)
 
-        except Exception, e:
-            print e
+        res = q.all()
+        if key:
+            return [getattr(ri, key) for ri in res]
+        return res
+
+        
 
     def _selector_default(self):
         return self._selector_factory()

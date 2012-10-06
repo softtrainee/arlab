@@ -56,14 +56,20 @@ class PlotPanel(Viewable):
         if new:
             display = self.signal_display
             display.clear()
+            pad=lambda x, n=9:'{{:>{}s}}'.format(n).format(x)
+            ts=[]
             for iso, reg in zip(self.isotopes, new):
-                v = '{:0.5f}'.format(reg.coefficients[-1])
-                e = '{:0.5f}'.format(reg.coefficient_errors[-1])
-                v = v + u'\00b1 ' + e
-                display.add_text('{}={:>10s}'.format(iso, v))
+                vv=reg.coefficients[-1]
+                ee=reg.coefficient_errors[-1]
+                v = pad('{:0.4f}'.format(vv))
+                e = pad('{:0.4f}'.format(ee), n=6)
+                v = v + u' \u00b1 ' + e +'({:0.2f}%)'.format(ee/vv*100)
+                ts.append('{}={:>10s}'.format(iso, v))
+            display.add_text('\n'.join(ts))
 
             display = self.ratio_display
             display.clear()
+            ts=[]
             for ra in self.ratios:
                 u, l = ra.split(':')
 
@@ -77,12 +83,15 @@ class PlotPanel(Viewable):
                         return
 
                     rr = ufloat((ru.coefficients[-1], ru.coefficient_errors[-1])) / ufloat((rl.coefficients[-1], rl.coefficient_errors[-1]))
-                    res = '{}/{}= {:>12s} '.format(u, l, '{:0.5f}'.format(rr.nominal_value)) + \
-                          u'\u00b1' + '{:>10s}'.format('{:0.5f}'.format(rr.std_dev())) + \
-                            ' {}/{}'.format(ruf, rlf)
-                    display.add_text(res)
+                    res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
+                          u'\u00b1 ' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
+                            pad(' {}/{} '.format(ruf, rlf), n=4)+\
+                            '({:0.2f}%)'.format(rr.std_dev()/rr.nominal_value*100)
+                    ts.append(res)
                 except  IndexError:
                     pass
+            
+            display.add_text('\n'.join(ts))
 
     def _get_fit(self, reg):
         deg = reg.degree
@@ -127,7 +136,7 @@ class PlotPanel(Viewable):
                            ),
                        layout='tabbed'
                        ),
-                 width=500,
+                 width=600,
                  height=725,
                  x=self.window_x,
                  y=self.window_y,
