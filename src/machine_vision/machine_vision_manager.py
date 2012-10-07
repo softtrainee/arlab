@@ -73,6 +73,7 @@ class MachineVisionManager(Manager):
         pass
     def _detector_default(self):
         return self.load_detector()
+
     def _dump_detector(self, name, obj):
         p = path.join(paths.hidden_dir, name)
         with open(p, 'wb') as f:
