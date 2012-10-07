@@ -19,7 +19,7 @@ from traits.api import Float
 
 #============= standard library imports ========================
 from threading import Lock
-
+import time
 from src.loggable import Loggable
 
 #============= local library imports  ==========================
@@ -71,6 +71,7 @@ class RS485Scheduler(Loggable):
 #            r = None
 
         with self._lock:
+#            time.sleep(self.collision_delay/1000.)
             return func(*args, **kwargs)
 
 

@@ -157,7 +157,7 @@ class SerialCommunicator(Communicator):
             #self._lock.release()
             return r
 
-    def ask(self, cmd, is_hex=False, verbose=True, delay=None, replace=None, remove_eol=True, info=None, nbytes=7):
+    def ask(self, cmd, is_hex=False, verbose=True, delay=None, replace=None, remove_eol=True, info=None, nbytes=8):
         '''
             
         '''
@@ -350,7 +350,7 @@ class SerialCommunicator(Communicator):
 #            time.sleep(50e-9)
             write(cmd)
 
-    def _read(self, is_hex=False, nbytes=7, timeout=1, delay=None):
+    def _read(self, is_hex=False, nbytes=8, timeout=1, delay=None):
         func = (lambda:self._get_nbytes(nbytes)) if is_hex else self._get_isline
         if delay is not None:
             time.sleep(delay / 1000.)
@@ -369,42 +369,30 @@ class SerialCommunicator(Communicator):
             except (ValueError, TypeError):
                 import traceback
                 traceback.print_exc()
-
+                
+        self.handle.flushOutput()
+        self.handle.flushInput()
         return r
 
-    def _get_nbytes(self, nbytes=7):
+    def _get_nbytes(self, nbytes=8):
         '''
             1 byte == 2 chars
         '''
-#        try:
         handle=self.handle
         inw=0
         timeout=1
         tt=0
         r=''
         while len(r)<nbytes*2 and tt<timeout:
-            inw = handle.inWaiting()
-            r=''.join(['{:02X}'.format(ri) for ri in map(ord, handle.read(inw))])
-#            print inw
             d=1/1000.
             time.sleep(d)
+            inw = handle.inWaiting()
+            c=min(inw,nbytes*2-len(r))
+            r+=''.join(['{:02X}'.format(ri) for ri in map(ord, handle.read(c))])
             tt+=d
-        handle.flushInput()
-#                    handle.flush()
+
         return r, tt<timeout
         
-#            print 'inw',inw, nbytes
-#            if inw>=nbytes*2:
-##            if inw / 2 == nbytes:
-#                r = self.handle.read(nbytes*2)
-#                self.handle.flush()
-#                return r, True
-        
-#        except (OSError, IOError), e:
-#            import traceback
-#            print traceback.print_exc()
-#            self.warning(e)
-
     def _get_isline(self, terminator=None):
         try:
             inw = self.handle.inWaiting()
