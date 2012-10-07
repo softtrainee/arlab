@@ -151,6 +151,7 @@ class ArduinoGPActuator(GPActuator):
         ntries = 6
         i = 0
         while state is None and i < ntries:
+            time.sleep(0.15)
             state = self.repeat_command((cmd, pin, None), ntries=3,
                                         check_type=int,
                                         )
@@ -159,7 +160,6 @@ class ArduinoGPActuator(GPActuator):
                 break
 
             state = None
-            time.sleep(0.05)
 
 #        print request, pin, state,
 #        state = self.ask(self._build_command(cmd, pin))
