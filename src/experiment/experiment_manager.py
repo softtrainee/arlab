@@ -247,9 +247,11 @@ class ExperimentManager(Manager):
 
         #explicitly set db connection info here for now
         self.massspec_importer.db.kind = 'mysql'
-#        self.massspec_importer.db.host = '129.138.12.131'
-        self.massspec_importer.db.username = 'root'
-        self.massspec_importer.db.password = 'Argon'
+        self.massspec_importer.db.host = '129.138.12.131'
+        self.massspec_importer.db.username = 'massspec'
+        self.massspec_importer.db.password = 'DBArgon'
+#        self.massspec_importer.db.username = 'root'
+#        self.massspec_importer.db.password = 'Argon'
         self.massspec_importer.db.name = 'massspecdata_test'
 
         if not self.massspec_importer.db.connect():

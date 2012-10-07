@@ -86,9 +86,12 @@ class PlotPanel(Viewable):
                 rl = self.signals[l]
             except KeyError:
                 continue
-            ruf = self._get_fit(regs[self.isotopes.index(u)])
-            rlf = self._get_fit(regs[self.isotopes.index(l)])
-
+            try:
+                ruf = self._get_fit(regs[self.isotopes.index(u)])
+                rlf = self._get_fit(regs[self.isotopes.index(l)])
+            except IndexError:
+                continue
+            
             if cfb:
                 bu = ufloat((0, 0))
                 bl = ufloat((0, 0))
@@ -104,10 +107,11 @@ class PlotPanel(Viewable):
             else:
                 rr = ru / rl
 
+           
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
                   u'\u00b1 ' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
                     pad(' {}/{} '.format(ruf, rlf), n=4) + \
-                    '({:0.2f}%)'.format(rr.std_dev() / rr.nominal_value * 100)
+                    self._get_pee(rr)
             ts.append(res)
 
         display.add_text('\n'.join(ts))
@@ -135,17 +139,26 @@ class PlotPanel(Viewable):
             uv = us - ub
             vv = uv.nominal_value
             ee = uv.std_dev()
-            try:
-                pee = ee / vv * 100
-            except ZeroDivisionError:
-                pee = 0
+#            try:
+#                pee = abs(ee / vv * 100)
+#            except ZeroDivisionError:
+#                pee = 0
 
             v = pad('{:0.4f}'.format(vv))
             e = pad('{:0.4f}'.format(ee), n=6)
-            v = v + u' \u00b1 ' + e + '({:0.2f}%)'.format(pee)
+            v = v + u' \u00b1 ' + e + self._get_pee(uv)
             ts.append('{}={:>10s}'.format(iso, v))
 
         display.add_text('\n'.join(ts))
+        
+    def _get_pee(self, uv):
+        vv = uv.nominal_value
+        ee = uv.std_dev()
+        try:
+            pee = abs(ee / vv * 100)
+        except ZeroDivisionError:
+            pee = 0
+        return pee
     def _get_fit(self, reg):
         try:
             deg = reg.degree
@@ -171,7 +184,9 @@ class PlotPanel(Viewable):
     def _graph_factory(self):
         return StackedRegressionGraph(container_dict=dict(padding=5, bgcolor='gray',
                                                 stack_order=self.stack_order
-                                             ))
+                                             ),
+                                      use_data_tool=False
+                                      )
     def traits_view(self):
         v = View(
                  Item('graph', show_label=False, style='custom'),

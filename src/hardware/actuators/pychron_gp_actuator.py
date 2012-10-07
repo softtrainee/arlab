@@ -72,12 +72,15 @@ class PychronGPActuator(GPActuator):
         else:
             addr = obj.name.split('-')[1]
         return addr
-
+    
     def get_lock_state(self, obj):
-        cmd = 'GetValveLockState'
+        cmd = 'GetValveLockState {}'.format(self._get_valve_name(obj))
         resp = self.ask(cmd)
-#        return bool(resp)
-        return bool(random.randint(0, 1))
+        if resp is not None:
+            resp=resp.strip()
+            boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
+            return boolfunc(resp)
+#        return bool(random.randint(0, 1))
 
 #    def get_lock_state(self, obj):
 ##        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
