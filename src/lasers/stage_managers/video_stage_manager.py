@@ -289,6 +289,7 @@ class VideoStageManager(StageManager):
         rpos = None
         interp = False
         if self.use_autocenter:
+            time.sleep(0.4)
             for _t in range(max(1, ntries)):
                 #use machine vision to calculate positioning error
                 rpos = self.autocenter_manager.locate_target(
@@ -301,7 +302,7 @@ class VideoStageManager(StageManager):
                                      use_calibration=False,
                                      update_hole=False
                                      )
-                    time.sleep(0.25)
+                    time.sleep(0.4)
                 else:
                     self.snapshot(auto=True,
                                   name='pos_err_{}_{}-'.format(holenum, _t))
@@ -523,9 +524,11 @@ class VideoStageManager(StageManager):
         v = VideoLaserTrayCanvas(parent=self,
                                padding=30,
                                video=video,
+                               camera=self.camera
 #                               use_camera=True,
 #                               map=self._stage_map
                                )
+        self.camera.parent=v
         return v
 
     def _canvas_editor_factory(self):
@@ -547,7 +550,7 @@ class VideoStageManager(StageManager):
 # defaults
 #===============================================================================
     def _camera_default(self):
-        camera = Camera(parent=self.canvas)
+        camera = Camera()
 
         camera.calibration_data.on_trait_change(self.update_camera_params, 'xcoeff_str')
         camera.calibration_data.on_trait_change(self.update_camera_params, 'ycoeff_str')
