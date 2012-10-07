@@ -16,7 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, Str, Button, Any, \
-    Bool, Property, Float, Int, on_trait_change, Dict, String, cached_property
+    Bool, Property, Float, Int, on_trait_change, Dict, String, cached_property, \
+    Event
 from traitsui.api import View, Item, TabularEditor, VGroup, HGroup, spring, \
     EnumEditor
 #============= standard library imports ========================
@@ -34,7 +35,7 @@ from src.experiment.batch_edit import BatchEdit
 from src.experiment.stats import ExperimentStats
 from src.helpers.filetools import str_to_bool
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
-
+from src.traits_editors.tabular_editor import myTabularEditor
 
 
 def extraction_path(name):
@@ -173,21 +174,19 @@ class ExperimentSet(Loggable):
         if self.automated_runs is not None:
             self._cached_runs = self.automated_runs
 
+        self.stats.delay_between_analyses = self.delay_between_analyses
         self.automated_runs = []
         with open(self.path, 'r') as fp:
             self._text = fp.read()
 
         f = (l for l in self._text.split('\n'))
-#        print self._text.split('\n')
         metastr = ''
-        for line in f:
-            #read meta
         #read until break
-#        for line in f:
+        for line in f:
             if line.startswith('#====='):
                 break
             metastr += '{}\n'.format(line)
-#        print metastr
+
         meta = yaml.load(metastr)
 
         delim = '\t'
@@ -374,6 +373,8 @@ class ExperimentSet(Loggable):
         self.dirty = True
         #updated the experiments stats
         if name == 'current_run':
+#            print 'sssss'
+            self.activated_row = self.automated_runs.index(new)
             if not new is self.automated_runs[0]:
                 #skip the first update 
                 self.stats.nruns_finished += 1
@@ -562,13 +563,20 @@ class ExperimentSet(Loggable):
 # views
 #===============================================================================
     def _automated_run_editor(self, update=''):
-        return TabularEditor(adapter=AutomatedRunAdapter(),
+        r = myTabularEditor(adapter=AutomatedRunAdapter(),
                              update=update,
                              right_clicked='object.right_clicked',
                              selected='object.selected',
+#                             refresh='object.refresh',
+#                             activated_row='object.activated_row',
+                             auto_resize=True,
                              multi_select=True,
-                             auto_update=True
-                                )
+                             auto_update=True,
+                             scroll_to_bottom=False
+                            )
+        self.tabular_editor = r
+        return r
+
     def traits_view(self):
         new_analysis = VGroup(
                               Item('automated_run',
@@ -581,9 +589,8 @@ class ExperimentSet(Loggable):
                                      )
                               )
 
-
         analysis_table = VGroup(Item('automated_runs', show_label=False,
-                                    editor=self._automated_run_editor(),
+                                    editor=self.tabular_editor,
 #                                    height=0.5
                                     ), show_border=True,
 
@@ -594,7 +601,6 @@ class ExperimentSet(Loggable):
                                    show_label=False,
                                    height=0.35
                                    )
-
 
         script_grp = VGroup(
                         Item('extraction_script',

@@ -22,6 +22,7 @@ from traitsui.api import View, Item
 #============= local library imports  ==========================
 #from src.database.isotope_analysis.selectable_readonly_texteditor import SelectableReadonlyTextEditor
 from src.displays.rich_text_display import RichTextDisplay
+from uncertainties import ufloat
 #from src.data_processing.regression.regressor import Regressor
 
 PLUSMINUS = unicode('\xb1')
@@ -61,7 +62,7 @@ class AnalysisSummary(HasTraits):
                    ('Int.', 12), (PLUSMINUS_ERR, 12),
                    ('Fit', 10),
                    ('Baseline', 12), (PLUSMINUS_ERR, 15),
-                   ('Blank', 12), (PLUSMINUS_ERR, 12)
+#                   ('Blank', 12), (PLUSMINUS_ERR, 12)
                    ]
         widths = [w for _, w in columns]
 
@@ -89,12 +90,58 @@ class AnalysisSummary(HasTraits):
                     fit,
                     floatfmt(base),
                     floatfmt(base_err),
-                    floatfmt(blank),
-                    floatfmt(blank_err)
+#                    floatfmt(blank),
+#                    floatfmt(blank_err)
                     ]
             msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
-#
             d.add_text(msg, underline=i == len(isos) - 1)
+
+        d.add_text(' ')
+        m = 'Corrected Signals'
+        d.add_text('{:<39s}'.format(m), underline=True, bold=True)
+
+        signals = dict()
+        for i, iso in enumerate(isos):
+            fit = fits[iso]
+            try:
+                inter, inter_err = intercepts[iso]
+            except KeyError:
+                inter, inter_err = 0, 0
+            try:
+                base, base_err = baselines[iso]
+            except KeyError:
+                base, base_err = 0, 0
+
+            s = ufloat((inter, inter_err)) - ufloat((base, base_err))
+            signals[iso] = s
+            try:
+                pe = abs(s.std_dev() / s.nominal_value * 100)
+            except ZeroDivisionError:
+                pe = 0
+            msgs = [
+                    iso,
+                    floatfmt(s.nominal_value),
+                    floatfmt(s.std_dev()),
+                    '({}%)'.format(floatfmt(pe, i=2))
+                    ]
+            msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
+            d.add_text(msg, underline=i == len(isos) - 1)
+
+        d.add_text(' ')
+        m = 'Corrected Ratios'
+        d.add_text('{:<39s}'.format(m), underline=True, bold=True)
+
+        ratios = ['Ar40/Ar36', 'Ar40/Ar39']
+        for r in ratios:
+            nu, de = r.split('/')
+            rr = signals[nu] / signals[de]
+            v, e = rr.nominal_value, rr.std_dev()
+            pe = e / v * 100
+            ms = [r, floatfmt(v), floatfmt(e), '({}%)'.format(floatfmt(pe, i=2))]
+#            msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
+            msg = ''.join([width(m, 10) for m in ms])
+
+            d.add_text(msg)
 
     def _display_default(self):
         return RichTextDisplay(default_size=12,

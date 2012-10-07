@@ -42,11 +42,12 @@ class DBResult(BaseDBResult):
 
     rundate = Property
     runtime = Property
+    path = Property
 
-    root = Str
+#    root = Str
 
-    directory = Str
-    filename = Str
+#    directory = Str
+#    filename = Str
 
     window_x = 0.1
     window_y = 0.1
@@ -54,8 +55,9 @@ class DBResult(BaseDBResult):
     window_height = None
 
     title_str = Str('Base')
-    data_manager = None
-    data_manager_klass = H5DataManager
+    selector = Any
+#    data_manager = None
+#    data_manager_klass = H5DataManager
 
     _loadable = True
 
@@ -71,37 +73,44 @@ class DBResult(BaseDBResult):
     def _get_runtime(self):
         return self._db_result.runtime.strftime('%H:%M:%S')
 
+    @cached_property
+    def _get_path(self):
+        root = self._db_result.path.root
+        name = self._db_result.path.filename
+        return os.path.join(root, name)
+
     def _export_button_fired(self):
         self._export_csv()
 
     def _export_csv(self):
-        p = os.path.join(self.directory, self.filename)
+#        p = os.path.join(self.directory, self.filename)
+        p = self.path
         if os.path.isfile(p) and self.graph is not None:
             self.graph.export_data(plotid=0)
 
     def initialize(self):
         return self.isloadable()
 
-    def _set_metadata(self, dbr):
-#        self.rid = dbr.id
-#        self.rundate = dbr.rundate
-#        self.runtime = dbr.runtime.strftime('%H:%M:%S')
+#    def _set_metadata(self, dbr):
+##        self.rid = dbr.id
+##        self.rundate = dbr.rundate
+##        self.runtime = dbr.runtime.strftime('%H:%M:%S')
+#
+#        p = dbr.path
+#        if p is not None:
 
-        p = dbr.path
-        if p is not None:
-
-            d = p.root
-            if d.startswith('.'):
-                d = os.path.join(self.root,
-                               d[1:]
-                               )
-            self.directory = d if p.root else ''
-            self.filename = p.filename if p.filename else ''
+#            d = p.root
+#            if d.startswith('.'):
+#                d = os.path.join(self.root,
+#                               d[1:]
+#                               )
+#            self.directory = d if p.root else ''
+#            self.filename = p.filename if p.filename else ''
 
     def load(self):
         dbr = self._db_result
         if dbr is not None:
-            self._set_metadata(dbr)
+#            self._set_metadata(dbr)
             self.title = '{} {}'.format(self.title_str, self.rid)
             self._load_hook(dbr)
         elif self.directory is not None and self.filename is not None:
@@ -111,40 +120,41 @@ class DBResult(BaseDBResult):
         pass
 
     def isloadable(self):
-        dm = self._get_data_manager()
+#        dm = self._get_data_manager()
+        dm = self.selector.data_manager
         try:
             self._loadable = dm.open_data(self._get_path())
         except Exception, e:
             self._loadable = False
         finally:
-            dm.close()
+            pass
+#            dm.close()
         return self._loadable
 
-    def _get_path(self):
-        return os.path.join(self.directory, self.filename)
+#    def _get_data_manager(self):
+##        dm = self.data_manager
+##        if dm is None:
+##        data = self._get_path()
+#        path = self.path
+#        name = os.path.basename(path)
+#        _, ext = os.path.splitext(name)
+#
+#        if ext in ['.h5', '.hdf5']:
+#            dm = self._data_manager_factory()
+#            if dm.isfile(path):
+##            if os.path.isfile(data):
+#                #is it wise to actually open the file now?
+##                    self._loadable = dm.open_data(data)
+#                self._loadable = True
+#
+#        else:
+#            self._loadable = False
+#            dm = CSVDataManager()
+#
+#        return dm
 
-    def _get_data_manager(self):
-#        dm = self.data_manager
-#        if dm is None:
-        data = self._get_path()
-        _, ext = os.path.splitext(self.filename)
-
-        if ext in ['.h5', '.hdf5']:
-            dm = self._data_manager_factory()
-            if dm.isfile(data):
-#            if os.path.isfile(data):
-                #is it wise to actually open the file now?
-#                    self._loadable = dm.open_data(data)
-                self._loadable = True
-
-        else:
-            self._loadable = False
-            dm = CSVDataManager()
-
-        return dm
-
-    def _data_manager_factory(self):
-        return H5DataManager()
+#    def _data_manager_factory(self):
+#        return H5DataManager()
 
     def load_graph(self):
         pass

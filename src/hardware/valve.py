@@ -104,32 +104,32 @@ class HardwareValve(Loggable):
 
         return result
 
-    def get_hard_lock(self):
-        '''
-        '''
-        if self.actuator is not None:
-            r = self.actuator.get_hard_lock_indicator_state(self)
-        else:
-            r = False
-
-        return r
-
-    def get_hard_lock_indicator_state(self):
-        '''
-        '''
-
-        s = self.get_hardware_state()
-        r = self.get_hard_lock()
-
-        if r:
-            if s:
-                self._fsm.HardLockOpen()
-            else:
-                self._fsm.HardLockClose()
-        else:
-            self._fsm.HardUnLock()
-        #print self.auto
-        return r
+#    def get_hard_lock(self):
+#        '''
+#        '''
+#        if self.actuator is not None:
+#            r = self.actuator.get_hard_lock_indicator_state(self)
+#        else:
+#            r = False
+#
+#        return r
+#
+#    def get_hard_lock_indicator_state(self):
+#        '''
+#        '''
+#
+#        s = self.get_hardware_state()
+#        r = self.get_hard_lock()
+#
+#        if r:
+#            if s:
+#                self._fsm.HardLockOpen()
+#            else:
+#                self._fsm.HardLockClose()
+#        else:
+#            self._fsm.HardUnLock()
+#        #print self.auto
+#        return r
 
     def open(self, mode='normal'):
         '''

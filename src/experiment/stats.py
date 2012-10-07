@@ -32,10 +32,13 @@ class ExperimentStats(HasTraits):
     total_time = Property(depends_on='_total_time')
     _total_time = Float
     _timer = Any(transient=True)
+    delay_between_analyses = Int
+
     def calculate_etf(self, runs):
         self.nruns = len(runs)
 
         dur = sum([a.get_estimated_duration() for a in runs])
+        dur += (self.delay_between_analyses * self.nruns)
         self._total_time = dur
 
         dt = (datetime.datetime.now() + \

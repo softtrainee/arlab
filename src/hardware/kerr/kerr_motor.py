@@ -33,6 +33,7 @@ class KerrMotor(KerrDevice):
         Base class for motors controller by a kerr microcontroller board
         
     '''
+    use_initialize = Bool(True)
     use_hysteresis = Bool(False)
     hysteresis_value = Int(0)
 
@@ -105,6 +106,9 @@ class KerrMotor(KerrDevice):
             self.use_hysteresis = True
         else:
             self.use_hysteresis = False
+
+        if config.has_option('General', 'initialize'):
+            self.use_initialize = self.config_get(config, 'General', 'initialize', cast='boolean')
 
     def _start_initialize(self, *args, **kw):
         '''

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property
+from traits.api import Property, Int
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import os
@@ -27,6 +27,17 @@ def get_name(func):
     return _get_name
 
 class AutomatedRunAdapter(TabularAdapter):
+    state_width = Int(20)
+    aliquot_width = Int(50)
+
+    sample_width = Int(10)
+    position_width = Int(10)
+    duration_width = Int(10)
+    overlap_width = Int(10)
+    autocenter_width = Int(10)
+    heat_value_width = Int(10)
+    heat_device_width = Int(10)
+    identifier_width = Int(60)
 
     state_image = Property
     state_text = Property
@@ -45,6 +56,14 @@ class AutomatedRunAdapter(TabularAdapter):
 #        if self.item:
 #            if self.item.state == 'not run':
 #                return True
+    def get_font(self, obj, trait, row):
+        import wx
+        s = 9
+        f = wx.FONTFAMILY_DEFAULT
+        st = wx.FONTSTYLE_NORMAL
+        w = wx.FONTWEIGHT_NORMAL
+        return wx.Font(s, f, st, w)
+
     def get_bg_color(self, obj, trait, row):
         item = getattr(obj, trait)[row]
         if not item.executable:

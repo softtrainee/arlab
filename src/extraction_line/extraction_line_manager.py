@@ -423,7 +423,7 @@ class ExtractionLineManager(Manager):
         if self.valve_manager is not None and e is not None:
             e.load(self.valve_manager.explanable_items)
             self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
-            self.valve_manager.mode = self.mode
+#            self.valve_manager.mode = self.mode
 #=================== defaults ===========================
 #    def _view_controller_default(self):
 #        return self._view_controller_factory()

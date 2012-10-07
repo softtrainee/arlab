@@ -62,7 +62,6 @@ class MainError(Exception):
     def __str__(self):
         return 'No "main" function defined'
 
-
 def verbose_skip(func):
     def decorator(obj, *args, **kw):
         fname = func.__name__
@@ -94,6 +93,30 @@ def skip(func):
         return func(obj, *args, **kw)
     return decorator
 
+def count_verbose_skip(func):
+    def decorator(obj, *args, **kw):
+        fname = func.__name__
+#        print fname, obj._syntax_checking, obj._cancel
+        if fname.startswith('_m_'):
+            fname = fname[3:]
+
+        args1, _, _, defaults = inspect.getargspec(func)
+
+        nd = sum([1 for di in defaults if di is not None]) if defaults else 0
+
+        min_args = len(args1) - 1 - nd
+        an = len(args) + len(kw)
+        if an < min_args:
+            raise PyscriptError('invalid arguments count for {}, args={} kwargs={}'.format(fname,
+                                                                                           args, kw))
+        if obj._syntax_checking or obj._cancel:
+            func(obj, calc_time=True, *args, **kw)
+            return
+
+        obj.debug('{} {} {}'.format(fname, args, kw))
+
+        return func(obj, *args, **kw)
+    return decorator
 
 
 class PyScript(Loggable):

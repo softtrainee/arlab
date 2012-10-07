@@ -41,19 +41,19 @@ class FusionsLogicBoard(CoreDevice):
 
     motor_microcontroller = Instance(KerrMicrocontroller)
 
-#    beam_motor = Instance(KerrMotor)
-#    beam = DelegatesTo('beam_motor', prefix='data_position')
-#    beammin = DelegatesTo('beam_motor', prefix='min')
-#    beammax = DelegatesTo('beam_motor', prefix='max')
-#    beam_enabled = DelegatesTo('beam_motor', prefix='enabled')
-#    update_beam = DelegatesTo('beam_motor', prefix='update_position')
-#
-#    zoom_motor = Instance(KerrMotor)
-#    zoom = DelegatesTo('zoom_motor', prefix='data_position')
-#    zoommin = DelegatesTo('zoom_motor', prefix='min')
-#    zoommax = DelegatesTo('zoom_motor', prefix='max')
-#    zoom_enabled = DelegatesTo('zoom_motor', prefix='enabled')
-#    update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
+    beam_motor = Instance(KerrMotor, ())
+    beam = DelegatesTo('beam_motor', prefix='data_position')
+    beammin = DelegatesTo('beam_motor', prefix='min')
+    beammax = DelegatesTo('beam_motor', prefix='max')
+    beam_enabled = DelegatesTo('beam_motor', prefix='enabled')
+    update_beam = DelegatesTo('beam_motor', prefix='update_position')
+
+    zoom_motor = Instance(KerrMotor, ())
+    zoom = DelegatesTo('zoom_motor', prefix='data_position')
+    zoommin = DelegatesTo('zoom_motor', prefix='min')
+    zoommax = DelegatesTo('zoom_motor', prefix='max')
+    zoom_enabled = DelegatesTo('zoom_motor', prefix='enabled')
+    update_zoom = DelegatesTo('zoom_motor', prefix='update_position')
 
 #    configure = Button
 
@@ -90,19 +90,9 @@ class FusionsLogicBoard(CoreDevice):
         #initialize Kerr devices
         self.motor_microcontroller.initialize(*args, **kw)
 
-#        for m, v in self.motors.iteritems():
         for m in self.motors:
-            if m.name=='beam':
-                continue
-            m.initialize(*args, **kw)
-
-#        if globalv.initialize_zoom:
-#            zm = self.zoom_motor
-#            zm.initialize(*args, **kw)
-#
-#        if globalv.initialize_beam:
-#            bm = self.beam_motor
-#            bm.initialize(*args, **kw)
+            if m.use_initialize:
+                m.initialize(*args, **kw)
 
         return True
 
@@ -139,6 +129,7 @@ class FusionsLogicBoard(CoreDevice):
 
 
         return True
+
     def open_motor_configure(self):
         mc = KerrManager(motor=self.get_motor('attenuator'))
 
@@ -150,8 +141,78 @@ class FusionsLogicBoard(CoreDevice):
         klassname = self.config_get(config, 'General', 'kind', default='', optional=True)
         m = self._motor_factory(name, klassname)
         m.load(p)
-        self.info('adding motor {} klass={}'.format(name, klassname if klassname else 'KerrMotor'))
+#        self.info('adding motor {} klass={}'.format(name, klassname if klassname else 'KerrMotor'))
+        self.info('adding motor {} klass={}'.format(name, m.__class__.__name__))
         self.motors.append(m)
+        if name == 'beam':
+            self.beam_motor = m
+        elif name == 'zoom':
+            self.zoom_motor = m
+
+#    def __getattr__(self, attr):
+#        if attr.endswith('_motor'):
+#            return self.get_motor(attr.replace('_motor', ''))
+
+#    def _motor_attr(self, attr, cb):
+#        if 'min' in attr:
+#            vattr = 'min'
+#            mname = attr.replace(vattr, '')
+#        elif 'max' in attr:
+#            vattr = 'max'
+#            mname = attr.replace(vattr, '')
+#        elif 'update' in attr:
+#            vattr = 'update_position'
+#            mname = attr.replace('update_', '')
+#        elif 'enabled' in attr:
+#            vattr = 'enabled'
+#            mname = attr.replace('_enabled', '')
+#        else:
+#            mname = attr
+#            vattr = 'data_position'
+#
+#        motor = self.get_motor(mname)
+#        if motor:
+#            return cb(motor, vattr)
+#
+##    def __setattr__(self, attr, v):
+##        print attr, v
+##        cb = lambda m, va:setattr(m, va, v)
+##        r = self._motor_attr(attr, cb)
+##        if not r:
+##            super(FusionsLogicBoard, self).__setattr__(attr, v)
+#
+#    def __getattr__(self, attr):
+#        cb = lambda m, va:getattr(m, va)
+#        return self._motor_attr(attr, cb)
+
+#
+#        if 'min' in attr:
+#            vattr = 'min'
+#            mname = attr.replace(vattr, '')
+#        elif 'max' in attr:
+#            vattr = 'max'
+#            mname = attr.replace(vattr, '')
+#        elif 'update' in attr:
+#            vattr = 'update_position'
+#            mname = attr.replace('update_', '')
+#        elif 'enabled' in attr:
+#            vattr = 'enabled'
+#            mname = attr.replace('_enabled', '')
+#        else:
+#            mname = attr
+#            vattr = 'data_position'
+#
+#        motor = self.get_motor(mname)
+#        if motor:
+#            return getattr(motor, vattr)
+#        try:
+#            motor = self.get_motor(mname)
+#            if motor:
+#                print mname, motor
+#                return getattr(motor, vattr)
+#        except Exception, e:
+#            pass
+#            pass
 
     def get_motor(self, name):
         return next((m for m in self.motors if m.name == name), None)
@@ -281,12 +342,12 @@ class FusionsLogicBoard(CoreDevice):
 #    def _zoom_motor_default(self):
 #        '''
 #        '''
-#        return KerrMotor(name='zoom', parent=self)
+#        return KerrMotor(name='zoomrrrr', parent=self)
 #
 #    def _beam_motor_default(self):
 #        '''
 #        '''
-#        return KerrSnapMotor(name='beam', parent=self)
+#        return KerrMotor(name='beameere', parent=self)
 
 #==============================================================================
 #motor methods

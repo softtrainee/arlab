@@ -18,6 +18,8 @@
 
 #========== local library imports =============
 from gp_actuator import GPActuator
+import time
+import random
 
 
 class PychronGPActuator(GPActuator):
@@ -72,30 +74,29 @@ class PychronGPActuator(GPActuator):
         return addr
 
     def get_lock_state(self, obj):
-#        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
-        cmd = 'GetValveLockStates'
+        cmd = 'GetValveLockState'
         resp = self.ask(cmd)
-        if resp is not None:
-            d = dict()
-            if ',' in resp:
-                d = dict([(r[:-1], bool(r[-1:])) for r in resp.split(',')])
-            else:
-#                for i in xrange(0, len(resp), 2):
-#                    print resp[i:i + 2]
-#                    print (resp[i:i + 1][0], bool(resp[i:i + 1][1]))
+#        return bool(resp)
+        return bool(random.randint(0, 1))
 
-                d = dict([(resp[i:i + 2][0], bool(int(resp[i:i + 2][1]))) for i in xrange(0, len(resp), 2)])
-#            print d, self._get_valve_name(obj)
-            try:
-                resp = d[self._get_valve_name(obj)]
-            except KeyError, e:
-                print e
-                return False
-
-
-#            resp = boolfunc(resp.strip())
-
-        return resp
+#    def get_lock_state(self, obj):
+##        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
+#        cmd = 'GetValveLockStates'
+#        resp = self.ask(cmd)
+#
+#        if resp is not None:
+#            d = dict()
+#            if ',' in resp:
+#                d = dict([(r[:-1], bool(r[-1:])) for r in resp.split(',')])
+#            else:
+#                d = dict([(resp[i:i + 2][0], bool(int(resp[i:i + 2][1]))) for i in xrange(0, len(resp), 2)])
+#            try:
+#                resp = d[self._get_valve_name(obj)]
+#            except KeyError, e:
+#                print e
+#                return False
+#
+#        return resp
 
 
     def get_channel_state(self, obj):
@@ -103,7 +104,6 @@ class PychronGPActuator(GPActuator):
         Query the hardware for the channel state
          
         '''
-
         # returns one if channel close  0 for open
         boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
         cmd = 'GetValveState {}'.format(self._get_valve_name(obj))
@@ -122,19 +122,20 @@ class PychronGPActuator(GPActuator):
         resp = self.ask(cmd)
         if resp:
             if resp.lower().strip() == 'ok':
+                time.sleep(0.01)
                 resp = self.get_channel_state(obj) == True
         return resp
 
     def open_channel(self, obj):
         '''
         Close the channel
-        
    
         '''
         cmd = 'Open {}'.format(self._get_valve_name(obj))
         resp = self.ask(cmd)
         if resp:
             if resp.lower().strip() == 'ok':
+                time.sleep(0.01)
                 resp = self.get_channel_state(obj) == True
 #        cmd = 'ROUT:OPEN (@{})'.format(self._get_valve_name(obj))
 #        self.tell(cmd)

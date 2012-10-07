@@ -165,7 +165,7 @@ class DatabaseAdapter(Loggable):
 #                _users, sess = getattr(self, self.test_func)(sess=sess)
 
         except Exception, e:
-            print e,'kkkkk'
+            print e, 'kkkkk'
 #            print e
 #            if self.kind == 'mysql':
 #                url = '{}@{}/{}' .format(self.user, self.host,
@@ -214,7 +214,7 @@ class DatabaseAdapter(Loggable):
                 self.sess = self.session_factory()
                 self.sess.autoflush = False
             else:
-                self.warning_dialog('Not connect to the database {}'.format(self.name))
+                self.warning_dialog('Not connected to the database {}'.format(self.name))
 
         return self.sess
 
@@ -347,7 +347,7 @@ class DatabaseAdapter(Loggable):
             return [getattr(ri, key) for ri in res]
         return res
 
-        
+
 
     def _selector_default(self):
         return self._selector_factory()

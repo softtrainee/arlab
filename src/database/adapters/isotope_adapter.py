@@ -30,6 +30,7 @@ from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, 
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
+from src.experiment.identifier import convert_identifier
 #from src.database.adapters.adapter_decorators import add, get_one, commit
 #from sqlalchemy.sql.expression import or_
 #============= standard library imports ========================
@@ -377,14 +378,8 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_labnumber(self, name):
         if isinstance(name, str):
-            if name == 'Bg':
-                name = 4
-            elif name == 'B':
-                name = 1
-            elif name == 'A':
-                name = 2
-            elif name.upper() == 'C':
-                name = 3
+            name = convert_identifier(name)
+
         return self._get_labnumber(name)
 
     @get_one

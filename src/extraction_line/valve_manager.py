@@ -63,7 +63,6 @@ class ValveManager(Manager):
 
     systems = None
     valve_groups = None
-    mode = 'normal'
 
     def show_valve_properties(self, name):
         v = self.get_valve_by_name(name)
@@ -72,7 +71,7 @@ class ValveManager(Manager):
 
     def kill(self):
         super(ValveManager, self).kill()
-        self.save_soft_lock_state()
+        self._save_soft_lock_states()
 
     def create_device(self, name, *args, **kw):
         '''
@@ -99,14 +98,15 @@ class ValveManager(Manager):
         setup_file = os.path.join(paths.extraction_line_dir, 'valves.xml')
         self._load_valves_from_file(setup_file)
 
-        self.load_soft_lock_state()
+        self._load_states()
+        self._load_soft_lock_states()
 
         self._load_system_dict()
         #self.info('loading section definitions file')
         #open config file
         #setup_file = os.path.join(paths.extraction_line_dir, 'section_definitions.cfg')
         #self._load_sections_from_file(setup_file)
-    def save_soft_lock_state(self):
+    def _save_soft_lock_states(self):
 
         p = os.path.join(paths.hidden_dir, 'soft_lock_state')
         self.info('saving soft lock state to {}'.format(p))
@@ -115,14 +115,19 @@ class ValveManager(Manager):
 
             pickle.dump(obj, f)
 
-    def load_soft_lock_state(self):
-        if self.mode == 'client':
+    def _load_states(self):
+        elm = self.extraction_line_manager
+        for k, v in self.valves.iteritems():
+            s = v.get_hardware_state()
+            elm.update_valve_state(k, s)
+
+    def _load_soft_lock_states(self):
+        if self.extraction_line_manager.mode == 'client':
             for k, v in self.valves.iteritems():
                 s = v.get_lock_state()
-                if s:
-                    self.lock(k, save=False)
-                else:
-                    self.unlock(k, save=False)
+                func = self.lock if s else self.unlock
+                func(k, save=False)
+
         else:
             p = os.path.join(paths.hidden_dir, 'soft_lock_state')
             if os.path.isfile(p):
@@ -405,7 +410,7 @@ class ValveManager(Manager):
                 ev.soft_lock = True
             v.lock()
             if save:
-                self.save_soft_lock_state()
+                self._save_soft_lock_states()
 
     def unlock(self, name, save=True):
         '''
@@ -417,7 +422,7 @@ class ValveManager(Manager):
                 ev.soft_lock = False
             v.unlock()
             if save:
-                self.save_soft_lock_state()
+                self._save_soft_lock_states()
 
 
     def validate(self, v):
@@ -539,7 +544,7 @@ class ValveManager(Manager):
         self.info('loading valve definitions file  {}'.format(path))
         def factory(v):
             name, hv = self._valve_factory(v)
-            self._load_explanation_valve(hv)
+#            self._load_explanation_valve(hv)
             self.valves[name] = hv
             return hv
 
@@ -584,18 +589,18 @@ class ValveManager(Manager):
         return name, hv
 
     def _load_explanation_valve(self, v):
-        s = v.get_hardware_state()
+#        s = v.get_hardware_state()
         #update the extraction line managers canvas
 #            self.extraction_line_manager.canvas.update_valve_state(v.name[-1], s)
         name = v.name.split('-')[1]
-        self.extraction_line_manager.update_valve_state(name, s)
+#        self.extraction_line_manager.update_valve_state(name, s)
 #        args = dict(
 #                    )
         ev = ExplanableValve(name=name,
                     address=v.address,
                     description=v.description,
                     canvas=self.extraction_line_manager.canvas,)
-        ev.state = s if s is not None else False
+#        ev.state = s if s is not None else False
 
         self.explanable_items.append(ev)
 

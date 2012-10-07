@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-
+from traits.api import Any
 #============= standard library imports ========================
 from tables import openFile, NodeError
 from numpy import array
@@ -32,7 +32,7 @@ class H5DataManager(DataManager):
     '''
 #    _extension = 'h5'
     _extension = 'hdf5'
-
+    repository = Any
 
     def set_group_attribute(self, group, key, value):
         f = self._frame
@@ -145,6 +145,9 @@ class H5DataManager(DataManager):
 
     def open_data(self, path, mode='r'):
         try:
+            if self.repository:
+                path = os.path.join(self.repository.root, path)
+
             self._frame = openFile(path, mode)
             return True
         except Exception:

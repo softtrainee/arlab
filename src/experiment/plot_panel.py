@@ -15,11 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Property, List, on_trait_change, Dict
-from traitsui.api import View, Item, TableEditor, Group, HGroup
-from src.loggable import Loggable
+from traits.api import HasTraits, Instance, Int, Property, List, on_trait_change, Dict, Bool
+from traitsui.api import View, Item, Group, HGroup, spring
 from src.graph.graph import Graph
-from src.graph.stacked_graph import StackedGraph
 from src.viewable import ViewableHandler, Viewable
 from src.displays.rich_text_display import RichTextDisplay
 from src.graph.regression_graph import StackedRegressionGraph
@@ -46,60 +44,115 @@ class PlotPanel(Viewable):
     series_cnt = 0
     ratio_display = Instance(RichTextDisplay)
     signal_display = Instance(RichTextDisplay)
-    fits = List
+#    fits = List
 
     signals = Dict
+    baselines = Dict
+    correct_for_baseline = Bool(True)
+    isbaseline = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
+
     @on_trait_change('graph:regression_results')
     def _update_display(self, new):
         if new:
-            display = self.signal_display
-            display.clear()
-            pad=lambda x, n=9:'{{:>{}s}}'.format(n).format(x)
-            ts=[]
             for iso, reg in zip(self.isotopes, new):
-                vv=reg.coefficients[-1]
-                ee=reg.coefficient_errors[-1]
-                v = pad('{:0.4f}'.format(vv))
-                e = pad('{:0.4f}'.format(ee), n=6)
-                v = v + u' \u00b1 ' + e +'({:0.2f}%)'.format(ee/vv*100)
-                ts.append('{}={:>10s}'.format(iso, v))
-            display.add_text('\n'.join(ts))
+                vv = reg.coefficients[-1]
+                ee = reg.coefficient_errors[-1]
+                if self.isbaseline:
+                    self.baselines[iso] = ufloat((vv, ee))
+                else:
+                    self.signals[iso] = ufloat((vv, ee))
+            self._print_results()
 
-            display = self.ratio_display
-            display.clear()
-            ts=[]
-            for ra in self.ratios:
-                u, l = ra.split(':')
+    @on_trait_change('correct_for_baseline')
+    def _print_results(self):
+        self._print_signals()
+        self._print_ratios()
 
+    def _print_ratios(self):
+        pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
+
+        display = self.ratio_display
+        display.clear()
+        cfb = self.correct_for_baseline
+        ts = []
+
+        regs = self.graph.regressors
+        for ra in self.ratios:
+            u, l = ra.split(':')
+            try:
+                ru = self.signals[u]
+                rl = self.signals[l]
+            except KeyError:
+                continue
+            ruf = self._get_fit(regs[self.isotopes.index(u)])
+            rlf = self._get_fit(regs[self.isotopes.index(l)])
+
+            if cfb:
+                bu = ufloat((0, 0))
+                bl = ufloat((0, 0))
                 try:
-                    ru = new[self.isotopes.index(u)]
-                    rl = new[self.isotopes.index(l)]
-                    ruf = self._get_fit(ru)
-                    rlf = self._get_fit(rl)
-
-                    if rl.coefficient_errors[-1] == Inf or ru.coefficient_errors[-1] == Inf:
-                        return
-
-                    rr = ufloat((ru.coefficients[-1], ru.coefficient_errors[-1])) / ufloat((rl.coefficients[-1], rl.coefficient_errors[-1]))
-                    res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
-                          u'\u00b1 ' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
-                            pad(' {}/{} '.format(ruf, rlf), n=4)+\
-                            '({:0.2f}%)'.format(rr.std_dev()/rr.nominal_value*100)
-                    ts.append(res)
-                except  IndexError:
+                    bu = self.baselines[u]
+                except KeyError:
                     pass
-            
-            display.add_text('\n'.join(ts))
+                try:
+                    bl = self.baselines[u]
+                except KeyError:
+                    pass
+                rr = (ru - bu) / (rl - bl)
+            else:
+                rr = ru / rl
 
+            res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
+                  u'\u00b1 ' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
+                    pad(' {}/{} '.format(ruf, rlf), n=4) + \
+                    '({:0.2f}%)'.format(rr.std_dev() / rr.nominal_value * 100)
+            ts.append(res)
+
+        display.add_text('\n'.join(ts))
+
+    def _print_signals(self):
+        display = self.signal_display
+        cfb = self.correct_for_baseline
+        display.clear()
+        pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
+
+        ts = []
+        for iso in self.isotopes:
+            try:
+                us = self.signals[iso]
+            except KeyError:
+                us = ufloat((0, 0))
+
+            ub = ufloat((0, 0))
+            if cfb:
+                try:
+                    ub = self.baselines[iso]
+                except KeyError:
+                    pass
+
+            uv = us - ub
+            vv = uv.nominal_value
+            ee = uv.std_dev()
+            try:
+                pee = ee / vv * 100
+            except ZeroDivisionError:
+                pee = 0
+
+            v = pad('{:0.4f}'.format(vv))
+            e = pad('{:0.4f}'.format(ee), n=6)
+            v = v + u' \u00b1 ' + e + '({:0.2f}%)'.format(pee)
+            ts.append('{}={:>10s}'.format(iso, v))
+
+        display.add_text('\n'.join(ts))
     def _get_fit(self, reg):
-        deg = reg.degree
-        if deg in [1, 2, 3]:
-            return ['l', 'p', 'c'][deg - 1]
-
-    def _fits_changed(self):
-        self.graph.set_fits(self.fits)
+        try:
+            deg = reg.degree
+            if deg in [1, 2, 3]:
+                return ['L', 'P', 'C'][deg - 1]
+        except AttributeError:
+            return reg.error_calc
 
     def close(self, isok):
         self.parent.cancel()
@@ -124,6 +177,7 @@ class PlotPanel(Viewable):
                  Item('graph', show_label=False, style='custom'),
                  Group(
                      Group(
+                           HGroup(Item('correct_for_baseline'), spring),
                            HGroup(
                                Item('signal_display', width=0.4, show_label=False, style='custom'),
                                Item('ratio_display', width=0.6, show_label=False, style='custom'),

@@ -14,10 +14,8 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-from traits.api import on_trait_change
+#from traits.api import on_trait_change
 #============= standard library imports ========================
 
 #============= local library imports  ==========================

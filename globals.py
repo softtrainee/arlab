@@ -30,10 +30,6 @@ class Globals(object):
     #using ipc_dgram is currently not working
     ipc_dgram = False
 
-    #fusions logic board flags
-#    initialize_beam = True
-#    initialize_zoom = True
-
     ignore_initialization_warnings = False
     ignore_connection_warnings = True
     ignore_chiller_unavailable = True
@@ -58,8 +54,6 @@ class Globals(object):
                            ('ignore_initialization_warnings', boolfunc),
                            ('ignore_connection_warnings', boolfunc),
                            ('ignore_chiller_unavailable', boolfunc),
-                           ('initialize_beam', boolfunc),
-                           ('initialize_zoom', boolfunc),
                            ('show_infos', boolfunc),
                            ('show_warnings', boolfunc),
                            ('video_test', boolfunc),
