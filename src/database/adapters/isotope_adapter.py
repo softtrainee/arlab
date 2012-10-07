@@ -131,7 +131,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @add
     def add_irradiation_holder(self, name, **kw):
-        print name, 'fffff', self.get_irradiation_holder(name)
+#        print name, 'fffff', self.get_irradiation_holder(name)
 #        return None, False
         ih = irrad_HolderTable(name=name, **kw)
         return self._add_unique(ih, 'irradiation_holder', name)

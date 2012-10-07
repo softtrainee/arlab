@@ -19,11 +19,11 @@ from traits.api import HasTraits, Instance
 from traitsui.api import View, Item, TableEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-from os import path
+#from os import path
 #============= local library imports  ==========================
 from src.machine_vision.machine_vision_manager import MachineVisionManager
 from src.machine_vision.detectors.co2_detector import CO2HoleDetector
-from src.paths import paths
+#from src.paths import paths
 
 class AutocenterManager(MachineVisionManager):
 
@@ -38,7 +38,6 @@ class AutocenterManager(MachineVisionManager):
             params = self.detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
             msg = 'Target found at {:0.3n}, {:0.3n}'.format(*params) if params else 'No target found'
             self.info(msg)
-
 
             if params:
                 params = cx - params[0] / self.pxpermm, cy + params[1] / self.pxpermm

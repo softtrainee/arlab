@@ -31,7 +31,6 @@ make another class to do all perms
 
 class CO2HoleDetector(HoleDetector):
 
-
 #    def close_images(self):
 ##        if self.brightness_image is not None:
 ##            self.brightness_image.close()
