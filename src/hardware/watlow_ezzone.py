@@ -213,9 +213,7 @@ class WatlowEZZone(CoreDevice):
     def initialize(self, *args, **kw):
         '''
         '''
-
         if self.read_baudrate(port=1):
-
             #set open loop and closed loop to zero
             self.disable()
             if self.program_memory_blocks:
@@ -895,7 +893,6 @@ class WatlowEZZone(CoreDevice):
     def read_high_power_scale(self, output=2, **kw):
         register = 898 if output == 1 else 928
         r = self.read(register, nregisters=2, **kw)
-        self.info('reading high power scale {}'.format(r))
         return r
 #    def read_cool_power(self,**kw):
 #        register=1906

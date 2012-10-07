@@ -956,7 +956,7 @@ class BakeoutManager(Manager):
                  pressure_grp, enabled_when='not alive')),
                  controller_grp, Item('graph', show_label=False,
                  style='custom')), handler=AppHandler,
-                 resizable=True, title='Bakeout Manager', height=830)
+                 resizable=True, title='Bakedpy', height=830)
         return v
 #def launch_bakeout():
 #    b = BakeoutManager()

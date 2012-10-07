@@ -99,9 +99,7 @@ class BakeoutController(WatlowEZZone):
             they are not necessary for the bakeout manager currently
         '''
         #read the current max output setting
-        self._max_output = self.read_high_power_scale()
-
-
+        self._max_output = self.read_high_power_scale(nbytes=7)
 
     def isAlive(self):
         return self.alive
