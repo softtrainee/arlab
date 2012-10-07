@@ -15,29 +15,29 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.repo.repository import FTPRepository
-import os
+from traits.api import Bool, on_trait_change
+from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
+from traitsui.editors.tabular_editor import TabularEditor
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+class _TabularEditor(wxTabularEditor):
 
-class FTPH5DataManager(H5DataManager):
-    repository = None
-    workspace_root = None
-    def connect(self, host, usr, pwd, remote):
-        self.repository = FTPRepository(host=host, username=usr, password=pwd, remote=remote)
+#    def init(self, parent):
+#        wxTabularEditor.init(self, parent)
 
-    def open_data(self, p):
-        out = os.path.join(self.workspace_root, p)
+    def update_editor(self):
+        control = self.control
+        wxTabularEditor.update_editor(self)
+        if self.factory.scroll_to_bottom:
+            control.EnsureVisible(control.GetItemCount() - 1)
+        else:
+            control.EnsureVisible(self.activated_row)
 
-        p = os.path.join(self.repository.root, p)
-        self.repository.retrieveFile(p, out)
-        return super(FTPH5DataManager, self).open_data(out)
+class myTabularEditor(TabularEditor):
+    scroll_to_bottom = Bool(True)
 
-    def isfile(self, path):
-        return self.repository.isfile(path)
-
+    def _get_klass(self):
+        return _TabularEditor
 #============= EOF =============================================

@@ -201,13 +201,11 @@ class RichTextDisplay(HasTraits):
         n = 300
         if len(self.text) >= n:
             pop = self.text.pop
-            s = sum(pop(0) for _ in xrange(n))
+            s = sum(pop(0) for _ in xrange(100))
             d.Remove(0, s)
 
         lp = d.GetLastPosition()
-#        d.ShowPosition(lp + 1000)
-#        d.PageDown(1)
-        self.show_positon(lp + 100)
+        self.show_positon(lp + 10)
 
         d.Thaw()
 

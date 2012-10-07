@@ -36,6 +36,7 @@ from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
 from globals import globalv
+from src.experiment.identifier import convert_identifier, get_analysis_type
 #from src.regression.ols_regressor import PolynomialRegressor
 
 
@@ -91,8 +92,6 @@ class AutomatedRun(Loggable):
     mass_spec_name = Str
     sample_data_record = Any
 
-    update = Event
-
     measurement_script_dirty = Event
     measurement_script = Property(depends_on='measurement_script_dirty')
     _measurement_script = Any
@@ -126,6 +125,7 @@ class AutomatedRun(Loggable):
 
     username = None
     _save_isotopes = List
+    update = Event
 
     def _runner_changed(self):
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
@@ -185,6 +185,7 @@ class AutomatedRun(Loggable):
         return default
 
     def start(self):
+        self.update = True
         self.overlap_evt = TEvent()
         self.info('Start automated run {}'.format(self.name))
         self._alive = True
@@ -306,12 +307,14 @@ class AutomatedRun(Loggable):
             return
         if self.plot_panel:
             self.plot_panel._ncounts = ncounts
+            self.plot_panel.isbaseline = False
 
         gn = 'signals'
-        self._build_tables(gn)
         fits = self.fits
         if fits is None:
             fits = ['linear', ] * len(self._active_detectors)
+
+        self._build_tables(gn, fits)
 
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
@@ -323,6 +326,7 @@ class AutomatedRun(Loggable):
 
         if self.plot_panel:
             self.plot_panel._ncounts = ncounts
+            self.plot_panel.isbaseline = False
 
         fits = ['', ] * len(self._active_detectors)
         gn = 'sniffs'
@@ -338,10 +342,12 @@ class AutomatedRun(Loggable):
         if not self._alive:
             return
 
+        result = None
         ion = self.ion_optics_manager
         if not detector:
             if self.plot_panel:
                 self.plot_panel._ncounts = ncounts
+                self.plot_panel.isbaseline = True
                 self.plot_panel.show()
             if mass:
                 if ion is not None:
@@ -349,17 +355,19 @@ class AutomatedRun(Loggable):
                     time.sleep(2)
 
             gn = 'baselines'
-            self._build_tables(gn)
-            fits = ['', ] * len(self._active_detectors)
-            return self._measure_iteration(gn,
+            fits = ['average_SEM', ] * len(self._active_detectors)
+            self._build_tables(gn, fits=fits)
+            result = self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, series, fits)
+            self.experiment_manager._prev_baselines = self.plot_panel.baselines
         else:
             isotopes = [di.isotope for di in self._active_detectors]
             masses = [ion.get_mass(iso) + mass for iso in isotopes]
-            return self._peak_hop_factory(detector, isotopes, ncounts, nintegrations, starttime, series,
+            result = self._peak_hop_factory(detector, isotopes, ncounts, nintegrations, starttime, series,
                                    name='baselines',
                                    masses=masses)
+        return result
 
     def do_peak_hop(self, *args):
         if not self._alive:
@@ -473,6 +481,7 @@ class AutomatedRun(Loggable):
 
         p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
         self.plot_panel = p
+        self.plot_panel.baselines = self.experiment_manager._prev_baselines
 
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
@@ -502,15 +511,15 @@ class AutomatedRun(Loggable):
         elif isinstance(fits, tuple):
             if len(fits) == 1:
                 fits = [fits[0], ] * n
-
+#
         fits = list(fits)
-        if self.plot_panel:
-            self.plot_panel.fits = fits
-#            self.plot_panel.regress_id = series
-        if self.peak_plot_panel:
-            self.peak_plot_panel.fits = fits
-#            self.peak_plot_panel.regress_id = series
-
+#        if self.plot_panel:
+#            self.plot_panel.fits = fits
+##            self.plot_panel.regress_id = series
+#        if self.peak_plot_panel:
+#            self.peak_plot_panel.fits = fits
+##            self.peak_plot_panel.regress_id = series
+#
         self.fits = fits
 
     def _open_plot_panel(self, p=None, stack_order='bottom_to_top'):
@@ -608,16 +617,22 @@ class AutomatedRun(Loggable):
 #        for di in self._active_detectors:
 #            tab = dm.new_table('/{}'.format(gn), di.name)
 #            tab.attrs.isotope = di.isotope
-    def _build_tables(self, gn):
+    def _build_tables(self, gn, fits=None):
         dm = self.data_manager
 
         dm.new_group(gn)
-        for d in self._active_detectors:
+        for i, d in enumerate(self._active_detectors):
             iso = d.isotope
             name = d.name
             isogrp = dm.new_group(iso, parent='/{}'.format(gn))
-            dm.new_table(isogrp, name)
             self._save_isotopes.append((iso, name, gn))
+
+            t = dm.new_table(isogrp, name)
+            try:
+                f = fits[i]
+                setattr(t.attrs, 'fit', f)
+            except (IndexError, TypeError):
+                pass
 
 
     def _peak_hop_factory(self, detector, isotopes, ncycles, nintegrations, starttime, series,
@@ -802,7 +817,7 @@ class AutomatedRun(Loggable):
 
             if not keys or not signals:
                 continue
-            
+
             x = time.time() - starttime# if not self._debug else i + starttime
             data_write_hook(x, keys, signals)
 
@@ -822,12 +837,9 @@ class AutomatedRun(Loggable):
                                                                  )
             else:
                 func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
-#            func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
 
             dets = self._active_detectors
 
-            self.plot_panel.signals = self.signals
-#            print fits
             for pi, (fi, dn) in enumerate(zip(fits, dets)):
                 signal = signals[keys.index(dn.name)]
                 kw['plotid'] = pi
@@ -849,7 +861,7 @@ class AutomatedRun(Loggable):
             return
 
         if fname in self.scripts:
-            self.info('script "{}" already loaded... cloning'.format(fname))
+#            self.debug('script "{}" already loaded... cloning'.format(fname))
             s = self.scripts[fname]
             if s is not None:
                 s = s.clone_traits()
@@ -876,16 +888,8 @@ class AutomatedRun(Loggable):
     def pre_extraction_save(self):
         # set our aliquot
         db = self.db
-        identifier = self.identifier
-        if identifier == 'B':
-            identifier = 1
-        elif identifier == 'A':
-            identifier = 2
-        elif identifier=='C':
-            identifier=3
-        elif identifier=='Bg':
-            identifier=4
-            
+#        identifier = self.identifier
+        identifier = convert_identifier(self.identifier)
 
         ln = db.get_labnumber(identifier)
         if ln is not None:
@@ -948,22 +952,15 @@ class AutomatedRun(Loggable):
             aliquot = self.aliquot
 
             sample = self.sample
-            if identifier == 'B':
-                identifier = 1
-                sample = 'BoneBlank'
-            elif identifier == 'A':
-                identifier = 2
-                sample = 'Air'
-            elif identifier == 'C':
-                identifier = 3
-                sample = 'Cocktail'
 
-            elif identifier == 'Bg':
-                identifier = 4
-                sample = 'Background'
-            else:
-                identifier = int(identifier)
-
+            identifier = convert_identifier(identifier)
+            if not sample:
+                samples = ['BoneBlank', 'Air', 'Cocktail', 'Background']
+                try:
+                    sample = samples[identifier]
+                except IndexError:
+                    sample = None
+#            
             lab = db.add_labnumber(identifier, aliquot, sample=sample)
 
             experiment = db.get_experiment(self.experiment_name)
@@ -1185,17 +1182,7 @@ class AutomatedRun(Loggable):
 
     @property
     def analysis_type(self):
-        #check for Bg before B
-        if self.identifier.startswith('Bg'):
-            return 'background'
-        elif self.identifier.startswith('B'):
-            return 'blank'
-        elif self.identifier.startswith('A'):
-            return 'air'
-        elif self.identifier.startswith('C-'):
-            return 'cocktail'
-        else:
-            return 'unknown'
+        return get_analysis_type(self.identifier)
 
     @property
     def executable(self):

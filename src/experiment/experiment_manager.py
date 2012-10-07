@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Button, Float, on_trait_change, Str, \
-    DelegatesTo, Bool, Property, Event, Int
+from traits.api import Instance, Button, Float, Str, \
+    DelegatesTo, Bool, Property, Event, Dict
 from traitsui.api import View, Item, Group, VGroup, HGroup, spring
 from traitsui.menu import Action
 from pyface.timer.do_later import do_later
@@ -24,7 +24,6 @@ from apptools.preferences.preference_binding import bind_preference
 #import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from threading import Thread
-import os
 import time
 
 #============= local library imports  ==========================
@@ -98,11 +97,14 @@ class ExperimentManager(Manager):
     editing_signal = None
 
     _last_ran = None
+    _prev_baselines = Dict
+
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
-#        self.populate_default_tables()
-        self.info_display.clear()
+        self.populate_default_tables()
+
+#        self.info_display.clear()
 
 #    def opened(self):
 #        pass
@@ -174,9 +176,16 @@ class ExperimentManager(Manager):
 
     def open_recent(self):
         db = self.db
-        db.reset()
-        selector = db.selector_factory(style='simple')
-        self.open_view(selector)
+        if db.connect():
+            db.reset()
+            selector = db.selector_factory(style='simple')
+
+            selector.set_data_manager(kind=self.repo_kind,
+                                      repository=self.repository,
+                                      workspace_root=paths.default_workspace)
+
+
+            self.open_view(selector)
 
 #    def get_spectrometer_manager(self):
 #        sm = self.spectrometer_manager
@@ -238,10 +247,10 @@ class ExperimentManager(Manager):
 
         #explicitly set db connection info here for now
         self.massspec_importer.db.kind = 'mysql'
-        self.massspec_importer.db.host = '129.138.12.131'
-        self.massspec_importer.db.username = 'massspec'
-        self.massspec_importer.db.password = 'DBArgon'
-        self.massspec_importer.db.name='massspecdata_test'
+#        self.massspec_importer.db.host = '129.138.12.131'
+        self.massspec_importer.db.username = 'root'
+        self.massspec_importer.db.password = 'Argon'
+        self.massspec_importer.db.name = 'massspecdata_test'
 
         if not self.massspec_importer.db.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
@@ -447,6 +456,7 @@ class ExperimentManager(Manager):
         if not self.test_connections():
             return
 
+        self.info_display.clear()
         self.experiment_set = None
         if path is None:
             path = self.open_file_dialog(default_directory=paths.experiment_dir)
@@ -564,8 +574,8 @@ class ExperimentManager(Manager):
         tb = HGroup(
                     Item('delay_between_runs_readback',
                          label='Delay Countdown',
-                         style='readonly', format_str='%i', 
-                         width=-50),
+                         style='readonly', format_str='%i',
+                         width= -50),
                     spring,
                     Item('end_at_run_completion'),
                     self._button_factory('execute_button',

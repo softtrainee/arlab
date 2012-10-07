@@ -17,8 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import Button, List, Any, Dict, Bool, Int, Enum
 
-from traitsui.api import View, Item, TabularEditor, EnumEditor, ButtonEditor, \
-    HGroup, VGroup, spring, ListEditor, InstanceEditor, Spring
+from traitsui.api import View, Item, ButtonEditor, \
+    HGroup, spring, ListEditor, InstanceEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
@@ -30,20 +30,7 @@ from src.database.core.query import Query
 from src.viewable import Viewable
 
 from traits.api import HasTraits
-#from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
-#
-##class _TabularEditor(wxTabularEditor):
-##    def init(self, parent):
-##        print 'sadfsad'
-##        wxTabularEditor.init(self, parent)
-###        self.control.SetWidth(100)
-##        print self.control.GetSize()
-#
-#class myTabularEditor(TabularEditor):
-#
-#    def _get_klass(self):
-#        print 'fffff'
-#        return _TabularEditor
+from src.traits_editors.tabular_editor import myTabularEditor
 
 class ColumnSorterMixin(HasTraits):
     _sort_field = None
@@ -80,10 +67,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     _db = DatabaseAdapter
 
-#    dclicked = Event
     dclicked = Any
     selected = Any
-    scroll_to_row = Any
+    scroll_to_row = Int
 #    activated = Any
     selected_row = Any
 
@@ -108,6 +94,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     queries = List(Query)
 
     style = Enum('normal', 'panel', 'simple')
+
+    data_manager = None
 
     def __init__(self, *args, **kw):
         super(DatabaseSelector, self).__init__(*args, **kw)
@@ -176,8 +164,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self.results = []
         self._load_results(dbs)
         self._sort_columns(self.results)
+
 #        self.selected = self.results[-1:]
-#        self.scroll_to_row = [30]#len(self.results) - 1
+        self.scroll_to_row = len(self.results)
 #        self.selected_row = [29, 30]#len(self.results) - 1
 #        print self.scroll_to_row
 #        print self.selected
@@ -322,7 +311,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return q
 
     def _result_factory(self, di, **kw):
-        return self.result_klass(_db_result=di, **kw)
+        return self.result_klass(_db_result=di,
+                                 selector=self,
+                                 **kw)
 
 #===============================================================================
 # views
@@ -348,17 +339,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return v
 
     def _view_factory(self):
-        editor = TabularEditor(adapter=self.tabular_adapter(),
+        editor = myTabularEditor(adapter=self.tabular_adapter(),
                                dclicked='object.dclicked',
                                selected='object.selected',
-                               scroll_to_row='object.scroll_to_row',
-#                               activated='object.activated',
-                               selected_row='object.selected_row',
-#                                auto_update=False,
-#                                stretch_last_section=False,
-                                stretch_last_section=False,
-                                auto_update=True,
-                               scroll_to_row_hint='visible',
+                               auto_update=True,
                                column_clicked='object.column_clicked',
                                editable=False,
                                operations=[
@@ -366,7 +350,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #                                           'drag'
                                            ],
                                multi_select=True,
-
 
                                )
 

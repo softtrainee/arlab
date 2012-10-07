@@ -96,6 +96,7 @@ class Paths():
     snapshot_dir = None
     video_dir = None
     stage_visualizer_dir = None
+    default_workspace = None
     #initialization_dir = None
     #device_creator_dir = None
 
@@ -120,6 +121,7 @@ class Paths():
         #_dir suffix ensures the path is checked for existence
         self.root_dir = root
         stable_root = join(HOME, 'Pychrondata')
+
 
         #==============================================================================
         # #database
@@ -176,9 +178,9 @@ class Paths():
         self.stage_visualizer_dir = join(data_dir, 'stage_visualizer')
 
         self.arar_dir = join(data_dir, 'arar')
-        
-        self.isotope_dir=join(self.data_dir,'isotopes')
 
+        self.isotope_dir = join(self.data_dir, 'isotopes')
+        self.default_workspace = join(self.data_dir, 'workspaces', 'collection')
         #initialization_dir = join(setup_dir, 'initializations')
         #device_creator_dir = join(device_dir, 'device_creator')
 

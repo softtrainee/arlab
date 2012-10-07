@@ -36,56 +36,49 @@ class RegressionGraph(Graph):
     selected_component = Any
     regressors = List
     regression_results = Event
-    fits = List
+#    fits = List
 #    def clear(self):
 #        super(RegressionGraph, self).clear()
 #        self.regressors = []
-    def set_fits(self, fits):
-        self.fits = fits
+#    def set_fits(self, fits):
+#        self.fits = fits
 #        for fi, pi in zip(fits, self.plots):
 #            scatter = pi.plots['data'][0]
 #            scatter.fit = fi
 
     def _update_graph(self):
-#        print 'assssss'
-#        print self.selected_plot, 'aa'
-#        print self.selected_plotid
         self.regressors = []
-#        plot = self.selected_plot
-        for fi, plot in zip(self.fits, self.plots):
-            try:
-                scatter = plot.plots['data'][0]
-#                print scatter, fi
-                if fi:
-#                if scatter.fit and scatter.fit != '---':
-                    line = plot.plots['fit'][0]
-                    uline = plot.plots['upper CI'][0]
-                    lline = plot.plots['lower CI'][0]
-                    sel = scatter.index.metadata.get('selections', [])
-
-                    args = self._regress(selection=sel,
-                                                   plot=plot,
-                                                   fit=fi,
-                                                   x=scatter.index.get_data(),
-                                                   y=scatter.value.get_data())
-                    if args:
-
-
-                        fx, fy, ly, uy = args
-    #                    print fy
-                        line.index.set_data(fx)
-                        line.value.set_data(fy)
-
-                        lline.index.set_data(fx)
-                        lline.value.set_data(ly)
-
-                        uline.index.set_data(fx)
-                        uline.value.set_data(uy)
-            except KeyError:
-                pass
-#                print 'update graph', e
+        for plot in self.plots:
+            ks = plot.plots.keys()
+            scatters = [plot.plots[k][0] for k in ks if k.startswith('data')]
+            fls = [plot.plots[k][0] for k in ks if k.startswith('fit')]
+            uls = [plot.plots[k][0] for k in ks if k.startswith('upper')]
+            lls = [plot.plots[k][0] for k in ks if k.startswith('lower')]
+            for si, fl, ul, ll in zip(scatters, fls, uls, lls):
+                self._plot_regression(plot, si, fl, ul, ll)
 
         self.regression_results = self.regressors
+
+    def _plot_regression(self, plot, scatter, line, uline, lline):
+        try:
+            sel = scatter.index.metadata.get('selections', [])
+            args = self._regress(selection=sel,
+                                           plot=plot,
+                                           fit=scatter.fit,
+                                           x=scatter.index.get_data(),
+                                           y=scatter.value.get_data())
+            if args:
+                fx, fy, ly, uy = args
+                line.index.set_data(fx)
+                line.value.set_data(fy)
+
+                lline.index.set_data(fx)
+                lline.value.set_data(ly)
+
+                uline.index.set_data(fx)
+                uline.value.set_data(uy)
+        except KeyError:
+            pass
 
     def _regress(self, x=None, y=None,
                  selection=None,
@@ -97,7 +90,6 @@ class RegressionGraph(Graph):
 
         fit = self._convert_fit(fit)
         if fit is None:
-#            self.regressors.append(None)
             return
 
         if plot is None:
@@ -109,7 +101,6 @@ class RegressionGraph(Graph):
 
         if filterstr:
             x, y = self._apply_filter(filterstr, x, y)
-#            index.metadata['selections']
         if selection:
             x = delete(x[:], selection, 0)
             y = delete(y[:], selection, 0)
@@ -128,7 +119,6 @@ class RegressionGraph(Graph):
             self.regressors.append(r)
             fx = linspace(0, (high - low), 200)
 
-#            print r.coefficients
             fy = r.predict(fx)
             if fy is None:
                 return
@@ -148,7 +138,9 @@ class RegressionGraph(Graph):
             m = r.coefficients[0]
             if fit.endswith('SEM'):
                 s = r.coefficient_errors[1]
+                r.error_calc = 'SEM'
             else:
+                r.error_calc = 'SD'
                 s = r.coefficient_errors[0]
 
             fy = ones(n) * m
@@ -204,15 +196,17 @@ class RegressionGraph(Graph):
                                                            plotid=plotid,
                                                            *args, **kw)
 
+
         kw['type'] = 'scatter'
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
+        si = len([p for p in plot.plots.keys() if p.startswith('data')])
 
         rd['selection_color'] = 'red'
         rd['selection_marker'] = marker
         rd['selection_marker_size'] = marker_size + 2
 
         scatter = plot.plot(names, **rd)[0]
-        self.set_series_label('data', plotid=plotid)
+        self.set_series_label('data{}'.format(si), plotid=plotid)
         scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
 
         scatter.fit = fit
@@ -221,21 +215,22 @@ class RegressionGraph(Graph):
             args = self._regress(x=x, y=y, plotid=plotid)
             if args:
                 fx, fy, ly, uy = args
+
+        kw['color'] = 'black'
         kw['type'] = 'line'
         kw['render_style'] = 'connectedpoints'
         plot, names, rd = self._series_factory(fx, fy, plotid=plotid, **kw)
         line = plot.plot(names, **rd)[0]
-        self.set_series_label('fit', plotid=plotid)
-        if 'color' in kw:
-            kw.pop('color')
+        self.set_series_label('fit{}'.format(si), plotid=plotid)
 
-        plot, names, rd = self._series_factory(fx, uy, line_style='dash', color='red', plotid=plotid, **kw)
+        kw['color'] = 'red'
+        plot, names, rd = self._series_factory(fx, uy, line_style='dash', plotid=plotid, **kw)
         plot.plot(names, **rd)[0]
-        self.set_series_label('upper CI', plotid=plotid)
+        self.set_series_label('upper CI{}'.format(si), plotid=plotid)
 
-        plot, names, rd = self._series_factory(fx, ly, line_style='dash', color='red', plotid=plotid, **kw)
+        plot, names, rd = self._series_factory(fx, ly, line_style='dash', plotid=plotid, **kw)
         plot.plot(names, **rd)[0]
-        self.set_series_label('lower CI', plotid=plotid)
+        self.set_series_label('lower CI'.format(si), plotid=plotid)
 
         try:
             self._set_bottom_axis(plot, plot, plotid)

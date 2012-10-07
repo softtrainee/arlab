@@ -49,16 +49,17 @@ class FusionsLaserManager(LaserManager):
     laser_controller = Instance(FusionsLogicBoard)
     fiber_light = Instance(FiberLight)
 
-#    beam = DelegatesTo('laser_controller')
-#    beammin = DelegatesTo('laser_controller')
-#    beammax = DelegatesTo('laser_controller')
-#    update_beam = DelegatesTo('laser_controller')
-    beam_enabled = Bool(True)
-#
-#    zoom = DelegatesTo('laser_controller')
-#    zoommin = DelegatesTo('laser_controller')
-#    zoommax = DelegatesTo('laser_controller')
-#    update_zoom = DelegatesTo('laser_controller')
+    beam = DelegatesTo('laser_controller')
+    beammin = DelegatesTo('laser_controller')
+    beammax = DelegatesTo('laser_controller')
+    update_beam = DelegatesTo('laser_controller')
+    beam_enabled = DelegatesTo('laser_controller')
+#    beam_enabled = Bool(True)
+
+    zoom = DelegatesTo('laser_controller')
+    zoommin = DelegatesTo('laser_controller')
+    zoommax = DelegatesTo('laser_controller')
+    update_zoom = DelegatesTo('laser_controller')
 
     pointer = Event
     pointer_state = Bool(False)
@@ -420,10 +421,9 @@ class FusionsLaserManager(LaserManager):
     def get_control_sliders(self):
         '''
         '''
-#        s = [('zoom', 'zoom', {}),
-#            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
-#            ]
-        s=[]
+        s = [('zoom', 'zoom', {}),
+            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
+            ]
         return s
 
     def get_lens_configuration_group(self):

@@ -19,7 +19,7 @@ from traits.api import Any, on_trait_change
 #============= standard library imports ========================
 from pyscript import PyScript
 import time
-from src.pyscripts.pyscript import verbose_skip
+from src.pyscripts.pyscript import verbose_skip, count_verbose_skip
 import os
 from src.paths import paths
 import random
@@ -112,8 +112,12 @@ class MeasurementPyScript(PyScript):
 #===============================================================================
 # commands
 #===============================================================================
-    @verbose_skip
-    def sniff(self, ncounts=0):
+    @count_verbose_skip
+    def sniff(self, ncounts=0, calc_time=False, integration_time=1):
+        if calc_time:
+            self._estimated_duration += (ncounts * integration_time)
+            return
+
         if self.automated_run is None:
             return
 
@@ -141,8 +145,12 @@ class MeasurementPyScript(PyScript):
     def set_time_zero(self):
         self._time_zero = time.time()
 
-    @verbose_skip
-    def multicollect(self, ncounts=200, integration_time=1):
+    @count_verbose_skip
+    def multicollect(self, ncounts=200, integration_time=1, calc_time=False):
+        if calc_time:
+            self._estimated_duration += (ncounts * integration_time)
+            return
+
         if self.automated_run is None:
             return
 
@@ -173,11 +181,20 @@ class MeasurementPyScript(PyScript):
 #        if isotopes:
 #            self.automated_run.set_isotopes(list(isotopes))
 
-    @verbose_skip
-    def baselines(self, counts=None, cycles=5, mass=None, detector=''):
+    @count_verbose_skip
+    def baselines(self, counts=1, cycles=5, mass=None, detector='', calc_time=False):
         '''
             if detector is not none then it is peak hopped
         '''
+        if calc_time:
+            if not detector:
+                ns = counts
+            else:
+                ns = counts * cycles
+
+            self._estimated_duration += ns
+            return
+
         if self.automated_run is None:
             return
 
@@ -191,8 +208,12 @@ class MeasurementPyScript(PyScript):
             self.cancel()
         self._series_count += 1
 
-    @verbose_skip
-    def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5):
+    @count_verbose_skip
+    def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5, calc_time=False):
+        if calc_time:
+            self._estimated_duration += (cycles * integrations)
+            return
+
         if self.automated_run is None:
             return
 #        isotopes = sorted(isotopes, key=lambda k:int(k[2:4]))
@@ -204,8 +225,12 @@ class MeasurementPyScript(PyScript):
                                     )
         self._series_count += 3
 
-    @verbose_skip
-    def peak_center(self, detector='AX', isotope='Ar40'):
+    @count_verbose_skip
+    def peak_center(self, detector='AX', isotope='Ar40', calc_time=False):
+        if calc_time:
+            self._estimated_duration += 30
+            return
+
         if self.automated_run is None:
             return
 

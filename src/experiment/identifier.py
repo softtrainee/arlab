@@ -17,27 +17,30 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
-from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.repo.repository import FTPRepository
-import os
 #============= standard library imports ========================
 #============= local library imports  ==========================
+def convert_identifier(identifier):
+    if identifier == 'B':
+        identifier = 1
+    elif identifier == 'A':
+        identifier = 2
+    elif identifier == 'C':
+        identifier = 3
+    elif identifier == 'Bg':
+        identifier = 4
+    return identifier
 
-
-class FTPH5DataManager(H5DataManager):
-    repository = None
-    workspace_root = None
-    def connect(self, host, usr, pwd, remote):
-        self.repository = FTPRepository(host=host, username=usr, password=pwd, remote=remote)
-
-    def open_data(self, p):
-        out = os.path.join(self.workspace_root, p)
-
-        p = os.path.join(self.repository.root, p)
-        self.repository.retrieveFile(p, out)
-        return super(FTPH5DataManager, self).open_data(out)
-
-    def isfile(self, path):
-        return self.repository.isfile(path)
+def get_analysis_type(idn):
+    #check for Bg before B
+    if idn.startswith('Bg'):
+        return 'background'
+    elif idn.startswith('B'):
+        return 'blank'
+    elif idn.startswith('A'):
+        return 'air'
+    elif idn.startswith('C-'):
+        return 'cocktail'
+    else:
+        return 'unknown'
 
 #============= EOF =============================================

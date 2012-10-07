@@ -35,6 +35,7 @@ from src.graph.graph import Graph
 from src.graph.stacked_graph import StackedGraph
 from src.managers.data_managers.ftp_h5_data_manager import FTPH5DataManager
 from traits.trait_errors import TraitError
+from src.managers.data_managers.h5_data_manager import H5DataManager
 
 class AnalysisResult(DBResult):
     title_str = 'Analysis'
@@ -75,10 +76,11 @@ class AnalysisResult(DBResult):
         except Exception, e:
             pass
 
-    def _data_manager_factory(self):
-        dm = FTPH5DataManager(workspace_root='/Users/ross/Sandbox/workspace/foo1')
-        dm.connect('localhost', 'ross', 'jir812', 'Sandbox/ftp/data')
-        return dm
+#    def _data_manager_factory(self):
+#        dm = H5DataManager()
+##        dm = FTPH5DataManager(workspace_root='/Users/ross/Sandbox/workspace/foo1')
+##        dm.connect('localhost', 'ross', 'jir812', 'Sandbox/ftp/data')
+#        return dm
 
     @cached_property
     def _get_labnumber(self):
@@ -132,73 +134,27 @@ class AnalysisResult(DBResult):
 #                if info.result:
 #                    self.analyzer.apply_fits()
             if selected == 'summary':
-                item = AnalysisSummary(age=10.0,
-                                       error=0.01,
-                                       result=self
-                                       )
+                item = AnalysisSummary(result=self)
             else:
                 item = getattr(self, '{}_graph'.format(selected))
             self.trait_set(display_item=item)
 
     def load_graph(self, graph=None, xoffset=0):
-#        keys, sniffs, signals, baselines, peakhop, peakcenter = self._get_data()
-##        self.det_keys = keys
-#
-#        if signals:
-#            self.iso_keys = [signals[k][0] for k in keys]
-#            self.fits = [signals[k][1] for k in keys]
-#            graph = self._load_graph(signals)
-#            self.signal_graph = graph
-#            self.categories.append('signal')
-#
-#        elif peakhop:
-#            for det, v in peakhop.iteritems():
-##                for vi in v:
-##                    print vi
-#                self.fits = [vi[1] for vi in v.itervalues()]
-#                self.categories.append(det)
-#                pg = self._load_graph(v, keys=self.iso_keys)
-#                self.add_class_trait('{}_graph'.format(det), pg)
-#        else:
-#            self.iso_keys = [None for k in keys]
-#            self.fits = [None for k in keys]
-#
-##        graph.set_x_limits(min=0)
-##        self.intercepts = [3.3, ] * len(keys)
-##        self.signal_regression_results = graph.regression_results
-#        self.display_item = graph
-        dm = self._data_manager_factory()
-        dm.open_data(self._get_path())
 
         self.fits = dict()
         self.intercepts = dict()
         self.baselines = dict()
-#        peakhops = self._get_peakhop_signals(dm)
 
         self.clear()
 
-#        if peakhops:
-#            for det, v in peakhops.iteritems():
-#                self.categories.append(det)
-#                pg = self._load_stacked_graph(v, det=det)
-#                name = '{}_graph'.format(det)
-#                try:
-#                    self.add_class_trait(name, pg)
-#                except TraitError:
-#                    self.trait_set({name:pg})
-#
-#                for iso, rs in zip(self.isos, pg.regression_results):
-#                    self.intercepts[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
-#
-#                pg.set_x_limits(min=0)
-
+        dm = self.selector.data_manager
         signals = self._get_table_data(dm, 'signals')
         if signals:
 
             self.categories.append('signal')
             graph = self._load_stacked_graph(signals)
 
-            for iso, rs in zip(self.isos, graph.regression_results):
+            for iso, rs in zip(self.isos, graph.regressors):
                 self.intercepts[iso] = (rs.coefficients[-1], rs.coefficient_errors[-1])
 
             self.signal_graph = graph
@@ -212,25 +168,10 @@ class AnalysisResult(DBResult):
         baselines = self._get_table_data(dm, 'baselines')
         if baselines:
             self.categories.append('baseline')
-            graph = self._load_stacked_graph(baselines, fit='average')
+            graph = self._load_stacked_graph(baselines)
             self.baseline_graph = graph
-            for iso, rs in zip(self.isos, graph.regression_results):
+            for iso, rs in zip(self.isos, graph.regressors):
                 self.baselines[iso] = (rs.coefficients[-1], rs.coefficient_errors[-1])
-
-#        peakhop_baselines = self._get_peakhop_baselines(dm)
-#        peakhop_baselines = self._get_table_data('peakh')
-#        if peakhop_baselines:
-#            for det, v in peakhop_baselines.iteritems():
-#                self.categories.append('{} baselines'.format(det))
-#                pg = self._load_stacked_graph(v, det=det, fit='average')
-#                name = '{}_baselines_graph'.format(det)
-#                try:
-#                    self.add_class_trait(name, pg)
-#                except TraitError:
-#                    self.trait_set({name:pg})
-#
-#                for iso, rs in zip(self.isos, pg.regression_results):
-#                    self.baselines[iso] = (rs['coefficients'][-1], rs['coeff_errors'][-1])
 
         peakcenter = self._get_peakcenter(dm)
         if peakcenter:
@@ -252,8 +193,7 @@ class AnalysisResult(DBResult):
                               'peak_center_graph'
                               ]]
 
-
-    def _load_stacked_graph(self, data, det=None, fit=None, regress=True):
+    def _load_stacked_graph(self, data, det=None, regress=True):
         if regress:
 #            klass = StackedTimeSeriesRegressionGraph
             klass = StackedRegressionTimeSeriesGraph
@@ -291,10 +231,7 @@ class AnalysisResult(DBResult):
             gkw['ytitle'] = '{} ({})'.format(di if det is None else det, iso)
             skw = dict()
             if regress:
-                if fit is None:
-                    fit = fi
-                if fit:
-                    skw['fit_type'] = fit
+                skw['fit'] = fi
 #
             graph.new_plot(**gkw)
             graph.new_series(xs, ys, plotid=i,
@@ -302,7 +239,9 @@ class AnalysisResult(DBResult):
                              marker_size=1.25,
                              **skw)
 #            graph.set_series_label(key, plotid=i)
-#
+            mi = min(xs)
+            ma = max(xs)
+            graph.set_x_limits(min=mi, max=ma, pad='0.1', plotid=i)
             params = dict(orientation='right' if i % 2 else 'left',
                           axis_line_visible=False
                           )
@@ -364,7 +303,8 @@ class AnalysisResult(DBResult):
         ds = dict()
         try:
             isogrps = dm.get_groups(grp)
-        except Exception:
+        except Exception, e:
+            print 'get table data', e
             return
 
         for ig in isogrps:
@@ -453,6 +393,13 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 #            self.join_table_parameter = str(jt[0])
 #    def _selected_changed(self):
 #        print self.selected
+    def set_data_manager(self, kind, **kw):
+        if kind == 'FTP':
+            dm = FTPH5DataManager(**kw)
+        else:
+            dm = H5DataManager(**kw)
+
+        self.data_manager = dm
 
     def _get_selector_records(self, **kw):
         sess = self._db.get_session()

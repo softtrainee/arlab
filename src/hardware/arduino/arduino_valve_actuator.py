@@ -35,9 +35,9 @@ class ArduinoValveActuator(ArduinoGPActuator):
         '''
         pass
 
-    def get_hard_lock_indicator_state(self, obj):
-        '''
-        '''
-        cmd = 'A{}'.format(obj.name)
-        return self.ask(cmd, verbose=False) == '1'
+#    def get_hard_lock_indicator_state(self, obj):
+#        '''
+#        '''
+#        cmd = 'A{}'.format(obj.name)
+#        return self.ask(cmd, verbose=False) == '1'
 #============= EOF ====================================
