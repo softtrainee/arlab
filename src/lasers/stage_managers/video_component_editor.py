@@ -37,12 +37,12 @@ class _VideoComponentEditor(_LaserComponentEditor):
    
         '''
         super(_VideoComponentEditor, self).init(parent)
-#        self.control.Bind(EVT_IDLE, self.onIdle)
+#        self.control.Bind(wx.EVT_IDLE, self.onIdle)
 #        self.control.Bind(EVT_PAINT, self.onPaint)
 
         self.playTimer = wx.Timer(self.control, 5)
         self.control.Bind(wx.EVT_TIMER, self.onNextFrame, self.playTimer)
-        self.playTimer.Start(1000 / self.value.fps)
+        self.playTimer.Start(1000 / self.value.fps) 
 
 #    def onIdle(self, event):
 ##        '''

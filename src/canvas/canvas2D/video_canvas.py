@@ -25,7 +25,7 @@ class VideoCanvas(BaseDataCanvas):
     video = None
     camera = None
     padding = 0
-    fps = 5
+#    fps = 5
 
     def __init__(self, *args, **kw):
         '''

@@ -159,7 +159,7 @@ class Camera(ConfigLoadable):
         self.set_attribute(config, 'height', 'General', 'height', cast='int')
         self.set_attribute(config, 'focus_z', 'General', 'focus', cast='float')
 
-        self.set_attribute(config, 'fps', 'General', 'fps', cast='int', default=5)
+        self.set_attribute(config, 'fps', 'General', 'fps', cast='int', default=12)
 
         cxs = self.config_get(config, 'General', 'xcoefficients')
         cys = self.config_get(config, 'General', 'ycoefficients')
@@ -189,9 +189,10 @@ class Camera(ConfigLoadable):
             if canvas is None:
                 canvas = self.parent
 
-            d /= 2.0 * px_per_cm / 10.0
-            lim = (-d + cur_pos, d + cur_pos)
-            canvas.set_mapper_limits(axis_key, lim)
+            if canvas:
+                d /= 2.0 * px_per_cm / 10.0
+                lim = (-d + cur_pos, d + cur_pos)
+                canvas.set_mapper_limits(axis_key, lim)
 
         cdata = self.calibration_data
         xpx_per_cm = np.polyval(cdata.get_xcoeffs(), [zoom])[0]
