@@ -36,6 +36,8 @@ class RegressionGraph(Graph):
     selected_component = Any
     regressors = List
     regression_results = Event
+    suppress_regression=False
+    use_data_tool=True
 #    fits = List
 #    def clear(self):
 #        super(RegressionGraph, self).clear()
@@ -47,13 +49,21 @@ class RegressionGraph(Graph):
 #            scatter.fit = fi
 
     def _update_graph(self):
+        if self.suppress_regression:
+            return
+        
         self.regressors = []
         for plot in self.plots:
             ks = plot.plots.keys()
-            scatters = [plot.plots[k][0] for k in ks if k.startswith('data')]
-            fls = [plot.plots[k][0] for k in ks if k.startswith('fit')]
-            uls = [plot.plots[k][0] for k in ks if k.startswith('upper')]
-            lls = [plot.plots[k][0] for k in ks if k.startswith('lower')]
+            scatters, kkk= zip(*[(plot.plots[k][0],k) for k in ks if k.startswith('data')])
+            ind=kkk[0][-1]
+            fls=[plot.plots[kk][0] for kk in ks if kk=='fit{}'.format(ind)]
+            uls=[plot.plots[kk][0] for kk in ks if kk=='upper{}'.format(ind)]
+            lls=[plot.plots[kk][0] for kk in ks if kk=='lower{}'.format(ind)]
+            
+            #fls = [plot.plots[k][0] for k in ks if k.startswith('fit')]
+            #uls = [plot.plots[k][0] for k in ks if k.startswith('upper')]
+            #lls = [plot.plots[k][0] for k in ks if k.startswith('lower')]
             for si, fl, ul, ll in zip(scatters, fls, uls, lls):
                 self._plot_regression(plot, si, fl, ul, ll)
 
@@ -236,7 +246,7 @@ class RegressionGraph(Graph):
             self._set_bottom_axis(plot, plot, plotid)
         except:
             pass
-
+        
         self._add_tools(scatter, plotid)
         return plot, scatter, line
 
@@ -270,6 +280,8 @@ class RegressionGraph(Graph):
         scatter.overlays.append(data_tool_overlay)
 
         broadcaster.tools.append(data_tool)
+        if not self.use_data_tool:
+            data_tool.visible=False
 
     def _set_limits(self, *args, **kw):
         '''

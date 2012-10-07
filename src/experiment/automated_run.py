@@ -499,9 +499,8 @@ class AutomatedRun(Loggable):
                          label=l, plotid=i)
 
             g.set_x_limits(min=0, max=400, plotid=i)
-#            g.set_x_limits(min=0, max=40, plotid=i)
+
         self._active_detectors = [spec.get_detector(n) for n in dets]
-#        self.plot_panel.isotopes = [d.isotope for d in self._active_detectors]
         self.plot_panel.detectors = self._active_detectors
 
     def set_regress_fits(self, fits, series=0):
@@ -844,12 +843,16 @@ class AutomatedRun(Loggable):
                 signal = signals[keys.index(dn.name)]
                 kw['plotid'] = pi
                 kw['fit'] = fi
-#                print kw
                 func(x, signal, kw)
 
-
-#            if (i and i % 100 == 0) or x > graph.get_x_limits()[1]:
-#                graph.set_x_limits(0, x + 10)
+            mi,ma=graph.get_x_limits()
+            dev=(ma-mi)*0.05
+            if (x+dev) > ma:
+                graph.suppress_regression=True
+                for j,_ in enumerate(graph.plots):
+                    graph.set_x_limits(0, x + (ma-mi)*0.25, plotid=j)
+                graph.suppress_regression=False
+                
 
         return True
 
