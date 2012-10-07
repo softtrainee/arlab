@@ -544,7 +544,7 @@ class ValveManager(Manager):
         self.info('loading valve definitions file  {}'.format(path))
         def factory(v):
             name, hv = self._valve_factory(v)
-#            self._load_explanation_valve(hv)
+            self._load_explanation_valve(hv)
             self.valves[name] = hv
             return hv
 
