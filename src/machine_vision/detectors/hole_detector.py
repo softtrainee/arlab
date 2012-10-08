@@ -19,8 +19,13 @@ from traits.api import  Float, Range, Property, Tuple, Bool, Enum, \
     Instance, Str, on_trait_change
 from traitsui.api import View, Item, VGroup, HGroup, spring
 #============= standard library imports ========================
-from numpy import histogram, argmax, array, asarray, ogrid, percentile
+from scipy import ndimage
+from numpy import histogram, argmax, array, asarray, ogrid, percentile, zeros_like, \
+    delete, zeros, asarray
 from skimage.exposure import rescale_intensity
+from skimage.draw import polygon
+from skimage.morphology import is_local_maximum, watershed
+
 import random
 import os
 
@@ -36,6 +41,8 @@ from detector import Detector
 from src.image.image import StandAloneImage
 from src.machine_vision.detectors.target import Target
 from src.machine_vision.segmenters.base import BaseSegmenter
+#from src.image.pyopencv_image_helper import grayspace
+
 
 DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
@@ -437,7 +444,8 @@ class HoleDetector(Detector):
         return self._segmenter_factory(self.segmentation_style)
 
     def _apply_filters(self, src, smooth=False,
-                        contrast=False, sharpen=False, verbose=False):
+                        contrast=False, sharpen=False,
+                        verbose=False):
         if verbose:
             self.debug('applying filters. smooth={} contrast={} sharpen={}'.format(smooth, contrast, sharpen))
 
@@ -487,12 +495,78 @@ class HoleDetector(Detector):
         ma = maholedim ** 2 * 3.1415
         return mi, ma
 
-    def _filter_targets(self, targets):
+    show = True
+    def _filter_targets(self, targets, threshold=0.95):
         mi, ma = self._get_filter_target_area()
 
         def test_target(tar):
-            return self._near_center(*tar.centroid_value) and \
-                ma > tar.area > mi
+            '''
+                if the convexity of the target is <threshold try to do a watershed segmentation
+                
+                make black image with white polygon
+                do watershed segmentation
+                find polygon center
+                
+            '''
+            ctest = tar.convexity > threshold
+            centtest = self._near_center(*tar.centroid_value)
+            atest = ma > tar.area > mi
+
+            if not ctest and (atest and centtest):
+                #make image with polygon
+                image = zeros((125, 125))
+                points = asarray(tar.poly_points)
+
+                points = asarray([(pi.x, pi.y) for pi in points])
+                rr, cc = polygon(points[:, 0], points[:, 1])
+                image[rr, cc] = 255
+
+                distance = ndimage.distance_transform_edt(image)
+                local_maxi = is_local_maximum(distance, image,
+        #                                      ones((5, 5))
+                                              )
+                markers = ndimage.label(local_maxi)[0]
+                wsrc = watershed(-distance, markers,
+                                  mask=image
+                                 )
+
+                values, bins = histogram(wsrc)
+                ind = argmax(values)
+                bi = bins[ind]
+                if not bi:
+                    values = delete(values, ind)
+                    bi = bins[argmax(values)]
+
+                nimage = zeros_like(wsrc, dtype='uint8')
+                nimage[wsrc > bi] = 1
+                nimage[wsrc > bi + 1] = 0
+                img = asMat(nimage)
+
+#                if self.show:
+#                    import matplotlib.pyplot as plt
+#                    fig, axes = plt.subplots(ncols=3, figsize=(8, 2.7))
+#                    ax0, ax1, ax2 = axes
+#
+#                    ax0.imshow(image, cmap=plt.cm.gray, interpolation='nearest')
+#                    ax1.imshow(-distance, cmap=plt.cm.jet, interpolation='nearest')
+#                    ax2.imshow(wsrc, cmap=plt.cm.gray, interpolation='nearest')
+#
+#                    for ax in axes:
+#                        ax.axis('off')
+#
+#                    plt.subplots_adjust(hspace=0.01, wspace=0.01, top=1, bottom=0, left=0,
+#                                    right=1)
+#                    plt.show()
+##                    self.show = False
+
+                tars = self._locate_targets(img)
+                if tars:
+                    tar = tars[0]
+                    ctest = tar.convexity > threshold
+                else:
+                    return
+
+            return ctest and atest and centtest
 
         return [t for t in targets if test_target(t)]
 

@@ -13,18 +13,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
+from src.machine_vision.convex_hull import convex_hull_area
+#def cached_property(function):
+#    name = '{}_cache'.format(function.__name__)
+#    def decorator(self):
+#        result = self.__dict__.get(name, None)
+#        if result is None:
+#            self.__dict__[name] = result = function()
+#        return result
+#
+#    return decorator
 #============= enthought library imports =======================
-
+from traits.api import HasTraits, cached_property, Property
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class Target(object):
+class Target(HasTraits):
     centroid_value = None
     poly_points = None
     bounding_rect = None
     threshold = None
     area = None
+    convexity = Property
 
     @property
     def dev_centroid(self):
@@ -44,4 +54,7 @@ class Target(object):
     def bounding_area(self):
         return self.bounding_rect.width * self.bounding_rect.height
 
+    @cached_property
+    def _get_convexity(self):
+        return self.area / convex_hull_area(self.poly_points)
 #============= EOF =============================================

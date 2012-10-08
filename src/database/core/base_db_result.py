@@ -23,7 +23,7 @@ import os
 #============= local library imports  ==========================
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.graph.graph import Graph
-from src.managers.data_managers.h5_data_manager import H5DataManager
+#from src.managers.data_managers.h5_data_manager import H5DataManager
 
 
 class BaseDBResult(HasTraits):
@@ -78,6 +78,10 @@ class DBResult(BaseDBResult):
         root = self._db_result.path.root
         name = self._db_result.path.filename
         return os.path.join(root, name)
+
+    @property
+    def filename(self):
+        return os.path.basename(self.path)
 
     def _export_button_fired(self):
         self._export_csv()

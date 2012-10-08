@@ -317,7 +317,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             ps = self.selector
 #            names = [ri.filename for ri in ps.selected_results if ri.filename != '---']
             names, attrs, gids = zip(*[(ri.filename, dict(dbresult=ri._db_result), ri.gid if ri.gid else 0)
-                                      for ri in ps.selected_results if ri.filename.strip()])
+                                      for ri in ps.selected_results if ri.path.strip()])
 #            gids = []
 #            gid = 0
 #            for ri in ps.selected_results:
@@ -364,11 +364,11 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             ps = ProcessingSelector(db=self.db)
             ps.selector.style = 'panel'
             ps.on_trait_change(self._update_data, 'update_data')
-#            ps.edit_traits()
+            ps.edit_traits()
 
             self.selector = ps
 #            if self._debug:
-            ps.selected_results = [i for i in ps.selector.results[-5:] if i.analysis_type != 'blank']
+            ps.selected_results = [i for i in ps.selector.results[-10:] if i.analysis_type != 'blank']
 
         else:
             self.selector.show()
@@ -516,7 +516,6 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                      repo=self.repo,
                      workspace=self.workspace,
                      ** kw)
-
         #need to call both load from file and database
         if a.load_from_file(n):
             a.load_from_database()

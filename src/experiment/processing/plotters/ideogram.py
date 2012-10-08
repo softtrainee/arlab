@@ -93,6 +93,13 @@ class Ideogram(Plotter):
 ##        self.build()
 ##        self.graph.redraw()
 #        self.figure.refresh()
+    def _get_limits(self, ages):
+        xmin = min(ages)
+        xmax = max(ages)
+        dev = xmax - xmin
+        xmin -= dev * 0.01
+        xmax += dev * 0.01
+        return xmin, xmax
 
     def build(self, analyses=None, padding=None, excludes=None):
 
@@ -142,7 +149,6 @@ class Ideogram(Plotter):
 
         ages, errors = self._get_ages(analyses)
 
-        pad = 2
         def get_ages_errors(gid):
             nages = [a.age[0] for a in analyses if a.gid == gid and a.age[0] in ages]
             nerrors = [a.age[1] for a in analyses if a.gid == gid and a.age[1] in errors]
@@ -165,25 +171,19 @@ class Ideogram(Plotter):
 #                return asarray(nages), asarray(nerrors)
 
             ages, errors = zip(*[calculate_weighted_mean(*get_ages_errors(gi)) for gi in gids])
-            xmin = min(ages) - pad
-            xmax = max(ages) + pad
-            self._add_ideo(g, ages, errors, xmin, xmax, padding, 0)
+#            xmin = min(ages)
+#            xmax = max(ages)
+            xmin, xmax = self._get_limits(ages)
+            self._add_ideo(g, ages, errors, xmin, xmax, padding, 0, len(analyses))
 
         else:
-
-#            ages, errors = zip(*[a.age for a in analyses if a.age[0] is not None])
-    #        for ai in analyses:
-    #            print a.age
-    #        ages = None
-
-            xmin = min(ages) - pad
-            xmax = max(ages) + pad
+            xmin, xmax = self._get_limits(ages)
+            start = 1
             for gid in gids:
                 ans = [a for a in analyses if a.gid == gid and a.age[0] in ages]
-#                nages = [a.age[0] for a in analyses if a.gid == gid and a.age[0] in ages]
-#                nerrors = [a.age[1] for a in analyses if a.gid == gid and a.age[1] in errors]
                 nages, nerrors = get_ages_errors(gid)
-                self._add_ideo(g, nages, nerrors, xmin, xmax, padding, gid, analyses=ans)
+                self._add_ideo(g, nages, nerrors, xmin, xmax, padding, gid, start=start, analyses=ans)
+                start = start + len(ans) + 1
 
         g.set_x_limits(min=xmin, max=xmax, plotid=0)
         g.set_x_limits(min=xmin, max=xmax, plotid=1)
@@ -214,6 +214,8 @@ class Ideogram(Plotter):
         bins = linspace(xmi, xma, N)
         probs = zeros(N)
 
+#        print ages
+#        print errors
         for ai, ei in zip(ages, errors):
             if abs(ai) < 1e-10 or abs(ei) < 1e-10:
                 continue
@@ -227,10 +229,11 @@ class Ideogram(Plotter):
 
                 #cumulate probablities
                 probs[j] += prob
+#            print ai, ei
 
         return bins, probs
 
-    def _add_ideo(self, g, ages, errors, xmi, xma, padding, gid, analyses=None):
+    def _add_ideo(self, g, ages, errors, xmi, xma, padding, gid, start=1, analyses=None):
         ages = asarray(ages)
         errors = asarray(errors)
 #        ages, errors = self._get_ages(analyses)
@@ -244,7 +247,7 @@ class Ideogram(Plotter):
                                         error=we,
                                         error_calc_method=self.error_calc_method
                                         ))
-
+#        print ages
         bins, probs = self._calculate_probability_curve(ages, errors, xmi, xma)
         minp = min(probs)
         maxp = max(probs)
@@ -252,6 +255,13 @@ class Ideogram(Plotter):
 
         nsigma = 0.954 #2sigma
         s, _p = g.new_series(x=bins, y=probs, plotid=0)
+        _s, _p = g.new_series(x=bins, y=probs,
+                              plotid=0,
+                              visible=False,
+                              color=s.color,
+                              line_style='dash',
+                              )
+
         s, _p = g.new_series([wm], [maxp - nsigma * dp],
                              type='scatter',
 #                             marker='plus',
@@ -260,7 +270,6 @@ class Ideogram(Plotter):
                              color=s.color,
                              plotid=0
                              )
-
 
         self._add_error_bars(s, [we], 'x', sigma_trait='nsigma')
 
@@ -273,7 +282,7 @@ class Ideogram(Plotter):
         self.minprob = minp
         self.maxprob = maxp
 
-        self._add_aux_plot(g, ages, errors, padding, gid)
+        self._add_aux_plot(g, ages, errors, padding, gid, start)
 
         if analyses:
             #set the color
@@ -290,7 +299,7 @@ class Ideogram(Plotter):
                 a = mswd ** 0.5
         return we * a
 
-    def _add_aux_plot(self, g, ages, errors, padding, gid, plotid=1):
+    def _add_aux_plot(self, g, ages, errors, padding, gid, start, plotid=1):
 
         g.set_grid_traits(visible=False, plotid=plotid)
         g.set_grid_traits(visible=False, grid='y', plotid=plotid)
@@ -304,7 +313,17 @@ class Ideogram(Plotter):
         n = zip(ages, errors)
         n = sorted(n, key=lambda x:x[0])
         ages, errors = zip(*n)
-        scatter, _p = g.new_series(ages, range(1, len(ages) + 1, 1),
+#        ys = range(1, len(ages) + 1)
+#        ma = 10 * (gid + 1)
+#        ys = linspace(1, 10 * (gid + 1), len(ages))
+
+#        gg = gid + 1
+#        print gg, ns, len(ages)
+#        ys = linspace(gg, ns + gid, len(ages))
+#        print ys
+        ma = start + len(ages)
+        ys = linspace(start, ma, len(ages))
+        scatter, _p = g.new_series(ages, ys,
                                    type='scatter', marker='circle',
                                    marker_size=2,
 #                                   selection_marker='circle',
@@ -314,7 +333,7 @@ class Ideogram(Plotter):
         self._add_scatter_inspector(scatter, gid=gid)
         scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
 
-        g.set_y_limits(min=0, max=len(ages) + 1, plotid=1)
+        g.set_y_limits(min=0, max=ma + 1, plotid=1)
 
 #
 #    def update_graph_metadata(self, obj, name, old, new):
@@ -330,16 +349,28 @@ class Ideogram(Plotter):
 #        refresh = False
         g = self.graph
 
+        xmi, xma = g.get_x_limits()
         for i, p in enumerate(g.plots[1].plots.itervalues()):
             sel = p[0].index.metadata['selections']
-#            print i, sel
+            plot = g.plots[0]
+            dp = plot.plots['plot{}'.format(i * 3 + 1)][0]
+            ages_errors = sorted([a.age for a in self.analyses if a.gid == i], key=lambda x: x[0])
+            if sel:
+                dp.visible = True
+                ages, errors = zip(*ages_errors)
+
+                wm, we = calculate_weighted_mean(ages, errors)
+                mswd = calculate_mswd(ages, errors)
+                we = self._calc_error(we, mswd)
+                _xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
+                dp.value.set_data(ys)
+            else:
+                dp.visible = False
+
 #            hoverid = p[0].index.metadata['selections']
 #
-            plot = g.plots[0]
-            lp = plot.plots['plot{}'.format(i * 2)][0]
-            sp = plot.plots['plot{}'.format(i * 2 + 1)][0]
-            xmi, xma = g.get_x_limits()
-            ages_errors = sorted([a.age for a in self.analyses if a.gid == i], key=lambda x: x[0])
+            lp = plot.plots['plot{}'.format(i * 3)][0]
+            sp = plot.plots['plot{}'.format(i * 3 + 2)][0]
             try:
                 ages, errors = zip(*[ai for j, ai in enumerate(ages_errors) if not j in sel])
                 wm, we = calculate_weighted_mean(ages, errors)

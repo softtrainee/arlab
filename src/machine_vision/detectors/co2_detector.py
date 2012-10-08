@@ -51,6 +51,23 @@ class CO2HoleDetector(HoleDetector):
         else:
             from pyface.timer.do_later import do_later
             do_later(im.edit_traits)
+    def _get_new_frame(self):
+        im = self.target_image
+        im.load(self.parent.get_new_frame())
+
+        src = grayspace(im.source_frame)
+        im.set_frame(0, colorspace(src.clone()))
+
+        cw = None
+        ch = None
+        if self.use_crop:
+            ci = 0
+            cw = (1 + ci * self.crop_expansion_scalar) * self.cropwidth
+            ch = (1 + ci * self.crop_expansion_scalar) * self.cropheight
+
+            self.info('cropping image to {}mm x {}mm'.format(cw, ch))
+            src = self._crop_image(src, cw, ch, image=im)
+        return src.clone()
 
     def locate_sample_well(self, cx, cy, holenum, holedim, new_image=True, **kw):
         '''
@@ -70,39 +87,46 @@ class CO2HoleDetector(HoleDetector):
         if new_image:
             self.open_image()
 
-        im = self.target_image
-        im.load(self.parent.get_new_frame())
-
-        src = grayspace(im.source_frame)
-        im.set_frame(0, colorspace(src.clone()))
-
-        cw = None
-        ch = None
-        if self.use_crop:
-            ci = 0
-            cw = (1 + ci * self.crop_expansion_scalar) * self.cropwidth
-            ch = (1 + ci * self.crop_expansion_scalar) * self.cropheight
-
-            self.info('cropping image to {}mm x {}mm'.format(cw, ch))
-            src = self._crop_image(src, cw, ch, image=im)
+#        im = self.target_image
+#        im.load(self.parent.get_new_frame())
+#
+#        src = grayspace(im.source_frame)
+#        im.set_frame(0, colorspace(src.clone()))
+#
+#        cw = None
+#        ch = None
+#        if self.use_crop:
+#            ci = 0
+#            cw = (1 + ci * self.crop_expansion_scalar) * self.cropwidth
+#            ch = (1 + ci * self.crop_expansion_scalar) * self.cropheight
+#
+#            self.info('cropping image to {}mm x {}mm'.format(cw, ch))
+#            src = self._crop_image(src, cw, ch, image=im)
 
         width = 3
         ba = lambda v: [bool((v >> i) & 1) for i in xrange(width - 1, -1, -1)]
-        test = [ba(i) for i in range(2 ** width)]
+        tests = [ba(i) for i in range(2 ** width)]
+
+        #best set of parameters
+        tests.insert(0, (False, True, False))
+
 
         pos_argss = []
         ntests = 3
 #        test = [(False, False, False, False)]
 
-        osrc = src.clone()
+#        osrc = src.clone()
         seg = self.segmentation_style
-#        seg = 'region'
-        for sharpen, smooth, contrast in test:
-            src = self._apply_filters(osrc, smooth, contrast, sharpen)
-            targets = self._segment_source(src, seg)
-            if targets:
-                nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
-                pos_argss.append((nx, ny))
+
+        while len(pos_argss) < ntests:
+            osrc = self._get_new_frame()
+            for sharpen, smooth, contrast in tests:
+                src = self._apply_filters(osrc, smooth, contrast, sharpen)
+                targets = self._segment_source(src, seg)
+                if targets:
+                    nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
+                    pos_argss.append((nx, ny))
+                    break
             else:
                 self.info('Failed segmentation={}. Trying alternates'.format(seg))
                 test_alternates = False
@@ -120,17 +144,17 @@ class CO2HoleDetector(HoleDetector):
 
                         self.info('Failed segmentation={}'.format(aseg))
 
-            if len(pos_argss) >= ntests:
-                nxs, nys = zip(*pos_argss)
+        if len(pos_argss) >= ntests:
+            nxs, nys = zip(*pos_argss)
 
-                nx = hist(nxs)
-                ny = hist(nys)
+            nx = hist(nxs)
+            ny = hist(nys)
 
-                src = self.target_image.get_frame(0)
-                tcx, tcy = self._get_true_xy(src)
-                self._draw_indicator(src, (tcx - nx, tcy - ny) , shape='crosshairs',
-                                     size=10)
-                self._draw_center_indicator(src, size=5)
-                return nx, ny
+            src = self.target_image.get_frame(0)
+            tcx, tcy = self._get_true_xy(src)
+            self._draw_indicator(src, (tcx - nx, tcy - ny) , shape='crosshairs',
+                                 size=10)
+            self._draw_center_indicator(src, size=5)
+            return nx, ny
 
 #============= EOF =====================================
