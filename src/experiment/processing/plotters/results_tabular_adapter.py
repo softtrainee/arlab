@@ -47,7 +47,29 @@ class BaseResults(HasTraits):
     error_calc_method = Str
 
 class IdeoResultsAdapter(ResultsTabularAdapter):
-    pass
+    age_text = Property
+    error_text = Property
+    mswd_text = Property
+
+    def _get_age_text(self):
+        return self._get_comparison_text('age')
+
+    def _get_error_text(self):
+        return self._get_comparison_text('error')
+
+    def _get_mswd_text(self):
+        return self._get_comparison_text('mswd')
+
+    def _get_comparison_text(self, name):
+        a = getattr(self.item, name)
+        o = getattr(self.item, 'o' + name)
+
+        if o is not None:
+            p = abs((a - o) / o * 100)
+            return '{:0.3f} ({:0.3f} {:0.2f}%)'.format(a, o, p)
+        else:
+            return '{:0.3f}'.format(a)
+
 class InverseIsochronResultsAdapter(ResultsTabularAdapter):
     trapped_4036_format = Str('%0.2f')
     trapped_4036err_format = Str('%0.2f')
@@ -58,7 +80,9 @@ class SpectrumResultsAdapter(ResultsTabularAdapter):
     pass
 
 class IdeoResults(BaseResults):
-    pass
+    oage = None
+    oerror = None
+    omswd = None
 class InverseIsochronResults(BaseResults):
     trapped_4036 = Float
     trapped_4036err = Float

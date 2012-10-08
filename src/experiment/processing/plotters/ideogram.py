@@ -346,29 +346,38 @@ class Ideogram(Plotter):
         return x.age[0]
 
     def _update_graph(self, new):
-#        refresh = False
         g = self.graph
 
         xmi, xma = g.get_x_limits()
         for i, p in enumerate(g.plots[1].plots.itervalues()):
+            result = self.results[i]
+
             sel = p[0].index.metadata['selections']
+#            if not sel:
+#                try:
+#                    hov = p[0].index.metadata['hover']
+#                    if hov:
+#                        return
+#                except KeyError:
+#                    pass
+
             plot = g.plots[0]
             dp = plot.plots['plot{}'.format(i * 3 + 1)][0]
             ages_errors = sorted([a.age for a in self.analyses if a.gid == i], key=lambda x: x[0])
             if sel:
                 dp.visible = True
                 ages, errors = zip(*ages_errors)
-
                 wm, we = calculate_weighted_mean(ages, errors)
                 mswd = calculate_mswd(ages, errors)
                 we = self._calc_error(we, mswd)
+                result.oage, result.oerror, result.omswd = wm, we, mswd
                 _xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
                 dp.value.set_data(ys)
             else:
+                result.oage, result.oerror, result.omswd = None, None, None
                 dp.visible = False
 
-#            hoverid = p[0].index.metadata['selections']
-#
+
             lp = plot.plots['plot{}'.format(i * 3)][0]
             sp = plot.plots['plot{}'.format(i * 3 + 2)][0]
             try:
@@ -376,6 +385,11 @@ class Ideogram(Plotter):
                 wm, we = calculate_weighted_mean(ages, errors)
                 mswd = calculate_mswd(ages, errors)
                 we = self._calc_error(we, mswd)
+
+                result.age = wm
+                result.error = we
+                result.mswd = mswd
+                result.error_calc_method = self.error_calc_method
                 _xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
             except ValueError:
                 wm, we = 0, 0
