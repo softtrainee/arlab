@@ -61,7 +61,7 @@ class FTPRepository(Repository):
 #        super(FTPRepository, self).__init__(*args, **kw)
 #    client = Property(depends_on='host, username, password')
     client = Property(depends_on='host, username, password')
-    _server_root=None
+    _server_root = None
     @property
     def url(self):
         return '{}@{}/{}'.format(self.username,
@@ -100,8 +100,7 @@ class FTPRepository(Repository):
         return self._execute(cb)
 
     def isfile(self, cp):
-        p = self.get_file_path(cp)
-
+#        cp = self.get_file_path(cp)
         cb = lambda ftp:self._isfile(ftp, cp)
         return self._execute(cb)
 
@@ -130,19 +129,19 @@ class FTPRepository(Repository):
             ftp.storascii('STOR {}'.format(dst), fp)
 
     def _execute(self, cb):
-        i=0
-        ntries=3
-        while i<ntries:
-            i+=1
+        i = 0
+        ntries = 3
+        while i < ntries:
+            i += 1
             ftp, err = self._get_client()
             if ftp is not None:
                 try:
                     if self._server_root is None:
-                        self._server_root=ftp.pwd()
-                    if not ftp.pwd()==os.path.join(self._server_root,self.remote):
+                        self._server_root = ftp.pwd()
+                    if not ftp.pwd() == os.path.join(self._server_root, self.remote):
                         ftp.cwd(self.remote)
                     return cb(ftp)
-                except Exception,e:
+                except Exception, e:
                     self.warning('execute exception {}'.format(e))
             else:
                 print err
