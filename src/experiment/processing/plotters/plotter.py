@@ -92,7 +92,9 @@ class Plotter(Viewable):
         results = Item('results',
                       style='custom',
                       show_label=False,
-                      editor=TabularEditor(adapter=self.adapter()))
+                      editor=TabularEditor(adapter=self.adapter(),
+                                           auto_update=True
+                                           ))
         ct = self._get_content()
 
         vg = VGroup(ct, results) if ct is not None else VGroup(results)
