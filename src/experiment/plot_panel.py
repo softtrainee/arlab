@@ -24,6 +24,7 @@ from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
 #============= standard library imports ========================
 from numpy import Inf
+from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
 class PlotPanelHandler(ViewableHandler):
     pass
@@ -52,54 +53,63 @@ class PlotPanel(Viewable):
     isbaseline = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
-
+    skip_results=False
+    
     @on_trait_change('graph:regression_results')
     def _update_display(self, new):
+#        import time
+#        print time.time(),len(new)
         if new:
             for iso, reg in zip(self.isotopes, new):
-                vv = reg.coefficients[-1]
-                ee = reg.coefficient_errors[-1]
-                if self.isbaseline:
-                    self.baselines[iso] = ufloat((vv, ee))
-                else:
-                    self.signals[iso] = ufloat((vv, ee))
-            self._print_results()
+                try:
+                    vv = reg.coefficients[-1]
+                    ee = reg.coefficient_errors[-1]
+                    if self.isbaseline:
+                        self.baselines[iso] = ufloat((vv, ee))
+                    else:
+                        self.signals[iso] = ufloat((vv, ee))
+                except TypeError:
+                    break
+            else:
+                self._print_results()
 
     @on_trait_change('correct_for_baseline')
     def _print_results(self):
-        self._print_signals()
-        self._print_ratios()
-
+        def func():
+            self._print_signals()
+            self._print_ratios()
+#        do_later(func)
+        func()
+    
     def _print_ratios(self):
         pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
-
+        
         display = self.ratio_display
+        display.freeze()
         display.clear()
         cfb = self.correct_for_baseline
-        ts = []
 
         regs = self.graph.regressors
-        for ra in self.ratios:
+        def func(ra):
+#        for ra in self.ratios:
             u, l = ra.split(':')
             try:
                 ru = self.signals[u]
                 rl = self.signals[l]
             except KeyError:
-                continue
+                return ''
+            
             try:
                 ruf = self._get_fit(regs[self.isotopes.index(u)])
                 rlf = self._get_fit(regs[self.isotopes.index(l)])
             except IndexError:
-                continue
+                return ''
             
             if cfb:
                 bu = ufloat((0, 0))
                 bl = ufloat((0, 0))
                 try:
                     bu = self.baselines[u]
-                except KeyError:
-                    pass
-                try:
                     bl = self.baselines[u]
                 except KeyError:
                     pass
@@ -107,23 +117,51 @@ class PlotPanel(Viewable):
             else:
                 rr = ru / rl
 
-           
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
                   u'\u00b1 ' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
                     pad(' {}/{} '.format(ruf, rlf), n=4) + \
                     self._get_pee(rr)
-            ts.append(res)
+            return res
 
+        ts=[func(ra) for ra in self.ratios]
         display.add_text('\n'.join(ts))
+        display.thaw()
 
     def _print_signals(self):
         display = self.signal_display
         cfb = self.correct_for_baseline
+        display.freeze()
         display.clear()
         pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
 
-        ts = []
-        for iso in self.isotopes:
+#        ts = []
+#        for iso in self.isotopes:
+#            try:
+#                us = self.signals[iso]
+#            except KeyError:
+#                us = ufloat((0, 0))
+#
+#            ub = ufloat((0, 0))
+#            if cfb:
+#                try:
+#                    ub = self.baselines[iso]
+#                except KeyError:
+#                    pass
+#
+#            uv = us - ub
+#            vv = uv.nominal_value
+#            ee = uv.std_dev()
+##            try:
+##                pee = abs(ee / vv * 100)
+##            except ZeroDivisionError:
+##                pee = 0
+#
+#            v = pad('{:0.4f}'.format(vv))
+#            e = pad('{:0.4f}'.format(ee), n=6)
+#            v = v + u' \u00b1 ' + e + self._get_pee(uv)
+#            ts.append('{}={:>10s}'.format(iso, v))
+
+        def func(iso):
             try:
                 us = self.signals[iso]
             except KeyError:
@@ -147,9 +185,11 @@ class PlotPanel(Viewable):
             v = pad('{:0.4f}'.format(vv))
             e = pad('{:0.4f}'.format(ee), n=6)
             v = v + u' \u00b1 ' + e + self._get_pee(uv)
-            ts.append('{}={:>10s}'.format(iso, v))
-
+            return '{}={:>10s}'.format(iso, v)
+            
+        ts=[func(iso) for iso in self.isotopes]
         display.add_text('\n'.join(ts))
+        display.thaw()
         
     def _get_pee(self, uv):
         vv = uv.nominal_value
@@ -158,7 +198,9 @@ class PlotPanel(Viewable):
             pee = abs(ee / vv * 100)
         except ZeroDivisionError:
             pee = 0
-        return pee
+        
+        return '({:0.2f}%)'.format(pee)
+    
     def _get_fit(self, reg):
         try:
             deg = reg.degree

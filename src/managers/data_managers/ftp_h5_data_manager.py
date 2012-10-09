@@ -15,13 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.repo.repository import FTPRepository
 import os
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.repo.repository import FTPRepository
 
 
 class FTPH5DataManager(H5DataManager):
@@ -32,8 +30,7 @@ class FTPH5DataManager(H5DataManager):
 
     def open_data(self, p):
         out = os.path.join(self.workspace_root, p)
-
-        p = os.path.join(self.repository.root, p)
+        
         self.repository.retrieveFile(p, out)
         return super(FTPH5DataManager, self).open_data(out)
 

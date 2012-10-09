@@ -129,6 +129,8 @@ class DBResult(BaseDBResult):
         try:
             self._loadable = dm.open_data(self._get_path())
         except Exception, e:
+            import traceback
+            print traceback.print_exc()
             self._loadable = False
         finally:
             pass
