@@ -64,6 +64,9 @@ class MainError(Exception):
 
 def verbose_skip(func):
     def decorator(obj, *args, **kw):
+        if obj._truncate:
+            return
+
         fname = func.__name__
 #        print fname, obj._syntax_checking, obj._cancel
         if fname.startswith('_m_'):
@@ -88,13 +91,16 @@ def verbose_skip(func):
 
 def skip(func):
     def decorator(obj, *args, **kw):
-        if obj._syntax_checking or obj._cancel:
+        if obj._syntax_checking or obj._cancel or obj._truncate:
             return
         return func(obj, *args, **kw)
     return decorator
 
 def count_verbose_skip(func):
     def decorator(obj, *args, **kw):
+        if obj._truncate:
+            return
+
         fname = func.__name__
 #        print fname, obj._syntax_checking, obj._cancel
         if fname.startswith('_m_'):
@@ -132,6 +138,7 @@ class PyScript(Loggable):
 
     _cancel = Bool(False)
     _completed = False
+    _truncate = False
 
     _syntax_checking = False
     _syntax_checked = False
@@ -204,6 +211,11 @@ class PyScript(Loggable):
             return '2'
 
         return '0'
+
+    def truncate(self):
+        self._truncate = True
+        if self._gosub_script is not None:
+            self._gosub_script.truncate()
 
     def cancel(self):
         self._cancel = True
@@ -414,6 +426,7 @@ class PyScript(Loggable):
 
         self._cancel = False
         self._completed = False
+        self._truncate = False
         safe_dict = self.get_context()
 
 #        safe_dict['isblank'] = False

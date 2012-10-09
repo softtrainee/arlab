@@ -126,6 +126,8 @@ class AutomatedRun(Loggable):
     username = None
     _save_isotopes = List
     update = Event
+    _truncate_signal = Bool
+    measuring = Bool(False)
 
     def _runner_changed(self):
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
@@ -136,6 +138,10 @@ class AutomatedRun(Loggable):
 #        self.extraction_script.runner = self.runner
 #        self.post_equilibration_script.runner = self.runner
 #        self.post_measurement_script.runner = self.runner
+    def truncate(self):
+        self.info('truncating current run')
+        self._measurement_script.truncate()
+        self._truncate_signal = True
 
     def finish(self):
         del self.info_display
@@ -186,6 +192,7 @@ class AutomatedRun(Loggable):
         return default
 
     def start(self):
+        self.measuring = False
         self.update = True
         self.overlap_evt = TEvent()
         self.info('Start automated run {}'.format(self.name))
@@ -248,13 +255,16 @@ class AutomatedRun(Loggable):
         #measurement sequence
         self.info('======== Measurement Started ========')
         self._pre_measurement_save()
+        self.measuring = True
         if self.measurement_script.execute():
             self._post_measurement_save()
 
             self.info('======== Measurement Finished ========')
+            self.measuring = False
             return True
         else:
             self.info('======== Measurement Finished unsuccessfully ========')
+            self.measuring = False
             return False
 
     def do_post_measurement(self):
@@ -490,7 +500,7 @@ class AutomatedRun(Loggable):
 
         spec = self.spectrometer_manager.spectrometer
         g = p.graph
-        g.suppress_regression=True
+        g.suppress_regression = True
         for i, l in enumerate(dets):
             det = spec.get_detector(l)
             g.new_plot(ytitle='{} {} Signal (fA)'.format(det.name, det.isotope))
@@ -502,7 +512,7 @@ class AutomatedRun(Loggable):
 
             g.set_x_limits(min=0, max=400, plotid=i)
 
-        g.suppress_regression=False
+        g.suppress_regression = False
         self._active_detectors = [spec.get_detector(n) for n in dets]
         self.plot_panel.detectors = self._active_detectors
 
@@ -534,7 +544,7 @@ class AutomatedRun(Loggable):
                          window_x=0.6 + 0.01 * self.index,
                          window_title='Plot Panel {}-{}'.format(self.identifier, self.aliquot),
                          stack_order=stack_order,
-                         parent=self
+                         automated_run=self
                          )
         p.graph.clear()
 
@@ -687,23 +697,15 @@ class AutomatedRun(Loggable):
 
                 graph.set_x_limits(0, 400, plotid=i)
                 pi = graph.plots[i]
-#                pi.value_range.epsilon = 0.01
                 pi.value_range.margin = 0.5
                 pi.value_range.tight_bounds = False
-#                graph.set_y_tracking(3, plotid=i)
 
-
-#            graph.set_y_limits(min='auto', max='auto')
             graph.new_series(type='scatter',
                              marker='circle',
                              marker_size=1.25,
                              plotid=i)
 
-
-        kw = dict(series=p.series_cnt, do_after=1,
-                  #update_y_limits=True,
-                   #ypadding=1, ymin_anchor=0
-                   )
+        kw = dict(series=p.series_cnt, do_after=1)
 
         _debug = globalv.automated_run_debug
         p.series_cnt += 1
@@ -785,15 +787,21 @@ class AutomatedRun(Loggable):
         spec = self.spectrometer_manager.spectrometer
 
         graph = self.plot_panel.graph
-        for i in xrange(0, ncounts, 1):
+        for i in xrange(1, ncounts + 1, 1):
             if i > self.plot_panel.ncounts:
+                self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
+                break
+
+            if self._truncate_signal:
+                self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
                 break
 
             if not self._alive:
+                self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
                 return False
 
             if i % 50 == 0:
-                self.info('collecting point {}'.format(i + 1))
+                self.info('collecting point {}'.format(i))
 
             _debug = globalv.automated_run_debug
             m = self.integration_time * 0.99 if not _debug else 0.1
@@ -819,9 +827,10 @@ class AutomatedRun(Loggable):
 
             if not keys or not signals:
                 continue
-            
+
             x = time.time() - starttime# if not self._debug else i + starttime
-            
+
+
             self.signals = dict(zip(keys, signals))
 
             kw = dict(series=series, do_after=1,
@@ -847,16 +856,16 @@ class AutomatedRun(Loggable):
                 kw['fit'] = fi
                 func(x, signal, kw)
 
-            mi,ma=graph.get_x_limits()
-            dev=(ma-mi)*0.05
-            if (x+dev) > ma:
-                graph.suppress_regression=True
-                for j,_ in enumerate(graph.plots):
-                    graph.set_x_limits(0, x + (ma-mi)*0.25, plotid=j)
-                graph.suppress_regression=False
+            mi, ma = graph.get_x_limits()
+            dev = (ma - mi) * 0.05
+            if (x + dev) > ma:
+                graph.suppress_regression = True
+                for j, _ in enumerate(graph.plots):
+                    graph.set_x_limits(0, x + (ma - mi) * 0.25, plotid=j)
+                graph.suppress_regression = False
             graph._update_graph()
             data_write_hook(x, keys, signals)
-        
+
         return True
 
     def _load_script(self, name):
@@ -1152,7 +1161,7 @@ class AutomatedRun(Loggable):
             nrow['value'] = signal
             nrow.append()
             tab.flush()
-            
+
         return write_data
 
     @cached_property

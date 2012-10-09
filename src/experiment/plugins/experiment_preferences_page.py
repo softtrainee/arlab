@@ -56,6 +56,11 @@ class ExperimentPreferencesPage(PreferencesPage):
     ftp_host = Str
     repo_root = Str
 
+    massspec_dbname = Str
+    massspec_username = Str
+    massspec_password = Password
+    massspec_host = Str
+
     favorites = List
     add_favorite = Button('+')
     delete_favorite = Button('-')
@@ -127,6 +132,7 @@ class ExperimentPreferencesPage(PreferencesPage):
                              show_border=True,
                              label='Authentication'
                              )
+
         fav_grp = VGroup(Item('db_fav_name',
 #                              editor=EnumEditor(name='favorites'),
                               show_label=False),
@@ -155,9 +161,22 @@ class ExperimentPreferencesPage(PreferencesPage):
                          ftp_auth_grp,
                          show_border=True, label='Repo'
                          )
+#
+        massspec_grp = Group(
+                             Group(
+                                 Item('massspec_dbname', label='Database'),
+                                 Item('massspec_host', label='Host'),
+                                 Item('massspec_username', label='Name'),
+                                 Item('massspec_password', label='Password'),
+                                 show_border=True,
+                                 label='MassSpec Authentication'
+                                 ),
+                             label='MassSpec'
+                             )
         return View(
                         user_grp,
                         db_grp,
-                        repo_grp
+                        repo_grp,
+                        massspec_grp,
                     )
 #============= EOF =============================================

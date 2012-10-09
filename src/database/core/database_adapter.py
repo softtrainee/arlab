@@ -122,7 +122,6 @@ class DatabaseAdapter(Loggable):
             self.sess.close()
             self.sess = None
 
-
     def connect(self, test=True, force=False):
         '''
         '''

@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, TableEditor
-import apptools.sweet_pickle as pickle
+#from traits.api import HasTraits, Instance
+#from traitsui.api import View, Item, TableEditor
+#import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #from os import path
 #============= local library imports  ==========================
@@ -34,6 +34,7 @@ class AutocenterManager(MachineVisionManager):
                 holedim = sm.g_dimension
             else:
                 holedim = 1.5
+                holedim = 3
 
             params = self.detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
             msg = 'Target found at {:0.3n}, {:0.3n}'.format(*params) if params else 'No target found'
@@ -60,7 +61,11 @@ class AutocenterManager(MachineVisionManager):
         return self._load_detector('co2_detector', CO2HoleDetector)
 
     def _test_fired(self):
-        self.locate_target(-13, -10, 55)
+
+        c = lambda: self.locate_target(-13, -10, 55)
+        from threading import Thread
+        t = Thread(target=c)
+        t.start()
 
 
 if __name__ == '__main__':
