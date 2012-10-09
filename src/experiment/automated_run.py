@@ -822,7 +822,6 @@ class AutomatedRun(Loggable):
             
             x = time.time() - starttime# if not self._debug else i + starttime
             
-
             self.signals = dict(zip(keys, signals))
 
             kw = dict(series=series, do_after=1,
