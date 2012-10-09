@@ -15,15 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Password, Property, cached_property
+from traits.api import Str, Password, Property, cached_property, Event
 #============= standard library imports ========================
 import os
 import ftplib as ftp
 #============= local library imports  ==========================
-
-
 from src.loggable import Loggable
-import shutil
+
+
 class Repository(Loggable):
     root = Str
 
@@ -60,7 +59,8 @@ class FTPRepository(Repository):
 #        self.remote = remote
 #        super(FTPRepository, self).__init__(*args, **kw)
 #    client = Property(depends_on='host, username, password')
-    client = Property(depends_on='host, username, password')
+    reset=Event
+    client = Property(depends_on='host, username, password, reset')
     _server_root = None
     @property
     def url(self):
@@ -72,7 +72,6 @@ class FTPRepository(Repository):
         c, _ = self.client
         return c is not None
 
-    @cached_property
     def _get_client(self):
         h = self.host
         u = self.username
@@ -142,6 +141,10 @@ class FTPRepository(Repository):
                         ftp.cwd(self.remote)
                     return cb(ftp)
                 except Exception, e:
+                    '''
+                        clears the client property cache
+                    '''
+                    self.reset=True
                     self.warning('execute exception {}'.format(e))
             else:
                 print err
