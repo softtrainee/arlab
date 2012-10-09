@@ -110,7 +110,9 @@ class IonOpticsManager(Manager):
 
     def do_peak_center(self, detector=None, isotope=None, center_dac=None,
                        save=True,
-                       confirm_save=False):
+                       confirm_save=False,
+                       warn=False
+                       ):
 #        spec = self.spectrometer
         if detector is None or isotope is None:
             self.dac = 0
@@ -130,11 +132,12 @@ class IonOpticsManager(Manager):
         self.alive = True
 
         t = Thread(name='ion_optics.peak_center', target=self._peak_center,
-                   args=(detector, isotope, center_dac, save, confirm_save))
+                   args=(detector, isotope, center_dac, save, confirm_save, warn))
         t.start()
         return t
 
-    def _peak_center(self, detector, isotope, center_dac, save, confirm_save):
+    def _peak_center(self, detector, isotope, center_dac,
+                     save, confirm_save, warn):
         graph = self._graph_factory()
 
         #set graph window attributes
@@ -147,8 +150,6 @@ class IonOpticsManager(Manager):
 
         self.open_view(graph)
 
-#        reference_detector_name = 'AX'
-#        reference_isotope_name = 'Ar40'
         spec = self.spectrometer
 
         self.peak_center = pc = PeakCenter(center_dac=center_dac,
@@ -163,8 +164,6 @@ class IonOpticsManager(Manager):
         if dac_d:
             args = detector, isotope, dac_d
             self.info('new center pos {} ({}) @ {}'.format(*args))
-
-            #reciprocal of spec.correct_dac
 
             det = spec.get_detector(detector)
 
@@ -190,8 +189,10 @@ class IonOpticsManager(Manager):
                     spec.magnet.set_dac(self.peak_center_result)
 
         elif not self.canceled:
-            self.warning_dialog('centering failed')
-            self.warning('centering failed')
+            msg = 'centering failed'
+            if warn:
+                self.warning_dialog(msg)
+            self.warning(msg)
 
         #needs to be called on the main thread to properly update
         #the menubar actions. alive=False enables IonOptics>Peak Center
@@ -206,10 +207,10 @@ class IonOpticsManager(Manager):
         self.canceled = True
         self.peak_center.canceled = True
         self.peak_center.stop()
+
 #===============================================================================
 # handler
 #===============================================================================
-
     def _graph_factory(self):
         g = Graph(
                   container_dict=dict(padding=5, bgcolor='gray'))

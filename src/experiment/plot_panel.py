@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Property, List, on_trait_change, Dict, Bool
+from traits.api import HasTraits, Any, Instance, Int, Property, List, on_trait_change, Dict, Bool
 from traitsui.api import View, Item, Group, HGroup, spring
 from src.graph.graph import Graph
 from src.viewable import ViewableHandler, Viewable
@@ -23,12 +23,13 @@ from src.displays.rich_text_display import RichTextDisplay
 from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
 #============= standard library imports ========================
-from numpy import Inf
-from pyface.timer.do_later import do_later
+#from numpy import Inf
+#from pyface.timer.do_later import do_later
 #============= local library imports  ==========================
 class PlotPanelHandler(ViewableHandler):
     pass
 class PlotPanel(Viewable):
+    automated_run = Any
     graph = Instance(Graph)
     window_x = 0
     window_y = 0
@@ -45,7 +46,6 @@ class PlotPanel(Viewable):
     series_cnt = 0
     ratio_display = Instance(RichTextDisplay)
     signal_display = Instance(RichTextDisplay)
-#    fits = List
 
     signals = Dict
     baselines = Dict
@@ -53,12 +53,9 @@ class PlotPanel(Viewable):
     isbaseline = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
-    skip_results=False
-    
+
     @on_trait_change('graph:regression_results')
     def _update_display(self, new):
-#        import time
-#        print time.time(),len(new)
         if new:
             for iso, reg in zip(self.isotopes, new):
                 try:
@@ -80,10 +77,10 @@ class PlotPanel(Viewable):
             self._print_ratios()
 #        do_later(func)
         func()
-    
+
     def _print_ratios(self):
         pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
-        
+
         display = self.ratio_display
         display.freeze()
         display.clear()
@@ -98,13 +95,13 @@ class PlotPanel(Viewable):
                 rl = self.signals[l]
             except KeyError:
                 return ''
-            
+
             try:
                 ruf = self._get_fit(regs[self.isotopes.index(u)])
                 rlf = self._get_fit(regs[self.isotopes.index(l)])
             except IndexError:
                 return ''
-            
+
             if cfb:
                 bu = ufloat((0, 0))
                 bl = ufloat((0, 0))
@@ -123,7 +120,7 @@ class PlotPanel(Viewable):
                     self._get_pee(rr)
             return res
 
-        ts=[func(ra) for ra in self.ratios]
+        ts = [func(ra) for ra in self.ratios]
         display.add_text('\n'.join(ts))
         display.thaw()
 
@@ -186,11 +183,11 @@ class PlotPanel(Viewable):
             e = pad('{:0.4f}'.format(ee), n=6)
             v = v + u' \u00b1 ' + e + self._get_pee(uv)
             return '{}={:>10s}'.format(iso, v)
-            
-        ts=[func(iso) for iso in self.isotopes]
+
+        ts = [func(iso) for iso in self.isotopes]
         display.add_text('\n'.join(ts))
         display.thaw()
-        
+
     def _get_pee(self, uv):
         vv = uv.nominal_value
         ee = uv.std_dev()
@@ -198,9 +195,9 @@ class PlotPanel(Viewable):
             pee = abs(ee / vv * 100)
         except ZeroDivisionError:
             pee = 0
-        
+
         return '({:0.2f}%)'.format(pee)
-    
+
     def _get_fit(self, reg):
         try:
             deg = reg.degree
@@ -210,7 +207,7 @@ class PlotPanel(Viewable):
             return reg.error_calc
 
     def close(self, isok):
-        self.parent.cancel()
+        self.automated_run.truncate()
         return isok
 
     def _get_ncounts(self):

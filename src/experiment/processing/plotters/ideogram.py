@@ -377,7 +377,6 @@ class Ideogram(Plotter):
                 result.oage, result.oerror, result.omswd = None, None, None
                 dp.visible = False
 
-
             lp = plot.plots['plot{}'.format(i * 3)][0]
             sp = plot.plots['plot{}'.format(i * 3 + 2)][0]
             try:

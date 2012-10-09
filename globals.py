@@ -34,11 +34,16 @@ class Globals(object):
     ignore_connection_warnings = True
     ignore_chiller_unavailable = True
 
-    video_test = True
-#    video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
+    video_test = False
+    video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
     video_test_path = '/Users/ross/Sandbox/snapshot002-6.662--8.572.jpg'
+    video_test_path = '/Users/ross/Sandbox/watershed_test.jpg'
+    video_test_path = '/Users/ross/Sandbox/watershed_test2.jpg'
+    video_test_path = '/Users/ross/Sandbox/snapshot002.jpg'
     #use_ipc = False == embed the remote hardware servers into pychron
     #= True == an instance of RemoteHardwareServer must be launched
+    show_autocenter_debug_image = False
+
     use_ipc = False
 
     _test = False #set test to 'true' when running tests
@@ -47,7 +52,6 @@ class Globals(object):
     experiment_debug = False
     experiment_savedb = True
     automated_run_debug = False
-
     def build(self, ip):
 
         boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False

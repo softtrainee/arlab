@@ -64,7 +64,7 @@ class PeakCenterAction(Action):
 
     def perform(self, event):
         man = get_manager(event, ION_OPTICS_PROTOCOL)
-        man.do_peak_center(confirm_save=True)
+        man.do_peak_center(confirm_save=True, warn=True)
 #        man.open_peak_center()
 
 class RelativePositionsAction(Action):

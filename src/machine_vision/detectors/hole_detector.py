@@ -21,7 +21,7 @@ from traitsui.api import View, Item, VGroup, HGroup, spring
 #============= standard library imports ========================
 from scipy import ndimage
 from numpy import histogram, argmax, array, asarray, ogrid, percentile, zeros_like, \
-    delete, zeros, asarray
+    delete, zeros, asarray, ones_like, rot90, max
 from skimage.exposure import rescale_intensity
 from skimage.draw import polygon
 from skimage.morphology import is_local_maximum, watershed
@@ -41,6 +41,8 @@ from detector import Detector
 from src.image.image import StandAloneImage
 from src.machine_vision.detectors.target import Target
 from src.machine_vision.segmenters.base import BaseSegmenter
+from pyface.timer.do_later import do_later
+from globals import globalv
 #from src.image.pyopencv_image_helper import grayspace
 
 
@@ -160,37 +162,16 @@ class HoleDetector(Detector):
             self.target_image.load(colorspace(src))
 
         t = self._locate_targets(src, **kw)
-
-        if t:
-            self._draw_markup(self.target_image.get_frame(0), t)
-
-#        import time
-#        time.sleep(1)
-#        draw_contour_list(self.target_image.get_frame(0), contours, hieararchy)
-
-#        self.permutations.append((t, kw))
-#        t2 = None
-#        if self.use_all_permutations:
-#            if kw.has_key('convextest'):
-#                kw['convextest'] = not kw['convextest']
-#            else:
-#                kw['convextest'] = True
 #
-#            t2 = self._locate_targets(src, **kw)
-##            self.permutations.append((t2, kw))
-#            if t2:
-#                if t:
-#                    t += t2
-#                else:
-#                    t = t2
+#        if t:
+#            self._draw_markup(self.target_image.get_frame(0), t)
 
-#            print 'k2', kw, len(ta) if ta else 0
         return t
 
     def _locate_targets(self, src, **kw):
 #        dsrc = self.working_image.frames[0]
         contours, hieararchy = contour(src)
-        draw_contour_list(self.target_image.get_frame(0), contours, hieararchy)
+#        draw_contour_list(self.target_image.get_frame(0), contours, hieararchy)
 
 #        do polygon approximation
         polygons, brs, areas = get_polygons(contours, hieararchy,
@@ -285,14 +266,23 @@ class HoleDetector(Detector):
             f.write('corrected pos= {:5f}, {:5f}\n'.format(nx, ny))
             f.write('deviation=     {:5f}, {:5f}'.format(dxmm, dymm))
 
-    def _draw_center_indicator(self, src, color=(0, 0, 255), size=10):
+    def _draw_center_indicator(self, src, color=(0, 0, 255), shape='crosshairs', size=10):
         self._draw_indicator(src, new_point(*self._get_true_xy(src)),
-                             shape='crosshairs',
+#                             shape='crosshairs',
+                             shape=shape,
                              color=color,
                              size=size)
 
+    def _draw_targets(self, src, results):
+        for r in results:
+            self._draw_result(src, r)
+
     def _draw_result(self, src, result, with_br=False, thickness=1, color=(255, 0, 0)):
-        self._draw_indicator(src, new_point(*result.centroid_value), shape='crosshairs')
+#        print 'rrrrr', result.centroid_value
+        self._draw_indicator(src, new_point(*result.centroid_value),
+                             color=(0, 255, 0),
+                             size=10,
+                             shape='crosshairs')
         draw_polygons(src, [result.poly_points])
         if with_br:
             draw_rectangle(src, result.bounding_rect.x,
@@ -495,7 +485,6 @@ class HoleDetector(Detector):
         ma = maholedim ** 2 * 3.1415
         return mi, ma
 
-    show = True
     def _filter_targets(self, targets, threshold=0.95):
         mi, ma = self._get_filter_target_area()
 
@@ -511,65 +500,91 @@ class HoleDetector(Detector):
             ctest = tar.convexity > threshold
             centtest = self._near_center(*tar.centroid_value)
             atest = ma > tar.area > mi
-
             if not ctest and (atest and centtest):
+
                 #make image with polygon
-                image = zeros((125, 125))
+                image = zeros(self.croppixels)
                 points = asarray(tar.poly_points)
 
                 points = asarray([(pi.x, pi.y) for pi in points])
                 rr, cc = polygon(points[:, 0], points[:, 1])
-                image[rr, cc] = 255
 
+                image[cc, rr] = 255
+
+                #do watershedding
                 distance = ndimage.distance_transform_edt(image)
-                local_maxi = is_local_maximum(distance, image,
-        #                                      ones((5, 5))
-                                              )
-                markers = ndimage.label(local_maxi)[0]
+                local_maxi = is_local_maximum(distance, image)
+                markers, ns = ndimage.label(local_maxi)
                 wsrc = watershed(-distance, markers,
                                   mask=image
                                  )
 
-                values, bins = histogram(wsrc)
-                ind = argmax(values)
-                bi = bins[ind]
-                if not bi:
+                #find the label with the max area ie max of histogram
+                def get_limits(values, bins):
+                    ind = argmax(values)
+                    if ind == 0:
+                        bil = bins[ind]
+                        biu = bins[ind + 1]
+                    elif ind == len(bins) - 1:
+                        bil = bins[ind - 1]
+                        biu = bins[ind]
+                    else:
+                        bil = bins[ind - 1]
+                        biu = bins[ind + 1]
+
+                    return bil, biu, ind
+
+                #bins = 3 * number of labels. this allows you to precisely pick the value of the max area
+                values, bins = histogram(wsrc, bins=ns * 3)
+                bil, biu, ind = get_limits(values, bins)
+
+                if not bil:
                     values = delete(values, ind)
-                    bi = bins[argmax(values)]
+                    bins = delete(bins, (ind, ind + 1))
+                    bil, biu, ind = get_limits(values, bins)
 
-                nimage = zeros_like(wsrc, dtype='uint8')
-                nimage[wsrc > bi] = 1
-                nimage[wsrc > bi + 1] = 0
+#                print values
+#                print bins
+#                print bil, biu
+
+                nimage = ones_like(wsrc, dtype='uint8')
+                nimage[wsrc < bil] = 0
+                nimage[wsrc > biu] = 0
+
                 img = asMat(nimage)
+                if globalv.show_autocenter_debug_image:
+                    do_later(lambda: self.debug_show(image, distance, wsrc, nimage))
 
-#                if self.show:
-#                    import matplotlib.pyplot as plt
-#                    fig, axes = plt.subplots(ncols=3, figsize=(8, 2.7))
-#                    ax0, ax1, ax2 = axes
-#
-#                    ax0.imshow(image, cmap=plt.cm.gray, interpolation='nearest')
-#                    ax1.imshow(-distance, cmap=plt.cm.jet, interpolation='nearest')
-#                    ax2.imshow(wsrc, cmap=plt.cm.gray, interpolation='nearest')
-#
-#                    for ax in axes:
-#                        ax.axis('off')
-#
-#                    plt.subplots_adjust(hspace=0.01, wspace=0.01, top=1, bottom=0, left=0,
-#                                    right=1)
-#                    plt.show()
-##                    self.show = False
-
+                #locate new polygon from the segmented image
                 tars = self._locate_targets(img)
                 if tars:
                     tar = tars[0]
                     ctest = tar.convexity > threshold
                 else:
-                    return
+                    return None, False
 
-            return ctest and atest and centtest
+            return tar, ctest and atest and centtest
 
-        return [t for t in targets if test_target(t)]
+        ts = [test_target(ti) for ti in targets]
+        return [ta[0] for ta in ts if ta[1]]
 
+    def debug_show(self, image, distance, wsrc, nimage):
+
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(ncols=4, figsize=(8, 2.7))
+        ax0, ax1, ax2, ax3 = axes
+
+        ax0.imshow(image, cmap=plt.cm.gray, interpolation='nearest')
+        ax1.imshow(-distance, cmap=plt.cm.jet, interpolation='nearest')
+        ax2.imshow(wsrc, cmap=plt.cm.jet, interpolation='nearest')
+        ax3.imshow(nimage, cmap=plt.cm.jet, interpolation='nearest')
+
+        for ax in axes:
+            ax.axis('off')
+
+        plt.subplots_adjust(hspace=0.01, wspace=0.01, top=1, bottom=0, left=0,
+                        right=1)
+        plt.show()
 #============= EOF =====================================
 #    def _watershed_segmentation(self, src, **kw):
 ##        from scipy import ndimage

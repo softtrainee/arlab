@@ -74,10 +74,13 @@ class ExperimentManager(Manager):
 
     test2 = Button
 
-    _alive = Bool(False)
     execute_button = Event
     execute_label = Property(depends_on='_alive')
+    _alive = Bool(False)
 
+    truncate_button = Button('Truncate')
+
+    measuring = DelegatesTo('experiment_set')
 #    open_button = Button
 #    save_button = Button
 #    default_save_directory = Str
@@ -106,13 +109,17 @@ class ExperimentManager(Manager):
 
 #        self.info_display.clear()
 
-#    def opened(self):
+    def opened(self):
+        self.info_display.clear()
 #        pass
 #        do_later(self.test_connections)
 #        self.test_connections()
 #        self.populate_default_tables()
 
     def test_connections(self):
+        if not self.db:
+            return
+
         if not self.db.connect():
             self.warning_dialog('Failed connecting to database. {}'.format(self.db.url))
             return
@@ -126,17 +133,17 @@ class ExperimentManager(Manager):
     def populate_default_tables(self):
         db = self.db
         if self.db:
-            db.connect()
-            for name, mass in MOLECULAR_WEIGHTS.iteritems():
-                db.add_molecular_weight(name, mass)
+            if db.connect():
+                for name, mass in MOLECULAR_WEIGHTS.iteritems():
+                    db.add_molecular_weight(name, mass)
 
-            for at in ['blank', 'air', 'cocktail', 'background', 'unknown']:
-                db.add_analysis_type(at)
+                for at in ['blank', 'air', 'cocktail', 'background', 'unknown']:
+                    db.add_analysis_type(at)
 
-            for mi in ['obama', 'jan']:
-                db.add_mass_spectrometer(mi)
+                for mi in ['obama', 'jan']:
+                    db.add_mass_spectrometer(mi)
 
-            db.commit()
+                db.commit()
 
     def bind_preferences(self):
         if self.db is None:
@@ -159,9 +166,15 @@ class ExperimentManager(Manager):
             bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
 
         bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
-#        if not self.db.connect():
-#            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
-#            self.db = None
+
+        bind_preference(self.massspec_importer.db, 'name', '{}.massspec_dbname'.format(prefid))
+        bind_preference(self.massspec_importer.db, 'host', '{}.massspec_host'.format(prefid))
+        bind_preference(self.massspec_importer.db, 'username', '{}.massspec_username'.format(prefid))
+        bind_preference(self.massspec_importer.db, 'password', '{}.massspec_password'.format(prefid))
+
+        if not self.db.connect():
+            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
+            self.db = None
 
     def info(self, msg, *args, **kw):
         super(ExperimentManager, self).info(msg, *args, **kw)
@@ -169,18 +182,12 @@ class ExperimentManager(Manager):
             self.info_display.add_text(msg, color='yellow')
 #            do_later(self.info_display.add_text, msg, color='yellow')
 
-    def save(self):
-        self.save_experiment_set()
-
-    def save_as(self):
-        self.save_as_experiment_set()
-
     def open_recent(self):
         db = self.db
         if db.connect():
             db.reset()
             selector = db.selector_factory(style='simple')
-            
+
             selector.set_data_manager(kind=self.repo_kind,
                                       repository=self.repository,
                                       workspace_root=paths.default_workspace_dir
@@ -197,63 +204,39 @@ class ExperimentManager(Manager):
 #
 #        return sm
 
-    def end_runs(self):
+    def _execute(self):
+        if self.isAlive():
 
-        self._alive = False
-        exp = self.experiment_set
-        exp.stats.nruns_finished = len(exp.automated_runs)
-        exp.stop_stats_timer()
+            if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
+                                     title='Confirm Cancel'
+                                     ):
+                self._alive = False
+                arun = self.experiment_set.current_run
+                if arun:
+                    arun.cancel()
 
-    def _setup_automated_run(self, i, arun, repo, dm, runner):
-        exp = self.experiment_set
+        else:
+            self._alive = True
+#        target = self.do_experiment
+        #target = self.spectrometer_manager.deflection_calibration
+            t = Thread(target=self._execute_automated_runs)
+            t.start()
 
-        exp.current_run = arun
-        arun.index = i
-        arun.experiment_name = exp.name
-        arun.experiment_manager = self
-        arun.spectrometer_manager = self.spectrometer_manager
-        arun.extraction_line_manager = self.extraction_line_manager
-        arun.ion_optics_manager = self.ion_optics_manager
-        arun.data_manager = dm
-        arun.db = self.db
-        arun.massspec_importer = self.massspec_importer
-        arun.runner = runner
-        arun.integration_time = 1.04
-        arun.repository = repo
-        arun._debug = globalv.experiment_debug
-        arun.info_display = self.info_display
-
-        arun.username = self.username
-
-#        arun.preceeding_blank=
-    def _launch_run(self, runsgen, cnt):
-        repo = self.repository
-        dm = self.data_manager
-        runner = self.pyscript_runner
-
-        run = runsgen.next()
-        self._setup_automated_run(cnt, run, repo, dm, runner)
-
-        run.pre_extraction_save()
-        ta = Thread(name=run.runid,
-                   target=self._do_automated_run,
-                   args=(run,)
-                   )
-        ta.start()
-        return ta, run
-
-    def do_automated_runs(self):
+    def _execute_automated_runs(self):
         self.end_at_run_completion = False
         #connect to massspec database warning if not
 
         #explicitly set db connection info here for now
-        self.massspec_importer.db.kind = 'mysql'
-        self.massspec_importer.db.host = '129.138.12.131'
-        self.massspec_importer.db.username = 'massspec'
-        self.massspec_importer.db.password = 'DBArgon'
+#        self.massspec_importer.db.kind = 'mysql'
+
+#        self.massspec_importer.db.host = '129.138.12.131'
+#        self.massspec_importer.db.username = 'massspec'
+#        self.massspec_importer.db.password = 'DBArgon'
+
 #        self.massspec_importer.db.username = 'root'
 #        self.massspec_importer.db.password = 'Argon'
-        self.massspec_importer.db.name = 'massspecdata_test'
+
+#        self.massspec_importer.db.name = 'massspecdata_test'
 
         if not self.massspec_importer.db.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
@@ -280,19 +263,15 @@ class ExperimentManager(Manager):
         exp = self.experiment_set
         exp.reset_stats()
 
-#        dm = H5DataManager()
-#        self.data_manager = dm
-#        repo = self.repository
-
         self.db.reset()
+
         exp.save_to_db()
 
-        rgen, nruns = exp.new_runs_generator()
-
+        rgen, nruns = exp.new_runs_generator(self._last_ran)
         cnt = 0
         totalcnt = 0
         while self.isAlive():
-
+            self.db.reset()
 
 #            if the user is editing the experiment set dont continue?
             if self.editing_signal:
@@ -327,8 +306,6 @@ class ExperimentManager(Manager):
                 break
 
             self._last_ran = run
-#            if run.analysis_type == 'unknown':
-#                self._last_ran = run
 
             if run.overlap:
                 self.info('overlaping')
@@ -336,21 +313,60 @@ class ExperimentManager(Manager):
             else:
                 t.join()
 
+            cnt += 1
+            totalcnt += 1
             if self.end_at_run_completion:
                 break
 
-            cnt += 1
-            totalcnt += 1
-
         if self.err_message:
+            '''
+                set last_run to None is this run wasnt successfully
+                experiment set will restart at last successful run
+            '''
+            self._last_ran = None
             run.state = 'fail'
             self.warning('automated runs did not complete successfully')
             self.warning('error: {}'.format(self.err_message))
         else:
             exp.stop_stats_timer()
-            self.end_runs()
+            self._end_runs()
 
         self.info('automated runs ended at {}, runs executed={}'.format(run.runid, totalcnt))
+
+    def _launch_run(self, runsgen, cnt):
+        repo = self.repository
+        dm = self.data_manager
+        runner = self.pyscript_runner
+
+        run = runsgen.next()
+        self._setup_automated_run(cnt, run, repo, dm, runner)
+
+        run.pre_extraction_save()
+        ta = Thread(name=run.runid,
+                   target=self._do_automated_run,
+                   args=(run,)
+                   )
+        ta.start()
+        return ta, run
+
+    def _setup_automated_run(self, i, arun, repo, dm, runner):
+        exp = self.experiment_set
+        exp.current_run = arun
+
+        arun.index = i
+        arun.experiment_name = exp.name
+        arun.experiment_manager = self
+        arun.spectrometer_manager = self.spectrometer_manager
+        arun.extraction_line_manager = self.extraction_line_manager
+        arun.ion_optics_manager = self.ion_optics_manager
+        arun.data_manager = dm
+        arun.db = self.db
+        arun.massspec_importer = self.massspec_importer
+        arun.runner = runner
+        arun.integration_time = 1.04
+        arun.repository = repo
+        arun.info_display = self.info_display
+        arun.username = self.username
 
     def _has_preceeding_blank_or_background(self):
         if self.experiment_set.automated_runs[0].analysis_type not in ['blank', 'background']:
@@ -367,7 +383,6 @@ class ExperimentManager(Manager):
             else:
                 return True
 
-        self.db.reset()
         arun.start()
 
         #bootstrap the extraction script and measurement script
@@ -414,29 +429,20 @@ class ExperimentManager(Manager):
             self._alive = False
 
         arun.state = 'success'
-        self.info('Automated run {} finished'.format(arun.runid))
         arun.finish()
+        self.experiment_set.increment_nruns_finished()
+        self.info('Automated run {} finished'.format(arun.runid))
 
-    def isAlive(self):
-        return self._alive
+    def _end_runs(self):
 
-    def _execute(self):
-        if self.isAlive():
+        self._alive = False
+        exp = self.experiment_set
+#        exp.stats.nruns_finished = len(exp.automated_runs)
+        exp.stop_stats_timer()
 
-            if self.confirmation_dialog('Cancel {} in Progress'.format(self.title),
-                                     title='Confirm Cancel'
-                                     ):
-                self._alive = False
-                arun = self.experiment_set.current_run
-                if arun:
-                    arun.cancel()
-
-        else:
-            self._alive = True
-#        target = self.do_experiment
-        #target = self.spectrometer_manager.deflection_calibration
-            t = Thread(target=self.do_automated_runs)
-            t.start()
+#===============================================================================
+# experiment set
+#===============================================================================
 
     def new_experiment_set(self):
 #        self.experiment_set = ExperimentSet()
@@ -458,7 +464,6 @@ class ExperimentManager(Manager):
         if not self.test_connections():
             return
 
-        self.info_display.clear()
         self.experiment_set = None
         if path is None:
             path = self.open_file_dialog(default_directory=paths.experiment_dir)
@@ -523,6 +528,15 @@ class ExperimentManager(Manager):
 #===============================================================================
     def _execute_button_fired(self):
         self._execute()
+
+    def _truncate_button_fired(self):
+        self.experiment_set.truncate_run()
+
+    def save(self):
+        self.save_experiment_set()
+
+    def save_as(self):
+        self.save_as_experiment_set()
 #    def _open_button_fired(self):
 #        p = '/Users/ross/Pychrondata_experiment/experiments/foo.txt'
 #        self.load_experiment_set(path=p)
@@ -572,7 +586,6 @@ class ExperimentManager(Manager):
     def execute_view(self):
 
         editor = self.experiment_set._automated_run_editor(update='object.experiment_set.current_run.update')
-
         tb = HGroup(
                     Item('delay_between_runs_readback',
                          label='Delay Countdown',
@@ -580,6 +593,8 @@ class ExperimentManager(Manager):
                          width= -50),
                     spring,
                     Item('end_at_run_completion'),
+                    Item('truncate_button', show_label=False,
+                         enabled_when='object.measuring'),
                     self._button_factory('execute_button',
                                              label='execute_label',
                                              enabled='object.experiment_set.executable',
@@ -649,6 +664,9 @@ class ExperimentManager(Manager):
     def test_view(self):
         v = View('test')
         return v
+
+    def isAlive(self):
+        return self._alive
 
 #===============================================================================
 # property get/set

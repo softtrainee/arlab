@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Instance, Str, Button, Any, \
     Bool, Property, Float, Int, on_trait_change, Dict, String, cached_property, \
-    Event
+    Event, DelegatesTo
 from traitsui.api import View, Item, TabularEditor, VGroup, HGroup, spring, \
     EnumEditor
 #============= standard library imports ========================
@@ -57,7 +57,7 @@ class ExperimentSet(Loggable):
     current_run = Instance(AutomatedRun)
     heat_schedule = Instance(HeatSchedule, ())
     db = Any
-
+    measuring = Property(depends_on='current_run.measuring')
     ok_to_add = Bool(False)
     apply = Button
     add = Button
@@ -98,6 +98,9 @@ class ExperimentSet(Loggable):
 
     _cached_runs = None
 
+    def truncate_run(self):
+        self.current_run.truncate()
+
     def check_for_mods(self):
         currenthash = sha.new(self._text).hexdigest()
         with open(self.path, 'r') as f:
@@ -129,6 +132,85 @@ class ExperimentSet(Loggable):
                 self.info('last ran analysis {} does not exist in modified experiment set. starting from the beginning')
 
         return rgen, n
+
+    def load_automated_runs(self):
+        if self.automated_runs is not None:
+            self._cached_runs = self.automated_runs
+
+        self.stats.delay_between_analyses = self.delay_between_analyses
+        self.automated_runs = []
+        with open(self.path, 'r') as fp:
+            self._text = fp.read()
+
+        f = (l for l in self._text.split('\n'))
+        metastr = ''
+        #read until break
+        for line in f:
+            if line.startswith('#====='):
+                break
+            metastr += '{}\n'.format(line)
+
+        meta = yaml.load(metastr)
+
+        delim = '\t'
+        header = map(str.strip, f.next().split(delim))
+        self.executable = True
+        for linenum, line in enumerate(f):
+            if line.startswith('#'):
+                continue
+            if not line.strip():
+                continue
+
+            try:
+                self.delay_between_analyses = meta['delay_between_analyses']
+                params = self._run_parser(header, line)
+                params['mass_spec_name'] = meta['mass_spec']
+                arun = self._automated_run_factory(**params)
+                self.automated_runs.append(arun)
+            except Exception, e:
+
+                self.warning_dialog('Invalid Experiment file {}\nlinenum= {}\nline= {}'.format(e, linenum, line))
+                self.automated_runs = []
+                self.executable = False
+                return False
+
+        self._update_aliquots()
+        return True
+
+    def _right_clicked_changed(self):
+        selected = self.selected
+        if selected:
+            selected = selected[0]
+            ms = selected.measurement_script.name
+            es = selected.extraction_script.name
+            be = BatchEdit(
+                           batch=len(self.selected) > 1,
+                           measurement_scripts=self.measurement_scripts,
+                           measurement_script=ms,
+                           orig_measurement_script=ms,
+
+                           extraction_scripts=self.extraction_scripts,
+                           extraction_script=es,
+                           orig_extraction_script=es,
+
+#                           power=selected.temp_or_power,
+#                           orig_power=selected.temp_or_power,
+                           power=selected.heat_value,
+                           orig_power=selected.heat_value,
+
+                           duration=selected.duration,
+                           orig_duration=selected.duration,
+
+                           position=selected.position,
+                           orig_position=selected.position
+
+                           )
+
+            be.reset()
+            info = be.edit_traits()
+            if info.result:
+                be.apply_edits(self.selected)
+                self.automated_run.update = True
 
     def _run_parser(self, header, line, delim='\t'):
         params = dict()
@@ -169,87 +251,6 @@ class ExperimentSet(Loggable):
                                                             post_measurement,
                                                             post_equilibration)
         return params
-
-    def load_automated_runs(self):
-        if self.automated_runs is not None:
-            self._cached_runs = self.automated_runs
-
-        self.stats.delay_between_analyses = self.delay_between_analyses
-        self.automated_runs = []
-        with open(self.path, 'r') as fp:
-            self._text = fp.read()
-
-        f = (l for l in self._text.split('\n'))
-        metastr = ''
-        #read until break
-        for line in f:
-            if line.startswith('#====='):
-                break
-            metastr += '{}\n'.format(line)
-
-        meta = yaml.load(metastr)
-
-        delim = '\t'
-        header = map(str.strip, f.next().split(delim))
-        self.executable = True
-        for linenum,line in enumerate(f):
-            if line.startswith('#'):
-                continue
-            if not line.strip():
-                continue
-            
-            try:
-                self.delay_between_analyses = meta['delay_between_analyses']
-                params = self._run_parser(header, line)
-                params['mass_spec_name'] = meta['mass_spec']
-                arun = self._automated_run_factory(**params)
-                self.automated_runs.append(arun)
-            except Exception, e:
-                
-                self.warning_dialog('Invalid Experiment file {}\nlinenum= {}\nline= {}'.format(e, linenum, line))
-                self.automated_runs = []
-                self.executable = False
-                return False
-
-        self._update_aliquots()
-        return True
-
-    def _right_clicked_changed(self):
-
-        selected = self.selected
-        if selected:
-            selected = selected[0]
-            ms = selected.measurement_script.name
-            es = selected.extraction_script.name
-            be = BatchEdit(
-                           batch=len(self.selected) > 1,
-                           measurement_scripts=self.measurement_scripts,
-                           measurement_script=ms,
-                           orig_measurement_script=ms,
-
-                           extraction_scripts=self.extraction_scripts,
-                           extraction_script=es,
-                           orig_extraction_script=es,
-
-#                           power=selected.temp_or_power,
-#                           orig_power=selected.temp_or_power,
-                           power=selected.heat_value,
-                           orig_power=selected.heat_value,
-
-                           duration=selected.duration,
-                           orig_duration=selected.duration,
-
-                           position=selected.position,
-                           orig_position=selected.position
-
-                           )
-
-            be.reset()
-            info = be.edit_traits()
-            if info.result:
-                be.apply_edits(self.selected)
-                self.automated_run.update = True
-
     def _load_script_names(self, name):
         p = os.path.join(paths.scripts_dir, name)
         if os.path.isdir(p):
@@ -370,19 +371,33 @@ class ExperimentSet(Loggable):
                                                         'post_equilibration',
                                                         self.post_equilibration_script)
 
+    def increment_nruns_finished(self):
+        self.stats.nruns_finished += 1
+
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
         self.dirty = True
-        #updated the experiments stats
-        if name == 'current_run':
-#            print 'sssss'
-            self.activated_row = self.automated_runs.index(new)
-            if not new is self.automated_runs[0]:
-                #skip the first update 
-                self.stats.nruns_finished += 1
-
-        elif name == 'automated_runs_items':
-            self.stats.calculate_etf(self.automated_runs)
+#        #updated the experiments stats
+#        if name == 'current_run':
+##            print 'sssss'
+#            self.activated_row = self.automated_runs.index(new)
+#            if not new is self.automated_runs[0]:
+#                #skip the first update 
+#                self.stats.nruns_finished += 1
+        self.stats.calculate_etf(self.automated_runs)
+#    @on_trait_change('current_run,automated_runs[]')
+#    def _update_stats(self, obj, name, old, new):
+#        self.dirty = True
+#        #updated the experiments stats
+#        if name == 'current_run':
+##            print 'sssss'
+#            self.activated_row = self.automated_runs.index(new)
+#            if not new is self.automated_runs[0]:
+#                #skip the first update 
+#                self.stats.nruns_finished += 1
+#
+#        elif name == 'automated_runs_items':
+#            self.stats.calculate_etf(self.automated_runs)
 
     @on_trait_change('automated_run.identifier')
     def _update_identifier(self, identifier):
@@ -461,6 +476,10 @@ class ExperimentSet(Loggable):
             return os.path.splitext(os.path.basename(self.path))[0]
         else:
             return 'New ExperimentSet'
+
+    def _get_measuring(self):
+        if self.current_run:
+            return self.current_run.measuring
 
     @cached_property
     def _get_extraction_scripts(self):
