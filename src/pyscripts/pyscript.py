@@ -337,7 +337,8 @@ class PyScript(Loggable):
         self.info(message)
 
         if self.info_display:
-            do_later(self.info_display.add_text, message)
+            self.info_display.add_text(message)
+#            do_later(self.info_display.add_text, message)
 
     def sleep(self, duration=0):
         self._estimated_duration += duration

@@ -166,7 +166,8 @@ class ExperimentManager(Manager):
     def info(self, msg, *args, **kw):
         super(ExperimentManager, self).info(msg, *args, **kw)
         if self.info_display:
-            do_later(self.info_display.add_text, msg, color='yellow')
+            self.info_display.add_text(msg, color='yellow')
+#            do_later(self.info_display.add_text, msg, color='yellow')
 
     def save(self):
         self.save_experiment_set()
@@ -179,11 +180,11 @@ class ExperimentManager(Manager):
         if db.connect():
             db.reset()
             selector = db.selector_factory(style='simple')
-
+            
             selector.set_data_manager(kind=self.repo_kind,
                                       repository=self.repository,
-                                      workspace_root=paths.default_workspace)
-
+                                      workspace_root=paths.default_workspace_dir
+                                      )
 
             self.open_view(selector)
 
@@ -337,7 +338,6 @@ class ExperimentManager(Manager):
 
             if self.end_at_run_completion:
                 break
-
 
             cnt += 1
             totalcnt += 1

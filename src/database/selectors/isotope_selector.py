@@ -233,15 +233,16 @@ class AnalysisResult(DBResult):
             if regress:
                 skw['fit'] = fi
 #
+            xs=xs[:-1]
+            ys=ys[:-1]
             graph.new_plot(**gkw)
             graph.new_series(xs, ys, plotid=i,
                              type='scatter', marker='circle',
                              marker_size=1.25,
                              **skw)
 #            graph.set_series_label(key, plotid=i)
-            mi = min(xs)
             ma = max(xs)
-            graph.set_x_limits(min=mi, max=ma, pad='0.1', plotid=i)
+            graph.set_x_limits(min=0, max=ma, plotid=i)
             params = dict(orientation='right' if i % 2 else 'left',
                           axis_line_visible=False
                           )

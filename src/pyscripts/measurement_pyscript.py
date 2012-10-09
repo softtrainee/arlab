@@ -24,7 +24,7 @@ import os
 from src.paths import paths
 import random
 #============= local library imports  ==========================
-
+estimated_duration_ff=1.01
 
 class Detector(object):
     name = None
@@ -115,7 +115,7 @@ class MeasurementPyScript(PyScript):
     @count_verbose_skip
     def sniff(self, ncounts=0, calc_time=False, integration_time=1):
         if calc_time:
-            self._estimated_duration += (ncounts * integration_time)
+            self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
             return
 
         if self.automated_run is None:
@@ -148,7 +148,7 @@ class MeasurementPyScript(PyScript):
     @count_verbose_skip
     def multicollect(self, ncounts=200, integration_time=1, calc_time=False):
         if calc_time:
-            self._estimated_duration += (ncounts * integration_time)
+            self._estimated_duration += (ncounts * integration_time*estimated_duration_ff)
             return
 
         if self.automated_run is None:
@@ -192,7 +192,7 @@ class MeasurementPyScript(PyScript):
             else:
                 ns = counts * cycles
 
-            self._estimated_duration += ns
+            self._estimated_duration += ns*estimated_duration_ff
             return
 
         if self.automated_run is None:
@@ -211,7 +211,7 @@ class MeasurementPyScript(PyScript):
     @count_verbose_skip
     def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5, calc_time=False):
         if calc_time:
-            self._estimated_duration += (cycles * integrations)
+            self._estimated_duration += (cycles * integrations *estimated_duration_ff)
             return
 
         if self.automated_run is None:

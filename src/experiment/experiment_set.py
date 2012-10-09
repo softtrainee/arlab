@@ -192,10 +192,12 @@ class ExperimentSet(Loggable):
         delim = '\t'
         header = map(str.strip, f.next().split(delim))
         self.executable = True
-        for line in f:
+        for linenum,line in enumerate(f):
             if line.startswith('#'):
                 continue
-
+            if not line.strip():
+                continue
+            
             try:
                 self.delay_between_analyses = meta['delay_between_analyses']
                 params = self._run_parser(header, line)
@@ -203,8 +205,8 @@ class ExperimentSet(Loggable):
                 arun = self._automated_run_factory(**params)
                 self.automated_runs.append(arun)
             except Exception, e:
-
-                self.warning_dialog('Invalid Experiment file {}'.format(e))
+                
+                self.warning_dialog('Invalid Experiment file {}\nlinenum= {}\nline= {}'.format(e, linenum, line))
                 self.automated_runs = []
                 self.executable = False
                 return False

@@ -150,7 +150,8 @@ class AutomatedRun(Loggable):
     def info(self, msg, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
         if self.info_display:
-            do_later(self.info_display.add_text, msg)
+            self.info_display.add_text(msg)
+#            do_later(self.info_display.add_text, msg)
 
     def get_estimated_duration(self):
         '''
@@ -489,6 +490,7 @@ class AutomatedRun(Loggable):
 
         spec = self.spectrometer_manager.spectrometer
         g = p.graph
+        g.suppress_regression=True
         for i, l in enumerate(dets):
             det = spec.get_detector(l)
             g.new_plot(ytitle='{} {} Signal (fA)'.format(det.name, det.isotope))
@@ -500,6 +502,7 @@ class AutomatedRun(Loggable):
 
             g.set_x_limits(min=0, max=400, plotid=i)
 
+        g.suppress_regression=False
         self._active_detectors = [spec.get_detector(n) for n in dets]
         self.plot_panel.detectors = self._active_detectors
 
@@ -816,9 +819,9 @@ class AutomatedRun(Loggable):
 
             if not keys or not signals:
                 continue
-
+            
             x = time.time() - starttime# if not self._debug else i + starttime
-            data_write_hook(x, keys, signals)
+            
 
             self.signals = dict(zip(keys, signals))
 
@@ -852,8 +855,9 @@ class AutomatedRun(Loggable):
                 for j,_ in enumerate(graph.plots):
                     graph.set_x_limits(0, x + (ma-mi)*0.25, plotid=j)
                 graph.suppress_regression=False
-                
-
+            graph._update_graph()
+            data_write_hook(x, keys, signals)
+        
         return True
 
     def _load_script(self, name):
@@ -1149,6 +1153,7 @@ class AutomatedRun(Loggable):
             nrow['value'] = signal
             nrow.append()
             tab.flush()
+            
         return write_data
 
     @cached_property

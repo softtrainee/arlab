@@ -180,7 +180,7 @@ class Paths():
         self.arar_dir = join(data_dir, 'arar')
 
         self.isotope_dir = join(self.data_dir, 'isotopes')
-        self.default_workspace = join(self.data_dir, 'workspaces', 'collection')
+        self.default_workspace_dir = join(self.data_dir, 'workspaces', 'collection')
         #initialization_dir = join(setup_dir, 'initializations')
         #device_creator_dir = join(device_dir, 'device_creator')
 

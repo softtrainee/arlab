@@ -26,6 +26,12 @@ from pyface.timer.do_later import do_later
 from email.mime.base import MIMEBase
 from src.paths import paths
 #=============local library imports  ==========================
+
+def gui_decorator(func):
+    def decorator(*args,**kw):
+        do_later(func, *args, **kw)
+    return decorator
+
 class DisplayHandler(Handler):
     def closed(self, info, is_ok):
         obj = info.object
@@ -130,22 +136,32 @@ class RichTextDisplay(HasTraits):
         self.add_text(self._text_buffer)
         self._text_buffer = []
 
+    @gui_decorator
     def clear(self):
         self.text = []
-        self._text_buffer = []
-
+#        self._text_buffer = []
+#        del self.text
+#        del self._text_buffer
+        
         d = self._display
         if d:
-            d.Freeze()
+#            d.Freeze()
 #            for i in range(4):
             d.SelectAll()
 #                d.DeleteSelection()
             d.Delete(d.Selection)
             d.SelectNone()
-            d.Thaw()
-
             d.SetInsertionPoint(0)
-
+#            d.Thaw()
+            
+    def freeze(self):
+        if self._display:
+            self._display.Freeze()
+            
+    def thaw(self):
+        if self._display:
+            self._display.Thaw()
+            
     def _add_(self, msg, color=None, size=None,
               bold=False,
               underline=False, **kw):
@@ -177,7 +193,7 @@ class RichTextDisplay(HasTraits):
         weight = wx.FONTWEIGHT_NORMAL
         font = wx.Font(size, family, style, weight, False, 'Consolas')
 
-        d.Freeze()
+#        d.Freeze()
 
         d.BeginFont(font)
         d.BeginTextColour(color)
@@ -207,46 +223,52 @@ class RichTextDisplay(HasTraits):
         lp = d.GetLastPosition()
         self.show_positon(lp + 10)
 
-        d.Thaw()
+#        d.Thaw()
 
     def show_positon(self, ipos):
-        d = self._display
-#        def _ShowPosition(self, ipos):
-        line = d.GetVisibleLineForCaretPosition(ipos)
-        ppuX, ppuY = d.GetScrollPixelsPerUnit()  #unit = scroll
-#step
-        startYUnits = d.GetViewStart()[1]
-        sy = d.GetVirtualSize()[1]
-
-        if ppuY == 0:
-            return False  # since there's no scrolling, hence no
-#adjusting
-
-        syUnits = sy / ppuY
-        r = line.GetRect()
-        ry = r.GetY()
-        rh = r.GetHeight()
-        csY = d.GetClientSize()[1]
-        csY -= d.GetBuffer().GetBottomMargin()
-
-#        if self.center_caret:
-        if ry >= startYUnits * ppuY + csY - rh / 2:
-            yUnits = startYUnits + csY / ppuY / 2
-            d.SetScrollbars(ppuX, ppuY, 0, syUnits, 0, yUnits)
-            d.PositionCaret()
-#                return True
+        try:
+            d = self._display
+    #        def _ShowPosition(self, ipos):
+            line = d.GetVisibleLineForCaretPosition(ipos)
+            ppuX, ppuY = d.GetScrollPixelsPerUnit()  #unit = scroll
+    #step
+            startYUnits = d.GetViewStart()[1]
+            sy = d.GetVirtualSize()[1]
+    
+            if ppuY == 0:
+                return False  # since there's no scrolling, hence no
+    #adjusting
+    
+            syUnits = sy / ppuY
+            r = line.GetRect()
+            ry = r.GetY()
+            rh = r.GetHeight()
+            csY = d.GetClientSize()[1]
+            csY -= d.GetBuffer().GetBottomMargin()
+    
+    #        if self.center_caret:
+            if ry >= startYUnits * ppuY + csY - rh / 2:
+                yUnits = startYUnits + csY / ppuY / 2
+                d.SetScrollbars(ppuX, ppuY, 0, syUnits, 0, yUnits)
+                d.PositionCaret()
+        except AttributeError:
+            pass
+    #                return True
 #        return False
+    @gui_decorator
     def add_text(self, msg, **kw):
         '''
         '''
         disp = self._display
         if disp:
-            tappend = self.text.append
+#            tappend = self.text.append
             if isinstance(msg, (list, tuple)):
-                for mi in msg:
-                    tappend(len(mi) + 1)
+                self.text+=[len(mi)+1 for mi in msg]
+#                for mi in msg:
+#                    tappend(len(mi) + 1)
             else:
-                tappend(len(msg) + 1)
+                self.text.append(len(msg)+1)
+#                tappend(len(msg) + 1)
 
             if isinstance(msg, (list, tuple)):
                 for mi in msg:
@@ -262,6 +284,8 @@ class RichTextDisplay(HasTraits):
         else:
 #            pass
             self._text_buffer.append((msg, kw))
+            
+        
 
 
 from email.mime.multipart import MIMEMultipart

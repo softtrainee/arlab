@@ -55,19 +55,22 @@ class RegressionGraph(Graph):
         self.regressors = []
         for plot in self.plots:
             ks = plot.plots.keys()
-            scatters, kkk= zip(*[(plot.plots[k][0],k) for k in ks if k.startswith('data')])
-            ind=kkk[0][-1]
-            fls=[plot.plots[kk][0] for kk in ks if kk=='fit{}'.format(ind)]
-            uls=[plot.plots[kk][0] for kk in ks if kk=='upper{}'.format(ind)]
-            lls=[plot.plots[kk][0] for kk in ks if kk=='lower{}'.format(ind)]
-            
-            #fls = [plot.plots[k][0] for k in ks if k.startswith('fit')]
-            #uls = [plot.plots[k][0] for k in ks if k.startswith('upper')]
-            #lls = [plot.plots[k][0] for k in ks if k.startswith('lower')]
-            for si, fl, ul, ll in zip(scatters, fls, uls, lls):
-                self._plot_regression(plot, si, fl, ul, ll)
-
-        self.regression_results = self.regressors
+            try:
+                scatters, kkk= zip(*[(plot.plots[k][0],k) for k in ks if k.startswith('data')])
+                ind=kkk[0][-1]
+                fls=[plot.plots[kk][0] for kk in ks if kk=='fit{}'.format(ind)]
+                uls=[plot.plots[kk][0] for kk in ks if kk=='upper CI{}'.format(ind)]
+                lls=[plot.plots[kk][0] for kk in ks if kk=='lower CI{}'.format(ind)]
+                
+                #fls = [plot.plots[k][0] for k in ks if k.startswith('fit')]
+                #uls = [plot.plots[k][0] for k in ks if k.startswith('upper')]
+                #lls = [plot.plots[k][0] for k in ks if k.startswith('lower')]
+                for si, fl, ul, ll in zip(scatters, fls, uls, lls):
+                    self._plot_regression(plot, si, fl, ul, ll)
+            except ValueError,e:
+                break
+        else:
+            self.regression_results = self.regressors
 
     def _plot_regression(self, plot, scatter, line, uline, lline):
         try:
@@ -90,7 +93,9 @@ class RegressionGraph(Graph):
         except KeyError:
             pass
 
-    def _regress(self, x=None, y=None,
+    def _regress(self, 
+                 x,y,
+#                 x=None, y=None,
                  selection=None,
                  plotid=0,
                  plot=None,
@@ -105,12 +110,12 @@ class RegressionGraph(Graph):
         if plot is None:
             plot = self.plots[plotid]
 
-        if x is None or y is None:
-            x = plot.data.get_data('x0')
-            y = plot.data.get_data('y0')
-
+#        if x is None or y is None:
+#            x = plot.data.get_data('x0')
+#            y = plot.data.get_data('y0')
         if filterstr:
             x, y = self._apply_filter(filterstr, x, y)
+            
         if selection:
             x = delete(x[:], selection, 0)
             y = delete(y[:], selection, 0)
@@ -120,10 +125,8 @@ class RegressionGraph(Graph):
         if fit in [1, 2, 3]:
             if len(y) < fit + 1:
                 return
-
             st = low
             xn = x - st
-
             r = PolynomialRegressor(xs=xn, ys=y,
                                     degree=fit)
             self.regressors.append(r)
@@ -222,7 +225,7 @@ class RegressionGraph(Graph):
         scatter.fit = fit
 
         if x is not None and y is not None:
-            args = self._regress(x=x, y=y, plotid=plotid)
+            args = self._regress(x, y,plotid=plotid)
             if args:
                 fx, fy, ly, uy = args
 
@@ -240,7 +243,7 @@ class RegressionGraph(Graph):
 
         plot, names, rd = self._series_factory(fx, ly, line_style='dash', plotid=plotid, **kw)
         plot.plot(names, **rd)[0]
-        self.set_series_label('lower CI'.format(si), plotid=plotid)
+        self.set_series_label('lower CI{}'.format(si), plotid=plotid)
 
         try:
             self._set_bottom_axis(plot, plot, plotid)
@@ -283,10 +286,10 @@ class RegressionGraph(Graph):
         if not self.use_data_tool:
             data_tool.visible=False
 
-    def _set_limits(self, *args, **kw):
+    def set_x_limits(self, *args, **kw):
         '''
         '''
-        super(RegressionGraph, self)._set_limits(*args, **kw)
+        super(RegressionGraph, self).set_x_limits(*args, **kw)
         self._update_graph()
 
 class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
