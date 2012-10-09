@@ -103,8 +103,6 @@ class TrayCalibrationManager(Manager):
             self.calibration_step = 'Calibrate'
             self._calibrating = False
 
-
-
     def load_calibration(self, stage_map=None):
         if stage_map is None:
             stage_map = self.parent.stage_map
