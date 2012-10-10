@@ -147,7 +147,10 @@ class AnalysisSummary(HasTraits):
         return RichTextDisplay(default_size=12,
                                width=700,
                                selectable=True,
-                               default_color='black')
+                               default_color='black',
+
+                               font_name='Monaco'
+                               )
 
     def traits_view(self):
         v = View(Item('display', show_label=False, style='custom'))

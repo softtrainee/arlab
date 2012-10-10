@@ -39,6 +39,9 @@ from globals import globalv
 from src.displays.rich_text_display import RichTextDisplay
 from src.repo.repository import Repository, FTPRepository
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
+from chaco.scatter_inspector_overlay import ScatterInspectorOverlay
+from chaco.tools.scatter_inspector import ScatterInspector
+from src.experiment.selection_view import SelectionView
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -193,7 +196,15 @@ class ExperimentManager(Manager):
                                       workspace_root=paths.default_workspace_dir
                                       )
 
-            self.open_view(selector)
+#            self.open_view(selector)
+            selector.load_recent()
+            v = SelectionView(table=selector)
+            v.build_graph()
+
+
+            dm = selector.data_manager
+            self.open_view(v)
+
 
 #    def get_spectrometer_manager(self):
 #        sm = self.spectrometer_manager

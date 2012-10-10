@@ -384,6 +384,7 @@ class HoleDetector(Detector):
 
         if image:
             image.set_frame(0, colorspace(src.clone()))
+#            image.save('/Users/ross/Sandbox/machine_vision/crop.jpg', width=cw_px, height=ch_px)
 
         return src
 
@@ -497,10 +498,15 @@ class HoleDetector(Detector):
                 find polygon center
                 
             '''
+
             ctest = tar.convexity > threshold
             centtest = self._near_center(*tar.centroid_value)
             atest = ma > tar.area > mi
             if not ctest and (atest and centtest):
+                src = self.target_image.get_frame(0)
+                self._draw_result(src, tar)
+#                w, h = self.croppixels
+#                self.target_image.save('/Users/ross/Sandbox/machine_vision/polygon.jpg', width=w, height=h)
 
                 #make image with polygon
                 image = zeros(self.croppixels)

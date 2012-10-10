@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Button, List, Any, Dict, Bool, Int, Enum
+from traits.api import Button, List, Any, Dict, Bool, Int, Enum, Event
 
 from traitsui.api import View, Item, ButtonEditor, \
     HGroup, spring, ListEditor, InstanceEditor
@@ -71,6 +71,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     selected = Any
     scroll_to_row = Int
 #    activated = Any
+    update = Event
     selected_row = Any
 
     wx = 0.4
@@ -96,6 +97,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     style = Enum('normal', 'panel', 'simple')
 
     data_manager = None
+
+    def _selected_changed(self):
+        if self.selected:
+            self.selected_row = self.results.index(self.selected[0])
+            self.update = True
 
     def __init__(self, *args, **kw):
         super(DatabaseSelector, self).__init__(*args, **kw)
@@ -342,6 +348,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         editor = myTabularEditor(adapter=self.tabular_adapter(),
                                dclicked='object.dclicked',
                                selected='object.selected',
+                               selected_row='object.selected_row',
+                               update='update',
                                auto_update=True,
                                column_clicked='object.column_clicked',
                                editable=False,

@@ -37,10 +37,18 @@ class AutocenterManager(MachineVisionManager):
                 holedim = 3
 
             params = self.detector.locate_sample_well(cx, cy, holenum, holedim, **kw)
+
             msg = 'Target found at {:0.3n}, {:0.3n}'.format(*params) if params else 'No target found'
             self.info(msg)
 
             if params:
+#                w, h = self.detector.croppixels
+#                self.detector.target_image.save('/Users/ross/Sandbox/machine_vision/image.png',
+#                                                width=w,
+#                                                height=h
+#                                                )
+
+
                 params = cx - params[0] / self.pxpermm, cy + params[1] / self.pxpermm
             return params
 
@@ -69,6 +77,8 @@ class AutocenterManager(MachineVisionManager):
 
 
 if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    logging_setup('autocenter')
     am = AutocenterManager()
     am.configure_traits()
 #============= EOF =============================================
