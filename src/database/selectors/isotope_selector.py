@@ -69,7 +69,7 @@ class AnalysisResult(DBResult):
     labnumber = Property
     analysis_type = Property
     aliquot = Property
-
+    mass_spectrometer = Property
     def __getattr__(self, attr):
         try:
             return getattr(self._db_result, attr)
@@ -105,6 +105,10 @@ class AnalysisResult(DBResult):
     @cached_property
     def _get_aliquot(self):
         return self._db_result.labnumber.aliquot
+
+    @cached_property
+    def _get_mass_spectrometer(self):
+        return self._db_result.measurement.mass_spectrometer.name.lower()
 
     def traits_view(self):
         info = self._get_info_grp()
@@ -233,8 +237,8 @@ class AnalysisResult(DBResult):
             if regress:
                 skw['fit'] = fi
 #
-            xs=xs[:-1]
-            ys=ys[:-1]
+            xs = xs[:-1]
+            ys = ys[:-1]
             graph.new_plot(**gkw)
             graph.new_series(xs, ys, plotid=i,
                              type='scatter', marker='circle',

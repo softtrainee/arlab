@@ -43,8 +43,9 @@ class DataTool(BaseTool):
         plot = self.plot
         if comp is not None:
             d = dict()
-            x, y = comp.map_data([event.x, event.y])
-            comps = self.component.container.components_at(event.x, event.y)
+
+            x, y = comp.map_data([event.x, event.y - 8])
+            comps = self.plot.components_at(event.x, event.y)
             if not self.component in comps:
                 self.new_value = d
                 return
@@ -67,7 +68,7 @@ class DataTool(BaseTool):
                 xi = date.strftime('%d/%m %H:%M:%S')
             else:
                 xi = self.x_format.format(x)
-            
+
             d['xy'] = (xi, '{:0.3f}'.format(y))
             self.new_value = d
 

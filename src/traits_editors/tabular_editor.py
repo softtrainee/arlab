@@ -30,10 +30,10 @@ class _TabularEditor(wxTabularEditor):
     def update_editor(self):
         control = self.control
         wxTabularEditor.update_editor(self)
+
         if self.factory.scroll_to_bottom:
-            control.EnsureVisible(control.GetItemCount() - 1)
-        else:
-            control.EnsureVisible(self.activated_row)
+            if not self.selected and not self.multi_selected:
+                control.EnsureVisible(control.GetItemCount() - 1)
 
 class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)

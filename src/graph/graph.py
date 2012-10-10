@@ -310,8 +310,12 @@ class Graph(Loggable, ContextMenuMixin):
     def set_data(self, d, plotid=0, series=0, axis=0):
         '''
         '''
-        n = self.series[plotid][series]
-        self.plots[plotid].data.set_data(n[axis], d)
+        if isinstance(series, int):
+            n = self.series[plotid][series]
+            series = n[axis]
+
+        print series
+        self.plots[plotid].data.set_data(series, d)
 
     def set_axis_traits(self, plotid=0, axis='x', **kw):
         '''
@@ -703,9 +707,8 @@ class Graph(Loggable, ContextMenuMixin):
                     rd['color_mapper'] = color_map_name_dict['hot']
                     rd['line_width'] = 0
 
-                    c = 'c0'
 #                    self.series[plotid][1] += (c,)
-
+                    c = self.series[plotid][-1][0].replace('x', 'c')
                     self.plots[plotid].data.set_data(c, [])
                     names += (c,)
 

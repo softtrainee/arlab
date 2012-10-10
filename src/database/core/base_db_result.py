@@ -23,10 +23,12 @@ import os
 #============= local library imports  ==========================
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.graph.graph import Graph
+import time
+from src.viewable import Viewable
 #from src.managers.data_managers.h5_data_manager import H5DataManager
 
 
-class BaseDBResult(HasTraits):
+class BaseDBResult(Viewable):
     rid = Property
     _db_result = Any
 
@@ -43,6 +45,7 @@ class DBResult(BaseDBResult):
     rundate = Property
     runtime = Property
     path = Property
+    timestamp = Property
 
 #    root = Str
 
@@ -65,9 +68,20 @@ class DBResult(BaseDBResult):
     exportable = True
     resizable = True
 
+    def opened(self):
+        ctrl = self.ui.control
+        from pyface.timer.do_later import do_later
+        do_later(ctrl.Raise)
+
+    @cached_property
+    def _get_timestamp(self):
+        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
+        ts = ' '.join((self.rundate, self.runtime))
+        return timefunc(ts)
+
     @cached_property
     def _get_rundate(self):
-        return self._db_result.rundate
+        return self._db_result.rundate.strftime('%Y-%m-%d')
 
     @cached_property
     def _get_runtime(self):
@@ -225,7 +239,7 @@ class DBResult(BaseDBResult):
                     x=self.window_x,
                     y=self.window_y,
                     title=self.title,
-
+                    handler=self.handler_klass
                     )
         if self.window_width:
             v.width = self.window_width

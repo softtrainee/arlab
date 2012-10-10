@@ -54,15 +54,15 @@ class Plotter(Viewable):
         scatter.tools.append(ScatterInspector(scatter,
 #                                              selection_mode='off'
                                               ))
-        overlay = ScatterInspectorOverlay(scatter,
-                    hover_color="red",
-                    hover_marker_size=int(scatter.marker_size + 2),
+#        overlay = ScatterInspectorOverlay(scatter,
+#                    hover_color="red",
+#                    hover_marker_size=int(scatter.marker_size + 2),
                     #selection_color='transparent',
                     #selection_marker_size=int(scatter.marker_size),
                     #selection_marker=scatter.marker
 #                    selection_outlin
-                    )
-        scatter.overlays.append(overlay)
+#                    )
+#        scatter.overlays.append(overlay)
         u = lambda a, b, c, d: self.update_graph_metadata(gid, a, b, c, d)
         scatter.index.on_trait_change(u, 'metadata_changed')
 #        self.metadata = scatter.index.metadata

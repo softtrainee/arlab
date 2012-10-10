@@ -73,6 +73,9 @@ class RichTextDisplay(HasTraits):
     _text_buffer = List
     selectable = False
     id = ''
+
+    font_name = 'Consolas'
+
     def close(self):
         if self.ui is not None:
             self.ui.dispose()
@@ -160,6 +163,13 @@ class RichTextDisplay(HasTraits):
         if self._display:
             self._display.Thaw()
 
+    def _create_font(self, size, name):
+        family = wx.FONTFAMILY_MODERN
+        style = wx.FONTSTYLE_NORMAL
+        weight = wx.FONTWEIGHT_NORMAL
+        font = wx.Font(size, family, style, weight, False, name)
+        return font
+
     def _add_(self, msg, color=None, size=None,
               bold=False,
               underline=False, **kw):
@@ -175,6 +185,7 @@ class RichTextDisplay(HasTraits):
         d = self._display
         if color is None:
             color = wx.Colour(*colors8i[self.default_color])
+
         if size is None:
             size = self.default_size
 
@@ -186,11 +197,8 @@ class RichTextDisplay(HasTraits):
         else:
             color = wx.Colour(*color)
 
-        family = wx.FONTFAMILY_MODERN
-        style = wx.FONTSTYLE_NORMAL
-        weight = wx.FONTWEIGHT_NORMAL
-        font = wx.Font(size, family, style, weight, False, 'Consolas')
 
+        font = self._create_font(size, name=self.font_name)
 #        d.Freeze()
 
         d.BeginFont(font)

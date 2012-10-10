@@ -101,7 +101,7 @@ class Image(HasTraits):
 #        print img.reshape(960, 960)
         self.source_frame = img
         self.frames = [img.clone()]
-        
+
 #        self.frames = [clone(img)]
 
     def update_bounds(self, obj, name, old, new):
@@ -135,7 +135,7 @@ class Image(HasTraits):
             del self._frame
         except AttributeError:
             pass
-        
+
         frame = self._get_frame(**kw)
 
         if frame is not None:
@@ -152,7 +152,7 @@ class Image(HasTraits):
             if clone:
                 nframe = frame.clone()
                 del frame
-                frame=nframe
+                frame = nframe
 
             if swap_rb:
                 frame = swapRB(frame)
@@ -262,11 +262,11 @@ class Image(HasTraits):
 #            pass
 
 
-    def save(self, path, src=None):
+    def save(self, path, src=None, width=640, height=480):
         if src is None:
             src = self.render_images(self.frames)
-        display = new_dst(640, 480, 3)
-        resize(src, 640, 480, dst=display)
+        display = new_dst(width, height, 3)
+        resize(src, width, height, dst=display)
 #        cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
 #        src = swapRB(src)
         save_image(display, path)
@@ -330,8 +330,8 @@ class StandAloneImage(HasTraits):
     def get_frame(self, i):
         return self._image.frames[i]
 
-    def save(self, path):
-        self._image.save(path)
+    def save(self, *args, **kw):
+        self._image.save(*args, **kw)
 
     def traits_view(self):
 
