@@ -1,0 +1,137 @@
+#===============================================================================
+# Copyright 2011 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+
+
+
+#=============enthought library imports=======================
+
+#=============standard library imports ========================
+
+#=============local library imports  ==========================
+from graph import Graph
+
+
+class StackedGraph(Graph):
+    '''
+    '''
+    equi_stack = True
+    panel_height = 100
+
+    def add_minor_xticks(self, plotid=0, **kw):
+        if plotid != 0:
+            kw['aux_component'] = self.plots[0]
+
+        super(StackedGraph, self).add_minor_xticks(plotid=plotid, **kw)
+
+    def add_minor_yticks(self, plotid=0, **kw):
+        if plotid != 0:
+            kw['aux_component'] = self.plots[0]
+
+        super(StackedGraph, self).add_minor_yticks(plotid=plotid, **kw)
+
+    def container_factory(self, *args, **kw):
+        c = super(StackedGraph, self).container_factory(*args, **kw)
+        '''
+            bind to self.plotcontainer.bounds
+            allows stacked graph to resize vertically
+        '''
+        c.on_trait_change(self._bounds_changed_, 'bounds')
+        return c
+
+    def new_plot(self, **kw):
+        '''
+        '''
+
+        bottom = self.plotcontainer.stack_order == 'bottom_to_top'
+        if self.equi_stack:
+            kw['resizable'] = 'h'
+            if 'bounds' not in kw:
+                kw['bounds'] = (1, self.panel_height)
+#
+        if len(self.plots) == 0:
+#            key = 'padding_top'
+            if 'title' not in kw:
+                kw['padding_top'] = 0
+#
+        else:
+            kw['resizable'] = 'h'
+            if 'bounds' not in kw:
+                kw['bounds'] = (1, self.panel_height)
+
+            if bottom:
+                kw['padding_bottom'] = 0
+                if 'title' not in kw:
+                    kw['padding_top'] = 20
+                else:
+                    kw['padding_top'] = 30
+            else:
+                kw['padding_bottom'] = 30
+                kw['padding_top'] = 0
+
+        p = super(StackedGraph, self).new_plot(**kw)
+        p.value_axis.ensure_labels_bounded = True
+
+        if len(self.plots) > 1:
+            if not bottom:
+#                plotiter = self.plots[1:]
+                plotiter1 = self.plots[:-1]
+            else:
+#                plotiter = self.plots[:-1]
+                plotiter1 = self.plots[1:]
+
+            link = True
+            if 'link' in kw:
+                link = kw['link']
+            if link:
+                pm = self.plots[0].index_mapper
+#                pii = self.plots[0].index_axis
+                for pi in self.plots:
+                    pi.index_mapper = pm
+#                    pi.index_axis = pii
+#                print pi, link, self.plots[0]
+##                pi.padding_top = 0
+##                pi.padding_bottom = 0
+#                if link:
+##                    pi.index_range = self.plots[0].index_range
+#                    pi.index_mapper = self.plots[0].index_mapper
+            for pi in plotiter1:
+                pi.index_axis.visible = False
+                pi.padding_top = 0
+                pi.padding_bottom = 0
+
+
+    def _bounds_changed_(self, bounds):
+        '''
+            vertically resizes the stacked graph.
+            the plots are sized equally
+        '''
+        padding_top = sum([getattr(p, 'padding_top') for p in self.plots])
+        padding_bottom = sum([getattr(p, 'padding_bottom') for p in self.plots])
+
+        pt = self.plotcontainer.padding_top + \
+                self.plotcontainer.padding_bottom + \
+                    padding_top + padding_bottom
+
+
+        if self.equi_stack:
+            for p in self.plots:
+                p.bounds[1] = (bounds[1] - pt) / len(self.plots)
+        else:
+            try:
+                self.plots[0].bounds[1] = (bounds[1] - pt) / max(1, (len(self.plots) - 1))
+            except IndexError:
+                pass
+#============= EOF ====================================
