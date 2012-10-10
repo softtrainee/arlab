@@ -63,7 +63,7 @@ class SerialCommunicator(Communicator):
     id_query = ''
     id_response = ''
 
-    read_delay =None
+    read_delay = None
     read_terminator = None
     def reset(self):
         handle = self.handle
@@ -351,16 +351,18 @@ class SerialCommunicator(Communicator):
             write(cmd)
 
     def _read(self, is_hex=False, nbytes=8, timeout=1, delay=None):
-        func = (lambda:self._get_nbytes(nbytes)) if is_hex else self._get_isline
+
+        func = (lambda: self._get_nbytes(nbytes)) \
+                    if is_hex else self._get_isline
         if delay is not None:
             time.sleep(delay / 1000.)
 
         elif self.read_delay:
             time.sleep(self.read_delay / 1000.)
-        
+
         r = None
         st = time.time()
-        
+
         while time.time() - st < timeout:
             try:
                 r, isline = func()
@@ -369,7 +371,7 @@ class SerialCommunicator(Communicator):
             except (ValueError, TypeError):
                 import traceback
                 traceback.print_exc()
-                
+
         self.handle.flushOutput()
         self.handle.flushInput()
         return r
@@ -378,21 +380,21 @@ class SerialCommunicator(Communicator):
         '''
             1 byte == 2 chars
         '''
-        handle=self.handle
-        inw=0
-        timeout=1
-        tt=0
-        r=''
-        while len(r)<nbytes*2 and tt<timeout:
-            d=1/1000.
+        handle = self.handle
+        inw = 0
+        timeout = 1
+        tt = 0
+        r = ''
+        while len(r) < nbytes * 2 and tt < timeout:
+            d = 1 / 1000.
             time.sleep(d)
             inw = handle.inWaiting()
-            c=min(inw,nbytes*2-len(r))
-            r+=''.join(['{:02X}'.format(ri) for ri in map(ord, handle.read(c))])
-            tt+=d
+            c = min(inw, nbytes * 2 - len(r))
+            r += ''.join(['{:02X}'.format(ri) for ri in map(ord, handle.read(c))])
+            tt += d
 
-        return r, tt<timeout
-        
+        return r, tt < timeout
+
     def _get_isline(self, terminator=None):
         try:
             inw = self.handle.inWaiting()

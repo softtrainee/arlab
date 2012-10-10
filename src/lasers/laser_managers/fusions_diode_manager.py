@@ -39,7 +39,6 @@ from threading import Timer
 
 class FusionsDiodeManager(FusionsLaserManager):
     '''
-        
     '''
     id = 'pychron.fusions.diode'
     name = 'fusions_diode'
@@ -66,12 +65,11 @@ class FusionsDiodeManager(FusionsLaserManager):
 
     use_power_slider = Bool(True)
 
-
     request_power = Float
     request_powermin = Float(0)
     request_powermax = Float(1500)
 
-    name = paths.diodelaser_db
+    dbname = paths.diodelaser_db
     db_root = paths.diodelaser_db_root
 #    def finish_loading(self):
 #        super(FusionsDiodeManager, self).finish_loading()

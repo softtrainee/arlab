@@ -20,9 +20,10 @@ from src.envisage.core.action_helper import open_manager
 from src.lasers.plugins.fusions.fusions_actions import FOpenMotionControllerManagerAction, \
     FPowerMapAction, FPowerCalibrationAction, FOpenLaserManagerAction, \
     FOpenStageVisualizerAction, FOpenPowerCalibrationAction, \
-    FLoadStageVisualizerAction, FInitializeZoomAction, FInitializeBeamAction, \
+    FLoadStageVisualizerAction, \
     FOpenVideoAction, FOpenPowerRecordGraphAction, FOpenPowerMapAction, \
-    FOpenPatternManagerAction, LaserAction
+    FOpenPatternManagerAction, LaserAction, FMotorConfigureAction
+    #FInitializeZoomAction, FInitializeBeamAction, \
 from src.lasers.laser_managers.laser_manager import ILaserManager
 #from traits.api import on_trait_change
 
@@ -106,15 +107,16 @@ class OpenPowerRecordGraphAction(FOpenPowerRecordGraphAction):
 class OpenVideoAction(FOpenVideoAction):
     get_manager = get_manager
 
+class MotorConfigureAction(FMotorConfigureAction):
+    get_manager = get_manager
 #===============================================================================
 # initializations
 #===============================================================================
-class InitializeBeamAction(FInitializeBeamAction):
-    get_manager = get_manager
-
-class InitializeZoomAction(FInitializeZoomAction):
-    get_manager = get_manager
-
+#class InitializeBeamAction(FInitializeBeamAction):
+#    get_manager = get_manager
+#
+#class InitializeZoomAction(FInitializeZoomAction):
+#    get_manager = get_manager
 #===============================================================================
 # patterning
 #===============================================================================

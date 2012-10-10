@@ -137,7 +137,6 @@ class KerrMotor(KerrDevice):
             self._data_position = self.max
             self.update_position = self.max
 
-
     def initialize(self, *args, **kw):
         '''
         '''
@@ -158,8 +157,10 @@ class KerrMotor(KerrDevice):
 
         #remove reference to progress
         self.progress = None
+        self.enabled = True
 
         return True
+
     def _clear_bits(self):
         cmd = (self.address, '0b', 100, 'clear bits')
         self._execute_hex_command(cmd)
@@ -266,6 +267,7 @@ class KerrMotor(KerrDevice):
         cmd = self._build_command(addr, cmd)
         status_byte = self.ask(cmd, is_hex=True,
                                 delay=100,
+                                nbytes=2,
                                 info='get defined status')
         return status_byte
 
@@ -357,7 +359,6 @@ class KerrMotor(KerrDevice):
     def _update_position(self):
         '''
         '''
-
         if not self._check_status_byte(0):
             self.enabled = False
 
@@ -480,7 +481,6 @@ class KerrMotor(KerrDevice):
                          ),
 
                     )
-
 
     def traits_view(self):
         '''
