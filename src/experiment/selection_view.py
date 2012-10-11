@@ -24,8 +24,11 @@ import numpy as np
 from src.viewable import Viewable
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 from src.graph.stacked_graph import StackedGraph
+from chaco.tools.zoom_tool import ZoomTool
 from chaco.tools.scatter_inspector import ScatterInspector
 from chaco.abstract_overlay import AbstractOverlay
+from chaco.tools.range_selection import RangeSelection
+from chaco.tools.range_selection_overlay import RangeSelectionOverlay
 
 
 class RecallOverlay(AbstractOverlay):
@@ -44,7 +47,7 @@ class RecallOverlay(AbstractOverlay):
         gc.draw_path()
 
         machines = ['jan', 'obama', 'map']
-        colors = [(0.5, 0, 1), (0, 0, 1), (1, 0, 0)]
+        colors = [(1, 0.5, 0), (0, 0, 1), (1, 0, 0)]
         xo = x + 5
         yo = y2 - 10
         texth = 12
@@ -76,13 +79,20 @@ class SelectionView(Viewable):
     graph = Instance(StackedGraph)
     def _graph_default(self):
         g = StackedGraph(container_dict=dict(padding=5))
-        g.new_plot(
+        plot = g.new_plot(
 #                   show_legend='ul',
                    padding=5)
 
-        ll = RecallOverlay(g.plots[0])
-#        g.plotcontainer.overlays.append(ll)
-        g.plots[0].overlays.append(ll)
+        plot.overlays.append(ZoomTool(plot,
+                                      minimum_screen_delta=5,
+                                      enable_wheel=False,
+                                      drag_button='left',
+                                      tool_mode='range',
+                                      always_on_top=True,
+                                      axis='index'
+                                      ))
+        plot.overlays.append(RecallOverlay(plot))
+
         g.set_axis_traits(axis='y', visible=False)
         g.set_axis_traits(axis='x', visible=False)
         g.set_grid_traits(grid='x', visible=False)
@@ -117,7 +127,7 @@ class SelectionView(Viewable):
         mm = [max(xj) for xj in xs if len(xj)]
         xma = max(mm)
 
-        colors = ['purple', 'blue', 'green']
+        colors = ['orange', 'blue', 'green']
         markers = ['circle', 'square', 'diamond', 'triangle', 'cross']
 
         def ffunc(s):
@@ -138,6 +148,10 @@ class SelectionView(Viewable):
                 s.tools.append(tool)
 
                 s.index.on_trait_change(ffunc(s), 'metadata_changed')
+
+                #add range selection tool
+#                s.active_tool = RangeSelection(s, left_button_selects=True)
+#                s.overlays.append(RangeSelectionOverlay(component=s))
 
 #                s.index.on_trait_change(getattr(self, '_update_{}'.format(at)), 'metadata_changed')
 

@@ -44,8 +44,9 @@ class DataTool(BaseTool):
         if comp is not None:
             d = dict()
 
-            x, y = comp.map_data([event.x, event.y - 8])
-            comps = self.plot.components_at(event.x, event.y)
+            x, y = comp.map_data([event.x, event.y - 5])
+            comps = comp.container.components_at(event.x, event.y)
+#            print comps
             if not self.component in comps:
                 self.new_value = d
                 return

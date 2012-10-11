@@ -157,7 +157,6 @@ class Paths():
         self.canvas3D_dir = join(setup_dir, 'canvas3D')
         self.extraction_line_dir = join(setup_dir, 'extractionline')
         self.monitors_dir = join(setup_dir, 'monitors')
-        self.jog_dir = join(setup_dir, 'jogs')
         self.pattern_dir = join(setup_dir, 'patterns')
 
         self.bakeout_config_dir = join(setup_dir, 'bakeout_configurations')

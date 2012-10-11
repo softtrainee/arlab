@@ -21,6 +21,7 @@ import os
 import ftplib as ftp
 #============= local library imports  ==========================
 from src.loggable import Loggable
+import shutil
 
 
 class Repository(Loggable):
@@ -46,9 +47,15 @@ class Repository(Loggable):
     def get_file_path(self, p):
         dst = os.path.join(self.root, os.path.basename(p))
         return dst
-#    def __init__(self, root, *args, **kw):
-#        self.root = root
-#        super(Repository, self).__init__(*args, **kw)
+
+    def isfile(self, n):
+        return os.path.isfile(self.get_file_path(n))
+
+    def retrieveFile(self, n, out):
+        try:
+            shutil.copyfile(self.get_file_path(n), out)
+        except Exception, e:
+            print e
 
 class FTPRepository(Repository):
     host = Str
@@ -59,9 +66,9 @@ class FTPRepository(Repository):
 #        self.remote = remote
 #        super(FTPRepository, self).__init__(*args, **kw)
 #    client = Property(depends_on='host, username, password')
-    reset=Event
-    client = Property(depends_on='host, username, password, reset')
+    client = Property(depends_on='host, username, password')
     _server_root = None
+
     @property
     def url(self):
         return '{}@{}/{}'.format(self.username,
@@ -144,7 +151,7 @@ class FTPRepository(Repository):
                     '''
                         clears the client property cache
                     '''
-                    self.reset=True
+                    self.reset = True
                     self.warning('execute exception {}'.format(e))
             else:
                 print err
