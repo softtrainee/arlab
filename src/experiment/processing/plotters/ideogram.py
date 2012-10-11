@@ -329,6 +329,7 @@ class Ideogram(Plotter):
 #                                   selection_marker='circle',
                                    selection_marker_size=3,
                                    plotid=plotid)
+
         self._add_error_bars(scatter, errors, 'x')
         self._add_scatter_inspector(scatter, gid=gid)
         scatter.index.on_trait_change(self._update_graph, 'metadata_changed')

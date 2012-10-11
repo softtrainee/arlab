@@ -39,6 +39,7 @@ from src.displays.rich_text_display import RichTextDisplay
 from src.experiment.processing.export.csv_exporter import CSVExporter
 from src.experiment.processing.export.excel_exporter import ExcelExporter
 from pyface.timer.do_later import do_later
+from src.experiment.processing.figures.figure_store import FigureStore
 
 class GraphSelector(HasTraits):
     show_series = Bool(False)
@@ -92,6 +93,8 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     export_csv = Button('csv')
     export_pdf = Button('pdf')
     export_excel = Button('excel')
+    store = Button('store')
+    load_button = Button('load')
 
     def refresh(self, caller=None):
 
@@ -249,7 +252,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         bs_keys.sort(key=lambda k:k[2:4], reverse=True)
 
         self.baseline_table_adapter.iso_keys = bs_keys
-
+        self.refresh(caller='load analyses')
 #===============================================================================
 # viewable
 #===============================================================================
@@ -330,7 +333,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
             if names:
                 self.load_analyses(names, attrs=attrs, groupids=gids, **self._get_load_keywords())
-                self.refresh(caller='update_data')
+#                self.refresh(caller='update_data')
 
         _do()
 #        t = Thread(target=_do)
@@ -346,11 +349,11 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _update_selected_analysis(self, new):
         self.selected_analysis = new
 
-    @on_trait_change('_analyses[]')
-    def _analyses_changed(self):
-#        print len(self.analyses), self.nanalyses
-        if len(self._analyses) > self.nanalyses:
-            self.refresh(caller='analyses_changed')
+#    @on_trait_change('_analyses[]')
+#    def _analyses_changed(self):
+##        print len(self.analyses), self.nanalyses
+#        if len(self._analyses) > self.nanalyses:
+#            self.refresh(caller='analyses_changed')
 
     @on_trait_change('graph_selector:show_series')
     def _refresh_graph(self, obj, name, old, new):
@@ -393,6 +396,23 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _export(self, klass):
         exp = klass(figure=self)
         exp.export(path='/Users/ross/Sandbox/aaaaaaaaaexporttest.xls')
+
+    def _store_fired(self):
+        name = 'staore1'
+        p = os.path.join(self.workspace.root, 'store', name)
+        d = os.path.dirname(p)
+        if not os.path.isdir(d):
+            os.mkdir(d)
+
+        st = FigureStore(p, self)
+        st.dump()
+
+    def _load_button_fired(self):
+        name = 'staore1'
+        p = os.path.join(self.workspace.root, 'store', name)
+        st = FigureStore(p, self)
+        st.load()
+
 #===============================================================================
 # views
 #===============================================================================
@@ -405,12 +425,14 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         tb = HGroup(
 #                    spring,
                     export,
+                    Item('store', show_label=False,),
+                    Item('load_button', show_label=False,),
 #                    Item('export_csv', show_label=False),
 #                    Item('export_excel', show_label=False),
 #                    Item('export_pdf', show_label=False),
                     Item('show_results', show_label=False),
-                       Item('manage_data', show_label=False),
-                       )
+                    Item('manage_data', show_label=False),
+                    )
         bottom = VGroup(tb, bot)
 
         v = View(VSplit(top, bottom),
@@ -509,18 +531,24 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 # factories
 #===============================================================================
     def _analyses_factory(self, n, **kw):
-
-#        df = self._open_file(n)
-#        if df:
         a = Analysis(uuid=n,
                      repo=self.repo,
                      workspace=self.workspace,
                      ** kw)
         #need to call both load from file and database
         if a.load_from_file(n):
-            a.load_from_database()
-            if a.load_age():
-                return a
+            if self.db.connect():
+                sess = self.db.get_session()
+                from src.database.orms.isotope_orm import AnalysisPathTable
+                from src.database.orms.isotope_orm import AnalysisTable
+                q = sess.query(AnalysisTable)
+                q = q.join(AnalysisPathTable)
+                q = q.filter(AnalysisPathTable.filename == n)
+                dbr = q.one()
+                a.dbresult = dbr
+                a.load_from_database()
+                if a.load_age():
+                    return a
 
     def _graph_factory(self, klass=None, **kw):
         g = Graph(container_dict=dict(kind='h', padding=10,

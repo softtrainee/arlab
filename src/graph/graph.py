@@ -694,13 +694,17 @@ class Graph(Loggable, ContextMenuMixin):
             if 'type' in rd:
                 if rd['type'] == 'line_scatter':
 
-                    renderer = plotobj.plot(names, type='scatter', marker_size=2,
-                                       marker='circle', color=rd['color'],
-                                        outline_color=rd['color'])
+                    renderer = plotobj.plot(names,
+                                            type='scatter', marker_size=2,
+                                       marker='circle',
+                                       color=rd['color'],
+                                       outline_color=rd['color'])
                     rd['type'] = 'line'
 
                 elif rd['type'] == 'scatter':
                     rd['outline_color'] = rd['color']
+                    rd['selection_color'] = 'white'
+                    rd['selection_outline_color'] = (1, 0, 0.5)
 
                 if rd['type'] == 'cmap_scatter':
                     from chaco.default_colormaps import color_map_name_dict

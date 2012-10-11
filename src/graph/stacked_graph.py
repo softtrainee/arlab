@@ -111,7 +111,7 @@ class StackedGraph(Graph):
                 pi.index_axis.visible = False
                 pi.padding_top = 0
                 pi.padding_bottom = 0
-
+        return p
 
     def _bounds_changed_(self, bounds):
         '''

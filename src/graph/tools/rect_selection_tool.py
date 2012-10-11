@@ -14,13 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-'''
-@author: Jake Ross
-@copyright: 2009
-@license: Educational Community License 1.0
-'''
 #=============enthought library imports=======================
 from traits.api import Any, Int, Str
 from chaco.api import AbstractOverlay
@@ -43,8 +36,8 @@ class RectSelectionTool(AbstractOverlay):
     active = True
 
     def normal_mouse_move(self, event):
-        control = event.window.control
-        self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
+#        control = event.window.control
+#        self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
         plot = self.component
         index = plot.map_index((event.x, event.y), threshold=self.threshold)
         if index is not None:
@@ -77,8 +70,8 @@ class RectSelectionTool(AbstractOverlay):
                 x, y = self._start_pos
                 x2, y2 = self._end_pos
                 rect = (x, y, x2 - x + 1, y2 - y + 1)
-                gc.set_fill_color([1, 0, 0, 0.5])
-                gc.set_stroke_color([1, 0, 0, 0.5])
+                gc.set_fill_color([1, 0, 0, 0.25])
+                gc.set_stroke_color([1, 0, 0, 0.25])
                 gc.rect(*rect)
                 gc.draw_path()
             finally:
@@ -119,8 +112,8 @@ class RectSelectionTool(AbstractOverlay):
         if self.active:
         #and not self.parent.filters[self.plotid]:
 #            self.parent.selected_plotid = self.plotid
-            self.parent.selected_plot = self.plot
-            self.parent.selected_component = self.component
+#            self.parent.selected_plot = self.plot
+#            self.parent.selected_component = self.component
             token = self._get_selection_token(event)
             if token is None:
     #                self.component.index.metadata[self.selection_metadata_name] = []
@@ -228,16 +221,15 @@ class RectSelectionTool(AbstractOverlay):
                     if dx <= x <= dx2 and dy >= y >= dy2
                    ]
 
-#        print selection, ind
-        if not ind and self.parent.filters[self.plotid]:
-            return
+##        print selection, ind
+#        if not ind and self.parent.filters[self.plotid]:
+#            return
 
         selection = index.metadata[self.selection_metadata_name]
 
         index.metadata[self.selection_metadata_name] = list(set(ind) ^ set(selection))
 #        else:
 #            index.metadata[self.selection_metadata_name] = ind
-
         index.metadata_changed = True
 
 

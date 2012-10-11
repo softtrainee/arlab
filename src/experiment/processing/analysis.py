@@ -96,7 +96,6 @@ class AnalysisTabularAdapter(TabularAdapter):
 class Analysis(Loggable):
     workspace = Any
     repo = Any
-    rid = Str
     sample = Str
     irradiation = Str
 

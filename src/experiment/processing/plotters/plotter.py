@@ -26,6 +26,7 @@ from chaco.tools.scatter_inspector import ScatterInspector
 from chaco.scatter_inspector_overlay import ScatterInspectorOverlay
 from chaco.array_data_source import ArrayDataSource
 from src.graph.error_bar_overlay import ErrorBarOverlay
+from src.graph.tools.rect_selection_tool import RectSelectionTool
 
 class Plotter(Viewable):
     adapter = Property
@@ -54,6 +55,13 @@ class Plotter(Viewable):
         scatter.tools.append(ScatterInspector(scatter,
 #                                              selection_mode='off'
                                               ))
+
+        rect_tool = RectSelectionTool(scatter,
+#                                      parent=self,
+                                      plot=self.graph.plots[0],
+                                      plotid=1
+                                      )
+        scatter.overlays.append(rect_tool)
 #        overlay = ScatterInspectorOverlay(scatter,
 #                    hover_color="red",
 #                    hover_marker_size=int(scatter.marker_size + 2),
