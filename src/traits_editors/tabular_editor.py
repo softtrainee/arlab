@@ -34,6 +34,9 @@ class _TabularEditor(wxTabularEditor):
         if self.factory.scroll_to_bottom:
             if not self.selected and not self.multi_selected:
                 control.EnsureVisible(control.GetItemCount() - 1)
+        else:
+            if not self.selected and not self.multi_selected:
+                control.EnsureVisible(0)
 
 class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)

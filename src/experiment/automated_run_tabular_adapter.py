@@ -23,21 +23,27 @@ import os
 def get_name(func):
     def _get_name(obj, trait, item):
         name = func(obj, trait, item)
-        return name if name else ''
+
+        return os.path.splitext(name)[0] if name else ''
     return _get_name
 
 class AutomatedRunAdapter(TabularAdapter):
     state_width = Int(20)
     aliquot_width = Int(50)
 
-    sample_width = Int(10)
-    position_width = Int(10)
-    duration_width = Int(10)
-    overlap_width = Int(10)
-    autocenter_width = Int(10)
-    heat_value_width = Int(10)
-    heat_device_width = Int(10)
+    sample_width = Int(50)
+    position_width = Int(50)
+    duration_width = Int(60)
+    overlap_width = Int(50)
+    autocenter_width = Int(70)
+    heat_value_width = Int(40)
+    heat_device_width = Int(70)
     identifier_width = Int(60)
+
+    extraction_script_width = Int(125)
+    measurement_script_width = Int(125)
+    post_measurement_script_width = Int(125)
+    post_equilibration_script_width = Int(125)
 
     state_image = Property
     state_text = Property
@@ -58,11 +64,11 @@ class AutomatedRunAdapter(TabularAdapter):
 #                return True
     def get_font(self, obj, trait, row):
         import wx
-        s = 9
+        s = 12
         f = wx.FONTFAMILY_DEFAULT
         st = wx.FONTSTYLE_NORMAL
-        w = wx.FONTWEIGHT_NORMAL
-        return wx.Font(s, f, st, w)
+        w = wx.FONTWEIGHT_BOLD
+        return wx.Font(s, f, st, w, False, u'Monaco')
 
     def get_bg_color(self, obj, trait, row):
         item = getattr(obj, trait)[row]
@@ -80,8 +86,8 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Sample', 'sample'),
                  ('Position', 'position'),
                  ('Autocenter', 'autocenter'),
-                 ('HeatDevice', 'heat_device'),
                  ('Overlap', 'overlap'),
+                 ('Heat Device', 'heat_device'),
                  ('Heat', 'heat_value'),
                  ('Duration', 'duration'),
                  ('Extraction', 'extraction_script'),
@@ -153,13 +159,17 @@ class AutomatedRunAdapter(TabularAdapter):
                 im = 'green'
             elif self.item.state == 'fail':
                 im = 'red'
+            elif self.item.state == 'truncate':
+                im = 'blue'
 
             #get the source path
             root = os.path.split(__file__)[0]
             while not root.endswith('src'):
                 root = os.path.split(root)[0]
+
             root = os.path.split(root)[0]
             root = os.path.join(root, 'resources')
             return os.path.join(root, '{}_ball.png'.format(im))
+#            return os.path.join(root, 'bullet_{}.png'.format(im))
 
 #============= EOF =============================================
