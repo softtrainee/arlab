@@ -439,10 +439,13 @@ class ExperimentManager(Manager):
         if not arun.do_post_measurement():
             self._alive = False
 
-        arun.state = 'success'
+
         arun.finish()
         self.experiment_set.increment_nruns_finished()
-        self.info('Automated run {} finished'.format(arun.runid))
+
+
+        fstate = 'truncated' if arun.state == 'truncate' else 'finished'
+        self.info('Automated run {} {}'.format(arun.runid, fstate))
 
     def _end_runs(self):
 
@@ -628,11 +631,11 @@ class ExperimentManager(Manager):
                       show_label=False,
                       editor=editor
                       ),
-                 width=900,
-                 height=700,
+                 width=1100,
+                 height=750,
                  resizable=True,
                  title=self.experiment_set.name,
-                 handler=self.handler_klass
+                 handler=self.handler_klass,
                  )
         return v
 

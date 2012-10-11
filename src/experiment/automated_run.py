@@ -61,7 +61,9 @@ class AutomatedRun(Loggable):
     experiment_name = Str
     identifier = String(enter_set=True, auto_set=False)
     aliquot = CInt
-    state = Enum('not run', 'extraction', 'measurement', 'success', 'fail')
+    state = Property(depends_on='_state')
+    _state = Enum('not run', 'extraction',
+                 'measurement', 'success', 'fail', 'truncate')
     irrad_level = Str
 
     heat_step = Instance(HeatStep)
@@ -140,8 +142,9 @@ class AutomatedRun(Loggable):
 #        self.post_measurement_script.runner = self.runner
     def truncate(self):
         self.info('truncating current run')
-        self._measurement_script.truncate()
+        self.state = 'truncate'
         self._truncate_signal = True
+        self._measurement_script.truncate()
 
     def finish(self):
         del self.info_display
@@ -1268,6 +1271,12 @@ class AutomatedRun(Loggable):
             else:
                 self._heat_value = t
 
+    def _get_state(self):
+        return self._state
+
+    def _set_state(self, s):
+        if self._state != 'truncate':
+            self._state = s
 #===============================================================================
 # views
 #===============================================================================
