@@ -36,6 +36,7 @@ from src.experiment.stats import ExperimentStats
 from src.helpers.filetools import str_to_bool
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
+from src.experiment.file_listener import FileListener
 
 
 def extraction_path(name):
@@ -97,9 +98,16 @@ class ExperimentSet(Loggable):
     _text = None
 
     _cached_runs = None
+    _alive = False
+    lab_map = Any
 
-    def truncate_run(self):
-        self.current_run.truncate()
+#        for i in range(1, 221, 1):
+#            r = random.random()
+#            mv.set_hole_state(i, r)
+#            mv.set_hole_labnumber(i, str(i))
+
+    def truncate_run(self, style):
+        self.current_run.truncate(style)
 
     def check_for_mods(self):
         currenthash = sha.new(self._text).hexdigest()
@@ -133,12 +141,42 @@ class ExperimentSet(Loggable):
 
         return rgen, n
 
+    def _reload_from_disk(self):
+        if not self._alive:
+            self._cached_runs = None
+            self.load_automated_runs()
+
+    def start_file_listener(self):
+        fl = FileListener(
+                          self.path,
+                          callback=self._reload_from_disk,
+                          check=self.check_for_mods
+                          )
+        self.filelistener = fl
+
+    def stop_file_listener(self):
+        self.filelistener.stop()
+
     def load_automated_runs(self):
         if self.automated_runs is not None:
             self._cached_runs = self.automated_runs
 
         self.stats.delay_between_analyses = self.delay_between_analyses
-        self.automated_runs = []
+
+        aruns = self._load_runs()
+        if aruns:
+            self.automated_runs = aruns
+            self._update_aliquots()
+            lm = self.lab_map
+
+            for ai in self.automated_runs:
+                if ai.position:
+                    lm.set_hole_labnumber(ai.position, ai.identifier)
+
+            return True
+
+    def _load_runs(self):
+        aruns = []
         with open(self.path, 'r') as fp:
             self._text = fp.read()
 
@@ -152,13 +190,26 @@ class ExperimentSet(Loggable):
 
         meta = yaml.load(metastr)
 
+        from src.lasers.stage_managers.stage_map import StageMap
+        from src.experiment.map_view import MapView
+        try:
+            sm = meta['tray']
+            sm = StageMap(file_path=os.path.join(paths.map_dir, '{}.txt'.format(sm)))
+            mv = MapView(stage_map=sm)
+            self.lab_map = mv
+        except KeyError:
+            pass
+
+
         delim = '\t'
         header = map(str.strip, f.next().split(delim))
         self.executable = True
         for linenum, line in enumerate(f):
             if line.startswith('#'):
                 continue
-            if not line.strip():
+
+            line = line.strip()
+            if not line:
                 continue
 
             try:
@@ -166,16 +217,18 @@ class ExperimentSet(Loggable):
                 params = self._run_parser(header, line)
                 params['mass_spec_name'] = meta['mass_spec']
                 arun = self._automated_run_factory(**params)
-                self.automated_runs.append(arun)
+                aruns.append(arun)
+
+#                self.automated_runs.append(arun)
             except Exception, e:
-
+                import traceback
+                print traceback.print_exc()
                 self.warning_dialog('Invalid Experiment file {}\nlinenum= {}\nline= {}'.format(e, linenum, line))
-                self.automated_runs = []
+#                self.automated_runs = []
                 self.executable = False
-                return False
+                return
 
-        self._update_aliquots()
-        return True
+        return aruns
 
     def _right_clicked_changed(self):
         selected = self.selected
@@ -218,6 +271,7 @@ class ExperimentSet(Loggable):
 
         #load strings
         for attr in ['identifier',
+                     'sample',
                      'measurement', 'extraction', 'post_measurement',
                      'post_equilibration',
                      'heat_device']:
@@ -225,20 +279,33 @@ class ExperimentSet(Loggable):
 
         #load booleans
         for attr in ['autocenter']:
-            param = args[header.index(attr)]
-            if param.strip():
-                params[attr] = str_to_bool(param)
+            try:
+                param = args[header.index(attr)]
+                if param.strip():
+                    params[attr] = str_to_bool(param)
+            except IndexError:
+                params[attr] = False
 
         #load numbers
-        for attr in ['duration', 'position', 'overlap']:
-            param = args[header.index(attr)].strip()
-            if param:
-                params[attr] = float(param)
+        for attr in ['duration', 'position', 'overlap', 'cleanup']:
+            try:
+                param = args[header.index(attr)].strip()
+                if param:
+                    params[attr] = float(param)
+            except IndexError:
+                pass
+#            print attr, header.index(attr), args
 
+        #default heat_units to watts
         heat = args[header.index('heat')]
         if heat:
-            v, u = heat.split(',')
-            v = float(v)
+            if ',' in heat:
+                v, u = heat.split(',')
+                v = float(v)
+            else:
+                v = float(heat)
+                u = 'w'
+
             params['heat_value'] = v
             params['heat_units'] = u
 
@@ -251,6 +318,7 @@ class ExperimentSet(Loggable):
                                                             post_measurement,
                                                             post_equilibration)
         return params
+
     def _load_script_names(self, name):
         p = os.path.join(paths.scripts_dir, name)
         if os.path.isdir(p):
@@ -283,9 +351,11 @@ class ExperimentSet(Loggable):
             self.loaded_scripts[new.name] = new
 
     def reset_stats(self):
+        self._alive = True
         self.stats.start_timer()
 
     def stop_stats_timer(self):
+        self._alive = False
         self.stats.stop_timer()
 
     def _auto_increment_runid(self, rid):
@@ -553,7 +623,8 @@ class ExperimentSet(Loggable):
         if self.automated_runs:
             pa = self.automated_runs[-1]
             for k in ['heat_device', 'autocenter']:
-                kw[k] = getattr(pa, k)
+                if not k in kw:
+                    kw[k] = getattr(pa, k)
 
         a = AutomatedRun(
 #                         _executable=True,

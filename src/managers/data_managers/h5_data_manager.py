@@ -147,7 +147,6 @@ class H5DataManager(DataManager):
         try:
             if self.repository:
                 path = os.path.join(self.repository.root, path)
-
             self._frame = openFile(path, mode)
             return True
         except Exception:

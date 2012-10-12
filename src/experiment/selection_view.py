@@ -15,8 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, Group, HGroup, HSplit, InstanceEditor
+from traits.api import HasTraits, Instance, List, Bool
+from traitsui.api import View, Item, Group, VGroup, HGroup, HSplit, InstanceEditor, spring
+from chaco.tools.zoom_tool import ZoomTool
+from chaco.tools.scatter_inspector import ScatterInspector
+from chaco.abstract_overlay import AbstractOverlay
+from chaco.data_label import DataLabel
 #============= standard library imports ========================
 import numpy as np
 
@@ -24,21 +28,17 @@ import numpy as np
 from src.viewable import Viewable
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 from src.graph.stacked_graph import StackedGraph
-from chaco.tools.zoom_tool import ZoomTool
-from chaco.tools.scatter_inspector import ScatterInspector
-from chaco.abstract_overlay import AbstractOverlay
-from chaco.tools.range_selection import RangeSelection
-from chaco.tools.range_selection_overlay import RangeSelectionOverlay
+from kiva.fonttools import Font
 
 
-class RecallOverlay(AbstractOverlay):
+class LegendOverlay(AbstractOverlay):
     def overlay(self, component, gc, *args, **kw):
 
         gc.save_state()
+        gc.set_font(Font('Monaco'))
         x = component.x
-        y = component.y
-        x2 = component.x2
         y2 = component.y2
+
         gc.set_fill_color((1, 1, 1))
         w = 100
         h = 110
@@ -71,17 +71,24 @@ class RecallOverlay(AbstractOverlay):
             gc.set_text_position(xo + 20, yy)
             gc.show_text(si)
 
-
         gc.restore_state()
 
 class SelectionView(Viewable):
     table = Instance(IsotopeAnalysisSelector)
     graph = Instance(StackedGraph)
+    data_labels_visible = Bool(True)
+    data_labels = List
+    def _data_labels_visible_changed(self):
+        for di in self.data_labels:
+            di.visible = self.data_labels_visible
+        self.graph.redraw()
+
     def _graph_default(self):
         g = StackedGraph(container_dict=dict(padding=5))
         plot = g.new_plot(
 #                   show_legend='ul',
                    padding=5)
+
 
         plot.overlays.append(ZoomTool(plot,
                                       minimum_screen_delta=5,
@@ -91,8 +98,9 @@ class SelectionView(Viewable):
                                       always_on_top=True,
                                       axis='index'
                                       ))
-        plot.overlays.append(RecallOverlay(plot))
 
+#        plot.on_trait_change(self._update, 'index_mapper.range.updated')
+        plot.overlays.append(LegendOverlay(plot))
         g.set_axis_traits(axis='y', visible=False)
         g.set_axis_traits(axis='x', visible=False)
         g.set_grid_traits(grid='x', visible=False)
@@ -108,14 +116,23 @@ class SelectionView(Viewable):
         ys = []
         ats = ['blank', 'air', 'cocktail', 'unknown', 'background']
         machines = ['jan', 'obama', 'map']
+        rids = []
         for mach in machines:
             for i, at in enumerate(ats):
-                xi = np.array([ri.timestamp for ri in self.table.results
+                dd = [(ri.shortname, ri.timestamp)
+                               for ri in self.table.results
                                 if ri.analysis_type == at
-                                    and ri.mass_spectrometer == mach])
+                                    and ri.mass_spectrometer == mach]
+                if dd:
+                    ni, xi = zip(*dd)
+                else:
+                    xi = []
+                    ni = []
+                xi = np.array(xi)
                 n = len(xi)
                 xs.append(xi)
-                ys.append(np.array(range(n)) + 1 + 5 * i)
+                ys.append(np.array(range(n)) + 1 + 3 * i)
+                rids.append(ni)
 
         mm = [min(xj) for xj in xs if len(xj)]
         xmi = min(mm)
@@ -136,10 +153,17 @@ class SelectionView(Viewable):
                     self._update_graph(s, xmi)
             return func
 
+        def fffunc(s):
+            def func(new):
+                if new:
+                    self._update(s, xmi)
+            return func
+
         for i, (name, color) in enumerate(zip(machines, colors)):
             xxj = xs[i * 5:i * 5 + 5]
             yyj = ys[i * 5:i * 5 + 5]
-            for at, xx, yy, marker in zip(ats, xxj, yyj, markers):
+            nnj = rids[i * 5:i * 5 + 5]
+            for at, xx, yy, nn, marker in zip(ats, xxj, yyj, nnj, markers):
                 s, _ = g.new_series(xx, yy, marker=marker, color=color, **skw)
                 g.set_series_label('{} {}'.format(name, at))
 #                self.add_trait('scatter_{}_{}'.format(at, name), s)
@@ -149,14 +173,57 @@ class SelectionView(Viewable):
 
                 s.index.on_trait_change(ffunc(s), 'metadata_changed')
 
+                for xi, yi, ni in zip(xx, yy, nn):
+                    dl = DataLabel(component=s,
+                                   font=Font('Monaco'),
+                                   data_point=(xi, yi),
+                                   label_position='top left',
+                                   bgcolor='white',
+#                                   label_format='%s',
+                                   label_text=ni,
+                                   show_label_coords=False,
+                                   arrow_visible=False,
+                                   marker_visible=False
+                                   )
+                    s.overlays.append(dl)
+                    self.data_labels.append(dl)
                 #add range selection tool
 #                s.active_tool = RangeSelection(s, left_button_selects=True)
 #                s.overlays.append(RangeSelectionOverlay(component=s))
-
 #                s.index.on_trait_change(getattr(self, '_update_{}'.format(at)), 'metadata_changed')
 
         g.set_x_limits(min=0, max=xma, pad='0.1')
         g.set_y_limits(min=0, max=yma * 1.1)
+
+#    def _update(self, sc, nds):
+#        #rescale y limits 
+#        plot = self.graph.plots[0]
+#        if self.data_labels:
+#            low = plot.index_mapper.range.low
+#            high = plot.index_mapper.range.high
+#            #get points in the range
+#            xs, ys = zip(*[di.data_point for di in self.data_labels])
+#            xs = np.array(xs)
+#            ys = np.array(ys)
+#
+#            tags = np.invert(np.bitwise_or(xs < low, xs > high))
+#            nys = ys[tags]
+#    #        dls = [di for di in self.data_labels if low <= di.data_point[0] <= high]
+#            if nys.shape[0]:
+#                nlow = min(nys)
+#                nhigh = max(nys)
+#
+##                nhigh = np.random.randint(100000)
+#                print 'looo', nlow, nhigh
+#                sc.value_mapper.range.low = nlow
+#                sc.value_mapper.range.high = nhigh
+#    #            print plot.value_mapper.range.low_setting
+#    #            print plot.value_mapper.range.high_setting
+##                self.graph.set_y_limits(nlow, nhigh, pad='0.1')
+##                plot.value_mapper.range.low = nlow
+##                plot.value_mapper.range.high = nhigh
+#                self.graph.redraw()
+
 
     def _update_graph(self, scatter, xmi):
 #        sel = scatter.index.metadata.get('selections')
@@ -175,7 +242,10 @@ class SelectionView(Viewable):
                     style='custom', width=0.3,
                     editor=InstanceEditor(view='panel_view')
                     )
-        ggrp = Item('graph', show_label=False, style='custom', width=0.7)
+        ggrp = VGroup(
+                     HGroup(Item('data_labels_visible', label='Label'), spring),
+                     Item('graph', show_label=False, style='custom', width=0.7)
+                     )
         v = View(HSplit(tgrp,
                         ggrp),
                  width=1000,

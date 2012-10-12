@@ -48,7 +48,8 @@ class ProcessingManager(DatabaseManager):
         if kind == 'local':
             repo = Repository(root=paths.isotope_dir)
         else:
-            repo = FTPRepository(host=host, username=usr, password=pwd,
+            repo = FTPRepository(host=host, username=usr,
+                                  password=pwd,
                              remote='Sandbox/ftp/data'
                              )
 #        self.repo = repo

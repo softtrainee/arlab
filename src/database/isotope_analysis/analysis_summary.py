@@ -23,19 +23,16 @@ from traitsui.api import View, Item
 #from src.database.isotope_analysis.selectable_readonly_texteditor import SelectableReadonlyTextEditor
 from src.displays.rich_text_display import RichTextDisplay
 from uncertainties import ufloat
+from src.database.isotope_analysis.summary import Summary
 #from src.data_processing.regression.regressor import Regressor
 
 PLUSMINUS = unicode('\xb1')
 PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
-class AnalysisSummary(HasTraits):
+class AnalysisSummary(Summary):
     age = Float
     error = Float
-    result = Any
 
     display = Instance(RichTextDisplay)
-    def __init__(self, *args, **kw):
-        super(AnalysisSummary, self).__init__(*args, **kw)
-        self._build_summary()
 
     def _build_summary(self):
         d = self.display

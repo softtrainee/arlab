@@ -1165,7 +1165,8 @@ class Graph(Loggable, ContextMenuMixin):
             elif kw['type'] == 'scatter':
                 kw['outline_color'] = c
 
-        for k, v in [('render_style', 'connectedpoints'),
+        for k, v in [
+                     ('render_style', 'connectedpoints'),
                      (colorkey, c)
                      ]:
             if k not in kw.keys():
@@ -1359,18 +1360,21 @@ class Graph(Loggable, ContextMenuMixin):
 
         if mi is not None:
             if isinstance(mi, (int, float)):
-                if mi < ra.high_setting:
-                    ra.low_setting = mi
+                if mi < ra.high:
+                    ra.low = mi
             else:
-                ra.low_setting = mi
+                ra.low = mi
+
+
         if ma is not None:
             if isinstance(ma, (int, float)):
-                if ma > ra.low_setting:
-                    ra.high_setting = ma
+                if ma > ra.low:
+                    ra.high = ma
             else:
-                ra.high_setting = ma
+                ra.high = ma
 
         self.redraw(force=force)
+
     def _get_selected_plotid(self):
         '''
         '''
