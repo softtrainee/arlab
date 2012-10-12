@@ -24,7 +24,14 @@ def get_name(func):
     def _get_name(obj, trait, item):
         name = func(obj, trait, item)
 
-        return os.path.splitext(name)[0] if name else ''
+        if name:
+            name,_ext=os.path.splitext(name)
+        
+            if '_' in name:
+                ns=name.split('_')
+                name='_'.join(ns[1:])
+
+        return name if name else ''
     return _get_name
 
 class AutomatedRunAdapter(TabularAdapter):

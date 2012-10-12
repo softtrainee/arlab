@@ -547,9 +547,10 @@ class ExperimentManager(Manager):
     def _show_lab_map_fired(self):
 
         lm = self.experiment_set.lab_map
-        if lm.ui:
+        if lm is None:
+            self.warning_dialog('No Tray map is set. Add "tray: <name_of_tray>" to ExperimentSet file')
+        elif lm.ui:
             lm.ui.control.Raise()
-
         else:
             self.open_view(lm)
 
@@ -642,7 +643,7 @@ class ExperimentManager(Manager):
                       show_label=False,
                       editor=editor
                       ),
-                 width=0.9,
+                 width=1150,
                  height=750,
                  resizable=True,
                  title=self.experiment_set.name,

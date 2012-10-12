@@ -214,7 +214,7 @@ class ExperimentSet(Loggable):
 
             try:
                 self.delay_between_analyses = meta['delay_between_analyses']
-                params = self._run_parser(header, line)
+                params = self._run_parser(header, line, meta)
                 params['mass_spec_name'] = meta['mass_spec']
                 arun = self._automated_run_factory(**params)
                 aruns.append(arun)
@@ -265,7 +265,7 @@ class ExperimentSet(Loggable):
                 be.apply_edits(self.selected)
                 self.automated_run.update = True
 
-    def _run_parser(self, header, line, delim='\t'):
+    def _run_parser(self, header, line,meta, delim='\t'):
         params = dict()
         args = map(str.strip, line.split(delim))
 
@@ -308,15 +308,25 @@ class ExperimentSet(Loggable):
 
             params['heat_value'] = v
             params['heat_units'] = u
+        
+        
+        def make_script_name(n):
+            na=args[header.index(n)]
+            if na.startswith('_'):
+                na=meta['mass_spec']+na
+                
+            return na
+        
+        gdict=globals()
+        args=[('{}_script'.format(ni),gdict['{}_path'.format(ni)](make_script_name(ni)))
+              for ni in ['extraction','measurement','post_measurement','post_equilibration']]
+#        extraction = args[header.index('extraction')]
+#        measurement = args[header.index('measurement')]
+#        post_measurement = args[header.index('post_measurement')]
+#        post_equilibration = args[header.index('post_equilibration')]
 
-        extraction = args[header.index('extraction')]
-        measurement = args[header.index('measurement')]
-        post_measurement = args[header.index('post_measurement')]
-        post_equilibration = args[header.index('post_equilibration')]
-
-        params['configuration'] = self._build_configuration(extraction, measurement,
-                                                            post_measurement,
-                                                            post_equilibration)
+        params['configuration'] = dict(args)#self._build_configuration(*args)
+#        params['configuration'] = self._build_configuration(*args)
         return params
 
     def _load_script_names(self, name):
@@ -332,13 +342,13 @@ class ExperimentSet(Loggable):
         else:
             self.warning_dialog('{} script directory does not exist!'.format(p))
 
-    def _build_configuration(self, extraction, measurement, post_measurement, post_equilibration):
-        c = dict(extraction_script=extraction_path(extraction),
-                  measurement_script=measurement_path(measurement),
-                  post_measurement_script=post_measurement_path(post_measurement),
-                  post_equilibration_script=post_equilibration_path(post_equilibration)
-                  )
-        return c
+#    def _build_configuration(self, extraction, measurement, post_measurement, post_equilibration):
+#        c = dict(extraction_script=extraction_path(extraction),
+#                  measurement_script=measurement_path(measurement),
+#                  post_measurement_script=post_measurement_path(post_measurement),
+#                  post_equilibration_script=post_equilibration_path(post_equilibration)
+#                  )
+#        return c
 
     def save_to_db(self):
         self.info('saving experiment {} to database'.format(self.name))
