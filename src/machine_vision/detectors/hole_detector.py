@@ -62,7 +62,9 @@ class HoleDetector(Detector):
 
     cropwidth = Float(5)
     cropheight = Float(5)
-    crop_expansion_scalar = Float(0.5)
+
+
+#    crop_expansion_scalar = Float(0.5)
     crosshairs_offsetx = 0
     crosshairs_offsety = 0
 
@@ -82,7 +84,7 @@ class HoleDetector(Detector):
 
 #    start_threshold_search_value = Int(80)
 #    threshold_search_width = Int(40)
-    crop_tries = Range(0, 102, 1)  # > 101 makes it a spinner
+#    crop_tries = Range(0, 102, 1)  # > 101 makes it a spinner
 
 #    threshold_tries = Range(0, 102, 2)
 #    threshold_expansion_scalar = Int(5)
@@ -134,6 +136,7 @@ class HoleDetector(Detector):
 
         src = asMat(img_rescale)
         return src
+
     def _get_mask_radius(self):
         r = self._hole_radius
         if not r:
@@ -503,10 +506,13 @@ class HoleDetector(Detector):
             centtest = self._near_center(*tar.centroid_value)
             atest = ma > tar.area > mi
             if not ctest and (atest and centtest):
-                src = self.target_image.get_frame(0)
-                self._draw_result(src, tar)
+#                src = self.target_image.get_frame(0)
+#                self._draw_result(src, tar)
 #                w, h = self.croppixels
 #                self.target_image.save('/Users/ross/Sandbox/machine_vision/polygon.jpg', width=w, height=h)
+
+                src = self.target_image.get_frame(0)
+                draw_polygons(src, [tar.poly_points], color=(0, 255, 255))
 
                 #make image with polygon
                 image = zeros(self.croppixels)
