@@ -135,7 +135,11 @@ class ExperimentManager(Manager):
                 for name, mass in MOLECULAR_WEIGHTS.iteritems():
                     db.add_molecular_weight(name, mass)
 
-                for at in ['blank', 'air', 'cocktail', 'background', 'unknown']:
+                for at in ['blank_air',
+                           'blank_cocktail',
+                           'blank_unknown',
+                           'air','cocktail','background','unknown']:
+#                           blank', 'air', 'cocktail', 'background', 'unknown']:
                     db.add_analysis_type(at)
 
                 for mi in ['obama', 'jan']:
