@@ -91,7 +91,7 @@ class Loggable(HasTraits):
 #                args = ('{:<30s} -- {}'.format(self.logger.name.strip(),
 #                        msg),)
 #                do_later(func, args)
-                gWarningDisplay.add_text('{:<30s} -- {}'.format(self.logger.name.strip(),msg))
+                gWarningDisplay.add_text('{:<50s} -- {}'.format(self.logger.name.strip(),msg))
 
             if decorate:
                 msg = '****** {}'.format(msg)
@@ -108,11 +108,13 @@ class Loggable(HasTraits):
                     if not gLoggerDisplay.opened and not gLoggerDisplay.was_closed:
                         do_later(gLoggerDisplay.edit_traits)
 
-                args = ('{:<30s} -- {}'.format(self.logger.name.strip(),
+                args = ('{:<50s} -- {}'.format(self.logger.name.strip(),
                         msg))
-                kw = dict(color=self.logcolor)
+#                kw = dict(color=self.logcolor)
+#                gLoggerDisplay.add_text(args, **kw)
+                gLoggerDisplay.add_text(args)
 
-                gLoggerDisplay.add_text(args, **kw)
+
 #                wx.CallAfter(gLoggerDisplay.add_text, args, **kw)
 #                do_later(gLoggerDisplay.add_text, args, **kw)
 

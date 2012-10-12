@@ -43,8 +43,8 @@ class AutomatedRunAdapter(TabularAdapter):
     duration_width = Int(60)
     overlap_width = Int(50)
     autocenter_width = Int(70)
-    heat_value_width = Int(60)
-    heat_device_width = Int(100)
+    heat_value_width = Int(85)
+    heat_device_width = Int(125)
     identifier_width = Int(60)
 
     extraction_script_width = Int(125)
@@ -74,8 +74,9 @@ class AutomatedRunAdapter(TabularAdapter):
         s = 12
         f = wx.FONTFAMILY_DEFAULT
         st = wx.FONTSTYLE_NORMAL
-        w = wx.FONTWEIGHT_BOLD
-        return wx.Font(s, f, st, w, False, u'Monaco')
+#        w = wx.FONTWEIGHT_BOLD
+        w = wx.FONTWEIGHT_NORMAL
+        return wx.Font(s, f, st, w, False, u'Helvetica')
 
     def get_bg_color(self, obj, trait, row):
         item = getattr(obj, trait)[row]

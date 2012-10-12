@@ -20,36 +20,47 @@ from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 def convert_labnumber(ln):
-    if ln == 1:
-        ln = 'Blank'
-    elif ln == 2:
-        ln = 'Air'
-    elif ln == 3:
-        ln = 'Cocktail'
-    elif ln == 4:
-        ln = 'Background'
+    
+    if ln in [1,2,3,4,5,6]:
+        sn=['Blank_air','Blank_cocktail','Blank_unknown','Background','Air','Cocktail']
+        ln =sn[ln]
+#    if ln == 1:
+#        ln = 'Blank'
+#    elif ln == 2:
+#        ln = 'Air'
+#    elif ln == 3:
+#        ln = 'Cocktail'
+#    elif ln == 4:
+#        ln = 'Background'
     return ln
 
 def convert_shortname(ln):
-    if ln == 1:
-        ln = 'bl'
-    elif ln == 2:
-        ln = 'a'
-    elif ln == 3:
-        ln = 'c'
-    elif ln == 4:
-        ln = 'bg'
+    if ln in [1,2,3,4,5,6]:
+        sn=['bla','blc','blu','bg','a','c']
+        ln =sn[ln]
+#    
+#    if ln == 1:
+#        ln = 'bl'
+#    elif ln == 2:
+#        ln = 'a'
+#    elif ln == 3:
+#        ln = 'c'
+#    elif ln == 4:
+#        ln = 'bg'
     return ln
 
 def convert_identifier(identifier):
-    if identifier == 'B':
-        identifier = 1
-    elif identifier == 'A':
-        identifier = 2
-    elif identifier == 'C':
-        identifier = 3
-    elif identifier == 'Bg':
-        identifier = 4
+    ids=['Ba','Bc','Bu','A','C','Bg']
+    if identifier in ids:
+        identifier=ids.index(identifier)+1
+#    if identifier == 'B':
+#        identifier = 1
+#    elif identifier == 'A':
+#        identifier = 2
+#    elif identifier == 'C':
+#        identifier = 3
+#    elif identifier == 'Bg':
+#        identifier = 4
     return identifier
 
 def get_analysis_type(idn):
@@ -60,7 +71,7 @@ def get_analysis_type(idn):
         return 'blank'
     elif idn.startswith('A'):
         return 'air'
-    elif idn.startswith('C-'):
+    elif idn.startswith('C'):
         return 'cocktail'
     else:
         return 'unknown'

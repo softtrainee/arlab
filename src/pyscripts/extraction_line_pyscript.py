@@ -166,8 +166,8 @@ class ExtractionLinePyScript(PyScript):
 #        self.report_result(result)
 
     @verbose_skip
-    def heat(self, power=None):
-        if power is None:
+    def heat(self, power=''):
+        if power=='':
             power = self.heat_value
 
         self.info('heat sample to power {}'.format(power))
