@@ -20,14 +20,16 @@ from traitsui.api import View, Item, HGroup, VGroup, spring
 from src.lasers.stage_managers.stage_map import StageMap
 from src.graph.graph import Graph
 import os
+import numpy as np
 from src.paths import paths
 from chaco.abstract_overlay import AbstractOverlay
 from pylab import get_cmap
 from chaco.tools.scatter_inspector import ScatterInspector
 from src.displays.rich_text_display import RichTextDisplay
 import math
-from kiva.constants import STROKE
+from kiva.constants import STROKE, FILL, FILL_STROKE
 from src.viewable import Viewable
+from enable.markers import CircleMarker
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -53,38 +55,23 @@ class MapOverlay(AbstractOverlay):
 
         xs = c.index.get_data()
         ys = c.value.get_data()
+        cs = c.color_data.get_data()
+        p1, p2 = c.map_screen(np.array([(0, 0), (self.radius, 0)]))
+        size = abs(p1[0] - p2[0])
 
-        p1, p2 = c.map_screen([(0, 0), (self.radius, 0)])
-        ri = abs(p1[0] - p2[0])
+        data = c.map_screen(np.array(zip(xs, ys)))
 
-        data = c.map_screen(zip(xs, ys))
-        states = c.states
-
-        ma = 5
-        maf = get_cmap('jet')
-
-        set_fill_color = gc.set_fill_color
-        set_stroke_color = gc.set_stroke_color
-        arc = lambda x, y:gc.arc(x, y, ri, 0, 360)
-        save_state = gc.save_state
-        restore_state = gc.restore_state
-        draw_path = gc.draw_path
-
-        for (xi, yi), si in zip(data, states):
-            if si is not None:
-                save_state()
-                if si:
-                    #use log of signal and normalize to 1.0 
-                    si = (5 + math.log(si, 10)) / (2 * ma)
-                    color = maf(si)
-                else:
-                    color = (0, 0, 0)
-
-                set_fill_color(color)
-                set_stroke_color(color)
-                arc(xi, yi)
-                draw_path()
-                restore_state()
+        gc.set_stroke_color((0, 0, 0))
+        for k, color in [(-1, (0, 0, 0)), (-2, (1, 1, 1))]:
+            gc.save_state()
+            pts = [pt for pt, si in zip(data, cs) if si == k]
+            if pts:
+                gc.set_fill_color(color)
+                marker = CircleMarker
+                path = gc.get_empty_path()
+                marker().add_to_path(path, size)
+                gc.draw_path_at_points(pts, path, FILL_STROKE)
+                gc.restore_state()
 
 class MapView(Viewable):
     stage_map = Instance(StageMap)
@@ -98,19 +85,23 @@ class MapView(Viewable):
     def _build_map(self):
 #        xs = [1, 2, 3, 4]
 #        ys = [2, 4, 6, 8]
-        xs, ys, states, labns = zip(*[(h.x, h.y, None, '') for h in self.stage_map.sample_holes])
+        xs, ys, states, labns = zip(*[(h.x, h.y, -1 , '') for h in self.stage_map.sample_holes])
         g = self.graph
         s, _p = g.new_series(xs, ys,
-                     type='scatter',
-                     marker='circle'
+                             colors=states,
+                     type='cmap_scatter',
+                     marker='circle',
+                     color_map_name='jet',
+                     marker_size=10,
                      )
 
         s.tools.append(ScatterInspector(s,
                                         selection_mode='single',
                                         threshold=10
                                         ))
+
         s.index.on_trait_change(self._update, 'metadata_changed')
-        s.states = list(states)
+
         ov = MapOverlay(s)
         s.overlays.append(ov)
         self.scatter = s
@@ -121,9 +112,9 @@ class MapView(Viewable):
 
     def _update(self, new):
         if new:
-#            sel = self.scatter.index.metadata.get('selections')
-##            print 's', sel
-#            if sel:
+            sel = self.scatter.index.metadata.get('selections')
+#            self.scatter.index.metadata['selections'] = range(221)
+#             if sel:
 #                e = MapItemSummary()
 #                e.edit_traits()
 
@@ -155,26 +146,30 @@ class MapView(Viewable):
                  height=500,
                  title='Lab Map',
                  handler=self.handler_klass
-#                 resizable=True
                  )
         return v
 
     def set_hole_state(self, holenum, state):
-        self.scatter.states[holenum - 1] = state
+        d = self.scatter.color_data.get_data()
+        d[holenum] = state
+        self.scatter.color_data.set_data(d)
 
     def set_hole_labnumber(self, holenum, ln):
         self.labnumbers[holenum - 1] = ln
-        self.scatter.states[holenum - 1] = 0
+        self.set_hole_state(holenum, -2)
+#        self.scatter.states[holenum - 1] = 1
 
 if __name__ == '__main__':
     import random
     sm = StageMap(file_path=os.path.join(paths.map_dir, '221-hole.txt'))
     mv = MapView(stage_map=sm)
-    for i in range(1, 210, 1):
+
+    for i in range(0, 210, 1):
         mv.set_hole_labnumber(i, str(i))
 
-    for i in range(1, 100, 1):
+    for i in range(0, 100, 1):
         r = random.random() * 10
         mv.set_hole_state(i, r)
+
     mv.configure_traits()
 #============= EOF =============================================

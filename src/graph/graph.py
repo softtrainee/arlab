@@ -665,7 +665,10 @@ class Graph(Loggable, ContextMenuMixin):
         '''
         raise NotImplementedError
 
-    def new_series(self, x=None, y=None, yer=None, plotid=None, aux_plot=False, **kw):
+    def new_series(self, x=None, y=None, yer=None, plotid=None, aux_plot=False,
+                   colors=None,
+                   color_map_name='hot',
+                    **kw):
         '''
         '''
         if plotid is None:
@@ -708,12 +711,12 @@ class Graph(Loggable, ContextMenuMixin):
 
                 if rd['type'] == 'cmap_scatter':
                     from chaco.default_colormaps import color_map_name_dict
-                    rd['color_mapper'] = color_map_name_dict['hot']
+                    rd['color_mapper'] = color_map_name_dict[color_map_name]
                     rd['line_width'] = 0
 
 #                    self.series[plotid][1] += (c,)
                     c = self.series[plotid][-1][0].replace('x', 'c')
-                    self.plots[plotid].data.set_data(c, [])
+                    self.plots[plotid].data.set_data(c, np.array(colors))
                     names += (c,)
 
             renderer = plotobj.plot(names, **rd)
