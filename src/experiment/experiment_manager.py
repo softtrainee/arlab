@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Button, Float, Str, \
-    DelegatesTo, Bool, Property, Event, Dict
+    DelegatesTo, Bool, Property, Event, Dict, Enum
 from traitsui.api import View, Item, Group, VGroup, HGroup, spring
 from traitsui.menu import Action
 from pyface.timer.do_later import do_later
@@ -42,6 +42,7 @@ from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 from chaco.scatter_inspector_overlay import ScatterInspectorOverlay
 from chaco.tools.scatter_inspector import ScatterInspector
 from src.experiment.selection_view import SelectionView
+from src.experiment.file_listener import FileListener
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -59,49 +60,44 @@ class ExperimentManager(Manager):
     ion_optics_manager = Instance(Manager)
 #    laser_manager = Instance(Manager)
 
-    data_manager = Instance(H5DataManager, ())
-
-    experiment_config = None
-
-    experiment_set = Instance(ExperimentSet)
-
     pyscript_runner = Instance(PyScriptRunner)
+    data_manager = Instance(H5DataManager, ())
+    experiment_set = Instance(ExperimentSet)
 
     db = Instance(IsotopeAdapter)
     massspec_importer = Instance(MassSpecDatabaseImporter)
+    repository = Instance(Repository)
+
     info_display = Instance(RichTextDisplay)
-    _dac_peak_center = Float
-    _dac_baseline = Float
 
-    mode = 'normal'
-
+#    experiment_config = None
+    show_lab_map = Button
     test2 = Button
-
     execute_button = Event
     execute_label = Property(depends_on='_alive')
-    _alive = Bool(False)
-
     truncate_button = Button('Truncate')
+    truncate_style = Enum('Immediate', 'Quick', 'Next Integration')
+    '''
+        immediate 0= is the standard truncation, measure_iteration stopped at current step and measurement_script truncated
+        quick     1= the current measure_iteration is truncated and a quick baseline is collected, peak center?
+        next_int. 2= same as setting ncounts to < current step. measure_iteration is truncated but script continues
+    '''
 
     measuring = DelegatesTo('experiment_set')
-#    open_button = Button
-#    save_button = Button
-#    default_save_directory = Str
-
     title = DelegatesTo('experiment_set', prefix='name')
-
     dirty = DelegatesTo('experiment_set')
+    mode = 'normal'
     err_message = None
 
-    repository = Instance(Repository)
     repo_kind = Str
     db_kind = Str
-
     username = Str
+
     end_at_run_completion = Bool(False)
     delay_between_runs_readback = Float
     editing_signal = None
 
+    _alive = Bool(False)
     _last_ran = None
     _prev_baselines = Dict
 
@@ -110,14 +106,13 @@ class ExperimentManager(Manager):
         self.bind_preferences()
         self.populate_default_tables()
 
-#        self.info_display.clear()
 
     def opened(self):
         self.info_display.clear()
-#        pass
-#        do_later(self.test_connections)
-#        self.test_connections()
-#        self.populate_default_tables()
+        self.experiment_set.start_file_listener()
+
+    def close(self, isok):
+        self.experiment_set.filelistener.stop()
 
     def test_connections(self):
         if not self.db:
@@ -256,7 +251,7 @@ class ExperimentManager(Manager):
 
         #check for a preceeding blank
         if not self._has_preceeding_blank_or_background():
-            self.info('experiment canceled because no blank was found of configured')
+            self.info('experiment canceled because no blank or background was configured')
             self._alive = False
             return
 
@@ -272,6 +267,7 @@ class ExperimentManager(Manager):
         self._alive = True
 
         exp = self.experiment_set
+        exp._alive = True
         exp.reset_stats()
 
         self.db.reset()
@@ -338,10 +334,8 @@ class ExperimentManager(Manager):
             run.state = 'fail'
             self.warning('automated runs did not complete successfully')
             self.warning('error: {}'.format(self.err_message))
-        else:
-            exp.stop_stats_timer()
-            self._end_runs()
 
+        self._end_runs()
         self.info('automated runs ended at {}, runs executed={}'.format(run.runid, totalcnt))
 
     def _launch_run(self, runsgen, cnt):
@@ -443,8 +437,12 @@ class ExperimentManager(Manager):
         arun.finish()
         self.experiment_set.increment_nruns_finished()
 
-
-        fstate = 'truncated' if arun.state == 'truncate' else 'finished'
+        if arun.state == 'truncate':
+            fstate = 'truncated'
+        else:
+            arun.state = 'success'
+            fstate = 'finished'
+#        fstate = 'truncated' if arun.state == 'truncate' else 'finished'
         self.info('Automated run {} {}'.format(arun.runid, fstate))
 
     def _end_runs(self):
@@ -544,7 +542,16 @@ class ExperimentManager(Manager):
         self._execute()
 
     def _truncate_button_fired(self):
-        self.experiment_set.truncate_run()
+        self.experiment_set.truncate_run(self.truncate_style)
+
+    def _show_lab_map_fired(self):
+
+        lm = self.experiment_set.lab_map
+        if lm.ui:
+            lm.ui.control.Raise()
+
+        else:
+            self.open_view(lm)
 
     def save(self):
         self.save_experiment_set()
@@ -606,8 +613,12 @@ class ExperimentManager(Manager):
                          style='readonly', format_str='%i',
                          width= -50),
                     spring,
+                    Item('show_lab_map', show_label=False),
+                    spring,
                     Item('end_at_run_completion'),
                     Item('truncate_button', show_label=False,
+                         enabled_when='object.measuring'),
+                    Item('truncate_style', show_label=False,
                          enabled_when='object.measuring'),
                     self._button_factory('execute_button',
                                              label='execute_label',
@@ -631,7 +642,7 @@ class ExperimentManager(Manager):
                       show_label=False,
                       editor=editor
                       ),
-                 width=1100,
+                 width=0.9,
                  height=750,
                  resizable=True,
                  title=self.experiment_set.name,
@@ -691,9 +702,11 @@ class ExperimentManager(Manager):
 # factories
 #===============================================================================
     def _experiment_set_factory(self, **kw):
-        return ExperimentSet(
+        exp = ExperimentSet(
                              db=self.db,
                              **kw)
+
+        return exp
 
 #===============================================================================
 # defaults

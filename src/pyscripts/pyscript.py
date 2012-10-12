@@ -212,10 +212,12 @@ class PyScript(Loggable):
 
         return '0'
 
-    def truncate(self):
-        self._truncate = True
+    def truncate(self, style=None):
+        if style is None:
+            self._truncate = True
+
         if self._gosub_script is not None:
-            self._gosub_script.truncate()
+            self._gosub_script.truncate(style=style)
 
     def cancel(self):
         self._cancel = True

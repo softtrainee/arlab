@@ -371,7 +371,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
             self.selector = ps
 #            if self._debug:
-            ps.selected_results = [i for i in ps.selector.results[-10:] if i.analysis_type != 'blank']
+            ps.selected_results = [i for i in ps.selector.results[-10:-6] if i.analysis_type != 'blank']
 
         else:
             self.selector.show()

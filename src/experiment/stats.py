@@ -32,7 +32,7 @@ class ExperimentStats(HasTraits):
     total_time = Property(depends_on='_total_time')
     _total_time = Float
     _timer = Any(transient=True)
-    delay_between_analyses = Int
+    delay_between_analyses = Float
 
     def calculate_etf(self, runs):
         self.nruns = len(runs)
@@ -74,9 +74,9 @@ class ExperimentStats(HasTraits):
     def start_timer(self):
         st = time.time()
         def update_time():
-            self._elapsed = int(time.time() - st)
+            self._elapsed = round(time.time() - st)
 
-        self._timer = Timer(1000, update_time)
+        self._timer = Timer(500, update_time)
         self._timer.Start()
 
     def stop_timer(self):

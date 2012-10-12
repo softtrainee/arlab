@@ -73,11 +73,18 @@ class DBResult(BaseDBResult):
         from pyface.timer.do_later import do_later
         do_later(ctrl.Raise)
 
+    @classmethod
+    def make_timestamp(cls, rd, rt):
+        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
+        ts = ' '.join((rd, rt))
+        return timefunc(ts)
+
     @cached_property
     def _get_timestamp(self):
-        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
-        ts = ' '.join((self.rundate, self.runtime))
-        return timefunc(ts)
+        return self.make_timestamp(self.rundate, self.runtime)
+#        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
+#        ts = ' '.join((self.rundate, self.runtime))
+#        return timefunc(ts)
 
     @cached_property
     def _get_rundate(self):
@@ -174,6 +181,7 @@ class DBResult(BaseDBResult):
 #        return dm
 
 #    def _data_manager_factory(self):
+#        from src.managers.data_managers.h5_data_manager import H5DataManager
 #        return H5DataManager()
 
     def load_graph(self):

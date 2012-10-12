@@ -31,13 +31,13 @@ class AutomatedRunAdapter(TabularAdapter):
     state_width = Int(20)
     aliquot_width = Int(50)
 
-    sample_width = Int(50)
+    sample_width = Int(80)
     position_width = Int(50)
     duration_width = Int(60)
     overlap_width = Int(50)
     autocenter_width = Int(70)
-    heat_value_width = Int(40)
-    heat_device_width = Int(70)
+    heat_value_width = Int(60)
+    heat_device_width = Int(100)
     identifier_width = Int(60)
 
     extraction_script_width = Int(125)

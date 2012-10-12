@@ -38,6 +38,7 @@ class ViewableHandler(Handler):
 
     def closed(self, info, is_ok):
         info.object.closed(is_ok)
+        info.object.ui = None
 
 class Viewable(Loggable):
     ui = Any

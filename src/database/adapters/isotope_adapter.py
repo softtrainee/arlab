@@ -31,6 +31,7 @@ from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
 from src.experiment.identifier import convert_identifier
+from src.repo.repository import Repository
 #from src.database.adapters.adapter_decorators import add, get_one, commit
 #from sqlalchemy.sql.expression import or_
 #============= standard library imports ========================
@@ -498,16 +499,30 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('ia')
     ia = IsotopeAdapter(
+
+                        name='isotopedb_dev',
+                        username='root',
+                        password='Argon',
+                        host='localhost',
+                        kind='mysql'
 #                        name='/Users/ross/Sandbox/exprepo/root/isotopedb.sqlite',
-                        name=paths.isotope_db,
-                        kind='sqlite')
-    ia.connect()
+#                        name=paths.isotope_db,
+#                        kind='sqlite'
+                        )
 
-    dbs = IsotopeAnalysisSelector(_db=ia, style='simple')
-#    dbs._execute_query()
-    dbs.load_recent()
+    if ia.connect():
 
-    dbs.configure_traits()
+
+        dbs = IsotopeAnalysisSelector(_db=ia, style='simple')
+
+        dbs.set_data_manager(kind='local',
+                             repository=Repository(root=paths.isotope_dir),
+                             workspace_root=paths.default_workspace_dir
+                             )
+    #    dbs._execute_query()
+        dbs.load_recent()
+
+        dbs.configure_traits()
 #    ia.add_user(project=p, name='mosuer', commit=True)
 #    p = ia.get_project('Foo3')
 #    m = ia.get_material('sanidine')

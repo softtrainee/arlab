@@ -32,6 +32,7 @@ class GuideOverlay(AbstractOverlay):
     orientation = Enum('h', 'v')
     value = Float
     color = Tuple(1, 0, 0)
+    line_style = 'dash'
 
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
@@ -39,7 +40,8 @@ class GuideOverlay(AbstractOverlay):
         '''
         gc.save_state()
         gc.clip_to_rect(self.component.x, self.component.y, self.component.width, self.component.height)
-        gc.set_line_dash([5, 2.5])
+        if self.line_style == 'dash':
+            gc.set_line_dash([5, 2.5])
         gc.set_stroke_color(self.color)
         gc.begin_path()
 
