@@ -138,7 +138,6 @@ class MapView(Viewable):
         info = HGroup(
                       Item('holenumber', width=30, style='readonly'),
                       Item('labnumber', style='readonly'),
-#                      Item('labnumber', style='readonly')
                       )
         v = View(info,
                  g,

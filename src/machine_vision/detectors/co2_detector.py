@@ -37,6 +37,20 @@ class CO2HoleDetector(HoleDetector):
 #
 #        if self.target_image is not None:
 #            self.target_image.close()
+    @property
+    def crop_dimensions(self):
+
+        if self.holedim:
+
+            #holedim is in px convert to mm
+            hd = self.holedim / self.pxpermm
+            ff = 2.5 #empirical fugde factor, 2<=ff<=2.6
+            cw = ch = hd * ff
+        else:
+            cw = self.crop_width
+            ch = self.crop_height
+        return cw, ch
+
     def open_image(self):
         if self.target_image is not None:
             self.target_image.close()
@@ -51,22 +65,22 @@ class CO2HoleDetector(HoleDetector):
         else:
             from pyface.timer.do_later import do_later
             do_later(im.edit_traits)
+
     def _get_new_frame(self):
         im = self.target_image
         im.load(self.parent.get_new_frame())
 
         src = grayspace(im.source_frame)
-        im.set_frame(0, colorspace(src.clone()))
-
-        cw = None
-        ch = None
+#        im.set_frame(0, colorspace(src.clone()))
+#
         if self.use_crop:
-            ci = 0
-            cw = (1 + ci * self.crop_expansion_scalar) * self.cropwidth
-            ch = (1 + ci * self.crop_expansion_scalar) * self.cropheight
-
-            self.info('cropping image to {}mm x {}mm'.format(cw, ch))
+#            ci = 0
+#            cw = (1 + ci * self.crop_expansion_scalar) * self.cropwidth
+#            ch = (1 + ci * self.crop_expansion_scalar) * self.cropheight
+            cw , ch = self.crop_dimensions
+            self.info('cropping image to {:0.3f}mm x {:0.3f}mm'.format(cw, ch))
             src = self._crop_image(src, cw, ch, image=im)
+
         return src.clone()
 
     def locate_sample_well(self, cx, cy, holenum, holedim, new_image=True, **kw):
