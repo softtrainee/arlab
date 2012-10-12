@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any
+from traits.api import Any, Dict
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -27,11 +27,51 @@ ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 class ExtractionLinePyScript(PyScript):
     runner = Any
     _resource_flag = None
-    analysis_type = None
-    heat_device = None
-    heat_value = None
-    heat_units = None
-    duration = None
+
+#    analysis_type = None
+#    heat_device = None
+#    heat_value = None
+#    heat_units = None
+#    duration = None
+#    cleanup = None
+    _context = Dict
+
+    def _set_analysis_type(self, v):
+        self._context['analysis_type'] = v
+
+    def _get_analysis_type(self):
+        return self.get_context()['analysis_type']
+
+    analysis_type = property(fset=_set_analysis_type,
+                             fget=_get_analysis_type)
+
+    @property
+    def heat_device(self):
+        return self.get_context()['heat_device']
+
+    @property
+    def position(self):
+        return self.get_context()['position']
+
+    @property
+    def heat_value(self):
+        return self.get_context()['heat_value']
+
+    def setup_context(self, **kw):
+        ctx = dict()
+        for attr in [
+                     'analysis_type',
+                     'heat_device',
+                     'position',
+                     'heat_units',
+                     'heat_value',
+                     'duration', 'cleanup']:
+            try:
+                ctx[attr] = kw[attr]
+            except KeyError:
+                pass
+
+        self._context = ctx
 
     def _runner_changed(self):
         self.runner.scripts.append(self)
@@ -69,20 +109,22 @@ class ExtractionLinePyScript(PyScript):
 
 #        d['holeid'] = 123
 #        d['OverlapRuns'] = True
-        d['analysis_type'] = self.analysis_type
-        d['duration'] = self.duration
-        d['heat_value'] = self.heat_value
-        d['heat_units'] = self.heat_units
+#        d['analysis_type'] = self.analysis_type
+#        d['duration'] = self.duration
+#        d['heat_value'] = self.heat_value
+#        d['heat_units'] = self.heat_units
+#        d['cleanup'] = self.cleanup
+        d.update(self._context)
         return d
 
     def gosub(self, *args, **kw):
         kw['analysis_type'] = self.analysis_type
         kw['runner'] = self.runner
+
         super(ExtractionLinePyScript, self).gosub(*args, **kw)
 
     @verbose_skip
     def is_open(self, name=None, description=''):
-
         self.info('is {} ({}) open?'.format(name, description))
         result = self._get_valve_state(name, description)
         if result:
@@ -102,9 +144,12 @@ class ExtractionLinePyScript(PyScript):
                                                       ))], protocol=ELPROTOCOL)
 
     @verbose_skip
-    def move_to_position(self, position=0):
-        self.info('move to position {}'.format(position))
-        result = self._manager_action([('move_to_position', (position,), {})
+    def move_to_position(self, position=''):
+        if position == '':
+            position = self.position
+
+        self.info('{} move to position {}'.format(self.heat_device, position))
+        return self._manager_action([('move_to_position', (position,), {})
                                         ],
                                       protocol=ILaserManager,
                                       name=self.heat_device
@@ -121,9 +166,10 @@ class ExtractionLinePyScript(PyScript):
 #        self.report_result(result)
 
     @verbose_skip
-    def heat(self, power=0):
-        if not power:
+    def heat(self, power=None):
+        if power is None:
             power = self.heat_value
+
         self.info('heat sample to power {}'.format(power))
         self._manager_action([('enable_laser', (), {}),
                                        ('set_laser_power', (power,), {})

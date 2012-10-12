@@ -19,6 +19,7 @@
 #============= enthought library imports =======================
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
+from globals import globalv
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -34,13 +35,10 @@ class ExecuteExperimentSetAction(Action):
     accelerator = 'Ctrl+W'
     def perform(self, event):
         man = get_manager(event)
-
-        p = '/Users/ross/Pychrondata_experiment/experiments/bar.txt'
-        p = None
 #        man.experiment_set_path = p
         from src.envisage.core.action_helper import MANAGERS
         if man not in MANAGERS:
-            if man.load_experiment_set(path=p):
+            if man.load_experiment_set(path=globalv.test_experiment_set):
                 open_manager(event.window.application, man, view='execute_view')
 
 

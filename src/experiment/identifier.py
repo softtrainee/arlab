@@ -19,6 +19,28 @@ from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+def convert_labnumber(ln):
+    if ln == 1:
+        ln = 'Blank'
+    elif ln == 2:
+        ln = 'Air'
+    elif ln == 3:
+        ln = 'Cocktail'
+    elif ln == 4:
+        ln = 'Background'
+    return ln
+
+def convert_shortname(ln):
+    if ln == 1:
+        ln = 'bl'
+    elif ln == 2:
+        ln = 'a'
+    elif ln == 3:
+        ln = 'c'
+    elif ln == 4:
+        ln = 'bg'
+    return ln
+
 def convert_identifier(identifier):
     if identifier == 'B':
         identifier = 1

@@ -96,7 +96,6 @@ class AnalysisTabularAdapter(TabularAdapter):
 class Analysis(Loggable):
     workspace = Any
     repo = Any
-    rid = Str
     sample = Str
     irradiation = Str
 
@@ -130,7 +129,7 @@ class Analysis(Loggable):
 #        print 'fiafsd'
 #        self.age_dirty = True
     def load_age(self):
-        if self.age:
+        if self.age is not None:
             self.info('{} age={}'.format(self.rid, self.age))
             return True
         else:
@@ -163,7 +162,6 @@ class Analysis(Loggable):
 #        return 1, 0
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irradinfo)
 
-#        print result
         if result:
             self.k39 = result['k39'].nominal_value
             self.k39err = result['k39'].std_dev()
@@ -179,11 +177,11 @@ class Analysis(Loggable):
 
     def _open_file(self, name):
         p = os.path.join(self.workspace.root, name)
-
         if os.path.isfile(p):
             return openFile(p)
         else:
             rname = os.path.basename(p)
+
             if self.repo.isfile(rname):
                 self.info('fetching file from repo')
 #                out = open(p, 'wb')

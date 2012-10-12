@@ -104,7 +104,7 @@ class WaitDialog(Viewable):
         try:
             self.ui.dispose()
         except Exception, e:
-            print 'wait dialog close exception', e
+            pass
 #
     def _continue(self):
         self._canceled = False

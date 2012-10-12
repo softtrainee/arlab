@@ -29,6 +29,7 @@ from src.repo.repository import FTPRepository, Repository
 from src.database.core.database_adapter import DatabaseAdapter
 from src.experiment.processing.figures.figure import Figure
 from src.experiment.processing.database_manager import DatabaseManager
+from src.paths import paths
 #from src.experiment.processing.processing_selector import ProcessingSelector
 #from src.experiment.processing.figure import Figure
 class ProcessingRepository(Repository):
@@ -43,10 +44,15 @@ class ProcessingManager(DatabaseManager):
         host = 'localhost'
         usr = 'ross'
         pwd = 'jir812'
-
-        repo = FTPRepository(host=host, username=usr, password=pwd,
+        kind = 'local'
+        if kind == 'local':
+            repo = Repository(root=paths.isotope_dir)
+        else:
+            repo = FTPRepository(host=host, username=usr,
+                                  password=pwd,
                              remote='Sandbox/ftp/data'
                              )
+#        self.repo = repo
         self.repo = repo
 
 #    def open_plot(self):
