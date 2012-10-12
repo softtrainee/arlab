@@ -74,7 +74,6 @@ class LaserPlugin(CorePlugin):
             factory = __import__(self.klass[0], fromlist=[self.klass[1]])
             m = getattr(factory, self.klass[1])()
 
-        print m, m.name
         m.bootstrap()
         m.bind_preferences(self.id)
         return m
