@@ -28,8 +28,7 @@ import wx
 class ErrorBarOverlay(AbstractOverlay):
     nsigma = Int(1)
     orientation = Enum('x', 'y')
-#    def _nsigma_changed(self):
-#        print 'erba', self.nsigma
+
     def update_sigma(self, new):
         self.nsigma = new
         self.component.invalidate_and_redraw()
@@ -58,17 +57,22 @@ class ErrorBarOverlay(AbstractOverlay):
             args1 = component.map_screen(zip(x, y - yer_sigma))
             args2 = component.map_screen(zip(x, y + yer_sigma))
 
+        sel = component.index.metadata['selections']
 
         color = component.color
         if isinstance(color, str):
             color = wx.Color()
             color.SetFromName(component.color)
 
-        gc.set_stroke_color(color)
-        for (x1, y1), (x2, y2) in zip(args1, args2):
+        for i, ((x1, y1), (x2, y2)) in enumerate(zip(args1, args2)):
+            if i in sel:
+                gc.set_stroke_color((1, 0, 0.5))
+            else:
+                gc.set_stroke_color(color)
+
             gc.move_to(x1, y1)
             gc.line_to(x2, y2)
             gc.stroke_path()
 
         gc.restore_state()
-        #============= EOF =====================================
+#============= EOF =====================================

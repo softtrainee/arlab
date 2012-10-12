@@ -36,8 +36,8 @@ class RegressionGraph(Graph):
     selected_component = Any
     regressors = List
     regression_results = Event
-    suppress_regression=False
-    use_data_tool=True
+    suppress_regression = False
+    use_data_tool = True
 #    fits = List
 #    def clear(self):
 #        super(RegressionGraph, self).clear()
@@ -51,23 +51,23 @@ class RegressionGraph(Graph):
     def _update_graph(self):
         if self.suppress_regression:
             return
-        
+
         self.regressors = []
         for plot in self.plots:
             ks = plot.plots.keys()
             try:
-                scatters, kkk= zip(*[(plot.plots[k][0],k) for k in ks if k.startswith('data')])
-                ind=kkk[0][-1]
-                fls=[plot.plots[kk][0] for kk in ks if kk=='fit{}'.format(ind)]
-                uls=[plot.plots[kk][0] for kk in ks if kk=='upper CI{}'.format(ind)]
-                lls=[plot.plots[kk][0] for kk in ks if kk=='lower CI{}'.format(ind)]
-                
+                scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
+                ind = kkk[0][-1]
+                fls = [plot.plots[kk][0] for kk in ks if kk == 'fit{}'.format(ind)]
+                uls = [plot.plots[kk][0] for kk in ks if kk == 'upper CI{}'.format(ind)]
+                lls = [plot.plots[kk][0] for kk in ks if kk == 'lower CI{}'.format(ind)]
+
                 #fls = [plot.plots[k][0] for k in ks if k.startswith('fit')]
                 #uls = [plot.plots[k][0] for k in ks if k.startswith('upper')]
                 #lls = [plot.plots[k][0] for k in ks if k.startswith('lower')]
                 for si, fl, ul, ll in zip(scatters, fls, uls, lls):
                     self._plot_regression(plot, si, fl, ul, ll)
-            except ValueError,e:
+            except ValueError, e:
                 break
         else:
             self.regression_results = self.regressors
@@ -93,8 +93,8 @@ class RegressionGraph(Graph):
         except KeyError:
             pass
 
-    def _regress(self, 
-                 x,y,
+    def _regress(self,
+                 x, y,
 #                 x=None, y=None,
                  selection=None,
                  plotid=0,
@@ -115,7 +115,7 @@ class RegressionGraph(Graph):
 #            y = plot.data.get_data('y0')
         if filterstr:
             x, y = self._apply_filter(filterstr, x, y)
-            
+
         if selection:
             x = delete(x[:], selection, 0)
             y = delete(y[:], selection, 0)
@@ -209,7 +209,6 @@ class RegressionGraph(Graph):
                                                            plotid=plotid,
                                                            *args, **kw)
 
-
         kw['type'] = 'scatter'
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
         si = len([p for p in plot.plots.keys() if p.startswith('data')])
@@ -225,7 +224,7 @@ class RegressionGraph(Graph):
         scatter.fit = fit
 
         if x is not None and y is not None:
-            args = self._regress(x, y,plotid=plotid)
+            args = self._regress(x, y, plotid=plotid)
             if args:
                 fx, fy, ly, uy = args
 
@@ -249,7 +248,7 @@ class RegressionGraph(Graph):
             self._set_bottom_axis(plot, plot, plotid)
         except:
             pass
-        
+
         self._add_tools(scatter, plotid)
         return plot, scatter, line
 
@@ -260,7 +259,7 @@ class RegressionGraph(Graph):
         self.plots[plotid].container.tools.append(broadcaster)
 
         rect_tool = RectSelectionTool(scatter,
-                                      parent=self,
+#                                      parent=self,
                                       plot=plot,
                                       plotid=plotid)
         scatter.overlays.append(rect_tool)
@@ -272,7 +271,8 @@ class RegressionGraph(Graph):
 
         #add a broadcaster so scatterinspector and rect selection will received events
         broadcaster.tools.append(rect_tool)
-        data_tool = DataTool(component=plot,
+        data_tool = DataTool(
+                             component=plot,
                              plot=scatter,
                              plotid=plotid,
                              parent=self
@@ -284,7 +284,7 @@ class RegressionGraph(Graph):
 
         broadcaster.tools.append(data_tool)
         if not self.use_data_tool:
-            data_tool.visible=False
+            data_tool.visible = False
 
     def set_x_limits(self, *args, **kw):
         '''

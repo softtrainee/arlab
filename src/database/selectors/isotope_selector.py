@@ -36,6 +36,9 @@ from src.graph.stacked_graph import StackedGraph
 from src.managers.data_managers.ftp_h5_data_manager import FTPH5DataManager
 from traits.trait_errors import TraitError
 from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.database.isotope_analysis.blanks_summary import BlanksSummary
+from src.experiment.identifier import convert_identifier, convert_labnumber, \
+    convert_shortname
 
 class AnalysisResult(DBResult):
     title_str = 'Analysis'
@@ -67,6 +70,7 @@ class AnalysisResult(DBResult):
     baselines = None
 
     labnumber = Property
+    shortname = Property
     analysis_type = Property
     aliquot = Property
     mass_spectrometer = Property
@@ -86,14 +90,15 @@ class AnalysisResult(DBResult):
     def _get_labnumber(self):
 #        print 'get aasfd'
         ln = self._db_result.labnumber.labnumber
-        if ln == 1:
-            ln = 'Blank'
-        elif ln == 2:
-            ln = 'Air'
-        elif ln == 3:
-            ln = 'Cocktail'
-        elif ln == 4:
-            ln = 'Background'
+        ln = convert_labnumber(ln)
+        ln = '{}-{}'.format(ln, self.aliquot)
+        return ln
+
+    @cached_property
+    def _get_shortname(self):
+#        print 'get aasfd'
+        ln = self._db_result.labnumber.labnumber
+        ln = convert_shortname(ln)
 
         ln = '{}-{}'.format(ln, self.aliquot)
         return ln
@@ -139,6 +144,8 @@ class AnalysisResult(DBResult):
 #                    self.analyzer.apply_fits()
             if selected == 'summary':
                 item = AnalysisSummary(result=self)
+            elif selected == 'blanks':
+                item = BlanksSummary(result=self)
             else:
                 item = getattr(self, '{}_graph'.format(selected))
             self.trait_set(display_item=item)
@@ -183,7 +190,17 @@ class AnalysisResult(DBResult):
             graph = self._load_peak_center_graph(peakcenter)
             self.peak_center_graph = graph
 
-        self.selected = 'summary'
+        blanks = self._get_blanks()
+        if blanks:
+            self.categories.append('blanks')
+
+        backgrounds = self._get_backgrounds()
+        if backgrounds:
+            self.categories.append('backgrounds')
+
+
+#        self.selected = 'summary'
+        self.selected = 'blanks'
 #        self.analyzer = Analyzer(analysis=self)
 #        self.analyzer.fits = [AnalysisParams(fit='linear', name=k) for k in keys]
     def clear(self):
@@ -196,6 +213,13 @@ class AnalysisResult(DBResult):
                         not tr in ['signal_graph', 'sniff_graph', 'baseline_graph',
                               'peak_center_graph'
                               ]]
+    def _get_blanks(self):
+        bhs = self._db_result.blanks_histories
+        return bhs
+
+    def _get_backgrounds(self):
+        bhs = self._db_result.backgrounds_histories
+        return bhs
 
     def _load_stacked_graph(self, data, det=None, regress=True):
         if regress:

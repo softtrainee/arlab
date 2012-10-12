@@ -146,19 +146,22 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     atm40 = atm36 * constants.atm4036
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
-
-    JR = j * ar40rad / k39
-
     try:
+        JR = j * ar40rad / k39
         age = (1 / constants.lambdak) * umath.log(1 + JR)
-        result = dict(age=age,
-                      rad40=ar40rad,
-                      k39=k39,
-                      ca37=ca37,
-                      )
-        return result
-    except ValueError, e:
-        print e
+    except ZeroDivisionError:
+        age = ufloat((0, 0))
+
+    result = dict(age=age,
+                  rad40=ar40rad,
+                  k39=k39,
+                  ca37=ca37,
+                  )
+    return result
+
+#    try:
+#    except ValueError, e:
+#        print e
 #        return e
 #============= EOF =====================================
 

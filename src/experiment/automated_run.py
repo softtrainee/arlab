@@ -61,7 +61,9 @@ class AutomatedRun(Loggable):
     experiment_name = Str
     identifier = String(enter_set=True, auto_set=False)
     aliquot = CInt
-    state = Enum('not run', 'extraction', 'measurement', 'success', 'fail')
+    state = Property(depends_on='_state')
+    _state = Enum('not run', 'extraction',
+                 'measurement', 'success', 'fail', 'truncate')
     irrad_level = Str
 
     heat_step = Instance(HeatStep)
@@ -82,6 +84,7 @@ class AutomatedRun(Loggable):
     multiposition = Bool
     autocenter = Bool
     overlap = CInt
+    cleanup = CInt
 
     weight = Float
     comment = Str
@@ -138,10 +141,15 @@ class AutomatedRun(Loggable):
 #        self.extraction_script.runner = self.runner
 #        self.post_equilibration_script.runner = self.runner
 #        self.post_measurement_script.runner = self.runner
-    def truncate(self):
-        self.info('truncating current run')
-        self._measurement_script.truncate()
+    def truncate(self, style):
+        self.info('truncating current run with style= {}'.format(style))
+        self.state = 'truncate'
         self._truncate_signal = True
+        if style == 'Immediate':
+            self._measurement_script.truncate()
+        elif style == 'Quick':
+            self._measurement_script.truncate('quick')
+
 
     def finish(self):
         del self.info_display
@@ -152,6 +160,7 @@ class AutomatedRun(Loggable):
 
         if self.peak_center:
             self.peak_center.graph.close()
+
 
     def info(self, msg, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
@@ -1103,22 +1112,32 @@ class AutomatedRun(Loggable):
         if file_name.endswith('.py'):
             klass = ExtractionLinePyScript
             hdn = self.heat_device.replace(' ', '_').lower()
-            return klass(
+            obj = klass(
                     root=source_dir,
                     name=file_name,
 
-                    hole=self.position,
-
-                    duration=self.duration,
-                    heat_value=self._heat_value,
-                    heat_units=self._heat_units,
-#                    watts=self.watts,
-#                    temp_or_power=self.temp_or_power,
-
-                    runner=self.runner,
-                    heat_device=hdn,
-                    analysis_type=self.analysis_type
+#                    hole=self.position,
+#
+#                    duration=self.duration,
+#                    heat_value=self._heat_value,
+#                    heat_units=self._heat_units,
+##                    watts=self.watts,
+##                    temp_or_power=self.temp_or_power,
+#                    cleanup=self.cleanup,
+#                    runner=self.runner,
+#                    heat_device=hdn,
+#                    analysis_type=self.analysis_type
                     )
+            obj.setup_context(position=self.position,
+                              duration=self.duration,
+                              heat_value=self._heat_value,
+                              heat_units=self._heat_units,
+                              cleanup=self.cleanup,
+                              runner=self.runner,
+                              heat_device=hdn,
+                              analysis_type=self.analysis_type)
+
+            return obj
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -1268,6 +1287,12 @@ class AutomatedRun(Loggable):
             else:
                 self._heat_value = t
 
+    def _get_state(self):
+        return self._state
+
+    def _set_state(self, s):
+        if self._state != 'truncate':
+            self._state = s
 #===============================================================================
 # views
 #===============================================================================
