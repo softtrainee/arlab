@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Float, Event, Property, Bool
-from traitsui.api import View, Item, ButtonEditor, HGroup, spring
+from traits.api import Any, Float, Event, Property, Bool, DelegatesTo
+from traitsui.api import View, Item, ButtonEditor, HGroup, spring, EnumEditor
 #============= standard library imports ========================
 from numpy import linspace, exp
 import random
@@ -35,7 +35,8 @@ def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.008):
         yield d
 
 class MagnetScan(SpectrometerTask):
-    graph = Any
+#    graph = Any
+    detectors = DelegatesTo('spectrometer')
     reference_detector = Any
 #    execute = Event
 #    execute_label = Property(depends_on='_alive')
@@ -108,7 +109,8 @@ class MagnetScan(SpectrometerTask):
 
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
         do = values[0]
-        intensities = self._magnet_step_hook(do, det, peak_generator)
+        intensities = self._magnet_step_hook(do, detector=det,
+                                             peak_generator=peak_generator)
         self._graph_hook(do, intensities)
         rintensities = [intensities]
 
@@ -155,9 +157,9 @@ class MagnetScan(SpectrometerTask):
         stm = self.step_mass
         if abs(sm - em) > stm:
     #        ds = mag.calculate_dac(sm)
-            ds = spec.correct_dac(self.detector,
+            ds = spec.correct_dac(self.reference_detector,
                                   mag.map_mass_to_dac(sm))
-            de = spec.correct_dac(self.detector,
+            de = spec.correct_dac(self.reference_detector,
                                   mag.map_mass_to_dac(em))
 
 
@@ -167,28 +169,21 @@ class MagnetScan(SpectrometerTask):
 
             dacstep = stm / float(massdev) * dacdev
 
-            values = self._calc_dacvalues(ds, de, dacstep)
+            values = self._calc_step_values(ds, de, dacstep)
             self._scan_dac(values, self.reference_detector.name)
             self._alive = False
 
-    def _graph_factory(self):
-        pass
-
-    def _graph_default(self):
-        return self._graph_factory()
-
-    def _calc_dacvalues(self, start, end, width):
-        sign = 1 if start < end else -1
-        nsteps = abs(end - start + width * sign) / width
-
-        return linspace(start, end, nsteps)
+    def _reference_detector_default(self):
+        return self.detectors[0]
 
     def traits_view(self):
-        v = View(Item('start_mass', label='Start'),
+        v = View(Item('reference_detector', editor=EnumEditor(name='detectors')),
+                 Item('start_mass', label='Start'),
                  Item('stop_mass', label='Stop'),
-                  Item('step_mass', label='Step'),
-                  HGroup(spring, Item('execute', editor=ButtonEditor(label_value='execute_label'),
-                        show_label=False))
+                 Item('step_mass', label='Step'),
+                 buttons=['OK', 'Cancel']
+#                  HGroup(spring, Item('execute', editor=ButtonEditor(label_value='execute_label'),
+#                        show_label=False))
 
                   )
         return v

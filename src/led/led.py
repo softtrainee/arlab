@@ -28,7 +28,7 @@ COLORS = ['red', 'yellow', 'green', 'black']
 class LED(HasTraits):
     '''
     '''
-    shape='circle'
+    shape = 'circle'
     state = Property(depends_on='_state')
     _state = Int
     def _set_state(self, v):
@@ -43,7 +43,7 @@ class LED(HasTraits):
         return self._state
 
 class ButtonLED(LED):
-    
+
     callable = Callable
     def on_action(self):
         self.callable()

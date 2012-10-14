@@ -18,7 +18,7 @@
 from traits.api import Any, Str, String, Int, CInt, List, Enum, Property, \
      Event, Float, Instance, Bool, cached_property, Dict, on_trait_change, DelegatesTo
 from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group
-from pyface.timer.do_later import do_later
+#from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 import os
 import time

@@ -53,7 +53,7 @@ class RichTextDisplay(HasTraits):
     width = Float(625)
     height = Float(415)
 #    delegated_text = List
-    text = List
+#    text = List
     editable = False
     ok_to_open = True
 
@@ -76,7 +76,7 @@ class RichTextDisplay(HasTraits):
 
 #    font_name = 'Consolas'
     font_name = 'Helvetica'
-    
+
     def close(self):
         if self.ui is not None:
             self.ui.dispose()
@@ -104,9 +104,7 @@ class RichTextDisplay(HasTraits):
 
     def factory(self, window, editor):
         '''
-
         '''
-
         panel = wx.Panel(window,
                        - 1,
                        wx.DefaultPosition,
@@ -142,7 +140,7 @@ class RichTextDisplay(HasTraits):
 
     @gui_decorator
     def clear(self):
-        self.text = []
+#        self.text = []
         self._text_buffer = []
 
         d = self._display
@@ -198,7 +196,6 @@ class RichTextDisplay(HasTraits):
         else:
             color = wx.Colour(*color)
 
-
         font = self._create_font(size, name=self.font_name)
 #        d.Freeze()
 
@@ -222,15 +219,15 @@ class RichTextDisplay(HasTraits):
         d.Newline()
 
         n = 300
-        if len(self.text) >= n:
-            pop = self.text.pop
-            s = sum(pop(0) for _ in xrange(100))
+        ls = d.GetValue().split('\n')
+        if len(ls) > n:
+            s = sum(len(ls[i]) + 1 for i in xrange(10))
             d.Remove(0, s)
+            lp = d.GetLastPosition()
+            d.SetInsertionPoint(lp)
 
         lp = d.GetLastPosition()
         self.show_positon(lp + 10)
-
-#        d.Thaw()
 
     def show_positon(self, ipos):
         try:
@@ -268,13 +265,13 @@ class RichTextDisplay(HasTraits):
         '''
         disp = self._display
         if disp:
-#            tappend = self.text.append
-            if isinstance(msg, (list, tuple)):
-                self.text += [len(mi) + 1 for mi in msg]
-#                for mi in msg:
-#                    tappend(len(mi) + 1)
-            else:
-                self.text.append(len(msg) + 1)
+##            tappend = self.text.append
+#            if isinstance(msg, (list, tuple)):
+#                self.text += [len(mi) + 1 for mi in msg]
+##                for mi in msg:
+##                    tappend(len(mi) + 1)
+#            else:
+#                self.text.append(len(msg) + 1)
 #                tappend(len(msg) + 1)
 
             if isinstance(msg, (list, tuple)):

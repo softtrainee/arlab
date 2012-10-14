@@ -35,6 +35,8 @@ from src.spectrometer.spectrometer import Spectrometer
 import os
 from src.paths import paths
 from src.spectrometer.tasks.relative_detector_positions import RelativeDetectorPositions
+from src.spectrometer.tasks.coincidence_scan import CoincidenceScan
+from src.spectrometer.tasks.cdd_operating_voltage_scan import CDDOperatingVoltageScan
 #from src.spectrometer.ion_optics_manager import IonOpticsManager
 #from src.spectrometer.scan_manager import ScanManager
 
@@ -102,12 +104,30 @@ class SpectrometerManager(Manager):
 #            self.info('calculated relative position {} to AX = {}'.format(d.name, rp))
 
     def relative_detector_positions_task_factory(self):
+#        ion = self.application.get_service('src.spectrometer.ion_optics_manager.IonOpticsManager')
+#        return RelativeDetectorPositions(spectrometer=self.spectrometer,
+#                                         ion_optics_manager=ion
+#                                         )
+
+        return self._factory(RelativeDetectorPositions)
+
+    def coincidence_scan_task_factory(self):
+        obj = self._factory(CoincidenceScan)
+        info = obj.edit_traits(kind='livemodal')
+        if info.result:
+            self.open_view(obj.graph)
+            obj.execute()
+
+    def cdd_operate_voltage_scan_task_factory(self):
+        obj = CDDOperatingVoltageScan(spectrometer=self.spectrometer)
+        info = obj.edit_traits(kind='livemodal')
+        if info.result:
+            self.open_view(obj.graph)
+            obj.execute()
+
+    def _factory(self, klass):
         ion = self.application.get_service('src.spectrometer.ion_optics_manager.IonOpticsManager')
-        return RelativeDetectorPositions(spectrometer=self.spectrometer,
-                                         ion_optics_manager=ion
-                                         )
-
-
+        return klass(spectrometer=self.spectrometer, ion_optics_manager=ion)
 #    def deflection_calibration(self):
 #        #set steering voltage to zero
 #        self.spectrometer.deflection_calibration()

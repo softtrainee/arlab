@@ -138,26 +138,29 @@ class IonOpticsManager(Manager):
 
     def _peak_center(self, detector, isotope, center_dac,
                      save, confirm_save, warn):
-        graph = self._graph_factory()
+#        graph = self._graph_factory()
 
-        #set graph window attributes
-        graph.window_title = 'Peak Center {}({}) @ {:0.3f}'.format(detector, isotope, center_dac)
 
-        #bind to the graphs close_func
-        #self.close is called when graph window is closed
-        #use so we can stop the timer
-        graph.close_func = self.close
+#        graph.close_func = self.close
 
-        self.open_view(graph)
+#        self.open_view(graph)
 
         spec = self.spectrometer
 
         self.peak_center = pc = PeakCenter(center_dac=center_dac,
                                            detector=detector,
                         reference_isotope=isotope,
-                        graph=graph,
+#                        graph=graph,
                         spectrometer=spec
                         )
+
+        #bind to the graphs close_func
+        #self.close is called when graph window is closed
+        #use so we can stop the timer
+        pc.graph.close_func = self.close
+        #set graph window attributes
+        pc.graph.window_title = 'Peak Center {}({}) @ {:0.3f}'.format(detector, isotope, center_dac)
+        self.open_view(pc.graph)
 
         dac_d = pc.get_peak_center()
         self.peak_center_result = dac_d
@@ -211,14 +214,14 @@ class IonOpticsManager(Manager):
 #===============================================================================
 # handler
 #===============================================================================
-    def _graph_factory(self):
-        g = Graph(
-                  container_dict=dict(padding=5, bgcolor='gray'))
-        g.new_plot()
-        return g
-
-    def _graph_default(self):
-        return self._graph_factory()
+#    def _graph_factory(self):
+#        g = Graph(
+#                  container_dict=dict(padding=5, bgcolor='gray'))
+#        g.new_plot()
+#        return g
+#
+#    def _graph_default(self):
+#        return self._graph_factory()
 
     def _detector_default(self):
         return self.detectors[0]

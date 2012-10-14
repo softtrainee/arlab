@@ -54,7 +54,14 @@ class SpectrometerActionSet(WorkbenchActionSet):
                        path=PATH + '/IonOptics',
                        class_name='{}:PeakCenterAction'.format(BASE)
                        ),
-
+                Action(name='Coincidence',
+                       path=PATH + '/IonOptics',
+                       class_name='{}:CoincidenceScanAction'.format(BASE)
+                       ),
+                Action(name='CDD Op. Voltage',
+                       path=PATH,
+                       class_name='{}:CDDOperateVoltageAction'.format(BASE)
+                       ),
                 Action(name='Scan',
                        path=PATH,
                        class_name='{}:OpenScanManagerAction'.format(BASE)

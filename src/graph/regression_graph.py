@@ -264,27 +264,23 @@ class RegressionGraph(Graph):
                                       plotid=plotid)
         scatter.overlays.append(rect_tool)
 
-#        o = ScatterInspectorOverlay(scatter,
-#                                  hover_color='blue'
-#                                  )
-#        scatter.overlays.append(o)
-
         #add a broadcaster so scatterinspector and rect selection will received events
         broadcaster.tools.append(rect_tool)
-        data_tool = DataTool(
-                             component=plot,
-                             plot=scatter,
-                             plotid=plotid,
-                             parent=self
-                             )
-        data_tool_overlay = DataToolOverlay(component=scatter,
-                                            tool=data_tool,
-                                            )
-        scatter.overlays.append(data_tool_overlay)
+#        data_tool = DataTool(
+#                             component=plot,
+#                             plot=scatter,
+#                             plotid=plotid,
+#                             parent=self
+#                             )
+#        data_tool_overlay = DataToolOverlay(component=scatter,
+#                                            tool=data_tool,
+#                                            )
+#        scatter.overlays.append(data_tool_overlay)
+#
+#        broadcaster.tools.append(data_tool)
 
-        broadcaster.tools.append(data_tool)
-        if not self.use_data_tool:
-            data_tool.visible = False
+#        if not self.use_data_tool:
+#            data_tool.visible = False
 
     def set_x_limits(self, *args, **kw):
         '''

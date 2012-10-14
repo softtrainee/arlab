@@ -528,7 +528,7 @@ class VideoStageManager(StageManager):
 #                               use_camera=True,
 #                               map=self._stage_map
                                )
-        self.camera.parent=v
+        self.camera.parent = v
         return v
 
     def _canvas_editor_factory(self):

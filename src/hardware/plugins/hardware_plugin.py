@@ -66,7 +66,6 @@ class HardwarePlugin(CorePlugin):
                           )
         return [so, so1, so2]
 
-#@todo: add flag manager 
     def _flag_manager_factory(self):
         return FlagManager(application=self.application)
 

@@ -23,6 +23,7 @@ from src.pyscripts.pyscript import verbose_skip, count_verbose_skip
 import os
 from src.paths import paths
 import random
+from ConfigParser import ConfigParser
 #============= local library imports  ==========================
 estimated_duration_ff = 1.01
 
@@ -240,7 +241,7 @@ class MeasurementPyScript(PyScript):
     @count_verbose_skip
     def peak_center(self, detector='AX', isotope='Ar40', calc_time=False):
         if calc_time:
-            self._estimated_duration += 30
+            self._estimated_duration += 45
             return
 
         if self.automated_run is None:
@@ -297,6 +298,55 @@ class MeasurementPyScript(PyScript):
         v = '{},{}'.format(detname, v)
         self.automated_run.set_spectrometer_parameter('SetDeflection', v)
 
+    @verbose_skip
+    def set_source_optics_from_file(self):
+        ''' 
+        '''
+        attrs = ['YSymmetry', 'ZSymmetry', 'ZFocus', 'ExtractionLens']
+        self._set_from_file(attrs, 'SourceOptics')
+
+    @verbose_skip
+    def set_cdd_operating_voltage_from_file(self):
+        config = self._get_config()
+
+        v = config.getfloat('CDDParameters', 'OperatingVoltage')
+        if v is not None:
+            func = self.automated_run.set_spectrometer_parameter
+            func('SetOperatingVoltage', '{},{}'.format('CDD', v))
+
+    @verbose_skip
+    def set_source_parameters_from_file(self):
+        '''            
+        '''
+        attrs = ['IonRepeller', 'ElectronVolts']
+        self._set_from_file(attrs, 'SourceParameters')
+
+    @verbose_skip
+    def set_deflections_from_file(self):
+        func = self.automated_run.set_spectrometer_parameter
+
+        config = self._get_config()
+        section = 'Deflections'
+        dets = config.options(section)
+        for dn in dets:
+            v = config.getfloat(section, dn)
+            if v is not None:
+                func('SetDeflection', '{},{}'.format(dn, v))
+
+    def _set_from_file(self, attrs, section):
+        func = self.automated_run.set_spectrometer_parameter
+        config = self._get_config()
+        for attr in attrs:
+            v = config.getfloat(section, attr)
+            if v is not None:
+                func('Set{}'.format(attr), v)
+
+    def _get_config(self):
+        config = ConfigParser()
+        p = os.path.join(paths.spectrometer_dir, 'config.cfg')
+        config.read(p)
+
+        return config
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     paths.build('_test')

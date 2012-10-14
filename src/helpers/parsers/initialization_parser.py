@@ -39,6 +39,11 @@ def handle_uncaught_exception(func):
     return _handle
 
 def decorate_all(cls):
+    '''
+         adds the handle_uncaught_exception decorator to all methods of the class 
+    '''
+
+
     for name, m in inspect.getmembers(cls, inspect.ismethod):
         setattr(cls, name, handle_uncaught_exception(m))
     return cls
@@ -47,9 +52,6 @@ def decorate_all(cls):
 @decorate_all
 class InitializationParser(XMLParser):
     '''
-    @todo: catch exceptions
-    
-    add a exception_handler decorator
     '''
 
 

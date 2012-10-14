@@ -54,7 +54,6 @@ class VideoCanvas(BaseDataCanvas):
             self.on_trait_change(self.video.update_bounds, 'bounds')
 
         if self.camera:
-            #@todo: set fps in camera.cfg
             self.fps = self.camera.fps
 
 #============= EOF ====================================

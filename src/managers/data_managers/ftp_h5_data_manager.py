@@ -30,7 +30,7 @@ class FTPH5DataManager(H5DataManager):
 
     def open_data(self, p):
         out = os.path.join(self.workspace_root, p)
-        
+
         self.repository.retrieveFile(p, out)
         return super(FTPH5DataManager, self).open_data(out)
 

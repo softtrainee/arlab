@@ -564,11 +564,12 @@ class HoleDetector(Detector):
                 nimage[wsrc > biu] = 0
 
                 img = asMat(nimage)
-                if globalv.show_autocenter_debug_image:
-                    do_later(lambda: self.debug_show(image, distance, wsrc, nimage))
 
                 #locate new polygon from the segmented image
                 tars = self._locate_targets(img)
+                if globalv.show_autocenter_debug_image:
+                    do_later(lambda: self.debug_show(image, distance, wsrc, nimage))
+
                 if tars:
                     tar = tars[0]
                     ctest = tar.convexity > threshold

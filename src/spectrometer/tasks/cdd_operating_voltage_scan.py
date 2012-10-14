@@ -1,0 +1,156 @@
+#===============================================================================
+# Copyright 2012 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+
+#============= enthought library imports =======================
+from traits.api import HasTraits, Float
+from traitsui.api import View, Item, TableEditor
+#============= standard library imports ========================
+import time
+import numpy as np
+#============= local library imports  ==========================
+from src.spectrometer.tasks.spectrometer_task import SpectrometerTask
+from src.graph.graph import Graph
+from src.data_processing.time_series.time_series import smooth
+from globals import globalv
+from ConfigParser import ConfigParser
+import os
+from src.paths import paths
+
+
+def scan_generator(start, stop, n):
+    #p = '/Users/ross/Sandbox/curve.txt'
+    #ys = np.loadtxt(p)
+    #ys = ys[41:-45]
+#    xs = np.linspace(0, len(ys) - 1, len(ys))
+#    print ys.shape
+#    print start, stop , n
+    n4 = n / 4
+
+    xs = np.linspace(start, stop, n)
+    ys = xs[:n4 + 1]
+    b = ys[-1]
+    ys2 = xs[:2 * n4] * 0.1 + b
+    b = ys2[-1]
+    ys3 = xs[:n4 + 2] + b
+    ys = np.hstack((ys, ys2, ys3))
+    ys += np.random.random(ys.shape[0]) * 80
+#    print ys.shape
+    i = 0
+    while 1:
+        yield ys[i]
+        i += 1
+
+class CDDOperatingVoltageScan(SpectrometerTask):
+    start_v = Float(0)
+    end_v = Float(1500)
+    step_v = Float(1)
+
+    def _execute(self):
+        spec = self.spectrometer
+        graph = self.graph
+        steps = self._calc_step_values(self.start_v, self.end_v, self.step_v)
+        settle_time = 1
+
+        scan_gen = scan_generator(steps[0], steps[-1], len(steps))
+        for opv in steps:
+            if globalv.spectrometer_debug:
+                v = scan_gen.next()
+            else:
+                spec.set_cdd_operating_voltage(opv)
+                time.sleep(settle_time)
+                v = spec.get_intensity('CDD')
+            graph.add_datum((opv, v), do_later=1)
+
+        xs = graph.get_data()
+        ys = graph.get_data(axis=1)
+
+        nopv = self._calculate_optimal_operating_voltage(xs, ys)
+
+        if nopv:
+            self.info('Optimal operating voltage {:0.1f}'.format(nopv))
+
+            graph.add_vertical_rule(nopv, color=(0, 0, 1))
+
+            if self.confirmation_dialog('Save new CDD Operating voltage {:0.1f}'.format(nopv)):
+                self._save(nopv)
+
+    def _save(self, nv):
+        p = os.path.join(paths.spectrometer_dir, 'config.cfg')
+        config = ConfigParser()
+        config.read(p)
+
+        config.set('CDDParameters', 'OperatingVoltage', nv)
+        config.write(p)
+        self.info('saving new operating voltage {:0.1f} to {}'.format(nv, p))
+
+    def _calculate_optimal_operating_voltage(self, xs, ys):
+        '''
+             find the flattest region of the grad
+
+            1. smooth the signal
+            2. calculate the gradient 
+            3. get x of min y
+        '''
+
+        #1. smooth
+        smoothed = smooth(ys)
+
+        #2. gradient
+        grads = np.gradient(smoothed)
+
+        #3. get min
+        cp = xs[np.argmin(grads)]
+
+        return cp
+
+
+    def _graph_factory(self):
+        graph = Graph(container_dict=dict(padding=[10, 0, 30, 10],
+                                          bgcolor='gray'))
+
+        graph.new_plot(
+#                       title='{}'.format(self.title),
+                       xtitle='CDD Operating Voltage (V)',
+                       ytitle='Intensity (fA)',
+                       )
+        graph.new_series()
+        return graph
+
+    def traits_view(self):
+        v = View(Item('start_v', label='Start Voltage'),
+                   Item('end_v', label='Stop Voltage'),
+                   Item('step_v', label='Step Voltage'),
+                   buttons=['OK', 'Cancel']
+                  )
+        return v
+
+
+
+if __name__ == '__main__':
+
+    xs = np.linspace(0, 100, 200)
+    ys = xs[:50]
+    b = ys[-1]
+    ys2 = xs[50:150] * 0.001 + b
+    ys3 = xs[150:] - 50
+
+    ys = np.hstack((ys, ys2, ys3))
+    c = CDDOperatingVoltageScan()
+    v = c._calculate_optimal_operating_voltage(xs, ys)
+
+    assert(abs(v - 49.4974874372) < 0.001)
+
+#============= EOF =============================================

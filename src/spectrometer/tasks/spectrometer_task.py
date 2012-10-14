@@ -18,6 +18,7 @@
 from traits.api import Any, Event, Property, Bool
 #from traitsui.api import View, Item, spring, ButtonEditor, HGroup
 #============= standard library imports ========================
+from numpy import linspace
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from threading import Thread
@@ -29,7 +30,7 @@ class SpectrometerTask(Loggable):
     execute_label = Property(depends_on='_alive')
     _alive = Bool
 
-    detector = Any
+    graph = Any
 
     def _get_execute_label(self):
         return 'Stop' if self.isAlive() else 'Start'
@@ -45,9 +46,12 @@ class SpectrometerTask(Loggable):
             self.stop()
             self._end()
         else:
-            self._alive = True
-            t = Thread(name='magnet_scan', target=self._execute)
-            t.start()
+            self.execute()
+
+    def execute(self):
+        self._alive = True
+        t = Thread(name=self.__class__.__name__, target=self._execute)
+        t.start()
 
     def _execute(self):
         pass
@@ -55,5 +59,15 @@ class SpectrometerTask(Loggable):
     def _end(self):
         pass
 
+    def _graph_factory(self):
+        pass
 
+    def _graph_default(self):
+        return self._graph_factory()
+
+    def _calc_step_values(self, start, end, width):
+        sign = 1 if start < end else -1
+        nsteps = abs(end - start + width * sign) / width
+
+        return linspace(start, end, nsteps)
 #============= EOF =============================================

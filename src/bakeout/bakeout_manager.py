@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-#@todo: individual start/stop buttons
-#@todo: start/stop graph recording
 
 #============= enthought library imports  ==========================
 from traits.api import Array, Instance, Bool, Button, Event, \

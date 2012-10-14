@@ -214,7 +214,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             if pref is not None:
                 pref.changeable_items.append(item)
             else:
-                item.PreferencesSetID=0
+                item.PreferencesSetID = 0
 #            item.AnalysisID = analysis.AnalysisID
             analysis.changeable = item
             drs.changeable_items.append(item)

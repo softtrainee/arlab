@@ -52,8 +52,8 @@ def convert_shortname(ln):
 def convert_identifier(identifier):
     ids=['Ba','Bc','Bu','A','C','Bg']
     if identifier in ids:
-        identifier=ids.index(identifier)+1
-#    if identifier == 'B':
+        identifier = ids.index(identifier) + 1
+#    if identifier == 'Ba':
 #        identifier = 1
 #    elif identifier == 'A':
 #        identifier = 2

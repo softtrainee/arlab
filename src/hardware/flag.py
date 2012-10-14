@@ -30,7 +30,6 @@ def convert_to_bool(v):
     except:
         return v.lower().strip() in ['t', 'true', 'on']
 
-#@todo: convert to HasTraits
 class Flag(HasTraits):
     name = Str
     _set = Bool(False)
@@ -44,7 +43,6 @@ class Flag(HasTraits):
                         )
                )
         return v
-
 
     def _get_display_state(self):
         return self._set

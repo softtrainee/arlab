@@ -234,10 +234,10 @@ class Magnet(SpectrometerDevice):
         molweights = self.spectrometer.molecular_weights
         if self.mftable:
 
-            xs=[molweights[i] for i in self.mftable[0]]
-            ys=self.mftable[1]
-            return polyval(polyfit(xs,ys,2),mass)
-        
+            xs = [molweights[i] for i in self.mftable[0]]
+            ys = self.mftable[1]
+            return polyval(polyfit(xs, ys, 2), mass)
+
 
 #    def __dac_changed(self):
 #        m = self.map_dac_to_mass(self._dac)

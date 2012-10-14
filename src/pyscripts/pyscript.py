@@ -373,7 +373,7 @@ class PyScript(Loggable):
             duration = 0.1
         self._sleep(duration)
 
-    def execute(self, new_thread=False):
+    def execute(self, new_thread=False, finished_callback=None):
 
         def _ex_():
             self.bootstrap()
@@ -384,6 +384,9 @@ class PyScript(Loggable):
 
             if ok:
                 self._execute()
+                if finished_callback:
+                    finished_callback()
+
             return self._completed
 
         if new_thread:
@@ -449,7 +452,7 @@ class PyScript(Loggable):
         if self._syntax_checking:
             return
 
-        self._post_execute_hook()
+#        self._post_execute_hook()
 
         if self._cancel:
             self.info('{} canceled'.format(self.name))
@@ -463,8 +466,8 @@ class PyScript(Loggable):
                 except KeyError:
                     pass
 
-    def _post_execute_hook(self):
-        pass
+#    def _post_execute_hook(self):
+#        pass
 #        if self.controller is not None:
 #            self.controller.end()
 
