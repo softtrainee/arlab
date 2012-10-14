@@ -23,18 +23,26 @@ from traitsui.api import View, Item, ListEditor, InstanceEditor, \
 from src.hardware.flag import Flag, TimedFlag
 
 class FlagManager(HasTraits):
-    flags = List(Instance(Flag))
-    timed_flags = List
+    flags = List(Flag)
+    timed_flags = List(TimedFlag)
+
+    def add_flag(self, f):
+        self.flags.append(f)
+
+    def add_timed_flag(self, f):
+        self.timed_flags.append(f)
+
     def traits_view(self):
-
-
         v = View(
                  VGroup(
                      self._flag_item_factory('flags', 'Flags'),
                      self._flag_item_factory('timed_flags', 'Timed Flags')
                      ),
 
-                 title='Flag Manager'
+                 title='Flag Manager',
+                 width=300,
+#                 height=300
+                 resizable=True
                  )
         return v
 
@@ -45,6 +53,8 @@ class FlagManager(HasTraits):
                                         style='custom',
                                         )
                       ),
+#                     visible_when=name,
+#                     defined_when=name,
                      show_border=True,
                      label=label
                      )
@@ -55,6 +65,7 @@ class Demo(HasTraits):
     test = Button
     def traits_view(self):
         return View(Item('test'))
+
     def _test_fired(self):
         fm = FlagManager()
         fm.flags = [Flag('ObamaPipetteFlag'),

@@ -18,10 +18,11 @@
 from traits.api import HasTraits, Bool, Property, Str, Float, CInt
 from traitsui.api import View, Item, HGroup, spring
 #============= standard library imports ========================
+from threading import Timer as OneShotTimer
+from time import time
 #============= local library imports  ==========================
 from src.helpers.timer import Timer as PTimer
-from threading import Timer
-from time import time
+from src.loggable import Loggable
 
 def convert_to_bool(v):
     try:
@@ -30,10 +31,9 @@ def convert_to_bool(v):
     except:
         return v.lower().strip() in ['t', 'true', 'on']
 
-class Flag(HasTraits):
-    name = Str
+class Flag(Loggable):
     _set = Bool(False)
-    display_state = Property(Bool, depends_on='_state')
+    display_state = Property(Bool, depends_on='_set')
 
     def traits_view(self):
         v = View(
@@ -58,15 +58,17 @@ class Flag(HasTraits):
         return int(self._set)
 
     def set(self, value):
-        print value
+        ovalue = value
         if isinstance(value, str):
             value = convert_to_bool(value)
         else:
             value = bool(value)
+        self.info('setting flag state to {} ({})'.format(value, ovalue))
         self._set = value
         return True
 
     def clear(self):
+        self.info('clearing flag')
         self._set = False
 
     def isSet(self):
@@ -74,14 +76,12 @@ class Flag(HasTraits):
 
 class TimedFlag(Flag):
     duration = Float(1)
-    _start_time = None
 
-    _uperiod = 1000
-#    def __init__(self, name, t):
-#        super(TimedFlag, self).__init__(name)
-#        self.duration = float(t)
     display_time = Property(depends_on='_time_remaining')
     _time_remaining = CInt(0)
+
+    _start_time = None
+    _uperiod = 1000
 
     def clear(self):
         super(TimedFlag, self).clear()
@@ -122,7 +122,7 @@ class TimedFlag(Flag):
 
             self._start_time = time()
             self.pt = PTimer(self._uperiod, self._update_time)
-            t = Timer(self.duration, self.clear)
+            t = OneShotTimer(self.duration, self.clear)
             t.start()
 
         return True
