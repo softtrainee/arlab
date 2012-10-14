@@ -18,7 +18,8 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, String, on_trait_change
 from pyface.timer.api import do_later
-from pyface.message_dialog import warning
+from pyface.message_dialog import warning, information
+from pyface.api import confirm
 from pyface.wx.dialog import confirmation
 
 #============= standard library imports ========================
@@ -73,6 +74,12 @@ class Loggable(HasTraits):
         #NO==5104, YES==5103
         return result == 5103
 
+    def information_dialog(self, msg, title=None):
+        if title is None:
+            information(None, msg)
+        else:
+            information(None, msg, title=title)
+
     def db_save_dialog(self):
         return self.confirmation_dialog('Save to Database')
 
@@ -91,7 +98,7 @@ class Loggable(HasTraits):
 #                args = ('{:<30s} -- {}'.format(self.logger.name.strip(),
 #                        msg),)
 #                do_later(func, args)
-                gWarningDisplay.add_text('{:<50s} -- {}'.format(self.logger.name.strip(),msg))
+                gWarningDisplay.add_text('{:<50s} -- {}'.format(self.logger.name.strip(), msg))
 
             if decorate:
                 msg = '****** {}'.format(msg)

@@ -314,7 +314,6 @@ class Graph(Loggable, ContextMenuMixin):
             n = self.series[plotid][series]
             series = n[axis]
 
-        print series
         self.plots[plotid].data.set_data(series, d)
 
     def set_axis_traits(self, plotid=0, axis='x', **kw):

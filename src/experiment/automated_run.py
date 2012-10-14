@@ -411,7 +411,10 @@ class AutomatedRun(Loggable):
             if pc.result:
                 dm = self.data_manager
                 tab = dm.new_table('/', 'peakcenter')
-                for xi, yi in zip(*pc.data):
+
+                xs, ys = pc.graph.get_data(), pc.graph.get_data(axis=1)
+
+                for xi, yi in zip(xs, ys):
                     nrow = tab.row
                     nrow['time'] = xi
                     nrow['value'] = yi

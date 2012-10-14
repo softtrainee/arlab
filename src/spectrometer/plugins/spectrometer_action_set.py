@@ -19,13 +19,12 @@
 #============= enthought library imports =======================
 from envisage.ui.action.api import Action#, Group, Menu, ToolBar
 from envisage.ui.workbench.api import WorkbenchActionSet
-
-
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
 PATH = 'MenuBar/Spectrometer'
 BASE = 'src.spectrometer.plugins.spectrometer_actions'
+
+
 class SpectrometerActionSet(WorkbenchActionSet):
     '''
     '''
@@ -59,7 +58,7 @@ class SpectrometerActionSet(WorkbenchActionSet):
                        class_name='{}:CoincidenceScanAction'.format(BASE)
                        ),
                 Action(name='CDD Op. Voltage',
-                       path=PATH,
+                       path=PATH + '/Utitilies',
                        class_name='{}:CDDOperateVoltageAction'.format(BASE)
                        ),
                 Action(name='Scan',

@@ -17,16 +17,92 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, Item, TableEditor
-from src.spectrometer.tasks.magnet_scan import MagnetScan, psuedo_peak
+#============= standard library imports ========================
+#import time
+import numpy as np
+from ConfigParser import ConfigParser
+import os
+#============= local library imports  ==========================
+from src.spectrometer.tasks.peak_center import calculate_peak_center
+from src.paths import paths
+from src.spectrometer.tasks.magnet_scan import MagnetScan
 from src.graph.graph import Graph
 from globals import globalv
-import time
-import numpy as np
-#============= standard library imports ========================
-#============= local library imports  ==========================
 
 
 class CoincidenceScan(MagnetScan):
+    start_mass = 39
+    stop_mass = 40
+    step_mass = 0.005
+    title = 'Coincidence Scan'
+    def _post_execute(self):
+        '''
+            calculate all peak centers
+            
+            calculate relative shifts to a reference detector. not necessarily the same
+            as the reference detector used for setting the magnet
+        '''
+        graph = self.graph
+        plot = graph.plots[0]
+        def get_peak_center(i, di):
+            lp = plot.plots[di.name][0]
+            xs = lp.index.get_data()
+            ys = lp.value.get_data()
+
+            result = None
+            cx = None
+            if len(xs) and len(ys):
+                result = calculate_peak_center(xs, ys)
+            if result is None or isinstance(result, str):
+                self.warning('no peak center for {} {}'.format(di.name, di.isotope))
+            else:
+                cx = result[0][1]
+            return cx
+
+        spec = self.spectrometer
+        centers = dict([(di.name, get_peak_center(i, di))
+                            for i, di in enumerate(spec.detectors)])
+
+        #calculate relative to AX
+        config = ConfigParser()
+        p = os.path.join(paths.spectrometer_dir, 'config.cfg')
+        config.read(open(p, 'r'))
+        ref = 'AX'
+        post = centers[ref]
+        if post is None:
+            return
+
+        inform = True
+        no_change = True
+        for di in spec.detectors:
+            newcen = centers[di.name]
+            if newcen is None:
+                continue
+
+            dac_dev = post - centers[di.name]
+            if abs(dac_dev) < 0.001:
+                self.info('no offset detected between {} and {}'.format(ref, di.name))
+                no_change = True
+                continue
+
+            no_change = False
+
+            defl = di.map_dac_to_deflection(dac_dev)
+            self.info('{} dac dev. {:0.5f}. converted to deflection voltage {:0.1f}.'.format(di.name, dac_dev, defl))
+
+            curdefl = di.deflection
+            newdefl = int(curdefl + defl)
+            if newdefl > 0:
+                msg = 'Apply new deflection. {} Current {}. New {}'.format(di.name, curdefl, newdefl)
+                if self.confirmation_dialog(msg):
+                    #update the config.cfg deflections
+                    config.set('Deflection', di.name, newdefl)
+                    di.deflection = newdefl
+
+        if no_change and inform:
+            self.information_dialog('no deflection changes needed')
+        else:
+            config.write(p)
 
     def _graph_hook(self, do, intensities, **kw):
         graph = self.graph
@@ -37,10 +113,10 @@ class CoincidenceScan(MagnetScan):
                 ind = lp.index.get_data()
                 ind = np.hstack((ind, do))
                 lp.index.set_data(ind)
-
+#                print inte
                 val = lp.value.get_data()
                 val = np.hstack((val, inte))
-                val = val / np.max(val)
+#                val = val / np.max(val)
 
                 lp.value.set_data(val)
 
@@ -51,13 +127,18 @@ class CoincidenceScan(MagnetScan):
 #            debug
         if globalv.experiment_debug:
             inte = peak_generator.next()
-            intensities = [0], [inte * 1, inte * 2, inte * 3, inte * 4, inte * 5] * np.random.random(5)
+            intensities = [0], [inte * 1, inte * 2, inte * 3, inte * 4, inte * 5, inte * 6]
 
         return intensities
 
     def _graph_factory(self):
-        g = Graph()
-        g.new_plot()
+        g = Graph(window_title='Coincidence Scan',
+                  container_dict=dict(padding=5, bgcolor='lightgray')
+                  )
+        g.new_plot(padding=[50, 5, 5, 50],
+                   ytitle='Intensity (fA)',
+                   xtitle='Operating Voltage (V)')
+
         for di in self.spectrometer.detectors:
             g.new_series(
                          name=di.name,

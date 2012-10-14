@@ -21,7 +21,8 @@ from traitsui.api import View, Item, VGroup, HGroup, \
      spring, Label, Spring, CustomEditor
 #============= standard library imports ========================
 import os
-from numpy import loadtxt, polyfit, polyval, hstack
+from numpy import loadtxt, polyfit, polyval, hstack, poly1d
+from scipy import optimize
 #============= local library imports  ==========================
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.paths import paths
@@ -73,11 +74,12 @@ class Detector(SpectrometerDevice):
         #load deflection correction table
         p = os.path.join(paths.spectrometer_dir,
                          'deflections', self.name)
-        data = loadtxt(p, delimiter=',')
+        x, y = loadtxt(p, delimiter=',', unpack=True)
 
-        x, y = data.transpose()
+#        x, y = data.transpose()
 
-        y = [yi - y[0] for yi in y]
+#        y = [yi - y[0] for yi in y]
+        y -= y[0]
         coeffs = polyfit(x, y, 1)
 
 #        plot(x, y, '+')
@@ -92,6 +94,7 @@ class Detector(SpectrometerDevice):
     def _set_deflection(self, v):
         self._deflection = v
         self.ask('SetDeflection {},{}'.format(self.name, v))
+
     def _get_deflection(self):
         return self._deflection
 
@@ -107,6 +110,11 @@ class Detector(SpectrometerDevice):
         dev = polyval(self._deflection_correction_factors, [de])[0]
 
         return dev
+
+    def map_dac_to_deflection(self, dac):
+        c = self._deflection_correction_factors[:]
+        c[-1] -= dac
+        return optimize.newton(poly1d(c), 1)
 
     def color_square_factory(self, width=10, height=10):
         def color_factory(window, editor):
