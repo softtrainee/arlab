@@ -62,7 +62,7 @@ class MapOverlay(AbstractOverlay):
         data = c.map_screen(np.array(zip(xs, ys)))
 
         gc.set_stroke_color((0, 0, 0))
-        for k, color in [(-1, (0, 0, 0)), (-2, (1, 1, 1))]:
+        for k, color in [(-1, (0, 0, 0)), (-1.1, (1, 1, 1)), (-1.2, (0, 1, 0))]:
             gc.save_state()
             pts = [pt for pt, si in zip(data, cs) if si == k]
             if pts:
@@ -87,6 +87,8 @@ class MapView(Viewable):
 #        ys = [2, 4, 6, 8]
         xs, ys, states, labns = zip(*[(h.x, h.y, -1 , '') for h in self.stage_map.sample_holes])
         g = self.graph
+        states = list(states)
+        states[len(states) / 2] = -1.2
         s, _p = g.new_series(xs, ys,
                              colors=states,
                      type='cmap_scatter',
@@ -112,11 +114,11 @@ class MapView(Viewable):
 
     def _update(self, new):
         if new:
-            sel = self.scatter.index.metadata.get('selections')
-#            self.scatter.index.metadata['selections'] = range(221)
-#             if sel:
+#            sel = self.scatter.index.metadata.get('selections')
+#            if sel:
 #                e = MapItemSummary()
 #                e.edit_traits()
+
 
             hov = self.scatter.index.metadata.get('hover')
             if hov:
@@ -155,7 +157,7 @@ class MapView(Viewable):
 
     def set_hole_labnumber(self, holenum, ln):
         self.labnumbers[holenum - 1] = ln
-        self.set_hole_state(holenum, -2)
+        self.set_hole_state(holenum - 1, -1.1)
 #        self.scatter.states[holenum - 1] = 1
 
 if __name__ == '__main__':

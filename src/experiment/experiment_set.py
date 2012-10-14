@@ -215,20 +215,68 @@ class ExperimentSet(Loggable):
             try:
                 self.delay_between_analyses = meta['delay_between_analyses']
                 params = self._run_parser(header, line, meta)
-                params['mass_spec_name'] = meta['mass_spec']
+                params['mass_spec_name'] = meta['mass_spectrometer']
                 arun = self._automated_run_factory(**params)
                 aruns.append(arun)
 
-#                self.automated_runs.append(arun)
             except Exception, e:
                 import traceback
                 print traceback.print_exc()
                 self.warning_dialog('Invalid Experiment file {}\nlinenum= {}\nline= {}'.format(e, linenum, line))
-#                self.automated_runs = []
                 self.executable = False
                 return
 
+        aruns = self._add_frequency_runs(meta, aruns)
+
         return aruns
+
+    def _add_frequency_runs(self, meta, runs):
+        nruns = []
+        i = 0
+        def _make_script_name(_meta, na):
+            na = _meta['scripts'][na]
+            if na is None:
+                na = ''
+            elif na.startswith('_'):
+                na = meta['mass_spectrometer'] + na
+
+            if na and not na.endswith('.py'):
+                na = na + '.py'
+            return na
+
+        for ai in runs:
+            nruns.append(ai)
+            try:
+                int(ai.identifier)
+                i += 1
+            except ValueError:
+                continue
+
+            for name, identifier in [('blanks', 'Bu'), ('airs', 'A'), ('cocktails', 'C'), ('backgrounds', 'Bg')]:
+                try:
+                    _meta = meta[name]
+                    freq = _meta['frequency']
+                    if not freq:
+                        continue
+                except KeyError:
+                    continue
+
+                make_script_name = lambda x: _make_script_name(_meta, x)
+                params = dict()
+                params['identifier'] = '{}'.format(identifier)
+                params['configuration'] = self._build_configuration(make_script_name)
+
+                if i % freq == 0:
+                    arun = self._automated_run_factory(**params)
+                    nruns.append(arun)
+
+        return nruns
+
+    def _build_configuration(self, make_script_name):
+        gdict = globals()
+        args = [('{}_script'.format(ni), gdict['{}_path'.format(ni)](make_script_name(ni)))
+              for ni in ['extraction', 'measurement', 'post_measurement', 'post_equilibration']]
+        return dict(args)
 
     def _right_clicked_changed(self):
         selected = self.selected
@@ -265,7 +313,7 @@ class ExperimentSet(Loggable):
                 be.apply_edits(self.selected)
                 self.automated_run.update = True
 
-    def _run_parser(self, header, line,meta, delim='\t'):
+    def _run_parser(self, header, line, meta, delim='\t'):
         params = dict()
         args = map(str.strip, line.split(delim))
 
@@ -282,7 +330,11 @@ class ExperimentSet(Loggable):
             try:
                 param = args[header.index(attr)]
                 if param.strip():
-                    params[attr] = str_to_bool(param)
+                    bo = str_to_bool(param)
+                    if bo is not None:
+                        params[attr] = bo
+                    else:
+                        params[attr] = False
             except IndexError:
                 params[attr] = False
 
@@ -308,24 +360,26 @@ class ExperimentSet(Loggable):
 
             params['heat_value'] = v
             params['heat_units'] = u
-        
-        
+
+
         def make_script_name(n):
-            na=args[header.index(n)]
+            na = args[header.index(n)]
             if na.startswith('_'):
-                na=meta['mass_spec']+na
-                
+                na = meta['mass_spec'] + na
+
+            if na and not na.endswith('.py'):
+                na = na + '.py'
             return na
-        
-        gdict=globals()
-        args=[('{}_script'.format(ni),gdict['{}_path'.format(ni)](make_script_name(ni)))
-              for ni in ['extraction','measurement','post_measurement','post_equilibration']]
+
+#        gdict = globals()
+#        args = [('{}_script'.format(ni), gdict['{}_path'.format(ni)](make_script_name(ni)))
+#              for ni in ['extraction', 'measurement', 'post_measurement', 'post_equilibration']]
 #        extraction = args[header.index('extraction')]
 #        measurement = args[header.index('measurement')]
 #        post_measurement = args[header.index('post_measurement')]
 #        post_equilibration = args[header.index('post_equilibration')]
-
-        params['configuration'] = dict(args)#self._build_configuration(*args)
+        params['configuration'] = self._build_configuration(make_script_name)
+#        params['configuration'] = dict(args)#self._build_configuration(*args)
 #        params['configuration'] = self._build_configuration(*args)
         return params
 
@@ -642,6 +696,8 @@ class ExperimentSet(Loggable):
                          **kw
                          )
         self._bind_automated_run(a)
+
+        a.create_scripts()
         return a
 
     def _bind_automated_run(self, a):
