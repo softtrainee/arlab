@@ -61,7 +61,6 @@ class FusionsLaserUIPlugin(CoreUIPlugin):
     def start_manager(self, obj, name, old, new):
         protocol = 'src.lasers.laser_managers.laser_manager.ILaserManager'
         name = self.id.replace('.', '_')
-        print 'laser man', name
         lm = self.application.get_service(protocol, 'name=="{}"'.format(name))
         if not lm:
             return

@@ -170,12 +170,10 @@ Add {}'.format(sd)):
         self.led.state = 'green'
         time.sleep(0.005)
         if self.script == '---':
+            self._duration_timeout = True
             self.set_control_mode('closed')
             self.set_closed_loop_setpoint(self.setpoint)
-
             self._oduration = self._duration
-#            self._timer = Timer(self.update_interval * 1000., self._update_)
-            self._duration_timeout = True
 
         else:
             self._duration_timeout = False
@@ -193,7 +191,7 @@ Add {}'.format(sd)):
                                     name=self.script,
                                     controller=self)
                 t.bootstrap()
-                t.execute(new_thread=True)
+                t.execute(new_thread=True, finished_callback=self.end)
 
             self._active_script = t
 

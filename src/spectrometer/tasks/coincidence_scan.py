@@ -32,24 +32,26 @@ class CoincidenceScan(MagnetScan):
         graph = self.graph
         if graph:
             spec = self.spectrometer
-            for di, inte in zip(spec.detectors, intensities):
-                lp = graph.plots[0].plot[di.name]
+            for di, inte in zip(spec.detectors, intensities[1]):
+                lp = graph.plots[0].plots[di.name][0]
                 ind = lp.index.get_data()
                 ind = np.hstack((ind, do))
                 lp.index.set_data(ind)
 
                 val = lp.value.get_data()
                 val = np.hstack((val, inte))
+                val = val / np.max(val)
+
                 lp.value.set_data(val)
 
-    def _magnet_step_hook(self, di, peak_generator=None):
+    def _magnet_step_hook(self, di, detector=None, peak_generator=None):
 
         spec = self.spectrometer
         intensities = spec.get_intensities()
 #            debug
         if globalv.experiment_debug:
             inte = peak_generator.next()
-            intensities = [inte * 1, inte * 2, inte * 3, inte * 4, inte * 5]
+            intensities = [0], [inte * 1, inte * 2, inte * 3, inte * 4, inte * 5] * np.random.random(5)
 
         return intensities
 
@@ -58,7 +60,7 @@ class CoincidenceScan(MagnetScan):
         g.new_plot()
         for di in self.spectrometer.detectors:
             g.new_series(
-                         label=di.name,
+                         name=di.name,
                          color=di.color)
 
         return g

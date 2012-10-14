@@ -94,7 +94,7 @@ class wxLED(wx.Control):
         XXXXXXXXXXXXXXXXX
         XXXXXXXXXXXXXXXXX
         '''.strip()
-        
+
         self.set_state(state)
 
 

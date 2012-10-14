@@ -20,6 +20,7 @@ from traits.api import Float, Str
 from numpy import linspace, array, where, max, polyfit, argmax
 #============= local library imports  ==========================
 from magnet_scan import MagnetScan
+from src.graph.graph import Graph
 
 class PeakCenter(MagnetScan):
     center_dac = Float
@@ -48,8 +49,9 @@ class PeakCenter(MagnetScan):
             start = center_dac - wnd * (i + 1)
             end = center_dac + wnd * (i + 1)
             self.info('Scan parameters center={} start={} end={} step width={}'.format(center_dac, start, end, self.step_width))
+            graph.set_x_limits(min=min([start, end]), max=max([start, end]))
 
-            self._peak_center_graph_factory(graph, start, end)
+#            self._peak_center_graph_factory(graph, start, end)
 
             width = self.step_width
             try:
@@ -169,11 +171,12 @@ class PeakCenter(MagnetScan):
 #===============================================================================
 # factories
 #===============================================================================
+    def _graph_factory(self):
+        graph = Graph(
+                  container_dict=dict(padding=[10, 0, 30, 10], bgcolor='gray'))
 
-    def _peak_center_graph_factory(self, graph, start, end, title=''):
-        graph.container_dict = dict(padding=[10, 0, 30, 10])
-        graph.clear()
-        graph.new_plot(title='{}'.format(title),
+        graph.new_plot(
+#                       title='{}'.format(self.title),
                        xtitle='DAC (V)',
                        ytitle='Intensity (fA)',
                        )
@@ -190,8 +193,12 @@ class PeakCenter(MagnetScan):
                          )
 
         graph.plots[0].value_range.tight_bounds = False
+        return graph
 
-        graph.set_x_limits(min=min([start, end]), max=max([start, end]))
+#    def _peak_center_graph_factory(self, graph, start, end, title=''):
+#        graph.container_dict = dict(padding=[10, 0, 30, 10])
+#        graph.clear()
+
 
 
 #============= EOF =============================================

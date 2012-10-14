@@ -70,6 +70,24 @@ class PeakCenterAction(Action):
 class RelativePositionsAction(Action):
     def perform(self, event):
         man = get_manager(event, SPECTROMETER_PROTOCOL)
-        obj = man.relative_detector_positions_task_factory()
-        open_manager(event.window.application, obj)
+#        obj = man.relative_detector_positions_task_factory()
+#        open_manager(event.window.application, obj)
+
+
+class CoincidenceScanAction(Action):
+    def perform(self, event):
+        man = get_manager(event, SPECTROMETER_PROTOCOL)
+
+        man.coincidence_scan_task_factory()
+
+#        open_manager(event.window.application, obj)
+
+
+
+class CDDOperateVoltageAction(Action):
+    def perform(self, event):
+        man = get_manager(event, SPECTROMETER_PROTOCOL)
+        man.cdd_operate_voltage_scan_task_factory()
+#        open_manager(event.window.application, obj)
+
 #============= EOF ====================================

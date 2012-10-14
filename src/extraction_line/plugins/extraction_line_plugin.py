@@ -61,8 +61,8 @@ class ExtractionLinePlugin(CorePlugin):
             mode = plugin.get('mode')
         except AttributeError:
             #no epxeriment plugin defined
-            mode='normal'
-            
+            mode = 'normal'
+
         elm = ExtractionLineManager(mode=mode)
         elm.bind_preferences()
 

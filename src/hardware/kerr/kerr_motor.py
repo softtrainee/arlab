@@ -423,10 +423,8 @@ class KerrMotor(KerrDevice):
             
             pos_msteps= (motor_steps-focus_pos_msteps) * pos
             
-            
-            @todo: may need a way to account for hystersis/backlash
-            
-            for zoom drive a few steps past desired position then back to desired position
+        
+            drive a few steps past desired position then back to desired position
             this takes out any lash in the gears
             
         '''
