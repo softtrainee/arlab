@@ -23,11 +23,11 @@ import os
 import numpy as np
 from src.paths import paths
 from chaco.abstract_overlay import AbstractOverlay
-from pylab import get_cmap
+#from pylab import get_cmap
 from chaco.tools.scatter_inspector import ScatterInspector
 from src.displays.rich_text_display import RichTextDisplay
-import math
-from kiva.constants import STROKE, FILL, FILL_STROKE
+#import math
+from kiva.constants import FILL_STROKE
 from src.viewable import Viewable
 from enable.markers import CircleMarker
 #============= standard library imports ========================

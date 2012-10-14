@@ -231,7 +231,8 @@ class IonOpticsManager(Manager):
                Item('isotope'),
                Item('dac'),
                buttons=['OK', 'Cancel'],
-               kind='livemodal'
+               kind='livemodal',
+               title='Peak Center'
                )
         return v
 #    def graph_view(self):

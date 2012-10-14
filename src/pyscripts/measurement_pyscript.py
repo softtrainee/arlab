@@ -312,7 +312,8 @@ class MeasurementPyScript(PyScript):
         v = config.getfloat('CDDParameters', 'OperatingVoltage')
         if v is not None:
             func = self.automated_run.set_spectrometer_parameter
-            func('SetOperatingVoltage', '{},{}'.format('CDD', v))
+#            func('SetOperatingVoltage', '{},{}'.format('CDD', v))
+            func('SetIonCounterVoltage', v)
 
     @verbose_skip
     def set_source_parameters_from_file(self):

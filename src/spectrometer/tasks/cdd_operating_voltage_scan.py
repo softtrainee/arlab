@@ -34,7 +34,7 @@ def scan_generator(start, stop, n):
     d = stop - start
     d3 = d / 3
     xs = np.linspace(start, stop, n)
-    ys = ((xs - d3) / d) ** 3 + 0.1 * xs / d + 5 + np.random.random(n) / d3
+    ys = ((xs - d3) / d) ** 3 + 1 * xs / d + 5 + np.random.random(n) / 80
 
     i = 0
     while 1:
@@ -99,7 +99,14 @@ class CDDOperatingVoltageScan(SpectrometerTask):
         '''
 
         #1. smooth
-        smoothed = smooth(ys)
+        smoothed = smooth(ys, window_len=100)
+
+        #truncate the smooth to elimate edge artifacts
+        trunc = 20
+        xs = xs[trunc:-trunc]
+        smoothed = smoothed[trunc:-trunc]
+
+        self.graph.new_series(xs, smoothed)
 
         #2. gradient
         grads = np.gradient(smoothed)
@@ -111,15 +118,17 @@ class CDDOperatingVoltageScan(SpectrometerTask):
 
 
     def _graph_factory(self):
-        graph = Graph(container_dict=dict(padding=[10, 0, 30, 10],
-                                          bgcolor='gray'))
+        graph = Graph(container_dict=dict(padding=5,
+                                          bgcolor='lightgray'))
 
         graph.new_plot(
+                       padding=[50, 5, 5, 50],
 #                       title='{}'.format(self.title),
                        xtitle='CDD Operating Voltage (V)',
                        ytitle='Intensity (fA)',
                        )
-        graph.new_series()
+        graph.new_series(type='scatter',
+                         marker='pixel')
         return graph
 
     def traits_view(self):

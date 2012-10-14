@@ -31,6 +31,7 @@ def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.008):
 
     for i, d in enumerate(gaussian(x)):
         if abs(center - x[i]) < peak_width:
+#            d = magnitude
             d = magnitude + magnitude / 50.0 * random.random()
         yield d
 
@@ -45,7 +46,7 @@ class MagnetScan(SpectrometerTask):
     start_mass = Float(36)
     stop_mass = Float(40)
     step_mass = Float(1)
-
+    title = 'Magnet Scan'
 #    def _scan_dac(self, values, det, delay=850):
 #
 #        graph = self.graph
@@ -105,7 +106,7 @@ class MagnetScan(SpectrometerTask):
         mag.settling_time = 0.5
         if globalv.experiment_debug:
             delay = 1
-            mag.settling_time = 0.001
+            mag.settling_time = 0.01
 
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
         do = values[0]
@@ -150,28 +151,37 @@ class MagnetScan(SpectrometerTask):
         return intensity
 
     def _execute(self):
-        spec = self.spectrometer
-        mag = spec.magnet
         sm = self.start_mass
         em = self.stop_mass
         stm = self.step_mass
         if abs(sm - em) > stm:
     #        ds = mag.calculate_dac(sm)
+            self._do_scan(sm, em, stm)
+            self._alive = False
+            self._post_execute()
+
+    def _do_scan(self, sm, em, stm, map_mass=True):
+        spec = self.spectrometer
+        mag = spec.magnet
+        if map_mass:
             ds = spec.correct_dac(self.reference_detector,
-                                  mag.map_mass_to_dac(sm))
+                                      mag.map_mass_to_dac(sm))
             de = spec.correct_dac(self.reference_detector,
                                   mag.map_mass_to_dac(em))
 
 
-    #        de = mag.calculate_dac(em)
+#        de = mag.calculate_dac(em)
             massdev = abs(sm - em)
             dacdev = abs(ds - de)
 
-            dacstep = stm / float(massdev) * dacdev
+            stm = stm / float(massdev) * dacdev
+            sm, em = ds, de
 
-            values = self._calc_step_values(ds, de, dacstep)
-            self._scan_dac(values, self.reference_detector.name)
-            self._alive = False
+        values = self._calc_step_values(sm, em, stm)
+        return self._scan_dac(values, self.reference_detector.name)
+
+    def _post_execute(self):
+        pass
 
     def _reference_detector_default(self):
         return self.detectors[0]
@@ -181,7 +191,8 @@ class MagnetScan(SpectrometerTask):
                  Item('start_mass', label='Start'),
                  Item('stop_mass', label='Stop'),
                  Item('step_mass', label='Step'),
-                 buttons=['OK', 'Cancel']
+                 buttons=['OK', 'Cancel'],
+                 title=self.title
 #                  HGroup(spring, Item('execute', editor=ButtonEditor(label_value='execute_label'),
 #                        show_label=False))
 
