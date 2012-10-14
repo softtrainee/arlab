@@ -54,12 +54,12 @@ def str_to_bool(a):
     '''
     '''
 
-    tks = ['true', 't','yes','y','1']
-    fks = ['false', 'f','no','n','0']
+    tks = ['true', 't', 'yes', 'y', '1']
+    fks = ['false', 'f', 'no', 'n', '0']
 
     if a is not None:
-        a=str(a).lower()
-    
+        a = str(a).strip().lower()
+
     if a in tks:
         return True
     elif a in fks:

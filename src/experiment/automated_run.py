@@ -141,6 +141,12 @@ class AutomatedRun(Loggable):
 #        self.extraction_script.runner = self.runner
 #        self.post_equilibration_script.runner = self.runner
 #        self.post_measurement_script.runner = self.runner
+    def create_scripts(self):
+        self.extraction_script
+        self.measurement_script
+        self.post_equilibration_script
+        self.post_measurement_script
+
     def truncate(self, style):
         self.info('truncating current run with style= {}'.format(style))
         self.state = 'truncate'
@@ -899,7 +905,7 @@ class AutomatedRun(Loggable):
             self.info('loading script "{}"'.format(fname))
             func = getattr(self, '{}_script_factory'.format(name))
             s = func(ec)
-            if os.path.isfile(s.filename):
+            if s and os.path.isfile(s.filename):
                 setattr(self, '_{}_script'.format(name), s)
                 if s.bootstrap():
                     try:
@@ -909,7 +915,7 @@ class AutomatedRun(Loggable):
                         self._executable = False
                 return s
             else:
-                self.warning_dialog('Invalid Script {}'.format(s.filename))
+                self.warning_dialog('Invalid Script {}'.format(s.filename if s else 'None'))
 
 
     def pre_extraction_save(self):
