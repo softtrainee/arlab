@@ -86,6 +86,14 @@ class RegisterDeviceAction(Action):
 
 
 class OpenFlagManagerAction(Action):
+    def __init__(self, *args, **kw):
+        super(OpenFlagManagerAction, self).__init__(*args, **kw)
+        fm = self.window.application.get_service('src.managers.flag_manager.FlagManager')
+        self.enabled = False
+        if fm and (fm.flags or fm.timed_flags):
+            self.enabled = True
+#        self.enabled = fm and (bool(len(fm.flags)) or bool(len(fm.timed_flags)))
+
     def perform(self, event):
         fm = event.window.application.get_service('src.managers.flag_manager.FlagManager')
         open_manager(self.window.application,

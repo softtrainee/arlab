@@ -289,7 +289,7 @@ class Manager(Viewable, RPCable):
         ff = Flag(f)
         self.flags.append(ff)
         if self.application:
-            fm = self.application.get_service('src.managers.flag__manager.FlagManager')
+            fm = self.application.get_service('src.managers.flag_manager.FlagManager')
             if fm is not None:
                 fm.add_flag(ff)
 
@@ -298,7 +298,7 @@ class Manager(Viewable, RPCable):
         ff = TimedFlag(f)
         self.flags.append(ff)
         if self.application:
-            fm = self.application.get_service('src.managers.flag__manager.FlagManager')
+            fm = self.application.get_service('src.managers.flag_manager.FlagManager')
             if fm is not None:
                 fm.add_timed_flag(ff)
 

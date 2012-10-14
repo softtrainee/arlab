@@ -31,23 +31,11 @@ from src.paths import paths
 
 
 def scan_generator(start, stop, n):
-    #p = '/Users/ross/Sandbox/curve.txt'
-    #ys = np.loadtxt(p)
-    #ys = ys[41:-45]
-#    xs = np.linspace(0, len(ys) - 1, len(ys))
-#    print ys.shape
-#    print start, stop , n
-    n4 = n / 4
-
+    d = stop - start
+    d3 = d / 3
     xs = np.linspace(start, stop, n)
-    ys = xs[:n4 + 1]
-    b = ys[-1]
-    ys2 = xs[:2 * n4] * 0.1 + b
-    b = ys2[-1]
-    ys3 = xs[:n4 + 2] + b
-    ys = np.hstack((ys, ys2, ys3))
-    ys += np.random.random(ys.shape[0]) * 80
-#    print ys.shape
+    ys = ((xs - d3) / d) ** 3 + 0.1 * xs / d + 5 + np.random.random(n) / d3
+
     i = 0
     while 1:
         yield ys[i]
@@ -57,7 +45,7 @@ class CDDOperatingVoltageScan(SpectrometerTask):
     start_v = Float(0)
     end_v = Float(1500)
     step_v = Float(1)
-
+    title = 'CDD Operating Voltage Scan'
     def _execute(self):
         spec = self.spectrometer
         graph = self.graph
@@ -68,11 +56,13 @@ class CDDOperatingVoltageScan(SpectrometerTask):
         for opv in steps:
             if globalv.spectrometer_debug:
                 v = scan_gen.next()
+                settle_time = 0.001
             else:
                 spec.set_cdd_operating_voltage(opv)
-                time.sleep(settle_time)
                 v = spec.get_intensity('CDD')
-            graph.add_datum((opv, v), do_later=1)
+
+            graph.add_datum((opv, v), do_after=1)
+            time.sleep(settle_time)
 
         xs = graph.get_data()
         ys = graph.get_data(axis=1)
@@ -93,7 +83,7 @@ class CDDOperatingVoltageScan(SpectrometerTask):
         config.read(p)
 
         config.set('CDDParameters', 'OperatingVoltage', nv)
-        config.write(p)
+        config.write(open(p, 'w'))
         self.info('saving new operating voltage {:0.1f} to {}'.format(nv, p))
 
     def _calculate_optimal_operating_voltage(self, xs, ys):
@@ -103,6 +93,9 @@ class CDDOperatingVoltageScan(SpectrometerTask):
             1. smooth the signal
             2. calculate the gradient 
             3. get x of min y
+            
+            @todo: this algorithm may not work properly. need to collect a real scan to test on
+            
         '''
 
         #1. smooth
@@ -133,6 +126,7 @@ class CDDOperatingVoltageScan(SpectrometerTask):
         v = View(Item('start_v', label='Start Voltage'),
                    Item('end_v', label='Stop Voltage'),
                    Item('step_v', label='Step Voltage'),
+                   title=self.title,
                    buttons=['OK', 'Cancel']
                   )
         return v
