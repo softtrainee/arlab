@@ -323,13 +323,11 @@ class AutomatedRun(Loggable):
 
         self.info('======== Post Equilibration Started ========')
         self.post_equilibration_script.manager = self.experiment_manager
-
+        self.post_equilibration_script.syntax_checked = True
         if self.post_equilibration_script.execute():
             self.info('======== Post Equilibration Finished ========')
-#            return True
         else:
             self.info('======== Post Equilibration Finished unsuccessfully ========')
-#            return False
 
     def do_data_collection(self, ncounts, starttime, series=0):
         if not self._alive:
@@ -442,7 +440,9 @@ class AutomatedRun(Loggable):
 
     def do_coincidence_scan(self):
         sm = self.spectrometer_manager
-        sm.do_coincidence_scan()
+        obj, t = sm.do_coincidence_scan()
+        self.coincidence_scan = obj
+        t.join()
 
     def set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))

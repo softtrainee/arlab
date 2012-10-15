@@ -43,6 +43,7 @@ from chaco.scatter_inspector_overlay import ScatterInspectorOverlay
 from chaco.tools.scatter_inspector import ScatterInspector
 from src.experiment.selection_view import SelectionView
 from src.experiment.file_listener import FileListener
+from src.helpers.parsers.initialization_parser import InitializationParser
 
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -138,7 +139,7 @@ class ExperimentManager(Manager):
                 for at in ['blank_air',
                            'blank_cocktail',
                            'blank_unknown',
-                           'air','cocktail','background','unknown']:
+                           'air', 'cocktail', 'background', 'unknown']:
 #                           blank', 'air', 'cocktail', 'background', 'unknown']:
                     db.add_analysis_type(at)
 
@@ -262,8 +263,22 @@ class ExperimentManager(Manager):
         self.info('start automated runs')
 
         if self.mode == 'client':
-            runner = RemotePyScriptRunner('localhost', 1061, 'udp')
-#            runner = RemotePyScriptRunner('129.138.12.153', 1061, 'udp')
+#            em = self.extraction_line_manager
+            ip = InitializationParser()
+            elm = ip.get_plugin('ExtractionLine', category='hardware')
+            runner = elm.find('runner')
+            host, port, kind = None, None, None
+            if runner:
+                comms = runner.find('communications')
+                host = comms.find('host')
+                port = comms.find('port')
+                kind = comms.find('kind')
+
+            host = host if host else 'localhost'
+            port = port if port else 1061
+            kind = kind if kind else 'udp'
+
+            runner = RemotePyScriptRunner(host, port, kind)
         else:
             runner = PyScriptRunner()
 
@@ -398,14 +413,20 @@ class ExperimentManager(Manager):
         if not arun.extraction_script:
             self.err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
             return
+        else:
+            arun.extraction_script.syntax_checked = True
 
         if not arun.measurement_script:
             self.err_message = 'Invalid measurement_script {measurement_script}'.format(**arun.configuration)
             return
+        else:
+            arun.measurement_script.syntax_checked = True
 
         if not arun.post_measurement_script:
             self.err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
             return
+        else:
+            arun.post_measurement_script.syntax_checked = True
 
         if not isAlive():
             return

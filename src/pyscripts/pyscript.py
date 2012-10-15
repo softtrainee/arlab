@@ -156,6 +156,7 @@ class PyScript(Loggable):
     @property
     def filename(self):
         return os.path.join(self.root, self.name)
+
     def toblob(self):
         return self._text
 
@@ -379,7 +380,7 @@ class PyScript(Loggable):
             self.bootstrap()
 
             ok = True
-            if not self._syntax_checked:
+            if not self.syntax_checked:
                 self._test()
 
             if ok:
@@ -543,6 +544,16 @@ class PyScript(Loggable):
                 if self._cancel:
                     break
                 self._sleep(0.5)
+
+
+    def _get_syntax_checked(self):
+        return self._syntax_checked
+
+    def _set_syntax_checked(self, v):
+        self._syntax_checked = v
+
+    syntax_checked = property(fget=_get_syntax_checked,
+                              fset=_set_syntax_checked)
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
