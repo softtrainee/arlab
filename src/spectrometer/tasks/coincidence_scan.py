@@ -35,6 +35,8 @@ class CoincidenceScan(MagnetScan):
     stop_mass = 40
     step_mass = 0.005
     title = 'Coincidence Scan'
+    inform = True
+
     def _post_execute(self):
         '''
             calculate all peak centers
@@ -72,7 +74,6 @@ class CoincidenceScan(MagnetScan):
         if post is None:
             return
 
-        inform = True
         no_change = True
         for di in spec.detectors:
             newcen = centers[di.name]
@@ -99,7 +100,7 @@ class CoincidenceScan(MagnetScan):
                     config.set('Deflection', di.name, newdefl)
                     di.deflection = newdefl
 
-        if no_change and inform:
+        if no_change and self.inform:
             self.information_dialog('no deflection changes needed')
         else:
             config.write(p)

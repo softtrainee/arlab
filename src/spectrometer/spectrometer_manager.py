@@ -15,38 +15,23 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, DelegatesTo, Event, Bool, \
- on_trait_change, Any, List, Property, Button
-#from traitsui.api import View, Item, HGroup, VGroup, TableEditor
-#from traitsui.table_column import ObjectColumn
-#from traitsui.extras.checkbox_column import CheckboxColumn
-
+from traits.api import Instance, Any
 #============= standard library imports ========================
-#import os
-#from threading import Thread
+import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-#from src.graph.graph import Graph
-#from src.initializer import Initializer
-
-
-#from src.graph.time_series_graph import TimeSeriesStreamGraph
 from src.spectrometer.spectrometer import Spectrometer
-import os
 from src.paths import paths
 from src.spectrometer.tasks.relative_detector_positions import RelativeDetectorPositions
 from src.spectrometer.tasks.coincidence_scan import CoincidenceScan
 from src.spectrometer.tasks.cdd_operating_voltage_scan import CDDOperatingVoltageScan
-#from src.spectrometer.ion_optics_manager import IonOpticsManager
-#from src.spectrometer.scan_manager import ScanManager
+
 
 class SpectrometerManager(Manager):
     spectrometer = Instance(Spectrometer, ())
     spectrometer_microcontroller = Any
 
     def load(self):
-
-
         self.spectrometer.load()
 
         config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
@@ -62,11 +47,8 @@ class SpectrometerManager(Manager):
                                             isotope=isotope
                                             )
 
-
         return True
-##    def opened(self):
-##        self.popup = PopupWindow(self.ui.control)
-#
+
     def finish_loading(self):
         integration_time = 1.048576
 
@@ -83,33 +65,14 @@ class SpectrometerManager(Manager):
         self.spectrometer.load_configurations()
         self.spectrometer.finish_loading()
 
-#    def calculate_relative_detector_positions(self):
-#        # set all deflections to 0
-#
-#        ion = self.application.get_service('src.spectrometer.ion_optics_manager.IonOpticsManager')
-#
-#        #peak center on the axial detector
-#        t = ion.do_peak_center('AX', 'Ar36', save=False)
-#        t.join()
-#
-#        axial_dac = ion.peak_center_result
-#        #peak center on all detectors
-#        for d in self.spectrometer.detectors:
-#            if not self.isAlive():
-#                break
-#            if d.name is not 'AX':
-#                t = ion.do_peak_center(d.name, 'Ar36', save=False)
-#                t.join()
-#            rp = ion.peak_center_result / axial_dac
-#            self.info('calculated relative position {} to AX = {}'.format(d.name, rp))
-
     def relative_detector_positions_task_factory(self):
-#        ion = self.application.get_service('src.spectrometer.ion_optics_manager.IonOpticsManager')
-#        return RelativeDetectorPositions(spectrometer=self.spectrometer,
-#                                         ion_optics_manager=ion
-#                                         )
-
         return self._factory(RelativeDetectorPositions)
+
+    def do_coincidence_scan(self):
+        obj = self._factory(CoincidenceScan)
+        obj.inform = False
+        self.open_view(obj.graph)
+        obj.execute()
 
     def coincidence_scan_task_factory(self):
         obj = self._factory(CoincidenceScan)
@@ -128,29 +91,7 @@ class SpectrometerManager(Manager):
     def _factory(self, klass):
         ion = self.application.get_service('src.spectrometer.ion_optics_manager.IonOpticsManager')
         return klass(spectrometer=self.spectrometer, ion_optics_manager=ion)
-#    def deflection_calibration(self):
-#        #set steering voltage to zero
-#        self.spectrometer.deflection_calibration()
-#        self.defscanning = False
-#
-#    def open_magfield_calibration(self):
-#        mag = self.spectrometer.magnet
-#        mag.update_graph()
-#        mag.graph.edit_traits()
-#
-#===============================================================================
-# property get/set
-#===============================================================================
 
-#===============================================================================
-# change handlers
-#===============================================================================
-
-##===============================================================================
-## property getter/setters
-##===============================================================================
-#    def _get_defscan_label(self):
-#        return 'Start' if not self.defscanning else 'Stop'
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
