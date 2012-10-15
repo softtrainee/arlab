@@ -88,37 +88,25 @@ class MeasurementPyScript(PyScript):
     def truncate(self, style=None):
         if style == 'quick':
             self._use_abbreviated_counts = True
-
         super(MeasurementPyScript, self).truncate(style=style)
-
-
-    def _get_detectors(self):
-        return self._detectors
-    detector = property(fget=_get_detectors)
-
 
     def get_script_commands(self):
         cmds = ['baselines', 'position', 'set_time_zero', 'peak_center',
                  'activate_detectors', 'multicollect', 'regress', 'sniff',
                  'peak_hop',
+                 'coincidence',
+
                  'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',
                  'set_extraction_lens', 'set_deflection',
-
+                 'set_cdd_operating_voltage',
+                 'set_source_parameters_from_file',
+                 'set_source_optics_from_file',
                  ]
         return cmds
 
     def get_variables(self):
         return ['detector']
 
-    @on_trait_change('automated_run:signals')
-    def update_signals(self, obj, name, old, new):
-
-        try:
-            det = self.detector
-            for k, v in new.iteritems():
-                det[k].signal = v
-        except AttributeError:
-            pass
 #===============================================================================
 # commands
 #===============================================================================
@@ -128,32 +116,19 @@ class MeasurementPyScript(PyScript):
             self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
             return
 
-        if self.automated_run is None:
-            return
-
-        if not self.automated_run.do_sniff(ncounts,
+        if not self._automated_run_call('do_sniff', ncounts,
                            self._time_zero,
-                           series=self._series_count,
+                           series=self._series_count):
 
-                           ):
             self.cancel()
         self._series_count += 1
 
     @verbose_skip
     def regress(self, *fits):
-        if self.automated_run is None:
-            return
-
         if not fits:
             fits = 'linear'
 
-#        self.automated_run.set_regress_fits(fits, series=self._regress_id)
-        self.automated_run.set_regress_fits(fits)
-#        self._series_count += 3
-
-    @verbose_skip
-    def set_time_zero(self):
-        self._time_zero = time.time()
+        self._automated_run_call('set_regress_fits', fits)
 
     @count_verbose_skip
     def multicollect(self, ncounts=200, integration_time=1, calc_time=False):
@@ -161,14 +136,8 @@ class MeasurementPyScript(PyScript):
             self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
             return
 
-        if self.automated_run is None:
-            return
-
-#         print 'cooooll', ncounts, self._time_zero, integration_time
-        if not self.automated_run.do_data_collection(ncounts, self._time_zero,
-                      series=self._series_count,
-                      #update_x=True
-                      ):
+        if not self._automated_run_call('do_data_collection', ncounts, self._time_zero,
+                      series=self._series_count):
             self.cancel()
 
 #        self._regress_id = self._series_count
@@ -176,20 +145,12 @@ class MeasurementPyScript(PyScript):
 
     @verbose_skip
     def activate_detectors(self, *dets):
-        if self.automated_run is None:
-            return
 
         if dets:
             self._detectors = dict()
-            self.automated_run.activate_detectors(list(dets))
+            self._automated_run_call('activate_detectors', list(dets))
             for di in list(dets):
                 self._detectors[di] = 0
-#    @verbose_skip
-#    def set_isotopes(self, *isotopes):
-#        if self.automated_run is None:
-#            return
-#        if isotopes:
-#            self.automated_run.set_isotopes(list(isotopes))
 
     @count_verbose_skip
     def baselines(self, counts=1, cycles=5, mass=None, detector='', calc_time=False):
@@ -205,19 +166,15 @@ class MeasurementPyScript(PyScript):
             self._estimated_duration += ns * estimated_duration_ff
             return
 
-        if self.automated_run is None:
-            return
-
         if self._use_abbreviated_counts:
             counts *= 0.25
 
-        if not self.automated_run.do_baselines(counts, self._time_zero,
+        if not self._automated_run_call('do_baselines', counts, self._time_zero,
                                mass,
                                detector,
                                series=self._series_count,
-                               nintegrations=cycles
-
-                              ):
+                               nintegrations=cycles):
+#
             self.cancel()
         self._series_count += 1
 
@@ -227,15 +184,11 @@ class MeasurementPyScript(PyScript):
             self._estimated_duration += (cycles * integrations * estimated_duration_ff)
             return
 
-        if self.automated_run is None:
-            return
-#        isotopes = sorted(isotopes, key=lambda k:int(k[2:4]))
-        self.automated_run.do_peak_hop(detector, isotopes,
+        self._automated_run_call('do_peak_hop', detector, isotopes,
                                     cycles,
                                     integrations,
                                     self._time_zero,
-                                    self._series_count
-                                    )
+                                    self._series_count)
         self._series_count += 3
 
     @count_verbose_skip
@@ -243,11 +196,7 @@ class MeasurementPyScript(PyScript):
         if calc_time:
             self._estimated_duration += 45
             return
-
-        if self.automated_run is None:
-            return
-
-        self.automated_run.do_peak_center(detector=detector, isotope=isotope)
+        self._automated_run_call('do_peak_center', detector=detector, isotope=isotope)
 
     @verbose_skip
     def position(self, pos, detector='AX', dac=False):
@@ -257,46 +206,63 @@ class MeasurementPyScript(PyScript):
             position('Ar40', detector='AX') #Ar40 will be converted to 39.962 use mole weight dict
             
         '''
+        self._automated_run_call('set_position', pos, detector, dac=dac)
 
+    @verbose_skip
+    def coincidence(self):
+        self._automated_run_call('do_coincidence_scan')
+
+    def _automated_run_call(self, funcname, *args, **kw):
         if self.automated_run is None:
             return
-        self.automated_run.set_position(pos, detector, dac=dac)
+        func = getattr(self.automated_run, funcname)
+        return func(*args, **kw)
+
+    def _set_spectrometer_parameter(self, *args, **kw):
+        self._automated_run_call('set_spectrometer_parameter', *args, **kw)
+
+#===============================================================================
+# set commands
+#===============================================================================
+    @verbose_skip
+    def set_time_zero(self):
+        self._time_zero = time.time()
 
     @verbose_skip
     def set_ysymmetry(self, v):
-        if self.automated_run is None:
-            return
-
-        self.automated_run.set_spectrometer_parameter('SetYSymmetry', v)
+        self._set_spectrometer_parameter('SetYSymmetry', v)
 
     @verbose_skip
     def set_zsymmetry(self, v):
-        if self.automated_run is None:
-            return
-
-        self.automated_run.set_spectrometer_parameter('SetZSymmetry', v)
+        self._set_spectrometer_parameter('SetZSymmetry', v)
 
     @verbose_skip
     def set_zfocus(self, v):
-        if self.automated_run is None:
-            return
-
-        self.automated_run.set_spectrometer_parameter('SetZFocus', v)
+        self._set_spectrometer_parameter('SetZFocus', v)
 
     @verbose_skip
     def set_extraction_lens(self, v):
-        if self.automated_run is None:
-            return
-
-        self.automated_run.set_spectrometer_parameter('SetExtractionLens', v)
+        self._set_spectrometer_parameter('SetExtractionLens', v)
 
     @verbose_skip
     def set_deflection(self, detname, v):
+
+        v = '{},{}'.format(detname, v)
+        self._set_spectrometer_parameter('SetDeflection', v)
+
+    @verbose_skip
+    def set_cdd_operating_voltage(self, v=''):
+        '''
+            if v is None use value from file
+        '''
         if self.automated_run is None:
             return
 
-        v = '{},{}'.format(detname, v)
-        self.automated_run.set_spectrometer_parameter('SetDeflection', v)
+        if v == '':
+            config = self._get_config()
+            v = config.getfloat('CDDParameters', 'OperatingVoltage')
+
+        self._set_spectrometer_parameter('SetIonCounterVoltage', v)
 
     @verbose_skip
     def set_source_optics_from_file(self):
@@ -304,16 +270,6 @@ class MeasurementPyScript(PyScript):
         '''
         attrs = ['YSymmetry', 'ZSymmetry', 'ZFocus', 'ExtractionLens']
         self._set_from_file(attrs, 'SourceOptics')
-
-    @verbose_skip
-    def set_cdd_operating_voltage_from_file(self):
-        config = self._get_config()
-
-        v = config.getfloat('CDDParameters', 'OperatingVoltage')
-        if v is not None:
-            func = self.automated_run.set_spectrometer_parameter
-#            func('SetOperatingVoltage', '{},{}'.format('CDD', v))
-            func('SetIonCounterVoltage', v)
 
     @verbose_skip
     def set_source_parameters_from_file(self):
@@ -324,7 +280,7 @@ class MeasurementPyScript(PyScript):
 
     @verbose_skip
     def set_deflections_from_file(self):
-        func = self.automated_run.set_spectrometer_parameter
+        func = self._set_spectrometer_parameter
 
         config = self._get_config()
         section = 'Deflections'
@@ -335,7 +291,7 @@ class MeasurementPyScript(PyScript):
                 func('SetDeflection', '{},{}'.format(dn, v))
 
     def _set_from_file(self, attrs, section):
-        func = self.automated_run.set_spectrometer_parameter
+        func = self._set_spectrometer_parameter
         config = self._get_config()
         for attr in attrs:
             v = config.getfloat(section, attr)
@@ -348,6 +304,24 @@ class MeasurementPyScript(PyScript):
         config.read(p)
 
         return config
+
+    def _get_detectors(self):
+        return self._detectors
+    detector = property(fget=_get_detectors)
+
+
+#===============================================================================
+# handler
+#===============================================================================
+    @on_trait_change('automated_run:signals')
+    def update_signals(self, obj, name, old, new):
+        try:
+            det = self.detector
+            for k, v in new.iteritems():
+                det[k].signal = v
+        except AttributeError:
+            pass
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     paths.build('_test')

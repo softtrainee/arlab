@@ -125,6 +125,7 @@ class AutomatedRun(Loggable):
     peak_center = None
 #    info_display = DelegatesTo('experiment_manager')
     info_display = None#DelegatesTo('experiment_manager')
+    coincidence_scan = None
 
     username = None
     _save_isotopes = List
@@ -167,6 +168,8 @@ class AutomatedRun(Loggable):
         if self.peak_center:
             self.peak_center.graph.close()
 
+        if self.coincidence_scan:
+            self.coincidence_scan.graph.close()
 
     def info(self, msg, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
@@ -437,56 +440,13 @@ class AutomatedRun(Loggable):
                 attrs.high_signal = ys[2]
                 tab.flush()
 
-#    def do_regress(self, fits, series=0):
-#        if not self._alive:
-#            return
-##        time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
-#        self.regression_results = dict()
-#
-#        reg = PolynomialRegressor()
-#        dm = self.data_manager
-#        ppp = self.peak_plot_panel
-#        if ppp:
-##            print ppp.isotopes
-#            n = len(ppp.isotopes)
-#            if isinstance(fits, str) or len(fits) < n:
-#                fits = [fits[0], ] * n
-#            for pi, (iso, fi) in enumerate(zip(ppp.isotopes, fits)):
-#                tab = dm.get_table(ppp.detector, '/signals/{}'.format(iso))
-#                if tab is None:
-#                    continue
-#
-#                rdict = self._regress_graph(reg,
-#                                            ppp.graph,
-#                                            iso,
-#                                            ppp.detector,
-#                                            fi, tab, pi)
-#                self.regression_results[ppp.detector + iso] = rdict
-#                tab.attrs.fit = fi
-#            ppp.series_cnt += 3
-#
-#        n = len(self._active_detectors)
-#        if isinstance(fits, str) or len(fits) < n:
-#            fits = [fits[0], ] * n
-#
-#        if self.plot_panel:
-#            for pi, (dn, fi) in enumerate(zip(self._active_detectors, fits)):
-#                tab = dm.get_table(dn.name, '/signals/{}'.format(dn.isotope))
-#                if tab is None:
-#                    continue
-#
-#                rdict = self._regress_graph(reg,
-#                                            self.plot_panel.graph,
-#                                            iso,
-#                                            dn.name, fi, tab, pi)
-#                self.regression_results[dn.name] = rdict
-#                tab.attrs.fit = fi
+    def do_coincidence_scan(self):
+        sm = self.spectrometer_manager
+        sm.do_coincidence_scan()
 
     def set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
-        sm = self.spectrometer_manager
-        if sm is not None:
-            sm.spectrometer.set_parameter(name, v)
+        self.spectrometer_manager.spectrometer.set_parameter(name, v)
 
     def set_position(self, pos, detector, dac=False):
         if not self._alive:
@@ -1349,3 +1309,48 @@ class AutomatedRun(Loggable):
                  )
         return v
 #============= EOF =============================================
+
+#    def do_regress(self, fits, series=0):
+#        if not self._alive:
+#            return
+##        time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
+#        self.regression_results = dict()
+#
+#        reg = PolynomialRegressor()
+#        dm = self.data_manager
+#        ppp = self.peak_plot_panel
+#        if ppp:
+##            print ppp.isotopes
+#            n = len(ppp.isotopes)
+#            if isinstance(fits, str) or len(fits) < n:
+#                fits = [fits[0], ] * n
+#            for pi, (iso, fi) in enumerate(zip(ppp.isotopes, fits)):
+#                tab = dm.get_table(ppp.detector, '/signals/{}'.format(iso))
+#                if tab is None:
+#                    continue
+#
+#                rdict = self._regress_graph(reg,
+#                                            ppp.graph,
+#                                            iso,
+#                                            ppp.detector,
+#                                            fi, tab, pi)
+#                self.regression_results[ppp.detector + iso] = rdict
+#                tab.attrs.fit = fi
+#            ppp.series_cnt += 3
+#
+#        n = len(self._active_detectors)
+#        if isinstance(fits, str) or len(fits) < n:
+#            fits = [fits[0], ] * n
+#
+#        if self.plot_panel:
+#            for pi, (dn, fi) in enumerate(zip(self._active_detectors, fits)):
+#                tab = dm.get_table(dn.name, '/signals/{}'.format(dn.isotope))
+#                if tab is None:
+#                    continue
+#
+#                rdict = self._regress_graph(reg,
+#                                            self.plot_panel.graph,
+#                                            iso,
+#                                            dn.name, fi, tab, pi)
+#                self.regression_results[dn.name] = rdict
+#                tab.attrs.fit = fi
