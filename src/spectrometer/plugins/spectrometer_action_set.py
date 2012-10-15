@@ -29,26 +29,8 @@ class SpectrometerActionSet(WorkbenchActionSet):
     '''
     '''
     id = 'pychron.spectrometer.action_set'
-#    menus = [
-#           Menu(name = '&File', path = 'MenuBar')
-#           ]
+
     actions = [
-#               Action(name = 'Stage Manager',
-#                      path = 'MenuBar/Lasers',
-#                      class_name = 'src.lasers.plugins.fusions_laser_actions:OpenStageManagerAction'),
-#                
-#                Action(name='Peak Center',
-#                       path='MenuBar/Spec',
-#                       class_name='src.spectrometer.plugins.spectrometer_actions:PeakCenterAction'
-#                       ),
-#                Action(name='Mag Field Calibration',
-#                       path='MenuBar/Spec',
-#                       class_name='src.spectrometer.plugins.spectrometer_actions:MagFieldCalibrationAction'
-#                       ),
-#                Action(name='IonOptics',
-#                       path=PATH,
-#                       class_name='{}:OpenIonOpticsAction'.format(BASE)
-#                       ),
                 Action(name='Peak Center',
                        path=PATH + '/IonOptics',
                        class_name='{}:PeakCenterAction'.format(BASE)
@@ -65,7 +47,7 @@ class SpectrometerActionSet(WorkbenchActionSet):
                        path=PATH,
                        class_name='{}:OpenScanManagerAction'.format(BASE)
                        ),
-                Action(name='RelativePositions',
+                Action(name='Relative Positions',
                        path=PATH + '/Utitilies',
                        class_name='{}:RelativePositionsAction'.format(BASE)
                        )

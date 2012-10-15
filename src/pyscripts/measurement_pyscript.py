@@ -99,8 +99,8 @@ class MeasurementPyScript(PyScript):
                  'set_ysymmetry', 'set_zsymmetry', 'set_zfocus',
                  'set_extraction_lens', 'set_deflection',
                  'set_cdd_operating_voltage',
-                 'set_source_parameters_from_file',
-                 'set_source_optics_from_file',
+                 'set_source_parameters',
+                 'set_source_optics',
                  ]
         return cmds
 
@@ -265,21 +265,21 @@ class MeasurementPyScript(PyScript):
         self._set_spectrometer_parameter('SetIonCounterVoltage', v)
 
     @verbose_skip
-    def set_source_optics_from_file(self):
+    def set_source_optics(self):
         ''' 
         '''
         attrs = ['YSymmetry', 'ZSymmetry', 'ZFocus', 'ExtractionLens']
         self._set_from_file(attrs, 'SourceOptics')
 
     @verbose_skip
-    def set_source_parameters_from_file(self):
+    def set_source_parameters(self):
         '''            
         '''
         attrs = ['IonRepeller', 'ElectronVolts']
         self._set_from_file(attrs, 'SourceParameters')
 
     @verbose_skip
-    def set_deflections_from_file(self):
+    def set_deflections(self):
         func = self._set_spectrometer_parameter
 
         config = self._get_config()

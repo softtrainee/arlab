@@ -67,9 +67,6 @@ class ExperimentSet(Loggable):
     path = Str
     stats = Instance(ExperimentStats, ())
 
-#    mass_spec = Str
-#    metadata = Dict
-
     loaded_scripts = Dict
 
     measurement_script = String
@@ -100,11 +97,6 @@ class ExperimentSet(Loggable):
     _cached_runs = None
     _alive = False
     lab_map = Any
-
-#        for i in range(1, 221, 1):
-#            r = random.random()
-#            mv.set_hole_state(i, r)
-#            mv.set_hole_labnumber(i, str(i))
 
     def truncate_run(self, style):
         self.current_run.truncate(style)
@@ -200,7 +192,6 @@ class ExperimentSet(Loggable):
         except KeyError:
             pass
 
-
         delim = '\t'
         header = map(str.strip, f.next().split(delim))
         self.executable = True
@@ -294,8 +285,6 @@ class ExperimentSet(Loggable):
                            extraction_script=es,
                            orig_extraction_script=es,
 
-#                           power=selected.temp_or_power,
-#                           orig_power=selected.temp_or_power,
                            power=selected.heat_value,
                            orig_power=selected.heat_value,
 
@@ -304,7 +293,6 @@ class ExperimentSet(Loggable):
 
                            position=selected.position,
                            orig_position=selected.position
-
                            )
 
             be.reset()
@@ -346,7 +334,6 @@ class ExperimentSet(Loggable):
                     params[attr] = float(param)
             except IndexError:
                 pass
-#            print attr, header.index(attr), args
 
         #default heat_units to watts
         heat = args[header.index('heat')]
@@ -361,26 +348,16 @@ class ExperimentSet(Loggable):
             params['heat_value'] = v
             params['heat_units'] = u
 
-
         def make_script_name(n):
             na = args[header.index(n)]
             if na.startswith('_'):
-                na = meta['mass_spec'] + na
+                na = meta['mass_spectrometer'] + na
 
             if na and not na.endswith('.py'):
                 na = na + '.py'
             return na
 
-#        gdict = globals()
-#        args = [('{}_script'.format(ni), gdict['{}_path'.format(ni)](make_script_name(ni)))
-#              for ni in ['extraction', 'measurement', 'post_measurement', 'post_equilibration']]
-#        extraction = args[header.index('extraction')]
-#        measurement = args[header.index('measurement')]
-#        post_measurement = args[header.index('post_measurement')]
-#        post_equilibration = args[header.index('post_equilibration')]
         params['configuration'] = self._build_configuration(make_script_name)
-#        params['configuration'] = dict(args)#self._build_configuration(*args)
-#        params['configuration'] = self._build_configuration(*args)
         return params
 
     def _load_script_names(self, name):

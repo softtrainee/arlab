@@ -72,7 +72,8 @@ class SpectrometerManager(Manager):
         obj = self._factory(CoincidenceScan)
         obj.inform = False
         self.open_view(obj.graph)
-        obj.execute()
+        t = obj.execute()
+        return obj, t
 
     def coincidence_scan_task_factory(self):
         obj = self._factory(CoincidenceScan)

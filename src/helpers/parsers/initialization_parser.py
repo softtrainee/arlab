@@ -53,8 +53,6 @@ def decorate_all(cls):
 class InitializationParser(XMLParser):
     '''
     '''
-
-
     def __init__(self, *args, **kw):
         p = os.path.join(paths.setup_dir, 'initialization.xml')
         if os.path.isfile(p):

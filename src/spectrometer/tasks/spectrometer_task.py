@@ -52,6 +52,7 @@ class SpectrometerTask(Loggable):
         self._alive = True
         t = Thread(name=self.__class__.__name__, target=self._execute)
         t.start()
+        return t
 
     def _execute(self):
         pass
