@@ -31,7 +31,7 @@ from src.loggable import Loggable
 from src.experiment.heat_schedule import HeatStep
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
-from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
+from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
@@ -1052,12 +1052,12 @@ class AutomatedRun(Loggable):
             ai = det.name
             detectors.append((ai, det.isotope))
 
-            table = dm.get_table(ai, '/baselines')
+            table = dm.get_table(ai, '/baselines/{}'.format(det.isotope))
             if table:
                 bi = [(row['time'], row['value']) for row in table.iterrows()]
                 baselines.append(bi)
 
-            table = dm.get_table(ai, '/signals')
+            table = dm.get_table(ai, '/signals/{}'.format(det.isotope))
             if table:
                 si = [(row['time'], row['value']) for row in table.iterrows()]
                 signals.append(si)

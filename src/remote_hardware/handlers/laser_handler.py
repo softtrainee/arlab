@@ -174,13 +174,14 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         smanager = manager.stage_manager
         z = smanager.get_z()
-        if smanager._temp_position is not None and not smanager.moving():
-            x, y = smanager._temp_position
-            smanager._temp_position = None
+        if smanager.temp_position is not None and not smanager.moving():
+            x, y = smanager.temp_position
+            smanager.temp_position = None
+
         else:
             x, y = smanager.get_uncalibrated_xy()
 
-        result = ','.join(['{:0.2f}' .format(i) for i in (x, y, z)])
+        result = ','.join(['{:0.5f}' .format(i) for i in (x, y, z)])
 
         return result
 

@@ -27,7 +27,7 @@ from src.experiment.experiment_manager import ExperimentManager
 from src.managers.manager import Manager
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.data_processing.mass_spec_database_importer import MassSpecDatabaseImporter
+from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.repo.repository import Repository, FTPRepository
 from src.displays.rich_text_display import RichTextDisplay
 from src.paths import paths
@@ -35,6 +35,7 @@ from threading import Thread
 import time
 from src.helpers.parsers.initialization_parser import InitializationParser
 from apptools.preferences.preference_binding import bind_preference
+from src.experiment.set_selector import SetSelector
 
 
 class ExperimentExecutor(ExperimentManager):
@@ -64,6 +65,7 @@ class ExperimentExecutor(ExperimentManager):
     _alive = Bool(False)
     _last_ran = None
     _prev_baselines = Dict
+    _was_executed = False
     err_message = None
 
     repo_kind = Str
@@ -73,6 +75,8 @@ class ExperimentExecutor(ExperimentManager):
     mode = 'normal'
 
     measuring = DelegatesTo('experiment_set')
+
+
     def isAlive(self):
         return self._alive
 
@@ -98,6 +102,9 @@ class ExperimentExecutor(ExperimentManager):
         bind_preference(self.massspec_importer.db, 'username', '{}.massspec_username'.format(prefid))
         bind_preference(self.massspec_importer.db, 'password', '{}.massspec_password'.format(prefid))
 
+    def opened(self):
+        self.info_display.clear()
+        self._was_executed = False
 
 #===============================================================================
 # private
@@ -114,10 +121,15 @@ class ExperimentExecutor(ExperimentManager):
 
         else:
 
+            if self._was_executed:
+                self.load_experiment_set(self.path)
+
             t = Thread(target=self._execute_experiment_sets)
             t.start()
+            self._was_executed = True
 
     def _execute_experiment_sets(self):
+
         self.end_at_run_completion = False
         if not self.massspec_importer.db.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
@@ -243,7 +255,7 @@ class ExperimentExecutor(ExperimentManager):
             self.warning('error: {}'.format(self.err_message))
 
         self._end_runs()
-        self.info('Set{}. Automated runs ended at {}, runs executed={}'.format(iexp + 1, run.runid, totalcnt))
+        self.info('Set{}. Automated runs ended at {}, runs executed={}'.format(iexp, run.runid, totalcnt))
         return totalcnt
 
     def _launch_run(self, runsgen, cnt):
@@ -478,4 +490,10 @@ class ExperimentExecutor(ExperimentManager):
         #use local data dir
         repo.root = paths.isotope_dir
         return repo
+
+    def _set_selector_default(self):
+        s = SetSelector(experiment_manager=self,
+                        addable=False
+                        )
+        return s
 #============= EOF =============================================

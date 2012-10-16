@@ -38,6 +38,12 @@ class _TabularEditor(wxTabularEditor):
             if not self.selected and not self.multi_selected:
                 control.EnsureVisible(0)
 
+    def _key_down(self, event):
+        key = event.GetKeyCode()
+#        print event.GetModifiers()
+
+        super(_TabularEditor, self)._key_down(event)
+
 class myTabularEditor(TabularEditor):
     scroll_to_bottom = Bool(True)
 

@@ -25,7 +25,7 @@ import os
 #import time
 #import datetime
 import yaml
-import sha
+#import sha
 #============= local library imports  ==========================
 from src.experiment.automated_run import AutomatedRun
 from src.experiment.heat_schedule import HeatSchedule
@@ -36,7 +36,7 @@ from src.experiment.stats import ExperimentStats
 from src.helpers.filetools import str_to_bool
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
-from src.experiment.file_listener import FileListener
+#from src.experiment.file_listener import FileListener
 from src.experiment.identifier import convert_identifier, convert_labnumber
 
 
@@ -602,29 +602,8 @@ tray: {}
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
         self.dirty = True
-#        #updated the experiments stats
-#        if name == 'current_run':
-##            print 'sssss'
-#            self.activated_row = self.automated_runs.index(new)
-#            if not new is self.automated_runs[0]:
-#                #skip the first update 
-#                self.stats.nruns_finished += 1
         self.stats.calculate_etf(self.automated_runs)
-#        self._update_aliquots()
 
-#    @on_trait_change('current_run,automated_runs[]')
-#    def _update_stats(self, obj, name, old, new):
-#        self.dirty = True
-#        #updated the experiments stats
-#        if name == 'current_run':
-##            print 'sssss'
-#            self.activated_row = self.automated_runs.index(new)
-#            if not new is self.automated_runs[0]:
-#                #skip the first update 
-#                self.stats.nruns_finished += 1
-#
-#        elif name == 'automated_runs_items':
-#            self.stats.calculate_etf(self.automated_runs)
 
     @on_trait_change('automated_run.labnumber')
     def _update_labnumber(self, labnumber):
@@ -669,12 +648,12 @@ tray: {}
 #                self.ok_to_add = True
             else:
                 self.warning_dialog('{} does not exist'.format(labnumber))
+
     def _mass_spectrometer_changed(self):
-        print 'asdfs'
         for ai in self.automated_runs:
             ai.mass_spec_name = self.mass_spectrometer
 
-        self.automated_run.mass_spec_name = self.mass_spectrometer
+#        self.automated_run.mass_spec_name = self.mass_spectrometer
 #    def _update_aliquots(self):
 #        db = self.db
 #        idcnt_dict = dict()
