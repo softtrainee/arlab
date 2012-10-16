@@ -220,7 +220,7 @@ class IsotopeAdapter(DatabaseAdapter):
             return user, True
 
         else:
-            self.info('user={} project={} already exists'.format(name, project.name if project else 'None'))
+#            self.info('user={} project={} already exists'.format(name, project.name if project else 'None'))
             return user, False
 
 
@@ -243,34 +243,56 @@ class IsotopeAdapter(DatabaseAdapter):
     @add
     def add_sample(self, name, project=None, material=None, **kw):
         sample = SampleTable(name=name, **kw)
-        if isinstance(project, str):
-            project = self.get_project(project)
+#        if isinstance(project, str):
+        project = self.get_project(project)
 
-        if isinstance(material, str):
-            material = self.get_material(material)
+#        if isinstance(material, str):
+        material = self.get_material(material)
 
-        q = self._build_query_and(SampleTable, name, MaterialTable, material)
-        q = self._build_query_and(SampleTable, name, ProjectTable, project, q=q)
-
-        addflag = True
-
+        sess = self.get_session()
+        q = sess.query(SampleTable)
+        q = q.join(MaterialTable)
+        q = q.join(ProjectTable)
+        q = q.filter(SampleTable.name == name)
+        q = q.filter(MaterialTable.name == material.name)
+        q = q.filter(ProjectTable.name == project.name)
         sam = sql_retrieve(q.one)
-        if sam is not None:
-            addflag = not (sam.project == project or sam.material == material)
 
-        if addflag:
-            self.info('adding sample {}'.format(name))
+        if sam is not None:
+#            self.info('sample={} material={} project={} already exists'.format(name,
+#                                                                           material.name if material else 'None',
+#                                                                           project.name if project else 'None'
+#                                                                           ))
+            return sam, False
+        else:
             if project is not None:
                 project.samples.append(sample)
+            if material is not None:
                 material.samples.append(sample)
 
             return sample, True
-        else:
-            self.info('sample={} material={} project={} already exists'.format(name,
-                                                                           material.name if material else 'None',
-                                                                           project.name if project else 'None'
-                                                                           ))
-            return sample, False
+#        q = self._build_query_and(SampleTable, name, MaterialTable, material)
+#        q = self._build_query_and(SampleTable, name, ProjectTable, project, q=q)
+
+#        addflag = True
+#
+#        sam = sql_retrieve(q.one)
+#        if sam is not None:
+#            addflag = not (sam.project == project or sam.material == material)
+#
+#        if addflag:
+#            self.info('adding sample {}'.format(name))
+#            if project is not None:
+#                project.samples.append(sample)
+#                material.samples.append(sample)
+#
+#            return sample, True
+#        else:
+#            self.info('sample={} material={} project={} already exists'.format(name,
+#                                                                           material.name if material else 'None',
+#                                                                           project.name if project else 'None'
+#                                                                           ))
+#            return sample, False
 
 
     @add
@@ -279,8 +301,7 @@ class IsotopeAdapter(DatabaseAdapter):
                       aliquot=aliquot,
                       ** kw)
 
-        if isinstance(sample, str):
-            sample = self.get_sample(sample)
+        sample = self.get_sample(sample)
 
 #        ln = self._add_unique(ln, 'labnumber', labnumber)
         pln = self.get_labnumber(labnumber)
@@ -377,11 +398,14 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_irradiation_production(self, name):
         return irrad_ProductionTable
 
-    def get_labnumber(self, name):
-        if isinstance(name, str):
-            name = convert_identifier(name)
-
-        return self._get_labnumber(name)
+    def get_labnumber(self, labnum):
+        if isinstance(labnum, str):
+            labnum = convert_identifier(labnum)
+        try:
+            labnum = int(labnum)
+        except (ValueError, TypeError):
+            return
+        return self._get_labnumber(labnum)
 
     @get_one
     def _get_labnumber(self, name):

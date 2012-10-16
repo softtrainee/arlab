@@ -23,10 +23,21 @@ from globals import globalv
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-EXPERIMENT_MANAGER_PROTOCOL = 'src.experiment.experiment_manager.ExperimentManager'
+#EXPERIMENT_MANAGER_PROTOCOL = 
+
 def get_manager(event):
     app = event.window.application
-    manager = app.get_service(EXPERIMENT_MANAGER_PROTOCOL)
+    manager = app.get_service('src.experiment.experiment_manager.ExperimentManager')
+    return manager
+
+def get_executor(event):
+    app = event.window.application
+    manager = app.get_service('src.experiment.experiment_executor.ExperimentExecutor')
+    return manager
+
+def get_editor(event):
+    app = event.window.application
+    manager = app.get_service('src.experiment.experiment_editor.ExperimentEditor')
     return manager
 
 
@@ -34,12 +45,12 @@ class ExecuteExperimentSetAction(Action):
     name = 'Execute'
     accelerator = 'Ctrl+W'
     def perform(self, event):
-        man = get_manager(event)
+        man = get_executor(event)
 #        man.experiment_set_path = p
         from src.envisage.core.action_helper import MANAGERS
         if man not in MANAGERS:
             if man.load_experiment_set(path=globalv.test_experiment_set):
-                open_manager(event.window.application, man, view='execute_view')
+                open_manager(event.window.application, man)
 
 
 
@@ -52,7 +63,7 @@ class NewExperimentSetAction(Action):
     def perform(self, event):
         '''
         '''
-        manager = get_manager(event)
+        manager = get_editor(event)
         manager.new_experiment_set()
         open_manager(event.window.application, manager)
 
@@ -66,7 +77,7 @@ class OpenExperimentSetAction(Action):
     def perform(self, event):
         '''
         '''
-        manager = get_manager(event)
+        manager = get_editor(event)
         if manager.load_experiment_set(edit=True):
             open_manager(event.window.application, manager)
 #class EnableableAction(Action):
@@ -139,39 +150,45 @@ class OpenRecentTableAction(Action):
 #===============================================================================
 # database actions
 #===============================================================================
-class AddProjectAction(Action):
+class LabnumberEntryAction(Action):
     def perform(self, event):
-        '''
-        '''
         manager = get_manager(event)
+        lne = manager._labnumber_entry_factory()
+        open_manager(event.window.application, lne)
 
-
-class AddSampleProjectAction(Action):
-    def perform(self, event):
-        '''
-        '''
-        manager = get_manager(event)
-
-
-class AddMaterialAction(Action):
-    def perform(self, event):
-        '''
-        '''
-        manager = get_manager(event)
-
-
-class IrradiationChronologyAction(Action):
-    def perform(self, event):
-        '''
-        '''
-        manager = get_manager(event)
-
-
-class IrradiationProductAction(Action):
-    def perform(self, event):
-        '''
-        '''
-        manager = get_manager(event)
+#class AddProjectAction(Action):
+#    def perform(self, event):
+#        '''
+#        '''
+#        manager = get_manager(event)
+#
+#
+#class AddSampleProjectAction(Action):
+#    def perform(self, event):
+#        '''
+#        '''
+#        manager = get_manager(event)
+#
+#
+#class AddMaterialAction(Action):
+#    def perform(self, event):
+#        '''
+#        '''
+#        manager = get_manager(event)
+#
+#
+#class IrradiationChronologyAction(Action):
+#    def perform(self, event):
+#        '''
+#        '''
+#        manager = get_manager(event)
+#
+#
+#class IrradiationProductAction(Action):
+#    def perform(self, event):
+#        '''
+#        '''
+#        manager = get_manager(event)
 
 
 

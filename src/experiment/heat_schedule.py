@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import on_trait_change, HasTraits, Instance, List, \
-     Enum, Str, Float, Button, Property, Event, Any
+     Enum, Str, Float, Button, Property, Event, Any, CFloat
 import apptools.sweet_pickle as pickle
 from traitsui.api import View, Item, HGroup, Spring, spring, VGroup
 from traitsui.tabular_adapter import TabularAdapter
@@ -51,7 +51,6 @@ class HeatStepAdapter(TabularAdapter):
                 #('', 'step'), 
                 ('', 'state'), hp ,
                 ('Duration (sec)', 'duration'),
-                ('Elapsed (sec)', 'elapsed_time')
                 ]
 
 #    def insert(self, object, name, row, item):
@@ -116,7 +115,7 @@ class HeatStep(HasTraits):
     duration = Property
     _duration = Float
 
-    elapsed_time = Float
+#    elapsed_time = CFloat
     state = Enum('not run', 'running', 'success', 'fail')
     step = Str
 #    update = Event
@@ -189,13 +188,18 @@ class HeatSchedule(HasTraits):
                                 )
         v = View(
                  VGroup(
-                     HGroup(Spring(width=5,
-                                   springy=False
-                                   ), Item('name',
-#                          show_label=False, 
-                          style='readonly'),
+                     HGroup(
+#                            Spring(width=5,
+#                                   springy=False
+#                                   ),
+                            Item('name',
+                                 show_label=False,
+                                 style='readonly',
+#                                 width=100
+                                 ),
+                            spring,
                             Item('kind', show_label=False),
-                            spring),
+                            ),
                      Item('steps',
                           show_label=False, editor=editor),
                      HGroup(Item('add_button'),

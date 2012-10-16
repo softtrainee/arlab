@@ -107,5 +107,5 @@ def sql_retrieve(func):
     try:
         return func()
     except sqlalchemy.exc.SQLAlchemyError, e:
-        print e
+        pass
 #============= EOF =============================================

@@ -555,6 +555,9 @@ class PyScript(Loggable):
     syntax_checked = property(fget=_get_syntax_checked,
                               fset=_set_syntax_checked)
 
+    def __str__(self):
+        return self.name
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
 

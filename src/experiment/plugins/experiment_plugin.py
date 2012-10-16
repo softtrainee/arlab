@@ -21,6 +21,8 @@
 from src.experiment.experiment_manager import ExperimentManager
 from src.envisage.core.core_plugin import CorePlugin
 from src.helpers.parsers.initialization_parser import InitializationParser
+from src.experiment.experiment_executor import ExperimentExecutor
+from src.experiment.experiment_editor import ExperimentEditor
 
 
 class ExperimentPlugin(CorePlugin):
@@ -34,8 +36,17 @@ class ExperimentPlugin(CorePlugin):
         '''
         so = self.service_offer_factory(
                           protocol=ExperimentManager,
-#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
                           factory=self._factory
+                          )
+        so1 = self.service_offer_factory(
+                          protocol=ExperimentExecutor,
+#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
+                          factory=self._factory1
+                          )
+        so2 = self.service_offer_factory(
+                          protocol=ExperimentEditor,
+#                          protocol='src.experiments.experiments_manager.ExperimentsManager',
+                          factory=self._factory2
                           )
 
 #        so1 = self.service_offer_factory(protocol='src.experiments.process_view.ProcessView',
@@ -45,9 +56,14 @@ class ExperimentPlugin(CorePlugin):
 #                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
 #                           )
 #        return [so, so1, so2]
-        return [so]
+        return [so, so1, so2]
 
     def _factory(self, *args, **kw):
+        '''
+        '''
+        return ExperimentManager(application=self.application)
+
+    def _factory1(self, *args, **kw):
         '''
 
         '''
@@ -64,10 +80,13 @@ class ExperimentPlugin(CorePlugin):
 #            p4 = 'src.lasers.laser_managers.fusions_co2_manager.FusionsCO2Manager'
 #            lm = self.application.get_service(p4)
 
-        return ExperimentManager(application=self.application,
+        return ExperimentExecutor(application=self.application,
                                  extraction_line_manager=self.application.get_service(p1),
                                  spectrometer_manager=self.application.get_service(p2),
                                  ion_optics_manager=self.application.get_service(p3),
                                  mode=mode
                                  )
+
+    def _factory2(self, *args, **kw):
+        return ExperimentEditor(application=self.application)
 #============= EOF ====================================

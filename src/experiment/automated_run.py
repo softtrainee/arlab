@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Any, Str, String, Int, CInt, List, Enum, Property, \
      Event, Float, Instance, Bool, cached_property, Dict, on_trait_change, DelegatesTo
-from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group
+from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, Group, spring, Spring
 #from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 import os
@@ -59,23 +59,26 @@ class AutomatedRun(Loggable):
     sample = Str
 
     experiment_name = Str
-    identifier = String(enter_set=True, auto_set=False)
+    labnumber = String(enter_set=True, auto_set=False)
     aliquot = CInt
     state = Property(depends_on='_state')
     _state = Enum('not run', 'extraction',
                  'measurement', 'success', 'fail', 'truncate')
     irrad_level = Str
 
-    heat_step = Instance(HeatStep)
-    duration = Property(depends_on='heat_step,_duration')
-
+#    heat_step = Instance(HeatStep)
+#    duration = Property(depends_on='heat_step,_duration')
+    duration = Property(depends_on='_duration')
     _duration = Float
 
-    heat_value = Property(depends_on='heat_step,_heat_value,_heat_units')
+#    heat_value = Property(depends_on='heat_step,_heat_value,_heat_units')
+    heat_value = Property(depends_on='_heat_value')
     _heat_value = Float
 
-    heat_units = Property(depends_on='heat_step,_heat_units')
-    _heat_units = Str#Enum('watts', 'temp', 'percent')
+#    heat_units = Property(depends_on='heat_step,_heat_units')
+    heat_units = Property(Enum('---', 'watts', 'temp', 'percent'),
+                           depends_on='_heat_units')
+    _heat_units = Enum('---', 'watts', 'temp', 'percent')
 
     heat_device = Str
 
@@ -142,6 +145,19 @@ class AutomatedRun(Loggable):
 #        self.extraction_script.runner = self.runner
 #        self.post_equilibration_script.runner = self.runner
 #        self.post_measurement_script.runner = self.runner
+    def to_string_attrs(self, attr):
+        def get_attr(ai):
+            aii = getattr(self, ai)
+            if ai in ['measurement_script',
+                      'extraction_script',
+                      'post_measurement_script',
+                      'post_equilibration_script']:
+                if aii:
+                    aii = str(aii).replace(self.mass_spec_name, '')
+            return aii
+
+        return [get_attr(ai) for ai in attr]
+
     def create_scripts(self):
         self.extraction_script
         self.measurement_script
@@ -520,7 +536,7 @@ class AutomatedRun(Loggable):
         p = PlotPanel(
                          window_y=0.05 + 0.01 * self.index,
                          window_x=0.6 + 0.01 * self.index,
-                         window_title='Plot Panel {}-{}'.format(self.identifier, self.aliquot),
+                         window_title='Plot Panel {}-{}'.format(self.labnumber, self.aliquot),
                          stack_order=stack_order,
                          automated_run=self
                          )
@@ -642,7 +658,7 @@ class AutomatedRun(Loggable):
             p.series_cnt = 0
 
         p.detector = detector
-        p.isotopes = isotopes
+#        p.isotopes = isotopes
 #        p._ncounts = ncycles
 
         dm = self.data_manager
@@ -850,8 +866,14 @@ class AutomatedRun(Loggable):
 
         ec = self.configuration
         fname = os.path.basename(ec['{}_script'.format(name)])
+
+
         if not fname:
             return
+
+#        ms = self.mass_spec_name
+#        if ms and not name.startswith(ms):
+#            fname = '{}_{}'.format(ms, fname)
 
         if fname in self.scripts:
 #            self.debug('script "{}" already loaded... cloning'.format(fname))
@@ -862,6 +884,9 @@ class AutomatedRun(Loggable):
                 s.analysis_type = self.analysis_type
             return s
         else:
+            if fname == '---':
+                return
+
             self.info('loading script "{}"'.format(fname))
             func = getattr(self, '{}_script_factory'.format(name))
             s = func(ec)
@@ -881,15 +906,15 @@ class AutomatedRun(Loggable):
     def pre_extraction_save(self):
         # set our aliquot
         db = self.db
-#        identifier = self.identifier
-        identifier = convert_identifier(self.identifier)
+#        labnumber = self.labnumber
+        ln = convert_identifier(self.labnumber)
 
-        ln = db.get_labnumber(identifier)
-        if ln is not None:
-            aliquot = ln.aliquot + 1
-            self.aliquot = aliquot
-        else:
-            self.warning('invalid lab number {}'.format(self.identifier))
+        ln = db.get_labnumber(ln)
+        if ln is None:
+            self.warning('invalid lab number {}'.format(self.labnumber))
+#            aliquot = ln.aliquot + 1
+#            self.aliquot = aliquot
+#        else:
 
         d = get_datetime()
         self._runtime = d.time()
@@ -908,7 +933,7 @@ class AutomatedRun(Loggable):
         #at post_measurement_save
         import uuid
         name = uuid.uuid4()
-#        name = '{}-{}'.format(self.identifier, self.aliquot)
+#        name = '{}-{}'.format(self.labnumber, self.aliquot)
 #        name = hashlib.sha1(name)
 
         path = os.path.join(self.repository.root, '{}.h5'.format(name))
@@ -916,7 +941,7 @@ class AutomatedRun(Loggable):
                      path=path
 #                     directory=self.repository.root,
 #                     directory='automated_runs',
-#                     base_frame_name='{}-{}'.format(self.identifier, self.aliquot)
+#                     base_frame_name='{}-{}'.format(self.labnumber, self.aliquot)
 
                      )
 
@@ -941,20 +966,20 @@ class AutomatedRun(Loggable):
         if db:
         #save to a database
 #            self.labnumber = 1
-            identifier = self.identifier
+            ln = self.labnumber
             aliquot = self.aliquot
 
             sample = self.sample
 
-            identifier = convert_identifier(identifier)
+            ln = convert_identifier(ln)
             if not sample:
                 samples = ['BoneBlank', 'Air', 'Cocktail', 'Background']
                 try:
-                    sample = samples[identifier]
+                    sample = samples[ln]
                 except IndexError:
                     sample = None
-#            
-            lab = db.add_labnumber(identifier, aliquot, sample=sample)
+
+            lab = db.add_labnumber(ln, aliquot, sample=sample)
 
             experiment = db.get_experiment(self.experiment_name)
             d = get_datetime()
@@ -1037,9 +1062,9 @@ class AutomatedRun(Loggable):
                 si = [(row['time'], row['value']) for row in table.iterrows()]
                 signals.append(si)
 
-        self.massspec_importer.add_analysis(self.identifier,
+        self.massspec_importer.add_analysis(self.labnumber,
                                             self.aliquot,
-                                            self.identifier,
+                                            self.labnumber,
                                             baselines,
                                             signals,
                                             detectors,
@@ -1182,21 +1207,21 @@ class AutomatedRun(Loggable):
 
     @property
     def runid(self):
-        return '{}-{}'.format(self.identifier, self.aliquot)
+        return '{}-{}'.format(self.labnumber, self.aliquot)
 
     @property
     def analysis_type(self):
-        return get_analysis_type(self.identifier)
+        return get_analysis_type(self.labnumber)
 
     @property
     def executable(self):
         return self.extraction_script is not None and self.measurement_script is not None and self._executable
 
     def _get_duration(self):
-        if self.heat_step:
-            d = self.heat_step.duration
-        else:
-            d = self._duration
+#        if self.heat_step:
+#            d = self.heat_step.duration
+#        else:
+        d = self._duration
         return d
 
 #    def _get_temp_or_power(self):
@@ -1214,20 +1239,29 @@ class AutomatedRun(Loggable):
 #            t = self._temp_or_power
 #        return t
     def _get_heat_units(self):
-        units = dict(t='temp', w='watts', p='percent')
-        return units[self._heat_units]
+        return self._heat_units
+#        units = dict(t='temp', w='watts', p='percent')
+#        if self._heat_units == '---':
+#            return 'watts'
+#
+#        return units[self._heat_units[0]]
 
     def _set_heat_units(self, v):
         self._heat_units = v
 
     def _get_heat_value(self):
-        if self.heat_step:
-            v = self.heat_step.heat_value
-            u = self.heat_step.heat_units
-        else:
-            v = self._heat_value
-            u = self._heat_units
-        return (v, u)
+#        if self.heat_step:
+#            v = self.heat_step.heat_value
+#            u = self.heat_step.heat_units
+#        else:
+        v = self._heat_value
+        return v
+#        u = self._heat_units[0]
+#        return (v, u)
+
+#    @property
+#    def heat_value_str(self):
+#        return '{},{}'.format(*self.heat_value)
 
     def _validate_duration(self, d):
         return self._validate_float(d)
@@ -1236,6 +1270,7 @@ class AutomatedRun(Loggable):
 #        return self._validate_float(d)
     def _validate_heat_value(self, d):
         return self._validate_float(d)
+
     def _validate_float(self, d):
         try:
             return float(d)
@@ -1244,17 +1279,24 @@ class AutomatedRun(Loggable):
 
     def _set_duration(self, d):
         if d is not None:
-            if self.heat_step:
-                self.heat_step.duration = d
-            else:
-                self._duration = d
+#            if self.heat_step:
+#                self.heat_step.duration = d
+#            else:
+            self._duration = d
 
     def _set_heat_value(self, t):
         if t is not None:
-            if self.heat_step:
-                self.heat_step.heat_value = t
-            else:
-                self._heat_value = t
+#            if self.heat_step:
+#                self.heat_step.heat_value = t
+#            else:
+            self._heat_value = t
+            if not t:
+                self.heat_units = '---'
+            elif self.heat_units == '---':
+                self.heat_units = 'watts'
+
+        else:
+            self.heat_units = '---'
 
     def _get_state(self):
         return self._state
@@ -1282,21 +1324,29 @@ class AutomatedRun(Loggable):
         def readonly(n, **kw):
             return Item(n, style='readonly', **kw)
 
+        sspring = lambda width = 17:Spring(springy=False, width=width)
         v = View(
                  VGroup(
                      Group(
-                     HGroup(Item('identifier'),
-                            readonly('aliquot')
+                     HGroup(Item('labnumber'),
+                            #readonly('aliquot')
                             ),
                      readonly('sample'),
                      readonly('irrad_level', label='Irradiation'),
+
+                     HGroup(sspring(width=33), Item('heat_value', label='Heat'),
+                            spring,
+                            Item('heat_units',
+                                 show_label=False),
+                            ),
+                     Item('duration', label='Duration'),
                      Item('weight'),
                      Item('comment'),
+
                      show_border=True,
                      label='Info'
                      ),
                      Group(
-                         Item('heat_device', editor=EnumEditor(values=HEATDEVICENAMES)),
                          Item('autocenter'),
                          Item('position'),
                          Item('multiposition', label='Multi. position run'),

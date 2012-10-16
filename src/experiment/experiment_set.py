@@ -37,6 +37,7 @@ from src.helpers.filetools import str_to_bool
 from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
 from src.experiment.file_listener import FileListener
+from src.experiment.identifier import convert_identifier, convert_labnumber
 
 
 def extraction_path(name):
@@ -57,55 +58,142 @@ class ExperimentSet(Loggable):
     automated_run = Instance(AutomatedRun)
     current_run = Instance(AutomatedRun)
     heat_schedule = Instance(HeatSchedule, ())
+    stats = Instance(ExperimentStats, ())
+
+    lab_map = Any
     db = Any
+
     measuring = Property(depends_on='current_run.measuring')
-    ok_to_add = Bool(False)
+
     apply = Button
     add = Button
 
+    delay_between_analyses = Float(1)
     name = Property(depends_on='path')
     path = Str
-    stats = Instance(ExperimentStats, ())
+    ok_to_add = Bool(False)
+    dirty = Property(depends_on='_dirty,path')
+    _dirty = Bool(False)
+    isediting = False
+    executable = Bool(True)
+    auto_increment = Bool(True)
+    update_aliquots_needed = Event
 
     loaded_scripts = Dict
 
     measurement_script = String
-    measurement_scripts = Property
+    measurement_scripts = Property(depends_on='mass_spectrometer')
 
     post_measurement_script = String
-    post_measurement_scripts = Property
+    post_measurement_scripts = Property(depends_on='mass_spectrometer')
 
     post_equilibration_script = String
-    post_equilibration_scripts = Property
+    post_equilibration_scripts = Property(depends_on='mass_spectrometer')
 
     extraction_script = String
-    extraction_scripts = Property
+    extraction_scripts = Property(depends_on='mass_spectrometer')
 
-    delay_between_analyses = Float(1)
-
-    dirty = Property(depends_on='_dirty,path')
-    _dirty = Bool(False)
+#    mass_spectrometer = Str('jan')
+    mass_spectrometer = Str
+    mass_spectrometers = Property
+    tray = Str
+    trays = Property
+    heat_device = Str
+    heat_devices = Property
 
     selected = Any
     right_clicked = Any
 
-    executable = Bool(True)
-
-    isediting = False
     _text = None
 
     _cached_runs = None
     _alive = False
-    lab_map = Any
+#===============================================================================
+# persistence
+#===============================================================================
+    def dump(self, stream):
+#        self.dirty = False
+
+        header = ['labnumber',
+                  'sample',
+                  'position',
+                  'overlap',
+                  'heat_value',
+                  'heat_units',
+                  'duration',
+                  'cleanup',
+                  'autocenter',
+                  'extraction', 'measurement', 'post_equilibration', 'post_measurement']
+        attrs = ['labnumber',
+                  'sample',
+                  'position',
+                  'overlap',
+                  'heat_value',
+                  'heat_units',
+                  'duration',
+                  'cleanup',
+                  'autocenter',
+                  'extraction_script', 'measurement_script',
+                  'post_equilibration_script', 'post_measurement_script']
+
+        writeline = lambda m: stream.write(m + '\n')
+
+#        with open(p, 'wb') as f:
+        tab = lambda l: writeline('\t'.join(map(str, l)))
+
+        #write metadata
+
+        self._meta_dumper(stream)
+        writeline('#' + '=' * 80)
+
+        tab(header)
+        for arun in self.automated_runs:
+            vs = arun.to_string_attrs(attrs)
+#            vs = [getattr(arun, ai) for ai in attrs]
+            vals = [v if v and v != '---' else '' for v in vs]
+            tab(vals)
+
+        return stream
+#               
+    def _meta_dumper(self, fp=None):
+        def make_frequency_runs(name):
+            tmp = '''{}:
+ frequency: {{}}
+ scripts:
+  extraction: {{}}
+  measurement: {{}}
+  post_equilibration: {{}}
+  post_measurement: {{}}'''.format(name)
+            s = tmp.format(0, '', '', '', '')
+            return s
+
+
+        s = '''mass_spectrometer: {}
+delay_between_analyses: {}
+heat_device: {}
+tray: {} 
+{}
+{}
+{}
+{}
+'''.format(self.mass_spectrometer,
+           self.delay_between_analyses,
+           self.heat_device,
+           self.lab_map if self.lab_map else '',
+           make_frequency_runs('blanks'),
+           make_frequency_runs('airs'),
+           make_frequency_runs('cocktails'),
+           make_frequency_runs('backgrounds'),
+           )
+
+        if fp:
+            fp.write(s)
+        else:
+            return s
 
     def truncate_run(self, style):
         self.current_run.truncate(style)
 
-    def check_for_mods(self):
-        currenthash = sha.new(self._text).hexdigest()
-        with open(self.path, 'r') as f:
-            diskhash = sha.new(f.read()).hexdigest()
-        return currenthash != diskhash
 
     def new_runs_generator(self, last_ran=None):
         runs = [ai for ai in self.automated_runs if ai.executable]
@@ -133,46 +221,40 @@ class ExperimentSet(Loggable):
 
         return rgen, n
 
-    def _reload_from_disk(self):
-        if not self._alive:
-            self._cached_runs = None
-            self.load_automated_runs()
 
-    def start_file_listener(self):
-        fl = FileListener(
-                          self.path,
-                          callback=self._reload_from_disk,
-                          check=self.check_for_mods
-                          )
-        self.filelistener = fl
 
-    def stop_file_listener(self):
-        self.filelistener.stop()
-
-    def load_automated_runs(self):
+    def load_automated_runs(self, text):
         if self.automated_runs is not None:
             self._cached_runs = self.automated_runs
 
         self.stats.delay_between_analyses = self.delay_between_analyses
 
-        aruns = self._load_runs()
+        if text is None:
+            with open(self.path, 'r') as fp:
+                text = fp.read()
+
+        aruns = self._load_runs(text)
         if aruns:
             self.automated_runs = aruns
-            self._update_aliquots()
+#            self._update_aliquots()
             lm = self.lab_map
 
             for ai in self.automated_runs:
                 if ai.position:
-                    lm.set_hole_labnumber(ai.position, ai.identifier)
+                    lm.set_hole_labnumber(ai.position, ai.labnumber)
 
             return True
 
-    def _load_runs(self):
+    def _load_runs(self, text):
         aruns = []
-        with open(self.path, 'r') as fp:
-            self._text = fp.read()
 
-        f = (l for l in self._text.split('\n'))
+#        if text is None:
+#            with open(self.path, 'r') as fp:
+#                text = fp.read()
+#
+#        self._text = text
+
+        f = (l for l in text.split('\n'))
         metastr = ''
         #read until break
         for line in f:
@@ -180,6 +262,7 @@ class ExperimentSet(Loggable):
                 break
             metastr += '{}\n'.format(line)
 
+#        print metastr
         meta = yaml.load(metastr)
 
         from src.lasers.stage_managers.stage_map import StageMap
@@ -189,10 +272,13 @@ class ExperimentSet(Loggable):
             sm = StageMap(file_path=os.path.join(paths.map_dir, '{}.txt'.format(sm)))
             mv = MapView(stage_map=sm)
             self.lab_map = mv
+            hd = meta['heat_device']
+            self.heat_device = hd if hd else '---'
         except KeyError:
             pass
 
         delim = '\t'
+
         header = map(str.strip, f.next().split(delim))
         self.executable = True
         for linenum, line in enumerate(f):
@@ -207,6 +293,7 @@ class ExperimentSet(Loggable):
                 self.delay_between_analyses = meta['delay_between_analyses']
                 params = self._run_parser(header, line, meta)
                 params['mass_spec_name'] = meta['mass_spectrometer']
+                params['heat_device'] = self.heat_device
                 arun = self._automated_run_factory(**params)
                 aruns.append(arun)
 
@@ -238,12 +325,12 @@ class ExperimentSet(Loggable):
         for ai in runs:
             nruns.append(ai)
             try:
-                int(ai.identifier)
+                int(ai.labnumber)
                 i += 1
             except ValueError:
                 continue
 
-            for name, identifier in [('blanks', 'Bu'), ('airs', 'A'), ('cocktails', 'C'), ('backgrounds', 'Bg')]:
+            for name, ln in [('blanks', 'Bu'), ('airs', 'A'), ('cocktails', 'C'), ('backgrounds', 'Bg')]:
                 try:
                     _meta = meta[name]
                     freq = _meta['frequency']
@@ -254,7 +341,7 @@ class ExperimentSet(Loggable):
 
                 make_script_name = lambda x: _make_script_name(_meta, x)
                 params = dict()
-                params['identifier'] = '{}'.format(identifier)
+                params['labnumber'] = '{}'.format(ln)
                 params['configuration'] = self._build_configuration(make_script_name)
 
                 if i % freq == 0:
@@ -306,11 +393,12 @@ class ExperimentSet(Loggable):
         args = map(str.strip, line.split(delim))
 
         #load strings
-        for attr in ['identifier',
+        for attr in ['labnumber',
                      'sample',
                      'measurement', 'extraction', 'post_measurement',
                      'post_equilibration',
-                     'heat_device']:
+#                     'heat_device'
+                     ]:
             params[attr] = args[header.index(attr)]
 
         #load booleans
@@ -323,7 +411,7 @@ class ExperimentSet(Loggable):
                         params[attr] = bo
                     else:
                         params[attr] = False
-            except IndexError:
+            except (IndexError, ValueError):
                 params[attr] = False
 
         #load numbers
@@ -336,17 +424,24 @@ class ExperimentSet(Loggable):
                 pass
 
         #default heat_units to watts
-        heat = args[header.index('heat')]
-        if heat:
-            if ',' in heat:
-                v, u = heat.split(',')
-                v = float(v)
-            else:
-                v = float(heat)
-                u = 'w'
+        heat_value = args[header.index('heat_value')]
+        heat_units = args[header.index('heat_units')]
+        if not heat_units:
+            heat_units = '---'
 
-            params['heat_value'] = v
-            params['heat_units'] = u
+        params['heat_value'] = heat_value
+        params['heat_units'] = heat_units
+#        heat = args[header.index('heat_value')]
+#        if heat:
+#            if ',' in heat:
+#                v, u = heat.split(',')
+#                v = float(v)
+#            else:
+#                v = float(heat)
+#                u = 'w'
+#
+#            params['heat_value'] = v
+#            params['heat_units'] = u
 
         def make_script_name(n):
             na = args[header.index(n)]
@@ -399,14 +494,14 @@ class ExperimentSet(Loggable):
         self._alive = False
         self.stats.stop_timer()
 
-    def _auto_increment_runid(self, rid):
+    def _auto_increment(self, m):
 
         try:
-            rid = str(int(rid) + 1)
+            m = str(int(m) + 1)
         except ValueError:
             pass
 
-        return rid
+        return m
 
 #===============================================================================
 # handlers
@@ -414,47 +509,60 @@ class ExperimentSet(Loggable):
     def _add_fired(self):
         ars = self.automated_runs
         ar = self.automated_run
+        rid = self._auto_increment(ar.labnumber)
 
-        rid = self._auto_increment_runid(ar.identifier)
+        position = None
+        if ar.position:
+            position = self._auto_increment(ar.position)
+
+        def make_script_name(ni):
+            na = getattr(self, '{}_script'.format(ni))
+            if na == '---':
+                return na
+            if not na.startswith(self.mass_spectrometer):
+                na = '{}_{}'.format(self.mass_spectrometer, na)
+
+            if na and not na.endswith('.py'):
+                na = na + '.py'
+
+            return na
+
+        ar.configuration = self._build_configuration(make_script_name)
+        ar.extraction_script_dirty = True
+        ar.measurement_script_dirty = True
+        ar.post_measurement_script_dirty = True
+        ar.post_equilibration_script_dirty = True
+
 
         ars.append(ar)
-#        self.automated_run = self._automated_run_factory(self.extraction_script,
-#                                                         self.measurement_script,
-#                                                         identifier=rid,
-#                                                         )
-        self.automated_run = self.automated_run_factory()
 
-#    @on_trait_change('automated_runs[]')
-#    def _automated_runs_changed(self, obj, name, old, new):
-#        if old:
-#            old = old[0]
-#
-#            if self.automated_run:
-#                if old.identifier == self.automated_run.identifier:
-#                    self.automated_run.aliquot -= 1
-#
-#            fo = dict()
-#            pi = None
-#
-#            for ai in self.automated_runs:
-#                try:
-#                    pi = fo[ai.identifier]
-#                    if ai.aliquot != pi + 1:
-#                        ai.aliquot -= 1
-#                except KeyError:
-#                    pass
-#
-#                fo[ai.identifier] = ai.aliquot
+        kw = dict()
+        if self.auto_increment:
+            if rid:
+                kw['labnumber'] = rid
+            if position:
+                kw['position'] = position
+
+        kw['_heat_value'] = ar._heat_value
+        kw['_heat_units'] = ar._heat_units
+        kw['_duration'] = ar._duration
+        kw['configuration'] = ar.configuration
+        kw['mass_spec_name'] = self.mass_spectrometer
+        self.automated_run = self.automated_run_factory(copy_automated_run=False, **kw)
+
+        self.update_aliquots_needed = True
 
     def _apply_fired(self):
-        for i, s in enumerate(self.heat_schedule.steps):
-            a = self.automated_run_factory(heat_value=s.heat_value,
-                                         duration=s.duration,
-                                         )
-            a.aliquot += i
-            self.automated_runs.append(a)
+        for _i, s in enumerate(self.heat_schedule.steps):
+            if s.duration:
+                a = self.automated_run_factory(_heat_value=s.heat_value,
+                                             _duration=s.duration,
+                                             _heat_units=self.heat_schedule.kind[0]
+                                             )
+    #            a.aliquot += i
+                self.automated_runs.append(a)
 
-        self.automated_run.aliquot = a.aliquot + 1
+#        self.automated_run.aliquot = a.aliquot + 1
 
     def _extraction_script_changed(self):
 #        print self.extraction_script
@@ -463,24 +571,30 @@ class ExperimentSet(Loggable):
                                                         'extraction',
                                                         self.extraction_script)
 
+            self.automated_run.extraction_script_dirty = True
+
     def _measurement_script_changed(self):
 #        print self.measurement_script
         if self.automated_run:
             self.automated_run.configuration['measurement_script'] = os.path.join(paths.scripts_dir,
                                                         'measurement',
                                                         self.measurement_script)
+            self.automated_run.measurement_script_dirty = True
     def _post_measurement_script_changed(self):
 #        print self.post_measurement_script
         if self.automated_run:
             self.automated_run.configuration['post_measurement_script'] = os.path.join(paths.scripts_dir,
                                                         'post_measurement',
                                                         self.post_measurement_script)
+            self.automated_run.post_measurement_script_dirty = True
+
     def _post_equilibration_script_changed(self):
 #        print self.post_equilibration_script
         if self.automated_run:
             self.automated_run.configuration['post_equilibration_script'] = os.path.join(paths.scripts_dir,
                                                         'post_equilibration',
                                                         self.post_equilibration_script)
+            self.automated_run.post_equilibration_script_dirty = True
 
     def increment_nruns_finished(self):
         self.stats.nruns_finished += 1
@@ -496,6 +610,8 @@ class ExperimentSet(Loggable):
 #                #skip the first update 
 #                self.stats.nruns_finished += 1
         self.stats.calculate_etf(self.automated_runs)
+#        self._update_aliquots()
+
 #    @on_trait_change('current_run,automated_runs[]')
 #    def _update_stats(self, obj, name, old, new):
 #        self.dirty = True
@@ -510,10 +626,11 @@ class ExperimentSet(Loggable):
 #        elif name == 'automated_runs_items':
 #            self.stats.calculate_etf(self.automated_runs)
 
-    @on_trait_change('automated_run.identifier')
-    def _update_identifier(self, identifier):
+    @on_trait_change('automated_run.labnumber')
+    def _update_labnumber(self, labnumber):
         if not self.isediting:
             return
+
         arun = self.automated_run
         #check for id in labtable
         self.ok_to_add = False
@@ -523,55 +640,66 @@ class ExperimentSet(Loggable):
         arun.aliquot = 1
         arun.irrad_level = ''
 
-        if identifier:
-#            oidentifier = identifier
+        if labnumber:
+            if isinstance(convert_identifier(labnumber), int):
+                self.ok_to_add = True
+                arun.sample = convert_labnumber(convert_identifier(labnumber))
+                return
 
-            ln = db.get_labnumber(identifier)
-            if ln:
+            def _add_info(li):
                 try:
-                    arun.sample = ln.sample.name
+                    arun.sample = li.sample.name
                 except AttributeError:
-                    self.warning_dialog('{} does not have sample info'.format(ln.labnumber))
+                    pass
+#                    self.warning_dialog('{} does not have sample info'.format(li.labnumber))
 
-#                noccurrences = len([ai for ai in self.automated_runs
-#                                  if ai.identifier == oidentifier
-#                                  ])
-#                print noccurrences, ln.aliquot
-#                arun.aliquot = ln.aliquot + noccurrences + 1
-
-                ipos = ln.irradiation_position
-                if ipos is None:
-                    self.warning_dialog('{} does not have irradiation info'.format(ln.labnumber))
-                else:
+                ipos = li.irradiation_position
+                if not ipos is None:
                     irrad = ipos.irradiation
                     arun.irrad_level = '{}{}'.format(irrad.name, irrad.level)
+#                else:
+#                    self.warning_dialog('{} does not have irradiation info'.format(li.labnumber))
 
+            ln = db.get_labnumber(labnumber)
+            if ln:
+                _add_info(ln)
                 self.ok_to_add = True
-
-    def _update_aliquots(self):
-        db = self.db
-        idcnt_dict = dict()
-        stdict = dict()
-        for arun in self.automated_runs:
-            arunid = arun.identifier
-            ln = db.get_labnumber(arunid)
-            if arunid in idcnt_dict:
-                c = idcnt_dict[arunid]
-                c += 1
+#            elif self.confirmation_dialog('{} does not exist. Add to database?'.format(labnumber)):
+#                db.add_labnumber(labnumber, 1, commit=True)
+#                self.ok_to_add = True
             else:
-                c = 1
-            if ln is not None:
-                st = ln.aliquot
-            else:
-                if arunid in stdict:
-                    st = stdict[arunid]
-#                    st += 1
-                else:
-                    st = 0
+                self.warning_dialog('{} does not exist'.format(labnumber))
+    def _mass_spectrometer_changed(self):
+        print 'asdfs'
+        for ai in self.automated_runs:
+            ai.mass_spec_name = self.mass_spectrometer
 
-            arun.aliquot = st + c
-            idcnt_dict[arunid] = c
-            stdict[arunid] = st
+        self.automated_run.mass_spec_name = self.mass_spectrometer
+#    def _update_aliquots(self):
+#        db = self.db
+#        idcnt_dict = dict()
+#        stdict = dict()
+#        for arun in self.automated_runs:
+#            arunid = arun.labnumber
+#            ln = db.get_labnumber(arunid)
+#            if arunid in idcnt_dict:
+#                c = idcnt_dict[arunid]
+#                c += 1
+#            else:
+#                c = 1
+#
+#            if ln is not None:
+#                st = ln.aliquot
+#            else:
+#                if arunid in stdict:
+#                    st = stdict[arunid]
+##                    st += 1
+#                else:
+#                    st = 0
+#
+#            arun.aliquot = st + c
+#            idcnt_dict[arunid] = c
+#            stdict[arunid] = st
 
 #===============================================================================
 # property get/set
@@ -592,37 +720,62 @@ class ExperimentSet(Loggable):
         if self.current_run:
             return self.current_run.measuring
 
-    @cached_property
-    def _get_extraction_scripts(self):
-        es = self._load_script_names('extraction')
-        if es:
-            self.extraction_script = es[0]
+    def _get_scripts(self, es):
+        if self.mass_spectrometer != '---':
+            k = '{}_'.format(self.mass_spectrometer)
+            es = [ei.replace(k, '') for ei in es if ei.startswith(k)]
+
+        es = ['---'] + es
         return es
 
-    @cached_property
+    def _get_extraction_scripts(self):
+        ms = self._load_script_names('extraction')
+        ms = self._get_scripts(ms)
+        if not self.extraction_script in ms:
+            self.extraction_script = '---'
+
+        return ms
+
     def _get_measurement_scripts(self):
         ms = self._load_script_names('measurement')
-        if ms:
-            self.measurement_script = ms[0]
+        ms = self._get_scripts(ms)
+        if not self.measurement_script in ms:
+            self.measurement_script = '---'
         return ms
 
-    @cached_property
     def _get_post_measurement_scripts(self):
         ms = self._load_script_names('post_measurement')
-        if ms:
-            self.post_measurement_script = ms[0]
+        ms = self._get_scripts(ms)
+#        if not self.post_measurement_script in ms:
+#            self.post_measurement_script = '---'
+        self.post_measurement_script = 'pump_ms.py'
+        return ms
+
+    def _get_post_equilibration_scripts(self):
+        ms = self._load_script_names('post_equilibration')
+        ms = self._get_scripts(ms)
+        if not self.post_equilibration_script in ms:
+            self.post_equilibration_script = '---'
         return ms
 
     @cached_property
-    def _get_post_equilibration_scripts(self):
-        ms = self._load_script_names('post_equilibration')
-        if ms:
-            self.post_equilibration_script = ms[0]
+    def _get_mass_spectrometers(self):
+        db = self.db
+        ms = ['---'] + [mi.name for mi in db.get_mass_spectrometers()]
         return ms
+
+    def _get_trays(self):
+        ts = ['---'] + [s for s in os.listdir(paths.map_dir)
+                if not s.startswith('.') and s.endswith('.txt')]
+        return ts
+
+    def _get_heat_devices(self):
+        return ['---', 'Fusions CO2', 'Fusions Diode']
+
 #===============================================================================
 # factories
 #===============================================================================
-    def automated_run_factory(self, **kw):
+    def automated_run_factory(self, copy_automated_run=False, ** params):
         extraction = self.extraction_script
         measurement = self.measurement_script
         post_measurement = self.post_measurement_script
@@ -637,17 +790,29 @@ class ExperimentSet(Loggable):
         if not post_equilibration:
             post_equilibration = self.post_equilibration_scripts[0]
 
+        names = dict(extraction=extraction,
+                           measurement=measurement,
+                           post_measurement=post_measurement,
+                           post_equilibration=post_equilibration
+                           )
 
-        configuration = self._build_configuration(extraction, measurement,
-                                                  post_measurement, post_equilibration)
+        def make_script_name(ni):
+            na = names[ni]
+            if na == '---':
+                return na
+            if not na.startswith(self.mass_spectrometer):
+                na = '{}_{}'.format(self.mass_spectrometer, na)
+            return na
 
-        params = dict()
+#        make_script_name = lambda x: names[x]
+        configuration = self._build_configuration(make_script_name)
+
         arun = self.automated_run
-        if arun:
-            params = dict(
-                          identifier=arun.identifier,
-                          position=arun.position,
-                          aliquot=arun.aliquot)
+        if arun and copy_automated_run:
+            params.update(dict(
+                               labnumber=arun.labnumber,
+                               position=arun.position,
+                               aliquot=arun.aliquot))
 
         params['configuration'] = configuration
 
@@ -668,10 +833,10 @@ class ExperimentSet(Loggable):
                     kw[k] = getattr(pa, k)
 
         a = AutomatedRun(
-#                         _executable=True,
                          scripts=self.loaded_scripts,
                          **kw
                          )
+
         self._bind_automated_run(a)
 
         a.create_scripts()
@@ -718,14 +883,15 @@ class ExperimentSet(Loggable):
                                    show_label=False,
                                    style='custom'
                                    ),
-                              HGroup(
+                              HGroup(Item('auto_increment'),
                                      spring,
                                      Item('add', show_label=False, enabled_when='ok_to_add'),
-                                     )
+                                     ),
+                              enabled_when='mass_spectrometer and mass_spectrometer!="---"'
                               )
 
         analysis_table = VGroup(Item('automated_runs', show_label=False,
-                                    editor=self.tabular_editor,
+                                    editor=self._automated_run_editor(),
 #                                    height=0.5
                                     ), show_border=True,
 
@@ -756,20 +922,37 @@ class ExperimentSet(Loggable):
 
         v = View(
                  HGroup(
-                        VGroup(new_analysis,
+                        VGroup(VGroup(
+                                      Item('mass_spectrometer',
+                                           editor=EnumEditor(name='mass_spectrometers'),
+#                                           show_label=False
+                                           ),
+                                      Item('heat_device',
+                                           editor=EnumEditor(name='heat_devices'),
+#                                           show_label=False,
+                                           ),
+                                      Item('tray',
+                                           editor=EnumEditor(name='trays'),
+#                                           show_label=False,
+                                           )
+                                      ),
+                               new_analysis,
                                script_grp
                                ),
 
-                 VGroup(
-                         heat_schedule_table,
-                         HGroup(spring, Item('apply', enabled_when='ok_to_add'),
-                                show_labels=False),
-                        analysis_table,
-#                        stats
-                        ),
-                 ))
+                         VGroup(
+                                 heat_schedule_table,
+                                 HGroup(spring, Item('apply', enabled_when='ok_to_add'),
+                                        show_labels=False),
+                                analysis_table,
+        #                        stats
+                                ),
+                        )
+                 )
 
         return v
+
+
 #===============================================================================
 # debugging
 #===============================================================================
@@ -803,5 +986,26 @@ class ExperimentSet(Loggable):
 #                AutomatedRun(identifier='A-10'),
 #                AutomatedRun(identifier='B-03'),
 #                ]
+#    @on_trait_change('automated_runs[]')
+#    def _automated_runs_changed(self, obj, name, old, new):
+#        if old:
+#            old = old[0]
+#
+#            if self.automated_run:
+#                if old.identifier == self.automated_run.identifier:
+#                    self.automated_run.aliquot -= 1
+#
+#            fo = dict()
+#            pi = None
+#
+#            for ai in self.automated_runs:
+#                try:
+#                    pi = fo[ai.identifier]
+#                    if ai.aliquot != pi + 1:
+#                        ai.aliquot -= 1
+#                except KeyError:
+#                    pass
+#
+#                fo[ai.identifier] = ai.aliquot
 #============= EOF =============================================
 

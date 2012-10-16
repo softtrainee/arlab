@@ -289,7 +289,7 @@ class DatabaseAdapter(Loggable):
             self.info('adding {}= {}'.format(attr, name))
             return item, True
         else:
-            self.info('{}= {} already exists'.format(attr, name))
+#            self.info('{}= {} already exists'.format(attr, name))
             return nitem, False
 
     def _get_datetime_keywords(self, kw):
