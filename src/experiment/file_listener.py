@@ -49,11 +49,10 @@ class FileListener(object):
         self._check_callback = check
         self._freq = freq
 
-        self._otime = self.otime
         self._alive = True
-
-        t = Thread(target=self._listen)
-        t.start()
+        if os.path.isfile(self._path):
+            t = Thread(target=self._listen)
+            t.start()
 
     @property
     def otime(self):
@@ -63,6 +62,7 @@ class FileListener(object):
         self._alive = False
 
     def _listen(self):
+        self._otime = self.otime
         while self._alive:
             time.sleep(1 / self._freq)
             if self._check():

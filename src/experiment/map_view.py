@@ -85,32 +85,36 @@ class MapView(Viewable):
     def _build_map(self):
 #        xs = [1, 2, 3, 4]
 #        ys = [2, 4, 6, 8]
-        xs, ys, states, labns = zip(*[(h.x, h.y, -1 , '') for h in self.stage_map.sample_holes])
-        g = self.graph
-        states = list(states)
-        states[len(states) / 2] = -1.2
-        s, _p = g.new_series(xs, ys,
-                             colors=states,
-                     type='cmap_scatter',
-                     marker='circle',
-                     color_map_name='jet',
-                     marker_size=10,
-                     )
+        if self.stage_map:
+            if not self.stage_map.sample_holes:
+                return
 
-        s.tools.append(ScatterInspector(s,
-                                        selection_mode='single',
-                                        threshold=10
-                                        ))
+            xs, ys, states, labns = zip(*[(h.x, h.y, -1 , '') for h in self.stage_map.sample_holes])
+            g = self.graph
+            states = list(states)
+            states[len(states) / 2] = -1.2
+            s, _p = g.new_series(xs, ys,
+                                 colors=states,
+                         type='cmap_scatter',
+                         marker='circle',
+                         color_map_name='jet',
+                         marker_size=10,
+                         )
 
-        s.index.on_trait_change(self._update, 'metadata_changed')
+            s.tools.append(ScatterInspector(s,
+                                            selection_mode='single',
+                                            threshold=10
+                                            ))
 
-        ov = MapOverlay(s)
-        s.overlays.append(ov)
-        self.scatter = s
-        self.labnumbers = list(labns)
+            s.index.on_trait_change(self._update, 'metadata_changed')
 
-        g.set_x_limits(min=min(xs), max=max(xs), pad='0.05')
-        g.set_y_limits(min=min(ys), max=max(ys), pad='0.05')
+            ov = MapOverlay(s)
+            s.overlays.append(ov)
+            self.scatter = s
+            self.labnumbers = list(labns)
+
+            g.set_x_limits(min=min(xs), max=max(xs), pad='0.05')
+            g.set_y_limits(min=min(ys), max=max(ys), pad='0.05')
 
     def _update(self, new):
         if new:

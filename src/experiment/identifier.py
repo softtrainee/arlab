@@ -20,10 +20,10 @@ from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 def convert_labnumber(ln):
-    
-    if ln in [1,2,3,4,5,6]:
-        sn=['Blank_air','Blank_cocktail','Blank_unknown','Background','Air','Cocktail']
-        ln =sn[ln]
+
+    if ln in [1, 2, 3, 4, 5, 6]:
+        sn = ['Blank_air', 'Blank_cocktail', 'Blank_unknown', 'Background', 'Air', 'Cocktail']
+        ln = sn[ln - 1]
 #    if ln == 1:
 #        ln = 'Blank'
 #    elif ln == 2:
@@ -35,9 +35,9 @@ def convert_labnumber(ln):
     return ln
 
 def convert_shortname(ln):
-    if ln in [1,2,3,4,5,6]:
-        sn=['bla','blc','blu','bg','a','c']
-        ln =sn[ln]
+    if ln in [1, 2, 3, 4, 5, 6]:
+        sn = ['bla', 'blc', 'blu', 'bg', 'a', 'c']
+        ln = sn[ln - 1]
 #    
 #    if ln == 1:
 #        ln = 'bl'
@@ -50,7 +50,7 @@ def convert_shortname(ln):
     return ln
 
 def convert_identifier(identifier):
-    ids=['Ba','Bc','Bu','A','C','Bg']
+    ids = ['Ba', 'Bc', 'Bu', 'Bg', 'A', 'C']
     if identifier in ids:
         identifier = ids.index(identifier) + 1
 #    if identifier == 'Ba':

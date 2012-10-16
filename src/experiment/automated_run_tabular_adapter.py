@@ -25,11 +25,11 @@ def get_name(func):
         name = func(obj, trait, item)
 
         if name:
-            name,_ext=os.path.splitext(name)
-        
+            name, _ext = os.path.splitext(name)
+
             if '_' in name:
-                ns=name.split('_')
-                name='_'.join(ns[1:])
+                ns = name.split('_')
+                name = '_'.join(ns[1:])
 
         return name if name else ''
     return _get_name
@@ -45,7 +45,7 @@ class AutomatedRunAdapter(TabularAdapter):
     autocenter_width = Int(70)
     heat_value_width = Int(85)
     heat_device_width = Int(125)
-    identifier_width = Int(60)
+    labnumber_width = Int(60)
 
     extraction_script_width = Int(125)
     measurement_script_width = Int(125)
@@ -60,6 +60,7 @@ class AutomatedRunAdapter(TabularAdapter):
     post_equilibration_script_text = Property
     position_text = Property
     heat_value_text = Property
+    heat_units_text = Property
     duration_text = Property
     autocenter_text = Property
     overlap_text = Property
@@ -89,14 +90,15 @@ class AutomatedRunAdapter(TabularAdapter):
 #            hp =
 
         return  [('', 'state'),
-                 ('RunID', 'identifier'), ('Aliquot', 'aliquot'),
+                 ('Labnumber', 'labnumber'), ('Aliquot', 'aliquot'),
 
                  ('Sample', 'sample'),
                  ('Position', 'position'),
                  ('Autocenter', 'autocenter'),
                  ('Overlap', 'overlap'),
-                 ('Heat Device', 'heat_device'),
+                 #('Heat Device', 'heat_device'),
                  ('Heat', 'heat_value'),
+                 ('Heat Units', 'heat_units'),
                  ('Duration', 'duration'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
@@ -105,11 +107,18 @@ class AutomatedRunAdapter(TabularAdapter):
                  ]
 
     def _get_heat_value_text(self, trait, item):
-        _, u = self.item.heat_value
-        if u:
-            return '{:0.2f},{}'.format(*self.item.heat_value)
-        else:
+        return self._get_number('heat_value')
+
+    def _get_heat_units_text(self):
+        if self.item.heat_units == '---':
             return ''
+        else:
+            return self.item.heat_units
+#        v, u = self.item.heat_value
+#        if u and v:
+#            return '{:0.2f},{}'.format(*self.item.heat_value)
+#        else:
+#            return ''
 
     def _get_duration_text(self, trait, item):
         return self._get_number('duration')
@@ -121,6 +130,9 @@ class AutomatedRunAdapter(TabularAdapter):
         return self._get_number('position')
 
     def _get_number(self, attr):
+        '''
+            dont display 0.0's
+        '''
         v = getattr(self.item, attr)
         if v:
             return v
