@@ -32,7 +32,7 @@ from src.experiment.file_listener import FileListener
 from src.experiment.labnumber_entry import LabnumberEntry
 from src.experiment.set_selector import SetSelector
 from src.managers.manager import Manager
-from globals import globalv
+#from globals import globalv
 
 
 class ExperimentManager(Manager):
@@ -49,6 +49,7 @@ class ExperimentManager(Manager):
 
     editing_signal = None
     filelistener = None
+
 
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
@@ -81,8 +82,8 @@ class ExperimentManager(Manager):
     def stop_file_listener(self):
         self.filelistener.stop()
 
-    def opened(self):
-        self.info_display.clear()
+#    def opened(self):
+#        self.info_display.clear()
 #        self.start_file_listener()
 
     def close(self, isok):
@@ -295,6 +296,7 @@ class ExperimentManager(Manager):
 
     def _set_selector_default(self):
         s = SetSelector(experiment_manager=self,
+                        addable=True
                         )
         return s
 
@@ -302,29 +304,29 @@ class ExperimentManager(Manager):
         return self._db_factory()
 
 
-def main():
-    paths.build('_experiment')
-    from src.helpers.logger_setup import logging_setup
-
-    logging_setup('experiment_manager')
-
-    globalv.show_infos = False
-
-#    s = SpectrometerManager()
-#    s.bootstrap()
-#    s.molecular_weight = 'Ar40'
-#    ini = Initializer()
-#    ini.add_initialization(dict(name = 'spectrometer_manager',
-#                                manager = s
-#                                ))
-#    ini.run()
-
-#    e = ExperimentManager(spectrometer_manager=s)
-    e = ExperimentManager()
-
-#    e.configure_traits(view='test_view')
-#    e.analyze_data()
-    e.configure_traits(view='execute_view')
+#def main():
+#    paths.build('_experiment')
+#    from src.helpers.logger_setup import logging_setup
+#
+#    logging_setup('experiment_manager')
+#
+#    globalv.show_infos = False
+#
+##    s = SpectrometerManager()
+##    s.bootstrap()
+##    s.molecular_weight = 'Ar40'
+##    ini = Initializer()
+##    ini.add_initialization(dict(name = 'spectrometer_manager',
+##                                manager = s
+##                                ))
+##    ini.run()
+#
+##    e = ExperimentManager(spectrometer_manager=s)
+#    e = ExperimentManager()
+#
+##    e.configure_traits(view='test_view')
+##    e.analyze_data()
+#    e.configure_traits(view='execute_view')
 
 def dum_run(r):
     print 'start ', r
@@ -345,8 +347,8 @@ def test():
         t.start()
         time.sleep(1.8)
 
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+#    main()
 #    test()
 #============= EOF ====================================
 

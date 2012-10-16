@@ -52,7 +52,7 @@ class SetSelector(HasTraits):
                                                      selected_index='selected_index',
                                                      operations=[])),
                  Item('add_button',
-                      show_label=False),
+                      show_label=False, defined_when='experiment_manager.addable'),
                  )
         return v
 
