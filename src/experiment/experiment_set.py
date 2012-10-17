@@ -72,8 +72,12 @@ class ExperimentSet(Loggable):
     name = Property(depends_on='path')
     path = Str
     ok_to_add = Bool(False)
-    dirty = Property(depends_on='_dirty,path')
-    _dirty = Bool(False)
+
+#    dirty = Property(depends_on='_dirty,path')
+#    _dirty = Bool(False)
+
+    dirty = Bool(False)
+
     isediting = False
     executable = Bool(True)
     auto_increment = Bool(True)
@@ -112,7 +116,7 @@ class ExperimentSet(Loggable):
 # persistence
 #===============================================================================
     def dump(self, stream):
-#        self.dirty = False
+        self.dirty = False
 
         header = ['labnumber',
                   'sample',
@@ -124,6 +128,7 @@ class ExperimentSet(Loggable):
                   'cleanup',
                   'autocenter',
                   'extraction', 'measurement', 'post_equilibration', 'post_measurement']
+
         attrs = ['labnumber',
                   'sample',
                   'position',
@@ -601,9 +606,11 @@ tray: {}
 
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
-        self.dirty = True
+        if self.automated_runs:
+            self.dirty = True
+        else:
+            self.dirty = False
         self.stats.calculate_etf(self.automated_runs)
-
 
     @on_trait_change('automated_run.labnumber')
     def _update_labnumber(self, labnumber):
@@ -654,46 +661,23 @@ tray: {}
             ai.mass_spec_name = self.mass_spectrometer
 
 #        self.automated_run.mass_spec_name = self.mass_spectrometer
-#    def _update_aliquots(self):
-#        db = self.db
-#        idcnt_dict = dict()
-#        stdict = dict()
-#        for arun in self.automated_runs:
-#            arunid = arun.labnumber
-#            ln = db.get_labnumber(arunid)
-#            if arunid in idcnt_dict:
-#                c = idcnt_dict[arunid]
-#                c += 1
-#            else:
-#                c = 1
-#
-#            if ln is not None:
-#                st = ln.aliquot
-#            else:
-#                if arunid in stdict:
-#                    st = stdict[arunid]
-##                    st += 1
-#                else:
-#                    st = 0
-#
-#            arun.aliquot = st + c
-#            idcnt_dict[arunid] = c
-#            stdict[arunid] = st
 
 #===============================================================================
 # property get/set
 #===============================================================================
-    def _set_dirty(self, d):
-        self._dirty = d
-
-    def _get_dirty(self):
-        return self._dirty and os.path.isfile(self.path)
+#    def _set_dirty(self, d):
+#        self._dirty = d
+#
+#    def _get_dirty(self):
+#        return self._dirty and os.path.isfile(self.path)
 
     def _get_name(self):
         if self.path:
             return os.path.splitext(os.path.basename(self.path))[0]
         else:
-            return 'New ExperimentSet'
+            return ''
+#        else:
+#            return 'New ExperimentSet'
 
     def _get_measuring(self):
         if self.current_run:
@@ -751,6 +735,11 @@ tray: {}
     def _get_heat_devices(self):
         return ['---', 'Fusions CO2', 'Fusions Diode']
 
+#    def _set_dirty(self, d):
+#        self._dirty = d
+#
+#    def _get_dirty(self):
+#        return self._dirty and os.path.isfile(self.path)
 #===============================================================================
 # factories
 #===============================================================================
@@ -862,10 +851,6 @@ tray: {}
                                    show_label=False,
                                    style='custom'
                                    ),
-                              HGroup(Item('auto_increment'),
-                                     spring,
-                                     Item('add', show_label=False, enabled_when='ok_to_add'),
-                                     ),
                               enabled_when='mass_spectrometer and mass_spectrometer!="---"'
                               )
 
@@ -916,7 +901,11 @@ tray: {}
                                            )
                                       ),
                                new_analysis,
-                               script_grp
+                               script_grp,
+                               HGroup(Item('auto_increment'),
+                                     spring,
+                                     Item('add', show_label=False, enabled_when='ok_to_add'),
+                                     ),
                                ),
 
                          VGroup(
