@@ -236,8 +236,6 @@ class StageManager(Manager):
         else:
             self.linear_move(x, y)
 
-
-
     def get_hole(self, name):
         if self._stage_map:
             return self._stage_map.get_hole(name)

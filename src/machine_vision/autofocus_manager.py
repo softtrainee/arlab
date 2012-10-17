@@ -126,7 +126,7 @@ class AutofocusManager(Manager):
 
         target = self._passive_focus
         self._passive_focus_thread = Thread(name='autofocus', target=target,
-                                            args=(self._evt_autofocusing)
+                                            args=(self._evt_autofocusing,)
                                             )
         self._passive_focus_thread.start()
 
@@ -201,7 +201,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _reset_velocity(self, vo):
         if self.stage_controller:
             pdict = dict(velocity=vo, key='z')
-            self.stage_controller._set_single_axis_motion_parameters(pdict=pdict)
+            self.stage_controller.set_single_axis_motion_parameters(pdict=pdict)
 
     def _do_focusing(self, start, end, steps, operator):
         roi = self._get_roi()
@@ -224,6 +224,8 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             #sweep 1 and velocity 1
             self._do_sweep(start, end, velocity=self.parameters.velocity_scalar1)
             fms, focussteps = self._collect_focus_measures(operator, roi)
+            if not (fms and focussteps):
+                return
 
             #reached end of sweep
             #calculate a nominal focal point    
@@ -263,8 +265,11 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
         if velocity:
             vo = controller.axes['z'].velocity
-            controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity,
+
+            controller.set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity,
                                                     key='z'))
+#            controller._set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity,
+#                                                    key='z'))
 
         controller.single_axis_move('z', end)
 
@@ -272,14 +277,15 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         controller = self.stage_controller
         focussteps = []
         fms = []
-        while controller.timer.IsRunning() and not self._evt_autofocusing.isSet():
-            src = self._load_source()
-            x = controller.get_current_position('z')
-            y = self._calculate_focus_measure(src, operator, roi)
-            focussteps.append(x)
-            fms.append(y)
-            self.graph.add_datum((x, y), series=series, do_after=1)
-            time.sleep(0.05)
+        if controller.timer:
+            while controller.timer.IsRunning() and not self._evt_autofocusing.isSet():
+                src = self._load_source()
+                x = controller.get_current_position('z')
+                y = self._calculate_focus_measure(src, operator, roi)
+                focussteps.append(x)
+                fms.append(y)
+                self.graph.add_datum((x, y), series=series, do_after=1)
+                time.sleep(0.05)
         return fms, focussteps
 
     def _calculate_nominal_focal_point(self, fms, focussteps):

@@ -394,7 +394,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
             disp = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
 
             if self._check_motion_parameters(disp, ax):
-                self._set_single_axis_motion_parameters(ax)
+                self.set_single_axis_motion_parameters(ax)
         else:
             func = self._z_inprogress_update
 
@@ -739,7 +739,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 #self.read_error()
                 #time.sleep(0.1)
 
-    def _set_single_axis_motion_parameters(self, axis=None, pdict=None):
+    def set_single_axis_motion_parameters(self, axis=None, pdict=None):
         '''
            
         '''

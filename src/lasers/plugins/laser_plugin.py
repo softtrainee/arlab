@@ -75,6 +75,7 @@ class LaserPlugin(CorePlugin):
             m = getattr(factory, self.klass[1])()
 
         m.bootstrap()
+        m.plugin_id = self.id
         m.bind_preferences(self.id)
         return m
 

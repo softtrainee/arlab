@@ -215,8 +215,6 @@ class Pattern(HasTraits):
 
     def graph_view(self):
         v = View(Item('graph', style='custom', show_label=False,
-                      width=350,
-                      height=350
                       ),
                  #title=self.name
                  )
