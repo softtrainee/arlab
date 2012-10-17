@@ -225,10 +225,11 @@ class ExperimentManager(Manager):
 #===============================================================================
 # experiment set
 #===============================================================================
-    def new_experiment_set(self):
-        self.experiment_sets = []
+    def new_experiment_set(self, clear=True):
+        if clear:
+            self.experiment_sets = []
+
         exp = self._experiment_set_factory()
-        exp.isediting = True
         arun = exp.automated_run_factory()
         exp.automated_run = arun
 #        exp.automated_runs.append(arun)
@@ -257,7 +258,7 @@ class ExperimentManager(Manager):
             ts = self._parse_experiment_file(path)
             for text in ts:
                 exp = self._experiment_set_factory(path=path)
-                exp.isediting = edit
+#                exp.isediting = edit
     #            exp = ExperimentSet(path=path)
     #            try:
 

@@ -152,7 +152,7 @@ class HeatStep(HasTraits):
 
 class HeatSchedule(HasTraits):
     steps = List(HeatStep)
-    kind = Enum('watts', 'temp', 'percent')
+    units = Enum('watts', 'temp', 'percent')
     name = Property(depends_on='path')
     path = Str
 
@@ -175,10 +175,10 @@ class HeatSchedule(HasTraits):
 #            s.state = 'not run'
 #            s.elapsed_time = 0
     def _kind_changed(self):
-        self.adapter.set_kind(self.kind)
+        self.adapter.set_kind(self.units)
 
     def traits_view(self):
-        self.adapter = HeatStepAdapter(kind=self.kind)
+        self.adapter = HeatStepAdapter(kind=self.units)
 
         editor = TabularEditor(adapter=self.adapter,
                                 operations=['delete', 'edit'],
@@ -198,7 +198,7 @@ class HeatSchedule(HasTraits):
 #                                 width=100
                                  ),
                             spring,
-                            Item('kind', show_label=False),
+                            Item('units', show_label=False),
                             ),
                      Item('steps',
                           show_label=False, editor=editor),

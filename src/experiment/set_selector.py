@@ -15,26 +15,46 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Button, Property, Int, Str
-from traitsui.api import View, Item, ListStrEditor
+from traits.api import HasTraits, Any, Button, Property, Int, Str, Instance, List, Bool
+from traitsui.api import View, Item, ListStrEditor, HGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
 class SetSelector(HasTraits):
     experiment_manager = Any
-    add_button = Button('Add')
-    names = Property(depends_on='experiment_manager.experiment_sets')
+    experiment_sets = List#Instance('src.experiment_set.ExperimentSet')
+    add_button = Button('+')
+    delete_button = Button('-')
+    names = List(['Set1'])
+#    names = Property(depends_on='experiment_sets')
     selected_index = Int
     selected = Str
-
-    def _get_names(self):
-        return ['Set {}'.format(i + 1) for i in range(len(self.experiment_manager.experiment_sets))]
-
+    editable = Bool(True)
+#    def _get_names(self):
+#        print 'asdffds', ['Set {}'.format(i + 1) for i in range(len(self.experiment_sets))]
+#        return ['Set {}'.format(i + 1) for i in range(len(self.experiment_sets))]
     def _add_button_fired(self):
         exp = self.experiment_manager
-        exp.new_experiment_set()
-        self.trait_set(selected_index=len(exp.experiment_sets) - 1, trait_change_notify=False)
+        exp.new_experiment_set(clear=False)
+        i = 0
+        while 1:
+            ni = len(self.names) + 1 + i
+            na = 'Set{}'.format(ni)
+            if na in self.names:
+                i += 1
+            else:
+                break
+        self.names.append(na)
+#        self.trait_set(selected_index=ni - 1, trait_change_notify=False)
+
+    def _delete_button_fired(self):
+        if self.selected_index:
+            si = self.selected_index
+        else:
+            si = len(self.names) - 1
+        self.names.pop(si)
+        self.experiment_manager.experiment_sets.pop(si)
 
     def _selected_index_changed(self):
         if self.selected_index >= 0:
@@ -51,8 +71,14 @@ class SetSelector(HasTraits):
                                                      editable=False,
                                                      selected_index='selected_index',
                                                      operations=[])),
-                 Item('add_button',
-                      show_label=False, defined_when='experiment_manager.addable'),
+                 HGroup(
+                        Item('add_button',
+                             width= -40,
+                             show_label=False, defined_when='editable'),
+                        Item('delete_button',
+                             width= -40,
+                             show_label=False, defined_when='editable')
+                        ),
                  )
         return v
 
