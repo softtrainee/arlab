@@ -47,8 +47,6 @@ class AutocenterManager(MachineVisionManager):
 #                                                width=w,
 #                                                height=h
 #                                                )
-
-
                 params = cx - params[0] / self.pxpermm, cy + params[1] / self.pxpermm
             return params
 

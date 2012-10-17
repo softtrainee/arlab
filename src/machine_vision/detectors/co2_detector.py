@@ -23,6 +23,7 @@ from src.image.cvwrapper import  grayspace, colorspace
 
 from src.image.image import StandAloneImage
 from hole_detector import HoleDetector
+from threading import Timer
 
 '''
 todo remove all permutations 
@@ -58,10 +59,15 @@ class CO2HoleDetector(HoleDetector):
         im = StandAloneImage(title=self.title,
                              view_identifier='pychron.fusions.co2.target'
                              )
+
         self.target_image = im
         if self.parent is not None:
             #use a manager to open so will auto close on quit
             self.parent.open_view(im)
+            minutes = 1
+            t = Timer(60 * minutes, self.target_image.close)
+            t.start()
+
         else:
             from pyface.timer.do_later import do_later
             do_later(im.edit_traits)
