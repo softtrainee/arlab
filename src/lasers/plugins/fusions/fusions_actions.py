@@ -33,13 +33,13 @@ class LaserAction(Action):
             self.enabled = False
 
 class FOpenLaserManagerAction(LaserAction):
+    accelerator = 'Ctrl+L'
     def perform(self, event):
         manager = self.get_manager(event)
         if manager is not None:
             app = self.window.application
-#            hp.setrelheap()
             open_manager(app, manager)
-#            print hp.heap()
+
 
 class FOpenMotionControllerManagerAction(LaserAction):
 

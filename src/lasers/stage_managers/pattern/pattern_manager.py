@@ -295,13 +295,15 @@ class PatternManager(Manager):
 # view
 #===============================================================================
     def execute_view(self):
-        v = View(
+        v = View(VGroup(
+#                 Item('pattern', show_label=False,
+#                       style='custom',
+#                       editor=InstanceEditor(view='graph_view')),
                  HGroup(Item('pattern_name', label='Name', style='readonly')),
-
-                 self._button_factory('execute_button', 'execute_label', enabled='object.pattern is not None'),
-                 Item('design_button', show_label=False),
-                 Item('load_button', show_label=False),
-                 )
+                 HGroup(self._button_factory('execute_button', 'execute_label', enabled='object.pattern is not None'),
+                        Item('design_button', show_label=False),
+                        Item('load_button', show_label=False)),
+                 ))
         return v
 
     def traits_view(self):

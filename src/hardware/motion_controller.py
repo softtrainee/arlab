@@ -249,6 +249,11 @@ class MotionController(CoreDevice):
                                       ))
         return g
 
+    def set_single_axis_motion_parameters(self, *args, **kw):
+        pass
+
+    def block(self, *args, **kw):
+        pass
     def linear_move(self, *args, **kw):
         pass
 

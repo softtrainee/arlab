@@ -57,6 +57,7 @@ class LaserManager(Manager):
     monitor_name = 'laser_monitor'
     monitor_klass = LaserMonitor
 
+    plugin_id = Str
     #simulation_led = Instance(LED, ())
 
     status_text = Str
@@ -277,14 +278,15 @@ class LaserManager(Manager):
 
             sm.stage_controller = self.stage_manager.stage_controller
             sm.stage_controller.parent = sm
-            sm.bind_preferences(self.id)
+            if self.plugin_id:
+                sm.bind_preferences(self.plugin_id)
             sm.visualizer = self.stage_manager.visualizer
 
             sm.load()
 
             self.stage_manager = sm
-        except AttributeError:
-            pass
+        except AttributeError, e:
+            print e
 #===============================================================================
 # persistence
 #===============================================================================
