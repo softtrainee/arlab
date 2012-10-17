@@ -15,16 +15,22 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Property, Bool, Str
 from traitsui.api import View, Item, HGroup
 from traitsui.menu import Action
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.experiment.experiment_manager import ExperimentManager
 from src.paths import paths
-from src.managers.manager import SaveableManagerHandler
+import os
 
 class ExperimentEditor(ExperimentManager):
+    dirty = Property(depends_on='_dirty,_path')
+    _path = Str
+    _dirty = Bool
+
+    dirty_save_as = Bool(False)
+
 #===============================================================================
 # persistence
 #===============================================================================
@@ -36,24 +42,15 @@ class ExperimentEditor(ExperimentManager):
 
     def save_as_experiment_sets(self):
         p = self.save_file_dialog(default_directory=paths.experiment_dir)
-        self._dump_experiment_sets(p)
-        self._experiment_sets_path = p
-#        self.experiment_set.path = p
-#        self.experiment_set.dirty = False
+        p = self._dump_experiment_sets(p)
+        self._path = p
 
     def save_experiment_sets(self):
-#        p = self.experiment_set.path
-
-#        for exp in self.experiment_sets:
-        p = self._experiment_sets_path
-        self._dump_experiment_sets(p)
-
-#        self.experiment_set.dirty = False
+        self._dump_experiment_sets(self._path)
+        self.dirty = False
 
     def _dump_experiment_sets(self, p):
-#        if not p:
-#            p = '/Users/ross/Pychrondata_experiment/experiments/foo.txt'
-#            p = self.save_file_dialog(default_directory=paths.experiment_dir)
+
         if not p:
             return
         if not p.endswith('.txt'):
@@ -63,10 +60,13 @@ class ExperimentEditor(ExperimentManager):
         with open(p, 'wb') as fp:
             n = len(self.experiment_sets)
             for i, exp in enumerate(self.experiment_sets):
+                exp.path = p
                 exp.dump(fp)
                 if i < (n - 1):
                     fp.write('\n')
                     fp.write('*' * 80)
+
+        return p
 
 #===============================================================================
 # views
@@ -91,13 +91,33 @@ class ExperimentEditor(ExperimentManager):
                  height=0.75,
                  buttons=['OK', 'Cancel',
                           Action(name='Save', action='save',
-                                 enabled_when='object.dirty'),
-                          Action(name='Save As', action='save_as'),
+                                 enabled_when='dirty'),
+                          Action(name='Save As',
+                                 action='save_as',
+                                 enabled_when='dirty_save_as'
+                                 ),
 
                           ],
-#                 handler=ExperimentManagerHandler,
-                 handler=SaveableManagerHandler,
-#                 title=self.title
+                 handler=self.handler_klass,
+#                 handler=SaveableManagerHandler,
+                 title='Experiment'
                  )
         return v
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def _update_dirty(self, n):
+        self.dirty_save_as = n
+        self._dirty = n
+
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _set_dirty(self, d):
+        self._dirty = d
+
+    def _get_dirty(self):
+        return self._dirty and os.path.isfile(self._path)
+
 #============= EOF =============================================

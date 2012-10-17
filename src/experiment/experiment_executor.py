@@ -195,8 +195,8 @@ class ExperimentExecutor(ExperimentManager):
             self.db.reset()
 
 #            if the user is editing the experiment set dont continue?
-            if self.editing_signal:
-                self.editing_signal.wait()
+#            if self.editing_signal:
+#                self.editing_signal.wait()
 
             #check for mods
             if self.check_for_mods():
@@ -451,7 +451,7 @@ class ExperimentExecutor(ExperimentManager):
                  width=1150,
                  height=750,
                  resizable=True,
-                 title=self.experiment_set.name,
+#                 title=self.experiment_set.name,
                  handler=self.handler_klass,
                  )
         return v

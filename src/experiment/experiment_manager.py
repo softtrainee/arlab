@@ -31,23 +31,30 @@ from src.experiment.selection_view import SelectionView
 from src.experiment.file_listener import FileListener
 from src.experiment.labnumber_entry import LabnumberEntry
 from src.experiment.set_selector import SetSelector
-from src.managers.manager import Manager
+from src.managers.manager import Manager, SaveableManagerHandler
 #from globals import globalv
 
+class ExperimentManagerHandler(SaveableManagerHandler):
+    def object_experiment_set_changed(self, info):
+        if info.initialized:
+            info.ui.title = 'Experiment {}'.format(info.object.title)
+
+    def object_path_changed(self, info):
+        if info.initialized:
+            info.ui.title = 'Experiment {}'.format(info.object.title)
 
 class ExperimentManager(Manager):
-
+    handler_klass = ExperimentManagerHandler
     experiment_set = Instance(ExperimentSet)
     set_selector = Instance(SetSelector)
     db = Instance(IsotopeAdapter)
 
     experiment_sets = List
 
-#    title = DelegatesTo('experiment_set', prefix='name')
-    dirty = Bool#DelegatesTo('experiment_set')
+    title = DelegatesTo('experiment_set', prefix='name')
     path = DelegatesTo('experiment_set')
 
-    editing_signal = None
+#    editing_signal = None
     filelistener = None
 
 
@@ -212,6 +219,9 @@ class ExperimentManager(Manager):
             arun.aliquot = st + c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
+
+    def _update_dirty(self):
+        pass
 #===============================================================================
 # experiment set
 #===============================================================================
@@ -278,6 +288,7 @@ class ExperimentManager(Manager):
                              db=self.db,
                              **kw)
         exp.on_trait_change(self._update_aliquots, 'update_aliquots_needed')
+        exp.on_trait_change(self._update_dirty, 'dirty')
         return exp
 
     def _labnumber_entry_factory(self):
