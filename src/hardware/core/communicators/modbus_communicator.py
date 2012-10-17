@@ -107,9 +107,12 @@ class ModbusCommunicator(SerialCommunicator):
         if resp is not None and resp is not 'simulation':
 
             args = self._parse_hexstr(resp)
-            if args[0] != cmd[:2]:
-                self.warning('{} != {}     {} >> {}'.format(cmd[:2],
-                                                args[0], cmd, resp))
+            if args:
+                if args[0] != cmd[:2]:
+                    self.warning('{} != {}     {} >> {}'.format(cmd[:2],
+                                                    args[0], cmd, resp))
+                    return
+            else:
                 return
 
             #check the crc
@@ -132,8 +135,9 @@ class ModbusCommunicator(SerialCommunicator):
                 if ndata > 2:
                     data = []
                     for i in range(ndata / 4):
-                        low_word = ''.join(dataargs[4 * i:4 * i + 2])
-                        high_word = ''.join(dataargs[4 * i + 2:4 * i + 4])
+                        s = 4 * i
+                        low_word = ''.join(dataargs[s:s + 2])
+                        high_word = ''.join(dataargs[s + 2:s + 4])
 
                         if self.device_word_order == 'low_high':
                             '''
