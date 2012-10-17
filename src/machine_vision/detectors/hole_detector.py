@@ -70,6 +70,7 @@ class HoleDetector(Detector):
 
     save_positioning_error = Bool(False)
     use_histogram = Bool(True)
+#    display_processed_image = Bool(True)
     display_processed_image = Bool(False)
 #    use_smoothing = Bool(True)
     use_crop = Bool(True)
@@ -77,7 +78,10 @@ class HoleDetector(Detector):
 #    _dilation_value = 1
 #    use_contrast_equalization = Bool(True)
 
-    segmentation_style = Enum('region', 'edge', 'threshold',
+    segmentation_style = Enum(
+                              'region',
+                              'edge',
+                              'threshold',
                               'adaptivethreshold',
                                )
 #    segmentation_style = Enum('edge', 'threshold', 'edge', 'region')
@@ -161,10 +165,11 @@ class HoleDetector(Detector):
 
 #        if not 'hole' in kw:
 #            kw['hole'] = False
-        if self.display_processed_image:
-            self.target_image.load(colorspace(src))
 
         t = self._locate_targets(src, **kw)
+
+        if self.display_processed_image:
+            self.target_image.load(colorspace(src))
 #
 #        if t:
 #            self._draw_markup(self.target_image.get_frame(0), t)
@@ -357,7 +362,7 @@ class HoleDetector(Detector):
         cx, cy = self._get_center()
 
         tol *= self.pxpermm
-#        print x, y, cx, cy, abs(x - cx) < tol and abs(y - cy) < tol
+
         return abs(x - cx) < tol and abs(y - cy) < tol
 
     def _get_true_xy(self, src):
@@ -464,7 +469,13 @@ class HoleDetector(Detector):
         segmenter = self.segmenter
         if style == 'region':
 
-            for j in range(1, segmenter.threshold_tries):
+            segmenter.count = 0
+            if segmenter.use_adaptive_threshold:
+                ni = 2
+            else:
+                ni = segmenter.threshold_tries
+
+            for j in range(1, ni):
                 segmenter.count = j
                 npos = self._segment_hook(src, segmenter,
                                            **kw)
@@ -501,10 +512,13 @@ class HoleDetector(Detector):
                 find polygon center
                 
             '''
+            def test(ti):
+                ctest = ti.convexity > threshold
+                centtest = self._near_center(*ti.centroid_value)
+                atest = ma > ti.area > mi
+                return ctest, centtest, atest
 
-            ctest = tar.convexity > threshold
-            centtest = self._near_center(*tar.centroid_value)
-            atest = ma > tar.area > mi
+            ctest, centtest, atest = test(tar)
             if not ctest and (atest and centtest):
 #                src = self.target_image.get_frame(0)
 #                self._draw_result(src, tar)
@@ -572,7 +586,9 @@ class HoleDetector(Detector):
 
                 if tars:
                     tar = tars[0]
-                    ctest = tar.convexity > threshold
+                    ctest, centtest, atest = test(tar)
+#                    ctest = tar.convexity > threshold
+#                    centtest = self.
                 else:
                     return None, False
 

@@ -78,7 +78,7 @@ class ExperimentSet(Loggable):
 
     dirty = Bool(False)
 
-    isediting = False
+#    isediting = False
     executable = Bool(True)
     auto_increment = Bool(True)
     update_aliquots_needed = Event
@@ -108,8 +108,10 @@ class ExperimentSet(Loggable):
     selected = Any
     right_clicked = Any
 
-    _text = None
+    copy_button = Button
+    duplicate_button = Button('duplicate')
 
+#    _text = None
     _cached_runs = None
     _alive = False
 #===============================================================================
@@ -199,7 +201,6 @@ tray: {}
     def truncate_run(self, style):
         self.current_run.truncate(style)
 
-
     def new_runs_generator(self, last_ran=None):
         runs = [ai for ai in self.automated_runs if ai.executable]
 
@@ -225,8 +226,6 @@ tray: {}
                 self.info('last ran analysis {} does not exist in modified experiment set. starting from the beginning')
 
         return rgen, n
-
-
 
     def load_automated_runs(self, text):
         if self.automated_runs is not None:
@@ -511,6 +510,13 @@ tray: {}
 #===============================================================================
 # handlers
 #===============================================================================
+
+    def _duplicate_button_fired(self):
+
+        for si in self.selected:
+            self.automated_runs.append(si.clone_traits())
+        self.update_aliquots_needed = True
+
     def _add_fired(self):
         ars = self.automated_runs
         ar = self.automated_run
@@ -538,15 +544,26 @@ tray: {}
         ar.post_measurement_script_dirty = True
         ar.post_equilibration_script_dirty = True
 
-
         ars.append(ar)
 
         kw = dict()
         if self.auto_increment:
             if rid:
-                kw['labnumber'] = rid
-            if position:
-                kw['position'] = position
+                nrid = rid
+#                kw['labnumber'] = rid
+            npos = position
+            if npos:
+                npos = position
+
+#                kw['position'] = position
+        else:
+            nrid = ar.labnumber
+            npos = ar.position
+#            kw['labnumber'] = self.automated_run.labnumber
+#            kw['position'] = self.automated_run.position
+        kw['labnumber'] = nrid
+        if npos:
+            kw['position'] = npos
 
         kw['_heat_value'] = ar._heat_value
         kw['_heat_units'] = ar._heat_units
@@ -554,20 +571,19 @@ tray: {}
         kw['configuration'] = ar.configuration
         kw['mass_spec_name'] = self.mass_spectrometer
         self.automated_run = self.automated_run_factory(copy_automated_run=False, **kw)
-
         self.update_aliquots_needed = True
 
     def _apply_fired(self):
-        for _i, s in enumerate(self.heat_schedule.steps):
+        hs = self.heat_schedule
+        for _i, s in enumerate(hs.steps):
             if s.duration:
-                a = self.automated_run_factory(_heat_value=s.heat_value,
-                                             _duration=s.duration,
-                                             _heat_units=self.heat_schedule.kind[0]
-                                             )
-    #            a.aliquot += i
+                a = self.automated_run.clone_traits()
+                a._heat_value = s.heat_value
+                a._duration = s.duration
+                a._heat_units = hs.units
                 self.automated_runs.append(a)
 
-#        self.automated_run.aliquot = a.aliquot + 1
+        self.update_aliquots_needed = True
 
     def _extraction_script_changed(self):
 #        print self.extraction_script
@@ -614,8 +630,8 @@ tray: {}
 
     @on_trait_change('automated_run.labnumber')
     def _update_labnumber(self, labnumber):
-        if not self.isediting:
-            return
+#        if not self.isediting:
+#            return
 
         arun = self.automated_run
         #check for id in labtable
@@ -854,7 +870,11 @@ tray: {}
                               enabled_when='mass_spectrometer and mass_spectrometer!="---"'
                               )
 
-        analysis_table = VGroup(Item('automated_runs', show_label=False,
+        analysis_table = VGroup(
+                                HGroup(
+#                                       Item('copy_button'), 
+                                       Item('duplicate_button'), show_labels=False),
+                                Item('automated_runs', show_label=False,
                                     editor=self._automated_run_editor(),
 #                                    height=0.5
                                     ), show_border=True,

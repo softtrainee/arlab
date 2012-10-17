@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import List
+from traits.api import List, Any
 from traitsui.wx.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 
@@ -25,6 +25,8 @@ from traitsui.basic_editor_factory import BasicEditorFactory
 from wx import Panel, PaintDC, \
     CLIP_CHILDREN, EVT_MOTION, EVT_LEFT_DOWN, EVT_IDLE, \
     RED_PEN, EVT_PAINT, BitmapFromBuffer
+from wx._misc import EVT_TIMER
+import wx
 
 #import math
 #import wx
@@ -40,7 +42,8 @@ class _ImageEditor(Editor):
     '''
 
     points = List
-
+    fps = 20
+    playTimer = Any
     def init(self, parent):
         '''
         '''
@@ -72,38 +75,42 @@ class _ImageEditor(Editor):
         return panel
 
     def _set_bindings(self, panel):
-        panel.Bind(EVT_PAINT, self.onPaint)
+        self.playTimer = wx.Timer(panel, 5)
+        panel.Bind(wx.EVT_TIMER, self.onNextFrame, self.playTimer)
+        self.playTimer.Start(1000 / self.fps)
+
+#        panel.Bind(EVT_PAINT, self.onPaint)
 #        if track_mouse:
 #            panel.Bind(EVT_MOTION, self.onMotion)
 
-        panel.Bind(EVT_IDLE, self.onIdle)
-        panel.Bind(EVT_LEFT_DOWN, self.onLeftDown)
+#        panel.Bind(EVT_IDLE, self.onIdle)
+#        panel.Bind(EVT_LEFT_DOWN, self.onLeftDown)
 
-    def onLeftDown(self, event):
-        '''
-        '''
-        self.value.mouse_x = x = event.GetX()
-        self.value.mouse_y = y = event.GetY()
-
-        if not self.points:
-            self.points.append((x, y))
-        else:
-            self.points[0] = (x, y)
-
-        self.control.Refresh()
-
-    def onPaint(self, event):
-        '''
-
-        '''
-        self._draw_(event)
-
-    def onIdle(self, event):
+#    def onLeftDown(self, event):
+#        '''
+#        '''
+#        self.value.mouse_x = x = event.GetX()
+#        self.value.mouse_y = y = event.GetY()
+#
+#        if not self.points:
+#            self.points.append((x, y))
+#        else:
+#            self.points[0] = (x, y)
+#
+#        self.control.Refresh()
+#
+#    def onPaint(self, event):
 #        '''
 #
 #        '''
+#        self._draw_(event)
+
+    def onIdle(self, event):
         self._draw_(event)
         event.RequestMore()
+
+    def onNextFrame(self, event):
+        self._draw_(event)
 
     def _draw_(self, event):
         '''
@@ -112,13 +119,13 @@ class _ImageEditor(Editor):
         if src is not None:
             self._draw(src)
 
-    def onMotion(self, event):
-        '''
-
-        '''
-        #self.value.mouse_x=event.GetX()
-        #self.value.mouse_y=event.GetY()
-        pass
+#    def onMotion(self, event):
+#        '''
+#
+#        '''
+#        #self.value.mouse_x=event.GetX()
+#        #self.value.mouse_y=event.GetY()
+#        pass
 
     def _draw(self, src):
         '''

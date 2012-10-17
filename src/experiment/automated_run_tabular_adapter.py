@@ -44,8 +44,9 @@ class AutomatedRunAdapter(TabularAdapter):
     overlap_width = Int(50)
     autocenter_width = Int(70)
     heat_value_width = Int(85)
+    heat_units_width = Int(50)
     heat_device_width = Int(125)
-    labnumber_width = Int(60)
+    labnumber_width = Int(70)
 
     extraction_script_width = Int(125)
     measurement_script_width = Int(125)
@@ -98,7 +99,7 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Overlap', 'overlap'),
                  #('Heat Device', 'heat_device'),
                  ('Heat', 'heat_value'),
-                 ('Heat Units', 'heat_units'),
+                 ('Units', 'heat_units'),
                  ('Duration', 'duration'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),

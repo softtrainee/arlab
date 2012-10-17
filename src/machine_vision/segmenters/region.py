@@ -15,29 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Property, Bool
-from traitsui.api import View, Item, TableEditor
+from traits.api import Int, Property, Bool
+from traitsui.api import View, Item
 #============= standard library imports ========================
-from numpy import zeros_like, invert, ones, argmax, delete
+from numpy import zeros_like, invert
 from skimage.filter import sobel, threshold_adaptive
 from skimage.morphology import watershed
-from scipy import ndimage
 #============= local library imports  ==========================
 from src.machine_vision.segmenters.base import BaseSegmenter
-from skimage.morphology.watershed import is_local_maximum
-from numpy.lib.function_base import histogram
-from src.image.pyopencv_image_helper import asMat, get_polygons
 show = True
 class RegionSegmenter(BaseSegmenter):
     threshold_low = Property(Int, depends_on='threshold_width,threshold_tries,threshold_base')
     threshold_high = Property(Int, depends_on='threshold_width,threshold_tries,threshold_base')
 
     threshold_width = Int(5)
-    threshold_tries = Int(4)
-    threshold_base = Int(125)
+    threshold_tries = Int(20)
+    threshold_base = Int(150)
     count = Int(1)
 
-    use_adaptive_threshold = Bool(True)
+#    use_adaptive_threshold = Bool(True)
+    use_adaptive_threshold = Bool(False)
     def traits_view(self):
         return View(
                     Item('threshold_width', label='Width'),
@@ -46,19 +43,20 @@ class RegionSegmenter(BaseSegmenter):
                     Item('threshold_low', style='readonly'),
                     Item('threshold_high', style='readonly')
                     )
+
     def segment(self, src):
         image = src.ndarray[:]
-
         if self.use_adaptive_threshold:
-            block_size = 40
+            block_size = 25
             markers = threshold_adaptive(image, block_size) * 255
-            markers[markers < 1] = 1
+            markers = invert(markers)
+
         else:
             markers = zeros_like(image)
             markers[image < self.threshold_low] = 1
             markers[image > self.threshold_high] = 255
 
-        elmap = sobel(image)
+        elmap = sobel(image, mask=image)
         wsrc = watershed(elmap, markers, mask=image)
 
 #        elmap = ndimage.distance_transform_edt(image)

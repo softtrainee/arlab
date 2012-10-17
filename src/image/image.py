@@ -24,6 +24,7 @@ import wx
 from numpy import asarray, flipud, ndarray, hstack, array, ones, vstack, zeros, \
     percentile
 from globals import globalv
+from src.image.pyopencv_image_helper import threshold, colorspace, crop
 #=============local library imports  ==========================
 try:
     from cvwrapper import swapRB, grayspace, cvFlip, \
@@ -150,9 +151,7 @@ class Image(HasTraits):
             hflip = _get_param(hflip, 'hflip')
 
             if clone:
-                nframe = frame.clone()
-                del frame
-                frame = nframe
+                frame = frame.clone()
 
             if swap_rb:
                 frame = swapRB(frame)
@@ -293,6 +292,27 @@ class StandAloneImage(HasTraits):
     view_identifier = None
     title = None
     ui = Any
+#    thresholdv = Int
+#    osrc = None
+#    def _thresholdv_changed(self):
+#        if self.osrc is None:
+#            self.osrc = grayspace(self._image.get_frame(0))
+#            self.osrc = crop(self.osrc, 640 / 2, 480 / 2, 200, 200)
+
+#        print 'fff'
+#        im = self.get_frame(0)
+#        tim = threshold(im, self.thresholdv)
+#        self.source_frame = tim
+#        self.set_frame(0, None)
+#        self.load(self.source_frame)
+#        self.set_frame(0, self.source_frame)
+#        print self._image.frames[0] == self.source_frame
+#        sc = self._image.source_frame
+#        tim = threshold(self.osrc, self.thresholdv)
+##        self._image = Image(width=self.width, height=self.height)
+##        self.load(colorspace(tim))
+#        self.set_frame(0, colorspace(tim))
+#        
     def __image_default(self):
         return Image(width=self.width, height=self.height)
 
@@ -341,7 +361,9 @@ class StandAloneImage(HasTraits):
                       style='custom'
                       )
 
-        v = View(imgrp,
+        v = View(
+#                 Item('thresholdv'),
+                 imgrp,
                  handler=ImageHandler,
                  x=0.55,
                  y=35,

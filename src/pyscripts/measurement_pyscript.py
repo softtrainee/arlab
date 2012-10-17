@@ -265,14 +265,17 @@ class MeasurementPyScript(PyScript):
         self._set_spectrometer_parameter('SetIonCounterVoltage', v)
 
     @verbose_skip
-    def set_source_optics(self):
+    def set_source_optics(self, **kw):
         ''' 
+        set_source_optics(YSymmetry=10.0)
+        set ysymmetry to 10 use config.cfg
+        
         '''
         attrs = ['YSymmetry', 'ZSymmetry', 'ZFocus', 'ExtractionLens']
-        self._set_from_file(attrs, 'SourceOptics')
+        self._set_from_file(attrs, 'SourceOptics', **kw)
 
     @verbose_skip
-    def set_source_parameters(self):
+    def set_source_parameters(self, **kw):
         '''            
         '''
         attrs = ['IonRepeller', 'ElectronVolts']
@@ -290,11 +293,15 @@ class MeasurementPyScript(PyScript):
             if v is not None:
                 func('SetDeflection', '{},{}'.format(dn, v))
 
-    def _set_from_file(self, attrs, section):
+    def _set_from_file(self, attrs, section, **user_params):
         func = self._set_spectrometer_parameter
         config = self._get_config()
         for attr in attrs:
-            v = config.getfloat(section, attr)
+            if attr in user_params:
+                v = user_params[attr]
+            else:
+                v = config.getfloat(section, attr)
+
             if v is not None:
                 func('Set{}'.format(attr), v)
 
@@ -308,7 +315,6 @@ class MeasurementPyScript(PyScript):
     def _get_detectors(self):
         return self._detectors
     detector = property(fget=_get_detectors)
-
 
 #===============================================================================
 # handler

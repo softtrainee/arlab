@@ -35,8 +35,11 @@ class EdgeSegmenter(BaseSegmenter):
 
         ndsrc = src.ndarray / 255.
         edges = canny(ndsrc,
-                      low_threshold=self.canny_low_threshold,
-                      high_threshold=self.canny_high_threshold,
+#                      low_threshold=0.001,
+#                      high_threshold=0.1,
+
+#                      low_threshold=self.canny_low_threshold,
+#                      high_threshold=self.canny_high_threshold,
                       sigma=self.canny_sigma)
         filled = ndimage.binary_fill_holes(edges)
         filled = invert(filled) * 255

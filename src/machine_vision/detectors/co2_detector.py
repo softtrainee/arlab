@@ -110,7 +110,8 @@ class CO2HoleDetector(HoleDetector):
         seg = self.segmentation_style
 
         def get_npos(osrc):
-            src = self._apply_filters(osrc, True, True, True)
+            src = osrc
+            src = self._apply_filters(osrc, False, True, False)
             targets = self._segment_source(src, seg)
             if targets:
                 nx, ny = self._get_positioning_error(targets, cx, cy, holenum)

@@ -492,8 +492,11 @@ class ExperimentExecutor(ExperimentManager):
         return repo
 
     def _set_selector_default(self):
-        s = SetSelector(experiment_manager=self,
-                        addable=False
+        s = SetSelector(
+                        experiment_manager=self,
+                        #experiment_sets=self.experiment_sets,
+                        editable=False
                         )
+
         return s
 #============= EOF =============================================
