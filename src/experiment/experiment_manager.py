@@ -190,10 +190,13 @@ class ExperimentManager(Manager):
             self._text = a
             return ts
 
-    def _update_aliquots(self):
-
-        ans = [ai for ei in self.experiment_sets
+    def _get_all_automated_runs(self):
+        return [ai for ei in self.experiment_sets
                     for ai in ei.automated_runs]
+
+    def _update_aliquots(self):
+        ans = self._get_all_automated_runs()
+
         db = self.db
         idcnt_dict = dict()
         stdict = dict()

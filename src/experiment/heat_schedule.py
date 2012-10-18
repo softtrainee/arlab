@@ -18,9 +18,9 @@
 from traits.api import on_trait_change, HasTraits, Instance, List, \
      Enum, Str, Float, Button, Property, Event, Any, CFloat
 import apptools.sweet_pickle as pickle
-from traitsui.api import View, Item, HGroup, Spring, spring, VGroup
+from traitsui.api import View, Item, HGroup, Spring, spring, VGroup, TabularEditor
 from traitsui.tabular_adapter import TabularAdapter
-from traitsui.editors.tabular_editor import TabularEditor
+#from traitsui.editors.tabular_editor import TabularEditor
 from pyface.api import FileDialog, OK
 #============= standard library imports ========================
 import os
@@ -163,6 +163,8 @@ class HeatSchedule(HasTraits):
 
     current_step = Instance(HeatStep)
 
+    selected = List
+    selected_index = List
 #    elapsed_time = Float
 
 #    @on_trait_change('current_step:elapsed_time')
@@ -184,7 +186,10 @@ class HeatSchedule(HasTraits):
                                 operations=['delete', 'edit'],
                                 multi_select=True,
                                 editable=True,
-                                update='object.current_step.update'
+                                auto_update=True,
+                                selected='object.selected',
+                                selected_row='object.selected_index',
+#                                update='object.current_step.update'
                                 )
         v = View(
                  VGroup(
@@ -261,8 +266,12 @@ class HeatSchedule(HasTraits):
 #===============================================================================
 
     def _add_button_fired(self):
-        ps = self.steps[-1]
-        self.steps.append(ps.clone_traits())
+        ps = self.selected
+        if not ps:
+            ps = self.steps[-1:]
+
+        for pi in ps:
+            self.steps.append(pi.clone_traits())
 
     def _load_button_fired(self):
         p = self._get_path('open')

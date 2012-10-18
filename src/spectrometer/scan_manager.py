@@ -249,7 +249,6 @@ class ScanManager(Manager):
         g = TimeSeriesStreamGraph(container_dict=dict(bgcolor='gray',
                                                       padding=5
                                                       )
-
                                   )
         n = self.graph_scan_width * 60
         g.new_plot(padding=[50, 5, 5, 50],
@@ -266,18 +265,17 @@ class ScanManager(Manager):
             g.set_series_label(det.name)
             det.series_id = i
 
-        p = g.plots[0]
+#        p = g.plots[0]
 #        print p, p.plots
-        cp = p.plots[det.name][0]
-#        print cp
-        dt = DataTool(plot=cp, component=p,
-                      normalize_time=True,
-                      use_date_str=False)
-        dto = DataToolOverlay(
-                              component=p,
-                              tool=dt)
-        p.tools.append(dt)
-        p.overlays.append(dto)
+#        cp = p.plots[det.name][0]
+#        dt = DataTool(plot=cp, component=p,
+#                      normalize_time=True,
+#                      use_date_str=False)
+#        dto = DataToolOverlay(
+#                              component=p,
+#                              tool=dt)
+#        p.tools.append(dt)
+#        p.overlays.append(dto)
 
 #        self.graph_ymax_auto = True
 #        self.graph_ymin_auto = True

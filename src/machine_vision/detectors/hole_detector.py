@@ -48,7 +48,7 @@ from globals import globalv
 
 DEVX = random.randint(-10, 10)
 DEVY = random.randint(-10, 10)
-DEVX = 0
+DEVX = 10
 DEVY = 0
 CX = 2
 CY = -2
@@ -70,8 +70,8 @@ class HoleDetector(Detector):
 
     save_positioning_error = Bool(False)
     use_histogram = Bool(True)
-#    display_processed_image = Bool(True)
-    display_processed_image = Bool(False)
+    display_processed_image = Bool(True)
+#    display_processed_image = Bool(False)
 #    use_smoothing = Bool(True)
     use_crop = Bool(True)
 #    use_dilation = Bool(False)
@@ -170,7 +170,8 @@ class HoleDetector(Detector):
 
         if self.display_processed_image:
             self.target_image.load(colorspace(src))
-#
+
+
 #        if t:
 #            self._draw_markup(self.target_image.get_frame(0), t)
 
@@ -442,18 +443,20 @@ class HoleDetector(Detector):
     def _segmenter_default(self):
         return self._segmenter_factory(self.segmentation_style)
 
-    def _apply_filters(self, src, smooth=False,
-                        contrast=False, sharpen=False,
+    def _apply_filters(self, src,
+#                        smooth=False,
+                        contrast=True,
+                        sharpen=True,
                         verbose=False):
         if verbose:
-            self.debug('applying filters. smooth={} contrast={} sharpen={}'.format(smooth, contrast, sharpen))
+            self.debug('applying filters. contrast={} sharpen={}'.format(contrast, sharpen))
 
         if sharpen:
             src = self.sharpen(src)
         if contrast:
             src = self.contrast_equalization(src)
-        if smooth:
-            src = self.smooth(src)
+#        if smooth:
+#            src = self.smooth(src)
 
         try:
             return asMat(src)
@@ -468,19 +471,28 @@ class HoleDetector(Detector):
         npos = None
         segmenter = self.segmenter
         if style == 'region':
+            def _region_iteration(ni, si):
+                segmenter.count = 0
+                for j in range(1, ni):
+                    segmenter.count = j
+                    npos = self._segment_hook(si, segmenter,
+                                               **kw)
+                    if npos:
+                        break
+                return npos
 
-            segmenter.count = 0
+            ni = segmenter.threshold_tries
             if segmenter.use_adaptive_threshold:
-                ni = 2
-            else:
-                ni = segmenter.threshold_tries
-
-            for j in range(1, ni):
-                segmenter.count = j
                 npos = self._segment_hook(src, segmenter,
                                            **kw)
-                if npos:
-                    break
+                if not npos:
+                    segmenter.use_adaptive_threshold = False
+                    npos = _region_iteration(ni, src)
+                    segmenter.use_adaptive_threshold = True
+
+            else:
+                npos = _region_iteration(ni, src)
+
             return npos
         else:
             return self._segment_hook(src, segmenter, **kw)

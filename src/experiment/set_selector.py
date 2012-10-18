@@ -26,14 +26,16 @@ class SetSelector(HasTraits):
     experiment_sets = List#Instance('src.experiment_set.ExperimentSet')
     add_button = Button('+')
     delete_button = Button('-')
-    names = List(['Set1'])
-#    names = Property(depends_on='experiment_sets')
+    names = Property(depends_on='experiment_manager.experiment_sets')
+
     selected_index = Int
     selected = Str
     editable = Bool(True)
-#    def _get_names(self):
+    def _get_names(self):
+        return ['Set {}'.format(i + 1) for i in range(len(self.experiment_manager.experiment_sets))]
+
 #        print 'asdffds', ['Set {}'.format(i + 1) for i in range(len(self.experiment_sets))]
-#        return ['Set {}'.format(i + 1) for i in range(len(self.experiment_sets))]
+
     def _add_button_fired(self):
         exp = self.experiment_manager
         exp.new_experiment_set(clear=False)
@@ -45,7 +47,7 @@ class SetSelector(HasTraits):
                 i += 1
             else:
                 break
-        self.names.append(na)
+#        self.names.append(na)
 #        self.trait_set(selected_index=ni - 1, trait_change_notify=False)
 
     def _delete_button_fired(self):
@@ -53,7 +55,7 @@ class SetSelector(HasTraits):
             si = self.selected_index
         else:
             si = len(self.names) - 1
-        self.names.pop(si)
+#        self.names.pop(si)
         self.experiment_manager.experiment_sets.pop(si)
 
     def _selected_index_changed(self):

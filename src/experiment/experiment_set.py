@@ -490,13 +490,13 @@ tray: {}
         if new:
             self.loaded_scripts[new.name] = new
 
-    def reset_stats(self):
-        self._alive = True
-        self.stats.start_timer()
-
-    def stop_stats_timer(self):
-        self._alive = False
-        self.stats.stop_timer()
+#    def reset_stats(self):
+#        self._alive = True
+#        self.stats.start_timer()
+#
+#    def stop_stats_timer(self):
+#        self._alive = False
+#        self.stats.stop_timer()
 
     def _auto_increment(self, m):
 
@@ -626,7 +626,7 @@ tray: {}
             self.dirty = True
         else:
             self.dirty = False
-        self.stats.calculate_etf(self.automated_runs)
+#        self.stats.calculate_etf(self.automated_runs)
 
     @on_trait_change('automated_run.labnumber')
     def _update_labnumber(self, labnumber):
@@ -842,7 +842,8 @@ tray: {}
 #
 #
 #        return self._automated_run_factory(extraction=es, measurement=ms)
-
+    def _stats_default(self):
+        return ExperimentStats(experiment_set=self)
 #===============================================================================
 # views
 #===============================================================================
