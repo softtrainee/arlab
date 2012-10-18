@@ -37,6 +37,7 @@ def calculate_flux(ar40, ar39, age):
 
 def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        j, irradinfo,
+                       ic=(1.0, 0),
                        a37decayfactor=None,
                        a39decayfactor=None
                        ):
@@ -82,6 +83,11 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k3839 = ufloat(k3839)
     cl3638 = ufloat(cl3638)
     j = ufloat(j)
+    ic = ufloat(ic)
+
+    s36 *= ic
+    s36bs *= ic
+    s36bk *= ic
 #    except Exception, e:
 #        return
 

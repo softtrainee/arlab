@@ -75,8 +75,17 @@ class proc_BackgroundsSetTable(Base, BaseMixin):
     background_analysis_id = foreignkey('AnalysisTable')
 
 
+class proc_DetectorIntercalibrationSetTable(Base, BaseMixin):
+    detector_intercalibration_id = foreignkey('proc_DetectorIntercalibrationTable')
+    detector_intercalibration_analysis_id = foreignkey('AnalysisTable')
+
+
 class proc_BackgroundsHistoryTable(Base, HistoryMixin):
     backgrounds = relationship('proc_BackgroundsTable', backref='history')
+
+
+class proc_DetectorIntercalibrationHistoryTable(Base, HistoryMixin):
+    detector_intercalibration = relationship('proc_DetectorIntercalibrationTable', backref='history')
 
 
 class proc_BackgroundsTable(Base, BaseMixin):
@@ -87,6 +96,18 @@ class proc_BackgroundsTable(Base, BaseMixin):
     isotope = stringcolumn()
     fit = Column(String(40))
     sets = relationship('proc_BackgroundsSetTable', backref='backgrounds')
+
+
+class proc_DetectorIntercalibrationTable(Base, BaseMixin):
+    history_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
+    user_value = Column(Float)
+    user_error = Column(Float)
+#    use_set = Column(Boolean)
+    fit = Column(String(40))
+    sets = relationship('proc_DetectorIntercalibrationSetTable',
+                        backref='detector_intercalibration')
+
+
 
 
 #class proc_WorkspaceHistoryTable(Base, HistoryMixin):
@@ -132,6 +153,10 @@ class AnalysisTable(Base, ResultsMixin):
     backgrounds_histories = relationship('proc_BackgroundsHistoryTable', backref='analysis')
     backgrounds_sets = relationship('proc_BackgroundsSetTable', backref='analysis')
 
+    detector_intercalibration_histories = relationship('proc_DetectorIntercalibrationHistoryTable',
+                                                       backref='analysis')
+    detector_intercalibration_sets = relationship('proc_DetectorIntercalibrationSetTable',
+                                                   backref='analysis')
 
 class AnalysisTypeTable(Base, NameMixin):
     measurements = relationship('MeasurementTable', backref='analysis_type')

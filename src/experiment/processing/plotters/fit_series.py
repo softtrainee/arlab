@@ -22,12 +22,24 @@ from numpy import array, where, polyval, polyfit
 #============= local library imports  ==========================
 from src.experiment.processing.plotters.series import Series
 
+
+#    return pb.signals[k].value
+
+def try_decorator(func):
+    def decorator(*args, **kw):
+        try:
+            return func(*args, **kw)
+        except (IndexError, ValueError):
+            pass
+    return decorator
+
+@try_decorator
 def preceeding_predictors(predictors, tm, k, ts=None, attr='value'):
     ti = where(ts < tm)[0][-1]
     pb = predictors[ti]
     return getattr(pb.signals[k], attr)
-#    return pb.signals[k].value
 
+@try_decorator
 def bracketing_average_predictors(predictors, tm, k, attr='value', **kw):
     pb, ab = _bracketing_predictors(predictors, tm, **kw)
 
@@ -35,6 +47,8 @@ def bracketing_average_predictors(predictors, tm, k, attr='value', **kw):
     aas = getattr(ab.signals[k], attr)
     return (ps + aas) / 2.0
 
+
+@try_decorator
 def bracketing_interpolate_predictors(predictors, tm, k, attr='value', **kw):
     pb, ab = _bracketing_predictors(predictors, tm, **kw)
     x = [pb.timestamp, ab.timestamp]
@@ -43,6 +57,8 @@ def bracketing_interpolate_predictors(predictors, tm, k, attr='value', **kw):
     y = [ps, aas]
     return polyval(polyfit(x, y, 1), tm)
 
+
+@try_decorator
 def _bracketing_predictors(predictors, tm, ts=None):
     if ts is None:
         ts = array([a.timestamp for a in predictors])

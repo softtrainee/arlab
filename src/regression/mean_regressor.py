@@ -15,23 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Array
-from traitsui.api import View, Item, TableEditor
+from traits.api import Array
 #============= standard library imports ========================
-from numpy import average, ones, asarray
+from numpy import average, ones, asarray, float64
 #============= local library imports  ==========================
 from base_regressor import BaseRegressor
 
 class MeanRegressor(BaseRegressor):
-
+    ddof = 1
     def _calculate_coefficients(self):
         return [self.ys.mean()]
 
     def _calculate_coefficient_errors(self):
-        ys = self.ys
-        std = ys.std()
-        sem = 1 / (len(ys) ** 0.5) * std
-        return [std, sem]
+        return [self.std, self.sem]
 
     @property
     def summary(self):
@@ -51,7 +47,13 @@ sem={}
 
     @property
     def std(self):
-        return self.ys.std()
+        '''
+            mass spec uses ddof=1
+            ddof=0 provides a maximum likelihood estimate of the variance for normally distributed variables
+            ddof=1 unbiased estimator of the variance of the infinite population
+        '''
+        ys = asarray(self.ys, dtype=float64)
+        return ys.std(ddof=self.ddof)
 
     @property
     def sem(self):
@@ -59,6 +61,7 @@ sem={}
 
     def predict(self, xs, *args):
         return ones(asarray(xs).shape) * self.mean
+
 
 class WeightedMeanRegressor(MeanRegressor):
     errors = Array
@@ -74,8 +77,6 @@ class WeightedMeanRegressor(MeanRegressor):
     @property
     def weights(self):
         return 1 / self.errors ** 2
-
-#        return self.ys.average(weights=ws)
 
 
 #============= EOF =============================================

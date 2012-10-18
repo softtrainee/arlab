@@ -64,7 +64,6 @@ class FitSeriesFigure(BaseFigure):
         else:
             self.selector.show()
 
-
         self._update_data()
 
     def _get_load_keywords(self):
@@ -72,6 +71,10 @@ class FitSeriesFigure(BaseFigure):
 
     def _get_analyses(self):
         return sorted(self._analyses + self.fit_analyses, key=lambda x: x.timestamp)
+
+    def _check_refresh(self):
+        if self._analyses or self.fit_analyses:
+            return True
 
     def _add_analysis(self, a, ispredictor=False):
 #        print ispredictor, a

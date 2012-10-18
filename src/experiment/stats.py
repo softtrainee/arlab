@@ -147,6 +147,7 @@ class StatsGroup(ExperimentStats):
             if sel in ei.automated_runs:
                 si = ei.automated_runs.index(sel)
                 tt += ei.stats.calculate_duration(ei.automated_runs[:si + 1])
+                break
             else:
                 tt += ei.stats.calculate_duration()
 

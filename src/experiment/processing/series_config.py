@@ -98,4 +98,7 @@ class BlanksSeriesConfig(SeriesConfig):
 
 class BackgroundsSeriesConfig(BlanksSeriesConfig):
     pass
+
+class DetectorIntercalibrationSeriesConfig(BlanksSeriesConfig):
+    pass
 #============= EOF =============================================

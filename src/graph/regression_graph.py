@@ -55,6 +55,18 @@ class RegressionGraph(Graph):
         self.regressors = []
         for plot in self.plots:
             ks = plot.plots.keys()
+#            print ks
+#            scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
+#            ind = kkk[0][-1]
+#            fls = [plot.plots[kk][0] for kk in ks if kk == 'fit{}'.format(ind)]
+#            uls = [plot.plots[kk][0] for kk in ks if kk == 'upper CI{}'.format(ind)]
+#            lls = [plot.plots[kk][0] for kk in ks if kk == 'lower CI{}'.format(ind)]
+#
+#            #fls = [plot.plots[k][0] for k in ks if k.startswith('fit')]
+#            #uls = [plot.plots[k][0] for k in ks if k.startswith('upper')]
+#            #lls = [plot.plots[k][0] for k in ks if k.startswith('lower')]
+#            for si, fl, ul, ll in zip(scatters, fls, uls, lls):
+#                self._plot_regression(plot, si, fl, ul, ll)
             try:
                 scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
                 ind = kkk[0][-1]
@@ -68,6 +80,7 @@ class RegressionGraph(Graph):
                 for si, fl, ul, ll in zip(scatters, fls, uls, lls):
                     self._plot_regression(plot, si, fl, ul, ll)
             except ValueError, e:
+                print e
                 break
         else:
             self.regression_results = self.regressors

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Int, Float, Property, cached_property, Dict, \
-    List, Color, Any, Event
+    List, Color, Any, Event, Tuple
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import random
@@ -24,8 +24,10 @@ import os
 from tables import openFile
 #============= local library imports  ==========================
 from src.experiment.processing.argon_calculations import calculate_arar_age
-from src.experiment.processing.signal import Signal, Blank, Background
+from src.experiment.processing.signal import Signal, Blank, Background, Value, \
+    InterpolatedRatio
 from src.loggable import Loggable
+from uncertainties import ufloat
 
 
 class AnalysisTabularAdapter(TabularAdapter):
@@ -123,6 +125,9 @@ class Analysis(Loggable):
     uuid = Str
 #    age_scalar = Enum({'Ma':1e6, 'ka':1e3})
     age_scalar = 1e6
+    ic_factor = Property
+    _ic_factor = Tuple
+
 
 #    @on_trait_change('signals:blank_signal')
 #    def _change(self):
@@ -134,6 +139,10 @@ class Analysis(Loggable):
             return True
         else:
             self.warning('could not compute age for {}'.format(self.rid))
+
+#    @cached_property
+    def _get_ic_factor(self):
+        return self._ic_factor
 
     @cached_property
     def _get_age(self):
@@ -160,7 +169,8 @@ class Analysis(Loggable):
 #            return None
 
 #        return 1, 0
-        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irradinfo)
+        ic = self.ic_factor
+        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irradinfo, ic)
 
         if result:
             self.k39 = result['k39'].nominal_value
@@ -194,39 +204,37 @@ class Analysis(Loggable):
         if dbr is None:
             dbr = self.dbresult
 
-#        #load blanks
-#        histories = dbr.blanks_histories
-#        if histories:
-#            hist = histories[-1]
-#            for bi in hist.blanks:
-#                isotope = bi.isotope
-#                s = Blank(timestamp=self.timestamp)
-#                if not bi.use_set:
-#                    s.value = bi.user_value
-#                    s.error = bi.user_error
-#                else:
-#                    #load signals
-#                    s.fit = bi.fit.lower()
-##                    def an_factory(bii):
-##                        c = self.__class__(
-###                                           dbresult=bii.analysis,
-##                                            repo=self.repo,
-##                                            workspace=self.workspace
-##                                            )
-##                        c.load_from_file(bii.analysis.path.filename)
-##                        return c
-#
-#                    xs, ys = zip(*[(ba.timestamp, ba.signals[isotope].value)
-#                                   for ba in map(self._analysis_factory, bi.sets)])
-#                    s.xs = xs
-#                    s.ys = ys
-#
-#                self.signals['{}bl'.format(isotope)] = s
         #load blanks
         self._load_from_history(dbr, 'blanks', 'bl', Blank)
 
         #load backgrounds
         self._load_from_history(dbr, 'backgrounds', 'bg', Background)
+
+        #load airs for detector intercal
+        self._load_detector_intercalibration(dbr)
+
+    def _load_detector_intercalibration(self, dbr):
+        self._ic_factor = (1.0, 0)
+        name = 'detector_intercalibration'
+        histories = getattr(dbr, '{}_histories'.format(name))
+#        print histories, name
+        if histories:
+            hist = histories[-1]
+            item = getattr(hist, name)[0]
+            if not item.fit:
+#                s = Value(value=item.user_value, error=item.user_error)
+                self._ic_factor = item.user_value, item.user_error
+            else:
+                intercal = lambda x:self._intercalibration_factory(x, 'Ar40', 'Ar36', 295.5)
+                data = map(intercal, item.sets)
+                xs, ys, es = zip(*data)
+
+                s = InterpolatedRatio(timestamp=self.timestamp,
+                                      fit=item.fit,
+                                      xs=xs, ys=ys, es=es
+                                      )
+
+                self._ic_factor = s.value, s.error
 
     def _load_from_history(self, dbr, name, key, klass, **kw):
         histories = getattr(dbr, '{}_histories'.format(name))
@@ -236,7 +244,8 @@ class Analysis(Loggable):
             for bi in items:
                 isotope = bi.isotope
                 s = klass(timestamp=self.timestamp, **kw)
-                if not bi.use_set:
+                if not bi.fit:
+#                if not bi.use_set:
                     s.value = bi.user_value
                     s.error = bi.user_error
                 else:
@@ -253,6 +262,23 @@ class Analysis(Loggable):
         c = klass(repo=self.repo, workspace=self.workspace)
         c.load_from_file(dbr.analysis.path.filename)
         return c
+
+    def _ratio_factory(self, dbr, num_key, dem_key):
+        a = self._analysis_factory(dbr)
+        num = a.signals[num_key]
+        dem = a.signals[dem_key]
+        to_unc = lambda x: ufloat((x.nominal_value, x.std_dev()))
+        r = to_unc(num) / to_unc(dem)
+        return a.timestamp, r.nominal_value, r.std_dev()
+
+    def _intercalibration_factory(self, dbr, num_key, dem_key, scalar):
+        if not isinstance(scalar, tuple):
+            scalar = (scalar, 0)
+        scalar = ufloat(scalar)
+        ti, ri, ei = self._ratio_factory(dbr, num_key, dem_key)
+        ic = ufloat((ri, ei)) / scalar
+        return ti, ic.nominal_value, ic.std_dev()
+
 
     def load_from_file(self, name):
         df = self._open_file(name)

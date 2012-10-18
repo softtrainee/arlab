@@ -77,7 +77,7 @@ class AnalysisResult(DBResult):
     def __getattr__(self, attr):
         try:
             return getattr(self._db_result, attr)
-        except Exception, e:
+        except AttributeError, e:
             pass
 
 #    def _data_manager_factory(self):
@@ -88,10 +88,11 @@ class AnalysisResult(DBResult):
 
     @cached_property
     def _get_labnumber(self):
-#        print 'get aasfd'
+#        print 'get aasfd', self._db_result.labnumber
+
         ln = self._db_result.labnumber.labnumber
         ln = convert_labnumber(ln)
-        ln = '{}-{}'.format(ln, self.aliquot)
+#        ln = '{}-{}'.format(ln, self.aliquot)
         return ln
 
     @cached_property
@@ -260,9 +261,7 @@ class AnalysisResult(DBResult):
             skw = dict()
             if regress:
                 skw['fit'] = fi
-#
-            xs = xs[:-1]
-            ys = ys[:-1]
+
             graph.new_plot(**gkw)
             graph.new_series(xs, ys, plotid=i,
                              type='scatter', marker='circle',
@@ -396,12 +395,14 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
     columns = [
 #               ('ID', 'rid'),
                ('Labnumber', 'labnumber'),
+               ('Aliquot', 'aliquot'),
                ('Date', 'rundate'),
                ('Time', 'runtime')
                ]
     font = 'monospace'
-    rid_width = Int(50)
+#    rid_width = Int(50)
     labnumber_width = Int(90)
+    aliquot_width = Int(90)
     rundate_width = Int(90)
     runtime_width = Int(90)
 #    width = Int(50)

@@ -80,10 +80,12 @@ class Series(Plotter):
 #        pxmi = None
         for i, (k, f) in enumerate(keys + basekeys):
             if new_plot:
-                graph.new_plot(padding_left=padding[0],
-                       padding_right=padding[1],
-                       padding_top=padding[2],
-                       padding_bottom=padding[3],
+                graph.new_plot(
+#                               padding_left=padding[0],
+#                       padding_right=padding[1],
+#                       padding_top=padding[2],
+#                       padding_bottom=padding[3],
+                        padding=padding,
                        pan=False,
                        zoom=False,
                        ytitle='{} (fA)'.format(k))
@@ -92,30 +94,35 @@ class Series(Plotter):
 
                 p.value_range.tight_bounds = False
                 p.value_range.margin = 0.1
+                p.index_range.tight_bounds = False
+                p.index_range.margin = 0.1
 
             self.fits[k] = f
 
             for gid in gids:
-                xs, ys, es = zip(*[(a.timestamp,
-                                self._get_series_value(a, k, i, gid),
-                                self._get_series_error(a, k, i, gid),
-                                ) for a in analyses if a.timestamp > 0 and a.gid == gid])
+                data = [(a.timestamp,
+                                    self._get_series_value(a, k, i, gid),
+                                    self._get_series_error(a, k, i, gid),
+                                    ) for a in analyses if a.timestamp > 0 and a.gid == gid]
+
+                data = [di for di in data if di[1] is not None]
+                xs, ys, es = zip(*data)
 
                 self._add_series(graph, k, xs, ys, es, f, padding,
                                  regress, gid, plotid=cnt)
-                xma = max(xs)
-                xmi = min(xs)
-
-                if self.pxma:
-                    xma = max(self.pxma, xma)
-                    xmi = min(self.pxmi, xmi)
-
-                self.pxma = xma
-                self.pxmi = xmi
+#                xma = max(xs)
+#                xmi = min(xs)
+#
+#                if self.pxma:
+#                    xma = max(self.pxma, xma)
+#                    xmi = min(self.pxmi, xmi)
+#
+#                self.pxma = xma
+#                self.pxmi = xmi
             cnt += 1
 
-        if self.pxma and self.pxmi:
-            graph.set_x_limits(self.pxmi, self.pxma, plotid=0, pad='0.1')
+#        if self.pxma and self.pxmi:
+#            graph.set_x_limits(self.pxmi, self.pxma, plotid=0, pad='0.1')
 
         return graph
 

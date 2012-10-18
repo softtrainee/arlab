@@ -94,21 +94,13 @@ class MassSpecDatabaseImporter(Loggable):
         item = db.add_changeable_items(analysis, drs, commit=True)
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
-        add_results = False
-        isos = []
-        for det, iso in keys:
+#        add_results = False
+#        isos = []
+        for ((det, iso), si, bi) in zip(keys, signals, baselines):
             #===================================================================
             # isotopes
             #===================================================================
             iso = db.add_isotope(analysis, det, iso)
-
-            if add_results:
-                i = regression_results[det].coefficients[-1]
-                ierr = regression_results[det].coefficient_errors[-1]
-                db.add_isotope_result(iso, drs, i, ierr)
-            isos.append(iso)
-
-        for bi in baselines:
             #===================================================================
             # baselines
             #===================================================================
@@ -116,15 +108,37 @@ class MassSpecDatabaseImporter(Loggable):
             blob = self._build_timeblob(tb, vb)
             label = '{} Baseline'.format(det.upper())
             ncnts = len(tb)
-            db.add_baseline(blob, label, ncnts)
-
-        for iso, si in zip(isos, signals):
+            db.add_baseline(blob, label, ncnts, iso)
             #===================================================================
             # peak time
             #===================================================================
             tb, vb = zip(*si)
             blob = self._build_timeblob(tb, vb)
             db.add_peaktimeblob(blob, iso)
+
+#            if add_results:
+#                i = regression_results[det].coefficients[-1]
+#                ierr = regression_results[det].coefficient_errors[-1]
+#                db.add_isotope_result(iso, drs, i, ierr)
+#            isos.append(iso)
+
+#        for bi in baselines:
+#            #===================================================================
+#            # baselines
+#            #===================================================================
+#            tb, vb = zip(*bi)
+#            blob = self._build_timeblob(tb, vb)
+#            label = '{} Baseline'.format(det.upper())
+#            ncnts = len(tb)
+#            db.add_baseline(blob, label, ncnts)
+#
+#        for iso, si in zip(isos, signals):
+#            #===================================================================
+#            # peak time
+#            #===================================================================
+#            tb, vb = zip(*si)
+#            blob = self._build_timeblob(tb, vb)
+#            db.add_peaktimeblob(blob, iso)
 
         db.commit()
 
