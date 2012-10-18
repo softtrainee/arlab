@@ -69,6 +69,7 @@ class FitSeriesEditor(Loggable):
 
         gids = [1] * len(names)
         attrs = [dict(dbresult=ai.dbresult) for ai in analyses]
+
         #also load these analyses
         f.load_analyses(names,
                         groupids=gids,
@@ -76,14 +77,15 @@ class FitSeriesEditor(Loggable):
                         set_series_configs=False)
 
         sanalyses = [bi
-                  for a in analyses
-                    for bi in self._get_db_results(a, sess)]
-
+                     for a in analyses
+                        for bi in self._get_db_results(a, sess)]
+#        print sanalyses
         sanalyses = list(set(sanalyses))
         if sanalyses:
             names, attrs = zip(*[(bi.path.filename, dict(dbresult=bi)) for bi in sanalyses])
-
             f.load_analyses(names, attrs=attrs, ispredictor=True)
+
+#        f.load_analyses(names, attrs=attrs, ispredictor=True)
 
 
 
@@ -228,7 +230,7 @@ class FitSeriesEditor(Loggable):
 
     def _apply_fired(self):
         self.db.rollback()
-        for a in self.analyses:
+        for a in self._analyses:
             self._apply(a)
 
     def _save_fired(self):

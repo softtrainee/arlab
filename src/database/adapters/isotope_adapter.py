@@ -25,7 +25,9 @@ from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, 
     proc_BlanksHistoryTable, proc_BlanksTable, proc_BlanksSetTable, \
     proc_BackgroundsHistoryTable, proc_BackgroundsTable, \
     proc_BackgroundsSetTable, IsotopeTable, DetectorTable, MolecularWeightTable, \
-    irrad_ProductionTable, irrad_IrradiationTable, irrad_HolderTable
+    irrad_ProductionTable, irrad_IrradiationTable, irrad_HolderTable, \
+    proc_DetectorIntercalibrationHistoryTable, \
+    proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable
 #import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
@@ -59,63 +61,134 @@ class IsotopeAdapter(DatabaseAdapter):
 # adders
 #===========================================================================
     @add
+    def _add_history(self, name, analysis, **kw):
+        table = globals()['proc_{}HistoryTable'.format(name)]
+        analysis = self.get_analysis(analysis)
+        h = table(analysis=analysis, **kw)
+        return h, True
+
+    @add
+    def _add_set(self, name, key, value, analysis, **kw):
+        table = globals()['proc_{}SetTable'.format(name)]
+        nset = table(**kw)
+#        bs = proc_BlanksSetTable(**kw)
+
+#        blank = self.get_blank(blank)
+        pa = getattr(self, 'get_{}'.format(key))(value)
+
+        analysis = self.get_analysis(analysis)
+
+        if analysis:
+            setattr(nset, '_analysis_id'.format(key), analysis)
+#            bs.blank_analysis_id = analysis.id
+        if pa:
+            pa.sets.append(nset)
+#        if blank:
+#            blank.sets.append(bs)
+        return nset, True
+
+    @add
+    def _add_series_item(self, name, key, history, **kw):
+        item = globals()['proc_{}Table'.format(name)](**kw)
+        history = getattr(self, 'get_{}_history'.format(key))(history)
+        if history:
+            getattr(history, key).append(item)
+            return item, True
+        return item, False
+
     def add_blanks_history(self, analysis, **kw):
-        analysis = self.get_analysis(analysis)
-        bh = proc_BlanksHistoryTable(analysis=analysis, **kw)
-        return bh, True
+        return self._add_history('Blanks', analysis, **kw)
+#        analysis = self.get_analysis(analysis)
+#        bh = proc_BlanksHistoryTable(analysis=analysis, **kw)
+#        return bh, True
 
-    @add
     def add_blanks(self, history, **kw):
-        b = proc_BlanksTable(**kw)
-        history = self.get_blanks_history(history)
-        if history:
-            history.blanks.append(b)
-            return b, True
-        return b, False
+        return self._add_series_item('Blanks', 'blanks', history, **kw)
 
-    @add
+
+#        b = proc_BlanksTable(**kw)
+#        history = self.get_blanks_history(history)
+#        if history:
+#            history.blanks.append(b)
+#            return b, True
+#        return b, False
+
     def add_blanks_set(self, blank, analysis, **kw):
-        bs = proc_BlanksSetTable(**kw)
-        blank = self.get_blank(blank)
-        analysis = self.get_analysis(analysis)
+        return self._add_set('Blanks', 'blank', blank, analysis, **kw)
+#        bs = proc_BlanksSetTable(**kw)
+#        blank = self.get_blank(blank)
+#        analysis = self.get_analysis(analysis)
+#
+#        if analysis:
+#            bs.blank_analysis_id = analysis.id
+#        if blank:
+#            blank.sets.append(bs)
+#        return bs, True
 
-        if analysis:
-            bs.blank_analysis_id = analysis.id
-        if blank:
-            blank.sets.append(bs)
-        return bs, True
 
-    @add
     def add_backgrounds_history(self, analysis, **kw):
-        analysis = self.get_analysis(analysis)
-        bh = proc_BackgroundsHistoryTable(analysis=analysis, **kw)
-        return bh, True
+        return self._add_history('Backgrounds', analysis, **kw)
+#        analysis = self.get_analysis(analysis)
+#        bh = proc_BackgroundsHistoryTable(analysis=analysis, **kw)
+#        return bh, True
 
-    @add
+
     def add_backgrounds(self, history, **kw):
-        b = proc_BackgroundsTable(**kw)
-        history = self.get_backgrounds_history(history)
-        if history:
-            history.backgrounds.append(b)
-            return b, True
-        return b, False
+        return self._add_series_item('Backgrounds', 'backgrounds', history, **kw)
+#        b = proc_BackgroundsTable(**kw)
+#        history = self.get_backgrounds_history(history)
+#        if history:
+#            history.backgrounds.append(b)
+#            return b, True
+#        return b, False
 
-    @add
+
     def add_backgrounds_set(self, background, analysis, **kw):
-        bs = proc_BackgroundsSetTable(**kw)
-        background = self.get_background(background)
-        analysis = self.get_analysis(analysis)
+        return self._add_set('Backgrounds', 'background', background, analysis, **kw)
 
-        if analysis:
-            bs.background_analysis_id = analysis.id
-        if background:
-            background.sets.append(bs)
-        return bs, True
+#        bs = proc_BackgroundsSetTable(**kw)
+#        background = self.get_background(background)
+#        analysis = self.get_analysis(analysis)
+#
+#        if analysis:
+#            bs.background_analysis_id = analysis.id
+#        if background:
+#            background.sets.append(bs)
+#        return bs, True
 
     @add
     def add_detector(self, name, **kw):
         det = DetectorTable(name=name, **kw)
         return self._add_unique(det, 'detector', name)
+
+    def add_detector_intercalibration_history(self, analysis, **kw):
+        return self._add_history('DetectorIntercalibration', analysis, **kw)
+#        analysis = self.get_analysis(analysis)
+#        dh = proc_DetectorIntercalibrationHistoryTable(analysis=analysis, **kw)
+#        return dh, True
+
+    def add_detector_intercalibration(self, history, **kw):
+        return self._add_series_item('DetectorIntercalibration',
+                                     'detector_intercalibration', history, **kw)
+#        d = proc_DetectorIntercalibrationTable(**kw)
+#        history = self.get_detector_intercalibration_history(history)
+#        if history:
+#            history.detector_intercalibration.append(d)
+#            return d, True
+#        return d, False
+
+    def add_detector_intercalibration_set(self, detector_intercalibration, analysis, **kw):
+        return self._add_set('DetectorIntercalibration', 'detector_intercalibration',
+                             detector_intercalibration, analysis, **kw)
+#        ds = proc_DetectorIntercalibrationSetTable(**kw)
+#        detector_intercalibration = self.get_detector_intercalibration(detector_intercalibration)
+#        analysis = self.get_analysis(analysis)
+#
+#        if analysis:
+#            ds.detector_intercalibration_analysis_id = analysis.id
+#        if detector_intercalibration:
+#            detector_intercalibration.sets.append(ds)
+#        return ds, True
 
     @add
     def add_experiment(self, name, **kw):
@@ -387,6 +460,14 @@ class IsotopeAdapter(DatabaseAdapter):
         return DetectorTable
 
     @get_one
+    def get_detector_intercalibration(self, name):
+        return proc_DetectorIntercalibrationTable
+
+    @get_one
+    def get_detector_intercalibration_history(self, name):
+        return proc_DetectorIntercalibrationHistoryTable
+
+    @get_one
     def get_experiment(self, name):
         return ExperimentTable
 
@@ -401,10 +482,12 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_labnumber(self, labnum):
         if isinstance(labnum, str):
             labnum = convert_identifier(labnum)
+
         try:
             labnum = int(labnum)
         except (ValueError, TypeError):
-            return
+            pass
+
         return self._get_labnumber(labnum)
 
     @get_one

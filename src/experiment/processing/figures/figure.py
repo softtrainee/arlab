@@ -27,6 +27,7 @@ from src.experiment.processing.figures.base_figure import BaseFigure, GraphSelec
 #from src.experiment.processing.result import Result
 from src.helpers.traitsui_shortcuts import instance_item
 from src.experiment.processing.series.backgrounds_editor import BackgroundsEditor
+from src.experiment.processing.series.detector_intercalibration_editor import DetectorIntercalibrationEditor
 
 class FigureGraphSelector(GraphSelector):
     show_ideo = Bool(True)
@@ -49,6 +50,7 @@ class Figure(BaseFigure):
     graph_selector = Instance(FigureGraphSelector, ())
     blanks_editor = Instance(BlanksEditor)
     backgrounds_editor = Instance(BackgroundsEditor)
+    detector_intercalibration_editor = Instance(DetectorIntercalibrationEditor)
     nanalyses = -1
 
     def _refresh(self, graph, analyses, padding):
@@ -125,12 +127,17 @@ class Figure(BaseFigure):
                                           )
         self.backgrounds_editor.add(self.isotope_keys)
 
-        keys = self.signal_keys
-        bl_keys = [i for i in keys if i.endswith('bl')]
-        bg_keys = [i for i in keys if i.endswith('bg')]
+        self.detector_intercalibration_editor = DetectorIntercalibrationEditor(db=self.db,
+                                                                               figure=self)
+        self.detector_intercalibration_editor.add(['IC'])
 
-        self.blank_table_adapter.iso_keys = bl_keys
-        self.background_table_adapter.iso_keys = bg_keys
+#        keys = self.signal_keys
+#        bl_keys = [i for i in keys if i.endswith('bl')]
+#        bg_keys = [i for i in keys if i.endswith('bg')]
+
+#        self.blank_table_adapter.iso_keys = bl_keys
+#        self.background_table_adapter.iso_keys = bg_keys
+
 
 #===============================================================================
 # handlers
@@ -150,43 +157,54 @@ class Figure(BaseFigure):
 
         blanksgrp , ta = self._analyses_table_factroy('Blanks')
         self.blank_table_adapter = ta
-
-        grp.content.append(blanksgrp)
-
+#
+#        grp.content.append(blanksgrp)
+#
         backsgrp, ta = self._analyses_table_factroy('Backgrounds')
         self.background_table_adapter = ta
-        grp.content.append(backsgrp)
+#        grp.content.append(backsgrp)
 
+        height = 200
         editblankgrp = VGroup(
                               Item('blanks_editor',
-                                   height=200,
+                                   height=height,
                                    show_label=False, style='custom'),
-                              visible_when='blanks_editor',
+#                              visible_when='blanks_editor',
                               label='Edit Blanks')
+
         editbackgrp = VGroup(
                               Item('backgrounds_editor',
-                                   height=200,
+                                   height=height,
                                    show_label=False, style='custom'),
-                              visible_when='backgrounds_editor',
+#                              visible_when='backgrounds_editor',
                               label='Edit Backgrounds')
+        editdetintergrp = VGroup(
+                              Item('detector_intercalibration_editor',
+                                   height=height,
+                                   show_label=False, style='custom'),
+#                              visible_when='detector_intercalibration_editor',
+                              label='Edit Det. Intercal.')
+
         editideogrp = VGroup(
-                             instance_item('ideogram', height=200),
+                             instance_item('ideogram', height=height),
                              visible_when='ideogram',
                              label='Edit Ideo.')
         editinvisogrp = VGroup(
-                             instance_item('inverse_isochron', height=200),
+                             instance_item('inverse_isochron', height=height),
                              visible_when='inverse_isochron',
                              label='Edit Inv. Isochron')
         editspecgrp = VGroup(
-                             instance_item('spectrum', height=200),
+                             instance_item('spectrum', height=height),
                              visible_when='spectrum',
                              label='Edit Spectrum.')
 
+        grp.content.append(editdetintergrp)
         grp.content.append(editblankgrp)
         grp.content.append(editbackgrp)
         grp.content.append(editideogrp)
         grp.content.append(editinvisogrp)
         grp.content.append(editspecgrp)
+
         return grp
 
 #============= EOF =============================================

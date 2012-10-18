@@ -37,6 +37,8 @@ from src.repo.repository import Repository
 from src.experiment.plot_panel import PlotPanel
 from globals import globalv
 from src.experiment.identifier import convert_identifier, get_analysis_type
+from src.database.adapters.local_lab_adapter import LocalLabAdapter
+from src.paths import paths
 #from src.regression.ols_regressor import PolynomialRegressor
 
 
@@ -50,8 +52,10 @@ class AutomatedRun(Loggable):
     data_manager = Any
 
     db = Any
+    local_lab_db = Instance(LocalLabAdapter)
     massspec_importer = Instance(MassSpecDatabaseImporter)
     repository = Instance(Repository)
+
     runner = Any
     plot_panel = Any
     peak_plot_panel = Any
@@ -498,11 +502,11 @@ class AutomatedRun(Loggable):
         for i, l in enumerate(dets):
             det = spec.get_detector(l)
             g.new_plot(ytitle='{} {} Signal (fA)'.format(det.name, det.isotope))
-            g.new_series(type='scatter',
-                         marker='circle',
-                         marker_size=1.25,
-                         fit=None,
-                         label=l, plotid=i)
+#            g.new_series(type='scatter',
+#                         marker='circle',
+#                         marker_size=1.25,
+#                         fit=None,
+#                         label=l, plotid=i)
 
             g.set_x_limits(min=0, max=400, plotid=i)
 
@@ -773,7 +777,7 @@ class AutomatedRun(Loggable):
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, series, fits):
         self.info('measuring {}'.format(grpname))
-
+        print fits
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
             return True
@@ -871,10 +875,6 @@ class AutomatedRun(Loggable):
         if not fname:
             return
 
-#        ms = self.mass_spec_name
-#        if ms and not name.startswith(ms):
-#            fname = '{}_{}'.format(ms, fname)
-
         if fname in self.scripts:
 #            self.debug('script "{}" already loaded... cloning'.format(fname))
             s = self.scripts[fname]
@@ -902,23 +902,20 @@ class AutomatedRun(Loggable):
             else:
                 self.warning_dialog('Invalid Script {}'.format(s.filename if s else 'None'))
 
-
     def pre_extraction_save(self):
         # set our aliquot
         db = self.db
-#        labnumber = self.labnumber
         ln = convert_identifier(self.labnumber)
-
         ln = db.get_labnumber(ln)
         if ln is None:
-            self.warning('invalid lab number {}'.format(self.labnumber))
+            self.warning_dialog('invalid lab number {}'.format(self.labnumber))
 #            aliquot = ln.aliquot + 1
 #            self.aliquot = aliquot
 #        else:
 
         d = get_datetime()
         self._runtime = d.time()
-        self.info('analysis started at {}'.format(self._runtime))
+        self.info('Analysis started at {}'.format(self._runtime))
         self._rundate = d.date()
 
     def _post_extraction_save(self):
@@ -962,16 +959,22 @@ class AutomatedRun(Loggable):
         self.repository.add_file(cp)
         np = self.repository.get_file_path(cp)
 
+        ln = self.labnumber
+        ln = convert_identifier(ln)
+        aliquot = self.aliquot
+
+        #save to local sqlite database for backup and reference
+        ldb = self.local_lab_db
+
+        ldb.add_analysis(labnumber=ln,
+                         aliquot=aliquot,
+                         collection_path=cp,
+                         repository_path=np, commit=True)
+
+        #save to a database
         db = self.db
         if db:
-        #save to a database
-#            self.labnumber = 1
-            ln = self.labnumber
-            aliquot = self.aliquot
-
             sample = self.sample
-
-            ln = convert_identifier(ln)
             if not sample:
                 samples = ['BoneBlank', 'Air', 'Cocktail', 'Background']
                 try:
@@ -1010,8 +1013,6 @@ class AutomatedRun(Loggable):
             np = os.path.relpath(np, self.repository.root)
             db.add_analysis_path(np, analysis=a)
 
-            #            #save to db also
-
             self._save_isotope_info(a)
             if globalv.experiment_savedb:
                 db.commit()
@@ -1032,12 +1033,6 @@ class AutomatedRun(Loggable):
             db.add_isotope(analysis, iso, det, kind=kind)
             if globalv.experiment_savedb:
                 db.commit()
-#        for d in self._active_detectors:
-#            iso = d.isotope
-#            det = db.get_detector(d)
-#            if det is None:
-#                det = db.add_detector(d)
-#            db.add_isotope(iso, det, kind='signal')
 
     def _save_to_massspec(self):
         h = self.massspec_importer.db.host
@@ -1048,19 +1043,20 @@ class AutomatedRun(Loggable):
         baselines = []
         signals = []
         detectors = []
-        for det in self._active_detectors:
-            ai = det.name
-            detectors.append((ai, det.isotope))
 
-            table = dm.get_table(ai, '/baselines/{}'.format(det.isotope))
-            if table:
-                bi = [(row['time'], row['value']) for row in table.iterrows()]
-                baselines.append(bi)
+        for isotope, detname, kind in self._save_isotopes:
+            if kind == 'signals':
+                detectors.append((detname, isotope))
 
-            table = dm.get_table(ai, '/signals/{}'.format(det.isotope))
-            if table:
-                si = [(row['time'], row['value']) for row in table.iterrows()]
-                signals.append(si)
+                table = dm.get_table(detname, '/baselines/{}'.format(isotope))
+                if table:
+                    bi = [(row['time'], row['value']) for row in table.iterrows()]
+                    baselines.append(bi)
+
+                table = dm.get_table(detname, '/signals/{}'.format(isotope))
+                if table:
+                    si = [(row['time'], row['value']) for row in table.iterrows()]
+                    signals.append(si)
 
         self.massspec_importer.add_analysis(self.labnumber,
                                             self.aliquot,
@@ -1151,13 +1147,16 @@ class AutomatedRun(Loggable):
 
             for det in self._active_detectors:
                 k = det.name
-                t = dm.get_table(k,
-                                '/{}/{}'.format(grpname, det.isotope))
-                nrow = t.row
-                nrow['time'] = x
-                nrow['value'] = signals[keys.index(k)]
-                nrow.append()
-                t.flush()
+                try:
+                    t = dm.get_table(k,
+                                    '/{}/{}'.format(grpname, det.isotope))
+                    nrow = t.row
+                    nrow['time'] = x
+                    nrow['value'] = signals[keys.index(k)]
+                    nrow.append()
+                    t.flush()
+                except AttributeError:
+                    pass
 
         return write_data
 
@@ -1304,6 +1303,13 @@ class AutomatedRun(Loggable):
     def _set_state(self, s):
         if self._state != 'truncate':
             self._state = s
+
+    def _local_lab_db_default(self):
+        name = os.path.join(paths.hidden_dir, 'local_lab.db')
+        name = '/Users/ross/Sandbox/local.db'
+        ldb = LocalLabAdapter(name=name)
+        ldb.build_database()
+        return ldb
 #===============================================================================
 # views
 #===============================================================================

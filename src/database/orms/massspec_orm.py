@@ -107,7 +107,7 @@ class BaselinesTable(Base):
     Label = Column(String(40))
     NumCnts = Column(Integer)
     PeakTimeBlob = Column(BLOB, nullable=True)
-
+    isotope = relationship('IsotopeTable', backref='baseline')
 
 class DatabaseVersionTable(Base):
     __tablename__ = 'databaseversiontable'

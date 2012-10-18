@@ -44,7 +44,6 @@ class ExperimentExecutor(ExperimentManager):
     extraction_line_manager = Instance(Manager)
     ion_optics_manager = Instance(Manager)
     massspec_importer = Instance(MassSpecDatabaseImporter)
-    repository = Instance(Repository)
     info_display = Instance(RichTextDisplay)
     pyscript_runner = Instance(PyScriptRunner)
     data_manager = Instance(H5DataManager, ())
@@ -72,7 +71,7 @@ class ExperimentExecutor(ExperimentManager):
     _was_executed = False
     err_message = None
 
-    repo_kind = Str
+#    repo_kind = Str
     db_kind = Str
     username = Str
 
@@ -93,13 +92,13 @@ class ExperimentExecutor(ExperimentManager):
         super(ExperimentExecutor, self).bind_preferences()
 
         prefid = 'pychron.experiment'
-        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
-
-        if self.repo_kind == 'FTP':
-            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
-            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
-            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
-            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
+#        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
+#
+#        if self.repo_kind == 'FTP':
+#            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
+#            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
+#            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
+#            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
 
         bind_preference(self.massspec_importer.db, 'name', '{}.massspec_dbname'.format(prefid))
         bind_preference(self.massspec_importer.db, 'host', '{}.massspec_host'.format(prefid))
@@ -154,7 +153,6 @@ class ExperimentExecutor(ExperimentManager):
         self.stats.start_timer()
 #        self.stats.
 
-        self.end_at_run_completion = False
         if not self.massspec_importer.db.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
                 self._alive = False
@@ -194,12 +192,17 @@ class ExperimentExecutor(ExperimentManager):
         rc = 0
         ec = 0
         for i, exp in enumerate(self.experiment_sets):
-            self.experiment_set = exp
-            t = self._execute_automated_runs(i + 1, exp)
-            if t:
-                rc += t
-                ec += 1
-        self.info('Executed {:n} sets. total runs={:n}'.format(rc, ec))
+            if self.isAlive():
+                self.experiment_set = exp
+                t = self._execute_automated_runs(i + 1, exp)
+                if t:
+                    rc += t
+                    ec += 1
+
+            if self.end_at_run_completion:
+                break
+
+        self.info('Executed {:n} sets. total runs={:n}'.format(ec, rc))
         self._alive = False
 
     def _execute_automated_runs(self, iexp, exp):
@@ -511,17 +514,6 @@ class ExperimentExecutor(ExperimentManager):
                                 default_size=12,
                                 bg_color='black',
                                 default_color='limegreen')
-
-    def _repository_default(self):
-        if self.repo_kind == 'local':
-            klass = Repository
-        else:
-            klass = FTPRepository
-
-        repo = klass()
-        #use local data dir
-        repo.root = paths.isotope_dir
-        return repo
 
     def _set_selector_default(self):
         s = SetSelector(

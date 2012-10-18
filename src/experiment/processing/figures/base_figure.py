@@ -95,14 +95,20 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     export_excel = Button('excel')
     store = Button('store')
     load_button = Button('load')
+    def _check_refresh(self):
+        if self._analyses:
+            return True
+
 
     def refresh(self, caller=None):
 
         print 'refresh called from {}'.format(caller)
 
         self.results_display.clear()
+
         analyses = self._analyses
-        if not analyses:
+
+        if not self._check_refresh():
             return
 
         graph = self.graph
@@ -192,6 +198,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def load_analyses(self, names, groupids=None, attrs=None,
                       set_series_configs=True,
                       **kw):
+
         analyses = self._analyses
         if groupids is None:
             groupids = [0 for n in names]
@@ -221,7 +228,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
         #remove analyses not in names
         self._analyses = [ai for ai in analyses if ai.uuid not in rnames]
-
+#        print self._analyses
         self.nanalyses = -1
 
         keys = self.isotope_keys
@@ -244,14 +251,15 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         for i, se in enumerate(self.series_configs):
             se.graphid = i
 
-        self.signal_table_adapter.iso_keys = self.isotope_keys
 
         signal_keys = self.signal_keys
         signal_keys.sort(key=lambda k:k[2:4], reverse=True)
         bs_keys = [i for i in signal_keys if i.endswith('bs')]
         bs_keys.sort(key=lambda k:k[2:4], reverse=True)
 
-        self.baseline_table_adapter.iso_keys = bs_keys
+#        self.signal_table_adapter.iso_keys = self.isotope_keys
+#        self.baseline_table_adapter.iso_keys = bs_keys
+
         self.refresh(caller='load analyses')
 #===============================================================================
 # viewable
@@ -310,6 +318,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                 obj = pickle.load(f)
                 return obj
         except Exception, e:
+            print p
             print e
 #===============================================================================
 # private
@@ -367,7 +376,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             ps = ProcessingSelector(db=self.db)
             ps.selector.style = 'panel'
             ps.on_trait_change(self._update_data, 'update_data')
-            ps.edit_traits()
+#            ps.edit_traits()
 
             self.selector = ps
 #            if self._debug:
@@ -462,8 +471,8 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
         grps = [
               self._get_graph_edit_group(),
-              self._get_signals_group(),
-              self._get_baselines_group(),
+#              self._get_signals_group(),
+#              self._get_baselines_group(),
               ]
 
         g = Group(*grps,

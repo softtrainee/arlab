@@ -123,7 +123,8 @@ if __name__ == '__main__':
     from globals import globalv
     globalv.show_infos = False
     globalv.show_warnings = False
-
+    from launchers.helpers import build_version
+    build_version('_experiment')
     from src.helpers.logger_setup import logging_setup
     logging_setup('processing')
 

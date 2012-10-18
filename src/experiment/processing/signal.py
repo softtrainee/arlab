@@ -22,9 +22,13 @@ from numpy import array, polyfit, polyval, where
 import random
 #from src.regression.regressor import Regressor
 from uncertainties import ufloat
-from src.regression.mean_regressor import MeanRegressor
+from src.regression.mean_regressor import MeanRegressor, WeightedMeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
 #============= local library imports  ==========================
+
+class Value(HasTraits):
+    value = Float
+    error = Float
 
 
 class Signal(HasTraits):
@@ -32,6 +36,7 @@ class Signal(HasTraits):
     detector = Str
     xs = Array
     ys = Array
+#    es = Array
     fit = None
 #    dirty = Event
     uvalue = Property(depends='value, error, _value, _error')
@@ -51,11 +56,19 @@ class Signal(HasTraits):
     def _get_uvalue(self):
         return ufloat((self.value, self.error))
 
+    def _mean_regressor_factory(self):
+        reg = MeanRegressor(xs=self.xs, ys=self.ys)
+        return reg
+
     @cached_property
     def _get_regressor(self):
         try:
             if 'average' in self.fit.lower():
-                reg = MeanRegressor(xs=self.xs, ys=self.ys)
+                reg = self._mean_regressor_factory()
+#                if self.es:
+#                    reg = WeightedMeanRegressor(xs=self.xs, ys=self.ys, errors=self.es)
+#                else:
+#                    reg = MeanRegressor(xs=self.xs, ys=self.ys)
             else:
                 reg = PolynomialRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
 
@@ -145,7 +158,15 @@ def _bracketing_predictors(ts, ys, es, tm, attr):
 
 class InterpolatedSignal(Signal):
     timestamp = None
-    es = None
+    es = Array
+    def _mean_regressor_factory(self):
+        print 'asdfasdf', self.es
+        if len(self.es):
+            reg = WeightedMeanRegressor(xs=self.xs, ys=self.ys, errors=self.es)
+        else:
+            reg = super(InterpolatedSignal, self)._mean_regressor_factory()
+        return reg
+
     @cached_property
     def _get_value(self):
         tm = self.timestamp
@@ -224,5 +245,8 @@ class Blank(InterpolatedSignal):
 
 
 class Background(InterpolatedSignal):
+    pass
+
+class InterpolatedRatio(InterpolatedSignal):
     pass
 #============= EOF =============================================

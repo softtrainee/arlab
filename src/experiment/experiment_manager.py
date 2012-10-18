@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, DelegatesTo, Bool, List
+from traits.api import Instance, DelegatesTo, Bool, List, Str
 from apptools.preferences.preference_binding import bind_preference
 #import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -32,6 +32,7 @@ from src.experiment.file_listener import FileListener
 from src.experiment.labnumber_entry import LabnumberEntry
 from src.experiment.set_selector import SetSelector
 from src.managers.manager import Manager, SaveableManagerHandler
+from src.repo.repository import Repository, FTPRepository
 #from globals import globalv
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -48,7 +49,9 @@ class ExperimentManager(Manager):
     experiment_set = Instance(ExperimentSet)
     set_selector = Instance(SetSelector)
     db = Instance(IsotopeAdapter)
+    repository = Instance(Repository)
 
+    repo_kind = Str
     experiment_sets = List
 
     title = DelegatesTo('experiment_set', prefix='name')
@@ -122,7 +125,7 @@ class ExperimentManager(Manager):
                 for at in ['blank_air',
                            'blank_cocktail',
                            'blank_unknown',
-                           'air', 'cocktail', 'background', 'unknown']:
+                           'background', 'air', 'cocktail', 'unknown']:
 #                           blank', 'air', 'cocktail', 'background', 'unknown']:
                     db.add_analysis_type(at)
 
@@ -137,6 +140,13 @@ class ExperimentManager(Manager):
         prefid = 'pychron.experiment'
 
         bind_preference(self, 'username', '{}.username'.format(prefid))
+        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
+
+        if self.repo_kind == 'FTP':
+            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
+            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
+            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
+            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
 
         bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
         if self.db.kind == 'mysql':
@@ -318,6 +328,16 @@ class ExperimentManager(Manager):
     def _db_default(self):
         return self._db_factory()
 
+    def _repository_default(self):
+        if self.repo_kind == 'local':
+            klass = Repository
+        else:
+            klass = FTPRepository
+
+        repo = klass()
+        #use local data dir
+        repo.root = paths.isotope_dir
+        return repo
 
 #def main():
 #    paths.build('_experiment')

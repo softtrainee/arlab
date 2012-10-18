@@ -124,12 +124,16 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         return analysis, False
 
     @add
-    def add_baseline(self, blob, label, cnts, **kw):
+    def add_baseline(self, blob, label, cnts, iso, **kw):
         bs = BaselinesTable(PeakTimeBlob=blob,
                             Label=label,
                             NumCnts=cnts)
 
-        return bs, True
+        if iso is not None:
+            iso.baseline = bs
+            return bs, True
+
+        return bs, False
 
     @add
     def add_peaktimeblob(self, blob, iso, **kw):

@@ -54,7 +54,7 @@ class StackedGraph(Graph):
     def new_plot(self, **kw):
         '''
         '''
-
+        self.plotcontainer.stack_order = 'bottom_to_top'
         bottom = self.plotcontainer.stack_order == 'bottom_to_top'
         if self.equi_stack:
             kw['resizable'] = 'h'
@@ -92,21 +92,22 @@ class StackedGraph(Graph):
 #                plotiter = self.plots[:-1]
                 plotiter1 = self.plots[1:]
 
-            link = True
-            if 'link' in kw:
-                link = kw['link']
-            if link:
-                pm = self.plots[0].index_mapper
-#                pii = self.plots[0].index_axis
-                for pi in self.plots:
-                    pi.index_mapper = pm
-#                    pi.index_axis = pii
-#                print pi, link, self.plots[0]
-##                pi.padding_top = 0
-##                pi.padding_bottom = 0
+#            link = True
+#            if 'link' in kw:
+#                link = kw['link']
+#
+#            if link:
+#                pm = self.plots[0].index_mapper
+##                pii = self.plots[0].index_axis
+##                for pi in self.plots[1:]:
+##                    pi.index_mapper = pm
+##                    pi.index_axis = pii
+##                print pi, link, self.plots[0]
+###                pi.padding_top = 0
+###                pi.padding_bottom = 0
 #                if link:
-##                    pi.index_range = self.plots[0].index_range
-#                    pi.index_mapper = self.plots[0].index_mapper
+###                    pi.index_range = self.plots[0].index_range
+#                    p.index_mapper = self.plots[0].index_mapper
             for pi in plotiter1:
                 pi.index_axis.visible = False
                 pi.padding_top = 0
