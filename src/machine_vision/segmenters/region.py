@@ -23,18 +23,20 @@ from skimage.filter import sobel, threshold_adaptive
 from skimage.morphology import watershed
 #============= local library imports  ==========================
 from src.machine_vision.segmenters.base import BaseSegmenter
+from scipy import ndimage
+from pyface.timer.do_later import do_later
 show = True
 class RegionSegmenter(BaseSegmenter):
     threshold_low = Property(Int, depends_on='threshold_width,threshold_tries,threshold_base')
     threshold_high = Property(Int, depends_on='threshold_width,threshold_tries,threshold_base')
 
     threshold_width = Int(5)
-    threshold_tries = Int(20)
-    threshold_base = Int(150)
+    threshold_tries = Int(50)
+    threshold_base = Int(120)
     count = Int(1)
 
-#    use_adaptive_threshold = Bool(True)
-    use_adaptive_threshold = Bool(False)
+    use_adaptive_threshold = Bool(True)
+#    use_adaptive_threshold = Bool(False)
     def traits_view(self):
         return View(
                     Item('threshold_width', label='Width'),
@@ -52,6 +54,7 @@ class RegionSegmenter(BaseSegmenter):
             markers = invert(markers)
 
         else:
+#            print self.threshold_low, self.threshold_high
             markers = zeros_like(image)
             markers[image < self.threshold_low] = 1
             markers[image > self.threshold_high] = 255
@@ -65,8 +68,10 @@ class RegionSegmenter(BaseSegmenter):
 #                                      )
 #        markers = ndimage.label(local_maxi)[0]
 #        wsrc = watershed(-elmap, markers, mask=image)
+#        fwsrc = ndimage.binary_fill_holes(out)
+
         out = invert(wsrc)
-#        self.show_image(image, -elmap, out)
+#        do_later(lambda:self.show_image(image, -elmap, out))
         return out
 
     def show_image(self, image, elmap, out):

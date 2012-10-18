@@ -110,24 +110,30 @@ class CO2HoleDetector(HoleDetector):
         seg = self.segmentation_style
 
         def get_npos(osrc):
-            src = osrc
-            src = self._apply_filters(osrc, False, True, False)
-            targets = self._segment_source(src, seg)
-            if targets:
-                nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
-                src = self.target_image.get_frame(0)
-                tcx, tcy = self._get_true_xy(src)
+            tests = [
+                     (False, False),
+                     (True, True),
+                     (False, True),
+                     (True, False)
+                     ]
+            for sh, cr in tests:
+                src = self._apply_filters(osrc, sh, cr)
+                targets = self._segment_source(src, seg)
+                if targets:
+                    nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
+                    src = self.target_image.get_frame(0)
+                    tcx, tcy = self._get_true_xy(src)
 
-                self._draw_center_indicator(src, size=2,
-                                            shape='rect')
-                self._draw_targets(src, targets)
+                    self._draw_center_indicator(src, size=2,
+                                                shape='rect')
+                    self._draw_targets(src, targets)
 
-                self._draw_indicator(src, (tcx - nx, tcy - ny) ,
-                                     shape='rect',
-                                     size=2,
-                                     color=(0, 255, 255)
-                                     )
-                return nx, ny
+                    self._draw_indicator(src, (tcx - nx, tcy - ny),
+                                         shape='rect',
+                                         size=2,
+                                         color=(0, 255, 255)
+                                         )
+                    return nx, ny
 
         osrc = self._get_new_frame()
         return get_npos(osrc)

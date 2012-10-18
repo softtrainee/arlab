@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
-    Instance, Str, DelegatesTo
+    Instance, Str, DelegatesTo, Any, on_trait_change
 from traitsui.api import View, Item, HGroup, Group, VGroup, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -36,6 +36,7 @@ import time
 from src.helpers.parsers.initialization_parser import InitializationParser
 from apptools.preferences.preference_binding import bind_preference
 from src.experiment.set_selector import SetSelector
+from src.experiment.stats import StatsGroup
 
 
 class ExperimentExecutor(ExperimentManager):
@@ -62,6 +63,9 @@ class ExperimentExecutor(ExperimentManager):
         next_int. 2= same as setting ncounts to < current step. measure_iteration is truncated but script continues
     '''
 
+    selected_row = Any
+    selected = Any
+
     _alive = Bool(False)
     _last_ran = None
     _prev_baselines = Dict
@@ -75,7 +79,7 @@ class ExperimentExecutor(ExperimentManager):
     mode = 'normal'
 
     measuring = DelegatesTo('experiment_set')
-
+    stats = Instance(StatsGroup, ())
 
     def isAlive(self):
         return self._alive
@@ -106,6 +110,23 @@ class ExperimentExecutor(ExperimentManager):
         self.info_display.clear()
         self._was_executed = False
 
+    @on_trait_change('experiment_sets[]')
+    def _update_stats(self):
+        self.stats.experiment_sets = self.experiment_sets
+        self.stats.calculate()
+#===============================================================================
+# stats
+#===============================================================================
+    def increment_nruns_finished(self):
+        self.stats.nruns_finished += 1
+
+#    def reset_stats(self):
+##        self._alive = True
+#        self.stats.start_timer()
+#
+#    def stop_stats_timer(self):
+##        self._alive = False
+#        self.stats.stop_timer()
 #===============================================================================
 # private
 #===============================================================================
@@ -120,7 +141,6 @@ class ExperimentExecutor(ExperimentManager):
                     arun.cancel()
 
         else:
-
             if self._was_executed:
                 self.load_experiment_set(self.path)
 
@@ -129,6 +149,10 @@ class ExperimentExecutor(ExperimentManager):
             self._was_executed = True
 
     def _execute_experiment_sets(self):
+
+        self.stats.calculate()
+        self.stats.start_timer()
+#        self.stats.
 
         self.end_at_run_completion = False
         if not self.massspec_importer.db.connect():
@@ -184,7 +208,7 @@ class ExperimentExecutor(ExperimentManager):
 
         self.set_selector.selected_index = iexp - 1
         exp._alive = True
-        exp.reset_stats()
+
         self.db.reset()
         exp.save_to_db()
 
@@ -361,7 +385,7 @@ class ExperimentExecutor(ExperimentManager):
 
 
         arun.finish()
-        self.experiment_set.increment_nruns_finished()
+        self.increment_nruns_finished()
 
         if arun.state == 'truncate':
             fstate = 'truncated'
@@ -373,14 +397,20 @@ class ExperimentExecutor(ExperimentManager):
 
     def _end_runs(self):
         self._last_ran = None
+        self.stats.stop_timer()
 #        self._alive = False
-        exp = self.experiment_set
+#        exp = self.experiment_set
 #        exp.stats.nruns_finished = len(exp.automated_runs)
-        exp.stop_stats_timer()
+#        self.stop_stats_timer()
 
 #===============================================================================
 # handlers
 #===============================================================================
+    def _selected_changed(self):
+        if self.selected:
+            self.stats.calculate_at(self.selected)
+            self.stats.calculate()
+
     def _execute_button_fired(self):
         self._execute()
 
@@ -402,10 +432,11 @@ class ExperimentExecutor(ExperimentManager):
 #                             update=update,
                              right_clicked='object.right_clicked',
                              selected='object.selected',
+                             selected_row='object.selected_row',
 #                             refresh='object.refresh',
 #                             activated_row='object.activated_row',
                              auto_resize=True,
-                             multi_select=True,
+#                             multi_select=True,
                              auto_update=True,
                              scroll_to_bottom=False
                             )
@@ -430,7 +461,8 @@ class ExperimentExecutor(ExperimentManager):
         sel_grp = Item('set_selector', show_label=False, style='custom')
         exc_grp = Group(tb,
                         HGroup(sel_grp,
-                               Item('object.experiment_set.stats',
+#                               Item('object.experiment_set.stats',
+                               Item('stats',
                                    style='custom'),
                              spring,
                              Item('info_display',

@@ -25,7 +25,7 @@ from src.paths import paths
 import random
 from ConfigParser import ConfigParser
 #============= local library imports  ==========================
-estimated_duration_ff = 1.01
+estimated_duration_ff = 1.35
 
 class Detector(object):
     name = None

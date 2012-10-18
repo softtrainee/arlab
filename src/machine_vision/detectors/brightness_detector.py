@@ -173,7 +173,8 @@ class BrightnessDetector(CO2HoleDetector):
 
     def _get_intensity_area(self, src, verbose):
 
-        seg_src = self._apply_filters(src, contrast=True,
+        seg_src = self._apply_filters(src,
+#                                      contrast=True,
                                        verbose=verbose)
         targets = self._segment_source(seg_src, self.segmentation_style,
                                        verbose=verbose

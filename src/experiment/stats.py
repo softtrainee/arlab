@@ -15,35 +15,71 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Str, Float, Any, Int
+from traits.api import HasTraits, Property, Str, Float, Any, Int, List
 from traitsui.api import View, Item, VGroup
 from pyface.timer.api import Timer
 #============= standard library imports ========================
 import datetime
 import time
+from src.loggable import Loggable
 #============= local library imports  ==========================
 
-class ExperimentStats(HasTraits):
+
+class ExperimentStats(Loggable):
     elapsed = Property(depends_on='_elapsed')
     _elapsed = Float
     nruns = Int
     nruns_finished = Int
     etf = Str
+    time_at = Str
     total_time = Property(depends_on='_total_time')
     _total_time = Float
     _timer = Any(transient=True)
     delay_between_analyses = Float
+    _start_time = None
+    experiment_set = Any
 
-    def calculate_etf(self, runs):
-        self.nruns = len(runs)
+#    def calculate_time_at(self, identifier, i, runs):
+#        self.time_at = '{} {}'.format(identifier, self._calculate_duration(runs[:i + 1]))
 
-        dur = sum([a.get_estimated_duration() for a in runs])
-        dur += (self.delay_between_analyses * self.nruns)
+#    def calculate_etf(self):
+##        runs=self.
+#        self.nruns = len(runs)
+
+#        dur = sum([a.get_estimated_duration() for a in runs])
+#        dur += (self.delay_between_analyses * self.nruns)
+#        self._total_time = dur
+#
+#        dt = (datetime.datetime.now() + \
+#                       datetime.timedelta(seconds=int(dur)))
+#        self.etf = dt.strftime('%I:%M:%S %p %a %m/%d')
+#        self.etf = self._calculate_duration(runs)
+
+    def calculate_duration(self, runs=None):
+        if runs is None:
+            runs = self.experiment_set.automated_runs
+        dur = self._calculate_duration(runs)
         self._total_time = dur
+        return dur
 
+    def calculate_etf(self):
+        runs = self.experiment_set.automated_runs
+        dur = self._calculate_duration(runs)
+        self._total_time = dur
+        self.etf = self.format_duration(dur)
+
+    def format_duration(self, dur):
         dt = (datetime.datetime.now() + \
                        datetime.timedelta(seconds=int(dur)))
-        self.etf = dt.strftime('%I:%M:%S %p %a %m/%d')
+        return dt.strftime('%I:%M:%S %p %a %m/%d')
+
+#    def format_duration(self, dur):
+
+    def _calculate_duration(self, runs):
+        ni = len(runs)
+        dur = sum([a.get_estimated_duration() for a in runs])
+        dur += (self.delay_between_analyses * ni)
+        return dur
 
     def _get_total_time(self):
         dur = self._total_time
@@ -64,6 +100,7 @@ class ExperimentStats(HasTraits):
                              ),
                         Item('total_time',
                               style='readonly'),
+                        Item('time_at', style='readonly'),
                         Item('etf', style='readonly', label='Est. finish'),
                         Item('elapsed',
                              style='readonly'),
@@ -73,6 +110,7 @@ class ExperimentStats(HasTraits):
 
     def start_timer(self):
         st = time.time()
+        self._start_time = st
         def update_time():
             self._elapsed = round(time.time() - st)
 
@@ -80,5 +118,38 @@ class ExperimentStats(HasTraits):
         self._timer.Start()
 
     def stop_timer(self):
+        tt = self._total_time
+        et = self._elapsed
+        dt = tt - et
+        self.info('Estimated total time= {:0.1f}, elapsed time= {:0.1f}, deviation= {:0.1f}'.format(tt, et, dt))
         self._timer.Stop()
+
+class StatsGroup(ExperimentStats):
+    experiment_sets = List
+    def calculate(self):
+        runs = [ai
+                for ei in self.experiment_sets
+                    for ai in ei.automated_runs]
+        ni = len(runs)
+        self.nruns = ni
+        tt = sum([ei.stats.calculate_duration()
+                 for ei in self.experiment_sets])
+        self._total_time = tt
+        offset = 0
+        if self._start_time:
+            offset = time.time() - self._start_time
+
+        self.etf = self.format_duration(tt - offset)
+
+    def calculate_at(self, sel):
+        tt = 0
+        for ei in self.experiment_sets:
+            if sel in ei.automated_runs:
+                si = ei.automated_runs.index(sel)
+                tt += ei.stats.calculate_duration(ei.automated_runs[:si + 1])
+            else:
+                tt += ei.stats.calculate_duration()
+
+        self.time_at = self.format_duration(tt)
+
 #============= EOF =============================================
