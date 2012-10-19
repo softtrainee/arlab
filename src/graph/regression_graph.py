@@ -20,7 +20,7 @@ from traitsui.api import View, Item, TableEditor
 from src.graph.graph import Graph
 #============= standard library imports ========================
 from numpy import linspace, random, hstack, polyval, \
-    delete, bitwise_and, polyfit, ones
+    delete, bitwise_and, polyfit, ones, invert
 from chaco.tools.broadcaster import BroadcasterTool
 #============= local library imports  ==========================
 from src.graph.tools.rect_selection_tool import RectSelectionTool
@@ -47,6 +47,28 @@ class RegressionGraph(Graph):
 #        for fi, pi in zip(fits, self.plots):
 #            scatter = pi.plots['data'][0]
 #            scatter.fit = fi
+    def set_filter(self, fi, plotid=0, series=0):
+        plot = self.plots[plotid]
+        scatter = plot.plots['data{}'.format(series)][0]
+        scatter.filter = fi
+        self.redraw()
+
+    def get_filter(self, plotid=0, series=0):
+        plot = self.plots[plotid]
+        scatter = plot.plots['data{}'.format(series)][0]
+        return scatter.filter
+
+    def set_fit(self, fi, plotid=0, series=0):
+        plot = self.plots[plotid]
+        scatter = plot.plots['data{}'.format(series)][0]
+        scatter.fit = fi
+
+        self.redraw()
+
+    def get_fit(self, plotid=0, series=0):
+        plot = self.plots[plotid]
+        scatter = plot.plots['data{}'.format(series)][0]
+        return scatter.fit
 
     def _update_graph(self):
         if self.suppress_regression:
@@ -87,12 +109,16 @@ class RegressionGraph(Graph):
 
     def _plot_regression(self, plot, scatter, line, uline, lline):
         try:
-            sel = scatter.index.metadata.get('selections', [])
-            args = self._regress(selection=sel,
+#            sel = scatter.index.metadata.get('selections', [])
+            args = self._regress(
+#                                 selection=sel,
                                            plot=plot,
                                            fit=scatter.fit,
+                                           filterstr=scatter.filter,
+                                           index=scatter.index,
                                            x=scatter.index.get_data(),
-                                           y=scatter.value.get_data())
+                                           y=scatter.value.get_data(),
+                                           )
             if args:
                 fx, fy, ly, uy = args
                 line.index.set_data(fx)
@@ -109,10 +135,11 @@ class RegressionGraph(Graph):
     def _regress(self,
                  x, y,
 #                 x=None, y=None,
-                 selection=None,
+#                 selection=None,
                  plotid=0,
                  plot=None,
-                 component=None,
+                 index=None,
+#                 component=None,
                  filterstr=None,
                  fit=None):
 
@@ -126,8 +153,14 @@ class RegressionGraph(Graph):
 #        if x is None or y is None:
 #            x = plot.data.get_data('x0')
 #            y = plot.data.get_data('y0')
+#        print selection
+#        if not selection:
         if filterstr:
-            x, y = self._apply_filter(filterstr, x, y)
+            selection = self._apply_filter(filterstr, x)
+            if index:
+                index.metadata['selections'] = selection
+        else:
+            selection = index.metadata.get('selections', [])
 
         if selection:
             x = delete(x[:], selection, 0)
@@ -162,11 +195,13 @@ class RegressionGraph(Graph):
             n = 10
             fx = linspace(low, high, n)
             m = r.coefficients[0]
-            if fit.endswith('SEM'):
+#            print fit, fit.endswith("SEM")
+            fit = fit.lower()
+            if fit.endswith('sem'):
                 s = r.coefficient_errors[1]
-                r.error_calc = 'SEM'
+                r.error_calc = 'sem'
             else:
-                r.error_calc = 'SD'
+                r.error_calc = 'sd'
                 s = r.coefficient_errors[0]
 
             fy = ones(n) * m
@@ -181,12 +216,21 @@ class RegressionGraph(Graph):
             fits = ['linear', 'parabolic', 'cubic']
             if f in fits:
                 f = fits.index(f) + 1
-            elif not 'average' in f:
+            elif 'average' in f:
+                if f.endswith('sem'):
+                    f = 'averageSEM'
+                else:
+                    f = 'averageSD'
+#                if not (f.endswith('sd') or f.endswith('sem')):
+#                    f = 'averageSD'
+
+            else:
                 f = None
 
         return f
 
-    def _apply_filter(self, filt, xs, ys):
+#    def _apply_filter(self, filt, xs, ys):
+    def _apply_filter(self, filt, xs):
 #        if filt:
         '''
             100   == filters out t>100
@@ -195,7 +239,7 @@ class RegressionGraph(Graph):
         '''
         filt = map(float, filt.split(','))
         ge = filt[-1]
-        sli = xs.__le__(ge)
+        sli = xs.__ge__(ge)
 
         if len(filt) == 2:
             le = filt[0]
@@ -203,8 +247,10 @@ class RegressionGraph(Graph):
             if le > ge:
                 return
 
+        return list(invert(sli).nonzero()[0])
+#        print sli
 #        dplot.index.metadata['selections'] = list(invert(sli).nonzero()[0])
-        return xs[sli], ys[sli]#, list(invert(sli).nonzero()[0])
+#        return xs[sli], ys[sli], list(invert(sli).nonzero()[0])
 
     def new_series(self, x=None, y=None,
                    ux=None, uy=None, lx=None, ly=None,
@@ -214,7 +260,7 @@ class RegressionGraph(Graph):
                    marker_size=2,
                    plotid=0, *args, **kw):
 
-        self.filters.append(None)
+#        self.filters.append(None)
         kw['marker'] = marker
         kw['marker_size'] = marker_size
         if not fit:
@@ -235,7 +281,7 @@ class RegressionGraph(Graph):
         scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
 
         scatter.fit = fit
-
+        scatter.filter = None
         if x is not None and y is not None:
             args = self._regress(x, y, plotid=plotid)
             if args:

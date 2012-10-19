@@ -191,7 +191,7 @@ class DBResult(BaseDBResult):
 
         if klass is None:
             klass = Graph
-        g = klass(container_dict=dict(padding=10),
+        g = klass(container_dict=dict(padding=5),
                   width=width,
                   height=height
                   )

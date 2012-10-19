@@ -27,7 +27,8 @@ from src.database.core.database_selector import DatabaseSelector
 from src.database.core.base_db_result import DBResult
 from src.database.orms.isotope_orm import AnalysisTable
 
-from src.graph.regression_graph import StackedRegressionTimeSeriesGraph
+from src.graph.regression_graph import StackedRegressionTimeSeriesGraph, \
+    StackedRegressionGraph
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
 from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.graph.graph import Graph
@@ -39,6 +40,28 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.database.isotope_analysis.blanks_summary import BlanksSummary
 from src.experiment.identifier import convert_identifier, convert_labnumber, \
     convert_shortname
+from src.database.isotope_analysis.fit_selector import FitSelector
+
+class EditableGraph(HasTraits):
+    graph = Instance(Graph)
+    fit_selector = Instance(FitSelector)
+
+    def __getattr__(self, attr):
+        try:
+            return getattr(self.graph, attr)
+        except KeyError:
+            pass
+
+    def traits_view(self):
+        v = View(Item('graph', show_label=False, style='custom',
+                      height=0.8
+                      ),
+
+                 Item('fit_selector', show_label=False, style='custom',
+                      height=0.2
+                      ))
+
+        return v
 
 class AnalysisResult(DBResult):
     title_str = 'Analysis'
@@ -47,14 +70,16 @@ class AnalysisResult(DBResult):
     color = 'black'
 
     sniff_graph = Instance(Graph)
-    signal_graph = Instance(StackedRegressionTimeSeriesGraph)
-    baseline_graph = Instance(StackedRegressionTimeSeriesGraph)
+    signal_graph = Instance(EditableGraph)
+    baseline_graph = Instance(EditableGraph)
+#    signal_graph = Instance(StackedRegressionTimeSeriesGraph)
+#    baseline_graph = Instance(StackedRegressionTimeSeriesGraph)
     peak_center_graph = Instance(Graph)
     peak_hop_graphs = List
 #    sniff_graph = Instance(TimeSeriesStackedGraph)
 #    signal_graph = Instance(TimeSeriesStackedGraph)
 #    baseline_graph = Instance(TimeSeriesStackedGraph)
-#    analyzer = Instance(Analyzer)
+    fit_selector = Instance(FitSelector)
 
 #    categories = List(['summary', 'signal', 'sniff', 'baseline', 'peak center' ])
     categories = List(['summary', ])#'signal', 'sniff', 'baseline', 'peak center' ])
@@ -63,17 +88,20 @@ class AnalysisResult(DBResult):
 
 #    det_keys = None
 #    iso_keys = None
-#    intercepts = None
-    fits = None
+#    signals = None
+#    fits = None
     isos = None
-    intercepts = None
-    baselines = None
+#    signals = None
+#    baselines = None
 
     labnumber = Property
     shortname = Property
     analysis_type = Property
     aliquot = Property
     mass_spectrometer = Property
+
+    analysis_summary = Instance(AnalysisSummary)
+
     def __getattr__(self, attr):
         try:
             return getattr(self._db_result, attr)
@@ -138,24 +166,31 @@ class AnalysisResult(DBResult):
         if selected is not None:
 
             selected = selected.replace(' ', '_')
-#            if selected == 'analyzer':
-#                item = self.analyzer
-#                info = self.analyzer.edit_traits()
-#                if info.result:
-#                    self.analyzer.apply_fits()
+            selected = selected.lower()
+
             if selected == 'summary':
-                item = AnalysisSummary(result=self)
+                fs = FitSelector(analysis=self,
+                                 graph=self.signal_graph,
+                                 name='Signal'
+                                 )
+
+                item = AnalysisSummary(result=self,
+                                       fit_selector=fs
+                                       )
+                fs.on_trait_change(item.refresh, 'fits:fit, fits:filterstr')
+
             elif selected == 'blanks':
                 item = BlanksSummary(result=self)
             else:
                 item = getattr(self, '{}_graph'.format(selected))
+
             self.trait_set(display_item=item)
 
     def load_graph(self, graph=None, xoffset=0):
 
-        self.fits = dict()
-        self.intercepts = dict()
-        self.baselines = dict()
+#        self.fits = dict()
+#        self.signals = dict()
+#        self.baselines = dict()
 
         self.clear()
 
@@ -166,24 +201,33 @@ class AnalysisResult(DBResult):
             self.categories.append('signal')
             graph = self._load_stacked_graph(signals)
 
-            for iso, rs in zip(self.isos, graph.regressors):
-                self.intercepts[iso] = (rs.coefficients[-1], rs.coefficient_errors[-1])
+#            for iso, rs in zip(self.isos, graph.regressors):
+#                self.signals[iso] = (rs.coefficients[-1], rs.coefficient_errors[-1])
 
-            self.signal_graph = graph
+            self.signal_graph = EditableGraph(graph=graph)
+            self.signal_graph.fit_selector = FitSelector(analysis=self,
+                                                         name='Signal',
+                                                         graph=self.signal_graph)
+#            self.signal_graph = graph
 
         sniffs = self._get_table_data(dm, 'sniffs')
         if sniffs:
             self.categories.append('sniff')
             graph = self._load_stacked_graph(sniffs, regress=False)
-            self.sniff_graph = graph
+            self.sniff_graph = EditableGraph(graph=graph)
+            self.sniff_graph.fit_selector = FitSelector(analysis=self, graph=self.sniff_graph)
 
         baselines = self._get_table_data(dm, 'baselines')
         if baselines:
             self.categories.append('baseline')
             graph = self._load_stacked_graph(baselines)
-            self.baseline_graph = graph
-            for iso, rs in zip(self.isos, graph.regressors):
-                self.baselines[iso] = (rs.coefficients[-1], rs.coefficient_errors[-1])
+#            for iso, rs in zip(self.isos, graph.regressors):
+#                self.baselines[iso] = (rs.coefficients[-1], rs.coefficient_errors[-1])
+
+            self.baseline_graph = EditableGraph(graph=graph)
+            self.baseline_graph.fit_selector = FitSelector(analysis=self,
+                                                           name='Baseline',
+                                                           graph=self.baseline_graph)
 
         peakcenter = self._get_peakcenter(dm)
         if peakcenter:
@@ -199,11 +243,12 @@ class AnalysisResult(DBResult):
         if backgrounds:
             self.categories.append('backgrounds')
 
+#        self.fit_selector = Analyzer(analysis=self)
+#        self.categories.append('Analyzer')
 
-#        self.selected = 'summary'
-        self.selected = 'blanks'
-#        self.analyzer = Analyzer(analysis=self)
-#        self.analyzer.fits = [AnalysisParams(fit='linear', name=k) for k in keys]
+        self.selected = 'summary'
+#        self.selected = 'blanks'
+#        self.fit_selector.fits = [AnalysisParams(fit='linear', name=k) for k in keys]
     def clear(self):
         self.baselines = dict()
         self.categories = ['summary']
@@ -225,12 +270,13 @@ class AnalysisResult(DBResult):
     def _load_stacked_graph(self, data, det=None, regress=True):
         if regress:
 #            klass = StackedTimeSeriesRegressionGraph
-            klass = StackedRegressionTimeSeriesGraph
+#            klass = StackedRegressionTimeSeriesGraph
+            klass = StackedRegressionGraph
         else:
             klass = StackedGraph
 
         graph = self._graph_factory(klass, width=700)
-        gkw = dict()
+        gkw = dict(padding=[50, 50, 5, 40])
 
         isos = [vi[1] for vi in data.itervalues()]
         isos = sorted(isos, key=lambda k: int(k[2:]))
@@ -250,14 +296,15 @@ class AnalysisResult(DBResult):
             except ValueError:
                 continue
 
-            try:
-                cfit = self.fits[iso]
-                if cfit is None:
-                    self.fits[iso] = fi
-            except KeyError:
-                self.fits[iso] = fi
+#            try:
+#                cfit = self.fits[iso]
+#                if cfit is None:
+#                    self.fits[iso] = fi
+#            except KeyError:
+#                self.fits[iso] = fi
 
             gkw['ytitle'] = '{} ({})'.format(di if det is None else det, iso)
+            gkw['xtitle'] = 'Time (s)'
             skw = dict()
             if regress:
                 skw['fit'] = fi
@@ -269,10 +316,15 @@ class AnalysisResult(DBResult):
                              **skw)
 #            graph.set_series_label(key, plotid=i)
             ma = max(xs)
+
+            graph.suppress_regression = iso != isos[-1]
             graph.set_x_limits(min=0, max=ma, plotid=i)
+            graph.suppress_regression = False
+
             params = dict(orientation='right' if i % 2 else 'left',
                           axis_line_visible=False
                           )
+
             graph.set_axis_traits(i, 'y', **params)
             i += 1
 

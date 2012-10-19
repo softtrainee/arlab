@@ -26,6 +26,9 @@ class Summary(HasTraits):
         super(Summary, self).__init__(*args, **kw)
         self._build_summary()
 
+    def refresh(self):
+        self._build_summary()
+
     def _build_summary(self, *args, **kw):
         pass
 #============= EOF =============================================

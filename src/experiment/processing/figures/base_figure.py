@@ -54,6 +54,13 @@ class GraphSelector(HasTraits):
         v = View(VGroup(*self.selections))
         return v
 
+def sort_keys(func):
+    def decorator(keys, **kw):
+        import re
+        key = lambda x: re.sub('\D', '', x)
+        return sorted(keys, key=key, **kw)
+    return decorator
+
 class BaseFigure(Viewable, ColumnSorterMixin):
     graph = Instance(Graph)
     analyses = Property(
@@ -616,9 +623,16 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #        exc=lambda x: i.endswith('bs') or i.endswith
 #        return [i for i in keys if not (i.endswith('bs') or i.endswith('bl'))]
 
+    @sort_keys
     def _get_signal_keys(self):
         keys = [ki for ai in self._analyses
                     for ki in ai.signals.keys()]
+        return keys
+#        return sorted(list(set(keys)), key=lambda x:int(x[2:4]), reverse=True)
 
-        return sorted(list(set(keys)), key=lambda x:int(x[2:4]), reverse=True)
+#    def _sort_keys(self, keys, reverse=True):
+#        import re
+#        key = lambda x: re.sub('\D', '', x)
+#        return sorted(list(set(keys)), key=key, reverse=reverse)
+
 #============= EOF =============================================

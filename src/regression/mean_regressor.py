@@ -23,6 +23,7 @@ from base_regressor import BaseRegressor
 
 class MeanRegressor(BaseRegressor):
     ddof = 1
+    _fit = 'average'
     def _calculate_coefficients(self):
         return [self.ys.mean()]
 

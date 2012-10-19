@@ -24,6 +24,8 @@ from traitsui.api import View, Item
 from src.displays.rich_text_display import RichTextDisplay
 from uncertainties import ufloat
 from src.database.isotope_analysis.summary import Summary
+import re
+from src.database.isotope_analysis.fit_selector import FitSelector
 #from src.data_processing.regression.regressor import Regressor
 
 PLUSMINUS = unicode('\xb1')
@@ -33,20 +35,22 @@ class AnalysisSummary(Summary):
     error = Float
 
     display = Instance(RichTextDisplay)
+    fit_selector = Instance(FitSelector)
 
     def _build_summary(self):
         d = self.display
+        d.clear()
         result = self.result
 
         isos = result.isos
-        isos = sorted(isos, key=lambda k:int(k[2:]))
+        isos = sorted(isos, key=lambda x: re.sub('\D', '', x))
         isos.reverse()
 
-        fits = result.fits
-        intercepts = result.intercepts
-        baselines = result.baselines
-        if baselines is None:
-            baselines = [(0, 0) for i in range(len(isos))]
+#        fits = result.fits
+#        signals = result.signals
+#        baselines = result.baselines
+#        if baselines is None:
+#            baselines = [(0, 0) for i in range(len(isos))]
 
         d.add_text('RID={} Labnumber={}'.format(result.rid, result.labnumber), bold=True)
         d.add_text('date={} time={}'.format(result.rundate, result.runtime), bold=True)
@@ -63,73 +67,39 @@ class AnalysisSummary(Summary):
                    ]
         widths = [w for _, w in columns]
 
-        msg = ''.join([width(m, w) for m, w in columns])
+        msg = 'Iso.   Int.             ' + PLUSMINUS_ERR + '         Fit'
+        msg += '           Baseline     ' + PLUSMINUS_ERR + '             '
+#        msg = ''.join([width(m, w) for m, w in columns])
         d.add_text(msg, underline=True, bold=True)
 
+#        sg = result.signal_graph
+#        bg = result.baseline_graph
         #add isotopes
+        n = len(isos) - 1
+
+#        baselines = dict()
+#        signals = dict()
         for i, iso in enumerate(isos):
-            fit = fits[iso]
-            try:
-                inter, inter_err = intercepts[iso]
-            except KeyError:
-                inter, inter_err = 0, 0
-            try:
-                base, base_err = baselines[iso]
-            except KeyError:
-                base, base_err = 0, 0
+            self._make_signals(n, i, iso, floatfmt, width, widths)
 
-            blank = 0
-            blank_err = 0
-            msgs = [
-                    iso,
-                    floatfmt(inter),
-                    floatfmt(inter_err),
-                    fit,
-                    floatfmt(base),
-                    floatfmt(base_err),
-#                    floatfmt(blank),
-#                    floatfmt(blank_err)
-                    ]
-            msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
-            d.add_text(msg, underline=i == len(isos) - 1)
-
+#        d.add_text(' ')
         d.add_text(' ')
+
         m = 'Corrected Signals'
         d.add_text('{:<39s}'.format(m), underline=True, bold=True)
 
         signals = dict()
         for i, iso in enumerate(isos):
-            fit = fits[iso]
-            try:
-                inter, inter_err = intercepts[iso]
-            except KeyError:
-                inter, inter_err = 0, 0
-            try:
-                base, base_err = baselines[iso]
-            except KeyError:
-                base, base_err = 0, 0
-
-            s = ufloat((inter, inter_err)) - ufloat((base, base_err))
+            s = self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
             signals[iso] = s
-            try:
-                pe = abs(s.std_dev() / s.nominal_value * 100)
-            except ZeroDivisionError:
-                pe = 0
-            msgs = [
-                    iso,
-                    floatfmt(s.nominal_value),
-                    floatfmt(s.std_dev()),
-                    '({}%)'.format(floatfmt(pe, i=2))
-                    ]
-            msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
-            d.add_text(msg, underline=i == len(isos) - 1)
 
-        d.add_text(' ')
+        d.add_text([' '])
         m = 'Corrected Ratios'
         d.add_text('{:<39s}'.format(m), underline=True, bold=True)
-
+#
         ratios = ['Ar40/Ar36', 'Ar40/Ar39']
-        for r in ratios:
+        n = len(ratios) - 1
+        for i, r in enumerate(ratios):
             nu, de = r.split('/')
             rr = signals[nu] / signals[de]
             v, e = rr.nominal_value, rr.std_dev()
@@ -137,20 +107,77 @@ class AnalysisSummary(Summary):
             ms = [r, floatfmt(v), floatfmt(e), '({}%)'.format(floatfmt(pe, i=2))]
 #            msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
             msg = ''.join([width(m, 10) for m in ms])
+#
+            d.add_text(msg, underline=i == n)
 
-            d.add_text(msg)
+
+    def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths):
+        d = self.display
+
+        pi = n - i
+        sig, base = self._get_signal_and_baseline(pi)
+        s = sig - base
+        try:
+            pe = abs(s.std_dev() / s.nominal_value * 100)
+        except ZeroDivisionError:
+            pe = 0
+        msgs = [
+                iso,
+                floatfmt(s.nominal_value),
+                floatfmt(s.std_dev()),
+                '({}%)'.format(floatfmt(pe, i=2))
+                ]
+        msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
+        d.add_text(msg, underline=i == n)
+        return s
+
+    def _get_signal_and_baseline(self, pi):
+        sg = self.result.signal_graph
+        bg = self.result.baseline_graph
+
+        reg = sg.regressors[pi]
+        inter = reg.predict(0)
+        inter_err = reg.coefficient_errors[-1]
+
+        reg = bg.regressors[pi]
+        base = reg.predict(0)
+        base_err = reg.coefficient_errors[-1]
+        return ufloat((inter, inter_err)), ufloat((base, base_err))
+
+    def _make_signals(self, n, i, iso, floatfmt, width, widths):
+        sg = self.result.signal_graph
+        d = self.display
+        pi = n - i
+        fit = sg.get_fit(pi) if sg else '---'
+        sig, base = self._get_signal_and_baseline(pi)
+
+        blank = 0
+        blank_err = 0
+        msgs = [
+                iso,
+                floatfmt(sig.nominal_value),
+                floatfmt(sig.std_dev()),
+                fit,
+                floatfmt(base.nominal_value),
+                floatfmt(base.std_dev()),
+#                    floatfmt(blank),
+#                    floatfmt(blank_err)
+                ]
+        msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
+        d.add_text(msg, underline=i == n)
 
     def _display_default(self):
         return RichTextDisplay(default_size=12,
                                width=700,
                                selectable=True,
                                default_color='black',
-
-                               font_name='Monaco'
+                               font_name='Bitstream Vera Sans Mono'
+#                               font_name='Monaco'
                                )
 
     def traits_view(self):
-        v = View(Item('display', show_label=False, style='custom'))
+        v = View(Item('display', height=0.8, show_label=False, style='custom'),
+                 Item('fit_selector', height=0.2, show_label=False, style='custom'))
         return v
 
 

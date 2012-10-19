@@ -82,7 +82,11 @@ class OLSRegressor(BaseRegressor):
 #                print 'ys', ys
 #        print self.degree, self._result.summary()
     def predict(self, pos):
-        pos = asarray(pos)
+        si = None
+        if isinstance(pos, (float, int)):
+            pos = asarray([pos])
+            si = 0
+#        print si
 ##        print pos.shape
 #        pos = pos.reshape((len(pos), 1))
 #        print pos
@@ -92,8 +96,14 @@ class OLSRegressor(BaseRegressor):
 #        print 'value_at predict', self._ols.predict(pos)
 #        return polyval(coeffs, pos)
         X = self._get_X(xs=pos)
-        if self._result:
-            return self._result.predict(X)
+        res = self._result
+        if res:
+            pred = res.predict(X)
+            if si is not None:
+                pred = pred[0]
+
+            return pred
+#                return self._result.predict(X)[0]
 
     def calculate_y(self, x):
         coeffs = self.coefficients
@@ -150,6 +160,21 @@ class OLSRegressor(BaseRegressor):
     @property
     def summary(self):
         return self._result.summary()
+
+#    @property
+#    def fit(self):
+#        fits = ['linear', 'parabolic', 'cubic']
+#        return fits[self._degree - 1]
+#    
+    def _get_fit(self):
+        fits = ['linear', 'parabolic', 'cubic']
+        return fits[self._degree - 1]
+
+#        return self._fit
+
+    def _set_fit(self, v):
+        self._set_degree(v)
+#        self._fit = v
 
 class PolynomialRegressor(OLSRegressor):
     def _get_X(self, xs=None):

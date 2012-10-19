@@ -39,6 +39,8 @@ class BaseRegressor(Loggable):
     _coefficients = List
     _coefficient_errors = List
     _result = None
+    fit = Property
+    _fit = None
 
     def predict(self, x):
         return x
@@ -115,6 +117,14 @@ class BaseRegressor(Loggable):
         x = self.xs
         xm = self.xs.mean()
         return ((x - xm) ** 2).sum()
+
+    def _get_fit(self):
+        return self._fit
+
+    def _set_fit(self, v):
+        self._fit = v
+
+#    fit = property(fset=_set_fit, fget=_get_fit)
 #            lower=[]
 #                lower.append(rmodel[i] - cor)
 #                upper.append(rmodel[i] + cor)
