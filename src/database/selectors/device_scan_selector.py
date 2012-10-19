@@ -91,7 +91,7 @@ class ScanResult(DBResult):
 class DeviceScanSelector(DatabaseSelector):
     parameter = String('ScanTable.rundate')
     query_table = ScanTable
-    result_klass = ScanResult
+    record_klass = ScanResult
     join_table_col = String('name')
     join_table = String('DeviceTable')
     multi_graphable = Bool(True)

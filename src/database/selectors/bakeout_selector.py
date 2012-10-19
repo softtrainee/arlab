@@ -91,7 +91,7 @@ class BakeoutDBSelector(DatabaseSelector):
     parameter = String('BakeoutTable.rundate')
     date_str = 'rundate'
     query_table = BakeoutTable
-    result_klass = BakeoutDBResult
+    record_klass = BakeoutDBResult
 
     def _get__parameters(self):
 

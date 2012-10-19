@@ -21,6 +21,7 @@ from chaco.tools.zoom_tool import ZoomTool
 from chaco.tools.scatter_inspector import ScatterInspector
 from chaco.abstract_overlay import AbstractOverlay
 from chaco.data_label import DataLabel
+from kiva.fonttools import Font
 #============= standard library imports ========================
 import numpy as np
 
@@ -28,7 +29,6 @@ import numpy as np
 from src.viewable import Viewable
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 from src.graph.stacked_graph import StackedGraph
-from kiva.fonttools import Font
 
 
 class LegendOverlay(AbstractOverlay):

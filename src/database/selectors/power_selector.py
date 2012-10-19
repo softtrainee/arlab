@@ -65,7 +65,7 @@ class PowerResult(RIDDBResult):
 class PowerSelector(DatabaseSelector):
     parameter = String('PowerTable.rundate')
     query_table = PowerTable
-    result_klass = PowerResult
+    record_klass = PowerResult
     tabular_adapter = RIDResultsAdapter
 
     def _get_selector_records(self, **kw):

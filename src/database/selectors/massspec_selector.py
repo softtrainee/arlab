@@ -65,7 +65,7 @@ class MassSpecSelector(DatabaseSelector):
 #    query_table = AnalysesTable
     query_table = SampleTable
 
-    result_klass = MassSpecDBResult
+    record_klass = MassSpecDBResult
     add_selection_changed = Event
     orm_path = 'src.database.orms.massspec_orm'
     open_button_label = 'Add'

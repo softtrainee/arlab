@@ -32,8 +32,10 @@ class BaseResultsAdapter(TabularAdapter):
     rid_width = Int(20)
     runtime_width = Int(80)
     rundate_width = Int(100)
+
     def get_bg_color(self, obj, trait, row, *args):
-        if obj.results[row]._loadable:
+        if getattr(obj, trait)[row].loadable:
+#        if obj.results[row]._loadable:
             return 'white'
         else:
             return '#FF4D4D'
