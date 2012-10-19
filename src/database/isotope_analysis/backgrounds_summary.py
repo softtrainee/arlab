@@ -26,7 +26,7 @@ from src.database.isotope_analysis.history_summary import HistorySummary
 
 class BackgroundsSummary(HistorySummary):
     history_name = 'backgrounds'
-
+    apply_name = 'selected_backgrounds_id'
 
 
 

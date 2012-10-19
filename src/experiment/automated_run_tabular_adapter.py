@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Property, Int
 from traitsui.tabular_adapter import TabularAdapter
+from kiva.fonttools import Font
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -78,6 +79,7 @@ class AutomatedRunAdapter(TabularAdapter):
         st = wx.FONTSTYLE_NORMAL
 #        w = wx.FONTWEIGHT_BOLD
         w = wx.FONTWEIGHT_NORMAL
+
         return wx.Font(s, f, st, w, False, u'Helvetica')
 
     def get_bg_color(self, obj, trait, row):

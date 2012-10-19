@@ -28,56 +28,7 @@ from src.database.isotope_analysis.history_summary import HistorySummary
 
 class BlanksSummary(HistorySummary):
     history_name = 'blanks'
-#    history_names = Property(depends_on='histories')
-#    histories = List
-#    selected_history = Str
-#    graph = Instance(Graph)
-#
-#    @on_trait_change('selected_history')
-#    def _build_summary(self):
-#        dbr = self.result
-#        self.histories = dbr.blanks_histories
-#
-#        g = StackedGraph()
-#        if self.histories:
-#
-#            hi = self.histories[0]
-#            isokeys = sorted([bi.isotope for bi in hi.blanks if bi.use_set],
-#                           key=lambda x:int(x[2:4]),
-#                           reverse=True)
-#            for iso in isokeys:
-#
-#                bset = next((bi.sets for bi in hi.blanks if bi.isotope == iso), None)
-#
-#                g.new_plot()
-#
-#                xs = [dbr.make_timestamp(str(bs.analysis.rundate),
-#                                     str(bs.analysis.runtime)) for bs in bset]
-#
-#                xs = np.array(xs)
-#                xs = xs - np.min(xs)
-#                ys = np.random.random(xs.shape[0])
-#                g.new_series(xs, ys)
-#        self.graph = g
-#
-#
-#    def _get_history_names(self):
-#        return ['{}-{}'.format(dbi.user, dbi.create_date)
-#                          for dbi in self.histories]
-#
-#    def traits_view(self):
-#        v = View(HGroup(
-#                        Item('history_names', show_label=False,
-#                             editor=ListStrEditor(editable=False,
-#                                         operations=[],
-#                                         horizontal_lines=True,
-#                                         selected='selected_history'),
-#                            width=200
-#                            ),
-#                        Item('graph', show_label=False, style='custom')
-#                        )
-#                 )
-#
-#        return v
+    apply_name = 'selected_blanks_id'
+
 
 #============= EOF =============================================

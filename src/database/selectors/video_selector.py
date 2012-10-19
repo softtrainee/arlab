@@ -189,7 +189,7 @@ class VideoResult(RIDDBResult):
 class VideoSelector(DatabaseSelector):
     parameter = String('VideoTable.rundate')
     query_table = VideoTable
-    result_klass = VideoResult
+    record_klass = VideoResult
     tabular_adapter = RIDResultsAdapter
 
 

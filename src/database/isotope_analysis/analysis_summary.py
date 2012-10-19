@@ -40,20 +40,20 @@ class AnalysisSummary(Summary):
     def _build_summary(self):
         d = self.display
         d.clear()
-        result = self.result
+        record = self.record
 
-        isos = result.isos
+        isos = record.isos
         isos = sorted(isos, key=lambda x: re.sub('\D', '', x))
         isos.reverse()
 
-#        fits = result.fits
-#        signals = result.signals
-#        baselines = result.baselines
+#        fits = record.fits
+#        signals = record.signals
+#        baselines = record.baselines
 #        if baselines is None:
 #            baselines = [(0, 0) for i in range(len(isos))]
 
-        d.add_text('RID={} Labnumber={}'.format(result.rid, result.labnumber), bold=True)
-        d.add_text('date={} time={}'.format(result.rundate, result.runtime), bold=True)
+        d.add_text('Labnumber={}-{}'.format(record.labnumber, record.aliquot), bold=True)
+        d.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
 
         floatfmt = lambda m, i = 5: '{{:0.{}f}}'.format(i).format(m)
         width = lambda m, i: '{{:<{}s}}'.format(i).format(m)
@@ -61,7 +61,7 @@ class AnalysisSummary(Summary):
         #add header
         columns = [('Iso.', 5),
                    ('Int.', 12), (PLUSMINUS_ERR, 12),
-                   ('Fit', 10),
+                   ('Fit', 11),
                    ('Baseline', 12), (PLUSMINUS_ERR, 15),
 #                   ('Blank', 12), (PLUSMINUS_ERR, 12)
                    ]
@@ -72,8 +72,8 @@ class AnalysisSummary(Summary):
 #        msg = ''.join([width(m, w) for m, w in columns])
         d.add_text(msg, underline=True, bold=True)
 
-#        sg = result.signal_graph
-#        bg = result.baseline_graph
+#        sg = record.signal_graph
+#        bg = record.baseline_graph
         #add isotopes
         n = len(isos) - 1
 
@@ -132,8 +132,8 @@ class AnalysisSummary(Summary):
         return s
 
     def _get_signal_and_baseline(self, pi):
-        sg = self.result.signal_graph
-        bg = self.result.baseline_graph
+        sg = self.record.signal_graph
+        bg = self.record.baseline_graph
 
         reg = sg.regressors[pi]
         inter = reg.predict(0)
@@ -145,7 +145,7 @@ class AnalysisSummary(Summary):
         return ufloat((inter, inter_err)), ufloat((base, base_err))
 
     def _make_signals(self, n, i, iso, floatfmt, width, widths):
-        sg = self.result.signal_graph
+        sg = self.record.signal_graph
         d = self.display
         pi = n - i
         fit = sg.get_fit(pi) if sg else '---'
@@ -185,7 +185,7 @@ class AnalysisSummary(Summary):
 #class AnalysisSummary2(HasTraits):
 #    age = Float
 #    error = Float
-#    result = Any
+#    record = Any
 #
 #    summary = Property(depends_on='age,err')
 #
@@ -198,8 +198,8 @@ class AnalysisSummary(Summary):
 #{{header1}}
 #{{data1}}
 #
-#Name:{{result.filename}}
-#Root:{{result.directory}}
+#Name:{{record.filename}}
+#Root:{{record.directory}}
 #
 #{{header2}}
 #{%- for k,v in signals %}
@@ -209,20 +209,20 @@ class AnalysisSummary(Summary):
 #Age : {{obj.age}}\xb1{{obj.error}}    
 #'''
 #
-#        data1 = map(lambda x: getattr(self.result, x), ['rid', 'rundate', 'runtime'])
+#        data1 = map(lambda x: getattr(self.record, x), ['rid', 'rundate', 'runtime'])
 #
 #        temp = Template(doc)
 #        join = lambda f, n: ('\t' * n).join(f)
 ##        join = '\t\t\t'.join
 #        entab = lambda x:map('{}'.format, map(str, x))
 #        makerow = lambda x, n: join(entab(x), n)
-#        result = self.result
-#        r = temp.render(result=result,
+#        record = self.record
+#        r = temp.render(record=record,
 #                           header1=makerow(self.header1, 3),
 #                           header2=makerow(self.header2, 1),
 #                           data1=makerow(data1, 3),
-#                           signals=zip(result.det_keys,
-#                                       result.intercepts
+#                           signals=zip(record.det_keys,
+#                                       record.intercepts
 #                                       ),
 #                           obj=self,
 #                           )

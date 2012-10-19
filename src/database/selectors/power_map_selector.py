@@ -124,7 +124,7 @@ class PowerMapResult(DBResult):
 class PowerMapSelector(DatabaseSelector):
     parameter = String('PowerMapTable.rundate')
 
-    result_klass = PowerMapResult
+    record_klass = PowerMapResult
     query_table = PowerMapTable
 
 

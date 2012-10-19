@@ -21,9 +21,12 @@ from traitsui.api import View, Item, TableEditor
 #============= local library imports  ==========================
 
 class Summary(HasTraits):
-    result = Any
+    record = Any
     def __init__(self, *args, **kw):
         super(Summary, self).__init__(*args, **kw)
+        self._create_summary()
+
+    def _create_summary(self):
         self._build_summary()
 
     def refresh(self):

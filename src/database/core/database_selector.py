@@ -59,7 +59,7 @@ class ColumnSorterMixin(HasTraits):
 
 
 class DatabaseSelector(Viewable, ColumnSorterMixin):
-    results = List
+    records = List
 
     search = Button
     open_button = Button
@@ -82,7 +82,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     tabular_adapter = BaseResultsAdapter
 
     query_table = None
-    result_klass = None
+    record_klass = None
 
     omit_bogus = Bool(True)
 
@@ -100,7 +100,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def _selected_changed(self):
         if self.selected:
-            self.selected_row = self.results.index(self.selected[0])
+            self.selected_row = self.records.index(self.selected[0])
             self.update = True
 
     def __init__(self, *args, **kw):
@@ -124,11 +124,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def load_recent(self):
         dbs = self._get_recent()
-        self.load_results(dbs)
+        self.load_records(dbs)
 
     def execute_query(self, filter_str=None):
         dbs = self._execute_query(filter_str)
-        self.load_results(dbs)
+        self.load_records(dbs)
 
     def get_recent(self):
         return self._get_recent()
@@ -162,32 +162,38 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
         dbs = self._get_selector_records(**query_dict)
 
-        self.info('query {} returned {} results'.format(query_dict['filter_str'],
+        self.info('query {} returned {} records'.format(query_dict['filter_str'],
                                 len(dbs) if dbs else 0))
         return dbs
 
-    def load_results(self, dbs):
-        self.results = []
-        self._load_results(dbs)
-        self._sort_columns(self.results)
+    def load_records(self, dbs):
+        self.records = []
+        self._load_records(dbs)
+        self._sort_columns(self.records)
 
-#        self.selected = self.results[-1:]
-        self.scroll_to_row = len(self.results)
-#        self.selected_row = [29, 30]#len(self.results) - 1
+#        self.selected = self.records[-1:]
+        self.scroll_to_row = len(self.records)
+#        self.selected_row = [29, 30]#len(self.records) - 1
 #        print self.scroll_to_row
 #        print self.selected
 #        print self.selected_row
 
-    def _load_results(self, results):
+    def _load_records(self, records):
         db = self._db
-        if results:
-            for di in results:
+        if records:
+            for di in records:
+                r = os.path.dirname(db.name)
                 d = self._result_factory(di,
-                                         root=os.path.dirname(db.name))
-#                    d = self.result_klass(_db_result=di)
+                                         root=r
+                                         )
+#                    d = self.record_klass(_db_result=di)
                 d.load()
-                d._loadable = True
-                self.results.append(d)
+                d.on_trait_change(self._changed, 'changed')
+                self.records.append(d)
+
+    def _changed(self, new):
+        db = self._db
+        db.commit()
 
     def _open_selected(self):
         s = self.selected
@@ -223,32 +229,29 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def _open_individual(self, s):
         for si in s:
-            if not si._loadable:
+            if not si.initialize():
                 continue
 
-            sid = si.rid
+            sid = si.record_id
             if sid in self.opened_windows:
                 c = self.opened_windows[sid].control
                 if c is None:
                     self.opened_windows.pop(sid)
                 else:
-                    try:
-                        c.Raise()
-                    except:
-                        self.opened_windows.pop(sid)
+                    si.opened()
+#                    try:
+#                        c.Raise()
+#                    except:
+#                        self.opened_windows.pop(sid)
 
             else:
-
                 try:
-                    if not si.initialize():
-                        si._isloadable = False
-                        return
                     si.load_graph()
                     si.window_x = self.wx
                     si.window_y = self.wy
 
                     info = si.edit_traits()
-                    self._open_window(si.rid, info)
+                    self._open_window(sid, info)
                 except Exception, e:
                     import traceback
                     traceback.print_exc()
@@ -317,7 +320,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return q
 
     def _result_factory(self, di, **kw):
-        return self.result_klass(_db_result=di,
+
+        return self.record_klass(_dbrecord=di,
                                  selector=self,
                                  **kw)
 
@@ -373,7 +377,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #                             defined_when='multi_graphable'
 #                             ),
 #                             spring, Item('limit')),
-                 Item('results',
+                 Item('records',
                       style='custom',
                       editor=editor,
                       show_label=False,

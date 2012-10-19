@@ -141,7 +141,7 @@ class PowerCalibrationResult(DBResult):
 class PowerCalibrationSelector(DatabaseSelector):
     parameter = String('PowerCalibrationTable.rundate')
     query_table = PowerCalibrationTable
-    result_klass = PowerCalibrationResult
+    record_klass = PowerCalibrationResult
 
     def _get_selector_records(self, **kw):
         return self._db.get_calibration_records(**kw)

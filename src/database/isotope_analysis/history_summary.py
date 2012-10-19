@@ -15,85 +15,195 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Str, Instance, on_trait_change
-from traitsui.api import View, Item, HGroup, ListStrEditor
+from traits.api import HasTraits, Property, List, Str, Instance, on_trait_change, Any, \
+    cached_property, Int, Button, Event, DelegatesTo
+from traitsui.api import View, Item, HGroup, Group, TabularEditor
+from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 import numpy as np
+import re
 #============= local library imports  ==========================
 from src.database.isotope_analysis.summary import Summary
 from src.graph.stacked_graph import StackedGraph
+from src.graph.graph import Graph
+from src.database.orms.isotope_orm import proc_SelectedHistoriesTable
+from pyface.timer.do_later import do_later
+
+
+class HistoryView(HasTraits):
+    summary = Any
+    apply = Button
+    applied_history = Event
+
+    selected_history = Any
+
+    def _apply_fired(self):
+        summary = self.summary
+        dbhist = summary.selected_history.history
+        record = summary.record
+        selhistory = record.selected_histories
+        if not selhistory:
+            selhistory = proc_SelectedHistoriesTable(analysis=record)
+
+        setattr(selhistory, summary.apply_name, dbhist)
+        self.summary.oselected_history = summary.selected_history
+        self.applied_history = summary.selected_history
+
+    def traits_view(self):
+        v = View(Group(
+                          Item('object.summary.histories', show_label=False,
+                          editor=TabularEditor(
+                                     adapter=HistoryTabularAdapter(),
+                                     editable=False,
+                                     operations=[],
+                                     auto_update=True,
+                                     horizontal_lines=True,
+                                     selected='object.selected_history')),
+                          Item('apply',
+                               enabled_when='summary.selected_history!=summary.oselected_history',
+                               show_label=False),
+                          show_border=True,
+                          label='histories',
+                        )
+                 )
+        return v
+
+class HistoryTabularAdapter(TabularAdapter):
+    columns = [('User', 'user'), ('Date', 'create_date')]
+
+    user_text = Property
+    user_width = Int(50)
+    create_date_width = Int(120)
+
+    def get_font(self, obj, trait, row):
+        import wx
+        s = 9
+        f = wx.FONTFAMILY_DEFAULT
+        st = wx.FONTSTYLE_NORMAL
+#        w = wx.FONTWEIGHT_BOLD
+        w = wx.FONTWEIGHT_NORMAL
+        name = 'Bitstream Vera Sans Mono'
+        return wx.Font(s, f, st, w, False, name)
+
+    def _get_user_text(self):
+        u = self.item.user
+        return u if u is not None else '---'
+
+class History(HasTraits):
+    history = Any
+
+    @cached_property
+    def _get_user(self):
+        return self.summary.user
+
+    @cached_property
+    def _get_create_date(self):
+        return self.summary.create_date
+
+    def __getattr__(self, attr):
+        return getattr(self.history, attr)
 
 class HistorySummary(Summary):
-    history_names = Property(depends_on='histories')
-    histories = List
-    selected_history = Str
-    graph = Instance(StackedGraph)
-
+    histories = Property
+    graph = Instance(Graph)
+    history_view = Instance(HistoryView)
+    selected_history = DelegatesTo('history_view')
     history_name = ''
 
-    @on_trait_change('selected_history')
-    def _build_summary(self):
-        hn = self.history_name
-        dbr = self.result
-        self.histories = getattr(dbr, '{}_histories'.format(hn))
+    def _history_view_default(self):
+        return HistoryView(summary=self)
 
-        g = StackedGraph()
+    def _create_summary(self):
+        hist = None
         if self.histories:
-            hi = next((hh for hh in self.histories
-                       if '{:<12s} {}'.format(hh.user, hh.create_date) == self.selected_history),
-                      self.histories[-1])
+            selh = self.record.selected_histories
+            hist = getattr(selh, self.apply_name)
 
-            isokeys = sorted([bi.isotope for bi in getattr(hi, hn)
+            sh = next((hi for hi in self.histories if hi.history == hist), None)
+            def up():
+                self.oselected_history = sh
+                self.selected_history = None
+                self.selected_history = sh
+
+            do_later(up)
+
+        self._build_summary(history=hist)
+
+    def _get_isotope_keys(self, history, name):
+        isokeys = sorted([bi.isotope for bi in getattr(history, name)
 #                              if bi.use_set
-                              ],
-                           key=lambda x:int(x[2:4]),
-                           reverse=True)
-            xma = -np.Inf
-            xmi = np.Inf
+                          ],
+                         key=lambda x:re.sub('\D', '', x),
+                       reverse=True)
+        return isokeys
 
-            for i, iso in enumerate(isokeys):
-                bi = next((bii for bii in getattr(hi, hn)
-                           if bii.isotope == iso), None)
+    @on_trait_change('selected_history')
+    def _update_summary(self):
+        if self.selected_history:
+            self._build_summary()
 
-                g.new_plot()
-                if bi.use_set:
-                    xs = [dbr.make_timestamp(str(bs.analysis.rundate),
-                                         str(bs.analysis.runtime)) for bs in bi.sets]
+    @cached_property
+    def _get_histories(self):
+        hn = self.history_name
+        dbr = self.record
+        return [History(history=hii) for hii in getattr(dbr, '{}_histories'.format(hn))]
 
-                    xs = np.array(xs)
-                    if xs.shape[0]:
-                        xs = xs - np.min(xs)
-                        ys = np.random.random(xs.shape[0])
-                        g.new_series(xs, ys)
-                        xma = max(xma, max(xs))
-                        xmi = min(xmi, min(xs))
-                else:
-                    uv = bi.user_value
-                    ue = bi.user_error
-                    kw = dict(plotid=i, color=(0, 0, 0))
-                    g.add_horizontal_rule(uv, line_style='solid',
-                                          **kw)
-                    g.add_horizontal_rule(uv + ue, **kw)
-                    g.add_horizontal_rule(uv - ue, **kw)
-                    g.set_y_limits(min=uv - ue,
-                                   max=uv + ue, pad='0.1', plotid=i)
+    def _build_summary(self, history=None):
+
+        if self.histories:
+            if history is None:
+                if self.selected_history:
+                    history = self.selected_history
+
+            if history:
+                self._build_graph(history)
+
+    def _build_graph(self, hi):
+        hn = self.history_name
+        dbr = self.record
+#
+        g = StackedGraph()
         self.graph = g
+#        isokeys = self._get_isotope_keys(hi, hn)
+#        xma = -np.Inf
+#        xmi = np.Inf
+#
+#        for i, iso in enumerate(isokeys):
+#            bi = next((bii for bii in getattr(hi, hn)
+#                       if bii.isotope == iso), None)
+#
+#            g.new_plot()
+#            if bi.use_set:
+#                xs = [dbr.make_timestamp(str(bs.analysis.rundate),
+#                                     str(bs.analysis.runtime)) for bs in bi.sets]
+#
+#                xs = np.array(xs)
+#                if xs.shape[0]:
+#                    xs = xs - np.min(xs)
+#                    ys = np.random.random(xs.shape[0])
+#                    g.new_series(xs, ys)
+#                    xma = max(xma, max(xs))
+#                    xmi = min(xmi, min(xs))
+#            else:
+#                uv = bi.user_value
+#                ue = bi.user_error
+#                kw = dict(plotid=i, color=(0, 0, 0))
+#                g.add_horizontal_rule(uv, line_style='solid',
+#                                      **kw)
+#                g.add_horizontal_rule(uv + ue, **kw)
+#                g.add_horizontal_rule(uv - ue, **kw)
+#                g.set_y_limits(min=uv - ue,
+#                               max=uv + ue, pad='0.1', plotid=i)
 
-    def _get_history_names(self):
-        return ['{:<12s} {}'.format(dbi.user, dbi.create_date)
-                          for dbi in self.histories]
 
     def traits_view(self):
         v = View(HGroup(
-                        Item('history_names', show_label=False,
-                             editor=ListStrEditor(
-                                         editable=False,
-                                         operations=[],
-                                         horizontal_lines=True,
-                                         selected='object.selected_history'),
-                            width=200
-                            ),
-                        Item('graph', show_label=False, style='custom')
+                        Item('history_view', style='custom', show_label=False,
+                             width=0.25),
+                        Item('graph', show_label=False,
+                             style='custom',
+                             width=0.75
+                             )
                         )
                  )
 
