@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Enum, Float, Any
-from traitsui.api import View, Item, HGroup, Label, Spring
+from traits.api import HasTraits, Str, Enum, Float, Any, List
+from traitsui.api import View, Item, HGroup, Label, Spring, EnumEditor
 #============= standard library imports ========================
 import wx
 #============= local library imports  ==========================
@@ -85,18 +85,23 @@ class AnalysisParameters(HasTraits):
     filterstr = Str(enter_set=True, auto_set=False)
     name = Str
     intercept = Float
+    error = Float
     analysis = Any
-
+    fittypes = List(['linear', 'parabolic', 'cubic', 'averageSD', 'averageSEM'])
     def traits_view(self):
         v = View(HGroup(Label(self.name),
                         Spring(width=50 - 10 * len(self.name), springy=False),
-                        Item('fit[]', style='custom',
-                              editor=BoundEnumEditor(values=['linear', 'parabolic', 'cubic'],
-
-                                                     )),
+                        Item('fit', editor=EnumEditor(name='fittypes'),
+                             show_label=False),
+#                        Item('fit[]', style='custom',
+#                              editor=BoundEnumEditor(values=['linear', 'parabolic', 'cubic'],
+#
+#                                                     )),
                         Item('filterstr[]'),
                         Spring(width=50, springy=False),
-                        Item('intercept', format_str='%0.3f',
+                        Item('intercept', format_str='%0.5f',
+                              style='readonly'),
+                        Item('error', format_str='%0.5f',
                               style='readonly')
                         )
                  )
