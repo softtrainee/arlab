@@ -102,7 +102,7 @@ class RegressionGraph(Graph):
                 for si, fl, ul, ll in zip(scatters, fls, uls, lls):
                     self._plot_regression(plot, si, fl, ul, ll)
             except ValueError, e:
-                print e
+#                print e
                 break
         else:
             self.regression_results = self.regressors

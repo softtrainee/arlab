@@ -398,6 +398,7 @@ class IsotopeAdapter(DatabaseAdapter):
         if sample is not None and ln is not None:
             sample.labnumbers.append(ln)
 
+        self.info('adding labnumber {}'.format(labnumber))
         return ln, True
 
     @add

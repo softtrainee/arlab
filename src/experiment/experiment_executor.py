@@ -37,6 +37,8 @@ from src.helpers.parsers.initialization_parser import InitializationParser
 from apptools.preferences.preference_binding import bind_preference
 from src.experiment.set_selector import SetSelector
 from src.experiment.stats import StatsGroup
+import os
+from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 
 
 class ExperimentExecutor(ExperimentManager):
@@ -92,13 +94,6 @@ class ExperimentExecutor(ExperimentManager):
         super(ExperimentExecutor, self).bind_preferences()
 
         prefid = 'pychron.experiment'
-#        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
-#
-#        if self.repo_kind == 'FTP':
-#            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
-#            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
-#            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
-#            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
 
         bind_preference(self.massspec_importer.db, 'name', '{}.massspec_dbname'.format(prefid))
         bind_preference(self.massspec_importer.db, 'host', '{}.massspec_host'.format(prefid))
@@ -109,10 +104,40 @@ class ExperimentExecutor(ExperimentManager):
         self.info_display.clear()
         self._was_executed = False
 
+    def _reload_from_disk(self):
+        super(ExperimentExecutor, self)._reload_from_disk()
+        self._update_stats()
+
     @on_trait_change('experiment_sets[]')
     def _update_stats(self):
         self.stats.experiment_sets = self.experiment_sets
         self.stats.calculate()
+
+    def execute_procedure(self, name=None):
+        if name is None:
+            name = self.open_file_dialog(default_directory=paths.procedures_dir)
+            if not name:
+                return
+
+            name = os.path.basename(name)
+
+        self._execute_procedure(name)
+
+    def _execute_procedure(self, name):
+        root = paths.procedures_dir
+        self.info('executing procedure {}'.format(os.path.join(root, name)))
+
+        els = ExtractionLinePyScript(root=root,
+                                     name=name,
+                                     runner=self.pyscript_runner
+                                     )
+        if els.bootstrap():
+            try:
+                els._test()
+                els.execute(new_thread=True, bootstrap=False)
+            except Exception, e:
+                self.warning(e)
+                self.warning_dialog('Invalid Script {}'.format(name))
 #===============================================================================
 # stats
 #===============================================================================
@@ -164,28 +189,6 @@ class ExperimentExecutor(ExperimentManager):
             self.info('experiment canceled because no blank or background was configured')
             self._alive = False
             return
-
-        if self.mode == 'client':
-#            em = self.extraction_line_manager
-            ip = InitializationParser()
-            elm = ip.get_plugin('ExtractionLine', category='hardware')
-            runner = elm.find('runner')
-            host, port, kind = None, None, None
-            if runner:
-                comms = runner.find('communications')
-                host = comms.find('host')
-                port = comms.find('port')
-                kind = comms.find('kind')
-
-            host = host if host else 'localhost'
-            port = port if port else 1061
-            kind = kind if kind else 'udp'
-
-            runner = RemotePyScriptRunner(host, port, kind)
-        else:
-            runner = PyScriptRunner()
-
-        self.pyscript_runner = runner
 
         self._alive = True
         self.set_selector.selected_index = -2
@@ -321,10 +324,11 @@ class ExperimentExecutor(ExperimentManager):
         arun.username = self.username
 
     def _has_preceeding_blank_or_background(self, exp):
-        if exp.automated_runs[0].analysis_type not in ['blank', 'background']:
-            #the experiment set doesnt start with a blank
-            #ask user for preceeding blank
-            return False
+#        if exp.automated_runs[0].analysis_type not in ['blank', 'background']:
+#            #the experiment set doesnt start with a blank
+#            #ask user for preceeding blank
+#            self.warning_dialog("Experiment doesn't start with a blank or background")
+#            return False
         return True
 
     def _do_automated_run(self, arun):
@@ -450,7 +454,9 @@ class ExperimentExecutor(ExperimentManager):
                          style='readonly', format_str='%i',
                          width= -50),
                     spring,
-                    Item('show_lab_map', show_label=False),
+                    Item('show_lab_map', show_label=False,
+                         enabled_when='object.experiment_set.lab_map'
+                         ),
                     spring,
                     Item('end_at_run_completion'),
                     Item('truncate_button', show_label=False,
@@ -523,4 +529,28 @@ class ExperimentExecutor(ExperimentManager):
                         )
 
         return s
+
+    def _pyscript_runner_default(self):
+        if self.mode == 'client':
+#            em = self.extraction_line_manager
+            ip = InitializationParser()
+            elm = ip.get_plugin('ExtractionLine', category='hardware')
+            runner = elm.find('runner')
+            host, port, kind = None, None, None
+
+            if runner is not None:
+                comms = runner.find('communications')
+                host = comms.find('host')
+                port = comms.find('port')
+                kind = comms.find('kind')
+
+            host = host if host.text else 'localhost'
+            port = port if port.text else 1061
+            kind = kind if kind.text else 'udp'
+
+            runner = RemotePyScriptRunner(host, port, kind)
+        else:
+            runner = PyScriptRunner()
+
+        return runner
 #============= EOF =============================================

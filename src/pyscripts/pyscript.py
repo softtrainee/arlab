@@ -244,9 +244,10 @@ class PyScript(Loggable):
     def bootstrap(self, load=True, **kw):
         self._interval_flag = Event()
         self._interval_stack = Queue()
+
         if self.root and self.name and load:
 #            p = os.path.join(self.root, self.name)
-
+#            self.syntax_checked = False
             with open(self.filename, 'r') as f:
                 self._text = f.read()
             return True
@@ -351,8 +352,11 @@ class PyScript(Loggable):
         message = str(message)
         self.info(message)
 
-        if self.info_display:
-            self.info_display.add_text(message)
+        try:
+            if self.info_display:
+                self.info_display.add_text(message)
+        except AttributeError:
+            pass
 #            do_later(self.info_display.add_text, message)
 
     def sleep(self, duration=0):
@@ -374,10 +378,11 @@ class PyScript(Loggable):
             duration = 0.1
         self._sleep(duration)
 
-    def execute(self, new_thread=False, finished_callback=None):
+    def execute(self, new_thread=False, bootstrap=True, finished_callback=None):
 
         def _ex_():
-            self.bootstrap()
+            if bootstrap:
+                self.bootstrap()
 
             ok = True
             if not self.syntax_checked:
@@ -423,6 +428,8 @@ class PyScript(Loggable):
 
         else:
             self.info('syntax checking passed')
+
+        self.syntax_checked = True
         self._syntax_checking = False
 
     def _execute(self):

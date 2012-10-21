@@ -207,7 +207,7 @@ class PlotPanel(Viewable):
             return reg.error_calc
 
     def close(self, isok):
-        self.automated_run.truncate()
+        self.automated_run.truncate('Immediate')
         return isok
 
     def _get_ncounts(self):
