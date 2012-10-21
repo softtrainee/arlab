@@ -219,8 +219,14 @@ class Manager(Viewable, RPCable):
         '''
         return self._file_dialog_('save as', **kw)
 
+    def open_directory_dialog(self, **kw):
+        return self._directory_dialog(False, **kw)
+
     def save_directory_dialog(self, **kw):
-        dlg = DirectoryDialog(new_directory=True, **kw)
+        return self._directory_dialog(True)
+
+    def _directory_dialog(self, new_directory, **kw):
+        dlg = DirectoryDialog(new_directory=new_directory, **kw)
         if dlg.open() == OK:
             return dlg.path
 

@@ -15,24 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Property, Any, Instance
+from traits.api import Instance
 from traitsui.api import View, Item
 #============= standard library imports ========================
-#import wx
-#============= local library imports  ==========================
-#from src.database.isotope_analysis.selectable_readonly_texteditor import SelectableReadonlyTextEditor
-from src.displays.rich_text_display import RichTextDisplay
-from uncertainties import ufloat
-from src.database.isotope_analysis.summary import Summary
 import re
+from uncertainties import ufloat
+#============= local library imports  ==========================
+from src.displays.rich_text_display import RichTextDisplay
+from src.database.isotope_analysis.summary import Summary
 from src.database.isotope_analysis.fit_selector import FitSelector
-#from src.data_processing.regression.regressor import Regressor
 
 PLUSMINUS = unicode('\xb1')
 PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
 class AnalysisSummary(Summary):
-    age = Float
-    error = Float
 
     display = Instance(RichTextDisplay)
     fit_selector = Instance(FitSelector)
@@ -40,17 +35,12 @@ class AnalysisSummary(Summary):
     def _build_summary(self):
         d = self.display
         d.clear()
+
         record = self.record
 
         isos = record.isos
         isos = sorted(isos, key=lambda x: re.sub('\D', '', x))
         isos.reverse()
-
-#        fits = record.fits
-#        signals = record.signals
-#        baselines = record.baselines
-#        if baselines is None:
-#            baselines = [(0, 0) for i in range(len(isos))]
 
         d.add_text('Labnumber={}-{}'.format(record.labnumber, record.aliquot), bold=True)
         d.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
@@ -72,18 +62,12 @@ class AnalysisSummary(Summary):
 #        msg = ''.join([width(m, w) for m, w in columns])
         d.add_text(msg, underline=True, bold=True)
 
-#        sg = record.signal_graph
-#        bg = record.baseline_graph
         #add isotopes
         n = len(isos) - 1
-
-#        baselines = dict()
-#        signals = dict()
         for i, iso in enumerate(isos):
             self._make_signals(n, i, iso, floatfmt, width, widths)
 
-#        d.add_text(' ')
-        d.add_text(' ')
+#        d.add_text('\n')
 
         m = 'Corrected Signals'
         d.add_text('{:<39s}'.format(m), underline=True, bold=True)
@@ -93,7 +77,8 @@ class AnalysisSummary(Summary):
             s = self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
             signals[iso] = s
 
-        d.add_text([' '])
+#        d.add_text([' '])
+#        d.add_text(' ')
         m = 'Corrected Ratios'
         d.add_text('{:<39s}'.format(m), underline=True, bold=True)
 #
@@ -108,8 +93,14 @@ class AnalysisSummary(Summary):
 #            msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
             msg = ''.join([width(m, 10) for m in ms])
 #
+            if i == n:
+                msg += '\n'
             d.add_text(msg, underline=i == n)
 
+
+        v, e = self.record.age
+        e = u' \u00b1' + '{:0.3f}'.format(e)
+        d.add_text('age={:0.3f} {}'.format(v, e))
 
     def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths):
         d = self.display
@@ -128,7 +119,10 @@ class AnalysisSummary(Summary):
                 '({}%)'.format(floatfmt(pe, i=2))
                 ]
         msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
+        if i == n:
+            msg += '\n'
         d.add_text(msg, underline=i == n)
+
         return s
 
     def _get_signal_and_baseline(self, pi):
@@ -164,6 +158,8 @@ class AnalysisSummary(Summary):
 #                    floatfmt(blank_err)
                 ]
         msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
+        if i == n:
+            msg += '\n'
         d.add_text(msg, underline=i == n)
 
     def _display_default(self):

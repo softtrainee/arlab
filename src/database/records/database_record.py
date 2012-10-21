@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Str, Instance, Property, cached_property
+from traits.api import Int, Any, Str, Instance, Property, cached_property, Bool
 from traitsui.api import View, Item, Group, HGroup, VGroup, spring
 #============= standard library imports ========================
 import os
@@ -26,12 +26,13 @@ import time
 
 
 class DatabaseRecord(Viewable):
+    dbrecord = Property(depends_on='_dbrecord')
     _dbrecord = Any
 
     title = Str
     title_str = Str
     summary = Str
-    graph = Instance(Graph)
+#    graph = Instance(Graph)
 
     rundate = Property
     runtime = Property
@@ -44,10 +45,13 @@ class DatabaseRecord(Viewable):
     window_height = None
     selector = Any
 
-    loadable = Property
+    loadable = Property(depends_on='_loadable')
+    _loadable = Bool(True)
     record_id = Property
 
     resizable = True
+
+    gid = Int
 
     @classmethod
     def make_timestamp(cls, rd, rt):
@@ -68,39 +72,10 @@ class DatabaseRecord(Viewable):
         elif self.directory is not None and self.filename is not None:
             self._load_hook('')
 
-    def _load_hook(self, dbr):
-        pass
-
     def initialize(self):
-        return self.loadable
-#        return self.isloadable()
-
-#    def isloadable(self):
-##        dm = self._get_data_manager()
-#        dm = self.selector.data_manager
-#        try:
-#            self._loadable = dm.open_data(self._get_path())
-#        except Exception, e:
-#            import traceback
-#            print traceback.print_exc()
-#            self._loadable = False
-#        finally:
-#            pass
-##            dm.close()
-#        return self._loadable
-
-#===============================================================================
-# private
-#===============================================================================
-
-#===============================================================================
-# property get/set
-#===============================================================================
-    @cached_property
-    def _get_loadable(self):
         dm = self.selector.data_manager
         try:
-            l = dm.open_data(self._get_path())
+            l = dm.open_data(self._get_path(), caller='_get_loadable {}'.format(self))
         except Exception, e:
             import traceback
             print traceback.print_exc()
@@ -108,18 +83,35 @@ class DatabaseRecord(Viewable):
         finally:
             pass
 
-        return l
+        self._loadable = l
+        return self.loadable
 
+#===============================================================================
+# private
+#===============================================================================
+
+    def _load_hook(self, dbr):
+        pass
+#===============================================================================
+# property get/set
+#===============================================================================
     @cached_property
+    def _get_loadable(self):
+        return self._loadable
+
+
     def _get_record_id(self):
         return self._dbrecord.id
 
-#    @cached_property
-#    def _get_timestamp(self):
-#        return self.make_timestamp(self.rundate, self.runtime)
-#        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
-#        ts = ' '.join((self.rundate, self.runtime))
-#        return timefunc(ts)
+    def _get_dbrecord(self):
+        return self._dbrecord
+
+    @cached_property
+    def _get_timestamp(self):
+        return self.make_timestamp(self.rundate, self.runtime)
+        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
+        ts = ' '.join((self.rundate, self.runtime))
+        return timefunc(ts)
 
     @cached_property
     def _get_rundate(self):
@@ -139,14 +131,13 @@ class DatabaseRecord(Viewable):
     def filename(self):
         return os.path.basename(self.path)
 
-    def _export_button_fired(self):
-        self._export_csv()
+#    def _export_button_fired(self):
+#        self._export_csv()
 
 #===============================================================================
 # factories
 #===============================================================================
     def _graph_factory(self, klass=None, width=500, height=300):
-
         if klass is None:
             klass = Graph
         g = klass(container_dict=dict(padding=5),

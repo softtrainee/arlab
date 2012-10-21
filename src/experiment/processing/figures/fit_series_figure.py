@@ -44,7 +44,7 @@ class FitSeriesFigure(BaseFigure):
         db = self.db
         db.connect()
         if self.selector is None:
-            db.selector_factory()
+#            db.selector_factory()
             from src.experiment.processing.processing_selector import ProcessingSelector
             ps = ProcessingSelector(db=self.db)
             ps.selector.style = 'panel'

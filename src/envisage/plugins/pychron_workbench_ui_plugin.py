@@ -43,34 +43,34 @@ class PychronWorkbenchUIPlugin(CoreUIPlugin):
     def _preferences_pages_default(self):
         '''
         '''
-        from pychron_workbench_preferences_page import PychronWorkbenchPreferencesPage
-        return [PychronWorkbenchPreferencesPage]
+        from pychron_workbench_preferences_page import PychronPluginPreferencesPage
+        return [PychronPluginPreferencesPage]
 
     def _views_default(self):
         '''
         '''
         return []#self._create_process_view]
 
-    def _create_process_view(self, **kw):
-        '''
-            @type **kw: C{str}
-            @param **kw:
-        '''
-        app = self.application
-        obj = app.get_service('src.experiments.process_view.ProcessView')
-        manager = app.get_service('src.experiments.experiments_manager.ExperimentsManager')
-        smanager = app.get_service('src.scripts.scripts_manager.ScriptsManager')
-
-        #obj.experiment = manager.selected
-        if manager is not None:
-            manager.on_trait_change(obj.selected_update, 'selected')
-        if smanager is not None:
-            smanager.on_trait_change(obj.selected_update, 'selected')
-
-        args = dict(id='pychron.process_view',
-                         name='Process',
-                         obj=obj
-                       )
-        return self.traitsuiview_factory(args, kw)
+#    def _create_process_view(self, **kw):
+#        '''
+#            @type **kw: C{str}
+#            @param **kw:
+#        '''
+#        app = self.application
+##        obj = app.get_service('src.experiments.process_view.ProcessView')
+##        manager = app.get_service('src.experiments.experiments_manager.ExperimentsManager')
+##        smanager = app.get_service('src.scripts.scripts_manager.ScriptsManager')
+#
+#        #obj.experiment = manager.selected
+##        if manager is not None:
+##            manager.on_trait_change(obj.selected_update, 'selected')
+##        if smanager is not None:
+##            smanager.on_trait_change(obj.selected_update, 'selected')
+#
+#        args = dict(id='pychron.process_view',
+#                         name='Process',
+#                         obj=obj
+#                       )
+#        return self.traitsuiview_factory(args, kw)
 
 #============= EOF ====================================

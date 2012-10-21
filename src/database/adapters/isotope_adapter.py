@@ -27,7 +27,8 @@ from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, 
     proc_BackgroundsSetTable, IsotopeTable, DetectorTable, MolecularWeightTable, \
     irrad_ProductionTable, irrad_IrradiationTable, irrad_HolderTable, \
     proc_DetectorIntercalibrationHistoryTable, \
-    proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable
+    proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable, \
+    proc_SelectedHistoriesTable
 #import sqlalchemy
 from sqlalchemy.sql.expression import or_, and_
 from src.database.core.functions import add, sql_retrieve, get_one, \
@@ -92,7 +93,10 @@ class IsotopeAdapter(DatabaseAdapter):
         item = globals()['proc_{}Table'.format(name)](**kw)
         history = getattr(self, 'get_{}_history'.format(key))(history)
         if history:
-            getattr(history, key).append(item)
+            try:
+                getattr(history, key).append(item)
+            except AttributeError:
+                setattr(history, key, item)
             return item, True
         return item, False
 
@@ -367,6 +371,15 @@ class IsotopeAdapter(DatabaseAdapter):
 #                                                                           ))
 #            return sample, False
 
+    @add
+    def add_selected_histories(self, analysis, **kw):
+        sh = analysis.selected_histories
+        if sh is None:
+            sh = proc_SelectedHistoriesTable(analysis_id=analysis.id)
+            analysis.selected_histories = sh
+            return sh, True
+        else:
+            return sh, False
 
     @add
     def add_labnumber(self, labnumber, aliquot, sample=None, **kw):
@@ -431,6 +444,9 @@ class IsotopeAdapter(DatabaseAdapter):
 #===========================================================================
 # getters single
 #===========================================================================
+#    @get_one
+#    def get_analysis(self):
+
     @get_one
     def get_analysis(self, rid):
         return AnalysisTable, 'lab_id'

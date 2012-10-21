@@ -33,6 +33,7 @@ class H5DataManager(DataManager):
 #    _extension = 'h5'
     _extension = 'hdf5'
     repository = Any
+    workspace_root = None
 
     def set_group_attribute(self, group, key, value):
         f = self._frame
@@ -143,10 +144,17 @@ class H5DataManager(DataManager):
     def isfile(self, path):
         return os.path.isfile(path)
 
-    def open_data(self, path, mode='r'):
+    def open_data(self, path, mode='r', caller=None):
+#        print 'open data', caller
         try:
             if self.repository:
+                out = os.path.join(self.workspace_root, path)
                 path = os.path.join(self.repository.root, path)
+                if not os.path.isfile(out):
+                    self.info('copying {} to repository {}'.format(path, os.path.dirname(out)))
+                    self.repository.retrieveFile(path, out)
+                path = out
+
             self._frame = openFile(path, mode)
             return True
         except Exception:

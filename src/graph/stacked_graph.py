@@ -54,7 +54,7 @@ class StackedGraph(Graph):
     def new_plot(self, **kw):
         '''
         '''
-        self.plotcontainer.stack_order = 'bottom_to_top'
+#        self.plotcontainer.stack_order = 'bottom_to_top'
         bottom = self.plotcontainer.stack_order == 'bottom_to_top'
         if self.equi_stack:
             kw['resizable'] = 'h'

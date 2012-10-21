@@ -96,7 +96,8 @@ class Paths():
     snapshot_dir = None
     video_dir = None
     stage_visualizer_dir = None
-    default_workspace = None
+    default_workspace_dir = None
+    workspace_root_dir = None
     #initialization_dir = None
     #device_creator_dir = None
 
@@ -179,7 +180,8 @@ class Paths():
         self.arar_dir = join(data_dir, 'arar')
 
         self.isotope_dir = join(self.data_dir, 'isotopes')
-        self.default_workspace_dir = join(self.data_dir, 'workspaces', 'collection')
+        self.workspace_root_dir = join(self.data_dir, 'workspaces')
+        self.default_workspace_dir = join(self.workspace_root_dir, 'collection')
         #initialization_dir = join(setup_dir, 'initializations')
         #device_creator_dir = join(device_dir, 'device_creator')
 

@@ -34,8 +34,9 @@ class FitSeriesEditor(Loggable):
     db = Instance(DatabaseAdapter)
 
     figure = Any
-    workspace = DelegatesTo('figure')
-    repo = DelegatesTo('figure')
+    username = DelegatesTo('figure')
+#    workspace = DelegatesTo('figure')
+#    repo = DelegatesTo('figure')
 #    fit_analyses = DelegatesTo('figure')
     _analyses = DelegatesTo('figure')
 
@@ -65,10 +66,10 @@ class FitSeriesEditor(Loggable):
         f = self.fits_figure
         sess = self.db.get_session()
         analyses = self._analyses
-        names = [ai.dbresult.path.filename for ai in analyses]
+        names = [ai.dbrecord.filename for ai in analyses]
 
         gids = [1] * len(names)
-        attrs = [dict(dbresult=ai.dbresult) for ai in analyses]
+        attrs = [dict(dbrecord=ai.dbrecord) for ai in analyses]
 
         #also load these analyses
         f.load_analyses(names,
@@ -82,7 +83,7 @@ class FitSeriesEditor(Loggable):
 #        print sanalyses
         sanalyses = list(set(sanalyses))
         if sanalyses:
-            names, attrs = zip(*[(bi.path.filename, dict(dbresult=bi)) for bi in sanalyses])
+            names, attrs = zip(*[(bi.path.filename, dict(dbrecord=bi)) for bi in sanalyses])
             f.load_analyses(names, attrs=attrs, ispredictor=True)
 
 #        f.load_analyses(names, attrs=attrs, ispredictor=True)
@@ -105,7 +106,7 @@ class FitSeriesEditor(Loggable):
         func_set = getattr(db, 'add_{}_set'.format(sn))
 
         for a in analyses:
-            an = a.dbresult
+            an = a.dbrecord
             histories = an.blanks_histories
             histories = getattr(an, '{}_histories'.format(sn))
             phistory = histories[-1] if histories else None
@@ -125,48 +126,65 @@ class FitSeriesEditor(Loggable):
 
                 self.info('adding configs set. nanalyses={}'.format(len(fit_analyses)))
                 for fa in fit_analyses:
-#                    db.add_blanks_set(ni, fa.dbresult)
-                    func_set(ni, fa.dbresult)
+#                    db.add_blanks_set(ni, fa.dbrecord)
+                    func_set(ni, fa.dbrecord)
                 #copy configs from previous histories
                 self._copy_from_previous(phistory, history, isotope)
 
         db.commit()
         for a in analyses:
             #reload figure's analyses
-            a.load_from_database(dbr=a.dbresult)
+            a.load_from_database(dbr=a.dbrecord)
 
         self.figure.refresh()
+
+    def _set_history(self, analysis):
+        dbrecord = analysis.dbrecord._dbrecord
+        sn = self._series_name
+        db = self.db
+
+        user = self.username
+        user = user if user else '---'
+
+        funchist = getattr(db, 'add_{}_history'.format(sn))
+        self.info('{} adding {} history for {}'.format(user, sn, analysis.rid))
+        history = funchist(dbrecord, user=user)
+        sh = db.add_selected_histories(dbrecord)
+        setattr(sh, 'selected_{}'.format(sn), history)
+        return history
 
     def _apply(self, analysis):
         sn = self._series_name
         db = self.db
-
-        an = analysis.dbresult
-        histories = getattr(an, '{}_histories'.format(sn))
-        phistory = histories[-1] if histories else None
         history = None
 
-        funchist = getattr(db, 'add_{}_history'.format(sn))
         func = getattr(db, 'add_{}'.format(sn))
         for ci in self.configs:
             if ci.save:
                 self.saveable = True
-                l = ci.label
+                if history is None:
+                    history = self._set_history(analysis)
+
+                isotope = ci.label
                 uv = ci.value
                 ue = ci.error
-                k = '{}{}'.format(l, self._series_key)
-                analysis.signals[k] = Signal(_value=uv, error=ue)
-                if history is None:
-                    self.info('adding {} history for {}'.format(sn, analysis.rid))
+                self.info(u'setting {} {}. {:0.5f} \u00b1{:0.5f}'.format(isotope, sn, uv, ue))
+                self._add_history(func, history, uv, ue, isotope, analysis)
 
-                    history = funchist(an)
+    def _add_history(self, func, history, uv, ue, isotope, analysis):
+        sn = self._series_name
+        dbr = analysis.dbrecord._dbrecord
+        histories = getattr(dbr, '{}_histories'.format(sn))
+        phistory = histories[-1] if histories else None
+        k = '{}{}'.format(isotope, self._series_key)
+        analysis.signals[k] = Signal(_value=uv, error=ue)
 
-                func(history, isotope=l, use_set=False,
-                     user_value=uv, user_error=ue
-                     )
-                self.info('setting {} {}. {:0.5f} +/- {:0.5f}'.format(l, sn, uv, ue))
+        func(history, isotope=isotope,
+             use_set=False,
+             user_value=uv, user_error=ue
+             )
 
-                self._copy_from_previous(phistory, history, l)
+        self._copy_from_previous(phistory, history, isotope)
 
     def _copy_from_previous(self, phistory, chistory, isotope):
         if phistory is None:
@@ -178,10 +196,13 @@ class FitSeriesEditor(Loggable):
         #copy configs from a previous history
         bs = getattr(phistory, sn)
         bss = [bi for bi in bs if bi.isotope != isotope]
+
+        get_config = lambda x: next((ci for ci in self.configs if ci.label == x))
         for bi in bss:
             li = bi.isotope
-#            if li != isotope:
-#                continue
+            if get_config(li).save:
+                #dont copy from history if were going to save
+                continue
 
             uv = bi.user_value
             ue = bi.user_error
@@ -197,7 +218,7 @@ class FitSeriesEditor(Loggable):
 
     def _get_db_results(self, a, sess):
         at = self._analysis_type
-        an = a.dbresult
+        an = a.dbrecord
         exp = an.experiment
         q = sess.query(AnalysisTable)
         q = q.join(ExperimentTable)
@@ -218,8 +239,9 @@ class FitSeriesEditor(Loggable):
 #                   repo=self.repo)
 
         f = self.figure_klass(db=self.db,
-                   workspace=self.workspace,
-                   repo=self.repo)
+#                   workspace=self.workspace,
+#                   repo=self.repo
+                   )
         f.edit_traits()
         f.on_trait_change(self._do_series_fit, 'apply_event')
         self.fits_figure = f
@@ -242,6 +264,7 @@ class FitSeriesEditor(Loggable):
         db = self.db
         self.info('committing {} to db'.format(self._series_name))
         db.commit()
+        self.saveable = False
 
 #===============================================================================
 # views

@@ -27,58 +27,33 @@ from globals import globalv
 
 def get_manager(event):
     app = event.window.application
-    manager = app.get_service('src.experiment.experiment_manager.ExperimentManager')
+    manager = app.get_service('src.experiment.processing.processing_manager.ProcessingManager')
     return manager
 
-def get_executor(event):
-    app = event.window.application
-    manager = app.get_service('src.experiment.experiment_executor.ExperimentExecutor')
-    return manager
-
-def get_editor(event):
-    app = event.window.application
-    manager = app.get_service('src.experiment.experiment_editor.ExperimentEditor')
-    return manager
-
-
-class ExecuteExperimentSetAction(Action):
-    name = 'Execute'
-    accelerator = 'Ctrl+W'
+class NewFigureAction(Action):
+    accelerator = 'Ctrl+k'
     def perform(self, event):
-        man = get_executor(event)
-#        man.experiment_set_path = p
-        if man.load_experiment_set(path=globalv.test_experiment_set):
-            open_manager(event.window.application, man)
+        man = get_manager(event)
 
+        nf = man.new_figure()
+        if nf:
+            open_manager(event.window.application, nf)
 
-
-class NewExperimentSetAction(Action):
-    '''
-    '''
-    description = 'Create a new experiment set'
-    name = 'New Experiment Set'
-    accelerator = 'Ctrl+N'
+class NewWorkspaceAction(Action):
     def perform(self, event):
-        '''
-        '''
-        manager = get_editor(event)
-        manager.new_experiment_set()
-        open_manager(event.window.application, manager)
+        man = get_manager(event)
 
+        man.new_workspace()
+#        open_manager(event.window.application, nf)
 
-class OpenExperimentSetAction(Action):
-    '''
-    '''
-    description = 'Open experiment set'
-    name = 'Open Experiment Set'
-    accelerator = 'Shift+Ctrl+O'
+class OpenWorkspaceAction(Action):
     def perform(self, event):
-        '''
-        '''
-        manager = get_editor(event)
-        if manager.load_experiment_set(edit=True):
-            open_manager(event.window.application, manager)
-#class EnableableAction(Action):
+        man = get_manager(event)
+
+        man.open_workspace()
+#        open_manager(event.window.application, nf)
+
+
 #
 #    dirty_traitname = 'dirty'
 #    def __init__(self, *args, **kw):

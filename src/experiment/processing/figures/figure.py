@@ -120,12 +120,14 @@ class Figure(BaseFigure):
         self.blanks_editor = BlanksEditor(db=self.db,
                                           figure=self
                                           )
-        self.blanks_editor.add(self.isotope_keys)
+        isos = self.isotope_keys[:]
+        isos.reverse()
+        self.blanks_editor.add(isos)
 
         self.backgrounds_editor = BackgroundsEditor(db=self.db,
                                           figure=self
                                           )
-        self.backgrounds_editor.add(self.isotope_keys)
+        self.backgrounds_editor.add(isos)
 
         self.detector_intercalibration_editor = DetectorIntercalibrationEditor(db=self.db,
                                                                                figure=self)

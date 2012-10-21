@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, Any, on_trait_change
+from traits.api import HasTraits, List, Any, on_trait_change
 from traitsui.api import View, Item, ListEditor, InstanceEditor, Group
 #============= standard library imports ========================
 import re
@@ -26,8 +26,9 @@ from analysis_parameters import AnalysisParameters
 class FitSelector(HasTraits):
     analysis = Any
     graph = Any
-    fits = List(Instance(AnalysisParameters, ()))
+    fits = List(AnalysisParameters)
 
+    _suppress_update = False
     def _analysis_changed(self):
         if self.analysis:
             keys = list(self.analysis.isos)
@@ -39,18 +40,18 @@ class FitSelector(HasTraits):
             self.fits = list(map(lambda x:self._param_factory(n, x), enumerate(keys)))
 
     def _param_factory(self, n, arg):
+
         i, name = arg
         reg = self.graph.regressors[n - i]
         fit = reg.fit
         if fit == 'average':
-            fit = 'average{}'.format(reg.error_calc.upper())
+            fit = u'average \u00b1' + reg.error_calc.upper()
 
         obj = AnalysisParameters(name=name,
                                  fit=fit,
                                  intercept=reg.predict(0),
                                  error=reg.coefficient_errors[-1],
-                                 analyzer=self,
-                                 graph=self.graph)
+                                 )
         return obj
 
     @on_trait_change('fits:fit, fits:filterstr')
@@ -63,7 +64,9 @@ class FitSelector(HasTraits):
         else:
             g.set_filter(new, plotid=plotid)
 
+        self._suppress_update = True
         g._update_graph()
+        self._suppress_update = False
         try:
             reg = g.regressors[plotid]
             obj.intercept = reg.predict(0)
@@ -72,14 +75,20 @@ class FitSelector(HasTraits):
             obj.intercept = 0
             obj.error = 0
 
+        self.analysis.age_dirty = True
+
     @on_trait_change('graph:graph:regression_results')
     def _update_values(self, new):
+        if self._suppress_update:
+            return
+
         if new:
             n = len(self.fits) - 1
             for i, fi in enumerate(self.fits):
                 reg = new[n - i]
                 fi.intercept = reg.predict(0)
                 fi.error = reg.coefficient_errors[-1]
+            self.analysis.age_dirty = True
 
     def traits_view(self):
         v = View(

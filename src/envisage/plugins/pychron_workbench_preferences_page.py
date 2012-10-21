@@ -18,13 +18,14 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, List, HasTraits, Bool, Instance, Str, on_trait_change
-from traitsui.api import View, Item, TableEditor, ListEditor
+from traitsui.api import View, Item, TableEditor, ListEditor, Group
 from apptools.preferences.ui.api import PreferencesPage
 from traitsui.extras.checkbox_column import CheckboxColumn
 from traitsui.table_column import ObjectColumn
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.helpers.parsers.initialization_parser import InitializationParser
+from envisage.ui.workbench.workbench_preferences_page import WorkbenchPreferencesPage
 
 
 class Plugin(HasTraits):
@@ -58,7 +59,8 @@ class PluginCategory(HasTraits):
 
         return View(Item('plugins', editor=editor, show_label=False))
 
-class PychronWorkbenchPreferencesPage(PreferencesPage):
+
+class PychronPluginPreferencesPage(PreferencesPage):
     '''
     '''
     categories = List(transient=True)
@@ -110,7 +112,7 @@ class PychronWorkbenchPreferencesPage(PreferencesPage):
         return v
 
 if __name__ == '__main__':
-    d = PychronWorkbenchPreferencesPage()
+    d = PychronPluginPreferencesPage()
     d.configure_traits()
 #============= views ===================================
 #============= EOF ====================================

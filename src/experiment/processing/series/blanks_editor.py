@@ -91,7 +91,7 @@ class BlanksEditor(FitSeriesEditor):
 #        self.fits_figure = f
 #        self._load()
 #    def _get_db_results(self, a, sess):
-#        an = a.dbresult
+#        an = a.dbrecord
 #        exp = an.experiment
 #        q = sess.query(AnalysisTable)
 #        q = q.join(ExperimentTable)
@@ -118,7 +118,7 @@ class BlanksEditor(FitSeriesEditor):
 ##        names = []
 ##        attrs = []
 ##        def get_blanks(a):
-##            an = a.dbresult
+##            an = a.dbrecord
 ##            exp = an.experiment
 ##            q = sess.query(AnalysisTable)
 ##            q = q.join(ExperimentTable)
@@ -134,13 +134,13 @@ class BlanksEditor(FitSeriesEditor):
 ##                    for bi in self._get_db_results(a, sess)]
 #
 #        blanks = list(set(blanks))
-#        names, attrs = zip(*[(bi.path.filename, dict(dbresult=bi)) for bi in blanks])
+#        names, attrs = zip(*[(bi.path.filename, dict(dbrecord=bi)) for bi in blanks])
 #
 #        f.load_analyses(names, attrs=attrs)
 #
-#        names = [ai.dbresult.path.filename for ai in self.analyses]
+#        names = [ai.dbrecord.path.filename for ai in self.analyses]
 #        gids = [1] * len(names)
-#        attrs = [dict(dbresult=ai.dbresult) for ai in self.analyses]
+#        attrs = [dict(dbrecord=ai.dbrecord) for ai in self.analyses]
 #        #also load this analysis
 #        f.load_analyses(names, groupids=gids,
 #                        attrs=attrs)
@@ -154,7 +154,7 @@ class BlanksEditor(FitSeriesEditor):
 #        fit_analyses = [ba for ba in self.fits_figure.analyses if ba.analysis_type == 'blank']
 #        analyses = self.analyses
 #        for a in analyses:
-#            an = a.dbresult
+#            an = a.dbrecord
 #            histories = an.blanks_histories
 #            phistory = histories[-1] if histories else None
 #
@@ -173,7 +173,7 @@ class BlanksEditor(FitSeriesEditor):
 #
 #                self.info('adding configs set. nanalyses={}'.format(len(fit_analyses)))
 #                for fa in fit_analyses:
-#                    db.add_blanks_set(bl, fa.dbresult)
+#                    db.add_blanks_set(bl, fa.dbrecord)
 #
 #                #copy configs from previous histories
 #                self._copy_from_previous(phistory, isotope)
@@ -182,7 +182,7 @@ class BlanksEditor(FitSeriesEditor):
 #
 #        for a in analyses:
 #            #reload figure's analyses
-#            a.load_from_database(dbr=a.dbresult)
+#            a.load_from_database(dbr=a.dbrecord)
 #
 #        self.figure.refresh()
 
@@ -204,7 +204,7 @@ class BlanksEditor(FitSeriesEditor):
 #            self._apply(a)
 #    def _apply(self, analysis):
 #        db = self.db
-#        an = analysis.dbresult
+#        an = analysis.dbrecord
 #        histories = an.blanks_histories
 #        phistory = histories[-1] if histories else None
 #        history = None

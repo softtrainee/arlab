@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -27,7 +26,7 @@ class Summary(HasTraits):
         self._create_summary()
 
     def _create_summary(self):
-        self._build_summary()
+        self.refresh()
 
     def refresh(self):
         self._build_summary()

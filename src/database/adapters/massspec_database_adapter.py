@@ -602,7 +602,7 @@ if __name__ == '__main__':
     ia = MassSpecDatabaseAdapter()
     ia.connect()
 
-    ia.selector_factory()
+#    ia.selector_factory()
     dbs = ia.selector
     dbs.load_recent()
 
