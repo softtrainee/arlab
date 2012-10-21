@@ -40,7 +40,7 @@ class ExperimentPreferencesPage(PreferencesPage):
     name = 'Experiment'
     preferences_path = 'pychron.experiment'
     id = 'pychron.experiment.preferences_page'
-    username = Str
+#    username = Str
 
     db_fav_name = Str
     db_name = Str
@@ -110,10 +110,6 @@ class ExperimentPreferencesPage(PreferencesPage):
             self.selected = fv
 
     def traits_view(self):
-        user_grp = Group(
-                         Item('username'),
-                         label='User'
-                         )
 
         db_auth_grp = Group(
                             Item('db_host', width=125, label='Host'),
@@ -174,7 +170,7 @@ class ExperimentPreferencesPage(PreferencesPage):
                              label='MassSpec'
                              )
         return View(
-                        user_grp,
+#                        user_grp,
                         db_grp,
                         repo_grp,
                         massspec_grp,

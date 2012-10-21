@@ -19,16 +19,21 @@ from traits.api import HasTraits, Instance
 from traitsui.api import View, Item, TableEditor
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.loggable import Loggable
+from src.managers.manager import Manager
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class DatabaseManager(Loggable):
+class DatabaseManager(Manager):
     db = Instance(IsotopeAdapter)
-    def _db_default(self):
+    def _db_factory(self):
         db = IsotopeAdapter(username='root',
                             password='Argon',
                             kind='mysql',
                             name='isotopedb_dev'
                             )
+
+        return db
+    def _db_default(self):
+        db = self._db_factory()
         return db
 
 #============= EOF =============================================

@@ -86,8 +86,8 @@ class AnalysisParameters(HasTraits):
     name = Str
     intercept = Float
     error = Float
-    analysis = Any
-    fittypes = List(['linear', 'parabolic', 'cubic', 'averageSD', 'averageSEM'])
+#    analysis = Any
+    fittypes = List(['linear', 'parabolic', 'cubic', u'average \u00b1SD', u'average \u00b1SEM'])
     def traits_view(self):
         v = View(HGroup(Label(self.name),
                         Spring(width=50 - 10 * len(self.name), springy=False),

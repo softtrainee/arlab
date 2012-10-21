@@ -16,15 +16,15 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Any, List, Bool, Property, \
-    cached_property, Button, on_trait_change
+    cached_property, Button, on_trait_change, Str
 from traitsui.api import View, Item, TabularEditor, VSplit, Group, HGroup, VGroup, \
     spring, Handler
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-from tables import openFile
+#from tables import openFile
 import os
 #============= local library imports  ==========================
-from src.loggable import Loggable
+#from src.loggable import Loggable
 from src.graph.graph import Graph
 from src.experiment.processing.analysis import Analysis, AnalysisTabularAdapter
 from src.experiment.processing.result import Result
@@ -40,6 +40,7 @@ from src.experiment.processing.export.csv_exporter import CSVExporter
 from src.experiment.processing.export.excel_exporter import ExcelExporter
 from pyface.timer.do_later import do_later
 from src.experiment.processing.figures.figure_store import FigureStore
+from src.managers.data_managers.h5_data_manager import H5DataManager
 
 class GraphSelector(HasTraits):
     show_series = Bool(False)
@@ -55,10 +56,12 @@ class GraphSelector(HasTraits):
         return v
 
 def sort_keys(func):
-    def decorator(keys, **kw):
+    def decorator(cls):
         import re
         key = lambda x: re.sub('\D', '', x)
-        return sorted(keys, key=key, **kw)
+        keys = func(cls)
+        return sorted(keys, key=key)
+
     return decorator
 
 class BaseFigure(Viewable, ColumnSorterMixin):
@@ -68,9 +71,10 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                         )
     _analyses = List#(Analysis)
     selected_analysis = Any
-    workspace = Any
-    repo = Any
+#    workspace = Any
+#    repo = Any
     db = Any
+    username = Str
 
     series_configs = List
     selector = None
@@ -95,13 +99,13 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     results_display = Instance(RichTextDisplay, (),
                                )
 
-
     show_results = Button('stats')
     export_csv = Button('csv')
     export_pdf = Button('pdf')
     export_excel = Button('excel')
     store = Button('store')
     load_button = Button('load')
+
     def _check_refresh(self):
         if self._analyses:
             return True
@@ -195,8 +199,10 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             if gseries:
                 graph.plotcontainer.add(gseries.plotcontainer)
                 series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
-            self.series = series
-            self.series.graph.on_trait_change(self._refresh_stats, 'regression_results')
+
+#            self.series = series
+#            self.series.graph.on_trait_change(self._refresh_stats, 'regression_results')
+
         graph.redraw()
 
     def _add_analysis(self, a, **kw):
@@ -222,9 +228,9 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
         for n, gid, attr in zip(names, groupids, attrs):
             if not n in _names:
-                a = self._analyses_factory(n, gid=gid, **attr)
+                a = self._analysis_factory(n, gid=gid, **attr)
                 if a:
-                    self.info('loading analysis {} groupid={}'.format(a.rid, gid))
+                    self.info('loading analysis {} groupid={}'.format(a.dbrecord.record_id, gid))
                     self._add_analysis(a, **kw)
 #                    self.analyses.append(a)
                 else:
@@ -257,7 +263,6 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
         for i, se in enumerate(self.series_configs):
             se.graphid = i
-
 
         signal_keys = self.signal_keys
         signal_keys.sort(key=lambda k:k[2:4], reverse=True)
@@ -325,39 +330,21 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                 obj = pickle.load(f)
                 return obj
         except Exception, e:
-            print p
+            print 'ddd', p
             print e
 #===============================================================================
 # private
 #===============================================================================
     def _update_data(self):
-#        from threading import Thread
-        def _do():
-            ps = self.selector
-#            names = [ri.filename for ri in ps.selected_results if ri.filename != '---']
-            names, attrs, gids = zip(*[(ri.filename, dict(dbresult=ri._db_result), ri.gid if ri.gid else 0)
-                                      for ri in ps.selected_results if ri.path.strip()])
-#            gids = []
-#            gid = 0
-#            for ri in ps.selected_results:
-#                if ri.filename == '---':
-#                    gid += 1
-#                    continue
-#                gids.append(gid)
-            #names = ('2be77db7-962b-4e78-9741-f891b3186216.h5', '3405b691-e36e-4460-8007-37086aff7df3.h5', '33337493-1077-49fe-9535-70f78878103e.h5', 'ff4260d5-e6a6-4884-82df-68aca814b121.h5', '3166d184-e512-4ad8-b613-62134e9c84d3.h5')
-            #gids = (0, 0, 1, 1, 1)
+        ps = self.selector
+        names, attrs, gids = zip(*[(ri.filename, dict(dbrecord=ri), ri.gid)
+                                  for ri in ps.selected_results if ri.path.strip()])
 
-            if names:
-                self.load_analyses(names, attrs=attrs, groupids=gids, **self._get_load_keywords())
-#                self.refresh(caller='update_data')
-
-        _do()
-#        t = Thread(target=_do)
-#        t.start()
+        if names:
+            self.load_analyses(names, attrs=attrs, groupids=gids, **self._get_load_keywords())
 
     def _get_load_keywords(self):
         return {}
-
 
 #===============================================================================
 # handlers
@@ -378,21 +365,25 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _manage_data_fired(self):
         db = self.db
         db.connect()
+        import time
+        st = time.clock()
         if self.selector is None:
-            db.selector_factory()
+#            db.selector_factory()
             ps = ProcessingSelector(db=self.db)
             ps.selector.style = 'panel'
             ps.on_trait_change(self._update_data, 'update_data')
 #            ps.edit_traits()
-
+            ps.selector.load_recent()
             self.selector = ps
 #            if self._debug:
-            ps.selected_results = [i for i in ps.selector.results[-10:-6] if i.analysis_type != 'blank']
-
+            ps.selected_results = [i for i in ps.selector.records[-10:-6] if i.analysis_type != 'blank']
+            print 'get results time', time.clock() - st
         else:
             self.selector.show()
 
+        st = time.clock()
         self._update_data()
+        print 'update time', time.clock() - st
 
     def _show_results_fired(self):
         self.results_display.edit_traits()
@@ -454,7 +445,8 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         v = View(VSplit(top, bottom),
                  resizable=True,
                  width=0.5,
-                 height=0.8,
+                 height=800,
+#                 height=0.8,
                  title=' '
                  )
         v.buttons = self._get_buttons()
@@ -546,25 +538,36 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #===============================================================================
 # factories
 #===============================================================================
-    def _analyses_factory(self, n, **kw):
+    def _analysis_factory(self, n, dbrecord=None, **kw):
+
         a = Analysis(uuid=n,
-                     repo=self.repo,
-                     workspace=self.workspace,
-                     ** kw)
+#                     repo=self.repo,
+#                     workspace=self.workspace,
+                     dbrecord=dbrecord,
+                     **kw)
         #need to call both load from file and database
-        if a.load_from_file(n):
-            if self.db.connect():
-                sess = self.db.get_session()
-                from src.database.orms.isotope_orm import AnalysisPathTable
-                from src.database.orms.isotope_orm import AnalysisTable
-                q = sess.query(AnalysisTable)
-                q = q.join(AnalysisPathTable)
-                q = q.filter(AnalysisPathTable.filename == n)
-                dbr = q.one()
-                a.dbresult = dbr
-                a.load_from_database()
-                if a.load_age():
-                    return a
+#        if not a.load_from_file(n):
+#            return
+
+#        if self.db.connect():
+#            sess = self.db.get_session()
+#            from src.database.orms.isotope_orm import AnalysisPathTable
+#            from src.database.orms.isotope_orm import AnalysisTable
+#            q = sess.query(AnalysisTable)
+#            q = q.join(AnalysisPathTable)
+#            q = q.filter(AnalysisPathTable.filename == n)
+#            dbr = q.one()
+
+#            selector = self.db.new_selector()
+#            selector.data_manager = H5DataManager(repository=self.repo)
+#            dbrecord = selector.record_klass(_dbrecord=dbr, selector=selector)
+        if dbrecord and dbrecord.loadable:
+
+#            a.dbrecord = dbrecord
+
+#                a.load_from_file(n)
+            if a.load_age():
+                return a
 
     def _graph_factory(self, klass=None, **kw):
         g = Graph(container_dict=dict(kind='h', padding=10,
@@ -598,9 +601,10 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                             default_color='black',
                             width=290,
                             selectable=True,
-                            id='stats_display.{}'.format(self.workspace.name)
+#                            id='stats_display'
+#                            id='stats_display.{}'.format(self.workspace.name)
                             )
-        r.title = '{} Stats'.format(self.workspace.name)
+#        r.title = '{} Stats'.format(self.workspace.name)
 #        r.title = ''.format(self)
         return r
 #===============================================================================
@@ -625,8 +629,8 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
     @sort_keys
     def _get_signal_keys(self):
-        keys = [ki for ai in self._analyses
-                    for ki in ai.signals.keys()]
+        keys = list(set([ki for ai in self._analyses
+                    for ki in ai.signals.keys()]))
         return keys
 #        return sorted(list(set(keys)), key=lambda x:int(x[2:4]), reverse=True)
 

@@ -209,7 +209,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         graph = None
         xoffset = 0
         for si in s:
-            if not si._loadable:
+            if not si.loadable:
                 continue
 
             if graph is None:

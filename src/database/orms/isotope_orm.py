@@ -80,7 +80,8 @@ class proc_BackgroundsSetTable(Base, BaseMixin):
 
 
 class proc_BackgroundsHistoryTable(Base, HistoryMixin):
-    backgrounds = relationship('proc_BackgroundsTable', backref='history')
+    backgrounds = relationship('proc_BackgroundsTable',
+                               backref='history')
     selected = relationship('proc_SelectedHistoriesTable',
                             backref='selected_backgrounds',
                             uselist=False

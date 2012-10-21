@@ -30,32 +30,7 @@ class DetectorIntercalibrationEditor(FitSeriesEditor):
 #    _series_key = 'bg'
     _analysis_type = 'air'
 
-    def _apply(self, analysis):
-        sn = self._series_name
-        db = self.db
-
-        an = analysis.dbresult
-#        histories = getattr(an, '{}_histories'.format(sn))
-#        phistory = histories[-1] if histories else None
-        history = None
-
-        funchist = getattr(db, 'add_{}_history'.format(sn))
-        func = getattr(db, 'add_{}'.format(sn))
-        for ci in self.configs:
-            if ci.save:
-                self.saveable = True
-                l = ci.label
-                uv = ci.value
-                ue = ci.error
-#                k = '{}{}'.format(l, self._series_key)
-#                analysis.signals[k] = Signal(_value=uv, error=ue)
-                if history is None:
-                    self.info('adding {} history for {}'.format(sn, analysis.rid))
-                    history = funchist(an)
-
-                func(history, user_value=uv, user_error=ue)
-                self.info('setting {} {}. {:0.5f} +/- {:0.5f}'.format(l, sn, uv, ue))
-
-#                self._copy_from_previous(phistory, history, l)
+    def _add_history(self, func, history, uv, ue, *args):
+        func(history, user_value=uv, user_error=ue)
 
 #============= EOF =============================================

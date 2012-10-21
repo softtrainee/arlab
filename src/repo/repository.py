@@ -98,6 +98,7 @@ class FTPRepository(Repository):
         return os.path.join(self.remote, cp)
 
     def retrieveFile(self, p, out):
+
         cb = lambda ftp:self._retreive_binary(ftp, p, out)
         self._execute(cb)
 

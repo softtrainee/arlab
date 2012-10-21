@@ -14,8 +14,11 @@
 # limitations under the License.
 #===============================================================================
 #============= enthought library imports =======================
+from traits.api import Str
+from traitsui.api import View, Group, Item
 from envisage.core_plugin import CorePlugin
-from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin
+from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin as ETSWorkbenchPlugin
+from envisage.ui.workbench.workbench_preferences_page import WorkbenchPreferencesPage as ETSWorkbenchPreferencesPage
 from envisage.api import Plugin
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
@@ -33,6 +36,7 @@ from src.helpers.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay
 from globals import globalv
 #import logging
 from src.helpers.logger_setup import new_logger
+
 
 if globalv.open_logger_on_launch:
     do_later(gLoggerDisplay.edit_traits)
@@ -80,9 +84,31 @@ PACKAGE_DICT = dict(
                    EmailPlugin='src.social.plugins.email_plugin',
                    EmailUIPlugin='src.social.plugins.email_ui_plugin',
 
-                   ArArPlugin='src.arar.plugins.arar_plugin',
-                   ArArUIPlugin='src.arar.plugins.arar_ui_plugin'
+#                   ArArPlugin='src.arar.plugins.arar_plugin',
+#                   ArArUIPlugin='src.arar.plugins.arar_ui_plugin'
+
+                    ProcessingPlugin='src.experiment.plugins.processing_plugin',
+                    ProcessingUIPlugin='src.experiment.plugins.processing_ui_plugin'
                  )
+
+class WorkbenchPreferencesPage(ETSWorkbenchPreferencesPage):
+    username = Str
+
+    def traits_view(self):
+        user_grp = Group(
+                         Item('username'),
+                         label='User',
+                         show_border=True,
+                         )
+        v = View(user_grp,
+                 Item('prompt_on_exit'),
+                 )
+        return v
+
+class WorkbenchPlugin(ETSWorkbenchPlugin):
+    def _my_preferences_pages_default(self):
+        return [WorkbenchPreferencesPage]
+
 
 def get_module_name(klass):
     words = []

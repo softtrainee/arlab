@@ -163,6 +163,7 @@ class HistorySummary(Summary):
         dbr = self.record
 #
         g = StackedGraph()
+#        g.width = 700
         self.graph = g
 #        isokeys = self._get_isotope_keys(hi, hn)
 #        xma = -np.Inf
@@ -198,7 +199,8 @@ class HistorySummary(Summary):
 
     def traits_view(self):
         v = View(HGroup(
-                        Item('history_view', style='custom', show_label=False,
+                        Item('history_view', style='custom',
+                             show_label=False,
                              width=0.25),
                         Item('graph', show_label=False,
                              style='custom',

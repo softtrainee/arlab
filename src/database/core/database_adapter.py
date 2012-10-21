@@ -360,10 +360,15 @@ class DatabaseAdapter(Loggable):
         self.selector = self._selector_factory(**kw)
         return self.selector
 
+#    def new_selector(self, **kw):
+#        if self.selector_klass:
+#            s = self.selector_klass(_db=self, **kw)
+#            return s
+
     def _selector_factory(self, **kw):
         if self.selector_klass:
             s = self.selector_klass(_db=self, **kw)
-            s.load_recent()
+#            s.load_recent()
             return s
 
 #    def _get(self, table, query_dict, func='one'):

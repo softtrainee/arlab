@@ -15,25 +15,28 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-import os
+from traits.api import HasTraits
+from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.repo.repository import FTPRepository
+from src.envisage.core.core_plugin import CorePlugin
+from src.experiment.processing.processing_manager import ProcessingManager
 
+class ProcessingPlugin(CorePlugin):
+    def _service_offers_default(self):
+        '''
+        '''
+        so = self.service_offer_factory(
+                          protocol=ProcessingManager,
+                          factory=self._factory
+                          )
 
-class FTPH5DataManager(H5DataManager):
-    repository = None
-    workspace_root = None
-    def connect(self, host, usr, pwd, remote):
-        self.repository = FTPRepository(host=host, username=usr, password=pwd, remote=remote)
+        return [so]
 
-    def open_data(self, p, **kw):
-        out = os.path.join(self.workspace_root, p)
-        self.repository.retrieveFile(p, out)
-        return super(FTPH5DataManager, self).open_data(out, **kw)
+    def _factory(self, *args, **kw):
+        '''
+        '''
+        return ProcessingManager(application=self.application)
 
-    def isfile(self, path):
-        return self.repository.isfile(path)
 
 #============= EOF =============================================

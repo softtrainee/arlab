@@ -120,7 +120,7 @@ class SelectionView(Viewable):
         for mach in machines:
             for i, at in enumerate(ats):
                 dd = [(ri.shortname, ri.timestamp)
-                               for ri in self.table.results
+                               for ri in self.table.records
                                 if ri.analysis_type == at
                                     and ri.mass_spectrometer == mach]
                 if dd:

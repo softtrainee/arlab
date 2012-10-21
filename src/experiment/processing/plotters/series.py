@@ -110,27 +110,27 @@ class Series(Plotter):
 
                 self._add_series(graph, k, xs, ys, es, f, padding,
                                  regress, gid, plotid=cnt)
-#                xma = max(xs)
-#                xmi = min(xs)
-#
-#                if self.pxma:
-#                    xma = max(self.pxma, xma)
-#                    xmi = min(self.pxmi, xmi)
-#
-#                self.pxma = xma
-#                self.pxmi = xmi
+                xma = max(xs)
+                xmi = min(xs)
+
+                if self.pxma:
+                    xma = max(self.pxma, xma)
+                    xmi = min(self.pxmi, xmi)
+
+                self.pxma = xma
+                self.pxmi = xmi
             cnt += 1
 
-#        if self.pxma and self.pxmi:
-#            graph.set_x_limits(self.pxmi, self.pxma, plotid=0, pad='0.1')
+        if self.pxma and self.pxmi:
+            graph.set_x_limits(self.pxmi, self.pxma, plotid=0, pad='0.1')
 
         return graph
 
     def _get_series_value(self, a, k, i, gid):
-        return a.signals[k].value
+        return a.dbrecord.signals[k].value
 
     def _get_series_error(self, a, k, i, gid):
-        return a.signals[k].error
+        return a.dbrecord.signals[k].error
 
     def _add_series(self, g, iso, xs, ys, es, fi, padding, regress, gid, plotid=0):
         color = self.colorgen.next()
