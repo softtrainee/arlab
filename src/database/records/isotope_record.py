@@ -609,6 +609,7 @@ class IsotopeRecord(DatabaseRecord):
 
             if selected == 'summary':
                 item = self.analysis_summary
+                item.refresh()
 
             elif selected == 'blanks':
                 item = BlanksSummary(record=self)

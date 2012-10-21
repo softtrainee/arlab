@@ -20,10 +20,14 @@
 from pyface.action.api import Action
 from src.envisage.core.action_helper import open_manager
 from globals import globalv
+from src.paths import paths
+import os
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-#EXPERIMENT_MANAGER_PROTOCOL = 
+#EXPERIMENT_MANAGER_PROTOCOL =
+
+
 
 def get_manager(event):
     app = event.window.application
@@ -40,6 +44,10 @@ def get_editor(event):
     manager = app.get_service('src.experiment.experiment_editor.ExperimentEditor')
     return manager
 
+class ExecuteProcedureAction(Action):
+    def perform(self, event):
+        man = get_executor(event)
+        man.execute_procedure()
 
 class ExecuteExperimentSetAction(Action):
     name = 'Execute'
@@ -76,7 +84,7 @@ class OpenExperimentSetAction(Action):
         '''
         '''
         manager = get_editor(event)
-        if manager.load_experiment_set(edit=True):
+        if manager.load_experiment_set(set_names=True):
             open_manager(event.window.application, manager)
 #class EnableableAction(Action):
 #
@@ -187,7 +195,6 @@ class LabnumberEntryAction(Action):
 #        '''
 #        '''
 #        manager = get_manager(event)
-
 
 
 #============= EOF ====================================

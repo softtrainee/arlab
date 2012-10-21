@@ -31,6 +31,13 @@ class AnalysisSummary(Summary):
 
     display = Instance(RichTextDisplay)
     fit_selector = Instance(FitSelector)
+    @classmethod
+    def calc_percent_error(cls, v, e):
+        if v:
+            sigpee = '{:0.2f}%'.format(e / v * 100)
+        else:
+            sigpee = 'Inf'
+        return sigpee
 
     def _build_summary(self):
         d = self.display
@@ -50,15 +57,15 @@ class AnalysisSummary(Summary):
 
         #add header
         columns = [('Iso.', 5),
-                   ('Int.', 12), (PLUSMINUS_ERR, 12),
+                   ('Int.', 12), (PLUSMINUS_ERR, 20),
                    ('Fit', 11),
                    ('Baseline', 12), (PLUSMINUS_ERR, 15),
 #                   ('Blank', 12), (PLUSMINUS_ERR, 12)
                    ]
         widths = [w for _, w in columns]
 
-        msg = 'Iso.   Int.             ' + PLUSMINUS_ERR + '         Fit'
-        msg += '           Baseline     ' + PLUSMINUS_ERR + '             '
+        msg = 'Iso.   Int.            ' + PLUSMINUS_ERR + '                       Fit'
+        msg += '            Baseline     ' + PLUSMINUS_ERR + '             '
 #        msg = ''.join([width(m, w) for m, w in columns])
         d.add_text(msg, underline=True, bold=True)
 
@@ -97,7 +104,6 @@ class AnalysisSummary(Summary):
                 msg += '\n'
             d.add_text(msg, underline=i == n)
 
-
         v, e = self.record.age
         e = u' \u00b1' + '{:0.3f}'.format(e)
         d.add_text('age={:0.3f} {}'.format(v, e))
@@ -108,15 +114,14 @@ class AnalysisSummary(Summary):
         pi = n - i
         sig, base = self._get_signal_and_baseline(pi)
         s = sig - base
-        try:
-            pe = abs(s.std_dev() / s.nominal_value * 100)
-        except ZeroDivisionError:
-            pe = 0
+
+        sv = s.nominal_value
+        se = s.std_dev()
+        bse = '{} ({})'.format(floatfmt(se), self.calc_percent_error(sv, se))
         msgs = [
                 iso,
-                floatfmt(s.nominal_value),
-                floatfmt(s.std_dev()),
-                '({}%)'.format(floatfmt(pe, i=2))
+                floatfmt(sv),
+                bse
                 ]
         msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
         if i == n:
@@ -147,16 +152,25 @@ class AnalysisSummary(Summary):
 
         blank = 0
         blank_err = 0
+
+        sv = sig.nominal_value
+        se = sig.std_dev()
+
+        bs = base.nominal_value
+        be = base.std_dev()
+
+        sse = '{} ({})'.format(floatfmt(se), self.calc_percent_error(sv, se))
+        bse = '{} ({})'.format(floatfmt(bs), self.calc_percent_error(bs, be))
+
         msgs = [
                 iso,
-                floatfmt(sig.nominal_value),
-                floatfmt(sig.std_dev()),
+                floatfmt(sv),
+                sse,
                 fit,
-                floatfmt(base.nominal_value),
-                floatfmt(base.std_dev()),
-#                    floatfmt(blank),
-#                    floatfmt(blank_err)
+                floatfmt(bs),
+                bse
                 ]
+
         msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
         if i == n:
             msg += '\n'

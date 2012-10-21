@@ -99,7 +99,7 @@ class AutomatedRun(Loggable):
     scripts = Dict
     signals = Dict
 
-    mass_spec_name = Str
+    mass_spectrometer = Str
     sample_data_record = Any
 
     measurement_script_dirty = Event
@@ -157,7 +157,7 @@ class AutomatedRun(Loggable):
                       'post_measurement_script',
                       'post_equilibration_script']:
                 if aii:
-                    aii = str(aii).replace(self.mass_spec_name, '')
+                    aii = str(aii).replace(self.mass_spectrometer, '')
             return aii
 
         return [get_attr(ai) for ai in attr]
@@ -172,16 +172,18 @@ class AutomatedRun(Loggable):
         self.info('truncating current run with style= {}'.format(style))
         self.state = 'truncate'
         self._truncate_signal = True
+
         if style == 'Immediate':
+            self._alive = False
             self._measurement_script.truncate()
         elif style == 'Quick':
             self._measurement_script.truncate('quick')
 
-
     def finish(self):
-        del self.info_display
+#        del self.info_display
         if self.plot_panel:
             self.plot_panel.close_ui()
+
         if self.peak_plot_panel:
             self.peak_plot_panel.close_ui()
 
@@ -396,6 +398,11 @@ class AutomatedRun(Loggable):
                 self.plot_panel._ncounts = ncounts
                 self.plot_panel.isbaseline = True
                 self.plot_panel.show()
+#            else:
+#                p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
+#                self.plot_panel = p
+
+
             if mass:
                 if ion is not None:
                     ion.position(mass, self._active_detectors[0].name, False)
@@ -777,12 +784,12 @@ class AutomatedRun(Loggable):
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, series, fits):
         self.info('measuring {}'.format(grpname))
-        print fits
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
             return True
 
         spec = self.spectrometer_manager.spectrometer
+
 
         graph = self.plot_panel.graph
         for i in xrange(1, ncounts + 1, 1):
@@ -792,6 +799,7 @@ class AutomatedRun(Loggable):
 
             if self._truncate_signal:
                 self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
+                self._truncate_signal = False
                 break
 
             if not self._alive:
@@ -827,7 +835,6 @@ class AutomatedRun(Loggable):
                 continue
 
             x = time.time() - starttime# if not self._debug else i + starttime
-
 
             self.signals = dict(zip(keys, signals))
 
@@ -897,9 +904,11 @@ class AutomatedRun(Loggable):
                         s._test()
                     except Exception, e:
                         self.warning(e)
+                        self.warning_dialog('Invalid Script {}'.format(s.filename if s else 'None'))
                         self._executable = False
                 return s
             else:
+                self._executable = False
                 self.warning_dialog('Invalid Script {}'.format(s.filename if s else 'None'))
 
     def pre_extraction_save(self):
@@ -1003,7 +1012,7 @@ class AutomatedRun(Loggable):
             db.add_measurement(
                               a,
                               self.analysis_type,
-                              self.mass_spec_name,
+                              self.mass_spectrometer,
                               self.measurement_script.name,
                               script_blob=self.measurement_script.toblob()
                               )
@@ -1095,17 +1104,17 @@ class AutomatedRun(Loggable):
     def _extraction_script_factory(self, ec, key):
         #get the klass
 
-        path = os.path
+#        path = os.path
 
-        source_dir = path.dirname(ec[key])
-        file_name = path.basename(ec[key])
+        source_dir = os.path.dirname(ec[key])
+        file_name = os.path.basename(ec[key])
         if file_name.endswith('.py'):
             klass = ExtractionLinePyScript
             hdn = self.heat_device.replace(' ', '_').lower()
             obj = klass(
                     root=source_dir,
                     name=file_name,
-
+                    runner=self.runner
 #                    hole=self.position,
 #
 #                    duration=self.duration,
@@ -1123,7 +1132,6 @@ class AutomatedRun(Loggable):
                               heat_value=self._heat_value,
                               heat_units=self._heat_units,
                               cleanup=self.cleanup,
-                              runner=self.runner,
                               heat_device=hdn,
                               analysis_type=self.analysis_type)
 

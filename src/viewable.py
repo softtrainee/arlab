@@ -62,7 +62,7 @@ class Viewable(Loggable):
 
     def show(self, **kw):
         if self.ui is None or self.ui.control is None:
-            func = lambda:self.edit_traits(**kw)
+            func = lambda:do_after(1, self.edit_traits, **kw)
         else:
             func = lambda:do_after(1, self.ui.control.Raise)
 

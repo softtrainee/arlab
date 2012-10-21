@@ -33,6 +33,7 @@ from src.experiment.labnumber_entry import LabnumberEntry
 from src.experiment.set_selector import SetSelector
 from src.managers.manager import Manager, SaveableManagerHandler
 from src.repo.repository import Repository, FTPRepository
+from pyface.timer.do_later import do_later
 #from globals import globalv
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -60,7 +61,6 @@ class ExperimentManager(Manager):
 #    editing_signal = None
     filelistener = None
 
-
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
@@ -76,10 +76,13 @@ class ExperimentManager(Manager):
             self._update_aliquots()
 
     def check_for_mods(self):
-        currenthash = sha.new(self._text).hexdigest()
-        with open(self.path, 'r') as f:
-            diskhash = sha.new(f.read()).hexdigest()
-        return currenthash != diskhash
+        try:
+            currenthash = sha.new(self._text).hexdigest()
+            with open(self.path, 'r') as f:
+                diskhash = sha.new(f.read()).hexdigest()
+            return currenthash != diskhash
+        except:
+            self.filelistener.stop()
 
     def start_file_listener(self, path):
         fl = FileListener(
@@ -137,6 +140,7 @@ class ExperimentManager(Manager):
     def bind_preferences(self):
         if self.db is None:
             self.db = self._db_factory()
+
         prefid = 'pychron.experiment'
 
         bind_preference(self, 'username', '{}.username'.format(prefid))
@@ -254,38 +258,40 @@ class ExperimentManager(Manager):
 #===============================================================================
 # persistence
 #===============================================================================
-    def load_experiment_set(self, path=None, edit=False):
+    def load_experiment_set(self, path=None, set_names=False):
 #        self.bind_preferences()
         #make sure we have a database connection
         if not self.test_connections():
             return
 
-        self.experiment_set = None
         if path is None:
             path = self.open_file_dialog(default_directory=paths.experiment_dir)
 
         if path is not None:
             self.start_file_listener(path)
+            self.experiment_set = None
             self.experiment_sets = []
             #parse the file into individual experiment sets
             ts = self._parse_experiment_file(path)
             for text in ts:
                 exp = self._experiment_set_factory(path=path)
-#                exp.isediting = edit
-    #            exp = ExperimentSet(path=path)
-    #            try:
-
+#   
                 if exp.load_automated_runs(text=text):
-    #                self.experiment_set = exp
-                    exp.automated_run = exp.automated_runs[-1]
                     self.experiment_sets.append(exp)
+                    exp.automated_run = exp.automated_runs[-1].clone_traits()
+                    if set_names:
+                        exp.set_script_names()
 
             self._update_aliquots()
             self.experiment_set = self.experiment_sets[0]
-            self.set_selector.selected_index = -2
-            self.set_selector.selected_index = 0
-            return True
 
+            def func():
+                self.set_selector.selected_index = -2
+                self.set_selector.selected_index = 0
+
+            do_later(func)
+
+            return True
 
 #===============================================================================
 # handlers

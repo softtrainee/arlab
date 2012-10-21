@@ -67,6 +67,14 @@ class Paths():
     plugins_dir = None
     hidden_dir = hidden_dir = None
     test_dir = None
+    #===========================================================================
+    # scripts
+    #===========================================================================
+    procedures_dir = None
+    measurement_dir = None
+    post_measurement_dir = None
+    extraction_dir = None
+    post_equilibration_dir = None
     #==============================================================================
     # setup
     #==============================================================================
@@ -145,6 +153,13 @@ class Paths():
         # root
         #==============================================================================
         self.scripts_dir = scripts_dir = join(root, 'scripts')
+        self.procedures_dir = join(scripts_dir, 'procedures')
+        self.measurement_dir = join(scripts_dir, 'measurement')
+        self.post_measurement_dir = join(scripts_dir, 'post_measurement')
+        self.extraction_dir = join(scripts_dir, 'extraction')
+        self.post_equilibration_dir = join(scripts_dir, 'post_equilibration')
+
+
         self.experiment_dir = join(root, 'experiments')
         self.hidden_dir = join(root, '.hidden')
         self.test_dir = join(root, 'testing')
