@@ -46,14 +46,14 @@ class ScriptTable(BaseMixin):
 class HistoryMixin(BaseMixin):
     @declared_attr
     def analysis_id(self):
-        return foreignkey('AnalysisTable')
+        return foreignkey('meas_AnalysisTable')
 
     create_date = Column(DateTime, default=func.now())
     user = stringcolumn()
 
 class proc_BlanksSetTable(Base, BaseMixin):
     blanks_id = foreignkey('proc_BlanksTable')
-    blank_analysis_id = foreignkey('AnalysisTable')
+    blank_analysis_id = foreignkey('meas_AnalysisTable')
 
 
 class proc_BlanksHistoryTable(Base, HistoryMixin):
@@ -76,7 +76,7 @@ class proc_BlanksTable(Base, BaseMixin):
 
 class proc_BackgroundsSetTable(Base, BaseMixin):
     backgrounds_id = foreignkey('proc_BackgroundsTable')
-    background_analysis_id = foreignkey('AnalysisTable')
+    background_analysis_id = foreignkey('meas_AnalysisTable')
 
 
 class proc_BackgroundsHistoryTable(Base, HistoryMixin):
@@ -100,7 +100,7 @@ class proc_BackgroundsTable(Base, BaseMixin):
 
 class proc_DetectorIntercalibrationSetTable(Base, BaseMixin):
     detector_intercalibration_id = foreignkey('proc_DetectorIntercalibrationTable')
-    detector_intercalibration_analysis_id = foreignkey('AnalysisTable')
+    detector_intercalibration_analysis_id = foreignkey('meas_AnalysisTable')
 
 
 
@@ -126,7 +126,7 @@ class proc_DetectorIntercalibrationTable(Base, BaseMixin):
                         )
 
 class proc_SelectedHistoriesTable(Base, BaseMixin):
-    analysis_id = foreignkey('AnalysisTable')
+    analysis_id = foreignkey('meas_AnalysisTable')
     selected_blanks_id = foreignkey('proc_BlanksHistoryTable')
     selected_backgrounds_id = foreignkey('proc_BackgroundsHistoryTable')
     selected_detector_intercalibration_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
@@ -155,18 +155,28 @@ class proc_WorkspaceSettings(Base, BaseMixin):
 #===============================================================================
 # measurement
 #===============================================================================
-class AnalysisPathTable(Base, PathMixin):
-    analysis_id = foreignkey('AnalysisTable')
+
+class AnalysisTypeTable(Base, NameMixin):
+    measurements = relationship('meas_MeasurementTable', backref='analysis_type')
 
 
-class AnalysisTable(Base, ResultsMixin):
+class DetectorTable(Base, NameMixin):
+    kind = stringcolumn()
+    isotopes = relationship('meas_IsotopeTable', backref='detector')
+
+class meas_AnalysisPathTable(Base, PathMixin):
+    analysis_id = foreignkey('meas_AnalysisTable')
+
+
+class meas_AnalysisTable(Base, ResultsMixin):
     lab_id = foreignkey('LabTable')
-    extraction_id = foreignkey('ExtractionTable')
-    measurement_id = foreignkey('MeasurementTable')
-    experiment_id = foreignkey('ExperimentTable')
+    extraction_id = foreignkey('meas_ExtractionTable')
+    measurement_id = foreignkey('meas_MeasurementTable')
+    experiment_id = foreignkey('meas_ExperimentTable')
     endtime = Column(Time)
     status = Column(Integer, default=1)
-    isotopes = relationship('IsotopeTable', backref='analysis')
+    aliquot = Column(Integer)
+    isotopes = relationship('meas_IsotopeTable', backref='analysis')
 
     #proc relationships
     blanks_histories = relationship('proc_BlanksHistoryTable', backref='analysis')
@@ -183,26 +193,17 @@ class AnalysisTable(Base, ResultsMixin):
     selected_histories = relationship('proc_SelectedHistoriesTable',
                                       backref='analysis', uselist=False)
 
-class AnalysisTypeTable(Base, NameMixin):
-    measurements = relationship('MeasurementTable', backref='analysis_type')
+class meas_ExperimentTable(Base, NameMixin):
+    analyses = relationship('meas_AnalysisTable', backref='experiment')
 
 
-class DetectorTable(Base, NameMixin):
-    kind = stringcolumn()
-    isotopes = relationship('IsotopeTable', backref='detector')
-
-
-class ExperimentTable(Base, NameMixin):
-    analyses = relationship('AnalysisTable', backref='experiment')
-
-
-class ExtractionTable(Base, ScriptTable):
+class meas_ExtractionTable(Base, ScriptTable):
     position = Column(Integer)
     value = Column(Float)
     heat_duration = Column(Float)
     clean_up_duration = Column(Float)
 
-    analysis = relationship('AnalysisTable', backref='extraction',
+    analysis = relationship('meas_AnalysisTable', backref='extraction',
                           uselist=False
                           )
 
@@ -245,32 +246,32 @@ class irrad_IrradiationTable(Base, NameMixin):
     levels = relationship('irrad_LevelTable', backref='irradiation')
 
 
-class IsotopeTable(Base, BaseMixin):
+class meas_IsotopeTable(Base, BaseMixin):
     molecular_weight_id = foreignkey('MolecularWeightTable')
-    analysis_id = foreignkey('AnalysisTable')
+    analysis_id = foreignkey('meas_AnalysisTable')
     detector_id = foreignkey('DetectorTable')
     kind = stringcolumn()
 
 
 class LabTable(Base, BaseMixin):
     labnumber = Column(Integer)
-    aliquot = Column(Integer)
+#    aliquot = Column(Integer)
     sample_id = foreignkey('SampleTable')
-    analyses = relationship('AnalysisTable', backref='labnumber')
+    analyses = relationship('meas_AnalysisTable', backref='labnumber')
     irradiation_id = foreignkey('irrad_PositionTable')
 
 
 class MassSpectrometerTable(Base, NameMixin):
 #    experiments = relationship('ExperimentTable', backref='mass_spectrometer')
-    measurements = relationship('MeasurementTable', backref='mass_spectrometer')
+    measurements = relationship('meas_MeasurementTable', backref='mass_spectrometer')
 
 
 class MaterialTable(Base, NameMixin):
     samples = relationship('SampleTable', backref='material')
 
 
-class MeasurementTable(Base, ScriptTable):
-    analysis = relationship('AnalysisTable', backref='measurement',
+class meas_MeasurementTable(Base, ScriptTable):
+    analysis = relationship('meas_AnalysisTable', backref='measurement',
                           uselist=False
                           )
     mass_spectrometer_id = foreignkey('MassSpectrometerTable')
@@ -278,7 +279,7 @@ class MeasurementTable(Base, ScriptTable):
 
 
 class MolecularWeightTable(Base, NameMixin):
-    isotopes = relationship('IsotopeTable', backref='molecular_weight')
+    isotopes = relationship('meas_IsotopeTable', backref='molecular_weight')
     mass = Column(Float)
 
 

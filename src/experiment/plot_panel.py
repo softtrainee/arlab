@@ -28,6 +28,7 @@ from uncertainties import ufloat
 #============= local library imports  ==========================
 class PlotPanelHandler(ViewableHandler):
     pass
+
 class PlotPanel(Viewable):
     automated_run = Any
     graph = Instance(Graph)
@@ -73,7 +74,12 @@ class PlotPanel(Viewable):
     @on_trait_change('correct_for_baseline')
     def _print_results(self):
         def func():
+            self.signal_display.freeze()
+            self.signal_display.clear()
             self._print_signals()
+            self._print_baselines()
+            self.signal_display.thaw()
+
             self._print_ratios()
 #        do_later(func)
         func()
@@ -84,22 +90,15 @@ class PlotPanel(Viewable):
         display = self.ratio_display
         display.freeze()
         display.clear()
+
         cfb = self.correct_for_baseline
 
-        regs = self.graph.regressors
         def func(ra):
-#        for ra in self.ratios:
             u, l = ra.split(':')
             try:
                 ru = self.signals[u]
                 rl = self.signals[l]
             except KeyError:
-                return ''
-
-            try:
-                ruf = self._get_fit(regs[self.isotopes.index(u)])
-                rlf = self._get_fit(regs[self.isotopes.index(l)])
-            except IndexError:
                 return ''
 
             if cfb:
@@ -116,7 +115,6 @@ class PlotPanel(Viewable):
 
             res = '{}/{}={} '.format(u, l, pad('{:0.4f}'.format(rr.nominal_value))) + \
                   u'\u00b1 ' + pad(format('{:0.4f}'.format(rr.std_dev())), n=6) + \
-                    pad(' {}/{} '.format(ruf, rlf), n=4) + \
                     self._get_pee(rr)
             return res
 
@@ -125,68 +123,49 @@ class PlotPanel(Viewable):
         display.thaw()
 
     def _print_signals(self):
-        display = self.signal_display
-        cfb = self.correct_for_baseline
-        display.freeze()
-        display.clear()
-        pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
-
-#        ts = []
-#        for iso in self.isotopes:
-#            try:
-#                us = self.signals[iso]
-#            except KeyError:
-#                us = ufloat((0, 0))
-#
-#            ub = ufloat((0, 0))
-#            if cfb:
-#                try:
-#                    ub = self.baselines[iso]
-#                except KeyError:
-#                    pass
-#
-#            uv = us - ub
-#            vv = uv.nominal_value
-#            ee = uv.std_dev()
-##            try:
-##                pee = abs(ee / vv * 100)
-##            except ZeroDivisionError:
-##                pee = 0
-#
-#            v = pad('{:0.4f}'.format(vv))
-#            e = pad('{:0.4f}'.format(ee), n=6)
-#            v = v + u' \u00b1 ' + e + self._get_pee(uv)
-#            ts.append('{}={:>10s}'.format(iso, v))
-
-        def func(iso):
+        def get_value(iso):
             try:
                 us = self.signals[iso]
             except KeyError:
                 us = ufloat((0, 0))
 
             ub = ufloat((0, 0))
-            if cfb:
+            if self.correct_for_baseline:
                 try:
                     ub = self.baselines[iso]
                 except KeyError:
                     pass
 
-            uv = us - ub
+            return us - ub
+
+        self._print_('', get_value)
+
+    def _print_baselines(self):
+        def get_value(iso):
+            try:
+                ub = self.baselines[iso]
+            except KeyError:
+                ub = ufloat((0, 0))
+            return ub
+
+        self._print_('bs', get_value)
+
+    def _print_(self, name, get_value):
+        display = self.signal_display
+        pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
+
+        def func(iso):
+            uv = get_value(iso)
             vv = uv.nominal_value
             ee = uv.std_dev()
-#            try:
-#                pee = abs(ee / vv * 100)
-#            except ZeroDivisionError:
-#                pee = 0
 
             v = pad('{:0.4f}'.format(vv))
             e = pad('{:0.4f}'.format(ee), n=6)
             v = v + u' \u00b1 ' + e + self._get_pee(uv)
-            return '{}={:>10s}'.format(iso, v)
+            return '{}{}={:>10s}'.format(iso, name, v)
 
         ts = [func(iso) for iso in self.isotopes]
         display.add_text('\n'.join(ts))
-        display.thaw()
 
     def _get_pee(self, uv):
         vv = uv.nominal_value
@@ -198,13 +177,13 @@ class PlotPanel(Viewable):
 
         return '({:0.2f}%)'.format(pee)
 
-    def _get_fit(self, reg):
-        try:
-            deg = reg.degree
-            if deg in [1, 2, 3]:
-                return ['L', 'P', 'C'][deg - 1]
-        except AttributeError:
-            return reg.error_calc
+#    def _get_fit(self, reg):
+#        try:
+#            deg = reg.degree
+#            if deg in [1, 2, 3]:
+#                return ['L', 'P', 'C'][deg - 1]
+#        except AttributeError:
+#            return reg.error_calc
 
     def close(self, isok):
         self.automated_run.truncate('Immediate')
@@ -245,7 +224,7 @@ class PlotPanel(Viewable):
                        layout='tabbed'
                        ),
                  width=600,
-                 height=725,
+                 height=825,
                  x=self.window_x,
                  y=self.window_y,
                  title=self.window_title,
@@ -259,15 +238,17 @@ class PlotPanel(Viewable):
 # defaults
 #===============================================================================
     def _signal_display_default(self):
-        return RichTextDisplay(height=100,
+        return RichTextDisplay(height=150,
                                default_color='black',
                                default_size=12,
+                               scroll_to_bottom=False
 #                               width=0.25
                                )
     def _ratio_display_default(self):
-        return RichTextDisplay(height=100,
+        return RichTextDisplay(height=150,
                                default_color='black',
                                default_size=12,
+                               scroll_to_bottom=False
 #                               width=0.75
                                )
 #============= EOF =============================================

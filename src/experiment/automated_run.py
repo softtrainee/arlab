@@ -244,11 +244,7 @@ class AutomatedRun(Loggable):
             script = getattr(self, '{}_script'.format(s))
             if script is not None:
                 script.cancel()
-#        self.extraction_script.cancel()
-#        
-#        self.post_equilibration_script.cancel()
-#        self.measurement_script.cancel()
-#        self.post_measurement_script.cancel()
+        self.finish()
 
     def wait_for_overlap(self):
         '''
@@ -898,26 +894,27 @@ class AutomatedRun(Loggable):
             func = getattr(self, '{}_script_factory'.format(name))
             s = func(ec)
             if s and os.path.isfile(s.filename):
-                setattr(self, '_{}_script'.format(name), s)
                 if s.bootstrap():
                     try:
                         s._test()
+                        setattr(self, '_{}_script'.format(name), s)
                     except Exception, e:
                         self.warning(e)
                         self.warning_dialog('Invalid Script {}'.format(s.filename if s else 'None'))
                         self._executable = False
+                        setattr(self, '_{}_script'.format(name), None)
+
                 return s
             else:
                 self._executable = False
                 self.warning_dialog('Invalid Script {}'.format(s.filename if s else 'None'))
 
     def pre_extraction_save(self):
-        # set our aliquot
-        db = self.db
-        ln = convert_identifier(self.labnumber)
-        ln = db.get_labnumber(ln)
-        if ln is None:
-            self.warning_dialog('invalid lab number {}'.format(self.labnumber))
+#        db = self.db
+#        ln = convert_identifier(self.labnumber)
+#        ln = db.get_labnumber(ln)
+#        if ln is None:
+#            self.warning_dialog('invalid lab number {}'.format(self.labnumber))
 #            aliquot = ln.aliquot + 1
 #            self.aliquot = aliquot
 #        else:
@@ -983,15 +980,16 @@ class AutomatedRun(Loggable):
         #save to a database
         db = self.db
         if db:
-            sample = self.sample
-            if not sample:
-                samples = ['BoneBlank', 'Air', 'Cocktail', 'Background']
-                try:
-                    sample = samples[ln]
-                except IndexError:
-                    sample = None
+#            sample = self.sample
+#            if not sample:
+#                samples = ['BoneBlank', 'Air', 'Cocktail', 'Background']
+#                try:
+#                    sample = samples[ln]
+#                except IndexError:
+#                    sample = None
 
-            lab = db.add_labnumber(ln, aliquot, sample=sample)
+#            lab = db.add_labnumber(ln, sample=sample)
+            lab = db.get_labnumber(ln)
 
             experiment = db.get_experiment(self.experiment_name)
             d = get_datetime()
@@ -1000,6 +998,7 @@ class AutomatedRun(Loggable):
             a = db.add_analysis(lab, runtime=self._runtime,
                                     rundate=self._rundate,
                                     endtime=d.time(),
+                                    aliquot=aliquot
                                 )
 
             experiment.analyses.append(a)
@@ -1222,7 +1221,9 @@ class AutomatedRun(Loggable):
 
     @property
     def executable(self):
-        return self.extraction_script is not None and self.measurement_script is not None and self._executable
+        return self.extraction_script is not None and \
+                    self.measurement_script is not None and \
+                        self._executable
 
     def _get_duration(self):
 #        if self.heat_step:

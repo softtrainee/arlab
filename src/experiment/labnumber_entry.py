@@ -81,9 +81,7 @@ class LabnumberEntry(Loggable):
 
     _update_sample_table = Event
 
-    save_button = Button
-
-
+    save_button = Button('Save')
 
     def _set_auto_params(self, s, rid):
         s.labnumber = rid
@@ -119,7 +117,7 @@ class LabnumberEntry(Loggable):
                                     material=mat,
                                     )
 
-            db.add_labnumber(ln, 0, sample=sam,
+            db.add_labnumber(ln, sample=sam,
                                     commit=True)
 
         db.commit()

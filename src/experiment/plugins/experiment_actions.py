@@ -55,7 +55,7 @@ class ExecuteExperimentSetAction(Action):
     def perform(self, event):
         man = get_executor(event)
 #        man.experiment_set_path = p
-        if man.load_experiment_set(path=globalv.test_experiment_set):
+        if man.load_experiment_set(path=globalv.test_experiment_set, edit=False):
             open_manager(event.window.application, man)
 
 

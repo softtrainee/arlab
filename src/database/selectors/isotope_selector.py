@@ -26,7 +26,7 @@ from traits.api import Int
 #============= local library imports  ==========================
 from src.database.core.database_selector import DatabaseSelector
 #from src.database.core.base_db_result import DBResult
-from src.database.orms.isotope_orm import AnalysisTable
+from src.database.orms.isotope_orm import meas_AnalysisTable
 
 #from src.graph.regression_graph import StackedRegressionTimeSeriesGraph, \
 #    StackedRegressionGraph
@@ -68,7 +68,7 @@ class IsotopeAnalysisSelector(DatabaseSelector):
     title = 'Recall Analyses'
     orm_path = 'src.database.orms.isotope_orm'
 
-    query_table = AnalysisTable
+    query_table = meas_AnalysisTable
     record_klass = IsotopeRecord
 
     tabular_adapter = IsotopeResultsAdapter
@@ -90,9 +90,9 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 
     def _get_selector_records(self, **kw):
         sess = self._db.get_session()
-        q = sess.query(AnalysisTable)
+        q = sess.query(meas_AnalysisTable)
 #        q = q.order_by(AnalysisTable.id.desc())
-        q = q.filter(AnalysisTable.status != -1)
+        q = q.filter(meas_AnalysisTable.status != -1)
         return q.all()
 
 

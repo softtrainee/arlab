@@ -67,8 +67,12 @@ def get_analysis_type(idn):
     #check for Bg before B
     if idn.startswith('Bg'):
         return 'background'
-    elif idn.startswith('B'):
-        return 'blank'
+    elif idn.startswith('Ba'):
+        return 'blank_air'
+    elif idn.startswith('Bu'):
+        return 'blank_unknown'
+    elif idn.startswith('Bc'):
+        return 'blank_cocktail'
     elif idn.startswith('A'):
         return 'air'
     elif idn.startswith('C'):

@@ -195,14 +195,16 @@ class IsotopeRecord(DatabaseRecord):
 
     def _load_signals(self):
         if self._no_load:
-            graph = self.signal_graph
-            for iso, rs in zip(self.isos, graph.regressors):
-                self.signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
-                                                          _error=rs.coefficient_errors[-1])
             graph = self.baseline_graph
-            for iso, rs in zip(self.isos, graph.regressors):
-                self.signals[iso] = Signal(_value=rs.coefficients[-1],
-                                           _error=rs.coefficient_errors[-1])
+            if graph:
+                for iso, rs in zip(self.isos, graph.regressors):
+                    self.signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
+                                                              _error=rs.coefficient_errors[-1])
+            graph = self.signal_graph
+            if graph:
+                for iso, rs in zip(self.isos, graph.regressors):
+                    self.signals[iso] = Signal(_value=rs.coefficients[-1],
+                                               _error=rs.coefficient_errors[-1])
             return
 
         self._no_load = True
@@ -237,11 +239,11 @@ class IsotopeRecord(DatabaseRecord):
 #===============================================================================
 # private
 #===============================================================================
-    def __getattr__(self, attr):
-        try:
-            return getattr(self._dbrecord, attr)
-        except AttributeError, e:
-            print 'gettatrr', attr
+#    def __getattr__(self, attr):
+#        try:
+#            return getattr(self._dbrecord, attr)
+#        except AttributeError, e:
+#            print 'gettatrr', attr
 
     def load_from_database(self):
 
@@ -665,7 +667,6 @@ class IsotopeRecord(DatabaseRecord):
 #        print 'get aasfd'
         ln = self._dbrecord.labnumber.labnumber
         ln = convert_shortname(ln)
-
         ln = '{}-{}'.format(ln, self.aliquot)
         return ln
 
@@ -675,7 +676,7 @@ class IsotopeRecord(DatabaseRecord):
 
     @cached_property
     def _get_aliquot(self):
-        return self._dbrecord.labnumber.aliquot
+        return self._dbrecord.aliquot
 
     @cached_property
     def _get_mass_spectrometer(self):

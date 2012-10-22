@@ -134,13 +134,13 @@ class ExperimentManager(Manager):
 
                 for mi in ['obama', 'jan']:
                     db.add_mass_spectrometer(mi)
-                    
-                for i,di in enumerate(['blank_air',
+
+                for i, di in enumerate(['blank_air',
                            'blank_cocktail',
                            'blank_unknown',
                            'background', 'air', 'cocktail']):
-                    samp=db.add_sample(di)
-                    db.add_labnumber(i+1, 0, sample=samp)
+                    samp = db.add_sample(di)
+                    db.add_labnumber(i + 1, sample=samp)
 
                 db.commit()
 
@@ -232,7 +232,11 @@ class ExperimentManager(Manager):
                 c = 1
 
             if ln is not None:
-                st = ln.aliquot
+                try:
+                    st = ln.analyses[-1].aliquot
+                except IndexError:
+                    st = 0
+#                st = ln.aliquot
             else:
                 if arunid in stdict:
                     st = stdict[arunid]
@@ -265,7 +269,7 @@ class ExperimentManager(Manager):
 #===============================================================================
 # persistence
 #===============================================================================
-    def load_experiment_set(self, path=None, set_names=False):
+    def load_experiment_set(self, path=None, edit=True):
 #        self.bind_preferences()
         #make sure we have a database connection
         if not self.test_connections():
@@ -285,8 +289,9 @@ class ExperimentManager(Manager):
 #   
                 if exp.load_automated_runs(text=text):
                     self.experiment_sets.append(exp)
-                    exp.automated_run = exp.automated_runs[-1].clone_traits()
-                    if set_names:
+
+                    if edit:
+                        exp.automated_run = exp.automated_runs[-1].clone_traits()
                         exp.set_script_names()
 
             self._update_aliquots()

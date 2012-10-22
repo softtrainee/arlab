@@ -865,12 +865,14 @@ tray: {}
 
         return self._automated_run_factory(**params)
 
-    def _automated_run_factory(self, **kw):
+    def _automated_run_factory(self, labnumber=None, **kw):
         '''
              always use this factory for new AutomatedRuns
              it sets the configuration, loaded scripts and binds our update_loaded_script
              handler so we are aware of scripts that have been tested
         '''
+
+
 
         #copy some of the last runs values
         if self.automated_runs:
@@ -881,12 +883,18 @@ tray: {}
 
         a = AutomatedRun(
                          scripts=self.loaded_scripts,
+                         labnumber=labnumber,
                          **kw
                          )
 
-        self._bind_automated_run(a)
+        ln = self.db.get_labnumber(labnumber)
+        if ln is None:
+            self.warning_dialog('Invalid labnumber {}'.format(labnumber))
+            a._executable = False
+        else:
+            self._bind_automated_run(a)
+            a.create_scripts()
 
-        a.create_scripts()
         return a
 
     def _bind_automated_run(self, a):
