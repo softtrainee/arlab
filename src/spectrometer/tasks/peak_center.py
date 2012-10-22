@@ -107,9 +107,13 @@ class PeakCenter(MagnetScan):
         for i in range(ntries):
             if not self.isAlive():
                 break
-
+            
+            if i>0:
+                graph.clear()
+                self._graph_factory(graph=graph)
+                
             wnd = self.window
-
+            
             start = center_dac - wnd * (i + 1)
             end = center_dac + wnd * (i + 1)
             self.info('Scan parameters center={} start={} end={} step width={}'.format(center_dac, start, end, self.step_width))
@@ -240,8 +244,9 @@ class PeakCenter(MagnetScan):
 #===============================================================================
 # factories
 #===============================================================================
-    def _graph_factory(self):
-        graph = Graph(
+    def _graph_factory(self, graph=None):
+        if graph is None:
+            graph = Graph(
                   container_dict=dict(padding=5,
                                       bgcolor='lightgray'))
 

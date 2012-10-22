@@ -148,7 +148,7 @@ class IonOpticsManager(Manager):
         spec = self.spectrometer
 
         self.peak_center = pc = PeakCenter(center_dac=center_dac,
-                                           detector=detector,
+                                           reference_detector=detector,
                         reference_isotope=isotope,
 #                        graph=graph,
                         spectrometer=spec

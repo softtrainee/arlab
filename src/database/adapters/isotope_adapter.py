@@ -331,8 +331,10 @@ class IsotopeAdapter(DatabaseAdapter):
         q = q.join(MaterialTable)
         q = q.join(ProjectTable)
         q = q.filter(SampleTable.name == name)
-        q = q.filter(MaterialTable.name == material.name)
-        q = q.filter(ProjectTable.name == project.name)
+        if material:
+            q = q.filter(MaterialTable.name == material.name)
+        if project:
+            q = q.filter(ProjectTable.name == project.name)
         sam = sql_retrieve(q.one)
 
         if sam is not None:

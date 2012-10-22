@@ -110,22 +110,26 @@ class MagnetScan(SpectrometerTask):
 
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
         do = values[0]
-        intensities = self._magnet_step_hook(do, detector=det,
+        intensities = self._magnet_step_hook(do, 
+                                             delay=1,
+                                             detector=det,
                                              peak_generator=peak_generator)
         self._graph_hook(do, intensities)
         rintensities = [intensities]
 
+        delay=delay/1000.
         for di in values[1:]:
             if not self.isAlive():
                 break
 
             mag.set_dac(di, verbose=False)
-            intensities = self._magnet_step_hook(di, det, peak_generator=peak_generator)
+            intensities = self._magnet_step_hook(di, det, delay=delay,
+                                                 peak_generator=peak_generator)
             self._graph_hook(di, intensities, update_y_limits=True)
 
             rintensities.append(intensities)
 
-            time.sleep(delay / 1000.)
+#            time.sleep(delay / 1000.)
 
         return rintensities
 
@@ -139,11 +143,15 @@ class MagnetScan(SpectrometerTask):
                             **kw
                             )
 
-    def _magnet_step_hook(self, di, detector=None, peak_generator=None):
+    def _magnet_step_hook(self, di, detector=None, peak_generator=None, delay=None):
+        
+        spec.mag.set_dac(di, verbose=False)
+        
         spec = self.spectrometer
-
+        if delay:
+            time.sleep(delay)
         intensity = spec.get_intensity(detector)
-
+        
 #            debug
         if globalv.experiment_debug:
             intensity = peak_generator.next()
@@ -178,7 +186,7 @@ class MagnetScan(SpectrometerTask):
             sm, em = ds, de
 
         values = self._calc_step_values(sm, em, stm)
-        return self._scan_dac(values, self.reference_detector.name)
+        return self._scan_dac(values, self.reference_detector)
 
     def _post_execute(self):
         pass

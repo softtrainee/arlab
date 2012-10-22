@@ -1314,7 +1314,7 @@ class AutomatedRun(Loggable):
 
     def _local_lab_db_default(self):
         name = os.path.join(paths.hidden_dir, 'local_lab.db')
-        name = '/Users/ross/Sandbox/local.db'
+        #name = '/Users/ross/Sandbox/local.db'
         ldb = LocalLabAdapter(name=name)
         ldb.build_database()
         return ldb
