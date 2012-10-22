@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
+import os
 
 class Globals(object):
     #use_shared_memory = False
@@ -34,8 +34,8 @@ class Globals(object):
     ignore_connection_warnings = True
     ignore_chiller_unavailable = True
 
-#    video_test = False
-    video_test = True
+    video_test = False
+#    video_test = True
     video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
 #    video_test_path = '/Users/ross/Sandbox/snapshot002-6.662--8.572.jpg'
 #    video_test_path = '/Users/ross/Sandbox/watershed_test.jpg'
@@ -43,8 +43,8 @@ class Globals(object):
     video_test_path = '/Users/ross/Sandbox/snapshot002.jpg'
     show_autocenter_debug_image = False
 #    show_autocenter_debug_image = True
-
-    test_experiment_set = '/Users/ross/Pychrondata_experiment/experiments/bar.txt'
+    root=os.path.expanduser('~')
+    test_experiment_set = os.path.join(root,'Pychrondata_experiment','experiments','bar.txt')
     #use_ipc = False == embed the remote hardware servers into pychron
     #= True == an instance of RemoteHardwareServer must be launched
 
@@ -53,8 +53,8 @@ class Globals(object):
     _test = False #set test to 'true' when running tests
 
 #    experiment_debug = False
-#    experiment_debug = False
-    experiment_debug = True
+    experiment_debug = False
+#    experiment_debug = True
     experiment_savedb = True
     automated_run_debug = False
     spectrometer_debug = True

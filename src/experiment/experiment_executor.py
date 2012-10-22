@@ -543,10 +543,13 @@ class ExperimentExecutor(ExperimentManager):
                 host = comms.find('host')
                 port = comms.find('port')
                 kind = comms.find('kind')
-
-            host = host if host.text else 'localhost'
-            port = port if port.text else 1061
-            kind = kind if kind.text else 'udp'
+            
+            if host is not None:
+                host = host if host.text else 'localhost'
+            if port is not None:
+                port = port if port.text else 1061
+            if kind is not None:
+                kind = kind if kind.text else 'udp'
 
             runner = RemotePyScriptRunner(host, port, kind)
         else:

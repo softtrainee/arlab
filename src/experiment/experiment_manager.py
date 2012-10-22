@@ -134,6 +134,13 @@ class ExperimentManager(Manager):
 
                 for mi in ['obama', 'jan']:
                     db.add_mass_spectrometer(mi)
+                    
+                for i,di in enumerate(['blank_air',
+                           'blank_cocktail',
+                           'blank_unknown',
+                           'background', 'air', 'cocktail']):
+                    samp=db.add_sample(di)
+                    db.add_labnumber(i+1, 0, sample=samp)
 
                 db.commit()
 
