@@ -137,10 +137,14 @@ class AnalysisSummary(Summary):
         reg = sg.regressors[pi]
         inter = reg.predict(0)
         inter_err = reg.coefficient_errors[-1]
+        if bg:
+            reg = bg.regressors[pi]
+            base = reg.predict(0)
+            base_err = reg.coefficient_errors[-1]
+        else:
+            base = 0
+            base_err = 0
 
-        reg = bg.regressors[pi]
-        base = reg.predict(0)
-        base_err = reg.coefficient_errors[-1]
         return ufloat((inter, inter_err)), ufloat((base, base_err))
 
     def _make_signals(self, n, i, iso, floatfmt, width, widths):

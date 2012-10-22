@@ -103,6 +103,7 @@ class ExperimentExecutor(ExperimentManager):
     def opened(self):
         self.info_display.clear()
         self._was_executed = False
+        self.stats.reset()
 
     def _reload_from_disk(self):
         super(ExperimentExecutor, self)._reload_from_disk()
@@ -163,10 +164,9 @@ class ExperimentExecutor(ExperimentManager):
                 arun = self.experiment_set.current_run
                 if arun:
                     arun.cancel()
-
         else:
             if self._was_executed:
-                self.load_experiment_set(self.path)
+                self.load_experiment_set(self.path, edit=False)
 
             t = Thread(target=self._execute_experiment_sets)
             t.start()
@@ -176,7 +176,7 @@ class ExperimentExecutor(ExperimentManager):
 
         self.stats.calculate()
         self.stats.start_timer()
-#        self.stats.
+        self.stats.nruns_finished = 0
 
         if not self.massspec_importer.db.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
@@ -241,6 +241,7 @@ class ExperimentExecutor(ExperimentManager):
                 self._reload_from_disk()
                 rgen, nruns = exp.new_runs_generator(self._last_ran)
 
+            print 'self', self.isAlive()
             if self.isAlive() and \
                     cnt < nruns and \
                             not cnt == 0:
@@ -258,7 +259,8 @@ class ExperimentExecutor(ExperimentManager):
 
             try:
                 t, run = self._launch_run(rgen, cnt)
-            except StopIteration:
+            except StopIteration, e:
+                print 'stop', e
                 break
 
             self._last_ran = run
@@ -276,7 +278,7 @@ class ExperimentExecutor(ExperimentManager):
 
         if self.err_message:
             '''
-                set last_run to None is this run wasnt successfully
+                set last_run to None if this run wasnt successfully
                 experiment set will restart at last successful run
             '''
             self._last_ran = None
@@ -388,8 +390,8 @@ class ExperimentExecutor(ExperimentManager):
             return
 
         if not arun.do_post_measurement():
-            self._alive = False
-
+            if not arun.state == 'truncate':
+                self._alive = False
 
         arun.finish()
         self.increment_nruns_finished()
@@ -492,7 +494,7 @@ class ExperimentExecutor(ExperimentManager):
                  width=1150,
                  height=750,
                  resizable=True,
-#                 title=self.experiment_set.name,
+                 title=self.experiment_set.name,
                  handler=self.handler_klass,
                  )
         return v
@@ -543,7 +545,7 @@ class ExperimentExecutor(ExperimentManager):
                 host = comms.find('host')
                 port = comms.find('port')
                 kind = comms.find('kind')
-            
+
             if host is not None:
                 host = host if host.text else 'localhost'
             if port is not None:

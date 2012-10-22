@@ -56,6 +56,7 @@ class RichTextDisplay(HasTraits):
 #    text = List
     editable = False
     ok_to_open = True
+    scroll_to_bottom = True
 
     opened = False
     was_closed = False
@@ -218,16 +219,17 @@ class RichTextDisplay(HasTraits):
         d.EndFont()
         d.Newline()
 
-        n = 300
-        ls = d.GetValue().split('\n')
-        if len(ls) > n:
-            s = sum(len(ls[i]) + 1 for i in xrange(10))
-            d.Remove(0, s)
-            lp = d.GetLastPosition()
-            d.SetInsertionPoint(lp)
+        if self.scroll_to_bottom:
+            n = 300
+            ls = d.GetValue().split('\n')
+            if len(ls) > n:
+                s = sum(len(ls[i]) + 1 for i in xrange(10))
+                d.Remove(0, s)
+                lp = d.GetLastPosition()
+                d.SetInsertionPoint(lp)
 
-        lp = d.GetLastPosition()
-        self.show_positon(lp + 10)
+            lp = d.GetLastPosition()
+            self.show_positon(lp + 10)
 
     def show_positon(self, ipos):
         try:

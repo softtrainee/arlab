@@ -15,30 +15,23 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+#============= standard library imports ========================
+from sqlalchemy.sql.expression import  and_
+#============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
-
-from src.paths import paths
-from src.database.orms.isotope_orm import ProjectTable, UserTable, SampleTable, \
-    MaterialTable, AnalysisTable, AnalysisPathTable, LabTable, ExtractionTable, \
-    MeasurementTable, ExperimentTable, MassSpectrometerTable, AnalysisTypeTable, \
-    proc_BlanksHistoryTable, proc_BlanksTable, proc_BlanksSetTable, \
-    proc_BackgroundsHistoryTable, proc_BackgroundsTable, \
-    proc_BackgroundsSetTable, IsotopeTable, DetectorTable, MolecularWeightTable, \
-    irrad_ProductionTable, irrad_IrradiationTable, irrad_HolderTable, \
-    proc_DetectorIntercalibrationHistoryTable, \
-    proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable, \
-    proc_SelectedHistoriesTable
-#import sqlalchemy
-from sqlalchemy.sql.expression import or_, and_
+from src.database.orms.isotope_orm import meas_AnalysisPathTable, meas_AnalysisTable, meas_ExperimentTable, \
+    meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
+proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
+    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
+DetectorTable, MassSpectrometerTable, MaterialTable, MolecularWeightTable, \
+    ProjectTable, UserTable, SampleTable, LabTable, AnalysisTypeTable, \
+irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
 from src.experiment.identifier import convert_identifier
 from src.repo.repository import Repository
-#from src.database.adapters.adapter_decorators import add, get_one, commit
-#from sqlalchemy.sql.expression import or_
-#============= standard library imports ========================
-#============= local library imports  ==========================
+from src.paths import paths
 
 #@todo: change rundate and runtime to DateTime columns
 
@@ -51,7 +44,7 @@ class IsotopeAdapter(DatabaseAdapter):
     '''
 
     selector_klass = IsotopeAnalysisSelector
-    path_table = AnalysisPathTable
+    path_table = meas_AnalysisPathTable
 
 #    def initialize_database(self):
 #        self.add_sample('B')
@@ -196,12 +189,12 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @add
     def add_experiment(self, name, **kw):
-        exp = ExperimentTable(name=name, **kw)
+        exp = meas_ExperimentTable(name=name, **kw)
         return exp, True
 
     @add
     def add_extraction(self, analysis, name, **kw):
-        ex = ExtractionTable(script_name=name, **kw)
+        ex = meas_ExtractionTable(script_name=name, **kw)
         analysis = self.get_analysis(analysis)
         if analysis:
             analysis.extraction = ex
@@ -221,7 +214,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @add
     def add_isotope(self, analysis, molweight, det, **kw):
-        iso = IsotopeTable(**kw)
+        iso = meas_IsotopeTable(**kw)
         analysis = self.get_analysis(analysis)
         if analysis:
             analysis.isotopes.append(iso)
@@ -238,7 +231,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @add
     def add_measurement(self, analysis, analysis_type, mass_spec, name, **kw):
-        ms = MeasurementTable(script_name=name, **kw)
+        ms = meas_MeasurementTable(script_name=name, **kw)
 #        if isinstance(analysis, str):
         analysis = self.get_analysis(analysis)
         analysis_type = self.get_analysis_type(analysis_type)
@@ -384,18 +377,23 @@ class IsotopeAdapter(DatabaseAdapter):
             return sh, False
 
     @add
-    def add_labnumber(self, labnumber, aliquot, sample=None, **kw):
+    def add_labnumber(self, labnumber,
+#                      aliquot, 
+                      sample=None, **kw):
+        pln = self.get_labnumber(labnumber)
+        if pln is not None:
+            return pln, False
+
         ln = LabTable(labnumber=labnumber,
-                      aliquot=aliquot,
+#                      aliquot=aliquot,
                       ** kw)
 
         sample = self.get_sample(sample)
 
 #        ln = self._add_unique(ln, 'labnumber', labnumber)
-        pln = self.get_labnumber(labnumber)
-        if pln is not None:
-            if pln.aliquot == aliquot:
-                return ln, False
+#        if pln is not None:
+#            if pln.aliquot == aliquot:
+#                return ln, False
 
         if sample is not None and ln is not None:
             sample.labnumbers.append(ln)
@@ -408,7 +406,7 @@ class IsotopeAdapter(DatabaseAdapter):
 #        if isinstance(labnumber, (str, int, unicode)):
         labnumber = self.get_labnumber(labnumber)
 
-        anal = AnalysisTable(**kw)
+        anal = meas_AnalysisTable(**kw)
         if labnumber is not None:
             labnumber.analyses.append(anal)
 
@@ -417,7 +415,7 @@ class IsotopeAdapter(DatabaseAdapter):
     @add
     def add_analysis_path(self, path, analysis=None, **kw):
         kw = self._get_path_keywords(path, kw)
-        anal_path = AnalysisPathTable(**kw)
+        anal_path = meas_AnalysisPathTable(**kw)
         if isinstance(analysis, (str, int, long)):
             analysis = self.get_analysis(analysis)
 #
@@ -452,7 +450,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @get_one
     def get_analysis(self, rid):
-        return AnalysisTable, 'lab_id'
+        return meas_AnalysisTable, 'lab_id'
 
     @get_one
     def get_analysis_type(self, name):
@@ -488,7 +486,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @get_one
     def get_experiment(self, name):
-        return ExperimentTable
+        return meas_ExperimentTable
 
     @get_one
     def get_irradiation_holder(self, name):
@@ -537,7 +535,7 @@ class IsotopeAdapter(DatabaseAdapter):
 # ##getters multiple
 #===============================================================================
     def get_analyses(self, **kw):
-        return self._get_items(AnalysisTable, globals(), **kw)
+        return self._get_items(meas_AnalysisTable, globals(), **kw)
 
     def get_analysis_types(self, **kw):
         return self._get_items(AnalysisTypeTable, globals(), **kw)

@@ -124,6 +124,10 @@ class ExperimentStats(Loggable):
         self.info('Estimated total time= {:0.1f}, elapsed time= {:0.1f}, deviation= {:0.1f}'.format(tt, et, dt))
         self._timer.Stop()
 
+    def reset(self):
+        self._start_time = None
+        self.nruns_finished = 0
+
 class StatsGroup(ExperimentStats):
     experiment_sets = List
     def calculate(self):
@@ -138,6 +142,7 @@ class StatsGroup(ExperimentStats):
         offset = 0
         if self._start_time:
             offset = time.time() - self._start_time
+
 
         self.etf = self.format_duration(tt - offset)
 

@@ -115,14 +115,25 @@ class SelectionView(Viewable):
         xs = []
         ys = []
         ats = ['blank', 'air', 'cocktail', 'unknown', 'background']
+#        ats += ['blank_air', 'blank_cocktail', 'blank_unknown']
         machines = ['jan', 'obama', 'map']
         rids = []
+        def test(ri, at, mach):
+            if at == 'blank':
+                attest = ri.analysis_type.startswith('blank')
+            else:
+                attest = ri.analysis_type == at
+
+            if attest:
+                return ri.mass_spectrometer == mach
+
         for mach in machines:
             for i, at in enumerate(ats):
                 dd = [(ri.shortname, ri.timestamp)
                                for ri in self.table.records
-                                if ri.analysis_type == at
-                                    and ri.mass_spectrometer == mach]
+                                    if test(ri, at, mach)
+
+                        ]
                 if dd:
                     ni, xi = zip(*dd)
                 else:
@@ -232,7 +243,7 @@ class SelectionView(Viewable):
             xs = scatter.index.get_data()
 
             ts = xs[hover] + xmi
-            result = next((ri for ri in self.table.results
+            result = next((ri for ri in self.table.records
                            if abs(ri.timestamp - ts) < 1), None)
 
             self.table.selected = [result]
