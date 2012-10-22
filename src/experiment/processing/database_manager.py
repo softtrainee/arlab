@@ -25,10 +25,11 @@ from src.managers.manager import Manager
 class DatabaseManager(Manager):
     db = Instance(IsotopeAdapter)
     def _db_factory(self):
-        db = IsotopeAdapter(username='root',
-                            password='Argon',
+        db = IsotopeAdapter(username='massspec',
+                            password='DBArgon',
                             kind='mysql',
-                            name='isotopedb_dev'
+                            name='isotopedb',
+                            host='129.138.12.131'
                             )
 
         return db

@@ -29,7 +29,7 @@ from src.graph.graph import Graph
 from src.experiment.processing.analysis import Analysis, AnalysisTabularAdapter
 from src.experiment.processing.result import Result
 from src.experiment.processing.plotters.series import Series
-from src.experiment.processing.series_config import SeriesConfig
+from src.experiment.processing.series_config import SeriesConfig, RatioConfig
 from src.experiment.processing.processing_selector import ProcessingSelector
 from src.helpers.traitsui_shortcuts import listeditor
 from src.viewable import ViewableHandler, Viewable
@@ -41,6 +41,8 @@ from src.experiment.processing.export.excel_exporter import ExcelExporter
 from pyface.timer.do_later import do_later
 from src.experiment.processing.figures.figure_store import FigureStore
 from src.managers.data_managers.h5_data_manager import H5DataManager
+from threading import Thread
+from src.initializer import MProgressDialog
 
 class GraphSelector(HasTraits):
     show_series = Bool(False)
@@ -77,6 +79,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     username = Str
 
     series_configs = List
+    ratio_configs = List
     selector = None
 #    result = Instance(Result, ())
 
@@ -92,8 +95,10 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
     series_klass = Series
     series_config_klass = SeriesConfig
+    ratio_config_klass = RatioConfig
 
     use_user_series_configs = True
+    use_user_ratio_configs = True
     use_user_graph_selector = True
 
     results_display = Instance(RichTextDisplay, (),
@@ -192,16 +197,16 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             sks = [(si.label, si.fit) for si in self.series_configs if si.show]
             bks = [('{}bs'.format(si.label), si.fit_baseline)
                     for si in self.series_configs if si.show_baseline]
-
+            rks=[(si.label, si.fit) for si in self.ratio_configs if si.show]
             gids = self._get_gids(analyses)
-            gseries = series.build(analyses, sks, bks, gids, padding=seriespadding)
+            gseries = series.build(analyses, sks, bks,rks, gids, padding=seriespadding)
 
             if gseries:
                 graph.plotcontainer.add(gseries.plotcontainer)
                 series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
 
-#            self.series = series
-#            self.series.graph.on_trait_change(self._refresh_stats, 'regression_results')
+            self.series = series
+            self.series.graph.on_trait_change(self._refresh_stats, 'regression_results')
 
         graph.redraw()
 
@@ -224,20 +229,31 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         rnames = set(_names) - set(names)
 
         newnames = set(names) - set(_names)
-        self.nanalyses = len(analyses) - len(rnames) + len(newnames) - 1
+        self.nanalyses =n= len(analyses) - len(rnames) + len(newnames) - 1
 
+        pd = MProgressDialog(max=n+1, size=(550, 15))
+        import wx
+        pd.open()
+        (w, h) =wx.DisplaySize()
+        (ww, _hh) = pd.control.GetSize()
+        pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
+        
+        
         for n, gid, attr in zip(names, groupids, attrs):
             if not n in _names:
                 a = self._analysis_factory(n, gid=gid, **attr)
                 if a:
-                    self.info('loading analysis {} groupid={}'.format(a.dbrecord.record_id, gid))
+                    msg='loading analysis {} groupid={}'.format(a.dbrecord.record_id, gid)
+                    pd.change_message(msg)
+                    self.info(msg)
                     self._add_analysis(a, **kw)
-#                    self.analyses.append(a)
                 else:
                     self.warning('could not load {}'.format(n))
             else:
                 a = next((a for a in analyses if a.uuid == n), None)
                 a.gid = gid
+            
+            pd.increment()
 
         #remove analyses not in names
         self._analyses = [ai for ai in analyses if ai.uuid not in rnames]
@@ -247,7 +263,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         keys = self.isotope_keys
         keys.sort(key=lambda k:k[2:4], reverse=True)
         if not self.series_configs and set_series_configs:
-            self.series_configs = [self.series_config_klass(label=iso, parent=self)
+            self.series_configs = [self.series_config_klass(label=iso, figure=self)
                                    for iso in keys]
         else:
             #have a series configs list 
@@ -257,12 +273,30 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                 se = next((s for s in self.series_configs if s.label == iso), None)
 #                print i, iso, se
                 if not se:
-                    self.series_configs.insert(1, self.series_config_klass(label=iso, parent=self))
+                    self.series_configs.insert(1, self.series_config_klass(label=iso, 
+                                                                           figure=self))
                 else:
-                    se.parent = self
+                    se.figure = self
 
         for i, se in enumerate(self.series_configs):
             se.graphid = i
+        
+        rkeys=['Ar40/Ar36',]
+        if not self.series_configs and set_series_configs:
+            self.ratio_configs=[self.ratio_config_klass(label=ri, 
+                                                        figure=self) for ri in rkeys]
+        else:
+            #have a series configs list 
+            #load any missing isotopes
+#            print keys
+            for i, iso in enumerate(rkeys):
+                se = next((s for s in self.ratio_configs if s.label == iso), None)
+#                print i, iso, se
+                if not se:
+                    self.ratio_configs.insert(1, self.ratio_config_klass(label=iso, 
+                                                                           figure=self))
+                else:
+                    se.figure = self
 
         signal_keys = self.signal_keys
         signal_keys.sort(key=lambda k:k[2:4], reverse=True)
@@ -278,21 +312,31 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #===============================================================================
     def closed(self, ok):
         self._dump_series_configs()
+        self._dump_ratio_configs()
         self._dump_graph_selector()
 
     def opened(self):
         if self.use_user_series_configs:
             self._load_series_configs()
+
+        if self.use_user_ratio_configs:
+            self._load_ratio_configs()
+        
         if self.use_user_graph_selector:
             self._load_graph_selector()
+        
 #===============================================================================
 # persistence
 #===============================================================================
     def _get_series_config_path(self):
         return os.path.join(paths.hidden_dir, 'series_config')
+    
+    def _get_ratio_config_path(self):
+        return os.path.join(paths.hidden_dir, 'ratio_config')
 
     def _get_graph_selector_path(self):
         return os.path.join(paths.hidden_dir, 'graph_selector')
+
 
     def _load_graph_selector(self):
         p = self._get_graph_selector_path()
@@ -305,8 +349,16 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         obj = self._load_obj(p)
         if obj:
             for si in obj:
-                si.parent = self
+                si.figure = self
             self.series_configs = obj
+            
+    def _load_ratio_configs(self):
+        p = self._get_ratio_config_path()
+        obj = self._load_obj(p)
+        if obj:
+            for si in obj:
+                si.figure = self
+            self.ratio_configs = obj
 
     def _dump_graph_selector(self):
         p = self._get_graph_selector_path()
@@ -315,6 +367,10 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _dump_series_configs(self):
         p = self._get_series_config_path()
         self._dump_obj(self.series_configs, p)
+        
+    def _dump_ratio_configs(self):
+        p = self._get_ratio_config_path()
+        self._dump_obj(self.ratio_configs, p)
 
     def _dump_obj(self, obj, p):
         try:
@@ -336,13 +392,19 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 # private
 #===============================================================================
     def _update_data(self):
-        ps = self.selector
-        names, attrs, gids = zip(*[(ri.filename, dict(dbrecord=ri), ri.gid)
-                                  for ri in ps.selected_results if ri.path.strip()])
-
-        if names:
-            self.load_analyses(names, attrs=attrs, groupids=gids, **self._get_load_keywords())
-
+        def do():
+            ps = self.selector
+            try:
+                names, attrs, gids = zip(*[(ri.filename, dict(dbrecord=ri), ri.gid)
+                                          for ri in ps.selected_records if ri.path.strip()])
+        
+                if names:
+                    self.load_analyses(names, attrs=attrs, groupids=gids, **self._get_load_keywords())
+            except ValueError:
+                pass
+        
+        do_later(do)
+        
     def _get_load_keywords(self):
         return {}
 
@@ -366,24 +428,24 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         db = self.db
         db.connect()
         import time
-        st = time.clock()
+#        st = time.clock()
         if self.selector is None:
 #            db.selector_factory()
             ps = ProcessingSelector(db=self.db)
             ps.selector.style = 'panel'
             ps.on_trait_change(self._update_data, 'update_data')
-#            ps.edit_traits()
             ps.selector.load_recent()
+            ps.edit_traits()
             self.selector = ps
 #            if self._debug:
-            ps.selected_results = [i for i in ps.selector.records[-10:-6] if i.analysis_type != 'blank']
-            print 'get results time', time.clock() - st
+#            ps.selected_results = [i for i in ps.selector.records[-10:-6] if i.analysis_type != 'blank']
+#            print 'get results time', time.clock() - st
         else:
             self.selector.show()
 
-        st = time.clock()
-        self._update_data()
-        print 'update time', time.clock() - st
+#        st = time.clock()
+#        self._update_data()
+#        print 'update time', time.clock() - st
 
     def _show_results_fired(self):
         self.results_display.edit_traits()
@@ -522,6 +584,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                  listeditor('series_configs',
                             height=125,
                             width=200),
+                 listeditor('ratio_configs'),
                  label='Graph'
                  )
         return g
