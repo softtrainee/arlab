@@ -51,9 +51,16 @@ class ProcessingManager(DatabaseManager):
     def bind_preferences(self):
         try:
             bind_preference(self, 'username', 'envisage.ui.workbench.username')
+            prefid='pychron.experiment'
+            bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
+            if self.db.kind == 'mysql':
+                bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
+                bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
+                bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
+    
+            bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
         except AttributeError:
             pass
-
     def connect_repo(self):
         host = 'localhost'
         usr = 'ross'
@@ -82,7 +89,9 @@ class ProcessingManager(DatabaseManager):
             info = self.edit_traits(view='new_workspace_view', kind='livemodal')
             if info.result:
                 name = self.new_name
-
+            else:
+                return
+            
         while 1:
             ws = self._workspace_factory(name)
             if ws is not None:

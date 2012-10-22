@@ -33,8 +33,8 @@ class SeriesConfig(HasTraits):
                         'Average ' + u'\u00b1SEM',
 
                         )
-    parent = Any(transient=True)
-    stats = Str
+    figure = Any(transient=True)
+#    stats = Str
     graphid = Int(0)
 
     def _get_fits(self):
@@ -44,10 +44,10 @@ class SeriesConfig(HasTraits):
 
     @on_trait_change('show,show_baseline,fit,fit_baseline')
     def _change(self):
-        if self.parent:
-            self.parent.refresh(caller='series_config._change')
-#            if self.parent.series:
-#                reg = self.parent.series.graph.regressors[self.graphid]
+        if self.figure:
+            self.figure.refresh(caller='series_config._change')
+#            if self.figure.series:
+#                reg = self.figure.series.graph.regressors[self.graphid]
 #            else:
 #                return
 #
@@ -61,8 +61,8 @@ class SeriesConfig(HasTraits):
 #                    ss = '+ '.join(map(lambda x:'{:0.7f}{}'.format(*x),
 #                                              zip(cs, xx[:len(cs)][::-1])))
 ##
-#                    self.parent.results_display.add_text('\n')
-#                    self.parent.results_display.add_text(ss)
+#                    self.figure.results_display.add_text('\n')
+#                    self.figure.results_display.add_text(ss)
 ##                    self.stats = ss
 ###                    ei = reg.coefficient_errors[-1]
 ###                    ei = rdict['coeff_errors'][-1]
@@ -79,14 +79,28 @@ class SeriesConfig(HasTraits):
                         Item('fit', editor=EnumEditor(name='fits'), show_label=False),
                         Item('show_baseline', label='Baseline'),
                         Item('fit_baseline', show_label=False),
-                        spring,
-                        Item('stats',
-                             width=200,
-                             show_label=False, style='readonly')
+#                        spring,
+#                        Item('stats',
+#                             width=200,
+#                             show_label=False, style='readonly')
                         )
                  )
         return v
 
+class RatioConfig(SeriesConfig):
+    def traits_view(self):
+        v = View(HGroup(Item('show', label=self.label),
+                        Item('fit', editor=EnumEditor(name='fits'), show_label=False),
+                        #Item('show_baseline', label='Baseline'),
+                        #Item('fit_baseline', show_label=False),
+#                        spring,
+#                        Item('stats',
+#                             width=200,
+#                             show_label=False, style='readonly')
+                        )
+                 )
+        return v
+    
 class BlanksSeriesConfig(SeriesConfig):
 
     def _get_fits(self):

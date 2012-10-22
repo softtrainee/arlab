@@ -67,7 +67,7 @@ from src.helpers.color_generators import colorname_generator
 #            return o
 
 
-class SelectedResultsAdapter(TabularAdapter):
+class SelectedrecordsAdapter(TabularAdapter):
     labnumber_width = Int(90)
     rid_width = Int(50)
 
@@ -102,8 +102,8 @@ class Marker(HasTraits):
 
 
 class ProcessingSelector(Viewable, ColumnSorterMixin):
-    selected_result_labels = Property(depends_on='selected_results')
-    selected_results = List
+    selected_record_labels = Property(depends_on='selected_records')
+    selected_records = List
     db = Instance(DatabaseAdapter)
 
     selector = DelegatesTo('db')
@@ -126,12 +126,12 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
     selected = Any
 
 
-    def _load_selected_results(self):
+    def _load_selected_records(self):
         for r in self.selector.selected:
-            if r not in self.selected_results:
-                self.selected_results.append(r)
+            if r not in self.selected_records:
+                self.selected_records.append(r)
 
-        self.selected_row = self.selected_results[-1]
+        self.selected_row = self.selected_records[-1]
 
     def close(self, isok):
         if isok:
@@ -147,18 +147,18 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
             r.gid = 1
             r.color = 'red'
 
-        oruns = set(self.selected_results) ^ set(self.selected)
-        self.selected_results = list(oruns) + [Marker()] + self.selected
+        oruns = set(self.selected_records) ^ set(self.selected)
+        self.selected_records = list(oruns) + [Marker()] + self.selected
 
 #    def _add_mean_marker_fired(self):
 #        pass
 
     def _append_fired(self):
-        self._load_selected_results()
+        self._load_selected_records()
 
     def _replace_fired(self):
-        self.selected_results = []
-        self._load_selected_results()
+        self.selected_records = []
+        self._load_selected_records()
 
     def _project_changed(self):
         #get all analyses of this project
@@ -192,7 +192,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                     for ln in s.labnumbers
                         for an in ln.analyses if not exclude(an)]
 
-        selector.load_results(nrs)
+        selector.load_records(nrs)
 
     def _machine_changed(self):
         db = self.db
@@ -213,7 +213,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                     return True
 
         nrs = [me.analysis for me in mi.measurements if not exclude(me)]
-        selector.load_results(nrs)
+        selector.load_records(nrs)
 
     def _analysis_type_changed(self):
         db = self.db
@@ -241,7 +241,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
         nrs = [mi.analysis for mi in atype.measurements if not exclude(mi)]
 
-        selector.load_results(nrs)
+        selector.load_records(nrs)
 
 #===============================================================================
 # view
@@ -280,7 +280,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
 
         selected_grp = VGroup(
-                              Item('selected_results',
+                              Item('selected_records',
                                           show_label=False,
                                           style='custom',
                                           editor=TabularEditor(
@@ -291,7 +291,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                                                         selected_row='object.selected_row',
                                                         column_clicked='object.column_clicked',
 #                                                        operations=['drag']
-                                                        adapter=SelectedResultsAdapter(
+                                                        adapter=SelectedrecordsAdapter(
 #                                                                                       can_drop=True,
 #                                                                                       can_edit=True
                                                                                        ),
@@ -357,8 +357,8 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
         return ats
 #        return ['Blank', 'Air', 'Unknown']
 
-    def _get_selected_result_labels(self):
-        return ['{} {}'.format(r.rid, r.labnumber) for r in self.selected_results]
+    def _get_selected_record_labels(self):
+        return ['{} {}'.format(r.rid, r.labnumber) for r in self.selected_records]
 
 
 #============= EOF =============================================

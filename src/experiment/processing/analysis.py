@@ -15,17 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Int, Float, Property, cached_property, Dict, \
-    List, Color, Any, Event, Tuple, DelegatesTo
+from traits.api import Str, Int, Float, Property, cached_property, Dict, \
+    List, Color, Any, Event
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
-import random
-import os
-from tables import openFile
+
 #============= local library imports  ==========================
-from src.experiment.processing.argon_calculations import calculate_arar_age
-from src.experiment.processing.signal import Signal, Blank, Background, Value, \
-    InterpolatedRatio
+
 from src.loggable import Loggable
 from uncertainties import ufloat
 
@@ -136,7 +132,7 @@ class Analysis(Loggable):
     def load_age(self):
         a = self.age
         if a is not None:
-            self.info('{} age={}'.format(self.dbrecord.record_id, a))
+            #self.info('{} age={}'.format(self.dbrecord.record_id, a))
             return True
         else:
             self.warning('could not compute age for {}'.format(self.rid))

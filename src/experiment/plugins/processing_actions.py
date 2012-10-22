@@ -34,7 +34,8 @@ class NewFigureAction(Action):
     accelerator = 'Ctrl+k'
     def perform(self, event):
         man = get_manager(event)
-
+        
+        
         nf = man.new_figure()
         if nf:
             open_manager(event.window.application, nf)

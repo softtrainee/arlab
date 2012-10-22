@@ -28,7 +28,6 @@ from uncertainties import ufloat
 #============= local library imports  ==========================
 class PlotPanelHandler(ViewableHandler):
     pass
-
 class PlotPanel(Viewable):
     automated_run = Any
     graph = Instance(Graph)
@@ -61,7 +60,7 @@ class PlotPanel(Viewable):
             for iso, reg in zip(self.isotopes, new):
                 try:
                     vv = reg.coefficients[-1]
-                    ee = reg.coefficient_errors[-1]
+                    ee = abs(reg.coefficient_errors[-1])
                     if self.isbaseline:
                         self.baselines[iso] = ufloat((vv, ee))
                     else:

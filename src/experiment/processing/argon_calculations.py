@@ -155,7 +155,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     try:
         JR = j * ar40rad / k39
         age = (1 / constants.lambdak) * umath.log(1 + JR)
-    except ZeroDivisionError:
+    except (ZeroDivisionError, ValueError):
         age = ufloat((0, 0))
 
     result = dict(age=age,

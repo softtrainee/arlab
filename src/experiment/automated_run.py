@@ -913,11 +913,11 @@ class AutomatedRun(Loggable):
 #        db = self.db
 #        ln = convert_identifier(self.labnumber)
 #        ln = db.get_labnumber(ln)
-#        if ln is None:
+#        if ln is None:            
 #            self.warning_dialog('invalid lab number {}'.format(self.labnumber))
-#            aliquot = ln.aliquot + 1
-#            self.aliquot = aliquot
-#        else:
+##            aliquot = ln.aliquot + 1
+##            self.aliquot = aliquot
+##        else:
 
         d = get_datetime()
         self._runtime = d.time()

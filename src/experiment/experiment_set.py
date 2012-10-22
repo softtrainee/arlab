@@ -289,8 +289,10 @@ tray: {}
         self._set_meta_param('lab_map', meta, create_map, metaname='tray')
 
         default = lambda x: x if x else '---'
+        default_int=lambda x: x if x is not None else 1
         self._set_meta_param('heat_device', meta, default)
         self._set_meta_param('mass_spectrometer', meta, default)
+        self._set_meta_param('delay_between_analyses', meta, default_int)
 
         delim = '\t'
 
