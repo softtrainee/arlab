@@ -42,10 +42,10 @@ class HeatStepAdapter(TabularAdapter):
     def _columns_default(self):
         return self._columns_factory()
     def _columns_factory(self):
-        hp = ('Temp', 'heat_value')
+        hp = ('Temp', 'extract_value')
 
         if self.kind == 'power':
-            hp = ('Power', 'heat_value')
+            hp = ('Power', 'extract_value')
 
         return [
                 #('', 'step'), 
@@ -109,7 +109,7 @@ class HeatStepAdapter(TabularAdapter):
             return os.path.join(root, '{}_ball.png'.format(im))
 
 class HeatStep(HasTraits):
-    heat_value = Property
+    extract_value = Property
     _power = Float
 
     duration = Property
@@ -120,13 +120,13 @@ class HeatStep(HasTraits):
     step = Str
 #    update = Event
 
-    def _get_heat_value(self):
+    def _get_extract_value(self):
         return self._power
 
-    def _validate_heat_value(self, v):
+    def _validate_extract_value(self, v):
         return self._validate_float(v, self._power)
 
-    def _set_heat_value(self, v):
+    def _set_extract_value(self, v):
         self._power = v
 
     def _get_duration(self):
@@ -246,12 +246,12 @@ class HeatSchedule(HasTraits):
             #load a text file
             for args in parse_file(p, delimiter=','):
                 if len(args) == 2:
-                    self.steps.append(HeatStep(heat_value=float(args[0]),
+                    self.steps.append(HeatStep(extract_value=float(args[0]),
                                                duration=float(args[1])
                                                ))
                 elif len(args) == 4:
                     for i in range(*map(int, args[:3])):
-                        self.steps.append(HeatStep(heat_value=float(i),
+                        self.steps.append(HeatStep(extract_value=float(i),
                                                    duration=float(args[3])
                                                    ))
         else:

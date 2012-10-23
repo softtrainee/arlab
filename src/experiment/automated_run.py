@@ -75,16 +75,16 @@ class AutomatedRun(Loggable):
     duration = Property(depends_on='_duration')
     _duration = Float
 
-#    heat_value = Property(depends_on='heat_step,_heat_value,_heat_units')
-    heat_value = Property(depends_on='_heat_value')
-    _heat_value = Float
+#    extract_value = Property(depends_on='heat_step,_extract_value,_extract_units')
+    extract_value = Property(depends_on='_extract_value')
+    _extract_value = Float
 
-#    heat_units = Property(depends_on='heat_step,_heat_units')
-    heat_units = Property(Enum('---', 'watts', 'temp', 'percent'),
-                           depends_on='_heat_units')
-    _heat_units = Enum('---', 'watts', 'temp', 'percent')
+#    extract_units = Property(depends_on='heat_step,_extract_units')
+    extract_units = Property(Enum('---', 'watts', 'temp', 'percent'),
+                           depends_on='_extract_units')
+    _extract_units = Enum('---', 'watts', 'temp', 'percent')
 
-    heat_device = Str
+    extract_device = Str
 
     position = CInt
     endposition = Int
@@ -304,7 +304,7 @@ class AutomatedRun(Loggable):
             return False
 
     def do_post_measurement(self):
-        if not self._alive:
+        if not self._alive and not self._truncate_signal:
             return
 
         self.info('======== Post Measurement Started ========')
@@ -482,7 +482,7 @@ class AutomatedRun(Loggable):
             try:
                 #update the plot_panel labels
                 for det, pi in zip(self._active_detectors, self.plot_panel.graph.plots):
-                    pi.y_axis.title = '{} {} Signal (fA)'.format(det.name, det.isotope)
+                    pi.y_axis.title = '{} {} (fA)'.format(det.name, det.isotope)
 #                self.plot_panel.isotopes = [d.isotope for d in self._active_detectors]
             except Exception, e:
                 print 'set_position exception', e
@@ -504,7 +504,7 @@ class AutomatedRun(Loggable):
         g.suppress_regression = True
         for i, l in enumerate(dets):
             det = spec.get_detector(l)
-            g.new_plot(ytitle='{} {} Signal (fA)'.format(det.name, det.isotope))
+            g.new_plot(ytitle='{} {} (fA)'.format(det.name, det.isotope))
 #            g.new_series(type='scatter',
 #                         marker='circle',
 #                         marker_size=1.25,
@@ -779,7 +779,7 @@ class AutomatedRun(Loggable):
 
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, series, fits):
-        self.info('measuring {}'.format(grpname))
+        self.info('measuring {}. ncounts={}'.format(grpname, ncounts))
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
             return True
@@ -884,14 +884,14 @@ class AutomatedRun(Loggable):
             if s is not None:
                 s = s.clone_traits()
                 s.automated_run = self
-                hdn = self.heat_device.replace(' ', '_').lower()
+                hdn = self.extract_device.replace(' ', '_').lower()
                 an=self.analysis_type.split('_')[0]
                 s.setup_context(position=self.position, 
-                                heat_value=self.heat_value, 
-                                heat_units=self.heat_units,
+                                extract_value=self.extract_value, 
+                                extract_units=self.extract_units,
                                 duration=self.duration,
                                 cleanup=self.cleanup,
-                                heat_device=hdn,
+                                extract_device=hdn,
                                 analysis_type=an
                                 )
             return s
@@ -1115,7 +1115,7 @@ class AutomatedRun(Loggable):
         file_name = os.path.basename(ec[key])
         if file_name.endswith('.py'):
             klass = ExtractionLinePyScript
-            hdn = self.heat_device.replace(' ', '_').lower()
+            hdn = self.extract_device.replace(' ', '_').lower()
             obj = klass(
                     root=source_dir,
                     name=file_name,
@@ -1125,10 +1125,10 @@ class AutomatedRun(Loggable):
 #            print self.position, 'positino',an
             obj.setup_context(position=self.position,
                               duration=self.duration,
-                              heat_value=self._heat_value,
-                              heat_units=self._heat_units,
+                              extract_value=self._extract_value,
+                              extract_units=self._extract_units,
                               cleanup=self.cleanup,
-                              heat_device=hdn,
+                              extract_device=hdn,
                               analysis_type=an)
 
             return obj
@@ -1243,37 +1243,37 @@ class AutomatedRun(Loggable):
 #        else:
 #            t = self._temp_or_power
 #        return t
-    def _get_heat_units(self):
-        return self._heat_units
+    def _get_extract_units(self):
+        return self._extract_units
 #        units = dict(t='temp', w='watts', p='percent')
-#        if self._heat_units == '---':
+#        if self._extract_units == '---':
 #            return 'watts'
 #
-#        return units[self._heat_units[0]]
+#        return units[self._extract_units[0]]
 
-    def _set_heat_units(self, v):
-        self._heat_units = v
+    def _set_extract_units(self, v):
+        self._extract_units = v
 
-    def _get_heat_value(self):
+    def _get_extract_value(self):
 #        if self.heat_step:
-#            v = self.heat_step.heat_value
-#            u = self.heat_step.heat_units
+#            v = self.heat_step.extract_value
+#            u = self.heat_step.extract_units
 #        else:
-        v = self._heat_value
+        v = self._extract_value
         return v
-#        u = self._heat_units[0]
+#        u = self._extract_units[0]
 #        return (v, u)
 
 #    @property
-#    def heat_value_str(self):
-#        return '{},{}'.format(*self.heat_value)
+#    def extract_value_str(self):
+#        return '{},{}'.format(*self.extract_value)
 
     def _validate_duration(self, d):
         return self._validate_float(d)
 
 #    def _validate_temp_or_power(self, d):
 #        return self._validate_float(d)
-    def _validate_heat_value(self, d):
+    def _validate_extract_value(self, d):
         return self._validate_float(d)
 
     def _validate_float(self, d):
@@ -1289,19 +1289,19 @@ class AutomatedRun(Loggable):
 #            else:
             self._duration = d
 
-    def _set_heat_value(self, t):
+    def _set_extract_value(self, t):
         if t is not None:
 #            if self.heat_step:
-#                self.heat_step.heat_value = t
+#                self.heat_step.extract_value = t
 #            else:
-            self._heat_value = t
+            self._extract_value = t
             if not t:
-                self.heat_units = '---'
-            elif self.heat_units == '---':
-                self.heat_units = 'watts'
+                self.extract_units = '---'
+            elif self.extract_units == '---':
+                self.extract_units = 'watts'
 
         else:
-            self.heat_units = '---'
+            self.extract_units = '---'
 
     def _get_state(self):
         return self._state
@@ -1346,9 +1346,9 @@ class AutomatedRun(Loggable):
                      readonly('sample'),
                      readonly('irrad_level', label='Irradiation'),
 
-                     HGroup(sspring(width=33), Item('heat_value', label='Heat'),
+                     HGroup(sspring(width=33), Item('extract_value', label='Heat'),
                             spring,
-                            Item('heat_units',
+                            Item('extract_units',
                                  show_label=False),
                             ),
                      Item('duration', label='Duration'),

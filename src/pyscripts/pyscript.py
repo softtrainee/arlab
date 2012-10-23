@@ -303,7 +303,7 @@ class PyScript(Loggable):
                 self._gosub_script = None
                 if not self._cancel:
                     self.info('gosub finished')
-
+    @verbose_skip
     def exit(self):
         self.info('doing EXIT')
         self.cancel()
