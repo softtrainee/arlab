@@ -365,6 +365,7 @@ class FusionsLaserManager(LaserManager):
     def move_to_position(self, position):
         if self.stage_manager is not None:
             self.stage_manager.move_to_hole(position)
+            return True
 
 #            if not self.stage_manager.opened:
 #                #do_later opens the stage manager from the main thread

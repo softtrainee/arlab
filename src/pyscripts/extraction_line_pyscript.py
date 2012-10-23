@@ -58,20 +58,20 @@ class ExtractionLinePyScript(PyScript):
         return self.get_context()['heat_value']
 
     def setup_context(self, **kw):
-        ctx = dict()
-        for attr in [
-                     'analysis_type',
-                     'heat_device',
-                     'position',
-                     'heat_units',
-                     'heat_value',
-                     'duration', 'cleanup']:
-            try:
-                ctx[attr] = kw[attr]
-            except KeyError:
-                pass
+#        ctx = dict()
+#        for attr in [
+#                     'analysis_type',
+#                     'heat_device',
+#                     'position',
+#                     'heat_units',
+#                     'heat_value',
+#                     'duration', 'cleanup']:
+#            try:
+#                ctx[attr] = kw[attr]
+#            except KeyError:
+#                pass
 
-        self._context = ctx
+        self._context.update(kw)
 
     def _runner_changed(self):
         self.runner.scripts.append(self)
@@ -149,11 +149,17 @@ class ExtractionLinePyScript(PyScript):
             position = self.position
 
         self.info('{} move to position {}'.format(self.heat_device, position))
-        return self._manager_action([('move_to_position', (position,), {})
+        success=self._manager_action([('move_to_position', (position,), {})
                                         ],
-                                      protocol=ILaserManager,
+                                      protocol='src.lasers.laser_managers.laser_manager.ILaserManager',
+#                                      protocol=ILaserManager,
                                       name=self.heat_device
                                       )
+        if not success:
+            self.info('{} move to position failed')
+        else:
+            self.info('move to position suceeded')
+            return True
 
 #    @verbose_skip
 #    def set_stage_map(self, mapname=None):

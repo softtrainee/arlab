@@ -67,13 +67,13 @@ class LaserPlugin(CorePlugin):
                         print e
             except Exception, e:
                 print e
-            params['name'] = self.name
+            params['name']=self.name
             factory = __import__(pkg, fromlist=[klass])
             m = getattr(factory, klass)(**params)
         else:
             factory = __import__(self.klass[0], fromlist=[self.klass[1]])
             m = getattr(factory, self.klass[1])()
-
+        
         m.bootstrap()
         m.plugin_id = self.id
         m.bind_preferences(self.id)
@@ -85,10 +85,11 @@ class LaserPlugin(CorePlugin):
         '''
         app = self.application
         d = []
+        
         if self.klass is not None:
             d = [dict(name=self.name,
                      manager=app.get_service(ILaserManager, 'name=="{}"'.format(self.name)
                                              ))]
-
+        #print '_managers default', d, self.name
         return d
 #============= EOF ====================================

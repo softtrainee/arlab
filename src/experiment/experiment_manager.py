@@ -60,7 +60,8 @@ class ExperimentManager(Manager):
 
 #    editing_signal = None
     filelistener = None
-
+    username=Str
+    
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()

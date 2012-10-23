@@ -884,7 +884,16 @@ class AutomatedRun(Loggable):
             if s is not None:
                 s = s.clone_traits()
                 s.automated_run = self
-                s.analysis_type = self.analysis_type
+                hdn = self.heat_device.replace(' ', '_').lower()
+                an=self.analysis_type.split('_')[0]
+                s.setup_context(position=self.position, 
+                                heat_value=self.heat_value, 
+                                heat_units=self.heat_units,
+                                duration=self.duration,
+                                cleanup=self.cleanup,
+                                heat_device=hdn,
+                                analysis_type=an
+                                )
             return s
         else:
             if fname == '---':
@@ -1102,9 +1111,6 @@ class AutomatedRun(Loggable):
 
     def _extraction_script_factory(self, ec, key):
         #get the klass
-
-#        path = os.path
-
         source_dir = os.path.dirname(ec[key])
         file_name = os.path.basename(ec[key])
         if file_name.endswith('.py'):
@@ -1114,25 +1120,16 @@ class AutomatedRun(Loggable):
                     root=source_dir,
                     name=file_name,
                     runner=self.runner
-#                    hole=self.position,
-#
-#                    duration=self.duration,
-#                    heat_value=self._heat_value,
-#                    heat_units=self._heat_units,
-##                    watts=self.watts,
-##                    temp_or_power=self.temp_or_power,
-#                    cleanup=self.cleanup,
-#                    runner=self.runner,
-#                    heat_device=hdn,
-#                    analysis_type=self.analysis_type
                     )
+            an=self.analysis_type.split('_')[0]
+#            print self.position, 'positino',an
             obj.setup_context(position=self.position,
                               duration=self.duration,
                               heat_value=self._heat_value,
                               heat_units=self._heat_units,
                               cleanup=self.cleanup,
                               heat_device=hdn,
-                              analysis_type=self.analysis_type)
+                              analysis_type=an)
 
             return obj
 #===============================================================================

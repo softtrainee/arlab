@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Str, cached_property, \
-    List, on_trait_change, Int, Bool, Event, Any, Button
+    List, on_trait_change, Int, Bool, Event, Any, Button, Undefined
 from traitsui.api import View, Item, EnumEditor, \
      VGroup, HGroup, Spring, spring, Group, Image, ImageEditor, TabularEditor, \
      Handler
@@ -166,6 +166,10 @@ class LabnumberEntry(Loggable):
     def _get_irradiation_trays(self):
 
         p = self._get_map_path()
+        if not os.path.isdir(p):
+            self.warning_dialog('{} does not exist'.format(p))
+            return Undefined
+        
         ts = [pi for pi in os.listdir(p)
                     if not (pi.endswith('.png')
                             or pi.endswith('.pct')

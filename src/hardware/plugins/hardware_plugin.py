@@ -116,8 +116,9 @@ class HardwarePlugin(CorePlugin):
         if self.managers:
             for m in self.managers:
                 man = m['manager']
-                man.kill()
-                man.close_ui()
+                if man:
+                    man.kill()
+                    man.close_ui()
 
         for s in self.application.get_services(ICoreDevice):
             if s.is_scanable:
