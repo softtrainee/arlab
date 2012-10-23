@@ -758,7 +758,7 @@ class AutomatedRun(Loggable):
             if outlet:
                 #close mass spec ion pump
                 elm.close_valve(outlet, mode='script')
-                time.sleep(1)
+                time.sleep(3)
 
             if inlet:
                 #open inlet

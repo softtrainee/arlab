@@ -435,6 +435,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             ps.selector.style = 'panel'
             ps.on_trait_change(self._update_data, 'update_data')
             ps.selector.load_recent()
+#            ps._analysis_type_changed()
             ps.edit_traits()
             self.selector = ps
 #            if self._debug:
