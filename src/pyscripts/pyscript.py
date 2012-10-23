@@ -170,7 +170,10 @@ class PyScript(Loggable):
                 self.cancel()
             else:
                 self.cancel_flag = False
-
+    
+    def setup_context(self, **kw):
+        pass
+    
     def get_context(self):
         ks = [((k[0], k[1]) if isinstance(k, tuple) else (k, k))
                for k in self.get_commands()]
