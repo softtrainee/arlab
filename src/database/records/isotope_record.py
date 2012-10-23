@@ -242,11 +242,11 @@ class IsotopeRecord(DatabaseRecord):
 #===============================================================================
 # private
 #===============================================================================
-    def __getattr__(self, attr):
-        try:
-            return getattr(self._dbrecord, attr)
-        except AttributeError, e:
-            print 'gettatrr', attr
+#    def __getattr__(self, attr):
+#        try:
+#            return getattr(self._dbrecord, attr)
+#        except AttributeError, e:
+#            print 'gettatrr', attr
 
     def load_from_database(self):
 
@@ -649,35 +649,40 @@ class IsotopeRecord(DatabaseRecord):
     def _get_record_id(self):
         return '{}-{}'.format(self.labnumber, self.aliquot)
 
-    @cached_property
+#    @cached_property
     def _get_labnumber(self):
+        if self._dbrecord:
 #        print 'get aasfd', self._dbrecord.labnumber
 
-        ln = self._dbrecord.labnumber.labnumber
-        ln = convert_labnumber(ln)
-#        ln = '{}-{}'.format(ln, self.aliquot)
-        return ln
+            ln = self._dbrecord.labnumber.labnumber
+            ln = convert_labnumber(ln)
+    #        ln = '{}-{}'.format(ln, self.aliquot)
+            return ln
 
     @cached_property
     def _get_shortname(self):
-#        print 'get aasfd'
-        ln = self._dbrecord.labnumber.labnumber
-        ln = convert_shortname(ln)
+        if self._dbrecord:
+    #        print 'get aasfd'
+            ln = self._dbrecord.labnumber.labnumber
+            ln = convert_shortname(ln)
+    
+            ln = '{}-{}'.format(ln, self.aliquot)
+            return ln
 
-        ln = '{}-{}'.format(ln, self.aliquot)
-        return ln
-
-    @cached_property
+#    @cached_property
     def _get_analysis_type(self):
-        return self._dbrecord.measurement.analysis_type.name
+        if self._dbrecord:
+            return self._dbrecord.measurement.analysis_type.name
 
-    @cached_property
+#    @cached_property
     def _get_aliquot(self):
-        return self._dbrecord.labnumber.aliquot
+        if self._dbrecord:
+            return self._dbrecord.aliquot
 
     @cached_property
     def _get_mass_spectrometer(self):
-        return self._dbrecord.measurement.mass_spectrometer.name.lower()
+        if self._dbrecord:
+            return self._dbrecord.measurement.mass_spectrometer.name.lower()
 
     @cached_property
     def _get_age(self):

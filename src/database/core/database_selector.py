@@ -167,6 +167,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return dbs
 
     def load_records(self, dbs):
+        
         self.records = []
         self._load_records(dbs)
         self._sort_columns(self.records)

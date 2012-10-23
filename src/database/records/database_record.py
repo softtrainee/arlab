@@ -69,8 +69,9 @@ class DatabaseRecord(Viewable):
         if dbr is not None:
             self.title = '{} {}'.format(self.title_str, self.record_id)
             self._load_hook(dbr)
-        elif self.directory is not None and self.filename is not None:
+        elif self.filename is not None:
             self._load_hook('')
+#        elif self.directory is not None and self.filename is not None:
 
     def initialize(self):
         dm = self.selector.data_manager
@@ -101,35 +102,40 @@ class DatabaseRecord(Viewable):
 
 
     def _get_record_id(self):
-        return self._dbrecord.id
+        if self._dbrecord:
+            return self._dbrecord.id
 
     def _get_dbrecord(self):
         return self._dbrecord
 
-    @cached_property
+#    @cached_property
     def _get_timestamp(self):
         return self.make_timestamp(self.rundate, self.runtime)
-        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
-        ts = ' '.join((self.rundate, self.runtime))
-        return timefunc(ts)
+#        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
+#        ts = ' '.join((self.rundate, self.runtime))
+#        return timefunc(ts)
 
     @cached_property
     def _get_rundate(self):
-        return self._dbrecord.rundate.strftime('%Y-%m-%d')
+        if self._dbrecord:
+            return self._dbrecord.rundate.strftime('%Y-%m-%d')
 
     @cached_property
     def _get_runtime(self):
-        return self._dbrecord.runtime.strftime('%H:%M:%S')
+        if self._dbrecord:
+            return self._dbrecord.runtime.strftime('%H:%M:%S')
 
-    @cached_property
+#    @cached_property
     def _get_path(self):
-        root = self._dbrecord.path.root
-        name = self._dbrecord.path.filename
-        return os.path.join(root, name)
+        if self._dbrecord:
+            root = self._dbrecord.path.root
+            name = self._dbrecord.path.filename
+            return os.path.join(root, name)
 
     @property
     def filename(self):
-        return os.path.basename(self.path)
+        if self.path:
+            return os.path.basename(self.path)
 
 #    def _export_button_fired(self):
 #        self._export_csv()
