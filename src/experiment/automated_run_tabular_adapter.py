@@ -44,9 +44,9 @@ class AutomatedRunAdapter(TabularAdapter):
     duration_width = Int(60)
     overlap_width = Int(50)
     autocenter_width = Int(70)
-    heat_value_width = Int(85)
-    heat_units_width = Int(50)
-    heat_device_width = Int(125)
+    extract_value_width = Int(85)
+    extract_units_width = Int(50)
+    extract_device_width = Int(125)
     labnumber_width = Int(70)
 
     extraction_script_width = Int(125)
@@ -61,8 +61,8 @@ class AutomatedRunAdapter(TabularAdapter):
     post_measurement_script_text = Property
     post_equilibration_script_text = Property
     position_text = Property
-    heat_value_text = Property
-    heat_units_text = Property
+    extract_value_text = Property
+    extract_units_text = Property
     duration_text = Property
     autocenter_text = Property
     overlap_text = Property
@@ -88,7 +88,7 @@ class AutomatedRunAdapter(TabularAdapter):
             return 'red'
 
     def _columns_default(self):
-#        hp = ('Temp', 'heat_value')
+#        hp = ('Temp', 'extract_value')
 #        if self.kind == 'watts':
 #            hp =
 
@@ -99,9 +99,9 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Position', 'position'),
                  ('Autocenter', 'autocenter'),
                  ('Overlap', 'overlap'),
-                 #('Heat Device', 'heat_device'),
-                 ('Heat', 'heat_value'),
-                 ('Units', 'heat_units'),
+                 #('Heat Device', 'extract_device'),
+                 ('Extract', 'extract_value'),
+                 ('Units', 'extract_units'),
                  ('Duration', 'duration'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
@@ -109,17 +109,17 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Post equilibration', 'post_equilibration_script'),
                  ]
 
-    def _get_heat_value_text(self, trait, item):
-        return self._get_number('heat_value')
+    def _get_extract_value_text(self, trait, item):
+        return self._get_number('extract_value')
 
-    def _get_heat_units_text(self):
-        if self.item.heat_units == '---':
+    def _get_extract_units_text(self):
+        if self.item.extract_units == '---':
             return ''
         else:
-            return self.item.heat_units
-#        v, u = self.item.heat_value
+            return self.item.extract_units
+#        v, u = self.item.extract_value
 #        if u and v:
-#            return '{:0.2f},{}'.format(*self.item.heat_value)
+#            return '{:0.2f},{}'.format(*self.item.extract_value)
 #        else:
 #            return ''
 

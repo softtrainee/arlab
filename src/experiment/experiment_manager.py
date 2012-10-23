@@ -37,9 +37,9 @@ from pyface.timer.do_later import do_later
 #from globals import globalv
 
 class ExperimentManagerHandler(SaveableManagerHandler):
-    def object_experiment_set_changed(self, info):
-        if info.initialized:
-            info.ui.title = 'Experiment {}'.format(info.object.title)
+#    def object_experiment_set_changed(self, info):
+#        if info.initialized:
+#            info.ui.title = 'Experiment {}'.format(info.object.title)
 
     def object_path_changed(self, info):
         if info.initialized:
@@ -296,15 +296,16 @@ class ExperimentManager(Manager):
                         exp.set_script_names()
 
             self._update_aliquots()
-            self.experiment_set = self.experiment_sets[0]
+            if self.experiment_sets:
+                self.experiment_set = self.experiment_sets[0]
+    
+                def func():
+                    self.set_selector.selected_index = -2
+                    self.set_selector.selected_index = 0
+    
+                do_later(func)
 
-            def func():
-                self.set_selector.selected_index = -2
-                self.set_selector.selected_index = 0
-
-            do_later(func)
-
-            return True
+                return True
 
 #===============================================================================
 # handlers

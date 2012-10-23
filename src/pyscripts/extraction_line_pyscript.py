@@ -29,9 +29,9 @@ class ExtractionLinePyScript(PyScript):
     _resource_flag = None
 
 #    analysis_type = None
-#    heat_device = None
-#    heat_value = None
-#    heat_units = None
+#    extract_device = None
+#    extract_value = None
+#    extract_units = None
 #    duration = None
 #    cleanup = None
     _context = Dict
@@ -46,25 +46,25 @@ class ExtractionLinePyScript(PyScript):
                              fget=_get_analysis_type)
 
     @property
-    def heat_device(self):
-        return self.get_context()['heat_device']
+    def extract_device(self):
+        return self.get_context()['extract_device']
 
     @property
     def position(self):
         return self.get_context()['position']
 
     @property
-    def heat_value(self):
-        return self.get_context()['heat_value']
+    def extract_value(self):
+        return self.get_context()['extract_value']
 
     def setup_context(self, **kw):
 #        ctx = dict()
 #        for attr in [
 #                     'analysis_type',
-#                     'heat_device',
+#                     'extract_device',
 #                     'position',
-#                     'heat_units',
-#                     'heat_value',
+#                     'extract_units',
+#                     'extract_value',
 #                     'duration', 'cleanup']:
 #            try:
 #                ctx[attr] = kw[attr]
@@ -90,8 +90,8 @@ class ExtractionLinePyScript(PyScript):
                  'acquire', 'release',
                  'wait', 'set_resource',
                  'move_to_position',
-                 'heat',
-                 'end_heat',
+                 'extract',
+                 'end_extract',
                  'is_open', 'is_closed',
                  ]
         return cmds
@@ -111,8 +111,8 @@ class ExtractionLinePyScript(PyScript):
 #        d['OverlapRuns'] = True
 #        d['analysis_type'] = self.analysis_type
 #        d['duration'] = self.duration
-#        d['heat_value'] = self.heat_value
-#        d['heat_units'] = self.heat_units
+#        d['extract_value'] = self.extract_value
+#        d['extract_units'] = self.extract_units
 #        d['cleanup'] = self.cleanup
         d.update(self._context)
         return d
@@ -148,12 +148,12 @@ class ExtractionLinePyScript(PyScript):
         if position == '':
             position = self.position
 
-        self.info('{} move to position {}'.format(self.heat_device, position))
+        self.info('{} move to position {}'.format(self.extract_device, position))
         success=self._manager_action([('move_to_position', (position,), {})
                                         ],
                                       protocol='src.lasers.laser_managers.laser_manager.ILaserManager',
 #                                      protocol=ILaserManager,
-                                      name=self.heat_device
+                                      name=self.extract_device
                                       )
         if not success:
             self.info('{} move to position failed')
@@ -167,26 +167,28 @@ class ExtractionLinePyScript(PyScript):
 #        result = self._manager_action([('set_stage_map', (mapname), {})
 #                                        ],
 #                                      protocol=ILaserManager,
-#                                      name=self.heat_device
+#                                      name=self.extract_device
 #                                      )
 #        self.report_result(result)
 
     @verbose_skip
-    def heat(self, power=''):
+    def extract(self, power=''):
         if power=='':
-            power = self.heat_value
+            power = self.extract_value
 
-        self.info('heat sample to power {}'.format(power))
+        self.info('extract sample to power {}'.format(power))
         self._manager_action([('enable_laser', (), {}),
                                        ('set_laser_power', (power,), {})
                                        ],
                                       protocol=ILaserManager,
-                                      name=self.heat_device
+                                      name=self.extract_device
                              )
-    def end_heat(self):
+        
+    @verbose_skip
+    def end_extract(self):
         self._manager_action([('disable_laser', (), {})],
                              protocol=ILaserManager,
-                             name=self.heat_device
+                             name=self.extract_device
                              )
 
     @verbose_skip

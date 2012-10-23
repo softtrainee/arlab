@@ -103,8 +103,8 @@ class ExperimentSet(Loggable):
     mass_spectrometers = Property
     tray = Str
     trays = Property
-    heat_device = Str
-    heat_devices = Property
+    extract_device = Str
+    extract_devices = Property
 
     selected = Any
     right_clicked = Any
@@ -125,8 +125,8 @@ class ExperimentSet(Loggable):
                   'sample',
                   'position',
                   'overlap',
-                  'heat_value',
-                  'heat_units',
+                  'extract_value',
+                  'extract_units',
                   'duration',
                   'cleanup',
                   'autocenter',
@@ -136,8 +136,8 @@ class ExperimentSet(Loggable):
                   'sample',
                   'position',
                   'overlap',
-                  'heat_value',
-                  'heat_units',
+                  'extract_value',
+                  'extract_units',
                   'duration',
                   'cleanup',
                   'autocenter',
@@ -178,7 +178,7 @@ class ExperimentSet(Loggable):
 
         s = '''mass_spectrometer: {}
 delay_between_analyses: {}
-heat_device: {}
+extract_device: {}
 tray: {} 
 {}
 {}
@@ -186,7 +186,7 @@ tray: {}
 {}
 '''.format(self.mass_spectrometer,
            self.delay_between_analyses,
-           self.heat_device,
+           self.extract_device,
            self.lab_map if self.lab_map else '',
            make_frequency_runs('blanks'),
            make_frequency_runs('airs'),
@@ -290,7 +290,7 @@ tray: {}
 
         default = lambda x: x if x else '---'
         default_int=lambda x: x if x is not None else 1
-        self._set_meta_param('heat_device', meta, default)
+        self._set_meta_param('extract_device', meta, default)
         self._set_meta_param('mass_spectrometer', meta, default)
         self._set_meta_param('delay_between_analyses', meta, default_int)
 
@@ -310,7 +310,7 @@ tray: {}
                 params = self._run_parser(header, line, meta)
 
                 params['mass_spectrometer'] = self.mass_spectrometer
-                params['heat_device'] = self.heat_device
+                params['extract_device'] = self.extract_device
 
                 arun = self._automated_run_factory(**params)
                 aruns.append(arun)
@@ -390,8 +390,8 @@ tray: {}
                            extraction_script=es,
                            orig_extraction_script=es,
 
-                           power=selected.heat_value,
-                           orig_power=selected.heat_value,
+                           power=selected.extract_value,
+                           orig_power=selected.extract_value,
 
                            duration=selected.duration,
                            orig_duration=selected.duration,
@@ -415,7 +415,7 @@ tray: {}
                      'sample',
                      'measurement', 'extraction', 'post_measurement',
                      'post_equilibration',
-#                     'heat_device'
+#                     'extract_device'
                      ]:
             params[attr] = args[header.index(attr)]
 
@@ -441,15 +441,15 @@ tray: {}
             except IndexError:
                 pass
 
-        #default heat_units to watts
-        heat_value = args[header.index('heat_value')]
-        heat_units = args[header.index('heat_units')]
-        if not heat_units:
-            heat_units = '---'
+        #default extract_units to watts
+        extract_value = args[header.index('extract_value')]
+        extract_units = args[header.index('extract_units')]
+        if not extract_units:
+            extract_units = '---'
 
-        params['heat_value'] = heat_value
-        params['heat_units'] = heat_units
-#        heat = args[header.index('heat_value')]
+        params['extract_value'] = extract_value
+        params['extract_units'] = extract_units
+#        heat = args[header.index('extract_value')]
 #        if heat:
 #            if ',' in heat:
 #                v, u = heat.split(',')
@@ -458,8 +458,8 @@ tray: {}
 #                v = float(heat)
 #                u = 'w'
 #
-#            params['heat_value'] = v
-#            params['heat_units'] = u
+#            params['extract_value'] = v
+#            params['extract_units'] = u
 
         def make_script_name(n):
             na = args[header.index(n)]
@@ -579,8 +579,8 @@ tray: {}
         if npos:
             kw['position'] = npos
 
-        kw['_heat_value'] = ar._heat_value
-        kw['_heat_units'] = ar._heat_units
+        kw['_extract_value'] = ar._extract_value
+        kw['_extract_units'] = ar._extract_units
         kw['_duration'] = ar._duration
         kw['configuration'] = ar.configuration
         kw['mass_spectrometer'] = self.mass_spectrometer
@@ -592,9 +592,9 @@ tray: {}
         for _i, s in enumerate(hs.steps):
             if s.duration:
                 a = self.automated_run.clone_traits()
-                a._heat_value = s.heat_value
+                a._extract_value = s.extract_value
                 a._duration = s.duration
-                a._heat_units = hs.units
+                a._extract_units = hs.units
                 self.automated_runs.append(a)
 
         self.update_aliquots_needed = True
@@ -813,7 +813,7 @@ tray: {}
                 if not s.startswith('.') and s.endswith('.txt')]
         return ts
 
-    def _get_heat_devices(self):
+    def _get_extract_devices(self):
         return ['---', 'Fusions CO2', 'Fusions Diode']
 
 #    def _set_dirty(self, d):
@@ -879,7 +879,7 @@ tray: {}
         #copy some of the last runs values
         if self.automated_runs:
             pa = self.automated_runs[-1]
-            for k in ['heat_device', 'autocenter']:
+            for k in ['extract_device', 'autocenter']:
                 if not k in kw:
                     kw[k] = getattr(pa, k)
 
@@ -985,8 +985,8 @@ tray: {}
                                            editor=EnumEditor(name='mass_spectrometers'),
 #                                           show_label=False
                                            ),
-                                      Item('heat_device',
-                                           editor=EnumEditor(name='heat_devices'),
+                                      Item('extract_device',
+                                           editor=EnumEditor(name='extract_devices'),
 #                                           show_label=False,
                                            ),
                                       Item('tray',

@@ -138,6 +138,7 @@ class PlotPanel(Viewable):
             return us - ub
 
         self._print_('', get_value)
+        self.signal_display.add_text(' '*40, underline=True)
 
     def _print_baselines(self):
         def get_value(iso):
@@ -223,7 +224,7 @@ class PlotPanel(Viewable):
                        layout='tabbed'
                        ),
                  width=600,
-                 height=825,
+                 height=875,
                  x=self.window_x,
                  y=self.window_y,
                  title=self.window_title,
@@ -237,14 +238,14 @@ class PlotPanel(Viewable):
 # defaults
 #===============================================================================
     def _signal_display_default(self):
-        return RichTextDisplay(height=150,
+        return RichTextDisplay(height=200,
                                default_color='black',
                                default_size=12,
                                scroll_to_bottom=False
 #                               width=0.25
                                )
     def _ratio_display_default(self):
-        return RichTextDisplay(height=150,
+        return RichTextDisplay(height=200,
                                default_color='black',
                                default_size=12,
                                scroll_to_bottom=False

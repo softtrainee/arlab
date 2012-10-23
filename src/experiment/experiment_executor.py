@@ -167,9 +167,11 @@ class ExperimentExecutor(ExperimentManager):
         else:
             if self._was_executed:
                 self.load_experiment_set(self.path, edit=False)
-
+            
             t = Thread(target=self._execute_experiment_sets)
             t.start()
+
+            self.err_message=False
             self._was_executed = True
 
     def _execute_experiment_sets(self):
@@ -221,8 +223,10 @@ class ExperimentExecutor(ExperimentManager):
         rgen, nruns = exp.new_runs_generator(self._last_ran)
         cnt = 0
         totalcnt = 0
+        
         while self.isAlive():
             self.db.reset()
+            force_delay=False
 
 #            if the user is editing the experiment set dont continue?
 #            if self.editing_signal:
@@ -241,10 +245,9 @@ class ExperimentExecutor(ExperimentManager):
                 self._reload_from_disk()
                 rgen, nruns = exp.new_runs_generator(self._last_ran)
 
-            print 'self', self.isAlive()
-            if self.isAlive() and \
-                    cnt < nruns and \
-                            not cnt == 0:
+            if force_delay or (self.isAlive() and \
+                               cnt < nruns and \
+                                        not cnt == 0):
                 delay = exp.delay_between_analyses
                 self.delay_between_runs_readback = delay
                 self.info('Delay between runs {}'.format(delay))
