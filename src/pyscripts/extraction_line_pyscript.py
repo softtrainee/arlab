@@ -17,33 +17,32 @@
 #============= enthought library imports =======================
 from traits.api import Any, Dict
 #============= standard library imports ========================
-
+import time
+from numpy import linspace
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import PyScript, verbose_skip
 from src.lasers.laser_managers.laser_manager import ILaserManager
-import time
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+
 
 class ExtractionLinePyScript(PyScript):
     runner = Any
     _resource_flag = None
 
-#    analysis_type = None
-#    extract_device = None
-#    extract_value = None
-#    extract_units = None
-#    duration = None
-#    cleanup = None
     _context = Dict
 
-    def _set_analysis_type(self, v):
-        self._context['analysis_type'] = v
+#    def _set_analysis_type(self, v):
+#        self._context['analysis_type'] = v
+#
+#    def _get_analysis_type(self):
+#        return self.get_context()['analysis_type']
+#
+#    analysis_type = property(fset=_set_analysis_type,
+#                             fget=_get_analysis_type)
 
-    def _get_analysis_type(self):
+    @property
+    def analysis_type(self):
         return self.get_context()['analysis_type']
-
-    analysis_type = property(fset=_set_analysis_type,
-                             fget=_get_analysis_type)
 
     @property
     def extract_device(self):
@@ -92,6 +91,7 @@ class ExtractionLinePyScript(PyScript):
                  'move_to_position',
                  'extract',
                  'end_extract',
+                 'ramp',
                  'is_open', 'is_closed',
                  ]
         return cmds
@@ -107,18 +107,12 @@ class ExtractionLinePyScript(PyScript):
         #    move_to_hole(holeid)
         #=======================================================================
 
-#        d['holeid'] = 123
-#        d['OverlapRuns'] = True
-#        d['analysis_type'] = self.analysis_type
-#        d['duration'] = self.duration
-#        d['extract_value'] = self.extract_value
-#        d['extract_units'] = self.extract_units
-#        d['cleanup'] = self.cleanup
         d.update(self._context)
         return d
 
     def gosub(self, *args, **kw):
-        kw['analysis_type'] = self.analysis_type
+#        kw['analysis_type'] = self.analysis_type
+        kw['_context'] = self._context
         kw['runner'] = self.runner
 
         super(ExtractionLinePyScript, self).gosub(*args, **kw)
@@ -149,7 +143,7 @@ class ExtractionLinePyScript(PyScript):
             position = self.position
 
         self.info('{} move to position {}'.format(self.extract_device, position))
-        success=self._manager_action([('move_to_position', (position,), {})
+        success = self._manager_action([('move_to_position', (position,), {})
                                         ],
                                       protocol='src.lasers.laser_managers.laser_manager.ILaserManager',
 #                                      protocol=ILaserManager,
@@ -173,7 +167,7 @@ class ExtractionLinePyScript(PyScript):
 
     @verbose_skip
     def extract(self, power=''):
-        if power=='':
+        if power == '':
             power = self.extract_value
 
         self.info('extract sample to power {}'.format(power))
@@ -183,7 +177,7 @@ class ExtractionLinePyScript(PyScript):
                                       protocol=ILaserManager,
                                       name=self.extract_device
                              )
-        
+
     @verbose_skip
     def end_extract(self):
         self._manager_action([('disable_laser', (), {})],
@@ -192,9 +186,50 @@ class ExtractionLinePyScript(PyScript):
                              )
 
     @verbose_skip
+    def ramp(self, setpoint=0, rate=0, start=0, period=2):
+
+        setpoint = float(setpoint)
+        rate = float(rate)
+        period = float(period)
+
+        self.info('ramping from {} to {} rate= {} W/s, step_period= {} s'.format(start,
+                                                                    setpoint,
+                                                                    rate,
+                                                                    period
+                                                                    ))
+
+        dT = setpoint - start
+        dur = abs(dT / rate)
+
+        if not self._manager_action([('enable_laser', (), {})],
+                             protocol=ILaserManager,
+                             name=self.extract_device)[0]:
+            return
+
+        check_period = 0.5
+        samples_per_sec = 1 / float(period)
+        n = int(dur * samples_per_sec)
+        steps = linspace(start, setpoint, n)
+
+        st = time.time()
+        for i, si in enumerate(steps):
+            if self._cancel:
+                break
+            self.info('ramp step {} of {}. setpoint={}'.format(i + 1, n, si))
+            self._manager_action([('set_laser_power', (si,), {})],
+                             protocol=ILaserManager,
+                             name=self.extract_device
+                             )
+            for _ in xrange(int(period / check_period)):
+                if self._cancel:
+                    break
+                time.sleep(check_period)
+
+        return int(time.time() - st)
+
+    @verbose_skip
     def _m_open(self, name=None, description=''):
-#        if self._syntax_checking or self._cancel:
-#            return
+
         if description is None:
             description = '---'
 
@@ -207,16 +242,11 @@ class ExtractionLinePyScript(PyScript):
 
     @verbose_skip
     def close(self, name=None, description=''):
-#        if self._syntax_checking or self._cancel:
-#            return
 
         if description is None:
             description = '---'
 
         self.info('closing {} ({})'.format(name, description))
-#        self._manager_action('close_valve',
-#                             protocol=ELPROTOCOL,
-#                             description=name, mode='script')
         self._manager_action([('close_valve', (name,), dict(
                                                       mode='script',
                                                       description=description
@@ -224,10 +254,6 @@ class ExtractionLinePyScript(PyScript):
 
     @verbose_skip
     def acquire(self, name=None):
-
-#        if self._syntax_checking or self._cancel:
-#            return
-
         if self.runner is None:
             return
 
@@ -268,8 +294,6 @@ class ExtractionLinePyScript(PyScript):
 
     @verbose_skip
     def release(self, name=None):
-#        if self._syntax_checking or self._cancel:
-#            return
 
         self.info('release {}'.format(name))
         r = self.runner.get_resource(name)

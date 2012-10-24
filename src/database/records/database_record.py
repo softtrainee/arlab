@@ -69,9 +69,9 @@ class DatabaseRecord(Viewable):
         if dbr is not None:
             self.title = '{} {}'.format(self.title_str, self.record_id)
             self._load_hook(dbr)
-        elif self.filename is not None:
-            self._load_hook('')
+#        elif self.filename is not None:
 #        elif self.directory is not None and self.filename is not None:
+#            self._load_hook('')
 
     def initialize(self):
         dm = self.selector.data_manager
@@ -108,7 +108,7 @@ class DatabaseRecord(Viewable):
     def _get_dbrecord(self):
         return self._dbrecord
 
-#    @cached_property
+    @cached_property
     def _get_timestamp(self):
         return self.make_timestamp(self.rundate, self.runtime)
 #        timefunc = lambda xi: time.mktime(time.strptime(xi, '%Y-%m-%d %H:%M:%S'))
@@ -125,7 +125,7 @@ class DatabaseRecord(Viewable):
         if self._dbrecord:
             return self._dbrecord.runtime.strftime('%H:%M:%S')
 
-#    @cached_property
+    @cached_property
     def _get_path(self):
         if self._dbrecord:
             root = self._dbrecord.path.root
@@ -134,8 +134,7 @@ class DatabaseRecord(Viewable):
 
     @property
     def filename(self):
-        if self.path:
-            return os.path.basename(self.path)
+        return os.path.basename(self.path)
 
 #    def _export_button_fired(self):
 #        self._export_csv()

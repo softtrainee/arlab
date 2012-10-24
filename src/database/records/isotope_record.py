@@ -103,6 +103,9 @@ class IsotopeRecord(DatabaseRecord):
 
     _no_load = False
 
+    k39 = None
+    rad40 = None
+    arar_result = None
 #    def _age_dirty_changed(self):
 #        print 'asfdasfd'
 #===============================================================================
@@ -194,31 +197,51 @@ class IsotopeRecord(DatabaseRecord):
         if det_intercals:
             self.categories.append('Det. Intercal.')
 
+    def get_baseline_corrected_signal_dict(self):
+        self._load_signals()
+        signals = self.signals
+        d = dict()
+
+        for ki in ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']:
+            try:
+                us = signals[ki].uvalue
+            except KeyError:
+                us = ufloat((0, 0))
+            try:
+                ub = signals[ki + 'bs'].uvalue
+            except KeyError:
+                ub = ufloat((0, 0))
+
+            d[ki] = us - ub
+
+        return d
+
     def _load_signals(self):
         if self._no_load:
             graph = self.signal_graph
-            for iso, rs in zip(self.isos, graph.regressors):
-                self.signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
-                                                          _error=rs.coefficient_errors[-1])
+            if graph:
+                for iso, rs in zip(self.isos, graph.regressors):
+                    self.signals[iso] = Signal(_value=rs.coefficients[-1],
+                                               _error=rs.coefficient_errors[-1])
             graph = self.baseline_graph
-            for iso, rs in zip(self.isos, graph.regressors):
-                self.signals[iso] = Signal(_value=rs.coefficients[-1],
-                                           _error=rs.coefficient_errors[-1])
+            if graph:
+                for iso, rs in zip(self.isos, graph.regressors):
+                    self.signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
+                                                              _error=rs.coefficient_errors[-1])
             return
 
         self._no_load = True
         dm = self.selector.data_manager
         dm.open_data(self.path)
-        
+
         signals = self._get_table_data(dm, 'signals')
         if signals:
 
             self.categories.append('signal')
-            
+
             #this is the major computational sink
             #takes ~0.1s  to execute
             graph = self._load_stacked_graph(signals)
-
 
             for iso, rs in zip(self.isos, graph.regressors):
                 self.signals[iso] = Signal(_value=rs.coefficients[-1],
@@ -340,9 +363,9 @@ class IsotopeRecord(DatabaseRecord):
                 self.signals['{}{}'.format(isotope, key)] = s
 
     def _calculate_age(self):
-        
+
         self._load_signals()
-        
+
         signals = self.signals
         j = self._get_j()
         irradinfo = self._get_irradinfo()
@@ -367,14 +390,16 @@ class IsotopeRecord(DatabaseRecord):
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irradinfo, ic)
 
         if result:
-            self.k39 = result['k39'].nominal_value
-            self.k39err = result['k39'].std_dev()
+            self.arar_result = result
+#            self.k39 = result['k39'].nominal_value
+#            self.k39err = result['k39'].std_dev()
+#            self.rad40 = result['rad40'].nominal_value
+#            self.rad40err = result['rad40'].std_dev()
             ai = result['age']
 
             ai = ai / self.age_scalar
             age = ai.nominal_value
             err = ai.std_dev()
-
             return age, err
 
     def _get_j(self):
@@ -515,7 +540,7 @@ class IsotopeRecord(DatabaseRecord):
         gkw = dict(padding=[50, 50, 5, 40])
 
         isos = [vi[1] for vi in data.itervalues()]
-        isos=sorted(isos, key=lambda x:re.sub('\D','', x))
+        isos = sorted(isos, key=lambda x:re.sub('\D', '', x))
 #        isos = sorted(isos, key=lambda k: int(k[2:]))
         self.isos = isos
 
@@ -557,7 +582,7 @@ class IsotopeRecord(DatabaseRecord):
 
             graph.set_axis_traits(i, 'y', **params)
             i += 1
-            
+
         return graph
 
     def _load_peak_center_graph(self, data):
@@ -649,7 +674,7 @@ class IsotopeRecord(DatabaseRecord):
     def _get_record_id(self):
         return '{}-{}'.format(self.labnumber, self.aliquot)
 
-#    @cached_property
+    @cached_property
     def _get_labnumber(self):
         if self._dbrecord:
 #        print 'get aasfd', self._dbrecord.labnumber
@@ -665,16 +690,16 @@ class IsotopeRecord(DatabaseRecord):
     #        print 'get aasfd'
             ln = self._dbrecord.labnumber.labnumber
             ln = convert_shortname(ln)
-    
+
             ln = '{}-{}'.format(ln, self.aliquot)
             return ln
 
-#    @cached_property
+    @cached_property
     def _get_analysis_type(self):
         if self._dbrecord:
             return self._dbrecord.measurement.analysis_type.name
 
-#    @cached_property
+    @cached_property
     def _get_aliquot(self):
         if self._dbrecord:
             return self._dbrecord.aliquot

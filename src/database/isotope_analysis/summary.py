@@ -15,12 +15,23 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
+from traits.api import HasTraits, Any, Instance
+from src.displays.rich_text_display import RichTextDisplay
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class Summary(HasTraits):
+    display = Instance(RichTextDisplay)
     record = Any
+
+    @classmethod
+    def calc_percent_error(cls, v, e):
+        if v:
+            sigpee = '{:0.2f}%'.format(abs(e / v * 100))
+        else:
+            sigpee = 'Inf'
+        return sigpee
+
     def __init__(self, *args, **kw):
         super(Summary, self).__init__(*args, **kw)
         self._create_summary()
@@ -33,4 +44,14 @@ class Summary(HasTraits):
 
     def _build_summary(self, *args, **kw):
         pass
+
+    def _display_default(self):
+        return RichTextDisplay(default_size=12,
+                               width=700,
+                               selectable=True,
+                               default_color='black',
+                               font_name='Bitstream Vera Sans Mono'
+#                               font_name='Monaco'
+                               )
+
 #============= EOF =============================================

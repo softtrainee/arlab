@@ -37,9 +37,9 @@ from pyface.timer.do_later import do_later
 #from globals import globalv
 
 class ExperimentManagerHandler(SaveableManagerHandler):
-#    def object_experiment_set_changed(self, info):
-#        if info.initialized:
-#            info.ui.title = 'Experiment {}'.format(info.object.title)
+    def object_experiment_set_changed(self, info):
+        if info.initialized:
+            info.ui.title = 'Experiment {}'.format(info.object.title)
 
     def object_path_changed(self, info):
         if info.initialized:
@@ -60,21 +60,21 @@ class ExperimentManager(Manager):
 
 #    editing_signal = None
     filelistener = None
-    username=Str
-    
+    username = Str
+
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
         self.populate_default_tables()
 
     def _reload_from_disk(self):
-        if not self._alive:
-            ts = self._parse_experiment_file(self.experiment_set.path)
-            for ei, ti in zip(self.experiment_sets, ts):
-                ei._cached_runs = None
-                ei.load_automated_runs(text=ti)
+#        if not self._alive:
+        ts = self._parse_experiment_file(self.experiment_set.path)
+        for ei, ti in zip(self.experiment_sets, ts):
+#                ei._cached_runs = None
+            ei.load_automated_runs(text=ti)
 
-            self._update_aliquots()
+        self._update_aliquots()
 
     def check_for_mods(self):
         try:
@@ -172,16 +172,25 @@ class ExperimentManager(Manager):
             self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
             self.db = None
 
+    def selector_factory(self, style):
+        db = self.db
+        sel = db.selector_factory(style=style)
+        sel.set_data_manager(kind=self.repo_kind,
+                                      repository=self.repository,
+                                      workspace_root=paths.default_workspace_dir
+                                      )
+        return sel
     def open_recent(self):
         db = self.db
         if db.connect():
             db.reset()
-            selector = db.selector_factory(style='simple')
-
-            selector.set_data_manager(kind=self.repo_kind,
-                                      repository=self.repository,
-                                      workspace_root=paths.default_workspace_dir
-                                      )
+            selector = self.selector_factory('simple')
+#            selector = db.selector_factory(style='simple')
+#
+#            selector.set_data_manager(kind=self.repo_kind,
+#                                      repository=self.repository,
+#                                      workspace_root=paths.default_workspace_dir
+#                                      )
 
 #            self.open_view(selector)
             selector.load_recent()
@@ -219,6 +228,7 @@ class ExperimentManager(Manager):
     def _update_aliquots(self):
         ans = self._get_all_automated_runs()
 
+
         db = self.db
         idcnt_dict = dict()
         stdict = dict()
@@ -244,7 +254,7 @@ class ExperimentManager(Manager):
 #                    st += 1
                 else:
                     st = 0
-            
+
             arun.aliquot = st + c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
@@ -298,11 +308,11 @@ class ExperimentManager(Manager):
             self._update_aliquots()
             if self.experiment_sets:
                 self.experiment_set = self.experiment_sets[0]
-    
+
                 def func():
                     self.set_selector.selected_index = -2
                     self.set_selector.selected_index = 0
-    
+
                 do_later(func)
 
                 return True

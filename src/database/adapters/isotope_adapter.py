@@ -26,7 +26,8 @@ proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, p
     proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
 DetectorTable, MassSpectrometerTable, MaterialTable, MolecularWeightTable, \
     ProjectTable, UserTable, SampleTable, LabTable, AnalysisTypeTable, \
-irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable
+irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, \
+    meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
 from src.experiment.identifier import convert_identifier
@@ -375,6 +376,27 @@ class IsotopeAdapter(DatabaseAdapter):
             return sh, True
         else:
             return sh, False
+
+    @add
+    def add_spectrometer_parameters(self, meas, **kw):
+        sp = meas_SpectrometerParametersTable(**kw)
+        if meas:
+            meas.spectrometer_parameters = sp
+            return sp, True
+        else:
+            return sp, False
+
+    @add
+    def add_deflection(self, meas, det, value):
+        sp = meas_SpectrometerDeflectionsTable(deflection=value)
+        if meas:
+            meas.deflections.append(sp)
+            det = self.get_detector(det)
+            if det:
+                det.deflections.append(sp)
+            return sp, True
+        else:
+            return sp, False
 
     @add
     def add_labnumber(self, labnumber,

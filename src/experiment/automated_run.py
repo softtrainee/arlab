@@ -149,6 +149,17 @@ class AutomatedRun(Loggable):
 #        self.extraction_script.runner = self.runner
 #        self.post_equilibration_script.runner = self.runner
 #        self.post_measurement_script.runner = self.runner
+
+    def get_corrected_signals(self):
+        d = dict()
+        pp = self.plot_panel
+        if pp:
+            for ki, si in pp.signals.iteritems():
+                bi = pp.baselines[ki]
+                d[ki] = si - bi
+            return d
+
+
     def to_string_attrs(self, attr):
         def get_attr(ai):
             aii = getattr(self, ai)
@@ -494,6 +505,7 @@ class AutomatedRun(Loggable):
         p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
         self.plot_panel = p
         self.plot_panel.baselines = self.experiment_manager._prev_baselines
+        self.plot_panel.blanks = self.experiment_manager._prev_blanks
 
         if not self.spectrometer_manager:
             self.warning('not spectrometer manager')
@@ -1017,13 +1029,21 @@ class AutomatedRun(Loggable):
                               self.extraction_script.name,
                               script_blob=self.measurement_script.toblob()
                               )
-            db.add_measurement(
+            meas = db.add_measurement(
                               a,
                               self.analysis_type,
                               self.mass_spectrometer,
                               self.measurement_script.name,
                               script_blob=self.measurement_script.toblob()
                               )
+
+            spec_dict = dict()
+            spec_dict = self.spectrometer_manager.make_parameters_dict()
+
+            db.add_spectrometer_parameters(meas, **spec_dict)
+#
+            for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
+                db.add_deflection(meas, det, deflection)
 
             #use a path relative to the repo repo
 #            np = os.path.join(('.', np))

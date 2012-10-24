@@ -57,29 +57,79 @@ class Repository(Loggable):
         except Exception, e:
             print e
 
-class FTPRepository(Repository):
+class RemoteRepository(Repository):
     host = Str
     username = Str
     password = Password
-    remote = Str
+    root = Str
+
+import paramiko
+class SFTPRepository(RemoteRepository):
+    client = Property(depends_on='host, username, password')
+    _client = None
+    _server_root = None
+
+    def _get_client(self):
+        if self._client is not None:
+            return self._client
+
+        t = paramiko.Transport((self.hostname, 22))
+        t.connect(username=self.username, password=self.password)
+        sftp = paramiko.SFTPClient.from_transport(t)
+        self._client = sftp
+        return True
+
+    def connect(self):
+        return self.client
+
+    def add_file(self, p):
+        pass
+#        src = p
+#        dst = self.get_file_path(p)
+#        shutil.copyfile(src, dst)
+
+    def isfile(self, n):
+        def cb(clt):
+            return n in clt.listdir()
+        self._execute(cb)
+
+    def _execute(self, cb):
+        client = self.client
+        if self._server_root is None:
+            self._server_root = client.getcwd()
+
+        if not client.getcwd() == os.path.join(self._server_root, self.root):
+            client.chdir(self.root)
+
+        return cb(client)
+#        return os.path.isfile(self.get_file_path(n))
+
+    def retrieveFile(self, n, out):
+        def cb(clt):
+            clt.get(n, out)
+        self._execute(cb)
+
+class FTPRepository(Repository):
 #    def __init__(self, *args, **kw):
-#        self.remote = remote
+#        self.root = root
 #        super(FTPRepository, self).__init__(*args, **kw)
 #    client = Property(depends_on='host, username, password')
-    client = Property(depends_on='host, username, password')
-    _server_root = None
+#    _client = None
 
     @property
     def url(self):
         return '{}@{}/{}'.format(self.username,
                                  self.host,
-                                 self.remote
+                                 self.root
                                  )
     def connect(self):
         c, _ = self.client
         return c is not None
 
     def _get_client(self):
+        if self._client is not None:
+            return self._client, None
+
         h = self.host
         u = self.username
         p = self.password
@@ -88,14 +138,19 @@ class FTPRepository(Repository):
         fc = None
         e = None
 
+#        print h, u, p
         try:
-            fc = ftp.FTP(h, user=u, passwd=p, timeout=2)
+            fc = ftp.FTP(h, user=u,
+                         passwd=p,
+                         timeout=20)
+            self._client = fc
         except Exception, e:
             pass
+
         return fc, e
 
-    def get_file_path(self, cp):
-        return os.path.join(self.remote, cp)
+#    def get_file_path(self, cp):
+#        return os.path.join(self.root, cp)
 
     def retrieveFile(self, p, out):
 
@@ -112,24 +167,24 @@ class FTPRepository(Repository):
         return self._execute(cb)
 
     def _isfile(self, ftp, cp):
-#        ftp.cwd(self.remote)
+#        ftp.cwd(self.root)
         return cp in ftp.nlst()
 
     def _retreive_binary(self, ftp, p, op):
-#        ftp.cwd(self.remote)
+#        ftp.cwd(self.root)
 
         cb = open(op, 'wb').write
         ftp.retrbinary('RETR {}'.format(p), cb)
 
     def _add_binary(self, ftp, p, dst=None):
-#        ftp.cwd(self.remote)
+#        ftp.cwd(self.root)
         if dst is None:
             dst = os.path.basename(p)
         with open(p, 'rb') as fp:
             ftp.storbinary('STOR {}'.format(dst), fp)
 
     def _add_ascii(self, ftp, p, dst=None):
-#        ftp.cwd(self.remote)
+#        ftp.cwd(self.root)
         if dst is None:
             dst = os.path.basename(p)
         with open(p, 'r') as fp:
@@ -142,18 +197,23 @@ class FTPRepository(Repository):
             i += 1
             ftp, err = self._get_client()
             if ftp is not None:
-                try:
-                    if self._server_root is None:
-                        self._server_root = ftp.pwd()
-                    if not ftp.pwd() == os.path.join(self._server_root, self.remote):
-                        ftp.cwd(self.remote)
-                    return cb(ftp)
-                except Exception, e:
-                    '''
-                        clears the client property cache
-                    '''
-                    self.reset = True
-                    self.warning('execute exception {}'.format(e))
+                print ftp
+#                print ftp.pwd(), os.path.join(self._server_root, self.root)
+                ftp.cwd(self.root)
+                return cb(ftp)
+#                try:
+#                    if self._server_root is None:
+#                        self._server_root = ftp.pwd()
+#                    if not ftp.pwd() == os.path.join(self._server_root, self.root):
+#                        ftp.cwd(self.root)
+#                    return cb(ftp)
+#                except Exception, e:
+#                    '''
+#                        clears the client property cache
+#                    '''
+##                    self.reset = True
+#                    self._client = None
+#                    self.warning('execute exception {}'.format(e))
             else:
                 print err
 

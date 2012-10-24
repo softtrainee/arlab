@@ -31,6 +31,7 @@ from src.viewable import Viewable
 
 from traits.api import HasTraits
 from src.traits_editors.tabular_editor import myTabularEditor
+from pyface.timer.do_later import do_later
 
 class ColumnSorterMixin(HasTraits):
     _sort_field = None
@@ -94,13 +95,16 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     queries = List(Query)
 
-    style = Enum('normal', 'panel', 'simple')
+    style = Enum('normal', 'panel', 'simple', 'single')
 
     data_manager = None
 
     def _selected_changed(self):
         if self.selected:
-            self.selected_row = self.records.index(self.selected[0])
+            sel = self.selected
+            if self.style != 'single':
+                sel = sel[0]
+            self.selected_row = self.records.index(sel)
             self.update = True
 
     def __init__(self, *args, **kw):
@@ -167,7 +171,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return dbs
 
     def load_records(self, dbs):
-        
+
         self.records = []
         self._load_records(dbs)
         self._sort_columns(self.records)
@@ -229,6 +233,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self._open_window(wid, info)
 
     def _open_individual(self, s):
+        if not isinstance(s, (list, tuple)):
+            s = (s,)
+
         for si in s:
             if not si.initialize():
                 continue
@@ -250,9 +257,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                     si.load_graph()
                     si.window_x = self.wx
                     si.window_y = self.wy
+                    def do(si, sid):
+                        info = si.edit_traits()
+                        self._open_window(sid, info)
 
-                    info = si.edit_traits()
-                    self._open_window(sid, info)
+                    do_later(do, si, sid)
+
                 except Exception, e:
                     import traceback
                     traceback.print_exc()
@@ -362,7 +372,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #                                           'move', 
 #                                           'drag'
                                            ],
-                               multi_select=True,
+                               multi_select=not self.style == 'single',
 
                                )
 
@@ -388,9 +398,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
                  qgrp,
                  button_grp,
-
                  resizable=True,
                  )
+
+        if self.style == 'single':
+            v.buttons = ['OK', 'Cancel']
         return v
 
 #===============================================================================

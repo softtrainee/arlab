@@ -126,7 +126,7 @@ class WaitDialog(Viewable):
 
         return View(
 
-                    Item('message', show_label=False, style='readonly'),
+                    Item('message', width=1.0, show_label=False, style='readonly'),
                     Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
                                                            low_name='low_name',
                                                            high_name='wtime'

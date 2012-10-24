@@ -163,6 +163,8 @@ class AnalysisTypeTable(Base, NameMixin):
 class DetectorTable(Base, NameMixin):
     kind = stringcolumn()
     isotopes = relationship('meas_IsotopeTable', backref='detector')
+    deflections = relationship('meas_SpectrometerDeflectionsTable', backref='detector')
+
 
 class meas_AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('meas_AnalysisTable')
@@ -207,6 +209,41 @@ class meas_ExtractionTable(Base, ScriptTable):
                           uselist=False
                           )
 
+class meas_SpectrometerParametersTable(Base, BaseMixin):
+    measurement_id = foreignkey('meas_MeasurementTable')
+    extraction_len = Column('extraction_lens', Float)
+    ysymmetry = Column(Float)
+    zsymmetry = Column(Float)
+    zfocus = Column(Float)
+
+
+class meas_SpectrometerDeflectionsTable(Base, BaseMixin):
+    detector_id = foreignkey('DetectorTable')
+    measurement_id = foreignkey('meas_MeasurementTable')
+    deflection = Column(Float)
+
+class meas_IsotopeTable(Base, BaseMixin):
+    molecular_weight_id = foreignkey('MolecularWeightTable')
+    analysis_id = foreignkey('meas_AnalysisTable')
+    detector_id = foreignkey('DetectorTable')
+    kind = stringcolumn()
+
+class meas_MeasurementTable(Base, ScriptTable):
+    analysis = relationship('meas_AnalysisTable', backref='measurement',
+                          uselist=False
+                          )
+    mass_spectrometer_id = foreignkey('MassSpectrometerTable')
+    analysis_type_id = foreignkey('AnalysisTypeTable')
+
+    spectrometer_parameters = relationship('meas_SpectrometerParametersTable',
+                                         backref='measurement',
+                                         uselist=False
+                                         )
+    deflections = relationship('meas_SpectrometerDeflectionsTable', backref='measurement')
+
+class meas_SignalsTable(Base, BaseMixin):
+    analysis_id = foreignkey('meas_AnalysisTable')
+    datablob = Column(BLOB)
 
 class irrad_HolderTable(Base, NameMixin):
     levels = relationship('irrad_LevelTable', backref='holder')
@@ -246,11 +283,7 @@ class irrad_IrradiationTable(Base, NameMixin):
     levels = relationship('irrad_LevelTable', backref='irradiation')
 
 
-class meas_IsotopeTable(Base, BaseMixin):
-    molecular_weight_id = foreignkey('MolecularWeightTable')
-    analysis_id = foreignkey('meas_AnalysisTable')
-    detector_id = foreignkey('DetectorTable')
-    kind = stringcolumn()
+
 
 
 class LabTable(Base, BaseMixin):
@@ -270,12 +303,6 @@ class MaterialTable(Base, NameMixin):
     samples = relationship('SampleTable', backref='material')
 
 
-class meas_MeasurementTable(Base, ScriptTable):
-    analysis = relationship('meas_AnalysisTable', backref='measurement',
-                          uselist=False
-                          )
-    mass_spectrometer_id = foreignkey('MassSpectrometerTable')
-    analysis_type_id = foreignkey('AnalysisTypeTable')
 
 
 class MolecularWeightTable(Base, NameMixin):

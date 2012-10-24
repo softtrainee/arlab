@@ -51,13 +51,13 @@ class ProcessingManager(DatabaseManager):
     def bind_preferences(self):
         try:
             bind_preference(self, 'username', 'envisage.ui.workbench.username')
-            prefid='pychron.experiment'
+            prefid = 'pychron.experiment'
             bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
             if self.db.kind == 'mysql':
                 bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
                 bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
                 bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
-    
+
             bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
         except AttributeError:
             pass
@@ -65,11 +65,16 @@ class ProcessingManager(DatabaseManager):
         host = 'localhost'
         usr = 'ross'
         pwd = 'jir812'
-#        kind = 'local'
+        kind = 'local'
+
+#        self.repo_kind = 'FTP'
+#        host = '129.138.12.131'
+#        pwd = 'JR*4039'
         if self.repo_kind == 'FTP':
             repo = FTPRepository(host=host, username=usr,
                                   password=pwd,
-                             remote=paths.isotope_dir
+                                remote='ftp/data'
+#                             remote=paths.isotope_dir
                              )
         else:
             repo = Repository(root=paths.isotope_dir)
@@ -91,7 +96,7 @@ class ProcessingManager(DatabaseManager):
                 name = self.new_name
             else:
                 return
-            
+
         while 1:
             ws = self._workspace_factory(name)
             if ws is not None:
