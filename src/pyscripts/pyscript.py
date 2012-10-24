@@ -170,10 +170,10 @@ class PyScript(Loggable):
                 self.cancel()
             else:
                 self.cancel_flag = False
-    
+
     def setup_context(self, **kw):
         pass
-    
+
     def get_context(self):
         ks = [((k[0], k[1]) if isinstance(k, tuple) else (k, k))
                for k in self.get_commands()]
@@ -279,6 +279,8 @@ class PyScript(Loggable):
         if not os.path.isfile(p):
             raise GosubError(p)
 #        print self.__class__
+
+
         s = self.__class__(root=root,
 #                          path=p,
                           name=name,
@@ -362,7 +364,7 @@ class PyScript(Loggable):
             pass
 #            do_later(self.info_display.add_text, message)
 
-    def sleep(self, duration=0):
+    def sleep(self, duration=0, message=None):
         self._estimated_duration += duration
         if self.parent_script is not None:
             self.parent_script._estimated_duration += self._estimated_duration
@@ -378,8 +380,8 @@ class PyScript(Loggable):
 
         self.info('SLEEP {}'.format(duration))
         if globalv.experiment_debug:
-            duration = 0.1
-        self._sleep(duration)
+            duration = min(duration, 5)
+        self._sleep(duration, message=message)
 
     def execute(self, new_thread=False, bootstrap=True, finished_callback=None):
 
@@ -511,21 +513,21 @@ class PyScript(Loggable):
 #==============================================================================
 # Sleep/ Wait
 #==============================================================================
-    def _sleep(self, v):
+    def _sleep(self, v, message=None):
         v = float(v)
 #        if self._syntax_checking or self._cancel:
 #            return
 
         if v > 1:
             if v >= 5:
-                self._block(v, dialog=True)
+                self._block(v, message=message, dialog=True)
             else:
                 self._block(v, dialog=False)
 
         else:
             time.sleep(v)
 
-    def _block(self, timeout, dialog=False):
+    def _block(self, timeout, message='', dialog=False):
         if dialog:
 
             st = time.time()
@@ -537,7 +539,7 @@ class PyScript(Loggable):
                                 end_evt=evt,
                                 parent=self,
                                 title='{} - Wait'.format(self.logger_name),
-                                message='Waiting for {}'.format(timeout)
+                                message='Waiting for {:0.1f}  {}'.format(timeout, message)
                                 )
 
             do_later(wd.edit_traits)

@@ -192,18 +192,26 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
         seriespadding = padding
         if gs.show_series:
-            series = self.series_klass()
-            series.analyses = self._analyses
             sks = [(si.label, si.fit) for si in self.series_configs if si.show]
             bks = [('{}bs'.format(si.label), si.fit_baseline)
                     for si in self.series_configs if si.show_baseline]
-            rks=[(si.label, si.fit) for si in self.ratio_configs if si.show]
+            rks = [(si.label, si.fit) for si in self.ratio_configs if si.show]
             gids = self._get_gids(analyses)
-            gseries = series.build(analyses, sks, bks,rks, gids, padding=seriespadding)
+
+            keys = sks + bks + rks
+            epts = None
+            if self.series:
+                epts = self.series.get_excluded_points(keys, gids)
+
+            series = self.series_klass()
+            series.analyses = self._analyses
+            gseries = series.build(analyses, sks, bks, rks, gids,
+                                   seriespadding)
 
             if gseries:
                 graph.plotcontainer.add(gseries.plotcontainer)
                 series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
+                series.set_excluded_points(epts, keys, gids)
 
             self.series = series
             self.series.graph.on_trait_change(self._refresh_stats, 'regression_results')
@@ -229,21 +237,21 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         rnames = set(_names) - set(names)
 
         newnames = set(names) - set(_names)
-        self.nanalyses =n= len(analyses) - len(rnames) + len(newnames) - 1
+        self.nanalyses = n = len(analyses) - len(rnames) + len(newnames) - 1
 
-        pd = MProgressDialog(max=n+1, size=(550, 15))
+        pd = MProgressDialog(max=n + 1, size=(550, 15))
         import wx
         pd.open()
-        (w, h) =wx.DisplaySize()
+        (w, h) = wx.DisplaySize()
         (ww, _hh) = pd.control.GetSize()
         pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
-        
-        
+
+
         for n, gid, attr in zip(names, groupids, attrs):
             if not n in _names:
                 a = self._analysis_factory(n, gid=gid, **attr)
                 if a:
-                    msg='loading analysis {} groupid={}'.format(a.dbrecord.record_id, gid)
+                    msg = 'loading analysis {} groupid={}'.format(a.dbrecord.record_id, gid)
                     pd.change_message(msg)
                     self.info(msg)
                     self._add_analysis(a, **kw)
@@ -252,7 +260,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             else:
                 a = next((a for a in analyses if a.uuid == n), None)
                 a.gid = gid
-            
+
             pd.increment()
 
         #remove analyses not in names
@@ -273,17 +281,17 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                 se = next((s for s in self.series_configs if s.label == iso), None)
 #                print i, iso, se
                 if not se:
-                    self.series_configs.insert(1, self.series_config_klass(label=iso, 
+                    self.series_configs.insert(1, self.series_config_klass(label=iso,
                                                                            figure=self))
                 else:
                     se.figure = self
 
         for i, se in enumerate(self.series_configs):
             se.graphid = i
-        
-        rkeys=['Ar40/Ar36',]
+
+        rkeys = ['Ar40/Ar36', ]
         if not self.series_configs and set_series_configs:
-            self.ratio_configs=[self.ratio_config_klass(label=ri, 
+            self.ratio_configs = [self.ratio_config_klass(label=ri,
                                                         figure=self) for ri in rkeys]
         else:
             #have a series configs list 
@@ -293,7 +301,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                 se = next((s for s in self.ratio_configs if s.label == iso), None)
 #                print i, iso, se
                 if not se:
-                    self.ratio_configs.insert(1, self.ratio_config_klass(label=iso, 
+                    self.ratio_configs.insert(1, self.ratio_config_klass(label=iso,
                                                                            figure=self))
                 else:
                     se.figure = self
@@ -321,16 +329,16 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
         if self.use_user_ratio_configs:
             self._load_ratio_configs()
-        
+
         if self.use_user_graph_selector:
             self._load_graph_selector()
-        
+
 #===============================================================================
 # persistence
 #===============================================================================
     def _get_series_config_path(self):
         return os.path.join(paths.hidden_dir, 'series_config')
-    
+
     def _get_ratio_config_path(self):
         return os.path.join(paths.hidden_dir, 'ratio_config')
 
@@ -351,7 +359,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             for si in obj:
                 si.figure = self
             self.series_configs = obj
-            
+
     def _load_ratio_configs(self):
         p = self._get_ratio_config_path()
         obj = self._load_obj(p)
@@ -367,7 +375,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _dump_series_configs(self):
         p = self._get_series_config_path()
         self._dump_obj(self.series_configs, p)
-        
+
     def _dump_ratio_configs(self):
         p = self._get_ratio_config_path()
         self._dump_obj(self.ratio_configs, p)
@@ -397,14 +405,14 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             try:
                 names, attrs, gids = zip(*[(ri.filename, dict(dbrecord=ri), ri.gid)
                                           for ri in ps.selected_records if ri.path.strip()])
-        
+
                 if names:
                     self.load_analyses(names, attrs=attrs, groupids=gids, **self._get_load_keywords())
             except ValueError:
                 pass
-        
+
         do_later(do)
-        
+
     def _get_load_keywords(self):
         return {}
 

@@ -209,18 +209,21 @@ tray: {}
         rgen = (r for r in runs)
         if last_ran is not None:
             #get index of last run in self.automated_runs
-            startid = next((i for i, r in enumerate(runs) if r.runid == last_ran.runid), None)
-            if startid is not None:
-                if self._cached_runs:
-                    #for graphic clarity load the finished runs back in
-                    cached = self._cached_runs[:startid - 1]
-                    for ai in self.automated_runs:
-                        crun = next((r for r in cached if r.runid == ai.runid), None)
-                        if crun is not None:
-                            ai.state = crun.state
+#            startid = next((i for i, r in enumerate(runs) if r.runid == last_ran.runid), None)
+#            if startid is not None:
+            if self._cached_runs:
+                startid = self._cached_runs.index(last_ran) + 1
+                #for graphic clarity load the finished runs back in
+                cached = self._cached_runs[:startid]
 
-                newruns = runs[startid + 1:]
-                self.info('starting at analysis {} (startid={} of {})'.format(newruns[0].runid, startid + 2, n))
+                for ai in self.automated_runs:
+                    crun = next((r for r in cached if r.labnumber == ai.labnumber and ai.aliquot == 0), None)
+                    if crun is not None:
+                        ai.state = crun.state
+                        ai.aliquot = crun.aliquot
+
+                newruns = runs[startid:]
+                self.info('starting at analysis {} (startid={} of {})'.format(newruns[0].runid, startid + 1, n))
                 n = len(newruns)
                 rgen = (r for r in newruns)
             else:
@@ -289,7 +292,7 @@ tray: {}
         self._set_meta_param('lab_map', meta, create_map, metaname='tray')
 
         default = lambda x: x if x else '---'
-        default_int=lambda x: x if x is not None else 1
+        default_int = lambda x: x if x is not None else 1
         self._set_meta_param('extract_device', meta, default)
         self._set_meta_param('mass_spectrometer', meta, default)
         self._set_meta_param('delay_between_analyses', meta, default_int)

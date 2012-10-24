@@ -21,23 +21,13 @@ from traitsui.api import View, Item
 import re
 from uncertainties import ufloat
 #============= local library imports  ==========================
-from src.displays.rich_text_display import RichTextDisplay
 from src.database.isotope_analysis.summary import Summary
 from src.database.isotope_analysis.fit_selector import FitSelector
 
 PLUSMINUS = unicode('\xb1')
 PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
 class AnalysisSummary(Summary):
-
-    display = Instance(RichTextDisplay)
     fit_selector = Instance(FitSelector)
-    @classmethod
-    def calc_percent_error(cls, v, e):
-        if v:
-            sigpee = '{:0.2f}%'.format(e / v * 100)
-        else:
-            sigpee = 'Inf'
-        return sigpee
 
     def _build_summary(self):
         d = self.display
@@ -76,44 +66,70 @@ class AnalysisSummary(Summary):
 
 #        d.add_text('\n')
 
-        m = 'Corrected Signals'
+        m = 'Baseline Corrected Signals'
         d.add_text('{:<39s}'.format(m), underline=True, bold=True)
 
-        signals = dict()
+#        signals = dict()
         for i, iso in enumerate(isos):
-            s = self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
-            signals[iso] = s
+            self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
 
-#        d.add_text([' '])
-#        d.add_text(' ')
-        m = 'Corrected Ratios'
+        m = 'Fully Corrected Signals'
+        d.add_text('{:<39s}'.format(m), underline=True, bold=True)
+
+#        signals = dict()
+        for i, iso in enumerate(isos):
+            self._make_corrected_signals(n, i, iso, floatfmt, width, widths,
+                                         fully_correct=True)
+
+        m = 'Corrected Values'
         d.add_text('{:<39s}'.format(m), underline=True, bold=True)
 #
-        ratios = ['Ar40/Ar36', 'Ar40/Ar39']
-        n = len(ratios) - 1
-        for i, r in enumerate(ratios):
-            nu, de = r.split('/')
-            rr = signals[nu] / signals[de]
-            v, e = rr.nominal_value, rr.std_dev()
-            pe = e / v * 100
-            ms = [r, floatfmt(v), floatfmt(e), '({}%)'.format(floatfmt(pe, i=2))]
-#            msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
-            msg = ''.join([width(m, 10) for m in ms])
-#
-            if i == n:
-                msg += '\n'
-            d.add_text(msg, underline=i == n)
+        rec = self.record
+        arar_result = rec.arar_result
+        if arar_result:
+            def make_ratio(r, nom, dem, scalar=1):
+                try:
+                    rr = nom / dem * scalar
+                    v, e = rr.nominal_value, rr.std_dev()
+                except ZeroDivisionError:
+                    v, e = 0, 0
+
+                ee = '{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
+                ms = [r, floatfmt(v), ee]
+                msg = ''.join([width(m, 15) for m in ms])
+                d.add_text(msg)
+
+            rad40 = arar_result['rad40']
+            tot40 = arar_result['tot40']
+            k39 = arar_result['k39']
+            atm36 = arar_result['atm36']
+
+            make_ratio('40*', rad40, tot40, scalar=100)
+            make_ratio('40/36', tot40, atm36)
+            make_ratio('40/39', tot40, k39)
+            make_ratio('40*/36', rad40, atm36)
+            make_ratio('40*/39', rad40, k39)
+
+        d.add_text(' ')
 
         v, e = self.record.age
         e = u' \u00b1' + '{:0.3f}'.format(e)
         d.add_text('age={:0.3f} {}'.format(v, e))
 
-    def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths):
+    def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths,
+                                fully_correct=False):
         d = self.display
 
         pi = n - i
         sig, base = self._get_signal_and_baseline(pi)
+
         s = sig - base
+        if fully_correct:
+            arar = self.record.arar_result
+            if arar:
+                iso = iso.replace('Ar', 's')
+                s = arar[iso]
+
 
         sv = s.nominal_value
         se = s.std_dev()
@@ -180,14 +196,14 @@ class AnalysisSummary(Summary):
             msg += '\n'
         d.add_text(msg, underline=i == n)
 
-    def _display_default(self):
-        return RichTextDisplay(default_size=12,
-                               width=700,
-                               selectable=True,
-                               default_color='black',
-                               font_name='Bitstream Vera Sans Mono'
-#                               font_name='Monaco'
-                               )
+#    def _display_default(self):
+#        return RichTextDisplay(default_size=12,
+#                               width=700,
+#                               selectable=True,
+#                               default_color='black',
+#                               font_name='Bitstream Vera Sans Mono'
+##                               font_name='Monaco'
+#                               )
 
     def traits_view(self):
         v = View(Item('display', height=0.8, show_label=False, style='custom'),

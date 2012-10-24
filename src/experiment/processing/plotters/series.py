@@ -47,14 +47,44 @@ class Series(Plotter):
         else:
             return '{:0.2e}'.format(x)
 
-    def build(self, analyses, keys, basekeys, ratiokeys,gids, padding,
+    def get_excluded_points(self, keys, gids):
+        graph = self.graph
+        exclude = dict()
+
+        for i, (k, f) in enumerate(keys):
+            for gid in gids:
+                try:
+                    plot = graph.plots[i].plots['data{}'.format(gid)][0]
+                    exclude['{}{}'.format(k, gid)] = plot.index.metadata['selections']
+                except IndexError:
+                    pass
+        return exclude
+
+    def set_excluded_points(self, exclude, keys, gids):
+        if not exclude:
+            return
+
+        graph = self.graph
+#        ks = keys + basekeys + ratiokeys
+        graph.suppress_regression = True
+        for i, (k, f) in enumerate(keys):
+            for gid in gids:
+                plot = graph.plots[i].plots['data{}'.format(gid)][0]
+                try:
+                    plot.index.metadata['selections'] = exclude['{}{}'.format(k, gid)]
+                except KeyError:
+                    pass
+
+        graph.suppress_regression = False
+        graph._update_graph()
+
+
+    def build(self, analyses, keys, basekeys, ratiokeys, gids,
+              padding,
               graph=None,
               new_plot=True,
               regress=True,
-#              analyses=None
               ):
-#        if analyses is None:
-#            analyses = self.analyses
 
         self.colorgen = colorname_gen()
         if isinstance(keys, str):
@@ -137,17 +167,17 @@ class Series(Plotter):
             self.fits[ri] = f
 
             def get_ratio(rs, a):
-                n,d=rs.split('/')
-                signals=a.dbrecord.signals
-                un=ufloat((signals[n].value, signals[n].error))
-                ud=ufloat((signals[d].value, signals[d].error))
-                uv=un/ud
+                n, d = rs.split('/')
+                signals = a.dbrecord.signals
+                un = ufloat((signals[n].value, signals[n].error))
+                ud = ufloat((signals[d].value, signals[d].error))
+                uv = un / ud
                 return a.timestamp, uv.nominal_value, uv.std_dev()
-                
-                
+
+
             for gid in gids:
-                data=[get_ratio(ri,a) for a in analyses if a.timestamp > 0 and a.gid == gid]
-                
+                data = [get_ratio(ri, a) for a in analyses if a.timestamp > 0 and a.gid == gid]
+
 #                data = [(a.timestamp,
 #                                    self._get_series_value(a, ni, i, gid),
 #                                    self._get_series_error(a, ni, i, gid),
@@ -156,7 +186,7 @@ class Series(Plotter):
                 data = [di for di in data if di[1] is not None]
                 xs, ys, es = zip(*data)
 
-                self._add_series(graph,  ri, xs, ys, es, f, padding,
+                self._add_series(graph, ri, xs, ys, es, f, padding,
                                  regress, gid, plotid=cnt)
                 xma = max(xs)
                 xmi = min(xs)

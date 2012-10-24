@@ -152,6 +152,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     atm40 = atm36 * constants.atm4036
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
+
     try:
         JR = j * ar40rad / k39
         age = (1 / constants.lambdak) * umath.log(1 + JR)
@@ -160,8 +161,16 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
 
     result = dict(age=age,
                   rad40=ar40rad,
+                  tot40=s40,
                   k39=k39,
                   ca37=ca37,
+                  atm36=atm36,
+
+                  s40=s40,
+                  s39=s39,
+                  s38=s38,
+                  s37=s37,
+                  s36=s36,
                   )
     return result
 

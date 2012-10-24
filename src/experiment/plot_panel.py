@@ -49,7 +49,9 @@ class PlotPanel(Viewable):
 
     signals = Dict
     baselines = Dict
+    blanks = Dict
     correct_for_baseline = Bool(True)
+    correct_for_blank = Bool(True)
     isbaseline = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
@@ -67,10 +69,12 @@ class PlotPanel(Viewable):
                         self.signals[iso] = ufloat((vv, ee))
                 except TypeError:
                     break
+                except AssertionError:
+                    continue
             else:
                 self._print_results()
 
-    @on_trait_change('correct_for_baseline')
+    @on_trait_change('correct_for_baseline, correct_for_blank')
     def _print_results(self):
         def func():
             self.signal_display.freeze()
@@ -79,7 +83,12 @@ class PlotPanel(Viewable):
             self._print_baselines()
             self.signal_display.thaw()
 
+
+            self.ratio_display.freeze()
+            self.ratio_display.clear()
             self._print_ratios()
+            self._print_blanks()
+            self.ratio_display.thaw()
 #        do_later(func)
         func()
 
@@ -87,9 +96,6 @@ class PlotPanel(Viewable):
         pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
 
         display = self.ratio_display
-        display.freeze()
-        display.clear()
-
         cfb = self.correct_for_baseline
 
         def func(ra):
@@ -119,7 +125,7 @@ class PlotPanel(Viewable):
 
         ts = [func(ra) for ra in self.ratios]
         display.add_text('\n'.join(ts))
-        display.thaw()
+        display.add_text(' ' * 80, underline=True)
 
     def _print_signals(self):
         def get_value(iso):
@@ -128,17 +134,25 @@ class PlotPanel(Viewable):
             except KeyError:
                 us = ufloat((0, 0))
 
-            ub = ufloat((0, 0))
+
+            ubs = ufloat((0, 0))
+            ubl = ufloat((0, 0))
             if self.correct_for_baseline:
                 try:
-                    ub = self.baselines[iso]
+                    ubs = self.baselines[iso]
+                except KeyError:
+                    pass
+            if self.correct_for_blank:
+                try:
+                    ubl = self.blanks[iso]
                 except KeyError:
                     pass
 
-            return us - ub
+            return us - ubs - ubl
 
-        self._print_('', get_value)
-        self.signal_display.add_text(' '*40, underline=True)
+        self._print_('', get_value, self.signal_display)
+        self.signal_display.add_text(' ' * 80, underline=True)
+
 
     def _print_baselines(self):
         def get_value(iso):
@@ -148,10 +162,20 @@ class PlotPanel(Viewable):
                 ub = ufloat((0, 0))
             return ub
 
-        self._print_('bs', get_value)
+        self._print_('bs', get_value, self.signal_display)
 
-    def _print_(self, name, get_value):
-        display = self.signal_display
+    def _print_blanks(self):
+        def get_value(iso):
+            try:
+                ub = self.blanks[iso]
+            except KeyError:
+                ub = ufloat((5, 0))
+            return ub
+
+        self._print_('bl', get_value, self.ratio_display)
+
+    def _print_(self, name, get_value, display):
+#        display = self.signal_display
         pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
 
         def func(iso):
@@ -210,7 +234,10 @@ class PlotPanel(Viewable):
                  Item('graph', show_label=False, style='custom'),
                  Group(
                      Group(
-                           HGroup(Item('correct_for_baseline'), spring),
+                           HGroup(
+                                  Item('correct_for_baseline'),
+                                  Item('correct_for_blank'),
+                                  spring),
                            HGroup(
                                Item('signal_display', width=0.4, show_label=False, style='custom'),
                                Item('ratio_display', width=0.6, show_label=False, style='custom'),

@@ -39,6 +39,10 @@ from src.experiment.set_selector import SetSelector
 from src.experiment.stats import StatsGroup
 import os
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
+from src.lasers.laser_managers.laser_manager import ILaserManager
+from globals import globalv
+from src.database.orms.isotope_orm import meas_AnalysisTable, AnalysisTypeTable, \
+    meas_MeasurementTable
 
 
 class ExperimentExecutor(ExperimentManager):
@@ -70,6 +74,7 @@ class ExperimentExecutor(ExperimentManager):
     _alive = Bool(False)
     _last_ran = None
     _prev_baselines = Dict
+    _prev_blanks = Dict
     _was_executed = False
     err_message = None
 
@@ -104,6 +109,15 @@ class ExperimentExecutor(ExperimentManager):
         self.info_display.clear()
         self._was_executed = False
         self.stats.reset()
+
+    def _get_all_automated_runs(self):
+        ans = super(ExperimentExecutor, self)._get_all_automated_runs()
+        startid = 0
+        exp = self.experiment_set
+        if exp and exp._cached_runs:
+            startid = exp._cached_runs.index(self._last_ran) + 1
+
+        return ans[startid:]
 
     def _reload_from_disk(self):
         super(ExperimentExecutor, self)._reload_from_disk()
@@ -167,12 +181,38 @@ class ExperimentExecutor(ExperimentManager):
         else:
             if self._was_executed:
                 self.load_experiment_set(self.path, edit=False)
-            
-            t = Thread(target=self._execute_experiment_sets)
-            t.start()
 
-            self.err_message=False
-            self._was_executed = True
+            self.stop_file_listener()
+
+            #check for blank before starting the thread
+            exp = self.experiment_sets[0]
+            if self._has_preceeding_blank_or_background(exp):
+                t = Thread(target=self._execute_experiment_sets)
+                t.start()
+
+                self.err_message = False
+                self._was_executed = True
+            else:
+                self.info('experiment canceled because no blank or background was configured')
+                self._alive = False
+
+    def _check_for_managers(self, exp):
+        nonfound = []
+        if self.extraction_line_manager is None:
+            if not globalv.experiment_debug:
+                nonfound.append('extraction_line')
+
+        if exp.extract_device:
+            extract_device = exp.extract_device.replace(' ', '_').lower()
+            if not self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device)):
+                if not globalv.experiment_debug:
+                    nonfound.append(extract_device)
+
+        if self.spectrometer_manager is None:
+            if not globalv.experiment_debug:
+                nonfound.append('spectrometer')
+
+        return nonfound
 
     def _execute_experiment_sets(self):
 
@@ -186,11 +226,19 @@ class ExperimentExecutor(ExperimentManager):
                 return
 
         exp = self.experiment_sets[0]
-        #check for a preceeding blank
-        if not self._has_preceeding_blank_or_background(exp):
-            self.info('experiment canceled because no blank or background was configured')
+
+        nonfound = self._check_for_managers(exp)
+        if nonfound:
+            self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+            self.info('experiment canceled because could not find managers {}'.format(nonfound))
             self._alive = False
             return
+
+        #check for a preceeding blank
+#        if not self._has_preceeding_blank_or_background(exp):
+#            self.info('experiment canceled because no blank or background was configured')
+#            self._alive = False
+#            return
 
         self._alive = True
         self.set_selector.selected_index = -2
@@ -223,10 +271,10 @@ class ExperimentExecutor(ExperimentManager):
         rgen, nruns = exp.new_runs_generator(self._last_ran)
         cnt = 0
         totalcnt = 0
-        
+
         while self.isAlive():
             self.db.reset()
-            force_delay=False
+            force_delay = False
 
 #            if the user is editing the experiment set dont continue?
 #            if self.editing_signal:
@@ -273,6 +321,9 @@ class ExperimentExecutor(ExperimentManager):
                 run.wait_for_overlap()
             else:
                 t.join()
+
+            if run.analysis_type.startswith('blank'):
+                self._prev_blanks = run.get_corrected_signals()
 
             cnt += 1
             totalcnt += 1
@@ -328,7 +379,55 @@ class ExperimentExecutor(ExperimentManager):
         arun.info_display = self.info_display
         arun.username = self.username
 
+    def _get_blank(self, kind):
+        db = self.db
+        sel = self.selector_factory('single')
+        sess = db.get_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.join(meas_MeasurementTable)
+        q = q.join(AnalysisTypeTable)
+        q = q.filter(AnalysisTypeTable.name == 'blank_{}'.format(kind))
+        dbs = q.all()
+
+        sel.load_records(dbs)
+
+        info = sel.edit_traits(kind='livemodal')
+        if info.result:
+            dbr = sel.selected
+            if dbr:
+                self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
+                self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
+                for iso, pi in self._prev_blanks.iteritems():
+                    print iso, pi
+                return True
+
     def _has_preceeding_blank_or_background(self, exp):
+        types = ['air', 'unknown', 'cocktail']
+        #get first air, unknown or cocktail
+        aruns = self.experiment_set.automated_runs
+        fa = next(((i, a) for i, a in enumerate(aruns)
+                    if a.analysis_type in types), None)
+        if fa:
+            ind, an = fa
+            if ind == 0:
+                if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
+                    if not self._get_blank(an.analysis_type):
+                        return
+                else:
+                    return
+            else:
+                pa = aruns[ind - 1]
+                if not pa.analysis_type in types:
+                    if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
+                        if not self._get_blank(an.analysis_type):
+                            return
+                    else:
+                        return
+
+
+#        if not exp.automated_runs[0].analysis_type.startswith('blank'):
+
+
 #        if exp.automated_runs[0].analysis_type not in ['blank', 'background']:
 #            #the experiment set doesnt start with a blank
 #            #ask user for preceeding blank
