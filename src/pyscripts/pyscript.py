@@ -527,9 +527,10 @@ class PyScript(Loggable):
         else:
             time.sleep(v)
 
-    def _block(self, timeout, message='', dialog=False):
+    def _block(self, timeout, message=None, dialog=False):
         if dialog:
-
+            if message is None:
+                message = ''
             st = time.time()
 #            c = Condition()
 #            c.acquire()

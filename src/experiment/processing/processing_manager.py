@@ -21,7 +21,7 @@ from traitsui.api import View, Item
 import os
 #============= local library imports  ==========================
 #from src.managers.manager import Manager
-from src.repo.repository import FTPRepository, Repository
+from src.repo.repository import FTPRepository, Repository, SFTPRepository
 
 #from src.experiment.processing.ideogram import Ideogram
 #from src.experiment.processing.spectrum import Spectrum
@@ -61,20 +61,21 @@ class ProcessingManager(DatabaseManager):
             bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
         except AttributeError:
             pass
+
     def connect_repo(self):
         host = 'localhost'
         usr = 'ross'
         pwd = 'jir812'
         kind = 'local'
 
-#        self.repo_kind = 'FTP'
+        self.repo_kind = 'FTP'
 #        host = '129.138.12.131'
 #        pwd = 'JR*4039'
         if self.repo_kind == 'FTP':
-            repo = FTPRepository(host=host, username=usr,
+            repo = SFTPRepository(host=host, username=usr,
                                   password=pwd,
-                                remote='ftp/data'
-#                             remote=paths.isotope_dir
+#                                root='ftp/data'
+                             root=paths.isotope_dir
                              )
         else:
             repo = Repository(root=paths.isotope_dir)
@@ -187,6 +188,8 @@ if __name__ == '__main__':
 #    pm.workspace_root = '/Users/ross/Sandbox/workspace'
     pm.username = 'bar'
     pm.open_workspace('mobat')
+
+    print pm.repo
 
 #    sl = pm.db.selector_factory()
 #    sl.configure_traits()

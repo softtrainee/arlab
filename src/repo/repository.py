@@ -73,20 +73,25 @@ class SFTPRepository(RemoteRepository):
         if self._client is not None:
             return self._client
 
-        t = paramiko.Transport((self.hostname, 22))
-        t.connect(username=self.username, password=self.password)
+        t = paramiko.Transport((self.host, 22))
+        t.connect(username=self.username,
+                  password=self.password)
+
         sftp = paramiko.SFTPClient.from_transport(t)
         self._client = sftp
-        return True
+        return self._client
 
     def connect(self):
         return self.client
 
     def add_file(self, p):
-        pass
-#        src = p
-#        dst = self.get_file_path(p)
-#        shutil.copyfile(src, dst)
+
+        def cb(clt):
+            bp = os.path.basename(p)
+            self.info('adding {} to {}'.format(bp, clt.getcwd()))
+            clt.put(p, bp)
+
+        self._execute(cb)
 
     def isfile(self, n):
         def cb(clt):

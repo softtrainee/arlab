@@ -36,9 +36,26 @@ def stringcolumn(size=40):
     return Column(String(size))
 
 
+#===============================================================================
+# unsorted
+#===============================================================================
 class ScriptTable(BaseMixin):
     script_name = stringcolumn(80)
     script_blob = Column(BLOB)
+
+
+class AnalysisTypeTable(Base, NameMixin):
+    measurements = relationship('meas_MeasurementTable', backref='analysis_type')
+
+
+class DetectorTable(Base, NameMixin):
+    kind = stringcolumn()
+    isotopes = relationship('meas_IsotopeTable', backref='detector')
+    deflections = relationship('meas_SpectrometerDeflectionsTable', backref='detector')
+
+
+class ExtractionDeviceTable(Base, NameMixin):
+    extractions = relationship('meas_ExtractionTable', backref='extraction_device')
 
 #===============================================================================
 # proc
@@ -156,16 +173,6 @@ class proc_WorkspaceSettings(Base, BaseMixin):
 # measurement
 #===============================================================================
 
-class AnalysisTypeTable(Base, NameMixin):
-    measurements = relationship('meas_MeasurementTable', backref='analysis_type')
-
-
-class DetectorTable(Base, NameMixin):
-    kind = stringcolumn()
-    isotopes = relationship('meas_IsotopeTable', backref='detector')
-    deflections = relationship('meas_SpectrometerDeflectionsTable', backref='detector')
-
-
 class meas_AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('meas_AnalysisTable')
 
@@ -195,6 +202,7 @@ class meas_AnalysisTable(Base, ResultsMixin):
     selected_histories = relationship('proc_SelectedHistoriesTable',
                                       backref='analysis', uselist=False)
 
+
 class meas_ExperimentTable(Base, NameMixin):
     analyses = relationship('meas_AnalysisTable', backref='experiment')
 
@@ -202,12 +210,13 @@ class meas_ExperimentTable(Base, NameMixin):
 class meas_ExtractionTable(Base, ScriptTable):
     position = Column(Integer)
     value = Column(Float)
-    heat_duration = Column(Float)
+    extract_duration = Column(Float)
     clean_up_duration = Column(Float)
-
+    extraction_device_id = foreignkey('ExtractionDeviceTable')
     analysis = relationship('meas_AnalysisTable', backref='extraction',
                           uselist=False
                           )
+
 
 class meas_SpectrometerParametersTable(Base, BaseMixin):
     measurement_id = foreignkey('meas_MeasurementTable')
@@ -278,13 +287,16 @@ class irrad_ProductionTable(Base, NameMixin):
     Cl3638 = Column(Float)
     Cl3638_err = Column(Float)
 
+    irradiations = relationship('irrad_IrradiationTable', backref='production')
 
 class irrad_IrradiationTable(Base, NameMixin):
     levels = relationship('irrad_LevelTable', backref='irradiation')
+    irradiation_production_id = foreignkey('irrad_ProductionTable')
+    irradiation_chronology_id = foreignkey('irrad_ChronologyTable')
 
-
-
-
+class irrad_ChronologyTable(Base, BaseMixin):
+    chronology = Column(BLOB)
+    irradiation = relationship('irrad_IrradiationTable', backref='chronology')
 
 class LabTable(Base, BaseMixin):
     labnumber = Column(Integer)

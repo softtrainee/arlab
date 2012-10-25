@@ -29,6 +29,7 @@ import os
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.paths import paths
+from src.experiment.entry.irradiation import Irradiation
 
 
 class IrradiatedSample(HasTraits):
@@ -82,6 +83,7 @@ class LabnumberEntry(Loggable):
     _update_sample_table = Event
 
     save_button = Button('Save')
+    add_irradiation_button = Button('Add')
 
     def _set_auto_params(self, s, rid):
         s.labnumber = rid
@@ -98,8 +100,26 @@ class LabnumberEntry(Loggable):
             for ni in range(int(nholes)):
                 self.irradiated_samples.append(IrradiatedSample(hole=ni + 1))
 
+
+    def _db_default(self):
+        #=======================================================================
+        # debug
+        #=======================================================================
+        from src.database.adapters.isotope_adapter import IsotopeAdapter
+        db = IsotopeAdapter(name='isotopedb_dev_migrate',
+                          username='root',
+                          host='localhost',
+                          kind='mysql',
+                          password='Argon'
+                          )
+        db.connect()
+        return db
+        #=======================================================================
+        # 
+        #=======================================================================
     def _save_to_db(self):
         db = self.db
+
         for irs in self.irradiated_samples:
             ln = irs.labnumber
             sam = irs.sample
@@ -124,6 +144,11 @@ class LabnumberEntry(Loggable):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _add_irradiation_button_fired(self):
+        irrad = Irradiation(db=self.db)
+        irrad.edit_traits()
+
+
     def _save_button_fired(self):
         self._save_to_db()
 
@@ -169,7 +194,7 @@ class LabnumberEntry(Loggable):
         if not os.path.isdir(p):
             self.warning_dialog('{} does not exist'.format(p))
             return Undefined
-        
+
         ts = [pi for pi in os.listdir(p)
                     if not (pi.endswith('.png')
                             or pi.endswith('.pct')
@@ -198,12 +223,16 @@ class LabnumberEntry(Loggable):
                                         Item('sub_irradiation',
                                              editor=EnumEditor(name='sub_irradiations')
                                              ),
-                                        Item('irradiation_tray',
-                                             editor=EnumEditor(name='irradiation_trays')
-                                             )),
+                                          Item('add_irradiation_button', show_label=False)
+#                                        Item('irradiation_tray',
+#                                             editor=EnumEditor(name='irradiation_trays')
+#                                             )
+                                          ),
+                                   spring,
                                     Item('irradiation_tray_image',
                                          editor=ImageEditor(),
-                                         height=150,
+                                         height=200,
+                                         width=200,
                                           style='custom',
                                           show_label=False),
                                           ),

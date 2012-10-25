@@ -228,6 +228,7 @@ class IsotopeRecord(DatabaseRecord):
                 for iso, rs in zip(self.isos, graph.regressors):
                     self.signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
                                                               _error=rs.coefficient_errors[-1])
+
             return
 
         self._no_load = True
@@ -262,6 +263,8 @@ class IsotopeRecord(DatabaseRecord):
             self.baseline_graph.fit_selector = FitSelector(analysis=self,
                                                            name='Baseline',
                                                            graph=self.baseline_graph)
+
+        self._load_histories()
 #===============================================================================
 # private
 #===============================================================================
@@ -271,7 +274,7 @@ class IsotopeRecord(DatabaseRecord):
 #        except AttributeError, e:
 #            print 'gettatrr', attr
 
-    def load_from_database(self):
+    def _load_histories(self):
 
         #load blanks
         self._load_from_history('blanks', 'bl', Blank)
