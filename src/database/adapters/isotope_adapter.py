@@ -27,7 +27,8 @@ proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, p
 DetectorTable, MassSpectrometerTable, MaterialTable, MolecularWeightTable, \
     ProjectTable, UserTable, SampleTable, LabTable, AnalysisTypeTable, \
 irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, \
-    meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable
+    meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
+    ExtractionDeviceTable, irrad_ChronologyTable
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
 from src.experiment.identifier import convert_identifier
@@ -194,15 +195,30 @@ class IsotopeAdapter(DatabaseAdapter):
         return exp, True
 
     @add
-    def add_extraction(self, analysis, name, **kw):
+    def add_extraction(self, analysis, name, extract_device=None, **kw):
         ex = meas_ExtractionTable(script_name=name, **kw)
         analysis = self.get_analysis(analysis)
         if analysis:
             analysis.extraction = ex
+
+        extract_device = self.get_extraction_device(extract_device)
+        if extract_device:
+            extract_device.extractions.append(ex)
+
         return ex, True
 
     @add
-    def add_irradiation_holder(self, name, **kw):
+    def add_irradiation(self, name, production=None, chronology=None):
+        production = self.get_irradiation_production(production)
+        chronology = self.get_irradiation_chronology(chronology)
+
+        ir = irrad_IrradiationTable(name=name,
+                                    production=production,
+                                    chronology=chronology)
+        return self._add_unique(ir, 'irradiation', name)
+
+    @add
+    def add_irradiation_holder(self, name , **kw):
 #        print name, 'fffff', self.get_irradiation_holder(name)
 #        return None, False
         ih = irrad_HolderTable(name=name, **kw)
@@ -212,6 +228,14 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_irradiation_production(self, **kw):
         ip = irrad_ProductionTable(**kw)
         return ip, True
+
+    @add
+    def add_irradiation_chronology(self, chronblob):
+        '''
+            startdate1,starttime1%enddate1,endtime1$startdate2,starttime2%enddate2,endtime2
+        '''
+        ch = irrad_ChronologyTable(chronology=chronblob)
+        return ch, True
 
     @add
     def add_isotope(self, analysis, molweight, det, **kw):
@@ -451,6 +475,8 @@ class IsotopeAdapter(DatabaseAdapter):
         at = AnalysisTypeTable(name=name)
         return self._add_unique(at, 'analysis_type', name)
 
+
+
 #    @add
 #    def add_irradiation_chronology(self, irradiations, **kw):
 #        '''
@@ -511,12 +537,24 @@ class IsotopeAdapter(DatabaseAdapter):
         return meas_ExperimentTable
 
     @get_one
+    def get_extraction_device(self, name):
+        return ExtractionDeviceTable
+
+    @get_one
+    def get_irradiation_chronology(self, name):
+        return irrad_ChronologyTable
+
+    @get_one
     def get_irradiation_holder(self, name):
         return irrad_HolderTable
 
     @get_one
     def get_irradiation_production(self, name):
         return irrad_ProductionTable
+
+    @get_one
+    def get_irradiation(self, name):
+        return irrad_IrradiationTable
 
     def get_labnumber(self, labnum):
         if isinstance(labnum, str):

@@ -13,8 +13,8 @@ if __name__ == '__main__':
 
     url = 'mysql://root:Argon@localhost/isotopedb?connect_timeout=3'
     url = 'mysql://root:Argon@localhost/isotopedb_dev?connect_timeout=3'
-    #url = 'mysql://root:Argon@localhost/isotopedb_dev_migrate?connect_timeout=3'
-    url = 'mysql://massspec:DBArgon@129.138.12.131/isotopedb?connect_timeout=3'
+    url = 'mysql://root:Argon@localhost/isotopedb_dev_migrate?connect_timeout=3'
+#    url = 'mysql://massspec:DBArgon@129.138.12.131/isotopedb?connect_timeout=3'
 
     main(url=url , debug='False', repository='isotopedb/')
 

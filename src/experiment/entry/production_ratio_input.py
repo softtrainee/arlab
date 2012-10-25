@@ -21,6 +21,7 @@ from src.managers.manager import SaveableHandler, SaveableButtons
 from traitsui.menu import Action
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from traits.trait_errors import TraitError
+from src.loggable import Loggable
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ProductionRatio(HasTraits):
@@ -33,10 +34,12 @@ class ProductionRatio(HasTraits):
                       Item('error'),
                       show_labels=False))
         return v
-class ProductionRatioInput(HasTraits):
+
+class ProductionRatioInput(Loggable):
     db = Instance(IsotopeAdapter)
     name = Str
-    db_name = Str
+    db_name = Property(depends_on='_db_name')
+    _db_name = Str
     names = Property(depends_on='saved')
     saved = Event
     #K interferences
@@ -55,11 +58,11 @@ class ProductionRatioInput(HasTraits):
 
     def _get_names(self):
         db = self.db
-
         ns = [str(ni.name) for ni in db.get_irradiation_productions()]
         return ns
 
     def save(self):
+        self.info('saving production ratio')
         db = self.db
 
         keys = [
@@ -72,14 +75,41 @@ class ProductionRatioInput(HasTraits):
         errors = [getattr(self, ki).error for ki in keys]
 
         params = dict(zip(map(str.capitalize, keys + ekeys), values + errors))
-        params['name'] = self.name
-        db.add_irradiation_production(**params)
+        ip = db.get_irradiation_production(self.name)
+        if ip:
+            for k, v in params.iteritems():
+                setattr(ip, k, v)
+        else:
+            params['name'] = self.name
+            db.add_irradiation_production(**params)
+
+
         db.commit()
         self.saved = True
+        self._db_name = '{}'.format(self.name)
+#        self.trait_set(_db_name='{}'.format(self.name), trait_change_notify=False)
 
-    def _db_name_changed(self):
+    def _get_db_name(self):
+        return self._db_name
+
+    def _set_db_name(self, n):
+        self._db_name = n
+
+    def _name_changed(self):
+        if self.name in self.names:
+            self._db_name = '{}'.format(self.name)
+#            print self.db_name
+#            self._db_name = self.name.capitalize()
+
+#            print self.db_name
+#            d = lambda: setattr(self, 'db_name', self.name.capitalize())
+#            from pyface.timer.do_later import do_later
+#            do_later(d)
+#            self.db_name = self.name
+
+    def __db_name_changed(self):
         ip = self.db.get_irradiation_production(self.db_name)
-        self.name = self.db_name
+        self.name = self._db_name
         try:
             self.k4039.value = ip.K4039
             self.k4039.error = ip.K4039_err
@@ -100,8 +130,8 @@ class ProductionRatioInput(HasTraits):
         except TraitError:
             pass
 
-    def save_as(self):
-        print 'asdfasd'
+#    def save_as(self):
+#        print 'asdfasd'
 
     def traits_view(self):
         def item(n):
@@ -132,13 +162,17 @@ class ProductionRatioInput(HasTraits):
                         ),
                  width=300,
                  resizable=True,
-                 buttons=SaveableButtons,
+                 buttons=[Action(name='Save', action='save',
+                                enabled_when='object.save_enabled'),
+                          'Cancel'
+                          ],
                  handler=SaveableHandler,
+                 title='Production Ratio Input'
                  )
         return v
 
-    def _db_default(self):
-        return IsotopeAdapter(name='isotopedb_dev_migrate')
+#    def _db_default(self):
+#        return IsotopeAdapter(name='isotopedb_dev_migrate')
 
 if __name__ == '__main__':
     d = ProductionRatioInput()

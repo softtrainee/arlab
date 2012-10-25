@@ -147,17 +147,10 @@ class H5DataManager(DataManager):
     def open_data(self, path, mode='r', caller=None):
 #        print 'open data', caller
         try:
-            if self.repository:
-                out = os.path.join(self.workspace_root, path)
-                path = os.path.join(self.repository.root, path)
-                if not os.path.isfile(out):
-                    self.info('copying {} to repository {}'.format(path, os.path.dirname(out)))
-                    self.repository.retrieveFile(path, out)
-                path = out
-
             self._frame = openFile(path, mode)
             return True
         except Exception:
+            self._frame = None
             import traceback
             traceback.print_exc()
             return False

@@ -62,6 +62,8 @@ class ExperimentManager(Manager):
     filelistener = None
     username = Str
 
+    _text = None
+
     def __init__(self, *args, **kw):
         super(ExperimentManager, self).__init__(*args, **kw)
         self.bind_preferences()
@@ -142,6 +144,15 @@ class ExperimentManager(Manager):
                            'background', 'air', 'cocktail']):
                     samp = db.add_sample(di)
                     db.add_labnumber(i + 1, sample=samp)
+
+                for hi, kind, make in [('Fusions CO2', '10.6um co2', 'photon machines'),
+                                      ('Fusions Diode', '810nm diode', 'photon machines'),
+                                      ('Fusions UV', '193nm eximer', 'photon machines')
+                                      ]:
+                    db.add_extraction_device(hi,
+                                             kind=kind,
+                                             make=make
+                                             )
 
                 db.commit()
 

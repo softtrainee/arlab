@@ -70,16 +70,12 @@ class AutomatedRun(Loggable):
                  'measurement', 'success', 'fail', 'truncate')
     irrad_level = Str
 
-#    heat_step = Instance(HeatStep)
-#    duration = Property(depends_on='heat_step,_duration')
     duration = Property(depends_on='_duration')
     _duration = Float
 
-#    extract_value = Property(depends_on='heat_step,_extract_value,_extract_units')
     extract_value = Property(depends_on='_extract_value')
     _extract_value = Float
 
-#    extract_units = Property(depends_on='heat_step,_extract_units')
     extract_units = Property(Enum('---', 'watts', 'temp', 'percent'),
                            depends_on='_extract_units')
     _extract_units = Enum('---', 'watts', 'temp', 'percent')
@@ -765,14 +761,17 @@ class AutomatedRun(Loggable):
         eqtime = self.get_measurement_parameter('equilibration_time', default=15)
         inlet = self.get_measurement_parameter('inlet_valve')
         outlet = self.get_measurement_parameter('outlet_valve')
+        delay = self.get_measurement_parameter('inlet_delay', default=3)
+
         elm = self.extraction_line_manager
         if elm:
             if outlet:
                 #close mass spec ion pump
                 elm.close_valve(outlet, mode='script')
-                time.sleep(3)
 
             if inlet:
+                self.info('waiting {}s before opening inlet value {}'.format(inlet))
+                time.sleep(delay)
                 #open inlet
                 elm.open_valve(inlet, mode='script')
 
@@ -897,9 +896,9 @@ class AutomatedRun(Loggable):
                 s = s.clone_traits()
                 s.automated_run = self
                 hdn = self.extract_device.replace(' ', '_').lower()
-                an=self.analysis_type.split('_')[0]
-                s.setup_context(position=self.position, 
-                                extract_value=self.extract_value, 
+                an = self.analysis_type.split('_')[0]
+                s.setup_context(position=self.position,
+                                extract_value=self.extract_value,
                                 extract_units=self.extract_units,
                                 duration=self.duration,
                                 cleanup=self.cleanup,
@@ -931,19 +930,10 @@ class AutomatedRun(Loggable):
                 self.warning_dialog('Invalid Script {}'.format(s.filename if s else 'None'))
 
     def pre_extraction_save(self):
-#        db = self.db
-#        ln = convert_identifier(self.labnumber)
-#        ln = db.get_labnumber(ln)
-#        if ln is None:            
-#            self.warning_dialog('invalid lab number {}'.format(self.labnumber))
-##            aliquot = ln.aliquot + 1
-##            self.aliquot = aliquot
-##        else:
-
         d = get_datetime()
         self._runtime = d.time()
-        self.info('Analysis started at {}'.format(self._runtime))
         self._rundate = d.date()
+        self.info('Analysis started at {}'.format(self._runtime))
 
     def _post_extraction_save(self):
         pass
@@ -953,21 +943,11 @@ class AutomatedRun(Loggable):
         dm = self.data_manager
         #make a new frame for saving data
 
-        #the new frame is untracked and will be added to the git repo
-        #at post_measurement_save
         import uuid
         name = uuid.uuid4()
-#        name = '{}-{}'.format(self.labnumber, self.aliquot)
-#        name = hashlib.sha1(name)
 
         path = os.path.join(self.repository.root, '{}.h5'.format(name))
-        frame = dm.new_frame(
-                     path=path
-#                     directory=self.repository.root,
-#                     directory='automated_runs',
-#                     base_frame_name='{}-{}'.format(self.labnumber, self.aliquot)
-
-                     )
+        frame = dm.new_frame(path=path)
 
         #save some metadata with the file
         attrs = frame.root._v_attrs
@@ -982,8 +962,10 @@ class AutomatedRun(Loggable):
         self.info('post measurement save')
 
         cp = self.data_manager.get_current_path()
+
         #commit repository
         self.repository.add_file(cp)
+
         np = self.repository.get_file_path(cp)
 
         ln = self.labnumber
@@ -996,20 +978,12 @@ class AutomatedRun(Loggable):
         ldb.add_analysis(labnumber=ln,
                          aliquot=aliquot,
                          collection_path=cp,
-                         repository_path=np, commit=True)
+                         repository_path=np,
+                         commit=True)
 
         #save to a database
         db = self.db
         if db:
-#            sample = self.sample
-#            if not sample:
-#                samples = ['BoneBlank', 'Air', 'Cocktail', 'Background']
-#                try:
-#                    sample = samples[ln]
-#                except IndexError:
-#                    sample = None
-
-#            lab = db.add_labnumber(ln, sample=sample)
             lab = db.get_labnumber(ln)
 
             experiment = db.get_experiment(self.experiment_name)
@@ -1024,33 +998,17 @@ class AutomatedRun(Loggable):
 
             experiment.analyses.append(a)
 
-            db.add_extraction(
-                              a,
-                              self.extraction_script.name,
-                              script_blob=self.measurement_script.toblob()
-                              )
-            meas = db.add_measurement(
-                              a,
-                              self.analysis_type,
-                              self.mass_spectrometer,
-                              self.measurement_script.name,
-                              script_blob=self.measurement_script.toblob()
-                              )
-
-            spec_dict = dict()
-            spec_dict = self.spectrometer_manager.make_parameters_dict()
-
-            db.add_spectrometer_parameters(meas, **spec_dict)
-#
-            for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
-                db.add_deflection(meas, det, deflection)
+            _ext = self._save_extraction(a)
+            meas = self._save_measurement(a)
 
             #use a path relative to the repo repo
-#            np = os.path.join(('.', np))
             np = os.path.relpath(np, self.repository.root)
             db.add_analysis_path(np, analysis=a)
 
+            self._save_spectrometer_info(meas)
             self._save_isotope_info(a)
+            self._save_blank_info(a)
+
             if globalv.experiment_savedb:
                 db.commit()
 
@@ -1059,6 +1017,64 @@ class AutomatedRun(Loggable):
 
         #close h5 file
         self.data_manager.close()
+
+    def _save_measurement(self, analysis):
+        db = self.db
+        meas = db.add_measurement(
+                              analysis,
+                              self.analysis_type,
+                              self.mass_spectrometer,
+                              self.measurement_script.name,
+                              script_blob=self.measurement_script.toblob()
+                              )
+        return meas
+
+    def _save_extraction(self, analysis):
+        db = self.db
+        ext = db.add_extraction(analysis,
+                          self.extraction_script.name,
+                          script_blob=self.measurement_script.toblob(),
+                          extract_device=self.extract_device,
+                          experiment_blob=self.experiment_manager.experiment_blob(),
+                          extract_value=self.extract_value,
+                          position=self.position,
+                          extract_duration=self.duration
+                          )
+        return ext
+
+    def _save_spectrometer_info(self, meas):
+        db = self.db
+
+        spec_dict = self.spectrometer_manager.make_parameters_dict()
+        db.add_spectrometer_parameters(meas, **spec_dict)
+
+        for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
+            db.add_deflection(meas, det, deflection)
+
+    def _save_blank_info(self, analysis):
+        self._save_history_info(analysis, 'blanks')
+
+    def _save_history_info(self, analysis, name):
+        db = self.db
+        pb = getattr(self.experiment_manager, '_prev_{}'.format(name))
+        if not pb:
+            return
+
+        user = self.username
+        user = user if user else '---'
+
+        funchist = getattr(db, 'add_{}_history'.format(name))
+        self.info('{} adding {} history for {}-{}'.format(user, name, analysis.labnumber.labnumber, analysis.aliquot))
+        history = funchist(analysis, user=user)
+        sh = db.add_selected_histories(analysis)
+        setattr(sh, 'selected_{}'.format(name), history)
+
+        func = getattr(db, 'add_{}'.format(name))
+        for isotope, v in pb:
+            uv = v.nominal_value
+            ue = v.std_dev()
+            func(history, uv, ue, isotope)
+
 
     def _save_isotope_info(self, analysis):
         db = self.db
@@ -1141,7 +1157,7 @@ class AutomatedRun(Loggable):
                     name=file_name,
                     runner=self.runner
                     )
-            an=self.analysis_type.split('_')[0]
+            an = self.analysis_type.split('_')[0]
 #            print self.position, 'positino',an
             obj.setup_context(position=self.position,
                               duration=self.duration,
