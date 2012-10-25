@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Str, Button, Instance, Property, DelegatesTo
+from traits.api import HasTraits, Int, Str, Button, Instance, \
+ Property, DelegatesTo, Range, Undefined, cached_property, List
 from traitsui.api import View, Item, TableEditor, EnumEditor, HGroup, Label, spring
 from traitsui.menu import Action
 #============= standard library imports ========================
@@ -25,6 +26,9 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import SaveableHandler
 from src.experiment.entry.production_ratio_input import ProductionRatioInput
 from src.experiment.entry.chronology_input import ChronologyInput
+import os
+from src.paths import paths
+
 
 class Irradiation(Loggable):
     db = Instance(IsotopeAdapter)
@@ -32,13 +36,16 @@ class Irradiation(Loggable):
     chronology_input = Instance(ChronologyInput)
 
     name = Str
-    ntrays = Int
-
+#    ntrays = Range(1, 200, 1)
+    tray = Str
+    trays = List
     add_pr_button = Button('+')
     set_chron_button = Button('Set Chronology')
 
+
     pr_name = Str
     chron_name = Str
+    previd = 0
 #    pr_names = DelegatesTo('production_ratio_input', prefix='names')
 
     def _add_pr_button_fired(self):
@@ -59,7 +66,6 @@ class Irradiation(Loggable):
         if ir is not None:
             self.warning_dialog('Irradiation already exists')
             return
-
         else:
             prn = self.pr_name
             if not prn:
@@ -69,20 +75,30 @@ class Irradiation(Loggable):
                 return '{},{}%{},{}'.format(ci.startdate, ci.starttime,
                                         ci.enddate, ci.endtime)
             err = self.chronology_input.validate_chronology()
-            if err :
-                self.warning_dialog('Invalid Chronology. {}'.format(err))
-                return
+#            if err :
+#                self.warning_dialog('Invalid Chronology. {}'.format(err))
+#                return
 
             chronblob = '$'.join([make_ci(ci) for ci in self.chronology_input.dosages])
-
             cr = db.add_irradiation_chronology(chronblob)
+
             ir = db.add_irradiation(self.name, prn, cr)
+
+#            holder = db.get_irradiation_holder(self.holder)
+#            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
+#            for ni in alpha:
+#                db.add_irradiation_level(ni, ir, holder)
 
         db.commit()
 
+
+
+    def _get_map_path(self):
+        return os.path.join(paths.setup_dir, 'irradiation_tray_maps')
+
     def traits_view(self):
         v = View(Item('name'),
-                 Item('ntrays', label='N. Trays'),
+#                 Item('ntrays', label='N. Trays'),
                  HGroup(Item('pr_name', editor=EnumEditor(name='object.production_ratio_input.names')),
                         Item('add_pr_button', show_label=False)
                         ),

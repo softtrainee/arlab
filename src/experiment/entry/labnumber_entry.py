@@ -26,11 +26,25 @@ from pyface.image_resource import ImageResource
 
 #============= standard library imports ========================
 import os
+import struct
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.paths import paths
 from src.experiment.entry.irradiation import Irradiation
 
+ALPHAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+class Level(HasTraits):
+    name = Str
+    tray = Str
+    trays = List
+    def traits_view(self):
+        v = View(HGroup(Item('name'), Item('tray', show_label=False, editor=EnumEditor(name='trays'))),
+                 buttons=['OK', 'Cancel']
+                 )
+        return v
+
+    def _tray_default(self):
+        return self.trays[0]
 
 class IrradiatedSample(HasTraits):
     labnumber = Str
@@ -63,13 +77,14 @@ class IrradiatedSampleAdapter(TabularAdapter):
 class LabnumberEntry(Loggable):
     db = Any
     irradiation = Str
-    sub_irradiation = Str
+    level = Str
     irradiation_tray = Str
 
     irradiations = Property
-    sub_irradiations = Property(depends_on='irradiations')
-    irradiation_trays = Property
-    irradiation_tray_image = Property(Image, depends_on='irradiation_tray')
+    levels = Property(depends_on='irradiations')
+    trays = Property
+#    irradiation_trays = Property
+    irradiation_tray_image = Property(Image, depends_on='level')
 
     irradiated_samples = List(IrradiatedSample)
 
@@ -83,7 +98,26 @@ class LabnumberEntry(Loggable):
     _update_sample_table = Event
 
     save_button = Button('Save')
-    add_irradiation_button = Button('Add')
+    add_irradiation_button = Button('Add Irradiation')
+    add_level_button = Button('Add Level')
+    _prev_level = 0
+    def __init__(self, *args, **kw):
+        super(LabnumberEntry, self).__init__(*args, **kw)
+        self._load_default_holders()
+
+    def _load_default_holders(self):
+        db = self.db
+        for t in self.trays:
+            p = os.path.join(self._get_map_path(), t)
+            with open(p, 'r') as f:
+                h = f.readline()
+                nholes, _diam = h.split(',')
+                nholes = int(nholes)
+                holes = [map(float, l.strip().split(',')) for i, l in enumerate(f) if i < nholes]
+                blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
+                db.add_irradiation_holder(t, geometry=blob)
+
+        db.commit()
 
     def _set_auto_params(self, s, rid):
         s.labnumber = rid
@@ -99,7 +133,6 @@ class LabnumberEntry(Loggable):
             nholes, diam = line.split(',')
             for ni in range(int(nholes)):
                 self.irradiated_samples.append(IrradiatedSample(hole=ni + 1))
-
 
     def _db_default(self):
         #=======================================================================
@@ -140,14 +173,27 @@ class LabnumberEntry(Loggable):
             db.add_labnumber(ln, sample=sam,
                                     commit=True)
 
-        db.commit()
+#        db.commit()
 #===============================================================================
 # handlers
 #===============================================================================
     def _add_irradiation_button_fired(self):
-        irrad = Irradiation(db=self.db)
+        irrad = Irradiation(db=self.db,
+                            trays=self.trays
+                            )
         irrad.edit_traits()
 
+    def _add_level_button_fired(self):
+        irrad = self.irradiation
+
+        t = Level(name=ALPHAS[self._prev_level], trays=self.trays)
+        info = t.edit_traits(kind='livemodal')
+        if info.result:
+#            irrad = self.db.get_irradiation(irrad)
+#            holder = self.db.get_irradiation_holder(t.tray)
+            self.db.add_irradiation_level(t.name, irrad, t.tray)
+
+            self._prev_level = self._prev_level + 1
 
     def _save_button_fired(self):
         self._save_to_db()
@@ -176,19 +222,33 @@ class LabnumberEntry(Loggable):
 #===============================================================================
     @cached_property
     def _get_irradiations(self):
-        r = ['NM-Test', 'NM-100', 'NM-200']
+#        r = ['NM-Test', 'NM-100', 'NM-200']
+        r = [str(ri.name) for ri in self.db.get_irradiations() if ri.name]
         if r:
             self.irradiation = r[-1]
         return r
 
-    def _get_sub_irradiations(self):
-        r = ['A', 'B']
-        if r:
-            self.sub_irradiation = r[-1]
+    def _get_levels(self):
+        r = []
+        irrad = self.db.get_irradiation(self.irradiation)
+        if irrad:
+            r = [str(ri.name) for ri in irrad.levels]
+            if r:
+                self.level = r[-1]
         return r
 
+    def _get_irradiation_tray_image(self):
+        p = self._get_map_path()
+        ir = self.db.get_irradiation(self.irradiation)
+#        holder = next((li.holder.name for li in ir.levels), None)
+        holder = 'h'
+        if holder:
+            im = ImageResource('{}.png'.format(holder),
+                                 search_path=[p]
+                                 )
+            return im
     @cached_property
-    def _get_irradiation_trays(self):
+    def _get_trays(self):
 
         p = self._get_map_path()
         if not os.path.isdir(p):
@@ -200,17 +260,9 @@ class LabnumberEntry(Loggable):
                             or pi.endswith('.pct')
                             or pi.startswith('.'))]
         if ts:
-            self.irradiation_tray = ts[-1]
+            self.tray = ts[-1]
 
         return ts
-
-    def _get_irradiation_tray_image(self):
-        p = self._get_map_path()
-        im = ImageResource('{}.png'.format(self.irradiation_tray),
-                             search_path=[p]
-                             )
-        return im
-
     def _get_map_path(self):
         return os.path.join(paths.setup_dir, 'irradiation_tray_maps')
 
@@ -220,10 +272,11 @@ class LabnumberEntry(Loggable):
                                    VGroup(Item('irradiation',
                                                editor=EnumEditor(name='irradiations')
                                                ),
-                                        Item('sub_irradiation',
-                                             editor=EnumEditor(name='sub_irradiations')
+                                        Item('level',
+                                             editor=EnumEditor(name='levels')
                                              ),
-                                          Item('add_irradiation_button', show_label=False)
+                                          Item('add_irradiation_button', show_label=False),
+                                          Item('add_level_button', show_label=False),
 #                                        Item('irradiation_tray',
 #                                             editor=EnumEditor(name='irradiation_trays')
 #                                             )

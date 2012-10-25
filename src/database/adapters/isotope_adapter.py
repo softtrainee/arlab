@@ -28,7 +28,7 @@ DetectorTable, MassSpectrometerTable, MaterialTable, MolecularWeightTable, \
     ProjectTable, UserTable, SampleTable, LabTable, AnalysisTypeTable, \
 irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
-    ExtractionDeviceTable, irrad_ChronologyTable
+    ExtractionDeviceTable, irrad_ChronologyTable, irrad_LevelTable
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
 from src.experiment.identifier import convert_identifier
@@ -236,6 +236,19 @@ class IsotopeAdapter(DatabaseAdapter):
         '''
         ch = irrad_ChronologyTable(chronology=chronblob)
         return ch, True
+
+    @add
+    def add_irradiation_level(self, name, irradiation, holder):
+        level = irrad_LevelTable(name=name)
+        irradiation = self.get_irradiation(irradiation)
+        if irradiation is not None:
+            irradiation.levels.append(level)
+
+        holder = self.get_irradiation_holder(holder)
+        if holder is not None:
+            holder.levels.append(level)
+
+        return level, True
 
     @add
     def add_isotope(self, analysis, molweight, det, **kw):
