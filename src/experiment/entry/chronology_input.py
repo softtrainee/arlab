@@ -26,6 +26,28 @@ class Dosage(HasTraits):
     enddate = Date
     starttime = Time
     endtime = Time
+    def validate_dosage(self, prev_dose):
+        if self.startdate is None:
+            return 'Start date not set'
+        if self.enddate is None:
+            return 'End date not set'
+        if self.starttime is None:
+            return 'Start time not set'
+        if self.endtime is None:
+            return 'End time not set'
+
+        if prev_dose:
+            if not prev_dose.enddate <= self.startdate:
+                return 'Date > Prev Date'
+            if not prev_dose.endtime <= self.starttime:
+                return 'Time > Prev Time'
+
+        if not self.startdate <= self.enddate:
+            return 'Start Date > End Date'
+
+        if not self.starttime < self.endtime:
+            return 'Start Time > End Time'
+
     def traits_view(self):
         v = View(
                 HGroup(
@@ -48,6 +70,13 @@ class ChronologyInput(HasTraits):
     dosages = List(Dosage)
     add = Button('+')
     remove = Button('-')
+    def validate_chronology(self):
+        pdi = None
+        for di in self.dosages:
+            err = di.validate_dosage(pdi)
+            if err:
+                return err
+            pdi = di
 
     def _remove_fired(self):
         self.dosages.pop(-1)
