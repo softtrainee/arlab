@@ -19,7 +19,7 @@
 #============= standard library imports ========================
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, Time, Date
+from sqlalchemy import Column, Integer, String, Time, Date, BLOB
 #============= local library imports  ==========================
 Base = declarative_base()
 class MigrateVersionTable(Base):
@@ -56,5 +56,10 @@ class RIDMixin(ResultsMixin):
 class PathMixin(BaseMixin):
     root = Column(String(200))
     filename = Column(String(80))
+
+class ScriptTable(BaseMixin):
+    script_name = Column(String(80))
+    script_blob = Column(BLOB)
+
 
 #============= EOF =============================================

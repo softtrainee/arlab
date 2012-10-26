@@ -36,12 +36,16 @@ class AnalysisSummary(Summary):
         record = self.record
 
         isos = record.isos
-        isos = sorted(isos, key=lambda x: re.sub('\D', '', x))
-        isos.reverse()
+        if isos:
+            isos = sorted(isos, key=lambda x: re.sub('\D', '', x))
+            isos.reverse()
+        else:
+            isos = []
 
         d.add_text('Labnumber={}-{}'.format(record.labnumber, record.aliquot), bold=True)
         d.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
-
+        j, j_err = record.j
+        d.add_text('J={} {}{}'.format(j, u'\u00b1', j_err))
         floatfmt = lambda m, i = 5: '{{:0.{}f}}'.format(i).format(m)
         width = lambda m, i: '{{:<{}s}}'.format(i).format(m)
 

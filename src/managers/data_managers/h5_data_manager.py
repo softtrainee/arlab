@@ -153,7 +153,7 @@ class H5DataManager(DataManager):
             self._frame = None
             import traceback
             traceback.print_exc()
-            return False
+            return True
 
     def close(self):
         try:

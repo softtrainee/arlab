@@ -33,6 +33,9 @@ from src.experiment.processing.signal import InterpolatedRatio, Background, \
     Blank, Signal
 from uncertainties import ufloat
 import re
+import datetime
+import time
+from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -72,8 +75,9 @@ class IsotopeRecord(DatabaseRecord):
 
     detector_intercalibration_summary = Property
     analysis_summary = Property
+    irradiation_summary = Property
 #    categories = List(['summary', 'signal', 'sniff', 'baseline', 'peak center' ])
-    categories = List(['summary', ])#'signal', 'sniff', 'baseline', 'peak center' ])
+    categories = List(['summary', 'irradiation' ])#'signal', 'sniff', 'baseline', 'peak center' ])
     selected = Any('signal')
     display_item = Instance(HasTraits)
 
@@ -99,6 +103,10 @@ class IsotopeRecord(DatabaseRecord):
     age_dirty = Event
 
     ic_factor = Property
+    j = Property
+    irradiation_info = Property
+    production_ratios = Property
+
     age_scalar = 1e6
 
     _no_load = False
@@ -273,6 +281,24 @@ class IsotopeRecord(DatabaseRecord):
 #            return getattr(self._dbrecord, attr)
 #        except AttributeError, e:
 #            print 'gettatrr', attr
+    def _blank_factory(self, iso, tab):
+
+        return self._signal_factory(iso, tab)
+
+    def _signal_factory(self, iso, tab):
+        kw = dict()
+        if tab is not None:
+            xs, ys = self._get_xy(tab)
+            try:
+                fit = tab._v_attrs['fit']
+            except Exception:
+                fit = 1
+
+            kw = dict(xs=xs, ys=ys,
+                      fit=fit,
+                      detector=tab.name)
+        sig = Signal(isotope=iso, **kw)
+        return sig
 
     def _load_histories(self):
 
@@ -370,8 +396,8 @@ class IsotopeRecord(DatabaseRecord):
         self._load_signals()
 
         signals = self.signals
-        j = self._get_j()
-        irradinfo = self._get_irradinfo()
+#        j = self._get_j()
+#        irradinfo = self._get_irradiation()
 
         keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
         for iso in keys:
@@ -389,8 +415,9 @@ class IsotopeRecord(DatabaseRecord):
         bksignals = sigs('bg')
 
         ic = self.ic_factor
-
-        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irradinfo, ic)
+        j = self.j
+        irrad = self.irradiation_info
+        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irrad, ic)
 
         if result:
             self.arar_result = result
@@ -406,10 +433,63 @@ class IsotopeRecord(DatabaseRecord):
             return age, err
 
     def _get_j(self):
-        return (1e-4, 1e-7)
+        s = 1.0
+        e = 1e-3
+        analysis = self.dbrecord
+        labnumber = analysis.labnumber
+        try:
+            f = labnumber.selected_flux_history.flux
+            s = f.j
+            e = f.j_err
+        except AttributeError:
+            pass
 
-    def _get_irradinfo(self):
-        return (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), 1
+        return (s, e)
+
+    def _get_production_ratios(self):
+        ln = self._dbrecord.labnumber
+        ip = ln.irradiation_position
+        lev = ip.level
+        ir = lev.irradiation
+        pr = ir.production
+
+#        prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
+#                           for pi in ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
+        return pr
+
+    def _get_irradiation_info(self):
+        '''
+            return k4039, k3839, ca3937, ca3837, ca3637, cl3638, t
+        '''
+        prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), 1
+        analysis = self.dbrecord
+        labnumber = analysis.labnumber
+        if labnumber:
+            irradiation = labnumber.irradiation_position.level.irradiation
+            if irradiation:
+                pr = irradiation.production
+                if pr:
+#                    prs = self.production_ratios
+                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
+                           for pi in ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
+
+                chron = irradiation.chronology
+                if chron:
+                    chronblob = chron.chronology
+                    dose = chronblob.split('$')[-1]
+                    _start, end = dose.split('%')
+
+                    end = '2010-01-01 01:01:01'
+
+                    analts = '{} {}'.format(analysis.rundate, analysis.runtime)
+                    analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
+                    irradts = datetime.datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
+                    dt = analts - irradts
+
+                    t = dt.total_seconds()
+                    prs.append(t)
+
+        return prs
 
     @cached_property
     def _get_ic_factor(self):
@@ -433,24 +513,6 @@ class IsotopeRecord(DatabaseRecord):
                 ic = s.value, s.error
 
         return ic
-    def _blank_factory(self, iso, tab):
-
-        return self._signal_factory(iso, tab)
-
-    def _signal_factory(self, iso, tab):
-        kw = dict()
-        if tab is not None:
-            xs, ys = self._get_xy(tab)
-            try:
-                fit = tab._v_attrs['fit']
-            except Exception:
-                fit = 1
-
-            kw = dict(xs=xs, ys=ys,
-                      fit=fit,
-                      detector=tab.name)
-        sig = Signal(isotope=iso, **kw)
-        return sig
 
     def _get_xy(self, tab, x='time', y='value'):
         return zip(*[(r[x], r[y]) for r in tab.iterrows()])
@@ -641,6 +703,9 @@ class IsotopeRecord(DatabaseRecord):
                 item = BlanksSummary(record=self)
             elif selected == 'det._intercal.':
                 item = self.detector_intercalibration_summary
+            elif selected == 'irradiation':
+                item = self.irradiation_summary
+                item.refresh()
 #                item = DetectorIntercalibrationSummary(record=self)
             else:
                 item = getattr(self, '{}_graph'.format(selected))
@@ -655,7 +720,8 @@ class IsotopeRecord(DatabaseRecord):
                          graph=self.signal_graph,
                          name='Signal'
                          )
-        self.signal_graph.fit_selector = fs
+        if self.signal_graph:
+            self.signal_graph.fit_selector = fs
 
         item = AnalysisSummary(record=self,
                                fit_selector=fs
@@ -665,6 +731,11 @@ class IsotopeRecord(DatabaseRecord):
 
     def _apply_history_change(self, new):
         self.changed = True
+
+    @cached_property
+    def _get_irradiation_summary(self):
+        i = IrradiationSummary(record=self)
+        return i
 
     @cached_property
     def _get_detector_intercalibration_summary(self):
