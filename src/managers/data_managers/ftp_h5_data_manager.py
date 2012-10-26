@@ -23,25 +23,24 @@ from src.repo.repository import FTPRepository, SFTPRepository
 
 
 class FTPH5DataManager(H5DataManager):
-    repository = None
-    workspace_root = None
+
     def connect(self, host, usr, pwd, remote):
         self.repository = SFTPRepository(host=host,
                                          username=usr,
                                          password=pwd,
                                          root=remote)
 
-    def open_data(self, path, **kw):
-        if self.repository:
-            out = os.path.join(self.workspace_root, path)
-            path = os.path.join(self.repository.root, path)
-            if not os.path.isfile(out):
-                self.info('copying {} to repository {}'.format(path, os.path.dirname(out)))
-                self.repository.retrieveFile(path, out)
-            path = out
-##        out = os.path.join(self.workspace_root, p)
-##        self.repository.retrieveFile(p, out)
-        return super(FTPH5DataManager, self).open_data(path, **kw)
+#    def open_data(self, path, **kw):
+#        if self.repository:
+#            out = os.path.join(self.workspace_root, path)
+#            path = os.path.join(self.repository.root, path)
+#            if not os.path.isfile(out):
+#                self.info('copying {} to repository {}'.format(path, os.path.dirname(out)))
+#                self.repository.retrieveFile(path, out)
+#            path = out
+###        out = os.path.join(self.workspace_root, p)
+###        self.repository.retrieveFile(p, out)
+#        return super(FTPH5DataManager, self).open_data(path, **kw)
 
     def isfile(self, path):
         return self.repository.isfile(path)

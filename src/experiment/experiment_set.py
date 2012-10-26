@@ -695,8 +695,11 @@ tray: {}
 
                 ipos = li.irradiation_position
                 if not ipos is None:
-                    irrad = ipos.irradiation
-                    arun.irrad_level = '{}{}'.format(irrad.name, irrad.level)
+                    level = ipos.level
+                    irrad = level.irradiation
+#                    irrad = ipos.irradiation
+
+                    arun.irrad_level = '{}{}'.format(irrad.name, level.name)
 #                else:
 #                    self.warning_dialog('{} does not have irradiation info'.format(li.labnumber))
 
@@ -890,14 +893,17 @@ tray: {}
 
         a = AutomatedRun(
                          scripts=self.loaded_scripts,
-                         labnumber=labnumber,
+                         labnumber=labnumber if labnumber else '',
                          **kw
                          )
-
-        ln = self.db.get_labnumber(labnumber)
-        if ln is None:
-            self.warning_dialog('Invalid labnumber {}'.format(labnumber))
-            a._executable = False
+        if labnumber:
+            ln = self.db.get_labnumber(labnumber)
+            if ln is None:
+                self.warning_dialog('Invalid labnumber {}'.format(labnumber))
+                a._executable = False
+            else:
+                self._bind_automated_run(a)
+                a.create_scripts()
         else:
             self._bind_automated_run(a)
             a.create_scripts()
@@ -932,6 +938,8 @@ tray: {}
                              selected='object.selected',
 #                             refresh='object.refresh',
 #                             activated_row='object.activated_row',
+                            operations=['delete', 'edit'],
+#                            editable=False,
                              auto_resize=True,
                              multi_select=True,
                              auto_update=True,

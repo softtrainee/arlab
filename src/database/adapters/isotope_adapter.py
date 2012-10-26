@@ -209,6 +209,11 @@ class IsotopeAdapter(DatabaseAdapter):
         return ex, True
 
     @add
+    def add_extraction_device(self, name, **kw):
+        item = ExtractionDeviceTable(name=name, **kw)
+        return self._add_unique(item, 'extraction_device', name)
+
+    @add
     def add_flux(self, j, j_err):
         f = flux_FluxTable(j=j, j_err=j_err)
         return f, True
@@ -727,7 +732,8 @@ if __name__ == '__main__':
     logging_setup('ia')
     ia = IsotopeAdapter(
 
-                        name='isotopedb_dev_migrate',
+#                        name='isotopedb_dev_migrate',
+                        name='isotopedb_dev',
                         username='root',
                         password='Argon',
                         host='localhost',

@@ -169,7 +169,7 @@ class PlotPanel(Viewable):
             try:
                 ub = self.blanks[iso]
             except KeyError:
-                ub = ufloat((5, 0))
+                ub = ufloat((0, 0))
             return ub
 
         self._print_('bl', get_value, self.ratio_display)
@@ -268,14 +268,16 @@ class PlotPanel(Viewable):
         return RichTextDisplay(height=200,
                                default_color='black',
                                default_size=12,
-                               scroll_to_bottom=False
+                               scroll_to_bottom=False,
+                               bg_color='#FFFFCC'
 #                               width=0.25
                                )
     def _ratio_display_default(self):
         return RichTextDisplay(height=200,
                                default_color='black',
                                default_size=12,
-                               scroll_to_bottom=False
+                               scroll_to_bottom=False,
+                               bg_color='#FFFFCC'
 #                               width=0.75
                                )
 #============= EOF =============================================

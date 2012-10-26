@@ -212,10 +212,11 @@ class meas_ExperimentTable(Base, NameMixin):
 
 class meas_ExtractionTable(Base, ScriptTable):
     position = Column(Integer)
-    value = Column(Float)
+    extract_value = Column(Float)
     extract_duration = Column(Float)
-    clean_up_duration = Column(Float)
-    extraction_device_id = foreignkey('ExtractionDeviceTable')
+    cleanup_duration = Column(Float)
+    experiment_blob = Column(BLOB)
+    extract_device_id = foreignkey('ExtractionDeviceTable')
     analysis = relationship('meas_AnalysisTable', backref='extraction',
                           uselist=False
                           )
@@ -329,7 +330,9 @@ class DetectorTable(Base, NameMixin):
 
 class ExtractionDeviceTable(Base, NameMixin):
     extractions = relationship('meas_ExtractionTable', backref='extraction_device')
-
+    kind = stringcolumn()
+    make = stringcolumn()
+    model = stringcolumn()
 
 class LabTable(Base, BaseMixin):
     labnumber = Column(Integer)
