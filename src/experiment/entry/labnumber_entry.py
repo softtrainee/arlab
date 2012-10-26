@@ -31,8 +31,7 @@ import struct
 from src.loggable import Loggable
 from src.paths import paths
 from src.experiment.entry.irradiation import Irradiation
-from pyface.timer.do_later import do_later
-from traits.traits import Color
+
 
 ALPHAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 ALPHAS = [a for a in ALPHAS] + ['{}{}'.format(a, b)
@@ -73,7 +72,7 @@ class IrradiatedSample(HasTraits):
 
 class IrradiatedSampleAdapter(TabularAdapter):
     columns = [
-               ('Location', 'hole'),
+               ('Hole', 'hole'),
                ('Labnumber', 'labnumber'),
                ('Sample', 'sample'),
                ('Project', 'project'),
@@ -84,10 +83,10 @@ class IrradiatedSampleAdapter(TabularAdapter):
                (u'\u00b1', 'j_err'),
                ('Note', 'note')
              ]
-    hole_can_edit = False
-    hole_width = Property
-    def _get_hole_width(self):
-        return 35
+#    hole_can_edit = False
+    hole_width = Int(45)
+#    def _get_hole_width(self):
+#        return 35
 
     def get_bg_color(self, obj, trait, row):
         item = getattr(obj, trait)[row]
@@ -128,7 +127,6 @@ class LabnumberEntry(Loggable):
     add_irradiation_button = Button('Add Irradiation')
     add_level_button = Button('Add Level')
 
-    _prev_level = 0
 
     selected = Any
 
@@ -222,14 +220,19 @@ class LabnumberEntry(Loggable):
                 dbln = db.add_labnumber(ln, sample=sam,)
                 pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
 
+            def add_flux():
+                hist = db.add_flux_history(pos)
+                dbln.selected_flux_history = hist
+                f = db.add_flux(irs.j, irs.j_err)
+                f.history = hist
+
             if dbln.selected_flux_history:
                 tol = 1e-10
                 flux = dbln.selected_flux_history.flux
                 if abs(flux.j - irs.j) > tol or abs(flux.j_err - irs.j_err) > tol:
-                    hist = db.add_flux_history(pos)
-                    dbln.selected_flux_history = hist
-                    f = db.add_flux(irs.j, irs.j_err)
-                    f.history = hist
+                    add_flux()
+            else:
+                add_flux()
 
             db.commit()
 #===============================================================================
@@ -299,7 +302,6 @@ class LabnumberEntry(Loggable):
             irrad = self.db.get_irradiation(irrad)
             if not next((li for li in irrad.levels if li.name == t.name), None):
                 self.db.add_irradiation_level(t.name, irrad, t.tray)
-#                self._prev_level = self._prev_level + 1
                 self.db.commit()
                 self.level = t.name
                 self.saved = True

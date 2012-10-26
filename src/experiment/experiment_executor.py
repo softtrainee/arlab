@@ -196,7 +196,7 @@ class ExperimentExecutor(ExperimentManager):
                 self.err_message = False
                 self._was_executed = True
             else:
-                self.info('experiment canceled because no blank or background was configured')
+                self.info('experiment canceled because no blank was configured')
                 self._alive = False
 
     def _check_for_managers(self, exp):
@@ -405,6 +405,9 @@ class ExperimentExecutor(ExperimentManager):
                 return True
 
     def _has_preceeding_blank_or_background(self, exp):
+        if globalv.experiment_debug:
+            return True
+
         types = ['air', 'unknown', 'cocktail']
         #get first air, unknown or cocktail
         aruns = self.experiment_set.automated_runs
@@ -427,15 +430,6 @@ class ExperimentExecutor(ExperimentManager):
                     else:
                         return
 
-
-#        if not exp.automated_runs[0].analysis_type.startswith('blank'):
-
-
-#        if exp.automated_runs[0].analysis_type not in ['blank', 'background']:
-#            #the experiment set doesnt start with a blank
-#            #ask user for preceeding blank
-#            self.warning_dialog("Experiment doesn't start with a blank or background")
-#            return False
         return True
 
     def _do_automated_run(self, arun):

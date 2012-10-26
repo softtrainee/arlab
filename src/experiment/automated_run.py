@@ -1038,7 +1038,8 @@ class AutomatedRun(Loggable):
                           experiment_blob=self.experiment_manager.experiment_blob(),
                           extract_value=self.extract_value,
                           position=self.position,
-                          extract_duration=self.duration
+                          extract_duration=self.duration,
+                          cleanup_duration=self.cleanup
                           )
         return ext
 

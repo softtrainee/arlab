@@ -14,8 +14,8 @@
 # limitations under the License.
 #===============================================================================
 
-#============= enthought library imports =======================
-from traits.api import Property, Int
+#============= enthought library imports=======================
+from traits.api import Property, Int, Bool
 from traitsui.tabular_adapter import TabularAdapter
 from kiva.fonttools import Font
 #============= standard library imports ========================
@@ -68,6 +68,9 @@ class AutomatedRunAdapter(TabularAdapter):
     overlap_text = Property
 
     can_edit = False
+#    position_can_edit = True
+#    duration_can_edit = True
+#    extract_value_can_edit = True
 #    def get_can_edit(self, obj, trait, row):
 #        if self.item:
 #            if self.item.state == 'not run':

@@ -105,6 +105,8 @@ class IsotopeRecord(DatabaseRecord):
     ic_factor = Property
     j = Property
     irradiation_info = Property
+    irradiation_level = Property
+    irradiation_position = Property
     production_ratios = Property
 
     age_scalar = 1e6
@@ -241,6 +243,8 @@ class IsotopeRecord(DatabaseRecord):
 
         self._no_load = True
         dm = self.selector.data_manager
+        print dm
+
         dm.open_data(self.path)
 
         signals = self._get_table_data(dm, 'signals')
@@ -447,15 +451,30 @@ class IsotopeRecord(DatabaseRecord):
         return (s, e)
 
     def _get_production_ratios(self):
-        ln = self._dbrecord.labnumber
-        ip = ln.irradiation_position
-        lev = ip.level
-        ir = lev.irradiation
-        pr = ir.production
+        try:
+            lev = self.irradiation_level
+#            ln = self._dbrecord.labnumber
+#            ip = ln.irradiation_position
+#            lev = ip.level
+            ir = lev.irradiation
+            pr = ir.production
+            return pr
+        except AttributeError:
+            pass
 
 #        prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
 #                           for pi in ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
-        return pr
+    def _get_irradiation_level(self):
+        try:
+            return self.irradiation_position.level
+        except AttributeError:
+            pass
+
+    def _get_irradiation_position(self):
+        try:
+            return self.dbrecord.labnumber.irradiation_position
+        except AttributeError:
+            pass
 
     def _get_irradiation_info(self):
         '''
@@ -463,13 +482,21 @@ class IsotopeRecord(DatabaseRecord):
         '''
         prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), 1
         analysis = self.dbrecord
-        labnumber = analysis.labnumber
-        if labnumber:
-            irradiation = labnumber.irradiation_position.level.irradiation
+#        labnumber = analysis.labnumber
+
+        irradiation_level = self.irradiation_level
+#        if labnumber:
+#            try:
+#                irradiation = labnumber.irradiation_position.level.irradiation
+#            except AttributeError:
+#                irradiation = None
+
+        if irradiation_level:
+            irradiation = irradiation_level.irradiation
             if irradiation:
                 pr = irradiation.production
                 if pr:
-#                    prs = self.production_ratios
+    #                    prs = self.production_ratios
                     prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
                            for pi in ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
 
@@ -751,12 +778,12 @@ class IsotopeRecord(DatabaseRecord):
     @cached_property
     def _get_labnumber(self):
         if self._dbrecord:
-#        print 'get aasfd', self._dbrecord.labnumber
-
-            ln = self._dbrecord.labnumber.labnumber
-            ln = convert_labnumber(ln)
+#            print 'get aasfd', self._dbrecord.labnumber
+            if self._dbrecord.labnumber:
+                ln = self._dbrecord.labnumber.labnumber
+                ln = convert_labnumber(ln)
     #        ln = '{}-{}'.format(ln, self.aliquot)
-            return ln
+                return ln
 
     @cached_property
     def _get_shortname(self):

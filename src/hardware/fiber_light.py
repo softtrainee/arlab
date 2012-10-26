@@ -110,9 +110,9 @@ class FiberLight(AbstractDevice):
         '''
         '''
         if self.state:
-            s = 'OFF'
-        else:
             s = 'ON'
+        else:
+            s = 'OFF'
         return s
 
     def get_control_group(self):

@@ -29,7 +29,7 @@ from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 from src.experiment.selection_view import SelectionView
 from src.experiment.file_listener import FileListener
-from src.experiment.labnumber_entry import LabnumberEntry
+from src.experiment.entry.labnumber_entry import LabnumberEntry
 from src.experiment.set_selector import SetSelector
 from src.managers.manager import Manager, SaveableManagerHandler
 from src.repo.repository import Repository, FTPRepository
@@ -149,7 +149,7 @@ class ExperimentManager(Manager):
                                       ('Fusions Diode', '810nm diode', 'photon machines'),
                                       ('Fusions UV', '193nm eximer', 'photon machines')
                                       ]:
-                    db.add_extraction_device(hi,
+                    db.add_extraction_device(name=hi,
                                              kind=kind,
                                              make=make
                                              )
@@ -191,6 +191,7 @@ class ExperimentManager(Manager):
                                       workspace_root=paths.default_workspace_dir
                                       )
         return sel
+
     def open_recent(self):
         db = self.db
         if db.connect():
