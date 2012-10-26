@@ -31,13 +31,14 @@ class FitSelector(HasTraits):
     _suppress_update = False
     def _analysis_changed(self):
         if self.analysis:
-            keys = list(self.analysis.isos)
+            if self.analysis.isos:
+                keys = list(self.analysis.isos)
 
-            key = lambda x: re.sub('\D', '', x)
-            keys = sorted(keys, key=key, reverse=True)
+                key = lambda x: re.sub('\D', '', x)
+                keys = sorted(keys, key=key, reverse=True)
 
-            n = len(keys) - 1
-            self.fits = list(map(lambda x:self._param_factory(n, x), enumerate(keys)))
+                n = len(keys) - 1
+                self.fits = list(map(lambda x:self._param_factory(n, x), enumerate(keys)))
 
     def _param_factory(self, n, arg):
 

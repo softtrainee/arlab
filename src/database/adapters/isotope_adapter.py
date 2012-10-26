@@ -28,7 +28,8 @@ DetectorTable, MassSpectrometerTable, MaterialTable, MolecularWeightTable, \
     ProjectTable, UserTable, SampleTable, LabTable, AnalysisTypeTable, \
 irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
-    ExtractionDeviceTable, irrad_ChronologyTable, irrad_LevelTable
+    ExtractionDeviceTable, irrad_ChronologyTable, irrad_LevelTable, \
+    irrad_PositionTable, flux_FluxTable, flux_HistoryTable
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
 from src.experiment.identifier import convert_identifier
@@ -208,6 +209,21 @@ class IsotopeAdapter(DatabaseAdapter):
         return ex, True
 
     @add
+    def add_flux(self, j, j_err):
+        f = flux_FluxTable(j=j, j_err=j_err)
+        return f, True
+
+    @add
+    def add_flux_history(self, pos, **kw):
+        ft = flux_HistoryTable(**kw)
+        if pos:
+            ft.position = pos
+            return ft, True
+        else:
+            return ft, False
+
+
+    @add
     def add_irradiation(self, name, production=None, chronology=None):
         production = self.get_irradiation_production(production)
         chronology = self.get_irradiation_chronology(chronology)
@@ -230,21 +246,40 @@ class IsotopeAdapter(DatabaseAdapter):
         return ip, True
 
     @add
+    def add_irradiation_position(self, pos, labnumber, irrad, level, **kw):
+        labnumber = self.get_labnumber(labnumber)
+        dbpos = irrad_PositionTable(position=pos, labnumber=labnumber)
+
+#        irrad = self.get_irradiation(irrad)
+        level = self.get_irradiation_level(irrad, level)
+#        level = next((li for li in irrad.levels if li.name == level), None)
+        if level:
+            level.positions.append(dbpos)
+            return dbpos, True
+        else:
+            return dbpos, False
+
+    @add
     def add_irradiation_chronology(self, chronblob):
         '''
-            startdate1,starttime1%enddate1,endtime1$startdate2,starttime2%enddate2,endtime2
+            startdate1 starttime1%enddate1 endtime1$startdate2 starttime2%enddate2 endtime2
         '''
         ch = irrad_ChronologyTable(chronology=chronblob)
         return ch, True
 
     @add
     def add_irradiation_level(self, name, irradiation, holder):
-        level = irrad_LevelTable(name=name)
         irradiation = self.get_irradiation(irradiation)
+        holder = self.get_irradiation_holder(holder)
+
+        irn = irradiation.name if irradiation else None
+        hn = holder.name if holder else None
+        self.info('adding level {} {} to {}'.format(name, hn, irn))
+
+        level = irrad_LevelTable(name=name)
         if irradiation is not None:
             irradiation.levels.append(level)
 
-        holder = self.get_irradiation_holder(holder)
         if holder is not None:
             holder.levels.append(level)
 
@@ -379,30 +414,11 @@ class IsotopeAdapter(DatabaseAdapter):
                 project.samples.append(sample)
             if material is not None:
                 material.samples.append(sample)
-
+            self.info('adding sample {} project={}, material={}'.format(name,
+                                                                        material.name if material else 'None',
+                                                                        project.name if project else 'None'))
             return sample, True
-#        q = self._build_query_and(SampleTable, name, MaterialTable, material)
-#        q = self._build_query_and(SampleTable, name, ProjectTable, project, q=q)
 
-#        addflag = True
-#
-#        sam = sql_retrieve(q.one)
-#        if sam is not None:
-#            addflag = not (sam.project == project or sam.material == material)
-#
-#        if addflag:
-#            self.info('adding sample {}'.format(name))
-#            if project is not None:
-#                project.samples.append(sample)
-#                material.samples.append(sample)
-#
-#            return sample, True
-#        else:
-#            self.info('sample={} material={} project={} already exists'.format(name,
-#                                                                           material.name if material else 'None',
-#                                                                           project.name if project else 'None'
-#                                                                           ))
-#            return sample, False
 
     @add
     def add_selected_histories(self, analysis, **kw):
@@ -569,6 +585,17 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_irradiation(self, name):
         return irrad_IrradiationTable
 
+    def get_irradiation_level(self, irrad, level):
+        sess = self.get_session()
+        q = sess.query(irrad_LevelTable)
+        q = q.join(irrad_IrradiationTable)
+        q = q.filter(irrad_IrradiationTable.name == irrad)
+        q = q.filter(irrad_LevelTable.name == level)
+        try:
+            return q.one()
+        except Exception, e:
+            print 'get level except', e
+
     def get_labnumber(self, labnum):
         if isinstance(labnum, str):
             labnum = convert_identifier(labnum)
@@ -604,6 +631,9 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_sample(self, name):
         return SampleTable
 
+    @get_one
+    def get_flux_history(self, name):
+        return flux_HistoryTable
 #===============================================================================
 # ##getters multiple
 #===============================================================================
@@ -697,7 +727,7 @@ if __name__ == '__main__':
     logging_setup('ia')
     ia = IsotopeAdapter(
 
-                        name='isotopedb_dev',
+                        name='isotopedb_dev_migrate',
                         username='root',
                         password='Argon',
                         host='localhost',

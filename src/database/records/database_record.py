@@ -118,19 +118,22 @@ class DatabaseRecord(Viewable):
     @cached_property
     def _get_rundate(self):
         if self._dbrecord:
-            return self._dbrecord.rundate.strftime('%Y-%m-%d')
+            if self._dbrecord.rundate:
+                return self._dbrecord.rundate.strftime('%Y-%m-%d')
 
     @cached_property
     def _get_runtime(self):
         if self._dbrecord:
-            return self._dbrecord.runtime.strftime('%H:%M:%S')
+            if self._dbrecord.runtime:
+                return self._dbrecord.runtime.strftime('%H:%M:%S')
 
     @cached_property
     def _get_path(self):
         if self._dbrecord:
-            root = self._dbrecord.path.root
-            name = self._dbrecord.path.filename
-            return os.path.join(root, name)
+            if self._dbrecord.path:
+                root = self._dbrecord.path.root
+                name = self._dbrecord.path.filename
+                return os.path.join(root, name)
 
     @property
     def filename(self):

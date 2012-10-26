@@ -28,9 +28,10 @@ from src.experiment.entry.production_ratio_input import ProductionRatioInput
 from src.experiment.entry.chronology_input import ChronologyInput
 import os
 from src.paths import paths
+from src.viewable import Viewable
 
 
-class Irradiation(Loggable):
+class Irradiation(Viewable):
     db = Instance(IsotopeAdapter)
     production_ratio_input = Instance(ProductionRatioInput)
     chronology_input = Instance(ChronologyInput)
@@ -58,40 +59,39 @@ class Irradiation(Loggable):
         pr.db.reset()
         pr.edit_traits()
 
-    def save(self):
-
-        db = self.db
-
-        ir = db.get_irradiation(self.name)
-        if ir is not None:
-            self.warning_dialog('Irradiation already exists')
-            return
-        else:
-            prn = self.pr_name
-            if not prn:
-                prn = self.production_ratio_input.names[0]
-
-            def make_ci(ci):
-                return '{},{}%{},{}'.format(ci.startdate, ci.starttime,
-                                        ci.enddate, ci.endtime)
-            err = self.chronology_input.validate_chronology()
-#            if err :
-#                self.warning_dialog('Invalid Chronology. {}'.format(err))
-#                return
-
-            chronblob = '$'.join([make_ci(ci) for ci in self.chronology_input.dosages])
-            cr = db.add_irradiation_chronology(chronblob)
-
-            ir = db.add_irradiation(self.name, prn, cr)
-
-#            holder = db.get_irradiation_holder(self.holder)
-#            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
-#            for ni in alpha:
-#                db.add_irradiation_level(ni, ir, holder)
-
-        db.commit()
-
-
+#    def save(self):
+#
+#        db = self.db
+#
+#        ir = db.get_irradiation(self.name)
+#        if ir is not None:
+#            self.warning_dialog('Irradiation already exists')
+#            return
+#        else:
+#            prn = self.pr_name
+#            if not prn:
+#                prn = self.production_ratio_input.names[0]
+#
+#            def make_ci(ci):
+#                return '{},{}%{},{}'.format(ci.startdate, ci.starttime,
+#                                        ci.enddate, ci.endtime)
+#            err = self.chronology_input.validate_chronology()
+##            if err :
+##                self.warning_dialog('Invalid Chronology. {}'.format(err))
+##                return
+#
+#            chronblob = '$'.join([make_ci(ci) for ci in self.chronology_input.dosages])
+#            cr = db.add_irradiation_chronology(chronblob)
+#
+#            ir = db.add_irradiation(self.name, prn, cr)
+#
+##            holder = db.get_irradiation_holder(self.holder)
+##            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]
+##            for ni in alpha:
+##                db.add_irradiation_level(ni, ir, holder)
+#
+#        db.commit()
+#        self.close_ui()
 
     def _get_map_path(self):
         return os.path.join(paths.setup_dir, 'irradiation_tray_maps')
@@ -106,7 +106,7 @@ class Irradiation(Loggable):
 
 #                 buttons=['OK', 'Cancel'],
                  title='New Irradiation',
-                 buttons=[Action(name='Save', action='save',
+                 buttons=[Action(name='OK', action='save',
                                 enabled_when='object.save_enabled'),
                           'Cancel'
                           ],

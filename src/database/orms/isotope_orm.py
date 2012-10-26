@@ -24,7 +24,7 @@ from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
 from src.database.core.base_orm import BaseMixin, NameMixin
-from src.database.core.base_orm import PathMixin, ResultsMixin
+from src.database.core.base_orm import PathMixin, ResultsMixin, ScriptTable
 from sqlalchemy.sql.expression import func
 
 Base = declarative_base()
@@ -37,26 +37,29 @@ def stringcolumn(size=40):
 
 
 #===============================================================================
-# unsorted
+# flux
 #===============================================================================
-class ScriptTable(BaseMixin):
-    script_name = stringcolumn(80)
-    script_blob = Column(BLOB)
+class flux_FluxTable(Base, BaseMixin):
+    j = Column(Float)
+    j_err = Column(Float)
+    history_id = foreignkey('flux_HistoryTable')
 
+class flux_MonitorTable(Base, NameMixin):
+    decay_constant = Column(Float)
+    decay_constant_err = Column(Float)
+    age = Column(Float)
+    age_err = Column(Float)
+    sample_id = foreignkey('SampleTable')
 
-class AnalysisTypeTable(Base, NameMixin):
-    measurements = relationship('meas_MeasurementTable', backref='analysis_type')
-
-
-class DetectorTable(Base, NameMixin):
-    kind = stringcolumn()
-    isotopes = relationship('meas_IsotopeTable', backref='detector')
-    deflections = relationship('meas_SpectrometerDeflectionsTable', backref='detector')
-
-
-class ExtractionDeviceTable(Base, NameMixin):
-    extractions = relationship('meas_ExtractionTable', backref='extraction_device')
-
+class flux_HistoryTable(Base, BaseMixin):
+    irradiation_position_id = foreignkey('irrad_PositionTable')
+    selected = relationship('LabTable',
+                            backref='selected_flux_history',
+                            uselist=False
+                            )
+    flux = relationship('flux_FluxTable',
+                      backref='history',
+                      uselist=False)
 #===============================================================================
 # proc
 #===============================================================================
@@ -169,10 +172,10 @@ class proc_WorkspaceSettings(Base, BaseMixin):
 #===============================================================================
 # 
 #===============================================================================
+
 #===============================================================================
 # measurement
 #===============================================================================
-
 class meas_AnalysisPathTable(Base, PathMixin):
     analysis_id = foreignkey('meas_AnalysisTable')
 
@@ -254,6 +257,10 @@ class meas_SignalsTable(Base, BaseMixin):
     analysis_id = foreignkey('meas_AnalysisTable')
     datablob = Column(BLOB)
 
+
+#===============================================================================
+# irradiation
+#===============================================================================
 class irrad_HolderTable(Base, NameMixin):
     levels = relationship('irrad_LevelTable', backref='holder')
     geometry = Column(BLOB)
@@ -267,7 +274,10 @@ class irrad_PositionTable(Base, BaseMixin):
     labnumber = relationship('LabTable', backref='irradiation_position',
                              uselist=False
                              )
+    flux_histories = relationship('flux_HistoryTable', backref='position')
+
     level_id = foreignkey('irrad_LevelTable')
+    position = Column(Integer)
 
 class irrad_ProductionTable(Base, NameMixin):
     K4039 = Column(Float)
@@ -298,12 +308,36 @@ class irrad_ChronologyTable(Base, BaseMixin):
     chronology = Column(BLOB)
     irradiation = relationship('irrad_IrradiationTable', backref='chronology')
 
+#===============================================================================
+# 
+#===============================================================================
+
+#===============================================================================
+# general
+#===============================================================================
+
+
+class AnalysisTypeTable(Base, NameMixin):
+    measurements = relationship('meas_MeasurementTable', backref='analysis_type')
+
+
+class DetectorTable(Base, NameMixin):
+    kind = stringcolumn()
+    isotopes = relationship('meas_IsotopeTable', backref='detector')
+    deflections = relationship('meas_SpectrometerDeflectionsTable', backref='detector')
+
+
+class ExtractionDeviceTable(Base, NameMixin):
+    extractions = relationship('meas_ExtractionTable', backref='extraction_device')
+
+
 class LabTable(Base, BaseMixin):
     labnumber = Column(Integer)
 #    aliquot = Column(Integer)
     sample_id = foreignkey('SampleTable')
     analyses = relationship('meas_AnalysisTable', backref='labnumber')
     irradiation_id = foreignkey('irrad_PositionTable')
+    selected_flux_id = foreignkey('flux_HistoryTable')
 
 
 class MassSpectrometerTable(Base, NameMixin):
@@ -313,8 +347,6 @@ class MassSpectrometerTable(Base, NameMixin):
 
 class MaterialTable(Base, NameMixin):
     samples = relationship('SampleTable', backref='material')
-
-
 
 
 class MolecularWeightTable(Base, NameMixin):
@@ -337,9 +369,7 @@ class UserTable(Base, NameMixin):
     project_id = foreignkey('ProjectTable')
 
 
-
-
-
-
-
+#===============================================================================
+# 
+#===============================================================================
 #============= EOF =============================================
