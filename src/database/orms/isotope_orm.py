@@ -185,6 +185,8 @@ class meas_AnalysisTable(Base, ResultsMixin):
     extraction_id = foreignkey('meas_ExtractionTable')
     measurement_id = foreignkey('meas_MeasurementTable')
     experiment_id = foreignkey('meas_ExperimentTable')
+    import_id = foreignkey('gen_ImportTable')
+
     endtime = Column(Time)
     status = Column(Integer, default=1)
     aliquot = Column(Integer)
@@ -334,6 +336,11 @@ class gen_ExtractionDeviceTable(Base, NameMixin):
     kind = stringcolumn()
     make = stringcolumn()
     model = stringcolumn()
+
+class gen_ImportTable(Base, BaseMixin):
+    date = Column(DateTime, default=func.now())
+    user = stringcolumn()
+    analyses = relationship('meas_AnalysisTable')
 
 class gen_LabTable(Base, BaseMixin):
     labnumber = Column(Integer)

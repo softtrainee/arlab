@@ -40,7 +40,8 @@ from src.database.orms.isotope_orm import flux_FluxTable, flux_HistoryTable, flu
 #gen_
 from src.database.orms.isotope_orm import gen_DetectorTable, gen_ExtractionDeviceTable, gen_ProjectTable, \
     gen_MolecularWeightTable, gen_MaterialTable, gen_MassSpectrometerTable, \
-    gen_SampleTable, gen_LabTable, gen_AnalysisTypeTable, gen_UserTable
+    gen_SampleTable, gen_LabTable, gen_AnalysisTypeTable, gen_UserTable, gen_ImportTable
+
 
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
@@ -307,6 +308,11 @@ class IsotopeAdapter(DatabaseAdapter):
             holder.levels.append(level)
 
         return level, True
+
+    @add
+    def add_import(self, **kw):
+        ih = gen_ImportTable(**kw)
+        return ih, True
 
     @add
     def add_isotope(self, analysis, molweight, det, **kw):
