@@ -34,6 +34,7 @@ from src.experiment.set_selector import SetSelector
 from src.managers.manager import Manager, SaveableManagerHandler
 from src.repo.repository import Repository, FTPRepository
 from pyface.timer.do_later import do_later
+from src.helpers.alphas import ALPHAS
 #from globals import globalv
 
 class ExperimentManagerHandler(SaveableManagerHandler):
@@ -238,39 +239,84 @@ class ExperimentManager(Manager):
                     for ai in ei.automated_runs]
 
     def _update_aliquots(self):
+
         ans = self._get_all_automated_runs()
+        #update the aliquots
+        self._modify_aliquots(ans)
 
+        #update the steps
+        self._modify_steps(ans)
 
+    def _modify_steps(self, ans):
         db = self.db
         idcnt_dict = dict()
         stdict = dict()
-#        for arun in self.automated_runs:
+        extract_group = 1
+        aoff = 0
         for arun in ans:
             arunid = arun.labnumber
-            ln = db.get_labnumber(arunid)
+            if arun.extract_group:
+                if not arun.extract_group == extract_group:
+                    aoff += 1
+                    idcnt_dict, stdict = dict(), dict()
+                    c = 1
+                else:
+                    if arunid in idcnt_dict:
+                        c = idcnt_dict[arunid]
+                        c += 1
+                    else:
+                        c = 1
+
+                ln = db.get_labnumber(arunid)
+                if ln is not None:
+                    try:
+                        st = ln.analyses[-1].step
+                        st = list(ALPHAS).index(st)
+                    except (IndexError, ValueError):
+                        st = 0
+                else:
+                    st = stdict[arunid] if arunid in stdict else 0
+
+                arun._step = st + c
+                idcnt_dict[arunid] = c
+                stdict[arunid] = st
+                extract_group = arun.extract_group
+
+            arun.aliquot += aoff
+
+    def _modify_aliquots(self, ans):
+        db = self.db
+        #update the aliquots
+        idcnt_dict = dict()
+        stdict = dict()
+        for arun in ans:
+            arunid = arun.labnumber
+            c = 1
             if arunid in idcnt_dict:
                 c = idcnt_dict[arunid]
-                c += 1
-            else:
-                c = 1
+                if not arun.extract_group:
+                    c += 1
+#                else:
+#                    c = 1
+#            else:
+#                c = 1
 
+            ln = db.get_labnumber(arunid)
             if ln is not None:
                 try:
                     st = ln.analyses[-1].aliquot
                 except IndexError:
                     st = 0
-#                st = ln.aliquot
             else:
-                if arunid in stdict:
-                    st = stdict[arunid]
-#                    st += 1
-                else:
-                    st = 0
+                st = stdict[arunid] if arunid in stdict else 0
+#                if arunid in stdict:
+#                    st = stdict[arunid]
+#                else:
+#                    st = 0
 
             arun.aliquot = st + c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
-
     def _update_dirty(self):
         pass
 #===============================================================================

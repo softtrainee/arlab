@@ -491,6 +491,10 @@ class Graph(Loggable, ContextMenuMixin):
             plot.value_range.high_setting = 'auto'
             plot.value_range.low_setting = 'auto'
 
+    def set_plot_title(self, t, font='Helvetica', size=None, plotid=0):
+        p = self.plots[plotid]
+        p.title = t
+
     def set_title(self, t, font='Helvetica', size=None):
         '''
         '''

@@ -35,12 +35,13 @@ from src.experiment.entry.irradiated_position import IrradiatedPosition, \
     IrradiatedPositionAdapter
 from src.experiment.entry.level import Level
 from src.experiment.entry.flux_monitor import FluxMonitor
+from src.helpers.alphas import ALPHAS
 
 
-ALPHAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-ALPHAS = [a for a in ALPHAS] + ['{}{}'.format(a, b)
-                                    for a in ALPHAS
-                                        for b in ALPHAS]
+#ALPHAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+#ALPHAS = [a for a in ALPHAS] + ['{}{}'.format(a, b)
+#                                    for a in ALPHAS
+#                                        for b in ALPHAS]
 
 
 

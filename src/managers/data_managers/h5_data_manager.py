@@ -19,7 +19,7 @@
 #============= enthought library imports =======================
 from traits.api import Any
 #============= standard library imports ========================
-from tables import openFile, NodeError
+from tables import openFile, Filters
 from numpy import array
 #============= local library imports  ==========================
 from data_manager import DataManager
@@ -34,7 +34,7 @@ class H5DataManager(DataManager):
     _extension = 'hdf5'
     repository = Any
     workspace_root = None
-
+    compression_level = 5
     def set_group_attribute(self, group, key, value):
         f = self._frame
 
@@ -88,7 +88,10 @@ class H5DataManager(DataManager):
         '''
         p = self._new_frame_path(*args, **kw)
         try:
-            self._frame = openFile(p, mode='w')
+
+            fil = Filters(complevel=self.compression_level)
+
+            self._frame = openFile(p, mode='w', filters=fil)
         except ValueError:
             pass
 
@@ -166,8 +169,9 @@ class H5DataManager(DataManager):
     def close(self):
         try:
             self._frame.close()
-        except Exception:
-            pass
+        except Exception, e:
+            print 'exception closing file', e
+
 
     def kill(self):
         self.close()
