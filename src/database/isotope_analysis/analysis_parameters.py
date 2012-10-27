@@ -18,67 +18,9 @@
 from traits.api import HasTraits, Str, Enum, Float, Any, List
 from traitsui.api import View, Item, HGroup, Label, Spring, EnumEditor
 #============= standard library imports ========================
-import wx
+#import wx
 #============= local library imports  ==========================
-from traitsui.api import CustomEditor
-from traitsui.wx.enum_editor import ListEditor, SimpleEditor
-from traitsui.editors.enum_editor \
-    import ToolkitEditorFactory
 
-class _BoundEnumEditor(SimpleEditor):
-#class _BoundEnumEditor(ListEditor):
-#class _BoundEnumEditor(CustomEditor):
-    def init(self, parent):
-#        super(_BoundEnumEditor, self).init(parent)
-
-        self.control = control = wx.ComboBox(parent, -1, self.names[0],
-                               wx.Point(0, 0),
-                               wx.Size(-1, -1),
-                                self.names,
-                                style=wx.CB_DROPDOWN
-                               )
-
-#         wx.EVT_CHOICE(parent, self.control.GetId(), self.update_object)
-        control.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
-#        parent.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
-        parent.Bind(wx.EVT_COMBOBOX, self.update_object, control)
-
-        self._no_enum_update = 0
-        self.set_tooltip()
-#        parent.Bind(wx.EVT_KEY_DOWN, self.onKeyDown)
-#        self.control.Bind(wx.EVT_TEXT, None)
-#        wx.EVT_CHOICE(parent, self.control.GetId(), None)
-#        s = self.control.GetWindowStyle()
-#        self.control.SetWindowStyle(s | wx.WANTS_CHARS)
-#        self.control.Bind(wx.EVT_CHAR, self.onKeyDown)
-#        parent.Bind(wx.EVT_CHAR, self.onKeyDown)
-#        self.control.Bind(wx.EVT_CHAR_HOOK, self.onKeyDown)
-
-#        print self.control
-    def update_object(self, event):
-        super(_BoundEnumEditor, self).update_object(event)
-        if self._bind:
-            for fi in self.object.analyzer.fits:
-                fi.fit = self.value
-
-        self._bind = False
-
-    def onKeyDown(self, event):
-#        print event.GetKeyCode()
-        if event.CmdDown():
-            self._bind = True
-#        else:
-#            self._bind = False
-#        event.RequestMore()
-#        event.Skip()
-
-class BoundEnumEditor(ToolkitEditorFactory):
-    evaluate = lambda x: x
-    def _get_custom_editor_class(self):
-        return _BoundEnumEditor
-
-    def _get_simple_editor_class(self):
-        return _BoundEnumEditor
 
 class AnalysisParameters(HasTraits):
     fit = Str#Enum('linear', 'parabolic', 'cubic')

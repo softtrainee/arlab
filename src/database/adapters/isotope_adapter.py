@@ -20,18 +20,31 @@ from sqlalchemy.sql.expression import  and_
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
-from src.database.orms.isotope_orm import meas_AnalysisPathTable, meas_AnalysisTable, meas_ExperimentTable, \
-    meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
-proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
-    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
-DetectorTable, MassSpectrometerTable, MaterialTable, MolecularWeightTable, \
-    ProjectTable, UserTable, SampleTable, LabTable, AnalysisTypeTable, \
-irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, \
-    meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
-    ExtractionDeviceTable, irrad_ChronologyTable, irrad_LevelTable, \
-    irrad_PositionTable, flux_FluxTable, flux_HistoryTable
+
+#meas_
+from src.database.orms.isotope_orm import meas_AnalysisPathTable, meas_AnalysisTable, \
+    meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
+    meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable
+
+#proc_
+from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
+    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable
+
+#irrad_
+from src.database.orms.isotope_orm import irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, irrad_ChronologyTable, irrad_LevelTable, \
+    irrad_PositionTable
+
+#flux_
+from src.database.orms.isotope_orm import flux_FluxTable, flux_HistoryTable, flux_MonitorTable
+
+#gen_
+from src.database.orms.isotope_orm import gen_DetectorTable, gen_ExtractionDeviceTable, gen_ProjectTable, \
+    gen_MolecularWeightTable, gen_MaterialTable, gen_MassSpectrometerTable, \
+    gen_SampleTable, gen_LabTable, gen_AnalysisTypeTable, gen_UserTable
+
 from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
+
 from src.experiment.identifier import convert_identifier
 from src.repo.repository import Repository
 from src.paths import paths
@@ -158,7 +171,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @add
     def add_detector(self, name, **kw):
-        det = DetectorTable(name=name, **kw)
+        det = gen_DetectorTable(name=name, **kw)
         return self._add_unique(det, 'detector', name)
 
     def add_detector_intercalibration_history(self, analysis, **kw):
@@ -210,7 +223,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @add
     def add_extraction_device(self, name, **kw):
-        item = ExtractionDeviceTable(name=name, **kw)
+        item = gen_ExtractionDeviceTable(name=name, **kw)
         return self._add_unique(item, 'extraction_device', name)
 
     @add
@@ -226,7 +239,10 @@ class IsotopeAdapter(DatabaseAdapter):
             return ft, True
         else:
             return ft, False
-
+    @add
+    def add_flux_monitor(self, name, **kw):
+        fx = flux_MonitorTable(name=name, **kw)
+        return self._add_unique(fx, 'flux_monitor', name)
 
     @add
     def add_irradiation(self, name, production=None, chronology=None):
@@ -256,8 +272,10 @@ class IsotopeAdapter(DatabaseAdapter):
         dbpos = irrad_PositionTable(position=pos, labnumber=labnumber)
 
 #        irrad = self.get_irradiation(irrad)
-        level = self.get_irradiation_level(irrad, level)
-#        level = next((li for li in irrad.levels if li.name == level), None)
+#        level = self.get_irradiation_level(irrad, level)
+        if isinstance(level, str):
+            level = next((li for li in irrad.levels if li.name == level), None)
+
         if level:
             level.positions.append(dbpos)
             return dbpos, True
@@ -327,31 +345,31 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @add
     def add_mass_spectrometer(self, name):
-        ms = MassSpectrometerTable(name=name)
+        ms = gen_MassSpectrometerTable(name=name)
         return self._add_unique(ms, 'mass_spectrometer', name)
 
     @add
     def add_material(self, name, **kw):
-        mat = MaterialTable(name=name, **kw)
+        mat = gen_MaterialTable(name=name, **kw)
         return self._add_unique(mat, 'material', name)
 
     @add
     def add_molecular_weight(self, name, mass):
-        mw = MolecularWeightTable(name=name, mass=mass)
+        mw = gen_MolecularWeightTable(name=name, mass=mass)
         return self._add_unique(mw, 'molecular_weight', name)
 
     @add
     def add_project(self, name, **kw):
-        proj = ProjectTable(name=name, **kw)
+        proj = gen_ProjectTable(name=name, **kw)
         return self._add_unique(proj, 'project', name)
 
     @add
     def add_user(self, name, project=None, **kw):
-        user = UserTable(name=name, **kw)
+        user = gen_UserTable(name=name, **kw)
         if isinstance(project, str):
             project = self.get_project(project)
 
-        q = self._build_query_and(UserTable, name, ProjectTable, project)
+        q = self._build_query_and(gen_UserTable, name, gen_ProjectTable, project)
 
         addflag = True
         u = sql_retrieve(q.one)
@@ -390,7 +408,7 @@ class IsotopeAdapter(DatabaseAdapter):
 #            return sample, False
     @add
     def add_sample(self, name, project=None, material=None, **kw):
-        sample = SampleTable(name=name, **kw)
+        sample = gen_SampleTable(name=name, **kw)
 #        if isinstance(project, str):
         project = self.get_project(project)
 
@@ -398,14 +416,14 @@ class IsotopeAdapter(DatabaseAdapter):
         material = self.get_material(material)
 
         sess = self.get_session()
-        q = sess.query(SampleTable)
-        q = q.join(MaterialTable)
-        q = q.join(ProjectTable)
-        q = q.filter(SampleTable.name == name)
+        q = sess.query(gen_SampleTable)
+        q = q.join(gen_MaterialTable)
+        q = q.join(gen_ProjectTable)
+        q = q.filter(gen_SampleTable.name == name)
         if material:
-            q = q.filter(MaterialTable.name == material.name)
+            q = q.filter(gen_MaterialTable.name == material.name)
         if project:
-            q = q.filter(ProjectTable.name == project.name)
+            q = q.filter(gen_ProjectTable.name == project.name)
         sam = sql_retrieve(q.one)
 
         if sam is not None:
@@ -464,7 +482,7 @@ class IsotopeAdapter(DatabaseAdapter):
         if pln is not None:
             return pln, False
 
-        ln = LabTable(labnumber=labnumber,
+        ln = gen_LabTable(labnumber=labnumber,
 #                      aliquot=aliquot,
                       ** kw)
 
@@ -506,7 +524,7 @@ class IsotopeAdapter(DatabaseAdapter):
         return None, False
     @add
     def add_analysis_type(self, name):
-        at = AnalysisTypeTable(name=name)
+        at = gen_AnalysisTypeTable(name=name)
         return self._add_unique(at, 'analysis_type', name)
 
 
@@ -536,7 +554,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @get_one
     def get_analysis_type(self, name):
-        return AnalysisTypeTable
+        return gen_AnalysisTypeTable
 
     @get_one
     def get_blank(self, name):
@@ -556,7 +574,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @get_one
     def get_detector(self, name):
-        return DetectorTable
+        return gen_DetectorTable
 
     @get_one
     def get_detector_intercalibration(self, name):
@@ -572,7 +590,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @get_one
     def get_extraction_device(self, name):
-        return ExtractionDeviceTable
+        return gen_ExtractionDeviceTable
 
     @get_one
     def get_irradiation_chronology(self, name):
@@ -599,7 +617,8 @@ class IsotopeAdapter(DatabaseAdapter):
         try:
             return q.one()
         except Exception, e:
-            print 'get level except', e
+            pass
+#            print 'get level except', e
 
     def get_labnumber(self, labnum):
         if isinstance(labnum, str):
@@ -614,31 +633,35 @@ class IsotopeAdapter(DatabaseAdapter):
 
     @get_one
     def _get_labnumber(self, name):
-        return LabTable, 'labnumber'
+        return gen_LabTable, 'labnumber'
 
     @get_one
     def get_mass_spectrometer(self, name):
-        return MassSpectrometerTable
+        return gen_MassSpectrometerTable
 
     @get_one
     def get_material(self, name):
-        return MaterialTable
+        return gen_MaterialTable
 
     @get_one
     def get_molecular_weight(self, name):
-        return MolecularWeightTable
+        return gen_MolecularWeightTable
 
     @get_one
     def get_project(self, name):
-        return ProjectTable
+        return gen_ProjectTable
 
     @get_one
     def get_sample(self, name):
-        return SampleTable
+        return gen_SampleTable
 
     @get_one
     def get_flux_history(self, name):
         return flux_HistoryTable
+
+    @get_one
+    def get_flux_monitor(self, name):
+        return flux_MonitorTable
 #===============================================================================
 # ##getters multiple
 #===============================================================================
@@ -646,7 +669,7 @@ class IsotopeAdapter(DatabaseAdapter):
         return self._get_items(meas_AnalysisTable, globals(), **kw)
 
     def get_analysis_types(self, **kw):
-        return self._get_items(AnalysisTypeTable, globals(), **kw)
+        return self._get_items(gen_AnalysisTypeTable, globals(), **kw)
 
     def get_irradiations(self, **kw):
         return self._get_items(irrad_IrradiationTable, globals(), **kw)
@@ -655,45 +678,47 @@ class IsotopeAdapter(DatabaseAdapter):
         return self._get_items(irrad_ProductionTable, globals(), **kw)
 
     def get_labnumbers(self, **kw):
-        return self._get_items(LabTable, globals(), **kw)
+        return self._get_items(gen_LabTable, globals(), **kw)
 
     def get_mass_spectrometers(self, **kw):
-        return self._get_items(MassSpectrometerTable, globals(), **kw)
+        return self._get_items(gen_MassSpectrometerTable, globals(), **kw)
 
     def get_materials(self, **kw):
-        return self._get_items(MaterialTable, globals(), **kw)
+        return self._get_items(gen_MaterialTable, globals(), **kw)
 
     def get_projects(self, **kw):
-        return self._get_items(ProjectTable, globals(), **kw)
+        return self._get_items(gen_ProjectTable, globals(), **kw)
 
     def get_samples(self, **kw):
-        return self._get_items(SampleTable, globals(), **kw)
+        return self._get_items(gen_SampleTable, globals(), **kw)
 
     def get_users(self, **kw):
-        return self._get_items(UserTable, globals(), **kw)
+        return self._get_items(gen_UserTable, globals(), **kw)
 
+    def get_flux_monitors(self, **kw):
+        return self._get_items(flux_MonitorTable, globals(), **kw)
 #===============================================================================
 # deleters
 #===============================================================================
     @delete_one
     def delete_user(self, name):
-        return UserTable
+        return gen_UserTable
 
     @delete_one
     def delete_project(self, name):
-        return ProjectTable
+        return gen_ProjectTable
 
     @delete_one
     def delete_material(self, name):
-        return MaterialTable
+        return gen_MaterialTable
 
     @delete_one
     def delete_sample(self, name):
-        return SampleTable
+        return gen_SampleTable
 
     @delete_one
     def delete_labnumber(self, name):
-        return LabTable, 'labnumber'
+        return gen_LabTable, 'labnumber'
 
 
     def _build_query_and(self, table, name, jtable, attr, q=None):
@@ -732,8 +757,8 @@ if __name__ == '__main__':
     logging_setup('ia')
     ia = IsotopeAdapter(
 
-#                        name='isotopedb_dev_migrate',
-                        name='isotopedb_dev',
+                        name='isotopedb_dev_migrate',
+#                        name='isotopedb_dev',
                         username='root',
                         password='Argon',
                         host='localhost',
@@ -747,9 +772,10 @@ if __name__ == '__main__':
 
 
         dbs = IsotopeAnalysisSelector(_db=ia, style='simple')
-
+#        repo = Repository(root=paths.isotope_dir)
+        repo = Repository(root='/Users/ross/Sandbox/importtest')
         dbs.set_data_manager(kind='local',
-                             repository=Repository(root=paths.isotope_dir),
+                             repository=repo,
                              workspace_root=paths.default_workspace_dir
                              )
     #    dbs._execute_query()

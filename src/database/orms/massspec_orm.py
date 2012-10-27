@@ -49,6 +49,7 @@ class AnalysesTable(Base):
 
     IrradPosition = Column(Integer, ForeignKey('IrradiationPositionTable.IrradPosition'))
     Aliquot = Column(Integer)
+    Increment = Column(String(20))
     SpecParametersID = Column(Integer, default=0)
     PwrAchievedSD = Column(Float, default=0)
     PwrAchieved_Max = Column(Float, default=0)
@@ -107,7 +108,7 @@ class BaselinesTable(Base):
     Label = Column(String(40))
     NumCnts = Column(Integer)
     PeakTimeBlob = Column(BLOB, nullable=True)
-    isotope = relationship('IsotopeTable', backref='baseline')
+    isotope = relationship('IsotopeTable', backref='baseline', uselist=False)
 
 class DatabaseVersionTable(Base):
     __tablename__ = 'databaseversiontable'
@@ -137,7 +138,7 @@ class DetectorTable(Base):
     IonCounterDeadtimeSec = Column(Float, default=0)
     Label = Column(String(40))
 
-    isotopes = relation('IsotopeTable')
+    isotopes = relationship('IsotopeTable', backref='detector')
 
 
 class DetectorTypeTable(Base):
@@ -170,7 +171,44 @@ class IrradiationPositionTable(Base):
     J = Column(Float, nullable=True)
     JEr = Column(Float, nullable=True)
 
-    analyses = relation('AnalysesTable')
+    analyses = relationship('AnalysesTable', backref='irradiation_position')
+
+class IrradiationLevelTable(Base):
+    __tablename__ = 'IrradiationLevelTable'
+    IrradBaseID = Column(String(80))
+    Level = Column(String(80), primary_key=True)
+    SampleHolder = Column(String(40))
+    ProductionRatiosID = Column(Integer, ForeignKey('IrradiationProductionTable.ProductionRatiosID'))
+
+class IrradiationProductionTable(Base):
+    __tablename__ = 'IrradiationProductionTable'
+    ProductionRatiosID = Column(Integer, primary_key=True)
+    K4039 = Column(Float)
+    K4039Er = Column(Float)
+    K3839 = Column(Float)
+    K3839Er = Column(Float)
+    K3739 = Column(Float)
+    K3739Er = Column(Float)
+
+    Ca3937 = Column(Float)
+    Ca3937Er = Column(Float)
+    Ca3837 = Column(Float)
+    Ca3837Er = Column(Float)
+    Ca3637 = Column(Float)
+    Ca3637Er = Column(Float)
+
+    P36Cl38Cl = Column(Float)
+    P36Cl38ClEr = Column(Float)
+
+    Label = Column(String(80))
+    levels = relationship('IrradiationLevelTable', backref='production')
+
+class IrradiationChronologyTable(Base):
+    __tablename__ = 'irradiationchronologytable'
+    IrradBaseID = Column(String(80), primary_key=True)
+    StartTime = Column(DateTime, primary_key=True)
+    EndTime = Column(DateTime, primary_key=True)
+
 
 class IsotopeResultsTable(Base):
     '''
@@ -223,7 +261,7 @@ class IsotopeTable(Base):
 
     peak_time_series = relation('PeakTimeTable', uselist=False)
 
-    results = relation('IsotopeResultsTable')
+    result = relationship('IsotopeResultsTable', backref='isotope', uselist=False)
 
 
 class MaterialTable(Base):
@@ -257,7 +295,7 @@ class ProjectTable(Base):
     __tablename__ = 'projecttable'
     ProjectID = Column(Integer, primary_key=True)
     Project = Column(String(40))
-    samples = relation('SampleTable', backref='projecttable')
+    samples = relationship('SampleTable', backref='project')
 
 
 class SampleTable(Base):
@@ -280,6 +318,6 @@ class SampleTable(Base):
     Salinity = Column(Float, default=0)
     Temperature = Column(Float, default=0)
 
-    irradpositions = relation('IrradiationPositionTable')
+    irradpositions = relationship('IrradiationPositionTable', backref='sample')
     analyses = relation('AnalysesTable', backref='sample')
 
