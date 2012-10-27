@@ -49,11 +49,11 @@ class flux_MonitorTable(Base, NameMixin):
     decay_constant_err = Column(Float)
     age = Column(Float)
     age_err = Column(Float)
-    sample_id = foreignkey('SampleTable')
+    sample_id = foreignkey('gen_SampleTable')
 
 class flux_HistoryTable(Base, BaseMixin):
     irradiation_position_id = foreignkey('irrad_PositionTable')
-    selected = relationship('LabTable',
+    selected = relationship('gen_LabTable',
                             backref='selected_flux_history',
                             uselist=False
                             )
@@ -181,13 +181,14 @@ class meas_AnalysisPathTable(Base, PathMixin):
 
 
 class meas_AnalysisTable(Base, ResultsMixin):
-    lab_id = foreignkey('LabTable')
+    lab_id = foreignkey('gen_LabTable')
     extraction_id = foreignkey('meas_ExtractionTable')
     measurement_id = foreignkey('meas_MeasurementTable')
     experiment_id = foreignkey('meas_ExperimentTable')
     endtime = Column(Time)
     status = Column(Integer, default=1)
     aliquot = Column(Integer)
+    step = stringcolumn(10)
     isotopes = relationship('meas_IsotopeTable', backref='analysis')
 
     #proc relationships
@@ -216,7 +217,7 @@ class meas_ExtractionTable(Base, ScriptTable):
     extract_duration = Column(Float)
     cleanup_duration = Column(Float)
     experiment_blob = Column(BLOB)
-    extract_device_id = foreignkey('ExtractionDeviceTable')
+    extract_device_id = foreignkey('gen_ExtractionDeviceTable')
     analysis = relationship('meas_AnalysisTable', backref='extraction',
                           uselist=False
                           )
@@ -231,22 +232,22 @@ class meas_SpectrometerParametersTable(Base, BaseMixin):
 
 
 class meas_SpectrometerDeflectionsTable(Base, BaseMixin):
-    detector_id = foreignkey('DetectorTable')
+    detector_id = foreignkey('gen_DetectorTable')
     measurement_id = foreignkey('meas_MeasurementTable')
     deflection = Column(Float)
 
 class meas_IsotopeTable(Base, BaseMixin):
-    molecular_weight_id = foreignkey('MolecularWeightTable')
+    molecular_weight_id = foreignkey('gen_MolecularWeightTable')
     analysis_id = foreignkey('meas_AnalysisTable')
-    detector_id = foreignkey('DetectorTable')
+    detector_id = foreignkey('gen_DetectorTable')
     kind = stringcolumn()
 
 class meas_MeasurementTable(Base, ScriptTable):
     analysis = relationship('meas_AnalysisTable', backref='measurement',
                           uselist=False
                           )
-    mass_spectrometer_id = foreignkey('MassSpectrometerTable')
-    analysis_type_id = foreignkey('AnalysisTypeTable')
+    mass_spectrometer_id = foreignkey('gen_MassSpectrometerTable')
+    analysis_type_id = foreignkey('gen_AnalysisTypeTable')
 
     spectrometer_parameters = relationship('meas_SpectrometerParametersTable',
                                          backref='measurement',
@@ -272,7 +273,7 @@ class irrad_LevelTable(Base, NameMixin):
     positions = relationship('irrad_PositionTable', backref='level')
 
 class irrad_PositionTable(Base, BaseMixin):
-    labnumber = relationship('LabTable', backref='irradiation_position',
+    labnumber = relationship('gen_LabTable', backref='irradiation_position',
                              uselist=False
                              )
     flux_histories = relationship('flux_HistoryTable', backref='position')
@@ -318,58 +319,58 @@ class irrad_ChronologyTable(Base, BaseMixin):
 #===============================================================================
 
 
-class AnalysisTypeTable(Base, NameMixin):
+class gen_AnalysisTypeTable(Base, NameMixin):
     measurements = relationship('meas_MeasurementTable', backref='analysis_type')
 
 
-class DetectorTable(Base, NameMixin):
+class gen_DetectorTable(Base, NameMixin):
     kind = stringcolumn()
     isotopes = relationship('meas_IsotopeTable', backref='detector')
     deflections = relationship('meas_SpectrometerDeflectionsTable', backref='detector')
 
 
-class ExtractionDeviceTable(Base, NameMixin):
+class gen_ExtractionDeviceTable(Base, NameMixin):
     extractions = relationship('meas_ExtractionTable', backref='extraction_device')
     kind = stringcolumn()
     make = stringcolumn()
     model = stringcolumn()
 
-class LabTable(Base, BaseMixin):
+class gen_LabTable(Base, BaseMixin):
     labnumber = Column(Integer)
 #    aliquot = Column(Integer)
-    sample_id = foreignkey('SampleTable')
+    sample_id = foreignkey('gen_SampleTable')
     analyses = relationship('meas_AnalysisTable', backref='labnumber')
     irradiation_id = foreignkey('irrad_PositionTable')
     selected_flux_id = foreignkey('flux_HistoryTable')
 
 
-class MassSpectrometerTable(Base, NameMixin):
+class gen_MassSpectrometerTable(Base, NameMixin):
 #    experiments = relationship('ExperimentTable', backref='mass_spectrometer')
     measurements = relationship('meas_MeasurementTable', backref='mass_spectrometer')
 
 
-class MaterialTable(Base, NameMixin):
-    samples = relationship('SampleTable', backref='material')
+class gen_MaterialTable(Base, NameMixin):
+    samples = relationship('gen_SampleTable', backref='material')
 
 
-class MolecularWeightTable(Base, NameMixin):
+class gen_MolecularWeightTable(Base, NameMixin):
     isotopes = relationship('meas_IsotopeTable', backref='molecular_weight')
     mass = Column(Float)
 
 
-class ProjectTable(Base, NameMixin):
-    users = relationship('UserTable', backref='project')
-    samples = relationship('SampleTable', backref='project')
+class gen_ProjectTable(Base, NameMixin):
+    users = relationship('gen_UserTable', backref='project')
+    samples = relationship('gen_SampleTable', backref='project')
 
 
-class SampleTable(Base, NameMixin):
-    material_id = foreignkey('MaterialTable')
-    project_id = foreignkey('ProjectTable')
-    labnumbers = relationship('LabTable', backref='sample')
+class gen_SampleTable(Base, NameMixin):
+    material_id = foreignkey('gen_MaterialTable')
+    project_id = foreignkey('gen_ProjectTable')
+    labnumbers = relationship('gen_LabTable', backref='sample')
 
 
-class UserTable(Base, NameMixin):
-    project_id = foreignkey('ProjectTable')
+class gen_UserTable(Base, NameMixin):
+    project_id = foreignkey('gen_ProjectTable')
 
 
 #===============================================================================

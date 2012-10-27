@@ -172,7 +172,7 @@ class RichTextDisplay(HasTraits):
 
     def _add_(self, msg, color=None, size=None,
               bold=False,
-              underline=False, **kw):
+              underline=False, new_line=True, **kw):
         '''
             
         '''
@@ -217,7 +217,8 @@ class RichTextDisplay(HasTraits):
 
         d.EndTextColour()
         d.EndFont()
-        d.Newline()
+        if new_line:
+            d.Newline()
 
         if self.scroll_to_bottom:
             n = 300

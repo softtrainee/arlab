@@ -248,6 +248,7 @@ class IsotopeRecord(DatabaseRecord):
         dm.open_data(self.path)
 
         signals = self._get_table_data(dm, 'signals')
+
         if signals:
 
             self.categories.append('signal')
@@ -467,14 +468,15 @@ class IsotopeRecord(DatabaseRecord):
     def _get_irradiation_level(self):
         try:
             return self.irradiation_position.level
-        except AttributeError:
-            pass
+        except AttributeError, e:
+            print e
 
     def _get_irradiation_position(self):
         try:
             return self.dbrecord.labnumber.irradiation_position
-        except AttributeError:
-            pass
+        except AttributeError, e:
+            print e
+
 
     def _get_irradiation_info(self):
         '''
@@ -504,17 +506,18 @@ class IsotopeRecord(DatabaseRecord):
                 if chron:
                     chronblob = chron.chronology
                     dose = chronblob.split('$')[-1]
-                    _start, end = dose.split('%')
+                    start, _end = dose.split('%')
 
-                    end = '2010-01-01 01:01:01'
+#                    end = '2010-01-01 01:01:01'
 
                     analts = '{} {}'.format(analysis.rundate, analysis.runtime)
                     analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
-                    irradts = datetime.datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
+#                    irradts = datetime.datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
+                    irradts = datetime.datetime.strptime(start, '%Y-%m-%d %H:%M:%S')
                     dt = analts - irradts
 
                     t = dt.total_seconds()
-                    prs.append(t)
+                    prs.append(t / (60. * 60 * 24 * 365.25))
 
         return prs
 
@@ -610,13 +613,13 @@ class IsotopeRecord(DatabaseRecord):
                 except AttributeError:
                     pass
 
-                fit = None
+                fit = 'linear'
                 try:
                     fit = ti.attrs.fit
                 except AttributeError, e:
                     pass
 #                print 'nn', name, ig._v_name
-                ds[name] = [ti._v_name, iso, fit, data]
+                ds[ig._v_name] = [ti._v_name, iso, fit, data]
 
         return ds
 
@@ -635,7 +638,6 @@ class IsotopeRecord(DatabaseRecord):
         isos = sorted(isos, key=lambda x:re.sub('\D', '', x))
 #        isos = sorted(isos, key=lambda k: int(k[2:]))
         self.isos = isos
-
         def get_data(k):
             try:
                 return data[k]

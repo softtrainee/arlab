@@ -23,6 +23,7 @@ from uncertainties import ufloat
 #============= local library imports  ==========================
 from src.database.isotope_analysis.summary import Summary
 from src.database.isotope_analysis.fit_selector import FitSelector
+import math
 
 PLUSMINUS = unicode('\xb1')
 PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
@@ -46,20 +47,25 @@ class AnalysisSummary(Summary):
         d.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
         j, j_err = record.j
         d.add_text('J={} {}{}'.format(j, u'\u00b1', j_err))
-        floatfmt = lambda m, i = 5: '{{:0.{}f}}'.format(i).format(m)
+        def floatfmt(m, i=6):
+            if abs(m) < 10 ** -i:
+                return '{:0.2e}'.format(m)
+            else:
+                return '{{:0.{}f}}'.format(i).format(m)
+#        floatfmt = lambda m, i = 5: '{{:0.{}f}}'.format(i).format(m)
         width = lambda m, i: '{{:<{}s}}'.format(i).format(m)
 
         #add header
         columns = [('Iso.', 5),
                    ('Int.', 12), (PLUSMINUS_ERR, 20),
                    ('Fit', 11),
-                   ('Baseline', 12), (PLUSMINUS_ERR, 15),
-#                   ('Blank', 12), (PLUSMINUS_ERR, 12)
+                   ('Baseline', 12), (PLUSMINUS_ERR, 18),
+                   ('Blank', 12), (PLUSMINUS_ERR, 18)
                    ]
         widths = [w for _, w in columns]
 
-        msg = 'Iso.   Int.            ' + PLUSMINUS_ERR + '                       Fit'
-        msg += '            Baseline     ' + PLUSMINUS_ERR + '             '
+        msg = 'Iso.   Int.             ' + PLUSMINUS_ERR + '                      Fit'
+        msg += '         Baseline     ' + PLUSMINUS_ERR + '                    Blank         ' + PLUSMINUS_ERR
 #        msg = ''.join([width(m, w) for m, w in columns])
         d.add_text(msg, underline=True, bold=True)
 
@@ -67,6 +73,8 @@ class AnalysisSummary(Summary):
         n = len(isos) - 1
         for i, iso in enumerate(isos):
             self._make_signals(n, i, iso, floatfmt, width, widths)
+#        for i, iso in enumerate(isos):
+#            self._make_blanks(n, i, iso, floatfmt, width, widths)
 
 #        d.add_text('\n')
 
@@ -91,7 +99,7 @@ class AnalysisSummary(Summary):
         rec = self.record
         arar_result = rec.arar_result
         if arar_result:
-            def make_ratio(r, nom, dem, scalar=1):
+            def make_ratio(r, nom, dem, scalar=1, underline=False):
                 try:
                     rr = nom / dem * scalar
                     v, e = rr.nominal_value, rr.std_dev()
@@ -99,20 +107,22 @@ class AnalysisSummary(Summary):
                     v, e = 0, 0
 
                 ee = '{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
-                ms = [r, floatfmt(v), ee]
+                ms = [floatfmt(v), ee]
                 msg = ''.join([width(m, 15) for m in ms])
-                d.add_text(msg)
+                d.add_text(width(r, 10), bold=True, new_line=False,
+                           underline=underline)
+                d.add_text(msg, underline=underline, size=11)
 
             rad40 = arar_result['rad40']
             tot40 = arar_result['tot40']
             k39 = arar_result['k39']
             atm36 = arar_result['atm36']
 
-            make_ratio('40*', rad40, tot40, scalar=100)
+            make_ratio('%40*', rad40, tot40, scalar=100)
             make_ratio('40/36', tot40, atm36)
             make_ratio('40/39', tot40, k39)
             make_ratio('40*/36', rad40, atm36)
-            make_ratio('40*/39', rad40, k39)
+            make_ratio('40*/39', rad40, k39, underline=True)
 
         d.add_text(' ')
 
@@ -139,15 +149,18 @@ class AnalysisSummary(Summary):
         se = s.std_dev()
         bse = '{} ({})'.format(floatfmt(se), self.calc_percent_error(sv, se))
         msgs = [
-                iso,
+#                iso,
                 floatfmt(sv),
                 bse
                 ]
-        msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
+        msg = ''.join([width(m, w) for m, w in zip(msgs, widths[1:])])
         if i == n:
             msg += '\n'
-        d.add_text(msg, underline=i == n)
-
+#        d.add_text(msg, underline=i == n)
+        d.add_text(width(iso, widths[0]), bold=True,
+                  new_line=False,
+                  underline=i == n)
+        d.add_text(msg, size=11, underline=i == n)
         return s
 
     def _get_signal_and_baseline(self, pi):
@@ -174,8 +187,10 @@ class AnalysisSummary(Summary):
         fit = sg.get_fit(pi) if sg else '---'
         sig, base = self._get_signal_and_baseline(pi)
 
-        blank = 0
-        blank_err = 0
+        blank = self.record.signals['{}bl'.format(iso)]
+        blank = blank.uvalue
+        bls = blank.nominal_value
+        ble = blank.std_dev()
 
         sv = sig.nominal_value
         se = sig.std_dev()
@@ -184,21 +199,28 @@ class AnalysisSummary(Summary):
         be = base.std_dev()
 
         sse = '{} ({})'.format(floatfmt(se), self.calc_percent_error(sv, se))
-        bse = '{} ({})'.format(floatfmt(bs), self.calc_percent_error(bs, be))
+        bse = '{} ({})'.format(floatfmt(be), self.calc_percent_error(bs, be))
+        ble = '{} ({})'.format(floatfmt(ble), self.calc_percent_error(bls, ble))
 
         msgs = [
-                iso,
+#                iso,
                 floatfmt(sv),
                 sse,
                 fit,
+
                 floatfmt(bs),
-                bse
+                bse,
+                floatfmt(bls),
+                ble
                 ]
 
-        msg = ''.join([width(m, w) for m, w in zip(msgs, widths)])
+        msg = ''.join([width(m, w) for m, w in zip(msgs, widths[1:])])
         if i == n:
             msg += '\n'
-        d.add_text(msg, underline=i == n)
+        d.add_text(width(iso, widths[0]), bold=True,
+                  new_line=False,
+                  underline=i == n)
+        d.add_text(msg, size=11, underline=i == n)
 
 #    def _display_default(self):
 #        return RichTextDisplay(default_size=12,

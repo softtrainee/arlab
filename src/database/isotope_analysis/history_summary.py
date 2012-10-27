@@ -116,7 +116,7 @@ class HistorySummary(Summary):
     def _create_summary(self):
         hist = None
         if self.histories:
-            selh = self.record.selected_histories
+            selh = self.record._dbrecord.selected_histories
             hist = getattr(selh, self.apply_name)
 
             sh = next((hi for hi in self.histories if hi.history == hist), None)
@@ -145,7 +145,7 @@ class HistorySummary(Summary):
     @cached_property
     def _get_histories(self):
         hn = self.history_name
-        dbr = self.record
+        dbr = self.record._dbrecord
         return [History(history=hii) for hii in getattr(dbr, '{}_histories'.format(hn))]
 
     def _build_summary(self, history=None):

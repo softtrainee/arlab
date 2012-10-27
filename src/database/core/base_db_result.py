@@ -137,12 +137,12 @@ class DBResult(BaseDBResult):
         if dbr is not None:
 #            self._set_metadata(dbr)
             self.title = '{} {}'.format(self.title_str, self.rid)
-            self._load_hook(dbr)
-        elif self.directory is not None and self.filename is not None:
-            self._load_hook('')
-
-    def _load_hook(self, dbr):
-        pass
+#            self._load_hook(dbr)
+#        elif self.directory is not None and self.filename is not None:
+#            self._load_hook('')
+#
+#    def _load_hook(self, dbr):
+#        pass
 
     def isloadable(self):
 #        dm = self._get_data_manager()

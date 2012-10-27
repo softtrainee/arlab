@@ -31,67 +31,21 @@ import struct
 from src.loggable import Loggable
 from src.paths import paths
 from src.experiment.entry.irradiation import Irradiation
+from src.experiment.entry.irradiated_position import IrradiatedPosition, \
+    IrradiatedPositionAdapter
+from src.experiment.entry.level import Level
+from src.experiment.entry.flux_monitor import FluxMonitor
 
 
 ALPHAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 ALPHAS = [a for a in ALPHAS] + ['{}{}'.format(a, b)
                                     for a in ALPHAS
                                         for b in ALPHAS]
-class Level(HasTraits):
-    name = Str
-    tray = Str
-    trays = List
-    def traits_view(self):
-        v = View(HGroup(Item('name'), Item('tray', show_label=False, editor=EnumEditor(name='trays'))),
-                 buttons=['OK', 'Cancel']
-                 )
-        return v
 
-    def _tray_default(self):
-        return self.trays[0]
 
-class IrradiatedSample(HasTraits):
-    labnumber = Str
-    material = Str
-    sample = Str
-    hole = Int
-    project = Str
-    size = Str
-    weight = Str
-    note = Str
-    j = Float
-    j_err = Float
 
-    auto_assigned = Bool(False)
-#
-    @on_trait_change('labnumber,sample, project, material')
-    def _update_auto_assigned(self, obj, name, old, new):
-#        print 'ol', name, old, new
-        if old:
-            self.auto_assigned = False
 
-class IrradiatedSampleAdapter(TabularAdapter):
-    columns = [
-               ('Hole', 'hole'),
-               ('Labnumber', 'labnumber'),
-               ('Sample', 'sample'),
-               ('Project', 'project'),
-               ('Material', 'material'),
-               ('Size', 'size'),
-               ('Weight', 'weight'),
-               ('J', 'j'),
-               (u'\u00b1', 'j_err'),
-               ('Note', 'note')
-             ]
-#    hole_can_edit = False
-    hole_width = Int(45)
-#    def _get_hole_width(self):
-#        return 35
 
-    def get_bg_color(self, obj, trait, row):
-        item = getattr(obj, trait)[row]
-        if item.auto_assigned:
-            return '#B0C4DE'
 
 class LabnumberEntry(Loggable):
     db = Any
@@ -108,7 +62,7 @@ class LabnumberEntry(Loggable):
     tray_name = Str
     irradiation_tray_image = Property(Image, depends_on='level, irradiation')
 
-    irradiated_samples = List(IrradiatedSample)
+    irradiated_positions = List(IrradiatedPosition)
 
     auto_assign = Bool
     auto_startrid = Int(19999)
@@ -121,12 +75,18 @@ class LabnumberEntry(Loggable):
     freeze_button = Button('Freeze')
     thaw_button = Button('Thaw')
 
+    calculate_flux = Button('Calculate Flux')
+    flux_monitor = Str
+    flux_monitors = Property(depends_on='saved')
+    flux_monitor_age = Float
+
     _update_sample_table = Event
 
     save_button = Button('Save')
     add_irradiation_button = Button('Add Irradiation')
     add_level_button = Button('Add Level')
-
+    edit_monitor_button = Button('Edit Flux Monitor')
+    calculate_flux_button = Button('Calculate Flux')
 
     selected = Any
 
@@ -159,19 +119,19 @@ class LabnumberEntry(Loggable):
     def _load_irradiated_samples(self, name):
 
         p = os.path.join(self._get_map_path(), name)
-        self.irradiated_samples = []
+        self.irradiated_positions = []
         with open(p, 'r') as f:
             line = f.readline()
             nholes, diam = line.split(',')
             for ni in range(int(nholes)):
-                self.irradiated_samples.append(IrradiatedSample(hole=ni + 1))
+                self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1))
 
     def _db_default(self):
         #=======================================================================
         # debug
         #=======================================================================
         from src.database.adapters.isotope_adapter import IsotopeAdapter
-        db = IsotopeAdapter(name='isotopedb_dev_migrate',
+        db = IsotopeAdapter(name='isotopedb_dev',
                           username='root',
                           host='localhost',
                           kind='mysql',
@@ -185,7 +145,7 @@ class LabnumberEntry(Loggable):
     def _save_to_db(self):
         db = self.db
 
-        for irs in self.irradiated_samples:
+        for irs in self.irradiated_positions:
             ln = irs.labnumber
             if not ln:
                 continue
@@ -238,6 +198,35 @@ class LabnumberEntry(Loggable):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _flux_monitor_changed(self):
+        if self.flux_monitor:
+            fx = self.db.get_flux_monitor(self.flux_monitor)
+            if fx:
+                self.flux_monitor_age = fx.age
+
+    def _edit_monitor_button_fired(self):
+
+        names = self.flux_monitors
+        monitor = FluxMonitor(names=names)
+        info = monitor.edit_traits(kind='livemodal')
+        if info.result:
+            db = self.db
+            kw = dict(age=monitor.age,
+                       age_err=monitor.age_err,
+                       decay_constant=monitor.decay_constant,
+                       decay_constant_err=monitor.decay_constant_err)
+
+            dbmonitor = db.get_flux_monitor(monitor.name)
+            if dbmonitor:
+                for k, v in kw.iteritems():
+                    setattr(dbmonitor, k, v)
+            else:
+                db.add_flux_monitor(monitor.name, **kw)
+                self.flux_monitor = monitor.name
+
+            db.commit()
+            self.saved = True
+
     def _add_irradiation_button_fired(self):
         irrad = Irradiation(db=self.db,
                             trays=self.trays
@@ -325,7 +314,7 @@ class LabnumberEntry(Loggable):
         cnt = 0
 #        print name, old, new
         if self.auto_assign:
-            for s in self.irradiated_samples:
+            for s in self.irradiated_positions:
                 rid = str(self.auto_startrid + cnt)
                 if s.labnumber:
                     if self.auto_assign_overwrite or s.auto_assigned:
@@ -364,7 +353,7 @@ class LabnumberEntry(Loggable):
                 for pi in positions:
                     ir = self._position_factory(pi)
                     hi = pi.position - 1
-                    self.irradiated_samples[hi] = ir
+                    self.irradiated_positions[hi] = ir
 
     def _position_factory(self, dbpos):
         ln = dbpos.labnumber
@@ -374,7 +363,7 @@ class LabnumberEntry(Loggable):
 #        material = None
 #        project = None
         labnumber = ln.labnumber if ln else None
-        ir = IrradiatedSample(labnumber=str(labnumber), hole=position)
+        ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
         if labnumber:
             selhist = ln.selected_flux_history
             if selhist:
@@ -441,6 +430,16 @@ class LabnumberEntry(Loggable):
                              search_path=[p]
                              )
         return im
+
+    @cached_property
+    def _get_flux_monitors(self):
+        db = self.db
+        fs = db.get_flux_monitors()
+        if fs:
+            fs = [fi.name for fi in db.get_flux_monitors()]
+        else:
+            fs = []
+        return fs
 
     @cached_property
     def _get_trays(self):
@@ -519,8 +518,8 @@ class LabnumberEntry(Loggable):
 
         samples = Group(
 
-                        Item('irradiated_samples',
-                             editor=TabularEditor(adapter=IrradiatedSampleAdapter(),
+                        Item('irradiated_positions',
+                             editor=TabularEditor(adapter=IrradiatedPositionAdapter(),
                                                   update='_update_sample_table',
                                                   multi_select=True,
                                                   selected='selected',
@@ -531,13 +530,25 @@ class LabnumberEntry(Loggable):
                         label='Lab Numbers',
                         show_border=True
                         )
+        flux = Group(
+                     HGroup(
+                            Item('flux_monitor', show_label=False, editor=EnumEditor(name='flux_monitors')),
+                            Item('edit_monitor_button', show_label=False)),
+                     Item('flux_monitor_age', format_str='%0.3f', style='readonly', label='Monitor Age (Ma)'),
+                     Spring(height=50, springy=False),
+                     Item('calculate_flux_button',
+                          enabled_when='len(object.selected)>=3',
+                          show_label=False),
+                     label='Flux',
+                     show_border=True
+                     )
         v = View(VGroup(
-                        HGroup(auto, irradiation),
+                        HGroup(auto, irradiation, flux),
                         samples,
                         HGroup(spring, Item('save_button', show_label=False))
                         ),
                  resizable=True,
-                 width=900,
+                 width=0.75,
                  height=600,
                  )
         return v
