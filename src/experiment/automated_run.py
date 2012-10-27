@@ -39,10 +39,12 @@ from globals import globalv
 from src.experiment.identifier import convert_identifier, get_analysis_type
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
+from src.helpers.alphas import ALPHAS
 #from src.regression.ols_regressor import PolynomialRegressor
 
 
-HEATDEVICENAMES = ['Fusions Diode', 'Fusions CO2']
+#HEATDEVICENAMES = ['Fusions Diode', 'Fusions CO2']
+
 
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
@@ -65,6 +67,9 @@ class AutomatedRun(Loggable):
     experiment_name = Str
     labnumber = String(enter_set=True, auto_set=False)
     aliquot = CInt
+    step = Property(depends_on='_step')
+    _step = Int
+
     state = Property(depends_on='_state')
     _state = Enum('not run', 'extraction',
                  'measurement', 'success', 'fail', 'truncate')
@@ -73,6 +78,7 @@ class AutomatedRun(Loggable):
     duration = Property(depends_on='_duration')
     _duration = Float
 
+    extract_group = CInt
     extract_value = Property(depends_on='_extract_value')
     _extract_value = Float
 
@@ -966,6 +972,9 @@ class AutomatedRun(Loggable):
         #commit repository
         self.repository.add_file(cp)
 
+        #close h5 file
+        self.data_manager.close()
+
         np = self.repository.get_file_path(cp)
 
         ln = self.labnumber
@@ -993,7 +1002,8 @@ class AutomatedRun(Loggable):
             a = db.add_analysis(lab, runtime=self._runtime,
                                     rundate=self._rundate,
                                     endtime=d.time(),
-                                    aliquot=aliquot
+                                    aliquot=aliquot,
+                                    step=self.step
                                 )
 
             experiment.analyses.append(a)
@@ -1015,8 +1025,7 @@ class AutomatedRun(Loggable):
         #save to massspec
         self._save_to_massspec()
 
-        #close h5 file
-        self.data_manager.close()
+
 
     def _save_measurement(self, analysis):
         db = self.db
@@ -1114,6 +1123,7 @@ class AutomatedRun(Loggable):
 
         self.massspec_importer.add_analysis(self.labnumber,
                                             self.aliquot,
+                                            self.step,
                                             self.labnumber,
                                             baselines,
                                             signals,
@@ -1346,6 +1356,12 @@ class AutomatedRun(Loggable):
     def _set_state(self, s):
         if self._state != 'truncate':
             self._state = s
+
+    def _get_step(self):
+        if self._step == 0:
+            return ''
+        else:
+            return ALPHAS[self._step - 1]
 
     def _local_lab_db_default(self):
         name = os.path.join(paths.hidden_dir, 'local_lab.db')

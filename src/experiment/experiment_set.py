@@ -116,6 +116,8 @@ class ExperimentSet(Loggable):
     _cached_runs = None
     _alive = False
 
+    _current_group_id = 0
+
 
 #===============================================================================
 # persistence
@@ -127,6 +129,7 @@ class ExperimentSet(Loggable):
                   'sample',
                   'position',
                   'overlap',
+                  'extract_group',
                   'extract_value',
                   'extract_units',
                   'duration',
@@ -138,6 +141,7 @@ class ExperimentSet(Loggable):
                   'sample',
                   'position',
                   'overlap',
+                  'extract_group',
                   'extract_value',
                   'extract_units',
                   'duration',
@@ -420,7 +424,6 @@ tray: {}
                      'sample',
                      'measurement', 'extraction', 'post_measurement',
                      'post_equilibration',
-#                     'extract_device'
                      ]:
             params[attr] = args[header.index(attr)]
 
@@ -438,7 +441,8 @@ tray: {}
                 params[attr] = False
 
         #load numbers
-        for attr in ['duration', 'position', 'overlap', 'cleanup']:
+
+        for attr in ['duration', 'position', 'overlap', 'cleanup', 'extract_group']:
             try:
                 param = args[header.index(attr)].strip()
                 if param:
@@ -600,8 +604,11 @@ tray: {}
                 a._extract_value = s.extract_value
                 a._duration = s.duration
                 a._extract_units = hs.units
+                a.extract_group = self._current_group_id
+#                a._nominal_step = i
                 self.automated_runs.append(a)
 
+        self._current_group_id += 1
         self.update_aliquots_needed = True
 
     def _extraction_script_changed(self):

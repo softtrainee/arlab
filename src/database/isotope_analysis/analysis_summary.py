@@ -217,7 +217,12 @@ class AnalysisSummary(Summary):
         msg = ''.join([width(m, w) for m, w in zip(msgs, widths[1:])])
         if i == n:
             msg += '\n'
-        d.add_text(width(iso, widths[0]), bold=True,
+#        print width(iso, widths[0]), widths[0]
+#        d.add_text(iso, bold=True,
+#                  new_line=False,
+#                  underline=i == n)
+        d.add_text(width(iso, 6),
+                   bold=True,
                   new_line=False,
                   underline=i == n)
         d.add_text(msg, size=11, underline=i == n)

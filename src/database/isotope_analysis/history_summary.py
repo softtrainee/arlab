@@ -149,7 +149,6 @@ class HistorySummary(Summary):
         return [History(history=hii) for hii in getattr(dbr, '{}_histories'.format(hn))]
 
     def _build_summary(self, history=None):
-
         if self.histories:
             if history is None:
                 if self.selected_history:
@@ -162,49 +161,55 @@ class HistorySummary(Summary):
         hn = self.history_name
         dbr = self.record
 #
-        g = StackedGraph()
-#        g.width = 700
+        g = Graph(container_dict=dict(padding=5, stack_order='top_to_bottom'))
+        g.width = 510
         self.graph = g
-#        isokeys = self._get_isotope_keys(hi, hn)
-#        xma = -np.Inf
-#        xmi = np.Inf
-#
-#        for i, iso in enumerate(isokeys):
-#            bi = next((bii for bii in getattr(hi, hn)
-#                       if bii.isotope == iso), None)
-#
-#            g.new_plot()
-#            if bi.use_set:
-#                xs = [dbr.make_timestamp(str(bs.analysis.rundate),
-#                                     str(bs.analysis.runtime)) for bs in bi.sets]
-#
-#                xs = np.array(xs)
-#                if xs.shape[0]:
-#                    xs = xs - np.min(xs)
-#                    ys = np.random.random(xs.shape[0])
-#                    g.new_series(xs, ys)
-#                    xma = max(xma, max(xs))
-#                    xmi = min(xmi, min(xs))
-#            else:
-#                uv = bi.user_value
-#                ue = bi.user_error
-#                kw = dict(plotid=i, color=(0, 0, 0))
-#                g.add_horizontal_rule(uv, line_style='solid',
-#                                      **kw)
-#                g.add_horizontal_rule(uv + ue, **kw)
-#                g.add_horizontal_rule(uv - ue, **kw)
-#                g.set_y_limits(min=uv - ue,
-#                               max=uv + ue, pad='0.1', plotid=i)
+        isokeys = self._get_isotope_keys(hi, hn)
+        xma = -np.Inf
+        xmi = np.Inf
+
+        for i, iso in enumerate(isokeys):
+            bi = next((bii for bii in getattr(hi, hn)
+                       if bii.isotope == iso), None)
+
+            g.new_plot(padding=[50, 5, 30, 5],
+                       title=iso
+
+                       )
+            if bi.use_set:
+                xs = [dbr.make_timestamp(str(bs.analysis.rundate),
+                                     str(bs.analysis.runtime)) for bs in bi.sets]
+
+                xs = np.array(xs)
+                if xs.shape[0]:
+                    xs = xs - np.min(xs)
+                    ys = np.random.random(xs.shape[0])
+                    g.new_series(xs, ys)
+                    xma = max(xma, max(xs))
+                    xmi = min(xmi, min(xs))
+            else:
+                uv = bi.user_value
+                ue = bi.user_error
+                g.set_plot_title('{} {:0.5f} {}{:0.6f}'.format(iso, uv, u'\u00b1', ue), plotid=i)
+
+                kw = dict(plotid=i, color=(1, 0, 0))
+                g.add_horizontal_rule(uv, line_style='solid',
+                                      **kw)
+                kw = dict(plotid=i, color=(0, 0, 0))
+                g.add_horizontal_rule(uv + ue, **kw)
+                g.add_horizontal_rule(uv - ue, **kw)
+                g.set_y_limits(min=uv - ue,
+                               max=uv + ue, pad='0.1', plotid=i)
 
 
     def traits_view(self):
         v = View(HGroup(
                         Item('history_view', style='custom',
                              show_label=False,
-                             width=0.25),
+                             width=0.27),
                         Item('graph', show_label=False,
                              style='custom',
-                             width=0.75
+                             width=0.73
                              )
                         )
                  )

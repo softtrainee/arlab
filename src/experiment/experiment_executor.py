@@ -28,7 +28,7 @@ from src.managers.manager import Manager
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
 from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter
-from src.repo.repository import Repository, FTPRepository
+#from src.repo.repository import Repository, FTPRepository
 from src.displays.rich_text_display import RichTextDisplay
 from src.paths import paths
 from threading import Thread
@@ -41,7 +41,7 @@ import os
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.lasers.laser_managers.laser_manager import ILaserManager
 from globals import globalv
-from src.database.orms.isotope_orm import meas_AnalysisTable, AnalysisTypeTable, \
+from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable
 
 
@@ -118,7 +118,10 @@ class ExperimentExecutor(ExperimentManager):
         startid = 0
         exp = self.experiment_set
         if exp and exp._cached_runs:
-            startid = exp._cached_runs.index(self._last_ran) + 1
+            try:
+                startid = exp._cached_runs.index(self._last_ran) + 1
+            except ValueError:
+                pass
 
         return ans[startid:]
 
@@ -388,8 +391,8 @@ class ExperimentExecutor(ExperimentManager):
         sess = db.get_session()
         q = sess.query(meas_AnalysisTable)
         q = q.join(meas_MeasurementTable)
-        q = q.join(AnalysisTypeTable)
-        q = q.filter(AnalysisTypeTable.name == 'blank_{}'.format(kind))
+        q = q.join(gen_AnalysisTypeTable)
+        q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
         dbs = q.all()
 
         sel.load_records(dbs)

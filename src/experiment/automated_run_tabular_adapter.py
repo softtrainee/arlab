@@ -66,6 +66,7 @@ class AutomatedRunAdapter(TabularAdapter):
     duration_text = Property
     autocenter_text = Property
     overlap_text = Property
+    aliquot_text = Property
 
     can_edit = False
 #    position_can_edit = True
@@ -125,6 +126,8 @@ class AutomatedRunAdapter(TabularAdapter):
 #            return '{:0.2f},{}'.format(*self.item.extract_value)
 #        else:
 #            return ''
+    def _get_aliquot_text(self, trait, item):
+        return '{}{}'.format(self.item.aliquot, self.item.step)
 
     def _get_duration_text(self, trait, item):
         return self._get_number('duration')

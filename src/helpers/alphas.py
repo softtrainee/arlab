@@ -15,20 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-#from traits.api import HasTraits, List, Str, Instance, Property, \
-#     on_trait_change
-#from traitsui.api import View, Item, ListStrEditor, HGroup
+
 #============= standard library imports ========================
-#import numpy as np
 #============= local library imports  ==========================
-#from src.database.isotope_analysis.summary import Summary
-from src.database.isotope_analysis.history_summary import HistorySummary
-#from src.graph.graph import Graph
-#from src.graph.stacked_graph import StackedGraph
-
-class BlanksSummary(HistorySummary):
-    history_name = 'blanks'
-    apply_name = 'selected_blanks'
-
-
+seeds = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+ALPHAS = [a for a in seeds] + ['{}{}'.format(a, b)
+                                    for a in seeds
+                                        for b in seeds]
 #============= EOF =============================================

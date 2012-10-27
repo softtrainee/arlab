@@ -23,7 +23,6 @@ import ftplib as ftp
 from src.loggable import Loggable
 import shutil
 
-
 class Repository(Loggable):
     root = Str
 

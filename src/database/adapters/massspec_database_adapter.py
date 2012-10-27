@@ -82,7 +82,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
 # adders
 #===============================================================================
     @add
-    def add_analysis(self, rid, aliquot, irradpos, runtype, **kw):
+    def add_analysis(self, rid, aliquot, step, irradpos, runtype, **kw):
         '''
         '''
 
@@ -101,6 +101,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
                          RunDateTime=func.current_timestamp(),
                          LoginSessionID=1,
                          SpecRunType=runtype,
+                         Increment=step
                          )
             #IrradPosition cannot be null
             if irradpos is not None:

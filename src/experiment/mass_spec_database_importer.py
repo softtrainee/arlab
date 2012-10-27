@@ -61,7 +61,7 @@ class MassSpecDatabaseImporter(Loggable):
 
         return db
 
-    def add_analysis(self, rid, aliquot, irradpos, baselines, signals, keys,
+    def add_analysis(self, rid, aliquot, step, irradpos, baselines, signals, keys,
                      regression_results):
         '''
             
@@ -81,6 +81,7 @@ class MassSpecDatabaseImporter(Loggable):
         #=======================================================================
         analysis = db.add_analysis(rid,
                                    aliquot,
+                                   step,
                                    irradpos,
                                    RUN_TYPE_DICT[runtype])
         #=======================================================================
