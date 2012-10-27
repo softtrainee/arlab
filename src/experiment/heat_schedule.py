@@ -166,7 +166,6 @@ class HeatSchedule(HasTraits):
     selected = List
     selected_index = List
 
-    current_group_id = Int
 #    elapsed_time = Float
 
 #    @on_trait_change('current_step:elapsed_time')

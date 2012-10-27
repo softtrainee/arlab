@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Button, Instance
+from traits.api import HasTraits, Any, Button, Instance, Str
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import struct
@@ -31,14 +31,17 @@ from src.repo.repository import Repository
 from src.managers.data_managers.table_descriptions import TimeSeriesTableDescription
 from src.database.orms.massspec_orm import IrradiationLevelTable, \
     IrradiationChronologyTable, IrradiationPositionTable
-from src.database.orms.isotope_orm import meas_AnalysisTable
+#from src.database.orms.isotope_orm import meas_AnalysisTable
 
 class Importer(Loggable):
+    username = Str('root')
     source = Any
     destination = Any
     import_button = Button
     display = Instance(RichTextDisplay)
     repository = Any
+    _dbimport = None
+
     def info(self, msg, log=True, **kw):
         if log:
             super(Importer, self).info(msg, **kw)
@@ -133,6 +136,14 @@ class MassSpecImporter(Importer):
                                        runtime=rdt.time(),
                                        rundate=rdt.date()
                                        )
+            if self._dbimport is None:
+                #add import 
+                dbimp = dest.add_import(user=self.username)
+                self._dbimport = dbimp
+            else:
+                dbimp = self._dbimport
+
+            dbimp.analyses.append(dbanal)
             path = self._import_signals(msrecord)
             dest.add_analysis_path(path, dbanal)
 
@@ -300,7 +311,8 @@ if __name__ == '__main__':
 
     s = MassSpecDatabaseAdapter(kind='mysql', username='root', password='Argon', name='massspecdata_local')
     s.connect()
-    d = IsotopeAdapter(kind='mysql', username='root', password='Argon', name='isotopedb_dev_migrate')
+    d = IsotopeAdapter(kind='mysql', username='root', password='Argon',
+                        name='isotopedb_dev_import')
     d.connect()
 
     im.source = s
