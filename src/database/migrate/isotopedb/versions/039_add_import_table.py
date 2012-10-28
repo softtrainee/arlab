@@ -4,7 +4,9 @@ meta = MetaData()
 t = Table('gen_ImportTable', meta,
 Column('id', Integer, primary_key=True),
 Column('date', DateTime),
-Column('user', String(80))
+Column('user', String(80)),
+Column('source_host', String(200)),
+Column('source', String(200))
 )
 
 

@@ -92,6 +92,11 @@ class StackedGraph(Graph):
 #                plotiter = self.plots[:-1]
                 plotiter1 = self.plots[1:]
 
+            pm = self.plots[0]
+            pind = pm.index_range
+            for pi in self.plots[1:]:
+                pi.index_range = pind
+
 #            link = True
 #            if 'link' in kw:
 #                link = kw['link']
@@ -112,6 +117,7 @@ class StackedGraph(Graph):
                 pi.index_axis.visible = False
                 pi.padding_top = 0
                 pi.padding_bottom = 0
+
         return p
 
     def _bounds_changed_(self, bounds):

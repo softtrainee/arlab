@@ -340,6 +340,8 @@ class gen_ExtractionDeviceTable(Base, NameMixin):
 class gen_ImportTable(Base, BaseMixin):
     date = Column(DateTime, default=func.now())
     user = stringcolumn()
+    source = stringcolumn()
+    source_host = stringcolumn()
     analyses = relationship('meas_AnalysisTable')
 
 class gen_LabTable(Base, BaseMixin):

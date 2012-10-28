@@ -16,28 +16,31 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Property, List, Any, cached_property, \
-    Event, Dict, DelegatesTo
+    Event, Dict
 from traitsui.api import View, Item, HGroup, ListStrEditor
+from pyface.timer.do_later import do_later
+#============= standard library imports ========================
+from uncertainties import ufloat
+import re
+import datetime
+from numpy import array
+from profilehooks import profile
+#============= local library imports  ==========================
+from src.database.isotope_analysis.blanks_summary import BlanksSummary
 from src.graph.graph import Graph
 from src.database.isotope_analysis.fit_selector import FitSelector
-from src.graph.regression_graph import StackedRegressionGraph
+from src.graph.regression_graph import StackedRegressionGraph, RegressionGraph
 from src.graph.stacked_graph import StackedGraph
 from src.database.records.database_record import DatabaseRecord
 from src.database.isotope_analysis.analysis_summary import AnalysisSummary
 from src.experiment.identifier import convert_shortname, convert_labnumber
-from src.database.isotope_analysis.blanks_summary import BlanksSummary
-from pyface.timer.do_later import do_later
 from src.database.isotope_analysis.detector_intercalibration_summary import DetectorIntercalibrationSummary
 from src.experiment.processing.argon_calculations import calculate_arar_age
 from src.experiment.processing.signal import InterpolatedRatio, Background, \
     Blank, Signal
-from uncertainties import ufloat
-import re
-import datetime
-import time
 from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
-#============= standard library imports ========================
-#============= local library imports  ==========================
+from src.regression.ols_regressor import PolynomialRegressor
+from src.regression.mean_regressor import MeanRegressor
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -76,17 +79,13 @@ class IsotopeRecord(DatabaseRecord):
     detector_intercalibration_summary = Property
     analysis_summary = Property
     irradiation_summary = Property
-#    categories = List(['summary', 'signal', 'sniff', 'baseline', 'peak center' ])
     categories = List(['summary', 'irradiation' ])#'signal', 'sniff', 'baseline', 'peak center' ])
     selected = Any('signal')
     display_item = Instance(HasTraits)
 
-#    det_keys = None
-#    iso_keys = None
-#    signals = None
-#    fits = None
-    isos = None
-    signals = Dict
+    isotope_keys = Property
+    signals = Property
+    _signals = Dict
 #    baselines = None
 #    backgrounds = None
 #    blanks = None
@@ -95,6 +94,7 @@ class IsotopeRecord(DatabaseRecord):
     shortname = Property
     analysis_type = Property
     aliquot = Property
+    step = Property
     mass_spectrometer = Property
 
     changed = Event
@@ -182,7 +182,22 @@ class IsotopeRecord(DatabaseRecord):
 #===============================================================================
     def load_graph(self, graph=None, xoffset=0):
         dm = self.selector.data_manager
-        self._load_signals()
+        signals, baselines = self._load_signals()
+#        signals = self._get_table_data(dm, 'signals')
+        if signals:
+            self.categories.append('signal')
+            graph = self._load_stacked_graph(signals)
+            self.signal_graph = EditableGraph(graph=graph)
+
+#        baselines = self._get_table_data(dm, 'baselines')
+        if baselines:
+            self.categories.append('baseline')
+            graph = self._load_stacked_graph(baselines)
+            self.baseline_graph = EditableGraph(graph=graph)
+            self.baseline_graph.fit_selector = FitSelector(analysis=self,
+                                                           name='Baseline',
+                                                           graph=self.baseline_graph)
+
         sniffs = self._get_table_data(dm, 'sniffs')
         if sniffs:
             self.categories.append('sniff')
@@ -208,7 +223,7 @@ class IsotopeRecord(DatabaseRecord):
             self.categories.append('Det. Intercal.')
 
     def get_baseline_corrected_signal_dict(self):
-        self._load_signals()
+#        self._load_signals()
         signals = self.signals
         d = dict()
 
@@ -226,58 +241,6 @@ class IsotopeRecord(DatabaseRecord):
 
         return d
 
-    def _load_signals(self):
-        if self._no_load:
-            graph = self.signal_graph
-            if graph:
-                for iso, rs in zip(self.isos, graph.regressors):
-                    self.signals[iso] = Signal(_value=rs.coefficients[-1],
-                                               _error=rs.coefficient_errors[-1])
-            graph = self.baseline_graph
-            if graph:
-                for iso, rs in zip(self.isos, graph.regressors):
-                    self.signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
-                                                              _error=rs.coefficient_errors[-1])
-
-            return
-
-        self._no_load = True
-        dm = self.selector.data_manager
-        print dm
-
-        dm.open_data(self.path)
-
-        signals = self._get_table_data(dm, 'signals')
-
-        if signals:
-
-            self.categories.append('signal')
-
-            #this is the major computational sink
-            #takes ~0.1s  to execute
-            graph = self._load_stacked_graph(signals)
-
-            for iso, rs in zip(self.isos, graph.regressors):
-                self.signals[iso] = Signal(_value=rs.coefficients[-1],
-                                           _error=rs.coefficient_errors[-1])
-
-            self.signal_graph = EditableGraph(graph=graph)
-
-        baselines = self._get_table_data(dm, 'baselines')
-        if baselines:
-            self.categories.append('baseline')
-            graph = self._load_stacked_graph(baselines)
-
-            for iso, rs in zip(self.isos, graph.regressors):
-                self.signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
-                                                          _error=rs.coefficient_errors[-1])
-
-            self.baseline_graph = EditableGraph(graph=graph)
-            self.baseline_graph.fit_selector = FitSelector(analysis=self,
-                                                           name='Baseline',
-                                                           graph=self.baseline_graph)
-
-        self._load_histories()
 #===============================================================================
 # private
 #===============================================================================
@@ -286,24 +249,125 @@ class IsotopeRecord(DatabaseRecord):
 #            return getattr(self._dbrecord, attr)
 #        except AttributeError, e:
 #            print 'gettatrr', attr
-    def _blank_factory(self, iso, tab):
 
-        return self._signal_factory(iso, tab)
 
-    def _signal_factory(self, iso, tab):
-        kw = dict()
-        if tab is not None:
-            xs, ys = self._get_xy(tab)
-            try:
-                fit = tab._v_attrs['fit']
-            except Exception:
-                fit = 1
+    @profile
+    def _calculate_age(self):
+#        self._load_signals()
+        signals = self.signals
 
-            kw = dict(xs=xs, ys=ys,
-                      fit=fit,
-                      detector=tab.name)
-        sig = Signal(isotope=iso, **kw)
-        return sig
+        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+        for iso in keys:
+            for k in ['', 'bs', 'bl', 'bg']:
+                isok = iso + k
+                if not signals.has_key(isok):
+                    signals[isok] = self._signal_factory(isok, None)
+
+        sigs = lambda name: [(signals[iso].value, signals[iso].error)
+                                for iso in map('{{}}{}'.format(name).format, keys)]
+        fsignals = sigs('')
+        bssignals = sigs('bs')
+        blsignals = sigs('bl')
+        bksignals = sigs('bg')
+
+        ic = self.ic_factor
+        j = self.j
+        irrad = self.irradiation_info
+        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irrad, ic)
+
+        if result:
+            self.arar_result = result
+            ai = result['age']
+            ai = ai / self.age_scalar
+            age = ai.nominal_value
+            err = ai.std_dev()
+            return age, err
+
+    def _get_history_item(self, name):
+        '''
+            get the selected history item if available else use the last history
+        '''
+        dbr = self.dbrecord
+        histories = getattr(dbr, '{}_histories'.format(name))
+        if histories:
+            hist = None
+            shists = dbr.selected_histories
+            if shists:
+                hist = getattr(shists, 'selected_{}'.format(name))
+
+            if hist is None:
+                hist = histories[-1]
+
+            return getattr(hist, name)
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def _selected_changed(self):
+        selected = self.selected
+        if selected is not None:
+
+            selected = selected.replace(' ', '_')
+            selected = selected.lower()
+
+            if selected == 'summary':
+                item = self.analysis_summary
+                item.refresh()
+
+            elif selected == 'blanks':
+                item = BlanksSummary(record=self)
+            elif selected == 'det._intercal.':
+                item = self.detector_intercalibration_summary
+            elif selected == 'irradiation':
+                item = self.irradiation_summary
+                item.refresh()
+#                item = DetectorIntercalibrationSummary(record=self)
+            else:
+                item = getattr(self, '{}_graph'.format(selected))
+
+            self.trait_set(display_item=item)
+
+    def _apply_history_change(self, new):
+        self.changed = True
+
+#===============================================================================
+# loaders
+#===============================================================================
+    def _load_signals(self):
+        if self._no_load:
+            graph = self.signal_graph
+            if graph:
+                for iso, rs in zip(self.isotope_keys, graph.regressors):
+                    self._signals[iso] = Signal(_value=rs.coefficients[-1],
+                                               _error=rs.coefficient_errors[-1])
+            graph = self.baseline_graph
+            if graph:
+                for iso, rs in zip(self.isotope_keys, graph.regressors):
+                    self._signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
+                                                              _error=rs.coefficient_errors[-1])
+
+            return
+
+        self._no_load = True
+        dm = self.selector.data_manager
+
+        dm.open_data(self.path)
+
+        signals = self._get_table_data(dm, 'signals')
+        if signals:
+            regressors = self._load_regressors(signals)
+            for iso, rs in regressors.iteritems():
+                self._signals[iso] = Signal(_value=rs.coefficients[-1],
+                                           _error=rs.coefficient_errors[-1])
+        baselines = self._get_table_data(dm, 'baselines')
+        if baselines:
+            regressors = self._load_regressors(baselines)
+            for iso, rs in regressors.iteritems():
+                self._signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
+                                           _error=rs.coefficient_errors[-1])
+
+        self._load_histories()
+        return signals, baselines
 
     def _load_histories(self):
 
@@ -314,64 +378,10 @@ class IsotopeRecord(DatabaseRecord):
         self._load_from_history('backgrounds', 'bg', Background)
 
         #load airs for detector intercal
-#        self._load_detector_intercalibration()
-#    def load_from_file(self):
-#        df = self._open_file(name)
-#        if df:
-#            try:
-#                #get the signals
-#                for iso in df.root.signals:
-#                    name = iso._v_name
-#                    tab = next((n for n in iso._f_iterNodes()), None)
-#                    self.signals[name] = self._signal_factory(name, tab)
-#            except Exception:
-#                pass
-#
-#            try:
-#                for biso in df.root.baselines:
-#                    name = biso._v_name
-#                    basetab = next((n for n in biso._f_iterNodes()), None)
-#                    self.signals['{}bs'.format(name)] = self._signal_factory(name, basetab)
-#            except Exception:
-#                pass
-#
-#            try:
-#                t = df.root._v_attrs['TIMESTAMP']
-#            except KeyError:
-#                t = -1
-#    #        print t, 'TIMESTAMP'
-#            self.timestamp = t
-#            return True
+        self._load_detector_intercalibration()
 
-#    def load_from_file(self, name):
-#        df = self._open_file(name)
-#        if df:
-#            try:
-#                #get the signals
-#                for iso in df.root.signals:
-#                    name = iso._v_name
-#                    tab = next((n for n in iso._f_iterNodes()), None)
-#                    self.dbrecord.signals[name] = self.dbrecord._signal_factory(name, tab)
-#            except Exception, e:
-#                print 'load file', e
-#                pass
-#
-#            try:
-#                for biso in df.root.baselines:
-#                    name = biso._v_name
-#                    basetab = next((n for n in biso._f_iterNodes()), None)
-#                    self.dbrecord.signals['{}bs'.format(name)] = self.dbrecord._signal_factory(name, basetab)
-#            except Exception, e:
-#                print 'load base file', e
-#                pass
-#
-#            try:
-#                t = df.root._v_attrs['TIMESTAMP']
-#            except KeyError:
-#                t = -1
-#    #        print t, 'TIMESTAMP'
-#            self.timestamp = t
-#            return True
+    def _load_detector_intercalibration(self):
+        pass
 
     def _load_from_history(self, name, key, klass, **kw):
         item = self._get_history_item(name)
@@ -391,52 +401,201 @@ class IsotopeRecord(DatabaseRecord):
                     s.ys = ys
                     s.es = es
 
-#                sigs[isotope] = s
-
-#            setattr(self, key, sigs)
                 self.signals['{}{}'.format(isotope, key)] = s
 
-    def _calculate_age(self):
+    def _load_regressors(self, data):
+        isos = [vi[1] for vi in data.itervalues()]
+        isos = sorted(isos, key=lambda x:re.sub('\D', '', x))
+        def get_data(k):
+            try:
+                return data[k]
+            except KeyError:
+                return next((di for di in data.itervalues() if di[1] == k), None)
 
-        self._load_signals()
+        regs = dict()
+        for iso in isos:
+            try:
+                _di, _iso, fit, (x, y) = get_data(iso)
+            except ValueError:
+                continue
+            x = array(x)
+            y = array(y)
+            low = min(x)
+            fit = RegressionGraph._convert_fit(fit)
+            if fit in [1, 2, 3]:
+                if len(y) < fit + 1:
+                    return
+                st = low
+                xn = x - st
+                r = PolynomialRegressor(xs=xn, ys=y,
+                                        degree=fit)
+            else:
+                r = MeanRegressor(xs=x, ys=y)
 
-        signals = self.signals
-#        j = self._get_j()
-#        irradinfo = self._get_irradiation()
+            regs[iso] = r
 
-        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
-        for iso in keys:
-            for k in ['', 'bs', 'bl', 'bg']:
-                isok = iso + k
-                if not signals.has_key(isok):
-                    signals[isok] = self._signal_factory(isok, None)
+        return regs
 
-        sigs = lambda name: [(signals[iso].value, signals[iso].error)
-                                for iso in map('{{}}{}'.format(name).format, keys)]
-#        try:
-        fsignals = sigs('')
-        bssignals = sigs('bs')
-        blsignals = sigs('bl')
-        bksignals = sigs('bg')
+    def _load_stacked_graph(self, data, det=None, regress=True):
+        if regress:
+            klass = StackedRegressionGraph
+        else:
+            klass = StackedGraph
 
-        ic = self.ic_factor
-        j = self.j
-        irrad = self.irradiation_info
-        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals, j, irrad, ic)
+        graph = self._graph_factory(klass, width=700)
+        graph.suppress_regression = True
+        gkw = dict(padding=[50, 50, 5, 40])
 
-        if result:
-            self.arar_result = result
-#            self.k39 = result['k39'].nominal_value
-#            self.k39err = result['k39'].std_dev()
-#            self.rad40 = result['rad40'].nominal_value
-#            self.rad40err = result['rad40'].std_dev()
-            ai = result['age']
+        isos = [vi[1] for vi in data.itervalues()]
+        isos = sorted(isos, key=lambda x:re.sub('\D', '', x))
 
-            ai = ai / self.age_scalar
-            age = ai.nominal_value
-            err = ai.std_dev()
-            return age, err
+        def get_data(k):
+            try:
+                return data[k]
+            except KeyError:
+                return next((di for di in data.itervalues() if di[1] == k), None)
 
+        i = 0
+#        for i, iso in enumerate(isos):
+        for iso in isos:
+            try:
+                di, _iso, fi, (xs, ys) = get_data(iso)
+            except ValueError:
+                continue
+
+            gkw['ytitle'] = '{} ({})'.format(di if det is None else det, iso)
+            gkw['xtitle'] = 'Time (s)'
+            skw = dict()
+            if regress:
+                skw['fit'] = fi
+
+            graph.new_plot(**gkw)
+            graph.new_series(xs, ys, plotid=i,
+                             type='scatter', marker='circle',
+                             marker_size=1.25,
+                             **skw)
+#            graph.set_series_label(key, plotid=i)
+            ma = max(xs)
+
+#            graph.suppress_regression = iso != isos[-1]
+#            graph.suppress_regression = False
+
+            params = dict(orientation='right' if i % 2 else 'left',
+                          axis_line_visible=False
+                          )
+
+            graph.set_axis_traits(i, 'y', **params)
+            i += 1
+
+        graph.set_x_limits(min=0, max=ma, plotid=0)
+        graph.suppress_regression = False
+        graph._update_graph()
+
+        return graph
+
+    def _load_peak_center_graph(self, data):
+        xs = []
+        ys = []
+        if data:
+            xsys, center_dac, pcdacs, pcsignals = data
+            xs, ys = zip(*xsys)
+
+        graph = self._graph_factory()
+        graph.container_dict = dict(padding=[10, 0, 30, 10])
+        graph.clear()
+
+        title = ''
+        graph.new_plot(title='{}'.format(title),
+                       xtitle='DAC (V)',
+                       ytitle='Intensity (fA)',
+                       )
+
+        graph.new_series(
+                         x=xs, y=ys,
+                         type='scatter', marker='circle',
+                         marker_size=1.25
+                         )
+        graph.new_series(
+                         x=pcdacs,
+                         y=pcsignals,
+                         type='scatter', marker='circle',
+                         marker_size=2
+                         )
+        graph.add_vertical_rule(center_dac)
+
+#        graph.plots[0].value_range.tight_bounds = False
+        if xs:
+            graph.set_x_limits(min=min(xs), max=max(xs))
+        return graph
+#===============================================================================
+# getters
+#===============================================================================
+    def _get_xy(self, tab, x='time', y='value'):
+        return zip(*[(r[x], r[y]) for r in tab.iterrows()])
+
+    def _get_detector_intercalibrations(self):
+        ds = self.dbrecord.detector_intercalibration_histories
+        return ds
+
+    def _get_blanks(self):
+        bhs = self.dbrecord.blanks_histories
+        return bhs
+
+    def _get_backgrounds(self):
+        bhs = self._dbrecord.backgrounds_histories
+        return bhs
+
+    def _get_peakcenter(self, dm):
+
+        ti = dm.get_table('peakcenter', '/')
+        if ti is not None:
+            try:
+                center = ti.attrs.center_dac
+            except AttributeError:
+                center = 0
+
+            try:
+                pcsignals = [ti.attrs.low_signal, ti.attrs.high_signal]
+                pcdacs = [ti.attrs.low_dac, ti.attrs.high_dac]
+            except AttributeError:
+                pcsignals = []
+                pcdacs = []
+
+            return ([(r['time'], r['value']) for r in  ti.iterrows()], center, pcdacs, pcsignals)
+
+    def _get_table_data(self, dm, grp):
+        ds = dict()
+        try:
+            isogrps = dm.get_groups(grp)
+        except Exception, e:
+            print 'get table data', e
+            return
+
+        for ig in isogrps:
+            for ti in dm.get_tables(ig):
+                name = ti.name
+                data = zip(*[(r['time'], r['value']) for r in ti.iterrows()])
+
+                iso = ig._v_name
+                try:
+                    iso = ti.attrs.isotope
+                except AttributeError:
+                    pass
+
+                fit = 'linear'
+                try:
+                    fit = ti.attrs.fit
+                except AttributeError, e:
+                    pass
+#                print 'nn', name, ig._v_name
+                ds[ig._v_name] = [ti._v_name, iso, fit, data]
+
+        return ds
+
+#===============================================================================
+# property get/set
+#===============================================================================
+    @cached_property
     def _get_j(self):
         s = 1.0
         e = 1e-3
@@ -451,33 +610,31 @@ class IsotopeRecord(DatabaseRecord):
 
         return (s, e)
 
+    @cached_property
     def _get_production_ratios(self):
         try:
             lev = self.irradiation_level
-#            ln = self._dbrecord.labnumber
-#            ip = ln.irradiation_position
-#            lev = ip.level
             ir = lev.irradiation
             pr = ir.production
             return pr
         except AttributeError:
             pass
 
-#        prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
-#                           for pi in ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
+    @cached_property
     def _get_irradiation_level(self):
         try:
             return self.irradiation_position.level
         except AttributeError, e:
             print e
 
+    @cached_property
     def _get_irradiation_position(self):
         try:
             return self.dbrecord.labnumber.irradiation_position
         except AttributeError, e:
             print e
 
-
+    @cached_property
     def _get_irradiation_info(self):
         '''
             return k4039, k3839, ca3937, ca3837, ca3637, cl3638, t
@@ -543,206 +700,6 @@ class IsotopeRecord(DatabaseRecord):
                 ic = s.value, s.error
 
         return ic
-
-    def _get_xy(self, tab, x='time', y='value'):
-        return zip(*[(r[x], r[y]) for r in tab.iterrows()])
-
-    def _get_history_item(self, name):
-        '''
-            get the selected history item if available else use the last history
-        '''
-        dbr = self.dbrecord
-        histories = getattr(dbr, '{}_histories'.format(name))
-        if histories:
-            hist = None
-            shists = dbr.selected_histories
-            if shists:
-                hist = getattr(shists, 'selected_{}'.format(name))
-
-            if hist is None:
-                hist = histories[-1]
-
-            return getattr(hist, name)
-
-    def _get_detector_intercalibrations(self):
-        ds = self.dbrecord.detector_intercalibration_histories
-        return ds
-
-    def _get_blanks(self):
-        bhs = self.dbrecord.blanks_histories
-        return bhs
-
-    def _get_backgrounds(self):
-        bhs = self._dbrecord.backgrounds_histories
-        return bhs
-
-    def _get_peakcenter(self, dm):
-
-        ti = dm.get_table('peakcenter', '/')
-        if ti is not None:
-            try:
-                center = ti.attrs.center_dac
-            except AttributeError:
-                center = 0
-
-            try:
-                pcsignals = [ti.attrs.low_signal, ti.attrs.high_signal]
-                pcdacs = [ti.attrs.low_dac, ti.attrs.high_dac]
-            except AttributeError:
-                pcsignals = []
-                pcdacs = []
-
-            return ([(r['time'], r['value']) for r in  ti.iterrows()], center, pcdacs, pcsignals)
-
-    def _get_table_data(self, dm, grp):
-        ds = dict()
-        try:
-            isogrps = dm.get_groups(grp)
-        except Exception, e:
-            print 'get table data', e
-            return
-
-        for ig in isogrps:
-            for ti in dm.get_tables(ig):
-                name = ti.name
-                data = zip(*[(r['time'], r['value']) for r in ti.iterrows()])
-
-                iso = ig._v_name
-                try:
-                    iso = ti.attrs.isotope
-                except AttributeError:
-                    pass
-
-                fit = 'linear'
-                try:
-                    fit = ti.attrs.fit
-                except AttributeError, e:
-                    pass
-#                print 'nn', name, ig._v_name
-                ds[ig._v_name] = [ti._v_name, iso, fit, data]
-
-        return ds
-
-    def _load_stacked_graph(self, data, det=None, regress=True):
-        if regress:
-#            klass = StackedTimeSeriesRegressionGraph
-#            klass = StackedRegressionTimeSeriesGraph
-            klass = StackedRegressionGraph
-        else:
-            klass = StackedGraph
-
-        graph = self._graph_factory(klass, width=700)
-        gkw = dict(padding=[50, 50, 5, 40])
-
-        isos = [vi[1] for vi in data.itervalues()]
-        isos = sorted(isos, key=lambda x:re.sub('\D', '', x))
-#        isos = sorted(isos, key=lambda k: int(k[2:]))
-        self.isos = isos
-        def get_data(k):
-            try:
-                return data[k]
-            except KeyError:
-                return next((di for di in data.itervalues() if di[1] == k), None)
-
-        i = 0
-#        for i, iso in enumerate(isos):
-        for iso in isos:
-            try:
-                di, _iso, fi, (xs, ys) = get_data(iso)
-            except ValueError:
-                continue
-
-            gkw['ytitle'] = '{} ({})'.format(di if det is None else det, iso)
-            gkw['xtitle'] = 'Time (s)'
-            skw = dict()
-            if regress:
-                skw['fit'] = fi
-
-            graph.new_plot(**gkw)
-            graph.new_series(xs, ys, plotid=i,
-                             type='scatter', marker='circle',
-                             marker_size=1.25,
-                             **skw)
-#            graph.set_series_label(key, plotid=i)
-            ma = max(xs)
-
-            graph.suppress_regression = iso != isos[-1]
-            graph.set_x_limits(min=0, max=ma, plotid=i)
-            graph.suppress_regression = False
-
-            params = dict(orientation='right' if i % 2 else 'left',
-                          axis_line_visible=False
-                          )
-
-            graph.set_axis_traits(i, 'y', **params)
-            i += 1
-
-        return graph
-
-    def _load_peak_center_graph(self, data):
-        xs = []
-        ys = []
-        if data:
-            xsys, center_dac, pcdacs, pcsignals = data
-            xs, ys = zip(*xsys)
-
-        graph = self._graph_factory()
-        graph.container_dict = dict(padding=[10, 0, 30, 10])
-        graph.clear()
-
-        title = ''
-        graph.new_plot(title='{}'.format(title),
-                       xtitle='DAC (V)',
-                       ytitle='Intensity (fA)',
-                       )
-
-        graph.new_series(
-                         x=xs, y=ys,
-                         type='scatter', marker='circle',
-                         marker_size=1.25
-                         )
-        graph.new_series(
-                         x=pcdacs,
-                         y=pcsignals,
-                         type='scatter', marker='circle',
-                         marker_size=2
-                         )
-        graph.add_vertical_rule(center_dac)
-
-#        graph.plots[0].value_range.tight_bounds = False
-        if xs:
-            graph.set_x_limits(min=min(xs), max=max(xs))
-        return graph
-
-#===============================================================================
-# handlers
-#===============================================================================
-    def _selected_changed(self):
-        selected = self.selected
-        if selected is not None:
-
-            selected = selected.replace(' ', '_')
-            selected = selected.lower()
-
-            if selected == 'summary':
-                item = self.analysis_summary
-                item.refresh()
-
-            elif selected == 'blanks':
-                item = BlanksSummary(record=self)
-            elif selected == 'det._intercal.':
-                item = self.detector_intercalibration_summary
-            elif selected == 'irradiation':
-                item = self.irradiation_summary
-                item.refresh()
-#                item = DetectorIntercalibrationSummary(record=self)
-            else:
-                item = getattr(self, '{}_graph'.format(selected))
-
-            self.trait_set(display_item=item)
-#===============================================================================
-# property get/set
-#===============================================================================
     @cached_property
     def _get_analysis_summary(self):
         fs = FitSelector(analysis=self,
@@ -757,9 +714,6 @@ class IsotopeRecord(DatabaseRecord):
                                )
         fs.on_trait_change(item.refresh, 'fits:fit, fits:filterstr')
         return item
-
-    def _apply_history_change(self, new):
-        self.changed = True
 
     @cached_property
     def _get_irradiation_summary(self):
@@ -800,12 +754,18 @@ class IsotopeRecord(DatabaseRecord):
     @cached_property
     def _get_analysis_type(self):
         if self._dbrecord:
-            return self._dbrecord.measurement.analysis_type.name
+            if self._dbrecord.measurement:
+                return self._dbrecord.measurement.analysis_type.name
 
     @cached_property
     def _get_aliquot(self):
         if self._dbrecord:
             return self._dbrecord.aliquot
+
+    @cached_property
+    def _get_step(self):
+        if self._dbrecord:
+            return self._dbrecord.step
 
     @cached_property
     def _get_mass_spectrometer(self):
@@ -820,6 +780,39 @@ class IsotopeRecord(DatabaseRecord):
 #        print time.clock() - st
         return r
 
+    def _get_signals(self):
+        self._load_signals()
+        return self._signals
+
+    def _get_isotope_keys(self):
+        keys = [k[:4] for k in self._signals.keys()]
+        keys = list(set(keys))
+        isos = sorted(keys, key=lambda x: re.sub('\D', '', x))
+        return isos
+
+
+
+#===============================================================================
+# factories
+#===============================================================================
+    def _blank_factory(self, iso, tab):
+
+        return self._signal_factory(iso, tab)
+
+    def _signal_factory(self, iso, tab):
+        kw = dict()
+        if tab is not None:
+            xs, ys = self._get_xy(tab)
+            try:
+                fit = tab._v_attrs['fit']
+            except Exception:
+                fit = 1
+
+            kw = dict(xs=xs, ys=ys,
+                      fit=fit,
+                      detector=tab.name)
+        sig = Signal(isotope=iso, **kw)
+        return sig
 #===============================================================================
 # views
 #===============================================================================

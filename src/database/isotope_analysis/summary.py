@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance
 from src.displays.rich_text_display import RichTextDisplay
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -34,13 +35,24 @@ class Summary(HasTraits):
 
     def __init__(self, *args, **kw):
         super(Summary, self).__init__(*args, **kw)
-        self._create_summary()
-
-    def _create_summary(self):
         self.refresh()
 
     def refresh(self):
-        self._build_summary()
+        self.build_summary()
+
+    def build_summary(self):
+        def do():
+            d = self.display
+            d.clear(gui=False)
+            d.freeze()
+            self._build_summary()
+            d.thaw()
+
+        do_later(do)
+
+    def add_text(self, *args, **kw):
+        kw['gui'] = False
+        self.display.add_text(*args, **kw)
 
     def _build_summary(self, *args, **kw):
         pass
@@ -50,6 +62,7 @@ class Summary(HasTraits):
                                width=700,
                                selectable=True,
                                default_color='black',
+                               scroll_to_bottom=False,
                                font_name='Bitstream Vera Sans Mono'
 #                               font_name='Monaco'
                                )

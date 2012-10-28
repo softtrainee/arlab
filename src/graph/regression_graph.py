@@ -173,12 +173,14 @@ class RegressionGraph(Graph):
                 return
             st = low
             xn = x - st
+
             r = PolynomialRegressor(xs=xn, ys=y,
                                     degree=fit)
             self.regressors.append(r)
             fx = linspace(0, (high - low), 200)
 
             fy = r.predict(fx)
+
             if fy is None:
                 return
 
@@ -210,7 +212,8 @@ class RegressionGraph(Graph):
 
         return fx, fy, ly, uy
 
-    def _convert_fit(self, f):
+    @classmethod
+    def _convert_fit(cls, f):
         if isinstance(f, str):
             f = f.lower()
             fits = ['linear', 'parabolic', 'cubic']
@@ -341,11 +344,11 @@ class RegressionGraph(Graph):
 #        if not self.use_data_tool:
 #            data_tool.visible = False
 
-    def set_x_limits(self, *args, **kw):
-        '''
-        '''
-        super(RegressionGraph, self).set_x_limits(*args, **kw)
-        self._update_graph()
+#    def set_x_limits(self, *args, **kw):
+#        '''
+#        '''
+#        super(RegressionGraph, self).set_x_limits(*args, **kw)
+#        self._update_graph()
 
 class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
     pass

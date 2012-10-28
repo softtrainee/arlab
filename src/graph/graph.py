@@ -52,7 +52,8 @@ VALID_FONTS = ['Helvetica', 'Arial',
 #               'Times New Roman',
                'Geneva',
 
-               ]
+           ]
+from profilehooks import profile
 
 def name_generator(base):
     '''
@@ -592,6 +593,7 @@ class Graph(Loggable, ContextMenuMixin):
                                    color=color)
         plot.overlays.append(guide_overlay)
 
+    @profile
     def new_plot(self, add=True, **kw):
         '''
         '''
@@ -657,9 +659,9 @@ class Graph(Loggable, ContextMenuMixin):
                 self._set_title('{}_axis'.format(t), kw[title], plotid)
 
 
-        broadcaster = BroadcasterTool(tools=tools
-                                      )
-        p.tools.insert(0, broadcaster)
+#        broadcaster = BroadcasterTool(tools=tools
+#                                      )
+#        p.tools.insert(0, broadcaster)
 
         return p
 

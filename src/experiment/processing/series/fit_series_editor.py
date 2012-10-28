@@ -29,7 +29,7 @@ from src.loggable import Loggable
 from src.experiment.processing.signal import Signal
 #from src.experiment.processing.analysis import Signal
 from src.database.orms.isotope_orm import meas_AnalysisTable, meas_MeasurementTable, \
-    AnalysisTypeTable, meas_ExperimentTable
+    gen_AnalysisTypeTable, meas_ExperimentTable
 
 class FitSeriesEditor(Loggable):
     db = Instance(DatabaseAdapter)
@@ -224,8 +224,8 @@ class FitSeriesEditor(Loggable):
         q = sess.query(meas_AnalysisTable)
         q = q.join(meas_ExperimentTable)
         q = q.join(meas_MeasurementTable)
-        q = q.join(AnalysisTypeTable)
-        q = q.filter(AnalysisTypeTable.name == at)
+        q = q.join(gen_AnalysisTypeTable)
+        q = q.filter(gen_AnalysisTypeTable.name == at)
         q = q.filter(meas_ExperimentTable.id == exp.id)
         q = q.filter(meas_AnalysisTable.id != an.id)
         return q.all()

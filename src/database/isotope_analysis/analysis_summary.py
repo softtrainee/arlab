@@ -24,29 +24,30 @@ from uncertainties import ufloat
 from src.database.isotope_analysis.summary import Summary
 from src.database.isotope_analysis.fit_selector import FitSelector
 import math
+#try:
+#    PLUSMINUS = u'\u00b1'
+#except:
+PLUSMINUS = '+/-'
 
-PLUSMINUS = unicode('\xb1')
 PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
 class AnalysisSummary(Summary):
     fit_selector = Instance(FitSelector)
 
     def _build_summary(self):
-        d = self.display
-        d.clear()
 
         record = self.record
 
-        isos = record.isos
+        isos = record.isotope_keys
         if isos:
             isos = sorted(isos, key=lambda x: re.sub('\D', '', x))
             isos.reverse()
         else:
             isos = []
 
-        d.add_text('Labnumber={}-{}'.format(record.labnumber, record.aliquot), bold=True)
-        d.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
+        self.add_text('Labnumber={}-{}'.format(record.labnumber, record.aliquot), bold=True)
+        self.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
         j, j_err = record.j
-        d.add_text('J={} {}{}'.format(j, u'\u00b1', j_err))
+        self.add_text('J={} {}{}'.format(j, u'\u00b1', j_err))
         def floatfmt(m, i=6):
             if abs(m) < 10 ** -i:
                 return '{:0.2e}'.format(m)
@@ -67,7 +68,7 @@ class AnalysisSummary(Summary):
         msg = 'Iso.   Int.             ' + PLUSMINUS_ERR + '                      Fit'
         msg += '         Baseline     ' + PLUSMINUS_ERR + '                    Blank         ' + PLUSMINUS_ERR
 #        msg = ''.join([width(m, w) for m, w in columns])
-        d.add_text(msg, underline=True, bold=True)
+        self.add_text(msg, underline=True, bold=True)
 
         #add isotopes
         n = len(isos) - 1
@@ -76,17 +77,17 @@ class AnalysisSummary(Summary):
 #        for i, iso in enumerate(isos):
 #            self._make_blanks(n, i, iso, floatfmt, width, widths)
 
-#        d.add_text('\n')
+#        self.add_text('\n')
 
         m = 'Baseline Corrected Signals'
-        d.add_text('{:<39s}'.format(m), underline=True, bold=True)
+        self.add_text('{:<39s}'.format(m), underline=True, bold=True)
 
 #        signals = dict()
         for i, iso in enumerate(isos):
             self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
 
         m = 'Fully Corrected Signals'
-        d.add_text('{:<39s}'.format(m), underline=True, bold=True)
+        self.add_text('{:<39s}'.format(m), underline=True, bold=True)
 
 #        signals = dict()
         for i, iso in enumerate(isos):
@@ -94,7 +95,7 @@ class AnalysisSummary(Summary):
                                          fully_correct=True)
 
         m = 'Corrected Values'
-        d.add_text('{:<39s}'.format(m), underline=True, bold=True)
+        self.add_text('{:<39s}'.format(m), underline=True, bold=True)
 #
         rec = self.record
         arar_result = rec.arar_result
@@ -109,9 +110,9 @@ class AnalysisSummary(Summary):
                 ee = '{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
                 ms = [floatfmt(v), ee]
                 msg = ''.join([width(m, 15) for m in ms])
-                d.add_text(width(r, 10), bold=True, new_line=False,
+                self.add_text(width(r, 10), bold=True, new_line=False,
                            underline=underline)
-                d.add_text(msg, underline=underline, size=11)
+                self.add_text(msg, underline=underline, size=11)
 
             rad40 = arar_result['rad40']
             tot40 = arar_result['tot40']
@@ -124,11 +125,11 @@ class AnalysisSummary(Summary):
             make_ratio('40*/36', rad40, atm36)
             make_ratio('40*/39', rad40, k39, underline=True)
 
-        d.add_text(' ')
+        self.add_text(' ')
 
         v, e = self.record.age
         e = u' \u00b1' + '{:0.3f}'.format(e)
-        d.add_text('age={:0.3f} {}'.format(v, e))
+        self.add_text('age={:0.3f} {}'.format(v, e))
 
     def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths,
                                 fully_correct=False):
@@ -157,10 +158,10 @@ class AnalysisSummary(Summary):
         if i == n:
             msg += '\n'
 #        d.add_text(msg, underline=i == n)
-        d.add_text(width(iso, widths[0]), bold=True,
+        self.add_text(width(iso, widths[0]), bold=True,
                   new_line=False,
                   underline=i == n)
-        d.add_text(msg, size=11, underline=i == n)
+        self.add_text(msg, size=11, underline=i == n)
         return s
 
     def _get_signal_and_baseline(self, pi):
@@ -182,7 +183,7 @@ class AnalysisSummary(Summary):
 
     def _make_signals(self, n, i, iso, floatfmt, width, widths):
         sg = self.record.signal_graph
-        d = self.display
+#        d = self.display
         pi = n - i
         fit = sg.get_fit(pi) if sg else '---'
         sig, base = self._get_signal_and_baseline(pi)
@@ -221,11 +222,11 @@ class AnalysisSummary(Summary):
 #        d.add_text(iso, bold=True,
 #                  new_line=False,
 #                  underline=i == n)
-        d.add_text(width(iso, 6),
+        self.add_text(width(iso, 6),
                    bold=True,
                   new_line=False,
                   underline=i == n)
-        d.add_text(msg, size=11, underline=i == n)
+        self.add_text(msg, size=11, underline=i == n)
 
 #    def _display_default(self):
 #        return RichTextDisplay(default_size=12,

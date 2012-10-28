@@ -19,15 +19,17 @@ from traits.api import HasTraits, Instance, Any, List, Bool, Property, \
     cached_property, Button, on_trait_change, Str
 from traitsui.api import View, Item, TabularEditor, VSplit, Group, HGroup, VGroup, \
     spring, Handler
-import apptools.sweet_pickle as pickle
+#import apptools.sweet_pickle as pickle
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #from tables import openFile
+import cPickle as pickle
 import os
+
 #============= local library imports  ==========================
 #from src.loggable import Loggable
 from src.graph.graph import Graph
 from src.experiment.processing.analysis import Analysis, AnalysisTabularAdapter
-from src.experiment.processing.result import Result
 from src.experiment.processing.plotters.series import Series
 from src.experiment.processing.series_config import SeriesConfig, RatioConfig
 from src.experiment.processing.processing_selector import ProcessingSelector
@@ -38,10 +40,7 @@ from src.database.core.database_selector import ColumnSorterMixin
 from src.displays.rich_text_display import RichTextDisplay
 from src.experiment.processing.export.csv_exporter import CSVExporter
 from src.experiment.processing.export.excel_exporter import ExcelExporter
-from pyface.timer.do_later import do_later
 from src.experiment.processing.figures.figure_store import FigureStore
-from src.managers.data_managers.h5_data_manager import H5DataManager
-from threading import Thread
 from src.initializer import MProgressDialog
 
 class GraphSelector(HasTraits):
@@ -246,7 +245,6 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         (ww, _hh) = pd.control.GetSize()
         pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
 
-
         for n, gid, attr in zip(names, groupids, attrs):
             if not n in _names:
                 a = self._analysis_factory(n, gid=gid, **attr)
@@ -404,12 +402,15 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             ps = self.selector
             try:
                 names, attrs, gids = zip(*[(ri.filename, dict(dbrecord=ri), ri.gid)
-                                          for ri in ps.selected_records if ri.path.strip()])
+                                          for ri in ps.selected_records
+                                            if ri.path.strip()
+
+                                            ])
 
                 if names:
                     self.load_analyses(names, attrs=attrs, groupids=gids, **self._get_load_keywords())
-            except ValueError:
-                pass
+            except ValueError, e:
+                print e
 
         do_later(do)
 
@@ -444,16 +445,16 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             ps.on_trait_change(self._update_data, 'update_data')
             ps.selector.load_recent()
 #            ps._analysis_type_changed()
-            ps.edit_traits()
+#            ps.edit_traits()
             self.selector = ps
 #            if self._debug:
-#            ps.selected_results = [i for i in ps.selector.records[-10:-6] if i.analysis_type != 'blank']
+            ps.selected_records = [i for i in ps.selector.records[-20:] if i.analysis_type != 'blank']
 #            print 'get results time', time.clock() - st
         else:
             self.selector.show()
 
 #        st = time.clock()
-#        self._update_data()
+        self._update_data()
 #        print 'update time', time.clock() - st
 
     def _show_results_fired(self):
@@ -610,6 +611,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #===============================================================================
 # factories
 #===============================================================================
+
     def _analysis_factory(self, n, dbrecord=None, **kw):
 
         a = Analysis(uuid=n,
@@ -633,13 +635,13 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #            selector = self.db.new_selector()
 #            selector.data_manager = H5DataManager(repository=self.repo)
 #            dbrecord = selector.record_klass(_dbrecord=dbr, selector=selector)
-        if dbrecord and dbrecord.loadable:
+#        if dbrecord and dbrecord.loadable:
 
 #            a.dbrecord = dbrecord
 
 #                a.load_from_file(n)
-            if a.load_age():
-                return a
+        if a.load_age():
+            return a
 
     def _graph_factory(self, klass=None, **kw):
         g = Graph(container_dict=dict(kind='h', padding=10,

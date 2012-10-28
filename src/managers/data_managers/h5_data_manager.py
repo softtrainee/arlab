@@ -158,7 +158,8 @@ class H5DataManager(DataManager):
             path = out
 
         try:
-            self._frame = openFile(path, mode)
+            fil = Filters(complevel=self.compression_level)
+            self._frame = openFile(path, mode, filters=fil)
             return True
         except Exception:
             self._frame = None
