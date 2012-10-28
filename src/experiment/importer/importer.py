@@ -30,7 +30,10 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.repo.repository import Repository
 from src.managers.data_managers.table_descriptions import TimeSeriesTableDescription
 from src.database.orms.massspec_orm import IrradiationLevelTable, \
-    IrradiationChronologyTable, IrradiationPositionTable
+    IrradiationChronologyTable, IrradiationPositionTable, AnalysesTable, \
+    SampleTable, ProjectTable
+from threading import Thread
+import time
 #from src.database.orms.isotope_orm import meas_AnalysisTable
 
 class Importer(Loggable):
@@ -48,7 +51,8 @@ class Importer(Loggable):
         self.display.add_text(msg)
 
     def _import_button_fired(self):
-        self._import()
+        t = Thread(target=self._import)
+        t.start()
 
     def _import(self):
         pass
@@ -85,7 +89,6 @@ class Importer(Loggable):
 
             det, data = baselines[k]
             write_file(det, data, 'baselines', k)
-#                frame.createTable(grp, 'Det')
 
         dm.close()
         return name
@@ -104,10 +107,17 @@ class Importer(Loggable):
 
 class MassSpecImporter(Importer):
     def _import(self):
+        st = time.time()
+        self.info('starting import')
         items = self._gather_data()
+        n = 0
         for item in items:
-            self._import_item(item)
-            self.destination.commit()
+            if self._import_item(item):
+                self.destination.commit()
+                n += 1
+
+        t = (time.time() - st) / 60.
+        self.info('imported {} analyses in {:0.1f} mins'.format(n, t))
 
     def _import_item(self, msrecord):
         dest = self.destination
@@ -116,12 +126,19 @@ class MassSpecImporter(Importer):
         step = msrecord.Increment
         rdt = msrecord.RunDateTime
 
+        monitors = self._get_monitors(msrecord)
+        return
+
+
         dblabnumber = dest.get_labnumber(labnumber)
+        analyses = dblabnumber.analyses
         if not dblabnumber:
             dblabnumber = dest.add_labnumber(labnumber)
             self._import_irradiation(msrecord, dblabnumber)
+            #get all the monitors and add to analyses
+            monitors = self._get_monitors(msrecord)
+            analyses += monitors
 
-        analyses = dblabnumber.analyses
         def test(ai):
             a = int(ai.aliquot) == int(aliquot)
             b = ai.step == step
@@ -138,7 +155,11 @@ class MassSpecImporter(Importer):
                                        )
             if self._dbimport is None:
                 #add import 
-                dbimp = dest.add_import(user=self.username)
+                dbimp = dest.add_import(user=self.username,
+                                        source=self.source.name,
+                                        source_host=self.source.host
+
+                                        )
                 self._dbimport = dbimp
             else:
                 dbimp = self._dbimport
@@ -148,6 +169,7 @@ class MassSpecImporter(Importer):
             dest.add_analysis_path(path, dbanal)
 
             self._import_blanks(msrecord, dbanal)
+            return True
 
     def _import_blanks(self, msrecord, dbanal):
         '''
@@ -166,8 +188,6 @@ class MassSpecImporter(Importer):
             bk, bk_er = result.Bkgd, result.BkgdEr
             dest.add_blanks(dbhist, user_value=bk, user_error=bk_er,
                             use_set=False, isotope=iso.Label)
-
-
 
     def _import_signals(self, msrecord):
         signals = dict()
@@ -188,85 +208,126 @@ class MassSpecImporter(Importer):
             baselines[iso.Label] = det, data
 
         return self._dump_file(signals, baselines)
-#            dest.commit()
-    def _import_irradiation(self, msrecord, dblabnumber):
-        src = self.source
-        dest = self.destination
-        #get irradiation position
-        irrad_position = msrecord.irradiation_position
 
+    def _get_monitors(self, msrecord):
+        irrad_level = self._get_irradiation_level(msrecord)
+        if irrad_level:
+            '''
+                get all analyses at this irradiation level that are FC-2 and project is monitor
+            '''
+            src = self.source
+            sess = src.get_session()
+            q = sess.query(AnalysesTable)
+            q = q.join(IrradiationPositionTable)
+            q = q.join(SampleTable)
+            q = q.join(ProjectTable)
+            q = q.filter(IrradiationPositionTable.IrradiationLevel == msrecord.irradiation_position.IrradiationLevel)
+            q = q.filter(SampleTable.Sample == 'FC-2')
+            q = q.filter(ProjectTable.Project == 'J-Curve')
+            return q.all()
+#            qs = q.all()
+#            for qi in qs:
+#                print qi
+#            q = sess.query(AnalysesTable)
+#            q = q.join(IrradiationPositionTable)
+#            q=q.filter(IrradiationPositionTable.IrradPosition=)
+#            q = q.join(IrradiationLevelTable)
+#            q = q.filter(IrradiationLevelTable.id == irrad_level.id)
+#            print q.all()
+
+    def _get_irradiation_level(self, msrecord, name=None, level=None):
         #get irradiation level
-        name, level = irrad_position.IrradiationLevel[:-1], irrad_position.IrradiationLevel[-1:]
+        irrad_position = msrecord.irradiation_position
+        if name is None:
+            name = irrad_position.IrradiationLevel[:-1]
+        if level is None:
+            level = irrad_position.IrradiationLevel[-1:]
+
         if name and level:
+#            irrad_level = self._get_irradiation_level(name, level)
+
+            src = self.source
             sess = src.get_session()
             q = sess.query(IrradiationLevelTable)
             q = q.filter(IrradiationLevelTable.IrradBaseID == name)
             q = q.filter(IrradiationLevelTable.Level == level)
             irrad_level = q.one()
-#            print irrad_level.IrradBaseID, irrad_level.Level
+            return irrad_level
 
-            if irrad_level:
+    def _import_irradiation(self, msrecord, dblabnumber):
+#        src = self.source
+        dest = self.destination
+        #get irradiation position
+        irrad_position = msrecord.irradiation_position
+#
+#        #get irradiation level
+        name, level = irrad_position.IrradiationLevel[:-1], irrad_position.IrradiationLevel[-1:]
+#        if name and level:
+#            irrad_level = self._get_irradiation_level(name, level)
+        irrad_level = self._get_irradiation_level(msrecord, name=name, level=level)
+        if irrad_level:
 
-                #get irradiation holder
-                holder = irrad_level.SampleHolder
+            #get irradiation holder
+            holder = irrad_level.SampleHolder
 
-                #get the production ratio
-                pri = irrad_level.production
-                prname = pri.Label
-                dbpr = dest.get_irradiation_production(prname)
-                if not dbpr:
-                    kw = dict(name=prname)
-                    prs = ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', ('P36Cl38Cl', 'Cl3638')]
-                    for k in prs:
-                        if not isinstance(k, tuple):
-                            ko = k
-                        else:
-                            k, ko = k
-                        ke = '{}Er'.format(k)
-                        v = getattr(pri, k)
-                        e = getattr(pri, ke)
-                        kw[ko] = v
-                        kw['{}_err'.format(ko)] = e
+            #get the production ratio
+            pri = irrad_level.production
+            prname = pri.Label
+            dbpr = dest.get_irradiation_production(prname)
+            if not dbpr:
+                kw = dict(name=prname)
+                prs = ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', ('P36Cl38Cl', 'Cl3638')]
+                for k in prs:
+                    if not isinstance(k, tuple):
+                        ko = k
+                    else:
+                        k, ko = k
+                    ke = '{}Er'.format(k)
+                    v = getattr(pri, k)
+                    e = getattr(pri, ke)
+                    kw[ko] = v
+                    kw['{}_err'.format(ko)] = e
 
-                    self.info('adding production ratio {}'.format(prname))
-                    dbpr = dest.add_irradiation_production(**kw)
+                self.info('adding production ratio {}'.format(prname))
+                dbpr = dest.add_irradiation_production(**kw)
 
-                #get irradiation
-                dbirrad = dest.get_irradiation(name)
-                if dbirrad is None:
-                    #get the chronology
-                    q = sess.query(IrradiationChronologyTable)
-                    q = q.filter(IrradiationChronologyTable.IrradBaseID == name)
-                    chrons = q.all()
-                    chronblob = '$'.join(['{}%{}'.format(ci.StartTime, ci.EndTime) for ci in chrons])
+            #get irradiation
+            dbirrad = dest.get_irradiation(name)
+            if dbirrad is None:
+                sess = self.source.get_session()
+                #get the chronology
+                q = sess.query(IrradiationChronologyTable)
+                q = q.filter(IrradiationChronologyTable.IrradBaseID == name)
+                chrons = q.all()
+                chronblob = '$'.join(['{}%{}'.format(ci.StartTime, ci.EndTime) for ci in chrons])
 
-                    self.info('adding irradiation and chronology for {}'.format(name))
-                    dbchron = dest.add_irradiation_chronology(chronblob)
-                    dbirrad = dest.add_irradiation(name, production=dbpr, chronology=dbchron)
+                self.info('adding irradiation and chronology for {}'.format(name))
+                dbchron = dest.add_irradiation_chronology(chronblob)
+                dbirrad = dest.add_irradiation(name, production=dbpr, chronology=dbchron)
 
-                #get irradiation level
-                dblevel = next((li.name for li in dbirrad.levels if li.name == level), None)
-                if not dblevel:
-                    self.info('adding irradiation level {}'.format(level))
-                    dblevel = dest.add_irradiation_level(level, dbirrad, holder)
+            #get irradiation level
+            dblevel = next((li.name for li in dbirrad.levels if li.name == level), None)
+            if not dblevel:
+                self.info('adding irradiation level {}'.format(level))
+                dblevel = dest.add_irradiation_level(level, dbirrad, holder)
 
-                #add position
-                dbpos = dest.add_irradiation_position(irrad_position.HoleNumber, dblabnumber, dbirrad, dblevel)
+            #add position
+            dbpos = dest.add_irradiation_position(irrad_position.HoleNumber, dblabnumber, dbirrad, dblevel)
 
-                #set the flux
-                dbhist = dest.add_flux_history(dbpos)
-                dbflux = dest.add_flux(irrad_position.J, irrad_position.JEr)
-                dbflux.history = dbhist
-                dblabnumber.selected_flux_history = dbhist
+            #set the flux
+            dbhist = dest.add_flux_history(dbpos)
+            dbflux = dest.add_flux(irrad_position.J, irrad_position.JEr)
+            dbflux.history = dbhist
+            dblabnumber.selected_flux_history = dbhist
 
-                #add the sample
-                sam = irrad_position.sample
-                dbproj = dest.add_project('{}-MassSpecImport'.format(sam.project.Project))
+            #add the sample
+            sam = irrad_position.sample
+            dbproj = dest.add_project('{}-MassSpecImport'.format(sam.project.Project))
 #                proj = sam.project
-                dbmat = dest.add_material(irrad_position.Material)
-                dbsam = dest.add_sample(sam.Sample, material=dbmat,
-                                        project=dbproj)
-                dblabnumber.sample = dbsam
+            dbmat = dest.add_material(irrad_position.Material)
+            dbsam = dest.add_sample(sam.Sample, material=dbmat,
+                                    project=dbproj)
+            dblabnumber.sample = dbsam
 
     def _gather_data(self):
         '''
@@ -289,15 +350,18 @@ class MassSpecImporter(Importer):
     def _get_import_ids(self):
 #        ips = ['17348']
         ips = []
-        p = '/Users/ross/Sandbox/importtest/importfile.txt'
+        p = '/Users/ross/Sandbox/importtest/importfile2.txt'
         with open(p, 'r') as f:
             for l in f:
                 l = l.strip()
                 if not l or l.startswith('#'):
                     continue
                 ips.append(l)
+        ips = list(set(ips))
+        with open('{}_out'.format(p), 'w') as f:
+            f.write('\n'.join(ips))
 
-        return ips
+        return ips[:1]
 
 
 
@@ -309,9 +373,14 @@ if __name__ == '__main__':
     repo = Repository(root='/Users/ross/Sandbox/importtest')
     im = MassSpecImporter()
 
-    s = MassSpecDatabaseAdapter(kind='mysql', username='root', password='Argon', name='massspecdata_local')
+    s = MassSpecDatabaseAdapter(kind='mysql', username='root',
+                                password='Argon',
+                                host='localhost',
+                                name='massspecdata_local')
     s.connect()
-    d = IsotopeAdapter(kind='mysql', username='root', password='Argon',
+    d = IsotopeAdapter(kind='mysql', username='root',
+                       host='localhost',
+                       password='Argon',
                         name='isotopedb_dev_import')
     d.connect()
 

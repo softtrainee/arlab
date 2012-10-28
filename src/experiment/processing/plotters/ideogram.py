@@ -31,6 +31,7 @@ from src.experiment.processing.plotters.results_tabular_adapter import IdeoResul
 from src.experiment.processing.plotters.plotter import Plotter
 from src.stats.core import calculate_weighted_mean, calculate_mswd
 from src.graph.context_menu_mixin import IsotopeContextMenuMixin
+from src.graph.graph import Graph
 #from src.experiment.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -118,7 +119,6 @@ class Ideogram(Plotter):
                                 container_dict=dict(padding=5,
                                                     bgcolor='lightgray')
                                 )
-
             self.graph = g
         else:
             g = self.graph
@@ -156,17 +156,6 @@ class Ideogram(Plotter):
             ee = array(nerrors)
             return aa, ee
 
-
-#            exl = []
-#            if excludes:
-#                exl = excludes[gid]
-#            print exl, 'exx'
-#            aa = array(nages)
-#            ee = array(nerrors)
-
-#            ex = [ii in exl for ii in range(len(aa))]
-#            return ma.masked_array(aa, mask=ex), ma.masked_array(ee, mask=ex)
-
         if self.ideogram_of_means:
 #                return asarray(nages), asarray(nerrors)
 
@@ -188,7 +177,7 @@ class Ideogram(Plotter):
         g.set_x_limits(min=xmin, max=xmax, plotid=0)
         g.set_x_limits(min=xmin, max=xmax, plotid=1)
 
-        minp = self.minprob
+        minp = 0
         maxp = self.maxprob
         g.set_y_limits(min=minp, max=maxp * 1.05, plotid=0)
 
@@ -213,7 +202,6 @@ class Ideogram(Plotter):
 
         bins = linspace(xmi, xma, N)
         probs = zeros(N)
-
 #        print ages
 #        print errors
         for ai, ei in zip(ages, errors):
@@ -270,6 +258,7 @@ class Ideogram(Plotter):
                              color=s.color,
                              plotid=0
                              )
+        s.index_mapper.on_trait_change(self._update_graph, 'updated')
 
         self._add_error_bars(s, [we], 'x', sigma_trait='nsigma')
 
@@ -333,7 +322,9 @@ class Ideogram(Plotter):
         self._add_error_bars(scatter, errors, 'x')
         self._add_scatter_inspector(scatter, gid=gid)
         scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
-
+#        scatter.index_mapper.on_trait_change(self._update_graph, 'updated')
+#        print p.index_range.low
+#        p.on_trait_change(self._update_graph, 'index_range.low')
         g.set_y_limits(min=0, max=ma + 1, plotid=1)
 
 #
@@ -348,7 +339,6 @@ class Ideogram(Plotter):
 
     def _update_graph(self, new):
         g = self.graph
-
         xmi, xma = g.get_x_limits()
         for i, p in enumerate(g.plots[1].plots.itervalues()):
             result = self.results[i]
@@ -390,13 +380,13 @@ class Ideogram(Plotter):
                 result.error = we
                 result.mswd = mswd
                 result.error_calc_method = self.error_calc_method
-                _xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
+                xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
             except ValueError:
                 wm, we = 0, 0
                 ys = zeros(N)
 
             lp.value.set_data(ys)
-
+            lp.index.set_data(xs)
             sp.index.set_data([wm])
             sp.xerror.set_data([we])
 

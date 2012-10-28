@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Str, Instance
 from traitsui.api import View, Item
+from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -30,7 +31,6 @@ from src.repo.repository import FTPRepository, Repository, SFTPRepository
 from src.experiment.processing.figures.figure import Figure
 from src.experiment.processing.database_manager import DatabaseManager
 from src.paths import paths
-from apptools.preferences.preference_binding import bind_preference
 #from src.experiment.processing.processing_selector import ProcessingSelector
 #from src.experiment.processing.figure import Figure
 class ProcessingRepository(Repository):
@@ -59,7 +59,7 @@ class ProcessingManager(DatabaseManager):
                 bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
 
             bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
-        except AttributeError:
+        except (AttributeError, NameError):
             pass
 
     def connect_repo(self):
@@ -75,7 +75,8 @@ class ProcessingManager(DatabaseManager):
             repo = SFTPRepository(host=host, username=usr,
                                   password=pwd,
 #                                root='ftp/data'
-                             root=paths.isotope_dir
+#                             root=paths.isotope_dir
+                                root='/Users/ross/Sandbox/importtest'
                              )
         else:
             repo = Repository(root=paths.isotope_dir)

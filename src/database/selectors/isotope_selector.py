@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int
+from traits.api import Int, Property
 #from traits.api import HasTraits, Any, List, String, \
 #    Float, Bool, Int, Instance, Property, Dict, Enum, on_trait_change, \
 #    Str, Trait, cached_property
@@ -62,6 +62,12 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
     aliquot_width = Int(90)
     rundate_width = Int(90)
     runtime_width = Int(90)
+    aliquot_text = Property
+    def _get_aliquot_text(self, trait, item):
+        a = self.item.aliquot
+        s = self.item.step
+        return '{}{}'.format(a, s)
+#        return '1'
 #    width = Int(50)
 
 class IsotopeAnalysisSelector(DatabaseSelector):

@@ -22,6 +22,7 @@ from src.viewable import ViewableHandler, Viewable
 from src.displays.rich_text_display import RichTextDisplay
 from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #from numpy import Inf
 #from pyface.timer.do_later import do_later
@@ -78,19 +79,23 @@ class PlotPanel(Viewable):
     def _print_results(self):
         def func():
             self.signal_display.freeze()
-            self.signal_display.clear()
+            self.signal_display.clear(gui=False)
             self._print_signals()
             self._print_baselines()
             self.signal_display.thaw()
 
 
             self.ratio_display.freeze()
-            self.ratio_display.clear()
+            self.ratio_display.clear(gui=False)
             self._print_ratios()
             self._print_blanks()
             self.ratio_display.thaw()
-#        do_later(func)
-        func()
+
+        do_later(func)
+#        func()
+    def add_text(self, disp, *args, **kw):
+        kw['gui'] = False
+        disp.add_text(*args, **kw)
 
     def _print_ratios(self):
         pad = lambda x, n = 9:'{{:>{}s}}'.format(n).format(x)
@@ -124,8 +129,8 @@ class PlotPanel(Viewable):
             return res
 
         ts = [func(ra) for ra in self.ratios]
-        display.add_text('\n'.join(ts))
-        display.add_text(' ' * 80, underline=True)
+        self.add_text(display, '\n'.join(ts))
+        self.add_text(display, ' ' * 80, underline=True)
 
     def _print_signals(self):
         def get_value(iso):
@@ -151,7 +156,7 @@ class PlotPanel(Viewable):
             return us - ubs - ubl
 
         self._print_('', get_value, self.signal_display)
-        self.signal_display.add_text(' ' * 80, underline=True)
+        self.add_text(self.signal_display, ' ' * 80, underline=True)
 
 
     def _print_baselines(self):
@@ -189,7 +194,7 @@ class PlotPanel(Viewable):
             return '{}{}={:>10s}'.format(iso, name, v)
 
         ts = [func(iso) for iso in self.isotopes]
-        display.add_text('\n'.join(ts))
+        self.add_text(display, '\n'.join(ts))
 
     def _get_pee(self, uv):
         vv = uv.nominal_value

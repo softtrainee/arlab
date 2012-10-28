@@ -763,7 +763,8 @@ if __name__ == '__main__':
     logging_setup('ia')
     ia = IsotopeAdapter(
 
-                        name='isotopedb_dev_migrate',
+#                        name='isotopedb_dev_migrate',
+                        name='isotopedb_dev_import',
 #                        name='isotopedb_dev',
                         username='root',
                         password='Argon',

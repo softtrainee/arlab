@@ -22,14 +22,24 @@ from traitsui.api import View, Item, CustomEditor, Handler, HGroup, VGroup, spri
 import wx
 import wx.richtext as rt
 from src.helpers.color_generators import colors8i
-from pyface.timer.do_later import do_later
+from pyface.timer.do_later import do_later, do_after
 from email.mime.base import MIMEBase
 from src.paths import paths
 #=============local library imports  ==========================
 
 def gui_decorator(func):
     def decorator(*args, **kw):
-        do_later(func, *args, **kw)
+        if not 'gui' in kw or kw['gui']:
+#            if kw['gui']:
+            do_after(1, func, *args, **kw)
+        else:
+            func(*args, **kw)
+
+#        if 'gui' in kw['gui'] and kw['gui']:
+#            do_later(func, *args, **kw)
+#        else:
+#            func(*args, **kw)
+
     return decorator
 
 class DisplayHandler(Handler):
@@ -140,20 +150,33 @@ class RichTextDisplay(HasTraits):
         self._text_buffer = []
 
     @gui_decorator
-    def clear(self):
-#        self.text = []
-        self._text_buffer = []
-
+    def clear(self, gui=True):
         d = self._display
         if d:
-#            d.Freeze()
-#            for i in range(4):
+            d.Freeze()
             d.SelectAll()
-#                d.DeleteSelection()
             d.Delete(d.Selection)
             d.SelectNone()
             d.SetInsertionPoint(0)
-#            d.Thaw()
+            d.Thaw()
+#        def _clear():
+#    #        self.text = []
+#            self._text_buffer = []
+#
+#            d = self._display
+#            if d:
+#    #            d.Freeze()
+#    #            for i in range(4):
+#                d.SelectAll()
+#    #                d.DeleteSelection()
+#                d.Delete(d.Selection)
+#                d.SelectNone()
+#                d.SetInsertionPoint(0)
+##            d.Thaw()
+#        if gui:
+#            do_after(1, _clear)
+#        else:
+#            _clear()
 
     def freeze(self):
         if self._display:
@@ -198,8 +221,6 @@ class RichTextDisplay(HasTraits):
             color = wx.Colour(*color)
 
         font = self._create_font(size, name=self.font_name)
-#        d.Freeze()
-
         d.BeginFont(font)
         d.BeginTextColour(color)
 
@@ -262,21 +283,14 @@ class RichTextDisplay(HasTraits):
             pass
     #                return True
 #        return False
+
     @gui_decorator
-    def add_text(self, msg, **kw):
+    def add_text(self, msg, gui=True, **kw):
         '''
         '''
+
         disp = self._display
         if disp:
-##            tappend = self.text.append
-#            if isinstance(msg, (list, tuple)):
-#                self.text += [len(mi) + 1 for mi in msg]
-##                for mi in msg:
-##                    tappend(len(mi) + 1)
-#            else:
-#                self.text.append(len(msg) + 1)
-#                tappend(len(msg) + 1)
-
             if isinstance(msg, (list, tuple)):
                 for mi in msg:
                     if isinstance(mi, tuple):
@@ -284,15 +298,44 @@ class RichTextDisplay(HasTraits):
                             kw = mi[1]
                         mi = mi[0]
                     self._add_(mi, **kw)
-
-#                    print 'add', msg
             else:
                 self._add_(msg, **kw)
         else:
-#            pass
             self._text_buffer.append((msg, kw))
 
-
+#        def _add(msg, **kw):
+#            disp = self._display
+#            if disp:
+#    ##            tappend = self.text.append
+#    #            if isinstance(msg, (list, tuple)):
+#    #                self.text += [len(mi) + 1 for mi in msg]
+#    ##                for mi in msg:
+#    ##                    tappend(len(mi) + 1)
+#    #            else:
+#    #                self.text.append(len(msg) + 1)
+#    #                tappend(len(msg) + 1)
+#
+#                if isinstance(msg, (list, tuple)):
+#                    for mi in msg:
+#                        if isinstance(mi, tuple):
+#                            if len(mi) == 2:
+#                                kw = mi[1]
+#                            mi = mi[0]
+#                        self._add_(mi, **kw)
+#
+#    #                    print 'add', msg
+#                else:
+#                    self._add_(msg, **kw)
+#            else:
+#    #            pass
+#                self._text_buffer.append((msg, kw))
+#
+#
+#        if gui:
+#            do_later(_add, msg, **kw)
+##            do_after(1, _add, msg, **kw)
+#        else:
+#            _add(msg, **kw)
 
 
 from email.mime.multipart import MIMEMultipart

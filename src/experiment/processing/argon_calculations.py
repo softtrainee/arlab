@@ -90,7 +90,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s36bk *= ic
 #    except Exception, e:
 #        return
-    print s40bl, s40bs, s40bk
+#    print s40bl, s40bs, s40bk
     #subtract blanks and baselines
     s40 -= (s40bl + s40bs + s40bk)
     s39 -= (s39bl + s39bs + s39bk)
@@ -121,7 +121,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
             a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
         except ZeroDivisionError:
             a39decayfactor = 1
-    print a39decayfactor, a37decayfactor
+#    print a39decayfactor, a37decayfactor
     #t = umath.log(a39decayfactor) / (constants.lambda_39.nominal_value * 365.25)
     #t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
 
