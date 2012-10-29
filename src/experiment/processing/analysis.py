@@ -113,8 +113,8 @@ class Analysis(Loggable):
     age_dirty = Event
     age_error = Property
 
-    k39 = Float
-    k39err = Float
+#    k39 = Float
+#    k39err = Float
 
     gid = Int
     color = Color('black')
@@ -122,6 +122,8 @@ class Analysis(Loggable):
     uuid = Str
 #    age_scalar = Enum({'Ma':1e6, 'ka':1e3})
     age_scalar = 1e6
+
+    k39 = Property
 #    ic_factor = Property
 #    _ic_factor = Tuple
 
@@ -148,6 +150,10 @@ class Analysis(Loggable):
     @cached_property
     def _get_age(self):
         return self.dbrecord.age
+
+    @cached_property
+    def _get_k39(self):
+        return self.dbrecord.k39
 #        signals = self.signals
 #        j = self._get_j()
 #        irradinfo = self._get_irradinfo()

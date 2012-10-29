@@ -87,7 +87,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     omit_bogus = Bool(True)
 
-    limit = Int(30)
+    limit = Int(200)
     date_str = 'rundate'
 
     multi_select_graph = Bool(False)

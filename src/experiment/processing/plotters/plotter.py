@@ -58,7 +58,7 @@ class Plotter(Viewable):
 
         rect_tool = RectSelectionTool(scatter,
 #                                      parent=self,
-                                      plot=self.graph.plots[0],
+#                                      plot=self.graph.plots[0],
                                       plotid=1
                                       )
         scatter.overlays.append(rect_tool)

@@ -436,7 +436,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _manage_data_fired(self):
         db = self.db
         db.connect()
-        import time
+#        import time
 #        st = time.clock()
         if self.selector is None:
 #            db.selector_factory()
@@ -448,7 +448,10 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #            ps.edit_traits()
             self.selector = ps
 #            if self._debug:
-            ps.selected_records = [i for i in ps.selector.records[-20:] if i.analysis_type != 'blank']
+
+            ps.selected_records = [i for i in ps.selector.records[-200:] if i.labnumber == 57736]
+#            print len(ps.selected_records)
+#            ps.selected_records = [i for i in ps.selector.records[-20:] if i.analysis_type != 'blank']
 #            print 'get results time', time.clock() - st
         else:
             self.selector.show()

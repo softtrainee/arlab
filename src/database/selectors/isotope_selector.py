@@ -97,9 +97,16 @@ class IsotopeAnalysisSelector(DatabaseSelector):
     def _get_selector_records(self, **kw):
         sess = self._db.get_session()
         q = sess.query(meas_AnalysisTable)
-#        q = q.order_by(AnalysisTable.id.desc())
+        q = q.order_by(meas_AnalysisTable.id.desc())
         q = q.filter(meas_AnalysisTable.status != -1)
-        return q.all()
+
+        if 'limit' in kw:
+            q = q.limit(kw['limit'])
+
+        records = q.all()
+        records.reverse()
+        return records
+#        return q.all()
 
 
 #        return self._db.get_analyses(**kw)
