@@ -81,7 +81,8 @@ class Figure(BaseFigure):
 
             gideo = ideo.build(analyses, padding=ideopadding)
             if gideo:
-                graph.plotcontainer.add(gideo.plotcontainer)
+#                graph.plotcontainer.add(gideo.plotcontainer)
+                graph.plotcontainer.add(gideo)
 
             self._cached_ideogram = ideo
 #                result.add(ig)

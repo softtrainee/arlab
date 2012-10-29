@@ -277,6 +277,7 @@ class IsotopeRecord(DatabaseRecord):
 
         if result:
             self.arar_result = result
+            self.k39 = result['k39']
             ai = result['age']
             ai = ai / self.age_scalar
             age = ai.nominal_value

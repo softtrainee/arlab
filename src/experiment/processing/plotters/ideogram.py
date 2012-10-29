@@ -32,6 +32,7 @@ from src.experiment.processing.plotters.plotter import Plotter
 from src.stats.core import calculate_weighted_mean, calculate_mswd
 from src.graph.context_menu_mixin import IsotopeContextMenuMixin
 from src.graph.graph import Graph
+from chaco.plot_containers import GridPlotContainer
 #from src.experiment.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -70,7 +71,9 @@ class Ideogram(Plotter):
 
     plot_label_text = Property(depends_on='nsigma')
     plot_label = Any
-
+    nrows = Int(2)
+    ncols = Int(1)
+    graphs = List
     def _get_adapter(self):
         return IdeoResultsAdapter
 
@@ -102,8 +105,32 @@ class Ideogram(Plotter):
         xmax += dev * 0.01
         return xmin, xmax
 
-    def build(self, analyses=None, padding=None, excludes=None):
+    def build(self, analyses=None, padding=None):
+#        g = self._build(analyses=analyses, padding=padding)
+#        return g.plotcontainer
 
+        analyses = [[analyses, analyses, analyses],
+                  [analyses, analyses, analyses],
+                  [analyses, analyses, analyses]
+                  ]
+
+        r = self.nrows
+        c = self.ncols
+        op = GridPlotContainer(shape=(r, c),
+                               bgcolor='lightgray',
+                               fill_padding=True,
+                               padding=0)
+        self.graphs = []
+        for i in range(r):
+            for j in range(c):
+                g = self._build(analyses=analyses[i][j], padding=padding)
+                op.add(g.plotcontainer)
+                self.graphs.append(g)
+        return op
+
+    def _build(self, analyses=None, padding=None):
+
+#        g = self.graph
         self.results = []
 
         if analyses is None:
@@ -113,22 +140,28 @@ class Ideogram(Plotter):
 
         self.analyses = analyses
         self.padding = padding
-        if self.graph is None:
-            g = mStackedGraph(panel_height=200,
-                                equi_stack=False,
-                                container_dict=dict(padding=5,
-                                                    bgcolor='lightgray')
-                                )
-            self.graph = g
-        else:
-            g = self.graph
+#        if self.graph is None:
+#            g = mStackedGraph(panel_height=200,
+#                                equi_stack=False,
+#                                container_dict=dict(padding=5,
+#                                                    bgcolor='lightgray')
+#                                )
+#            self.graph = g
+#        else:
+#            g = self.graph
 
+        g = mStackedGraph(panel_height=200,
+                            equi_stack=False,
+                            container_dict=dict(padding=5,
+                                                bgcolor='lightgray')
+                            )
         g.clear()
         g.new_plot(
                    padding=padding)
+        h = 100 / self.nrows
         g.new_plot(
                    padding=padding, #[padding_left, padding_right, 1, 0],
-                   bounds=[50, 100]
+                   bounds=[50, h]
                    )
 
         g.set_grid_traits(visible=False)
@@ -258,7 +291,9 @@ class Ideogram(Plotter):
                              color=s.color,
                              plotid=0
                              )
-        s.index_mapper.on_trait_change(self._update_graph, 'updated')
+        d = lambda *args: self._update_graph(g, *args)
+#        s.index_mapper.on_trait_change(self._update_graph, 'updated')
+        s.index_mapper.on_trait_change(d, 'updated')
 
         self._add_error_bars(s, [we], 'x', sigma_trait='nsigma')
 
@@ -321,7 +356,10 @@ class Ideogram(Plotter):
 
         self._add_error_bars(scatter, errors, 'x')
         self._add_scatter_inspector(scatter, gid=gid)
-        scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
+
+        d = lambda *args: self._update_graph(g, *args)
+#        scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
+        scatter.index.on_trait_change(d, 'metadata_changed')
 #        scatter.index_mapper.on_trait_change(self._update_graph, 'updated')
 #        print p.index_range.low
 #        p.on_trait_change(self._update_graph, 'index_range.low')
@@ -337,8 +375,9 @@ class Ideogram(Plotter):
     def _cmp_analyses(self, x):
         return x.age[0]
 
-    def _update_graph(self, new):
-        g = self.graph
+    def _update_graph(self, g):
+#        print g
+#        g = self.graph
         xmi, xma = g.get_x_limits()
         for i, p in enumerate(g.plots[1].plots.itervalues()):
             result = self.results[i]
@@ -396,7 +435,8 @@ class Ideogram(Plotter):
 # handlers
 #==============================================================================
     def _error_calc_method_changed(self):
-        self._update_graph(True)
+        for g in self.graphs:
+            self._update_graph(g)
 
 #===============================================================================
 # views
