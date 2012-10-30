@@ -117,7 +117,7 @@ class ExperimentSet(Loggable):
     _alive = False
 
     _current_group_id = 0
-
+    _warned_labnumbers = List
 
 #===============================================================================
 # persistence
@@ -905,8 +905,12 @@ tray: {}
                          )
         if labnumber:
             ln = self.db.get_labnumber(labnumber)
+
             if ln is None:
-                self.warning_dialog('Invalid labnumber {}'.format(labnumber))
+                #check to see if we have already warned for this labnumber
+                if not labnumber in self._warned_labnumbers:
+                    self.warning_dialog('Invalid labnumber {}'.format(labnumber))
+                    self._warned_labnumbers.append(labnumber)
                 a._executable = False
             else:
                 self._bind_automated_run(a)
