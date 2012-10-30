@@ -326,15 +326,17 @@ class ExperimentManager(Manager):
             self.experiment_sets = []
             #parse the file into individual experiment sets
             ts = self._parse_experiment_file(path)
+            ws = []
             for text in ts:
                 exp = self._experiment_set_factory(path=path)
-#   
+                exp._warned_labnumbers = ws
                 if exp.load_automated_runs(text=text):
                     self.experiment_sets.append(exp)
 
                     if edit:
                         exp.automated_run = exp.automated_runs[-1].clone_traits()
                         exp.set_script_names()
+                ws = exp._warned_labnumbers
 
             self._update_aliquots()
             if self.experiment_sets:
