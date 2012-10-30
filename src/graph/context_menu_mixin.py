@@ -32,7 +32,7 @@ class ContextMenuMixin(HasTraits):
         '''
         '''
         return [
-                ('Clipboard', '_render_to_clipboard', {}),
+               # ('Clipboard', '_render_to_clipboard', {}),
                 ('PDF', 'save_pdf', {}),
                ('PNG', 'save_png', {})]
 

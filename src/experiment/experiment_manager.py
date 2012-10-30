@@ -126,36 +126,9 @@ class ExperimentManager(Manager):
         db = self.db
         if self.db:
             if db.connect():
-                for name, mass in MOLECULAR_WEIGHTS.iteritems():
-                    db.add_molecular_weight(name, mass)
 
-                for at in ['blank_air',
-                           'blank_cocktail',
-                           'blank_unknown',
-                           'background', 'air', 'cocktail', 'unknown']:
-#                           blank', 'air', 'cocktail', 'background', 'unknown']:
-                    db.add_analysis_type(at)
-
-                for mi in ['obama', 'jan']:
-                    db.add_mass_spectrometer(mi)
-
-                for i, di in enumerate(['blank_air',
-                           'blank_cocktail',
-                           'blank_unknown',
-                           'background', 'air', 'cocktail']):
-                    samp = db.add_sample(di)
-                    db.add_labnumber(i + 1, sample=samp)
-
-                for hi, kind, make in [('Fusions CO2', '10.6um co2', 'photon machines'),
-                                      ('Fusions Diode', '810nm diode', 'photon machines'),
-                                      ('Fusions UV', '193nm eximer', 'photon machines')
-                                      ]:
-                    db.add_extraction_device(name=hi,
-                                             kind=kind,
-                                             make=make
-                                             )
-
-                db.commit()
+                from src.database.defaults import load_isotopedb_defaults
+                load_isotopedb_defaults(db)
 
     def bind_preferences(self):
         if self.db is None:

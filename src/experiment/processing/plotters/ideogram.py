@@ -71,7 +71,7 @@ class Ideogram(Plotter):
 
     plot_label_text = Property(depends_on='nsigma')
     plot_label = Any
-    nrows = Int(2)
+    nrows = Int(1)
     ncols = Int(1)
     graphs = List
     def _get_adapter(self):
@@ -117,18 +117,50 @@ class Ideogram(Plotter):
         r = self.nrows
         c = self.ncols
         op = GridPlotContainer(shape=(r, c),
-                               bgcolor='lightgray',
+                               bgcolor='white',
                                fill_padding=True,
-                               padding=0)
+                               padding_top=10
+                               )
         self.graphs = []
+        plots = []
+        font = 'modern {}'.format(10)
+        tfont = 'modern {}'.format(10)
         for i in range(r):
             for j in range(c):
-                g = self._build(analyses=analyses[i][j], padding=padding)
+                padding = [30, 5 , 35, 35]
+#                if j == 0:
+#                    padding = [45, 5, 15, 15]
+
+
+#                padding = []
+                g = self._build(
+                                analyses[i][j],
+                                padding
+                                )
+                if i == r - 1:
+                    g.set_x_title('Age (Ma)')
+                if j == 0:
+                    g.set_y_title('Relative Probability')
+                    g.set_y_title('Analysis #', plotid=1)
+
+                p1 = g.plots[0]
+                p2 = g.plots[1]
+                p1.y_axis.tick_label_font = font
+                p1.y_axis.title_font = tfont
+                p1.x_axis.tick_label_font = font
+                p1.x_axis.title_font = tfont
+                p2.y_axis.tick_label_font = font
+                p2.y_axis.title_font = tfont
+
                 op.add(g.plotcontainer)
                 self.graphs.append(g)
-        return op
+                for pi in g.plots:
+                    plots.append(pi)
 
-    def _build(self, analyses=None, padding=None):
+        return op, plots
+
+    def _build(self, analyses, padding):
+
 
 #        g = self.graph
         self.results = []
@@ -139,7 +171,7 @@ class Ideogram(Plotter):
             padding = self.padding
 
         self.analyses = analyses
-        self.padding = padding
+#        self.padding = padding
 #        if self.graph is None:
 #            g = mStackedGraph(panel_height=200,
 #                                equi_stack=False,
@@ -152,25 +184,29 @@ class Ideogram(Plotter):
 
         g = mStackedGraph(panel_height=200,
                             equi_stack=False,
-                            container_dict=dict(padding=5,
-                                                bgcolor='lightgray')
+                            container_dict=dict(padding=0,
+#                                                bgcolor='lightgray'
+                                                )
                             )
         g.clear()
         g.new_plot(
+                   contextmenu=False,
                    padding=padding)
         h = 100 / self.nrows
         g.new_plot(
+                   contextmenu=False,
                    padding=padding, #[padding_left, padding_right, 1, 0],
                    bounds=[50, h]
                    )
 
         g.set_grid_traits(visible=False)
         g.set_grid_traits(visible=False, grid='y')
+#
+#        if r == nr:
+#            g.set_x_title('Age (Ma)')
 
-        g.set_x_title('Age (Ma)')
+#        if c == 0:
 
-        g.set_x_title('Age (Ma)')
-        g.set_y_title('Relative Probability')
 
         self.minprob = None
         self.maxprob = None
@@ -331,7 +367,8 @@ class Ideogram(Plotter):
         g.set_axis_traits(tick_visible=False,
                           tick_label_formatter=lambda x:'',
                           axis='y', plotid=plotid)
-        g.set_y_title('Analysis #', plotid=plotid)
+
+#        g.set_y_title('Analysis #', plotid=plotid)
 #        g.set_axis_traits(orientation='right', plotid=1, axis='y')
 
         n = zip(ages, errors)
@@ -376,22 +413,11 @@ class Ideogram(Plotter):
         return x.age[0]
 
     def _update_graph(self, g):
-#        print g
-#        g = self.graph
         xmi, xma = g.get_x_limits()
+        plot = g.plots[0]
         for i, p in enumerate(g.plots[1].plots.itervalues()):
             result = self.results[i]
-
             sel = p[0].index.metadata['selections']
-#            if not sel:
-#                try:
-#                    hov = p[0].index.metadata['hover']
-#                    if hov:
-#                        return
-#                except KeyError:
-#                    pass
-
-            plot = g.plots[0]
             dp = plot.plots['plot{}'.format(i * 3 + 1)][0]
             ages_errors = sorted([a.age for a in self.analyses if a.gid == i], key=lambda x: x[0])
             if sel:
@@ -401,8 +427,9 @@ class Ideogram(Plotter):
                 mswd = calculate_mswd(ages, errors)
                 we = self._calc_error(we, mswd)
                 result.oage, result.oerror, result.omswd = wm, we, mswd
-                _xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
+                xs, ys = self._calculate_probability_curve(ages, errors, xmi, xma)
                 dp.value.set_data(ys)
+                dp.index.set_data(xs)
             else:
                 result.oage, result.oerror, result.omswd = None, None, None
                 dp.visible = False

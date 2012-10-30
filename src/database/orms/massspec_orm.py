@@ -62,7 +62,7 @@ class AnalysesTable(Base):
     ChangeableItemsID = Column(Integer, default=0)
 
     RunDateTime = Column(DateTime)
-    LoginSessionID = Column(Integer)
+    LoginSessionID = Column(Integer, ForeignKey('LoginSessionTable.LoginSessionID'))
     SpecRunType = Column(Integer)
 
     isotopes = relation('IsotopeTable', backref='AnalysesTable')
@@ -261,8 +261,24 @@ class IsotopeTable(Base):
 
     peak_time_series = relation('PeakTimeTable', uselist=False)
 
-    result = relationship('IsotopeResultsTable', backref='isotope', uselist=False)
+    result = relationship('IsotopeResultsTable', backref='isotope',
+#                          uselist=False
+                          )
 
+
+
+class LoginSessionTable(Base):
+    __tablename__ = 'LoginSessionTable'
+    LoginSessionID = Column(Integer, primary_key=True)
+    SpecSysN = Column(Integer, ForeignKey('machinetable.SpecSysN'))
+    analyses = relationship('AnalysesTable', backref='login_session')
+
+class MachineTable(Base):
+    __tablename__ = 'machinetable'
+    SpecSysN = Column(Integer, primary_key=True)
+    Label = Column(String(80))
+
+    logins = relationship('LoginSessionTable', backref='machine')
 
 class MaterialTable(Base):
     '''

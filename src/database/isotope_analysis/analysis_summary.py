@@ -65,8 +65,8 @@ class AnalysisSummary(Summary):
                    ]
         widths = [w for _, w in columns]
 
-        msg = 'Iso.   Int.             ' + PLUSMINUS_ERR + '                      Fit'
-        msg += '         Baseline     ' + PLUSMINUS_ERR + '                    Blank         ' + PLUSMINUS_ERR
+        msg = 'Iso.    Int.            ' + PLUSMINUS_ERR + '                Fit'
+        msg += '        Baseline   ' + PLUSMINUS_ERR + '               Blank        ' + PLUSMINUS_ERR
 #        msg = ''.join([width(m, w) for m, w in columns])
         self.add_text(msg, underline=True, bold=True)
 
@@ -167,7 +167,6 @@ class AnalysisSummary(Summary):
     def _get_signal_and_baseline(self, pi):
         sg = self.record.signal_graph
         bg = self.record.baseline_graph
-
         reg = sg.regressors[pi]
         inter = reg.predict(0)
         inter_err = reg.coefficient_errors[-1]
@@ -188,10 +187,14 @@ class AnalysisSummary(Summary):
         fit = sg.get_fit(pi) if sg else '---'
         sig, base = self._get_signal_and_baseline(pi)
 
-        blank = self.record.signals['{}bl'.format(iso)]
-        blank = blank.uvalue
-        bls = blank.nominal_value
-        ble = blank.std_dev()
+        try:
+            blank = self.record.signals['{}bl'.format(iso)]
+            blank = blank.uvalue
+            bls = blank.nominal_value
+            ble = blank.std_dev()
+        except KeyError:
+            bls, ble = 0, 0
+
 
         sv = sig.nominal_value
         se = sig.std_dev()

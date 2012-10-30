@@ -317,6 +317,7 @@ class IsotopeRecord(DatabaseRecord):
 
             elif selected == 'blanks':
                 item = BlanksSummary(record=self)
+                item.refresh()
             elif selected == 'det._intercal.':
                 item = self.detector_intercalibration_summary
             elif selected == 'irradiation':
@@ -352,7 +353,8 @@ class IsotopeRecord(DatabaseRecord):
         self._no_load = True
         dm = self.selector.data_manager
 
-        dm.open_data(self.path)
+        if not dm.open_data(self.path):
+            return
 
         signals = self._get_table_data(dm, 'signals')
         if signals:
@@ -582,8 +584,8 @@ class IsotopeRecord(DatabaseRecord):
                     iso = ti.attrs.isotope
                 except AttributeError:
                     pass
-
-                fit = 'linear'
+#                print grp
+                fit = 'average_SEM' if grp == 'baselines' else 'linear'
                 try:
                     fit = ti.attrs.fit
                 except AttributeError, e:
@@ -667,15 +669,19 @@ class IsotopeRecord(DatabaseRecord):
                     start, _end = dose.split('%')
 
 #                    end = '2010-01-01 01:01:01'
-
                     analts = '{} {}'.format(analysis.rundate, analysis.runtime)
                     analts = datetime.datetime.strptime(analts, '%Y-%m-%d %H:%M:%S')
 #                    irradts = datetime.datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
-                    irradts = datetime.datetime.strptime(start, '%Y-%m-%d %H:%M:%S')
-                    dt = analts - irradts
+                    try:
+                        irradts = datetime.datetime.strptime(start, '%Y-%m-%d %H:%M:%S')
+                        dt = analts - irradts
+                        t = dt.total_seconds()
+                        tt = t / (60. * 60 * 24 * 365.25)
+                    except ValueError:
+                        self.warning('Invalid chronology {} for irradiation {}. Using zero decay time'.format(chronblob, irradiation.name))
+                        tt = 0
 
-                    t = dt.total_seconds()
-                    prs.append(t / (60. * 60 * 24 * 365.25))
+                    prs.append(tt)
 
         return prs
 
@@ -730,7 +736,7 @@ class IsotopeRecord(DatabaseRecord):
 
     @cached_property
     def _get_record_id(self):
-        return '{}-{}'.format(self.labnumber, self.aliquot)
+        return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 
     @cached_property
     def _get_labnumber(self):
@@ -749,7 +755,7 @@ class IsotopeRecord(DatabaseRecord):
             ln = self._dbrecord.labnumber.labnumber
             ln = convert_shortname(ln)
 
-            ln = '{}-{}'.format(ln, self.aliquot)
+            ln = '{}-{}{}'.format(ln, self.aliquot, self.step)
             return ln
 
     @cached_property
@@ -785,6 +791,7 @@ class IsotopeRecord(DatabaseRecord):
         self._load_signals()
         return self._signals
 
+    @cached_property
     def _get_isotope_keys(self):
         keys = [k[:4] for k in self._signals.keys()]
         keys = list(set(keys))

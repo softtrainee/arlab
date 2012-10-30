@@ -34,6 +34,8 @@ from src.database.orms.massspec_orm import IrradiationLevelTable, \
     SampleTable, ProjectTable
 from threading import Thread
 import time
+import zipfile
+from src.paths import paths
 #from src.database.orms.isotope_orm import meas_AnalysisTable
 
 class Importer(Loggable):
@@ -44,11 +46,10 @@ class Importer(Loggable):
     display = Instance(RichTextDisplay)
     repository = Any
     _dbimport = None
-
-    def info(self, msg, log=True, **kw):
-        if log:
-            super(Importer, self).info(msg, **kw)
+    import_count = 0
+    def info(self, msg, **kw):
         self.display.add_text(msg)
+        super(Importer, self).info(msg, **kw)
 
     def _import_button_fired(self):
         t = Thread(target=self._import)
@@ -65,7 +66,7 @@ class Importer(Loggable):
         name = uuid.uuid4()
         name = '{}.h5'.format(name)
         path = os.path.join(self.repository.root, name)
-        frame = dm.new_frame(path=path)
+        frame = dm.new_frame(path=path, verbose=False)
 
         frame.createGroup('/', 'signals')
         frame.createGroup('/', 'baselines')
@@ -91,6 +92,12 @@ class Importer(Loggable):
             write_file(det, data, 'baselines', k)
 
         dm.close()
+
+        with zipfile.ZipFile('/Users/ross/Sandbox/importtest/archive.zip', 'a') as z:
+            z.write(path, os.path.basename(path))
+
+        os.remove(path)
+
         return name
 
     def traits_view(self):
@@ -107,37 +114,52 @@ class Importer(Loggable):
 
 class MassSpecImporter(Importer):
     def _import(self):
+        self.info('Adding defaults database')
+        from src.database.defaults import load_isotopedb_defaults
+
+        load_isotopedb_defaults(self.destination)
+
+
         st = time.time()
         self.info('starting import')
         items = self._gather_data()
-        n = 0
+
         for item in items:
             if self._import_item(item):
                 self.destination.commit()
-                n += 1
 
         t = (time.time() - st) / 60.
-        self.info('imported {} analyses in {:0.1f} mins'.format(n, t))
+        self.info('Import completed')
+        self.info('imported {} analyses in {:0.1f} mins'.format(self.import_count, t))
 
     def _import_item(self, msrecord):
         dest = self.destination
         labnumber = msrecord.IrradPosition
         aliquot = msrecord.Aliquot
         step = msrecord.Increment
-        rdt = msrecord.RunDateTime
 
-        monitors = self._get_monitors(msrecord)
-        return
+#        monitors = self._get_monitors(msrecord)
+#        print monitors
+#        return
 
-
+#        analyses = []
         dblabnumber = dest.get_labnumber(labnumber)
-        analyses = dblabnumber.analyses
+#        print labnumber, dblabnumber
         if not dblabnumber:
             dblabnumber = dest.add_labnumber(labnumber)
+            dest.commit()
+
             self._import_irradiation(msrecord, dblabnumber)
-            #get all the monitors and add to analyses
+
+            #get all the monitors and add
             monitors = self._get_monitors(msrecord)
-            analyses += monitors
+            for mi in monitors:
+                self._import_item(mi)
+                dest.commit()
+
+#            analyses += monitors
+
+        analyses = dblabnumber.analyses
 
         def test(ai):
             a = int(ai.aliquot) == int(aliquot)
@@ -146,31 +168,66 @@ class MassSpecImporter(Importer):
 
         dbanal = next((ai for ai in analyses if test(ai)), None)
         if not dbanal:
-            self.info('adding analysis {} {}{}'.format(dblabnumber.labnumber, aliquot, step))
-            dbanal = dest.add_analysis(dblabnumber,
-                                       aliquot=aliquot,
-                                       step=step,
-                                       runtime=rdt.time(),
-                                       rundate=rdt.date()
-                                       )
-            if self._dbimport is None:
-                #add import 
-                dbimp = dest.add_import(user=self.username,
-                                        source=self.source.name,
-                                        source_host=self.source.host
-
-                                        )
-                self._dbimport = dbimp
-            else:
-                dbimp = self._dbimport
-
-            dbimp.analyses.append(dbanal)
-            path = self._import_signals(msrecord)
-            dest.add_analysis_path(path, dbanal)
-
-            self._import_blanks(msrecord, dbanal)
+            self._import_analysis(msrecord, dblabnumber)
+#            self.info('adding analysis {} {}{}'.format(dblabnumber.labnumber, aliquot, step))
+#            dbanal = dest.add_analysis(dblabnumber,
+#                                       aliquot=aliquot,
+#                                       step=step,
+#                                       runtime=rdt.time(),
+#                                       rundate=rdt.date()
+#                                       )
+#            if self._dbimport is None:
+#                #add import 
+#                dbimp = dest.add_import(user=self.username,
+#                                        source=self.source.name,
+#                                        source_host=self.source.host
+#
+#                                        )
+#                self._dbimport = dbimp
+#            else:
+#                dbimp = self._dbimport
+#            self._dbimport.analyses.append(dbanal)
+#            path = self._import_signals(msrecord)
+#            dest.add_analysis_path(path, dbanal)
+#
+#            self._import_blanks(msrecord, dbanal)
             return True
 
+    def _import_analysis(self, msrecord, dblabnumber):
+        aliquot = msrecord.Aliquot
+        step = msrecord.Increment
+        rdt = msrecord.RunDateTime
+        dest = self.destination
+        self.info('adding analysis {} {}{}'.format(dblabnumber.labnumber, aliquot, step))
+        self.import_count += 1
+        dbanal = dest.add_analysis(dblabnumber,
+                                   aliquot=aliquot,
+                                   step=step,
+                                   runtime=rdt.time(),
+                                   rundate=rdt.date()
+                                   )
+        ms = msrecord.login_session.machine
+        if ms:
+            ms = ms.Label.lower()
+        #add measurement
+        dest.add_measurement(dbanal, 'unknown', ms, 'MassSpec RunScript')
+
+        if self._dbimport is None:
+            #add import 
+            dbimp = dest.add_import(user=self.username,
+                                    source=self.source.name,
+                                    source_host=self.source.host
+
+                                    )
+            self._dbimport = dbimp
+        else:
+            dbimp = self._dbimport
+
+        dbimp.analyses.append(dbanal)
+        path = self._import_signals(msrecord)
+        dest.add_analysis_path(path, dbanal)
+
+        self._import_blanks(msrecord, dbanal)
     def _import_blanks(self, msrecord, dbanal):
         '''
             get Bkgd and BkgdEr from IsotopeResultsTable
@@ -184,7 +241,8 @@ class MassSpecImporter(Importer):
         selhist = dest.add_selected_histories(dbanal)
         selhist.selected_blanks = dbhist
         for iso in isotopes:
-            result = iso.result
+            #use the last result
+            result = iso.result[-1]
             bk, bk_er = result.Bkgd, result.BkgdEr
             dest.add_blanks(dbhist, user_value=bk, user_error=bk_er,
                             use_set=False, isotope=iso.Label)
@@ -358,16 +416,17 @@ class MassSpecImporter(Importer):
                     continue
                 ips.append(l)
         ips = list(set(ips))
-        with open('{}_out'.format(p), 'w') as f:
-            f.write('\n'.join(ips))
+#        with open('{}_out'.format(p), 'w') as f:
+#            f.write('\n'.join(ips))
 
-        return ips[:1]
+#        return ['57739']
+        return ips#[:1]
 
 
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
-#    paths.build('_test')
+    paths.build('_experiment')
     logging_setup('importer')
 
     repo = Repository(root='/Users/ross/Sandbox/importtest')

@@ -20,7 +20,7 @@ from traits.api import HasTraits, Instance, Any, Bool, \
 from traitsui.api import View, Item, Handler
 
 from enable.component_editor import ComponentEditor
-from chaco.api import PlotGraphicsContext, OverlayPlotContainer, \
+from chaco.api import OverlayPlotContainer, \
     VPlotContainer, HPlotContainer, GridPlotContainer, \
     BasePlotContainer, Plot, ArrayPlotData, PlotLabel, \
     add_default_axes, create_line_plot
@@ -47,6 +47,7 @@ from chaco.data_label import DataLabel
 from src.loggable import Loggable
 from chaco.tools.broadcaster import BroadcasterTool
 from src.graph.context_menu_mixin import ContextMenuMixin
+from chaco.plot_graphics_context import PlotGraphicsContext
 VALID_FONTS = ['Helvetica', 'Arial',
                'Lucida Grande',
 #               'Times New Roman',
@@ -1230,11 +1231,14 @@ class Graph(Loggable, ContextMenuMixin):
                                   dest_box_units='inch')
 
         pc = self.plotcontainer
-        if len(pc.components) == 1:
-            gc.render_component(pc.components[0])
-        else:
-            gc.render_component(pc)
+#        ob = pc.bgcolor
+#        pc.bgcolor = 'white'
+#        if len(pc.components) == 1:
+#            gc.render_component(pc.components[0])
+#        else:
+        gc.render_component(pc, valign='center')
         gc.save()
+#        pc.bgcolor = ob
 
     def _render_to_pic(self, filename):
         '''
@@ -1243,7 +1247,7 @@ class Graph(Loggable, ContextMenuMixin):
         gc = PlotGraphicsContext((int(p.outer_width), int(p.outer_height)))
         p.use_backbuffer = False
         gc.render_component(p)
-        p.user_backbuffer = True
+        p.use_backbuffer = True
         gc.save(filename)
 
     def _render_to_clipboard(self):
@@ -1261,27 +1265,30 @@ class Graph(Loggable, ContextMenuMixin):
             Save the image as png then Insert Image is probably equivalent but not
             as convenient
             
+            not working
         '''
-        import wx
-        p = self.plotcontainer
-        #gc = PlotGraphicsContext((int(p.outer_width), int(p.outer_height)))
-        width, height = p.outer_bounds
-        gc = PlotGraphicsContext((width, height), dpi=72)
-        p.use_backbuffer = False
-        gc.render_component(p)
-        p.use_backbuffer = True
-
-        # Create a bitmap the same size as the plot
-        # and copy the plot data to it
-
-        bitmap = wx.BitmapFromBufferRGBA(width + 1, height + 1,
-                                     gc.bmp_array.flatten())
-        data = wx.BitmapDataObject()
-        data.SetBitmap(bitmap)
-
-        if wx.TheClipboard.Open():
-            wx.TheClipboard.SetData(data)
-            wx.TheClipboard.Close()
+#        import wx
+#        p = self.plotcontainer
+#        #gc = PlotGraphicsContext((int(p.outer_width), int(p.outer_height)))
+#        width, height = p.outer_bounds
+#        gc = PlotGraphicsContext((width, height), dpi=72)
+##        p.use_backbuffer = False
+#        gc.render_component(p)
+##        p.use_backbuffer = True
+#
+#        # Create a bitmap the same size as the plot
+#        # and copy the plot data to it
+#        for di in dir(gc):
+#            print di
+#        bitmap = wx.BitmapFromBufferRGBA(width + 1, height + 1,
+#                                     gc.bmp_array.flatten()
+#                                     )
+#        data = wx.BitmapDataObject()
+#        data.SetBitmap(bitmap)
+#
+#        if wx.TheClipboard.Open():
+#            wx.TheClipboard.SetData(data)
+#            wx.TheClipboard.Close()
 
     def _get_title(self, axis, plotid):
         '''
@@ -1294,9 +1301,9 @@ class Graph(Loggable, ContextMenuMixin):
         '''
         axis = getattr(self.plots[plotid], axis)
         params = dict(title=title)
-        if font is not None and size is not None:
+        if font is not None or size is not None:
             if not font in VALID_FONTS:
-                font = 'Helvetica'
+                font = 'modern'
 
             font = '{} {}'.format(font, size)
             tfont = '{} {}'.format(font, size + 2)

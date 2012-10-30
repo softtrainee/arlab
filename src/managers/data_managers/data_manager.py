@@ -53,7 +53,7 @@ class DataManager(Manager):
         self._current_frame = name
         return name
 
-    def _new_frame_path(self, path=None, directory='scans', base_frame_name=None):
+    def _new_frame_path(self, path=None, directory='scans', base_frame_name=None, verbose=True):
         '''
 
         '''
@@ -70,8 +70,8 @@ class DataManager(Manager):
         if path is None:
             path, _cnt = unique_path(base, base_frame_name,
                                      extension=self._extension)
-
-        self.info('New frame {}'.format(path))
+        if verbose:
+            self.info('New frame {}'.format(path))
         return path
 
     def add_time_stamped_value(self, value, frame_key=None, rawtime=False):

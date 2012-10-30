@@ -93,21 +93,21 @@ class LabnumberEntry(Loggable):
 
     def __init__(self, *args, **kw):
         super(LabnumberEntry, self).__init__(*args, **kw)
-        self._load_default_holders()
+#        self._load_default_holders()
 
-    def _load_default_holders(self):
-        db = self.db
-        for t in self.trays:
-            p = os.path.join(self._get_map_path(), t)
-            with open(p, 'r') as f:
-                h = f.readline()
-                nholes, _diam = h.split(',')
-                nholes = int(nholes)
-                holes = [map(float, l.strip().split(',')) for i, l in enumerate(f) if i < nholes]
-                blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
-                db.add_irradiation_holder(t, geometry=blob)
-
-        db.commit()
+#    def _load_default_holders(self):
+#        db = self.db
+#        for t in self.trays:
+#            p = os.path.join(self._get_map_path(), t)
+#            with open(p, 'r') as f:
+#                h = f.readline()
+#                nholes, _diam = h.split(',')
+#                nholes = int(nholes)
+#                holes = [map(float, l.strip().split(',')) for i, l in enumerate(f) if i < nholes]
+#                blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
+#                db.add_irradiation_holder(t, geometry=blob)
+#
+#        db.commit()
 
     def _set_auto_params(self, s, rid):
         s.labnumber = rid
@@ -132,7 +132,7 @@ class LabnumberEntry(Loggable):
         # debug
         #=======================================================================
         from src.database.adapters.isotope_adapter import IsotopeAdapter
-        db = IsotopeAdapter(name='isotopedb_dev',
+        db = IsotopeAdapter(name='isotopedb_dev_import',
                           username='root',
                           host='localhost',
                           kind='mysql',
@@ -275,7 +275,7 @@ class LabnumberEntry(Loggable):
         irrad = self.db.get_irradiation(irrad)
         try:
             lastlevel = irrad.levels[-1].name
-            nind = ALPHAS.index(lastlevel) + 1
+            nind = list(ALPHAS).index(lastlevel) + 1
         except IndexError:
             nind = 0
 
@@ -344,10 +344,10 @@ class LabnumberEntry(Loggable):
         irrad = self.db.get_irradiation(self.irradiation)
         level = next((li for li in irrad.levels if li.name == self.level), None)
         if level:
-
-            holder = level.holder.name
-            if holder:
-                self._load_irradiated_samples(holder)
+            if level.holder:
+                holder = level.holder.name
+                if holder:
+                    self._load_irradiated_samples(holder)
 
             positions = level.positions
             if positions:
@@ -445,7 +445,7 @@ class LabnumberEntry(Loggable):
     @cached_property
     def _get_trays(self):
 
-        p = self._get_map_path()
+        p = os.path.join(self._get_map_path(), 'images')
         if not os.path.isdir(p):
             self.warning_dialog('{} does not exist'.format(p))
             return Undefined

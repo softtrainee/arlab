@@ -19,6 +19,8 @@
 #============= enthought library imports =======================
 from traits.api import Any
 from enable.api import Interactor
+from chaco.base_plot_container import BasePlotContainer
+from chaco.plot import Plot
 
 #============= standard library imports ========================
 
@@ -79,7 +81,37 @@ class ContextualMenuTool(Interactor):
         comps = self.component.components_at(event.x, event.y)
         if comps:
             plot = comps[0]
+            while not isinstance(plot, Plot):
+                plots = plot.components_at(event.x, event.y)
+#                print plots
+                if plots:
+                    plot = plots[0]
+                else:
+                    break
+
             self.parent.selected_plot = plot
+#            print plot
+#            for ci in plot.components:
+#                if ci.is_in(event.x, event.y):
+#                    self.parent.selected_plot = plot
+#                    break
+
+
+#            while isinstance(plot, Plot):
+#                print plot.components_at(event.x, event.y)
+
+#                plots = plot.components_at(event.x, event.y)
+
+#                if plots:
+#                    plot = plots[0]
+#                else:
+#                    break
+#            print plot
+#
+#            try:
+#                self.parent.selected_plot = plot
+#            except:
+#                pass
 #            display_menu(self.parent, event)
         else:
             self.parent.selected_plot = None

@@ -40,12 +40,12 @@ class Summary(HasTraits):
     def refresh(self):
         self.build_summary()
 
-    def build_summary(self):
+    def build_summary(self, *args, **kw):
         def do():
             d = self.display
             d.clear(gui=False)
             d.freeze()
-            self._build_summary()
+            self._build_summary(*args, **kw)
             d.thaw()
 
         do_later(do)

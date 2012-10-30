@@ -443,13 +443,14 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             ps = ProcessingSelector(db=self.db)
             ps.selector.style = 'panel'
             ps.on_trait_change(self._update_data, 'update_data')
-            ps.selector.load_recent()
+#            ps.selector.load_recent()
+            ps.selector.load_last(n=200)
 #            ps._analysis_type_changed()
 #            ps.edit_traits()
             self.selector = ps
 #            if self._debug:
 
-            ps.selected_records = [i for i in ps.selector.records[-200:] if i.labnumber == 57736]
+            ps.selected_records = [i for i in ps.selector.records if i.labnumber == 57736]
 #            print len(ps.selected_records)
 #            ps.selected_records = [i for i in ps.selector.records[-20:] if i.analysis_type != 'blank']
 #            print 'get results time', time.clock() - st
@@ -647,9 +648,9 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             return a
 
     def _graph_factory(self, klass=None, **kw):
-        g = Graph(container_dict=dict(kind='h', padding=10,
+        g = Graph(container_dict=dict(kind='h', padding=0,
                                       bgcolor='lightgray',
-                                      spacing=10,
+                                      spacing=2,
                                       ))
         return g
 

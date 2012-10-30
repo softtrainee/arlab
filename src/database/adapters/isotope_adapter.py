@@ -47,7 +47,7 @@ from src.database.core.functions import add, sql_retrieve, get_one, \
     delete_one
 
 from src.experiment.identifier import convert_identifier
-from src.repo.repository import Repository
+from src.repo.repository import Repository, ZIPRepository
 from src.paths import paths
 
 #@todo: change rundate and runtime to DateTime columns
@@ -272,7 +272,7 @@ class IsotopeAdapter(DatabaseAdapter):
         labnumber = self.get_labnumber(labnumber)
         dbpos = irrad_PositionTable(position=pos, labnumber=labnumber)
 
-#        irrad = self.get_irradiation(irrad)
+        irrad = self.get_irradiation(irrad)
 #        level = self.get_irradiation_level(irrad, level)
         if isinstance(level, str):
             level = next((li for li in irrad.levels if li.name == level), None)
@@ -416,22 +416,24 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_sample(self, name, project=None, material=None, **kw):
         sample = gen_SampleTable(name=name, **kw)
 #        if isinstance(project, str):
-        project = self.get_project(project)
 
 #        if isinstance(material, str):
-        material = self.get_material(material)
 
         sess = self.get_session()
         q = sess.query(gen_SampleTable)
-        q = q.join(gen_MaterialTable)
-        q = q.join(gen_ProjectTable)
         q = q.filter(gen_SampleTable.name == name)
-        if material:
-            q = q.filter(gen_MaterialTable.name == material.name)
-        if project:
-            q = q.filter(gen_ProjectTable.name == project.name)
-        sam = sql_retrieve(q.one)
 
+#        if material:
+#            q = q.join(gen_MaterialTable)
+#            material = self.get_material(material)
+#            q = q.filter(gen_MaterialTable.name == material.name)
+#        if project:
+#            q = q.join(gen_ProjectTable)
+#            project = self.get_project(project)
+#            q = q.filter(gen_ProjectTable.name == project.name)
+#
+        sam = sql_retrieve(q.one)
+#        print sam, name, material, project
         if sam is not None:
 #            self.info('sample={} material={} project={} already exists'.format(name,
 #                                                                           material.name if material else 'None',
@@ -444,8 +446,8 @@ class IsotopeAdapter(DatabaseAdapter):
             if material is not None:
                 material.samples.append(sample)
             self.info('adding sample {} project={}, material={}'.format(name,
-                                                                        material.name if material else 'None',
-                                                                        project.name if project else 'None'))
+                                                                        project.name if project else 'None',
+                                                                        material.name if material else 'None',))
             return sample, True
 
 
@@ -781,12 +783,14 @@ if __name__ == '__main__':
         dbs = IsotopeAnalysisSelector(_db=ia, style='simple')
 #        repo = Repository(root=paths.isotope_dir)
         repo = Repository(root='/Users/ross/Sandbox/importtest')
+        repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/archive.zip')
         dbs.set_data_manager(kind='local',
                              repository=repo,
                              workspace_root=paths.default_workspace_dir
                              )
     #    dbs._execute_query()
-        dbs.load_recent()
+#        dbs.load_recent()
+        dbs.load_last(n=100)
 
         dbs.configure_traits()
 #    ia.add_user(project=p, name='mosuer', commit=True)

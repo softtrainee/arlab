@@ -164,7 +164,7 @@ class DatabaseAdapter(Loggable):
 #                _users, sess = getattr(self, self.test_func)(sess=sess)
 
         except Exception, e:
-            print e, 'kkkkk'
+            print e
 #            print e
 #            if self.kind == 'mysql':
 #                url = '{}@{}/{}' .format(self.user, self.host,
@@ -216,6 +216,10 @@ class DatabaseAdapter(Loggable):
                 self.warning_dialog('Not connected to the database {}'.format(self.name))
 
         return self.sess
+
+    def expire(self):
+        if self.sess is not None:
+            self.sess.expire_all()
 
     def delete(self, item):
         if self.sess is not None:

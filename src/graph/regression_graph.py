@@ -20,7 +20,7 @@ from traitsui.api import View, Item, TableEditor
 from src.graph.graph import Graph
 #============= standard library imports ========================
 from numpy import linspace, random, hstack, polyval, \
-    delete, bitwise_and, polyfit, ones, invert
+    delete, bitwise_and, polyfit, ones, invert, average
 from chaco.tools.broadcaster import BroadcasterTool
 #============= local library imports  ==========================
 from src.graph.tools.rect_selection_tool import RectSelectionTool
@@ -29,7 +29,14 @@ from src.graph.time_series_graph import TimeSeriesGraph
 from src.graph.stacked_graph import StackedGraph
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
+import copy
 
+class StatsFilterParameters(object):
+    '''
+        exclude points where (xi-xm)**2>SDx*tolerance_factor
+    '''
+    tolerance_factor = 3.0
+    blocksize = 20
 
 class RegressionGraph(Graph):
     filters = List
@@ -70,7 +77,7 @@ class RegressionGraph(Graph):
         scatter = plot.plots['data{}'.format(series)][0]
         return scatter.fit
 
-    def _update_graph(self):
+    def _update_graph(self, **kw):
         if self.suppress_regression:
             return
 
@@ -109,12 +116,14 @@ class RegressionGraph(Graph):
 
     def _plot_regression(self, plot, scatter, line, uline, lline):
         try:
+
 #            sel = scatter.index.metadata.get('selections', [])
             args = self._regress(
 #                                 selection=sel,
                                            plot=plot,
                                            fit=scatter.fit,
                                            filterstr=scatter.filter,
+                                           filter_outliers=scatter.filter_outliers,
                                            index=scatter.index,
                                            x=scatter.index.get_data(),
                                            y=scatter.value.get_data(),
@@ -139,6 +148,7 @@ class RegressionGraph(Graph):
                  plotid=0,
                  plot=None,
                  index=None,
+                 filter_outliers=None,
 #                 component=None,
                  filterstr=None,
                  fit=None):
@@ -155,12 +165,20 @@ class RegressionGraph(Graph):
 #            y = plot.data.get_data('y0')
 #        print selection
 #        if not selection:
+
         if filterstr:
             selection = self._apply_filter(filterstr, x)
-            if index:
-                index.metadata['selections'] = selection
+            meta = dict(selections=selection)
+            index.trait_set(metadata=meta, trait_change_notify=False)
         else:
             selection = index.metadata.get('selections', [])
+
+        if filter_outliers:
+            x, y, excludes = self._apply_filter_outliers(x, y)
+            sels = index.metadata['selections']
+            excludes = list(set(sels + excludes))
+            meta = dict(selections=excludes)
+            index.trait_set(metadata=meta, trait_change_notify=False)
 
         if selection:
             x = delete(x[:], selection, 0)
@@ -251,14 +269,72 @@ class RegressionGraph(Graph):
                 return
 
         return list(invert(sli).nonzero()[0])
-#        print sli
-#        dplot.index.metadata['selections'] = list(invert(sli).nonzero()[0])
-#        return xs[sli], ys[sli], list(invert(sli).nonzero()[0])
+
+    def _apply_filter_outliers(self, xs, ys):
+        '''
+            filter data using stats
+            
+            1. group points into blocks
+            2. find mean of block
+            3. find outliers
+            4. exclude outliers
+        '''
+        import numpy as np
+        sf = StatsFilterParameters()
+        blocksize = sf.blocksize
+        tolerance_factor = sf.tolerance_factor
+
+        #group into blocks
+        n = ys.shape[0]
+        r = n / blocksize
+        c = blocksize
+
+        dev = n - (r * c)
+        remainder_block = None
+        if dev:
+            ys = ys[:-dev]
+            remainder_block = ys[-dev:]
+#            remainder_
+
+        blocks = ys.reshape(r, c)
+
+        #calculate stats
+        block_avgs = average(blocks, axis=1)
+        block_stds = np.std(blocks, axis=1)
+        devs = (blocks - block_avgs.reshape(r, 1)) ** 2
+#        devs = abs(blocks - block_avgs.reshape(r, 1))
+
+        #find outliers
+        tol = block_stds.reshape(r, 1) * tolerance_factor
+        exc_r, exc_c = np.where(devs > tol)
+        inc_r, inc_c = np.where(devs <= tol)
+        ny = blocks[inc_r, inc_c]
+        nx = xs[inc_c + inc_r * blocksize]
+        exc_xs = list(exc_c + exc_r * blocksize)
+
+#        if remainder_block:
+#        #do filter on remainder block 
+#            avg = average(remainder_block)
+#            stds = np.std(remainder_block)
+#            tol = stds * tolerance_factor
+#            devs = (remainder_block - avg) ** 2
+#            exc_i, _ = np.where(devs > tol)
+#            inc_i, _ = np.where(devs < tol)
+#            exc_i = exc_i + n - 1
+#            nnx = xs[inc_i + n - 1]
+#            nny = ys[inc_i + n - 1]
+#
+#            nx = hstack((nx, nnx))
+#            ny = hstack((ny, nny))
+#            exc_xs += exc_i
+
+        return nx, ny, exc_xs
 
     def new_series(self, x=None, y=None,
                    ux=None, uy=None, lx=None, ly=None,
                    fx=None, fy=None,
                    fit='linear',
+                   filter_outliers=False,
                    marker='circle',
                    marker_size=2,
                    plotid=0, *args, **kw):
@@ -285,6 +361,8 @@ class RegressionGraph(Graph):
 
         scatter.fit = fit
         scatter.filter = None
+        scatter.filter_outliers = filter_outliers
+
         if x is not None and y is not None:
             args = self._regress(x, y, plotid=plotid)
             if args:
@@ -359,10 +437,19 @@ class StackedRegressionGraph(RegressionGraph, StackedGraph):
 class StackedRegressionTimeSeriesGraph(StackedRegressionGraph, TimeSeriesGraph):
     pass
 if __name__ == '__main__':
+
+    import numpy as np
     rg = RegressionGraph()
     rg.new_plot()
-    x = linspace(0, 10, 100)
-    y = 2 * x + random.rand(100) * 50
-    rg.new_series(x, y)
+    x = linspace(0, 10, 200)
+
+    y = 2 * x + random.rand(200)
+
+    d = np.zeros(200)
+    d[::10] = random.rand() * 15
+
+    y += d
+    rg.new_series(x, y, filter_outliers=True)
+    rg._update_graph()
     rg.configure_traits()
 #============= EOF =============================================

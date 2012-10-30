@@ -62,7 +62,10 @@ class LegendOverlay(AbstractOverlay):
         gc.set_fill_color((0, 0, 0))
         for i, si in enumerate(ats):
             yy = yi - (texth) * (i + 1)
-            plot = component.plots['jan {}'.format(si)][0]
+            try:
+                plot = component.plots['jan {}'.format(si)][0]
+            except KeyError:
+                continue
             pcolor, plot.color = plot.color, 'black'
             mpcolor, plot.outline_color = plot.outline_color, 'black'
             plot._render_icon(gc, xo + 5, yy, 5, 5)
@@ -146,6 +149,8 @@ class SelectionView(Viewable):
                 rids.append(ni)
 
         mm = [min(xj) for xj in xs if len(xj)]
+        if not mm:
+            return
         xmi = min(mm)
         mm = [max(yj) for yj in ys if len(yj)]
         yma = max(mm)

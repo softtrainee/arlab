@@ -22,7 +22,8 @@ from apptools.preferences.preference_binding import bind_preference
 import os
 #============= local library imports  ==========================
 #from src.managers.manager import Manager
-from src.repo.repository import FTPRepository, Repository, SFTPRepository
+from src.repo.repository import FTPRepository, Repository, SFTPRepository, \
+    ZIPRepository
 
 #from src.experiment.processing.ideogram import Ideogram
 #from src.experiment.processing.spectrum import Spectrum
@@ -69,6 +70,7 @@ class ProcessingManager(DatabaseManager):
         kind = 'local'
 
         self.repo_kind = 'FTP'
+        self.repo_kind = 'ZIP'
 #        host = '129.138.12.131'
 #        pwd = 'JR*4039'
         if self.repo_kind == 'FTP':
@@ -78,6 +80,8 @@ class ProcessingManager(DatabaseManager):
 #                             root=paths.isotope_dir
                                 root='/Users/ross/Sandbox/importtest'
                              )
+        elif self.repo_kind == 'ZIP':
+            repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/archive.zip')
         else:
             repo = Repository(root=paths.isotope_dir)
         self.repo = repo

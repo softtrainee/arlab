@@ -84,15 +84,19 @@ def _getter(getfunc, func, obj, name,
         q = q.filter(getattr(table, attr) == name)
     if order_by is not None:
         q = q.order_by(order_by)
+
+#    return getattr(q, getfunc)()
     try:
         return getattr(q, getfunc)()
     except sqlalchemy.exc.SQLAlchemyError, e:
 #        print 'get_one, e1', e
         try:
-            return q.limit(100).all()[-1]
-        except (sqlalchemy.exc.SQLAlchemyError, IndexError), e:
-#            print 'get_one, e2', e    
+            q = q.order_by(table.id.desc())
+            return q.limit(1).all()[-1]
+        except (sqlalchemy.exc.SQLAlchemyError, IndexError, AttributeError), e:
             pass
+#            print 'get_one, e2', e
+#            pass
 
 def delete_one(func):
     def _delete_one(obj, name, *args, **kw):
