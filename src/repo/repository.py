@@ -22,6 +22,7 @@ import ftplib as ftp
 #============= local library imports  ==========================
 from src.loggable import Loggable
 import shutil
+from zipfile import ZipFile
 
 class Repository(Loggable):
     root = Str
@@ -53,8 +54,21 @@ class Repository(Loggable):
     def retrieveFile(self, n, out):
         try:
             shutil.copyfile(self.get_file_path(n), out)
+            return True
         except Exception, e:
-            print e
+            print 'Repository retrievie file exception- ', e
+
+class ZIPRepository(Repository):
+    def retrieveFile(self, n, out):
+        n = os.path.basename(n)
+        with ZipFile(self.root, 'r') as zp:
+            try:
+                zp.extract(n, os.path.dirname(out))
+                return True
+            except Exception, e:
+                print 'ZIPRepository retrievie file exception- ', e
+
+
 
 class RemoteRepository(Repository):
     host = Str
@@ -109,6 +123,7 @@ class SFTPRepository(RemoteRepository):
 #        return os.path.isfile(self.get_file_path(n))
 
     def retrieveFile(self, n, out):
+        print n, out
         def cb(clt):
             clt.get(n, out)
         self._execute(cb)

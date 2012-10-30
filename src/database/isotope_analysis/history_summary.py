@@ -109,11 +109,15 @@ class HistorySummary(Summary):
     history_view = Instance(HistoryView)
     selected_history = DelegatesTo('history_view')
     history_name = ''
+    def _graph_default(self):
+        g = Graph(container_dict=dict(padding=5, stack_order='top_to_bottom'))
+        g.width = 510
+        return g
 
     def _history_view_default(self):
         return HistoryView(summary=self)
 
-    def _create_summary(self):
+    def refresh(self):
         hist = None
         if self.histories:
             selh = self.record._dbrecord.selected_histories
@@ -125,9 +129,9 @@ class HistorySummary(Summary):
                 self.selected_history = None
                 self.selected_history = sh
 
-            do_later(up)
+        super(HistorySummary, self).build_summary(history=hist)
 
-        self._build_summary(history=hist)
+        do_later(up)
 
     def _get_isotope_keys(self, history, name):
         isokeys = sorted([bi.isotope for bi in getattr(history, name)
@@ -161,9 +165,9 @@ class HistorySummary(Summary):
         hn = self.history_name
         dbr = self.record
 #
-        g = Graph(container_dict=dict(padding=5, stack_order='top_to_bottom'))
-        g.width = 510
-        self.graph = g
+        g = self.graph
+        g.clear()
+#        self.graph = g
         isokeys = self._get_isotope_keys(hi, hn)
         xma = -np.Inf
         xmi = np.Inf

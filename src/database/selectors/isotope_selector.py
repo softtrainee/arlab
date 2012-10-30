@@ -100,6 +100,10 @@ class IsotopeAnalysisSelector(DatabaseSelector):
         q = q.order_by(meas_AnalysisTable.id.desc())
         q = q.filter(meas_AnalysisTable.status != -1)
 
+        if 'filter_str' in kw:
+#            print kw['filter_str']
+            q = q.filter(kw['filter_str'])
+
         if 'limit' in kw:
             q = q.limit(kw['limit'])
 

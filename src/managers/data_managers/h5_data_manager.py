@@ -154,7 +154,8 @@ class H5DataManager(DataManager):
             path = os.path.join(self.repository.root, path)
             if not os.path.isfile(out):
                 self.info('copying {} to repository {}'.format(path, os.path.dirname(out)))
-                self.repository.retrieveFile(path, out)
+                if not self.repository.retrieveFile(path, out):
+                    return False
             path = out
 
         try:

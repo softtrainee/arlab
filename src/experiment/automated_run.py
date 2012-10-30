@@ -1059,6 +1059,7 @@ class AutomatedRun(Loggable):
         db.add_spectrometer_parameters(meas, **spec_dict)
 
         for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
+            det = db.add_detector(det)
             db.add_deflection(meas, det, deflection)
 
     def _save_blank_info(self, analysis):
@@ -1257,7 +1258,7 @@ class AutomatedRun(Loggable):
 
     @property
     def runid(self):
-        return '{}-{}'.format(self.labnumber, self.aliquot)
+        return '{}-{}{}'.format(self.labnumber, self.aliquot, self.step)
 
     @property
     def analysis_type(self):

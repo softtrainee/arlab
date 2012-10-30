@@ -102,6 +102,7 @@ class PlotEditor(HasTraits):
     def _get_plots(self):
         if self.plot:
             pplot = self.plot
+#            print self.graph.plots
             self.id = self.graph.plots.index(pplot)
 
         elif self.graph:
