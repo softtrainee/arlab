@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float, Property
+from traits.api import HasTraits, Str, Float, Property, CStr
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -29,7 +29,8 @@ class ResultsTabularAdapter(TabularAdapter):
     default_columns = Property
     additional_columns = Property
     def _get_default_columns(self):
-        return [('Age', 'age'),
+        return [('Labnumber', 'labnumber'),
+                ('Age', 'age'),
                ('Error(1s)', 'error'),
                ('MSWD', 'mswd'),
              ]
@@ -45,6 +46,7 @@ class BaseResults(HasTraits):
     error = Float
     mswd = Float
     error_calc_method = Str
+    labnumber = CStr
 
 class IdeoResultsAdapter(ResultsTabularAdapter):
     age_text = Property

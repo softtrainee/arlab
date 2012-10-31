@@ -96,13 +96,13 @@ class FitSeriesFigure(BaseFigure):
             bks = [('{}bs'.format(si.label), si.fit_baseline)
                     for si in self.series_configs if si.show_baseline]
 
-            gids = self._get_gids(analyses)
+            group_ids = self._get_group_ids(analyses)
             gseries = series.build(analyses,
-                                   sks, bks, gids,
+                                   sks, bks, group_ids,
                                    padding=seriespadding)
 
-            gids = self._get_gids(self.fit_analyses)
-            gseries = series.build(self.fit_analyses, sks, bks, gids,
+            group_ids = self._get_group_ids(self.fit_analyses)
+            gseries = series.build(self.fit_analyses, sks, bks, group_ids,
                          graph=gseries,
 #                         analyses=,
                          new_plot=False,
@@ -144,10 +144,10 @@ class FitSeriesFigure(BaseFigure):
             r = self.confirmation_dialog('Sure you want to close with out saving')
         return r
 
-#    def _get_gids(self, analyses):
-#        gids = list(set([(a.gid, True) for a in analyses]))
-#        gids = [(g, True if i == 0 else False) for i, (g, _) in enumerate(gids)]
-#        return gids
+#    def _get_group_ids(self, analyses):
+#        group_ids = list(set([(a.group_id, True) for a in analyses]))
+#        group_ids = [(g, True if i == 0 else False) for i, (g, _) in enumerate(group_ids)]
+#        return group_ids
 
     @property
     def fit_series(self):

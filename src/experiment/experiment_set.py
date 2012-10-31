@@ -28,7 +28,7 @@ import yaml
 #import sha
 #============= local library imports  ==========================
 from src.experiment.automated_run import AutomatedRun
-from src.experiment.heat_schedule import HeatSchedule
+from src.experiment.extract_schedule import ExtractSchedule
 from src.paths import paths
 from src.loggable import Loggable
 from src.experiment.batch_edit import BatchEdit
@@ -58,7 +58,7 @@ class ExperimentSet(Loggable):
     automated_runs = List(AutomatedRun)
     automated_run = Instance(AutomatedRun)
     current_run = Instance(AutomatedRun)
-    heat_schedule = Instance(HeatSchedule, ())
+    extract_schedule = Instance(ExtractSchedule, ())
     stats = Instance(ExperimentStats, ())
 
     lab_map = Any
@@ -597,7 +597,7 @@ tray: {}
         self.update_aliquots_needed = True
 
     def _apply_fired(self):
-        hs = self.heat_schedule
+        hs = self.extract_schedule
         for _i, s in enumerate(hs.steps):
             if s.duration:
                 a = self.automated_run.clone_traits()
@@ -963,7 +963,7 @@ tray: {}
         new_analysis = VGroup(
                               Item('automated_run',
                                    show_label=False,
-                                   style='custom'
+                                   style='custom',
                                    ),
                               enabled_when='mass_spectrometer and mass_spectrometer!="---"'
                               )
@@ -974,16 +974,13 @@ tray: {}
                                        Item('duplicate_button'), show_labels=False),
                                 Item('automated_runs', show_label=False,
                                     editor=self._automated_run_editor(),
-#                                    height=0.5
+                                    height=0.75,
+#                                    width=400,
                                     ), show_border=True,
 
                                 label='Analyses'
                                 )
 
-        heat_schedule_table = Item('heat_schedule', style='custom',
-                                   show_label=False,
-                                   height=0.35
-                                   )
 
         script_grp = VGroup(
                         Item('extraction_script',
@@ -992,32 +989,51 @@ tray: {}
                         Item('measurement_script',
                              label='Measurement',
                              editor=EnumEditor(name='measurement_scripts')),
-                        Item('post_measurement_script',
-                             label='Post Measurement',
-                             editor=EnumEditor(name='post_measurement_scripts')),
                         Item('post_equilibration_script',
                              label='Post Equilibration',
                              editor=EnumEditor(name='post_equilibration_scripts')),
+                        Item('post_measurement_script',
+                             label='Post Measurement',
+                             editor=EnumEditor(name='post_measurement_scripts')),
                         show_border=True,
                         label='Scripts'
                         )
 
+#        schedule_grp = Item('extract_schedule',
+#                                   style='custom',
+#                                   show_label=False,
+#                                   height=0.25,
+#                                   )
+
+#        VGroup(
+#                                Item('extract_schedule',
+#                                   style='custom',
+#                                   show_label=False,
+#                                   height=0.25,
+#                                   width=0.1,
+#                                   ),
+#                                   HGroup(spring, Item('apply', enabled_when='ok_to_add'),
+#                                     show_labels=False),
+#                              springy=False
+#                              )
+        gparameters_grp = VGroup(
+              Item('mass_spectrometer',
+                   editor=EnumEditor(name='mass_spectrometers'),
+#                                           show_label=False
+                   ),
+              Item('extract_device',
+                   editor=EnumEditor(name='extract_devices'),
+#                                           show_label=False,
+                   ),
+              Item('tray',
+                   editor=EnumEditor(name='trays'),
+#                                           show_label=False,
+                   )
+              )
         v = View(
                  HGroup(
-                        VGroup(VGroup(
-                                      Item('mass_spectrometer',
-                                           editor=EnumEditor(name='mass_spectrometers'),
-#                                           show_label=False
-                                           ),
-                                      Item('extract_device',
-                                           editor=EnumEditor(name='extract_devices'),
-#                                           show_label=False,
-                                           ),
-                                      Item('tray',
-                                           editor=EnumEditor(name='trays'),
-#                                           show_label=False,
-                                           )
-                                      ),
+                        VGroup(
+                               gparameters_grp,
                                new_analysis,
                                script_grp,
                                HGroup(Item('auto_increment'),
@@ -1026,13 +1042,11 @@ tray: {}
                                      ),
                                ),
 
-                         VGroup(
-                                 heat_schedule_table,
-                                 HGroup(spring, Item('apply', enabled_when='ok_to_add'),
-                                        show_labels=False),
-                                analysis_table,
-        #                        stats
-                                ),
+                        VGroup(
+#                               schedule_grp,
+                               analysis_table
+                               )
+
                         )
                  )
 

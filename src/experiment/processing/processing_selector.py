@@ -71,6 +71,7 @@ class SelectedrecordsAdapter(TabularAdapter):
     labnumber_width = Int(90)
     rid_width = Int(50)
 
+    aliquot_text = Property
 #    rid_text = Property
     text_color = Property
     font = 'monospace'
@@ -91,9 +92,14 @@ class SelectedrecordsAdapter(TabularAdapter):
         cols = [
                 #('ID', 'rid'),
                 ('Labnumber', 'labnumber'),
+                ('Aliquot', 'aliquot'),
+                ('Group', 'group_id'),
+                ('Graph', 'graph_id')
                 ]
         return cols
 
+    def _get_aliquot_text(self, trait, item):
+        return '{}{}'.format(self.item.aliquot, self.item.step)
 
 class Marker(HasTraits):
     color = 'white'
@@ -118,13 +124,14 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
     analysis_types = Property
 
     add_group_marker = Button('Set Group')
+    graph_by_labnumber = Button('Graph By Labnumber')
 #    add_mean_marker = Button('Set Mean')
 
     update_data = Event
 
     selected_row = Any
     selected = Any
-
+    group_cnt = 0
 
     def _load_selected_records(self):
         for r in self.selector.selected:
@@ -141,10 +148,24 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _graph_by_labnumber_fired(self):
+        groups = dict()
+        for ri in self.selected_records:
+            if ri.labnumber in groups:
+                group = groups[ri.labnumber]
+                group.append(ri.labnumber)
+            else:
+                groups[ri.labnumber] = [ri.labnumber]
+
+        keys = sorted(groups.keys())
+        for ri in self.selected_records:
+            ri.graph_id = keys.index(ri.labnumber)
+
 
     def _add_group_marker_fired(self):
         for r in self.selected:
-            r.gid = 1
+            self.group_cnt += 1
+            r.group_id = self.group_cnt
             r.color = 'red'
 
         oruns = set(self.selected_records) ^ set(self.selected)
@@ -285,6 +306,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                                           style='custom',
                                           editor=TabularEditor(
                                                                multi_select=True,
+                                                               auto_update=True,
                                                         editable=False,
 #                                                        drag_move=True,
                                                         selected='object.selected',
@@ -301,6 +323,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                                           ),
 #                                    springy=False
                                 Item('add_group_marker', show_label=False),
+                                Item('graph_by_labnumber', show_label=False),
 #                                Item('add_mean_marker', show_label=False)
                                 )
 

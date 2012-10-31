@@ -40,8 +40,19 @@ class Plotter(Viewable):
     def _get_adapter(self):
         return ResultsTabularAdapter
 
-    def _get_content(self):
+    def _get_toolbar(self):
         return
+
+    def _get_content(self):
+        content = Item('results',
+                      style='custom',
+                      show_label=False,
+                      editor=TabularEditor(adapter=self.adapter(),
+                                           auto_update=True
+                                           ),
+                       height=50
+                       )
+        return content
 
     def _add_error_bars(self, scatter, errors, axis, sigma_trait=None):
         ebo = ErrorBarOverlay(component=scatter, orientation=axis)
@@ -50,7 +61,7 @@ class Plotter(Viewable):
         if sigma_trait:
             self.on_trait_change(ebo.update_sigma, sigma_trait)
 
-    def _add_scatter_inspector(self, scatter, gid=0):
+    def _add_scatter_inspector(self, scatter, group_id=0):
         #add a scatter hover tool
         scatter.tools.append(ScatterInspector(scatter,
 #                                              selection_mode='off'
@@ -71,19 +82,20 @@ class Plotter(Viewable):
 #                    selection_outlin
 #                    )
 #        scatter.overlays.append(overlay)
-        u = lambda a, b, c, d: self.update_graph_metadata(gid, a, b, c, d)
+        u = lambda a, b, c, d: self.update_graph_metadata(group_id, a, b, c, d)
         scatter.index.on_trait_change(u, 'metadata_changed')
 #        self.metadata = scatter.index.metadata
 
-    def update_graph_metadata(self, gid, obj, name, old, new):
-#        print gid, obj, name, old, new
-        hover = obj.metadata.get('hover')
-        if hover:
-#            print hover, gid
-            hoverid = hover[0]
+    def update_graph_metadata(self, group_id, obj, name, old, new):
+        pass
+#        print group_id, obj, name, old, new
+#        hover = obj.metadata.get('hover')
+#        if hover:
+#            print hover, group_id
+#            hoverid = hover[0]
 #            for ai in self.analyses:
-#                print ai.gid
-            self.selected_analysis = sorted([a for a in self.analyses if a.gid == gid], key=self._cmp_analyses)[hoverid]
+#                print ai.group_id
+#            self.selected_analysis = sorted([a for a in self.analyses if a.group_id == group_id], key=self._cmp_analyses)[hoverid]
 
 #        print hover
 #        hover = self.metadata.get('hover')
@@ -97,15 +109,10 @@ class Plotter(Viewable):
 # views
 #===============================================================================
     def traits_view(self):
-        results = Item('results',
-                      style='custom',
-                      show_label=False,
-                      editor=TabularEditor(adapter=self.adapter(),
-                                           auto_update=True
-                                           ))
-        ct = self._get_content()
+        content = self._get_content()
+        tb = self._get_toolbar()
 
-        vg = VGroup(ct, results) if ct is not None else VGroup(results)
+        vg = VGroup(tb, content) if tb is not None else VGroup(content)
         v = View(vg)
         return v
 #============= EOF =============================================

@@ -139,10 +139,10 @@ class BlanksEditor(FitSeriesEditor):
 #        f.load_analyses(names, attrs=attrs)
 #
 #        names = [ai.dbrecord.path.filename for ai in self.analyses]
-#        gids = [1] * len(names)
+#        group_ids = [1] * len(names)
 #        attrs = [dict(dbrecord=ai.dbrecord) for ai in self.analyses]
 #        #also load this analysis
-#        f.load_analyses(names, groupids=gids,
+#        f.load_analyses(names, groupids=group_ids,
 #                        attrs=attrs)
 
 

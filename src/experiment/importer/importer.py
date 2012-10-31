@@ -435,12 +435,15 @@ if __name__ == '__main__':
     s = MassSpecDatabaseAdapter(kind='mysql', username='root',
                                 password='Argon',
                                 host='localhost',
-                                name='massspecdata_local')
+                                name='massspecdata_local'
+                                )
     s.connect()
-    d = IsotopeAdapter(kind='mysql', username='root',
-                       host='localhost',
-                       password='Argon',
-                        name='isotopedb_dev_import')
+    d = IsotopeAdapter(kind='mysql',
+                       username='massspec',
+#                       host='localhost',
+                       host='129.138.12.131',
+                       password='DBArgon',
+                       name='isotopedb_dev')
     d.connect()
 
     im.source = s

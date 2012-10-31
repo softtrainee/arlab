@@ -182,9 +182,9 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                             rd.add_text('{} ='.format(config.label) + ss)
                             rd.add_text('err  ='.format(config.label) + se)
 
-    def _get_gids(self, analyses):
-        return list(set([a.gid for a in analyses]))
-#        return list(set([(a.gid + offset, True) for a in analyses]))
+    def _get_group_ids(self, analyses):
+        return list(set([a.group_id for a in analyses]))
+#        return list(set([(a.group_id + offset, True) for a in analyses]))
 
     def _refresh(self, graph, analyses, padding):
         gs = self.graph_selector
@@ -195,22 +195,22 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             bks = [('{}bs'.format(si.label), si.fit_baseline)
                     for si in self.series_configs if si.show_baseline]
             rks = [(si.label, si.fit) for si in self.ratio_configs if si.show]
-            gids = self._get_gids(analyses)
+            group_ids = self._get_group_ids(analyses)
 
             keys = sks + bks + rks
             epts = None
             if self.series:
-                epts = self.series.get_excluded_points(keys, gids)
+                epts = self.series.get_excluded_points(keys, group_ids)
 
             series = self.series_klass()
             series.analyses = self._analyses
-            gseries = series.build(analyses, sks, bks, rks, gids,
+            gseries = series.build(analyses, sks, bks, rks, group_ids,
                                    seriespadding)
 
             if gseries:
                 graph.plotcontainer.add(gseries.plotcontainer)
                 series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
-                series.set_excluded_points(epts, keys, gids)
+                series.set_excluded_points(epts, keys, group_ids)
 
             self.series = series
             self.series.graph.on_trait_change(self._refresh_stats, 'regression_results')
@@ -245,11 +245,14 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         (ww, _hh) = pd.control.GetSize()
         pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
 
-        for n, gid, attr in zip(names, groupids, attrs):
+        for n, group_id, attr in zip(names, groupids, attrs):
             if not n in _names:
-                a = self._analysis_factory(n, gid=gid, **attr)
+                a = self._analysis_factory(n, **attr)
+#                a.group_id = group_id
                 if a:
-                    msg = 'loading analysis {} groupid={}'.format(a.dbrecord.record_id, gid)
+                    msg = 'loading analysis {} groupid={} graphid={}'.format(a.dbrecord.record_id,
+                                                                  group_id,
+                                                                  a.graph_id)
                     pd.change_message(msg)
                     self.info(msg)
                     self._add_analysis(a, **kw)
@@ -257,7 +260,9 @@ class BaseFigure(Viewable, ColumnSorterMixin):
                     self.warning('could not load {}'.format(n))
             else:
                 a = next((a for a in analyses if a.uuid == n), None)
-                a.gid = gid
+
+            #dbrecord must be set before setting group_id
+            a.group_id = group_id
 
             pd.increment()
 
@@ -401,14 +406,14 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         def do():
             ps = self.selector
             try:
-                names, attrs, gids = zip(*[(ri.filename, dict(dbrecord=ri), ri.gid)
+                names, attrs, group_ids = zip(*[(ri.filename, dict(dbrecord=ri), ri.group_id)
                                           for ri in ps.selected_records
                                             if ri.path.strip()
 
                                             ])
 
                 if names:
-                    self.load_analyses(names, attrs=attrs, groupids=gids, **self._get_load_keywords())
+                    self.load_analyses(names, attrs=attrs, groupids=group_ids, **self._get_load_keywords())
             except ValueError, e:
                 print e
 
@@ -446,11 +451,18 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #            ps.selector.load_recent()
             ps.selector.load_last(n=200)
 #            ps._analysis_type_changed()
-#            ps.edit_traits()
+            ps.edit_traits()
             self.selector = ps
 #            if self._debug:
 
-            ps.selected_records = [i for i in ps.selector.records if i.labnumber == 57736]
+            ps.selected_records = [i for i in ps.selector.records if i.labnumber in [57740, 57741,
+                                                                                      57743, 57742, 57745
+                                                                                     ]]
+#            for pi in ps.selected_records:
+#                if pi.labnumber == 57741:
+##                    pi.group_id = 1
+#                    pi.graph_id = 1
+            ps.selected_records = ps.selected_records[::5]
 #            print len(ps.selected_records)
 #            ps.selected_records = [i for i in ps.selector.records[-20:] if i.analysis_type != 'blank']
 #            print 'get results time', time.clock() - st
@@ -458,7 +470,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             self.selector.show()
 
 #        st = time.clock()
-        self._update_data()
+#        self._update_data()
 #        print 'update time', time.clock() - st
 
     def _show_results_fired(self):

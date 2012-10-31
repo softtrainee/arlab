@@ -30,14 +30,14 @@ from enable.enable_traits import Pointer
 
 class SpectrumTool(BaseTool):
     spectrum = Any
-    gid = Int
+    group_id = Int
     def normal_left_down(self, event):
         pt = event.x, event.y
         if self.component.hittest(pt):
 
             d = self.component.map_data(pt)
 #            print d
-            cs = self.spectrum.cumulative39s[self.gid]
+            cs = self.spectrum.cumulative39s[self.group_id]
 
             t = where(cs < d)[0]
             if len(t):
@@ -63,10 +63,10 @@ class SpectrumTool(BaseTool):
 #            print t
 #            print cs, d
 #            print t
-#            print self.spectrum.cumulative39s[self.gid].index(d)
+#            print self.spectrum.cumulative39s[self.group_id].index(d)
 
 #class SpectrumOverlay(AbstractOverlay):
-#    gid = 0
+#    group_id = 0
 #    def overlay(self, component, gc, *args, **kw):
 #        sels = self.component.index.metadata['selections']
 #
@@ -182,13 +182,13 @@ class Spectrum(Plotter):
 
         g.set_y_title('Age (Ma)')
 
-        gids = list(set([a.gid for a in analyses]))
+        group_ids = list(set([a.group_id for a in analyses]))
         ma, mi = -Inf, Inf
         self.cumulative39s = []
-        for gid in gids:
-            anals = [a for a in analyses if a.gid == gid]
+        for group_id in group_ids:
+            anals = [a for a in analyses if a.group_id == group_id]
 #            print len(anals), len(analyses)
-            miage, maage = self._add_spectrum(g, anals, gid)
+            miage, maage = self._add_spectrum(g, anals, group_id)
 
             ma = max(ma, maage)
             mi = min(mi, miage)
@@ -228,7 +228,7 @@ class Spectrum(Plotter):
 
         return array(xs), array(ys), array(es), array(c39s)
 
-    def _add_spectrum(self, g, analyses, gid, index_key='k39'):
+    def _add_spectrum(self, g, analyses, group_id, index_key='k39'):
         xs, ys, es, c39s = self._calculate_spectrum(analyses, index_key)
 
 #            steps.append((ai, ei))
@@ -264,11 +264,11 @@ class Spectrum(Plotter):
 #        yp = hstack((yu, yl))
 #
 #        s, _p = g.new_series(x=xp, y=yp, type='polygon')
-        sp = SpectrumTool(ds, spectrum=self, gid=gid)
+        sp = SpectrumTool(ds, spectrum=self, group_id=group_id)
         ds.tools.append(sp)
 #    
         ds.errors = es
-        sp = SpectrumErrorOverlay(component=ds, spectrum=self, gid=gid)
+        sp = SpectrumErrorOverlay(component=ds, spectrum=self, group_id=group_id)
         ds.overlays.append(sp)
 
         mswd = calculate_mswd(ys, es)

@@ -72,11 +72,11 @@ class FitSeries(Series):
 
     @cached_property
     def _get_predictors(self):
-        return sorted([a for a in self.analyses if a.gid == 0], key=lambda x:x.timestamp)
+        return sorted([a for a in self.analyses if a.group_id == 0], key=lambda x:x.timestamp)
 
-    def _get_series_error(self, a, k, i, gid):
-        if gid == 0:
-            return super(FitSeries, self)._get_series_error(a, k, i, gid)
+    def _get_series_error(self, a, k, i, group_id):
+        if group_id == 0:
+            return super(FitSeries, self)._get_series_error(a, k, i, group_id)
         else:
             t = a.timestamp
             predictors = self.predictors
@@ -110,9 +110,9 @@ class FitSeries(Series):
 
             return n
 
-    def _get_series_value(self, a, k, i, gid):
-        if gid == 0:
-            return super(FitSeries, self)._get_series_value(a, k, i, gid)
+    def _get_series_value(self, a, k, i, group_id):
+        if group_id == 0:
+            return super(FitSeries, self)._get_series_value(a, k, i, group_id)
         else:
             t = a.timestamp
             predictors = self.predictors

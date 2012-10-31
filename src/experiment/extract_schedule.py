@@ -29,7 +29,7 @@ from src.helpers.filetools import parse_file
 from src.paths import paths
 
 
-class HeatStepAdapter(TabularAdapter):
+class ExtractStepAdapter(TabularAdapter):
     can_drop = True
     kind = Str
 
@@ -55,7 +55,7 @@ class HeatStepAdapter(TabularAdapter):
 
 #    def insert(self, object, name, row, item):
 #        print object, name, row, item
-#        object.steps.insert(row - 1, HeatStep())
+#        object.steps.insert(row - 1, ExtractStep())
 
     def get_width(self, object, trait, column):
         w = -1
@@ -108,7 +108,7 @@ class HeatStepAdapter(TabularAdapter):
             root = os.path.join(root, 'resources')
             return os.path.join(root, '{}_ball.png'.format(im))
 
-class HeatStep(HasTraits):
+class ExtractStep(HasTraits):
     extract_value = Property
     _power = Float
 
@@ -150,8 +150,8 @@ class HeatStep(HasTraits):
 #        #update the analysis table
 #        self.update = True
 
-class HeatSchedule(HasTraits):
-    steps = List(HeatStep)
+class ExtractSchedule(HasTraits):
+    steps = List(ExtractStep)
     units = Enum('watts', 'temp', 'percent')
     name = Property(depends_on='path')
     path = Str
@@ -161,7 +161,7 @@ class HeatSchedule(HasTraits):
     save_as_button = Button('Save As')
     add_button = Button('Add Step')
 
-    current_step = Instance(HeatStep)
+    current_step = Instance(ExtractStep)
 
     selected = List
     selected_index = List
@@ -181,7 +181,7 @@ class HeatSchedule(HasTraits):
         self.adapter.set_kind(self.units)
 
     def traits_view(self):
-        self.adapter = HeatStepAdapter(kind=self.units)
+        self.adapter = ExtractStepAdapter(kind=self.units)
 
         editor = TabularEditor(adapter=self.adapter,
                                 operations=['delete', 'edit'],
@@ -207,7 +207,9 @@ class HeatSchedule(HasTraits):
                             Item('units', show_label=False),
                             ),
                      Item('steps',
-                          show_label=False, editor=editor),
+                          show_label=False,
+                          width= -100,
+                          editor=editor),
                      HGroup(Item('add_button'),
                             spring,
                             Item('save_as_button',
@@ -220,7 +222,7 @@ class HeatSchedule(HasTraits):
                             show_labels=False
                         ),
                     show_border=True,
-                    label='Heat Schedule'
+                    label='Extract Schedule'
                     ),
                  )
         return v
@@ -247,12 +249,12 @@ class HeatSchedule(HasTraits):
             #load a text file
             for args in parse_file(p, delimiter=','):
                 if len(args) == 2:
-                    self.steps.append(HeatStep(extract_value=float(args[0]),
+                    self.steps.append(ExtractStep(extract_value=float(args[0]),
                                                duration=float(args[1])
                                                ))
                 elif len(args) == 4:
                     for i in range(*map(int, args[:3])):
-                        self.steps.append(HeatStep(extract_value=float(i),
+                        self.steps.append(ExtractStep(extract_value=float(i),
                                                    duration=float(args[3])
                                                    ))
         else:
@@ -301,9 +303,9 @@ class HeatSchedule(HasTraits):
 #===============================================================================
     def _steps_default(self):
         return [
-                HeatStep()]
+                ExtractStep()]
 #
-#                HeatStep(temp_or_power=0,
+#                ExtractStep(temp_or_power=0,
 #                               duration=5),
 #
 #                ]

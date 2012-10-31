@@ -36,11 +36,11 @@ from src.experiment.processing.plotters.fit_series import FitSeries
 #
 #    @cached_property
 #    def _get_blanks(self):
-#        return sorted([a for a in self.analyses if a.gid == 0], key=lambda x:x.timestamp)
+#        return sorted([a for a in self.analyses if a.group_id == 0], key=lambda x:x.timestamp)
 #
-#    def _get_series_value(self, a, k, gid):
-#        if gid == 0:
-#            return super(BlanksSeries, self)._get_series_value(a, k, gid)
+#    def _get_series_value(self, a, k, group_id):
+#        if group_id == 0:
+#            return super(BlanksSeries, self)._get_series_value(a, k, group_id)
 #        else:
 #            t = a.timestamp
 #            blanks = self.blanks
@@ -95,10 +95,10 @@ class BlanksFigure(FitSeriesFigure):
 #    def load_analyses(self, fit=True, *args, **kw):
 #        if fit is False:
 #            pass
-#    def _get_gids(self, analyses):
-#        gids = list(set([(a.gid, True) for a in analyses]))
-#        gids = [(g, True if i == 0 else False) for i, (g, _) in enumerate(gids)]
-#        return gids
+#    def _get_group_ids(self, analyses):
+#        group_ids = list(set([(a.group_id, True) for a in analyses]))
+#        group_ids = [(g, True if i == 0 else False) for i, (g, _) in enumerate(group_ids)]
+#        return group_ids
 #
 #    @property
 #    def fit_series(self):
