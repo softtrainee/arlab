@@ -57,7 +57,7 @@ class ExperimentExecutor(ExperimentManager):
     end_at_run_completion = Bool(False)
     delay_between_runs_readback = Float
 
-    show_lab_map = Button
+    show_sample_map = Button
     execute_button = Event
     execute_label = Property(depends_on='_alive')
     truncate_button = Button('Truncate')
@@ -528,9 +528,9 @@ class ExperimentExecutor(ExperimentManager):
     def _truncate_button_fired(self):
         self.experiment_set.truncate_run(self.truncate_style)
 
-    def _show_lab_map_fired(self):
+    def _show_sample_map_fired(self):
 
-        lm = self.experiment_set.lab_map
+        lm = self.experiment_set.sample_map
         if lm is None:
             self.warning_dialog('No Tray map is set. Add "tray: <name_of_tray>" to ExperimentSet file')
         elif lm.ui:
@@ -558,8 +558,8 @@ class ExperimentExecutor(ExperimentManager):
                          style='readonly', format_str='%i',
                          width= -50),
                     spring,
-                    Item('show_lab_map', show_label=False,
-                         enabled_when='object.experiment_set.lab_map'
+                    Item('show_sample_map', show_label=False,
+                         enabled_when='object.experiment_set.sample_map'
                          ),
                     spring,
                     Item('end_at_run_completion'),

@@ -38,8 +38,9 @@ from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 from src.traits_editors.tabular_editor import myTabularEditor
 #from src.experiment.file_listener import FileListener
 from src.experiment.identifier import convert_identifier, convert_labnumber
+from src.experiment.blocks.schedule_block import ScheduleBlock
+from constants import NULL_STR, SCRIPT_KEYS
 
-NULL_STR = '---'
 
 def extraction_path(name):
     return os.path.join(paths.extraction_dir , name)
@@ -55,14 +56,15 @@ def post_equilibration_path(name):
     return os.path.join(paths.post_equilibration_dir, name)
 
 
-class ExperimentSet(Loggable):
-    automated_runs = List(AutomatedRun)
-    automated_run = Instance(AutomatedRun)
+class ExperimentSet(ScheduleBlock):
+#    automated_runs = List(AutomatedRun)
+#    automated_run = Instance(AutomatedRun)
     current_run = Instance(AutomatedRun)
+    selected_runs = Instance(AutomatedRun)
     extract_schedule = Instance(ExtractSchedule, ())
     stats = Instance(ExperimentStats, ())
 
-    lab_map = Any
+    sample_map = Any
     db = Any
 
     measuring = Property(depends_on='current_run.measuring')
@@ -194,7 +196,7 @@ tray: {}
 '''.format(self.mass_spectrometer,
            self.delay_between_analyses,
            self.extract_device,
-           self.lab_map if self.lab_map else '',
+           self.sample_map if self.sample_map else '',
            make_frequency_runs('blanks'),
            make_frequency_runs('airs'),
            make_frequency_runs('cocktails'),
@@ -251,7 +253,7 @@ tray: {}
             self.executable = any([ai.executable for ai in aruns])
             self.automated_runs = aruns
 
-            lm = self.lab_map
+            lm = self.sample_map
             if lm:
                 for ai in self.automated_runs:
                     if ai.position:
@@ -298,7 +300,7 @@ tray: {}
                     mv = MapView(stage_map=sm)
                     return mv
 
-        self._set_meta_param('lab_map', meta, create_map, metaname='tray')
+        self._set_meta_param('sample_map', meta, create_map, metaname='tray')
 
         default = lambda x: x if x else '---'
         default_int = lambda x: x if x is not None else 1
@@ -409,11 +411,7 @@ tray: {}
                                     continue
                             else:
                                 cextract_group = ai.extract_group
-#                        else:
-#                            if cextract_group:
 
-
-#                            cextract_group = None
                         if fi.lower() == 'before' and ai != runs[-1]:
                             if len(nruns) >= 2:
 #                                print nruns[-2].labnumber, ln, 'fff'
@@ -429,7 +427,9 @@ tray: {}
     def _build_configuration(self, make_script_name):
         gdict = globals()
         args = [('{}_script'.format(ni), gdict['{}_path'.format(ni)](make_script_name(ni)))
-              for ni in ['extraction', 'measurement', 'post_measurement', 'post_equilibration']]
+              for ni in SCRIPT_KEYS]
+#              ['extraction', 'measurement', 'post_measurement', 'post_equilibration']
+#              ]
         return dict(args)
 
     def _right_clicked_changed(self):
@@ -559,9 +559,10 @@ tray: {}
         db.commit()
 
     def update_loaded_scripts(self, new):
+#        print self.loaded_scripts, 'loadded scripts'
         if new:
             self.loaded_scripts[new.name] = new
-
+            self.automated_run.scripts = self.loaded_scripts
 #    def reset_stats(self):
 #        self._alive = True
 #        self.stats.start_timer()
@@ -647,14 +648,13 @@ tray: {}
 
         def make_script_name(ni):
             na = getattr(self, '{}_script'.format(ni))
-            if na == '---':
+            if na == NULL_STR:
                 return na
             if not na.startswith(self.mass_spectrometer):
                 na = '{}_{}'.format(self.mass_spectrometer, na)
 
             if na and not na.endswith('.py'):
                 na = na + '.py'
-
             return na
 
         ar.configuration = self._build_configuration(make_script_name)
@@ -680,16 +680,20 @@ tray: {}
             npos = ar.position
 #            kw['labnumber'] = self.automated_run.labnumber
 #            kw['position'] = self.automated_run.position
+
+#        kw['_extract_value'] = ar._extract_value
+#        kw['_extract_units'] = ar._extract_units
+#        kw['_duration'] = ar._duration
+#        kw['configuration'] = ar.configuration
+#        kw['mass_spectrometer'] = self.mass_spectrometer
+
+        self.automated_run = ar.clone_traits()
         kw['labnumber'] = nrid
         if npos:
             kw['position'] = npos
+        self.automated_run.trait_set(**kw)
+#        self.automated_run = self.automated_run_factory(copy_automated_run=False, **kw)
 
-        kw['_extract_value'] = ar._extract_value
-        kw['_extract_units'] = ar._extract_units
-        kw['_duration'] = ar._duration
-        kw['configuration'] = ar.configuration
-        kw['mass_spectrometer'] = self.mass_spectrometer
-        self.automated_run = self.automated_run_factory(copy_automated_run=False, **kw)
         self.update_aliquots_needed = True
 
     def _apply_fired(self):
@@ -708,47 +712,34 @@ tray: {}
         self.update_aliquots_needed = True
 
     def _extraction_script_changed(self):
-#        print self.extraction_script, 'elch'
-        if self.automated_run:
-            name = self.extraction_script
-            name = self._add_mass_spectromter_name(name)
-            self.automated_run.configuration['extraction_script'] = os.path.join(paths.scripts_dir,
-                                                        'extraction',
-                                                        name
-                                                        )
-
-            self.automated_run.extraction_script_dirty = True
+        self._script_changed('extraction')
 
     def _measurement_script_changed(self):
-#        print self.measurement_script, 'mch'
-        if self.automated_run:
-            name = self.measurement_script
-            name = self._add_mass_spectromter_name(name)
-            self.automated_run.configuration['measurement_script'] = os.path.join(paths.scripts_dir,
-                                                        'measurement',
-                                                        name
-                                                        )
-            self.automated_run.measurement_script_dirty = True
+        self._script_changed('measurement')
 
     def _post_measurement_script_changed(self):
-        if self.automated_run:
-            name = self.post_measurement_script
-            name = self._add_mass_spectromter_name(name)
-            self.automated_run.configuration['post_measurement_script'] = os.path.join(paths.scripts_dir,
-                                                        'post_measurement',
-                                                        name
-                                                        )
-            self.automated_run.post_measurement_script_dirty = True
+        self._script_changed('post_measurement')
 
     def _post_equilibration_script_changed(self):
-#        print self.post_equilibration_script
-        if self.automated_run:
-            name = self.post_equilibration_script
-            name = self._add_mass_spectromter_name(name)
-            self.automated_run.configuration['post_equilibration_script'] = os.path.join(paths.scripts_dir,
-                                                        'post_equilibration',
-                                                        name)
-            self.automated_run.post_equilibration_script_dirty = True
+        self._script_changed('post_equilibration')
+
+    def _script_changed(self, name):
+        if self.selected_runs is not None:
+            for si in self.selected_runs:
+                self._update_run_script(self.selected_runs, name)
+
+        if self.automated_run is not None:
+            self._update_run_script(self.automated_run, name)
+
+    def _update_run_script(self, run, sname):
+        ssname = '{}_script'.format(sname)
+        name = getattr(self, ssname)
+        name = self._add_mass_spectromter_name(name)
+        run.configuration[ssname] = os.path.join(paths.scripts_dir,
+                                                    sname,
+                                                    name
+                                                    )
+        setattr(run, '{}_script_dirty'.format(sname), True)
 
     def _clean_script_name(self, name):
         name = self._remove_mass_spectrometer_name(name)
@@ -781,7 +772,7 @@ tray: {}
             self.dirty = False
 #        self.stats.calculate_etf(self.automated_runs)
 
-    @on_trait_change('automated_run.labnumber')
+    @on_trait_change('automated_run:labnumber')
     def _update_labnumber(self, labnumber):
 #        if not self.isediting:
 #            return
@@ -847,6 +838,19 @@ tray: {}
         if self.mass_spectrometer:
             self._load_default_scripts()
 #        self.automated_run.mass_spectrometer = self.mass_spectrometer
+
+    def _selected_changed(self, new):
+#        print new
+        self.selected_runs = new
+        if len(new) == 1:
+            self.automated_run = new[0].clone_traits()
+
+            for si in SCRIPT_KEYS:
+                try:
+                    n = self._clean_script_name(getattr(new[0], '{}_script'.format(si)).name)
+                    setattr(self, '{}_script'.format(si), n)
+                except AttributeError:
+                    pass
 
 #===============================================================================
 # property get/set
@@ -922,7 +926,7 @@ tray: {}
 
     def set_script_names(self):
         arun = self.automated_run
-        keys = ['measurement', 'post_measurement', 'extraction', 'post_equilibration']
+#        keys = ['measurement', 'post_measurement', 'extraction', 'post_equilibration']
 
         def get_name(si):
             script = getattr(arun, '{}_script'.format(si))
@@ -937,7 +941,7 @@ tray: {}
 
             return name
 #        print 'setting script names'
-        traits = dict([('{}_script'.format(k), get_name(k)) for k in keys])
+        traits = dict([('{}_script'.format(k), get_name(k)) for k in SCRIPT_KEYS])
         self.trait_set(**traits)
 
     @cached_property

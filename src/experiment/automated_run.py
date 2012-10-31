@@ -40,6 +40,7 @@ from src.experiment.identifier import convert_identifier, get_analysis_type
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.helpers.alphas import ALPHAS
+from constants import NULL_STR
 #from src.regression.ols_regressor import PolynomialRegressor
 
 
@@ -894,10 +895,9 @@ class AutomatedRun(Loggable):
         ec = self.configuration
         fname = os.path.basename(ec['{}_script'.format(name)])
 
-
         if not fname:
             return
-
+#        print self.scripts.keys(), fname
         if fname in self.scripts:
 #            self.debug('script "{}" already loaded... cloning'.format(fname))
             s = self.scripts[fname]
@@ -916,8 +916,10 @@ class AutomatedRun(Loggable):
                                 )
             return s
         else:
-            if fname == '---':
+            if NULL_STR in fname:
                 return
+
+            fname = fname if fname.endswith('.py') else fname + '.py'
 
             self.info('loading script "{}"'.format(fname))
             func = getattr(self, '{}_script_factory'.format(name))
@@ -929,14 +931,14 @@ class AutomatedRun(Loggable):
                         setattr(self, '_{}_script'.format(name), s)
                     except Exception, e:
                         self.warning(e)
-                        self.warning_dialog('Invalid Script {}'.format(s.filename if s else 'None'))
+                        self.warning_dialog('Invalid Scripta {}'.format(s.filename if s else 'None'))
                         self._executable = False
                         setattr(self, '_{}_script'.format(name), None)
 
                 return s
             else:
                 self._executable = False
-                self.warning_dialog('Invalid Script {}'.format(s.filename if s else 'None'))
+                self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else 'None'))
 
     def pre_extraction_save(self):
         d = get_datetime()
@@ -1141,6 +1143,7 @@ class AutomatedRun(Loggable):
     def measurement_script_factory(self, ec):
         ec = self.configuration
         mname = os.path.basename(ec['measurement_script'])
+        mname = self._add_script_extension(mname)
 
         ms = MeasurementPyScript(root=os.path.dirname(ec['measurement_script']),
             name=mname,
@@ -1164,7 +1167,11 @@ class AutomatedRun(Loggable):
         #get the klass
         source_dir = os.path.dirname(ec[key])
         file_name = os.path.basename(ec[key])
-        if file_name.endswith('.py'):
+
+        file_name = self._add_script_extension(file_name)
+
+        if os.path.isfile(os.path.join(source_dir, file_name)):
+#        if file_name.endswith('.py'):
             klass = ExtractionLinePyScript
             hdn = self.extract_device.replace(' ', '_').lower()
             obj = klass(
@@ -1183,6 +1190,9 @@ class AutomatedRun(Loggable):
                               analysis_type=an)
 
             return obj
+
+    def _add_script_extension(self, name, ext='.py'):
+        return name if name.endswith(ext) else name + ext
 #===============================================================================
 # property get/set
 #===============================================================================
