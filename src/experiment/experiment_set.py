@@ -228,6 +228,7 @@ tray: {}
                     if crun is not None:
                         ai.state = crun.state
                         ai.aliquot = crun.aliquot
+#                        print 'setting ', crun.aliquot
 
                 newruns = runs[startid:]
                 self.info('starting at analysis {} (startid={} of {})'.format(newruns[0].runid, startid + 1, n))
@@ -246,6 +247,7 @@ tray: {}
 
         aruns = self._load_runs(text)
         if aruns:
+#            self.update_aliquots_needed = True
             self.executable = any([ai.executable for ai in aruns])
             self.automated_runs = aruns
 
@@ -339,25 +341,42 @@ tray: {}
     def _add_frequency_runs(self, meta, runs):
         nruns = []
         i = 0
-        def _make_script_name(_meta, na):
-            na = _meta['scripts'][na]
+
+        names = dict()
+        setter = lambda sk, sc:names.__setitem__(sk, sc)
+        def _make_script_name(_meta, li, name):
+            na = _meta['scripts'][name]
             if na is None:
                 na = ''
             elif na.startswith('_'):
                 na = meta['mass_spectrometer'] + na
 
+            if not na:
+                self._load_default_scripts(setter=setter, key=li)
+#                print names, name
+                ni = names[name]
+                if ni != NULL_STR:
+                    na = self._add_mass_spectromter_name(ni)
+#                print na
+#                na = names[name] if names[name] != NULL_STR else ''
+
+
             if na and not na.endswith('.py'):
                 na = na + '.py'
+
+
             return na
 
+        cextract_group = None
         for ai in runs:
             nruns.append(ai)
+#            print ai.labnumber
             try:
                 int(ai.labnumber)
                 i += 1
             except ValueError:
                 continue
-
+#            index_mapping = dict(before=lambda n:-1, after=lambda n: n)
             for name, ln in [('blanks', 'Bu'), ('airs', 'A'), ('cocktails', 'C'), ('backgrounds', 'Bg')]:
                 try:
                     _meta = meta[name]
@@ -367,14 +386,43 @@ tray: {}
                 except KeyError:
                     continue
 
-                make_script_name = lambda x: _make_script_name(_meta, x)
+                make_script_name = lambda x: _make_script_name(_meta, ln, x)
                 params = dict()
                 params['labnumber'] = '{}'.format(ln)
                 params['configuration'] = self._build_configuration(make_script_name)
 
-                if i % freq == 0:
+#                print name, arun.labnumber, arun.aliquot
+                if isinstance(freq, int):
+                    freq = [freq]
+
+                for fi in freq:
                     arun = self._automated_run_factory(**params)
-                    nruns.append(arun)
+                    if isinstance(fi, int):
+                        if i % freq == 0:
+#                            arun = self._automated_run_factory(**params)
+                            nruns.append(arun)
+                    else:
+                        if ai.extract_group:
+                            if cextract_group == ai.extract_group:
+                                #if this is the last run dont continue
+                                if ai != runs[-1]:
+                                    continue
+                            else:
+                                cextract_group = ai.extract_group
+#                        else:
+#                            if cextract_group:
+
+
+#                            cextract_group = None
+                        if fi.lower() == 'before' and ai != runs[-1]:
+                            if len(nruns) >= 2:
+#                                print nruns[-2].labnumber, ln, 'fff'
+                                if nruns[-2].labnumber != ln:
+                                    nruns.insert(-1, arun)
+                            else:
+                                nruns.insert(-1, arun)
+                        elif fi.lower() == 'after':
+                            nruns.append(arun)
 
         return nruns
 
@@ -531,7 +579,15 @@ tray: {}
 
         return m
 
-    def _load_default_scripts(self):
+    def _load_default_scripts(self, setter=None, key=None):
+        if key is None:
+            if self.automated_run is None:
+                return
+            key = self.automated_run.labnumber
+
+        if setter is None:
+            setter = lambda ski, sci:setattr(self, '{}_script'.format(ski), sci)
+
         # open the yaml config file
 #        import yaml
         p = os.path.join(paths.scripts_dir, 'defaults.yaml')
@@ -539,13 +595,13 @@ tray: {}
             defaults = yaml.load(fp)
 
         #if labnumber is int use key='U'
-        key = self.automated_run.labnumber
         try:
             _ = int(key)
             key = 'U'
         except ValueError:
             pass
 
+#        print key, defaults
         if not key in defaults:
             return
 
@@ -561,20 +617,19 @@ tray: {}
 
             sc = self._remove_file_extension(sc)
 
-            if sk == 'extraction' and key == 'U':
+            if sk == 'extraction' and key.lower() in ['u', 'bu']:
                 if self.extract_device != NULL_STR:
                     sc = self.extract_device.split(' ')[1].lower()
-
+#                    print sc
             if not sc in getattr(self, '{}_scripts'.format(sk)):
                 sc = NULL_STR
-
-            setattr(self, '{}_script'.format(sk), sc)
+#            print setter, sk, sc
+            setter(sk, sc)
 
 
 #===============================================================================
 # handlers
 #===============================================================================
-
     def _duplicate_button_fired(self):
 
         for si in self.selected:
@@ -773,6 +828,9 @@ tray: {}
                 self.warning_dialog('{} does not exist'.format(labnumber))
 
     def _mass_spectrometer_changed(self):
+        if self.automated_run is None:
+            return
+
         for ai in self.automated_runs:
             ai.mass_spectrometer = self.mass_spectrometer
 

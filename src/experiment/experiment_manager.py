@@ -225,12 +225,18 @@ class ExperimentManager(Manager):
         idcnt_dict = dict()
         stdict = dict()
         extract_group = 1
-        aoff = 0
+        aoffs = dict()
         for arun in ans:
             arunid = arun.labnumber
             if arun.extract_group:
                 if not arun.extract_group == extract_group:
-                    aoff += 1
+                    if arunid in aoffs:
+                        aoffs[arunid] += 1
+                    else:
+                        aoffs[arunid] = 1
+
+
+#                    aoff += 1
                     idcnt_dict, stdict = dict(), dict()
                     c = 1
                 else:
@@ -255,6 +261,12 @@ class ExperimentManager(Manager):
                 stdict[arunid] = st
                 extract_group = arun.extract_group
 
+
+            if arunid in aoffs:
+                aoff = aoffs[arunid]
+            else:
+                aoff = 0
+#            print arun.labnumber, aoff
             arun.aliquot += aoff
 
     def _modify_aliquots(self, ans):
@@ -264,6 +276,7 @@ class ExperimentManager(Manager):
         stdict = dict()
         for arun in ans:
             arunid = arun.labnumber
+#            print arunid, id(arun)
             c = 1
             if arunid in idcnt_dict:
                 c = idcnt_dict[arunid]
@@ -286,10 +299,14 @@ class ExperimentManager(Manager):
 #                    st = stdict[arunid]
 #                else:
 #                    st = 0
-
             arun.aliquot = st + c
+#            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
             idcnt_dict[arunid] = c
             stdict[arunid] = st
+
+#        for arun in ans:
+#            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot
+
     def _update_dirty(self):
         pass
 #===============================================================================
