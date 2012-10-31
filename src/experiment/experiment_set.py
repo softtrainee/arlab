@@ -39,6 +39,7 @@ from src.traits_editors.tabular_editor import myTabularEditor
 #from src.experiment.file_listener import FileListener
 from src.experiment.identifier import convert_identifier, convert_labnumber
 
+NULL_STR = '---'
 
 def extraction_path(name):
     return os.path.join(paths.extraction_dir , name)
@@ -93,17 +94,17 @@ class ExperimentSet(Loggable):
     post_measurement_scripts = Property(depends_on='mass_spectrometer')
 
     post_equilibration_script = String
-    post_equilibration_scripts = Property(depends_on='mass_spectrometer')
+    post_equilibration_scripts = Property(depends_on='mass_spectrometer,extract_device')
 
     extraction_script = String
     extraction_scripts = Property(depends_on='mass_spectrometer')
 
 #    mass_spectrometer = Str('jan')
-    mass_spectrometer = Str
+    mass_spectrometer = Str(NULL_STR)
     mass_spectrometers = Property
     tray = Str
     trays = Property
-    extract_device = Str
+    extract_device = Str(NULL_STR)
     extract_devices = Property
 
     selected = Any
@@ -164,7 +165,7 @@ class ExperimentSet(Loggable):
         for arun in self.automated_runs:
             vs = arun.to_string_attrs(attrs)
 #            vs = [getattr(arun, ai) for ai in attrs]
-            vals = [v if v and v != '---' else '' for v in vs]
+            vals = [v if v and v != NULL_STR else '' for v in vs]
             tab(vals)
 
         return stream
@@ -530,6 +531,46 @@ tray: {}
 
         return m
 
+    def _load_default_scripts(self):
+        # open the yaml config file
+#        import yaml
+        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
+        with open(p, 'r') as fp:
+            defaults = yaml.load(fp)
+
+        #if labnumber is int use key='U'
+        key = self.automated_run.labnumber
+        try:
+            _ = int(key)
+            key = 'U'
+        except ValueError:
+            pass
+
+        if not key in defaults:
+            return
+
+        scripts = defaults[key]
+        for sk in ['extraction', 'measurement', 'post_equilibration', 'post_measurement']:
+
+            sc = NULL_STR
+            try:
+                sc = scripts[sk]
+                sc = sc if sc else NULL_STR
+            except KeyError:
+                pass
+
+            sc = self._remove_file_extension(sc)
+
+            if sk == 'extraction' and key == 'U':
+                if self.extract_device != NULL_STR:
+                    sc = self.extract_device.split(' ')[1].lower()
+
+            if not sc in getattr(self, '{}_scripts'.format(sk)):
+                sc = NULL_STR
+
+            setattr(self, '{}_script'.format(sk), sc)
+
+
 #===============================================================================
 # handlers
 #===============================================================================
@@ -612,7 +653,7 @@ tray: {}
         self.update_aliquots_needed = True
 
     def _extraction_script_changed(self):
-#        print self.extraction_script
+#        print self.extraction_script, 'elch'
         if self.automated_run:
             name = self.extraction_script
             name = self._add_mass_spectromter_name(name)
@@ -624,7 +665,7 @@ tray: {}
             self.automated_run.extraction_script_dirty = True
 
     def _measurement_script_changed(self):
-#        print self.measurement_script
+#        print self.measurement_script, 'mch'
         if self.automated_run:
             name = self.measurement_script
             name = self._add_mass_spectromter_name(name)
@@ -635,7 +676,6 @@ tray: {}
             self.automated_run.measurement_script_dirty = True
 
     def _post_measurement_script_changed(self):
-#        print self.post_measurement_script
         if self.automated_run:
             name = self.post_measurement_script
             name = self._add_mass_spectromter_name(name)
@@ -655,7 +695,20 @@ tray: {}
                                                         name)
             self.automated_run.post_equilibration_script_dirty = True
 
-    def _remove_mass_spectrometer_name(self, name,):
+    def _clean_script_name(self, name):
+        name = self._remove_mass_spectrometer_name(name)
+        return self._remove_file_extension(name)
+
+    def _remove_file_extension(self, name, ext='.py'):
+        if name is NULL_STR:
+            return NULL_STR
+
+        if name.endswith('.py'):
+            name = name[:-3]
+
+        return name
+
+    def _remove_mass_spectrometer_name(self, name):
         if self.mass_spectrometer:
             name = name.replace('{}_'.format(self.mass_spectrometer), '')
         return name
@@ -691,29 +744,28 @@ tray: {}
             if isinstance(convert_identifier(labnumber), int):
                 self.ok_to_add = True
                 arun.sample = convert_labnumber(convert_identifier(labnumber))
+                self._load_default_scripts()
                 return
 
-            def _add_info(li):
+            ln = db.get_labnumber(labnumber)
+            if ln:
+                self.ok_to_add = True
+                #set sample and irrad info
                 try:
-                    arun.sample = li.sample.name
+                    arun.sample = ln.sample.name
                 except AttributeError:
                     pass
-#                    self.warning_dialog('{} does not have sample info'.format(li.labnumber))
 
-                ipos = li.irradiation_position
+                ipos = ln.irradiation_position
                 if not ipos is None:
                     level = ipos.level
                     irrad = level.irradiation
 #                    irrad = ipos.irradiation
-
                     arun.irrad_level = '{}{}'.format(irrad.name, level.name)
-#                else:
-#                    self.warning_dialog('{} does not have irradiation info'.format(li.labnumber))
 
-            ln = db.get_labnumber(labnumber)
-            if ln:
-                _add_info(ln)
-                self.ok_to_add = True
+                #set default scripts
+                self._load_default_scripts()
+
 #            elif self.confirmation_dialog('{} does not exist. Add to database?'.format(labnumber)):
 #                db.add_labnumber(labnumber, 1, commit=True)
 #                self.ok_to_add = True
@@ -724,6 +776,18 @@ tray: {}
         for ai in self.automated_runs:
             ai.mass_spectrometer = self.mass_spectrometer
 
+        if self.automated_run.labnumber:
+            self._load_default_scripts()
+        else:
+            self.post_equilibration_script = NULL_STR
+            self.post_measurement_script = NULL_STR
+            self.measurement_script = NULL_STR
+            self.extraction_script = NULL_STR
+
+
+    def _extract_device_changed(self):
+        if self.mass_spectrometer:
+            self._load_default_scripts()
 #        self.automated_run.mass_spectrometer = self.mass_spectrometer
 
 #===============================================================================
@@ -750,22 +814,24 @@ tray: {}
     def _get_scripts(self, es):
         if self.mass_spectrometer != '---':
             k = '{}_'.format(self.mass_spectrometer)
-            es = [ei.replace(k, '') for ei in es if ei.startswith(k)]
+#            es = [ei.replace(k, '').replace('.py', '') for ei in es if ei.startswith(k)]
+            es = [self._clean_script_name(ei) for ei in es if ei.startswith(k)]
 
-        es = ['---'] + es
+        es = [NULL_STR] + es
         return es
 
     def _get_extraction_scripts(self):
         ms = self._load_script_names('extraction')
         ms = self._get_scripts(ms)
+#        self.extraction_script = '---'
 #        if not self.extraction_script in ms:
-#            self.extraction_script = '---'
 
         return ms
 
     def _get_measurement_scripts(self):
         ms = self._load_script_names('measurement')
         ms = self._get_scripts(ms)
+#        self.measurement_script = '---'
 
 #        name = self.automated_run.measurement_script.name
 #        name = self._remove_mass_spectrometer_name(name)
@@ -778,49 +844,48 @@ tray: {}
 ##                msi = '{}_{}'.format(self.mass_spectrometer, msi)
 #            self.measurement_script = msi
 #            print self.measurement_script
-#            self.measurement_script = '---'
 #        print self.automated_run.measurement_script
         return ms
 
     def _get_post_measurement_scripts(self):
         ms = self._load_script_names('post_measurement')
         ms = self._get_scripts(ms)
+#        self.post_measurement_script = '---'
 #        if not self.post_measurement_script in ms:
-#            self.post_measurement_script = '---'
 #        self.post_measurement_script = 'pump_ms.py'
         return ms
 
     def _get_post_equilibration_scripts(self):
         ms = self._load_script_names('post_equilibration')
         ms = self._get_scripts(ms)
+#        self.post_equilibration_script = '---'
 #        if not self.post_equilibration_script in ms:
-#            self.post_equilibration_script = '---'
         return ms
 
     def set_script_names(self):
         arun = self.automated_run
-
         keys = ['measurement', 'post_measurement', 'extraction', 'post_equilibration']
 
         def get_name(si):
             script = getattr(arun, '{}_script'.format(si))
             if script:
                 scripts = getattr(self, '{}_scripts'.format(si))
-                name = self._remove_mass_spectrometer_name(script.name)
+                name = self._clean_script_name(script.name)
+#                name = self._remove_mass_spectrometer_name(script.name)
                 if not name in scripts:
-                    name = '---'
+                    name = NULL_STR
             else:
-                name = '---'
+                name = NULL_STR
 
             return name
-
+#        print 'setting script names'
         traits = dict([('{}_script'.format(k), get_name(k)) for k in keys])
         self.trait_set(**traits)
 
     @cached_property
     def _get_mass_spectrometers(self):
         db = self.db
-        ms = ['---'] + [mi.name for mi in db.get_mass_spectrometers()]
+        ms = [NULL_STR] + [mi.name for mi in db.get_mass_spectrometers()]
         return ms
 
     def _get_trays(self):
@@ -829,7 +894,7 @@ tray: {}
         return ts
 
     def _get_extract_devices(self):
-        return ['---', 'Fusions CO2', 'Fusions Diode']
+        return [NULL_STR, 'Fusions CO2', 'Fusions Diode']
 
 #    def _set_dirty(self, d):
 #        self._dirty = d
@@ -862,7 +927,7 @@ tray: {}
 
         def make_script_name(ni):
             na = names[ni]
-            if na == '---':
+            if na is NULL_STR:
                 return na
             if not na.startswith(self.mass_spectrometer):
                 na = '{}_{}'.format(self.mass_spectrometer, na)
