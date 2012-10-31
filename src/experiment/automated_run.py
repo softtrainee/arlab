@@ -142,6 +142,9 @@ class AutomatedRun(Loggable):
     _truncate_signal = Bool
     measuring = Bool(False)
 
+#    def _aliquot_changed(self):
+#        print self.labnumber, self.aliquot
+
     def _runner_changed(self):
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
             sc = getattr(self, '{}_script'.format(s))
