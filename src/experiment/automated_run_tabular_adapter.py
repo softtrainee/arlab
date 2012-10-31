@@ -109,8 +109,8 @@ class AutomatedRunAdapter(TabularAdapter):
                  ('Duration', 'duration'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
-                 ('Post Measurement', 'post_measurement_script'),
                  ('Post equilibration', 'post_equilibration_script'),
+                 ('Post Measurement', 'post_measurement_script'),
                  ]
 
     def _get_extract_value_text(self, trait, item):

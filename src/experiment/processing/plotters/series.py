@@ -47,20 +47,20 @@ class Series(Plotter):
         else:
             return '{:0.2e}'.format(x)
 
-    def get_excluded_points(self, keys, gids):
+    def get_excluded_points(self, keys, group_ids):
         graph = self.graph
         exclude = dict()
 
         for i, (k, f) in enumerate(keys):
-            for gid in gids:
+            for group_id in group_ids:
                 try:
-                    plot = graph.plots[i].plots['data{}'.format(gid)][0]
-                    exclude['{}{}'.format(k, gid)] = plot.index.metadata['selections']
+                    plot = graph.plots[i].plots['data{}'.format(group_id)][0]
+                    exclude['{}{}'.format(k, group_id)] = plot.index.metadata['selections']
                 except IndexError:
                     pass
         return exclude
 
-    def set_excluded_points(self, exclude, keys, gids):
+    def set_excluded_points(self, exclude, keys, group_ids):
         if not exclude:
             return
 
@@ -68,10 +68,10 @@ class Series(Plotter):
 #        ks = keys + basekeys + ratiokeys
         graph.suppress_regression = True
         for i, (k, f) in enumerate(keys):
-            for gid in gids:
-                plot = graph.plots[i].plots['data{}'.format(gid)][0]
+            for group_id in group_ids:
+                plot = graph.plots[i].plots['data{}'.format(group_id)][0]
                 try:
-                    plot.index.metadata['selections'] = exclude['{}{}'.format(k, gid)]
+                    plot.index.metadata['selections'] = exclude['{}{}'.format(k, group_id)]
                 except KeyError:
                     pass
 
@@ -79,7 +79,7 @@ class Series(Plotter):
         graph._update_graph()
 
 
-    def build(self, analyses, keys, basekeys, ratiokeys, gids,
+    def build(self, analyses, keys, basekeys, ratiokeys, group_ids,
               padding,
               graph=None,
               new_plot=True,
@@ -126,17 +126,17 @@ class Series(Plotter):
 
             self.fits[k] = f
 
-            for gid in gids:
+            for group_id in group_ids:
                 data = [(a.timestamp,
-                                    self._get_series_value(a, k, i, gid),
-                                    self._get_series_error(a, k, i, gid),
-                                    ) for a in analyses if a.timestamp > 0 and a.gid == gid]
+                                    self._get_series_value(a, k, i, group_id),
+                                    self._get_series_error(a, k, i, group_id),
+                                    ) for a in analyses if a.timestamp > 0 and a.group_id == group_id]
 
                 data = [di for di in data if di[1] is not None]
                 xs, ys, es = zip(*data)
 
                 self._add_series(graph, k, xs, ys, es, f, padding,
-                                 regress, gid, plotid=cnt)
+                                 regress, group_id, plotid=cnt)
                 xma = max(xs)
                 xmi = min(xs)
 
@@ -175,19 +175,19 @@ class Series(Plotter):
                 return a.timestamp, uv.nominal_value, uv.std_dev()
 
 
-            for gid in gids:
-                data = [get_ratio(ri, a) for a in analyses if a.timestamp > 0 and a.gid == gid]
+            for group_id in group_ids:
+                data = [get_ratio(ri, a) for a in analyses if a.timestamp > 0 and a.group_id == group_id]
 
 #                data = [(a.timestamp,
-#                                    self._get_series_value(a, ni, i, gid),
-#                                    self._get_series_error(a, ni, i, gid),
-#                                    ) for a in analyses if a.timestamp > 0 and a.gid == gid]
+#                                    self._get_series_value(a, ni, i, group_id),
+#                                    self._get_series_error(a, ni, i, group_id),
+#                                    ) for a in analyses if a.timestamp > 0 and a.group_id == group_id]
 
                 data = [di for di in data if di[1] is not None]
                 xs, ys, es = zip(*data)
 
                 self._add_series(graph, ri, xs, ys, es, f, padding,
-                                 regress, gid, plotid=cnt)
+                                 regress, group_id, plotid=cnt)
                 xma = max(xs)
                 xmi = min(xs)
 
@@ -205,13 +205,13 @@ class Series(Plotter):
 
         return graph
 
-    def _get_series_value(self, a, k, i, gid):
+    def _get_series_value(self, a, k, i, group_id):
         return a.dbrecord.signals[k].value
 
-    def _get_series_error(self, a, k, i, gid):
+    def _get_series_error(self, a, k, i, group_id):
         return a.dbrecord.signals[k].error
 
-    def _add_series(self, g, iso, xs, ys, es, fi, padding, regress, gid, plotid=0):
+    def _add_series(self, g, iso, xs, ys, es, fi, padding, regress, group_id, plotid=0):
         color = self.colorgen.next()
         marker_size = 2
         if not regress:
@@ -245,7 +245,7 @@ class Series(Plotter):
 #            print plotid, g.plots[plotid].plots.keys()
             scatter = g.plots[plotid].plots['plot{}'.format(args[0][-1])][0]
 
-        self._add_scatter_inspector(scatter, gid)
+        self._add_scatter_inspector(scatter, group_id)
         self._add_error_bars(scatter, es, 'y')
 
 #        g.regress_plots()

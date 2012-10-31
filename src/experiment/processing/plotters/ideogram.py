@@ -16,12 +16,11 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Any, Int, Str, Float, List, Range, Property, Bool, \
-    Enum
-from traitsui.api import View, Item, HGroup, spring
+    Enum, on_trait_change
+from traitsui.api import View, Item, HGroup, spring, Group, VGroup, EnumEditor
 #from chaco.api import ArrayDataSource
 #============= standard library imports ========================
-from numpy import asarray, linspace, zeros, array, ma
-import math
+from numpy import asarray, linspace, zeros, array, ma, ones, pi, exp
 #============= local library imports  ==========================
 
 from src.graph.stacked_graph import StackedGraph
@@ -51,8 +50,45 @@ from chaco.plot_containers import GridPlotContainer
 N = 500
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
     def set_status(self):
-        self.hoverid
+        print self.hoverid
 
+
+EInt = lambda x: Int(x, enter_set=True, auto_set=False)
+class GraphPanelInfo(HasTraits):
+    nrows = EInt(1)#Int(1, enter_set=True, auto_set=False)
+    ncols = EInt(2)#Int(2, enter_set=True, auto_set=False)
+    fixed = Str('cols')
+    padding_left = EInt(40)
+    padding_right = EInt(5)
+    padding_top = EInt(40)
+    padding_bottom = EInt(40)
+
+    padding = Property
+    def _get_padding(self):
+        return [self.padding_left, self.padding_right, self.padding_top, self.padding_bottom]
+
+    def traits_view(self):
+        v = View(HGroup(
+                        VGroup(
+                               Item('ncols'),
+                               Item('nrows'),
+                               ),
+                        Item('fixed',
+                             show_label=False,
+                             style='custom',
+                             editor=EnumEditor(values=['cols', 'rows'],
+                                               cols=1,
+                                               )
+                             ),
+                        VGroup(
+                               Item('padding_left', label='Left'),
+                               Item('padding_right', label='Right'),
+                               Item('padding_top', label='Top'),
+                               Item('padding_bottom', label='Bottom'),
+                               )
+                        )
+                 )
+        return v
 
 class Ideogram(Plotter):
     ages = None
@@ -71,9 +107,10 @@ class Ideogram(Plotter):
 
     plot_label_text = Property(depends_on='nsigma')
     plot_label = Any
-    nrows = Int(1)
-    ncols = Int(1)
     graphs = List
+
+    graph_panel_info = Instance(GraphPanelInfo, ())
+
     def _get_adapter(self):
         return IdeoResultsAdapter
 
@@ -106,41 +143,60 @@ class Ideogram(Plotter):
         return xmin, xmax
 
     def build(self, analyses=None, padding=None):
+
+        if analyses is None:
+            analyses = self.analyses
+
+        self.analyses = analyses
 #        g = self._build(analyses=analyses, padding=padding)
 #        return g.plotcontainer
 
-        analyses = [[analyses, analyses, analyses],
-                  [analyses, analyses, analyses],
-                  [analyses, analyses, analyses]
-                  ]
+#        analyses = [[analyses, analyses, analyses],
+#                  [analyses, analyses, analyses],
+#                  [analyses, analyses, analyses]
+#                  ]
+        #parse analyses into graph groups
 
-        r = self.nrows
-        c = self.ncols
-        op = GridPlotContainer(shape=(r, c),
-                               bgcolor='white',
-                               fill_padding=True,
-                               padding_top=10
-                               )
+#        graphs = []
+#        gs = []
+        graph_ids = sorted(list(set([a.graph_id for a in analyses])))
+        def get_analyses(gii):
+            return [a for a in analyses if a.graph_id == gii]
+
+        graph_groups = [get_analyses(gi)
+                            for gi in graph_ids]
+        self._ngroups = n = len(graph_groups)
+
+        op, r, c = self._create_grid_container(n)
+        self._plotcontainer = op
+
+        aux_plot_height = 100 / r
         self.graphs = []
+        self.results = []
         plots = []
         font = 'modern {}'.format(10)
         tfont = 'modern {}'.format(10)
         for i in range(r):
             for j in range(c):
-                padding = [30, 5 , 35, 35]
-#                if j == 0:
-#                    padding = [45, 5, 15, 15]
 
-
-#                padding = []
+                k = i * c + j
+#                print k, i, j
+                try:
+                    ans = graph_groups[k]
+                except IndexError:
+                    break
+#                print [ai.labnumber for ai in ans]
                 g = self._build(
-                                analyses[i][j],
-                                padding
+                                ans,
+                                #analyses[i][j],
+                                padding,
+                                aux_plot_height,
+                                labnumber=ans[0].labnumber
                                 )
                 if i == r - 1:
                     g.set_x_title('Age (Ma)')
                 if j == 0:
-                    g.set_y_title('Relative Probability')
+#                    g.set_y_title('Relative Probability')
                     g.set_y_title('Analysis #', plotid=1)
 
                 p1 = g.plots[0]
@@ -157,20 +213,43 @@ class Ideogram(Plotter):
                 for pi in g.plots:
                     plots.append(pi)
 
+        self._plots = plots
         return op, plots
 
-    def _build(self, analyses, padding):
+    def _create_grid_container(self, ngroups):
+        gpi = self.graph_panel_info
+        r = gpi.nrows
+        c = gpi.ncols
 
+        while ngroups > r * c:
+            if gpi.fixed == 'cols':
+                r += 1
+            else:
+                c += 1
+
+        if ngroups == 1:
+            r = c = 1
+
+        op = GridPlotContainer(shape=(r, c),
+                               bgcolor='white',
+                               fill_padding=True,
+                               padding_top=10
+                               )
+        return op, r, c
+
+    def _build(self, analyses, padding=None, aux_plot_height=100, labnumber=None):
+        if padding is None:
+            padding = [40, 5 , 35, 35]
 
 #        g = self.graph
-        self.results = []
+#        self.results = []
 
-        if analyses is None:
-            analyses = self.analyses
-        if padding is None:
-            padding = self.padding
+#        if analyses is None:
+#            analyses = self.analyses
+#        if padding is None:
+#            padding = self.padding
 
-        self.analyses = analyses
+#        self.analyses = analyses
 #        self.padding = padding
 #        if self.graph is None:
 #            g = mStackedGraph(panel_height=200,
@@ -192,11 +271,11 @@ class Ideogram(Plotter):
         g.new_plot(
                    contextmenu=False,
                    padding=padding)
-        h = 100 / self.nrows
+#        h = 100 / self.nrows
         g.new_plot(
                    contextmenu=False,
                    padding=padding, #[padding_left, padding_right, 1, 0],
-                   bounds=[50, h]
+                   bounds=[50, aux_plot_height]
                    )
 
         g.set_grid_traits(visible=False)
@@ -208,19 +287,23 @@ class Ideogram(Plotter):
 #        if c == 0:
 
 
-        self.minprob = None
-        self.maxprob = None
+#        self.minprob = None
+#        self.maxprob = None
+        g.labnumber = labnumber
+        g.analyses = analyses
+        g.maxprob = None
+        g.minprob = None
 
-        gids = list(set([a.gid for a in analyses]))
+        group_ids = list(set([a.group_id for a in analyses]))
 
         if not analyses:
             return
 
         ages, errors = self._get_ages(analyses)
 
-        def get_ages_errors(gid):
-            nages = [a.age[0] for a in analyses if a.gid == gid and a.age[0] in ages]
-            nerrors = [a.age[1] for a in analyses if a.gid == gid and a.age[1] in errors]
+        def get_ages_errors(group_id):
+            nages = [a.age[0] for a in analyses if a.group_id == group_id and a.age[0] in ages]
+            nerrors = [a.age[1] for a in analyses if a.group_id == group_id and a.age[1] in errors]
             aa = array(nages)
             ee = array(nerrors)
             return aa, ee
@@ -228,7 +311,7 @@ class Ideogram(Plotter):
         if self.ideogram_of_means:
 #                return asarray(nages), asarray(nerrors)
 
-            ages, errors = zip(*[calculate_weighted_mean(*get_ages_errors(gi)) for gi in gids])
+            ages, errors = zip(*[calculate_weighted_mean(*get_ages_errors(gi)) for gi in group_ids])
 #            xmin = min(ages)
 #            xmax = max(ages)
             xmin, xmax = self._get_limits(ages)
@@ -237,17 +320,21 @@ class Ideogram(Plotter):
         else:
             xmin, xmax = self._get_limits(ages)
             start = 1
-            for gid in gids:
-                ans = [a for a in analyses if a.gid == gid and a.age[0] in ages]
-                nages, nerrors = get_ages_errors(gid)
-                self._add_ideo(g, nages, nerrors, xmin, xmax, padding, gid, start=start, analyses=ans)
+            for group_id in group_ids:
+                ans = [a for a in analyses if a.group_id == group_id and a.age[0] in ages]
+                nages, nerrors = get_ages_errors(group_id)
+                self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
+                               start=start,
+#                               analyses=ans
+                               )
                 start = start + len(ans) + 1
 
         g.set_x_limits(min=xmin, max=xmax, plotid=0)
         g.set_x_limits(min=xmin, max=xmax, plotid=1)
 
         minp = 0
-        maxp = self.maxprob
+        maxp = g.maxprob
+#        print maxp
         g.set_y_limits(min=minp, max=maxp * 1.05, plotid=0)
 
         #add meta plot info
@@ -271,26 +358,51 @@ class Ideogram(Plotter):
 
         bins = linspace(xmi, xma, N)
         probs = zeros(N)
-#        print ages
-#        print errors
+#        def gprob(a, e, b):
+#            #calculate the gaussian prob
+#            #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
+#            #see http://en.wikipedia.org/wiki/Normal_distribution
+#            delta = math.pow(a - b, 2)
+#            return math.exp(-delta / (2 * e * e)) / (math.sqrt(2 * math.pi * e * e))
+
         for ai, ei in zip(ages, errors):
             if abs(ai) < 1e-10 or abs(ei) < 1e-10:
                 continue
 
-            for j, bj in enumerate(bins):
+            #calculate probability curve for ai+/-ei
+#            gifunc = lambda x: gprob(ai, ei, x)
+
+            #verctorize maps the gifunc element-wise to bins
+#            gs= vectorize(gifunc)(bins)
+
+            #calculate probability curve for ai+/-ei
+            #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
+            #see http://en.wikipedia.org/wiki/Normal_distribution
+            ds = (ones(N) * ai - bins) ** 2
+            es = ones(N) * ei
+            es2 = 2 * es * es
+            gs = (es2 * pi) ** -0.5 * exp(-ds / es2)
+
+            #cumulate probabilities
+            #numpy element_wise addition
+            probs += gs
+
+#            for j, bj in enumerate(bins):
                 #calculate the gaussian prob
                 #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
                 #see http://en.wikipedia.org/wiki/Normal_distribution
-                delta = math.pow(ai - bj, 2)
-                prob = math.exp(-delta / (2 * ei * ei)) / (math.sqrt(2 * math.pi * ei * ei))
+#                delta = math.pow(ai - bj, 2)
+#                prob = math.exp(-delta / (2 * ei * ei)) / (math.sqrt(2 * math.pi * ei * ei))
 
                 #cumulate probablities
-                probs[j] += prob
+#                probs[j] += gprob(ai, bj, ei)
 #            print ai, ei
 
         return bins, probs
 
-    def _add_ideo(self, g, ages, errors, xmi, xma, padding, gid, start=1, analyses=None):
+    def _add_ideo(self, g, ages, errors, xmi, xma, padding, group_id, start=1,
+#                   analyses=None
+                   ):
         ages = asarray(ages)
         errors = asarray(errors)
 #        ages, errors = self._get_ages(analyses)
@@ -299,6 +411,7 @@ class Ideogram(Plotter):
         mswd = calculate_mswd(ages, errors)
         we = self._calc_error(we, mswd)
         self.results.append(IdeoResults(
+                                        labnumber=g.labnumber,
                                         age=wm,
                                         mswd=mswd,
                                         error=we,
@@ -308,9 +421,12 @@ class Ideogram(Plotter):
         bins, probs = self._calculate_probability_curve(ages, errors, xmi, xma)
         minp = min(probs)
         maxp = max(probs)
-        dp = maxp - minp
+#        dp = maxp - minp
+#        print dp
+#        if abs(dp) < 1e-6:
+#        dp = maxp
 
-        nsigma = 0.954 #2sigma
+        percentH = 1 - 0.954 #2sigma
         s, _p = g.new_series(x=bins, y=probs, plotid=0)
         _s, _p = g.new_series(x=bins, y=probs,
                               plotid=0,
@@ -319,7 +435,7 @@ class Ideogram(Plotter):
                               line_style='dash',
                               )
 
-        s, _p = g.new_series([wm], [maxp - nsigma * dp],
+        s, _p = g.new_series([wm], [maxp * percentH],
                              type='scatter',
 #                             marker='plus',
                              marker='circle',
@@ -333,21 +449,25 @@ class Ideogram(Plotter):
 
         self._add_error_bars(s, [we], 'x', sigma_trait='nsigma')
 
-        if self.minprob:
-            minp = min(self.minprob, minp)
+        if g.minprob:
+            minp = min(g.minprob, minp)
 
-        if self.maxprob:
-            maxp = max(self.maxprob, maxp)
+        if g.maxprob:
+            maxp = max(g.maxprob, maxp)
 
-        self.minprob = minp
-        self.maxprob = maxp
+        g.minprob = minp
+        g.maxprob = maxp
 
-        self._add_aux_plot(g, ages, errors, padding, gid, start)
+        g.set_axis_traits(tick_visible=False,
+#                          tick_label_formatter=lambda x:'',
+                          axis='y', plotid=0)
 
-        if analyses:
-            #set the color
-            for a in analyses:
-                a.color = s.color
+        self._add_aux_plot(g, ages, errors, padding, group_id, start)
+
+#        if g.analyses:
+        #set the color
+        for a in g.analyses:
+            a.color = s.color
 
     def _calc_error(self, we, mswd):
         ec = self.error_calc_method
@@ -359,7 +479,7 @@ class Ideogram(Plotter):
                 a = mswd ** 0.5
         return we * a
 
-    def _add_aux_plot(self, g, ages, errors, padding, gid, start, plotid=1):
+    def _add_aux_plot(self, g, ages, errors, padding, group_id, start, plotid=1):
 
         g.set_grid_traits(visible=False, plotid=plotid)
         g.set_grid_traits(visible=False, grid='y', plotid=plotid)
@@ -375,12 +495,12 @@ class Ideogram(Plotter):
         n = sorted(n, key=lambda x:x[0])
         ages, errors = zip(*n)
 #        ys = range(1, len(ages) + 1)
-#        ma = 10 * (gid + 1)
-#        ys = linspace(1, 10 * (gid + 1), len(ages))
+#        ma = 10 * (group_id + 1)
+#        ys = linspace(1, 10 * (group_id + 1), len(ages))
 
-#        gg = gid + 1
+#        gg = group_id + 1
 #        print gg, ns, len(ages)
-#        ys = linspace(gg, ns + gid, len(ages))
+#        ys = linspace(gg, ns + group_id, len(ages))
 #        print ys
         ma = start + len(ages)
         ys = linspace(start, ma, len(ages))
@@ -392,7 +512,7 @@ class Ideogram(Plotter):
                                    plotid=plotid)
 
         self._add_error_bars(scatter, errors, 'x')
-        self._add_scatter_inspector(scatter, gid=gid)
+        self._add_scatter_inspector(scatter, group_id=group_id)
 
         d = lambda *args: self._update_graph(g, *args)
 #        scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
@@ -419,7 +539,7 @@ class Ideogram(Plotter):
             result = self.results[i]
             sel = p[0].index.metadata['selections']
             dp = plot.plots['plot{}'.format(i * 3 + 1)][0]
-            ages_errors = sorted([a.age for a in self.analyses if a.gid == i], key=lambda x: x[0])
+            ages_errors = sorted([a.age for a in g.analyses if a.group_id == i], key=lambda x: x[0])
             if sel:
                 dp.visible = True
                 ages, errors = zip(*ages_errors)
@@ -465,14 +585,49 @@ class Ideogram(Plotter):
         for g in self.graphs:
             self._update_graph(g)
 
+    @on_trait_change('graph_panel_info:[ncols,nrows, padding_+]')
+    def _graph_panel_info_changed(self, obj, name, new):
+        if obj.ncols * obj.nrows <= self._ngroups:
+            oc = self._plotcontainer
+#            op = self._plots
+            np, nplots = self.build(padding=obj.padding)
+
+            pc = self.figure.graph.plotcontainer
+#            print self.figure.graph.plotcontainer.components
+            ind = pc.components.index(oc)
+            pc.remove(oc)
+            pc.insert(ind, np)
+#            for opi in op:
+#                self.figure.graph.plots.remove(opi)
+
+#            self.figure.graph.plots += op
+            self.figure.graph.redraw()
+            self._plotcontainer = np
+#            self._plots = nplots
+#            print self._plotcontainer
+#            self.figure.graph.plotcontainer.remove(oc)
+#            self.figure.graph.plotcontainer.
+#        op, r, c = self._create_grid_container(self._ngroups)
+
+
 #===============================================================================
 # views
 #===============================================================================
     def _get_content(self):
-        return HGroup(Item('nsigma', style='custom'),
+        g = Group(layout='tabbed')
+        r = super(Ideogram, self)._get_content()
+        g.content.append(r)
+        e = Item('graph_panel_info', show_label=False, style='custom')
+        g.content.append(e)
+        return g
+
+    def _get_toolbar(self):
+        return HGroup(
+                      Item('nsigma', style='custom'),
                       Item('ideogram_of_means'),
                       Item('error_calc_method', show_label=False),
-                      spring)
+                      spring
+                      )
 #    def traits_view(self):
 #        v = View(HGroup(Item('nsigma'), spring),
 #                 Item('results',
@@ -489,7 +644,7 @@ class Ideogram(Plotter):
 #class MultipleIdeogram(Ideogram):
 #    def _build_ideo(self, g):
 #        for i in range(3):
-#            anals = [a for a in self.analyses if a.gid == i]
+#            anals = [a for a in self.analyses if a.group_id == i]
 #            ages, errors = zip(*[a.age for a in anals])
 #            self._add_ideo(g, ages, errors)
 

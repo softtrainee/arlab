@@ -92,6 +92,10 @@ class AnalysisTabularAdapter(TabularAdapter):
 
 
 class Analysis(Loggable):
+    ''' 
+    thinly wraps database.records.IsotopeRecord class
+    '''
+
 #    workspace = Any
 #    repo = Any
     sample = Str
@@ -103,27 +107,30 @@ class Analysis(Loggable):
     sample = Property(depends_on='dbrecord')
     labnumber = Property(depends_on='dbrecord')
     irradiation = Property(depends_on='dbrecord')
+    group_id = Property(depends_on='dbrecord')
+    graph_id = Property(depends_on='dbrecord')
     analysis_type = Property(depends_on='labnumber')
+    k39 = Property
     timestamp = Float
 
 #    signals = Dict
 #    signals = DelegatesTo('dbrecord')
     signals = Property
     age = Property(depends_on='age_dirty, signals[]')
-    age_dirty = Event
     age_error = Property
+    age_dirty = Event
 
 #    k39 = Float
 #    k39err = Float
 
-    gid = Int
+#    group_id = Int
+#    graph_id
     color = Color('black')
     bgcolor = Color('white')
     uuid = Str
 #    age_scalar = Enum({'Ma':1e6, 'ka':1e3})
     age_scalar = 1e6
 
-    k39 = Property
 #    ic_factor = Property
 #    _ic_factor = Tuple
 
@@ -132,8 +139,7 @@ class Analysis(Loggable):
 #        print 'fiafsd'
 #        self.age_dirty = True
     def load_age(self):
-        a = self.age
-        if a is not None:
+        if self.age is not None:
             #self.info('{} age={}'.format(self.dbrecord.record_id, a))
             return True
         else:
@@ -143,17 +149,7 @@ class Analysis(Loggable):
 #    def _get_ic_factor(self):
 #        return self._ic_factor
 
-    @property
-    def timestamp(self):
-        return self.dbrecord.timestamp
 
-    @cached_property
-    def _get_age(self):
-        return self.dbrecord.age
-
-    @cached_property
-    def _get_k39(self):
-        return self.dbrecord.k39
 #        signals = self.signals
 #        j = self._get_j()
 #        irradinfo = self._get_irradinfo()
@@ -365,22 +361,32 @@ class Analysis(Loggable):
                 except KeyError:
                     print 'eee', 0
                     return 0
+#@property
+    def timestamp(self):
+        return self.dbrecord.timestamp
 
-    @cached_property
+#    @cached_property
+    def _get_age(self):
+        return self.dbrecord.age
+
+#    @cached_property
+    def _get_k39(self):
+        return self.dbrecord.k39
+#    @cached_property
     def _get_age_error(self):
         return self.age[1]
 
-    @cached_property
+#    @cached_property
     def _get_analysis_type(self):
         dbr = self.dbrecord
         return dbr.measurement.analysis_type.name
 
-    @cached_property
+#    @cached_property
     def _get_labnumber(self):
         dbr = self.dbrecord
         return dbr.labnumber
 
-    @cached_property
+#    @cached_property
     def _get_rid(self):
         dbr = self.dbrecord
         return '{}-{}'.format(self.labnumber, dbr.aliquot)
@@ -388,19 +394,31 @@ class Analysis(Loggable):
 #        ln = dbr.labnumber
 #        return '{}-{}'.format(ln.labnumber, ln.aliquot)
 
-    @cached_property
+#    @cached_property
     def _get_sample(self):
         dbr = self.dbrecord
         return dbr.sample.name
 
-    @cached_property
+#    @cached_property
     def _get_irradiation(self):
         dbr = self.dbrecord
         return dbr.irradiation.name
 
-    @cached_property
+#    @cached_property
     def _get_signals(self):
         return self.dbrecord.signals
+
+    def _get_group_id(self):
+        return self.dbrecord.group_id
+
+    def _get_graph_id(self):
+        return self.dbrecord.graph_id
+
+    def _set_group_id(self, g):
+        self.dbrecord.group_id = g
+
+    def _set_graph_id(self, g):
+        self.dbrecord.graph_id = g
 #timeit
 if __name__ == '__main__':
     from tables import openFile

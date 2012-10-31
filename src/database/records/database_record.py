@@ -51,7 +51,8 @@ class DatabaseRecord(Viewable):
 
     resizable = True
 
-    gid = Int
+    group_id = Int
+    graph_id = Int
 
     @classmethod
     def make_timestamp(cls, rd, rt):

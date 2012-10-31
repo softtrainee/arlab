@@ -63,7 +63,7 @@ class FigureStore(object):
     def _build(self):
         f = self.figure
         if f.analyses:
-            self._f_analyses, self._f_groupids = zip(*[(ai.uuid, ai.gid)
+            self._f_analyses, self._f_groupids = zip(*[(ai.uuid, ai.group_id)
                                                    for ai in f.analyses])
 
             self._f_graph_x_limits = [0, 1]

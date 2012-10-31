@@ -28,7 +28,7 @@ from threading import Event as TEvent
 #from numpy import linspace
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.experiment.heat_schedule import HeatStep
+from src.experiment.extract_schedule import ExtractStep
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionLinePyScript
 from src.experiment.mass_spec_database_importer import MassSpecDatabaseImporter

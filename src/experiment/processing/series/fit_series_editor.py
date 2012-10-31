@@ -69,12 +69,12 @@ class FitSeriesEditor(Loggable):
         analyses = self._analyses
         names = [ai.dbrecord.filename for ai in analyses]
 
-        gids = [1] * len(names)
+        group_ids = [1] * len(names)
         attrs = [dict(dbrecord=ai.dbrecord) for ai in analyses]
 
         #also load these analyses
         f.load_analyses(names,
-                        groupids=gids,
+                        groupids=group_ids,
                         attrs=attrs,
                         set_series_configs=False)
 
