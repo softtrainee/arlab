@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Enum, Any, DelegatesTo, List, Property, Str, \
-     on_trait_change, Bool, Int
+     on_trait_change, Bool, Int, Button, Event
 from traitsui.api import View, VGroup, HGroup, Group, Item, Spring, spring, Label, \
      ListEditor, InstanceEditor, EnumEditor
 from traits.api import HasTraits, Range, Float
@@ -33,7 +33,22 @@ from src.spectrometer.tasks.magnet_scan import MagnetScan
 from src.spectrometer.tasks.rise_rate import RiseRate
 from src.paths import paths
 from src.graph.tools.data_tool import DataTool, DataToolOverlay
-
+import csv
+from src.helpers.filetools import unique_path
+from src.managers.data_managers.csv_data_manager import CSVDataManager
+import time
+from pyface.timer.do_later import do_later
+#class CSVDataManager(HasTraits):
+#    def new_file(self, p, mode='w'):
+#        self._file = open(p, mode)
+#        self._writer = csv.writer(self._file)
+#
+#    def add_datum(self, *datum_tuple):
+#        self._writer.writerow(datum_tuple)
+#
+#    def close(self):
+##        self._writer.close()
+#        self._file.close()
 
 class ScanManager(Manager):
     spectrometer = Any
@@ -61,6 +76,12 @@ class ScanManager(Manager):
     _graph_ymin = Float
     _graph_ymax = Float
     graph_scan_width = Int #in minutes
+
+    record_button = Event
+    add_marker_button = Button('Add Marker')
+    record_label = Property(depends_on='_recording')
+    _recording = Bool(False)
+    record_data_manager = Any
 
     def _update_graph_limits(self, name, new):
         if 'high' in name:
@@ -148,10 +169,17 @@ class ScanManager(Manager):
     def _update_scan_graph(self):
         data = self.spectrometer.get_intensities()
         if data:
-            _, signals = data
-            self.graph.record_multiple(signals,
+            keys, signals = data
+            x = self.graph.record_multiple(signals,
                                        track_y=False,
                                        )
+            if self._recording:
+                dm = self.record_data_manager
+                if dm:
+                    if self._first_recording:
+                        self._first_recording = False
+                        dm.write_to_frame(('time',) + tuple(keys))
+                    dm.write_to_frame((x,) + tuple(signals))
 
     def _start_timer(self):
         self._first_iteration = True
@@ -163,6 +191,17 @@ class ScanManager(Manager):
     def _stop_timer(self):
         self.info('stopping scan timer')
         self.timer.Stop()
+
+    def _start_recording(self):
+        self._first_recording = True
+        self.record_data_manager = dm = CSVDataManager()
+#        root = paths.spectrometer_scans_dir
+#        p, _c = unique_path(root, 'scan')
+        dm.new_frame(directory=paths.spectrometer_scans_dir)
+
+
+    def _stop_recording(self):
+        self.record_data_manager.close()
 #===============================================================================
 # handlers
 #===============================================================================
@@ -233,6 +272,23 @@ class ScanManager(Manager):
         g.data_limits[0] = mins
         g.set_x_tracking(mins * 1.01)
 
+    def _record_button_fired(self):
+        if self._recording:
+            self._stop_recording()
+            self._recording = False
+        else:
+            self._start_recording()
+            self._recording = True
+
+    def _add_marker_button_fired(self):
+#        self.add_recording_marker()
+#        xs = self.graph.get_data('x0')
+        def do():
+            xs = self.graph.plots[0].data.get_data('x0')
+
+            self.record_data_manager.write_to_frame(tuple(' '))
+            self.graph.add_vertical_rule(xs[-1])
+        do_later(do)
 #===============================================================================
 # factories
 #===============================================================================
@@ -330,6 +386,8 @@ class ScanManager(Manager):
             p.value_range.high_setting = v
             self.graph.redraw()
 
+    def _get_record_label(self):
+        return 'Record' if not self._recording else 'Stop'
 #===============================================================================
 # defaults
 #===============================================================================
@@ -383,6 +441,11 @@ class ScanManager(Manager):
                                  hitem('graph_y_auto', 'Autoscale Y'),
                                  hitem('graph_ymax', 'Max', format_str='%0.3f'),
                                  hitem('graph_ymin', 'Min', format_str='%0.3f'),
+                                 HGroup(self._button_factory('record_button', label='record_label'),
+                                        Item('add_marker_button',
+                                             show_label=False,
+                                             enabled_when='_recording')),
+                                 label='Graph'
                                  )
         control_grp = Group(
                           graph_cntrl_grp,

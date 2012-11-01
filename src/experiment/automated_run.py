@@ -95,6 +95,7 @@ class AutomatedRun(Loggable):
     autocenter = Bool
     overlap = CInt
     cleanup = CInt
+    ramp_rate = Float
 
     weight = Float
     comment = Str
@@ -128,6 +129,7 @@ class AutomatedRun(Loggable):
     _rundate = None
     _runtime = None
 
+    check_executable = Bool(True)
     _executable = Bool(True)
     _alive = False
 
@@ -165,7 +167,6 @@ class AutomatedRun(Loggable):
                 d[ki] = si - bi
             return d
 
-
     def to_string_attrs(self, attr):
         def get_attr(ai):
             aii = getattr(self, ai)
@@ -175,6 +176,7 @@ class AutomatedRun(Loggable):
                       'post_equilibration_script']:
                 if aii:
                     aii = str(aii).replace(self.mass_spectrometer, '')
+
             return aii
 
         return [get_attr(ai) for ai in attr]
@@ -893,10 +895,17 @@ class AutomatedRun(Loggable):
     def _load_script(self, name):
 
         ec = self.configuration
-        fname = os.path.basename(ec['{}_script'.format(name)])
+        if not ec:
+            return
 
+        fname = os.path.basename(ec['{}_script'.format(name)])
         if not fname:
             return
+
+        if NULL_STR in fname:
+            return
+        fname = fname if fname.endswith('.py') else fname + '.py'
+
 #        print self.scripts.keys(), fname
         if fname in self.scripts:
 #            self.debug('script "{}" already loaded... cloning'.format(fname))
@@ -916,10 +925,6 @@ class AutomatedRun(Loggable):
                                 )
             return s
         else:
-            if NULL_STR in fname:
-                return
-
-            fname = fname if fname.endswith('.py') else fname + '.py'
 
             self.info('loading script "{}"'.format(fname))
             func = getattr(self, '{}_script_factory'.format(name))
@@ -987,7 +992,8 @@ class AutomatedRun(Loggable):
         aliquot = self.aliquot
 
         #save to local sqlite database for backup and reference
-        ldb = self.local_lab_db
+
+        ldb = self._local_lab_db_factory()
 
         ldb.add_analysis(labnumber=ln,
                          aliquot=aliquot,
@@ -1279,9 +1285,12 @@ class AutomatedRun(Loggable):
 
     @property
     def executable(self):
-        return self.extraction_script is not None and \
-                    self.measurement_script is not None and \
-                        self._executable
+        a = True
+        if self.check_executable:
+            a = self.extraction_script is not None and \
+                        self.measurement_script is not None and \
+                            self._executable
+        return a
 
     def _get_duration(self):
 #        if self.heat_step:
@@ -1377,7 +1386,9 @@ class AutomatedRun(Loggable):
         else:
             return ALPHAS[self._step - 1]
 
-    def _local_lab_db_default(self):
+    def _local_lab_db_factory(self):
+        if self.local_lab_db:
+            return self.local_lab_db
         name = os.path.join(paths.hidden_dir, 'local_lab.db')
         #name = '/Users/ross/Sandbox/local.db'
         ldb = LocalLabAdapter(name=name)
@@ -1386,6 +1397,34 @@ class AutomatedRun(Loggable):
 #===============================================================================
 # views
 #===============================================================================
+    def _get_position_group(self):
+        grp = VGroup(
+                         Item('autocenter'),
+                         Item('position'),
+                         Item('multiposition', label='Multi. position run'),
+                         Item('endposition'),
+                         show_border=True,
+                         label='Position'
+                     )
+        return grp
+
+    def simple_view(self):
+        ext_grp = VGroup(HGroup(Spring(springy=False, width=33),
+                         Item('extract_value', label='Extract'),
+                            spring,
+                            Item('extract_units',
+                                 show_label=False),
+                            ),
+                         Item('ramp_rate', label='Ramp Rate (C/s)'),
+                         Item('duration', label='Duration'),
+                         )
+        pos_grp = self._get_position_group()
+        v = View(VGroup(ext_grp,
+                        pos_grp
+                        )
+                )
+        return v
+
     def traits_view(self):
 
 #        scripts = VGroup(
@@ -1403,7 +1442,10 @@ class AutomatedRun(Loggable):
         def readonly(n, **kw):
             return Item(n, style='readonly', **kw)
 
+
         sspring = lambda width = 17:Spring(springy=False, width=width)
+
+        pos_grp = self._get_position_group()
         v = View(
                  VGroup(
                      Group(
@@ -1425,14 +1467,7 @@ class AutomatedRun(Loggable):
                      show_border=True,
                      label='Info'
                      ),
-                     Group(
-                         Item('autocenter'),
-                         Item('position'),
-                         Item('multiposition', label='Multi. position run'),
-                         Item('endposition'),
-                         show_border=True,
-                         label='Position'
-                     ),
+                     pos_grp,
 #                     scripts,
                      )
                  )

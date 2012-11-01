@@ -390,6 +390,7 @@ class PyScript(Loggable):
                 self.bootstrap()
 
             ok = True
+#            print id(self), self.name, self.syntax_checked
             if not self.syntax_checked:
                 self._test()
 

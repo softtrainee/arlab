@@ -90,8 +90,11 @@ class AutomatedRunAdapter(TabularAdapter):
         item = getattr(obj, trait)[row]
         if not item.executable:
             return 'red'
-
     def _columns_default(self):
+        return self._columns_factory()
+
+    def _columns_factory(self):
+
 #        hp = ('Temp', 'extract_value')
 #        if self.kind == 'watts':
 #            hp =
