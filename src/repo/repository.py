@@ -22,7 +22,8 @@ import ftplib as ftp
 #============= local library imports  ==========================
 from src.loggable import Loggable
 import shutil
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
+from src.helpers.filetools import unique_path
 
 class Repository(Loggable):
     root = Str
@@ -57,6 +58,18 @@ class Repository(Loggable):
             return True
         except Exception, e:
             print 'Repository retrievie file exception- ', e
+
+    def compress(self, base='archive'):
+        up, _cnt = unique_path(os.path.dirname(self.root), base, extension='zip')
+        name = os.path.basename(up)
+        with ZipFile(up, 'w', compression=ZIP_DEFLATED) as af:
+            for p in os.listdir(self.root):
+                if p.startswith('.'):
+                    continue
+                if p == name:
+                    continue
+                af.write(os.path.join(self.root, p), p)
+        return name
 
 class ZIPRepository(Repository):
     def retrieveFile(self, n, out):

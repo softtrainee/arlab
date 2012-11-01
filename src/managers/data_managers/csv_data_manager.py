@@ -31,7 +31,9 @@ class CSVDataManager(DataManager):
     '''
     '''
 
-    format_str = '{:0.3f}'
+    format_str = '{:0.6f}'
+    _writer = None
+    _file = None
     def load(self, frame_key=None):
         if frame_key is None:
             frame_key = self._current_frame
@@ -49,11 +51,11 @@ class CSVDataManager(DataManager):
         self.write_to_frame(data, frame_key)
 
     def write_to_frame(self, datum, frame_key=None):
-
         if frame_key is None:
             frame_key = self._current_frame
 
         frame = self._get_frame(frame_key)
+#        print frame, frame_key, self.frames.keys()
         if frame is not None:
             self.new_writer(frame, datum)
 
@@ -65,12 +67,14 @@ class CSVDataManager(DataManager):
         if append:
             mode = 'a'
         with open(p, mode) as f:
+#            writer = self.writer
             writer = csv.writer(f)
             if isinstance(datum[0], (list, tuple)):
                 writer.writerows(datum)
             else:
                 try:
-                    datum = [self.format_str.format(d) for d in datum]
+                    datum = map(self.format_str.format, datum)
+#                    datum = [self.format_str.format(d) for d in datum]
                 except Exception:
                     pass
 
@@ -91,6 +95,14 @@ class CSVDataManager(DataManager):
 
             data = [row for row in reader]
             return zip(*data)
+
+
+#    @property
+#    def writer(self):
+#        if self._writer is None:
+#            self._writer = csv.writer(self._file)
+#
+#        return self._writer
 
 
 if __name__ == '__main__':

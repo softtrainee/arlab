@@ -34,9 +34,9 @@ from src.database.orms.massspec_orm import IrradiationLevelTable, \
     SampleTable, ProjectTable
 from threading import Thread
 import time
-import zipfile
 from src.paths import paths
 #from src.database.orms.isotope_orm import meas_AnalysisTable
+from profilehooks import profile
 
 class Importer(Loggable):
     username = Str('root')
@@ -93,10 +93,10 @@ class Importer(Loggable):
 
         dm.close()
 
-        with zipfile.ZipFile('/Users/ross/Sandbox/importtest/archive.zip', 'a') as z:
-            z.write(path, os.path.basename(path))
-
-        os.remove(path)
+#        with zipfile.ZipFile('/Users/ross/Sandbox/importtest/archive.zip', 'a') as z:
+#            z.write(path, os.path.basename(path))
+#
+#        os.remove(path)
 
         return name
 
@@ -118,8 +118,6 @@ class MassSpecImporter(Importer):
         from src.database.defaults import load_isotopedb_defaults
 
         load_isotopedb_defaults(self.destination)
-
-
         st = time.time()
         self.info('starting import')
         items = self._gather_data()
@@ -127,6 +125,9 @@ class MassSpecImporter(Importer):
         for item in items:
             if self._import_item(item):
                 self.destination.commit()
+
+        self.info('compress repository')
+        self.repository.compress()
 
         t = (time.time() - st) / 60.
         self.info('Import completed')
@@ -155,7 +156,7 @@ class MassSpecImporter(Importer):
             monitors = self._get_monitors(msrecord)
             for mi in monitors:
                 self._import_item(mi)
-                dest.commit()
+            dest.commit()
 
 #            analyses += monitors
 
@@ -192,7 +193,7 @@ class MassSpecImporter(Importer):
 #
 #            self._import_blanks(msrecord, dbanal)
             return True
-
+    @profile
     def _import_analysis(self, msrecord, dblabnumber):
         aliquot = msrecord.Aliquot
         step = msrecord.Increment
@@ -228,6 +229,7 @@ class MassSpecImporter(Importer):
         dest.add_analysis_path(path, dbanal)
 
         self._import_blanks(msrecord, dbanal)
+
     def _import_blanks(self, msrecord, dbanal):
         '''
             get Bkgd and BkgdEr from IsotopeResultsTable
@@ -418,7 +420,8 @@ class MassSpecImporter(Importer):
         ips = list(set(ips))
 #        with open('{}_out'.format(p), 'w') as f:
 #            f.write('\n'.join(ips))
-
+#        return ['58631']
+#        return ['58621']
 #        return ['57739']
         return ips#[:1]
 
@@ -429,7 +432,7 @@ if __name__ == '__main__':
     paths.build('_experiment')
     logging_setup('importer')
 
-    repo = Repository(root='/Users/ross/Sandbox/importtest')
+    repo = Repository(root='/Users/ross/Sandbox/importtest/data')
     im = MassSpecImporter()
 
     s = MassSpecDatabaseAdapter(kind='mysql', username='root',

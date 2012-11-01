@@ -91,7 +91,8 @@ class Paths():
     bakeout_config_dir = None
     bakeout = None
 
-    heating_schedule_dir = None
+    block_dir = None
+#    heating_schedule_dir = None
     map_dir = map_dir = None
     user_points_dir = None
     #==============================================================================
@@ -106,6 +107,7 @@ class Paths():
     stage_visualizer_dir = None
     default_workspace_dir = None
     workspace_root_dir = None
+    spectrometer_scans_dir = None
     #initialization_dir = None
     #device_creator_dir = None
 
@@ -178,13 +180,15 @@ class Paths():
         self.bakeout_config_dir = join(setup_dir, 'bakeout_configurations')
         self.bakeout = join(device_dir, 'bakeout')
 
-        self.heating_schedule_dir = join(setup_dir, 'heating_schedules')
+#        self.heating_schedule_dir = join(setup_dir, 'heating_schedules')
+        self.block_dir = join(setup_dir, 'blocks')
         self.map_dir = map_dir = join(setup_dir, 'tray_maps')
         self.user_points_dir = join(map_dir, 'user_points')
         #==============================================================================
         # data
         #==============================================================================
         self.data_dir = data_dir = join(stable_root, 'data')
+        self.spectrometer_scans_dir = join(data_dir, 'spectrometer_scans')
         self.modeling_data_dir = join(data_dir, 'modeling')
         self.argus_data_dir = join(data_dir, 'argusVI')
         self.positioning_error_dir = join(data_dir, 'positioning_error')
