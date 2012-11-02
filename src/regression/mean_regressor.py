@@ -63,6 +63,16 @@ sem={}
     def predict(self, xs, *args):
         return ones(asarray(xs).shape) * self.mean
 
+    def tostring(self, sig_figs=5, error_sig_figs=5):
+        fmt = 'mean={{}} std={{:0.{}f}} ({{:0.2f}}%), sem={{:0.{}f}} ({{:0.2f}}%)'.format(sig_figs, error_sig_figs)
+
+        m = self.mean
+        std = self.std
+        sem = self.sem
+        s = fmt.format(m, std, self.percent_error(m, std),
+                       sem, self.percent_error(m, sem)
+                       )
+        return s
 
 class WeightedMeanRegressor(MeanRegressor):
     errors = Array

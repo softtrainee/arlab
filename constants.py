@@ -19,5 +19,5 @@
 #============= local library imports  ==========================
 NULL_STR = '---'
 SCRIPT_KEYS = ['measurement', 'post_measurement', 'extraction', 'post_equilibration']
-
+FIT_TYPES = ['linear', 'parabolic', 'cubic', u'average \u00b1SD', u'average \u00b1SEM']
 #============= EOF =============================================

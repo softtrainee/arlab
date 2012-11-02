@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Enum, Float, Any, List
 from traitsui.api import View, Item, HGroup, Label, Spring, EnumEditor
+from constants import FIT_TYPES
 #============= standard library imports ========================
 #import wx
 #============= local library imports  ==========================
@@ -29,7 +30,7 @@ class AnalysisParameters(HasTraits):
     intercept = Float
     error = Float
 #    analysis = Any
-    fittypes = List(['linear', 'parabolic', 'cubic', u'average \u00b1SD', u'average \u00b1SEM'])
+    fittypes = List(FIT_TYPES)
     def traits_view(self):
         v = View(HGroup(Label(self.name),
                         Spring(width=50 - 10 * len(self.name), springy=False),

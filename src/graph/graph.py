@@ -659,7 +659,6 @@ class Graph(Loggable, ContextMenuMixin):
             if title in kw:
                 self._set_title('{}_axis'.format(t), kw[title], plotid)
 
-
 #        broadcaster = BroadcasterTool(tools=tools
 #                                      )
 #        p.tools.insert(0, broadcaster)
@@ -1364,6 +1363,7 @@ class Graph(Loggable, ContextMenuMixin):
                     pad = float(pad) * (ma - mi)
                     if abs(pad - 0) < 1e-10:
                         pad = 1
+
             if isinstance(ma, (int, float)):
                 if ma is not None:
                     ma += pad
@@ -1371,7 +1371,6 @@ class Graph(Loggable, ContextMenuMixin):
             if isinstance(mi, (int, float)):
                 if mi is not None:
                     mi -= pad
-
 
         if mi is not None:
             if isinstance(mi, (int, float)):

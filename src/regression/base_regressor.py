@@ -23,6 +23,7 @@ from numpy import array, polyval, asarray
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from tinv import tinv
+from src.helpers.alphas import ALPHAS
 
 
 class BaseRegressor(Loggable):
@@ -41,6 +42,26 @@ class BaseRegressor(Loggable):
     _result = None
     fit = Property
     _fit = None
+
+    def percent_error(self, s, e):
+        try:
+            return abs(e / s * 100)
+        except ZeroDivisionError:
+            return 'Inf'
+
+    def tostring(self, sig_figs=5, error_sig_figs=5):
+
+        cs = self.coefficients
+        ce = self.coefficient_errors
+
+        pm = u'\u00b1'
+        fmt = '{{}}={{:0.{}f}}{{}}{{:0.{}f}} ({{:0.2f}}%)'.format(sig_figs, error_sig_figs)
+        s = ', '.join([fmt.format(a, ci, pm, cei, self.percent_error(ci, cei))
+                       for a, ci, cei in zip(ALPHAS, cs, ce)
+                       ])
+
+        return s
+
 
     def predict(self, x):
         return x
