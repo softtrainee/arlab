@@ -224,6 +224,7 @@ class ScanManager(Manager):
         if self.detector:
             self.scanner.detector = self.detector
             self.rise_rate.detector = self.detector
+            self.magnet.detector=self.detector
             nominal_width = 1
             emphasize_width = 2
             for name, plot in self.graph.plots[0].plots.iteritems():
@@ -269,8 +270,8 @@ class ScanManager(Manager):
         n = self.graph_scan_width
         n = max(n, 1 / 60.)
         mins = n * 60
-        g.data_limits[0] = mins
-        g.set_x_tracking(mins * 1.01)
+        g.data_limits[0] = 1.8*mins
+        g.set_x_tracking(mins)
 
     def _record_button_fired(self):
         if self._recording:
@@ -307,14 +308,13 @@ class ScanManager(Manager):
                                                       )
                                   )
         n = self.graph_scan_width * 60
-        g.new_plot(padding=[50, 5, 5, 50],
+        g.new_plot(padding=[55, 5, 5, 50],
                    data_limit=n,
                    xtitle='Time',
                    ytitle='Signal',
                    scale=self.graph_scale
                    )
 
-        g.set_x_tracking(n * 1.01)
         for i, det in enumerate(self.detectors):
 #            if not det.active:
             g.new_series(visible=det.active, color=det.color)

@@ -69,7 +69,7 @@ class Magnet(SpectrometerDevice):
     settling_time = 0.01
 
     calibration_points = Property(depends_on='mftable')
-
+    detector=Any
 #    graph = Instance(Graph, ())
 
 
@@ -231,14 +231,18 @@ class Magnet(SpectrometerDevice):
         return m
 
     def map_mass_to_dac(self, mass):
-        molweights = self.spectrometer.molecular_weights
+        spec=self.spectrometer
+        molweights = spec.molecular_weights
         if self.mftable:
 
             xs = [molweights[i] for i in self.mftable[0]]
             ys = self.mftable[1]
-            return polyval(polyfit(xs, ys, 2), mass)
 
-
+            dac=polyval(polyfit(xs, ys, 2), mass)
+            
+            
+            return dac
+        
 #    def __dac_changed(self):
 #        m = self.map_dac_to_mass(self._dac)
 ##        print 'get mass', m, type(m), nan, type(nan)
@@ -253,9 +257,11 @@ class Magnet(SpectrometerDevice):
 
     def _set_mass(self, m):
 #        print 'set mass', m
-        d = self.map_mass_to_dac(m)
-#        self._dac = d
-        self.dac = d
+        dac = self.map_mass_to_dac(m)
+        if self.detector:
+            dac = self.spectrometer.correct_dac(self.detector, dac)
+
+        self.dac = dac
 
     def _validate_dac(self, d):
         return self._validate_float(d)
