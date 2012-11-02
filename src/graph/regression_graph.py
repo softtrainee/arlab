@@ -30,6 +30,7 @@ from src.graph.stacked_graph import StackedGraph
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 import copy
+from src.graph.context_menu_mixin import RegressionContextMenuMixin
 
 class StatsFilterParameters(object):
     '''
@@ -38,7 +39,7 @@ class StatsFilterParameters(object):
     tolerance_factor = 3.0
     blocksize = 20
 
-class RegressionGraph(Graph):
+class RegressionGraph(Graph, RegressionContextMenuMixin):
     filters = List
     selected_component = Any
     regressors = List
@@ -54,6 +55,34 @@ class RegressionGraph(Graph):
 #        for fi, pi in zip(fits, self.plots):
 #            scatter = pi.plots['data'][0]
 #            scatter.fit = fi
+
+#===============================================================================
+# context menu handlers
+#===============================================================================
+    def cm_linear(self):
+        self.set_fit('linear')
+        self._update_graph()
+
+    def cm_parabolic(self):
+        self.set_fit('parabolic')
+        self._update_graph()
+
+    def cm_cubic(self):
+        self.set_fit('cubic')
+        self._update_graph()
+
+    def cm_average_std(self):
+        self.set_fit('average_std')
+        self._update_graph()
+
+    def cm_average_sem(self):
+        self.set_fit('average_sem')
+        self._update_graph()
+
+#===============================================================================
+# 
+#===============================================================================
+
     def set_filter(self, fi, plotid=0, series=0):
         plot = self.plots[plotid]
         scatter = plot.plots['data{}'.format(series)][0]
@@ -339,9 +368,10 @@ class RegressionGraph(Graph):
                    marker_size=2,
                    plotid=0, *args, **kw):
 
-#        self.filters.append(None)
         kw['marker'] = marker
         kw['marker_size'] = marker_size
+#        self.filters.append(None)
+
         if not fit:
             return super(RegressionGraph, self).new_series(x, y,
                                                            plotid=plotid,

@@ -1,0 +1,301 @@
+#===============================================================================
+# Copyright 2012 Jake Ross
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+
+#============= enthought library imports =======================
+from traits.api import HasTraits, Instance, Button, Bool, List, Str, Property, Any, \
+    Enum, File, Int, DelegatesTo
+from traitsui.api import View, Item, EnumEditor, HGroup, ListEditor, InstanceEditor, Label, Spring, \
+    VGroup, spring
+from src.graph.graph import Graph
+#============= standard library imports ========================
+#============= local library imports  ==========================
+
+import numpy as np
+import csv
+from src.graph.stacked_graph import StackedGraph
+from src.graph.regression_graph import StackedRegressionGraph, RegressionGraph
+from constants import FIT_TYPES, NULL_STR
+from pyface.file_dialog import FileDialog
+from src.paths import paths
+from pyface.constant import OK
+import os
+from src.loggable import Loggable
+class DataSelector(HasTraits):
+    index = Str
+    value = Str
+    column_names = List
+    parent = Any
+
+    add_button = Button('+')
+    remove_button = Button('-')
+    removable = Bool(True)
+    fit = Enum([NULL_STR] + FIT_TYPES)
+    plot_type = Enum('line', 'scatter')
+    def traits_view(self):
+        header = HGroup(Label('X'), Spring(width=60, springy=False),
+                        Label('Y'), Spring(width=60, springy=False),
+                        Label('Fit'), Spring(width=120, springy=False),
+                        Label('Type'),
+                        spring,
+                        defined_when='not removable'
+                        )
+
+        v = View(VGroup(header,
+                        HGroup(
+                               Item('index', editor=EnumEditor(name='column_names')),
+                               Item('value', editor=EnumEditor(name='column_names')),
+                               Item('fit'),
+                               Item('plot_type'),
+                               Item('add_button'),
+                               Item('remove_button', defined_when='removable'),
+                               show_labels=False
+                               )
+                        ),
+                 )
+        return v
+
+    def _add_button_fired(self):
+        self.parent.add_column_selector()
+
+    def _remove_button_fired(self):
+        self.parent.remove_column_selector(self)
+
+class StatsGraph(HasTraits):
+    graph = Instance(Graph)
+    window_title = Str
+    window_x = Int
+    window_y = Int
+    stats = Str
+    sig_figs = Int(3)
+    esig_figs = Int(4)
+
+    def _update_stats(self, new):
+        self.stats = ''
+        new = reversed(new)
+        ss = ['{}. {}'.format(i + 1, ni.tostring(sig_figs=self.sig_figs,
+                                                 error_sig_figs=self.esig_figs)) for i, ni in enumerate(new)]
+        self.stats = '\n'.join(ss)
+
+    def _graph_changed(self):
+        self.graph.on_trait_change(self._update_stats, 'regression_results')
+
+    def traits_view(self):
+        v = View(VGroup(
+                     Item('graph',
+                          style='custom', show_label=False,
+                          height=500, width=700),
+                     HGroup(
+                            Item('stats', show_label=False, style='readonly',
+                                 height=50,
+                                 width=1.0
+                                 ),
+                            show_border=True,
+                            label='Stats',
+
+                            )
+                        ),
+                 x=self.window_x,
+                 y=self.window_y,
+                 title=self.window_title,
+                 resizable=True
+                 )
+        return v
+
+
+class CSVGrapher(Loggable):
+    open_button = Button('Open')
+    plot_button = Button('Plot')
+    as_series = Bool(False)
+
+    _path = Str
+    path = File
+    data_selectors = List
+    column_names = List
+
+    stats = Str
+    file_name = Property(depends_on='_path')
+    short_name = Property(depends_on='_path')
+
+    _graph_count = 0
+
+    def add_column_selector(self):
+        csnames = self.column_names
+
+        vind = len(self.data_selectors) + 1
+        try:
+            cs = DataSelector(index=csnames[0],
+                                value=csnames[vind],
+                                column_names=csnames,
+                                plot_type=self.data_selectors[-1].plot_type,
+                                parent=self
+                                )
+            self.data_selectors.append(cs)
+        except IndexError:
+            self.warning_dialog('No More Columns')
+
+
+    def remove_column_selector(self, cs):
+        self.data_selectors.remove(cs)
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def _open_button_fired(self):
+        self.data_selectors = []
+        p = '/Users/ross/Sandbox/csvdata.txt'
+        self._path = p
+#        dlg = FileDialog(action='open', default_directory=paths.data_dir)
+#        if dlg.open() == OK:
+#            self._path = dlg.path
+
+        with open(self._path, 'r') as fp:
+            reader = csv.reader(fp)
+            self.column_names = names = reader.next()
+            cs = DataSelector(column_names=names,
+                                index=names[0],
+                                value=names[1],
+                                removable=False,
+                                parent=self,
+                                )
+            self.data_selectors.append(cs)
+
+    def _parse_data(self, reader):
+        groups = []
+        while 1:
+            lines = []
+            for l in reader:
+                if not l:
+                    data = np.array([map(float, l) for l in lines])
+                    data = data.transpose()
+                    groups.append(data)
+                    break
+                lines.append(l)
+            else:
+                data = np.array([map(float, l) for l in lines])
+                data = data.transpose()
+                groups.append(data)
+                break
+        return groups
+
+
+    def _plot_button_fired(self):
+        with open(self._path, 'r') as fp:
+            reader = csv.reader(fp)
+            _header = reader.next()
+            groups = self._parse_data(reader)
+#            print groups
+            for data in groups:
+#                print data
+                self._show_plot(data)
+
+    def _show_plot(self, data):
+        cd = dict(padding=5)
+        csnames = self.column_names
+        xmin = np.Inf
+        xmax = -np.Inf
+
+        if self.as_series:
+            g = RegressionGraph(container_dict=cd)
+            p = g.new_plot(padding=[50, 5, 5, 50],
+                           xtitle=''
+                           )
+            p.value_range.tight_bounds = False
+            p.value_range.margin = 0.1
+        else:
+            g = StackedRegressionGraph(container_dict=cd)
+
+        regressable = False
+        for i, csi in enumerate(self.data_selectors):
+            if not self.as_series:
+                p = g.new_plot(padding=[50, 5, 5, 50])
+                p.value_range.tight_bounds = False
+                p.value_range.margin = 0.1
+                plotid = i
+            else:
+                plotid = 0
+
+            try:
+                x = data[csnames.index(csi.index)]
+                y = data[csnames.index(csi.value)]
+                xmin = min(xmin, min(x))
+                xmax = max(xmax, max(x))
+                fit = csi.fit if csi.fit != NULL_STR else None
+                g.new_series(x, y, fit=fit, type=csi.plot_type, plotid=plotid)
+                g.set_x_title(csi.index, plotid=plotid)
+                g.set_y_title(csi.value, plotid=plotid)
+                if fit:
+                    regressable = True
+
+            except IndexError:
+                pass
+
+        g.set_x_limits(xmin, xmax, pad='0.1')
+
+        self._graph_count += 1
+        if regressable:
+            gg = StatsGraph(graph=g)
+            gii = gg
+        else:
+            gii = g
+
+        g._update_graph()
+
+        def show(gi):
+            gi.window_title = '{} Graph {}'.format(self.short_name, self._graph_count)
+            gi.window_x = self._graph_count * 20 + 400
+            gi.window_y = self._graph_count * 20 + 20
+            gi.edit_traits()
+
+        show(gii)
+
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_file_name(self):
+        if os.path.isfile(self._path):
+            return os.path.relpath(self._path, paths.data_dir)
+        else:
+            return ''
+
+    def _get_short_name(self):
+        if os.path.isfile(self._path):
+            return os.path.basename(self._path)
+        else:
+            return ''
+#===============================================================================
+# views
+#===============================================================================
+    def traits_view(self):
+        v = View(Item('as_series'),
+                 HGroup(Item('open_button', show_label=False),
+                        Item('plot_button', enabled_when='_path', show_label=False),
+                        Item('file_name', show_label=False, style='readonly')),
+                 Item('data_selectors', show_label=False, editor=ListEditor(mutable=False,
+                                                                              style='custom',
+                                                            editor=InstanceEditor())),
+
+
+                 resizable=True,
+                 width=525,
+                 height=225,
+                 title='CSV Plotter'
+                 )
+        return v
+
+if __name__ == '__main__':
+    cs = CSVGrapher()
+    cs.configure_traits()
+#============= EOF =============================================
