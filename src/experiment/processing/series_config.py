@@ -100,7 +100,7 @@ class RatioConfig(SeriesConfig):
                         )
                  )
         return v
-    
+
 class BlanksSeriesConfig(SeriesConfig):
 
     def _get_fits(self):

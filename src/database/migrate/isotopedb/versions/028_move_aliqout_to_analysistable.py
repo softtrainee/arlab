@@ -8,8 +8,8 @@ def upgrade(migrate_engine):
     meta = MetaData(bind=migrate_engine)
     t = Table('LabTable', meta, autoload=True)
     t.c.aliquot.drop()
-    
-    t=Table('meas_AnalysisTable', meta, autoload=True)
+
+    t = Table('meas_AnalysisTable', meta, autoload=True)
     col = Column('aliquot', Integer)
     col.create(t)
 
@@ -19,7 +19,7 @@ def downgrade(migrate_engine):
     t = Table('LabTable', meta, autoload=True)
     col = Column('aliquot', Integer)
     col.create(t)
-    
-    t=Table('meas_AnalysisTable', meta, autoload=True)
+
+    t = Table('meas_AnalysisTable', meta, autoload=True)
     t.c.aliquot.drop()
 

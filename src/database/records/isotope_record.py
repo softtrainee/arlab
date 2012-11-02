@@ -628,14 +628,15 @@ class IsotopeRecord(DatabaseRecord):
         try:
             return self.irradiation_position.level
         except AttributeError, e:
-            print e
+            print 'level', e
 
     @cached_property
     def _get_irradiation_position(self):
         try:
             return self.dbrecord.labnumber.irradiation_position
         except AttributeError, e:
-            print e
+            print 'pos', e
+#            print e
 
     @cached_property
     def _get_irradiation_info(self):

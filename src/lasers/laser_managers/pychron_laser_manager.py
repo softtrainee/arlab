@@ -40,7 +40,7 @@ class PychronLaserManager(Manager):
         self._communicator = ec = EthernetCommunicator(host=host,
                                                        port=port)
         return ec.open()
-    
+
     def move_to_position(self, pos, *args, **kw):
         cmd = 'GoToHole {}'.format(pos)
         self.info('sending {}'.format(cmd))
@@ -64,33 +64,33 @@ class PychronLaserManager(Manager):
     def _block(self):
         cmd = 'GetDriveMoving'
         ask = self._ask
-        
-        cnt=0
-        tries=0
-        maxtries=200 #timeout after 200 s
-        nsuccess=4
-        while tries<maxtries and cnt<nsuccess:
+
+        cnt = 0
+        tries = 0
+        maxtries = 200 #timeout after 200 s
+        nsuccess = 4
+        while tries < maxtries and cnt < nsuccess:
             time.sleep(0.25)
             resp = ask(cmd)
 #            print 'getmoviing repos', resp
             if resp is not None:
                 try:
                     if not str_to_bool(resp):
-                        cnt+=1
+                        cnt += 1
                 except:
-                    cnt=0
+                    cnt = 0
             else:
-                cnt=0
-            tries+=1
-            
-        state=cnt>nsuccess
+                cnt = 0
+            tries += 1
+
+        state = cnt > nsuccess
         if state:
             self.info('Move completed')
         else:
-            self.info('Move failed. timeout after {}s'.format(maxtries/4))
-        
+            self.info('Move failed. timeout after {}s'.format(maxtries / 4))
+
         return state
-                
+
 
     def _ask(self, cmd, **kw):
         return self._communicator.ask(cmd, **kw)
