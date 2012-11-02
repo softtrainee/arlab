@@ -233,11 +233,14 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         _names = [a.uuid for a in analyses]
 #        rnames = []
 #        if exclusive:
-        rnames = set(_names) - set(names)
+        rnames = list(set(_names) - set(names))
 
-        newnames = set(names) - set(_names)
-        self.nanalyses = n = len(analyses) - len(rnames) + len(newnames) - 1
+        newnames = list(set(names) - set(_names))
+        n = len(analyses) - len(rnames) + len(newnames) - 1
 
+#===============================================================================
+#     serial load
+#===============================================================================
         pd = MProgressDialog(max=n + 1, size=(550, 15))
         import wx
         pd.open()
@@ -265,6 +268,9 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             a.group_id = group_id
 
             pd.increment()
+#===============================================================================
+# 
+#===============================================================================
 
         #remove analyses not in names
         self._analyses = [ai for ai in analyses if ai.uuid not in rnames]
@@ -451,7 +457,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #            ps.selector.load_recent()
             ps.selector.load_last(n=200)
 #            ps._analysis_type_changed()
-            ps.edit_traits()
+#            ps.edit_traits()
             self.selector = ps
 #            if self._debug:
 
@@ -470,7 +476,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             self.selector.show()
 
 #        st = time.clock()
-#        self._update_data()
+        self._update_data()
 #        print 'update time', time.clock() - st
 
     def _show_results_fired(self):

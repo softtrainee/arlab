@@ -349,18 +349,18 @@ class Analysis(Loggable):
 #    def _get_irradinfo(self):
 #        return (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), 1
 
-    def __getattr__(self, attr):
-        try:
-#            print attr, self.signals[attr].value
-            return self.signals[attr].value
-        except KeyError:
-            if attr.endswith('_er'):
-                try:
-                    attr = attr.replace('_er', '')
-                    return self.signals[attr].error
-                except KeyError:
-                    print 'eee', 0
-                    return 0
+#    def __getattr__(self, attr):
+#        try:
+##            print attr, self.signals[attr].value
+#            return self.signals[attr].value
+#        except KeyError:
+#            if attr.endswith('_er'):
+#                try:
+#                    attr = attr.replace('_er', '')
+#                    return self.signals[attr].error
+#                except KeyError:
+#                    print 'eee', 0
+#                    return 0
 #@property
     def timestamp(self):
         return self.dbrecord.timestamp

@@ -122,7 +122,7 @@ class CoincidenceScan(MagnetScan):
                 lp.value.set_data(val)
 
     def _magnet_step_hook(self, di, detector=None, peak_generator=None, delay=None):
-        
+
         spec = self.spectrometer
         spec.magnet.set_dac(di, verbose=False)
         if delay:

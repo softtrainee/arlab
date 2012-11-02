@@ -6,8 +6,8 @@ Column('id', Integer, primary_key=True),
 Column('labnumber', Integer),
 Column('aliquot', Integer),
 Column('collection_path', BLOB),
-Column('repository_path',BLOB),
-Column('create_date',DateTime)
+Column('repository_path', BLOB),
+Column('create_date', DateTime)
 )
 
 

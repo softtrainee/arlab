@@ -110,14 +110,14 @@ class MagnetScan(SpectrometerTask):
 
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
         do = values[0]
-        intensities = self._magnet_step_hook(do, 
+        intensities = self._magnet_step_hook(do,
                                              delay=1,
                                              detector=det,
                                              peak_generator=peak_generator)
         self._graph_hook(do, intensities)
         rintensities = [intensities]
 
-        delay=delay/1000.
+        delay = delay / 1000.
         for di in values[1:]:
             if not self.isAlive():
                 break
@@ -144,14 +144,14 @@ class MagnetScan(SpectrometerTask):
                             )
 
     def _magnet_step_hook(self, di, detector=None, peak_generator=None, delay=None):
-        
-        
+
+
         spec = self.spectrometer
         spec.magnet.set_dac(di, verbose=False)
         if delay:
             time.sleep(delay)
         intensity = spec.get_intensity(detector)
-        
+
 #            debug
         if globalv.experiment_debug:
             intensity = peak_generator.next()
