@@ -36,7 +36,6 @@ from threading import Thread
 import time
 from src.paths import paths
 #from src.database.orms.isotope_orm import meas_AnalysisTable
-from profilehooks import profile
 
 class Importer(Loggable):
     username = Str('root')
@@ -193,7 +192,7 @@ class MassSpecImporter(Importer):
 #
 #            self._import_blanks(msrecord, dbanal)
             return True
-    @profile
+
     def _import_analysis(self, msrecord, dblabnumber):
         aliquot = msrecord.Aliquot
         step = msrecord.Increment

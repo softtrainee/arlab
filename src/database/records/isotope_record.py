@@ -24,7 +24,6 @@ from uncertainties import ufloat
 import re
 import datetime
 from numpy import array
-from profilehooks import profile
 #============= local library imports  ==========================
 from src.database.isotope_analysis.blanks_summary import BlanksSummary
 from src.graph.graph import Graph
@@ -251,7 +250,6 @@ class IsotopeRecord(DatabaseRecord):
 #            print 'gettatrr', attr
 
 
-    @profile
     def _calculate_age(self):
 #        self._load_signals()
         signals = self.signals
