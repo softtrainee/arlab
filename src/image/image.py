@@ -56,6 +56,7 @@ class Image(HasTraits):
     '''
     frames = List
     source_frame = Any
+    current_frame = Any
     width = Int
     height = Int
     _bitmap = None
@@ -101,7 +102,8 @@ class Image(HasTraits):
 
 #        print img.reshape(960, 960)
         self.source_frame = img
-        self.frames = [img.clone()]
+        self.current_frame = img.clone()
+#        self.frames = [img.clone()]
 
 #        self.frames = [clone(img)]
 
@@ -132,10 +134,10 @@ class Image(HasTraits):
 
     def get_frame(self, vflip=None, hflip=None , gray=False, swap_rb=None,
                   clone=False, croprect=None, size=None, **kw):
-        try:
-            del self._frame
-        except AttributeError:
-            pass
+#        try:
+#            del self._frame
+#        except AttributeError:
+#            pass
 
         frame = self._get_frame(**kw)
 
@@ -154,7 +156,8 @@ class Image(HasTraits):
                 frame = frame.clone()
 
             if swap_rb:
-                frame = swapRB(frame)
+                if not globalv.video_test:
+                    frame = swapRB(frame)
 
             if gray:
                 frame = grayspace(frame)
@@ -166,18 +169,17 @@ class Image(HasTraits):
                 else:
                     pass
 
-                d = frame.ndarray
                 rs = croprect[0]
                 re = croprect[0] + croprect[2]
                 cs = croprect[1]
                 ce = croprect[1] + croprect[3]
-                d = d[cs:ce, rs:re]
-                frame = asMat(d)
+
+                frame = asMat(frame.ndarray[cs:ce, rs:re])
 
             if size:
-                frame = resize(frame, *size)
+                resize(frame, *size)
 
-            if not globalv.test:
+            if not globalv.video_test:
                 if vflip:
                     if hflip:
                         cvFlip(frame, -1)
@@ -186,7 +188,7 @@ class Image(HasTraits):
                 elif hflip:
                     cvFlip(frame, 1)
 
-            self._frame = frame
+#            self._frame = frame
             return frame
 
     def get_image(self, **kw):
@@ -213,19 +215,18 @@ class Image(HasTraits):
                                        frame.data_as_string()
                                         )
 #    @memoized
-    def render_images(self, src):
+#    def render_images(self, src):
+    def render(self):
 
 #        w = sum([s.size()[0] for s in src])
 #        h = sum([s.size()[1] for s in src])
 #        print w,h, src[0].size()
-        try:
-            w = self.width
-            h = self.height - 15
-            display = new_dst(w, h, 3)
-            resize(src[0], w, h, dst=display)
-            return display
-        except:
-            return src[0]
+        w = self.width
+        h = self.height - 15
+#        display =
+        return resize(self.current_frame, w, h, dst=new_dst(w, h, 3))
+#        return display
+
 #        try:
 #            s1 = src[0].ndarray
 #            s2 = src[1].ndarray
@@ -263,12 +264,13 @@ class Image(HasTraits):
 
     def save(self, path, src=None, width=640, height=480):
         if src is None:
-            src = self.render_images(self.frames)
-        display = new_dst(width, height, 3)
-        resize(src, width, height, dst=display)
+            src = self.render()
+#            src = self.render_images(self.frames)
+#        display =
+
 #        cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
 #        src = swapRB(src)
-        save_image(display, path)
+        save_image(resize(src, width, height, dst=new_dst(width, height, 3)), path)
 
     def _draw_crosshairs(self, src):
         r = 10
@@ -340,15 +342,20 @@ class StandAloneImage(HasTraits):
     def source_frame(self):
         return self._image.source_frame
 
-    def set_frames(self, fs):
-        self._image.frames = fs
+#    def set_frames(self, fs):
+#        self._image.frames = fs
 
-    def set_frame(self, i, src):
-        self._image.frames[i] = src
-        return self._image.source_frame
+#    def set_frame(self, i, src):
+#        self._image.frames[i] = src
+#        return self._image.source_frame
 
-    def get_frame(self, i):
-        return self._image.frames[i]
+    def set_frame(self, src):
+        self._image.current_frame = src
+
+#    def get_frame(self, i):
+    def get_frame(self):
+        return self._image.current_frame
+#        return self._image.frames[i]
 
     def save(self, *args, **kw):
         self._image.save(*args, **kw)

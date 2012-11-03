@@ -16,13 +16,31 @@
 
 #=============enthought library imports=======================
 from traits.api import Any, Int, Str
-from chaco.api import AbstractOverlay
+from chaco.api import AbstractOverlay, BaseTool
 #=============standard library imports ========================
 from numpy import vstack
 #=============local library imports  ==========================
 
+class RectSelectionOverlay(AbstractOverlay):
+    tool = Any
+    def overlay(self, component, gc, *args, **kw):
 
-class RectSelectionTool(AbstractOverlay):
+        sp = self.tool._start_pos
+        ep = self.tool._end_pos
+        if sp and ep:
+            gc.save_state()
+            try:
+                x, y = sp
+                x2, y2 = ep
+                rect = (x, y, x2 - x + 1, y2 - y + 1)
+                gc.set_fill_color([1, 0, 0, 0.25])
+                gc.set_stroke_color([1, 0, 0, 0.25])
+                gc.rect(*rect)
+                gc.draw_path()
+            finally:
+                gc.restore_state()
+
+class RectSelectionTool(BaseTool):
     '''
     '''
     #update_flag = Bool
@@ -34,7 +52,8 @@ class RectSelectionTool(AbstractOverlay):
     persistent_hover = False
     selection_metadata_name = Str('selections')
     active = True
-
+    _start_pos = None
+    _end_pos = None
     def normal_mouse_move(self, event):
 #        control = event.window.control
 #        self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
@@ -52,30 +71,7 @@ class RectSelectionTool(AbstractOverlay):
                 plot.value.metadata.pop(self.hover_metadata_name, None)
         return
 
-    def overlay(self, component, gc, *args, **kw):
-        '''
-   
-        '''
 
-        if self.event_state == 'select': #@and not self.others_active():
-            self._overlay_box(gc)
-
-    def _overlay_box(self, gc):
-        '''
-
-        '''
-        if self._start_pos and self._end_pos:
-            gc.save_state()
-            try:
-                x, y = self._start_pos
-                x2, y2 = self._end_pos
-                rect = (x, y, x2 - x + 1, y2 - y + 1)
-                gc.set_fill_color([1, 0, 0, 0.25])
-                gc.set_stroke_color([1, 0, 0, 0.25])
-                gc.rect(*rect)
-                gc.draw_path()
-            finally:
-                gc.restore_state()
 
     def _get_selection_token(self, event):
         '''
@@ -157,9 +153,10 @@ class RectSelectionTool(AbstractOverlay):
             else:
                 if append:
                     if token not in md[self.selection_metadata_name]:
-                        md[self.selection_metadata_name] += [token]
+                        new_list = md[self.selection_metadata_name] + [token]
+                        md[self.selection_metadata_name] = new_list
+                        getattr(plot, name).metadata_changed = True
 
-            getattr(plot, name).metadata_changed = True
 #            print md
 #            plot.request_redraw()
 
@@ -226,7 +223,6 @@ class RectSelectionTool(AbstractOverlay):
 #            return
 
         selection = index.metadata[self.selection_metadata_name]
-
         index.metadata[self.selection_metadata_name] = list(set(ind) ^ set(selection))
 #        else:
 #            index.metadata[self.selection_metadata_name] = ind

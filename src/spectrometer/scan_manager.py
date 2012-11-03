@@ -32,11 +32,11 @@ from src.spectrometer.detector import Detector
 from src.spectrometer.tasks.magnet_scan import MagnetScan
 from src.spectrometer.tasks.rise_rate import RiseRate
 from src.paths import paths
-from src.graph.tools.data_tool import DataTool, DataToolOverlay
-import csv
-from src.helpers.filetools import unique_path
+#from src.graph.tools.data_tool import DataTool, DataToolOverlay
+#import csv
+#from src.helpers.filetools import unique_path
 from src.managers.data_managers.csv_data_manager import CSVDataManager
-import time
+#import time
 from pyface.timer.do_later import do_later
 #class CSVDataManager(HasTraits):
 #    def new_file(self, p, mode='w'):
@@ -224,7 +224,7 @@ class ScanManager(Manager):
         if self.detector:
             self.scanner.detector = self.detector
             self.rise_rate.detector = self.detector
-            self.magnet.detector=self.detector
+            self.magnet.detector = self.detector
             nominal_width = 1
             emphasize_width = 2
             for name, plot in self.graph.plots[0].plots.iteritems():
@@ -270,7 +270,7 @@ class ScanManager(Manager):
         n = self.graph_scan_width
         n = max(n, 1 / 60.)
         mins = n * 60
-        g.data_limits[0] = 1.8*mins
+        g.data_limits[0] = 1.8 * mins
         g.set_x_tracking(mins)
 
     def _record_button_fired(self):
@@ -303,7 +303,7 @@ class ScanManager(Manager):
         return Timer((self.integration_time + 0.025) * mult, self._update_scan_graph)
 
     def _graph_factory(self):
-        g = TimeSeriesStreamGraph(container_dict=dict(bgcolor='gray',
+        g = TimeSeriesStreamGraph(container_dict=dict(bgcolor='lightgray',
                                                       padding=5
                                                       )
                                   )
@@ -312,7 +312,8 @@ class ScanManager(Manager):
                    data_limit=n,
                    xtitle='Time',
                    ytitle='Signal',
-                   scale=self.graph_scale
+                   scale=self.graph_scale,
+                   bgcolor='whitesmoke'
                    )
 
         for i, det in enumerate(self.detectors):
@@ -491,6 +492,8 @@ if __name__ == '__main__':
         detectors = List
         magnet = Instance(Magnet, ())
         source = Instance(Source, ())
+        from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
+        molecular_weights = MOLECULAR_WEIGHTS
         def get_intensities(self):
             return [d.name for d in self.detectors], [random.random() + (i * 12.3) for i in range(len(self.detectors))]
 

@@ -369,7 +369,7 @@ class LaserTrayCanvas(MapCanvas):
         '''
         '''
 
-        gc.save_state()
+#        gc.save_state()
         gc.set_stroke_color(color)
         mx, my = xy
         mx += 1
@@ -379,32 +379,51 @@ class LaserTrayCanvas(MapCanvas):
             r = self.beam_radius
         else:
             r = self.crosshairs_radius
-        r = self._get_wh(r, 0)[0]
-        b = 4
 
-        ls = self._line_segment
-        #draw extensions
-        for p1, p2 in [((self.x, my), (mx - r, my)),
-                       ((mx + r, my), (self.x2, my)),
 
-                       ((mx, self.y), (mx, my - r)),
-                       ((mx, my + r), (mx, self.y2))
-                       ]:
+        if r:
+            r = self._get_wh(r, 0)[0]
+            gc.arc(mx, my, r, 0, 360)
 
-            ls(gc, p1, p2)
+            gc.move_to(self.x, my)
+            gc.line_to(mx - r, my)
+
+            gc.move_to(mx + r, my)
+            gc.line_to(self.x2, my)
+
+            gc.move_to(mx, self.y)
+            gc.line_to(mx, my - r)
+            gc.move_to(mx, my + r)
+            gc.line_to(mx, self.y2)
+            gc.stroke_path()
+#        gc.move_to(self.x, my)
+#        gc.line_to(self.x2, my)
+#
+#        gc.move_to(mx, self.y2)
+#        gc.line_to(mx, self.y)
+
 
         #draw circle
-        gc.set_fill_color((0, 0, 0, 0))
-        gc.arc(mx, my, r, 0, math.radians(360))
-        gc.draw_path()
+#        gc.set_fill_color((0, 0, 0, 0))
+#        r = 10
+#        print mx, my, r
+#        gc.arc(mx, my, r, 0, math.radians(360))
+#        gc.stroke_path()
+#        gc.draw_path()
 
         #draw center
-        gc.set_stroke_color((1, 1, 0, 1))
+#
+#        ls(gc, (mx - b, my), (mx + b, my))
+#        ls(gc, (mx, my - b), (mx, my + b))
+#        gc.set_stroke_color((1, 1, 0, 1))
+        b = 4
+        gc.move_to(mx - b, my)
+        gc.line_to(mx + b, my)
+        gc.move_to(mx, my - b)
+        gc.line_to(mx, my + b)
+        gc.stroke_path()
 
-        ls(gc, (mx - b, my), (mx + b, my))
-        ls(gc, (mx, my - b), (mx, my + b))
-
-        gc.restore_state()
+#        gc.restore_state()
 #===============================================================================
 #             
 #           1 |

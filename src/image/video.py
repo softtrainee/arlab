@@ -44,7 +44,7 @@ class Video(Image):
     _lock = None
     _prev_frame = None
     _stop_recording_event = None
-
+    _last_get = None
     def open(self, user=None, identifier= -1, force=False):
         '''
 
@@ -102,17 +102,33 @@ class Video(Image):
         cap = self.cap
         if cap is not None:
 #            if lock:
-            with self._lock:
-                if globalv.video_test:
-                    if self.source_frame is None:
-                        p = globalv.video_test_path
-                        self.load(p)
+#            with self._lock:
+            if globalv.video_test:
+                if self.source_frame is None:
+                    p = globalv.video_test_path
+                    self.load(p)
 
-                    f = self.source_frame
-                else:
-                    f = query_frame(cap)
+                f = self.current_frame.clone()
+            else:
+                f = query_frame(cap)
 
             return f
+
+    def get_image_data(self, **kw):
+        return self.get_frame(**kw).ndarray
+
+#        if not self._last_get:
+#            self._frame = self.get_frame(**kw).ndarray
+#            self._last_get = time.clock()
+#        else:
+##            print time.clock() - self._last_get
+#            if time.clock() - self._last_get > 1 / 25.:
+#                self._frame = self.get_frame(**kw).ndarray
+#                self._last_get = time.clock()
+
+#        return self._frame
+
+#        return query_frame(self.cap).ndarray
 
     def start_recording(self, path, user=None):
         self._stop_recording_event = Event()

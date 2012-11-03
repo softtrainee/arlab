@@ -34,7 +34,9 @@ class memoized(object):
             cache = obj.__cache
         except AttributeError:
             cache = obj.__cache = {}
+
         key = (self.func, args[1:], frozenset(kw.items()))[0]
+
         try:
             res = cache[key]
         except KeyError:

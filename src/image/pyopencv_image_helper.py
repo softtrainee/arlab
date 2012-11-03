@@ -135,9 +135,9 @@ def threshold(src, threshold, invert=False):
 
 def swapRB(src):
     if not src.empty():
-        dst = src.clone()
-        cv.convertImage(src, dst, cv.CV_CVTIMG_SWAP_RB)
-        return dst
+#        dst = src.clone()
+        cv.convertImage(src, src, cv.CV_CVTIMG_SWAP_RB)
+        return src
 
 #def new_dst(src, width=None, height=None, a=None, b=None):
 #    return src.clone()
@@ -576,15 +576,10 @@ def get_capture_device(deviceid):
     cap = cv.VideoCapture(deviceid)
     return cap
 
-
 def query_frame(device):
     frame = cv.Mat()
     device >> frame
-#    dst = cv.Mat()
-    dst = frame
-    #resize(frame, dst, 640, 480)
-#    print frame.size()
-    return dst
+    return frame
 
 
 def write_frame(writer, src):
