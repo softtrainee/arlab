@@ -33,6 +33,8 @@ from src.paths import paths
 from pyface.constant import OK
 import os
 from src.loggable import Loggable
+from src.data_processing.time_series.time_series import smooth
+from pyface.timer.do_later import do_later
 class DataSelector(HasTraits):
     index = Str
     value = Str
@@ -131,17 +133,56 @@ class CSVGrapher(Loggable):
 
     _graph_count = 0
 
+    def quick_graph(self, p):
+        kind = 'scatter'
+        for det in ['H2', 'H1', 'AX', 'L1', 'L2']:
+            g = self._gc(p, det, kind)
+            info = g.edit_traits()
+            g.save_pdf('/Users/ross/Sandbox/baselines/auto/{}_{}_{}'.format(kind, 'all', det))
+            info.dispose()
+
+    def _gc(self, p, det, kind):
+        g = Graph(container_dict=dict(padding=5),
+                  window_width=1000,
+                  window_height=800,
+                  window_x=40,
+                  window_y=20
+                  )
+        with open(p, 'r') as fp:
+            #gather data
+            reader = csv.reader(fp)
+            header = reader.next()
+            groups = self._parse_data(reader)
+            '''
+                groups= [data,]
+                data shape = nrow,ncols
+                
+            '''
+            data = groups[0]
+            x = data[0]
+            y = data[header.index(det)]
+
+        #smooth
+        sy = smooth(y, window_len=120)#, window='flat')
+
+        #plot
+        g.new_plot(zoom=True, xtitle='Time (s)', ytitle='{} Baseline Intensity (fA)'.format(det))
+        g.new_series(x, y, type=kind, marker='dot', marker_size=2)
+        g.new_series(x, sy, line_width=2)
+#        g.set_x_limits(500, 500 + 60 * 30)
+#        g.edit_traits()
+        return g
+
     def add_column_selector(self):
         csnames = self.column_names
 
         vind = len(self.data_selectors) + 1
         try:
-            cs = DataSelector(index=csnames[0],
-                                value=csnames[vind],
-                                column_names=csnames,
-                                plot_type=self.data_selectors[-1].plot_type,
-                                parent=self
-                                )
+            cs = self.data_selectors[-1].clone_traits(['fit', 'plot_type', 'parent'])
+            cs.trait_set(index=csnames[0],
+                         value=csnames[vind],
+                         column_names=csnames)
+
             self.data_selectors.append(cs)
         except IndexError:
             self.warning_dialog('No More Columns')
@@ -155,7 +196,8 @@ class CSVGrapher(Loggable):
 #===============================================================================
     def _open_button_fired(self):
         self.data_selectors = []
-        p = '/Users/ross/Sandbox/csvdata.txt'
+#        p = '/Users/ross/Sandbox/csvdata.txt'
+        p = '/Users/ross/Sandbox/scan007.txt'
         self._path = p
 #        dlg = FileDialog(action='open', default_directory=paths.data_dir)
 #        if dlg.open() == OK:
@@ -218,6 +260,7 @@ class CSVGrapher(Loggable):
             g = StackedRegressionGraph(container_dict=cd)
 
         regressable = False
+#        metadata = None
         for i, csi in enumerate(self.data_selectors):
             if not self.as_series:
                 p = g.new_plot(padding=[50, 5, 5, 50])
@@ -234,6 +277,7 @@ class CSVGrapher(Loggable):
                 xmax = max(xmax, max(x))
                 fit = csi.fit if csi.fit != NULL_STR else None
                 g.new_series(x, y, fit=fit, type=csi.plot_type, plotid=plotid)
+
                 g.set_x_title(csi.index, plotid=plotid)
                 g.set_y_title(csi.value, plotid=plotid)
                 if fit:
@@ -297,5 +341,7 @@ class CSVGrapher(Loggable):
 
 if __name__ == '__main__':
     cs = CSVGrapher()
+#    cs.quick_graph('/Users/ross/Sandbox/scan007.txt')
+    do_later(cs.quick_graph, '/Users/ross/Sandbox/scan007.txt')
     cs.configure_traits()
 #============= EOF =============================================

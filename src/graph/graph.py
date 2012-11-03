@@ -594,7 +594,6 @@ class Graph(Loggable, ContextMenuMixin):
                                    color=color)
         plot.overlays.append(guide_overlay)
 
-    @profile
     def new_plot(self, add=True, **kw):
         '''
         '''

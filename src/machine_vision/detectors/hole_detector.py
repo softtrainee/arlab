@@ -43,6 +43,7 @@ from src.machine_vision.detectors.target import Target
 from src.machine_vision.segmenters.base import BaseSegmenter
 from pyface.timer.do_later import do_later
 from globals import globalv
+import time
 #from src.image.pyopencv_image_helper import grayspace
 
 
@@ -167,7 +168,6 @@ class HoleDetector(Detector):
 #            kw['hole'] = False
 
         t = self._locate_targets(src, **kw)
-
         if self.display_processed_image:
             self.target_image.load(colorspace(src))
 
@@ -391,8 +391,9 @@ class HoleDetector(Detector):
         self.croprect = (x, y, cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
 
-        if image:
-            image.set_frame(0, colorspace(src.clone()))
+#        if image:
+#            image.set_frame(colorspace(src))
+#            image.set_frame(0, colorspace(src.clone()))
 #            image.save('/Users/ross/Sandbox/machine_vision/crop.jpg', width=cw_px, height=ch_px)
 
         return src
@@ -477,6 +478,7 @@ class HoleDetector(Detector):
                     segmenter.count = j
                     npos = self._segment_hook(si, segmenter,
                                                **kw)
+
                     if npos:
                         break
                 return npos
@@ -537,7 +539,7 @@ class HoleDetector(Detector):
 #                w, h = self.croppixels
 #                self.target_image.save('/Users/ross/Sandbox/machine_vision/polygon.jpg', width=w, height=h)
 
-                src = self.target_image.get_frame(0)
+                src = self.target_image.get_frame()
                 draw_polygons(src, [tar.poly_points], color=(0, 255, 255))
 
                 #make image with polygon

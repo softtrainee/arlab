@@ -23,7 +23,8 @@ from numpy import linspace, random, hstack, polyval, \
     delete, bitwise_and, polyfit, ones, invert, average
 from chaco.tools.broadcaster import BroadcasterTool
 #============= local library imports  ==========================
-from src.graph.tools.rect_selection_tool import RectSelectionTool
+from src.graph.tools.rect_selection_tool import RectSelectionTool, \
+    RectSelectionOverlay
 from src.graph.tools.data_tool import DataTool, DataToolOverlay
 from src.graph.time_series_graph import TimeSeriesGraph
 from src.graph.stacked_graph import StackedGraph
@@ -106,6 +107,20 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter = plot.plots['data{}'.format(series)][0]
         return scatter.fit
 
+    def _update_metadata(self, obj, name, old, new):
+        for plot in self.plots:
+            ks = plot.plots.keys()
+            scatters = [plot.plots[k][0] for k in ks if k.startswith('data')]
+            for si in scatters:
+#                print id(obj), id(si.index), si.index
+                if not si.index is obj:
+#                    print obj.metadata, si.index.metadata
+#                    si.index.trait_set(metadata=obj.metadata, trait_change_notify=False)
+                    si.index.trait_set(metadata=obj.metadata)
+                    si.value.trait_set(metadata=obj.metadata)
+
+#        self.redraw()
+
     def _update_graph(self, **kw):
         if self.suppress_regression:
             return
@@ -142,6 +157,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 break
         else:
             self.regression_results = self.regressors
+
 
     def _plot_regression(self, plot, scatter, line, uline, lline):
         try:
@@ -387,7 +403,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         scatter = plot.plot(names, **rd)[0]
         self.set_series_label('data{}'.format(si), plotid=plotid)
-        scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
+
+#        scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
+#        u = lambda obj, name, old, new: self._update_metadata(scatter, obj, name, old, new)
+#        scatter.index.on_trait_change(u, 'metadata_changed')
 
         scatter.fit = fit
         scatter.filter = None
@@ -419,23 +438,33 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         except:
             pass
 
+        self._bind_index(scatter.index, **kw)
         self._add_tools(scatter, plotid)
         return plot, scatter, line
+
+    def _bind_index(self, index, **kw):
+        index.on_trait_change(self._update_graph, 'metadata_changed')
 
     def _add_tools(self, scatter, plotid):
         plot = self.plots[plotid]
 
-        broadcaster = BroadcasterTool()
-        self.plots[plotid].container.tools.append(broadcaster)
+#        broadcaster = BroadcasterTool()
+#        self.plots[plotid].container.tools.append(broadcaster)
 
         rect_tool = RectSelectionTool(scatter,
 #                                      parent=self,
                                       plot=plot,
                                       plotid=plotid)
-        scatter.overlays.append(rect_tool)
+        rect_overlay = RectSelectionOverlay(
+                                            tool=rect_tool)
 
+        scatter.tools.append(rect_tool)
+        scatter.overlays.append(rect_overlay)
+
+#        print scatter.tools
         #add a broadcaster so scatterinspector and rect selection will received events
-        broadcaster.tools.append(rect_tool)
+#        broadcaster.tools.append(rect_tool)
+#        scatter.overlays.append(rect_overlay)
 #        data_tool = DataTool(
 #                             component=plot,
 #                             plot=scatter,
@@ -461,11 +490,17 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
     pass
 
+
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
-    pass
+    def _bind_index(self, index, bind_selection=True, **kw):
+        if bind_selection:
+            index.on_trait_change(self._update_metadata, 'metadata_changed')
+        super(StackedRegressionGraph, self)._bind_index(index)
+
 
 class StackedRegressionTimeSeriesGraph(StackedRegressionGraph, TimeSeriesGraph):
     pass
+
 if __name__ == '__main__':
 
     import numpy as np
