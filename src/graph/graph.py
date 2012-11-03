@@ -54,7 +54,6 @@ VALID_FONTS = ['Helvetica', 'Arial',
                'Geneva',
 
            ]
-from profilehooks import profile
 
 def name_generator(base):
     '''
