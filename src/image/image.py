@@ -47,7 +47,7 @@ except ImportError:
 #    def lines(self):
 #        return self._lines
 #from numpy.core.numeric import zeros
-import Image as PILImage
+#import Image as PILImage
 from pyface.timer.do_later import do_later, do_after
 
 #from src.helpers.memo import memoized
@@ -56,7 +56,7 @@ class Image(HasTraits):
     '''
     frames = List
     source_frame = Any
-    current_frame = Any
+#    current_frame = Any
     width = Int
     height = Int
     _bitmap = None
@@ -102,8 +102,8 @@ class Image(HasTraits):
 
 #        print img.reshape(960, 960)
         self.source_frame = img
-        self.current_frame = img.clone()
-#        self.frames = [img.clone()]
+#        self.current_frame = img.clone()
+        self.frames = [img.clone()]
 
 #        self.frames = [clone(img)]
 
@@ -224,7 +224,10 @@ class Image(HasTraits):
         w = self.width
         h = self.height - 15
 #        display =
-        return resize(self.current_frame, w, h, dst=new_dst(w, h, 3))
+        try:
+            return resize(self.frames[0], w, h, dst=new_dst(w, h, 3))
+        except IndexError:
+            pass
 #        return display
 
 #        try:
@@ -342,20 +345,14 @@ class StandAloneImage(HasTraits):
     def source_frame(self):
         return self._image.source_frame
 
-#    def set_frames(self, fs):
-#        self._image.frames = fs
+    def set_frames(self, fs):
+        self._image.frames = fs
 
-#    def set_frame(self, i, src):
-#        self._image.frames[i] = src
-#        return self._image.source_frame
+    def set_frame(self, i, src):
+        self._image.frames[i] = src
 
-    def set_frame(self, src):
-        self._image.current_frame = src
-
-#    def get_frame(self, i):
-    def get_frame(self):
-        return self._image.current_frame
-#        return self._image.frames[i]
+    def get_frame(self, i):
+        return self._image.frames[i]
 
     def save(self, *args, **kw):
         self._image.save(*args, **kw)

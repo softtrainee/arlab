@@ -539,7 +539,7 @@ class HoleDetector(Detector):
 #                w, h = self.croppixels
 #                self.target_image.save('/Users/ross/Sandbox/machine_vision/polygon.jpg', width=w, height=h)
 
-                src = self.target_image.get_frame()
+                src = self.target_image.get_frame(0)
                 draw_polygons(src, [tar.poly_points], color=(0, 255, 255))
 
                 #make image with polygon

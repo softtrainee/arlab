@@ -114,7 +114,8 @@ class _ImageEditor(Editor):
 #        frames = self.value.frames
 #        if frames is not None:
         frame = self.value.render()
-
+        if not frame:
+            return
         try:
             bitmap = frame.to_wx_bitmap()
 #            for d in dir(src):
