@@ -108,7 +108,8 @@ class Video(Image):
                     p = globalv.video_test_path
                     self.load(p)
 
-                f = self.current_frame.clone()
+                f = self.source_frame.clone()
+#                f = self.current_frame.clone()
             else:
                 f = query_frame(cap)
 
