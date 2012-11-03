@@ -113,7 +113,11 @@ class _ImageEditor(Editor):
 #        src = self.get_frames()
 #        frames = self.value.frames
 #        if frames is not None:
-        frame = self.value.render()
+        try:
+            frame = self.value.render()
+        except AttributeError:
+            return
+        
         if not frame:
             return
         try:
