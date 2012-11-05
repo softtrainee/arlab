@@ -42,39 +42,11 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        a39decayfactor=None
                        ):
 #    print signals
-    s40, s39, s38, s37, s36 = signals
-    s40bs, s39bs, s38bs, s37bs, s36bs = baselines
-    s40bl, s39bl, s38bl, s37bl, s36bl = blanks
-    s40bk, s39bk, s38bk, s37bk, s36bk = backgrounds
-#    s40, s40b, s39, s39b, s38, s38b, s37, s37b, s36, s36b = signals
+    s40, s39, s38, s37, s36 = map(ufloat, signals)
+    s40bs, s39bs, s38bs, s37bs, s36bs = map(ufloat, baselines)
+    s40bl, s39bl, s38bl, s37bl, s36bl = map(ufloat, blanks)
+    s40bk, s39bk, s38bk, s37bk, s36bk = map(ufloat, backgrounds)
     k4039, k3839, ca3937, ca3837, ca3637, cl3638, t = irradinfo
-
-#    try:
-    s40 = ufloat(s40)
-
-    s39 = ufloat(s39)
-
-    s38 = ufloat(s38)
-    s37 = ufloat(s37)
-    s36 = ufloat(s36)
-
-    s40bs = ufloat(s40bs)
-    s39bs = ufloat(s39bs)
-    s38bs = ufloat(s38bs)
-    s37bs = ufloat(s37bs)
-    s36bs = ufloat(s36bs)
-
-    s40bl = ufloat(s40bl)
-    s39bl = ufloat(s39bl)
-    s38bl = ufloat(s38bl)
-    s37bl = ufloat(s37bl)
-    s36bl = ufloat(s36bl)
-
-    s40bk = ufloat(s40bk)
-    s39bk = ufloat(s39bk)
-    s38bk = ufloat(s38bk)
-    s37bk = ufloat(s37bk)
-    s36bk = ufloat(s36bk)
 
     ca3637 = ufloat(ca3637)
     ca3937 = ufloat(ca3937)
@@ -88,9 +60,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s36 *= ic
     s36bs *= ic
     s36bk *= ic
-#    except Exception, e:
-#        return
-#    print s40bl, s40bs, s40bk
+
     #subtract blanks and baselines
     s40 -= (s40bl + s40bs + s40bk)
     s39 -= (s39bl + s39bs + s39bk)
@@ -98,46 +68,25 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s37 -= (s37bl + s37bs + s37bk)
     s36 -= (s36bl + s36bs + s36bk)
 
-#    d = ufloat((1.006, 0.001))
-#    d = ufloat((1.006, 1))
-
-    #correct for discrimination
-#    s40 *= umath.pow(d, 4.)
-#    s39 *= umath.pow(d, 3.)
-#    s38 *= umath.pow(d, 2.)
-#    s37 *= umath.pow(d, 1.)
-#    print '40/39', s40 / s39
     #calculate decay factors
     #2004-11-16 21:16:00
     if a37decayfactor is None:
         try:
 #            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
             a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
+            #t = umath.log(a39decayfactor) / (constants.lambda_39.nominal_value * 365.25)
         except ZeroDivisionError:
             a37decayfactor = 1
 
     if a39decayfactor is None:
         try:
+#            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
             a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
+            #t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
         except ZeroDivisionError:
             a39decayfactor = 1
-#    print a39decayfactor, a37decayfactor
-    #t = umath.log(a39decayfactor) / (constants.lambda_39.nominal_value * 365.25)
-    #t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
 
-#    print 't39', t
-#    print 't37', t1
-#    print 'p39', 1 / umath.exp(-t1 * (1 * constants.lambda_39.nominal_value * 365.25))
-#    print 'p37', 1 / umath.exp(-t1 * (1 * constants.lambda_37.nominal_value * 365.25))
-
-#    print 'mmm', 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
-#    print t, a39decayfactor
-#    print umath.exp(t * constants.lambda_39.nominal_value * 365.25)
-#
-#    print t, t1 , 'fff'
-#    print abs(t1 - t)
     #calculate interference corrections
-#    print s37, a37decayfactor
     ca37 = s37 * a37decayfactor
     s39 = s39 * a39decayfactor
     ca36 = ca3637 * ca37
@@ -146,7 +95,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k39 = s39 - ca39
     k38 = k3839 * k39
 
-#    print '38/39', k38 / k39
     if constants.lambda_cl36 < 0.1:
         m = cl3638 * constants.lambda_cl36 * 365.25 * t
     else:
@@ -157,17 +105,29 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     atm36 = s36 - ca36 - cl36
 
     #calculate rodiogenic
-    atm40 = atm36 * constants.atm4036
+    #dont include error in 40/36
+    atm40 = atm36 * constants.atm4036.nominal_value
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
 
     try:
         JR = j * ar40rad / k39
-        age = (1 / constants.lambdak) * umath.log(1 + JR)
+#        print 'we', JR, j
+        #dont include error in decay constant
+        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
+
+        j.set_std_dev(0)
+        JR = j * ar40rad / k39
+#        print 'wo', JR, j
+        #dont include error in decay constant
+        age_wo_jerr = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
     except (ZeroDivisionError, ValueError):
         age = ufloat((0, 0))
-
+        age_wo_jerr = ufloat((0, 0))
+#    print 'wea', age
+#    print 'woa', age_wo_jerr
     result = dict(age=age,
+                  age_err_wo_jerr=age_wo_jerr.std_dev(),
                   rad40=ar40rad,
                   tot40=s40,
                   k39=k39,
@@ -183,6 +143,111 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                   ar37decayfactor=a37decayfactor
                   )
     return result
+#def calculate_arar_age(signals, baselines, blanks, backgrounds,
+#                       j, irradinfo,
+#                       ic=(1.0, 0),
+#                       a37decayfactor=None,
+#                       a39decayfactor=None
+#                       ):
+##    s40, s39, s38, s37, s36 = signals
+#    s40bs, s39bs, s38bs, s37bs, s36bs = baselines
+#    s40bl, s39bl, s38bl, s37bl, s36bl = blanks
+#    s40bk, s39bk, s38bk, s37bk, s36bk = backgrounds
+#
+##    k4039, k3839, ca3937, ca3837, ca3637, cl3638, t = irradinfo
+#    pr, t = irradinfo[:-1], irradinfo[-1]
+#
+#    s40, s39, s38, s37, s36 = map(ufloat, signals)
+#    s40bs, s39bs, s38bs, s37bs, s36bs = map(ufloat, baselines)
+#    s40bl, s39bl, s38bl, s37bl, s36bl = map(ufloat, blanks)
+#    s40bk, s39bk, s38bk, s37bk, s36bk = map(ufloat, blanks)
+#    k4039, k3839, ca3937, ca3837, ca3637, cl3638 = map(ufloat, pr)
+#
+#    j = ufloat(j)
+#    ic = ufloat(ic)
+#
+#    s36 *= ic
+#    s36bs *= ic
+#
+#    #subtract blanks and baselines
+#    s40 -= (s40bl + s40bs + s40bk)
+#    s39 -= (s39bl + s39bs + s39bk)
+#    s38 -= (s38bl + s38bs + s38bk)
+#    s37 -= (s37bl + s37bs + s37bk)
+#    s36 -= (s36bl + s36bs + s36bk)
+#
+#    #calculate decay factors
+#    #2004-11-16 21:16:00
+#    if a37decayfactor is None:
+#        try:
+##            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
+#            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
+#            #t = umath.log(a39decayfactor) / (constants.lambda_39.nominal_value * 365.25)
+#        except ZeroDivisionError:
+#            a37decayfactor = 1
+#
+#    if a39decayfactor is None:
+#        try:
+##            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
+#            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
+#            #t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
+#        except ZeroDivisionError:
+#            a39decayfactor = 1
+#
+#    #calculate interference corrections
+#    ca37 = s37 * a37decayfactor
+#    s39 = s39 * a39decayfactor
+#    ca36 = ca3637 * ca37
+#    ca38 = ca3837 * ca37
+#    ca39 = ca3937 * ca37
+#    k39 = s39 - ca39
+#    k38 = k3839 * k39
+#
+#    if constants.lambda_cl36 < 0.1:
+#        m = cl3638 * constants.lambda_cl36 * 365.25 * t
+#    else:
+#        m = cl3638
+#
+#    mcl = m / (m * constants.atm3836 - 1)
+#    cl36 = mcl * (constants.atm3836 * (s36 - ca36) - s38 + k38 + ca38)
+#    atm36 = s36 - ca36 - cl36
+#
+#    #calculate rodiogenic
+#    #dont include error in 40/36
+#    atm40 = atm36 * constants.atm4036.nominal_value
+#    k40 = k39 * k4039
+#    ar40rad = s40 - atm40 - k40
+#
+#    try:
+#        JR = j * ar40rad / k39
+#        #dont include error in decay constant
+#        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
+#
+##        j.set_std_dev(0)
+##        JR = j * ar40rad / k39
+##        #dont include error in decay constant
+##        age_wo_jerr = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
+#    except (ZeroDivisionError, ValueError):
+#        age = ufloat((0, 0))
+##        age_wo_jerr = ufloat((0, 0))
+#
+#    result = dict(age=age,
+##                  age_wo_jerr=age_wo_jerr,
+#                  rad40=ar40rad,
+#                  tot40=s40,
+#                  k39=k39,
+#                  ca37=ca37,
+#                  atm36=atm36,
+#
+#                  s40=s40,
+#                  s39=s39,
+#                  s38=s38,
+#                  s37=s37,
+#                  s36=s36,
+#                  ar39decayfactor=a39decayfactor,
+#                  ar37decayfactor=a37decayfactor
+#                  )
+#    return result
 
 #    try:
 #    except ValueError, e:

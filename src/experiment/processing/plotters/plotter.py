@@ -26,7 +26,10 @@ from chaco.tools.scatter_inspector import ScatterInspector
 from chaco.scatter_inspector_overlay import ScatterInspectorOverlay
 from chaco.array_data_source import ArrayDataSource
 from src.graph.error_bar_overlay import ErrorBarOverlay
-from src.graph.tools.rect_selection_tool import RectSelectionTool
+from src.graph.tools.rect_selection_tool import RectSelectionTool, \
+    RectSelectionOverlay
+from chaco.tools.broadcaster import BroadcasterTool
+from enable.font_metrics_provider import font_metrics_provider
 
 class Plotter(Viewable):
     adapter = Property
@@ -36,7 +39,7 @@ class Plotter(Viewable):
     analyses = Any
     error_bar_overlay = Any
     figure = Any
-
+    popup = None
     def _get_adapter(self):
         return ResultsTabularAdapter
 
@@ -61,18 +64,41 @@ class Plotter(Viewable):
         if sigma_trait:
             self.on_trait_change(ebo.update_sigma, sigma_trait)
 
-    def _add_scatter_inspector(self, scatter, group_id=0):
+    def _add_scatter_inspector(self, container, plot, scatter, group_id=0, popup=True):
         #add a scatter hover tool
-        scatter.tools.append(ScatterInspector(scatter,
-#                                              selection_mode='off'
-                                              ))
+#        bc = BroadcasterTool()
+#        broadcaster = BroadcasterTool()
+#        scatter.tools.append(broadcaster)
+#        self.plots[plotid].container.tools.append(broadcaster)
+#        scatter.tools.append(ScatterInspector(scatter,
+##                                              selection_mode='off'
+#                                              ))
+
+#        broadcaster.tools.append(ScatterInspector(scatter,
+##                                              selection_mode='off'
+#                                              ))
+
+#        rect_tool = RectSelectionTool(scatter,
+##                                      parent=self,
+##                                      plot=self.graph.plots[0],
+#                                      plotid=1
+#                                      )
 
         rect_tool = RectSelectionTool(scatter,
 #                                      parent=self,
-#                                      plot=self.graph.plots[0],
-                                      plotid=1
+                                      container=container,
+                                      plot=plot,
+#                                      plotid=1
                                       )
-        scatter.overlays.append(rect_tool)
+        rect_overlay = RectSelectionOverlay(
+                                            tool=rect_tool)
+
+#        broadcaster.tools.append(rect_tool)
+        scatter.tools.append(rect_tool)
+        scatter.overlays.append(rect_overlay)
+
+
+#        scatter.overlays.append(rect_tool)
 #        overlay = ScatterInspectorOverlay(scatter,
 #                    hover_color="red",
 #                    hover_marker_size=int(scatter.marker_size + 2),
@@ -82,29 +108,83 @@ class Plotter(Viewable):
 #                    selection_outlin
 #                    )
 #        scatter.overlays.append(overlay)
-        u = lambda a, b, c, d: self.update_graph_metadata(group_id, a, b, c, d)
-        scatter.index.on_trait_change(u, 'metadata_changed')
+        if popup:
+            u = lambda a, b, c, d: self.update_graph_metadata(group_id, a, b, c, d)
+            scatter.index.on_trait_change(u, 'metadata_changed')
 #        self.metadata = scatter.index.metadata
 
     def update_graph_metadata(self, group_id, obj, name, old, new):
         pass
 #        print group_id, obj, name, old, new
-#        hover = obj.metadata.get('hover')
-#        if hover:
+        hover = obj.metadata.get('hover')
+#        print hover
+        if hover:
 #            print hover, group_id
-#            hoverid = hover[0]
+            hoverid = hover[0]
 #            for ai in self.analyses:
 #                print ai.group_id
-#            self.selected_analysis = sorted([a for a in self.analyses if a.group_id == group_id], key=self._cmp_analyses)[hoverid]
+            self.selected_analysis = sa = sorted([a for a in self.analyses if a.group_id == group_id], key=self._cmp_analyses)[hoverid]
+            event = obj.metadata.get('mouse_xy')
+            from src.canvas.popup_window import PopupWindow
+            if not self.popup:
+                self.popup = PopupWindow(None)
+
+#            print event.x, event.y
+            self._show_pop_up(self.popup, sa, event)
+        else:
+            if self.popup:
+                self.popup.Show(False)
+
+
 
 #        print hover
 #        hover = self.metadata.get('hover')
 #        if hover:
 #            hoverid = hover[0]
+
 #            self.selected_analysis = sorted([a for a in self.analyses ], key=self._cmp_analyses)[hoverid]
 
     def _cmp_analyses(self, x):
         return x.timestamp
+
+    def _show_pop_up(self, popup, analysis, mouse_xy):
+        try:
+            x, y = mouse_xy
+        except:
+            return
+
+        lines = [
+                 analysis.rid,
+                 analysis.age_string
+               ]
+        t = '\n'.join(lines)
+        gc = font_metrics_provider()
+        with gc:
+            font = popup.GetFont()
+            from kiva.fonttools import Font
+            gc.set_font(Font(face_name=font.GetFaceName(),
+                             size=font.GetPointSize(),
+                             family=font.GetFamily(),
+#                             weight=font.GetWeight(),
+#                             style=font.GetStyle(),
+#                             underline=0, 
+#                             encoding=DEFAULT
+                             ))
+            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
+#            print linewidths, lineheights
+            ml = max(linewidths)
+            mh = max(lineheights)
+
+#        ch = popup.GetCharWidth()
+        mh = mh * len(lines)
+#        print ml, mh
+        popup.Freeze()
+        popup.set_size(ml, mh)
+        popup.SetText(t)
+        popup.SetPosition((x + 55, y + 25))
+        popup.Show(True)
+        popup.Thaw()
+
 #===============================================================================
 # views
 #===============================================================================

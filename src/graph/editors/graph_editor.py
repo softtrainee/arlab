@@ -161,7 +161,8 @@ class GraphEditor(HasTraits):
         '''
 #        title_font, size = self._get_font_args(self.title_font)
 #        print title_font, size
-        self.graph.set_title(self.title, font=self.title_font,
+        self.graph.set_title(self.title,
+                             font=self.title_font,
                               size=self.title_font_size)
 
 #    def _get_font_args(self, f):

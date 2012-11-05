@@ -63,8 +63,9 @@ class Summary(HasTraits):
                                selectable=True,
                                default_color='black',
                                scroll_to_bottom=False,
-                               font_name='Bitstream Vera Sans Mono'
-#                               font_name='Monaco'
+                               font_name='courier'
+#                               font_name='Bitstream Vera Sans Mono'
+#                               font_name='monospace'
                                )
 
 #============= EOF =============================================

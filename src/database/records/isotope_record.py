@@ -23,7 +23,7 @@ from pyface.timer.do_later import do_later
 from uncertainties import ufloat
 import re
 import datetime
-from numpy import array
+from numpy import array, delete
 #============= local library imports  ==========================
 from src.database.isotope_analysis.blanks_summary import BlanksSummary
 from src.graph.graph import Graph
@@ -40,6 +40,7 @@ from src.experiment.processing.signal import InterpolatedRatio, Background, \
 from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
+from src.database.orms.isotope_orm import proc_FitHistoryTable, proc_FitTable
 
 class EditableGraph(HasTraits):
     graph = Instance(Graph)
@@ -64,7 +65,7 @@ class EditableGraph(HasTraits):
 
 class IsotopeRecord(DatabaseRecord):
     title_str = 'Analysis'
-    window_height = 650
+    window_height = 780
     window_width = 875
     color = 'black'
 
@@ -103,6 +104,7 @@ class IsotopeRecord(DatabaseRecord):
 
     ic_factor = Property
     j = Property
+    irradiation = Property
     irradiation_info = Property
     irradiation_level = Property
     irradiation_position = Property
@@ -115,82 +117,57 @@ class IsotopeRecord(DatabaseRecord):
     k39 = None
     rad40 = None
     arar_result = None
+
+    def save(self):
+        fit_hist = None
+        #save the fits
+        for fi in self.signal_graph.fit_selector.fits:
+            #get database fit
+            dbfit = self._get_db_fit(fi.name)
+            if dbfit != fi.fit:
+                if fit_hist is None:
+                    fit_hist = proc_FitHistoryTable(analysis=self.dbrecord,
+                                                    user=self.selector.db.save_username
+                                                    )
+                    self.dbrecord.fit_histories.append(fit_hist)
+                    selhist = self.dbrecord.selected_histories
+                    selhist.selected_fits = fit_hist
+
+                _f = proc_FitTable(history=fit_hist, fit=fi.fit,
+                                                    isotope=fi.name)
+
+        self.selector.db.commit()
+
 #    def _age_dirty_changed(self):
 #        print 'asfdasfd'
 #===============================================================================
 # viewable
 #===============================================================================
     def opened(self):
-        super(IsotopeRecord, self).opened()
         def d():
 #            self.selected = None
             self.selected = 'summary'
         do_later(d)
+        super(IsotopeRecord, self).opened()
 
     def closed(self, isok):
         self.selected = None
 
-
-#    def clear(self):
-#        self.baselines = dict()
-#        self.categories = ['summary']
-
-#    def get_peakhop_graphs(self):
-#        return [getattr(self, tr) for tr in self.traits()
-#                    if tr.endswith('_graph') and
-#                        not tr in ['signal_graph', 'sniff_graph', 'baseline_graph',
-#                              'peak_center_graph'
-#                              ]]
-
-
-
-
-
-#    def _get_peakhop_signals(self, dm):
-#        return self._get_table_data(dm, grp)
-#        return self._get_peakhop(dm, 'signals')
-
-#    def _get_peakhop_baselines(self, dm):
-#        return self._get_peakhop(dm, 'baselines')
-
-#    def _get_peakhop(self, dm, name):
-#        grp = dm.get_group('peakhop_{}'.format(name))
-#        peakhops = dict()
-#        if grp is not None:
-#            for di in dm.get_groups(grp):
-#                peakhop = dict()
-#                for ti in dm.get_tables(di):
-#                    data = zip(*[(r['time'], r['value']) for r in ti.iterrows()])
-#                    try:
-#                        fit = ti.attrs.fit
-#                    except AttributeError:
-#                        fit = None
-#                    peakhop[ti._v_name] = [di._v_name, ti._v_name, fit, data]
-#    #                p[ti._v_nam] = [ti._v_name, fit, data]
-#                peakhops[di._v_name] = peakhop
-#
-#        return peakhops
-
-#    def _get_sniffs(self, dm):
-#        return self._get_table_data(dm, 'sniffs')
-#
-#    def _get_baselines(self, dm):
-#        return self._get_table_data(dm, 'baselines')
 #===============================================================================
 # database record
 #===============================================================================
     def load_graph(self, graph=None, xoffset=0):
         dm = self.selector.data_manager
         signals, baselines = self._load_signals()
-#        signals = self._get_table_data(dm, 'signals')
         if signals:
-            self.categories.append('signal')
+            if 'signal' not in self.categories:
+                self.categories.append('signal')
             graph = self._load_stacked_graph(signals)
             self.signal_graph = EditableGraph(graph=graph)
 
-#        baselines = self._get_table_data(dm, 'baselines')
         if baselines:
-            self.categories.append('baseline')
+            if 'baseline' not in self.categories:
+                self.categories.append('baseline')
             graph = self._load_stacked_graph(baselines)
             self.baseline_graph = EditableGraph(graph=graph)
             self.baseline_graph.fit_selector = FitSelector(analysis=self,
@@ -211,11 +188,13 @@ class IsotopeRecord(DatabaseRecord):
 
         blanks = self._get_blanks()
         if blanks:
-            self.categories.append('blanks')
+            if 'blanks' not in self.categories:
+                self.categories.append('blanks')
 
         backgrounds = self._get_backgrounds()
         if backgrounds:
-            self.categories.append('backgrounds')
+            if 'backgrounds' not in self.categories:
+                self.categories.append('backgrounds')
 
         det_intercals = self._get_detector_intercalibrations()
         if det_intercals:
@@ -282,22 +261,7 @@ class IsotopeRecord(DatabaseRecord):
             err = ai.std_dev()
             return age, err
 
-    def _get_history_item(self, name):
-        '''
-            get the selected history item if available else use the last history
-        '''
-        dbr = self.dbrecord
-        histories = getattr(dbr, '{}_histories'.format(name))
-        if histories:
-            hist = None
-            shists = dbr.selected_histories
-            if shists:
-                hist = getattr(shists, 'selected_{}'.format(name))
 
-            if hist is None:
-                hist = histories[-1]
-
-            return getattr(hist, name)
 
 #===============================================================================
 # handlers
@@ -346,7 +310,7 @@ class IsotopeRecord(DatabaseRecord):
                     self._signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
                                                               _error=rs.coefficient_errors[-1])
 
-            return
+            return self._signals_table, self._baselines_table
 
         self._no_load = True
         dm = self.selector.data_manager
@@ -356,12 +320,14 @@ class IsotopeRecord(DatabaseRecord):
 
         signals = self._get_table_data(dm, 'signals')
         if signals:
+            self._signals_table = signals
             regressors = self._load_regressors(signals)
             for iso, rs in regressors.iteritems():
                 self._signals[iso] = Signal(_value=rs.coefficients[-1],
                                            _error=rs.coefficient_errors[-1])
         baselines = self._get_table_data(dm, 'baselines')
         if baselines:
+            self._baselines_table = baselines
             regressors = self._load_regressors(baselines)
             for iso, rs in regressors.iteritems():
                 self._signals['{}bs'.format(iso)] = Signal(_value=rs.coefficients[-1],
@@ -404,6 +370,8 @@ class IsotopeRecord(DatabaseRecord):
 
                 self.signals['{}{}'.format(isotope, key)] = s
 
+
+
     def _load_regressors(self, data):
         isos = [vi[1] for vi in data.itervalues()]
         isos = sorted(isos, key=lambda x:re.sub('\D', '', x))
@@ -416,11 +384,19 @@ class IsotopeRecord(DatabaseRecord):
         regs = dict()
         for iso in isos:
             try:
-                _di, _iso, fit, (x, y) = get_data(iso)
+                _di, _iso, ofit, (x, y) = get_data(iso)
             except ValueError:
                 continue
+
+            fit = self._get_iso_fit(iso, ofit)
+
             x = array(x)
             y = array(y)
+
+            exc = RegressionGraph._apply_filter_outliers(x, y)
+            x = delete(x[:], exc, 0)
+            y = delete(y[:], exc, 0)
+
             low = min(x)
             fit = RegressionGraph._convert_fit(fit)
             if fit in [1, 2, 3]:
@@ -444,8 +420,10 @@ class IsotopeRecord(DatabaseRecord):
             klass = StackedGraph
 
         graph = self._graph_factory(klass, width=700)
-        graph.suppress_regression = True
-        gkw = dict(padding=[50, 50, 5, 40])
+#        graph.suppress_regression = True
+        gkw = dict(padding=[50, 50, 5, 50],
+                   fill_padding=True
+                   )
 
         isos = [vi[1] for vi in data.itervalues()]
         isos = sorted(isos, key=lambda x:re.sub('\D', '', x))
@@ -457,20 +435,21 @@ class IsotopeRecord(DatabaseRecord):
                 return next((di for di in data.itervalues() if di[1] == k), None)
 
         i = 0
-#        for i, iso in enumerate(isos):
         for iso in isos:
             try:
-                di, _iso, fi, (xs, ys) = get_data(iso)
+                di, _iso, ofit, (xs, ys) = get_data(iso)
             except ValueError:
                 continue
 
+            fit = self._get_iso_fit(iso, ofit)
             gkw['ytitle'] = '{} ({})'.format(di if det is None else det, iso)
             gkw['xtitle'] = 'Time (s)'
             skw = dict()
             if regress:
-                skw['fit'] = fi
+                skw['fit'] = fit
 
-            graph.new_plot(**gkw)
+            graph.new_plot(
+                            **gkw)
             graph.new_series(xs, ys, plotid=i,
                              type='scatter', marker='circle',
                              marker_size=1.25,
@@ -481,15 +460,15 @@ class IsotopeRecord(DatabaseRecord):
 #            graph.suppress_regression = iso != isos[-1]
 #            graph.suppress_regression = False
 
-            params = dict(orientation='right' if i % 2 else 'left',
-                          axis_line_visible=False
-                          )
-
-            graph.set_axis_traits(i, 'y', **params)
+#            params = dict(orientation='right' if i % 2 else 'left',
+#                          axis_line_visible=False
+#                          )
+#
+#            graph.set_axis_traits(i, 'y', **params)
             i += 1
 
         graph.set_x_limits(min=0, max=ma, plotid=0)
-        graph.suppress_regression = False
+#        graph.suppress_regression = False
         graph._update_graph()
 
         return graph
@@ -531,6 +510,39 @@ class IsotopeRecord(DatabaseRecord):
 #===============================================================================
 # getters
 #===============================================================================
+    def _get_history_item(self, name):
+        '''
+            get the selected history item if available else use the last history
+        '''
+        dbr = self.dbrecord
+        histories = getattr(dbr, '{}_histories'.format(name))
+        if histories:
+            hist = None
+            shists = dbr.selected_histories
+            if shists:
+                hist = getattr(shists, 'selected_{}'.format(name))
+
+            if hist is None:
+                hist = histories[-1]
+
+            return getattr(hist, name)
+
+    def _get_iso_fit(self, iso, ofit):
+        fit = ofit
+#       get the fit latest fit history or use ofit
+        dbfit = self._get_db_fit(iso)
+        if dbfit:
+            fit = dbfit.fit
+        return fit
+
+    def _get_db_fit(self, iso):
+        hist = self.dbrecord.fit_histories
+        try:
+            hist = hist[-1]
+            return next((fi for fi in hist.fits if fi.isotope == iso), None)
+        except IndexError:
+            pass
+
     def _get_xy(self, tab, x='time', y='value'):
         return zip(*[(r[x], r[y]) for r in tab.iterrows()])
 
@@ -587,7 +599,13 @@ class IsotopeRecord(DatabaseRecord):
                 try:
                     fit = ti.attrs.fit
                 except AttributeError, e:
+#                    fit = 'parabolic'
                     pass
+
+                if grp == 'signals':
+                    if iso in ['Ar40', 'Ar39', 'Ar36']:
+                        fit = 'parabolic'
+
 #                print 'nn', name, ig._v_name
                 ds[ig._v_name] = [ti._v_name, iso, fit, data]
 
@@ -618,6 +636,14 @@ class IsotopeRecord(DatabaseRecord):
             ir = lev.irradiation
             pr = ir.production
             return pr
+        except AttributeError:
+            pass
+
+    @cached_property
+    def _get_irradiation(self):
+        try:
+            lev = self.irradiation_level
+            return lev.irradiation
         except AttributeError:
             pass
 
@@ -706,6 +732,7 @@ class IsotopeRecord(DatabaseRecord):
                 ic = s.value, s.error
 
         return ic
+
     @cached_property
     def _get_analysis_summary(self):
         fs = FitSelector(analysis=self,
@@ -780,10 +807,7 @@ class IsotopeRecord(DatabaseRecord):
 
     @cached_property
     def _get_age(self):
-#        import time
-#        st = time.clock()
         r = self._calculate_age()
-#        print time.clock() - st
         return r
 
     def _get_signals(self):
@@ -796,8 +820,6 @@ class IsotopeRecord(DatabaseRecord):
         keys = list(set(keys))
         isos = sorted(keys, key=lambda x: re.sub('\D', '', x))
         return isos
-
-
 
 #===============================================================================
 # factories
@@ -824,8 +846,6 @@ class IsotopeRecord(DatabaseRecord):
 # views
 #===============================================================================
     def traits_view(self):
-        info = self._get_info_grp()
-        info.label = 'Info'
         grp = HGroup(
                         Item('categories', editor=ListStrEditor(
                                                                 editable=False,

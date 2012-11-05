@@ -111,14 +111,16 @@ class Analysis(Loggable):
     graph_id = Property(depends_on='dbrecord')
     analysis_type = Property(depends_on='labnumber')
     k39 = Property
+    rad40 = Property
     timestamp = Float
 
 #    signals = Dict
 #    signals = DelegatesTo('dbrecord')
     signals = Property
-    age = Property(depends_on='age_dirty, signals[]')
+#    age = Property(depends_on='age_dirty, signals[]')
+    age = Property#(depends_on='age_dirty, signals[]')
     age_error = Property
-    age_dirty = Event
+#    age_dirty = Event
 
 #    k39 = Float
 #    k39err = Float
@@ -361,9 +363,22 @@ class Analysis(Loggable):
 #                except KeyError:
 #                    print 'eee', 0
 #                    return 0
-#@property
+    @property
+    def age_string(self):
+        a, e = self.age
+        try:
+            pe = abs(e / a * 100)
+        except ZeroDivisionError:
+            pe = 'Inf'
+        return u'{:0.3f} \u00b1{:0.3f}({:0.2f}%)'.format(a, e, pe)
+
+    @property
     def timestamp(self):
         return self.dbrecord.timestamp
+
+    def _get_rad40(self):
+        rr = self.dbrecord.arar_result
+        return rr['rad40'] / rr['tot40'] * 100
 
 #    @cached_property
     def _get_age(self):
@@ -389,7 +404,7 @@ class Analysis(Loggable):
 #    @cached_property
     def _get_rid(self):
         dbr = self.dbrecord
-        return '{}-{}'.format(self.labnumber, dbr.aliquot)
+        return '{}-{}{}'.format(self.labnumber, dbr.aliquot, dbr.step)
 #        dbr = self.dbrecord
 #        ln = dbr.labnumber
 #        return '{}-{}'.format(ln.labnumber, ln.aliquot)

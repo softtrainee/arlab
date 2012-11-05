@@ -766,7 +766,7 @@ if __name__ == '__main__':
     ia = IsotopeAdapter(
 
 #                        name='isotopedb_dev_migrate',
-                        name='isotopedb_dev_import',
+                        name='isotopedb_FC',
 #                        name='isotopedb_dev',
                         username='root',
                         password='Argon',
@@ -780,10 +780,12 @@ if __name__ == '__main__':
     if ia.connect():
 
 
-        dbs = IsotopeAnalysisSelector(_db=ia, style='simple')
+        dbs = IsotopeAnalysisSelector(db=ia,
+#                                      style='simple'
+                                      )
 #        repo = Repository(root=paths.isotope_dir)
         repo = Repository(root='/Users/ross/Sandbox/importtest')
-        repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/archive.zip')
+        repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/FC_Project_archive.zip')
         dbs.set_data_manager(kind='local',
                              repository=repo,
                              workspace_root=paths.default_workspace_dir

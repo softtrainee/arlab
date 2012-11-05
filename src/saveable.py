@@ -15,32 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, TableEditor
-from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.loggable import Loggable
-from src.managers.manager import Manager
+from traitsui.api import Handler
+from src.viewable import Viewable, ViewableHandler
+from traitsui.menu import Action
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class DatabaseManager(Manager):
-    db = Instance(IsotopeAdapter)
-    def _db_factory(self):
-#        db = IsotopeAdapter(username='massspec',
-#                            password='DBArgon',
-#                            kind='mysql',
-#                            name='isotopedb',
-#                            host='129.138.12.131'
-#                            )
-        db = IsotopeAdapter(username='root',
-                            password='Argon',
-                            kind='mysql',
-                            name='isotopedb_FC',
 
-                            )
+class SaveableHandler(ViewableHandler):
+    def save(self, info):
+        info.object.save()
 
-        return db
-    def _db_default(self):
-        db = self._db_factory()
-        return db
+    def save_as(self, info):
+        info.object.save_as()
 
+
+class Saveable(Viewable):
+    handler_klass = SaveableHandler
+
+
+SaveableButtons = [Action(name='Save', action='save',
+                                enabled_when='object.save_enabled'),
+                          Action(name='Save As', action='save_as')]
 #============= EOF =============================================

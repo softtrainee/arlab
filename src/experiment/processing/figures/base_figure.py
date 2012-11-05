@@ -87,6 +87,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     series = Instance(Series)
 
     manage_data = Button
+    custom_query = Button
     signal_keys = Property
     isotope_keys = Property(depends_on='signal_keys')
 
@@ -444,6 +445,55 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _refresh_graph(self, obj, name, old, new):
         self.refresh(caller='show_series')
 
+    def _create_custom_function(self):
+        p = os.path.join(paths.custom_queries_dir, 'get_irradiation_position.txt')
+        sql = open(p, 'r').read()
+        code = compile(sql, '<string>', 'exec')
+        #namespace to execute query in
+        ctx = dict(sess=self.db.get_session(),
+                   )
+        exec code in ctx
+        return ctx['query']
+
+    def _custom_query_fired(self):
+        db = self.db
+        db.connect()
+#        if self.selector is None:
+        ps = ProcessingSelector(db=self.db)
+        self.selector = ps
+        ps.selector.style = 'panel'
+        ps.on_trait_change(self._update_data, 'update_data')
+#            ps.selector.load_last(n=200)
+#        sess = db.get_session()
+
+        #=======================================================================
+        # custom
+        #=======================================================================
+        try:
+            query = self._create_custom_function()
+            recs = query()
+
+            from src.database.records.isotope_record import IsotopeRecord
+            recs = [IsotopeRecord(_dbrecord=ri,
+                                  selector=ps.selector
+                                  ) for ri in recs]
+            ps.selected_records = recs
+
+            gs = ps._group_by_labnumber()
+            for ri in ps.selected_records:
+                ri.group_id = gs.index(ri.labnumber)
+#            ps.show()
+        except Exception, e:
+            self.warning_dialog('Custom Query failed {}'.format(e))
+            print 'custom query exception', e
+
+        #=======================================================================
+        # 
+        #=======================================================================
+
+#        self.selector.show()
+        self._update_data()
+
     def _manage_data_fired(self):
         db = self.db
         db.connect()
@@ -533,6 +583,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #                    Item('export_pdf', show_label=False),
                     Item('show_results', show_label=False),
                     Item('manage_data', show_label=False),
+                    Item('custom_query', show_label=False),
                     )
         bottom = VGroup(tb, bot)
 
@@ -668,7 +719,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _graph_factory(self, klass=None, **kw):
         g = Graph(container_dict=dict(kind='h', padding=0,
                                       bgcolor='lightgray',
-                                      spacing=2,
+                                      spacing=0,
                                       ))
         return g
 

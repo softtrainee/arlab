@@ -67,6 +67,9 @@ class DatabaseAdapter(Loggable):
 
     selector = Any
 
+    #name used when writing to database
+    save_username = Str
+
 #    url = None
 
     @property
@@ -371,7 +374,7 @@ class DatabaseAdapter(Loggable):
 
     def _selector_factory(self, **kw):
         if self.selector_klass:
-            s = self.selector_klass(_db=self, **kw)
+            s = self.selector_klass(db=self, **kw)
 #            s.load_recent()
             return s
 

@@ -17,15 +17,17 @@
 #============= enthought library imports =======================
 from traits.api import Int, Any, Str, Instance, Property, cached_property, Bool
 from traitsui.api import View, Item, Group, HGroup, VGroup, spring
+from traitsui.menu import Action
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.graph.graph import Graph
 import time
+from src.saveable import Saveable
 
 
-class DatabaseRecord(Viewable):
+class DatabaseRecord(Saveable):
     dbrecord = Property(depends_on='_dbrecord')
     _dbrecord = Any
 
@@ -61,9 +63,7 @@ class DatabaseRecord(Viewable):
         return timefunc(ts)
 
     def opened(self):
-        ctrl = self.ui.control
-        from pyface.timer.do_later import do_later
-        do_later(ctrl.Raise)
+        self.show()
 
     def load(self):
         dbr = self._dbrecord
@@ -149,58 +149,63 @@ class DatabaseRecord(Viewable):
     def _graph_factory(self, klass=None, width=500, height=300):
         if klass is None:
             klass = Graph
-        g = klass(container_dict=dict(padding=5),
+        g = klass(container_dict=dict(padding=[5, 5, 0, 0],
+                                      spacing=0,
+                                      bgcolor='green',
+                                      fill_padding=False
+                                      ),
                   width=width,
                   height=height
                   )
+
         return g
 #===============================================================================
 # views
 #===============================================================================
-    def _get_additional_tabs(self):
-        return []
+#    def _get_additional_tabs(self):
+#        return []
+#
+#    def _get_graph_item(self):
+#        g = Item('graph',
+#                    show_label=False,
+#                    style='custom',
+#                    height=1.0)
+#        return g
 
-    def _get_graph_item(self):
-        g = Item('graph',
-                    show_label=False,
-                    style='custom',
-                    height=1.0)
-        return g
+#    def _get_info_grp(self):
+#        return VGroup(
+#                          VGroup(Item('rid', style='readonly', label='ID'),
+#                                    Item('rundate', style='readonly', label='Run Date'),
+#                                    Item('runtime', style='readonly', label='Run Time'),
+#                                    Item('directory', style='readonly'),
+#                                    Item('filename', style='readonly')),
+#                            VGroup(Item('summary',
+#                                    show_label=False,
+#                                    style='readonly',
+#                                    visible_when='object.summary'
+#                                    )),
+#                            HGroup(spring,
+#                              Item('export_button',
+#                                            show_label=False),
+#                       visible_when='object.exportable'
+#                       ),
+##                    label='Info',
+#                    )
 
-    def _get_info_grp(self):
-        return VGroup(
-                          VGroup(Item('rid', style='readonly', label='ID'),
-                                    Item('rundate', style='readonly', label='Run Date'),
-                                    Item('runtime', style='readonly', label='Run Time'),
-                                    Item('directory', style='readonly'),
-                                    Item('filename', style='readonly')),
-                            VGroup(Item('summary',
-                                    show_label=False,
-                                    style='readonly',
-                                    visible_when='object.summary'
-                                    )),
-                            HGroup(spring,
-                              Item('export_button',
-                                            show_label=False),
-                       visible_when='object.exportable'
-                       ),
-#                    label='Info',
-                    )
-
-    def traits_view(self):
-
-        grps = Group(self._get_info_grp())
-#        grps = Group()
-
-        agrps = self._get_additional_tabs()
-        g = self._get_graph_item()
-        if g is not None:
-            agrps.append(g)
-
-        for i, ai in enumerate(agrps):
-            grps.content.insert(i, ai)
-
-        return self._view_factory(grps)
+#    def traits_view(self):
+#
+#        grps = Group(self._get_info_grp())
+##        grps = Group()
+#
+#        agrps = self._get_additional_tabs()
+#        g = self._get_graph_item()
+#        if g is not None:
+#            agrps.append(g)
+#
+#        for i, ai in enumerate(agrps):
+#            grps.content.insert(i, ai)
+#
+#        return self._view_factory(grps)
 
     def _view_factory(self, grps):
         v = View(grps,
@@ -208,11 +213,14 @@ class DatabaseRecord(Viewable):
                     x=self.window_x,
                     y=self.window_y,
                     title=self.title,
-                    handler=self.handler_klass
+                    handler=self.handler_klass,
+                    buttons=[Action(name='Save', action='save')]
                     )
+
         if self.window_width:
             v.width = self.window_width
         if self.window_height:
             v.height = self.window_height
+
         return v
 #============= EOF =============================================

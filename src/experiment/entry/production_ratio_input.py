@@ -17,11 +17,11 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Str, Instance, Unicode, Property, Event
 from traitsui.api import View, Item, HGroup, VGroup, CheckListEditor
-from src.managers.manager import SaveableHandler, SaveableButtons
 from traitsui.menu import Action
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from traits.trait_errors import TraitError
 from src.loggable import Loggable
+from src.saveable import Saveable
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ProductionRatio(HasTraits):
@@ -35,7 +35,7 @@ class ProductionRatio(HasTraits):
                       show_labels=False))
         return v
 
-class ProductionRatioInput(Loggable):
+class ProductionRatioInput(Saveable):
     db = Instance(IsotopeAdapter)
     name = Str
     db_name = Property(depends_on='_db_name')
@@ -166,7 +166,7 @@ class ProductionRatioInput(Loggable):
                                 enabled_when='object.save_enabled'),
                           'Cancel'
                           ],
-                 handler=SaveableHandler,
+                 handler=self.handler_klass,
                  title='Production Ratio Input'
                  )
         return v

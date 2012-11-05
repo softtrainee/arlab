@@ -29,31 +29,72 @@ class FitSelector(HasTraits):
     fits = List(AnalysisParameters)
 
     _suppress_update = False
+    _plot_cache = None
     def _analysis_changed(self):
         if self.analysis:
             if self.analysis.isotope_keys:
                 keys = list(self.analysis.isotope_keys)
-
                 key = lambda x: re.sub('\D', '', x)
                 keys = sorted(keys, key=key, reverse=True)
 
                 n = len(keys) - 1
                 self.fits = list(map(lambda x:self._param_factory(n, x), enumerate(keys)))
+                self._schanged(None, None, None)
 
     def _param_factory(self, n, arg):
 
         i, name = arg
-        reg = self.graph.regressors[n - i]
-        fit = reg.fit
-        if fit == 'average':
-            fit = u'average \u00b1' + reg.error_calc.upper()
+        try:
+            reg = self.graph.regressors[n - i]
+            fit = reg.fit
+
+            inte = reg.predict(0)
+            er = reg.coefficient_errors[-1]
+            if fit == 'average':
+                fit = u'average \u00b1' + reg.error_calc.upper()
+        except IndexError:
+            inte, er, fit = 0, 0, '---'
 
         obj = AnalysisParameters(name=name,
                                  fit=fit,
-                                 intercept=reg.predict(0),
-                                 error=reg.coefficient_errors[-1],
+                                 _intercept=inte,
+                                 _error=er,
                                  )
         return obj
+
+
+    @on_trait_change('fits:show')
+    def _schanged(self, obj, name, new):
+#        print obj, name, new
+#        n = len(self.fits) - 1
+#        plotid = n - self.fits.index(obj)
+#        g = self.graph
+#        ss = [a.show for a in self.fits]
+#        print self.graph
+#        for i, a in enumerate(self.fits):
+#            print a.name, a.show
+#            if a.show:
+        if self._plot_cache is None:
+            comps = self.graph.plotcontainer.components
+            self._plot_cache = comps
+#        comps = list(set(self._plot_cache + self.graph.plotcontainer.components))
+#        comps = self.graph.plotcontainer.components
+        plots = [p for p, a in zip(self._plot_cache, reversed(self.fits)) if a.show]
+#        self._plot_cache = [p for p, a in zip(comps, self.fits) if not a.show]
+
+        self.graph.plotcontainer._components = plots
+        self.graph.set_paddings()
+        self.graph._update_bounds(self.graph.plotcontainer.bounds, plots)
+
+        for i, p in enumerate(reversed(plots)):
+            params = dict(orientation='right' if i % 2 else 'left',
+                          axis_line_visible=False
+                          )
+            pi = self._plot_cache.index(p)
+            self.graph.set_axis_traits(pi, 'y', **params)
+
+        self.graph.redraw()
+#        self._plot_cache = [self.graph.plotcontainer.components 
 
     @on_trait_change('fits:fit, fits:filterstr')
     def _changed(self, obj, name, new):
@@ -70,11 +111,11 @@ class FitSelector(HasTraits):
         self._suppress_update = False
         try:
             reg = g.regressors[plotid]
-            obj.intercept = reg.predict(0)
-            obj.error = reg.coefficient_errors[-1]
+            obj._intercept = reg.predict(0)
+            obj._error = reg.coefficient_errors[-1]
         except IndexError:
-            obj.intercept = 0
-            obj.error = 0
+            obj._intercept = 0
+            obj._error = 0
 
         self.analysis.age_dirty = True
 
@@ -87,9 +128,10 @@ class FitSelector(HasTraits):
             n = len(self.fits) - 1
             for i, fi in enumerate(self.fits):
                 reg = new[n - i]
-                fi.intercept = reg.predict(0)
-                fi.error = reg.coefficient_errors[-1]
-            self.analysis.age_dirty = True
+                fi._intercept = reg.predict(0)
+                fi._error = reg.coefficient_errors[-1]
+
+        self.analysis.age_dirty = True
 
     def traits_view(self):
         v = View(

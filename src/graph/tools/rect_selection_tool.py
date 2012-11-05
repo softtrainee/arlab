@@ -44,6 +44,7 @@ class RectSelectionTool(BaseTool):
     '''
     '''
     #update_flag = Bool
+    container = Any
     parent = Any
     plotid = Int
     plot = Any
@@ -54,24 +55,26 @@ class RectSelectionTool(BaseTool):
     active = True
     _start_pos = None
     _end_pos = None
+
     def normal_mouse_move(self, event):
 #        control = event.window.control
 #        self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
         plot = self.component
         index = plot.map_index((event.x, event.y), threshold=self.threshold)
         if index is not None:
-            if event.control_down:
-                plot.index.metadata[self.hover_metadata_name] = [index]
-                if hasattr(plot, "value"):
-                    plot.value.metadata[self.hover_metadata_name] = [index]
+            plot.index.metadata[self.hover_metadata_name] = [index]
+            yy = self.container.y2 - self.plot.y2 + self.plot.height - event.y
+            mxy = event.window.control.ClientToScreenXY(event.x, yy)
+            plot.index.metadata['mouse_xy'] = mxy
+#                if hasattr(plot, "value"):
+#                    plot.value.metadata[self.hover_metadata_name] = [index]
 
         elif not self.persistent_hover:
             plot.index.metadata.pop(self.hover_metadata_name, None)
             if hasattr(plot, "value"):
                 plot.value.metadata.pop(self.hover_metadata_name, None)
+
         return
-
-
 
     def _get_selection_token(self, event):
         '''
@@ -105,22 +108,21 @@ class RectSelectionTool(BaseTool):
         '''
 
         '''
-        if self.active:
+#        if self.active:
         #and not self.parent.filters[self.plotid]:
 #            self.parent.selected_plotid = self.plotid
 #            self.parent.selected_plot = self.plot
 #            self.parent.selected_component = self.component
-            token = self._get_selection_token(event)
-            if token is None:
-    #                self.component.index.metadata[self.selection_metadata_name] = []
-                self._start_select(event)
+        token = self._get_selection_token(event)
+        if token is None:
+#                self.component.index.metadata[self.selection_metadata_name] = []
+            self._start_select(event)
+        else:
+            if self._already_selected(token):
+                self._deselect_token(token)
             else:
-                if self._already_selected(token):
-                    self._deselect_token(token)
-                else:
-                    self._select_token(token)
+                self._select_token(token)
 
-            event.handled = True
 
     def _deselect_token(self, token):
         '''

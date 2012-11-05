@@ -20,6 +20,7 @@ from traits.api import HasTraits, String, Property, Str, List, Button, Any, \
 from traitsui.api import View, Item, EnumEditor, HGroup, Spring , spring
 from src.helpers.datetime_tools import get_date
 from datetime import datetime, timedelta
+from sqlalchemy.sql.expression import and_
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class TableSelector(HasTraits):
@@ -47,16 +48,18 @@ class TableSelector(HasTraits):
         return v
 
 class Query(HasTraits):
-    parameter = String
-    parameters = Property(depends_on='query_table')
+    parameter = String('Irradiation Position')
+#    parameters = Property(depends_on='query_table')
+    parameters = Property
 
     comparator = Str('=')
     comparisons = List(['=', '<', '>', '<=', '>=', '!=',
                          'like',
                          'contains'
                          ])
-    criterion = String('')
-    query_table = Any
+#    criterion = String('')
+    criterion = String('3')
+#    query_table = Any
 
     parent = Any
     add = Button('+')
@@ -64,62 +67,117 @@ class Query(HasTraits):
     removable = Bool(True)
     date_str = 'rundate'
 
-    def get_filter_str(self,):
-        return self._get_filter_str(self.parameter, self.comparator, self.criterion)
+    def assemble_filter(self, query, attr):
+        comp = self.comparator
+        if comp in ['like', 'contains', '=']:
+            c = self.criterion
+            if comp == 'like':
+                c += '%'
+            elif comp == 'contains':
+                comp = 'like'
+                c = '%' + c + '%'
+            query = query.filter(attr == c)
+        elif self.parameter == 'Run Date':
+            query = self.date_query(query, attr)
 
-    def _get_filter_str(self, param, comp, criteria):
-        if self.date_str in param:
-            c = criteria.replace('/', '-')
-            if criteria == 'today':
-                c = get_date()
-            elif criteria == 'this month':
-                d = datetime.today().date()
-                today = get_date()
-                if '=' in comp:
-                    d = d - timedelta(days=d.day)
-                    c = self._between(param, today, d)
-                    return c
-                else:
-                    c = d - timedelta(days=d.day - 1)
-            c = '{}'.format(c)
-        elif 'runtime' in param:
-            args = criteria.split(':')
-            if len(args) in [1, 2] and comp == '=':
-                base = ['00', ] * (3 - len(args))
-                g = ':'.join(args + base)
-                try:
-                    a = [int(ai) + (1 if len(args) - 1 == i else 0)
-                        for i, ai in enumerate(args)]
-                except ValueError:
-                    return None
+        return query
 
-                f = ':'.join(['{:n}', ] * (len(args)) + base)
-                l = f.format(*a)
-                c = self._between(param , l, g)
-                return c
+    def date_query(self, query, attr):
+        criterion = self.criterion
+        comp = self.comparator
+        c = criterion.replace('/', '-')
+        if criterion == 'today':
+            c = get_date()
+        elif criterion == 'this month':
+            d = datetime.today().date()
+            today = get_date()
+            if '=' in comp:
+                d = d - timedelta(days=d.day)
+                query = query(and_(attr <= today,
+                                   attr >= d
+                                   ))
             else:
-                c = ':'.join(args + ['00', ] * (3 - len(args)))
-        else:
-            #convert forgein key param
-            if not '.' in param:
-                param = '{}Table.id'.format(param)
+                comp = self._convert_comparator(comp)
+                c = d - timedelta(days=d.day - 1)
+                query = query(getattr(attr, comp)(c))
 
-            c = criteria
+#        c = '{}'.format(c)
+        return query
 
-        if comp == 'like':
-            c += '%'
-        elif comp == 'contains':
-            comp = 'like'
-            c = '%' + c + '%'
-
-        c = '"{}"'.format(c)
-        return ' '.join((param, comp, c))
+#        elif 'runtime' in param:
+#    def time_query(self):
+#        args = criteria.split(':')
+#        if len(args) in [1, 2] and comp == '=':
+#            base = ['00', ] * (3 - len(args))
+#            g = ':'.join(args + base)
+#            try:
+#                a = [int(ai) + (1 if len(args) - 1 == i else 0)
+#                    for i, ai in enumerate(args)]
+#            except ValueError:
+#                return None
+#
+#            f = ':'.join(['{:n}', ] * (len(args)) + base)
+#            l = f.format(*a)
+#            c = self._between(param , l, g)
+#            return c
+#        else:
+#            c = ':'.join(args + ['00', ] * (3 - len(args)))
+#    def get_filter_str(self,):
+#        return self._get_filter_str(self.parameter, self.comparator, self.criterion)
+#
+#    def _get_filter_str(self, param, comp, criteria):
+#        if self.date_str in param:
+#            c = criteria.replace('/', '-')
+#            if criteria == 'today':
+#                c = get_date()
+#            elif criteria == 'this month':
+#                d = datetime.today().date()
+#                today = get_date()
+#                if '=' in comp:
+#                    d = d - timedelta(days=d.day)
+#                    c = self._between(param, today, d)
+#                    return c
+#                else:
+#                    c = d - timedelta(days=d.day - 1)
+#            c = '{}'.format(c)
+#        elif 'runtime' in param:
+#            args = criteria.split(':')
+#            if len(args) in [1, 2] and comp == '=':
+#                base = ['00', ] * (3 - len(args))
+#                g = ':'.join(args + base)
+#                try:
+#                    a = [int(ai) + (1 if len(args) - 1 == i else 0)
+#                        for i, ai in enumerate(args)]
+#                except ValueError:
+#                    return None
+#
+#                f = ':'.join(['{:n}', ] * (len(args)) + base)
+#                l = f.format(*a)
+#                c = self._between(param , l, g)
+#                return c
+#            else:
+#                c = ':'.join(args + ['00', ] * (3 - len(args)))
+#        else:
+#            #convert forgein key param
+#            if not '.' in param:
+#                param = '{}.id'.format(param)
+#
+#            c = criteria
+#
+#        if comp == 'like':
+#            c += '%'
+#        elif comp == 'contains':
+#            comp = 'like'
+#            c = '%' + c + '%'
+#
+#        c = '"{}"'.format(c)
+#        return ' '.join((param, comp, c))
 
 #===============================================================================
 # private
 #===============================================================================
-    def _between(self, p, l, g):
-        return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)
+#    def _between(self, p, l, g):
+#        return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)
 
     def _convert_comparator(self, c):
         if c == '=':
@@ -134,18 +192,28 @@ class Query(HasTraits):
             c = '__ge__'
         return c
 
-    @cached_property
+#    @cached_property
     def _get_parameters(self):
 
-        b = self.query_table
-        params = [str(fi.column).split('.')[0].replace('Table', '').lower() for fi in b.__table__.foreign_keys]
-
-        params += [str(col) for col in b.__table__.columns]
-#        f = lambda x:[str(col)
-#                           for col in x.__table__.columns]
-#        params = list(f(b))
+#        b = self.query_table
+#        params = [str(fi.column).split('.')[0].replace('Table', '').lower() for fi in b.__table__.foreign_keys]
+#
+#        params += [str(col) for col in b.__table__.columns]
+##        f = lambda x:[str(col)
+##                           for col in x.__table__.columns]
+##        params = list(f(b))
+        params = ['Labnumber',
+                'Irradiation',
+                'Run Date/Time',
+                'Irradiation Level',
+                'Irradiation Position',
+                'Sample',
+                'Project',
+                'Experiment'
+                ]
         if not self.parameter:
             self.parameter = params[0]
+
         return params
 
 #===============================================================================
@@ -153,10 +221,11 @@ class Query(HasTraits):
 #===============================================================================
     def _add_fired(self):
 
-        g = TableSelector()
-        info = g.edit_traits()
-        if info.result:
-            self.parent.add_query(g.parameter)
+#        g = TableSelector()
+#        info = g.edit_traits()
+#        if info.result:
+#            self.parent.add_query(g.parameter)
+        self.parent.add_query('')
 
     def _remove_fired(self):
         self.parent.remove_query(self)

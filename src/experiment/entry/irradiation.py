@@ -23,15 +23,15 @@ from traitsui.menu import Action
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.managers.manager import SaveableHandler
 from src.experiment.entry.production_ratio_input import ProductionRatioInput
 from src.experiment.entry.chronology_input import ChronologyInput
 import os
 from src.paths import paths
 from src.viewable import Viewable
+from src.saveable import SaveableHandler, Saveable
 
 
-class Irradiation(Viewable):
+class Irradiation(Saveable):
     db = Instance(IsotopeAdapter)
     production_ratio_input = Instance(ProductionRatioInput)
     chronology_input = Instance(ChronologyInput)
@@ -110,7 +110,7 @@ class Irradiation(Viewable):
                                 enabled_when='object.save_enabled'),
                           'Cancel'
                           ],
-                 handler=SaveableHandler,
+                 handler=self.handler_klass,
                  )
         return v
 

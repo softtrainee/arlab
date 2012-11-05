@@ -67,4 +67,6 @@ class Viewable(Loggable):
             func = lambda:do_after(1, self.ui.control.Raise)
 
         func()
+
+
 # ============= EOF ====================================

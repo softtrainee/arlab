@@ -29,6 +29,7 @@ from src.viewable import Viewable, ViewableHandler
 from pyface.timer.do_later import do_after
 from src.rpc.rpcable import RPCable
 from src.envisage.core.action_helper import MANAGERS
+from src.saveable import SaveableHandler
 
 class MassSpecParam(object):
     _value = None
@@ -72,19 +73,10 @@ class AppHandler(ManagerHandler):
         info.object.close_displays()
         return True
 
-class SaveableHandler(Handler):
-    def save(self, info):
-        info.object.save()
-
-    def save_as(self, info):
-        info.object.save_as()
 
 class SaveableManagerHandler(SaveableHandler, ManagerHandler):
     pass
 
-SaveableButtons = [Action(name='Save', action='save',
-                                enabled_when='object.save_enabled'),
-                          Action(name='Save As', action='save_as')]
 
 class Manager(Viewable, RPCable):
     '''

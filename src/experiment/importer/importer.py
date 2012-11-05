@@ -71,11 +71,12 @@ class Importer(Loggable):
         frame.createGroup('/', 'baselines')
         #make new h5 file
 
-        def write_file(di, data, grp, k):
+        def write_file(di, data, fit, grp, k):
             di = di.replace(' ', '_')
             frame.createGroup('/{}'.format(grp), k)
             where = '/{}/{}'.format(grp, k)
             tab = frame.createTable(where, di, TimeSeriesTableDescription)
+            tab.attrs['fit'] = fit
             for y, x in data:
                 nrow = tab.row
                 nrow['time'] = x
@@ -84,11 +85,11 @@ class Importer(Loggable):
             tab.flush()
 
         for k, v in signals.iteritems():
-            det, data = v
-            write_file(det, data, 'signals', k)
+            det, data, fit = v
+            write_file(det, data, fit, 'signals', k)
 
-            det, data = baselines[k]
-            write_file(det, data, 'baselines', k)
+            det, data, fit = baselines[k]
+            write_file(det, data, fit, 'baselines', k)
 
         dm.close()
 
@@ -253,18 +254,20 @@ class MassSpecImporter(Importer):
         baselines = dict()
         isotopes = msrecord.isotopes
         for iso in isotopes:
-            pt = iso.peak_time_series
+            pt = iso.peak_time_series[-1]
             det = iso.detector.Label
             det = det if det else 'Null_Det'
 
             blob = pt.PeakTimeBlob
             data = [struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)]
-            signals[iso.Label] = det, data
+
+            fit = iso.results[-1].fit
+            signals[iso.Label] = det, data, fit
 
             pt = iso.baseline
             blob = pt.PeakTimeBlob
             data = [struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)]
-            baselines[iso.Label] = det, data
+            baselines[iso.Label] = det, data, 'average_SEM'
 
         return self._dump_file(signals, baselines)
 
@@ -396,15 +399,31 @@ class MassSpecImporter(Importer):
         '''
         src = self.source
         sess = src.get_session()
-        def get_analyses(ip):
-            q = sess.query(IrradiationPositionTable)
-            q = q.filter(IrradiationPositionTable.IrradPosition == ip)
-            irrad_pos = q.one()
-            return irrad_pos.analyses
+        #get by labnumber
+#        def get_analyses(ip):
+#            q = sess.query(IrradiationPositionTable)
+#            q = q.filter(IrradiationPositionTable.IrradPosition == ip)
+#            irrad_pos = q.one()
+#            return irrad_pos.analyses
 
-        ips = self._get_import_ids()
-        return [a for ip in ips
-                    for a in get_analyses(ip)]
+#        ips = self._get_import_ids()
+#        return [a for ip in ips
+#                    for a in get_analyses(ip)]
+        #get by project
+        def get_analyses(ni):
+            q = sess.query(IrradiationPositionTable)
+            q = q.join(SampleTable)
+            q = q.join(ProjectTable)
+            q = q.filter(ProjectTable.Project == ni)
+            return q.all()
+
+        prs = ['FC-Project']
+        ips = [ip for pr in prs
+                for ip in get_analyses(pr)
+               ]
+        ans = [a for ipi in ips
+                for a in ipi.analyses]
+        return ans
 
     def _get_import_ids(self):
 #        ips = ['17348']
@@ -434,18 +453,23 @@ if __name__ == '__main__':
     repo = Repository(root='/Users/ross/Sandbox/importtest/data')
     im = MassSpecImporter()
 
-    s = MassSpecDatabaseAdapter(kind='mysql', username='root',
-                                password='Argon',
-                                host='localhost',
-                                name='massspecdata_local'
+    s = MassSpecDatabaseAdapter(kind='mysql',
+#                                username='root',
+#                                password='Argon',
+#                                host='localhost',
+#                                name='massspecdata_local'
+                                username='massspec',
+                                password='DBArgon',
+                                host='129.138.12.131',
+                                name='massspecdata'
                                 )
     s.connect()
     d = IsotopeAdapter(kind='mysql',
-                       username='massspec',
-#                       host='localhost',
-                       host='129.138.12.131',
-                       password='DBArgon',
-                       name='isotopedb_dev')
+                       username='root',
+                       host='localhost',
+#                       host='129.138.12.131',
+                       password='Argon',
+                       name='isotopedb_FC')
     d.connect()
 
     im.source = s

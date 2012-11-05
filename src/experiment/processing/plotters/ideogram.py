@@ -32,6 +32,7 @@ from src.stats.core import calculate_weighted_mean, calculate_mswd
 from src.graph.context_menu_mixin import IsotopeContextMenuMixin
 from src.graph.graph import Graph
 from chaco.plot_containers import GridPlotContainer
+from chaco.tools.traits_tool import TraitsTool
 #from src.experiment.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -185,13 +186,14 @@ class Ideogram(Plotter):
                     ans = graph_groups[k]
                 except IndexError:
                     break
-#                print [ai.labnumber for ai in ans]
+                lns = map(str, list(set([ai.labnumber for ai in ans])))
                 g = self._build(
                                 ans,
                                 #analyses[i][j],
                                 padding,
                                 aux_plot_height,
-                                labnumber=ans[0].labnumber
+                                labnumber=ans[0].labnumber,
+                                title=', '.join(lns)
                                 )
                 if i == r - 1:
                     g.set_x_title('Age (Ma)')
@@ -237,58 +239,46 @@ class Ideogram(Plotter):
                                )
         return op, r, c
 
-    def _build(self, analyses, padding=None, aux_plot_height=100, labnumber=None):
+    def _build(self, analyses, padding=None, aux_plot_height=100, labnumber=None, title=''):
         if padding is None:
             padding = [40, 5 , 35, 35]
 
-#        g = self.graph
-#        self.results = []
-
-#        if analyses is None:
-#            analyses = self.analyses
-#        if padding is None:
-#            padding = self.padding
-
-#        self.analyses = analyses
-#        self.padding = padding
-#        if self.graph is None:
-#            g = mStackedGraph(panel_height=200,
-#                                equi_stack=False,
-#                                container_dict=dict(padding=5,
-#                                                    bgcolor='lightgray')
-#                                )
-#            self.graph = g
-#        else:
-#            g = self.graph
-
         g = mStackedGraph(panel_height=200,
                             equi_stack=False,
-                            container_dict=dict(padding=0,
-#                                                bgcolor='lightgray'
-                                                )
+                            container_dict=dict(padding=0)
                             )
         g.clear()
-        g.new_plot(
+        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))
+        g._has_title = True
+        p = g.new_plot(
                    contextmenu=False,
                    padding=padding)
-#        h = 100 / self.nrows
-        g.new_plot(
+
+        p.value_range.tight_bounds = False
+        p = g.new_plot(
                    contextmenu=False,
                    padding=padding, #[padding_left, padding_right, 1, 0],
-                   bounds=[50, aux_plot_height]
+                   bounds=[50, aux_plot_height],
                    )
+        p.value_range.tight_bounds = False
+        p = g.new_plot(
+                   contextmenu=False,
+                   padding=padding, #[padding_left, padding_right, 1, 0],
+                   bounds=[50, aux_plot_height],
+#                   title=title
+                   )
+        p.value_range.tight_bounds = False
+        p = g.new_plot(
+                   contextmenu=False,
+                   padding=padding, #[padding_left, padding_right, 1, 0],
+                   bounds=[50, aux_plot_height],
+                   title=title
+                   )
+        p.value_range.tight_bounds = False
 
         g.set_grid_traits(visible=False)
         g.set_grid_traits(visible=False, grid='y')
-#
-#        if r == nr:
-#            g.set_x_title('Age (Ma)')
 
-#        if c == 0:
-
-
-#        self.minprob = None
-#        self.maxprob = None
         g.labnumber = labnumber
         g.analyses = analyses
         g.maxprob = None
@@ -300,20 +290,24 @@ class Ideogram(Plotter):
             return
 
         ages, errors = self._get_ages(analyses)
-
         def get_ages_errors(group_id):
-            nages = [a.age[0] for a in analyses if a.group_id == group_id and a.age[0] in ages]
-            nerrors = [a.age[1] for a in analyses if a.group_id == group_id and a.age[1] in errors]
+            nages = [a.age[0] for a in analyses if a.group_id == group_id]
+            nerrors = [a.age[1] for a in analyses if a.group_id == group_id]
             aa = array(nages)
             ee = array(nerrors)
             return aa, ee
 
+        def get_rads(group_id):
+            rads = [a.rad40 for a in analyses if a.group_id == group_id]
+            return rads
+
+        def get_k39s(group_id):
+            rads = [a.k39 for a in analyses if a.group_id == group_id]
+            return rads
+
         if self.ideogram_of_means:
-#                return asarray(nages), asarray(nerrors)
 
             ages, errors = zip(*[calculate_weighted_mean(*get_ages_errors(gi)) for gi in group_ids])
-#            xmin = min(ages)
-#            xmax = max(ages)
             xmin, xmax = self._get_limits(ages)
             self._add_ideo(g, ages, errors, xmin, xmax, padding, 0, len(analyses))
 
@@ -325,20 +319,61 @@ class Ideogram(Plotter):
                 nages, nerrors = get_ages_errors(group_id)
                 self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
                                start=start,
-#                               analyses=ans
                                )
+
+                #add analysis number plot
+                n = zip(nages, nerrors)
+                n = sorted(n, key=lambda x:x[0])
+                aages, xerrs = zip(*n)
+                maa = start + len(ages)
+                age_ys = linspace(start, maa, len(aages))
+                self._add_aux_plot(g, aages, age_ys, xerrs, None, padding, group_id,
+                                       plotid=1)
+                g.set_axis_traits(tick_visible=False,
+                  tick_label_formatter=lambda x:'',
+                  axis='y', plotid=1)
+
                 start = start + len(ans) + 1
 
-        g.set_x_limits(min=xmin, max=xmax, plotid=0)
-        g.set_x_limits(min=xmin, max=xmax, plotid=1)
+                #add rad plot
+                rads = get_rads(group_id)
+                n = zip(nages, rads)
+                n = sorted(n, key=lambda x:x[0])
+                aages, rads = zip(*n)
+                rads, rad_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in rads])
+                self._add_aux_plot(g, aages,
+                                   rads,
+                                   None,
+                                   rad_errs,
+                                   padding,
+                                   group_id,
+                                       plotid=2)
+
+                g.set_axis_traits(axis='y', plotid=2)
+
+                #add k39 plot
+                k39s = get_k39s(group_id)
+                n = zip(nages, k39s)
+                n = sorted(n, key=lambda x:x[0])
+                aages, k39s = zip(*n)
+                k39, k39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in k39s])
+                self._add_aux_plot(g, aages,
+                                   k39,
+                                   None,
+                                   k39_errs,
+                                   padding,
+                                   group_id,
+                                   plotid=3)
+
+
+        g.set_x_limits(min=xmin, max=xmax, pad='0.2', plotid=0)
+#        g.set_x_limits(min=xmin, max=xmax, pad='0.2', plotid=1)
 
         minp = 0
         maxp = g.maxprob
-#        print maxp
         g.set_y_limits(min=minp, max=maxp * 1.05, plotid=0)
 
         #add meta plot info
-#        sigma = '03c3'
         self.plot_label = g.add_plot_label(self.plot_label_text, 0, 0)
 
         return g
@@ -346,7 +381,6 @@ class Ideogram(Plotter):
     def _get_plot_label_text(self):
         ustr = u'data 1\u03c3, age ' + str(self.nsigma) + u'\u03c3'
         return ustr
-
 
     def _get_ages(self, analyses):
         ages, errors = zip(*[a.age for a in analyses if a.age[0] is not None])
@@ -358,22 +392,10 @@ class Ideogram(Plotter):
 
         bins = linspace(xmi, xma, N)
         probs = zeros(N)
-#        def gprob(a, e, b):
-#            #calculate the gaussian prob
-#            #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
-#            #see http://en.wikipedia.org/wiki/Normal_distribution
-#            delta = math.pow(a - b, 2)
-#            return math.exp(-delta / (2 * e * e)) / (math.sqrt(2 * math.pi * e * e))
 
         for ai, ei in zip(ages, errors):
             if abs(ai) < 1e-10 or abs(ei) < 1e-10:
                 continue
-
-            #calculate probability curve for ai+/-ei
-#            gifunc = lambda x: gprob(ai, ei, x)
-
-            #verctorize maps the gifunc element-wise to bins
-#            gs= vectorize(gifunc)(bins)
 
             #calculate probability curve for ai+/-ei
             #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
@@ -386,17 +408,6 @@ class Ideogram(Plotter):
             #cumulate probabilities
             #numpy element_wise addition
             probs += gs
-
-#            for j, bj in enumerate(bins):
-                #calculate the gaussian prob
-                #p=1/(2*p*sigma2) *exp (-(x-u)**2)/(2*sigma2)
-                #see http://en.wikipedia.org/wiki/Normal_distribution
-#                delta = math.pow(ai - bj, 2)
-#                prob = math.exp(-delta / (2 * ei * ei)) / (math.sqrt(2 * math.pi * ei * ei))
-
-                #cumulate probablities
-#                probs[j] += gprob(ai, bj, ei)
-#            print ai, ei
 
         return bins, probs
 
@@ -459,10 +470,8 @@ class Ideogram(Plotter):
         g.maxprob = maxp
 
         g.set_axis_traits(tick_visible=False,
-#                          tick_label_formatter=lambda x:'',
+                          tick_label_formatter=lambda x:'',
                           axis='y', plotid=0)
-
-        self._add_aux_plot(g, ages, errors, padding, group_id, start)
 
 #        if g.analyses:
         #set the color
@@ -479,50 +488,32 @@ class Ideogram(Plotter):
                 a = mswd ** 0.5
         return we * a
 
-    def _add_aux_plot(self, g, ages, errors, padding, group_id, start, plotid=1):
+    def _add_aux_plot(self, g, ages, ys, xerrors, yerrors, padding, group_id, plotid=1):
 
         g.set_grid_traits(visible=False, plotid=plotid)
         g.set_grid_traits(visible=False, grid='y', plotid=plotid)
 
-        g.set_axis_traits(tick_visible=False,
-                          tick_label_formatter=lambda x:'',
-                          axis='y', plotid=plotid)
-
-#        g.set_y_title('Analysis #', plotid=plotid)
-#        g.set_axis_traits(orientation='right', plotid=1, axis='y')
-
-        n = zip(ages, errors)
-        n = sorted(n, key=lambda x:x[0])
-        ages, errors = zip(*n)
-#        ys = range(1, len(ages) + 1)
-#        ma = 10 * (group_id + 1)
-#        ys = linspace(1, 10 * (group_id + 1), len(ages))
-
-#        gg = group_id + 1
-#        print gg, ns, len(ages)
-#        ys = linspace(gg, ns + group_id, len(ages))
-#        print ys
-        ma = start + len(ages)
-        ys = linspace(start, ma, len(ages))
-        scatter, _p = g.new_series(ages, ys,
+        scatter, p = g.new_series(ages, ys,
                                    type='scatter', marker='circle',
                                    marker_size=2,
 #                                   selection_marker='circle',
                                    selection_marker_size=3,
                                    plotid=plotid)
+        if xerrors:
+            self._add_error_bars(scatter, xerrors, 'x')
+        if yerrors:
+            self._add_error_bars(scatter, yerrors, 'y')
+        self._add_scatter_inspector(g.plotcontainer, p, scatter, group_id=group_id)
 
-        self._add_error_bars(scatter, errors, 'x')
-        self._add_scatter_inspector(scatter, group_id=group_id)
+#        p.value_range.tight_bounds = False
+#        scatter.value_range.tight_bounds = False
+#        p.value_range.margin = 0.5
+#        print p.value_range.low, p.value_range.high, p.value_range.tight_bounds
+#        g.set_y_limits(*limits, plotid=plotid)
 
         d = lambda *args: self._update_graph(g, *args)
-#        scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
         scatter.index.on_trait_change(d, 'metadata_changed')
-#        scatter.index_mapper.on_trait_change(self._update_graph, 'updated')
-#        print p.index_range.low
-#        p.on_trait_change(self._update_graph, 'index_range.low')
-        g.set_y_limits(min=0, max=ma + 1, plotid=1)
 
-#
 #    def update_graph_metadata(self, obj, name, old, new):
 ###        print obj, name, old, new
 #        hover = self.metadata.get('hover')

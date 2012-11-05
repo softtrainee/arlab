@@ -66,7 +66,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     open_button = Button
     open_button_label = 'Open'
 
-    _db = DatabaseAdapter
+    db = DatabaseAdapter
 
     dclicked = Any
     selected = Any
@@ -159,13 +159,15 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return qs
 
     def _execute_query(self, filter_str):
-#        db = self._db
+#        db = self.db
         if filter_str is None:
             filter_str = self._generate_filter_str()
 
-        query_dict = dict(filter_str=filter_str,
+        query_dict = dict(
+                          filter_str=filter_str,
                       limit=self.limit,
-                      order=self._get_order()
+                      order=self._get_order(),
+                      queries=self.queries
                       )
 
         dbs = self._get_selector_records(**query_dict)
@@ -188,31 +190,38 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #        print self.selected_row
 
     def _load_records(self, records):
-        db = self._db
+        db = self.db
+        r = os.path.dirname(db.name)
         if records:
-            for di in records:
-                r = os.path.dirname(db.name)
-                d = self._result_factory(di,
-                                         root=r
-                                         )
+            nd = [self._result_factory(di, root=r) for di in records]
+            self.records.extend(nd)
+#            for di in records:
+#                r = os.path.dirname(db.name)
+#                d = self._result_factory(di,
+#                                         root=r
+#                                         )
 #                    d = self.record_klass(_db_result=di)
-                d.load()
-                d.on_trait_change(self._changed, 'changed')
-                self.records.append(d)
+
+
+#                self.records.append(d)
 
     def _changed(self, new):
-        db = self._db
+        db = self.db
         db.commit()
 
-    def _open_selected(self):
-        s = self.selected
+    def open_record(self, records):
+        self._open_selected(records)
 
-        if s is not None:
+    def _open_selected(self, records=None):
+        if records is None:
+            records = self.selected
+
+        if records is not None:
 
             if self.multi_select_graph:
-                self._open_multiple(s)
+                self._open_multiple(records)
             else:
-                self._open_individual(s)
+                self._open_individual(records)
 
     def _open_multiple(self, s):
         graph = None
@@ -276,8 +285,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self.opened_windows[wid] = ui
         self._update_windowxy()
 
-        if self._db.application is not None:
-            self._db.application.uis.append(ui)
+        if self.db.application is not None:
+            self.db.application.uis.append(ui)
 
     def _update_windowxy(self):
         self.wx += 0.005
@@ -320,26 +329,28 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 # factories
 #===============================================================================
     def _query_factory(self, removable=True, table=None):
-        if table is None:
-            table = self.query_table
-        else:
-            table = '{}Table'.format(table)
-            m = __import__(self.orm_path, fromlist=[table])
-            table = getattr(m, table)
+#        if table is None:
+#            table = self.query_table
+#        else:
+#            table = '{}Table'.format(table)
+#            m = __import__(self.orm_path, fromlist=[table])
+#            table = getattr(m, table)
 
         q = Query(parent=self,
                   removable=removable,
-                  query_table=table,
+#                  query_table=table,
                   date_str=self.date_str
                   )
         return q
 
     def _result_factory(self, di, **kw):
 
-        return self.record_klass(_dbrecord=di,
+        d = self.record_klass(_dbrecord=di,
                                  selector=self,
                                  **kw)
-
+        d.load()
+        d.on_trait_change(self._changed, 'changed')
+        return d
 #===============================================================================
 # views
 #===============================================================================
@@ -421,7 +432,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #            criteria = self.criteria
 #        self.criteria = criteria
 #
-#        db = self._db
+#        db = self.db
 #        if db is not None:
 #
 #            s = self._get_filter_str(param, comp, criteria)

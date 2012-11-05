@@ -81,7 +81,7 @@ class ProcessingManager(DatabaseManager):
                                 root='/Users/ross/Sandbox/importtest'
                              )
         elif self.repo_kind == 'ZIP':
-            repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/archive.zip')
+            repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/FC_Project_archive.zip')
         else:
             repo = Repository(root=paths.isotope_dir)
         self.repo = repo

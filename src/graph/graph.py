@@ -496,17 +496,18 @@ class Graph(Loggable, ContextMenuMixin):
         p = self.plots[plotid]
         p.title = t
 
-    def set_title(self, t, font='Helvetica', size=None):
+    def set_title(self, t, font='modern', size=None):
         '''
         '''
         self._title = t
 
         pc = self.plotcontainer
+
         if pc.overlays:
             pc.overlays.pop()
 
         if not font in VALID_FONTS:
-            font = 'Helvetica'
+            font = 'modern'
 
         if size is None:
             size = 12
@@ -522,12 +523,20 @@ class Graph(Loggable, ContextMenuMixin):
 #                       font)
 
         pl = PlotLabel(t, component=pc,
+#                       bgcolor='red',
+#                       draw_layer='overlay'
                                  font=font,
-                                 vjustify='bottom',
-                                 overlay_position='top'
+#                                 vjustify='bottom',
+#                                 overlay_position='top'
                                  )
+#        print pl
+        pc.overlays.append(pl)
+#        print pc.components
+#        pc.add(pl)
+#        pc._components.insert(0, pl)
 #        pc.invalidate_and_redraw()
-        pc.request_redraw()
+#        pc.request_redraw()
+        self.redraw()
 
     def get_x_title(self, plotid=0):
         '''

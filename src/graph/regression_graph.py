@@ -107,19 +107,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter = plot.plots['data{}'.format(series)][0]
         return scatter.fit
 
-    def _update_metadata(self, obj, name, old, new):
-        for plot in self.plots:
-            ks = plot.plots.keys()
-            scatters = [plot.plots[k][0] for k in ks if k.startswith('data')]
-            for si in scatters:
-#                print id(obj), id(si.index), si.index
-                if not si.index is obj:
-#                    print obj.metadata, si.index.metadata
-#                    si.index.trait_set(metadata=obj.metadata, trait_change_notify=False)
-                    si.index.trait_set(metadata=obj.metadata)
-                    si.value.trait_set(metadata=obj.metadata)
 
-#        self.redraw()
 
     def _update_graph(self, **kw):
         if self.suppress_regression:
@@ -128,18 +116,20 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         self.regressors = []
         for plot in self.plots:
             ks = plot.plots.keys()
-#            print ks
-#            scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
-#            ind = kkk[0][-1]
-#            fls = [plot.plots[kk][0] for kk in ks if kk == 'fit{}'.format(ind)]
-#            uls = [plot.plots[kk][0] for kk in ks if kk == 'upper CI{}'.format(ind)]
-#            lls = [plot.plots[kk][0] for kk in ks if kk == 'lower CI{}'.format(ind)]
-#
-#            #fls = [plot.plots[k][0] for k in ks if k.startswith('fit')]
-#            #uls = [plot.plots[k][0] for k in ks if k.startswith('upper')]
-#            #lls = [plot.plots[k][0] for k in ks if k.startswith('lower')]
-#            for si, fl, ul, ll in zip(scatters, fls, uls, lls):
-#                self._plot_regression(plot, si, fl, ul, ll)
+            try:
+                scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
+            except:
+                return
+
+        regress = True
+#        for si in scatters:
+#            if self
+
+        if not regress:
+            return
+
+        for plot in self.plots:
+            ks = plot.plots.keys()
             try:
                 scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
                 ind = kkk[0][-1]
@@ -147,15 +137,17 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 uls = [plot.plots[kk][0] for kk in ks if kk == 'upper CI{}'.format(ind)]
                 lls = [plot.plots[kk][0] for kk in ks if kk == 'lower CI{}'.format(ind)]
 
-                #fls = [plot.plots[k][0] for k in ks if k.startswith('fit')]
-                #uls = [plot.plots[k][0] for k in ks if k.startswith('upper')]
-                #lls = [plot.plots[k][0] for k in ks if k.startswith('lower')]
                 for si, fl, ul, ll in zip(scatters, fls, uls, lls):
                     self._plot_regression(plot, si, fl, ul, ll)
             except ValueError, e:
 #                print e
                 break
         else:
+#            regress = True
+#            if regress:
+#                for plot in self.plots:
+#                    for si, fl, ul, ll in zip(scatters, fls, uls, lls):
+#                        self._plot_regression(plot, si, fl, ul, ll)
             self.regression_results = self.regressors
 
 
@@ -219,7 +211,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             selection = index.metadata.get('selections', [])
 
         if filter_outliers:
-            x, y, excludes = self._apply_filter_outliers(x, y)
+            excludes = self._apply_filter_outliers(x, y)
             sels = index.metadata['selections']
             excludes = list(set(sels + excludes))
             meta = dict(selections=excludes)
@@ -315,7 +307,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         return list(invert(sli).nonzero()[0])
 
-    def _apply_filter_outliers(self, xs, ys):
+    @classmethod
+    def _apply_filter_outliers(cls, xs, ys):
         '''
             filter data using stats
             
@@ -324,62 +317,68 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             3. find outliers
             4. exclude outliers
         '''
-        import numpy as np
-        sf = StatsFilterParameters()
-        blocksize = sf.blocksize
-        tolerance_factor = sf.tolerance_factor
 
-        #group into blocks
-        n = ys.shape[0]
-        r = n / blocksize
-        c = blocksize
+        try:
+            import numpy as np
+            sf = StatsFilterParameters()
+            blocksize = sf.blocksize
+            tolerance_factor = sf.tolerance_factor
 
-        dev = n - (r * c)
-        remainder_block = None
-        if dev:
-            ys = ys[:-dev]
-            remainder_block = ys[-dev:]
-#            remainder_
+            #group into blocks
+            n = ys.shape[0]
+            r = n / blocksize
+            c = blocksize
 
-        blocks = ys.reshape(r, c)
+            dev = n - (r * c)
+#            remainder_block = None
+            if dev:
+                ys = ys[:-dev]
+#                remainder_block = ys[-dev:]
+    #            remainder_
 
-        #calculate stats
-        block_avgs = average(blocks, axis=1)
-        block_stds = np.std(blocks, axis=1)
-        devs = (blocks - block_avgs.reshape(r, 1)) ** 2
-#        devs = abs(blocks - block_avgs.reshape(r, 1))
+            blocks = ys.reshape(r, c)
 
-        #find outliers
-        tol = block_stds.reshape(r, 1) * tolerance_factor
-        exc_r, exc_c = np.where(devs > tol)
-        inc_r, inc_c = np.where(devs <= tol)
-        ny = blocks[inc_r, inc_c]
-        nx = xs[inc_c + inc_r * blocksize]
-        exc_xs = list(exc_c + exc_r * blocksize)
+            #calculate stats
+            block_avgs = average(blocks, axis=1)
+            block_stds = np.std(blocks, axis=1)
+            devs = (blocks - block_avgs.reshape(r, 1)) ** 2
+    #        devs = abs(blocks - block_avgs.reshape(r, 1))
 
-#        if remainder_block:
-#        #do filter on remainder block 
-#            avg = average(remainder_block)
-#            stds = np.std(remainder_block)
-#            tol = stds * tolerance_factor
-#            devs = (remainder_block - avg) ** 2
-#            exc_i, _ = np.where(devs > tol)
-#            inc_i, _ = np.where(devs < tol)
-#            exc_i = exc_i + n - 1
-#            nnx = xs[inc_i + n - 1]
-#            nny = ys[inc_i + n - 1]
-#
-#            nx = hstack((nx, nnx))
-#            ny = hstack((ny, nny))
-#            exc_xs += exc_i
+            #find outliers
+            tol = block_stds.reshape(r, 1) * tolerance_factor
+            exc_r, exc_c = np.where(devs > tol)
+#            inc_r, inc_c = np.where(devs <= tol)
+#            ny = blocks[inc_r, inc_c]
+#            nx = xs[inc_c + inc_r * blocksize]
+            exc_xs = list(exc_c + exc_r * blocksize)
 
-        return nx, ny, exc_xs
+    #        if remainder_block:
+    #        #do filter on remainder block 
+    #            avg = average(remainder_block)
+    #            stds = np.std(remainder_block)
+    #            tol = stds * tolerance_factor
+    #            devs = (remainder_block - avg) ** 2
+    #            exc_i, _ = np.where(devs > tol)
+    #            inc_i, _ = np.where(devs < tol)
+    #            exc_i = exc_i + n - 1
+    #            nnx = xs[inc_i + n - 1]
+    #            nny = ys[inc_i + n - 1]
+    #
+    #            nx = hstack((nx, nnx))
+    #            ny = hstack((ny, nny))
+    #            exc_xs += exc_i
+    #        print exc_xs
+    #        return nx, ny, exc_xs
+        except:
+            exc_xs = []
+
+        return exc_xs
 
     def new_series(self, x=None, y=None,
                    ux=None, uy=None, lx=None, ly=None,
                    fx=None, fy=None,
                    fit='linear',
-                   filter_outliers=False,
+                   filter_outliers=True,
                    marker='circle',
                    marker_size=2,
                    plotid=0, *args, **kw):
@@ -452,9 +451,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        self.plots[plotid].container.tools.append(broadcaster)
 
         rect_tool = RectSelectionTool(scatter,
-#                                      parent=self,
                                       plot=plot,
-                                      plotid=plotid)
+                                      plotid=plotid,
+                                      container=self.plotcontainer
+                                      )
         rect_overlay = RectSelectionOverlay(
                                             tool=rect_tool)
 
@@ -493,10 +493,21 @@ class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
 
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
     def _bind_index(self, index, bind_selection=True, **kw):
+        super(StackedRegressionGraph, self)._bind_index(index)
         if bind_selection:
             index.on_trait_change(self._update_metadata, 'metadata_changed')
-        super(StackedRegressionGraph, self)._bind_index(index)
 
+    def _update_metadata(self, obj, name, old, new):
+        self.suppress_regression = True
+        for plot in self.plots:
+            ks = plot.plots.keys()
+            scatters = [plot.plots[k][0] for k in ks if k.startswith('data')]
+            for si in scatters:
+    #                print id(obj), id(si.index), si.index
+                if not si.index is obj:
+                    si.index.trait_set(metadata=obj.metadata)
+                    si.value.trait_set(metadata=obj.metadata)
+        self.suppress_regression = False
 
 class StackedRegressionTimeSeriesGraph(StackedRegressionGraph, TimeSeriesGraph):
     pass
