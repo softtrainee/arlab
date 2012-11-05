@@ -33,7 +33,10 @@ class Saveable(Viewable):
     handler_klass = SaveableHandler
 
 
-SaveableButtons = [Action(name='Save', action='save',
-                                enabled_when='object.save_enabled'),
-                          Action(name='Save As', action='save_as')]
+SaveButton = Action(name='Save', action='save',
+                                enabled_when='object.save_enabled')
+SaveAsButton = Action(name='Save As', action='save_as')
+
+SaveableButtons = [SaveButton,
+                          SaveAsButton]
 #============= EOF =============================================

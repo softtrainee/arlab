@@ -109,7 +109,7 @@ class IsotopeRecord(DatabaseRecord):
     irradiation_level = Property
     irradiation_position = Property
     production_ratios = Property
-
+    status = Property
     age_scalar = 1e6
 
     _no_load = False
@@ -137,6 +137,9 @@ class IsotopeRecord(DatabaseRecord):
                                                     isotope=fi.name)
 
         self.selector.db.commit()
+
+    def set_status(self, status):
+        self._dbrecord.status = status
 
 #    def _age_dirty_changed(self):
 #        print 'asfdasfd'
@@ -773,6 +776,11 @@ class IsotopeRecord(DatabaseRecord):
                 ln = convert_labnumber(ln)
     #        ln = '{}-{}'.format(ln, self.aliquot)
                 return ln
+
+
+    @cached_property
+    def _get_status(self):
+        return self._dbrecord.status
 
     @cached_property
     def _get_shortname(self):

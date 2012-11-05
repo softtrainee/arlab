@@ -47,17 +47,31 @@ class Series(Plotter):
         else:
             return '{:0.2e}'.format(x)
 
-    def get_excluded_points(self, keys, group_ids):
-        graph = self.graph
-        exclude = dict()
 
-        for i, (k, f) in enumerate(keys):
-            for group_id in group_ids:
-                try:
-                    plot = graph.plots[i].plots['data{}'.format(group_id)][0]
-                    exclude['{}{}'.format(k, group_id)] = plot.index.metadata['selections']
-                except IndexError:
-                    pass
+    def get_excluded_points(self, keys, group_ids):
+        exclude = dict()
+        if self.graph:
+            graph = self.graph
+
+            for i, (k, f) in enumerate(keys):
+                for group_id in group_ids:
+                    try:
+                        plot = graph.plots[i].plots['data{}'.format(group_id)][0]
+                        exclude['{}{}'.format(k, group_id)] = plot.index.metadata['selections']
+                    except IndexError:
+                        pass
+        else:
+            for i, (k, f) in enumerate(keys):
+                for group_id in group_ids:
+                    try:
+#                        plot = graph.plots[i].plots['data{}'.format(group_id)][0]
+#                        sel = plot.index.metadata['selections']
+                        ff = [i for i, si in enumerate(self.sorted_analyses) if si.status == -1]
+                        exclude['{}{}'.format(k, group_id)] = ff
+                    except IndexError:
+                        pass
+
+
         return exclude
 
     def set_excluded_points(self, exclude, keys, group_ids):
@@ -79,13 +93,13 @@ class Series(Plotter):
         graph._update_graph()
 
 
-    def build(self, analyses, keys, basekeys, ratiokeys, group_ids,
+    def build(self, keys, basekeys, ratiokeys, group_ids,
               padding,
               graph=None,
               new_plot=True,
               regress=True,
               ):
-
+        analyses = self.analyses
         self.colorgen = colorname_gen()
         if isinstance(keys, str):
             keys = [keys]
@@ -238,18 +252,13 @@ class Series(Plotter):
         g.set_x_limits(min(xs), max(xs), pad='0.25', plotid=plotid)
 
         g.set_axis_traits(tick_label_formatter=self.axis_formatter, plotid=plotid, axis='y')
-
-#        from numpy import array
-#        es = array(es)
+        plot = g.plots[plotid]
         if regress:
-#            print 'ffff', g.regressors
             scatter = args[1]
         else:
-#            print args
-#            print plotid, g.plots[plotid].plots.keys()
-            scatter = g.plots[plotid].plots['plot{}'.format(args[0][-1])][0]
+            scatter = plot.plots['plot{}'.format(args[0][-1])][0]
 
-#        self._add_scatter_inspector(scatter, group_id, popup=False)
+        self._add_scatter_inspector(g.plotcontainer, plot, scatter, group_id, add_tool=False)
         self._add_error_bars(scatter, es, 'y')
 
 #        g.regress_plots()
