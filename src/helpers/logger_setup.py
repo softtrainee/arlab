@@ -96,6 +96,10 @@ def logging_setup(name, **kw):
     '''
     '''
 
+    #set up deprecation warnings
+    import warnings
+    warnings.simplefilter('default')
+
     #make sure we have a log directory
     bdir = os.path.join(paths.root, 'logs')
     if not os.path.isdir(bdir):

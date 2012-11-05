@@ -25,17 +25,12 @@ import os
 from src.repo.repository import FTPRepository, Repository, SFTPRepository, \
     ZIPRepository
 
-#from src.experiment.processing.ideogram import Ideogram
-#from src.experiment.processing.spectrum import Spectrum
-#from src.experiment.processing.inverse_isochron import InverseIsochron
-#from src.database.core.database_adapter import DatabaseAdapter
 from src.experiment.processing.figures.figure import Figure
 from src.experiment.processing.database_manager import DatabaseManager
 from src.paths import paths
-#from src.experiment.processing.processing_selector import ProcessingSelector
-#from src.experiment.processing.figure import Figure
 class ProcessingRepository(Repository):
     pass
+
 
 class ProcessingManager(DatabaseManager):
     workspace_root = paths.workspace_root_dir
@@ -87,6 +82,8 @@ class ProcessingManager(DatabaseManager):
         self.repo = repo
 
     def open_workspace(self, name=None):
+        import warnings
+        warnings.warn("deprecated", DeprecationWarning)
         if name is None:
             name = self.open_directory_dialog(default_path=self.workspace_root)
         else:
