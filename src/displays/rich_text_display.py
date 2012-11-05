@@ -88,6 +88,10 @@ class RichTextDisplay(HasTraits):
     font_name = 'Consolas'
 #    font_name = 'Helvetica'
 
+    @property
+    def visible(self):
+        return self._display is not None
+
     def close(self):
         if self.ui is not None:
             self.ui.dispose()
@@ -159,6 +163,8 @@ class RichTextDisplay(HasTraits):
             d.SelectNone()
             d.SetInsertionPoint(0)
             d.Thaw()
+
+
 #        def _clear():
 #    #        self.text = []
 #            self._text_buffer = []

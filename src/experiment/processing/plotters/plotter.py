@@ -37,6 +37,7 @@ class Plotter(Viewable):
     graph = Any
     selected_analysis = Any
     analyses = Any
+    sorted_analyses = Property(depends_on='analyses')
     error_bar_overlay = Any
     figure = Any
     popup = None
@@ -64,7 +65,7 @@ class Plotter(Viewable):
         if sigma_trait:
             self.on_trait_change(ebo.update_sigma, sigma_trait)
 
-    def _add_scatter_inspector(self, container, plot, scatter, group_id=0, popup=True):
+    def _add_scatter_inspector(self, container, plot, scatter, group_id=0, add_tool=True, popup=True):
         #add a scatter hover tool
 #        bc = BroadcasterTool()
 #        broadcaster = BroadcasterTool()
@@ -83,19 +84,19 @@ class Plotter(Viewable):
 ##                                      plot=self.graph.plots[0],
 #                                      plotid=1
 #                                      )
+        if add_tool:
+            rect_tool = RectSelectionTool(scatter,
+    #                                      parent=self,
+                                          container=container,
+                                          plot=plot,
+    #                                      plotid=1
+                                          )
+            rect_overlay = RectSelectionOverlay(
+                                                tool=rect_tool)
 
-        rect_tool = RectSelectionTool(scatter,
-#                                      parent=self,
-                                      container=container,
-                                      plot=plot,
-#                                      plotid=1
-                                      )
-        rect_overlay = RectSelectionOverlay(
-                                            tool=rect_tool)
-
-#        broadcaster.tools.append(rect_tool)
-        scatter.tools.append(rect_tool)
-        scatter.overlays.append(rect_overlay)
+    #        broadcaster.tools.append(rect_tool)
+            scatter.tools.append(rect_tool)
+            scatter.overlays.append(rect_overlay)
 
 
 #        scatter.overlays.append(rect_tool)
@@ -108,22 +109,24 @@ class Plotter(Viewable):
 #                    selection_outlin
 #                    )
 #        scatter.overlays.append(overlay)
-        if popup:
-            u = lambda a, b, c, d: self.update_graph_metadata(group_id, a, b, c, d)
-            scatter.index.on_trait_change(u, 'metadata_changed')
+#        if popup:
+        u = lambda a, b, c, d: self.update_graph_metadata(group_id, a, b, c, d)
+        scatter.index.on_trait_change(u, 'metadata_changed')
 #        self.metadata = scatter.index.metadata
 
+    def _get_sorted_analyses(self):
+        return sorted([a for a in self.analyses], key=self._cmp_analyses)
+
     def update_graph_metadata(self, group_id, obj, name, old, new):
-        pass
-#        print group_id, obj, name, old, new
         hover = obj.metadata.get('hover')
-#        print hover
+
+        sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
         if hover:
 #            print hover, group_id
             hoverid = hover[0]
 #            for ai in self.analyses:
 #                print ai.group_id
-            self.selected_analysis = sa = sorted([a for a in self.analyses if a.group_id == group_id], key=self._cmp_analyses)[hoverid]
+            self.selected_analysis = sa = sorted_ans[hoverid]
             event = obj.metadata.get('mouse_xy')
             from src.canvas.popup_window import PopupWindow
             if not self.popup:
@@ -135,14 +138,10 @@ class Plotter(Viewable):
             if self.popup:
                 self.popup.Show(False)
 
-
-
-#        print hover
-#        hover = self.metadata.get('hover')
-#        if hover:
-#            hoverid = hover[0]
-
-#            self.selected_analysis = sorted([a for a in self.analyses ], key=self._cmp_analyses)[hoverid]
+        sel = obj.metadata.get('selections', [])
+        #set the temp_status for all the analyses
+        for i, a in enumerate(sorted_ans):
+            a.temp_status = -1 if i in sel else 1
 
     def _cmp_analyses(self, x):
         return x.timestamp

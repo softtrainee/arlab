@@ -103,16 +103,17 @@ class Analysis(Loggable):
 
     dbrecord = Any
 
-    rid = Property(depends_on='dbrecord')
-    sample = Property(depends_on='dbrecord')
-    labnumber = Property(depends_on='dbrecord')
-    irradiation = Property(depends_on='dbrecord')
-    group_id = Property(depends_on='dbrecord')
-    graph_id = Property(depends_on='dbrecord')
-    analysis_type = Property(depends_on='labnumber')
+    rid = Property#(depends_on='dbrecord')
+    sample = Property#(depends_on='dbrecord')
+    labnumber = Property#(depends_on='dbrecord')
+    irradiation = Property#(depends_on='dbrecord')
+    group_id = Property#(depends_on='dbrecord')
+    graph_id = Property#(depends_on='dbrecord')
+    analysis_type = Property#(depends_on='labnumber')
     k39 = Property
     rad40 = Property
-    timestamp = Float
+    status = Property
+#    timestamp = Float
 
 #    signals = Dict
 #    signals = DelegatesTo('dbrecord')
@@ -136,6 +137,7 @@ class Analysis(Loggable):
 #    ic_factor = Property
 #    _ic_factor = Tuple
 
+    temp_status = Int
 #    @on_trait_change('signals:blank_signal')
 #    def _change(self):
 #        print 'fiafsd'
@@ -422,6 +424,9 @@ class Analysis(Loggable):
 #    @cached_property
     def _get_signals(self):
         return self.dbrecord.signals
+
+    def _get_status(self):
+        return self.dbrecord.status
 
     def _get_group_id(self):
         return self.dbrecord.group_id

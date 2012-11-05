@@ -82,8 +82,6 @@ class ProcessingManager(DatabaseManager):
         self.repo = repo
 
     def open_workspace(self, name=None):
-        import warnings
-        warnings.warn("deprecated", DeprecationWarning)
         if name is None:
             name = self.open_directory_dialog(default_path=self.workspace_root)
         else:

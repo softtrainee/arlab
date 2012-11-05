@@ -42,6 +42,7 @@ from src.experiment.processing.export.csv_exporter import CSVExporter
 from src.experiment.processing.export.excel_exporter import ExcelExporter
 from src.experiment.processing.figures.figure_store import FigureStore
 from src.initializer import MProgressDialog
+from src.saveable import Saveable, SaveableHandler, SaveButton
 
 class GraphSelector(HasTraits):
     show_series = Bool(False)
@@ -65,33 +66,29 @@ def sort_keys(func):
 
     return decorator
 
-class BaseFigure(Viewable, ColumnSorterMixin):
+class BaseFigure(Saveable, ColumnSorterMixin):
     graph = Instance(Graph)
-    analyses = Property(
-#                        depends_on='_analyses'
-                        )
+    series = Instance(Series)
+    graph_selector = Instance(GraphSelector, ())
+    results_display = Instance(RichTextDisplay, ())
+
+    analyses = Property()
     _analyses = List#(Analysis)
     selected_analysis = Any
-#    workspace = Any
-#    repo = Any
     db = Any
     username = Str
 
     series_configs = List
     ratio_configs = List
     selector = None
-#    result = Instance(Result, ())
 
 #    _debug = False
     _debug = True
-    series = Instance(Series)
 
     manage_data = Button
     custom_query = Button
     signal_keys = Property
     isotope_keys = Property(depends_on='signal_keys')
-
-    graph_selector = Instance(GraphSelector, ())
 
     series_klass = Series
     series_config_klass = SeriesConfig
@@ -101,9 +98,6 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     use_user_ratio_configs = True
     use_user_graph_selector = True
 
-    results_display = Instance(RichTextDisplay, (),
-                               )
-
     show_results = Button('stats')
     export_csv = Button('csv')
     export_pdf = Button('pdf')
@@ -111,16 +105,22 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     store = Button('store')
     load_button = Button('load')
 
-    def _check_refresh(self):
-        if self._analyses:
-            return True
+    def save(self):
+        self.info('saving')
+        self._save()
+        if self.confirmation_dialog('Are yor sure you want to save?', title='Confirm Save'):
+            self.db.commit()
 
+    def _save(self):
+        for a in self.analyses:
+            a.dbrecord.set_status(a.temp_status)
+#            print a.rid, a.temp_status
 
     def refresh(self, caller=None):
 
         print 'refresh called from {}'.format(caller)
 
-        self.results_display.clear()
+#        self.results_display.clear()
 
         analyses = self._analyses
 
@@ -138,10 +138,11 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         padding = [pl, 10, 0, 30]
         self._refresh(graph, analyses, padding)
 
-        self._refresh_stats()
+#        self._refresh_stats()
 
     def _refresh_stats(self):
         rd = self.results_display
+
         rd.clear()
         if self.series:
             if self.series.graph:
@@ -186,6 +187,9 @@ class BaseFigure(Viewable, ColumnSorterMixin):
     def _get_group_ids(self, analyses):
         return list(set([a.group_id for a in analyses]))
 #        return list(set([(a.group_id + offset, True) for a in analyses]))
+    def _check_refresh(self):
+        if self._analyses:
+            return True
 
     def _refresh(self, graph, analyses, padding):
         gs = self.graph_selector
@@ -198,14 +202,17 @@ class BaseFigure(Viewable, ColumnSorterMixin):
             rks = [(si.label, si.fit) for si in self.ratio_configs if si.show]
             group_ids = self._get_group_ids(analyses)
 
+            series = self.series_klass()
+            series.analyses = analyses
             keys = sks + bks + rks
-            epts = None
+#            epts = None
             if self.series:
                 epts = self.series.get_excluded_points(keys, group_ids)
+            else:
+                epts = series.get_excluded_points(keys, group_ids)
 
-            series = self.series_klass()
             series.analyses = self._analyses
-            gseries = series.build(analyses, sks, bks, rks, group_ids,
+            gseries = series.build(sks, bks, rks, group_ids,
                                    seriespadding)
 
             if gseries:
@@ -531,6 +538,7 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 
     def _show_results_fired(self):
         self.results_display.edit_traits()
+        self._refresh_stats()
 
     def _export_csv_fired(self):
         self.info('exporting to csv')
@@ -564,123 +572,8 @@ class BaseFigure(Viewable, ColumnSorterMixin):
         st = FigureStore(p, self)
         st.load()
 
-#===============================================================================
-# views
-#===============================================================================
-    def traits_view(self):
-        top = self._get_top_group()
-        bot = self._get_bottom_group()
-        export = HGroup(spring, 'export_csv', 'export_excel', 'export_pdf', show_labels=False,
-                        enabled_when='analyses'
-                        )
-        tb = HGroup(
-#                    spring,
-                    export,
-                    Item('store', show_label=False,),
-                    Item('load_button', show_label=False,),
-#                    Item('export_csv', show_label=False),
-#                    Item('export_excel', show_label=False),
-#                    Item('export_pdf', show_label=False),
-                    Item('show_results', show_label=False),
-                    Item('manage_data', show_label=False),
-                    Item('custom_query', show_label=False),
-                    )
-        bottom = VGroup(tb, bot)
-
-        v = View(VSplit(top, bottom),
-                 resizable=True,
-                 width=0.5,
-                 height=800,
-#                 height=0.8,
-                 title=' '
-                 )
-        v.buttons = self._get_buttons()
-        v.handler = self._get_handler()
-        return v
 
 
-    def _get_buttons(self):
-        return []
-
-    def _get_handler(self):
-        return ViewableHandler
-
-    def _get_top_group(self):
-        graph_grp = Item('graph', show_label=False, style='custom',
-                         height=0.7
-                         )
-        return graph_grp
-
-    def _get_bottom_group(self):
-
-        grps = [
-              self._get_graph_edit_group(),
-#              self._get_signals_group(),
-#              self._get_baselines_group(),
-              ]
-
-        g = Group(*grps,
-                  layout='tabbed')
-
-        return g
-
-    def _get_signals_group(self):
-        grp, ta = self._analyses_table_factroy('Signals')
-        self.signal_table_adapter = ta
-        return grp
-
-#        self.signal_table_adapter = ta = AnalysisTabularAdapter()
-#        sgrp = Group(Item('analyses',
-#                      show_label=False,
-##                       height=0.3,
-#                      editor=TabularEditor(adapter=ta,
-#                                           column_clicked='object.column_clicked',
-#                                           selected='object.selected_analysis',
-#                                           editable=False,
-##                                            operations=['delete']
-#                                            )
-#                       ),
-#                       label='Signals',
-#                       )
-#        return sgrp
-
-    def _get_baselines_group(self):
-        grp, ta = self._analyses_table_factroy('Baselines')
-        self.baseline_table_adapter = ta
-        return grp
-
-#        self.baseline_table_adapter = ta = AnalysisTabularAdapter()
-#        baselinegrp = Group(Item('analyses',
-#                                 show_label=False,
-##                                 height=0.3,
-#                                 editor=TabularEditor(adapter=ta,
-#                                           selected='object.selected_analysis',
-#                                           editable=False,
-#                                           )
-#                       ),
-#                       label='Baselines',
-#                       )
-#        return baselinegrp
-
-    def _get_graph_edit_group(self):
-        g = HGroup(Item('graph_selector', style='custom', show_label=False),
-                 listeditor('series_configs',
-                            height=125,
-                            width=200),
-                 listeditor('ratio_configs'),
-                 label='Graph'
-                 )
-        return g
-#    def _get_graph_edit_group(self):
-#        gs = self._get_graph_shows()
-#        g = HGroup(VGroup(*gs),
-#                 listeditor('series_configs', width=200),
-#                 label='Graph'
-#                 )
-#        return g
-#
-#    def _get_graph_shows(self):
-#        return [Item('show_series', label='Series')]
 #===============================================================================
 # factories
 #===============================================================================
@@ -785,5 +678,83 @@ class BaseFigure(Viewable, ColumnSorterMixin):
 #        import re
 #        key = lambda x: re.sub('\D', '', x)
 #        return sorted(list(set(keys)), key=key, reverse=reverse)
+#===============================================================================
+# views
+#===============================================================================
+    def traits_view(self):
+        top = self._get_top_group()
+        bot = self._get_bottom_group()
+        export = HGroup(spring, 'export_csv', 'export_excel', 'export_pdf', show_labels=False,
+                        enabled_when='analyses'
+                        )
+        tb = HGroup(
+#                    spring,
+                    export,
+                    Item('store', show_label=False,),
+                    Item('load_button', show_label=False,),
+#                    Item('export_csv', show_label=False),
+#                    Item('export_excel', show_label=False),
+#                    Item('export_pdf', show_label=False),
+                    Item('show_results', show_label=False),
+                    Item('manage_data', show_label=False),
+                    Item('custom_query', show_label=False),
+                    )
+        bottom = VGroup(tb, bot)
 
+        v = View(VSplit(top, bottom),
+                 resizable=True,
+                 width=0.5,
+                 height=800,
+#                 height=0.8,
+                 title=' '
+                 )
+        v.buttons = self._get_buttons()
+        v.handler = self._get_handler()
+        return v
+
+
+    def _get_buttons(self):
+        return [SaveButton]
+
+    def _get_handler(self):
+        return SaveableHandler
+
+    def _get_top_group(self):
+        graph_grp = Item('graph', show_label=False, style='custom',
+                         height=0.7
+                         )
+        return graph_grp
+
+    def _get_bottom_group(self):
+
+        grps = [
+              self._get_graph_edit_group(),
+#              self._get_signals_group(),
+#              self._get_baselines_group(),
+              ]
+
+        g = Group(*grps,
+                  layout='tabbed')
+
+        return g
+
+    def _get_signals_group(self):
+        grp, ta = self._analyses_table_factroy('Signals')
+        self.signal_table_adapter = ta
+        return grp
+
+    def _get_baselines_group(self):
+        grp, ta = self._analyses_table_factroy('Baselines')
+        self.baseline_table_adapter = ta
+        return grp
+
+    def _get_graph_edit_group(self):
+        g = HGroup(Item('graph_selector', style='custom', show_label=False),
+                 listeditor('series_configs',
+                            height=125,
+                            width=200),
+                 listeditor('ratio_configs'),
+                 label='Graph'
+                 )
+        return g
 #============= EOF =============================================
