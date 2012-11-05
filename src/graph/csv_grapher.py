@@ -135,11 +135,12 @@ class CSVGrapher(Loggable):
 
     def quick_graph(self, p):
         kind = 'scatter'
+#        for det in ['H2']:
         for det in ['H2', 'H1', 'AX', 'L1', 'L2']:
             g = self._gc(p, det, kind)
             info = g.edit_traits()
-            g.save_pdf('/Users/ross/Sandbox/baselines/auto/{}_{}_{}'.format(kind, 'all', det))
-            info.dispose()
+            g.save_pdf('/Users/ross/Sandbox/baselines/auto-down50/{}_{}2_{}'.format(kind, 'all', det))
+#            info.dispose()
 
     def _gc(self, p, det, kind):
         g = Graph(container_dict=dict(padding=5),
@@ -162,8 +163,13 @@ class CSVGrapher(Loggable):
             x = data[0]
             y = data[header.index(det)]
 
-        #smooth
         sy = smooth(y, window_len=120)#, window='flat')
+
+        x = x[::50]
+        y = y[::50]
+        sy = sy[::50]
+
+        #smooth
 
         #plot
         g.new_plot(zoom=True, xtitle='Time (s)', ytitle='{} Baseline Intensity (fA)'.format(det))
@@ -342,6 +348,6 @@ class CSVGrapher(Loggable):
 if __name__ == '__main__':
     cs = CSVGrapher()
 #    cs.quick_graph('/Users/ross/Sandbox/scan007.txt')
-    do_later(cs.quick_graph, '/Users/ross/Sandbox/scan007.txt')
+    do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan007-2.txt')
     cs.configure_traits()
 #============= EOF =============================================

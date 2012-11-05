@@ -93,7 +93,7 @@ class Series(Plotter):
         if graph is None:
             klass = StackedRegressionTimeSeriesGraph
             graph = klass(container_dict=dict(
-                                          bgcolor='lightgray',
+#                                          bgcolor='lightgray',
     #                                      padding=2,
                                           padding_top=0,
                                           padding_bottom=5,
@@ -201,7 +201,10 @@ class Series(Plotter):
 
         if self.pxma and self.pxmi:
             for pi in range(cnt):
-                graph.set_x_limits(self.pxmi, self.pxma, plotid=pi, pad='0.1')
+#                print self.pxma, self.pxmi
+                graph.set_x_limits(min=self.pxmi, max=self.pxma, plotid=pi, pad='0.1')
+#            print self.pxma, self.pxmi
+#            graph.set_x_limits(min=self.pxmi, max=self.pxma, plotid=0, pad='0.1')
 
         return graph
 
@@ -222,6 +225,7 @@ class Series(Plotter):
         args = g.new_series(xs, ys,
                      plotid=plotid,
                      fit=fi,
+                     filter_outliers=False,
 #                     regress=regress,
                      type='scatter',
                      marker='circle',
@@ -231,7 +235,7 @@ class Series(Plotter):
                      #marker_size=2
                      )
 
-#        g.set_x_limits(min(xs), max(xs), pad='0.25', plotid=plotid)
+        g.set_x_limits(min(xs), max(xs), pad='0.25', plotid=plotid)
 
         g.set_axis_traits(tick_label_formatter=self.axis_formatter, plotid=plotid, axis='y')
 
@@ -245,7 +249,7 @@ class Series(Plotter):
 #            print plotid, g.plots[plotid].plots.keys()
             scatter = g.plots[plotid].plots['plot{}'.format(args[0][-1])][0]
 
-        self._add_scatter_inspector(scatter, group_id)
+#        self._add_scatter_inspector(scatter, group_id, popup=False)
         self._add_error_bars(scatter, es, 'y')
 
 #        g.regress_plots()

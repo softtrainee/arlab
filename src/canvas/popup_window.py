@@ -29,36 +29,56 @@ import wx
 class PopupWindow(wx.MiniFrame):
     text = None
     def __init__(self, parent, style=None):
-        super(PopupWindow, self).__init__(parent, style=wx.NO_BORDER | wx.FRAME_FLOAT_ON_PARENT
-                              | wx.FRAME_NO_TASKBAR)
+        super(PopupWindow, self).__init__(parent,
+                                          style=wx.FRAME_FLOAT_ON_PARENT
+#                                          style=wx.NO_BORDER | wx.FRAME_FLOAT_ON_PARENT
+                              | wx.FRAME_NO_TASKBAR,
+
+                              )
+        self.SetBackgroundColour('red')
         #self.Bind(wx.EVT_KEY_DOWN , self.OnKeyDown)
 #        self.Bind(wx.EVT_CHAR, self.OnChar)
 #        self.Bind(wx.EVT_SET_FOCUS, self.OnFocus)
-        w = 125
-        h = 50
+#        w = 125
+#        h = 50
 
-        self.set_size(w, h)
-        s = wx.BoxSizer()
-        self.SetSizer(s)
-
+        s = wx.BoxSizer(wx.VERTICAL)
 
         t = wx.StaticText(self, style=wx.TE_MULTILINE | wx.TE_READONLY,
-                          size=(w, h)
+#                          size=(w, h)
                           )
-        #t = wx.TextCtrl(self, style = wx.TE_READONLY | wx.TE_)
-        s.Add(t)
+        t.SetBackgroundColour('#99CCFF')
+        s.Add(t, 1, wx.ALL, 2)
         self.text = t
+#        self.set_size(w, h)
+        self.SetAutoLayout(True)
+        self.SetSizer(s)
+        self.Layout()
+
+
+        #t = wx.TextCtrl(self, style = wx.TE_READONLY | wx.TE_)
+
+
+    def set_width(self, w):
+#        self.Freeze()
+        _w, h = self.GetSizeTuple()
+        self.SetSizeWH(w, h)
+#        self.Thaw()
 
     def set_size(self, width, height):
-        self.SetSize(wx.Size(width, height))
+        width, height = round(width), round(height)
+        self.Freeze()
+        self.SetSizeWH(width + 6, height + 6)
+        self.text.SetSizeWH(width, height)
+        self.Thaw()
 
 #    def OnChar(self, evt):
 #        print("OnChar: keycode=%s" % evt.GetKeyCode())
 #        self.GetParent().GetEventHandler().ProcessEvent(evt)
 
-    def Position(self, position, size):
-        #print("pos=%s size=%s" % (position, size))
-        self.Move((position[0] + size[0], position[1] + size[1]))
+#    def Position(self, position, size):
+#        #print("pos=%s size=%s" % (position, size))
+#        self.Move((position[0] + size[0], position[1] + size[1]))
 
     def SetPosition(self, position):
         #print("pos=%s" % (position))

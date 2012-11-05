@@ -23,7 +23,7 @@ from traitsui.api import View, Item, HGroup, Group, spring, \
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.managers.manager import Manager, SaveableHandler
+from src.managers.manager import Manager
 from traitsui.menu import Action
 from src.paths import paths
 from pyface.api import warning
@@ -31,6 +31,7 @@ from pyface.api import warning
 from src.pyscripts.pyscript_runner import PyScriptRunner
 import time
 from pyface.message_dialog import information
+from src.saveable import SaveableHandler
 #from traitsui.wx.code_editor import SourceEditor
 #from traitsui.wx.basic_editor_factory import BasicEditorFactory
 #from traitsui.editors.code_editor import ToolkitEditorFactory

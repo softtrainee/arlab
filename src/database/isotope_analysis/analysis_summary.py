@@ -24,10 +24,8 @@ from uncertainties import ufloat
 from src.database.isotope_analysis.summary import Summary
 from src.database.isotope_analysis.fit_selector import FitSelector
 import math
-#try:
-#    PLUSMINUS = u'\u00b1'
-#except:
-PLUSMINUS = '+/-'
+PLUSMINUS = u'\u00b1'
+#PLUSMINUS = '+/-'
 
 PLUSMINUS_ERR = '{}Err.'.format(PLUSMINUS)
 class AnalysisSummary(Summary):
@@ -48,7 +46,7 @@ class AnalysisSummary(Summary):
         self.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
         j, j_err = record.j
         self.add_text('J={} {}{}'.format(j, u'\u00b1', j_err))
-        def floatfmt(m, i=6):
+        def floatfmt(m, i=5):
             if abs(m) < 10 ** -i:
                 return '{:0.2e}'.format(m)
             else:
@@ -58,15 +56,15 @@ class AnalysisSummary(Summary):
 
         #add header
         columns = [('Iso.', 5),
-                   ('Int.', 12), (PLUSMINUS_ERR, 20),
-                   ('Fit', 11),
-                   ('Baseline', 12), (PLUSMINUS_ERR, 18),
-                   ('Blank', 12), (PLUSMINUS_ERR, 18)
+                   ('Int.', 12), (PLUSMINUS_ERR, 18),
+                   ('Fit', 4),
+                   ('Baseline', 10), (PLUSMINUS_ERR, 18),
+                   ('Blank', 8), (PLUSMINUS_ERR, 18)
                    ]
         widths = [w for _, w in columns]
 
-        msg = 'Iso.    Int.            ' + PLUSMINUS_ERR + '                Fit'
-        msg += '        Baseline   ' + PLUSMINUS_ERR + '               Blank        ' + PLUSMINUS_ERR
+        msg = 'Iso.  Int.       ' + PLUSMINUS_ERR + '           Fit '
+        msg += 'Baseline  ' + PLUSMINUS_ERR + '           Blank          ' + PLUSMINUS_ERR
 #        msg = ''.join([width(m, w) for m, w in columns])
         self.add_text(msg, underline=True, bold=True)
 
@@ -74,19 +72,14 @@ class AnalysisSummary(Summary):
         n = len(isos) - 1
         for i, iso in enumerate(isos):
             self._make_signals(n, i, iso, floatfmt, width, widths)
+
+#        m = 'Baseline Corrected Signals'
+#        self.add_text('{:<39s}'.format(m), underline=True, bold=True)
+#
 #        for i, iso in enumerate(isos):
-#            self._make_blanks(n, i, iso, floatfmt, width, widths)
+#            self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
 
-#        self.add_text('\n')
-
-        m = 'Baseline Corrected Signals'
-        self.add_text('{:<39s}'.format(m), underline=True, bold=True)
-
-#        signals = dict()
-        for i, iso in enumerate(isos):
-            self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
-
-        m = 'Fully Corrected Signals'
+        m = 'Corrected Signals'
         self.add_text('{:<39s}'.format(m), underline=True, bold=True)
 
 #        signals = dict()
@@ -128,8 +121,15 @@ class AnalysisSummary(Summary):
         self.add_text(' ')
 
         v, e = self.record.age
-        e = u' \u00b1' + '{:0.3f}'.format(e)
+        try:
+            ej = arar_result['age_err_wo_jerr'] / self.record.age_scalar
+        except TypeError:
+            ej = 0
+        e = u'\u00b1{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
+        ej = u'\u00b1{} ({})'.format(floatfmt(ej), self.calc_percent_error(v, ej))
+
         self.add_text('age={:0.3f} {}'.format(v, e))
+        self.add_text('           {}'.format(ej))
 
     def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths,
                                 fully_correct=False):
@@ -143,8 +143,8 @@ class AnalysisSummary(Summary):
             arar = self.record.arar_result
             if arar:
                 iso = iso.replace('Ar', 's')
-                s = arar[iso]
-
+                if iso in arar:
+                    s = arar[iso]
 
         sv = s.nominal_value
         se = s.std_dev()
@@ -184,7 +184,7 @@ class AnalysisSummary(Summary):
         sg = self.record.signal_graph
 #        d = self.display
         pi = n - i
-        fit = sg.get_fit(pi) if sg else '---'
+        fit = sg.get_fit(pi) if sg else ' '
         sig, base = self._get_signal_and_baseline(pi)
 
         try:
@@ -210,7 +210,7 @@ class AnalysisSummary(Summary):
 #                iso,
                 floatfmt(sv),
                 sse,
-                fit,
+                fit[0].upper(),
 
                 floatfmt(bs),
                 bse,
@@ -241,8 +241,8 @@ class AnalysisSummary(Summary):
 #                               )
 
     def traits_view(self):
-        v = View(Item('display', height=0.8, show_label=False, style='custom'),
-                 Item('fit_selector', height=0.2, show_label=False, style='custom'))
+        v = View(Item('display', height=0.75, show_label=False, style='custom'),
+                 Item('fit_selector', height=0.25, show_label=False, style='custom'))
         return v
 
 

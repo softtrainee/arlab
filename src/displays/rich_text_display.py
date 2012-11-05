@@ -85,8 +85,8 @@ class RichTextDisplay(HasTraits):
     selectable = False
     id = ''
 
-#    font_name = 'Consolas'
-    font_name = 'Helvetica'
+    font_name = 'Consolas'
+#    font_name = 'Helvetica'
 
     def close(self):
         if self.ui is not None:

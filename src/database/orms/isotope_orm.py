@@ -114,7 +114,7 @@ class proc_BackgroundsTable(Base, BaseMixin):
     user_error = Column(Float)
     use_set = Column(Boolean)
     isotope = stringcolumn()
-    fit = Column(String(40))
+    fit = stringcolumn()
     sets = relationship('proc_BackgroundsSetTable', backref='backgrounds')
 
 
@@ -140,16 +140,32 @@ class proc_DetectorIntercalibrationTable(Base, BaseMixin):
     user_value = Column(Float)
     user_error = Column(Float)
 #    use_set = Column(Boolean)
-    fit = Column(String(40))
+    fit = stringcolumn()
     sets = relationship('proc_DetectorIntercalibrationSetTable',
                         backref='detector_intercalibration',
                         )
+
+class proc_FitHistoryTable(Base, HistoryMixin):
+    fits = relationship('proc_FitTable', backref='history',
+#                        uselist=False
+                        )
+
+    selected = relationship('proc_SelectedHistoriesTable',
+                            backref='selected_fits',
+                            uselist=False
+                            )
+
+class proc_FitTable(Base, BaseMixin):
+    history_id = foreignkey('proc_FitHistoryTable')
+    fit = stringcolumn()
+    isotope = stringcolumn()
 
 class proc_SelectedHistoriesTable(Base, BaseMixin):
     analysis_id = foreignkey('meas_AnalysisTable')
     selected_blanks_id = foreignkey('proc_BlanksHistoryTable')
     selected_backgrounds_id = foreignkey('proc_BackgroundsHistoryTable')
     selected_detector_intercalibration_id = foreignkey('proc_DetectorIntercalibrationHistoryTable')
+    selected_fits_id = foreignkey('proc_FitHistoryTable')
 
 
 #class proc_WorkspaceHistoryTable(Base, HistoryMixin):
@@ -191,6 +207,7 @@ class meas_AnalysisTable(Base, ResultsMixin):
     status = Column(Integer, default=1)
     aliquot = Column(Integer)
     step = stringcolumn(10)
+
     isotopes = relationship('meas_IsotopeTable', backref='analysis')
 
     #proc relationships
@@ -204,6 +221,8 @@ class meas_AnalysisTable(Base, ResultsMixin):
                                                        backref='analysis')
     detector_intercalibration_sets = relationship('proc_DetectorIntercalibrationSetTable',
                                                    backref='analysis')
+
+    fit_histories = relationship('proc_FitHistoryTable', backref='analysis')
 
     selected_histories = relationship('proc_SelectedHistoriesTable',
                                       backref='analysis', uselist=False)

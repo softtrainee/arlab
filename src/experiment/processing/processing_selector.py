@@ -129,6 +129,8 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
     update_data = Event
 
+    dclicked = Any
+
     selected_row = Any
     selected = Any
     group_cnt = 0
@@ -144,6 +146,20 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
         if isok:
             self.update_data = True
         return True
+
+    def _group_by_labnumber(self):
+        groups = dict()
+        for ri in self.selected_records:
+            if ri.labnumber in groups:
+                group = groups[ri.labnumber]
+                group.append(ri.labnumber)
+            else:
+                groups[ri.labnumber] = [ri.labnumber]
+
+        keys = sorted(groups.keys())
+        return keys
+#        for ri in self.selected_records:
+#            ri.graph_id = keys.index(ri.labnumber)
 
 #===============================================================================
 # handlers
@@ -264,6 +280,8 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
         selector.load_records(nrs)
 
+    def _dclicked_changed(self):
+        self.selector.open_record(self.selected)
 #===============================================================================
 # view
 #===============================================================================
@@ -309,6 +327,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                                                                auto_update=True,
                                                         editable=False,
 #                                                        drag_move=True,
+                                                        dclicked='object.dclicked',
                                                         selected='object.selected',
                                                         selected_row='object.selected_row',
                                                         column_clicked='object.column_clicked',

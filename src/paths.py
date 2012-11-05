@@ -67,6 +67,7 @@ class Paths():
     plugins_dir = None
     hidden_dir = hidden_dir = None
     test_dir = None
+    custom_queries_dir = None
     #===========================================================================
     # scripts
     #===========================================================================
@@ -165,6 +166,7 @@ class Paths():
         self.experiment_dir = join(root, 'experiments')
         self.hidden_dir = join(root, '.hidden')
         self.test_dir = join(root, 'testing')
+        self.custom_queries_dir = join(root, 'custom_queries')
         #==============================================================================
         # setup
         #==============================================================================

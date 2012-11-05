@@ -141,7 +141,8 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         iso = self.get_isotope(iso)
         pk = PeakTimeTable(PeakTimeBlob=blob)
         if iso is not None:
-            iso.peak_time_series = pk
+#            iso.peak_time_series= pk
+            iso.peak_time_series.append(pk)
             return pk, True
 
         return pk, False
