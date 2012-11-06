@@ -43,10 +43,11 @@ class AnalysisParameters(HasTraits):
         e = self._error
         try:
             ee = abs(e / self._intercept * 100)
+            ee = '{:0.2f}'.format(ee)
         except ZeroDivisionError:
             ee = 'Inf'
         e = '{:0.6f}'.format(e)
-        return u'\u00b1{:<12s}({:0.2f}%)'.format(e, ee)
+        return u'\u00b1{:<12s}({}%)'.format(e, ee)
 
     def _name_changed(self):
         if self.name == 'Ar40':

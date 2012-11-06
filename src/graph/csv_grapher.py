@@ -348,6 +348,6 @@ class CSVGrapher(Loggable):
 if __name__ == '__main__':
     cs = CSVGrapher()
 #    cs.quick_graph('/Users/ross/Sandbox/scan007.txt')
-    do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan007-2.txt')
+    do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan010.txt')
     cs.configure_traits()
 #============= EOF =============================================

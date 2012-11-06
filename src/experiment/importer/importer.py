@@ -72,12 +72,15 @@ class Importer(Loggable):
         #make new h5 file
 
         def write_file(di, data, fit, grp, k):
+#            print di, fit, grp, k
             di = di.replace(' ', '_')
             frame.createGroup('/{}'.format(grp), k)
             where = '/{}/{}'.format(grp, k)
             tab = frame.createTable(where, di, TimeSeriesTableDescription)
-            tab.attrs['fit'] = fit
+
+            tab.attrs.fit = fit
             for y, x in data:
+                print y, x
                 nrow = tab.row
                 nrow['time'] = x
                 nrow['value'] = y
@@ -152,11 +155,13 @@ class MassSpecImporter(Importer):
 
             self._import_irradiation(msrecord, dblabnumber)
 
-            #get all the monitors and add
-            monitors = self._get_monitors(msrecord)
-            for mi in monitors:
-                self._import_item(mi)
-            dest.commit()
+            import_monitors = False
+            if import_monitors:
+                #get all the monitors and add
+                monitors = self._get_monitors(msrecord)
+                for mi in monitors:
+                    self._import_item(mi)
+                dest.commit()
 
 #            analyses += monitors
 
@@ -244,7 +249,7 @@ class MassSpecImporter(Importer):
         selhist.selected_blanks = dbhist
         for iso in isotopes:
             #use the last result
-            result = iso.result[-1]
+            result = iso.results[-1]
             bk, bk_er = result.Bkgd, result.BkgdEr
             dest.add_blanks(dbhist, user_value=bk, user_error=bk_er,
                             use_set=False, isotope=iso.Label)
@@ -254,15 +259,22 @@ class MassSpecImporter(Importer):
         baselines = dict()
         isotopes = msrecord.isotopes
         for iso in isotopes:
-            pt = iso.peak_time_series[-1]
+            pt = iso.peak_time_series[0]
             det = iso.detector.Label
             det = det if det else 'Null_Det'
 
+            #need to get xs from PeakTimeBlob
             blob = pt.PeakTimeBlob
-            data = [struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)]
+            _ys, xs = zip(*[struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
 
-            fit = iso.results[-1].fit
-            signals[iso.Label] = det, data, fit
+            #get PeakNeverBslnCorBlob
+            blob = pt.PeakNeverBslnCorBlob
+            #this blob is different 
+            #it is a flat list of ys
+            ys = [struct.unpack('>f', blob[i:i + 4])[0] for i in xrange(0, len(blob), 4)]
+
+            fit = iso.results[-1].fit.Label
+            signals[iso.Label] = det, zip(ys, xs), fit
 
             pt = iso.baseline
             blob = pt.PeakTimeBlob
@@ -411,18 +423,27 @@ class MassSpecImporter(Importer):
 #                    for a in get_analyses(ip)]
         #get by project
         def get_analyses(ni):
-            q = sess.query(IrradiationPositionTable)
-            q = q.join(SampleTable)
-            q = q.join(ProjectTable)
-            q = q.filter(ProjectTable.Project == ni)
+#            q = sess.query(IrradiationPositionTable)
+#            q = q.join(IrradiationPositionTable)
+#            q = q.join(SampleTable)
+#            q = q.join(ProjectTable)
+#            q = q.filter(ProjectTable.Project == ni)
+
+            q = sess.query(AnalysesTable)
+            q = q.filter(AnalysesTable.RID == '61311-36B')
+
+
             return q.all()
 
-        prs = ['FC-Project']
-        ips = [ip for pr in prs
-                for ip in get_analyses(pr)
-               ]
-        ans = [a for ipi in ips
-                for a in ipi.analyses]
+#        prs = ['FC-Project']
+#        ips = [ip for pr in prs
+#                for ip in get_analyses(pr)
+#               ]
+#        ans = [a for ipi in ips
+#                for a in ipi.analyses]
+
+        ans = get_analyses('FC-Project')
+        print len(ans)
         return ans
 
     def _get_import_ids(self):
@@ -469,7 +490,7 @@ if __name__ == '__main__':
                        host='localhost',
 #                       host='129.138.12.131',
                        password='Argon',
-                       name='isotopedb_FC')
+                       name='isotopedb_FC2')
     d.connect()
 
     im.source = s

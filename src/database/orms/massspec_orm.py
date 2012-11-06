@@ -235,7 +235,9 @@ class IsotopeResultsTable(Base):
     BkgdEr = Column(Float)
     BkgdDetTypeID = Column(Integer)
     PkHtChangePct = Column(Float)
-    Fit = Column(Integer)
+#    Fit = Column(Integer)
+    Fit = Column(Integer, ForeignKey('fittypetable.Fit'))
+
     GOF = Column(Float)
     PeakScaleFactor = Column(Float)
 
@@ -262,10 +264,17 @@ class IsotopeTable(Base):
 #    peak_time_series = relation('PeakTimeTable', uselist=False)
     peak_time_series = relation('PeakTimeTable')
 
-    result = relationship('IsotopeResultsTable', backref='isotope',
+    results = relationship('IsotopeResultsTable', backref='isotope',
 #                          uselist=False
                           )
 
+class FittypeTable(Base):
+    __tablename__ = 'fittypetable'
+    Fit = Column(Integer, primary_key=True)
+    Label = Column(String(40))
+    results = relationship('IsotopeResultsTable', backref='fit',
+#                          uselist=False
+                          )
 
 
 class LoginSessionTable(Base):
@@ -298,7 +307,7 @@ class PeakTimeTable(Base):
     Counter = Column(Integer, primary_key=True)
     PeakTimeBlob = Column(BLOB)
     IsotopeID = Column(Integer, ForeignKey('IsotopeTable.IsotopeID'))
-
+    PeakNeverBslnCorBlob = Column(BLOB)
 
 class PreferencesTable(Base):
     __tablename__ = 'PreferencesTable'

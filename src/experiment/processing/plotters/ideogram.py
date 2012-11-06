@@ -503,6 +503,8 @@ class Ideogram(Plotter):
             self._add_error_bars(scatter, xerrors, 'x')
         if yerrors:
             self._add_error_bars(scatter, yerrors, 'y')
+
+#        print 'aaa', group_id, id(scatter)
         self._add_scatter_inspector(g.plotcontainer, p, scatter, group_id=group_id)
 
 #        p.value_range.tight_bounds = False
@@ -510,7 +512,7 @@ class Ideogram(Plotter):
 #        p.value_range.margin = 0.5
 #        print p.value_range.low, p.value_range.high, p.value_range.tight_bounds
 #        g.set_y_limits(*limits, plotid=plotid)
-
+#        if plotid == 1:
         d = lambda *args: self._update_graph(g, *args)
         scatter.index.on_trait_change(d, 'metadata_changed')
 
@@ -525,11 +527,62 @@ class Ideogram(Plotter):
 
     def _update_graph(self, g):
         xmi, xma = g.get_x_limits()
-        plot = g.plots[0]
+        ideo = g.plots[0]
+
+        sels = dict()
+#        sel = []
+        has_sel = False
+        for pp in g.plots[1:]:
+#            si = []
+            for i, p in enumerate(pp.plots.itervalues()):
+                ss = p[0].index.metadata['selections']
+
+                if i in sels:
+                    sels[i] = list(set(ss + sels[i]))
+                else:
+                    sels[i] = ss
+#
+#                if ss:
+#                    has_sel = True
+#                    break
+#            if has_sel:
+#                break
+
+#        for ppp in g.plots[1:]:
+#            if ppp == pp:
+#                continue
+#
+#            for i, p in enumerate(ppp.plots.itervalues()):
+#                if i in sels:
+#                    p[0].index.metadata['selections'] = sels[i]
+
+#                si += ss
+
+#            sels[p[0]] = si
+#        print 'a', sels
+#
+#        for pp in g.plots[1:]:
+#            for i, p in enumerate(pp.plots.itervalues()):
+#                meta = p[0].index.metadata
+#                print meta
+#                p[0].index.metadata['selections'] = sel
+#                n = dict(selections=sel)
+#                n = dict()
+#                n.update(meta, selections=sel)
+#                p[0].index.trait_set(metadata=n, trait_change_notify=False)
+
         for i, p in enumerate(g.plots[1].plots.itervalues()):
             result = self.results[i]
-            sel = p[0].index.metadata['selections']
-            dp = plot.plots['plot{}'.format(i * 3 + 1)][0]
+#            print sels[p[0]]
+#            p[0].index.metadata['selections'] = sel
+#            sel = p[0].index.metadata['selections']
+#            print 'b', sel
+            try:
+                sel = sels[i]
+            except KeyError:
+                continue
+#            print sel, i
+            dp = ideo.plots['plot{}'.format(i * 3 + 1)][0]
             ages_errors = sorted([a.age for a in g.analyses if a.group_id == i], key=lambda x: x[0])
             if sel:
                 dp.visible = True
@@ -545,8 +598,8 @@ class Ideogram(Plotter):
                 result.oage, result.oerror, result.omswd = None, None, None
                 dp.visible = False
 
-            lp = plot.plots['plot{}'.format(i * 3)][0]
-            sp = plot.plots['plot{}'.format(i * 3 + 2)][0]
+            lp = ideo.plots['plot{}'.format(i * 3)][0]
+            sp = ideo.plots['plot{}'.format(i * 3 + 2)][0]
             try:
                 ages, errors = zip(*[ai for j, ai in enumerate(ages_errors) if not j in sel])
                 wm, we = calculate_weighted_mean(ages, errors)

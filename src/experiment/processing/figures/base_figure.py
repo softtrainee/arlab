@@ -217,7 +217,7 @@ class BaseFigure(Saveable, ColumnSorterMixin):
 
             if gseries:
                 graph.plotcontainer.add(gseries.plotcontainer)
-                series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
+#                series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
                 series.set_excluded_points(epts, keys, group_ids)
 
             self.series = series

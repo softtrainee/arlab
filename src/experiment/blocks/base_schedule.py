@@ -27,6 +27,7 @@ import os
 from src.paths import paths
 import yaml
 from src.helpers.filetools import str_to_bool
+from src.saveable import Saveable
 
 class RunAdapter(AutomatedRunAdapter):
     can_edit = True
@@ -54,7 +55,7 @@ class RunAdapter(AutomatedRunAdapter):
     def _set_cleanup_text(self, v):
         self._set_float('position', v)
 
-class BaseSchedule(Loggable):
+class BaseSchedule(Saveable):
     automated_runs = List(AutomatedRun)
     automated_run = Instance(AutomatedRun, ())
 

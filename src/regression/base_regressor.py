@@ -19,7 +19,7 @@ from traits.api import HasTraits, Array, List, Event, Property, cached_property,
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import math
-from numpy import array, polyval, asarray
+from numpy import array, polyval, asarray, where
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from tinv import tinv
@@ -80,17 +80,31 @@ class BaseRegressor(Loggable):
     def _calculate_coefficient_errors(self):
         raise NotImplementedError
 
+
+    def calculate_devs(self):
+        X = self.xs
+        Y = self.ys
+        return self.predict(X) - Y
+
+    def calculate_outliers(self, n=2):
+        devs = self.calculate_devs()
+        dd = devs ** 2
+        cd = abs(devs)
+        std = (1.0 / (devs.shape[0]) * dd.sum()) ** 0.5
+#        print std * n
+        return where(cd > std * n)[0]
+
     def calculate_ci(self, rx):
         if isinstance(rx, (float, int)):
             rx = [rx]
         X = self.xs
         Y = self.ys
-#        model = polyval(self.coefficients, X)
-#        rmodel = polyval(self.coefficients, rx)
         model = self.predict(X)
         rmodel = self.predict(rx)
-        return self._calculate_confidence_interval(X, Y, model, rx, rmodel)
-#    def _calculate_confidence_interval(self, confidence, x, observations, model, rx, rmodel):
+
+        cors = self._calculate_confidence_interval(X, Y, model, rx, rmodel)
+        lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+        return asarray(lci), asarray(uci)
 
     def _calculate_confidence_interval(self,
                                        x,
@@ -123,8 +137,9 @@ class BaseRegressor(Loggable):
                 return ti * syx * math.sqrt(d)
 
             cors = [_calc_interval(xi) for xi in rx]
-            lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
-            return asarray(lci), asarray(uci)
+            return cors
+#            lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+#            return asarray(lci), asarray(uci)
 
     @property
     def syx(self):

@@ -157,7 +157,6 @@ class StackedGraph(Graph):
                     if i == n - 1:
                         pi.padding_top = pt
 
-
 #        else:
 #            for i, pi in enumerate(pc.components):
 #                if n == 1:
@@ -186,8 +185,15 @@ class StackedGraph(Graph):
 #                pi.padding_bottom = 0
 
     def new_series(self, *args, **kw):
+        if not 'plotid' in kw:
+            kw['plotid'] = 0
+
+        plotid = kw['plotid']
         s, _p = super(StackedGraph, self).new_series(*args, **kw)
-        self._bind_index(s.index)
+
+        series_id = self.series[plotid][-1]
+#        print series_id
+        self._bind_index(s, series_id)
         return s, _p
 
     def _bounds_changed(self, bounds):
@@ -216,18 +222,19 @@ class StackedGraph(Graph):
             except IndexError:
                 pass
 
-    def _update_metadata(self, obj, name, old, new):
+    def _update_metadata(self, scatter, series_id, obj, name, old, new):
         for plot in self.plots:
-            for ps in plot.plots.itervalues():
+            for k, ps in plot.plots.iteritems():
                 si = ps[0]
+                sii = int(series_id[0][-1])
+                pi = int(k[-1])
                 if isinstance(si, ScatterPlot):
-                    if not si.index is obj:
+                    if not si.index is obj and pi == sii:
                         si.index.trait_set(metadata=obj.metadata)
-                        si.value.trait_set(metadata=obj.metadata)
 
-
-    def _bind_index(self, index, bind_selection=True, **kw):
+    def _bind_index(self, scatter, series_id, bind_selection=True, **kw):
         if bind_selection:
-            index.on_trait_change(self._update_metadata, 'metadata_changed')
+            u = lambda obj, name, old, new: self._update_metadata(scatter, series_id, obj, name, old, new)
+            scatter.index.on_trait_change(u, 'metadata_changed')
 
 #============= EOF ====================================

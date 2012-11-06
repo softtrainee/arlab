@@ -32,6 +32,7 @@ from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 import copy
 from src.graph.context_menu_mixin import RegressionContextMenuMixin
+from enable.font_metrics_provider import font_metrics_provider
 
 class StatsFilterParameters(object):
     '''
@@ -47,6 +48,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
     regression_results = Event
     suppress_regression = False
     use_data_tool = True
+    popup = None
 #    fits = List
 #    def clear(self):
 #        super(RegressionGraph, self).clear()
@@ -109,7 +111,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
 
 
-    def _update_graph(self, **kw):
+    def _update_graph(self, obj=None, name=None, old=None, new=None):
+#        print obj, name, old, new
         if self.suppress_regression:
             return
 
@@ -190,6 +193,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                  filterstr=None,
                  fit=None):
 
+        ox = x[:]
+        oy = y[:]
         fit = self._convert_fit(fit)
         if fit is None:
             return
@@ -203,6 +208,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        print selection
 #        if not selection:
 
+        filtered = index.metadata.get('filtered', [])
         if filterstr:
             selection = self._apply_filter(filterstr, x)
             meta = dict(selections=selection)
@@ -210,16 +216,13 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         else:
             selection = index.metadata.get('selections', [])
 
-        if filter_outliers:
-            excludes = self._apply_filter_outliers(x, y)
-            sels = index.metadata['selections']
-            excludes = list(set(sels + excludes))
-            meta = dict(selections=excludes)
-            index.trait_set(metadata=meta, trait_change_notify=False)
-
+#        print selection, id(index)
         if selection:
+            #dont delete the selections that are also in filtered
             x = delete(x[:], selection, 0)
             y = delete(y[:], selection, 0)
+        else:
+            filtered = False
 
         low = plot.index_range.low
         high = plot.index_range.high
@@ -228,10 +231,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 return
             st = low
             xn = x - st
-
+#            ox = xn[:]
             r = PolynomialRegressor(xs=xn, ys=y,
                                     degree=fit)
-            self.regressors.append(r)
             fx = linspace(0, (high - low), 200)
 
             fy = r.predict(fx)
@@ -244,8 +246,30 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 ly, uy = ci
             else:
                 ly, uy = fy, fy
+
             fx += low
 
+            if filter_outliers and not filtered:
+                t_fx, t_fy = ox[:], oy[:]
+                niterations = 1
+
+                for ni in range(niterations):
+                    excludes = list(r.calculate_outliers())
+                    oxcl = excludes[:]
+                    sels = index.metadata['selections']
+                    excludes = sorted(list(set(sels + excludes)))
+                    meta = dict(selections=excludes, filtered=oxcl)
+                    index.trait_set(metadata=meta, trait_change_notify=False)
+                    t_fx = delete(t_fx, excludes, 0)
+                    t_fy = delete(t_fy, excludes, 0)
+                    r = PolynomialRegressor(xs=t_fx, ys=t_fy,
+                                    degree=fit)
+
+#            if selection:
+#                x = delete(x[:], selection, 0)
+#                y = delete(y[:], selection, 0)
+
+            self.regressors.append(r)
         else:
             r = MeanRegressor(xs=x, ys=y)
             self.regressors.append(r)
@@ -307,8 +331,17 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         return list(invert(sli).nonzero()[0])
 
+
+#    @classmethod
+#    def _apply_fit_filter(cls, x, y, r):
+#        '''
+#            r=regressor
+#        '''
+#        return r.calculate_outliers()
+
+
     @classmethod
-    def _apply_filter_outliers(cls, xs, ys):
+    def _apply_block_filter(cls, xs, ys):
         '''
             filter data using stats
             
@@ -437,12 +470,71 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         except:
             pass
 
-        self._bind_index(scatter.index, **kw)
+        self._bind_index(scatter, **kw)
         self._add_tools(scatter, plotid)
         return plot, scatter, line
 
-    def _bind_index(self, index, **kw):
+    def _bind_index(self, scatter, **kw):
+        index = scatter.index
         index.on_trait_change(self._update_graph, 'metadata_changed')
+
+        u = lambda **kw:self._update_info(scatter, **kw)
+        scatter.value.on_trait_change(u, 'metadata_changed')
+
+    def _update_info(self, scatter):
+
+        hover = scatter.value.metadata.get('hover', None)
+        if hover:
+            hover = hover[0]
+            from src.canvas.popup_window import PopupWindow
+            if not self.popup:
+                self.popup = PopupWindow(None)
+
+            mouse_xy = scatter.index.metadata.get('mouse_xy')
+            if mouse_xy:
+                x = scatter.index.get_data()[hover]
+                y = scatter.value.get_data()[hover]
+                self._show_pop_up(self.popup, x, y, mouse_xy)
+        else:
+            if self.popup:
+                self.popup.Freeze()
+                self.popup.Show(False)
+                self.popup.Thaw()
+
+    def _show_pop_up(self, popup, index, value, mxmy):
+        x, y = mxmy
+        lines = [
+                 'x={:0.1f}'.format(index),
+                 'y={:0.5f}'.format(value)
+               ]
+        t = '\n'.join(lines)
+        gc = font_metrics_provider()
+        with gc:
+            font = popup.GetFont()
+            from kiva.fonttools import Font
+            gc.set_font(Font(face_name=font.GetFaceName(),
+                             size=font.GetPointSize(),
+                             family=font.GetFamily(),
+#                             weight=font.GetWeight(),
+#                             style=font.GetStyle(),
+#                             underline=0, 
+#                             encoding=DEFAULT
+                             ))
+            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
+#            print linewidths, lineheights
+            ml = max(linewidths)
+            mh = max(lineheights)
+
+#        ch = popup.GetCharWidth()
+        mh = mh * len(lines)
+#        print ml, mh
+        popup.Freeze()
+        popup.set_size(ml, mh)
+        popup.SetText(t)
+        popup.SetPosition((x + 55, y + 25))
+        popup.Show(True)
+        popup.Thaw()
+
 
     def _add_tools(self, scatter, plotid):
         plot = self.plots[plotid]
@@ -453,7 +545,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         rect_tool = RectSelectionTool(scatter,
                                       plot=plot,
                                       plotid=plotid,
-                                      container=self.plotcontainer
+                                      container=self.plotcontainer,
+#                                      update_mouse=False
                                       )
         rect_overlay = RectSelectionOverlay(
                                             tool=rect_tool)
@@ -492,10 +585,10 @@ class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
 
 
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
-    def _bind_index(self, index, bind_selection=True, **kw):
-        super(StackedRegressionGraph, self)._bind_index(index)
+    def _bind_index(self, scatter, bind_selection=True, **kw):
+        super(StackedRegressionGraph, self)._bind_index(scatter)
         if bind_selection:
-            index.on_trait_change(self._update_metadata, 'metadata_changed')
+            scatter.index.on_trait_change(self._update_metadata, 'metadata_changed')
 
     def _update_metadata(self, obj, name, old, new):
         self.suppress_regression = True
@@ -503,10 +596,34 @@ class StackedRegressionGraph(RegressionGraph, StackedGraph):
             ks = plot.plots.keys()
             scatters = [plot.plots[k][0] for k in ks if k.startswith('data')]
             for si in scatters:
-    #                print id(obj), id(si.index), si.index
                 if not si.index is obj:
-                    si.index.trait_set(metadata=obj.metadata)
-                    si.value.trait_set(metadata=obj.metadata)
+                    pass
+#                    si.index.trait_set(metadata=obj.metadata)
+#                pass
+#    #                print id(obj), id(si.index), si.index
+#                if not si.index is obj:
+#                    nn = obj.metadata.get('selections', None)
+#                    try:
+#                        hover = si.index.metadata['hover']
+#                    except KeyError:
+#                        hover = []
+#                    meta = dict(bind_selection=nn,
+#                                selections=si.index.metadata['selections'],
+#                                hover=hover
+#                                )
+#                    si.index.trait_set(metadata=meta, trait_change_notify=False)
+#                    si.index.metadata['bind_selection'] = nn
+#                ind = si.index.clone_traits('metadata')
+#                ind.metadata.update(dict(bind_s=nn))
+
+#                print 'fff', obj.metadata['selections']
+#                    si.index.trait_set(metadata=ind.metadata)
+#                    si.index.metadata.update(dict(bind_s=nn))
+#                    si.index.metadata['bind_s'] = nn
+#                    si.index.metadata['bind_selections'] = obj.metadata['selections']
+#                    si.index.trait_set(metadata=obj.metadata)
+#                    si.value.trait_set(metadata=obj.metadata)
+
         self.suppress_regression = False
 
 class StackedRegressionTimeSeriesGraph(StackedRegressionGraph, TimeSeriesGraph):
