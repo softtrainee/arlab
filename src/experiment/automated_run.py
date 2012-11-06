@@ -67,6 +67,13 @@ class AutomatedRun(Loggable):
 
     experiment_name = Str
     labnumber = String(enter_set=True, auto_set=False)
+
+    _labnumber = Int
+    labnumbers = Property(depends_on='project')
+
+    project = Any
+    projects = Property
+
     aliquot = CInt
     step = Property(depends_on='_step')
     _step = Int
@@ -148,15 +155,7 @@ class AutomatedRun(Loggable):
 #    def _aliquot_changed(self):
 #        print self.labnumber, self.aliquot
 
-    def _runner_changed(self):
-        for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
-            sc = getattr(self, '{}_script'.format(s))
-            if sc is not None:
-                setattr(sc, 'runner', self.runner)
-#        self.measurement_script.runner = self.runner
-#        self.extraction_script.runner = self.runner
-#        self.post_equilibration_script.runner = self.runner
-#        self.post_measurement_script.runner = self.runner
+
 
     def get_corrected_signals(self):
         d = dict()
@@ -892,59 +891,12 @@ class AutomatedRun(Loggable):
 
         return True
 
-    def _load_script(self, name):
 
-        ec = self.configuration
-        if not ec:
-            return
 
-        fname = os.path.basename(ec['{}_script'.format(name)])
-        if not fname:
-            return
 
-        if NULL_STR in fname:
-            return
-        fname = fname if fname.endswith('.py') else fname + '.py'
-
-#        print self.scripts.keys(), fname
-        if fname in self.scripts:
-#            self.debug('script "{}" already loaded... cloning'.format(fname))
-            s = self.scripts[fname]
-            if s is not None:
-                s = s.clone_traits()
-                s.automated_run = self
-                hdn = self.extract_device.replace(' ', '_').lower()
-                an = self.analysis_type.split('_')[0]
-                s.setup_context(position=self.position,
-                                extract_value=self.extract_value,
-                                extract_units=self.extract_units,
-                                duration=self.duration,
-                                cleanup=self.cleanup,
-                                extract_device=hdn,
-                                analysis_type=an
-                                )
-            return s
-        else:
-
-            self.info('loading script "{}"'.format(fname))
-            func = getattr(self, '{}_script_factory'.format(name))
-            s = func(ec)
-            if s and os.path.isfile(s.filename):
-                if s.bootstrap():
-                    try:
-                        s._test()
-                        setattr(self, '_{}_script'.format(name), s)
-                    except Exception, e:
-                        self.warning(e)
-                        self.warning_dialog('Invalid Scripta {}'.format(s.filename if s else 'None'))
-                        self._executable = False
-                        setattr(self, '_{}_script'.format(name), None)
-
-                return s
-            else:
-                self._executable = False
-                self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else 'None'))
-
+#===============================================================================
+# save
+#===============================================================================
     def pre_extraction_save(self):
         d = get_datetime()
         self._runtime = d.time()
@@ -1035,8 +987,6 @@ class AutomatedRun(Loggable):
 
         #save to massspec
         self._save_to_massspec()
-
-
 
     def _save_measurement(self, analysis):
         db = self.db
@@ -1143,9 +1093,74 @@ class AutomatedRun(Loggable):
                                             self.regression_results
 
                                             )
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def __labnumber_changed(self):
+        self.labnumber = self._labnumber
+
+    def _runner_changed(self):
+        for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
+            sc = getattr(self, '{}_script'.format(s))
+            if sc is not None:
+                setattr(sc, 'runner', self.runner)
+
 #===============================================================================
 # factories
 #===============================================================================
+    def _load_script(self, name):
+
+        ec = self.configuration
+        if not ec:
+            return
+
+        fname = os.path.basename(ec['{}_script'.format(name)])
+        if not fname:
+            return
+
+        if NULL_STR in fname:
+            return
+        fname = fname if fname.endswith('.py') else fname + '.py'
+
+#        print self.scripts.keys(), fname
+        if fname in self.scripts:
+#            self.debug('script "{}" already loaded... cloning'.format(fname))
+            s = self.scripts[fname]
+            if s is not None:
+                s = s.clone_traits()
+                s.automated_run = self
+                hdn = self.extract_device.replace(' ', '_').lower()
+                an = self.analysis_type.split('_')[0]
+                s.setup_context(position=self.position,
+                                extract_value=self.extract_value,
+                                extract_units=self.extract_units,
+                                duration=self.duration,
+                                cleanup=self.cleanup,
+                                extract_device=hdn,
+                                analysis_type=an
+                                )
+            return s
+        else:
+
+            self.info('loading script "{}"'.format(fname))
+            func = getattr(self, '{}_script_factory'.format(name))
+            s = func(ec)
+            if s and os.path.isfile(s.filename):
+                if s.bootstrap():
+                    try:
+                        s._test()
+                        setattr(self, '_{}_script'.format(name), s)
+                    except Exception, e:
+                        self.warning(e)
+                        self.warning_dialog('Invalid Scripta {}'.format(s.filename if s else 'None'))
+                        self._executable = False
+                        setattr(self, '_{}_script'.format(name), None)
+
+                return s
+            else:
+                self._executable = False
+                self.warning_dialog('Invalid Scriptb {}'.format(s.filename if s else 'None'))
     def measurement_script_factory(self, ec):
         ec = self.configuration
         mname = os.path.basename(ec['measurement_script'])
@@ -1199,6 +1214,15 @@ class AutomatedRun(Loggable):
 
     def _add_script_extension(self, name, ext='.py'):
         return name if name.endswith(ext) else name + ext
+
+    def _local_lab_db_factory(self):
+        if self.local_lab_db:
+            return self.local_lab_db
+        name = os.path.join(paths.hidden_dir, 'local_lab.db')
+        #name = '/Users/ross/Sandbox/local.db'
+        ldb = LocalLabAdapter(name=name)
+        ldb.build_database()
+        return ldb
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -1386,14 +1410,19 @@ class AutomatedRun(Loggable):
         else:
             return ALPHAS[self._step - 1]
 
-    def _local_lab_db_factory(self):
-        if self.local_lab_db:
-            return self.local_lab_db
-        name = os.path.join(paths.hidden_dir, 'local_lab.db')
-        #name = '/Users/ross/Sandbox/local.db'
-        ldb = LocalLabAdapter(name=name)
-        ldb.build_database()
-        return ldb
+    @cached_property
+    def _get_projects(self):
+        prs = dict([(pi, pi.name) for pi in self.db.get_projects()])
+        self.project = pi
+        return prs
+
+    def _get_labnumbers(self):
+        lns = []
+        if self.project:
+            lns = [int(ln.labnumber)
+                    for s in self.project.samples
+                        for ln in s.labnumbers]
+        return sorted(lns)
 #===============================================================================
 # views
 #===============================================================================
@@ -1449,9 +1478,10 @@ class AutomatedRun(Loggable):
         v = View(
                  VGroup(
                      Group(
-                     HGroup(Item('labnumber'),
-                            #readonly('aliquot')
-                            ),
+                           Item('project', editor=EnumEditor(name='projects')),
+                           HGroup(Item('labnumber'), Item('_labnumber',
+                                                          show_label=False,
+                                                          editor=EnumEditor(name='labnumbers'))),
                      readonly('sample'),
                      readonly('irrad_level', label='Irradiation'),
 

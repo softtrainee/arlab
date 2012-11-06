@@ -24,12 +24,13 @@ from src.experiment.blocks.base_schedule import BaseSchedule, RunAdapter
 from src.experiment.automated_run import AutomatedRun
 from src.traits_editors.tabular_editor import myTabularEditor
 from src.experiment.identifier import ANALYSIS_MAPPING
-from src.managers.manager import SaveableHandler, SaveableButtons
+
 import os
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from src.paths import paths
 from constants import SCRIPT_KEYS, NULL_STR
+from src.saveable import SaveableButtons
 
 def line_generator(path, delim='\t'):
     with open(path, 'r') as fp:
@@ -201,7 +202,7 @@ class Block(BaseSchedule):
                       self._get_copy_paste_group(),
                       Item('automated_runs', show_label=False, editor=r))
         v = View(HGroup(lgrp, rgrp),
-                 handler=SaveableHandler,
+                 handler=self.handler_klass,
                  buttons=SaveableButtons,
                  resizable=True,
                  width=1000,

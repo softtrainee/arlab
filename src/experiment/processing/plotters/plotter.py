@@ -41,6 +41,8 @@ class Plotter(Viewable):
     error_bar_overlay = Any
     figure = Any
     popup = None
+    _dehover_count = 0
+    _hover_cache = None
     def _get_adapter(self):
         return ResultsTabularAdapter
 
@@ -89,6 +91,7 @@ class Plotter(Viewable):
     #                                      parent=self,
                                           container=container,
                                           plot=plot,
+                                          group_id=group_id
     #                                      plotid=1
                                           )
             rect_overlay = RectSelectionOverlay(
@@ -110,33 +113,67 @@ class Plotter(Viewable):
 #                    )
 #        scatter.overlays.append(overlay)
 #        if popup:
-        u = lambda a, b, c, d: self.update_graph_metadata(group_id, a, b, c, d)
-        scatter.index.on_trait_change(u, 'metadata_changed')
+            u = lambda a, b, c, d: self.update_graph_metadata(group_id, a, b, c, d)
+            scatter.index.on_trait_change(u, 'metadata_changed')
+
+
 #        self.metadata = scatter.index.metadata
 
     def _get_sorted_analyses(self):
         return sorted([a for a in self.analyses], key=self._cmp_analyses)
 
     def update_graph_metadata(self, group_id, obj, name, old, new):
-        hover = obj.metadata.get('hover')
-
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
+
+        hover = obj.metadata.get('hover')
         if hover:
 #            print hover, group_id
             hoverid = hover[0]
+            try:
+                self._hover_cache[group_id] = hoverid
+            except:
+                self._hover_cache = {group_id:hoverid}
+
+#            print len(sorted_ans), hoverid, group_id
 #            for ai in self.analyses:
 #                print ai.group_id
-            self.selected_analysis = sa = sorted_ans[hoverid]
-            event = obj.metadata.get('mouse_xy')
+            try:
+                self.selected_analysis = sa = sorted_ans[hoverid]
+            except IndexError:
+                return
+
+#            event = obj.metadata.get('mouse_xy')
             from src.canvas.popup_window import PopupWindow
             if not self.popup:
                 self.popup = PopupWindow(None)
 
 #            print event.x, event.y
-            self._show_pop_up(self.popup, sa, event)
+            self._show_pop_up(self.popup, sa, obj)
         else:
-            if self.popup:
-                self.popup.Show(False)
+
+            if not self._hover_cache:
+                self._dehover_count = 0
+                if self.popup:
+                    self.popup.Freeze()
+                    self.popup.Show(False)
+                    self.popup.Thaw()
+            else:
+                try:
+                    if self._dehover_count >= len(self._hover_cache.keys()) + 5:
+                        self._dehover_count = 0
+
+                    elif len(self._hover_cache.keys()):
+                        self._dehover_count += 1
+                        return
+
+                    if self.popup:
+                        self.popup.Freeze()
+                        self.popup.Show(False)
+                        self.popup.Thaw()
+
+                except Exception, e:
+                    print e
+                    pass
 
         sel = obj.metadata.get('selections', [])
         #set the temp_status for all the analyses
@@ -146,11 +183,12 @@ class Plotter(Viewable):
     def _cmp_analyses(self, x):
         return x.timestamp
 
-    def _show_pop_up(self, popup, analysis, mouse_xy):
-        try:
-            x, y = mouse_xy
-        except:
-            return
+    def _show_pop_up(self, popup, analysis, obj):
+        x, y = obj.metadata.get('mouse_xy')
+#        try:
+#            x, y = mouse_xy
+#        except:
+#            return
 
         lines = [
                  analysis.rid,

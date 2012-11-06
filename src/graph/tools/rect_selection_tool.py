@@ -55,24 +55,32 @@ class RectSelectionTool(BaseTool):
     active = True
     _start_pos = None
     _end_pos = None
+    group_id = 0
+    update_mouse = True
 
     def normal_mouse_move(self, event):
+        plot = self.component
+        yy = self.container.y2 - self.plot.y2 + self.plot.height - event.y
+        xx = self.container.x + event.x
+        mxy = event.window.control.ClientToScreenXY(xx, yy)
+        if self.update_mouse:
+            plot.index.metadata['mouse_xy'] = mxy
 #        control = event.window.control
 #        self.parent.current_pos = control.ClientToScreenXY(event.x, event.y)
-        plot = self.component
         index = plot.map_index((event.x, event.y), threshold=self.threshold)
         if index is not None:
             plot.index.metadata[self.hover_metadata_name] = [index]
-            yy = self.container.y2 - self.plot.y2 + self.plot.height - event.y
-            mxy = event.window.control.ClientToScreenXY(event.x, yy)
-            plot.index.metadata['mouse_xy'] = mxy
-#                if hasattr(plot, "value"):
-#                    plot.value.metadata[self.hover_metadata_name] = [index]
+#            plot.index.metadata['hover_value'] = plot.value.get_data()[index]
+#            plot.index.metadata_changed = True
+            if hasattr(plot, "value"):
+                plot.value.metadata[self.hover_metadata_name] = [index]
+#            plot.index.metadata['mouse_xy'] = mxy
 
         elif not self.persistent_hover:
             plot.index.metadata.pop(self.hover_metadata_name, None)
             if hasattr(plot, "value"):
                 plot.value.metadata.pop(self.hover_metadata_name, None)
+#            plot.index.metadata_changed = True
 
         return
 
@@ -103,6 +111,13 @@ class RectSelectionTool(BaseTool):
 #            self.active = False
 #        else:
 #            self.active = True
+    def normal_left_dclick(self, event):
+        if self._end_pos is None:
+#            print id(self), self.component, 'meta []'
+            self.component.index.metadata[self.selection_metadata_name] = []
+        elif abs(self._end_pos[0] - self._start_pos[0]) < 2 and \
+                abs(self._end_pos[1] - self._start_pos[1]) < 2:
+            self.component.index.metadata[self.selection_metadata_name] = []
 
     def normal_left_down(self, event):
         '''
@@ -145,7 +160,7 @@ class RectSelectionTool(BaseTool):
         '''
         '''
         plot = self.component
-        for name in ('index', 'value'):
+        for name in ('index',):
             if not hasattr(plot, name):
                 continue
             md = getattr(plot, name).metadata
@@ -185,7 +200,6 @@ class RectSelectionTool(BaseTool):
 
         '''
         self._update_selection()
-
         self._end_select(event)
 #        event.handled = True
 
@@ -195,7 +209,7 @@ class RectSelectionTool(BaseTool):
         '''
         self._end_pos = (event.x, event.y)
         self.component.request_redraw()
-        event.handled = True
+#        event.handled = True
 
     def _update_selection(self):
         '''
@@ -203,6 +217,7 @@ class RectSelectionTool(BaseTool):
         comp = self.component
         index = comp.index
         ind = []
+#        print self._start_pos, self._end_pos
         if self._start_pos and self._end_pos:
             x, y = self._start_pos
             x2, y2 = self._end_pos
@@ -213,21 +228,13 @@ class RectSelectionTool(BaseTool):
             datay = comp.value.get_data()
 
             data = vstack([datax, datay]).transpose()
-#            for i, args in enumerate(data):
-#                if dx <= args[0] <= dx2 and dy >= args[1] >= dy2:
-#                    ind.append(i)
-            ind = [i for i, (x, y) in enumerate(data) \
-                    if dx <= x <= dx2 and dy >= y >= dy2
-                   ]
 
-##        print selection, ind
-#        if not ind and self.parent.filters[self.plotid]:
-#            return
+            ind = [i for i, (xi, yi) in enumerate(data) \
+                    if dx <= xi <= dx2 and dy >= yi >= dy2
+                   ]
 
         selection = index.metadata[self.selection_metadata_name]
         index.metadata[self.selection_metadata_name] = list(set(ind) ^ set(selection))
-#        else:
-#            index.metadata[self.selection_metadata_name] = ind
         index.metadata_changed = True
 
 
@@ -235,23 +242,27 @@ class RectSelectionTool(BaseTool):
         '''
  
         '''
-        self.component.request_redraw()
         self.event_state = 'normal'
         event.window.set_pointer('arrow')
-        if self._end_pos is None:
-            self.component.index.metadata[self.selection_metadata_name] = []
-        elif abs(self._end_pos[0] - self._start_pos[0]) < 2 and \
-                abs(self._end_pos[1] - self._start_pos[1]) < 2:
-            self.component.index.metadata[self.selection_metadata_name] = []
+
+#        print self.plot, self.component
+#        if self._end_pos is None:
+#            print id(self), self.component, 'meta []'
+#            self.component.index.metadata[self.selection_metadata_name] = []
+#        elif abs(self._end_pos[0] - self._start_pos[0]) < 2 and \
+#                abs(self._end_pos[1] - self._start_pos[1]) < 2:
+#            pass
+#            self.component.index.metadata[self.selection_metadata_name] = []
 
         self._end_pos = None
+        self.component.request_redraw()
 
     def _start_select(self, event):
         '''
  
         '''
         self._start_pos = (event.x, event.y)
-        self._end_pos = None
+#        self._end_pos = (event.x, event.y)
         self.event_state = 'select'
         event.window.set_pointer('cross')
 #============= EOF =====================================

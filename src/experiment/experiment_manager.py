@@ -21,7 +21,8 @@ from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 from threading import Thread
 import time
-import sha
+#import sha
+import hashlib
 #============= local library imports  ==========================
 from src.experiment.experiment_set import ExperimentSet
 from src.paths import paths
@@ -81,9 +82,9 @@ class ExperimentManager(Manager):
 
     def check_for_mods(self):
         try:
-            currenthash = sha.new(self._text).hexdigest()
+            currenthash = hashlib.new(self._text).hexdigest()
             with open(self.path, 'r') as f:
-                diskhash = sha.new(f.read()).hexdigest()
+                diskhash = hashlib.new(f.read()).hexdigest()
             return currenthash != diskhash
         except:
             self.filelistener.stop()

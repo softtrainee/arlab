@@ -43,6 +43,7 @@ class AnalysisSummary(Summary):
             isos = []
 
         self.add_text('Labnumber={}-{}'.format(record.labnumber, record.aliquot), bold=True)
+        self.add_text('UUID={}'.format(record.filename), bold=True)
         self.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
         j, j_err = record.j
         self.add_text('J={} {}{}'.format(j, u'\u00b1', j_err))

@@ -66,7 +66,8 @@ class Series(Plotter):
                     try:
 #                        plot = graph.plots[i].plots['data{}'.format(group_id)][0]
 #                        sel = plot.index.metadata['selections']
-                        ff = [i for i, si in enumerate(self.sorted_analyses) if si.status == -1]
+                        ff = [i for i, si in enumerate(self.sorted_analyses)
+                                    if si.status == -1 and si.group_id == group_id]
                         exclude['{}{}'.format(k, group_id)] = ff
                     except IndexError:
                         pass

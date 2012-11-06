@@ -235,12 +235,17 @@ class MultipleLinearRegressor(OLSRegressor):
 
 if __name__ == '__main__':
     import numpy as np
-    xs = np.linspace(0, 10, 20)
-    bo = 4
-    b1 = 3
-    ei = np.random.rand(len(xs))
-    ys = bo + b1 * xs + ei
-    print ys
-    m = PolynomialRegressor(xs=xs, ys=ys, degree=1)
-    print m.value_at(5)
+#    xs = np.linspace(0, 10, 20)
+#    bo = 4
+#    b1 = 3
+#    ei = np.random.rand(len(xs))
+#    ys = bo + b1 * xs + ei
+#    print ys
+    p = '/Users/ross/Sandbox/61311-36b'
+    xs, ys = np.loadtxt(p, unpack=True)
+#    xs, ys = np.loadtxt(p)
+    m = PolynomialRegressor(xs=xs, ys=ys, degree=2)
+    print m.calculate_y(0)
+
+#    print m.value_at(5)
 #============= EOF =============================================

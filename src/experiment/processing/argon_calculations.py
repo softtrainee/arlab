@@ -68,6 +68,9 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     s37 -= (s37bl + s37bs + s37bk)
     s36 -= (s36bl + s36bs + s36bk)
 
+#    t = umath.log(2.884) / (constants.lambda_37.nominal_value * 365.25)
+
+
     #calculate decay factors
     #2004-11-16 21:16:00
     if a37decayfactor is None:
@@ -81,8 +84,8 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     if a39decayfactor is None:
         try:
 #            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
+#            t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
             a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
-            #t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
         except ZeroDivisionError:
             a39decayfactor = 1
 

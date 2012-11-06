@@ -685,7 +685,7 @@ post_measurement_script, post_equilibration_script''')
                                aliquot=arun.aliquot))
 
         params['configuration'] = configuration
-
+        params['db'] = self.db
         return self._automated_run_factory(**params)
 
     def _automated_run_factory(self, labnumber=None, **kw):

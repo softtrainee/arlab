@@ -396,19 +396,38 @@ class IsotopeRecord(DatabaseRecord):
             x = array(x)
             y = array(y)
 
-            exc = RegressionGraph._apply_filter_outliers(x, y)
-            x = delete(x[:], exc, 0)
-            y = delete(y[:], exc, 0)
+#            if iso == 'Ar40':
+#                import numpy as np
+#                p = '/Users/ross/Sandbox/61311-36b'
+#                xs, ys = np.loadtxt(p, unpack=True)
+#                for ya, yb in zip(ys, y):
+#                    print ya, yb, ya - yb
+
+
+#            exc = RegressionGraph._apply_filter_outliers(x, y)
+#            x = delete(x[:], exc, 0)
+#            y = delete(y[:], exc, 0)
 
             low = min(x)
+
             fit = RegressionGraph._convert_fit(fit)
             if fit in [1, 2, 3]:
                 if len(y) < fit + 1:
                     return
                 st = low
                 xn = x - st
+#                print x[0], x[-1]
                 r = PolynomialRegressor(xs=xn, ys=y,
                                         degree=fit)
+                t_fx, t_fy = x[:], y[:]
+                niterations = 1
+                for ni in range(niterations):
+                    excludes = list(r.calculate_outliers())
+                    t_fx = delete(t_fx, excludes, 0)
+                    t_fy = delete(t_fy, excludes, 0)
+                    r = PolynomialRegressor(xs=t_fx, ys=t_fy,
+                                    degree=fit)
+
             else:
                 r = MeanRegressor(xs=x, ys=y)
 
