@@ -211,10 +211,10 @@ class ScanManager(Manager):
 
     def _start_recording(self):
         self._first_recording = True
-        self.record_data_manager = dm = CSVDataManager()
-#        root = paths.spectrometer_scans_dir
-#        p, _c = unique_path(root, 'scan')
-        dm.new_frame(directory=paths.spectrometer_scans_dir)
+#        self.record_data_manager = dm = CSVDataManager()
+##        root = paths.spectrometer_scans_dir
+##        p, _c = unique_path(root, 'scan')
+#        dm.new_frame(directory=paths.spectrometer_scans_dir)
 
 
     def _stop_recording(self):
@@ -309,19 +309,22 @@ class ScanManager(Manager):
         do_later(do)
 
     def _consume(self):
-        dm = self.record_data_manager
-        while self._consuming :
+        dm = CSVDataManager()
+        dm.new_frame(directory=paths.spectrometer_scans_dir)
+        _first_recording=True
+        while self._consuming:
             time.sleep(0.0001)
             c = self.queue.get()
             try:
                 x, keys, signals = c
             except ValueError:
                 continue
-
+            
             if dm:
-                if self._first_recording:
-                    self._first_recording = False
+                if _first_recording:
+                    _first_recording = False
                     dm.write_to_frame(('time',) + tuple(keys))
+
                 dm.write_to_frame((x,) + tuple(signals))
 #===============================================================================
 # factories
