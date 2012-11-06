@@ -20,7 +20,7 @@ from traits.api import Instance, Enum, Any, DelegatesTo, List, Property, Str, \
 from traitsui.api import View, VGroup, HGroup, Group, Item, Spring, spring, Label, \
      ListEditor, InstanceEditor, EnumEditor
 from traits.api import HasTraits, Range, Float
-from pyface.timer.api import Timer
+#from pyface.timer.api import Timer
 #============= standard library imports ========================
 import random
 import os
@@ -38,6 +38,10 @@ from src.paths import paths
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 #import time
 from pyface.timer.do_later import do_later
+import time
+from threading import Thread
+from Queue import Queue
+from src.helpers.timer import Timer
 #class CSVDataManager(HasTraits):
 #    def new_file(self, p, mode='w'):
 #        self._file = open(p, mode)
@@ -49,6 +53,7 @@ from pyface.timer.do_later import do_later
 #    def close(self):
 ##        self._writer.close()
 #        self._file.close()
+
 
 class ScanManager(Manager):
     spectrometer = Any
@@ -82,6 +87,7 @@ class ScanManager(Manager):
     record_label = Property(depends_on='_recording')
     _recording = Bool(False)
     record_data_manager = Any
+    _consuming = False
 
     def _update_graph_limits(self, name, new):
         if 'high' in name:
@@ -166,24 +172,34 @@ class ScanManager(Manager):
         del self.graph_y_auto
         del self.graph_scan_width
 
+    def _update(self, data):
+        keys, signals = data
+        x = self.graph.record_multiple(signals,
+                                       track_y=False,
+                                       )
+
+        if self._recording:
+            self.queue.put((x, keys, signals))
+
     def _update_scan_graph(self):
         data = self.spectrometer.get_intensities()
         if data:
-            keys, signals = data
-            x = self.graph.record_multiple(signals,
-                                       track_y=False,
-                                       )
-            if self._recording:
-                dm = self.record_data_manager
-                if dm:
-                    if self._first_recording:
-                        self._first_recording = False
-                        dm.write_to_frame(('time',) + tuple(keys))
-                    dm.write_to_frame((x,) + tuple(signals))
+            do_later(self._update, data)
+#            self._write_data(x, keys, signals)
+
+#    def _write_data(self, x, keys, signals):
+##        st = time.clock()
+#            dm = self.record_data_manager
+#            if dm:
+#                if self._first_recording:
+#                    self._first_recording = False
+#                    dm.write_to_frame(('time',) + tuple(keys))
+#                dm.write_to_frame((x,) + tuple(signals))
+##        print time.clock() - st
 
     def _start_timer(self):
         self._first_iteration = True
-
+        self._consuming = True
         self.info('starting scan timer')
         self.integration_time = 1.048576
         self.timer = self._timer_factory()
@@ -191,6 +207,7 @@ class ScanManager(Manager):
     def _stop_timer(self):
         self.info('stopping scan timer')
         self.timer.Stop()
+        self._consuming = False
 
     def _start_recording(self):
         self._first_recording = True
@@ -290,6 +307,22 @@ class ScanManager(Manager):
             self.record_data_manager.write_to_frame(tuple(' '))
             self.graph.add_vertical_rule(xs[-1])
         do_later(do)
+
+    def _consume(self):
+        dm = self.record_data_manager
+        while self._consuming :
+            time.sleep(0.0001)
+            c = self.queue.get()
+            try:
+                x, keys, signals = c
+            except ValueError:
+                continue
+
+            if dm:
+                if self._first_recording:
+                    self._first_recording = False
+                    dm.write_to_frame(('time',) + tuple(keys))
+                dm.write_to_frame((x,) + tuple(signals))
 #===============================================================================
 # factories
 #===============================================================================
@@ -299,6 +332,10 @@ class ScanManager(Manager):
             func = self._update_scan_graph
 
         mult = 1000
+
+        self.queue = Queue()
+        self.consumer = Thread(target=self._consume)
+        self.consumer.start()
 
         return Timer((self.integration_time + 0.025) * mult, self._update_scan_graph)
 
@@ -318,7 +355,10 @@ class ScanManager(Manager):
 
         for i, det in enumerate(self.detectors):
 #            if not det.active:
-            g.new_series(visible=det.active, color=det.color)
+            s, p = g.new_series(visible=det.active,
+#                         use_downsampling=False,
+                         color=det.color)
+#            print s.use_downsampling
             g.set_series_label(det.name)
             det.series_id = i
 
@@ -341,6 +381,12 @@ class ScanManager(Manager):
 #        p.value_range.tight_bounds = False
 #        for det in self.detectors:
 #            g.set_series_visiblity(det.active, series=det.name, do_later=10)
+
+        n = self.graph_scan_width
+        n = max(n, 1 / 60.)
+        mins = n * 60
+        g.data_limits[0] = 1.8 * mins
+#        g.set_x_tracking(mins)
 
         return g
 

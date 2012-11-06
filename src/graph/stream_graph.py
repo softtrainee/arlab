@@ -27,8 +27,7 @@ from src.helpers.datetime_tools import current_time_generator as time_generator
 from stacked_graph import StackedGraph
 from graph import Graph
 
-#assuming a average scan rate of 1s collect at most 5 days of data
-MAX_LIMIT = int(-1 * 60 * 60 * 24 * 5)
+MAX_LIMIT = int(-1 * 60 * 60 * 24)
 
 
 class StreamGraph(Graph):
@@ -125,7 +124,7 @@ class StreamGraph(Graph):
         except IndexError:
             self.time_generators.append(tg)
 
-    def record_multiple(self, ys, plotid=0, scalar=1, **kw):
+    def record_multiple(self, ys, plotid=0, scalar=1, track_x=True, **kw):
 
         tg = self.global_time_generator
         if tg is None:
@@ -134,7 +133,8 @@ class StreamGraph(Graph):
 
         x = tg.next() * scalar
         for i, yi in enumerate(ys):
-            self.record(yi, x=x, series=i, track_x=False, **kw)
+            kw['track_x'] = False
+            self.record(yi, x=x, series=i, **kw)
 
         ma = max(ys)
         mi = min(ys)
@@ -143,23 +143,14 @@ class StreamGraph(Graph):
         if mi > self.cur_min[plotid]:
             self.cur_min[plotid] = Inf
 
-        dl = self.data_limits[plotid]
-
-#        if x >= dl * self.scan_delays[plotid]:
-#            if not self.track_x_min:
-#                mi = None
-#            else:
-        mi = max(1, x - dl * self.scan_delays[plotid])
-#
-#            x = x + (ma - mi) * 0.5
-#            if not self.track_x_max:
-#                x = None
-#            print x, mi
-        self.set_x_limits(#max=x,
-                          min=mi,
-                          plotid=plotid,
-#                          pad=1
-                          )
+        if track_x:
+            dl = self.data_limits[plotid]
+            mi = max(1, x - dl * self.scan_delays[plotid])
+            self.set_x_limits(#max=x,
+                              min=mi,
+                              plotid=plotid,
+    #                          pad=1
+                              )
         return x
 
     def record(self, y, x=None, series=0, plotid=0,
@@ -196,9 +187,9 @@ class StreamGraph(Graph):
         sd = self.scan_delays[plotid]
 
         lim = MAX_LIMIT
-        pad = 10
+        pad = 1000
 #        print lim
-#        lim = -dl * sd + pad
+        lim = -dl * sd - pad
         new_xd = hstack((xd[lim:], [nx]))
         new_yd = hstack((yd[lim:], [ny]))
 

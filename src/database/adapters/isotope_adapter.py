@@ -785,7 +785,7 @@ if __name__ == '__main__':
                                       )
 #        repo = Repository(root=paths.isotope_dir)
         repo = Repository(root='/Users/ross/Sandbox/importtest')
-        repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/archive003.zip')
+        repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/archive004.zip')
         dbs.set_data_manager(kind='local',
                              repository=repo,
                              workspace_root=paths.default_workspace_dir
