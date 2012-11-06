@@ -134,7 +134,7 @@ class BaseFigure(Saveable, ColumnSorterMixin):
         except Exception:
             pass
 
-        pl = 70 if self.graph_selector.show_series else 40
+        pl = 70 if self.graph_selector.show_series else 50
         padding = [pl, 10, 0, 30]
         self._refresh(graph, analyses, padding)
 

@@ -33,6 +33,7 @@ from src.graph.context_menu_mixin import IsotopeContextMenuMixin
 from src.graph.graph import Graph
 from chaco.plot_containers import GridPlotContainer
 from chaco.tools.traits_tool import TraitsTool
+from chaco.data_label import DataLabel
 #from src.experiment.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -192,14 +193,17 @@ class Ideogram(Plotter):
                                 #analyses[i][j],
                                 padding,
                                 aux_plot_height,
-                                labnumber=ans[0].labnumber,
+#                                labnumber=ans[0].labnumber,
                                 title=', '.join(lns)
                                 )
                 if i == r - 1:
                     g.set_x_title('Age (Ma)')
+
                 if j == 0:
 #                    g.set_y_title('Relative Probability')
                     g.set_y_title('Analysis #', plotid=1)
+                    g.set_y_title('%40*', plotid=2)
+#                    g.set_y_title('k39', plotid=3)
 
                 p1 = g.plots[0]
                 p2 = g.plots[1]
@@ -239,9 +243,9 @@ class Ideogram(Plotter):
                                )
         return op, r, c
 
-    def _build(self, analyses, padding=None, aux_plot_height=100, labnumber=None, title=''):
+    def _build(self, analyses, padding=None, aux_plot_height=100, title=''):
         if padding is None:
-            padding = [40, 5 , 35, 35]
+            padding = [50, 5 , 35, 35]
 
         g = mStackedGraph(panel_height=200,
                             equi_stack=False,
@@ -265,21 +269,21 @@ class Ideogram(Plotter):
                    contextmenu=False,
                    padding=padding, #[padding_left, padding_right, 1, 0],
                    bounds=[50, aux_plot_height],
-#                   title=title
-                   )
-        p.value_range.tight_bounds = False
-        p = g.new_plot(
-                   contextmenu=False,
-                   padding=padding, #[padding_left, padding_right, 1, 0],
-                   bounds=[50, aux_plot_height],
                    title=title
                    )
         p.value_range.tight_bounds = False
+#        p = g.new_plot(
+#                   contextmenu=False,
+#                   padding=padding, #[padding_left, padding_right, 1, 0],
+#                   bounds=[50, aux_plot_height],
+#                   title=title
+#                   )
+#        p.value_range.tight_bounds = False
 
         g.set_grid_traits(visible=False)
         g.set_grid_traits(visible=False, grid='y')
 
-        g.labnumber = labnumber
+#        g.labnumber = labnumber
         g.analyses = analyses
         g.maxprob = None
         g.minprob = None
@@ -309,16 +313,20 @@ class Ideogram(Plotter):
 
             ages, errors = zip(*[calculate_weighted_mean(*get_ages_errors(gi)) for gi in group_ids])
             xmin, xmax = self._get_limits(ages)
-            self._add_ideo(g, ages, errors, xmin, xmax, padding, 0, len(analyses))
+            self._add_ideo(g, ages, errors, xmin, xmax, padding, 0, len(analyses),
+#                           labnumber=labnumber
+                           )
 
         else:
             xmin, xmax = self._get_limits(ages)
             start = 1
             for group_id in group_ids:
                 ans = [a for a in analyses if a.group_id == group_id and a.age[0] in ages]
+                labnumber = ', '.join(sorted(list(set([str(a.labnumber) for a in ans]))))
                 nages, nerrors = get_ages_errors(group_id)
                 self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
                                start=start,
+                               labnumber=labnumber
                                )
 
                 #add analysis number plot
@@ -351,19 +359,19 @@ class Ideogram(Plotter):
 
                 g.set_axis_traits(axis='y', plotid=2)
 
-                #add k39 plot
-                k39s = get_k39s(group_id)
-                n = zip(nages, k39s)
-                n = sorted(n, key=lambda x:x[0])
-                aages, k39s = zip(*n)
-                k39, k39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in k39s])
-                self._add_aux_plot(g, aages,
-                                   k39,
-                                   None,
-                                   k39_errs,
-                                   padding,
-                                   group_id,
-                                   plotid=3)
+#                #add k39 plot
+#                k39s = get_k39s(group_id)
+#                n = zip(nages, k39s)
+#                n = sorted(n, key=lambda x:x[0])
+#                aages, k39s = zip(*n)
+#                k39, k39_errs = zip(*[(ri.nominal_value, ri.std_dev()) for ri in k39s])
+#                self._add_aux_plot(g, aages,
+#                                   k39,
+#                                   None,
+#                                   k39_errs,
+#                                   padding,
+#                                   group_id,
+#                                   plotid=3)
 
 
         g.set_x_limits(min=xmin, max=xmax, pad='0.2', plotid=0)
@@ -411,7 +419,9 @@ class Ideogram(Plotter):
 
         return bins, probs
 
-    def _add_ideo(self, g, ages, errors, xmi, xma, padding, group_id, start=1,
+    def _add_ideo(self, g, ages, errors, xmi, xma, padding,
+                   group_id, start=1,
+                   labnumber=None,
 #                   analyses=None
                    ):
         ages = asarray(ages)
@@ -422,7 +432,7 @@ class Ideogram(Plotter):
         mswd = calculate_mswd(ages, errors)
         we = self._calc_error(we, mswd)
         self.results.append(IdeoResults(
-                                        labnumber=g.labnumber,
+                                        labnumber=labnumber,
                                         age=wm,
                                         mswd=mswd,
                                         error=we,
@@ -446,7 +456,8 @@ class Ideogram(Plotter):
                               line_style='dash',
                               )
 
-        s, _p = g.new_series([wm], [maxp * percentH],
+        ym = maxp * percentH
+        s, _p = g.new_series([wm], [ym],
                              type='scatter',
 #                             marker='plus',
                              marker='circle',
@@ -454,6 +465,17 @@ class Ideogram(Plotter):
                              color=s.color,
                              plotid=0
                              )
+
+        label_text = self._build_label_text(wm, ym, we, mswd, ages.shape[0])
+        label = DataLabel(component=s, data_point=(wm, ym),
+                          label_position='top right',
+                          label_text=label_text,
+                          border_visible=False,
+                          bgcolor='transparent',
+                          show_label_coords=False,
+                          marker_visible=False
+                          )
+        s.overlays.append(label)
         d = lambda *args: self._update_graph(g, *args)
 #        s.index_mapper.on_trait_change(self._update_graph, 'updated')
         s.index_mapper.on_trait_change(d, 'updated')
@@ -477,6 +499,21 @@ class Ideogram(Plotter):
         #set the color
         for a in g.analyses:
             a.color = s.color
+
+    def _build_label_text(self, x, y, we, mswd, n):
+        display_n = True
+        display_mswd = True
+        if display_n:
+            n = 'n= {}'.format(n)
+        else:
+            n = ''
+
+        if display_mswd:
+            mswd = 'mswd= {:0.2f}'.format(mswd)
+        else:
+            mswd = ''
+
+        return u'{:0.3f} \u00b1{:0.3f} {} {}'.format(x, we, mswd, n)
 
     def _calc_error(self, we, mswd):
         ec = self.error_calc_method

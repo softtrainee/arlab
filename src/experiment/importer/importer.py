@@ -80,7 +80,7 @@ class Importer(Loggable):
 
             tab.attrs.fit = fit
             for y, x in data:
-                print y, x
+#                print y, x
                 nrow = tab.row
                 nrow['time'] = x
                 nrow['value'] = y
@@ -155,7 +155,7 @@ class MassSpecImporter(Importer):
 
             self._import_irradiation(msrecord, dblabnumber)
 
-            import_monitors = False
+            import_monitors = True
             if import_monitors:
                 #get all the monitors and add
                 monitors = self._get_monitors(msrecord)
@@ -175,28 +175,7 @@ class MassSpecImporter(Importer):
         dbanal = next((ai for ai in analyses if test(ai)), None)
         if not dbanal:
             self._import_analysis(msrecord, dblabnumber)
-#            self.info('adding analysis {} {}{}'.format(dblabnumber.labnumber, aliquot, step))
-#            dbanal = dest.add_analysis(dblabnumber,
-#                                       aliquot=aliquot,
-#                                       step=step,
-#                                       runtime=rdt.time(),
-#                                       rundate=rdt.date()
-#                                       )
-#            if self._dbimport is None:
-#                #add import 
-#                dbimp = dest.add_import(user=self.username,
-#                                        source=self.source.name,
-#                                        source_host=self.source.host
-#
-#                                        )
-#                self._dbimport = dbimp
-#            else:
-#                dbimp = self._dbimport
-#            self._dbimport.analyses.append(dbanal)
-#            path = self._import_signals(msrecord)
-#            dest.add_analysis_path(path, dbanal)
-#
-#            self._import_blanks(msrecord, dbanal)
+
             return True
 
     def _import_analysis(self, msrecord, dblabnumber):
@@ -423,27 +402,26 @@ class MassSpecImporter(Importer):
 #                    for a in get_analyses(ip)]
         #get by project
         def get_analyses(ni):
-#            q = sess.query(IrradiationPositionTable)
-#            q = q.join(IrradiationPositionTable)
-#            q = q.join(SampleTable)
-#            q = q.join(ProjectTable)
-#            q = q.filter(ProjectTable.Project == ni)
+            q = sess.query(IrradiationPositionTable)
+            q = q.join(SampleTable)
+            q = q.join(ProjectTable)
+            q = q.filter(ProjectTable.Project == ni)
 
-            q = sess.query(AnalysesTable)
-            q = q.filter(AnalysesTable.RID == '61311-36B')
+#            q = sess.query(AnalysesTable)
+#            q = q.filter(AnalysesTable.RID == '61311-36B')
 
 
             return q.all()
 
-#        prs = ['FC-Project']
-#        ips = [ip for pr in prs
-#                for ip in get_analyses(pr)
-#               ]
-#        ans = [a for ipi in ips
-#                for a in ipi.analyses]
+        prs = ['FC-Project']
+        ips = [ip for pr in prs
+                for ip in get_analyses(pr)
+               ]
+        ans = [a for ipi in ips
+                for a in ipi.analyses]
 
-        ans = get_analyses('FC-Project')
-        print len(ans)
+#        ans = get_analyses('FC-Project')
+#        print len(ans)
         return ans
 
     def _get_import_ids(self):

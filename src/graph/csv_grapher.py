@@ -139,7 +139,7 @@ class CSVGrapher(Loggable):
         for det in ['H2', 'H1', 'AX', 'L1', 'L2']:
             g = self._gc(p, det, kind)
             info = g.edit_traits()
-            g.save_pdf('/Users/ross/Sandbox/baselines/auto-down50/{}_{}2_{}'.format(kind, 'all', det))
+            g.save_pdf('/Users/ross/Sandbox/baselines/auto-down50/{}_{}_obama2_{}'.format(kind, 'all', det))
 #            info.dispose()
 
     def _gc(self, p, det, kind):
@@ -203,11 +203,11 @@ class CSVGrapher(Loggable):
     def _open_button_fired(self):
         self.data_selectors = []
 #        p = '/Users/ross/Sandbox/csvdata.txt'
-        p = '/Users/ross/Sandbox/scan007.txt'
-        self._path = p
-#        dlg = FileDialog(action='open', default_directory=paths.data_dir)
-#        if dlg.open() == OK:
-#            self._path = dlg.path
+#        p = '/Users/ross/Sandbox/scan007.txt'
+#        self._path = p
+        dlg = FileDialog(action='open', default_directory=paths.data_dir)
+        if dlg.open() == OK:
+            self._path = dlg.path
 
         with open(self._path, 'r') as fp:
             reader = csv.reader(fp)
@@ -348,6 +348,7 @@ class CSVGrapher(Loggable):
 if __name__ == '__main__':
     cs = CSVGrapher()
 #    cs.quick_graph('/Users/ross/Sandbox/scan007.txt')
-    do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan010.txt')
+    do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan013.txt')
+#    do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan011.txt')
     cs.configure_traits()
 #============= EOF =============================================
