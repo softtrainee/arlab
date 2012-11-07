@@ -174,12 +174,13 @@ class ScanManager(Manager):
 
     def _update(self, data):
         keys, signals = data
-        x = self.graph.record_multiple(signals,
-                                       track_y=False,
-                                       )
-
-        if self._recording:
-            self.queue.put((x, keys, signals))
+        if signals:
+            x = self.graph.record_multiple(signals,
+                                           track_y=False,
+                                           )
+    
+            if self._recording:
+                self.queue.put((x, keys, signals))
 
     def _update_scan_graph(self):
         data = self.spectrometer.get_intensities()
@@ -506,7 +507,7 @@ class ScanManager(Manager):
                           layout='tabbed')
         intensity_grp = VGroup(
                                HGroup(spring, Label('Intensity'),
-                                      Spring(springy=False, width=23),
+                                      Spring(springy=False, width=90),
                                       Label(u'1\u03c3'),
                                       Spring(springy=False, width=87)),
                                Item('detectors',

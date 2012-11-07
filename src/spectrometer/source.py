@@ -38,10 +38,10 @@ class Source(SpectrometerDevice):
     _extraction_lens = Float#Range(0.0, 100.)
 
     def read_y_symmetry(self):
-        return self._read_value('GetYSymmetry', 'y_symmetry')
+        return self._read_value('GetYSymmetry', '_y_symmetry')
 
     def read_z_symmetry(self):
-        return self._read_value('GetZSymmetry', 'z_symmetry')
+        return self._read_value('GetZSymmetry', '_z_symmetry')
 
     def read_hv(self):
         return self._read_value('GetHighVoltage', 'current_hv')
