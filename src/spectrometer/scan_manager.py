@@ -507,9 +507,9 @@ class ScanManager(Manager):
         control_grp = Group(
                           graph_cntrl_grp,
                           detector_grp,
-                          source_grp,
                           rise_grp,
                           magnet_grp,
+                          source_grp,
                           layout='tabbed')
         intensity_grp = VGroup(
                                HGroup(spring, Label('Intensity'),

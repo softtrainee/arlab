@@ -18,7 +18,7 @@
 
 #============= enthought library imports =======================
 from traits.api import  Float, Range, Property
-from traitsui.api import View, Item, Group, HGroup, VGroup
+from traitsui.api import View, Item, Group, HGroup, VGroup, RangeEditor
 
 #============= standard library imports ========================
 
@@ -29,12 +29,20 @@ class Source(SpectrometerDevice):
     nominal_hv = Float(4500)
     current_hv = Float(4500)
 
-    y_symmetry = Property(Range(-50.0, 50.0), depends_on='_y_symmetry')
-    z_symmetry = Property(Range(-50.0, 100.0), depends_on='_z_symmetry')
+#    y_symmetry = Property(Range(-50.0, 50.0), depends_on='_y_symmetry')
+#    z_symmetry = Property(Range(-50.0, 100.0), depends_on='_z_symmetry')
+    z_symmetry = Property(depends_on='_z_symmetry')
+    y_symmetry = Property(depends_on='_y_symmetry')
     extraction_lens = Property(Range(0, 100.0), depends_on='_extraction_lens')
 
     _y_symmetry = Float#Range(0.0, 100.)
     _z_symmetry = Float#Range(0.0, 100.)
+    
+    y_symmetry_low=Float(-50.0)
+    y_symmetry_high=Float(50.0)    
+    z_symmetry_low=Float(-50.0)
+    z_symmetry_high=Float(100.0)
+    
     _extraction_lens = Float#Range(0.0, 100.)
 
     def read_y_symmetry(self):
@@ -69,8 +77,14 @@ class Source(SpectrometerDevice):
         v = View(
                Item('nominal_hv'),
                Item('current_hv', style='readonly'),
-               Item('y_symmetry'),
-               Item('z_symmetry'),
+               Item('y_symmetry',editor=RangeEditor(low_name='y_symmetry_low',
+                                                    high_name='y_symmetry_high',
+                                                    mode='slider'
+                                                    )),
+               Item('z_symmetry',editor=RangeEditor(low_name='z_symmetry_low',
+                                                    high_name='z_symmetry_high',
+                                                    mode='slider'
+                                                    )),
                Item('extraction_lens')
 
                )
