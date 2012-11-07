@@ -27,7 +27,7 @@ import numpy as np
 import csv
 from src.graph.stacked_graph import StackedGraph
 from src.graph.regression_graph import StackedRegressionGraph, RegressionGraph
-from constants import FIT_TYPES, NULL_STR
+from constants import FIT_TYPES, NULL_STR, DELIMITERS
 from pyface.file_dialog import FileDialog
 from src.paths import paths
 from pyface.constant import OK
@@ -46,11 +46,13 @@ class DataSelector(HasTraits):
     removable = Bool(True)
     fit = Enum([NULL_STR] + FIT_TYPES)
     plot_type = Enum('line', 'scatter')
+    use_filter=Bool(True)
     def traits_view(self):
         header = HGroup(Label('X'), Spring(width=60, springy=False),
                         Label('Y'), Spring(width=60, springy=False),
                         Label('Fit'), Spring(width=120, springy=False),
-                        Label('Type'),
+                        Label('Type'),Spring(width=80, springy=False),
+                        Label('Filter'),
                         spring,
                         defined_when='not removable'
                         )
@@ -61,6 +63,7 @@ class DataSelector(HasTraits):
                                Item('value', editor=EnumEditor(name='column_names')),
                                Item('fit'),
                                Item('plot_type'),
+                               Item('use_filter'),
                                Item('add_button'),
                                Item('remove_button', defined_when='removable'),
                                show_labels=False
@@ -86,7 +89,7 @@ class StatsGraph(HasTraits):
 
     def _update_stats(self, new):
         self.stats = ''
-        new = reversed(new)
+#        new = reversed(new)
         ss = ['{}. {}'.format(i + 1, ni.tostring(sig_figs=self.sig_figs,
                                                  error_sig_figs=self.esig_figs)) for i, ni in enumerate(new)]
         self.stats = '\n'.join(ss)
@@ -132,7 +135,7 @@ class CSVGrapher(Loggable):
     short_name = Property(depends_on='_path')
 
     _graph_count = 0
-
+    delimiter=Str(',')
     def quick_graph(self, p):
         kind = 'scatter'
 #        for det in ['H2']:
@@ -203,35 +206,49 @@ class CSVGrapher(Loggable):
     def _open_button_fired(self):
         self.data_selectors = []
 #        p = '/Users/ross/Sandbox/csvdata.txt'
-#        p = '/Users/ross/Sandbox/scan007.txt'
 #        self._path = p
-        dlg = FileDialog(action='open', default_directory=paths.data_dir)
-        if dlg.open() == OK:
-            self._path = dlg.path
+        self._path=os.path.join(paths.data_dir,'spectrometer_scans','scan007.txt')
+#        dlg = FileDialog(action='open', default_directory=paths.data_dir)
+#        if dlg.open() == OK:
+#            self._path = dlg.path
 
-        with open(self._path, 'r') as fp:
-            reader = csv.reader(fp)
+        with open(self._path, 'U') as fp:
+            
+                
+            reader = csv.reader(fp, delimiter=self.delimiter)
             self.column_names = names = reader.next()
-            cs = DataSelector(column_names=names,
-                                index=names[0],
-                                value=names[1],
-                                removable=False,
-                                parent=self,
-                                )
-            self.data_selectors.append(cs)
+            try:
+                cs = DataSelector(column_names=names,
+                                    index=names[0],
+                                    value=names[1],
+                                    removable=False,
+                                    parent=self,
+                                    )
+                self.data_selectors.append(cs)
+            except IndexError:
+                
+                self.warning_dialog('Invalid delimiter {} for {}'.format(DELIMITERS[self.delimiter],
+                                                                         os.path.basename(self._path)
+                                                                         ))
 
     def _parse_data(self, reader):
         groups = []
         while 1:
             lines = []
             for l in reader:
-                if not l:
+                l=[li.strip() for li in l]
+                if not l or not any(l):
                     data = np.array([map(float, l) for l in lines])
                     data = data.transpose()
                     groups.append(data)
                     break
                 lines.append(l)
             else:
+#                print lines
+#                for l in lines:
+#                    print l
+#                    print map(float, l)
+#                    
                 data = np.array([map(float, l) for l in lines])
                 data = data.transpose()
                 groups.append(data)
@@ -240,8 +257,8 @@ class CSVGrapher(Loggable):
 
 
     def _plot_button_fired(self):
-        with open(self._path, 'r') as fp:
-            reader = csv.reader(fp)
+        with open(self._path, 'U') as fp:
+            reader = csv.reader(fp, delimiter=self.delimiter)
             _header = reader.next()
             groups = self._parse_data(reader)
 #            print groups
@@ -250,7 +267,7 @@ class CSVGrapher(Loggable):
                 self._show_plot(data)
 
     def _show_plot(self, data):
-        cd = dict(padding=5)
+        cd = dict(padding=5, stack_order='top_to_bottom')
         csnames = self.column_names
         xmin = np.Inf
         xmax = -np.Inf
@@ -282,7 +299,10 @@ class CSVGrapher(Loggable):
                 xmin = min(xmin, min(x))
                 xmax = max(xmax, max(x))
                 fit = csi.fit if csi.fit != NULL_STR else None
-                g.new_series(x, y, fit=fit, type=csi.plot_type, plotid=plotid)
+                g.new_series(x, y, fit=fit, 
+                             filter_outliers=csi.use_filter,
+                             type=csi.plot_type, 
+                             plotid=plotid)
 
                 g.set_x_title(csi.index, plotid=plotid)
                 g.set_y_title(csi.value, plotid=plotid)
@@ -329,7 +349,7 @@ class CSVGrapher(Loggable):
 # views
 #===============================================================================
     def traits_view(self):
-        v = View(Item('as_series'),
+        v = View(Item('as_series'),Item('delimiter', editor=EnumEditor(values=DELIMITERS)),
                  HGroup(Item('open_button', show_label=False),
                         Item('plot_button', enabled_when='_path', show_label=False),
                         Item('file_name', show_label=False, style='readonly')),

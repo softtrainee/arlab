@@ -27,6 +27,7 @@ from scipy import optimize
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.paths import paths
 import wx
+from constants import NULL_STR
 
 
 charge = 1.6021764874e-19
@@ -38,8 +39,10 @@ class Detector(SpectrometerDevice):
     _deflection = Float
 
 #    intensity = Property(depends_on='spectrometer:intensity_dirty')
-    intensity = Float
-    std = Float
+#    intensity = Float
+#    std = Float
+    intensity=Str
+    std=Str
     intensities = Array
     nstd = Int(10)
     active = Bool(True)
@@ -57,10 +60,16 @@ class Detector(SpectrometerDevice):
     def _intensity_changed(self, new):
         if new:
             n = self.nstd
-            self.intensity = intensity = new[self.name]
-            self.intensities = hstack((self.intensities[-n:], [intensity]))
-            self.std = self.intensities.std()
-
+            try:
+                intensity = new[self.name]
+                self.intensities = hstack((self.intensities[-n:], [intensity]))
+                self.std = '{:0.5f}'.format(self.intensities.std())
+                
+                self.intensity = '{:0.5f}'.format(intensity)
+            except KeyError:
+                self.intensity=NULL_STR
+                self.std=NULL_STR
+                
     def _get_isotopes(self):
         molweights = self.spectrometer.molecular_weights
         return sorted(molweights.keys(), key=lambda x: int(x[2:]))
@@ -134,13 +143,14 @@ class Detector(SpectrometerDevice):
                              editor=CustomEditor(factory=self.color_square_factory()),
                              show_label=False
                              ),
-                        Spring(width=80, springy=False),
-                        Item('intensity', format_str='%0.5f', style='readonly',
+                        Spring(width=50, springy=False),
+                        Item('intensity',  style='readonly',
                              ),
-                        Spring(springy=False, width=20),
-                        Item('std', format_str='%0.5f', style='readonly',
+                        Spring(springy=False, width=150),
+                        Item('std',  style='readonly',
                              ),
-                        Spring(springy=False, width=50),
+#                        spring,
+                        Spring(springy=False, width=100),
                         show_labels=False
                         )
                  )
