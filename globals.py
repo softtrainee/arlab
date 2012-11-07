@@ -62,7 +62,7 @@ class Globals(object):
 #    spectrometer_debug = True
 
     load_valve_states = True
-    load_valve_states = True
+    load_soft_locks = True
 
     def build(self, ip):
 
