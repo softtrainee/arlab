@@ -212,10 +212,10 @@ class ScanManager(Manager):
 
     def _start_recording(self):
         self._first_recording = True
-#        self.record_data_manager = dm = CSVDataManager()
+        dm=self.record_data_manager
 ##        root = paths.spectrometer_scans_dir
 ##        p, _c = unique_path(root, 'scan')
-#        dm.new_frame(directory=paths.spectrometer_scans_dir)
+        dm.new_frame(directory=paths.spectrometer_scans_dir)
 
 
     def _stop_recording(self):
@@ -309,9 +309,8 @@ class ScanManager(Manager):
             self.graph.add_vertical_rule(xs[-1])
         do_later(do)
 
-    def _consume(self):
-        dm = CSVDataManager()
-        dm.new_frame(directory=paths.spectrometer_scans_dir)
+    def _consume(self, dm):
+        
         _first_recording=True
         while self._consuming:
             time.sleep(0.0001)
@@ -338,7 +337,10 @@ class ScanManager(Manager):
         mult = 1000
 
         self.queue = Queue()
-        self.consumer = Thread(target=self._consume)
+        self.record_data_manager =dm= CSVDataManager()
+       
+        
+        self.consumer = Thread(target=self._consume, args=(dm,))
         self.consumer.start()
 
         return Timer((self.integration_time + 0.025) * mult, self._update_scan_graph)
