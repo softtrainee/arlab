@@ -22,7 +22,7 @@ from traits.api import Any, Str
 from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
 #from src.canvas.designer.valve import Valve
 from src.canvas.canvas2D.markup.markup_items import Rectangle, Valve, Line, \
-    Label, RoughValve, BaseValve
+    Label, RoughValve, BaseValve, RoundedRectangle
 from pyface.wx.dialog import confirmation
 
 W = 2
@@ -138,14 +138,16 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
         def get_floats(elem, name):
             return map(float, elem.find(name).text.split(','))
-        def new_rectangle(elem, c, lw=1):
+        def new_rectangle(elem, c, bw=3):
             key = elem.text.strip()
             x, y = get_floats(elem, 'translation')
             w, h = get_floats(elem, 'dimension')
-            self.markupcontainer[key] = Rectangle(x + ox, y + oy, width=w, height=h,
+#            self.markupcontainer[key] = Rectangle(x + ox, y + oy, width=w, height=h,
+            self.markupcontainer[key] = RoundedRectangle(x + ox, y + oy, width=w, height=h,
                                                 canvas=self,
                                                 name=key,
-                                                line_width=lw,
+#                                                line_width=lw,
+                                                border_width=bw,
                                                 default_color=c)
         color_dict = dict()
         #get default colors
@@ -173,7 +175,9 @@ class ExtractionLineCanvas2D(MarkupCanvas):
             key = v.text.strip()
             x, y = get_floats(v, 'translation')
             v = Valve(x + ox, y + oy, name=key,
-                                    canvas=self)
+                                    canvas=self,
+                                    border_width=3
+                                    )
             #sync the states
             if key in self.valves:
                 vv = self.valves[key]
@@ -193,21 +197,19 @@ class ExtractionLineCanvas2D(MarkupCanvas):
 
         self.valves = ndict
 
-
-
         for b in cp.get_elements('stage'):
             if 'stage' in color_dict:
                 c = color_dict['stage']
             else:
                 c = (0.8, 0.8, 0.8)
-            new_rectangle(b, c, lw=5)
+            new_rectangle(b, c, bw=5)
 
         for s in cp.get_elements('spectrometer'):
             if 'spectrometer' in color_dict:
                 c = color_dict['spectrometer']
             else:
                 c = (0, 0.8, 0.8)
-            new_rectangle(s, c)
+            new_rectangle(s, c, bw=5)
 
         for t in cp.get_elements('turbo'):
             if 'turbo' in color_dict:

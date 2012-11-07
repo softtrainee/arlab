@@ -98,8 +98,10 @@ class ValveManager(Manager):
         setup_file = os.path.join(paths.extraction_line_dir, 'valves.xml')
         self._load_valves_from_file(setup_file)
 
-        self._load_states()
-        self._load_soft_lock_states()
+        if globalv.load_valve_states:
+            self._load_states()
+        if globalv.load_soft_locks:
+            self._load_soft_lock_states()
 
         self._load_system_dict()
         #self.info('loading section definitions file')

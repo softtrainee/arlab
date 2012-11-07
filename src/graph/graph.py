@@ -136,9 +136,9 @@ class Graph(Loggable, ContextMenuMixin):
 
         pc = self.plotcontainer
         menu = ContextualMenuTool(parent=self,
-                                      component=pc,
+                                  component=pc,
 #                                      plotid= -1
-                                      )
+                                )
 
         pc.tools.append(menu)
 
@@ -741,6 +741,7 @@ class Graph(Loggable, ContextMenuMixin):
 
         g = self.graph_editor
         if g is None:
+            print self
             g = GraphEditor(graph=self)
             self.graph_editor = g
 

@@ -156,8 +156,7 @@ class Image(HasTraits):
                 frame = frame.clone()
 
             if swap_rb:
-                if not globalv.video_test:
-                    frame = swapRB(frame)
+                frame = swapRB(frame)
 
             if gray:
                 frame = grayspace(frame)
