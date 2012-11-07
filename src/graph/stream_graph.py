@@ -186,13 +186,13 @@ class StreamGraph(Graph):
         dl = self.data_limits[plotid]
         sd = self.scan_delays[plotid]
 
-        lim = MAX_LIMIT
-        pad = 1000
-#        print lim
-        lim = -dl * sd - pad
+#        lim = MAX_LIMIT
+        pad = 100
+#        print lim, nx, ny
+        lim = -dl * sd - 1000
         new_xd = hstack((xd[lim:], [nx]))
         new_yd = hstack((yd[lim:], [ny]))
-
+#        print new_xd
         self.cur_max[plotid] = max(self.cur_max[plotid], max(new_yd))
         self.cur_min[plotid] = min(self.cur_min[plotid], min(new_yd))
 
@@ -215,6 +215,7 @@ class StreamGraph(Graph):
                         mi = None
                     else:
                         mi = max(1, mi)
+
 
                     self.set_x_limits(max=ma + pad,
                               min=mi,

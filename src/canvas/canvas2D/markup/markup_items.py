@@ -49,6 +49,7 @@ class MarkupItem(HasTraits):
     active_color = None
     canvas = Any(transient=True)
     line_width = 1
+    border_width = 2
     name = Str
     space = 'data'
     visible = True
@@ -66,7 +67,6 @@ class MarkupItem(HasTraits):
             self.set_stroke_color(gc)
             self.set_fill_color(gc)
             gc.set_line_width(self.line_width)
-
             self._render_(gc)
             gc.stroke_path()
 
@@ -125,7 +125,6 @@ class MarkupItem(HasTraits):
         self.state = state
 
     def _render_name(self, gc, x, y, w, h):
-#        print self.name
         if self.name:
             gc.set_fill_color((0, 0, 0))
 
@@ -170,11 +169,73 @@ class Rectangle(MarkupItem):
 #            gc.draw_path()
 
     def _render_border(self, gc, x, y, w, h):
-        gc.set_stroke_color((0, 0, 0))
+        print gc.get_stroke_color()
+#        gc.set_stroke_color((0, 0, 0))
         gc.rect(x - self.line_width, y - self.line_width,
                 w + self.line_width, h + self.line_width
                 )
         gc.stroke_path()
+
+class RoundedRectangle(Rectangle):
+    corner_radius = 8.0
+    def _render_(self, gc):
+        corner_radius = self.corner_radius
+        with gc:
+            width, height = self.get_wh()
+            x, y = self.get_xy()
+            gc.translate_ctm(x, y)
+        # draw a rounded rectangle
+            x = y = 0
+
+            gc.begin_path()
+            gc.move_to(x + corner_radius, y)
+            gc.arc_to(x + width, y,
+                    x + width,
+                    y + corner_radius, corner_radius)
+            gc.arc_to(x + width,
+                    y + height,
+                    x + width - corner_radius,
+                    y + height, corner_radius)
+            gc.arc_to(x, y + height,
+                    x, y,
+                    corner_radius)
+            gc.arc_to(x, y,
+                    x + width + corner_radius,
+                    y, corner_radius)
+
+            gc.draw_path()
+            self._render_border(gc, x, y, width, height)
+
+#                self._render_border(gc, x, y, width, height)
+
+            self._render_name(gc, x, y, width, height)
+
+    def _render_border(self, gc, x, y, width, height):
+        if self.use_border:
+
+            corner_radius = self.corner_radius
+            with gc:
+                gc.set_alpha(0.75)
+                gc.set_line_width(self.border_width)
+                c = list(self.default_color)
+                c = [ci / 2. for ci in c]
+                gc.set_stroke_color(tuple(c))
+
+                gc.move_to(x + corner_radius, y)
+                gc.arc_to(x + width, y,
+                        x + width,
+                        y + corner_radius, corner_radius)
+                gc.arc_to(x + width,
+                        y + height,
+                        x + width - corner_radius,
+                        y + height, corner_radius)
+                gc.arc_to(x, y + height,
+                        x, y,
+                        corner_radius)
+                gc.arc_to(x, y,
+                        x + width + corner_radius,
+                        y, corner_radius)
+                gc.stroke_path()
 
 class BaseValve(MarkupItem):
     soft_lock = False
@@ -201,30 +262,31 @@ class RoughValve(BaseValve):
     height = 2
     def _render_(self, gc):
         cx, cy = self.get_xy()
-        w, h = self.get_wh()
+        width, height = self.get_wh()
 
-        w2 = w / 2
+        w2 = width / 2
         x1 = cx
-        x2 = cx + w
+        x2 = cx + width
         x3 = cx + w2
 
         y1 = cy
         y2 = y1
-        y3 = cy + h
+        y3 = cy + height
 
         gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
         gc.fill_path()
+
         gc.set_stroke_color((0, 0, 0))
         gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
         gc.stroke_path()
 
         func = gc.lines
         args = (([(x1, y1), (x2, y2), (x3, y3), (x1, y1), (x2, y2)]),)
-#        args = (x - 2, y - 2, w + 4, h + 4)
+#        args = (x - 2, y - 2, width + 4, height + 4)
 
         self._draw_soft_lock(gc, func, args)
-        self._draw_state_indicator(gc, cx, cy, w, h)
-        self._render_name(gc, cx, cy, w, h)
+        self._draw_state_indicator(gc, cx, cy, width, height)
+        self._render_name(gc, cx, cy, width, height)
 
     def _draw_state_indicator(self, gc, x, y, w, h):
         if not self.state:
@@ -246,10 +308,10 @@ class RoughValve(BaseValve):
             gc.draw_path()
 
 
-class Valve(Rectangle, BaseValve):
+class Valve(RoundedRectangle, BaseValve):
     width = 2
     height = 2
-
+    corner_radius = 4
     def _render_(self, gc):
 
         super(Valve, self)._render_(gc)
@@ -279,22 +341,24 @@ class Valve(Rectangle, BaseValve):
 
     def _draw_state_indicator(self, gc, x, y, w, h):
         if not self.state:
+            gc.set_stroke_color((0, 0, 0))
             l = 7
+            o = 2
             gc.set_line_width(2)
-            gc.move_to(x, y)
+            gc.move_to(x + o, y + o)
             gc.line_to(x + l, y + l)
             gc.draw_path()
 
-            gc.move_to(x, y + h)
-            gc.line_to(x + l, y + h - l)
+            gc.move_to(x + o, y - o + h)
+            gc.line_to(x + o + l, y - o + h - l)
             gc.draw_path()
 
-            gc.move_to(x + w, y + h)
-            gc.line_to(x + w - l, y + h - l)
+            gc.move_to(x - o + w, y - o + h)
+            gc.line_to(x - o + w - l, y - o + h - l)
             gc.draw_path()
 
-            gc.move_to(x + w, y)
-            gc.line_to(x + w - l, y + l)
+            gc.move_to(x - o + w, y + o)
+            gc.line_to(x - o + w - l, y + o + l)
             gc.draw_path()
 
 

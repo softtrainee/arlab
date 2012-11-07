@@ -83,8 +83,9 @@ class Figure(BaseFigure):
             if gideo:
                 gideo, plots = gideo
 #                graph.plotcontainer.add(gideo.plotcontainer)
-                graph.plotcontainer.add(gideo)
-                graph.plots += plots
+#                graph.plotcontainer.add(gideo)
+                graph.add(gideo)
+#                graph.plots += plots
             self._cached_ideogram = ideo
 #                result.add(ig)
         else:
@@ -100,7 +101,8 @@ class Figure(BaseFigure):
                 self.spectrum = spec
             gspec = spec.build(analyses, padding=specpadding)
             if gspec:
-                graph.plotcontainer.add(gspec.plotcontainer)
+#                graph.plotcontainer.add(gspec.plotcontainer)
+                graph.add(gspec.plotcontainer)
         else:
             del self.spectrum
 
@@ -111,7 +113,7 @@ class Figure(BaseFigure):
                 self.inverse_isochron = isochron
             giso = isochron.build(analyses, padding=isopadding)
             if giso:
-                graph.plotcontainer.add(giso.plotcontainer)
+                graph.add(giso.plotcontainer)
         else:
             del self.inverse_isochron
 

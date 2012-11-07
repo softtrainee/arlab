@@ -164,16 +164,9 @@ class HoleDetector(Detector):
         except ValueError:
             pass
 
-#        if not 'hole' in kw:
-#            kw['hole'] = False
-
         t = self._locate_targets(src, **kw)
         if self.display_processed_image:
             self.target_image.load(colorspace(src))
-
-
-#        if t:
-#            self._draw_markup(self.target_image.get_frame(0), t)
 
         return t
 
@@ -391,9 +384,9 @@ class HoleDetector(Detector):
         self.croprect = (x, y, cw_px, ch_px)
         src = crop(src, x, y, cw_px, ch_px)
 
-#        if image:
+        if image:
 #            image.set_frame(colorspace(src))
-#            image.set_frame(0, colorspace(src.clone()))
+            image.set_frame(0, colorspace(src.clone()))
 #            image.save('/Users/ross/Sandbox/machine_vision/crop.jpg', width=cw_px, height=ch_px)
 
         return src

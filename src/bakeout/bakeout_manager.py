@@ -275,7 +275,6 @@ class BakeoutManager(Manager):
                         track_y=False,
 #                        do_later=10
                         )
-
             if self.include_temp:
                 kwargs['plotid'] = self.plotids[0]
                 nx = self.graph.record(pi, **kwargs)

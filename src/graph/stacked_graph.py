@@ -128,7 +128,7 @@ class StackedGraph(Graph):
 #                pi.padding_top = 0
 #                pi.padding_bottom = 0
         self.set_paddings()
-
+#        p.border_visible = False
         return p
 
     def set_paddings(self):
@@ -146,14 +146,15 @@ class StackedGraph(Graph):
 
                 pi.padding_top = pt
                 pi.index_axis.visible = True
+
             else:
                 pi.padding_top = 0
                 if i == 0:
                     pi.padding_bottom = 50
                     pi.index_axis.visible = True
                 else:
-                    pi.padding_bottom = 0
                     pi.index_axis.visible = False
+                    pi.padding_bottom = 0
                     if i == n - 1:
                         pi.padding_top = pt
 

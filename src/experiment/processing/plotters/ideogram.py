@@ -34,6 +34,7 @@ from src.graph.graph import Graph
 from chaco.plot_containers import GridPlotContainer
 from chaco.tools.traits_tool import TraitsTool
 from chaco.data_label import DataLabel
+from chaco.tools.data_label_tool import DataLabelTool
 #from src.experiment.processing.figure import AgeResult
 
 #def weighted_mean(x, errs):
@@ -247,26 +248,27 @@ class Ideogram(Plotter):
         if padding is None:
             padding = [50, 5 , 35, 35]
 
+        print padding
         g = mStackedGraph(panel_height=200,
                             equi_stack=False,
                             container_dict=dict(padding=0)
                             )
         g.clear()
-        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))
+#        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))
         g._has_title = True
         p = g.new_plot(
-                   contextmenu=False,
+#                   contextmenu=False,
                    padding=padding)
 
         p.value_range.tight_bounds = False
         p = g.new_plot(
-                   contextmenu=False,
+#                   contextmenu=False,
                    padding=padding, #[padding_left, padding_right, 1, 0],
                    bounds=[50, aux_plot_height],
                    )
         p.value_range.tight_bounds = False
         p = g.new_plot(
-                   contextmenu=False,
+#                   contextmenu=False,
                    padding=padding, #[padding_left, padding_right, 1, 0],
                    bounds=[50, aux_plot_height],
                    title=title
@@ -320,13 +322,15 @@ class Ideogram(Plotter):
         else:
             xmin, xmax = self._get_limits(ages)
             start = 1
+            offset = 0
             for group_id in group_ids:
                 ans = [a for a in analyses if a.group_id == group_id and a.age[0] in ages]
                 labnumber = ', '.join(sorted(list(set([str(a.labnumber) for a in ans]))))
                 nages, nerrors = get_ages_errors(group_id)
-                self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
+                offset = self._add_ideo(g, nages, nerrors, xmin, xmax, padding, group_id,
                                start=start,
-                               labnumber=labnumber
+                               labnumber=labnumber,
+                               offset=offset
                                )
 
                 #add analysis number plot
@@ -372,6 +376,21 @@ class Ideogram(Plotter):
 #                                   padding,
 #                                   group_id,
 #                                   plotid=3)
+
+
+            maxp = g.maxprob
+
+#            step = maxp / len(group_ids)
+#            print step
+#            step = 1
+#            #tweak age labels
+#            for i, (k, v) in enumerate(g.plots[0].plots.iteritems()):
+#                print k, v[0]
+#
+#                kk = int(k[-1]) + 1
+#                if not kk % 3:
+##                if k in ['plot2', 'plot5', ]:
+#                    v[0].value.set_data([(i + 1) * step])
 
 
         g.set_x_limits(min=xmin, max=xmax, pad='0.2', plotid=0)
@@ -422,6 +441,7 @@ class Ideogram(Plotter):
     def _add_ideo(self, g, ages, errors, xmi, xma, padding,
                    group_id, start=1,
                    labnumber=None,
+                   offset=0
 #                   analyses=None
                    ):
         ages = asarray(ages)
@@ -456,7 +476,7 @@ class Ideogram(Plotter):
                               line_style='dash',
                               )
 
-        ym = maxp * percentH
+        ym = maxp * percentH + offset
         s, _p = g.new_series([wm], [ym],
                              type='scatter',
 #                             marker='plus',
@@ -466,16 +486,7 @@ class Ideogram(Plotter):
                              plotid=0
                              )
 
-        label_text = self._build_label_text(wm, ym, we, mswd, ages.shape[0])
-        label = DataLabel(component=s, data_point=(wm, ym),
-                          label_position='top right',
-                          label_text=label_text,
-                          border_visible=False,
-                          bgcolor='transparent',
-                          show_label_coords=False,
-                          marker_visible=False
-                          )
-        s.overlays.append(label)
+        self._add_data_label(s, (wm, ym, we, mswd, ages.shape[0]))
         d = lambda *args: self._update_graph(g, *args)
 #        s.index_mapper.on_trait_change(self._update_graph, 'updated')
         s.index_mapper.on_trait_change(d, 'updated')
@@ -499,6 +510,27 @@ class Ideogram(Plotter):
         #set the color
         for a in g.analyses:
             a.color = s.color
+        return ym * 2.5
+
+    def _add_data_label(self, s, args):
+        wm, ym, we, mswd, n = args
+        label_text = self._build_label_text(*args)
+        label = DataLabel(component=s, data_point=(wm, ym),
+                          label_position='top right',
+                          label_text=label_text,
+                          border_visible=False,
+                          bgcolor='transparent',
+                          show_label_coords=False,
+                          marker_visible=False,
+                          text_color=s.color,
+                          arrow_color=s.color,
+                          )
+        s.overlays.append(label)
+        tool = DataLabelTool(label,
+#                             auto_arrow_root=False
+                             )
+        label.tools.append(tool)
+
 
     def _build_label_text(self, x, y, we, mswd, n):
         display_n = True
@@ -654,8 +686,16 @@ class Ideogram(Plotter):
 
             lp.value.set_data(ys)
             lp.index.set_data(xs)
+
             sp.index.set_data([wm])
             sp.xerror.set_data([we])
+            #update the data label position
+            for ov in sp.overlays:
+                if isinstance(ov, DataLabel):
+                    _, y = ov.data_point
+                    ov.data_point = wm, y
+                    n = len(ages)
+                    ov.label_text = self._build_label_text(wm, y, we, mswd, n)
 
         g.redraw()
 

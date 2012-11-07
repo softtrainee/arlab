@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from src.helpers.filetools import str_to_bool
 
 
 class Globals(object):
@@ -34,14 +35,14 @@ class Globals(object):
     ignore_connection_warnings = True
     ignore_chiller_unavailable = True
 
-#    video_test = False
-    video_test = True
+    video_test = False
+#    video_test = True
     video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
 #    video_test_path = '/Users/ross/Sandbox/snapshot002-6.662--8.572.jpg'
 #    video_test_path = '/Users/ross/Sandbox/watershed_test.jpg'
     video_test_path = '/Users/ross/Sandbox/watershed_test2.jpg'
     video_test_path = '/Users/ross/Sandbox/snapshot002.jpg'
-    video_test_path = '/Users/ross/Sandbox/snapshot003-fail.jpg'
+#    video_test_path = '/Users/ross/Sandbox/snapshot003-fail.jpg'
     show_autocenter_debug_image = False
 #    show_autocenter_debug_image = True
 
@@ -53,22 +54,27 @@ class Globals(object):
 
     _test = False #set test to 'true' when running tests
 
-#    experiment_debug = False
-    experiment_debug = True
+    experiment_debug = False
+#    experiment_debug = True
     experiment_savedb = True
     automated_run_debug = False
-    spectrometer_debug = True
+    spectrometer_debug = False
+#    spectrometer_debug = True
+
+    load_valve_states = True
+    load_valve_states = True
 
     def build(self, ip):
 
-        boolfunc = lambda x:True if x in ['True', 'true', 'T', 't'] else False
-        for attr, func in [('use_ipc', boolfunc),
-                           ('ignore_initialization_warnings', boolfunc),
-                           ('ignore_connection_warnings', boolfunc),
-                           ('ignore_chiller_unavailable', boolfunc),
-                           ('show_infos', boolfunc),
-                           ('show_warnings', boolfunc),
-                           ('video_test', boolfunc),
+        for attr, func in [('use_ipc', str_to_bool),
+                           ('ignore_initialization_warnings', str_to_bool),
+                           ('ignore_connection_warnings', str_to_bool),
+                           ('ignore_chiller_unavailable', str_to_bool),
+                           ('show_infos', str_to_bool),
+                           ('show_warnings', str_to_bool),
+                           ('video_test', str_to_bool),
+                           ('load_valve_states', str_to_bool),
+                           ('load_soft_locks', str_to_bool)
                             ]:
             a = ip.get_global(attr)
             if a:

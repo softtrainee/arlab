@@ -43,6 +43,8 @@ from src.experiment.processing.export.excel_exporter import ExcelExporter
 from src.experiment.processing.figures.figure_store import FigureStore
 from src.initializer import MProgressDialog
 from src.saveable import Saveable, SaveableHandler, SaveButton
+from src.graph.graph_container import HGraphContainer
+from enable.component_editor import ComponentEditor
 
 class GraphSelector(HasTraits):
     show_series = Bool(False)
@@ -67,7 +69,8 @@ def sort_keys(func):
     return decorator
 
 class BaseFigure(Saveable, ColumnSorterMixin):
-    graph = Instance(Graph)
+#    graph = Instance(Graph)
+    graph = Instance(HGraphContainer)
     series = Instance(Series)
     graph_selector = Instance(GraphSelector, ())
     results_display = Instance(RichTextDisplay, ())
@@ -129,8 +132,9 @@ class BaseFigure(Saveable, ColumnSorterMixin):
 
         graph = self.graph
         try:
-            comps = graph.plotcontainer.components
-            graph.plotcontainer.remove(*comps)
+            comps = graph.components
+#            comps = graph.plotcontainer.components
+            graph.remove(*comps)
         except Exception:
             pass
 
@@ -216,7 +220,8 @@ class BaseFigure(Saveable, ColumnSorterMixin):
                                    seriespadding)
 
             if gseries:
-                graph.plotcontainer.add(gseries.plotcontainer)
+#                graph.plotcontainer.add(gseries.plotcontainer)
+                graph.add(gseries.plotcontainer)
 #                series.on_trait_change(self._update_selected_analysis, 'selected_analysis')
                 series.set_excluded_points(epts, keys, group_ids)
 
@@ -610,10 +615,16 @@ class BaseFigure(Saveable, ColumnSorterMixin):
             return a
 
     def _graph_factory(self, klass=None, **kw):
-        g = Graph(container_dict=dict(kind='h', padding=0,
-                                      bgcolor='lightgray',
-                                      spacing=0,
-                                      ))
+#        g = Graph(container_dict=dict(kind='h', padding=0,
+#                                      bgcolor='lightgray',
+#                                      spacing=0,
+#                                      ))
+        g = HGraphContainer(
+                            bgcolor='lightgray',
+                            padding=0, spacing=0,
+#                            fill_padding=True,
+                            use_backbuffer=True
+                            )
         return g
 
     def _analyses_table_factroy(self, name):
@@ -720,7 +731,9 @@ class BaseFigure(Saveable, ColumnSorterMixin):
         return SaveableHandler
 
     def _get_top_group(self):
-        graph_grp = Item('graph', show_label=False, style='custom',
+        graph_grp = Item('graph',
+                         show_label=False, style='custom',
+                         editor=ComponentEditor(),
                          height=0.7
                          )
         return graph_grp

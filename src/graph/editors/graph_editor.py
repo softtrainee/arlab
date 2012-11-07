@@ -217,7 +217,6 @@ class GraphEditor(HasTraits):
     @on_trait_change('padding_+')
     def _padding_changed(self):
         from src.graph.stacked_graph import StackedGraph
-
         try:
 #            p = map(int, self.padding.split(','))
 #            if len(p) == 1:
@@ -225,13 +224,17 @@ class GraphEditor(HasTraits):
             padding = [getattr(self, 'padding_{}'.format(a)) for a in PADDING_KEYS]
             l, r, t, b = padding
             if isinstance(self.graph, StackedGraph):
+                print 'isstac'
                 _pl, _pr, pt, _pb = self.graph.plots[0].padding
-                #dont change the top padding of the first plot
-                t = pt
+                _pl, _pr, pt2, _pb = self.graph.plots[-1].padding
+
+                #dont change the top padding of the first plot and last
+
                 self.graph.plots[0].padding = [l, r, pt, b]
                 for ps in self.graph.plots[1:-1]:
                     ps.padding = [l, r, 0, 0]
-                self.graph.plots[-1].padding = [l, r, t, 0]
+
+                self.graph.plots[-1].padding = [l, r, pt2, 0]
             else:
                 for pi in self.graph.plots:
                     pi.padding = padding
@@ -239,7 +242,7 @@ class GraphEditor(HasTraits):
             self.graph.redraw()
 
         except Exception, e:
-#            print e
+            print e
             pass
 
     def traits_view(self):

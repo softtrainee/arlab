@@ -35,7 +35,6 @@ class ContextualMenuTool(Interactor):
     def normal_mouse_move(self, event):
         '''
         '''
-
         if self.parent.plots:
             comps = self.component.components_at(event.x, event.y)
 

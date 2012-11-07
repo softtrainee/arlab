@@ -15,11 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import on_trait_change
+from traits.api import Bool
 #============= standard library imports ========================
 from numpy import histogram, array, argmax
 #============= local library imports  ==========================
-from src.image.cvwrapper import  grayspace, colorspace
+from src.image.cvwrapper import  grayspace
 
 from src.image.image import StandAloneImage
 from hole_detector import HoleDetector
@@ -38,6 +38,7 @@ class CO2HoleDetector(HoleDetector):
 #
 #        if self.target_image is not None:
 #            self.target_image.close()
+    display_results = Bool(True)
     @property
     def crop_dimensions(self):
 
@@ -121,18 +122,19 @@ class CO2HoleDetector(HoleDetector):
                 targets = self._segment_source(src, seg)
                 if targets:
                     nx, ny = self._get_positioning_error(targets, cx, cy, holenum)
-                    src = self.target_image.get_frame(0)
-                    tcx, tcy = self._get_true_xy(src)
 
+                    src = self.target_image.get_frame(0)
                     self._draw_center_indicator(src, size=2,
                                                 shape='rect')
-                    self._draw_targets(src, targets)
+                    if self.display_results:
+                        tcx, tcy = self._get_true_xy(src)
+                        self._draw_targets(src, targets)
 
-                    self._draw_indicator(src, (tcx - nx, tcy - ny),
-                                         shape='rect',
-                                         size=2,
-                                         color=(0, 255, 255)
-                                         )
+                        self._draw_indicator(src, (tcx - nx, tcy - ny),
+                                             shape='rect',
+                                             size=2,
+                                             color=(0, 255, 255)
+                                             )
                     return nx, ny
 
         osrc = self._get_new_frame()
