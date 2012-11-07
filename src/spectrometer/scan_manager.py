@@ -474,7 +474,11 @@ class ScanManager(Manager):
                             label='Magnet'
                             )
         detector_grp = VGroup(
-                              HGroup(Spring(springy=False, width=120), Label('Deflection')),
+                              HGroup(
+                                     spring,
+                                     Label('Deflection'),
+                                     Spring(springy=False, width=70), 
+                                     ),
                               Item('detectors',
                                    show_label=False,
                                    editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
