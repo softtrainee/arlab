@@ -52,7 +52,9 @@ class IonOpticsManager(Manager):
         return molweights[isotope_key]
 
     def position(self, pos, detector, use_dac=False):
-        self.info('positioning {} on {}'.format(pos, detector))
+
+
+
         spec = self.spectrometer
         mag = spec.magnet
 
@@ -61,10 +63,10 @@ class IonOpticsManager(Manager):
         else:
             if isinstance(pos, str):
 
-                #if the pos is an isotope then updated the detectors
+                #if the pos is an isotope then update the detectors
                 spec.update_isotopes(pos, detector)
 
-                #pos is in isotope
+                #pos is isotope
                 pos = self.get_mass(pos)
                 mag._mass = pos
 
@@ -72,8 +74,12 @@ class IonOpticsManager(Manager):
             dac = mag.map_mass_to_dac(pos)
 
         det = spec.get_detector(detector)
-        dac = spec.correct_dac(det, dac)
-        mag.set_dac(dac)
+
+        if det:
+            dac = spec.correct_dac(det, dac)
+
+            self.info('positioning {} ({}) on {}'.format(pos, dac, detector))
+            mag.set_dac(dac)
 
     def get_center_dac(self, det, iso):
         spec = self.spectrometer

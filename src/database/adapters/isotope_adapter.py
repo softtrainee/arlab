@@ -22,9 +22,11 @@ from src.database.core.database_adapter import DatabaseAdapter
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 
 #meas_
-from src.database.orms.isotope_orm import meas_AnalysisPathTable, meas_AnalysisTable, \
+from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
-    meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable
+    meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
+    meas_SignalTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
+    proc_FitTable
 
 #proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
@@ -61,7 +63,7 @@ class IsotopeAdapter(DatabaseAdapter):
     '''
 
     selector_klass = IsotopeAnalysisSelector
-    path_table = meas_AnalysisPathTable
+#    path_table = meas_AnalysisPathTable
 
 #    def initialize_database(self):
 #        self.add_sample('B')
@@ -112,63 +114,21 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_blanks_history(self, analysis, **kw):
         return self._add_history('Blanks', analysis, **kw)
-#        analysis = self.get_analysis(analysis)
-#        bh = proc_BlanksHistoryTable(analysis=analysis, **kw)
-#        return bh, True
 
     def add_blanks(self, history, **kw):
         return self._add_series_item('Blanks', 'blanks', history, **kw)
 
-
-#        b = proc_BlanksTable(**kw)
-#        history = self.get_blanks_history(history)
-#        if history:
-#            history.blanks.append(b)
-#            return b, True
-#        return b, False
-
     def add_blanks_set(self, blank, analysis, **kw):
         return self._add_set('Blanks', 'blank', blank, analysis, **kw)
-#        bs = proc_BlanksSetTable(**kw)
-#        blank = self.get_blank(blank)
-#        analysis = self.get_analysis(analysis)
-#
-#        if analysis:
-#            bs.blank_analysis_id = analysis.id
-#        if blank:
-#            blank.sets.append(bs)
-#        return bs, True
-
 
     def add_backgrounds_history(self, analysis, **kw):
         return self._add_history('Backgrounds', analysis, **kw)
-#        analysis = self.get_analysis(analysis)
-#        bh = proc_BackgroundsHistoryTable(analysis=analysis, **kw)
-#        return bh, True
-
 
     def add_backgrounds(self, history, **kw):
         return self._add_series_item('Backgrounds', 'backgrounds', history, **kw)
-#        b = proc_BackgroundsTable(**kw)
-#        history = self.get_backgrounds_history(history)
-#        if history:
-#            history.backgrounds.append(b)
-#            return b, True
-#        return b, False
-
 
     def add_backgrounds_set(self, background, analysis, **kw):
         return self._add_set('Backgrounds', 'background', background, analysis, **kw)
-
-#        bs = proc_BackgroundsSetTable(**kw)
-#        background = self.get_background(background)
-#        analysis = self.get_analysis(analysis)
-#
-#        if analysis:
-#            bs.background_analysis_id = analysis.id
-#        if background:
-#            background.sets.append(bs)
-#        return bs, True
 
     @add
     def add_detector(self, name, **kw):
@@ -177,13 +137,14 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_detector_intercalibration_history(self, analysis, **kw):
         return self._add_history('DetectorIntercalibration', analysis, **kw)
-#        analysis = self.get_analysis(analysis)
-#        dh = proc_DetectorIntercalibrationHistoryTable(analysis=analysis, **kw)
-#        return dh, True
 
-    def add_detector_intercalibration(self, history, **kw):
-        return self._add_series_item('DetectorIntercalibration',
+    def add_detector_intercalibration(self, history, detector, **kw):
+        a = self._add_series_item('DetectorIntercalibration',
                                      'detector_intercalibration', history, **kw)
+        if a:
+            detector.intercalibrations.append(a)
+
+        return a
 #        d = proc_DetectorIntercalibrationTable(**kw)
 #        history = self.get_detector_intercalibration_history(history)
 #        if history:
@@ -226,6 +187,25 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_extraction_device(self, name, **kw):
         item = gen_ExtractionDeviceTable(name=name, **kw)
         return self._add_unique(item, 'extraction_device', name)
+
+    @add
+    def add_fit_history(self, analysis, **kw):
+        hist = proc_FitHistoryTable(**kw)
+        if analysis:
+            analysis.fit_histories.append(hist)
+            analysis.selected_histories.selected_fits = hist
+            return hist, True
+        else:
+            return hist, False
+    @add
+    def add_fit(self, history, isotope, **kw):
+        f = proc_FitTable(**kw)
+        if history:
+            history.fits.append(f)
+        if isotope:
+            isotope.fits.append(f)
+
+        return f, True
 
     @add
     def add_flux(self, j, j_err):
@@ -330,6 +310,17 @@ class IsotopeAdapter(DatabaseAdapter):
             molweight.isotopes.append(iso)
 
         return iso, True
+
+    @add
+    def add_isotope_result(self, isotope, history, **kw):
+        r = proc_IsotopeResultsTable(**kw)
+        if isotope:
+            isotope.results.append(r)
+            if history:
+                history.results.append(r)
+                return r, True
+
+        return r, False
 
     @add
     def add_measurement(self, analysis, analysis_type, mass_spec, name, **kw):
@@ -460,6 +451,15 @@ class IsotopeAdapter(DatabaseAdapter):
             return sh, True
         else:
             return sh, False
+    @add
+    def add_signal(self, isotope, data):
+        s = meas_SignalTable(data=data)
+        if isotope:
+            isotope.signals.append(s)
+
+            return s, True
+        else:
+            return s, False
 
     @add
     def add_spectrometer_parameters(self, meas, **kw):
@@ -518,18 +518,19 @@ class IsotopeAdapter(DatabaseAdapter):
 
         return anal, True
 
-    @add
-    def add_analysis_path(self, path, analysis=None, **kw):
-        kw = self._get_path_keywords(path, kw)
-        anal_path = meas_AnalysisPathTable(**kw)
-        if isinstance(analysis, (str, int, long)):
-            analysis = self.get_analysis(analysis)
+#    @add
+#    def add_analysis_path(self, path, analysis=None, **kw):
+#        kw = self._get_path_keywords(path, kw)
+#        anal_path = meas_AnalysisPathTable(**kw)
+#        if isinstance(analysis, (str, int, long)):
+#            analysis = self.get_analysis(analysis)
+##
+#        if analysis is not None:
+#            analysis.path = anal_path
+#            return anal_path, True
 #
-        if analysis is not None:
-            analysis.path = anal_path
-            return anal_path, True
+#        return None, False
 
-        return None, False
     @add
     def add_analysis_type(self, name):
         at = gen_AnalysisTypeTable(name=name)
@@ -626,7 +627,25 @@ class IsotopeAdapter(DatabaseAdapter):
             return q.one()
         except Exception, e:
             pass
-#            print 'get level except', e
+
+    def get_irradiation_position(self, irrad, level, pos):
+        sess = self.get_session()
+        q = sess.query(irrad_PositionTable)
+        q = q.join(irrad_LevelTable)
+        q = q.join(irrad_IrradiationTable)
+        q = q.filter(irrad_IrradiationTable.name == irrad)
+        q = q.filter(irrad_LevelTable.name == level)
+
+        if isinstance(pos, (list, tuple)):
+            q = q.filter(irrad_PositionTable.position.in_(pos))
+            func = 'all'
+        else:
+            q = q.filter(irrad_PositionTable.position == pos)
+            func = 'one'
+        try:
+            return getattr(q, func)()
+        except Exception, e:
+            pass
 
     def get_labnumber(self, labnum):
         if isinstance(labnum, str):
@@ -766,8 +785,8 @@ if __name__ == '__main__':
     ia = IsotopeAdapter(
 
 #                        name='isotopedb_dev_migrate',
-                        name='isotopedb_FC2',
-#                        name='isotopedb_dev',
+#                        name='isotopedb_FC2',
+                        name='isotopedb_dev',
                         username='root',
                         password='Argon',
                         host='localhost',
@@ -784,12 +803,12 @@ if __name__ == '__main__':
 #                                      style='simple'
                                       )
 #        repo = Repository(root=paths.isotope_dir)
-        repo = Repository(root='/Users/ross/Sandbox/importtest')
-        repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/archive004.zip')
-        dbs.set_data_manager(kind='local',
-                             repository=repo,
-                             workspace_root=paths.default_workspace_dir
-                             )
+#        repo = Repository(root='/Users/ross/Sandbox/importtest')
+#        repo = ZIPRepository(root='/Users/ross/Sandbox/importtest/archive004.zip')
+#        dbs.set_data_manager(kind='local',
+#                             repository=repo,
+#                             workspace_root=paths.default_workspace_dir
+#                             )
     #    dbs._execute_query()
 #        dbs.load_recent()
         dbs.load_last(n=100)

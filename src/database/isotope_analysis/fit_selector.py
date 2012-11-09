@@ -27,7 +27,6 @@ class FitSelector(HasTraits):
     analysis = Any
     graph = Any
     fits = List(AnalysisParameters)
-
     _suppress_update = False
     _plot_cache = None
     def _analysis_changed(self):
@@ -47,7 +46,8 @@ class FitSelector(HasTraits):
         try:
             reg = self.graph.regressors[n - i]
             fit = reg.fit
-
+            fo = self.graph.get_filter_outliers(n - i)
+#            print reg.filter_outliers
             inte = reg.predict(0)
             er = reg.coefficient_errors[-1]
             if fit == 'average':
@@ -57,6 +57,7 @@ class FitSelector(HasTraits):
 
         obj = AnalysisParameters(name=name,
                                  fit=fit,
+                                 filter_outliers=fo,
                                  _intercept=inte,
                                  _error=er,
                                  )
@@ -80,6 +81,12 @@ class FitSelector(HasTraits):
 #        comps = list(set(self._plot_cache + self.graph.plotcontainer.components))
 #        comps = self.graph.plotcontainer.components
         plots = [p for p, a in zip(self._plot_cache, reversed(self.fits)) if a.show]
+
+        for p, a in zip(self._plot_cache, reversed(self.fits)):
+            if not a.show:
+                p.visible = False
+            else:
+                p.visible = True
 #        self._plot_cache = [p for p, a in zip(comps, self.fits) if not a.show]
 
         self.graph.plotcontainer._components = plots
@@ -96,15 +103,18 @@ class FitSelector(HasTraits):
         self.graph.redraw()
 #        self._plot_cache = [self.graph.plotcontainer.components 
 
-    @on_trait_change('fits:fit, fits:filterstr')
+    @on_trait_change('fits:[fit,filterstr,filter_outliers]')
     def _changed(self, obj, name, new):
         n = len(self.fits) - 1
         plotid = n - self.fits.index(obj)
         g = self.graph
+
         if name == 'fit':
             g.set_fit(new, plotid=plotid)
-        else:
+        elif name == 'filterstr':
             g.set_filter(new, plotid=plotid)
+        elif name == 'filter_outliers':
+            g.set_filter_outliers(new, plotid=plotid)
 
         self._suppress_update = True
         g._update_graph()
@@ -113,6 +123,7 @@ class FitSelector(HasTraits):
             reg = g.regressors[plotid]
             obj._intercept = reg.predict(0)
             obj._error = reg.coefficient_errors[-1]
+
         except IndexError:
             obj._intercept = 0
             obj._error = 0
@@ -128,8 +139,9 @@ class FitSelector(HasTraits):
             n = len(self.fits) - 1
             for i, fi in enumerate(self.fits):
                 reg = new[n - i]
-                fi._intercept = reg.predict(0)
-                fi._error = reg.coefficient_errors[-1]
+                if reg:
+                    fi._intercept = reg.predict(0)
+                    fi._error = reg.coefficient_errors[-1]
 
         self.analysis.age_dirty = True
 

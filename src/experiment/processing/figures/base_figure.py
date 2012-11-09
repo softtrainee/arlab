@@ -45,6 +45,10 @@ from src.initializer import MProgressDialog
 from src.saveable import Saveable, SaveableHandler, SaveButton
 from src.graph.graph_container import HGraphContainer
 from enable.component_editor import ComponentEditor
+from multiprocessing.process import Process
+from threading import Thread
+from Queue import Queue
+import time
 
 class GraphSelector(HasTraits):
     show_series = Bool(False)
@@ -126,7 +130,6 @@ class BaseFigure(Saveable, ColumnSorterMixin):
 #        self.results_display.clear()
 
         analyses = self._analyses
-
         if not self._check_refresh():
             return
 
@@ -135,8 +138,8 @@ class BaseFigure(Saveable, ColumnSorterMixin):
             comps = graph.components
 #            comps = graph.plotcontainer.components
             graph.remove(*comps)
-        except Exception:
-            pass
+        except Exception, e:
+            print e
 
         pl = 70 if self.graph_selector.show_series else 50
         padding = [pl, 10, 0, 30]
@@ -233,6 +236,24 @@ class BaseFigure(Saveable, ColumnSorterMixin):
     def _add_analysis(self, a, **kw):
         self._analyses.append(a)
 
+    def _load_analysis(self, queue, n, dbrecord=None, **kw):
+        from src.database.orms.isotope_orm import meas_AnalysisTable
+        sess = self.db.new_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
+        dbr = q.one()
+#        print id(dbr), dbr
+        dbrecord._dbrecord = dbr
+        a = Analysis(uuid=n,
+                     dbrecord=dbrecord,
+                         **kw)
+        if a.load_age():
+            queue.put(a)
+#            self._analyses.append(a)
+        sess.expunge_all()
+        sess.close()
+        sess.remove()
+
     def load_analyses(self, names, groupids=None, attrs=None,
                       set_series_configs=True,
                       **kw):
@@ -254,41 +275,58 @@ class BaseFigure(Saveable, ColumnSorterMixin):
 #===============================================================================
 #     serial load
 #===============================================================================
-        pd = MProgressDialog(max=n + 1, size=(550, 15))
+        pd = MProgressDialog(max=n + 2, size=(550, 15))
         import wx
         pd.open()
         (w, h) = wx.DisplaySize()
         (ww, _hh) = pd.control.GetSize()
         pd.control.MoveXY(w / 2 - ww + 275, h / 2 + 150)
+        ans = []
 
-        for n, group_id, attr in zip(names, groupids, attrs):
-            if not n in _names:
-                a = self._analysis_factory(n, **attr)
-#                a.group_id = group_id
+        def add_analysis(q):
+            while 1:
+
+#                msg = 'loading analysis {}'.format('fffd')
+#                pd.change_message(msg)
+#                pd.increment()
+                a = q.get()
                 if a:
-                    msg = 'loading analysis {} groupid={} graphid={}'.format(a.dbrecord.record_id,
-                                                                  group_id,
-                                                                  a.graph_id)
-                    pd.change_message(msg)
-                    self.info(msg)
-                    self._add_analysis(a, **kw)
+#                    print a
+#                    do_later(pd.increment)
+                    self._analyses.append(a)
+                    time.sleep(0.0001)
                 else:
-                    self.warning('could not load {}'.format(n))
-            else:
-                a = next((a for a in analyses if a.uuid == n), None)
+                    break
 
-            #dbrecord must be set before setting group_id
-            a.group_id = group_id
+        q = Queue()
+        adder = Thread(target=add_analysis, args=(q,))
+        adder.start()
+
+        for n, attr in zip(names, attrs):
+            if not n in _names:
+                dbr = attr['dbrecord']
+                msg = 'loading analysis {} groupid={} graphid={}'.format(dbr.record_id, dbr.group_id, dbr.graph_id)
+                pd.change_message(msg)
+                self.info(msg)
+                t = Thread(target=self._load_analysis, args=(q, n,), kwargs=attr)
+                t.start()
 
             pd.increment()
+
+        pd.change_message('Finishing calculations')
+        t.join()
+        pd.increment()
+
+        #send stop signal to adder thread
+        q.put(None)
+        print 'threads finished'
 #===============================================================================
 # 
 #===============================================================================
-
         #remove analyses not in names
         self._analyses = [ai for ai in analyses if ai.uuid not in rnames]
 #        print self._analyses
-        self.nanalyses = -1
+#        self.nanalyses = -1
 
         keys = self.isotope_keys
         keys.sort(key=lambda k:k[2:4], reverse=True)
@@ -425,9 +463,11 @@ class BaseFigure(Saveable, ColumnSorterMixin):
         def do():
             ps = self.selector
             try:
-                names, attrs, group_ids = zip(*[(ri.filename, dict(dbrecord=ri), ri.group_id)
-                                          for ri in ps.selected_records
-                                            if ri.path.strip()
+                names, attrs, group_ids = zip(*[(str(ri.uuid),
+                                                 dict(dbrecord=ri),
+                                                ri.group_id)
+                                                for ri in ps.selected_records
+#                                            if ri.path.strip()
 
                                             ])
 
@@ -519,18 +559,18 @@ class BaseFigure(Saveable, ColumnSorterMixin):
 #            ps.selector.load_recent()
             ps.selector.load_last(n=200)
 #            ps._analysis_type_changed()
-#            ps.edit_traits()
+            ps.edit_traits()
             self.selector = ps
 #            if self._debug:
 
-            ps.selected_records = [i for i in ps.selector.records if i.labnumber in [57740, 57741,
-                                                                                      57743, 57742, 57745
-                                                                                     ]]
+#            ps.selected_records = [i for i in ps.selector.records if i.labnumber in [57740, 57741,
+#                                                                                      57743, 57742, 57745
+#                                                                                     ]]
 #            for pi in ps.selected_records:
 #                if pi.labnumber == 57741:
 ##                    pi.group_id = 1
 #                    pi.graph_id = 1
-            ps.selected_records = ps.selected_records[::5]
+#            ps.selected_records = ps.selected_records[::5]
 #            print len(ps.selected_records)
 #            ps.selected_records = [i for i in ps.selector.records[-20:] if i.analysis_type != 'blank']
 #            print 'get results time', time.clock() - st
@@ -538,7 +578,7 @@ class BaseFigure(Saveable, ColumnSorterMixin):
             self.selector.show()
 
 #        st = time.clock()
-        self._update_data()
+#        self._update_data()
 #        print 'update time', time.clock() - st
 
     def _show_results_fired(self):
@@ -584,12 +624,33 @@ class BaseFigure(Saveable, ColumnSorterMixin):
 #===============================================================================
 
     def _analysis_factory(self, n, dbrecord=None, **kw):
+        from src.database.orms.isotope_orm import meas_AnalysisTable
 
+#        sess = self.db.new_session()
+#        q = sess.query(meas_AnalysisTable)
+#        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
+#        dbr = q.one()
+##        print id(dbr), dbr
+#        dbrecord._dbrecord = dbr
+#        do_later(progress.change_message, 'loading analysis')
         a = Analysis(uuid=n,
 #                     repo=self.repo,
 #                     workspace=self.workspace,
                      dbrecord=dbrecord,
                      **kw)
+#        t = Thread(target=a.load_age)
+#        t.start()
+        if a.load_age():
+            return a
+#            self._analyses.append(a)
+#        return a
+#        do_later(progress.increment)
+#        sess.expunge
+#        return a
+#            return a
+#        sess.expunge(dbr)
+#        sess.close()
+#        return a
         #need to call both load from file and database
 #        if not a.load_from_file(n):
 #            return
@@ -611,8 +672,8 @@ class BaseFigure(Saveable, ColumnSorterMixin):
 #            a.dbrecord = dbrecord
 
 #                a.load_from_file(n)
-        if a.load_age():
-            return a
+#        if a.load_age():
+#            return a
 
     def _graph_factory(self, klass=None, **kw):
 #        g = Graph(container_dict=dict(kind='h', padding=0,

@@ -20,7 +20,7 @@ from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 from numpy import polyval, polyfit, vander, asarray, column_stack, ones
 try:
-    from statsmodels.api import OLS
+    from statsmodels.api import OLS, add_constant
 except ImportError:
     from scikits.statsmodels.api import OLS
 
@@ -96,6 +96,7 @@ class OLSRegressor(BaseRegressor):
 #        print 'value_at predict', self._ols.predict(pos)
 #        return polyval(coeffs, pos)
         X = self._get_X(xs=pos)
+#        print X
         res = self._result
         if res:
             pred = res.predict(X)
@@ -198,34 +199,48 @@ class MultipleLinearRegressor(OLSRegressor):
         X=array(xy)
     '''
 
-    def value_at(self, pos):
-        '''
-            pos should be (x,y)
-        '''
-        return self._ols.predict(asarray(pos))
-
-
-    def _get_X(self):
-        '''
-           
-        '''
-        xs = self.xs
+    def _get_X(self, xs=None):
+        if xs is None:
+            xs = asarray(self.xs)
         xs = asarray(xs)
+
         r, c = xs.shape
         if c == 2:
             xs = column_stack((xs, ones(r)))
             return xs
+#        return add_constant(xs)
+#        c = vander(xs, self.degree + 1)
+#        if self.constant:
+#            c[:, self.degree] *= self.constant
+#        return c
+#    def value_at(self, pos):
+#        '''
+#            pos should be (x,y)
+#        '''
+#        return self._ols.predict(asarray(pos))
 
-    def _calculate_coefficient_errors(self):
-        result = self._result
-        covar_diag = result.cov_params().diagonal()
-        n = result.nobs
-        q = result.df_model
-        ssr = result.ssr
-        sigma_fit = (ssr / ((n - 1) - q)) ** 0.5
-        errors = sigma_fit * covar_diag
-        print errors, self._result.bse
-        return errors
+
+#    def _get_X(self):
+#        '''
+#           
+#        '''
+#        xs = self.xs
+#        xs = asarray(xs)
+#        r, c = xs.shape
+#        if c == 2:
+#            xs = column_stack((xs, ones(r)))
+#            return xs
+
+#    def _calculate_coefficient_errors(self):
+#        result = self._result
+#        covar_diag = result.cov_params().diagonal()
+#        n = result.nobs
+#        q = result.df_model
+#        ssr = result.ssr
+#        sigma_fit = (ssr / ((n - 1) - q)) ** 0.5
+#        errors = sigma_fit * covar_diag
+#        print errors, self._result.bse
+#        return errors
 
 
 #        return dict(result=result,
@@ -241,11 +256,13 @@ if __name__ == '__main__':
 #    ei = np.random.rand(len(xs))
 #    ys = bo + b1 * xs + ei
 #    print ys
-    p = '/Users/ross/Sandbox/61311-36b'
-    xs, ys = np.loadtxt(p, unpack=True)
-#    xs, ys = np.loadtxt(p)
-    m = PolynomialRegressor(xs=xs, ys=ys, degree=2)
-    print m.calculate_y(0)
-
-#    print m.value_at(5)
+#    p = '/Users/ross/Sandbox/61311-36b'
+#    xs, ys = np.loadtxt(p, unpack=True)
+##    xs, ys = np.loadtxt(p)
+#    m = PolynomialRegressor(xs=xs, ys=ys, degree=2)
+#    print m.calculate_y(0)
+    xs = [(0, 0), (1, 0), (2, 0)]
+    ys = [0, 1, 2]
+    r = MultipleLinearRegressor(xs=xs, ys=ys)
+    print r.predict([(0, 1)])
 #============= EOF =============================================

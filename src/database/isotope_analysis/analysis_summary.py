@@ -32,18 +32,15 @@ class AnalysisSummary(Summary):
     fit_selector = Instance(FitSelector)
 
     def _build_summary(self):
-
         record = self.record
 
         isos = record.isotope_keys
-        if isos:
-            isos = sorted(isos, key=lambda x: re.sub('\D', '', x))
-            isos.reverse()
-        else:
+        isos = list(reversed(isos))
+        if not isos:
             isos = []
 
         self.add_text('Labnumber={}-{}'.format(record.labnumber, record.aliquot), bold=True)
-        self.add_text('UUID={}'.format(record.filename), bold=True)
+        self.add_text('UUID={}'.format(record.uuid), bold=True)
         self.add_text('date={} time={}'.format(record.rundate, record.runtime), bold=True)
         j, j_err = record.j
         self.add_text('J={} {}{}'.format(j, u'\u00b1', j_err))
@@ -80,13 +77,12 @@ class AnalysisSummary(Summary):
 #        for i, iso in enumerate(isos):
 #            self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
 
-        m = 'Corrected Signals'
+        m = 'Baseline Corrected Signals          Fully Corrected Signals'
         self.add_text('{:<39s}'.format(m), underline=True, bold=True)
 
 #        signals = dict()
         for i, iso in enumerate(isos):
-            self._make_corrected_signals(n, i, iso, floatfmt, width, widths,
-                                         fully_correct=True)
+            self._make_corrected_signals(n, i, iso, floatfmt, width, widths)
 
         m = 'Corrected Values'
         self.add_text('{:<39s}'.format(m), underline=True, bold=True)
@@ -126,34 +122,43 @@ class AnalysisSummary(Summary):
             ej = arar_result['age_err_wo_jerr'] / self.record.age_scalar
         except TypeError:
             ej = 0
+
+        print e, ej
         e = u'\u00b1{} ({})'.format(floatfmt(e), self.calc_percent_error(v, e))
         ej = u'\u00b1{} ({})'.format(floatfmt(ej), self.calc_percent_error(v, ej))
 
         self.add_text('age={:0.3f} {}'.format(v, e))
-        self.add_text('           {}'.format(ej))
+        self.add_text('           {} (Exclude Error in J)'.format(ej))
 
     def _make_corrected_signals(self, n, i, iso, floatfmt, width, widths,
                                 fully_correct=False):
-        d = self.display
+#        d = self.display
 
         pi = n - i
-        sig, base = self._get_signal_and_baseline(pi)
+        sig, base = self._get_signal_and_baseline(iso)
 
-        s = sig - base
-        if fully_correct:
-            arar = self.record.arar_result
-            if arar:
-                iso = iso.replace('Ar', 's')
-                if iso in arar:
-                    s = arar[iso]
+        s1 = sig - base
+#        if fully_correct:
+        arar = self.record.arar_result
+        s2 = ufloat((0, 0))
+        if arar:
+            iso = iso.replace('Ar', 's')
+            if iso in arar:
+                s2 = arar[iso]
 
-        sv = s.nominal_value
-        se = s.std_dev()
-        bse = '{} ({})'.format(floatfmt(se), self.calc_percent_error(sv, se))
+        sv1 = s1.nominal_value
+        se1 = s1.std_dev()
+        sv2 = s2.nominal_value
+        se2 = s2.std_dev()
+        bse1 = '{} ({})'.format(floatfmt(se1), self.calc_percent_error(sv1, se1))
+        bse2 = '{} ({})'.format(floatfmt(se2), self.calc_percent_error(sv2, se2))
         msgs = [
 #                iso,
-                floatfmt(sv),
-                bse
+                floatfmt(sv1),
+                bse1,
+                '     ',
+                floatfmt(sv2),
+                bse2
                 ]
         msg = ''.join([width(m, w) for m, w in zip(msgs, widths[1:])])
         if i == n:
@@ -163,30 +168,36 @@ class AnalysisSummary(Summary):
                   new_line=False,
                   underline=i == n)
         self.add_text(msg, size=11, underline=i == n)
-        return s
+#        return s
 
-    def _get_signal_and_baseline(self, pi):
-        sg = self.record.signal_graph
-        bg = self.record.baseline_graph
-        reg = sg.regressors[pi]
-        inter = reg.predict(0)
-        inter_err = reg.coefficient_errors[-1]
-        if bg:
-            reg = bg.regressors[pi]
-            base = reg.predict(0)
-            base_err = reg.coefficient_errors[-1]
-        else:
-            base = 0
-            base_err = 0
-
-        return ufloat((inter, inter_err)), ufloat((base, base_err))
+    def _get_signal_and_baseline(self, iso):
+        self.record._signals
+        sig = self.record._signals[iso]
+        base = self.record._signals['{}bs'.format(iso)]
+#        print sig.value
+#        sg = self.record.signal_graph
+#        bg = self.record.baseline_graph
+#        reg = sg.regressors[pi]
+#        inter = reg.predict(0)
+#        inter_err = reg.coefficient_errors[-1]
+#        if bg:
+#            reg = bg.regressors[pi]
+#            base = reg.predict(0)
+#            base_err = reg.coefficient_errors[-1]
+#        else:
+#            base = 0
+#            base_err = 0
+#        inter, inter_err = 0, 0
+#        base, base_err = 0, 0
+#        return ufloat((inter, inter_err)), ufloat((base, base_err))
+        return sig.uvalue, base.uvalue
 
     def _make_signals(self, n, i, iso, floatfmt, width, widths):
         sg = self.record.signal_graph
 #        d = self.display
         pi = n - i
         fit = sg.get_fit(pi) if sg else ' '
-        sig, base = self._get_signal_and_baseline(pi)
+        sig, base = self._get_signal_and_baseline(iso)
 
         try:
             blank = self.record.signals['{}bl'.format(iso)]

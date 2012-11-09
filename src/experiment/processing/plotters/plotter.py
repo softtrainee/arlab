@@ -30,11 +30,22 @@ from src.graph.tools.rect_selection_tool import RectSelectionTool, \
     RectSelectionOverlay
 from chaco.tools.broadcaster import BroadcasterTool
 from enable.font_metrics_provider import font_metrics_provider
+from src.canvas.popup_window import PopupWindow
+from src.graph.context_menu_mixin import IsotopeContextMenuMixin
+from src.graph.stacked_graph import StackedGraph
+
+class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
+    def set_status(self):
+        self.plotter.set_status()
+
+    def recall_analysis(self):
+        self.plotter.recall_analysis()
 
 class Plotter(Viewable):
     adapter = Property
     results = List(BaseResults)
     graph = Any
+    db = Any
     selected_analysis = Any
     analyses = Any
     sorted_analyses = Property(depends_on='analyses')
@@ -43,6 +54,27 @@ class Plotter(Viewable):
     popup = None
     _dehover_count = 0
     _hover_cache = None
+#    hoverid = None
+    def recall_analysis(self):
+        self.popup.Close()
+        dbrecord = self.selected_analysis.dbrecord
+
+        from src.database.orms.isotope_orm import meas_AnalysisTable
+        sess = self.db.new_session()
+        self.db.sess = sess
+        q = sess.query(meas_AnalysisTable)
+        q = q.filter(meas_AnalysisTable.id == dbrecord._dbrecord.id)
+        dbr = q.one()
+#        print id(dbr), dbr
+        dbrecord._dbrecord = dbr
+
+        dbrecord.load_graph()
+        dbrecord.edit_traits()
+
+#        sess.close()
+#        sess.remove()
+#        self.selected_analysis.dbrecord.edit_traits()
+
     def _get_adapter(self):
         return ResultsTabularAdapter
 
@@ -129,51 +161,34 @@ class Plotter(Viewable):
         if hover:
 #            print hover, group_id
             hoverid = hover[0]
-            try:
-                self._hover_cache[group_id] = hoverid
-            except:
-                self._hover_cache = {group_id:hoverid}
+#            self.hoverid = hoverid
+#            try:
+#                self._hover_cache[group_id] = hoverid
+#            except:
+#                self._hover_cache = {group_id:hoverid}
 
-#            print len(sorted_ans), hoverid, group_id
-#            for ai in self.analyses:
-#                print ai.group_id
             try:
                 self.selected_analysis = sa = sorted_ans[hoverid]
             except IndexError:
                 return
 
-#            event = obj.metadata.get('mouse_xy')
-            from src.canvas.popup_window import PopupWindow
             if not self.popup:
                 self.popup = PopupWindow(None)
 
 #            print event.x, event.y
             self._show_pop_up(self.popup, sa, obj)
         else:
+#            if self._dehover_count >= len(self._hover_cache.keys()):
+#                self._dehover_count = 0
+#            elif len(self._hover_cache.keys()):
+#                self._dehover_count += 1
+#                return
 
-            if not self._hover_cache:
-                self._dehover_count = 0
-                if self.popup:
-                    self.popup.Freeze()
-                    self.popup.Show(False)
-                    self.popup.Thaw()
-            else:
-                try:
-                    if self._dehover_count >= len(self._hover_cache.keys()) + 5:
-                        self._dehover_count = 0
-
-                    elif len(self._hover_cache.keys()):
-                        self._dehover_count += 1
-                        return
-
-                    if self.popup:
-                        self.popup.Freeze()
-                        self.popup.Show(False)
-                        self.popup.Thaw()
-
-                except Exception, e:
-                    print e
-                    pass
+            if self.popup:
+#                self.popup.Freeze()
+                self.popup.Show(False)
+#                self.popup.Thaw()
+                self.popup.Destroy()
 
         sel = obj.metadata.get('selections', [])
         #set the temp_status for all the analyses
@@ -184,11 +199,11 @@ class Plotter(Viewable):
         return x.timestamp
 
     def _show_pop_up(self, popup, analysis, obj):
-        x, y = obj.metadata.get('mouse_xy')
-#        try:
-#            x, y = mouse_xy
-#        except:
-#            return
+        try:
+            x, y = obj.metadata.get('mouse_xy')
+        except Exception, e:
+#            popup.Show(False)
+            return
 
         lines = [
                  analysis.rid,
@@ -215,12 +230,12 @@ class Plotter(Viewable):
 #        ch = popup.GetCharWidth()
         mh = mh * len(lines)
 #        print ml, mh
-        popup.Freeze()
+#        popup.Freeze()
+        popup.SetPosition((x + 55, y + 25))
         popup.set_size(ml, mh)
         popup.SetText(t)
-        popup.SetPosition((x + 55, y + 25))
         popup.Show(True)
-        popup.Thaw()
+#        popup.Thaw()
 
 #===============================================================================
 # views

@@ -27,7 +27,7 @@ from src.graph.stacked_graph import StackedGraph
 #from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.experiment.processing.plotters.results_tabular_adapter import IdeoResults, \
     IdeoResultsAdapter
-from src.experiment.processing.plotters.plotter import Plotter
+from src.experiment.processing.plotters.plotter import Plotter, mStackedGraph
 from src.stats.core import calculate_weighted_mean, calculate_mswd
 from src.graph.context_menu_mixin import IsotopeContextMenuMixin
 from src.graph.graph import Graph
@@ -51,9 +51,7 @@ from chaco.tools.data_label_tool import DataLabelTool
 #    pass
 
 N = 500
-class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
-    def set_status(self):
-        print self.hoverid
+
 
 
 EInt = lambda x: Int(x, enter_set=True, auto_set=False)
@@ -96,6 +94,7 @@ class GraphPanelInfo(HasTraits):
 class Ideogram(Plotter):
     ages = None
     errors = None
+
 
     ideogram_of_means = Bool
     error_calc_method = Enum('SEM, but if MSWD>1 use SEM * sqrt(MSWD)', 'SEM')
@@ -201,19 +200,23 @@ class Ideogram(Plotter):
                     g.set_x_title('Age (Ma)')
 
                 if j == 0:
-#                    g.set_y_title('Relative Probability')
+                    g.set_y_title('Relative Probability')
                     g.set_y_title('Analysis #', plotid=1)
                     g.set_y_title('%40*', plotid=2)
 #                    g.set_y_title('k39', plotid=3)
 
-                p1 = g.plots[0]
-                p2 = g.plots[1]
-                p1.y_axis.tick_label_font = font
-                p1.y_axis.title_font = tfont
-                p1.x_axis.tick_label_font = font
-                p1.x_axis.title_font = tfont
-                p2.y_axis.tick_label_font = font
-                p2.y_axis.title_font = tfont
+
+#                p1 = g.plots[0]
+#                p2 = g.plots[1]
+#                p1.y_axis.tick_label_font = font
+#                p1.y_axis.title_font = tfont
+#                p1.x_axis.tick_label_font = font
+#                p1.x_axis.title_font = tfont
+#                p2.y_axis.tick_label_font = font
+#                p2.y_axis.title_font = tfont
+
+                for pi in g.plots:
+                    pi.y_axis.tick_in = False
 
                 op.add(g.plotcontainer)
                 self.graphs.append(g)
@@ -248,10 +251,10 @@ class Ideogram(Plotter):
         if padding is None:
             padding = [50, 5 , 35, 35]
 
-        print padding
         g = mStackedGraph(panel_height=200,
                             equi_stack=False,
-                            container_dict=dict(padding=0)
+                            container_dict=dict(padding=0),
+                            plotter=self
                             )
         g.clear()
 #        g.plotcontainer.tools.append(TraitsTool(g.plotcontainer))

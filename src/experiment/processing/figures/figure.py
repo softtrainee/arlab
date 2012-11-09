@@ -73,7 +73,7 @@ class Figure(BaseFigure):
             if self._cached_ideogram is not None:
                 self.ideogram = ideo = self._cached_ideogram
             else:
-                self.ideogram = ideo = Ideogram()
+                self.ideogram = ideo = Ideogram(db=self.db)
 
             ideo.figure = self
             ideo.on_trait_change(self._update_selected_analysis, 'selected_analysis')
@@ -161,13 +161,13 @@ class Figure(BaseFigure):
     def _get_bottom_group(self):
         grp = super(Figure, self)._get_bottom_group()
 
-        blanksgrp , ta = self._analyses_table_factroy('Blanks')
-        self.blank_table_adapter = ta
+#        blanksgrp , ta = self._analyses_table_factroy('Blanks')
+#        self.blank_table_adapter = ta
 #
 #        grp.content.append(blanksgrp)
 #
-        backsgrp, ta = self._analyses_table_factroy('Backgrounds')
-        self.background_table_adapter = ta
+#        backsgrp, ta = self._analyses_table_factroy('Backgrounds')
+#        self.background_table_adapter = ta
 #        grp.content.append(backsgrp)
 
         height = 200

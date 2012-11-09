@@ -83,14 +83,25 @@ class ContextMenuMixin(HasTraits):
 
 class IsotopeContextMenuMixin(ContextMenuMixin):
     def set_status(self):
+        '''
+            override this method in a subclass 
+        '''
         pass
+
+    def recall_analysis(self):
+        '''
+            override this method in a subclass 
+        '''
+        pass
+
     def contextual_menu_contents(self):
         contents = super(IsotopeContextMenuMixin, self).contextual_menu_contents()
 
         contents.append(Menu(
+                             self.action_factory('Recall', 'recall_analysis'),
                              self.action_factory('Omit', 'set_status'),
                              self.action_factory('Include', 'set_status'),
-                             name='status'))
+                             name='Analysis'))
         return contents
 
 class RegressionContextMenuMixin(ContextMenuMixin):

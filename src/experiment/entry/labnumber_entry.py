@@ -555,7 +555,7 @@ class LabnumberEntry(Loggable):
         return v
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
-    paths.build('_test')
+    paths.build('_experiment')
 
     logging_setup('runid')
     m = LabnumberEntry()

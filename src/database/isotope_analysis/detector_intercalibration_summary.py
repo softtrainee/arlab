@@ -45,9 +45,10 @@ class DetGraph(HasTraits):
                       Item('graph',
                            show_label=False, style='custom',
                            height=0.95,
-                           width=525,
+#                           width=700,
                       ),
-                    )
+                    ),
+#                 width=700,
                  )
 
         return v
@@ -56,19 +57,32 @@ class DetectorIntercalibrationSummary(HistorySummary):
     history_name = 'detector_intercalibration'
     graph = Instance(DetGraph)
     apply_name = 'selected_detector_intercalibration'
+    def _graph_default(self):
+        g = super(DetectorIntercalibrationSummary, self)._graph_default()
+        return DetGraph(graph=g)
 
     def _build_graph(self, history):
 
         dbr = self.record
-        g = Graph(container_dict=dict(padding=5, bgcolor='lightgray'))
+#        g = Graph(container_dict=dict(padding=5, bgcolor='lightgray'),
+#                  width=510
+#                  )
+        g = self.graph.graph
+        g.clear()
         g.new_plot(padding=[50, 0, 0, 50])
-        self.graph = DetGraph(graph=g)
+#        self.graph = DetGraph(graph=g)
 
 #        bi = getattr(history, self.history_name)
         bi = history.detector_intercalibration
         if not bi:
             return
 #        print bi.fit
+
+        det = next((iso.detector for iso in dbr.dbrecord.isotopes
+                      if iso.molecular_weight.name == 'Ar36'), None)
+        bi = next((item for item in bi if item.detector == det), None)
+
+
         if bi.fit:
             xs = [dbr.make_timestamp(str(bs.analysis.rundate),
                                      str(bs.analysis.runtime)) for bs in bi.sets]

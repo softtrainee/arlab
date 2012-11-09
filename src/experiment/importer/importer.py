@@ -31,10 +31,16 @@ from src.repo.repository import Repository
 from src.managers.data_managers.table_descriptions import TimeSeriesTableDescription
 from src.database.orms.massspec_orm import IrradiationLevelTable, \
     IrradiationChronologyTable, IrradiationPositionTable, AnalysesTable, \
-    SampleTable, ProjectTable
+    SampleTable, ProjectTable, BaselinesChangeableItemsTable, FittypeTable
 from threading import Thread
 import time
 from src.paths import paths
+from src.experiment.processing.signal import Signal
+from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable
+from sqlalchemy.sql.expression import and_
+#from src.helpers.datetime_tools import get_datetime
+from datetime import datetime
+
 #from src.database.orms.isotope_orm import meas_AnalysisTable
 
 class Importer(Loggable):
@@ -127,10 +133,11 @@ class MassSpecImporter(Importer):
 
         for item in items:
             if self._import_item(item):
-                self.destination.commit()
-
-        self.info('compress repository')
-        self.repository.compress()
+                self.destination.flush()
+#                self.destination.commit()
+        self.destination.commit()
+#        self.info('compress repository')
+#        self.repository.compress()
 
         t = (time.time() - st) / 60.
         self.info('Import completed')
@@ -148,48 +155,67 @@ class MassSpecImporter(Importer):
 
 #        analyses = []
         dblabnumber = dest.get_labnumber(labnumber)
-#        print labnumber, dblabnumber
         if not dblabnumber:
             dblabnumber = dest.add_labnumber(labnumber)
-            dest.commit()
+            dest.flush()
+#            dest.commit()
 
             self._import_irradiation(msrecord, dblabnumber)
 
+#            import_monitors = False
             import_monitors = True
             if import_monitors:
                 #get all the monitors and add
                 monitors = self._get_monitors(msrecord)
-                for mi in monitors:
-                    self._import_item(mi)
-                dest.commit()
+                if monitors:
+                    for mi in monitors:
+                        self._import_item(mi)
+                        dest.flush()
+#                    dest.commit()
 
 #            analyses += monitors
 
-        analyses = dblabnumber.analyses
+#        analyses = dblabnumber.analyses
 
-        def test(ai):
-            a = int(ai.aliquot) == int(aliquot)
-            b = ai.step == step
-            return a and b
+#        def test(ai):
+#            a = int(ai.aliquot) == int(aliquot)
+#            b = ai.step == step
+#            return a and b
 
-        dbanal = next((ai for ai in analyses if test(ai)), None)
+#        dbanal = next((ai for ai in analyses if test(ai)), None)
+        sess = dest.get_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.join(gen_LabTable)
+        q = q.filter(gen_LabTable.labnumber == dblabnumber.labnumber)
+        q = q.filter(and_(meas_AnalysisTable.aliquot == aliquot,
+                           meas_AnalysisTable.step == step))
+        try:
+            dbanal = q.one()
+        except Exception, e:
+            dbanal = None
+#        print dbanal, dblabnumber.labnumber, step, aliquot
         if not dbanal:
             self._import_analysis(msrecord, dblabnumber)
-
+            dest.flush()
             return True
+#            print 'exception geting {}{}'.format(aliquot, step), e
 
     def _import_analysis(self, msrecord, dblabnumber):
         aliquot = msrecord.Aliquot
         step = msrecord.Increment
         rdt = msrecord.RunDateTime
+        status = msrecord.changeable[-1].StatusLevel
+
         dest = self.destination
         self.info('adding analysis {} {}{}'.format(dblabnumber.labnumber, aliquot, step))
         self.import_count += 1
         dbanal = dest.add_analysis(dblabnumber,
+                                   uuid=uuid.uuid4(),
                                    aliquot=aliquot,
                                    step=step,
                                    runtime=rdt.time(),
-                                   rundate=rdt.date()
+                                   rundate=rdt.date(),
+                                   status=status
                                    )
         ms = msrecord.login_session.machine
         if ms:
@@ -209,12 +235,14 @@ class MassSpecImporter(Importer):
             dbimp = self._dbimport
 
         dbimp.analyses.append(dbanal)
-        path = self._import_signals(msrecord)
-        dest.add_analysis_path(path, dbanal)
 
-        self._import_blanks(msrecord, dbanal)
+        selhist = dest.add_selected_histories(dbanal)
+        self._import_signals(msrecord, dbanal, selhist)
+#        dest.add_analysis_path(path, dbanal)
 
-    def _import_blanks(self, msrecord, dbanal):
+        self._import_blanks(msrecord, dbanal, selhist)
+
+    def _import_blanks(self, msrecord, dbanal, selhist):
         '''
             get Bkgd and BkgdEr from IsotopeResultsTable
             get isotope results from isotope
@@ -224,7 +252,6 @@ class MassSpecImporter(Importer):
         isotopes = msrecord.isotopes
         dbhist = dest.add_blanks_history(dbanal)
 
-        selhist = dest.add_selected_histories(dbanal)
         selhist.selected_blanks = dbhist
         for iso in isotopes:
             #use the last result
@@ -233,14 +260,29 @@ class MassSpecImporter(Importer):
             dest.add_blanks(dbhist, user_value=bk, user_error=bk_er,
                             use_set=False, isotope=iso.Label)
 
-    def _import_signals(self, msrecord):
-        signals = dict()
-        baselines = dict()
+    def _import_signals(self, msrecord, analysis, selhist):
+
+        dest = self.destination
+        ichist = dest.add_detector_intercalibration_history(analysis)
+        selhist.selected_detector_intercalibration = ichist
+
         isotopes = msrecord.isotopes
+        dbhist = dest.add_fit_history(analysis, user=self.username)
+
+#        selhist.selected_fits = dbhist
         for iso in isotopes:
             pt = iso.peak_time_series[0]
-            det = iso.detector.Label
-            det = det if det else 'Null_Det'
+            det = iso.detector.detector_type.Label
+            detname = det if det else 'Null_Det'
+
+            det = dest.get_detector(detname)
+            if det is None:
+                det = dest.add_detector(detname)
+
+            v = iso.detector.ICFactor
+            e = iso.detector.ICFactorEr
+#            dest.add_detector_intercalibration(ichist, det, user_value=v, user_error=e)
+            dest.add_detector_intercalibration(ichist, det, user_value=v, user_error=e)
 
             #need to get xs from PeakTimeBlob
             blob = pt.PeakTimeBlob
@@ -251,16 +293,80 @@ class MassSpecImporter(Importer):
             #this blob is different 
             #it is a flat list of ys
             ys = [struct.unpack('>f', blob[i:i + 4])[0] for i in xrange(0, len(blob), 4)]
-
             fit = iso.results[-1].fit.Label
-            signals[iso.Label] = det, zip(ys, xs), fit
 
-            pt = iso.baseline
-            blob = pt.PeakTimeBlob
-            data = [struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)]
-            baselines[iso.Label] = det, data, 'average_SEM'
+            baseline = iso.baseline
+            if baseline:
+                blob = baseline.PeakTimeBlob
+                bys, bxs = zip(*[struct.unpack('>ff', blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
 
-        return self._dump_file(signals, baselines)
+                sess = self.source.get_session()
+                q = sess.query(BaselinesChangeableItemsTable)
+                q = q.filter(BaselinesChangeableItemsTable.BslnID == baseline.BslnID)
+                ch = q.one()
+
+                q = sess.query(FittypeTable)
+                q = q.filter(FittypeTable.Fit == ch.Fit)
+                dbfi = q.one()
+                if dbfi:
+                    bfit = dbfi.Label
+                else:
+                    bfit = 'average_sem'
+            else:
+                bys, bxs = [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]
+                bfit = 'average_sem'
+
+            for k, (xi, yi), fi in (('signal', (xs, ys), fit), ('baseline', (bxs, bys), bfit)):
+                data = ''.join([struct.pack('>ff', x, y) for x, y in zip(xi, yi)])
+                #add isotope
+#                print iso.Label
+                smw = self.source.get_molecular_weight(iso.Label)
+#                print iso.Label, smw
+                molweight = dest.get_molecular_weight(iso.Label)
+                if not molweight:
+                    smw = self.source.get_molecular_weight(iso.Label)
+                    mass = smw.AtomicWeight
+                    molweight = dest.add_molecular_weight(iso.Label, mass)
+                    dest.flush()
+
+                dbiso = dest.add_isotope(analysis, molweight, det, kind=k)
+
+                #add signal data
+                dest.add_signal(dbiso, data)
+
+                #add fit
+                if fi == 'Average Y':
+                    fi = 'average_SEM'
+
+                dest.add_fit(dbhist, dbiso,
+                             fit=fi, filter_outliers=True,
+                             filter_outlier_iterations=1, filter_outlier_std_devs=2
+                             )
+
+                #do pychron fit of the data
+                sig = Signal(xs=xi, ys=yi, fit=fi,
+                             filter_outliers=True,
+                             filter_outlier_iterations=1,
+                             filter_outlier_std_devs=2)
+
+#                print sig.value
+                #add isotope result
+                try:
+                    s, e = sig.value, sig.error
+                except TypeError:
+                    print k, fi
+                    print xi, yi
+                    s, e = 0, 0
+                dest.add_isotope_result(dbiso,
+                                      dbhist,
+                                      signal_=s, signal_err=e,
+                                      )
+                dest.flush()
+
+#            signals[iso.Label] = det, zip(ys, xs), fit
+#            baselines[iso.Label] = det, data, 'average_SEM'
+
+#        return self._dump_file(signals, baselines)
 
     def _get_monitors(self, msrecord):
         irrad_level = self._get_irradiation_level(msrecord)
@@ -329,7 +435,7 @@ class MassSpecImporter(Importer):
             dbpr = dest.get_irradiation_production(prname)
             if not dbpr:
                 kw = dict(name=prname)
-                prs = ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', ('P36Cl38Cl', 'Cl3638')]
+                prs = ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', ('P36Cl38Cl', 'Cl3638')]
                 for k in prs:
                     if not isinstance(k, tuple):
                         ko = k
@@ -351,7 +457,9 @@ class MassSpecImporter(Importer):
                 #get the chronology
                 q = sess.query(IrradiationChronologyTable)
                 q = q.filter(IrradiationChronologyTable.IrradBaseID == name)
+                q = q.order_by(IrradiationChronologyTable.EndTime.asc())
                 chrons = q.all()
+
                 chronblob = '$'.join(['{}%{}'.format(ci.StartTime, ci.EndTime) for ci in chrons])
 
                 self.info('adding irradiation and chronology for {}'.format(name))
@@ -390,28 +498,46 @@ class MassSpecImporter(Importer):
         '''
         src = self.source
         sess = src.get_session()
-        #get by labnumber
-#        def get_analyses(ip):
-#            q = sess.query(IrradiationPositionTable)
-#            q = q.filter(IrradiationPositionTable.IrradPosition == ip)
-#            irrad_pos = q.one()
-#            return irrad_pos.analyses
+#        return self._gather_data_by_labnumber(sess)
+#        return self._gather_data_by_project(sess)
+#        s = get_datetime('2012-10-01 00:00:00')
+#        e = get_datetime('2012-10-04 23:59:59')
 
-#        ips = self._get_import_ids()
-#        return [a for ip in ips
-#                    for a in get_analyses(ip)]
+        fmt = '%m/%d/%Y'
+        d = '10/24/2012'
+        s = datetime.strptime(d, fmt)
+
+        d = '10/31/2012'
+        e = datetime.strptime(d, fmt)
+
+        ans = self._gather_data_by_date_range(sess, s, e)
+#        print ans[0].RID,
+#        print ans[-1].RID
+#        print len(ans)
+#        return []
+        return ans
+
+    def _gather_data_by_labnumber(self, sess):
+        #get by labnumber
+        def get_analyses(ip):
+            q = sess.query(IrradiationPositionTable)
+            q = q.filter(IrradiationPositionTable.IrradPosition == ip)
+            irrad_pos = q.one()
+            return irrad_pos.analyses
+
+        ips = self._get_import_ids()
+        return [a for ip in ips
+                    for a in get_analyses(ip)]
+
+    def _gather_data_by_project(self, sess):
         #get by project
         def get_analyses(ni):
             q = sess.query(IrradiationPositionTable)
             q = q.join(SampleTable)
             q = q.join(ProjectTable)
             q = q.filter(ProjectTable.Project == ni)
-
-#            q = sess.query(AnalysesTable)
-#            q = q.filter(AnalysesTable.RID == '61311-36B')
-
-
             return q.all()
+
 
         prs = ['FC-Project']
         ips = [ip for pr in prs
@@ -420,9 +546,17 @@ class MassSpecImporter(Importer):
         ans = [a for ipi in ips
                 for a in ipi.analyses]
 
-#        ans = get_analyses('FC-Project')
-#        print len(ans)
         return ans
+
+
+    def _gather_data_by_date_range(self, sess, start, end):
+        #get by range
+        q = sess.query(AnalysesTable)
+        q = q.filter(and_(AnalysesTable.RunDateTime >= start, AnalysesTable.RunDateTime < end))
+        return q.all()
+
+
+
 
     def _get_import_ids(self):
 #        ips = ['17348']
@@ -449,7 +583,7 @@ if __name__ == '__main__':
     paths.build('_experiment')
     logging_setup('importer')
 
-    repo = Repository(root='/Users/ross/Sandbox/importtest/data')
+#    repo = Repository(root='/Users/ross/Sandbox/importtest/data')
     im = MassSpecImporter()
 
     s = MassSpecDatabaseAdapter(kind='mysql',
@@ -468,13 +602,13 @@ if __name__ == '__main__':
                        host='localhost',
 #                       host='129.138.12.131',
                        password='Argon',
-                       name='isotopedb_FC2')
+                       name='isotopedb_dev')
     d.connect()
 
     im.source = s
     im.destination = d
 
-    im.repository = repo
+#    im.repository = repo
     im.configure_traits()
 
 

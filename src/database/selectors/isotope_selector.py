@@ -46,6 +46,22 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 #from src.database.isotope_analysis.fit_selector import FitSelector
 from src.database.records.isotope_record import IsotopeRecord
 
+def compile_query(query):
+    from sqlalchemy.sql import compiler
+    from MySQLdb.converters import conversions, escape
+
+    dialect = query.session.bind.dialect
+    statement = query.statement
+    comp = compiler.SQLCompiler(dialect, statement)
+    comp.compile()
+    enc = dialect.encoding
+    params = []
+    for k in comp.positiontup:
+        v = comp.params[k]
+        if isinstance(v, unicode):
+            v = v.encode(enc)
+        params.append(escape(v, conversions))
+    return (comp.string.encode(enc) % tuple(params)).decode(enc)
 
 class IsotopeResultsAdapter(BaseResultsAdapter):
     columns = [
@@ -68,11 +84,13 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
 #    irradiation_level_text = Property
 
     def _get_irradiation_text(self):
-        return '{}{} {}'.format(self.item.irradiation.name,
+        if self.item.irradiation:
+            return '{}{} {}'.format(self.item.irradiation.name,
                                 self.item.irradiation_level.name,
                                 self.item.irradiation_position.position
                                 )
-
+        else:
+            return ''
 
     def _get_aliquot_text(self, trait, item):
         a = self.item.aliquot
@@ -125,24 +143,33 @@ class IsotopeAnalysisSelector(DatabaseSelector):
                               irrad_LevelTable,
                               irrad_IrradiationTable], irrad_PositionTable.position)
               }
-
+        joined = []
         if queries:
             for qi in queries:
 
                 tabs, attr = mm[qi.parameter]
                 for tab in tabs:
-                    q = q.join(tab)
+                    if not tab in joined:
+                        joined.append(tab)
+                        q = q.join(tab)
+
+
                 q = qi.assemble_filter(q, attr)
 
         q = q.order_by(meas_AnalysisTable.rundate.desc())
         q = q.order_by(meas_AnalysisTable.runtime.desc())
-#        q = q.order_by(meas_AnalysisTable.id.desc())
 
         if limit:
             q = q.limit(limit)
         records = q.all()
         records.reverse()
-        return records
+
+        arguments = ['-1']
+        if queries:
+            arguments.extend((qi.criterion for qi in queries))
+
+        return records, compile_query(q)
+#        return records, q.statement, ', '.join(arguments)
 #        return q.all()
 
 

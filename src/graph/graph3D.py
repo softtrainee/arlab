@@ -120,6 +120,42 @@ class Graph3D(HasTraits):
         if outline:
             mlab.outline()
 
+    def plot_surf(self, *args, **kw):
+        mlab = self.scene.mlab
+        mlab.surf(*args, **kw)
+        mlab.outline()
+        mlab.axes()
+
+
+    def plot_points(self, x, y, z, color=None):
+        mlab = self.scene.mlab
+        if color:
+            pts = mlab.points3d(x, y, z, z, scale_mode='none', scale_factor=0.1)
+        else:
+            pts = mlab.points3d(x, y, z, scale_mode='none', scale_factor=0.1)
+        mesh = mlab.pipeline.delaunay2d(pts)
+        mlab.pipeline.surface(mesh)
+
+    def plot_lines(self, x, y, z):
+        import numpy as np
+#        n_mer, n_long = 6, 11
+#        pi = numpy.pi
+#        dphi = pi / 1000.0
+#        phi = numpy.arange(0.0, 2 * pi + 0.5 * dphi, dphi)
+#        mu = phi * n_mer
+#        x = numpy.cos(mu) * (1 + numpy.cos(n_long * mu / n_mer) * 0.5)
+#        y = numpy.sin(mu) * (1 + numpy.cos(n_long * mu / n_mer) * 0.5)
+#        print x
+#        z = numpy.sin(n_long * mu / n_mer) * 0.5
+#
+#        l = self.scene.mlab.plot3d(x, y, z, numpy.sin(mu), tube_radius=0.025, colormap='Spectral')
+#        return l
+
+        x = np.array(x)
+        y = np.array(y)
+        z = np.array(z)
+        self.scene.mlab.plot3d(x, y, z)
+
     def traits_view(self):
 #        self.scene.mlab.points3d(x, y, z)
         kw = dict()

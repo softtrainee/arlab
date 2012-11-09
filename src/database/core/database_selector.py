@@ -18,7 +18,7 @@
 from traits.api import Button, List, Any, Dict, Bool, Int, Enum, Event
 
 from traitsui.api import View, Item, ButtonEditor, \
-    HGroup, spring, ListEditor, InstanceEditor
+    HGroup, spring, ListEditor, InstanceEditor, Handler
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
@@ -59,6 +59,19 @@ class ColumnSorterMixin(HasTraits):
         self._sort_field = field
 
 
+class SelectorHandler(Handler):
+    def init(self, info):
+        pass
+##        if info.initialized:
+#        import wx
+#        for control in info.ui.control.GetChildren()[0].GetChildren():
+#            if isinstance(control, wx.Button):
+#                if control.GetLabel() == 'Search':
+#                    control.Bind(wx.EVT_KEY_DOWN, info.object.onKeyDown)
+#                    control.SetFocus()
+#                    info.ui.control.SetDefaultItem(control)
+#                    break
+
 class DatabaseSelector(Viewable, ColumnSorterMixin):
     records = List
 
@@ -98,7 +111,13 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     style = Enum('normal', 'panel', 'simple', 'single')
 
     data_manager = None
-
+    verbose = False
+    def onKeyDown(self, evt):
+        import wx
+        print evt
+        if evt.GetKeyCode() == wx.WXK_RETURN:
+            print 'ffoasdf'
+        evt.Skip()
     def _selected_changed(self):
         if self.selected:
             sel = self.selected
@@ -131,7 +150,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self.load_records(dbs)
 
     def load_last(self, n=None):
-        dbs = self._get_selector_records(limit=n)
+        dbs, _stmt = self._get_selector_records(limit=n)
         self.load_records(dbs)
 
     def execute_query(self, filter_str=None):
@@ -154,25 +173,30 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         fs = q.get_filter_str()
         return self._execute_query(fs)
 
-    def _generate_filter_str(self):
-        qs = 'and '.join([q.get_filter_str() for q in self.queries])
-        return qs
+#    def _generate_filter_str(self):
+#        qs = 'and '.join([q.get_filter_str() for q in self.queries])
+#        return qs
 
     def _execute_query(self, filter_str):
 #        db = self.db
-        if filter_str is None:
-            filter_str = self._generate_filter_str()
+#        if filter_str is None:
+#            filter_str = self._generate_filter_str()
 
         query_dict = dict(
-                          filter_str=filter_str,
+#                          filter_str=filter_str,
                       limit=self.limit,
                       order=self._get_order(),
                       queries=self.queries
                       )
 
-        dbs = self._get_selector_records(**query_dict)
+        dbs, query_str = self._get_selector_records(**query_dict)
 
-        self.info('query {} returned {} records'.format(query_dict['filter_str'],
+        if not self.verbose:
+            query_str = str(query_str)
+            query_str = query_str.split('WHERE')[-1]
+            query_str = query_str.split('ORDER BY')[0]
+
+        self.info('query {} returned {} records'.format(query_str,
                                 len(dbs) if dbs else 0))
         return dbs
 
@@ -336,7 +360,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #            m = __import__(self.orm_path, fromlist=[table])
 #            table = getattr(m, table)
 
-        q = Query(parent=self,
+        q = Query(selector=self,
                   removable=removable,
 #                  query_table=table,
                   date_str=self.date_str
@@ -356,8 +380,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
     def _get_button_grp(self):
         return HGroup(
-                        Item('open_button', editor=ButtonEditor(label_value='open_button_label'),
-                             show_label=False),
+#                        Item('open_button', editor=ButtonEditor(label_value='open_button_label'),
+#                             show_label=False),
                         spring, Item('search', show_label=False), defined_when='style=="normal"')
 
     def panel_view(self):
@@ -383,10 +407,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                                auto_update=True,
                                column_clicked='object.column_clicked',
                                editable=False,
-                               operations=[
-#                                           'move', 
+#                               operations=[
+#                                           'move',
 #                                           'drag'
-                                           ],
+#                                           ],
                                multi_select=not self.style == 'single',
 
                                )
@@ -414,6 +438,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
                  qgrp,
                  button_grp,
                  resizable=True,
+                 handler=SelectorHandler
                  )
 
         if self.style == 'single':
